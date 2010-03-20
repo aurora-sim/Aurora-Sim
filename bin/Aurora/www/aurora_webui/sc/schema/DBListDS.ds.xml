@@ -1,0 +1,26 @@
+isc.DataSource.create({
+    ID:"DBListDS",
+    dropExtraFields:false,
+    fields:{
+        name:{
+            name:"name",
+            primaryKey:true
+        },
+        type:{
+            name:"type"
+        },
+        version:{
+            name:"version"
+        },
+        status:{
+            name:"status"
+        }
+    },
+    operationBindings:[
+        {
+            language:"groovy",
+            operationType:"fetch",
+            script:"\n            if (!com.isomorphic.auth.DevModeAuthFilter.devModeAuthorized(request)) throw new Exception(\"Not Authorized\");\n            import com.isomorphic.sql.*;\n            import com.isomorphic.tools.*;\n\n            def dbNames = SQLConnectionManager.getDefinedDatabaseNames();\n            dbNames.collect{\n                def name = it;\n\n                // type and version\n                def type = \"N/A\";\n                def version = \"N/A\";\n                def status = \"OK\";\n                try {\n                    def conn = SQLConnectionManager.getConnection(name);\n                    def smd = new SQLMetaData(conn);\n                    def result = smd.getProductNameAndVersion();\n                    SQLConnectionManager.free(conn);\n                    type = result.productName;\n                    version = result.productVersion;\n                } catch (Exception e) { \n                    if (e.toString() =~ /ClassNotFoundException/) status = \"JDBC driver not installed\";\n                    else status = \"Unable to connect\";\n                }\n\n                [name:name, status: status, type: type, version: version];\n            }\n	    "
+        }
+    ]
+})

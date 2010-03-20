@@ -1,0 +1,15 @@
+isc.DataSource.create({
+    ID:"WSOperationHeader",
+    addGlobalId:false,
+    fields:{
+        encoding:{
+            name:"encoding"
+        },
+        message:{
+            name:"message"
+        },
+        part:{
+            name:"part"
+        }
+    }
+})

@@ -1,0 +1,1 @@
+if(!isomorphicDir){var isomorphicDir = "sc/";}

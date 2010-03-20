@@ -1,0 +1,25 @@
+isc.DataSource.create({
+    Constructor:"SchemaSet",
+    ID:"SchemaSet",
+    addGlobalId:false,
+    fields:{
+        schemaNamespace:{
+            name:"schemaNamespace",
+            type:"url"
+        },
+        schemaImports:{
+            multiple:true,
+            name:"schemaImports",
+            type:"Object"
+        },
+        qualifyAll:{
+            name:"qualifyAll",
+            type:"boolean"
+        },
+        schema:{
+            multiple:true,
+            name:"schema",
+            type:"DataSource"
+        }
+    }
+})

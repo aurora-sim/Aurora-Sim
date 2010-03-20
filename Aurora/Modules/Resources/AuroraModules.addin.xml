@@ -1,0 +1,15 @@
+<Addin id="Aurora.Modules" version="0.2">
+    <Runtime>
+        <Import assembly="Aurora.Modules.dll"/>
+    </Runtime>
+
+    <Dependencies>
+        <Addin id="OpenSim" version="0.5" />
+    </Dependencies>
+
+    <Extension path = "/OpenSim/RegionModules">
+      <RegionModule id="IWCEntityTransferModule"           type="OpenSim.Region.CoreModules.Framework.EntityTransfer.IWCEntityTransferModule" />
+      <RegionModule id="AuroraWorldMapModule"           type="Aurora.Modules.AuroraWorldMapModule" />
+      <RegionModule id="IWCSimulationConnectorModule"           type="Aurora.Modules.IWCSimulationConnectorModule" />
+    </Extension>
+</Addin>
