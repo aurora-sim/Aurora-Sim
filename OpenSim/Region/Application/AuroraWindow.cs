@@ -36,7 +36,7 @@ namespace OpenSim
             IntPtr hWnd = FindWindow(null, "Aurora"); //put your console window caption here
             if (hWnd != IntPtr.Zero)
             {
-                ShowWindow(hWnd, 0); // 0 = SW_HIDE
+                //ShowWindow(hWnd, 0); // 0 = SW_HIDE
             }
             //linkLabel1.Text = "http://" + Utils.GetExternalIp() + ":" + GetUIPort();
         }

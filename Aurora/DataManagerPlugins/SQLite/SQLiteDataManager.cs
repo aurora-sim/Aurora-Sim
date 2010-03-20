@@ -173,12 +173,12 @@ namespace Aurora.DataManager.SQLite
             string query = "";
             if (keyRow == "")
             {
-                query = String.Format("select {0} from '{1}'",
+                query = String.Format("select {0} from {1}",
                     wantedValue, table);
             }
             else
             {
-                query = String.Format("select {0} from '{1}' where {2} = '{3}'",
+                query = String.Format("select {0} from {1} where {2} = '{3}'",
                     wantedValue, table, keyRow, keyValue);
             }
             cmd.CommandText = query;

@@ -73,6 +73,47 @@ namespace Aurora.DataManager.MySQL
                 }
             }
         }
-        
+        public ObjectMediaURLInfo[] getObjectMediaInfo(string objectID)
+        {
+            ObjectMediaURLInfo[] infos = new ObjectMediaURLInfo[6];
+            ObjectMediaURLInfo info = new ObjectMediaURLInfo();
+
+            List<string> data = Query("objectUUID", objectID, "assetMediaURL", "*");
+            if (data.Count == 1)
+                return infos;
+            infos[1] = info;
+            /*int a = 0;
+            for (int i = 0; i < data.Count; ++i)
+            {
+                info.alt_image_enable = data[a + 2];
+                info.auto_loop = Convert.ToInt32(data[a + 3]) == 1;
+                info.auto_play = Convert.ToInt32(data[a + 4]) == 1;
+                info.auto_scale = Convert.ToInt32(data[a + 5]) == 1;
+                info.auto_zoom = Convert.ToInt32(data[a + 6]) == 1;
+                info.controls = Convert.ToInt32(data[a + 7]);
+                info.current_url = data[a + 8];
+                info.first_click_interact = Convert.ToInt32(data[a + 9]) == 1;
+                info.height_pixels = Convert.ToInt32(data[a + 10]);
+                info.home_url = data[a + 11];
+                info.perms_control = Convert.ToInt32(data[a + 12]);
+                info.perms_interact = Convert.ToInt32(data[a + 13]);
+                info.whitelist = data[a + 14];
+                info.whitelist_enable = Convert.ToInt32(data[a + 15]) == 1;
+                info.width_pixels = Convert.ToInt32(data[a + 16]);
+                info.object_media_version = data[a + 17];
+                a++;
+                if (i == 18)
+                    a = 18;
+                if (i == 36)
+                    a = 36;
+                if (i == 54)
+                    a = 54;
+                if (i == 72)
+                    a = 72;
+                if (i == 90)
+                    a = 90;
+            }*/
+            return infos;
+        }
     }
 }

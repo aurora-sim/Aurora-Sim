@@ -50,7 +50,7 @@ namespace Aurora.Modules
             List<string> KeyValue = new List<string>();
             KeyRow.Add("userUUID");
             KeyValue.Add(account.PrincipalID.ToString());
-            GenericData.Update("userauth", SetValue.ToArray(), SetRow.ToArray(), KeyRow.ToArray(), KeyValue.ToArray());
+            GenericData.Update("usersauth", SetValue.ToArray(), SetRow.ToArray(), KeyRow.ToArray(), KeyValue.ToArray());
         }
 
         public void PostInitialise(){}
