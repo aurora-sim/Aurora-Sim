@@ -1568,6 +1568,7 @@
       <Reference name="System"/>
       <Reference name="System.Xml"/>
       <Reference name="Mono.Addins.dll" />
+      <Reference name="Aurora.Framework"/>
       <Reference name="OpenMetaverseTypes.dll"/>
       <Reference name="OpenMetaverse.StructuredData.dll"/>
       <Reference name="OpenMetaverse.dll"/>
