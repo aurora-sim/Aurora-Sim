@@ -50,20 +50,20 @@ namespace Aurora.Services.InventoryService
         public AuroraInventoryService()
         {
             repository = new InventoryRepository(DataManager.DataManager.DataSessionProvider);
-            animationType = repository.CreateInventoryType("ANIMATION", 1);
-            bodyPartType = repository.CreateInventoryType("BODY_PART", 2);
-            callingCardType = repository.CreateInventoryType("CALLING_CARD", 3);
-            clothingType = repository.CreateInventoryType("CLOTHING", 4);
-            gestureType = repository.CreateInventoryType("GESTURE", 5);
-            landmarkType = repository.CreateInventoryType("LANDMARK", 6);
-            lostAndFoundType = repository.CreateInventoryType("LOST_AND_FOUND", 7);
-            notecardType = repository.CreateInventoryType("NOTECARD", 8);
-            objectType = repository.CreateInventoryType("OBJECT", 9);
-            photoType = repository.CreateInventoryType("PHOTO", 10);
-            scriptType = repository.CreateInventoryType("SCRIPT", 11);
-            soundType = repository.CreateInventoryType("SOUND", 12);
-            textureType = repository.CreateInventoryType("TEXTURE", 13);
-            trashType = repository.CreateInventoryType("TRASH", 14);
+            animationType = repository.CreateInventoryType("ANIMATION", (int)AssetType.Animation);
+            bodyPartType = repository.CreateInventoryType("BODY_PART", (int)AssetType.Bodypart);
+            callingCardType = repository.CreateInventoryType("CALLING_CARD", (int)AssetType.CallingCard);
+            clothingType = repository.CreateInventoryType("CLOTHING", (int)AssetType.Clothing);
+            gestureType = repository.CreateInventoryType("GESTURE", (int)AssetType.Gesture);
+            landmarkType = repository.CreateInventoryType("LANDMARK", (int)AssetType.Landmark);
+            lostAndFoundType = repository.CreateInventoryType("LOST_AND_FOUND", (int)AssetType.LostAndFoundFolder);
+            notecardType = repository.CreateInventoryType("NOTECARD", (int)AssetType.Notecard);
+            objectType = repository.CreateInventoryType("OBJECT", (int)AssetType.Object);
+            photoType = repository.CreateInventoryType("PHOTO", (int)AssetType.SnapshotFolder);
+            scriptType = repository.CreateInventoryType("SCRIPT", (int)AssetType.LSLText);
+            soundType = repository.CreateInventoryType("SOUND", (int)AssetType.Sound);
+            textureType = repository.CreateInventoryType("TEXTURE", (int)AssetType.Texture);
+            trashType = repository.CreateInventoryType("TRASH", (int)AssetType.TrashFolder);
         }
 
         #region IInventoryService Members
@@ -257,6 +257,11 @@ namespace Aurora.Services.InventoryService
         }
 
         public bool MoveItems(UUID ownerId, List<InventoryItemBase> items)
+        {
+            return false;
+        }
+
+        public bool LinkItems(UUID ownerID, InventoryItemBase item)
         {
             return false;
         }
