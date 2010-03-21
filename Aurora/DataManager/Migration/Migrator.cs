@@ -1,9 +1,13 @@
 using System;
+using System.Collections.Generic;
+using C5;
 
 namespace Aurora.DataManager.Migration
 {
     public class Migrator : IRestorePoint
     {
+        protected List<Rec<string, ColumnDefinition[]>> schema;
+
         public Version Version { get; protected set; }
 
         public bool CanProvideDefaults { get; protected set; }
@@ -30,9 +34,15 @@ namespace Aurora.DataManager.Migration
             return false;
         }
 
-        public virtual IRestorePoint PrepareRestorePoint()
+        public IRestorePoint PrepareRestorePoint(DataSessionProvider sessionProvider, IGenericData genericData)
         {
+            DoPrepareRestorePoint(sessionProvider, genericData);
             return this;
+        }
+
+        protected virtual void DoPrepareRestorePoint(DataSessionProvider sessionProvider, IGenericData genericData)
+        {
+
         }
 
         public void Migrate(DataSessionProvider sessionProvider, IGenericData genericData)
@@ -52,6 +62,91 @@ namespace Aurora.DataManager.Migration
         }
 
         protected virtual void DoCreateDefaults(DataSessionProvider sessionProvider, IGenericData genericData)
+        {
+        }
+
+        protected ColumnDefinition[] ColDefs(params ColumnDefinition[] defs)
+        {
+            return defs;
+        }
+
+        protected ColumnDefinition ColDef(string name, ColumnTypes columnType)
+        {
+            return new ColumnDefinition() { Name = name, Type = columnType, IsPrimary = false };
+        }
+
+        protected ColumnDefinition ColDef(string name, ColumnTypes columnType, bool isPrimary)
+        {
+            return new ColumnDefinition() { Name = name, Type = columnType, IsPrimary = isPrimary };
+        }
+
+        protected void AddSchema(string table, ColumnDefinition[] definitions)
+        {
+            schema.Add(new Rec<string, ColumnDefinition[]>(table, definitions));
+        }
+
+        protected void EnsureAllTablesInSchemaExist(IGenericData genericData)
+        {
+            foreach (var s in schema)
+            {
+                EnsureTableExists(genericData, s.X1, s.X2);
+            }
+        }
+
+        protected bool TestThatAllTablesValidate(IGenericData genericData)
+        {
+            foreach (var s in schema)
+            {
+                if (!VerifyTableExists(genericData, s.X1, s.X2))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        protected void CopyAllTablesToTempVersions(IGenericData genericData)
+        {
+            foreach (var s in schema)
+            {
+                CopyTableToTempVersion(genericData, s.X1, s.X2);
+            }
+        }
+
+        protected void RestoreTempTablesToReal(IGenericData genericData)
+        {
+            foreach (var s in schema)
+            {
+                RestoreTempTableToReal(genericData, s.X1, s.X2);
+            }
+        }
+
+        private void CopyTableToTempVersion(IGenericData genericData, string tablename, ColumnDefinition[] columnDefinitions)
+        {
+            CopyTableToTable(genericData, tablename, GetTempTableNameFromTableName(tablename), columnDefinitions);
+        }
+
+        private string GetTempTableNameFromTableName(string tablename)
+        {
+            return tablename + "_TEMP";
+        }
+
+        private void RestoreTempTableToReal(IGenericData genericData, string tablename, ColumnDefinition[] columnDefinitions)
+        {
+            CopyTableToTable(genericData, GetTempTableNameFromTableName(GetTempTableNameFromTableName(tablename)), tablename, columnDefinitions);
+        }
+
+
+        private void CopyTableToTable(IGenericData genericData, string sourceTableName, string destinationTableName, ColumnDefinition[] columnDefinitions)
+        {
+        }
+
+        private bool VerifyTableExists(IGenericData genericData, string tablename, ColumnDefinition[] columnDefinitions)
+        {
+            return false;
+        }
+
+        protected void EnsureTableExists(IGenericData genericData, string tableName, ColumnDefinition[] columnDefinitions)
         {
         }
     }
