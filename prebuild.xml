@@ -106,6 +106,8 @@
 
       <ReferencePath>../../../bin/</ReferencePath>
       <Reference name="System"/>
+      <Reference name="System.Windows.Forms"/>
+      <Reference name="System.Drawing"/>
       <Reference name="System.Xml"/>
       <Reference name="System.Web"/>
       <Reference name="log4net.dll"/>
@@ -1552,7 +1554,7 @@
     </Project>
 
     <!-- OpenSim app -->
-    <Project frameworkVersion="v3_5" name="OpenSim" path="OpenSim/Region/Application" type="Exe">
+    <Project frameworkVersion="v3_5" name="OpenSim" path="OpenSim/Region/Application" type="WinExe">
       <Configuration name="Debug">
         <Options>
           <OutputPath>../../../bin/</OutputPath>

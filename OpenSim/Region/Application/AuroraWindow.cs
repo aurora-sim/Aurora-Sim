@@ -16,29 +16,17 @@ namespace OpenSim
         
         public event ReadText OnReadText;
 
-        [DllImport("user32.dll")]
-        public static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
-        [DllImport("user32.dll")]
-        static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
-
-
         public AuroraWindow()
         {
             InitializeComponent();
+            OpenSim.Window = this;
             this.Text = "Aurora";
             this.Resize += new EventHandler(Form1_Resize);
             this.Icon = new Icon("Aurora.ico");
             this.Closing += new CancelEventHandler(Form1_Closing);
             notifyIcon1.Text = "Aurora";
             notifyIcon1.Icon = new Icon("Aurora.ico");
-            OpenSim.Window = this;
-            System.Console.Title = "Aurora";
-            IntPtr hWnd = FindWindow(null, "Aurora"); //put your console window caption here
-            if (hWnd != IntPtr.Zero)
-            {
-                //ShowWindow(hWnd, 0); // 0 = SW_HIDE
-            }
-            //linkLabel1.Text = "http://" + Utils.GetExternalIp() + ":" + GetUIPort();
+          
         }
 
         private string GetUIPort()
@@ -248,9 +236,11 @@ namespace OpenSim
             // 
             // ConsoleText
             // 
+            this.tableLayoutPanel1.SetColumnSpan(ConsoleText,3);
             this.ConsoleText.BackColor = System.Drawing.Color.Black;
             this.ConsoleText.Enabled = false;
             this.ConsoleText.ForeColor = System.Drawing.SystemColors.MenuHighlight;
+
             this.ConsoleText.Location = new System.Drawing.Point(3, 27);
             this.ConsoleText.Name = "ConsoleText";
             this.ConsoleText.ReadOnly = true;
