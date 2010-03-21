@@ -475,6 +475,8 @@ namespace OpenSim.Framework
     
     public delegate void GodUpdateRegionInfoUpdate(IClientAPI client, float BillableFactor, ulong EstateID, ulong RegionFlags, byte[] SimName,int RedirectX, int RedirectY);
     
+    public delegate void LinkInventoryItem(IClientAPI client, UUID oldItemID, UUID parentID, uint Callback);
+
     public delegate void GodlikeMessage(IClientAPI client, UUID requester, byte[] Method, byte[] Parameter);
     
     public delegate void SaveStateHandler(IClientAPI client,UUID agentID);
@@ -1100,6 +1102,7 @@ namespace OpenSim.Framework
         event MuteListEntryRemove OnRemoveMuteListEntry;
         event GodlikeMessage onGodlikeMessage;
         event GodUpdateRegionInfoUpdate OnGodUpdateRegionInfoUpdate;
+        event LinkInventoryItem OnLinkInventoryItem;
         
         /// <summary>
         /// Set the debug level at which packet output should be printed to console.

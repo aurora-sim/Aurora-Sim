@@ -2615,6 +2615,7 @@ namespace OpenSim.Region.Framework.Scenes
             client.OnObjectSaleInfo += ObjectSaleInfo;
             client.OnObjectIncludeInSearch += m_sceneGraph.MakeObjectSearchable;
             client.OnObjectOwner += ObjectOwner;
+            client.OnLinkInventoryItem += LinkInventoryItem;
         }
 
         public virtual void SubscribeToClientPrimRezEvents(IClientAPI client)

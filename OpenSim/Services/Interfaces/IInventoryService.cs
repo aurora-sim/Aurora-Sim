@@ -154,6 +154,8 @@ namespace OpenSim.Services.Interfaces
 
         bool MoveItems(UUID ownerID, List<InventoryItemBase> items);
 
+        bool LinkItem(IClientAPI client, UUID oldItemID, UUID parentID, uint Callback);
+
         /// <summary>
         /// Delete an item from the user's inventory
         /// </summary>

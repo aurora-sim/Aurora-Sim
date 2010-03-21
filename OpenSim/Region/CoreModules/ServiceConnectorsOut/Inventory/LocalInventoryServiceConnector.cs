@@ -343,6 +343,11 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Inventory
         {
             return m_InventoryService.GetAssetPermissions(userID, assetID);
         }
+
+        public override bool LinkItem(IClientAPI client, UUID oldItemID, UUID parentID, uint Callback)
+        {
+            return false;
+        }
         #endregion IInventoryService
     }
 }

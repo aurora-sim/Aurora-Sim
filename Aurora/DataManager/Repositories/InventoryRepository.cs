@@ -258,5 +258,10 @@ namespace Aurora.DataManager.Repositories
                 return session.CreateCriteria(typeof(InventoryFolder)).Add(Expression.Eq("ParentFolder", parentFolder)).List<InventoryFolder>();
             }
         }
+
+        public IList<InventoryFolder> GetUserFolders(UUID userId)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
