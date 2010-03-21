@@ -13,12 +13,13 @@ using Aurora.DataManager.SQLite;
 
 namespace Aurora.Modules
 {
-    public class AuroraDataModule: IRegionModule
+    public class LocalDataService: IRegionModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         internal IConfig m_config;
         string PluginModule = "";
         string ConnectionString = "";
+
         public void Initialise(Scene scene, IConfigSource source)
         {
             m_config = source.Configs["AuroraData"];
@@ -28,6 +29,9 @@ namespace Aurora.Modules
                 m_log.Error("[AuroraData]: no data plugin found!");
                 return;
             }
+            string ServiceName = m_config.GetString("Service", "");
+            if (ServiceName != Name)
+                return;
 
             PluginModule = m_config.GetString("PluginModule", "");
             ConnectionString = m_config.GetString("ConnectionString", "");
@@ -61,16 +65,13 @@ namespace Aurora.Modules
             }
         }
 
-        public void PostInitialise()
-        {
-            
-        }
+        public void PostInitialise() {}
 
         public void Close() {}
 
         public string Name
         {
-            get { return "AuroraDataManager"; }
+            get { return "LocalDataService"; }
         }
 
         public bool IsSharedModule
