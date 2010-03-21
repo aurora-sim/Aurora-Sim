@@ -150,10 +150,8 @@ namespace OpenSim
             // 
             // textBox2
             // 
-            this.textBox2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
             this.textBox2.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.textBox2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.textBox2.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
             this.textBox2.Location = new System.Drawing.Point(5, 337);
             this.textBox2.Margin = new System.Windows.Forms.Padding(5, 3, 3, 3);
             this.textBox2.Name = "textBox2";
@@ -175,7 +173,6 @@ namespace OpenSim
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.ForeColor = System.Drawing.Color.Silver;
             this.label1.Location = new System.Drawing.Point(3, 0);
             this.label1.Margin = new System.Windows.Forms.Padding(3, 0, 0, 0);
             this.label1.Name = "label1";
@@ -188,8 +185,6 @@ namespace OpenSim
             // linkLabel1
             // 
             this.linkLabel1.AutoSize = true;
-            this.linkLabel1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
-            this.linkLabel1.LinkColor = System.Drawing.Color.OliveDrab;
             this.linkLabel1.Location = new System.Drawing.Point(120, 0);
             this.linkLabel1.Margin = new System.Windows.Forms.Padding(0, 0, 3, 0);
             this.linkLabel1.Name = "linkLabel1";
@@ -237,10 +232,9 @@ namespace OpenSim
             // ConsoleText
             // 
             this.tableLayoutPanel1.SetColumnSpan(ConsoleText,3);
-            this.ConsoleText.BackColor = System.Drawing.Color.Black;
             this.ConsoleText.Enabled = false;
-            this.ConsoleText.ForeColor = System.Drawing.SystemColors.MenuHighlight;
-
+            this.ConsoleText.BackColor = Color.White;
+            this.ConsoleText.BorderStyle = BorderStyle.FixedSingle;
             this.ConsoleText.Location = new System.Drawing.Point(3, 27);
             this.ConsoleText.Name = "ConsoleText";
             this.ConsoleText.ReadOnly = true;
@@ -252,7 +246,6 @@ namespace OpenSim
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.Color.Black;
             this.ClientSize = new System.Drawing.Size(584, 362);
             this.Controls.Add(this.tableLayoutPanel1);
             this.Name = "AuroraWindow";
