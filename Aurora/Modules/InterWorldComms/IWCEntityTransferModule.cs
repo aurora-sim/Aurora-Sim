@@ -56,7 +56,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
         private bool m_Initialized = false;
 
-        private InterWorldPlugin IWC;
+        private InterWorldComms IWC;
 
         #region ISharedRegionModule
 
@@ -103,7 +103,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             if (m_Enabled)
                 if (!m_Initialized)
                 {
-                    IWC = scene.RequestModuleInterface<InterWorldPlugin>();
+                    IWC = scene.RequestModuleInterface<InterWorldComms>();
                     m_Initialized = true;
                 }
 

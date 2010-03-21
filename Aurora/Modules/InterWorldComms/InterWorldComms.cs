@@ -36,7 +36,7 @@ namespace Aurora.Modules
                 ", TrustLevel: " + TrustLevel;
         }
     }
-    public class InterWorldPlugin : IRegionModule
+    public class InterWorldComms : IRegionModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private IAuth a_AuthService = null;
@@ -85,7 +85,7 @@ namespace Aurora.Modules
             m_config = source.Configs["AuroraInterWorldConnectors"];
             WorldIdentifier = m_config.GetString("WorldIdentifier", "");
             
-            scene.RegisterModuleInterface<InterWorldPlugin>(this);
+            scene.RegisterModuleInterface<InterWorldComms>(this);
             
             
             IConfig m_LoginServerConfig = source.Configs["LoginService"];
@@ -111,7 +111,7 @@ namespace Aurora.Modules
             if (a_AuthService == default(IAuth))
             {
                 a_Enabled = false;
-                m_log.Debug("[AuroraInterGridPlugin]: No Auth Service defined! Disabling...");
+                m_log.Debug("[AuroraInterWorldComms]: No Auth Service defined! Disabling...");
             }
             GD = Aurora.DataManager.DataManager.GetGenericPlugin();
             PD = Aurora.DataManager.DataManager.GetProfilePlugin();

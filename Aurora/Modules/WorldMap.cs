@@ -74,7 +74,7 @@ namespace Aurora.Modules
         private IRegionData GenericData = Aurora.DataManager.DataManager.GetRegionPlugin();
 		private IConfigSource m_config;
 		private Dictionary<string, string> RegionsHidden = new Dictionary<string, string>();
-        private InterWorldPlugin IWC;
+        private InterWorldComms IWC;
 		//private int CacheRegionsDistance = 256;
 
 		#region INonSharedRegionModule Members
@@ -115,7 +115,7 @@ namespace Aurora.Modules
 
 		public virtual void RegionLoaded (Scene scene)
 		{
-            IWC = scene.RequestModuleInterface<InterWorldPlugin>();
+            IWC = scene.RequestModuleInterface<InterWorldComms>();
 		}
 
 

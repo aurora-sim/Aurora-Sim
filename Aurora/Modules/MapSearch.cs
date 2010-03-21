@@ -57,7 +57,7 @@ namespace Aurora.Modules
 		private static double time = 60000 /*oneminute*/ * 30;
 		//private static double time = 60000 /*oneminute*/;
 		private Timer aTimer = new System.Timers.Timer(time);
-        private InterWorldPlugin IWC = null;
+        private InterWorldComms IWC = null;
 
 		#region IRegionModule Members
 		public void Initialise(Scene scene, IConfigSource source)
@@ -88,7 +88,7 @@ namespace Aurora.Modules
             RegionsHidden = GenericData.GetRegionHidden();
 			aTimer.Elapsed += new ElapsedEventHandler(OnTimedEvent);
         	aTimer.Enabled = true;
-            IWC = m_scene.RequestModuleInterface<InterWorldPlugin>();
+            IWC = m_scene.RequestModuleInterface<InterWorldComms>();
 		}
 
 		public void Close()
