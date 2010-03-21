@@ -15,8 +15,9 @@ namespace Aurora.DataManager.DataModels
     public class InventoryFolder
     {
         public virtual InventoryObjectType PreferredAssetType { get; set; }
-        public virtual int Id { get; set; }
+        public virtual string Id { get; set; }
         public virtual InventoryFolder Parent { get; set; }
         public virtual string Name { get; set; }
+        public virtual string Owner { get; set; }
     }
 }

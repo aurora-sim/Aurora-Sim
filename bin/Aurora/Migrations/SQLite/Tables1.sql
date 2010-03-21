@@ -24,6 +24,7 @@ CREATE TABLE assetMediaURL (objectUUID VARCHAR(100), User VARCHAR(100), alt_imag
 
 CREATE TABLE  auroraprims (primUUID varchar(45) PRIMARY KEY,primName varchar(45),primType varchar(2),primKeys varchar(1024),primValues varchar(1024) );
 
+CREATE TABLE aurorainventoryfolders (FolderUUID VARCHAR(50) PRIMARY KEY, parentID VARCHAR(50), PreferredAssetType VARCHAR(50), Parent VARCHAR(50), Name VARCHAR(50));
 
 CREATE TABLE Migrations (migrations VARCHAR(50) PRIMARY KEY);
 insert into Migrations Values('1');
