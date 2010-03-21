@@ -121,7 +121,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("FolderUUID", ColumnTypes.String50, true),
                 ColDef("parentID", ColumnTypes.String50),
                 ColDef("PreferredAssetType", ColumnTypes.String50),
-                ColDef("Parent", ColumnTypes.String50),
+                ColDef("ParentFolder", ColumnTypes.String50),
                 ColDef("Name", ColumnTypes.String50)
                 ));
             

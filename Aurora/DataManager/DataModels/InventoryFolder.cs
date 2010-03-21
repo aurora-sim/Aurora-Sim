@@ -8,15 +8,20 @@ namespace Aurora.DataManager.DataModels
         public InventoryFolderMap()
         {
             Id(x => x.Id);
-            References(x => x.Parent);
+            Map(x => x.PreferredAssetType);
+            Map(x => x.FolderId);
+            References(x => x.ParentFolder);
+            Map(x => x.Name);
+            Map(x => x.Owner);
         }
     }
 
     public class InventoryFolder
     {
-        public virtual InventoryObjectType PreferredAssetType { get; set; }
-        public virtual string Id { get; set; }
-        public virtual InventoryFolder Parent { get; set; }
+        public virtual int Id { get; set; }
+        public virtual int PreferredAssetType { get; set; }
+        public virtual string FolderId { get; set; }
+        public virtual InventoryFolder ParentFolder { get; set; }
         public virtual string Name { get; set; }
         public virtual string Owner { get; set; }
     }

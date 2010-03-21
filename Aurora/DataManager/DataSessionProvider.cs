@@ -35,27 +35,38 @@ namespace Aurora.DataManager
 
         private ISessionFactory CreateSessionFactory()
         {
-            return Fluently.Configure()
-              .Database(
-                SQLiteConfiguration.Standard
-                  .UsingFile(DbFile)
-              )
-              .Mappings(m =>
-                m.FluentMappings.AddFromAssemblyOf<DataSessionProvider>())
-              .ExposeConfiguration(BuildSchema)
-              .BuildSessionFactory();
+            try
+            {
+                return Fluently.Configure()
+                    .Database(
+                        SQLiteConfiguration.Standard
+                            .UsingFile(DbFile)
+                    )
+                    .Mappings(m =>
+                              m.FluentMappings.AddFromAssemblyOf<DataSessionProvider>())
+                    .ExposeConfiguration(BuildSchema)
+                    .BuildSessionFactory();
+            }
+            catch(Exception e)
+            {
+                throw new Exception("Could not initialize session:" + System.Environment.NewLine + e.Message + ((e.InnerException!=null)?(System.Environment.NewLine + e.InnerException.Message):string.Empty));
+            }
         }
 
         private void BuildSchema(Configuration config)
         {
-            // delete the existing db on each run
-            if (File.Exists(DbFile))
-                File.Delete(DbFile);
-
             // this NHibernate tool takes a configuration (with mapping info in)
             // and exports a database schema from it
             new SchemaExport(config)
               .Create(false, true);
+        }
+
+        public void DeleteLocalResources()
+        {
+            if (File.Exists(DbFile))
+            {
+                File.Delete(DbFile);
+            }
         }
     }
 }

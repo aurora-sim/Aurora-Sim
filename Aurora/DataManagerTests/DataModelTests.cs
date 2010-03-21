@@ -1,5 +1,7 @@
+using System.IO;
 using Aurora.DataManager.Repositories;
 using NUnit.Framework;
+using OpenMetaverse;
 
 namespace Aurora.DataManager.Tests
 {
@@ -8,9 +10,7 @@ namespace Aurora.DataManager.Tests
         [Test]
         public void InventoryRepositoryTests()
         {
-            var repo = new InventoryRepository(new DataSessionProvider("InventoryRepoTest"));
-            var folder = repo.CreateFolderAndSave();
-            var folders = repo.GetAllFolders();
+            
         }
     }
 }

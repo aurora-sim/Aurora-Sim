@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Aurora.DataManager.DataModels;
 using NHibernate;
+using NHibernate.Criterion;
 using OpenMetaverse;
 using InventoryFolder = Aurora.DataManager.DataModels.InventoryFolder;
 
@@ -12,29 +14,6 @@ namespace Aurora.DataManager.Repositories
         public InventoryRepository(DataSessionProvider sessionProvider) : base(sessionProvider) { }
         public IList<InventoryObjectType> AllInventoryObjectTypes = new List<InventoryObjectType>();
         
-        public InventoryFolder CreateFolderAndSave()
-        {
-            using(var session = OpenSession())
-            {
-                var folder = new InventoryFolder();
-                session.SaveOrUpdate(folder);
-                return folder;
-            }
-        }
-
-        public IList<InventoryFolder> GetAllFolders()
-        {
-            using (var session = OpenSession())
-            {
-                return session.CreateCriteria(typeof(InventoryFolder)).List<InventoryFolder>();
-            }
-        }
-
-        public bool CreateUserInventory(UUID user)
-        {
-            return true;
-        }
-
         public IList<InventoryItem> GetActiveInventoryItemsByType(InventoryObjectType gestureType)
         {
             return new List<InventoryItem>();
@@ -48,17 +27,51 @@ namespace Aurora.DataManager.Repositories
         /// <returns></returns>
         public InventoryFolder GetRootFolder(UUID user)
         {
-            throw new NotImplementedException();
+            using (var session = OpenSession())
+            {
+                var rootFolders = session.CreateCriteria(typeof(InventoryFolder)).Add(Expression.IsNull("ParentFolder")).List<InventoryFolder>();
+                if (rootFolders.Count > 0)
+                {
+                    Debug.Assert(rootFolders.Count == 1, "This is unexpected that we have more than one root folder.");
+                    return rootFolders[0];
+                }
+            }
+            return null;
         }
 
-        public InventoryFolder CreateFolderAndSave(UUID user, string folderRootName, UUID parentID)
+        public InventoryFolder CreateRootFolderAndSave(UUID owner, string folderRootName)
         {
-            throw new NotImplementedException();
+            using (var session = OpenSession())
+            {
+                var folder = new InventoryFolder();
+                folder.Owner = owner.ToString();
+                folder.Name = folderRootName;
+                folder.FolderId = UUID.Random().ToString();
+                session.SaveOrUpdate(folder);
+                return folder;
+            }
         }
 
-        public IList<InventoryFolder> GetSubfoldersWithAnyAssetPreferences(InventoryFolder defaultRootFolder)
+        public InventoryFolder CreateFolderAndSave(string folderName, InventoryFolder parentFolder)
         {
-            throw new NotImplementedException();
+            using (var session = OpenSession())
+            {
+                var folder = new InventoryFolder();
+                folder.Owner = parentFolder.Owner.ToString();
+                folder.Name = folderName;
+                folder.ParentFolder = parentFolder;
+                folder.FolderId = UUID.Random().ToString();
+                session.SaveOrUpdate(folder);
+                return folder;
+            }
+        }
+
+        public IList<InventoryFolder> GetSubfoldersWithAnyAssetPreferences(InventoryFolder rootFolder)
+        {
+            using (var session = OpenSession())
+            {
+                return session.CreateCriteria(typeof(InventoryFolder)).Add(Expression.Eq("ParentFolder", rootFolder)).Add(Expression.IsNotNull("PreferredAssetType")).List<InventoryFolder>();
+            }
         }
 
         /// <summary>
@@ -68,18 +81,29 @@ namespace Aurora.DataManager.Repositories
         /// <returns></returns>
         public IList<InventoryFolder> GetMainFolders(UUID user)
         {
-            throw new NotImplementedException();
+            using (var session = OpenSession())
+            {
+                return session.CreateCriteria(typeof(InventoryFolder)).Add(Expression.Eq("ParentFolder",GetRootFolder(user))).List<InventoryFolder>();
+            }
         }
 
         /// <summary>
         /// Gets the first root folder that has the given name.
         /// </summary>
         /// <param name="user"></param>
-        /// <param name="folderRootName"></param>
+        /// <param name="name"></param>
         /// <returns></returns>
-        public InventoryFolder GetMainFolderByName(UUID user, string folderRootName)
+        public InventoryFolder GetMainFolderByName(UUID user, string name)
         {
-            throw new NotImplementedException();
+            using (var session = OpenSession())
+            {
+                var rootSubFolders = session.CreateCriteria(typeof (InventoryFolder)).Add(Expression.Eq("ParentFolder", GetRootFolder(user))).Add(Expression.Eq("Name", name)).List<InventoryFolder>();
+                if (rootSubFolders.Count > 0)
+                {
+                    return rootSubFolders[0];
+                }
+            }
+            return null;
         }
 
         /// <summary>
@@ -88,11 +112,20 @@ namespace Aurora.DataManager.Repositories
         /// </summary>
         /// <param name="name"></param>
         /// <param name="parentFolder"></param>
-        /// <param name="objectType"></param>
+        /// <param name="preferredType"></param>
         /// <returns></returns>
-        public InventoryFolder CreateFolderUnderFolderAndSave(string name, InventoryFolder parentFolder, InventoryObjectType objectType)
+        public InventoryFolder CreateFolderUnderFolderAndSave(string folderName, InventoryFolder parentFolder, int preferredType)
         {
-            throw new NotImplementedException();
+            using (var session = OpenSession())
+            {
+                var folder = new InventoryFolder();
+                folder.Owner = parentFolder.Owner.ToString();
+                folder.Name = folderName;
+                folder.ParentFolder = parentFolder;
+                folder.PreferredAssetType = preferredType;
+                session.SaveOrUpdate(folder);
+                return folder;
+            }
         }
 
         /// <summary>
@@ -130,9 +163,19 @@ namespace Aurora.DataManager.Repositories
         /// </summary>
         /// <param name="userId"></param>
         /// <param name="folderIds"></param>
-        public void RemoveFolders(UUID userId, List<UUID> folderIds)
+        public void RemoveFolders(List<UUID> folderIds)
         {
-            throw new NotImplementedException();
+            using (var session = OpenSession())
+            {
+                var rootSubFolders = session.CreateCriteria(typeof(InventoryFolder)).List<InventoryFolder>();
+                foreach (var inventoryFolder in rootSubFolders)
+                {
+                    if(folderIds.Contains(UUID.Parse(inventoryFolder.FolderId)))
+                    {
+                        session.Delete(inventoryFolder);
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -149,9 +192,12 @@ namespace Aurora.DataManager.Repositories
         /// </summary>
         /// <param name="userId"></param>
         /// <returns></returns>
-        public List<InventoryFolder> GetAllFolders(UUID userId)
+        public IList<InventoryFolder> GetAllFolders(UUID userId)
         {
-            throw new NotImplementedException();
+            using (var session = OpenSession())
+            {
+                return session.CreateCriteria(typeof(InventoryFolder)).Add(Expression.Eq("ParentFolder", GetRootFolder(userId))).List<InventoryFolder>();
+            }
         }
 
         #region IInventoryData
@@ -204,5 +250,13 @@ namespace Aurora.DataManager.Repositories
         }
 
         #endregion
+
+        public IList<InventoryFolder> GetChildFolders(InventoryFolder parentFolder)
+        {
+            using (var session = OpenSession())
+            {
+                return session.CreateCriteria(typeof(InventoryFolder)).Add(Expression.Eq("ParentFolder", parentFolder)).List<InventoryFolder>();
+            }
+        }
     }
 }
