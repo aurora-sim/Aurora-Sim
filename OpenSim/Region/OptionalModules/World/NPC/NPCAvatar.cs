@@ -402,6 +402,7 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         public event MuteListEntryRemove OnRemoveMuteListEntry;
         public event GodlikeMessage onGodlikeMessage;
         public event GodUpdateRegionInfoUpdate OnGodUpdateRegionInfoUpdate;
+        public event LinkInventoryItem OnLinkInventoryItem;
 
 #pragma warning restore 67
 

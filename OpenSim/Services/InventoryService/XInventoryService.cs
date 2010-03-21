@@ -510,5 +510,10 @@ namespace OpenSim.Services.InventoryService
 
             return newItem;
         }
+
+        public bool LinkItem(IClientAPI client, UUID oldItemID, UUID parentID, uint Callback)
+        {
+            return false;
+        }
     }
 }

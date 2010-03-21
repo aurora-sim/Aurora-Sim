@@ -685,5 +685,10 @@ namespace OpenSim.Services.InventoryService
                 Folders.Add(folder.ID, folder);
             }
         }
+
+        public bool LinkItem(IClientAPI client, UUID oldItemID, UUID parentID, uint Callback)
+        {
+            return false;
+        }
     }
 }

@@ -891,5 +891,10 @@ namespace OpenSim.Services.Connectors.SimianGrid
                     response["Message"].AsString());
             }
         }
+
+        public bool LinkItem(IClientAPI client, UUID oldItemID, UUID parentID, uint Callback)
+        {
+            return false;
+        }
     }
 }

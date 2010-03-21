@@ -340,5 +340,9 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Inventory
             return UUID.Zero;
         }
 
+        public bool LinkItem(IClientAPI client, UUID oldItemID, UUID parentID, uint Callback)
+        {
+            return false;
+        }
     }
 }

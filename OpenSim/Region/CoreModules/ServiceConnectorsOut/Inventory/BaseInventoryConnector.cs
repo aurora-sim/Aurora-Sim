@@ -222,5 +222,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Inventory
         public abstract List<InventoryItemBase> GetActiveGestures(UUID userId);
 
         public abstract int GetAssetPermissions(UUID userID, UUID assetID);
+
+        public abstract bool LinkItem(IClientAPI client, UUID oldItemID, UUID parentID, uint Callback);
     }
 }

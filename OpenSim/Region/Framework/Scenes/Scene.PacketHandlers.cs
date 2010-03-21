@@ -714,5 +714,9 @@ namespace OpenSim.Region.Framework.Scenes
             PurgeFolderDelegate d = (PurgeFolderDelegate)iar.AsyncState;
             d.EndInvoke(iar);
         }
+        private void LinkInventoryItem(IClientAPI client, UUID oldItemID, UUID parentID, uint Callback)
+        {
+            InventoryService.LinkItem(client, oldItemID, parentID, Callback);
+        }
     }
 }
