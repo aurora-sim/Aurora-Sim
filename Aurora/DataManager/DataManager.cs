@@ -11,6 +11,7 @@ using NHibernate.Tool.hbm2ddl;
 using Nini.Config;
 using Aurora.Framework;
 using OpenMetaverse;
+using Aurora.DataManager.DataModels;
 
 namespace Aurora.DataManager
 {
@@ -49,6 +50,12 @@ namespace Aurora.DataManager
         Dictionary<string, string> GetRegionHidden();
         string AbuseReports();
         ObjectMediaURLInfo[] getObjectMediaInfo(string objectID);
+    }
+    public interface IInventoryData
+    {
+        bool AssignNewInventoryType(string name, int assetType);
+        InventoryObjectType GetInventoryObjectTypeByType(int type);
+        System.Collections.Generic.IList<InventoryObjectType> GetAllInventoryTypes();
     }
     public class ObjectMediaURLInfo
     {

@@ -11,7 +11,6 @@ namespace Aurora.DataManager.SQLite
 {
     public class SQLiteRegion: SQLiteLoader, IRegionData
     {
-
         public Dictionary<string, string> GetRegionHidden()
         {
             SqliteCommand cmd = new SqliteCommand();
