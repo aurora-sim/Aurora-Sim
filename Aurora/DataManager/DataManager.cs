@@ -11,6 +11,7 @@ using NHibernate.Tool.hbm2ddl;
 using Nini.Config;
 using Aurora.Framework;
 using OpenMetaverse;
+using Settings = NHibernate.Cfg.Settings;
 
 namespace Aurora.DataManager
 {
@@ -24,7 +25,14 @@ namespace Aurora.DataManager
     {
         Integer,
         String,
-        Date
+        Date,
+        String50,
+        String512,
+        String45,
+        String1024,
+        String2,
+        String1,
+        String100
     }
 
     #region Interfaces
@@ -77,6 +85,14 @@ namespace Aurora.DataManager
     {
         GridRegionFlags GetRegionFlags(UUID regionID);
     }
+
+    public class ColumnDefinition
+    {
+        public string Name { get; set; }
+        public ColumnTypes Type { get; set; }
+        public bool IsPrimary { get; set; }
+    }
+
     public interface IGenericData
     {
         string Identifier { get; }

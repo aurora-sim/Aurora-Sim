@@ -118,7 +118,7 @@ namespace Aurora.DataManager.Migration
                 }
 
                 //prepare restore point if something goes wrong
-                restorePoint = currentMigrator.PrepareRestorePoint();
+                restorePoint = currentMigrator.PrepareRestorePoint(sessionProvider, genericData);
 
                 //Loop through versions from start to end, migrating then validating
                 Migrator executingMigrator = GetMigratorByVersion(operationDescription.StartVersion);
