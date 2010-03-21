@@ -204,5 +204,10 @@ namespace Aurora.DataManager.Repositories
         }
 
         #endregion
+
+        public IList<InventoryFolder> GetUserFolders(UUID userId)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

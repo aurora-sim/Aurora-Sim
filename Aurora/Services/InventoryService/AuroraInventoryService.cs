@@ -151,6 +151,23 @@ namespace Aurora.Services.InventoryService
             return Folders;
         }
 
+        public void GetUserInventory(UUID userId, InventoryReceiptCallback callback)
+        {
+            List<InventoryFolderImpl> Folders = new List<InventoryFolderImpl>();
+            List<InventoryItemBase> Items = new List<InventoryItemBase>();
+            foreach (InventoryFolder folder in repository.GetUserFolders(userId))
+            {
+                Folders.Add(new InventoryFolderImpl(ConvertInventoryFolderToInventoryFolderBase(folder)));
+            }
+            foreach (InventoryFolderBase folder in Folders)
+            {
+                Items.AddRange(GetFolderItems(userId, folder.ID));
+            }
+
+
+            Util.FireAndForget(delegate { callback(Folders, Items); });
+        }
+
         public InventoryFolderBase GetRootFolder(UUID userId)
         {
             return ConvertInventoryFolderToInventoryFolderBase(repository.GetRootFolder(userId));
@@ -200,12 +217,6 @@ namespace Aurora.Services.InventoryService
             return osActiveGestures;
         }
 
-        #endregion
-
-        public void GetUserInventory(UUID userId, InventoryReceiptCallback callback)
-        {
-        }
-
         public InventoryFolderBase GetFolderForType(UUID userId, AssetType type)
         {
             IList<InventoryFolder> Folders = repository.GetMainFolders(userId);
@@ -222,6 +233,8 @@ namespace Aurora.Services.InventoryService
 
             return ConvertInventoryFolderToInventoryFolderBase(repository.CreateFolderUnderFolderAndSave(type.ToString(), repository.GetRootFolder(userId), IOT));
         }
+
+        #endregion
 
         public InventoryCollection GetFolderContent(UUID userId, UUID folderId)
         {
