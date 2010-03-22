@@ -80,7 +80,7 @@ namespace Aurora.Modules
             
             MainServer.Instance.AddXmlRPCHandler("InterWorldNewWorldConnection", InterWorldNewWorldConnection);
             MainServer.Instance.AddXmlRPCHandler("InterWorldAddNewPresence", InterWorldAddNewPresence);
-            
+            MainServer.Instance.AddXmlRPCHandler("InterWorldRemovePresence", InterWorldRemovePresence);
             
             m_config = source.Configs["AuroraInterWorldConnectors"];
             WorldIdentifier = m_config.GetString("WorldIdentifier", "");
@@ -281,6 +281,12 @@ namespace Aurora.Modules
             }
         }
 
+        public void RemoveIWCUser(string client)
+        {
+            UUID agent = new UUID(client);
+            IWCUsers.Remove(agent);
+        }
+
         public ConnectionIdentifier GetIWCUserHomeConnection(UUID client)
         {
             string homeConnection = "";
@@ -336,7 +342,7 @@ namespace Aurora.Modules
         }
         #endregion
 
-        #region Adding New Presence to another world
+        #region Adding New Presence/Removing New Presence to/from another world
 
         public bool FireNewIWCUser(AgentCircuitData aCircuit, OpenSim.Services.Interfaces.GridRegion reg, OpenSim.Services.Interfaces.GridRegion finalDestination, out string reason)
         {
@@ -352,11 +358,11 @@ namespace Aurora.Modules
             }
             if (connIdent == null)
             {
-                m_log.DebugFormat("[GATEKEEPER SERVICE]: Request to login foreign agent {0} {1} failed: Can not find the region.",aCircuit.firstname, aCircuit.lastname);
+                m_log.DebugFormat("[IWC MODULE]: Request to login foreign agent {0} {1} failed: Can not find the region.", aCircuit.firstname, aCircuit.lastname);
                 return false;
             }
-            
-            m_log.DebugFormat("[GATEKEEPER SERVICE]: Request to login foreign agent {0} {1} @ ({2}) at destination {3}",
+
+            m_log.DebugFormat("[IWC MODULE]: Request to login foreign agent {0} {1} @ ({2}) at destination {3}",
                 aCircuit.firstname, aCircuit.lastname, aCircuit.AgentID, finalDestination.RegionName);
 
             UserAccount account = null;
@@ -368,16 +374,16 @@ namespace Aurora.Modules
                     return false;
             }
 
-            m_log.Debug("[GATEKEEPER SERVICE]: User is ok");
+            m_log.Debug("[IWC MODULE]: User is ok");
 
             bool fired = FireStartPresence(aCircuit, connIdent, out reason);
             if (!fired)
             {
-                m_log.Debug("[GATEKEEPER SERVICE]: Login new presence failed.");
+                m_log.Debug("[IWC MODULE]: Login new presence failed.");
                 return false;
             }
-            
-            m_log.DebugFormat("[GATEKEEPER SERVICE]: Login presence is ok");
+
+            m_log.DebugFormat("[IWC MODULE]: Login presence is ok");
 
 
             //
@@ -434,13 +440,13 @@ namespace Aurora.Modules
             if (!presenceServer.LoginAgent(AgentID, new UUID(SessionID), new UUID(SecureSessionID)))
             {
                 reason = "Unable to login presence";
-                m_log.InfoFormat("[GATEKEEPER SERVICE]: Presence login failed for foreign agent {0}. Refusing service.",
+                m_log.InfoFormat("[IWC MODULE]: Presence login failed for foreign agent {0}. Refusing service.",
                     AgentID);
                 successful = false;
             }
             else
             {
-                m_log.InfoFormat("[GATEKEEPER SERVICE]: Presence login allowed for foreign agent {0}.",
+                m_log.InfoFormat("[IWC MODULE]: Presence login allowed for foreign agent {0}.",
                     AgentID);
                 successful = true;
             }
@@ -453,6 +459,78 @@ namespace Aurora.Modules
             response.Value = responseData;
             return response;
         }
+
+        internal bool FireLogOutIWCUser(AgentCircuitData aCircuit, out string reason)
+        {
+            reason = "";
+            string IPaddress = "";
+            IWCUsers.TryGetValue(aCircuit.AgentID, out IPaddress);
+            ConnectionIdentifier connection = null;
+
+            foreach (ConnectionIdentifier ident in Connections)
+                if (ident.Connection == IPaddress)
+                    connection = ident;
+
+            if (connection == null)
+                return false;
+            
+            Hashtable request = new Hashtable();
+
+            request["SessionID"] = Framework.Utils.Encrypt(aCircuit.SessionID.ToString(), connection.Identifier, connection.Identifier);
+            request["AgentID"] = Framework.Utils.Encrypt(aCircuit.AgentID.ToString(), connection.Identifier, connection.Identifier);
+            
+            m_log.Info("[IWC MODULE]: Connecting to " + connection + ".");
+            
+            Hashtable result = Framework.Utils.GenericXMLRPCRequest(request, "InterWorldRemovePresence", connection.Connection);
+            
+            if ((string)result["success"] == "true")
+            {
+                if (result["reason"] == null)
+                    result["reason"] = "";
+
+                reason = result["reason"].ToString();
+                return Convert.ToBoolean(result["removedpresence"]);
+            }
+            else
+            {
+                reason = "Can not connect to the region.";
+                return false;
+            }
+        }
+
+        private XmlRpcResponse InterWorldRemovePresence(XmlRpcRequest request, IPEndPoint IPEndPoint)
+        {
+            if (!a_Enabled)
+                return new XmlRpcResponse();
+            XmlRpcResponse response = new XmlRpcResponse();
+            Hashtable requestData = (Hashtable)request.Params[0];
+            Hashtable responseData = new Hashtable();
+            string AgentID = Framework.Utils.Decrypt((string)requestData["AgentID"], WorldIdentifier, WorldIdentifier);
+            string SessionID = Framework.Utils.Decrypt((string)requestData["SessionID"], WorldIdentifier, WorldIdentifier);
+            string reason = string.Empty;
+            bool successful = false;
+
+            #region Add New Presence
+            if (!presenceServer.LogoutAgent(new UUID(SessionID),new Vector3(),new Vector3()))
+            {
+                reason = "Unable to login presence";
+                m_log.Info("[IWC MODULE]: Presence logout failed for foreign agent.");
+                successful = false;
+            }
+            else
+            {
+                successful = true;
+            }
+            #endregion
+            //Deal with removing the agent.
+            RemoveIWCUser(AgentID);
+
+            responseData["reason"] = reason;
+            responseData["removedpresence"] = successful;
+            response.Value = responseData;
+            return response;
+        }
+
         #endregion
 
         #region Generic Data Transfers between worlds

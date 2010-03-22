@@ -84,5 +84,63 @@ namespace Aurora.Framework
 
             return modules.ToArray();
         }
+
+
+        public static List<string> FindModules(string moduleDir, string identifier, string blockedDll)
+        {
+            DirectoryInfo dir = new DirectoryInfo(moduleDir);
+            List<string> modules = new List<string>();
+
+            foreach (FileInfo fileInfo in dir.GetFiles("*.dll"))
+            {
+                if (fileInfo.Name != blockedDll)
+                    modules.AddRange(FindModulesByDLL(fileInfo, identifier));
+                else
+                    continue;
+            }
+            return modules;
+        }
+        private static string[] FindModulesByDLL(FileInfo fileInfo, string identifier)
+        {
+            List<string> modules = new List<string>();
+
+            Assembly pluginAssembly;
+            if (!LoadedAssemblys.TryGetValue(fileInfo.FullName, out pluginAssembly))
+            {
+                try
+                {
+                    pluginAssembly = Assembly.LoadFrom(fileInfo.FullName);
+                    LoadedAssemblys.Add(fileInfo.FullName, pluginAssembly);
+                }
+                catch (BadImageFormatException)
+                {
+                }
+            }
+
+            if (pluginAssembly != null)
+            {
+                try
+                {
+                    foreach (Type pluginType in pluginAssembly.GetTypes())
+                    {
+                        if (pluginType.IsPublic)
+                        {
+                            if (!pluginType.IsAbstract)
+                            {
+                                if (pluginType.GetInterface(identifier) != null)
+                                {
+                                    modules.Add(fileInfo.Name+":"+pluginType.Name);
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                }
+            }
+
+            return modules.ToArray();
+        }
     }
 }
