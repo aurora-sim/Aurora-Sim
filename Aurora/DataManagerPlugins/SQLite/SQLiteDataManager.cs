@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using Mono.Data.SqliteClient;
 
@@ -234,16 +235,34 @@ namespace Aurora.DataManager.SQLite
             }
 
             string columnDefinition = string.Empty;
+            var primaryColumns = (from cd in columns where cd.IsPrimary == true select cd);
+            bool multiplePrimary = primaryColumns.Count() > 1;
+
             foreach (ColumnDefinition column in columns)
             {
                 if (columnDefinition != string.Empty)
                 {
                     columnDefinition += ", ";
                 }
-                columnDefinition += column.Name + " " + GetColumnTypeStringSymbol(column.Type);
+                columnDefinition += column.Name + " " + GetColumnTypeStringSymbol(column.Type) + ((column.IsPrimary && !multiplePrimary) ? " PRIMARY KEY" : string.Empty);
             }
 
-            string query = string.Format("create table " + table + " ( {0} ) ", columnDefinition);
+            string multiplePrimaryString = string.Empty;
+            if( multiplePrimary )
+            {
+                string listOfPrimaryNamesString = string.Empty;
+                foreach (ColumnDefinition column in primaryColumns)
+                {
+                    if (listOfPrimaryNamesString != string.Empty)
+                    {
+                        listOfPrimaryNamesString += ", ";
+                    }
+                    listOfPrimaryNamesString += column.Name;
+                }
+                multiplePrimaryString = string.Format(", PRIMARY KEY ({0}) ", listOfPrimaryNamesString);
+            }
+
+            string query = string.Format("create table " + table + " ( {0} {1}) ", columnDefinition, multiplePrimaryString);
 
             var cmd = new SqliteCommand();
             cmd.CommandText = query;

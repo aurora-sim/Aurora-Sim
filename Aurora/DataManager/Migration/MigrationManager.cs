@@ -117,11 +117,19 @@ namespace Aurora.DataManager.Migration
                     throw new MigrationOperationException(string.Format("Current version {0} did not validate. Stopping here so we don't cause any trouble. No changes were made.", currentMigrator.Version));
                 }
 
-                //prepare restore point if something goes wrong
-                restorePoint = currentMigrator.PrepareRestorePoint(sessionProvider, genericData);
-
+                bool restoreTaken = false;
                 //Loop through versions from start to end, migrating then validating
                 Migrator executingMigrator = GetMigratorByVersion(operationDescription.StartVersion);
+
+                //only restore if we are going to do something
+                if (executingMigrator != null)
+                {
+                    //prepare restore point if something goes wrong
+                    restorePoint = currentMigrator.PrepareRestorePoint(sessionProvider, genericData);
+                    restoreTaken = true;
+                }
+
+
                 while (executingMigrator != null)
                 {
                     executingMigrator.Migrate(sessionProvider, genericData);
@@ -143,7 +151,10 @@ namespace Aurora.DataManager.Migration
                     executingMigrator = GetMigratorAfterVersion(executingMigrator.Version);
                 }
 
-                currentMigrator.ClearRestorePoint(genericData);
+                if (restoreTaken )
+                {
+                    currentMigrator.ClearRestorePoint(genericData);    
+                }
             }
         }
 
