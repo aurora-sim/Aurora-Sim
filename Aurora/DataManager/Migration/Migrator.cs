@@ -89,7 +89,7 @@ namespace Aurora.DataManager.Migration
         {
             foreach (var s in schema)
             {
-                EnsureTableExists(genericData, s.X1, s.X2);
+                genericData.EnsureTableExists(s.X1, s.X2);
             }
         }
 
@@ -97,7 +97,7 @@ namespace Aurora.DataManager.Migration
         {
             foreach (var s in schema)
             {
-                if (!VerifyTableExists(genericData, s.X1, s.X2))
+                if (!genericData.VerifyTableExists(s.X1, s.X2))
                 {
                     return false;
                 }
@@ -123,7 +123,7 @@ namespace Aurora.DataManager.Migration
 
         private void CopyTableToTempVersion(IGenericData genericData, string tablename, ColumnDefinition[] columnDefinitions)
         {
-            CopyTableToTable(genericData, tablename, GetTempTableNameFromTableName(tablename), columnDefinitions);
+            genericData.CopyTableToTable(tablename, GetTempTableNameFromTableName(tablename), columnDefinitions);
         }
 
         private string GetTempTableNameFromTableName(string tablename)
@@ -133,21 +133,7 @@ namespace Aurora.DataManager.Migration
 
         private void RestoreTempTableToReal(IGenericData genericData, string tablename, ColumnDefinition[] columnDefinitions)
         {
-            CopyTableToTable(genericData, GetTempTableNameFromTableName(GetTempTableNameFromTableName(tablename)), tablename, columnDefinitions);
-        }
-
-
-        private void CopyTableToTable(IGenericData genericData, string sourceTableName, string destinationTableName, ColumnDefinition[] columnDefinitions)
-        {
-        }
-
-        private bool VerifyTableExists(IGenericData genericData, string tablename, ColumnDefinition[] columnDefinitions)
-        {
-            return false;
-        }
-
-        protected void EnsureTableExists(IGenericData genericData, string tableName, ColumnDefinition[] columnDefinitions)
-        {
+            genericData.CopyTableToTable(GetTempTableNameFromTableName(GetTempTableNameFromTableName(tablename)), tablename, columnDefinitions);
         }
     }
 }

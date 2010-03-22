@@ -10,13 +10,13 @@ using Aurora.DataManager;
 
 namespace Aurora.DataManager.MySQL
 {
-    public class MySQLDataLoader : IGenericData
+    public class MySQLDataLoader : DataManagerBase
     {
         MySqlConnection MySQLConn = null;
         readonly Mutex m_lock = new Mutex(false);
         string connectionString = "";
 
-        public string Identifier
+        public override string Identifier
         {
             get { return "MySQLData"; }
         }
@@ -89,7 +89,7 @@ namespace Aurora.DataManager.MySQL
             }
         }
 
-        public void ConnectToDatabase(string connectionstring)
+        public override void ConnectToDatabase(string connectionstring)
         {
             connectionString = connectionstring;
             GetLockedConnection();
@@ -210,16 +210,6 @@ namespace Aurora.DataManager.MySQL
             CreateTable(query);
         }
 
-        public bool TableExists(string table)
-        {
-            throw new NotImplementedException();
-        }
-
-        void IGenericData.CreateTable(string table, List<Rec<string,ColumnTypes>> columns)
-        {
-            throw new NotImplementedException();
-        }
-
         private bool CreateTable(string sqlstatement)
         {
             MySqlConnection dbcon = GetLockedConnection();
@@ -238,7 +228,7 @@ namespace Aurora.DataManager.MySQL
             }
         }
 
-        public List<string> Query(string keyRow, string keyValue, string table, string wantedValue)
+        public override List<string> Query(string keyRow, string keyValue, string table, string wantedValue)
         {
             MySqlConnection dbcon = GetLockedConnection();
             IDbCommand result;
@@ -331,7 +321,7 @@ namespace Aurora.DataManager.MySQL
             }
         }
 
-        public void Update(string table, string[] setValues, string[] setRows, string[] keyRows, string[] keyValues)
+        public override void Update(string table, string[] setValues, string[] setRows, string[] keyRows, string[] keyValues)
         {
             MySqlConnection dbcon = GetLockedConnection();
             IDbCommand result;
@@ -363,7 +353,22 @@ namespace Aurora.DataManager.MySQL
             }
         }
 
-        public void Insert(string table, string[] values)
+        public override void CloseDatabase()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override bool TableExists(string table)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void CreateTable(string table, ColumnDefinition[] columns)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Insert(string table, string[] values)
         {
             MySqlConnection dbcon = GetLockedConnection();
             IDbCommand result;
@@ -384,7 +389,7 @@ namespace Aurora.DataManager.MySQL
                 }
             }
         }
-        public void Insert(string table, string[] values, string updateKey, string updateValue)
+        public override void Insert(string table, string[] values, string updateKey, string updateValue)
         {
             MySqlConnection dbcon = GetLockedConnection();
             IDbCommand result;
@@ -405,7 +410,7 @@ namespace Aurora.DataManager.MySQL
                 }
             }
         }
-        public void Delete(string table, string[] keys, string[] values)
+        public override void Delete(string table, string[] keys, string[] values)
         {
             MySqlConnection dbcon = GetLockedConnection();
             IDbCommand result;
@@ -426,17 +431,37 @@ namespace Aurora.DataManager.MySQL
             }
         }
 
-        public void CloseDatabase()
-        {
-            //TODO: Add Closing
-        }
-
         public Version GetAuroraVersion()
         {
             throw new NotImplementedException();
         }
 
         public void WriteAuroraVersion(Version version)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void CopyTableToTable(string sourceTableName, string destinationTableName, ColumnDefinition[] columnDefinitions)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool VerifyTableExists(string tableName, ColumnDefinition[] columnDefinitions)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void EnsureTableExists(string tableName, ColumnDefinition[] columnDefinitions)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override void CopyAllDataBetweenMatchingTables(string sourceTableName, string destinationTableName, ColumnDefinition[] columnDefinitions)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override List<ColumnDefinition> ExtractColumnsFromTable(string tableName)
         {
             throw new NotImplementedException();
         }

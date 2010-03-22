@@ -114,6 +114,11 @@ namespace Aurora.Modules.DataPlugins
             throw new NotImplementedException();
         }
 
+        public void CreateTable(string table, ColumnDefinition[] columns)
+        {
+            throw new NotImplementedException();
+        }
+
         public void CreateTable(string table, List<Rec<string, ColumnTypes>> columns)
         {
             throw new NotImplementedException();
@@ -125,6 +130,21 @@ namespace Aurora.Modules.DataPlugins
         }
 
         public void WriteAuroraVersion(Version version)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void CopyTableToTable(string sourceTableName, string destinationTableName, ColumnDefinition[] columnDefinitions)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool VerifyTableExists(string tableName, ColumnDefinition[] columnDefinitions)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void EnsureTableExists(string tableName, ColumnDefinition[] columnDefinitions)
         {
             throw new NotImplementedException();
         }

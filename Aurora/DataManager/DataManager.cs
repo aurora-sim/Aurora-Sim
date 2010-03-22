@@ -117,9 +117,12 @@ namespace Aurora.DataManager
         void Update(string table, string[] setValues, string[] setRows, string[] keyRows, string[] keyValues);
         void CloseDatabase();
         bool TableExists(string table);
-        void CreateTable(string table,List<Rec<string, ColumnTypes>> columns);
+        void CreateTable(string table, ColumnDefinition[] columns);
         Version GetAuroraVersion();
         void WriteAuroraVersion(Version version);
+        void CopyTableToTable(string sourceTableName, string destinationTableName, ColumnDefinition[] columnDefinitions);
+        bool VerifyTableExists(string tableName, ColumnDefinition[] columnDefinitions);
+        void EnsureTableExists(string tableName, ColumnDefinition[] columnDefinitions);
     }
     #endregion
     public static class DataManager
