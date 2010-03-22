@@ -1,6 +1,6 @@
 using System;
 
-namespace Aurora.DataManager.DataModels
+namespace Aurora.Framework
 {
     public class InventoryObjectType
     {

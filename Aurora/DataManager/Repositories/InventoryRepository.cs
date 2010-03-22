@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using Aurora.DataManager.DataModels;
 using NHibernate;
 using NHibernate.Criterion;
 using OpenMetaverse;
-using InventoryFolder = Aurora.DataManager.DataModels.InventoryFolder;
+using Aurora.Framework;
+using InventoryFolder = Aurora.Framework.InventoryFolder;
 
 namespace Aurora.DataManager.Repositories
 {
@@ -13,7 +13,7 @@ namespace Aurora.DataManager.Repositories
     {
         public InventoryRepository(DataSessionProvider sessionProvider) : base(sessionProvider) { }
         public IList<InventoryObjectType> AllInventoryObjectTypes = new List<InventoryObjectType>();
-        
+
         public IList<InventoryItem> GetActiveInventoryItemsByType(InventoryObjectType gestureType)
         {
             return new List<InventoryItem>();
@@ -83,7 +83,7 @@ namespace Aurora.DataManager.Repositories
         {
             using (var session = OpenSession())
             {
-                return session.CreateCriteria(typeof(InventoryFolder)).Add(Expression.Eq("ParentFolder",GetRootFolder(user))).List<InventoryFolder>();
+                return session.CreateCriteria(typeof(InventoryFolder)).Add(Expression.Eq("ParentFolder", GetRootFolder(user))).List<InventoryFolder>();
             }
         }
 
@@ -97,7 +97,7 @@ namespace Aurora.DataManager.Repositories
         {
             using (var session = OpenSession())
             {
-                var rootSubFolders = session.CreateCriteria(typeof (InventoryFolder)).Add(Expression.Eq("ParentFolder", GetRootFolder(user))).Add(Expression.Eq("Name", name)).List<InventoryFolder>();
+                var rootSubFolders = session.CreateCriteria(typeof(InventoryFolder)).Add(Expression.Eq("ParentFolder", GetRootFolder(user))).Add(Expression.Eq("Name", name)).List<InventoryFolder>();
                 if (rootSubFolders.Count > 0)
                 {
                     return rootSubFolders[0];
@@ -170,7 +170,7 @@ namespace Aurora.DataManager.Repositories
                 var rootSubFolders = session.CreateCriteria(typeof(InventoryFolder)).List<InventoryFolder>();
                 foreach (var inventoryFolder in rootSubFolders)
                 {
-                    if(folderIds.Contains(UUID.Parse(inventoryFolder.FolderId)))
+                    if (folderIds.Contains(UUID.Parse(inventoryFolder.FolderId)))
                     {
                         session.Delete(inventoryFolder);
                     }
@@ -215,7 +215,7 @@ namespace Aurora.DataManager.Repositories
             CreateInventoryType(name, assetType);
             return true;
         }
-        
+
         public InventoryObjectType CreateInventoryType(string name, int assetType)
         {
             InventoryObjectType type = new InventoryObjectType();
@@ -260,6 +260,83 @@ namespace Aurora.DataManager.Repositories
         }
 
         public IList<InventoryFolder> GetUserFolders(UUID userId)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Retrives the InventoryFolder by its ID.
+        /// </summary>
+        /// <param name="inventoryFolder"></param>
+        /// <returns></returns>
+        public InventoryFolder GetFolder(InventoryFolder inventoryFolder)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Retrives the InventoryItem by its ID.
+        /// </summary>
+        /// <param name="inventoryItem"></param>
+        /// <returns></returns>
+        public InventoryItem GetItem(InventoryItem inventoryItem)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Updates the parentID, name, and owner
+        /// </summary>
+        /// <param name="folder"></param>
+        public void UpdateFolder(InventoryFolder folder)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Removes all InventoryItems with the specified UUIDs.
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <param name="itemIDs"></param>
+        public void RemoveItems(UUID userId, List<UUID> itemIDs)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Creates a new InventoryItem based off the InventoryItem given.
+        /// </summary>
+        /// <param name="inventoryItem"></param>
+        public void CreateItem(InventoryItem inventoryItem)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void CreateItems(IList<InventoryItem> inventoryItem)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void UpdateItem(InventoryItem inventoryItem)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void UpdateItems(IList<InventoryItem> inventoryItem)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Creates a new item with a new UUID, but has a parentItem
+        /// </summary>
+        /// <param name="item"></param>
+        public void CreateLinkedItem(InventoryItem item)
+        {
+            throw new NotImplementedException();
+        }
+
+        public List<InventoryItem> GetItemsInFolder(InventoryFolder inventoryFolder)
         {
             throw new NotImplementedException();
         }

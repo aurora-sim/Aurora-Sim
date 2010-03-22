@@ -1,6 +1,6 @@
 using OpenMetaverse;
 
-namespace Aurora.DataManager.DataModels
+namespace Aurora.Framework
 {
     public class InventoryObject
     {

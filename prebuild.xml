@@ -2476,8 +2476,7 @@
 
           <ReferencePath>../../bin/</ReferencePath>
                     <Reference name="System"/>
-		    <Reference name="System.Xml"/>
-		    <Reference name="C5.dll"/>
+          <Reference name="System.Xml"/>
 <Reference name="System.Drawing"/>
 	    <Reference name="Nini.dll"/>
 <Reference name="OpenMetaverseTypes.dll"/>
@@ -2501,6 +2500,8 @@
 <Reference name="OpenSim.Region.Physics.Manager"/>
 <Reference name="OpenSim.Server.Handlers"/>
 <Reference name="OpenSim.Services.PresenceService"/>
+<Reference name="OpenSim.Services.Base"/>
+<Reference name="C5.dll"/>
 
           <Files>
             <Match pattern="*.cs" recurse="true"/>
@@ -2592,8 +2593,7 @@
           <Reference name="System"/>
           <Reference name="System.Xml"/>
 	    <Reference name="Nini.dll"/>
-	    <Reference name="nunit.framework.dll"/>
-	    <Reference name="C5.dll"/>
+<Reference name="nunit.framework.dll"/>
 <Reference name="Aurora.Framework"/>
 <Reference name="OpenSim.Region.Framework"/>
 <Reference name="OpenMetaverseTypes.dll"/>
@@ -2706,8 +2706,6 @@
 <Reference name="XMLRPC.dll"/>
 <Reference name="log4net.dll"/>
 <Reference name="OpenMetaverse.dll"/>
-<Reference name="System.Core"/>
-<Reference name="System.Linq"/>
 <Reference name="OpenMetaverse.StructuredData.dll"/>
       <Reference name="OpenMetaverseTypes.dll"/>
 <Reference name="Mono.Addins.dll"/>
@@ -2765,8 +2763,7 @@
           <ReferencePath>../../bin/</ReferencePath>
           <Reference name="System"/>
           <Reference name="System.Xml"/>
-	  <Reference name="Nini.dll"/>
-	  <Reference name="C5.dll"/>
+	    <Reference name="Nini.dll"/>
 <Reference name="Aurora.Framework"/>
 <Reference name="Aurora.DataManager"/>
 <Reference name="OpenSim.Region.Framework"/>
@@ -2840,3 +2837,4 @@
 
   </Solution>
 </Prebuild>
+
