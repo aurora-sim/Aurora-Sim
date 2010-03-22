@@ -231,10 +231,9 @@ namespace OpenSim
             // 
             // ConsoleText
             // 
-            this.tableLayoutPanel1.SetColumnSpan(ConsoleText,3);
-            this.ConsoleText.Enabled = false;
-            this.ConsoleText.BackColor = Color.White;
-            this.ConsoleText.BorderStyle = BorderStyle.FixedSingle;
+            this.ConsoleText.BackColor = System.Drawing.Color.White;
+            this.ConsoleText.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.tableLayoutPanel1.SetColumnSpan(this.ConsoleText, 3);
             this.ConsoleText.Location = new System.Drawing.Point(3, 27);
             this.ConsoleText.Name = "ConsoleText";
             this.ConsoleText.ReadOnly = true;
@@ -281,10 +280,15 @@ namespace OpenSim
                 BeginInvoke(new StringParameterDelegate(AddConsoleText), new object[] { text, level });
                 return;
             }
-
-            ConsoleText.Text += text + "\n";
-            ConsoleText.SelectionStart = ConsoleText.Text.Length;
-            ConsoleText.ScrollToCaret();
+            try
+            {
+                ConsoleText.Text += text + "\n";
+                ConsoleText.SelectionStart = ConsoleText.Text.Length;
+                ConsoleText.ScrollToCaret();
+            }
+            catch (Exception ex)
+            {
+            }
         }
 
         #endregion

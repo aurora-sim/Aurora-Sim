@@ -58,20 +58,19 @@ namespace Aurora.Modules
         /// </summary>
         public Dictionary<OpenSim.Services.Interfaces.GridRegion, string> IWCConnectedRegions = new Dictionary<OpenSim.Services.Interfaces.GridRegion, string>();
         public List<UUID> OurRegions = new List<UUID>();
-        IPresenceService presenceServer;
+        
+        private IPresenceService presenceServer;
 
         /// <summary>
         /// All Connections
         /// </summary>
         public List<ConnectionIdentifier> Connections = new List<ConnectionIdentifier>();
-        IGenericData GD = null;
-        IProfileData PD = null;
+        
+        private IGenericData GD = null;
+        private IProfileData PD = null;
 
         #region IRegionModule 
-        public string Name
-        {
-            get { return "InterWorldComms"; }
-        }
+        public string Name{ get { return "InterWorldComms"; } }
 
         public void Initialise(Scene scene, IConfigSource source)
         {
@@ -94,10 +93,7 @@ namespace Aurora.Modules
             presenceServer = ServerUtils.LoadPlugin<IPresenceService>(presenceService, args);
         }
 
-        public bool IsSharedModule
-        {
-            get { return true; }
-        }
+        public bool IsSharedModule{ get { return true; } }
 
         public void Close() { }
 
@@ -270,10 +266,12 @@ namespace Aurora.Modules
         #region Finding Users
 
         Dictionary<UUID, string> IWCUsers = new Dictionary<UUID, string>();
+        List<UUID> LocalUsersOnIWC = new List<UUID>();
         public void AddIWCUser(string client, string homeConnection, string first, string last)
         {
             UUID agent = new UUID(client);
-            IWCUsers.Add(agent, homeConnection);
+            if(!IWCUsers.ContainsKey(agent))
+                IWCUsers.Add(agent, homeConnection);
             AuroraProfileData profile = PD.GetProfileInfo(agent);
             if (profile == null)
             {
@@ -287,6 +285,26 @@ namespace Aurora.Modules
             IWCUsers.Remove(agent);
         }
 
+        public bool IsIWCUser(UUID agentID)
+        {
+            return IWCUsers.ContainsKey(agentID);
+        }
+
+        public void AddLocalUser(UUID AgentID)
+        {
+            LocalUsersOnIWC.Add(AgentID);
+        }
+
+        public void RemoveLocalUser(UUID AgentID)
+        {
+            LocalUsersOnIWC.Remove(AgentID);
+        }
+
+        public bool IsLocalUserUsingIWC(UUID AgentID)
+        {
+            return LocalUsersOnIWC.Contains(AgentID);
+        }
+
         public ConnectionIdentifier GetIWCUserHomeConnection(UUID client)
         {
             string homeConnection = "";
@@ -295,6 +313,18 @@ namespace Aurora.Modules
             {
                 if (ident.Connection == homeConnection)
                     return ident;
+            }
+            return null;
+        }
+
+        public ConnectionIdentifier GetIWCConnectionByRegion(OpenSim.Services.Interfaces.GridRegion region)
+        {
+            string connection = "";
+            IWCConnectedRegions.TryGetValue(region, out connection);
+            foreach (ConnectionIdentifier con in Connections)
+            {
+                if (connection == con.Connection)
+                    return con;
             }
             return null;
         }
@@ -346,50 +376,60 @@ namespace Aurora.Modules
 
         public bool FireNewIWCUser(AgentCircuitData aCircuit, OpenSim.Services.Interfaces.GridRegion reg, OpenSim.Services.Interfaces.GridRegion finalDestination, out string reason)
         {
-            string connection = string.Empty;
-            reason = string.Empty;
-            
-            IWCConnectedRegions.TryGetValue(finalDestination, out connection);
-            ConnectionIdentifier connIdent = null;
-            foreach (ConnectionIdentifier con in Connections)
+            try
             {
-                if (connection == con.Connection)
-                    connIdent = con;
-            }
-            if (connIdent == null)
-            {
-                m_log.DebugFormat("[IWC MODULE]: Request to login foreign agent {0} {1} failed: Can not find the region.", aCircuit.firstname, aCircuit.lastname);
-                return false;
-            }
+                reason = string.Empty;
 
-            m_log.DebugFormat("[IWC MODULE]: Request to login foreign agent {0} {1} @ ({2}) at destination {3}",
-                aCircuit.firstname, aCircuit.lastname, aCircuit.AgentID, finalDestination.RegionName);
-
-            UserAccount account = null;
-            if (m_Scene.UserAccountService != null)
-            {
-                // Check to see if we have a local user with that UUID
-                account = m_Scene.UserAccountService.GetUserAccount(UUID.Zero, aCircuit.AgentID);
-                if (account == null)
+                ConnectionIdentifier connIdent = GetIWCConnectionByRegion(finalDestination);
+                if (connIdent == null)
+                {
+                    m_log.DebugFormat("[IWC MODULE]: Request to login foreign agent {0} {1} failed: Can not find the region.", aCircuit.firstname, aCircuit.lastname);
                     return false;
+                }
+
+                m_log.DebugFormat("[IWC MODULE]: Request to login foreign agent {0} {1} @ ({2}) at destination {3}",
+                    aCircuit.firstname, aCircuit.lastname, aCircuit.AgentID, finalDestination.RegionName);
+
+                UserAccount account = null;
+                if (m_Scene.UserAccountService != null)
+                {
+                    // Check to see if we have a local user with that UUID
+                    account = m_Scene.UserAccountService.GetUserAccount(UUID.Zero, aCircuit.AgentID);
+                    if (account == null)
+                    {
+                        if (!IsIWCUser(aCircuit.AgentID))
+                        {
+                            m_log.Debug("[IWC MODULE]: User was not found. Refusing.");
+                            return false;
+                        }
+                    }
+                }
+
+                m_log.Debug("[IWC MODULE]: User is ok");
+
+                bool fired = FireStartPresence(aCircuit, connIdent, out reason);
+                if (!fired)
+                {
+                    m_log.Debug("[IWC MODULE]: Login new presence failed.");
+                    return false;
+                }
+
+                m_log.DebugFormat("[IWC MODULE]: Login presence is ok");
+
+                if (!IsLocalUserUsingIWC(aCircuit.AgentID))
+                    AddLocalUser(aCircuit.AgentID);
+
+                //
+                // Finally launch the agent at the destination
+                //
+                return m_Scene.SimulationService.CreateAgent(finalDestination, aCircuit, (uint)Constants.TeleportFlags.ViaLogin, out reason);
             }
-
-            m_log.Debug("[IWC MODULE]: User is ok");
-
-            bool fired = FireStartPresence(aCircuit, connIdent, out reason);
-            if (!fired)
+            catch (Exception ex)
             {
-                m_log.Debug("[IWC MODULE]: Login new presence failed.");
+                m_log.Error("[IWC Module]: Error on Adding New Presence to foreign world: " + ex);
+                reason = "Error on Adding New Presence to foreign world: " + ex;
                 return false;
             }
-
-            m_log.DebugFormat("[IWC MODULE]: Login presence is ok");
-
-
-            //
-            // Finally launch the agent at the destination
-            //
-            return m_Scene.SimulationService.CreateAgent(finalDestination, aCircuit, (uint)Constants.TeleportFlags.ViaLogin, out reason);
         }
 
         private bool FireStartPresence(AgentCircuitData aCircuit, ConnectionIdentifier connection, out string reason)
@@ -463,14 +503,8 @@ namespace Aurora.Modules
         internal bool FireLogOutIWCUser(AgentCircuitData aCircuit, out string reason)
         {
             reason = "";
-            string IPaddress = "";
-            IWCUsers.TryGetValue(aCircuit.AgentID, out IPaddress);
-            ConnectionIdentifier connection = null;
-
-            foreach (ConnectionIdentifier ident in Connections)
-                if (ident.Connection == IPaddress)
-                    connection = ident;
-
+            ConnectionIdentifier connection = GetIWCUserHomeConnection(aCircuit.AgentID);
+            
             if (connection == null)
                 return false;
             

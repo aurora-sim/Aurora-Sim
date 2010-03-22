@@ -158,7 +158,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 if (success)
                 {
                     // Log them out of this grid
-                    m_aScene.PresenceService.LogoutAgent(agentCircuit.SessionID, sp.AbsolutePosition, sp.Lookat);
+                    //m_aScene.PresenceService.LogoutAgent(agentCircuit.SessionID, sp.AbsolutePosition, sp.Lookat);
                     
                 }
                 try
@@ -213,34 +213,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 aCircuit.firstname, aCircuit.lastname, home.RegionName, home.ExternalHostName, home.HttpPort, home.RegionName);
 
             DoTeleport(sp, home, home, position, lookAt, (uint)(Constants.TeleportFlags.SetLastToTarget | Constants.TeleportFlags.ViaHome), eq);
-        }
-        #endregion
-
-        #region IUserAgentVerificationModule
-
-        public bool VerifyClient(AgentCircuitData aCircuit, string token)
-        {
-            /*if (aCircuit.ServiceURLs.ContainsKey("HomeURI"))
-            {
-                string url = aCircuit.ServiceURLs["HomeURI"].ToString();
-                IUserAgentService security = new UserAgentServiceConnector(url);
-                return security.VerifyClient(aCircuit.SessionID, token);
-            }*/
-
-            return true;
-        }
-
-        void OnConnectionClosed(IClientAPI obj)
-        {
-            if (obj.IsLoggingOut)
-            {
-                AgentCircuitData aCircuit = ((Scene)(obj.Scene)).AuthenticateHandler.GetAgentCircuitData(obj.CircuitCode);
-                string reason = "";
-                m_log.Info("[IWC Module]: Logging out user " + aCircuit.firstname + " " + aCircuit.lastname + ".");
-                bool Sent = IWC.FireLogOutIWCUser(aCircuit, out reason);
-                if (!Sent)
-                    m_log.Error("[IWC Module]: Was not able to remove presence from foreign world, error: " + reason);
-            }
         }
 
         public override void Teleport(ScenePresence sp, ulong regionHandle, Vector3 position, Vector3 lookAt, uint teleportFlags)
@@ -317,9 +289,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                         // This is it
                         //
                         DoTeleport(sp, reg, finalDestination, position, lookAt, teleportFlags, eq);
-                        //
-                        //
-                        //
+
                         return;
                     }
                     reg = IWC.TryGetRegion((int)x, (int)y);
@@ -339,9 +309,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                         // This is it
                         //
                         DoTeleport(sp, reg, finalDestination, position, lookAt, teleportFlags, eq);
-                        //
-                        //
-                        //
+
                     }
                     else
                     {
@@ -370,6 +338,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 sp.ControllingClient.SendTeleportFailed("Internal error");
             }
         }
+        
         public override void DoTeleport(ScenePresence sp, GridRegion reg, GridRegion finalDestination, Vector3 position, Vector3 lookAt, uint teleportFlags, IEventQueue eq)
         {
             if (reg == null || finalDestination == null)
@@ -597,6 +566,39 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             }
         }
 
+        #endregion
+
+        #region IUserAgentVerificationModule
+
+        public bool VerifyClient(AgentCircuitData aCircuit, string token)
+        {
+            /*if (aCircuit.ServiceURLs.ContainsKey("HomeURI"))
+            {
+                string url = aCircuit.ServiceURLs["HomeURI"].ToString();
+                IUserAgentService security = new UserAgentServiceConnector(url);
+                return security.VerifyClient(aCircuit.SessionID, token);
+            }*/
+
+            return true;
+        }
+
+        void OnConnectionClosed(IClientAPI obj)
+        {
+            if (IWC.IsIWCUser(obj.AgentId) || IWC.IsLocalUserUsingIWC(obj.AgentId))
+            {
+                AgentCircuitData aCircuit = ((Scene)(obj.Scene)).AuthenticateHandler.GetAgentCircuitData(obj.CircuitCode);
+                m_aScene.PresenceService.LogoutAgent(aCircuit.SessionID, new Vector3(), new Vector3());
+            }
+            else if (obj.IsLoggingOut)
+            {
+                AgentCircuitData aCircuit = ((Scene)(obj.Scene)).AuthenticateHandler.GetAgentCircuitData(obj.CircuitCode);
+                string reason = "";
+                m_log.Info("[IWC Module]: Logging out user " + aCircuit.firstname + " " + aCircuit.lastname + ".");
+                bool Sent = IWC.FireLogOutIWCUser(aCircuit, out reason);
+                if (!Sent)
+                    m_log.Error("[IWC Module]: Was not able to remove presence from foreign world, error: " + reason);
+            }
+        }
 
         #endregion
     }
