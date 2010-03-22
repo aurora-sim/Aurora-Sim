@@ -266,13 +266,15 @@ namespace Aurora.Modules
 
         #region Finding Users
 
-        Dictionary<UUID, string> IWCUsers = new Dictionary<UUID, string>();
-        List<UUID> LocalUsersOnIWC = new List<UUID>();
-        public void AddIWCUser(string client, string homeConnection, string first, string last)
+        Dictionary<UUID, string> ForeignAgents = new Dictionary<UUID, string>();
+        
+        List<UUID> LocalAgents = new List<UUID>();
+        
+        public void AddForeignAgent(string client, string homeConnection, string first, string last)
         {
             UUID agent = new UUID(client);
-            if(!IWCUsers.ContainsKey(agent))
-                IWCUsers.Add(agent, homeConnection);
+            if(!ForeignAgents.ContainsKey(agent))
+                ForeignAgents.Add(agent, homeConnection);
             AuroraProfileData profile = PD.GetProfileInfo(agent);
             if (profile == null)
             {
@@ -280,36 +282,36 @@ namespace Aurora.Modules
             }
         }
 
-        public void RemoveIWCUser(string client)
+        public void RemoveForeignAgent(string client)
         {
             UUID agent = new UUID(client);
-            IWCUsers.Remove(agent);
+            ForeignAgents.Remove(agent);
         }
 
-        public bool IsIWCUser(UUID agentID)
+        public bool IsForeignAgent(UUID agentID)
         {
-            return IWCUsers.ContainsKey(agentID);
+            return ForeignAgents.ContainsKey(agentID);
         }
 
-        public void AddLocalUser(UUID AgentID)
+        public void AddLocalAgent(UUID AgentID)
         {
-            LocalUsersOnIWC.Add(AgentID);
+            LocalAgents.Add(AgentID);
         }
 
-        public void RemoveLocalUser(UUID AgentID)
+        public void RemoveLocalAgent(UUID AgentID)
         {
-            LocalUsersOnIWC.Remove(AgentID);
+            LocalAgents.Remove(AgentID);
         }
 
-        public bool IsLocalUserUsingIWC(UUID AgentID)
+        public bool IsLocalAgent(UUID AgentID)
         {
-            return LocalUsersOnIWC.Contains(AgentID);
+            return LocalAgents.Contains(AgentID);
         }
 
-        public ConnectionIdentifier GetIWCUserHomeConnection(UUID client)
+        public ConnectionIdentifier GetForeignAgentsHomeConnection(UUID client)
         {
             string homeConnection = "";
-            IWCUsers.TryGetValue(client, out homeConnection);
+            ForeignAgents.TryGetValue(client, out homeConnection);
             foreach (ConnectionIdentifier ident in Servers.Keys)
             {
                 if (ident.Connection == homeConnection)
@@ -318,7 +320,7 @@ namespace Aurora.Modules
             return null;
         }
 
-        public ConnectionIdentifier GetIWCConnectionByRegion(OpenSim.Services.Interfaces.GridRegion region)
+        public ConnectionIdentifier GetConnectionByRegion(OpenSim.Services.Interfaces.GridRegion region)
         {
             string connection = "";
             IWCConnectedRegions.TryGetValue(region, out connection);
@@ -381,7 +383,7 @@ namespace Aurora.Modules
             {
                 reason = string.Empty;
 
-                ConnectionIdentifier connIdent = GetIWCConnectionByRegion(finalDestination);
+                ConnectionIdentifier connIdent = GetConnectionByRegion(finalDestination);
                 if (connIdent == null)
                 {
                     m_log.DebugFormat("[IWC MODULE]: [FireNewIWCUser] Request to login foreign agent {0} {1} failed: Can not find the region.", aCircuit.firstname, aCircuit.lastname);
@@ -398,7 +400,7 @@ namespace Aurora.Modules
                     account = m_Scene.UserAccountService.GetUserAccount(UUID.Zero, aCircuit.AgentID);
                     if (account == null)
                     {
-                        if (!IsIWCUser(aCircuit.AgentID))
+                        if (!IsForeignAgent(aCircuit.AgentID))
                         {
                             m_log.Debug("[IWC MODULE]: [FireNewIWCUser] User was not found. Refusing.");
                             return false;
@@ -417,8 +419,8 @@ namespace Aurora.Modules
 
                 m_log.DebugFormat("[IWC MODULE]: [FireNewIWCUser] Login presence is ok");
 
-                if (!IsLocalUserUsingIWC(aCircuit.AgentID))
-                    AddLocalUser(aCircuit.AgentID);
+                if (!IsLocalAgent(aCircuit.AgentID))
+                    AddLocalAgent(aCircuit.AgentID);
 
                 return true;
             }
@@ -541,8 +543,8 @@ namespace Aurora.Modules
             }
             #endregion
             //Deal with creating a user for the agent.
-            AddIWCUser(AgentID, HomeConnection, FirstName, LastName);
-
+            AddForeignAgent(AgentID, HomeConnection, FirstName, LastName);
+            m_log.Info("[IWC MODULE]: [InterWorldAddNewPresence] Foreign Agent added.");
             //Launch agent
             m_Scene.SimulationService.CreateAgent(m_Scene.GridService.GetRegionByUUID(UUID.Zero,new UUID(RegionUUID)), aCircuit, (uint)Constants.TeleportFlags.ViaLogin, out reason);
             
@@ -555,7 +557,7 @@ namespace Aurora.Modules
         internal bool FireLogOutIWCUser(AgentCircuitData aCircuit, out string reason)
         {
             reason = "";
-            ConnectionIdentifier connection = GetIWCUserHomeConnection(aCircuit.AgentID);
+            ConnectionIdentifier connection = GetForeignAgentsHomeConnection(aCircuit.AgentID);
             
             if (connection == null)
                 return false;
@@ -609,7 +611,7 @@ namespace Aurora.Modules
             }
             #endregion
             //Deal with removing the agent.
-            RemoveIWCUser(AgentID);
+            RemoveForeignAgent(AgentID);
 
             responseData["reason"] = reason;
             responseData["removedpresence"] = successful;

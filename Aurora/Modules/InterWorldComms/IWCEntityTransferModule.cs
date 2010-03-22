@@ -584,7 +584,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
         void OnConnectionClosed(IClientAPI obj)
         {
-            if (IWC.IsIWCUser(obj.AgentId) || IWC.IsLocalUserUsingIWC(obj.AgentId))
+            if (IWC.IsForeignAgent(obj.AgentId) || IWC.IsLocalAgent(obj.AgentId))
             {
                 AgentCircuitData aCircuit = ((Scene)(obj.Scene)).AuthenticateHandler.GetAgentCircuitData(obj.CircuitCode);
                 m_aScene.PresenceService.LogoutAgent(aCircuit.SessionID, new Vector3(), new Vector3());
