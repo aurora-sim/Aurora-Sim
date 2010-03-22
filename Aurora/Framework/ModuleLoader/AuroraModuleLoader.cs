@@ -1,0 +1,88 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
+using System.Text;
+
+namespace Aurora.Framework
+{
+    public static class AuroraModuleLoader
+    {
+        /// <summary>
+        /// Gets all modules found in the given directory. 
+        /// Identifier is the name of the interface.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="moduleDir"></param>
+        /// <param name="identifier"></param>
+        /// <returns></returns>
+        public static List<T> PickupModules<T>(string moduleDir, string identifier)
+        {
+            DirectoryInfo dir = new DirectoryInfo(moduleDir);
+            List<T> modules = new List<T>();
+
+            foreach (FileInfo fileInfo in dir.GetFiles("*.dll"))
+            {
+                modules.AddRange(LoadRegionModules<T>(fileInfo.FullName, identifier));
+            }
+            return modules;
+        }
+        private static List<T> LoadRegionModules<T>(string dllName, string identifier)
+        {
+            T[] modules = LoadModules<T>(dllName, identifier);
+            List<T> initializedModules = new List<T>();
+
+            if (modules.Length > 0)
+            {
+                foreach (T module in modules)
+                {
+                    initializedModules.Add(module);
+                }
+            }
+            return initializedModules;
+        }
+        private static Dictionary<string, Assembly> LoadedAssemblys = new Dictionary<string, Assembly>();
+        private static T[] LoadModules<T>(string dllName, string identifier)
+        {
+            List<T> modules = new List<T>();
+
+            Assembly pluginAssembly;
+            if (!LoadedAssemblys.TryGetValue(dllName, out pluginAssembly))
+            {
+                try
+                {
+                    pluginAssembly = Assembly.LoadFrom(dllName);
+                    LoadedAssemblys.Add(dllName, pluginAssembly);
+                }
+                catch (BadImageFormatException)
+                {
+                }
+            }
+
+            if (pluginAssembly != null)
+            {
+                try
+                {
+                    foreach (Type pluginType in pluginAssembly.GetTypes())
+                    {
+                        if (pluginType.IsPublic)
+                        {
+                            if (!pluginType.IsAbstract)
+                            {
+                                if (pluginType.GetInterface(identifier) != null)
+                                {
+                                    modules.Add((T)Activator.CreateInstance(pluginType));
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                }
+            }
+
+            return modules.ToArray();
+        }
+    }
+}

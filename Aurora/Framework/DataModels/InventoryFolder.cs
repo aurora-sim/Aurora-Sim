@@ -1,7 +1,7 @@
 using System;
 using FluentNHibernate.Mapping;
 
-namespace Aurora.DataManager.DataModels
+namespace Aurora.Framework
 {
     public class InventoryFolderMap : ClassMap<InventoryFolder>
     {

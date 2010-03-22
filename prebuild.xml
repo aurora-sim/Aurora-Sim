@@ -2452,11 +2452,15 @@
           <ReferencePath>../../bin/</ReferencePath>
           <Reference name="System"/>
           <Reference name="System.Xml"/>
+<Reference name="System.Core"/>
 <Reference name="OpenMetaverseTypes.dll"/>
 <Reference name="OpenMetaverse.dll"/>
 <Reference name="OpenSim.Framework"/>
 <Reference name="OpenSim.Services.Interfaces"/>
 <Reference name="XMLRPC.dll"/>
+<Reference name="FluentNHibernate.dll"/>
+<Reference name="NHibernate.dll"/>
+
 
           <Files>
             <Match pattern="*.cs" recurse="true"/>
@@ -2476,8 +2480,7 @@
 
           <ReferencePath>../../bin/</ReferencePath>
                     <Reference name="System"/>
-		    <Reference name="System.Xml"/>
-		    <Reference name="C5.dll"/>
+          <Reference name="System.Xml"/>
 <Reference name="System.Drawing"/>
 	    <Reference name="Nini.dll"/>
 <Reference name="OpenMetaverseTypes.dll"/>
@@ -2501,6 +2504,8 @@
 <Reference name="OpenSim.Region.Physics.Manager"/>
 <Reference name="OpenSim.Server.Handlers"/>
 <Reference name="OpenSim.Services.PresenceService"/>
+<Reference name="OpenSim.Services.Base"/>
+<Reference name="C5.dll"/>
 
           <Files>
             <Match pattern="*.cs" recurse="true"/>
@@ -2538,6 +2543,7 @@
       <Reference name="System.Core"/>
       <Reference name="System.Linq"/>
       <Reference name="Aurora.DataManager"/>
+      <Reference name="Aurora.Framework"/>
       <Reference name="Nini.dll" />
       <Reference name="log4net.dll"/>
 
@@ -2576,34 +2582,6 @@
           </Files>
         </Project>
 
-<Project frameworkVersion="v3_5" name="Aurora.DataManager.Tests" path="Aurora/DataManagerTests" type="Library">
-          <Configuration name="Debug">
-            <Options>
-              <OutputPath>../../bin/</OutputPath>
-            </Options>
-          </Configuration>
-          <Configuration name="Release">
-            <Options>
-              <OutputPath>../../bin/</OutputPath>
-            </Options>
-          </Configuration>
-
-          <ReferencePath>../../bin/</ReferencePath>
-          <Reference name="System"/>
-          <Reference name="System.Xml"/>
-	    <Reference name="Nini.dll"/>
-	    <Reference name="nunit.framework.dll"/>
-	    <Reference name="C5.dll"/>
-<Reference name="Aurora.Framework"/>
-<Reference name="OpenSim.Region.Framework"/>
-<Reference name="OpenMetaverseTypes.dll"/>
-<Reference name="OpenMetaverse.dll"/>
-<Reference name="OpenSim.Framework"/>
-<Reference name="Aurora.DataManager.SQLite"/>
-          <Files>
-            <Match pattern="*.cs" recurse="true"/>
-          </Files>
-        </Project>
 
 <Project frameworkVersion="v3_5" name="Aurora.DataManager.MySQL" path="Aurora/DataManagerPlugins/MySQL" type="Library">
           <Configuration name="Debug">
@@ -2620,10 +2598,10 @@
           <ReferencePath>../../../bin/</ReferencePath>
           <Reference name="System"/>
           <Reference name="System.Xml"/>
-	  <Reference name="Nini.dll"/>
-	  <Reference name="System.Core"/>
-	  <Reference name="System.Linq"/>
-<Reference name="C5.dll"/>
+	  	    <Reference name="Nini.dll"/>
+	    <Reference name="C5.dll"/>
+	    <Reference name="System.Core"/>
+	    <Reference name="System.Linq"/>
 <Reference name="Aurora.DataManager"/>
 <Reference name="Aurora.Framework"/>
 <Reference name="OpenMetaverseTypes.dll"/>
@@ -2655,7 +2633,8 @@
           <Reference name="System"/>
 <Reference name="System.Data"/>
 <Reference name="System.Drawing"/>
-
+<Reference name="System.Core"/>
+<Reference name="System.Linq"/>
           <Reference name="System.Xml"/>
 <Reference name="Aurora.DataManager"/>
 <Reference name="Aurora.Framework"/>
@@ -2678,8 +2657,6 @@
 <Reference name="XMLRPC.dll"/>
 <Reference name="log4net.dll"/>
 <Reference name="OpenMetaverse.dll"/>
-<Reference name="System.Core"/>
-<Reference name="System.Linq"/>
 <Reference name="OpenMetaverse.StructuredData.dll"/>
       <Reference name="OpenMetaverseTypes.dll"/>
 <Reference name="Mono.Addins.dll"/>
@@ -2721,38 +2698,6 @@
         <Match pattern="*.cs" recurse="true"/>
       </Files>
     </Project>
-
-<Project frameworkVersion="v3_5" name="Aurora.DataManager.Tests" path="Aurora/DataManagerTests" type="Library">
-          <Configuration name="Debug">
-            <Options>
-              <OutputPath>../../bin/</OutputPath>
-            </Options>
-          </Configuration>
-          <Configuration name="Release">
-            <Options>
-              <OutputPath>../../bin/</OutputPath>
-            </Options>
-          </Configuration>
-
-          <ReferencePath>../../bin/</ReferencePath>
-          <Reference name="System"/>
-          <Reference name="System.Xml"/>
-	  <Reference name="Nini.dll"/>
-	  <Reference name="C5.dll"/>
-<Reference name="Aurora.Framework"/>
-<Reference name="Aurora.DataManager"/>
-<Reference name="OpenSim.Region.Framework"/>
-<Reference name="OpenMetaverseTypes.dll"/>
-<Reference name="OpenMetaverse.dll"/>
-<Reference name="nunit.framework"/>
-<Reference name="OpenSim.Framework"/>
-<Reference name="Aurora.DataManager.SQLite"/>
-<Reference name="Aurora.DataManager.MySQL"/>
-          <Files>
-            <Match pattern="*.cs" recurse="true"/>
-          </Files>
-        </Project>
-
 
   <?include file="addon-modules/*/prebuild*.xml" ?>
 
@@ -2811,5 +2756,38 @@
       </Files>
     </Project>
 
+	<Project frameworkVersion="v3_5" name="Aurora.DataManager.Tests" path="Aurora/DataManagerTests" type="Library">
+          <Configuration name="Debug">
+            <Options>
+              <OutputPath>../../bin/</OutputPath>
+            </Options>
+          </Configuration>
+          <Configuration name="Release">
+            <Options>
+              <OutputPath>../../bin/</OutputPath>
+            </Options>
+          </Configuration>
+
+          <ReferencePath>../../bin/</ReferencePath>
+          <Reference name="System"/>
+          <Reference name="System.Xml"/>
+	    <Reference name="Nini.dll"/>
+<Reference name="nunit.framework.dll"/>
+<Reference name="Aurora.Framework"/>
+<Reference name="OpenSim.Region.Framework"/>
+<Reference name="OpenMetaverseTypes.dll"/>
+<Reference name="OpenMetaverse.dll"/>
+<Reference name="OpenSim.Framework"/>
+<Reference name="Aurora.DataManager.SQLite"/>
+<Reference name="Aurora.DataManager.MySQL"/>
+<Reference name="C5.dll"/>
+          <Files>
+            <Match pattern="*.cs" recurse="true"/>
+          </Files>
+        </Project>
+
+
+
   </Solution>
 </Prebuild>
+

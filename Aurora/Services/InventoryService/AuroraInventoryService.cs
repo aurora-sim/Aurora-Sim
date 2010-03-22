@@ -1,19 +1,20 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
-using Aurora.DataManager.DataModels;
 using Aurora.DataManager.Repositories;
 using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Services.Interfaces;
-using InventoryFolder = Aurora.DataManager.DataModels.InventoryFolder;
+using Aurora.Framework;
+using InventoryFolder = Aurora.Framework.InventoryFolder;
 
 namespace Aurora.Services.InventoryService
 {
     /// <summary>
     /// This class will operate as a conversion layer for results from the inventory repository to the opensim types
     /// </summary>
-    public class AuroraInventoryService : IInventoryService
+    public class AuroraInventoryService : IInventoryPluginService, IInventoryService
     {
         private readonly InventoryObjectType animationType;
         private readonly InventoryObjectType bodyPartType;
@@ -47,8 +48,18 @@ namespace Aurora.Services.InventoryService
         private const string FOLDER_TEXTURES_NAME = "Textures";
         private const string FOLDER_TRASH_NAME = "Trash";
 
+        private List<IInventoryPlugin> Plugins = new List<IInventoryPlugin>();
+
         public AuroraInventoryService()
         {
+            #region Get Plugins
+            Plugins = Aurora.Framework.AuroraModuleLoader.PickupModules<IInventoryPlugin>(Environment.CurrentDirectory, "IInventoryPlugin");
+            foreach (IInventoryPlugin plugin in Plugins)
+            {
+                plugin.Startup(this);
+            }
+            #endregion
+
             repository = new InventoryRepository(DataManager.DataManager.DataSessionProvider);
             animationType = repository.CreateInventoryType("ANIMATION", (int)AssetType.Animation);
             bodyPartType = repository.CreateInventoryType("BODY_PART", (int)AssetType.Bodypart);
@@ -79,6 +90,11 @@ namespace Aurora.Services.InventoryService
             {
                 defaultRootFolder = repository.CreateRootFolderAndSave(user, FOLDER_ROOT_NAME);
                 result = true;
+            }
+
+            foreach (IInventoryPlugin plugin in Plugins)
+            {
+                plugin.CreateNewInventory(user, defaultRootFolder);
             }
 
             IList<InventoryFolder> defaultRootFolderSubFolders = repository.GetSubfoldersWithAnyAssetPreferences(defaultRootFolder);
@@ -170,7 +186,10 @@ namespace Aurora.Services.InventoryService
 
         public InventoryFolderBase GetRootFolder(UUID userId)
         {
-            return ConvertInventoryFolderToInventoryFolderBase(repository.GetRootFolder(userId));
+            InventoryFolder folder = repository.GetRootFolder(userId);
+            if (folder == null)
+                return null;
+            return ConvertInventoryFolderToInventoryFolderBase(folder);
         }
 
         public bool AddFolder(InventoryFolderBase folder)
@@ -231,66 +250,112 @@ namespace Aurora.Services.InventoryService
             return ConvertInventoryFolderToInventoryFolderBase(repository.CreateFolderUnderFolderAndSave(type.ToString(), repository.GetRootFolder(userId), (int)type));
         }
 
-        #endregion
-
         public InventoryCollection GetFolderContent(UUID userId, UUID folderId)
         {
-            throw new NotImplementedException();
-        }
+            InventoryCollection collection = new InventoryCollection();
+            List<InventoryFolderBase> Folders = new List<InventoryFolderBase>();
 
-        public List<InventoryItemBase> GetFolderItems(UUID userId, UUID folderId)
-        {
-            return new List<InventoryItemBase>();
+            InventoryFolder newFolder = new InventoryFolder();
+            newFolder.FolderId = folderId.ToString();
+
+            IList<InventoryFolder> folders = repository.GetChildFolders(repository.GetFolder(newFolder));
+            List<InventoryItemBase> Items = new List<InventoryItemBase>();
+
+            foreach (InventoryFolder folder in folders)
+            {
+                Items.AddRange(GetFolderItems(userId, new UUID(folder.FolderId)));
+                Folders.Add(ConvertInventoryFolderToInventoryFolderBase(folder));
+            }
+
+            collection.Folders = Folders;
+            collection.Items = Items;
+            collection.UserID = userId;
+
+            return collection;
         }
 
         public bool UpdateFolder(InventoryFolderBase folder)
         {
-            return AddFolder(folder);
-        }
-
-        public bool AddItem(InventoryItemBase item)
-        {
-            return false;
-        }
-
-        public bool UpdateItem(InventoryItemBase item)
-        {
-            return false;
-        }
-
-        public bool DeleteItems(UUID userId, List<UUID> itemIDs)
-        {
-            return false;
+            InventoryFolder IFFolder = ConvertInventoryFolderBaseToInventoryFolder(folder);
+            repository.UpdateFolder(IFFolder);
+            return true;
         }
 
         public InventoryItemBase GetItem(InventoryItemBase item)
         {
-            return item;
+            return ConvertInventoryItemToInventoryItemBase(repository.GetItem(ConvertInventoryItemBaseToInventoryItem(item)));
         }
 
         public InventoryFolderBase GetFolder(InventoryFolderBase folder)
         {
-            return folder;
+            return ConvertInventoryFolderToInventoryFolderBase(repository.GetFolder(ConvertInventoryFolderBaseToInventoryFolder(folder)));
+        }
+
+        public bool AddItem(InventoryItemBase item)
+        {
+            repository.CreateItem(ConvertInventoryItemBaseToInventoryItem(item));
+            return true;
+        }
+
+        public bool DeleteItems(UUID userId, List<UUID> itemIDs)
+        {
+            repository.RemoveItems(userId, itemIDs);
+            return true;
+        }
+
+        public bool UpdateItem(InventoryItemBase item)
+        {
+            repository.UpdateItem(ConvertInventoryItemBaseToInventoryItem(item));
+            return true;
         }
 
         public bool HasInventoryForUser(UUID userId)
         {
-            return false;
-        }
-
-        public bool MoveItems(UUID ownerId, List<InventoryItemBase> items)
-        {
-            return false;
+            return GetRootFolder(userId) != null;
         }
 
         public bool LinkItem(IClientAPI client, UUID oldItemID, UUID parentID, uint Callback)
         {
-            return false;
+            InventoryItem item = new InventoryItem(oldItemID);
+            item = repository.GetItem(item);
+            repository.CreateLinkedItem(item);
+            return true;
+        }
+
+        public bool MoveItems(UUID ownerId, List<InventoryItemBase> items)
+        {
+            List<InventoryItem> Items = new List<InventoryItem>();
+            foreach (InventoryItemBase item in items)
+                Items.Add(ConvertInventoryItemBaseToInventoryItem(item));
+
+            repository.UpdateItems(Items);
+
+            return true;
         }
 
         #endregion
 
-        private void EnsureFolderForPreferredTypeUnderFolder(string folderName, InventoryObjectType inventoryObjectType, InventoryFolder defaultRootFolder)
+        public List<InventoryItemBase> GetFolderItems(UUID userId, UUID folderId)
+        {
+            List<InventoryItem> items = repository.GetItemsInFolder(ConvertInventoryFolderBaseToInventoryFolder(GetFolder(new InventoryFolderBase(folderId))));
+            List<InventoryItemBase> Items = new List<InventoryItemBase>();
+            foreach (InventoryItem item in items)
+            {
+                Items.Add(ConvertInventoryItemToInventoryItemBase(item));
+            }
+            return Items;
+        }
+
+        #endregion
+
+        #region IInventoryPluginService
+
+        public void AddInventoryItemType(InventoryObjectType type)
+        {
+            repository.AssignNewInventoryType(type.Name, type.Type);
+        }
+
+        public void EnsureFolderForPreferredTypeUnderFolder(string folderName, InventoryObjectType inventoryObjectType, InventoryFolder defaultRootFolder)
         {
             if (!DoesFolderExistForPreferedType(defaultRootFolder, inventoryObjectType))
             {
@@ -298,14 +363,18 @@ namespace Aurora.Services.InventoryService
             }
         }
 
-        private bool DoesFolderExistForPreferedType(InventoryFolder folder, InventoryObjectType inventoryObjectType)
+        public bool DoesFolderExistForPreferedType(InventoryFolder folder, InventoryObjectType inventoryObjectType)
         {
             return (from f in repository.GetChildFolders(folder) where f.PreferredAssetType == inventoryObjectType.Type select f).Count() > 0;
         }
 
-        #region Converting
+        public bool AddInventoryItem(UUID user, InventoryItem item)
+        {
+            repository.CreateItem(item);
+            return true;
+        }
 
-        private InventoryFolderBase ConvertInventoryFolderToInventoryFolderBase(InventoryFolder folder)
+        public InventoryFolderBase ConvertInventoryFolderToInventoryFolderBase(InventoryFolder folder)
         {
             InventoryFolderBase IFfolder = new InventoryFolderBase();
             IFfolder.ID = new UUID(folder.FolderId);
@@ -317,35 +386,81 @@ namespace Aurora.Services.InventoryService
             return IFfolder;
         }
 
-        private InventoryItemBase ConvertInventoryItemToInventoryItemBase(InventoryItem activeGesture)
+        public InventoryItemBase ConvertInventoryItemToInventoryItemBase(InventoryItem item)
         {
             var inventoryItemBase = new InventoryItemBase();
-            inventoryItemBase.AssetID = activeGesture.AssetUUID;
-            inventoryItemBase.AssetType = (int)activeGesture.AssetType;
-            inventoryItemBase.BasePermissions = (uint)activeGesture.Permissions.BaseMask;
-            inventoryItemBase.CreationDate = (int)activeGesture.CreationDate.ToFileTime();
-            inventoryItemBase.CreatorId = activeGesture.CreatorID.ToString();
-            inventoryItemBase.CreatorIdAsUuid = activeGesture.CreatorID;
-            inventoryItemBase.CurrentPermissions = (uint)activeGesture.Permissions.OwnerMask;
-            inventoryItemBase.Description = activeGesture.Description;
-            inventoryItemBase.EveryOnePermissions = (uint)activeGesture.Permissions.EveryoneMask;
-            inventoryItemBase.Flags = activeGesture.Flags;
+            inventoryItemBase.AssetID = item.AssetUUID;
+            inventoryItemBase.AssetType = (int)item.AssetType;
+            inventoryItemBase.BasePermissions = (uint)item.Permissions.BaseMask;
+            inventoryItemBase.CreationDate = DateTimeToInt(item.CreationDate);
+            inventoryItemBase.CreatorId = item.CreatorID.ToString();
+            inventoryItemBase.CreatorIdAsUuid = item.CreatorID;
+            inventoryItemBase.CurrentPermissions = (uint)item.Permissions.OwnerMask;
+            inventoryItemBase.Description = item.Description;
+            inventoryItemBase.EveryOnePermissions = (uint)item.Permissions.EveryoneMask;
+            inventoryItemBase.Flags = item.Flags;
             inventoryItemBase.Folder = new UUID(repository.GetParentFolder(inventoryItemBase).FolderId);
-            inventoryItemBase.GroupID = activeGesture.GroupID;
-            inventoryItemBase.GroupOwned = activeGesture.GroupOwned;
-            inventoryItemBase.GroupPermissions = (uint)activeGesture.Permissions.GroupMask;
-            inventoryItemBase.ID = activeGesture.UUID;
-            inventoryItemBase.InvType = (int)activeGesture.InventoryType;
-            inventoryItemBase.Name = activeGesture.Name;
-            inventoryItemBase.NextPermissions = (uint)activeGesture.Permissions.NextOwnerMask;
-            inventoryItemBase.Owner = activeGesture.OwnerID;
-            inventoryItemBase.SalePrice = activeGesture.SalePrice;
-            inventoryItemBase.SaleType = Convert.ToByte(activeGesture.SaleType);
+            inventoryItemBase.GroupID = item.GroupID;
+            inventoryItemBase.GroupOwned = item.GroupOwned;
+            inventoryItemBase.GroupPermissions = (uint)item.Permissions.GroupMask;
+            inventoryItemBase.ID = item.UUID;
+            inventoryItemBase.InvType = (int)item.InventoryType;
+            inventoryItemBase.Name = item.Name;
+            inventoryItemBase.NextPermissions = (uint)item.Permissions.NextOwnerMask;
+            inventoryItemBase.Owner = item.OwnerID;
+            inventoryItemBase.SalePrice = item.SalePrice;
+            inventoryItemBase.SaleType = Convert.ToByte(item.SaleType);
 
             return inventoryItemBase;
         }
 
-        private InventoryFolder ConvertInventoryFolderBaseToInventoryFolder(InventoryFolderBase folder)
+        private readonly DateTime unixEpoch =
+            DateTime.ParseExact("1970-01-01 00:00:00 +0", "yyyy-MM-dd hh:mm:ss z", DateTimeFormatInfo.InvariantInfo).ToUniversalTime();
+
+        private int DateTimeToInt(DateTime stamp)
+        {
+            TimeSpan t = stamp.ToUniversalTime() - unixEpoch;
+            return (int)t.TotalSeconds;
+        }
+
+        private DateTime IntToDateTime(int stamp)
+        {
+            TimeSpan t = new TimeSpan(stamp);
+            DateTime time = new DateTime(t.Ticks + unixEpoch.Ticks, DateTimeKind.Utc);
+            return time;
+        }
+
+        public InventoryItem ConvertInventoryItemBaseToInventoryItem(InventoryItemBase item)
+        {
+            InventoryItem IIitem = new InventoryItem(item.ID);
+            IIitem.AssetType = (AssetType)item.AssetType;
+            IIitem.AssetUUID = item.AssetID;
+            IIitem.CreationDate = IntToDateTime(item.CreationDate);
+            IIitem.CreatorID = item.CreatorIdAsUuid;
+            IIitem.Description = item.Description;
+            IIitem.Flags = item.Flags;
+            IIitem.GroupID = item.GroupID;
+            IIitem.GroupOwned = item.GroupOwned;
+            IIitem.InventoryType = (InventoryType)item.InvType;
+            IIitem.LastOwnerID = UUID.Zero;
+            IIitem.Name = item.Name;
+            IIitem.OwnerID = item.Owner;
+            IIitem.ParentUUID = UUID.Zero;
+            Permissions permission = new Permissions();
+            permission.BaseMask = (PermissionMask)item.BasePermissions;
+            permission.EveryoneMask = (PermissionMask)item.EveryOnePermissions;
+            permission.GroupMask = (PermissionMask)item.GroupPermissions;
+            permission.NextOwnerMask = (PermissionMask)item.NextPermissions;
+            permission.OwnerMask = (PermissionMask)item.CurrentPermissions;
+            IIitem.Permissions = permission;
+            IIitem.SalePrice = item.SalePrice;
+            IIitem.SaleType = (SaleType)item.SaleType;
+            IIitem.TransactionID = UUID.Zero;
+            IIitem.UUID = item.ID;
+            return IIitem;
+        }
+
+        public InventoryFolder ConvertInventoryFolderBaseToInventoryFolder(InventoryFolderBase folder)
         {
             InventoryFolder IFfolder = new InventoryFolder();
             IFfolder.FolderId = folder.ID.ToString();
