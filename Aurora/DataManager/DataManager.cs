@@ -12,7 +12,6 @@ using Nini.Config;
 using Aurora.Framework;
 using OpenMetaverse;
 using Settings = NHibernate.Cfg.Settings;
-using Aurora.DataManager.DataModels;
 
 namespace Aurora.DataManager
 {

@@ -2452,11 +2452,15 @@
           <ReferencePath>../../bin/</ReferencePath>
           <Reference name="System"/>
           <Reference name="System.Xml"/>
+<Reference name="System.Core"/>
 <Reference name="OpenMetaverseTypes.dll"/>
 <Reference name="OpenMetaverse.dll"/>
 <Reference name="OpenSim.Framework"/>
 <Reference name="OpenSim.Services.Interfaces"/>
 <Reference name="XMLRPC.dll"/>
+<Reference name="FluentNHibernate.dll"/>
+<Reference name="NHibernate.dll"/>
+
 
           <Files>
             <Match pattern="*.cs" recurse="true"/>
@@ -2539,6 +2543,7 @@
       <Reference name="System.Core"/>
       <Reference name="System.Linq"/>
       <Reference name="Aurora.DataManager"/>
+      <Reference name="Aurora.Framework"/>
       <Reference name="Nini.dll" />
       <Reference name="log4net.dll"/>
 
@@ -2683,6 +2688,7 @@
           <Reference name="System"/>
 <Reference name="System.Data"/>
 <Reference name="System.Drawing"/>
+<Reference name="System.Linq"/>
 
           <Reference name="System.Xml"/>
 <Reference name="Aurora.DataManager"/>
