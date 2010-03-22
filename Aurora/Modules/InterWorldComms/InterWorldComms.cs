@@ -483,6 +483,10 @@ namespace Aurora.Modules
                 m_log.InfoFormat("[IWC MODULE]: Presence login failed for foreign agent {0}. Refusing service.",
                     AgentID);
                 successful = false;
+                responseData["reason"] = reason;
+                responseData["addedpresence"] = successful;
+                response.Value = responseData;
+                return response;
             }
             else
             {

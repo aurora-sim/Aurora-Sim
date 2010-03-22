@@ -282,9 +282,12 @@ namespace OpenSim
             }
             try
             {
-                ConsoleText.Text += text + "\n";
-                ConsoleText.SelectionStart = ConsoleText.Text.Length;
-                ConsoleText.ScrollToCaret();
+                lock (ConsoleText)
+                {
+                    ConsoleText.Text += text + "\n";
+                    ConsoleText.SelectionStart = ConsoleText.Text.Length;
+                    ConsoleText.ScrollToCaret();
+                }
             }
             catch (Exception ex)
             {
