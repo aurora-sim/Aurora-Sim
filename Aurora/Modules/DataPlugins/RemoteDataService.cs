@@ -149,6 +149,11 @@ namespace Aurora.Modules.DataPlugins
             throw new NotImplementedException();
         }
 
+        public void DropTable(string tableName)
+        {
+            throw new NotImplementedException();
+        }
+
         public Dictionary<string, string> GetRegionHidden()
         {
             throw new NotImplementedException();

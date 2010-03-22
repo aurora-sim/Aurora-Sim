@@ -98,6 +98,16 @@ namespace Aurora.DataManager
         public string Name { get; set; }
         public ColumnTypes Type { get; set; }
         public bool IsPrimary { get; set; }
+
+        public override bool Equals(object obj)
+        {
+            var cdef = obj as ColumnDefinition;
+            if( cdef != null )
+            {
+                return cdef.Name == Name && cdef.Type == Type && cdef.IsPrimary == IsPrimary;
+            }
+            return false;
+        }
     }
 
     public interface IGenericData
@@ -123,6 +133,7 @@ namespace Aurora.DataManager
         void CopyTableToTable(string sourceTableName, string destinationTableName, ColumnDefinition[] columnDefinitions);
         bool VerifyTableExists(string tableName, ColumnDefinition[] columnDefinitions);
         void EnsureTableExists(string tableName, ColumnDefinition[] columnDefinitions);
+        void DropTable(string tableName);
     }
     #endregion
     public static class DataManager

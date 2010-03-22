@@ -4,6 +4,7 @@ using System.IO;
 using Aurora.DataManager.Migration;
 using Aurora.DataManager.Migration.Migrators;
 using Aurora.DataManager.SQLite;
+using C5;
 using NUnit.Framework;
 
 namespace Aurora.DataManager.Tests
@@ -11,6 +12,55 @@ namespace Aurora.DataManager.Tests
     public class MigrationTests 
     {
         private string dbFileName = "TestMigration.db";
+
+        public class TestMigrator : Migrator
+        {
+            public TestMigrator()
+            {
+                Version = new Version(2010, 3, 13);
+                CanProvideDefaults = true;
+
+                schema = new List<Rec<string, ColumnDefinition[]>>();
+
+                AddSchema("test_table", ColDefs(
+                    ColDef("id", ColumnTypes.Integer),
+                    ColDef("test_string", ColumnTypes.String),
+                    ColDef("test_string1", ColumnTypes.String1),
+                    ColDef("test_string2", ColumnTypes.String2),
+                    ColDef("test_string45", ColumnTypes.String45),
+                    ColDef("test_string50", ColumnTypes.String50),
+                    ColDef("test_string100", ColumnTypes.String100),
+                    ColDef("test_string512", ColumnTypes.String512),
+                    ColDef("test_string1024", ColumnTypes.String1024),
+                    ColDef("test_date", ColumnTypes.Date)
+                    ));
+            }
+
+            protected override void DoCreateDefaults(DataSessionProvider sessionProvider, IGenericData genericData)
+            {
+                EnsureAllTablesInSchemaExist(genericData);
+            }
+
+            protected override bool DoValidate(DataSessionProvider sessionProvider, IGenericData genericData)
+            {
+                return TestThatAllTablesValidate(genericData);
+            }
+
+            protected override void DoMigrate(DataSessionProvider sessionProvider, IGenericData genericData)
+            {
+                DoCreateDefaults(sessionProvider, genericData);
+            }
+
+            protected override void DoPrepareRestorePoint(DataSessionProvider sessionProvider, IGenericData genericData)
+            {
+                CopyAllTablesToTempVersions(genericData);
+            }
+
+            public override void DoRestore(DataSessionProvider sessionProvider, IGenericData genericData)
+            {
+                RestoreTempTablesToReal(genericData);
+            }
+        }
 
         [Test]
         public void MigrationTestsTests()
@@ -20,10 +70,9 @@ namespace Aurora.DataManager.Tests
             IGenericData genericData = new SQLiteLoader();
             genericData.ConnectToDatabase(string.Format("URI=file:{0},version=3",dbFileName));
             genericData.CloseDatabase();
-            CreateEmptyDatabase();
 
             var migrators = new List<Migrator>();
-            var testMigrator0 = new AuroraMigrator_2010_03_13();
+            var testMigrator0 = new TestMigrator();
             migrators.Add(testMigrator0);
 
             var migrationManager = new MigrationManager(sessionProvider, genericData, migrators);
@@ -57,8 +106,6 @@ namespace Aurora.DataManager.Tests
             migrationManager.ExecuteOperation();
             
             genericData.CloseDatabase();
-            //empty the database just to be safe for other tests
-            CreateEmptyDatabase();
         }
 
         private void CreateEmptyDatabase()

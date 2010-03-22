@@ -112,6 +112,8 @@ namespace Aurora.DataManager
             CreateTable(tableName, columnDefinitions);
         }
 
+        public abstract void DropTable(string tableName);
+
         #endregion
 
         protected abstract void CopyAllDataBetweenMatchingTables(string sourceTableName, string destinationTableName, ColumnDefinition[] columnDefinitions);

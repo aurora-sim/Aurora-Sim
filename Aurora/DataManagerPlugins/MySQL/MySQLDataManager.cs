@@ -456,6 +456,11 @@ namespace Aurora.DataManager.MySQL
             throw new NotImplementedException();
         }
 
+        public override void DropTable(string tableName)
+        {
+            throw new NotImplementedException();
+        }
+
         protected override void CopyAllDataBetweenMatchingTables(string sourceTableName, string destinationTableName, ColumnDefinition[] columnDefinitions)
         {
             throw new NotImplementedException();

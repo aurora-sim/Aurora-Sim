@@ -142,6 +142,8 @@ namespace Aurora.DataManager.Migration
 
                     executingMigrator = GetMigratorAfterVersion(executingMigrator.Version);
                 }
+
+                currentMigrator.ClearRestorePoint(genericData);
             }
         }
 

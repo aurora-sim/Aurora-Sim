@@ -135,5 +135,22 @@ namespace Aurora.DataManager.Migration
         {
             genericData.CopyTableToTable(GetTempTableNameFromTableName(GetTempTableNameFromTableName(tablename)), tablename, columnDefinitions);
         }
+
+        public void ClearRestorePoint(IGenericData genericData)
+        {
+            foreach (var s in schema)
+            {
+                DeleteTempVersion(genericData, s.X1);
+            }
+        }
+
+        private void DeleteTempVersion(IGenericData genericData, string tableName)
+        {
+            string tempTableName = GetTempTableNameFromTableName(tableName);
+            if (genericData.TableExists(tempTableName))
+            {
+                genericData.DropTable(tempTableName);   
+            }
+        }
     }
 }

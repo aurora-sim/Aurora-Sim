@@ -2592,7 +2592,8 @@
           <Reference name="System"/>
           <Reference name="System.Xml"/>
 	    <Reference name="Nini.dll"/>
-<Reference name="nunit.framework.dll"/>
+	    <Reference name="nunit.framework.dll"/>
+	    <Reference name="C5.dll"/>
 <Reference name="Aurora.Framework"/>
 <Reference name="OpenSim.Region.Framework"/>
 <Reference name="OpenMetaverseTypes.dll"/>

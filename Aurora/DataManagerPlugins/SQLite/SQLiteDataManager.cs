@@ -11,7 +11,6 @@ namespace Aurora.DataManager.SQLite
     {
         protected List<string> m_ColumnNames;
         private SqliteConnection m_Connection;
-        protected FieldInfo m_DataField;
 
         protected Dictionary<string, FieldInfo> m_Fields = new Dictionary<string, FieldInfo>();
 
@@ -25,7 +24,6 @@ namespace Aurora.DataManager.SQLite
         {
             m_Connection = new SqliteConnection(connectionString);
             m_Connection.Open();
-            MigrationsManager();
         }
 
         private void CheckColumnNames(IDataReader reader)
@@ -261,6 +259,20 @@ namespace Aurora.DataManager.SQLite
                     return "INTEGER";
                 case ColumnTypes.String:
                     return "TEXT";
+                case ColumnTypes.String1:
+                    return "VARCHAR(1)";
+                case ColumnTypes.String2:
+                    return "VARCHAR(2)";
+                case ColumnTypes.String45:
+                    return "VARCHAR(45)";
+                case ColumnTypes.String50:
+                    return "VARCHAR(50)";
+                case ColumnTypes.String100:
+                    return "VARCHAR(100)";
+                case ColumnTypes.String512:
+                    return "VARCHAR(512)";
+                case ColumnTypes.String1024:
+                    return "VARCHAR(1024)";
                 case ColumnTypes.Date:
                     return "DATE";
                 default:
@@ -278,7 +290,10 @@ namespace Aurora.DataManager.SQLite
             IDataReader rdr = ExecuteReader(cmd);
             while (rdr.Read())
             {
-                defs.Add(new ColumnDefinition {Name = (string) rdr["name"], IsPrimary = ((int) rdr["pk"] > 0), Type = ConvertTypeToColumnType((string) rdr["type"])});
+                var name = rdr["name"];
+                var pk = rdr["pk"];
+                var type = rdr["type"];
+                defs.Add(new ColumnDefinition {Name = name.ToString(), IsPrimary = (int.Parse(pk.ToString()) > 0), Type = ConvertTypeToColumnType(type.ToString())});
             }
             rdr.Close();
             rdr.Dispose();
@@ -297,9 +312,32 @@ namespace Aurora.DataManager.SQLite
                     return ColumnTypes.Integer;
                 case "text":
                     return ColumnTypes.String;
+                case "varchar(1)":
+                    return ColumnTypes.String1;
+                case "varchar(2)":
+                    return ColumnTypes.String2;
+                case "varchar(45)":
+                    return ColumnTypes.String45;
+                case "varchar(50)":
+                    return ColumnTypes.String50;
+                case "varchar(100)":
+                    return ColumnTypes.String100;
+                case "varchar(512)":
+                    return ColumnTypes.String512;
+                case "varchar(1024)":
+                    return ColumnTypes.String1024;
+                case "date":
+                    return ColumnTypes.Date;
                 default:
                     throw new Exception("You've discovered some type in SQLite that's not reconized by Aurora, please place the correct conversion in ConvertTypeToColumnType.");
             }
+        }
+
+        public override void DropTable(string tableName)
+        {
+            var cmd = new SqliteCommand();
+            cmd.CommandText = string.Format("drop table {0}", tableName);
+            ExecuteNonQuery(cmd);
         }
 
         protected override void CopyAllDataBetweenMatchingTables(string sourceTableName, string destinationTableName, ColumnDefinition[] columnDefinitions)
