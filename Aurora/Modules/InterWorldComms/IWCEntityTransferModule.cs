@@ -134,18 +134,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             return region;
         }
 
-        protected override bool NeedsClosing(uint oldRegionX, uint newRegionX, uint oldRegionY, uint newRegionY, GridRegion reg)
-        {
-            if (base.NeedsClosing(oldRegionX, newRegionX, oldRegionY, newRegionY, reg))
-                return true;
-
-            GridRegionFlags flags = IWC.GetRegionFlags(reg.RegionID);
-            if (flags.IsIWCConnected)
-                return true;
-
-            return false;
-        }
-
         protected bool CreateAgent(ScenePresence sp, GridRegion reg, GridRegion finalDestination, AgentCircuitData agentCircuit, uint teleportFlags, out string reason, out bool IsIWC)
         {
             reason = string.Empty;
@@ -153,7 +141,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             GridRegionFlags flags = IWC.GetRegionFlags(reg.RegionID);
             if (flags.IsIWCConnected)
             {
-                IsIWC = true;
+                //Always needs to be root when teleporting to a region!
                 agentCircuit.child = false;
                 bool success = IWC.FireNewIWCUser(agentCircuit, reg, finalDestination, out reason);
                 IsIWC = success;
@@ -512,11 +500,18 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
                 KillEntity(sp.Scene, sp.LocalId);
 
+                sp.MakeChildAgent();
                 // Finally, let's close this previously-known-as-root agent, when the jump is outside the view zone
 
-                Thread.Sleep(5000);
-                sp.Close();
-                sp.Scene.IncomingCloseAgent(sp.UUID);
+                if (NeedsClosing(oldRegionX, newRegionX, oldRegionY, newRegionY, reg))
+                {
+                    Thread.Sleep(5000);
+                    sp.Close();
+                    sp.Scene.IncomingCloseAgent(sp.UUID);
+                }
+                else
+                    // now we have a child agent in this region. 
+                    sp.Reset(); 
 
                 // REFACTORING PROBLEM. Well, not a problem, but this method is HORRIBLE!
                 if (sp.Scene.NeedSceneCacheClear(sp.UUID))
