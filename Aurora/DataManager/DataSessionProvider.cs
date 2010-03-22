@@ -21,16 +21,18 @@ namespace Aurora.DataManager
             return factory;
         }
 
-        private string DbFile;
+        private IPersistenceConfigurer persistanceConfigurer;
 
-        public DataSessionProvider()
+        public DataSessionProvider(DataManagerTechnology technology, string connectionInfo)
         {
-            DbFile =  "firstProject.db";
-        }
-
-        public DataSessionProvider(string dbFile)
-        {
-            DbFile = dbFile;
+            if (technology == DataManagerTechnology.SQLite)
+            {
+                persistanceConfigurer = SQLiteConfiguration.Standard.ConnectionString(connectionInfo);
+            }
+            else if (technology == DataManagerTechnology.MySql)
+            {
+                persistanceConfigurer = MySQLConfiguration.Standard.ConnectionString(connectionInfo);
+            }
         }
 
         private ISessionFactory CreateSessionFactory()
@@ -39,17 +41,16 @@ namespace Aurora.DataManager
             {
                 return Fluently.Configure()
                     .Database(
-                        SQLiteConfiguration.Standard
-                            .UsingFile(DbFile)
+                        persistanceConfigurer
                     )
                     .Mappings(m =>
                               m.FluentMappings.AddFromAssemblyOf<DataSessionProvider>())
                     .ExposeConfiguration(BuildSchema)
                     .BuildSessionFactory();
             }
-            catch(Exception e)
+            catch (Exception e)
             {
-                throw new Exception("Could not initialize session:" + System.Environment.NewLine + e.Message + ((e.InnerException!=null)?(System.Environment.NewLine + e.InnerException.Message):string.Empty));
+                throw new Exception("Could not initialize session:" + System.Environment.NewLine + e.Message + ((e.InnerException != null) ? (System.Environment.NewLine + e.InnerException.Message) : string.Empty));
             }
         }
 
@@ -59,14 +60,6 @@ namespace Aurora.DataManager
             // and exports a database schema from it
             new SchemaExport(config)
               .Create(false, true);
-        }
-
-        public void DeleteLocalResources()
-        {
-            if (File.Exists(DbFile))
-            {
-                File.Delete(DbFile);
-            }
         }
     }
 }

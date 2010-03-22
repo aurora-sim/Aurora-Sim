@@ -2605,7 +2605,6 @@
           </Files>
         </Project>
 
-
 <Project frameworkVersion="v3_5" name="Aurora.DataManager.MySQL" path="Aurora/DataManagerPlugins/MySQL" type="Library">
           <Configuration name="Debug">
             <Options>
@@ -2621,36 +2620,9 @@
           <ReferencePath>../../../bin/</ReferencePath>
           <Reference name="System"/>
           <Reference name="System.Xml"/>
-	    <Reference name="Nini.dll"/>
-<Reference name="Aurora.DataManager"/>
-<Reference name="Aurora.Framework"/>
-<Reference name="OpenMetaverseTypes.dll"/>
-<Reference name="OpenMetaverse.dll"/>
-<Reference name="System.Data"/>
-<Reference name="MySql.Data.dll"/>
-<Reference name="OpenSim.Data"/>
-<Reference name="OpenSim.Framework"/>
-          <Files>
-            <Match pattern="*.cs" recurse="true"/>
-          </Files>
-        </Project>
-
-<Project frameworkVersion="v3_5" name="Aurora.DataManager.MySQL" path="Aurora/DataManagerPlugins/MySQL" type="Library">
-          <Configuration name="Debug">
-            <Options>
-              <OutputPath>../../../bin/</OutputPath>
-            </Options>
-          </Configuration>
-          <Configuration name="Release">
-            <Options>
-              <OutputPath>../../../bin/</OutputPath>
-            </Options>
-          </Configuration>
-
-          <ReferencePath>../../../bin/</ReferencePath>
-          <Reference name="System"/>
-          <Reference name="System.Xml"/>
-	    <Reference name="Nini.dll"/>
+	  <Reference name="Nini.dll"/>
+	  <Reference name="System.Core"/>
+	  <Reference name="System.Linq"/>
 <Reference name="C5.dll"/>
 <Reference name="Aurora.DataManager"/>
 <Reference name="Aurora.Framework"/>
@@ -2775,6 +2747,7 @@
 <Reference name="nunit.framework"/>
 <Reference name="OpenSim.Framework"/>
 <Reference name="Aurora.DataManager.SQLite"/>
+<Reference name="Aurora.DataManager.MySQL"/>
           <Files>
             <Match pattern="*.cs" recurse="true"/>
           </Files>

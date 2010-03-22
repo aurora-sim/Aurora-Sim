@@ -167,6 +167,6 @@ namespace Aurora.DataManager
             regionplugin = Plugin;
         }
 
-        public static DataSessionProvider DataSessionProvider = new DataSessionProvider();
+        public static DataSessionProvider DataSessionProvider;
     }
 }

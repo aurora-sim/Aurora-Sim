@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using C5;
@@ -93,139 +94,6 @@ namespace Aurora.DataManager.MySQL
         {
             connectionString = connectionstring;
             GetLockedConnection();
-            MigrationsManager();
-        }
-
-        #region Migrations
-        public void MigrationsManager()
-        {
-            UpdateTable(Environment.CurrentDirectory + "//Aurora//Migrations//MySQL//");
-        }
-
-        private void UpdateTable(string location)
-        {
-            string query = "select migrations from Migrations";
-            try
-            {
-                string RetVal = "";
-                MySqlConnection dbcon = GetLockedConnection();
-                IDbCommand result;
-                IDataReader reader;
-                using (result = Query(query, new Dictionary<string, object>(), dbcon))
-                {
-                    using (reader = result.ExecuteReader())
-                    {
-                        if (reader.Read())
-                        {
-                            RetVal = reader.GetString(0);
-                        }
-                    }
-                }
-                reader.Close();
-                reader.Dispose();
-                UpgradeTable(location, Convert.ToInt32(RetVal));
-            }
-            catch (Exception ex)
-            {
-                UpgradeTable(location, 0);
-            }
-        }
-
-        private void UpgradeTable(string location, int currentVersion)
-        {
-            List<StreamReader> files = ReadSQLMigrations(location);
-            foreach (StreamReader file in files)
-            {
-                List<string> fileLines = new List<string>();
-                string line = "";
-                while ((line = file.ReadLine()) != null)
-                {
-                    fileLines.Add(line);
-                }
-                string Migrations = fileLines[0].Split('=')[1];
-                Migrations = Migrations.TrimStart(' ');
-                int MigrationsVersion = Convert.ToInt32(Migrations);
-                if (MigrationsVersion == currentVersion)
-                    continue;
-                if (MigrationsVersion > currentVersion)
-                {
-                    foreach (string sqlstring in fileLines)
-                    {
-                        if (!sqlstring.StartsWith("Migrations") && !sqlstring.StartsWith("//") && !(sqlstring == ""))
-                        {
-                            MySqlConnection dbcon = GetLockedConnection();
-                            IDbCommand result;
-                            IDataReader reader;
-                            using (result = Query(sqlstring, new Dictionary<string, object>(), dbcon))
-                            {
-                                using (reader = result.ExecuteReader())
-                                {
-                                }
-                            }
-                        }
-                    }
-                    currentVersion = MigrationsVersion;
-                }
-            }
-        }
-
-        #region Find Updates
-        public List<StreamReader> ReadSQLMigrations(string Dir)
-        {
-            DirectoryInfo dir = new DirectoryInfo(Dir);
-            List<StreamReader> files = new List<StreamReader>();
-
-            foreach (FileInfo fileInfo in dir.GetFiles("*.sql"))
-            {
-                files.Add(fileInfo.OpenText());
-            }
-            return files;
-        }
-
-        #endregion
-        #endregion
-
-
-        private void CreateTables()
-        {
-            string query = "CREATE TABLE usernotes (useruuid VARCHAR(50), targetuuid VARCHAR(50),notes VARCHAR(512),noteUUID VARCHAR(50) PRIMARY KEY);";
-            CreateTable(query);
-            query = "CREATE TABLE userpicks (pickuuid VARCHAR(50) PRIMARY KEY, creatoruuid VARCHAR(50),toppick VARCHAR(512),parceluuid VARCHAR(50),name VARCHAR(50),description VARCHAR(50),snapshotuuid VARCHAR(50),user VARCHAR(50),originalname VARCHAR(50),simname VARCHAR(50),posglobal VARCHAR(50),sortorder VARCHAR(50),enabled VARCHAR(50));";
-            CreateTable(query);
-            query = "CREATE TABLE usersauth (userUUID VARCHAR(50) PRIMARY KEY, userLogin VARCHAR(50),userFirst VARCHAR(512),userLast VARCHAR(50),userEmail VARCHAR(50),userPass VARCHAR(50),userMac VARCHAR(50),userIP VARCHAR(50),userAcceptTOS VARCHAR(50),userGodLevel VARCHAR(50),userRealFirst VARCHAR(50),userRealLast VARCHAR(50),userAddress VARCHAR(50),userZip VARCHAR(50),userCountry VARCHAR(50),tempBanned VARCHAR(50),permaBanned VARCHAR(50),profileAllowPublish VARCHAR(50),profileMaturePublish VARCHAR(50),profileURL VARCHAR(50), AboutText VARCHAR(50), Email VARCHAR(50), CustomType VARCHAR(50), profileWantToMask VARCHAR(50),profileWantToText VARCHAR(50),profileSkillsMask VARCHAR(50),profileSkillsText VARCHAR(50),profileLanguages VARCHAR(50),visible VARCHAR(50),imviaemail VARCHAR(50),membershipGroup VARCHAR(50),FirstLifeAboutText VARCHAR(50),FirstLifeImage VARCHAR(50),Partner VARCHAR(50), Image VARCHAR(50));";
-            CreateTable(query);
-            query = "CREATE TABLE classifieds (classifieduuid VARCHAR(50) PRIMARY KEY, creatoruuid VARCHAR(50),creationdate VARCHAR(512),expirationdate VARCHAR(50),category VARCHAR(50),name VARCHAR(50),description VARCHAR(50),parceluuid VARCHAR(50),parentestate VARCHAR(50),snapshotuuid VARCHAR(50),simname VARCHAR(50),posglobal VARCHAR(50),parcelname VARCHAR(50),classifiedflags VARCHAR(50),priceforlisting VARCHAR(50));";
-            CreateTable(query);
-            query = "CREATE TABLE auroraregions (regionName VARCHAR(50), regionHandle VARCHAR(50),hidden VARCHAR(1),regionUUID VARCHAR(50) PRIMARY KEY,regionX VARCHAR(50),regionY VARCHAR(50),telehubX VARCHAR(50),telehubY VARCHAR(50));";
-            CreateTable(query);
-            query = "CREATE TABLE macban (macAddress VARCHAR(50) PRIMARY KEY);";
-            CreateTable(query);
-            query = "CREATE TABLE BannedViewers (Client VARCHAR(50) PRIMARY KEY);";
-            CreateTable(query);
-            query = "CREATE TABLE mutelists (userID VARCHAR(50) ,muteID VARCHAR(50),muteName VARCHAR(50),muteType VARCHAR(50),muteUUID VARCHAR(50) PRIMARY KEY);";
-            CreateTable(query);
-            query = "CREATE TABLE abusereports (Category VARCHAR(100) ,AReporter VARCHAR(100),OName VARCHAR(100),OUUID VARCHAR(100),AName VARCHAR(100) PRIMARY KEY,ADetails VARCHAR(100),OPos VARCHAR(100),Estate VARCHAR(100),Summary VARCHAR(100));";
-            CreateTable(query);
-            query = "CREATE TABLE primsMediaURL (objectUUID VARCHAR(100) ,CurrentURL VARCHAR(100),HomeURL VARCHAR(512),User VARCHAR(100),Version VARCHAR(100), PRIMARY KEY (Version, objectUUID) );";
-            CreateTable(query);
-        }
-
-        private bool CreateTable(string sqlstatement)
-        {
-            MySqlConnection dbcon = GetLockedConnection();
-            IDbCommand result;
-            IDataReader reader;
-            using (result = Query(sqlstatement, new Dictionary<string, object>(), dbcon))
-            {
-                using (reader = result.ExecuteReader())
-                {
-                    try
-                    {
-                        return true;
-                    }
-                    finally { }
-                }
-            }
         }
 
         public override List<string> Query(string keyRow, string keyValue, string table, string wantedValue)
@@ -271,16 +139,6 @@ namespace Aurora.DataManager.MySQL
                 }
             }
         }
-
-        //public List<string> QueryWithDefault<T>(string keyRow, string keyValue, string table, string wantedValue, T defaultValue)
-        //{
-        //    var result = Query(keyRow, keyValue, table, wantedValue);
-        //    if( result.Count == 0)
-        //    {
-        //        result.Add(defaultValue.ToString());
-        //    }
-        //    return result;
-        //}
 
         public List<string> Query(string keyRow, string keyValue, string table)
         {
@@ -353,32 +211,23 @@ namespace Aurora.DataManager.MySQL
             }
         }
 
-        public override void CloseDatabase()
-        {
-            throw new NotImplementedException();
-        }
-
-        public override bool TableExists(string table)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void CreateTable(string table, ColumnDefinition[] columns)
-        {
-            throw new NotImplementedException();
-        }
-
         public override void Insert(string table, string[] values)
         {
             MySqlConnection dbcon = GetLockedConnection();
             IDbCommand result;
             IDataReader reader;
-            string query = "insert into " + table + " VALUES('";
+
+            string valuesString = string.Empty;
+
             foreach (string value in values)
             {
-                query += value + "','";
+                if (valuesString != string.Empty)
+                {
+                    valuesString += ", ";
+                }
+                valuesString += "'" + value + "'";
             }
-            query += ")";
+            string query = "insert into " + table + " VALUES("+valuesString+")";
             using (result = Query(query, new Dictionary<string, object>(), dbcon))
             {
                 using (reader = result.ExecuteReader())
@@ -431,46 +280,6 @@ namespace Aurora.DataManager.MySQL
             }
         }
 
-        public Version GetAuroraVersion()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void WriteAuroraVersion(Version version)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void CopyTableToTable(string sourceTableName, string destinationTableName, ColumnDefinition[] columnDefinitions)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool VerifyTableExists(string tableName, ColumnDefinition[] columnDefinitions)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void EnsureTableExists(string tableName, ColumnDefinition[] columnDefinitions)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void DropTable(string tableName)
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override void CopyAllDataBetweenMatchingTables(string sourceTableName, string destinationTableName, ColumnDefinition[] columnDefinitions)
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override List<ColumnDefinition> ExtractColumnsFromTable(string tableName)
-        {
-            throw new NotImplementedException();
-        }
-
         public string Query(string query)
         {
             MySqlConnection dbcon = GetLockedConnection();
@@ -498,6 +307,167 @@ namespace Aurora.DataManager.MySQL
                         result.Dispose();
                     }
                 }
+            }
+        }
+
+        public override void CloseDatabase()
+        {
+            this.MySQLConn.Close();
+            MySQLConn.Dispose();
+        }
+
+        public override void CreateTable(string table, ColumnDefinition[] columns)
+        {
+            if (TableExists(table))
+            {
+                throw new DataManagerException("Trying to create a table with name of one that already exists.");
+            }
+
+            string columnDefinition = string.Empty;
+            var primaryColumns = (from cd in columns where cd.IsPrimary == true select cd);
+            bool multiplePrimary = primaryColumns.Count() > 1;
+
+            foreach (ColumnDefinition column in columns)
+            {
+                if (columnDefinition != string.Empty)
+                {
+                    columnDefinition += ", ";
+                }
+                columnDefinition += column.Name + " " + GetColumnTypeStringSymbol(column.Type) + ((column.IsPrimary && !multiplePrimary) ? " PRIMARY KEY" : string.Empty);
+            }
+
+            string multiplePrimaryString = string.Empty;
+            if (multiplePrimary)
+            {
+                string listOfPrimaryNamesString = string.Empty;
+                foreach (ColumnDefinition column in primaryColumns)
+                {
+                    if (listOfPrimaryNamesString != string.Empty)
+                    {
+                        listOfPrimaryNamesString += ", ";
+                    }
+                    listOfPrimaryNamesString += column.Name;
+                }
+                multiplePrimaryString = string.Format(", PRIMARY KEY ({0}) ", listOfPrimaryNamesString);
+            }
+
+            string query = string.Format("create table " + table + " ( {0} {1}) ", columnDefinition, multiplePrimaryString);
+
+            MySqlCommand dbcommand = MySQLConn.CreateCommand();
+            dbcommand.CommandText = query;
+            dbcommand.ExecuteNonQuery();
+        }
+
+        private string GetColumnTypeStringSymbol(ColumnTypes type)
+        {
+            switch (type)
+            {
+                case ColumnTypes.Integer:
+                    return "INTEGER";
+                case ColumnTypes.String:
+                    return "TEXT";
+                case ColumnTypes.String1:
+                    return "VARCHAR(1)";
+                case ColumnTypes.String2:
+                    return "VARCHAR(2)";
+                case ColumnTypes.String45:
+                    return "VARCHAR(45)";
+                case ColumnTypes.String50:
+                    return "VARCHAR(50)";
+                case ColumnTypes.String100:
+                    return "VARCHAR(100)";
+                case ColumnTypes.String512:
+                    return "VARCHAR(512)";
+                case ColumnTypes.String1024:
+                    return "VARCHAR(1024)";
+                case ColumnTypes.Date:
+                    return "DATE";
+                default:
+                    throw new DataManagerException("Unknown column type.");
+            }
+        }
+
+        public override void DropTable(string tableName)
+        {
+            MySqlCommand dbcommand = MySQLConn.CreateCommand();
+            dbcommand.CommandText = string.Format("drop table {0}", tableName); ;
+            dbcommand.ExecuteNonQuery();
+        }
+
+        protected override void CopyAllDataBetweenMatchingTables(string sourceTableName, string destinationTableName, ColumnDefinition[] columnDefinitions)
+        {
+            MySqlCommand dbcommand = MySQLConn.CreateCommand();
+            dbcommand.CommandText = string.Format("insert into {0} select * from {1}", destinationTableName, sourceTableName);
+            dbcommand.ExecuteNonQuery();
+        }
+
+        public override bool TableExists(string table)
+       {
+            MySqlCommand dbcommand = MySQLConn.CreateCommand();
+            dbcommand.CommandText = string.Format("select table_name from information_schema.tables where table_schema=database() and table_name='{0}'", table);
+            var rdr = dbcommand.ExecuteReader();
+
+            var ret = false;
+            if( rdr.Read())
+            {
+                ret = true;
+            }
+
+            rdr.Close();
+            rdr.Dispose();
+            dbcommand.Dispose();
+            return ret;
+        }
+
+        protected override List<ColumnDefinition> ExtractColumnsFromTable(string tableName)
+        {
+            var defs = new List<ColumnDefinition>();
+
+
+            MySqlCommand dbcommand = MySQLConn.CreateCommand();
+            dbcommand.CommandText = string.Format("desc {0}", tableName);
+            var rdr = dbcommand.ExecuteReader();
+            while (rdr.Read())
+            {
+                var name = rdr["Field"];
+                var pk = rdr["Key"];
+                var type = rdr["Type"];
+                defs.Add(new ColumnDefinition { Name = name.ToString(), IsPrimary = pk.ToString()=="PRI", Type = ConvertTypeToColumnType(type.ToString()) });
+            }
+            rdr.Close();
+            rdr.Dispose();
+            dbcommand.Dispose();
+            return defs;
+        }
+
+        private ColumnTypes ConvertTypeToColumnType(string typeString)
+        {
+            string tStr = typeString.ToLower();
+            //we'll base our names on lowercase
+            switch (tStr)
+            {
+                case "int(11)":
+                    return ColumnTypes.Integer;
+                case "text":
+                    return ColumnTypes.String;
+                case "varchar(1)":
+                    return ColumnTypes.String1;
+                case "varchar(2)":
+                    return ColumnTypes.String2;
+                case "varchar(45)":
+                    return ColumnTypes.String45;
+                case "varchar(50)":
+                    return ColumnTypes.String50;
+                case "varchar(100)":
+                    return ColumnTypes.String100;
+                case "varchar(512)":
+                    return ColumnTypes.String512;
+                case "varchar(1024)":
+                    return ColumnTypes.String1024;
+                case "date":
+                    return ColumnTypes.Date;
+                default:
+                    throw new Exception("You've discovered some type in MySQL that's not reconized by Aurora, please place the correct conversion in ConvertTypeToColumnType.");
             }
         }
     }

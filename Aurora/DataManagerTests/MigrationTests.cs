@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using Aurora.DataManager.Migration;
 using Aurora.DataManager.Migration.Migrators;
+using Aurora.DataManager.MySQL;
 using Aurora.DataManager.SQLite;
 using C5;
 using NUnit.Framework;
@@ -23,7 +24,7 @@ namespace Aurora.DataManager.Tests
                 schema = new List<Rec<string, ColumnDefinition[]>>();
 
                 AddSchema("test_table", ColDefs(
-                    ColDef("id", ColumnTypes.Integer),
+                    ColDef("id", ColumnTypes.Integer,true),
                     ColDef("test_string", ColumnTypes.String),
                     ColDef("test_string1", ColumnTypes.String1),
                     ColDef("test_string2", ColumnTypes.String2),
@@ -65,11 +66,22 @@ namespace Aurora.DataManager.Tests
         [Test]
         public void MigrationTestsTests()
         {
+            //IMPORTANT NOTIFICATION  
+            //Till I figure out a way, please delete the .db file or drop tables clean before running this
+
+            //Switch the comments to test one technology or another
+            var technology = DataManagerTechnology.SQLite;
+            //var technology = DataManagerTechnology.MySql;
+
+            var mysqlconnectionstring = "Data Source=localhost;Database=auroratest;User ID=auroratest;Password=test;";
+            var sqliteconnectionstring = string.Format("URI=file:{0},version=3", dbFileName);
+            string connectionString = (technology==DataManagerTechnology.SQLite)?sqliteconnectionstring:mysqlconnectionstring;
+
             CreateEmptyDatabase();
-            DataSessionProvider sessionProvider = new DataSessionProvider(dbFileName);
-            IGenericData genericData = new SQLiteLoader();
-            genericData.ConnectToDatabase(string.Format("URI=file:{0},version=3",dbFileName));
-            genericData.CloseDatabase();
+            DataSessionProvider sessionProvider = new DataSessionProvider(technology, connectionString);
+            IGenericData genericData = ((technology==DataManagerTechnology.SQLite)? (IGenericData) new SQLiteLoader():new MySQLDataLoader());
+            
+            genericData.ConnectToDatabase(connectionString);
 
             var migrators = new List<Migrator>();
             var testMigrator0 = new TestMigrator();

@@ -1,3 +1,4 @@
+using System.IO;
 using Aurora.DataManager.Repositories;
 using NUnit.Framework;
 using OpenMetaverse;
@@ -12,9 +13,15 @@ namespace Aurora.DataManager.Tests
             var userId = UUID.Random();
             var MY_INVENTORY = "My Inventory";
             string TEST_FOLDER = "Test Folder";
+            string file = "InventoryRepoTest.db";
 
-            DataSessionProvider sessionProvider = new DataSessionProvider("InventoryRepoTest.db");
-            sessionProvider.DeleteLocalResources();
+
+
+            DataSessionProvider sessionProvider = new DataSessionProvider(DataManagerTechnology.SQLite, string.Format("URI=file:{0},version=3", file));
+            if(File.Exists(file))
+            {
+                File.Delete(file);
+            }
             var repo = new InventoryRepository(sessionProvider);
 
             var folder = repo.CreateRootFolderAndSave(userId, MY_INVENTORY);

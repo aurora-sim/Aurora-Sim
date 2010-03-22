@@ -38,8 +38,14 @@ namespace Aurora.Modules
             ConnectionString = m_config.GetString("ConnectionString", "");
             if (PluginModule == "MySQL")
             {
+                DataManager.DataManager.DataSessionProvider = new DataSessionProvider(DataManagerTechnology.MySql, ConnectionString);
                 MySQLDataLoader GenericData = new MySQLDataLoader();
                 GenericData.ConnectToDatabase(ConnectionString);
+
+                var migrationManager = new MigrationManager(DataManager.DataManager.DataSessionProvider, GenericData);
+                migrationManager.DetermineOperation();
+                migrationManager.ExecuteOperation();
+
                 MySQLProfile ProfileData = new MySQLProfile();
                 ProfileData.ConnectToDatabase(ConnectionString);
                 MySQLRegion RegionData = new MySQLRegion();
@@ -50,10 +56,10 @@ namespace Aurora.Modules
             }
             else if (PluginModule == "SQLite")
             {
+                DataManager.DataManager.DataSessionProvider = new DataSessionProvider(DataManagerTechnology.SQLite, ConnectionString);
                 SQLiteLoader GenericData = new SQLiteLoader();
                 GenericData.ConnectToDatabase(ConnectionString);
 
-                //Do migration here, SQLite is the only one working so far
                 var migrationManager = new MigrationManager(DataManager.DataManager.DataSessionProvider, GenericData);
                 migrationManager.DetermineOperation();
                 migrationManager.ExecuteOperation();
