@@ -408,7 +408,7 @@ namespace Aurora.Modules
                     }
                 }
 
-                m_log.Debug("[IWC MODULE]: [FireNewIWCUser] User is ok");
+                m_log.Debug("[IWC MODULE]: [FireNewIWCUser] User is ok.");
 
                 bool fired = FireStartPresence(aCircuit, connIdent, finalDestination, out reason);
                 if (!fired)
@@ -417,11 +417,11 @@ namespace Aurora.Modules
                     return false;
                 }
 
-                m_log.DebugFormat("[IWC MODULE]: [FireNewIWCUser] Login presence is ok");
+                m_log.DebugFormat("[IWC MODULE]: [FireNewIWCUser] Login presence is ok.");
 
                 if (!IsLocalAgent(aCircuit.AgentID))
                     AddLocalAgent(aCircuit.AgentID);
-
+                m_log.DebugFormat("[IWC MODULE]: [FireNewIWCUser] Local Agent Added.");
                 return true;
             }
             catch (Exception ex)
@@ -546,7 +546,7 @@ namespace Aurora.Modules
             AddForeignAgent(AgentID, HomeConnection, FirstName, LastName);
             m_log.Info("[IWC MODULE]: [InterWorldAddNewPresence] Foreign Agent added.");
             //Launch agent
-            m_Scene.SimulationService.CreateAgent(m_Scene.GridService.GetRegionByUUID(UUID.Zero,new UUID(RegionUUID)), aCircuit, (uint)Constants.TeleportFlags.ViaLogin, out reason);
+            successful = m_Scene.SimulationService.CreateAgent(m_Scene.GridService.GetRegionByUUID(UUID.Zero, new UUID(RegionUUID)), aCircuit, (uint)Constants.TeleportFlags.ViaLogin, out reason);
             
             responseData["reason"] = reason;
             responseData["addedpresence"] = successful;
