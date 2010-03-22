@@ -2476,7 +2476,8 @@
 
           <ReferencePath>../../bin/</ReferencePath>
                     <Reference name="System"/>
-          <Reference name="System.Xml"/>
+		    <Reference name="System.Xml"/>
+		    <Reference name="C5.dll"/>
 <Reference name="System.Drawing"/>
 	    <Reference name="Nini.dll"/>
 <Reference name="OpenMetaverseTypes.dll"/>

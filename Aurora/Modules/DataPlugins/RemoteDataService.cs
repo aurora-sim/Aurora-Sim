@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
+using C5;
 using log4net;
 using Nini.Config;
 using Aurora.Framework;
@@ -113,7 +114,7 @@ namespace Aurora.Modules.DataPlugins
             throw new NotImplementedException();
         }
 
-        public void CreateTable(string table, List<C5.Rec<string, ColumnTypes>> columns)
+        public void CreateTable(string table, List<Rec<string, ColumnTypes>> columns)
         {
             throw new NotImplementedException();
         }
