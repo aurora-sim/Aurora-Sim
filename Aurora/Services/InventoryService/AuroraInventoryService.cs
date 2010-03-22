@@ -77,7 +77,7 @@ namespace Aurora.Services.InventoryService
             InventoryFolder defaultRootFolder = repository.GetRootFolder(user);
             if (defaultRootFolder == null)
             {
-                defaultRootFolder = repository.CreateFolderAndSave(user, FOLDER_ROOT_NAME, UUID.Zero);
+                defaultRootFolder = repository.CreateRootFolderAndSave(user, FOLDER_ROOT_NAME);
                 result = true;
             }
 
@@ -107,7 +107,7 @@ namespace Aurora.Services.InventoryService
             collection.UserID = userId;
             List<InventoryFolderBase> Folders = new List<InventoryFolderBase>();
             List<InventoryItemBase> Items = new List<InventoryItemBase>();
-            foreach (InventoryFolder folder in repository.GetAllFolders())
+            foreach (InventoryFolder folder in repository.GetAllFolders(userId))
             {
                 Folders.Add(ConvertInventoryFolderToInventoryFolderBase(folder));
             }
@@ -130,7 +130,7 @@ namespace Aurora.Services.InventoryService
 
         public bool DeleteFolders(UUID userId, List<UUID> folderIds)
         {
-            repository.RemoveFolders(userId, folderIds);
+            repository.RemoveFolders(folderIds);
             return true;
         }
 
@@ -143,7 +143,7 @@ namespace Aurora.Services.InventoryService
         public List<InventoryFolderBase> GetInventorySkeleton(UUID userId)
         {
             List<InventoryFolderBase> Folders = new List<InventoryFolderBase>();
-            List<InventoryFolder> folders = repository.GetAllFolders(userId);
+            IList<InventoryFolder> folders = repository.GetAllFolders(userId);
             foreach (InventoryFolder folder in folders)
             {
                 Folders.Add(ConvertInventoryFolderToInventoryFolderBase(folder));
@@ -176,7 +176,7 @@ namespace Aurora.Services.InventoryService
         public bool AddFolder(InventoryFolderBase folder)
         {
             InventoryFolder IFFolder = ConvertInventoryFolderBaseToInventoryFolder(folder);
-            repository.CreateFolderUnderFolderAndSave(IFFolder.Name, IFFolder.Parent, IFFolder.PreferredAssetType);
+            repository.CreateFolderUnderFolderAndSave(IFFolder.Name, IFFolder.ParentFolder, IFFolder.PreferredAssetType);
             return true;
         }
 
@@ -222,16 +222,13 @@ namespace Aurora.Services.InventoryService
             IList<InventoryFolder> Folders = repository.GetMainFolders(userId);
             foreach (InventoryFolder folder in Folders)
             {
-                if (folder.PreferredAssetType.Type == (int)type)
+                if (folder.PreferredAssetType == (int)type)
                 {
                     return ConvertInventoryFolderToInventoryFolderBase(folder);
                 }
             }
-            InventoryObjectType IOT = new InventoryObjectType();
-            IOT.Type = (int)type;
-            IOT.Name = type.ToString();
 
-            return ConvertInventoryFolderToInventoryFolderBase(repository.CreateFolderUnderFolderAndSave(type.ToString(), repository.GetRootFolder(userId), IOT));
+            return ConvertInventoryFolderToInventoryFolderBase(repository.CreateFolderUnderFolderAndSave(type.ToString(), repository.GetRootFolder(userId), (int)type));
         }
 
         #endregion
@@ -293,17 +290,17 @@ namespace Aurora.Services.InventoryService
 
         #endregion
 
-        private void EnsureFolderForPreferredTypeUnderFolder(string folderAnimationName, InventoryObjectType inventoryObjectType, InventoryFolder defaultRootFolder)
+        private void EnsureFolderForPreferredTypeUnderFolder(string folderName, InventoryObjectType inventoryObjectType, InventoryFolder defaultRootFolder)
         {
-            if (!DoesFolderExistForPreferedType(defaultRootFolder.Owner, inventoryObjectType))
+            if (!DoesFolderExistForPreferedType(defaultRootFolder, inventoryObjectType))
             {
-                repository.CreateFolderUnderFolderAndSave(FOLDER_ANIMATION_NAME, defaultRootFolder, animationType);
+                repository.CreateFolderUnderFolderAndSave(folderName, defaultRootFolder, animationType.Type);
             }
         }
 
-        private bool DoesFolderExistForPreferedType(string Owner, InventoryObjectType inventoryObjectType)
+        private bool DoesFolderExistForPreferedType(InventoryFolder folder, InventoryObjectType inventoryObjectType)
         {
-            return (from f in repository.GetMainFolders(new UUID(Owner)) where f.PreferredAssetType == inventoryObjectType select f).Count() > 0;
+            return (from f in repository.GetChildFolders(folder) where f.PreferredAssetType == inventoryObjectType.Type select f).Count() > 0;
         }
 
         #region Converting
@@ -311,11 +308,11 @@ namespace Aurora.Services.InventoryService
         private InventoryFolderBase ConvertInventoryFolderToInventoryFolderBase(InventoryFolder folder)
         {
             InventoryFolderBase IFfolder = new InventoryFolderBase();
-            IFfolder.ID = new UUID(folder.Id);
+            IFfolder.ID = new UUID(folder.FolderId);
             IFfolder.Name = folder.Name;
             IFfolder.Owner = new UUID(folder.Owner);
-            IFfolder.ParentID = new UUID(folder.Parent.Id);
-            IFfolder.Type = (short)folder.PreferredAssetType.Type;
+            IFfolder.ParentID = new UUID(folder.ParentFolder.FolderId);
+            IFfolder.Type = (short)folder.PreferredAssetType;
             IFfolder.Version = 1;
             return IFfolder;
         }
@@ -333,7 +330,7 @@ namespace Aurora.Services.InventoryService
             inventoryItemBase.Description = activeGesture.Description;
             inventoryItemBase.EveryOnePermissions = (uint)activeGesture.Permissions.EveryoneMask;
             inventoryItemBase.Flags = activeGesture.Flags;
-            inventoryItemBase.Folder = new UUID(repository.GetParentFolder(inventoryItemBase).Id);
+            inventoryItemBase.Folder = new UUID(repository.GetParentFolder(inventoryItemBase).FolderId);
             inventoryItemBase.GroupID = activeGesture.GroupID;
             inventoryItemBase.GroupOwned = activeGesture.GroupOwned;
             inventoryItemBase.GroupPermissions = (uint)activeGesture.Permissions.GroupMask;
@@ -351,15 +348,15 @@ namespace Aurora.Services.InventoryService
         private InventoryFolder ConvertInventoryFolderBaseToInventoryFolder(InventoryFolderBase folder)
         {
             InventoryFolder IFfolder = new InventoryFolder();
-            IFfolder.Id = folder.ID.ToString();
+            IFfolder.FolderId = folder.ID.ToString();
             IFfolder.Name = folder.Name;
             IFfolder.Owner = folder.Owner.ToString();
-            IFfolder.Parent = repository.GetParentFolder(folder);
+            IFfolder.ParentFolder = repository.GetParentFolder(folder);
             InventoryObjectType type = repository.GetInventoryObjectTypeByType(folder.Type);
             if (type == null)
-                IFfolder.PreferredAssetType = repository.CreateInventoryType(folder.Name, folder.Type);
+                IFfolder.PreferredAssetType = repository.CreateInventoryType(folder.Name, folder.Type).Type;
             else
-                IFfolder.PreferredAssetType = type;
+                IFfolder.PreferredAssetType = type.Type;
             return IFfolder;
         }
 
