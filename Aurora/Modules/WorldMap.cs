@@ -50,6 +50,7 @@ using OSDArray=OpenMetaverse.StructuredData.OSDArray;
 using OSDMap=OpenMetaverse.StructuredData.OSDMap;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 using Aurora.DataManager;
+using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules
 {
@@ -193,8 +194,8 @@ namespace Aurora.Modules
 			// this is here because CAPS map requests work even beyond the 10,000 limit.
 			ScenePresence avatarPresence;
 			m_scene.TryGetAvatar(agentID,out avatarPresence);
-			//UserProfileData UPD = m_scene.CommsManager.UserService.GetUserProfile(agentID);
-			List<MapBlockData> mapBlocks = new List<MapBlockData>(); ;
+            UserAccount account = m_scene.UserAccountService.GetUserAccount(UUID.Zero, agentID);
+            List<MapBlockData> mapBlocks = new List<MapBlockData>(); ;
 
 			List<GridRegion> regions = m_scene.GridService.GetRegionRange(m_scene.RegionInfo.ScopeID,
 			                                                              (int)(m_scene.RegionInfo.RegionLocX - 50) * (int)Constants.RegionSize,
@@ -203,8 +204,8 @@ namespace Aurora.Modules
 			                                                              (int)(m_scene.RegionInfo.RegionLocY + 50) * (int)Constants.RegionSize);
 			foreach (OpenSim.Services.Interfaces.GridRegion r in regions)
 			{
-				/*if(UPD.GodLevel == 0)
-				{*/
+				if(account.UserLevel == 0)
+				{
 					if(RegionsHidden.ContainsValue(r.RegionName))
 					{
 						if(r.EstateOwner == agentID)
@@ -220,21 +221,15 @@ namespace Aurora.Modules
 						MapBlockFromGridRegion(block, r);
 						mapBlocks.Add(block);
 					}
-				/*}
+				}
 				else
 				{
 					MapBlockData block = new MapBlockData();
 					MapBlockFromGridRegion(block, r);
 					mapBlocks.Add(block);
-				}*/
+				}
 			}
-            foreach (OpenSim.Services.Interfaces.GridRegion region in IWC.IWCConnectedRegions.Keys)
-            {
-                MapBlockData block = new MapBlockData();
-                MapBlockFromGridRegion(block, region);
-                mapBlocks.Add(block);
-            }
-			avatarPresence.ControllingClient.SendMapBlock(mapBlocks, 0);
+            avatarPresence.ControllingClient.SendMapBlock(mapBlocks, 0);
 			
 			
 			LLSDMapLayerResponse mapResponse = new LLSDMapLayerResponse();
@@ -335,8 +330,8 @@ namespace Aurora.Modules
 				if (!m_rootAgents.Contains(remoteClient.AgentId))
 					return;
 			}
-			//UserProfileData UPD = m_scene.CommsManager.UserService.GetUserProfile(remoteClient.AgentId);
-			uint xstart = 0;
+            UserAccount account = m_scene.UserAccountService.GetUserAccount(UUID.Zero, remoteClient.AgentId);
+            uint xstart = 0;
 			uint ystart = 0;
 			Utils.LongToUInts(m_scene.RegionInfo.RegionHandle, out xstart, out ystart);
 			if (itemtype == 6) // we only sevice 6 right now (avatar green dots)
@@ -350,8 +345,8 @@ namespace Aurora.Modules
 					mapItemReply mapitem = new mapItemReply();
 					if (avatars.Count == 0 || avatars.Count == 1)
 					{
-						/*if(UPD.GodLevel == 0)
-						{*/
+                        if (account.UserLevel == 0)
+						{
 							if(RegionsHidden.ContainsValue(m_scene.RegionInfo.RegionName))
 							{
 								if(m_scene.RegionInfo.EstateSettings.EstateOwner == remoteClient.AgentId)
@@ -377,7 +372,7 @@ namespace Aurora.Modules
 								mapitem.Extra2 = 0;
 								mapitems.Add(mapitem);
 							}
-						/*}
+						}
 						else
 						{
 							mapitem = new mapItemReply();
@@ -388,7 +383,7 @@ namespace Aurora.Modules
 							mapitem.Extra = 0;
 							mapitem.Extra2 = 0;
 							mapitems.Add(mapitem);
-						}*/
+						}
 					}
 					else
 					{
@@ -399,8 +394,8 @@ namespace Aurora.Modules
 								// Don't send a green dot for yourself
 								if (av.UUID != remoteClient.AgentId)
 								{
-									/*if(UPD.GodLevel == 0)
-									{*/
+                                    if (account.UserLevel == 0)
+									{
 										if(RegionsHidden.ContainsValue(m_scene.RegionInfo.RegionName))
 										{
 											if(m_scene.RegionInfo.EstateSettings.EstateOwner == remoteClient.AgentId)
@@ -426,7 +421,7 @@ namespace Aurora.Modules
 											mapitem.Extra2 = 0;
 											mapitems.Add(mapitem);
 										}
-									/*}
+									}
 									else
 									{
 										mapitem = new mapItemReply();
@@ -437,7 +432,7 @@ namespace Aurora.Modules
 										mapitem.Extra = 1;
 										mapitem.Extra2 = 0;
 										mapitems.Add(mapitem);
-									}*/
+									}
 								}
 							}
 						}
@@ -613,7 +608,7 @@ namespace Aurora.Modules
 				                                                              maxX * (int)Constants.RegionSize,
 				                                                              minY * (int)Constants.RegionSize,
 				                                                              maxY * (int)Constants.RegionSize);
-				//UserProfileData UPD = m_scene.CommsManager.UserService.GetUserProfile(remoteClient.AgentId);
+                UserAccount account = m_scene.UserAccountService.GetUserAccount(UUID.Zero, remoteClient.AgentId);
 				if (regions != null)
 				{
 					foreach (OpenSim.Services.Interfaces.GridRegion r in regions)
@@ -621,8 +616,8 @@ namespace Aurora.Modules
 						if ((r.RegionLocX == minX * (int)Constants.RegionSize) &&
 						    (r.RegionLocY == minY * (int)Constants.RegionSize))
 						{
-							/*if(UPD.GodLevel == 0)
-							{*/
+                            if(account.UserLevel == 0)
+                            {
 								if(RegionsHidden.ContainsValue(r.RegionName))
 								{
 									if(r.EstateOwner == remoteClient.AgentId)
@@ -639,24 +634,18 @@ namespace Aurora.Modules
 									MapBlockFromGridRegion(block, r);
 									response.Add(block);
 								}
-							/*}
+							}
 							else
 							{
 								MapBlockData block = new MapBlockData();
 								MapBlockFromGridRegion(block, r);
 								response.Add(block);
-							}*/
+							}
 						}
 						
 					}
 				}
-                foreach (OpenSim.Services.Interfaces.GridRegion region in IWC.IWCConnectedRegions.Keys)
-                {
-                    MapBlockData block = new MapBlockData();
-                    MapBlockFromGridRegion(block, region);
-                    response.Add(block);
-                }
-				if (response.Count == 0)
+                if (response.Count == 0)
 				{
 					// response still empty => couldn't find the map-tile the user clicked on => tell the client
 					MapBlockData block = new MapBlockData();

@@ -216,14 +216,10 @@ namespace Aurora.Modules
 
         private void AskServerForConnection(ConnectionIdentifier Connection)
         {
-            //It has asked the other server for a connection already.
-            
             Hashtable request = new Hashtable();
-            
             request["WorldIdentifier"] = Framework.Utils.Encrypt(Connection.Identifier, Connection.Identifier, Connection.Identifier);
             
             m_log.Info("[IWC MODULE]: Connecting to " + Connection + ".");
-            
             Hashtable result = Framework.Utils.GenericXMLRPCRequest(request, "InterWorldNewWorldConnection", Connection.Connection);
 
             if ((string)result["success"] == "true")
@@ -239,12 +235,20 @@ namespace Aurora.Modules
                         {
                             regTemp.Add(keyval.Key.ToString(), keyval.Value);
                         }
+
+                        #region Null check
                         if (regTemp["Token"] == null)
                         {
                             regTemp.Remove("Token");
                             regTemp.Add("Token", "");
                         }
-                        IWCConnectedRegions.Add(new OpenSim.Services.Interfaces.GridRegion(regTemp), Connection.Connection);
+                        #endregion
+
+                        #region Add Region to the grid and IWC databases
+                        OpenSim.Services.Interfaces.GridRegion region = new OpenSim.Services.Interfaces.GridRegion(regTemp);
+                        m_Scene.GridService.RegisterRegion(UUID.Zero, region);
+                        IWCConnectedRegions.Add(region, Connection.Connection);
+                        #endregion
                     }
                     servers.Add(Connection, true);
                     m_log.Info("[IWC MODULE]: Connected to " + Connection + " successfully.");
@@ -323,7 +327,11 @@ namespace Aurora.Modules
         public ConnectionIdentifier GetConnectionByRegion(OpenSim.Services.Interfaces.GridRegion region)
         {
             string connection = "";
-            IWCConnectedRegions.TryGetValue(region, out connection);
+            foreach (OpenSim.Services.Interfaces.GridRegion IWCregion in IWCConnectedRegions.Keys)
+            {
+                if(IWCregion.RegionHandle == region.RegionHandle)
+                    IWCConnectedRegions.TryGetValue(IWCregion, out connection);
+            }
             foreach (ConnectionIdentifier con in Connections)
             {
                 if (connection == con.Connection)
@@ -386,6 +394,7 @@ namespace Aurora.Modules
                 ConnectionIdentifier connIdent = GetConnectionByRegion(finalDestination);
                 if (connIdent == null)
                 {
+                    reason = "Can not find the region.";
                     m_log.DebugFormat("[IWC MODULE]: [FireNewIWCUser] Request to login foreign agent {0} {1} failed: Can not find the region.", aCircuit.firstname, aCircuit.lastname);
                     return false;
                 }
@@ -402,6 +411,7 @@ namespace Aurora.Modules
                     {
                         if (!IsForeignAgent(aCircuit.AgentID))
                         {
+                            reason = "User was not found.";
                             m_log.Debug("[IWC MODULE]: [FireNewIWCUser] User was not found. Refusing.");
                             return false;
                         }
@@ -413,6 +423,7 @@ namespace Aurora.Modules
                 bool fired = FireStartPresence(aCircuit, connIdent, finalDestination, out reason);
                 if (!fired)
                 {
+                    reason = "Login new presence failed.";
                     m_log.Debug("[IWC MODULE]: [FireNewIWCUser] Login new presence failed.");
                     return false;
                 }
@@ -666,5 +677,15 @@ namespace Aurora.Modules
         }
 
         #endregion
+
+        public bool IsRegionForeign(ulong p)
+        {
+            foreach (OpenSim.Services.Interfaces.GridRegion region in IWCConnectedRegions.Keys)
+            {
+                if (region.RegionHandle == p)
+                    return true;
+            }
+            return false;
+        }
     }
 }

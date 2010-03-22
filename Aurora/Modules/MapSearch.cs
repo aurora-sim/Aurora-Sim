@@ -132,15 +132,6 @@ namespace Aurora.Modules
                 return;
             }
 
-            #region IWC
-            Scene cScene = GetClientScene(remoteClient);
-            int i = 0;
-            foreach (OpenSim.Services.Interfaces.GridRegion region in IWC.IWCConnectedRegions.Keys)
-            {
-                regionInfos.Add(region);
-            }
-            #endregion
-
             List<MapBlockData> blocks = new List<MapBlockData>();
 
             MapBlockData data;
