@@ -2706,6 +2706,8 @@
 <Reference name="XMLRPC.dll"/>
 <Reference name="log4net.dll"/>
 <Reference name="OpenMetaverse.dll"/>
+<Reference name="System.Core"/>
+<Reference name="System.Linq"/>
 <Reference name="OpenMetaverse.StructuredData.dll"/>
       <Reference name="OpenMetaverseTypes.dll"/>
 <Reference name="Mono.Addins.dll"/>
@@ -2763,7 +2765,8 @@
           <ReferencePath>../../bin/</ReferencePath>
           <Reference name="System"/>
           <Reference name="System.Xml"/>
-	    <Reference name="Nini.dll"/>
+	  <Reference name="Nini.dll"/>
+	  <Reference name="C5.dll"/>
 <Reference name="Aurora.Framework"/>
 <Reference name="Aurora.DataManager"/>
 <Reference name="OpenSim.Region.Framework"/>
