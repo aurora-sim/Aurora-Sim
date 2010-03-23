@@ -131,7 +131,7 @@ namespace Aurora.Modules
             string identifiers = m_config.GetString("WorldsToInformIdentifiers", "");
             string[] tempIdent = identifiers.Split(',');
             string trustLevels = m_config.GetString("WorldsToInformTrustLevels", "");
-            string[] tempTrustLev = identifiers.Split(',');
+            string[] tempTrustLev = trustLevels.Split(',');
             int i = 0;
             foreach (string unnneeded in tempConn)
             {
@@ -167,7 +167,29 @@ namespace Aurora.Modules
             Hashtable requestData = (Hashtable)request.Params[0];
             Hashtable responseData = new Hashtable();
             string SentWorldIdentifier = Framework.Utils.Decrypt((string)requestData["WorldIdentifier"], WorldIdentifier, WorldIdentifier);
-            
+
+            #region GetConnection
+            KeyValuePair<ConnectionIdentifier, bool> con = new KeyValuePair<ConnectionIdentifier, bool>();
+            foreach (KeyValuePair<ConnectionIdentifier, bool> connection in servers)
+            {
+                string[] IPs = connection.Key.Connection.Split(':');
+                string IP = IPs[1].Substring(2);
+                if (Dns.GetHostByName(IP).AddressList[0].ToString() == IPEndPoint.Address.ToString())
+                {
+                    con = connection;
+                }
+            }
+            foreach (KeyValuePair<ConnectionIdentifier, bool> connection in Servers)
+            {
+                string[] IPs = connection.Key.Connection.Split(':');
+                string IP = IPs[1].Substring(2);
+                if (Dns.GetHostByName(IP).AddressList[0].ToString() == IPEndPoint.Address.ToString())
+                {
+                    con = connection;
+                }
+            }
+            #endregion
+
             #region Check Authentication
             if (SentWorldIdentifier != WorldIdentifier)
             {
@@ -187,7 +209,7 @@ namespace Aurora.Modules
             responseData["Connected"] = "true";
             #endregion
 
-            #region Get Our Regions
+            #region Get Our Regions and RegionInfos
             ArrayList tempRegions = new ArrayList();
             
             foreach (Scene scene in m_scenes)
@@ -195,31 +217,68 @@ namespace Aurora.Modules
 
             foreach (KeyValuePair<OpenSim.Services.Interfaces.GridRegion, ConnectionIdentifier> region in IWCConnectedRegions)
                 tempRegions.Add((object)region.Key.ToKeyValuePairs());
-            
+
+            #region Add RegionInfos to the hashtable
+
+            ArrayList RegionInfoKeys = new ArrayList();
+            ArrayList RegionInfoValues = new ArrayList();
+            if (GetTrustLevel("High",con.Key))
+            {
+                foreach (Scene scene in m_scenes)
+                {
+                    OSDMap map = scene.RegionInfo.PackRegionInfoData();
+                    KeyValuePair<string, string>[] pairs = new KeyValuePair<string, string>[map.Count];
+                    int i = 0;
+                    foreach (KeyValuePair<string, OSD> pair in map)
+                    {
+                        pairs[i] = new KeyValuePair<string, string>(pair.Key, pair.Value.ToString());
+                        i++;
+                    }
+                    ArrayList ListKeys = new ArrayList();
+                    ArrayList ListValues = new ArrayList();
+                    foreach (KeyValuePair<string, string> pair in pairs)
+                    {
+                        ListKeys.Add(pair.Key);
+                    }
+                    foreach (KeyValuePair<string, string> pair in pairs)
+                    {
+                        ListValues.Add(pair.Value);
+                    }
+                    RegionInfoKeys.Add(ListKeys);
+                    RegionInfoValues.Add(ListValues);
+                }
+            }
+
+            responseData["RegionKeys"] = RegionInfoKeys;
+            responseData["RegionValues"] = RegionInfoValues;
+
+            #endregion
+
             #endregion
 
             responseData["AllWorlds"] = tempRegions;
             response.Value = responseData;
 
             #region Callback on the connecting server
-            foreach (KeyValuePair<ConnectionIdentifier, bool> con in Servers)
+            foreach (KeyValuePair<ConnectionIdentifier, bool> connection in servers)
             {
-                string[] IPs = con.Key.Connection.Split(':');
+                string[] IPs = connection.Key.Connection.Split(':');
                 string IP = IPs[1].Substring(2);
                 if (Dns.GetHostByName(IP).AddressList[0].ToString() == IPEndPoint.Address.ToString())
                 {
-                    if (con.Value == false)
+                    if (connection.Value == false)
                     {
-                        lock(servers)
-                            AskServerForConnection(con.Key);
+                        lock (servers)
+                            AskServerForConnection(connection.Key);
                     }
                 }
             }
-            foreach (KeyValuePair<ConnectionIdentifier, bool> con in servers)
+
+            foreach (KeyValuePair<ConnectionIdentifier, bool> connection in servers)
             {
-                if (Servers.ContainsKey(con.Key))
-                    Servers.Remove(con.Key);
-                Servers.Add(con.Key, con.Value);
+                if (Servers.ContainsKey(connection.Key))
+                    Servers.Remove(connection.Key);
+                Servers.Add(connection.Key, connection.Value);
             }
             servers.Clear();
             #endregion
@@ -262,7 +321,46 @@ namespace Aurora.Modules
                         OpenSim.Services.Interfaces.GridRegion region = new OpenSim.Services.Interfaces.GridRegion(regTemp);
                         if (m_Scene.GridService.GetRegionByUUID(UUID.Zero,region.RegionID) != null)
                             m_Scene.GridService.RegisterRegion(UUID.Zero, region);
+
+                        ArrayList ListKeys = result["RegionKeys"] as ArrayList;
+                        ArrayList ListValues = result["RegionValues"] as ArrayList;
+                        int a = 0;
+                        List<RegionInfo> RegionInfos = new List<RegionInfo>();
+                        foreach (ArrayList Keys in ListKeys)
+                        {
+                            ArrayList Values = ListValues[a] as ArrayList;
+                            KeyValuePair<string, OSD>[] pairs = new KeyValuePair<string, OSD>[Keys.Count];
+                            int i = 0;
+                            foreach (string key in Keys)
+                            {
+                                OSDString osd = new OSDString((string)Values[i]);
+                                pairs[i] = new KeyValuePair<string, OSD>((string)Keys[i], (OSD)osd);
+                                i++;
+                            }
+
+                            Dictionary<string, OSD> dictionary = new Dictionary<string, OSD>();
+                            foreach (KeyValuePair<string, OSD> pair in pairs)
+                            {
+                                dictionary.Add(pair.Key, pair.Value);
+                            }
+
+                            OSDMap map = new OSDMap(dictionary);
+                            RegionInfo regionInfo = new RegionInfo();
+                            regionInfo.UnpackRegionInfoData(map);
+                            RegionInfos.Add(regionInfo);
+                        }
                         
+
+                        //Add neighbors
+                        foreach (Scene scene in m_scenes)
+                        {
+                            foreach (RegionInfo info in RegionInfos)
+                            {
+                                bool found = TryFindNeighborRegion((int)scene.RegionInfo.RegionLocX, (int)info.RegionLocX, (int)scene.RegionInfo.RegionLocY, (int)info.RegionLocY);
+                                if (found)
+                                    scene.AddNeighborRegion(info);
+                            }
+                        }
                         IWCConnectedRegions.Add(region, Connection);
                         #endregion
                     }
@@ -281,6 +379,42 @@ namespace Aurora.Modules
             {
                 m_log.Warn("[IWC MODULE]: Did not connect to " + Connection + " successfully.");
             }
+        }
+
+        #endregion
+
+        #region Trust Level
+
+        /// <summary>
+        /// This determines whether the trust level between the two worlds is great enough to allow the action.
+        /// The level is what is needed to fire the action. The connectionIdentifier is the connection.
+        /// </summary>
+        /// <param name="level"></param>
+        /// <param name="connectionIdentifier"></param>
+        /// <returns></returns>
+        private bool GetTrustLevel(string level, ConnectionIdentifier connectionIdentifier)
+        {
+            int NeededTrust = GetTrustLevelFromString(level);
+            int ForeignWorldTrust = GetTrustLevelFromString(connectionIdentifier.TrustLevel);
+            if (ForeignWorldTrust >= NeededTrust)
+                return true;
+            return false;
+        }
+
+        private int GetTrustLevelFromString(string level)
+        {
+            int CurrentWorldTrustLevel = 0;
+            if (level == "Full")
+                CurrentWorldTrustLevel = 4;
+            if (level == "High")
+                CurrentWorldTrustLevel = 3;
+            if (level == "Medium")
+                CurrentWorldTrustLevel = 2;
+            if (level == "Low")
+                CurrentWorldTrustLevel = 1;
+            if (level == "None")
+                CurrentWorldTrustLevel = 0;
+            return CurrentWorldTrustLevel;
         }
 
         #endregion
@@ -378,6 +512,19 @@ namespace Aurora.Modules
                 if (region.RegionHandle == p)
                     return true;
             }
+            return false;
+        }
+
+        private bool TryFindNeighborRegion(int locX, int locXNew, int locY, int locYNew)
+        {
+            if (locXNew - 1 == locX)
+                return true;
+            if (locXNew + 1 == locX)
+                return true;
+            if (locYNew + 1 == locY)
+                return true;
+            if (locYNew - 1 == locY)
+                return true;
             return false;
         }
 
