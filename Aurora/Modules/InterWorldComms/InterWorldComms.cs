@@ -260,7 +260,7 @@ namespace Aurora.Modules
             response.Value = responseData;
 
             #region Callback on the connecting server
-            List<ConnectionIdentifier> NewlyConnectedToWorlds = new List<ConnectionIdentifier>(; 
+            List<ConnectionIdentifier> NewlyConnectedToWorlds = new List<ConnectionIdentifier>(); 
             foreach (ConnectionIdentifier connection in UnsuccessfulConnectedToWorlds)
             {
                 string[] IPs = connection.Connection.Split(':');
