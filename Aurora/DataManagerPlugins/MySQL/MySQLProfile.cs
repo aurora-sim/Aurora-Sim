@@ -443,5 +443,40 @@ namespace Aurora.DataManager.MySQL
             UserProfilesCache.Add(new UUID(client), UserProfile);
             return UserProfile;
         }
+
+        public void UpdateUserProfile(AuroraProfileData Profile)
+        {
+            List<string> SetValues = new List<string>();
+            List<string> SetRows = new List<string>();
+            SetRows.Add("AboutText");
+            SetRows.Add("profileAllowPublish");
+            SetRows.Add("FirstLifeAboutText");
+            SetRows.Add("FirstLifeImage");
+            SetRows.Add("Image");
+            SetRows.Add("ProfileURL");
+            SetRows.Add("TempBanned");
+            SetRows.Add("profileWantToMask");
+            SetRows.Add("profileWantToText");
+            SetRows.Add("profileSkillsMask");
+            SetRows.Add("profileSkillsText");
+            SetRows.Add("profileLanguages");
+            SetValues.Add(Profile.AboutText);
+            SetValues.Add(Profile.AllowPublish);
+            SetValues.Add(Profile.FirstLifeAboutText);
+            SetValues.Add(Profile.FirstLifeImage.ToString());
+            SetValues.Add(Profile.Image.ToString());
+            SetValues.Add(Profile.ProfileURL);
+            SetValues.Add(Profile.TempBanned.ToString());
+            SetValues.Add(Profile.Interests[0]);
+            SetValues.Add(Profile.Interests[1]);
+            SetValues.Add(Profile.Interests[2]);
+            SetValues.Add(Profile.Interests[3]);
+            SetValues.Add(Profile.Interests[4]);
+            List<string> KeyValue = new List<string>();
+            List<string> KeyRow = new List<string>();
+            KeyRow.Add("userUUID");
+            KeyValue.Add(Profile.Identifier);
+            Update("usersauth", SetValues.ToArray(), SetRows.ToArray(), KeyRow.ToArray(), KeyValue.ToArray());
+        }
     }
 }

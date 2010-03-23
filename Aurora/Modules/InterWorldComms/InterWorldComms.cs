@@ -228,7 +228,7 @@ namespace Aurora.Modules
 
             ArrayList RegionInfoKeys = new ArrayList();
             ArrayList RegionInfoValues = new ArrayList();
-            /*if (GetTrustLevel("High",con))
+            if (GetTrustLevel("High",con))
             {
                 foreach (Scene scene in m_scenes)
                 {
@@ -253,7 +253,7 @@ namespace Aurora.Modules
                     RegionInfoKeys.Add(ListKeys);
                     RegionInfoValues.Add(ListValues);
                 }
-            }*/
+            }
 
             responseData["RegionKeys"] = RegionInfoKeys;
             responseData["RegionValues"] = RegionInfoValues;
@@ -333,7 +333,7 @@ namespace Aurora.Modules
                         ArrayList ListKeys = result["RegionKeys"] as ArrayList;
                         ArrayList ListValues = result["RegionValues"] as ArrayList;
                         int a = 0;
-                        /*List<RegionInfo> RegionInfos = new List<RegionInfo>();
+                        List<RegionInfo> RegionInfos = new List<RegionInfo>();
                         foreach (ArrayList Keys in ListKeys)
                         {
                             ArrayList Values = ListValues[a] as ArrayList;
@@ -368,7 +368,7 @@ namespace Aurora.Modules
                                 if (found)
                                     scene.AddNeighborRegion(info);
                             }
-                        }*/
+                        }
                         IWCConnectedRegions.Add(region, Connection);
                         #endregion
                     }

@@ -69,6 +69,7 @@ namespace Aurora.Modules
             if (cmdparams.Length != 5)
             {
                 m_log.Debug("[AA] Not enough parameters!");
+                return;
             }
             UserAccount account = m_scene.UserAccountService.GetUserAccount(UUID.Zero, cmdparams[2], cmdparams[3]);
             LoadAA(account, cmdparams[4]);

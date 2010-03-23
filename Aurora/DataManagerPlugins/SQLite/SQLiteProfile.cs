@@ -272,45 +272,6 @@ namespace Aurora.DataManager.SQLite
             return RetVal;
         }
 
-        public AuroraProfileData GetProfileInfo(UUID agentID, UUID target)
-        {
-            AuroraProfileData UserProfile = new AuroraProfileData();
-            if (UserProfilesCache.ContainsKey(agentID))
-            {
-                UserProfilesCache.TryGetValue(agentID, out UserProfile);
-                return UserProfile;
-            }
-            else
-            {
-                string profileURL = Query("select profileURL from usersauth where userUUID = '" + agentID.ToString() + "'")[0];
-                List<string> Interests = ReadInterestsInfoRow(agentID.ToString());
-                string allowpublish = Query("select profileAllowPublish from usersauth where userUUID = '" + agentID.ToString() + "'")[0];
-                string maturepublish = Query("select profileMaturePublish from usersauth where userUUID = '" + agentID.ToString() + "'")[0];
-                string membershipGroup = Query("select membershipGroup from usersauth where userUUID = '" + agentID.ToString() + "'")[0];
-                string godlevel = Query("select userGodLevel from usersauth where userUUID = '" + agentID.ToString() + "'")[0];
-                List<string> name = Query("select userlogin from usersauth where userUUID = '" + agentID.ToString() + "'");
-                string Password = Query("select userPass from usersauth where userUUID = '" + agentID.ToString() + "'")[0];
-                if (godlevel == " ")
-                    godlevel = "0";
-                if (allowpublish == " ")
-                    allowpublish = "0";
-                if (maturepublish == " ")
-                    maturepublish = "0";
-                UserProfile.PasswordHash = Password;
-                UserProfile.FirstName = name[0].Split(' ')[0];
-                UserProfile.SurName = name[0].Split(' ')[1];
-                UserProfile.Identifier = agentID.ToString();
-                UserProfile.ProfileUrl = profileURL;
-                UserProfile.Interests = Interests;
-                UserProfile.MembershipGroup = membershipGroup;
-                UserProfile.AllowPublish = allowpublish;
-                UserProfile.MaturePublish = maturepublish;
-                UserProfile.GodLevel = Convert.ToInt32(godlevel);
-                UserProfilesCache.Add(agentID, UserProfile);
-                return UserProfile;
-            }
-        }
-
         public AuroraProfileData GetProfileInfo(UUID agentID)
         {
             AuroraProfileData UserProfile = new AuroraProfileData();
@@ -391,6 +352,43 @@ namespace Aurora.DataManager.SQLite
             SetValues.Add(Profile.Image.ToString());
             SetValues.Add(Profile.ProfileURL);
             SetValues.Add(Profile.TempBanned.ToString());
+            SetValues.Add(Profile.Interests[0]);
+            SetValues.Add(Profile.Interests[1]);
+            SetValues.Add(Profile.Interests[2]);
+            SetValues.Add(Profile.Interests[3]);
+            SetValues.Add(Profile.Interests[4]);
+            List<string> KeyValue = new List<string>();
+            List<string> KeyRow = new List<string>();
+            KeyRow.Add("userUUID");
+            KeyValue.Add(Profile.Identifier);
+            Update("usersauth", SetValues.ToArray(), SetRows.ToArray(), KeyRow.ToArray(), KeyValue.ToArray());
+        }
+
+        public void FullUpdateUserProfile(AuroraProfileData Profile)
+        {
+            List<string> SetValues = new List<string>();
+            List<string> SetRows = new List<string>();
+            SetRows.Add("AboutText");
+            SetRows.Add("profileAllowPublish");
+            SetRows.Add("userEmail");
+            SetRows.Add("FirstLifeAboutText");
+            SetRows.Add("FirstLifeImage");
+            SetRows.Add("Image");
+            SetRows.Add("ProfileURL");
+            SetRows.Add("membershipGroup");
+            SetRows.Add("profileWantToMask");
+            SetRows.Add("profileWantToText");
+            SetRows.Add("profileSkillsMask");
+            SetRows.Add("profileSkillsText");
+            SetRows.Add("profileLanguages");
+            SetValues.Add(Profile.AboutText);
+            SetValues.Add(Profile.AllowPublish);
+            SetValues.Add(Profile.Email);
+            SetValues.Add(Profile.FirstLifeAboutText);
+            SetValues.Add(Profile.FirstLifeImage.ToString());
+            SetValues.Add(Profile.Image.ToString());
+            SetValues.Add(Profile.ProfileURL);
+            SetValues.Add(Profile.MembershipGroup);
             SetValues.Add(Profile.Interests[0]);
             SetValues.Add(Profile.Interests[1]);
             SetValues.Add(Profile.Interests[2]);

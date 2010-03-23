@@ -44,7 +44,7 @@ namespace Aurora.DataManager
         List<string> ReadInterestsInfoRow(string agentID);
         List<string> ReadPickInfoRow(string creator,string pickID);
         void InvalidateProfileNotes(UUID target);
-        AuroraProfileData GetProfileNotes(UUID agentID, UUID target);
+        void FullUpdateUserProfile(AuroraProfileData Profile);
         List<string> Query(string query);
         AuroraProfileData GetProfileInfo(UUID agentID);
 

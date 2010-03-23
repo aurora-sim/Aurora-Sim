@@ -38,6 +38,7 @@ using OpenSim.Framework.Client;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using Aurora.DataManager;
+using Aurora.Framework;
 
 namespace Aurora.Modules
 {
@@ -141,9 +142,9 @@ namespace Aurora.Modules
         	{
         		Adetails = detailssplit[4];
         	}
-            UserProfileData reporterProfile = ProfileData.GetProfileInfo(reporter);
+            AuroraProfileData reporterProfile = ProfileData.GetProfileInfo(reporter);
         	string ReporterName = reporterProfile.FirstName + " " + reporterProfile.SurName;
-            UserProfileData AbuserProfile = ProfileData.GetProfileInfo(abuserID);
+            AuroraProfileData AbuserProfile = ProfileData.GetProfileInfo(abuserID);
         	string AbuserName = AbuserProfile.FirstName + " " + reporterProfile.SurName;
         	summery =summery.Replace("\"","`");
         	summery =summery.Replace("|","");
