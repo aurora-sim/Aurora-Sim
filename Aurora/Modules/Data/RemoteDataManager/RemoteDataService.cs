@@ -219,6 +219,11 @@ namespace Aurora.Modules.DataPlugins
             throw new NotImplementedException();
         }
 
+        public void FullUpdateUserProfile(AuroraProfileData Profile)
+        {
+            throw new NotImplementedException();
+        }
+
         public AuroraProfileData CreateTemperaryAccount(string client, string first, string last)
         {
             throw new NotImplementedException();

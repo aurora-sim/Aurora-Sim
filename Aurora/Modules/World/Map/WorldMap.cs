@@ -50,6 +50,7 @@ using OSDArray=OpenMetaverse.StructuredData.OSDArray;
 using OSDMap=OpenMetaverse.StructuredData.OSDMap;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 using Aurora.DataManager;
+using Aurora.Framework;
 using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules
@@ -333,7 +334,7 @@ namespace Aurora.Modules
             UserAccount account = m_scene.UserAccountService.GetUserAccount(UUID.Zero, remoteClient.AgentId);
             uint xstart = 0;
 			uint ystart = 0;
-			Utils.LongToUInts(m_scene.RegionInfo.RegionHandle, out xstart, out ystart);
+		    OpenMetaverse.Utils.LongToUInts(m_scene.RegionInfo.RegionHandle, out xstart, out ystart);
 			if (itemtype == 6) // we only sevice 6 right now (avatar green dots)
 			{
 				if (regionhandle == 0 || regionhandle == m_scene.RegionInfo.RegionHandle)

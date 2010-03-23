@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using Mono.Data.SqliteClient;
+using Aurora.Framework;
 
 namespace Aurora.DataManager.SQLite
 {

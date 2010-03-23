@@ -1307,6 +1307,7 @@
       <Reference name="OpenSim.Framework.Statistics"/>
       <Reference name="OpenSim.Region.Physics.Manager"/>
       <Reference name="Aurora.DataManager"/>
+	 <Reference name="Aurora.Framework"/>
 
       <Reference name="GlynnTucker.Cache.dll"/>
 
@@ -2265,7 +2266,7 @@
       <Reference name="RAIL.dll"/>
       <Reference name="Nini.dll" />
       <Reference name="log4net.dll"/>
-<Reference name="Aurora.DataManager"/>
+	<Reference name="Aurora.Framework"/>
 
       <Files>
         <Match pattern="*.cs" recurse="true"/>

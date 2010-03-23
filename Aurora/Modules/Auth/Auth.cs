@@ -14,25 +14,54 @@ using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules
 {
-    public class Auth: IRegionModule, IAuth
+    public class Auth: IRegionModule, IIWCAuthenticationService, IAuthService
     {
-        List<string> CheckServers = new List<string>();
-        List<string> AuthServersBannedList = new List<string>();
-        IGenericData a_DataService = null;
+        private List<string> CheckServers = new List<string>();
+        private List<string> AuthServersBannedList = new List<string>();
+        private IGenericData a_DataService = null;
+        private Scene m_scene;
 
-        /// <summary>
-        /// Authenticates the user on a Login.
-        /// </summary>
-        /// <param name="userName"></param>
-        /// <param name="password"></param>
-        /// <returns></returns>
-        public bool LoginAuthenticateUser(string userName, string password)
+        #region IRegionModule Members
+
+        public string Name
         {
-            string truePassword = a_DataService.Query("UserName", userName, "users", "Password")[0];
-            if (truePassword == password)
-                return true;
-            return false;
+            get { return "GenericAuthPlugin"; }
         }
+
+        public void Close()
+        {
+        }
+
+        public void PostInitialise()
+        {
+            a_DataService = Aurora.DataManager.DataManager.GetGenericPlugin();
+        }
+        
+        public void Initialise(Scene scene, IConfigSource source)
+        {
+            m_scene = scene;
+            scene.AddCommand(this, "create userauth", "create userauth", "Creates a new User Auth", CreateUserAuth);
+            if (CheckServers.Count == 0)
+            {
+                string bannedAuthServers = source.Configs["AuroraAuth"].GetString("BannedAuthServers", "");
+                if (bannedAuthServers == "")
+                    return;
+                string[] servers = bannedAuthServers.Split(',');
+                foreach (string server in servers)
+                {
+                    CheckServers.Add(server);
+                }
+            }
+        }
+
+        public bool IsSharedModule
+        {
+            get { return true; }
+        }
+
+        #endregion
+
+        #region IIWCAuthenticationService
 
         /// <summary>
         /// This checks whether the user's homeserver is allowed to connect to the world.
@@ -57,52 +86,9 @@ namespace Aurora.Modules
             return true;
         }
 
-        /// <summary>
-        /// Creates a user account; this is called from IAccountBase, this creates the authentication side of it.
-        /// </summary>
-        /// <param name="userName"></param>
-        /// <param name="password"></param>
-        public void CreateUserAccount(string userName, string password)
-        {
-            string[] values = new string[2];
-            values[0] = userName;
-            values[1] = password;
-            a_DataService.Insert("Authentication", values);
-        }
+        #endregion
 
-        #region IModuleInterface Members
-
-        public string Name
-        {
-            get { return "GenericAuthPlugin"; }
-        }
-
-        public void Close()
-        {
-        }
-
-        public void PostInitialise()
-        {
-            a_DataService = Aurora.DataManager.DataManager.GetGenericPlugin();
-        }
-        Scene m_scene;
-        public void Initialise(Scene scene, IConfigSource source)
-        {
-            m_scene = scene;
-            scene.RegisterModuleInterface<IAuth>(this);
-            scene.AddCommand(this, "create userauth", "create userauth", "Creates a new User Auth", CreateUserAuth);
-            if (CheckServers.Count == 0)
-            {
-                string bannedAuthServers = source.Configs["AuroraAuth"].GetString("BannedAuthServers", "");
-                if (bannedAuthServers == "")
-                    return;
-                string[] servers = bannedAuthServers.Split(',');
-                foreach (string server in servers)
-                {
-                    CheckServers.Add(server);
-                }
-            }
-        }
+        #region IAuthService
 
         protected void CreateUserAuth(string module, string[] cmdparams)
         {
@@ -134,38 +120,35 @@ namespace Aurora.Modules
             values.Add(" ");
             values.Add(" ");
             values.Add("0");
-            values.Add(" ");
-            values.Add(" ");
-            values.Add(" ");
-            values.Add(" ");
-            values.Add(" ");
-            values.Add("0");
-            values.Add("0");
-            values.Add("0");
             values.Add("0");
             values.Add(" ");
             values.Add(" ");
             values.Add(" ");
             values.Add(" ");
             values.Add("0");
+            values.Add("0");
+            values.Add("0");
+            values.Add("0");
+            values.Add(" ");
+            values.Add(" ");
+            values.Add(" ");
+            values.Add(" ");
+            values.Add("0");
             values.Add(" ");
             values.Add("0");
             values.Add(" ");
             values.Add(" ");
             values.Add("0");
             values.Add("0");
+            values.Add("0");
             values.Add(" ");
             values.Add(" ");
             values.Add(" ");
             values.Add(" ");
-            values.Add(" ");
+            values.Add("");
+            values.Add("true");
             IGenericData GD = Aurora.DataManager.DataManager.GetGenericPlugin();
             GD.Insert("usersauth", values.ToArray());
-        }
-
-        public bool IsSharedModule
-        {
-            get { return true; }
         }
 
         #endregion

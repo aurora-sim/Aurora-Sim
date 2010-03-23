@@ -34,11 +34,6 @@ using OpenSim.Services.Interfaces;
 
 namespace Aurora.Framework
 {
-    public interface IClient
-    {
-        string Identifier { get; set; }
-        string UserName { get; set; }
-    }
     public class AuroraProfileData : UserProfileData
     {
         public string Login { get; set; }
@@ -345,18 +340,5 @@ namespace Aurora.Framework
             get { return m_Picks; }
             set { m_Picks = value; }
         }
-    }
-    public class ITransferableClient
-    {
-        public string HomeServerIP;
-        public string HomeServerPort;
-        public string Identifier;
-        public string UserSession;
-        public AgentCircuitData CircuitData;
-        public uint Flags;
-        public UUID IncomingRegion;
-        public UUID HomeRegion;
-        public Vector3 HomePos;
-        public Vector3 HomeLookAt;
     }
 }

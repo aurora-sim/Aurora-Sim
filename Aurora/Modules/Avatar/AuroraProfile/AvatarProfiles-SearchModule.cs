@@ -779,7 +779,7 @@ namespace Aurora.Modules
                 }
                 else
                 {
-                    m_scene.RequestModuleInterface<IAuth>().CreateUserAuth(target.ToString(), TargetSP.Firstname, TargetSP.Lastname);
+                    m_scene.RequestModuleInterface<IAuthService>().CreateUserAuth(target.ToString(), TargetSP.Firstname, TargetSP.Lastname);
                     m_log.Debug("[AvatarProfilesModule]: Got null for profile for " + target.ToString());
                     RequestAvatarProperty(remoteClient, target);
                 }

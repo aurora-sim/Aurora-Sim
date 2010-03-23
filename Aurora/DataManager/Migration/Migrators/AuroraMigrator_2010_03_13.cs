@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using C5;
+using Aurora.Framework;
 
 namespace Aurora.DataManager.Migration.Migrators
 {

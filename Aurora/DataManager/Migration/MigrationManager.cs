@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Aurora.DataManager.Migration.Migrators;
+using Aurora.Framework;
 
 namespace Aurora.DataManager.Migration
 {

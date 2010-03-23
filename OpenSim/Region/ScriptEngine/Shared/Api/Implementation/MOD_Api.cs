@@ -30,7 +30,7 @@ using System.Reflection;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.Remoting.Lifetime;
-using Aurora.DataManager;
+using Aurora.Framework;
 using OpenMetaverse;
 using Nini.Config;
 using OpenSim;
@@ -111,7 +111,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             if (message.Length > 1023)
                 message = message.Substring(0, 1023);
 
-            World.SimChat(Utils.StringToBytes(message),
+            World.SimChat(OpenMetaverse.Utils.StringToBytes(message),
                           ChatTypeEnum.Shout, ScriptBaseClass.DEBUG_CHANNEL, m_host.ParentGroup.RootPart.AbsolutePosition, m_host.Name, m_host.UUID, true);
 
             IWorldComm wComm = m_ScriptEngine.World.RequestModuleInterface<IWorldComm>();

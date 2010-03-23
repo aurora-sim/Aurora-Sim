@@ -8,6 +8,7 @@ using System.Threading;
 using C5;
 using MySql.Data.MySqlClient;
 using Aurora.DataManager;
+using Aurora.Framework;
 
 namespace Aurora.DataManager.MySQL
 {

@@ -444,7 +444,7 @@ namespace Aurora.DataManager.MySQL
             return UserProfile;
         }
 
-        public void UpdateUserProfile(AuroraProfileData Profile)
+        public void FullUpdateUserProfile(AuroraProfileData Profile)
         {
             List<string> SetValues = new List<string>();
             List<string> SetRows = new List<string>();

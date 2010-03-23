@@ -41,6 +41,7 @@ using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 using Aurora.DataManager;
+using Aurora.Framework;
 
 namespace Aurora.Modules
 {

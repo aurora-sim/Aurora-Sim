@@ -11,7 +11,7 @@ using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Services.Interfaces;
 using OpenMetaverse;
 using log4net;
-using Aurora.DataManager;
+using Aurora.Framework;
 
 namespace Aurora.Modules
 {

@@ -40,10 +40,10 @@ namespace Aurora.Modules
     public class InterWorldComms : IRegionModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private IAuth a_AuthService = null;
         private bool a_Enabled = true;
         private string WorldIdentifier = "";
-        
+        private IIWCAuthenticationService IWCAuthService = null;
+
         /// <summary>
         /// Connection, have we asked them for a connection
         /// </summary>
@@ -108,15 +108,10 @@ namespace Aurora.Modules
             {
                 OurRegions.Add(scene.RegionInfo.RegionID);
             }
-            a_AuthService = m_Scene.RequestModuleInterface<IAuth>();
-            if (a_AuthService == default(IAuth))
-            {
-                a_Enabled = false;
-                m_log.Debug("[AuroraInterWorldComms]: No Auth Service defined! Disabling...");
-            }
             GD = Aurora.DataManager.DataManager.GetGenericPlugin();
             ProfileDataManager = Aurora.DataManager.DataManager.GetProfilePlugin();
             InformOtherWorldsAboutUs();
+            IWCAuthService = m_Scene.RequestModuleInterface<IIWCAuthenticationService>();
         }
 
         private void InformOtherWorldsAboutUs()
@@ -196,7 +191,7 @@ namespace Aurora.Modules
                 response.Value = responseData;
                 return response;
             }
-            bool authed = a_AuthService.CheckAuthenticationServer(IPEndPoint);
+            bool authed = IWCAuthService.CheckAuthenticationServer(IPEndPoint);
             if (!authed)
             {
                 responseData["Connected"] = "false";

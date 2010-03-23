@@ -33,14 +33,13 @@ using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
-using Aurora.DataManager;
 using log4net;
-using Mono.Addins;
+using Aurora.DataManager;
+using Aurora.Framework;
 
-
-namespace OpenSim.Region.CoreModules.Avatar.Chat
+namespace Aurora.Modules
 {
-    public class ChatModule : ISharedRegionModule
+    public class AuroraChatModule : ISharedRegionModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -110,7 +109,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
 
         public virtual void RegionLoaded(Scene scene)
         {
-            GenericData = DataManager.GetGenericPlugin();
+            GenericData = Aurora.DataManager.DataManager.GetGenericPlugin();
         }
 
         public virtual void RemoveRegion(Scene scene)
@@ -437,7 +436,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
                     invString += (muteListType[i] + " " + muteListID[i] + " " + muteListName[i] + " |\n");
                     i++;
                 }
-                fileData = Utils.StringToBytes(invString);
+                fileData = OpenMetaverse.Utils.StringToBytes(invString);
             }
             IXfer xfer = client.Scene.RequestModuleInterface<IXfer>();
             if (xfer != null)

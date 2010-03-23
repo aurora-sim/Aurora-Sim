@@ -40,6 +40,7 @@ using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using Caps=OpenSim.Framework.Capabilities.Caps;
 using Aurora.DataManager;
+using Aurora.Framework;
 
 namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
 {
@@ -531,12 +532,12 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
             byte[] tmp = obj.AsBinary();
             if (BitConverter.IsLittleEndian)
                 Array.Reverse(tmp);
-            return Utils.BytesToUInt(tmp);
+            return OpenMetaverse.Utils.BytesToUInt(tmp);
 
         }
         private string ConvertUintToBytes(uint val)
         {
-            byte[] resultbytes = Utils.UIntToBytes(val);
+            byte[] resultbytes = OpenMetaverse.Utils.UIntToBytes(val);
             if (BitConverter.IsLittleEndian)
                 Array.Reverse(resultbytes);
             return String.Format("<binary encoding=\"base64\">{0}</binary>",Convert.ToBase64String(resultbytes));

@@ -5,6 +5,7 @@ using FluentNHibernate.Cfg.Db;
 using NHibernate;
 using NHibernate.Cfg;
 using NHibernate.Tool.hbm2ddl;
+using Aurora.Framework;
 
 namespace Aurora.DataManager
 {
