@@ -83,11 +83,15 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
         public override void AddRegion(Scene scene)
         {
-            base.AddRegion(scene);
-            if (m_Enabled)
-            {
-                scene.RegisterModuleInterface<IUserAgentVerificationModule>(this);
-            }
+            if (!base.m_Enabled)
+                return;
+
+            if (base.m_aScene == null)
+                base.m_aScene = scene;
+
+            scene.RegisterModuleInterface<IEntityTransferModule>(this);
+            scene.RegisterModuleInterface<IUserAgentVerificationModule>(this);
+            scene.EventManager.OnNewClient += OnNewClient;
         }
 
         protected override void OnNewClient(IClientAPI client)
@@ -126,9 +130,9 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
         protected override GridRegion GetFinalDestination(GridRegion region)
         {
-            GridRegionFlags flags = IWC.GetRegionFlags(region.RegionID);
-            m_log.DebugFormat("[IWC MODULE]: region {0} flags: {1}", region.RegionID, flags);
-            if (flags.IsIWCConnected)
+            bool IsIWC = IWC.IsRegionForeign(region.RegionHandle);
+            m_log.DebugFormat("[IWC MODULE]: region {0} flags: {1}", region.RegionID, IsIWC);
+            if (IsIWC)
             {
                 m_log.DebugFormat("[IWC MODULE]: RegionFound {0}", region.RegionID);
                 return region;
@@ -139,13 +143,12 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         protected bool CreateAgent(ScenePresence sp, GridRegion reg, GridRegion finalDestination, AgentCircuitData agentCircuit, uint teleportFlags, out string reason, out bool IsIWC)
         {
             reason = string.Empty;
-            IsIWC = false;
-            GridRegionFlags flags = IWC.GetRegionFlags(reg.RegionID);
-            if (flags.IsIWCConnected)
+            IsIWC = IWC.IsRegionForeign(reg.RegionHandle);
+            if (IsIWC)
             {
                 //Always needs to be root when teleporting to a region!
-                agentCircuit.child = false;
-                bool success = IWC.FireNewIWCUser(agentCircuit, reg, finalDestination, out reason);
+                //agentCircuit.child = false;
+                bool success = IWC.FireNewIWCRootAgent(agentCircuit, reg, finalDestination, true, out reason);
                 IsIWC = success;
                 return success;
             }
@@ -255,6 +258,11 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     if (reg != null)
                     {
                         GridRegion finalDestination = GetFinalDestination(reg);
+                        /*if(IWC.IsRegionForeign(reg.RegionHandle))
+                        {
+                            DoIWCTeleport(sp, reg, finalDestination, position, lookAt, teleportFlags, eq);
+                            return;
+                        }*/
                         if (finalDestination == null)
                         {
                             m_log.DebugFormat("[ENTITY TRANSFER MODULE]: Final destination is having problems. Unable to teleport agent.");
@@ -924,17 +932,20 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 cAgent.CallbackURI = "http://" + m_scene.RegionInfo.ExternalHostName + ":" + m_scene.RegionInfo.HttpPort +
                     "/agent/" + agent.UUID.ToString() + "/" + m_scene.RegionInfo.RegionID.ToString() + "/release/";
 
+                OpenSim.Services.Interfaces.GridRegion ourRegion = agent.Scene.GridService.GetRegionByUUID(UUID.Zero, agent.Scene.RegionInfo.RegionID);
                 bool foreign = IWC.IsRegionForeign(neighbourRegion.RegionHandle);
 
                 if (!foreign)
                     m_scene.SimulationService.UpdateAgent(neighbourRegion, cAgent);
                 else
                 {
-                    OpenSim.Services.Interfaces.GridRegion ourRegion = agent.Scene.GridService.GetRegionByUUID(UUID.Zero, agent.Scene.RegionInfo.RegionID);
                     string reason = "";
-                    bool success = IWC.FireNewIWCUser(m_aScene.AuthenticateHandler.GetAgentCircuitData(agent.ControllingClient.CircuitCode),
+                    bool success = IWC.FireNewIWCRootAgent(m_aScene.AuthenticateHandler.GetAgentCircuitData(agent.ControllingClient.CircuitCode),
                         ourRegion,
-                        neighbourRegion,out reason);
+                        neighbourRegion,
+                        false,
+                        out reason);
+
                     if (!success)
                     {
                         m_log.Debug("[IWC ENTITY TRANSFER MODULE]: Crossing agent failed:" + reason);
@@ -992,6 +1003,9 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 }
 
                 agent.MakeChildAgent();
+                
+                agent.Reset();
+
                 // now we have a child agent in this region. Request all interesting data about other (root) agents
                 agent.SendInitialFullUpdateToAllClients();
 

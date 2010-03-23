@@ -49,7 +49,16 @@ namespace Aurora.Modules
         /// </summary>
         public Dictionary<ConnectionIdentifier, bool> Servers = new Dictionary<ConnectionIdentifier, bool>();
         public Dictionary<ConnectionIdentifier, bool> servers = new Dictionary<ConnectionIdentifier, bool>();
-        
+
+        /// <summary>
+        /// Foreign agents that are in our world.
+        /// </summary>
+        Dictionary<UUID, string> ForeignAgents = new Dictionary<UUID, string>();
+        /// <summary>
+        /// Local Agents that are in foreign worlds.
+        /// </summary>
+        List<UUID> LocalAgents = new List<UUID>();
+
         private IConfig m_config;
         private Scene m_Scene;
         private List<Scene> m_scenes = new List<Scene>();
@@ -57,7 +66,7 @@ namespace Aurora.Modules
         /// <summary>
         /// All the regions that we have connected and have saved
         /// </summary>
-        public Dictionary<OpenSim.Services.Interfaces.GridRegion, string> IWCConnectedRegions = new Dictionary<OpenSim.Services.Interfaces.GridRegion, string>();
+        public Dictionary<OpenSim.Services.Interfaces.GridRegion, ConnectionIdentifier> IWCConnectedRegions = new Dictionary<OpenSim.Services.Interfaces.GridRegion, ConnectionIdentifier>();
         public List<UUID> OurRegions = new List<UUID>();
         
         private IPresenceService presenceServer;
@@ -68,7 +77,7 @@ namespace Aurora.Modules
         public List<ConnectionIdentifier> Connections = new List<ConnectionIdentifier>();
         
         private IGenericData GD = null;
-        private IProfileData PD = null;
+        private IProfileData ProfileDataManager = null;
 
         #region IRegionModule 
         public string Name{ get { return "InterWorldComms"; } }
@@ -79,7 +88,7 @@ namespace Aurora.Modules
             m_scenes.Add(scene);
             
             MainServer.Instance.AddXmlRPCHandler("InterWorldNewWorldConnection", InterWorldNewWorldConnection);
-            MainServer.Instance.AddXmlRPCHandler("InterWorldAddNewPresence", InterWorldAddNewPresence);
+            MainServer.Instance.AddXmlRPCHandler("InterWorldAddNewRootPresence", InterWorldAddNewRootPresence);
             MainServer.Instance.AddXmlRPCHandler("InterWorldRemovePresence", InterWorldRemovePresence);
             
             m_config = source.Configs["AuroraInterWorldConnectors"];
@@ -111,7 +120,7 @@ namespace Aurora.Modules
                 m_log.Debug("[AuroraInterWorldComms]: No Auth Service defined! Disabling...");
             }
             GD = Aurora.DataManager.DataManager.GetGenericPlugin();
-            PD = Aurora.DataManager.DataManager.GetProfilePlugin();
+            ProfileDataManager = Aurora.DataManager.DataManager.GetProfilePlugin();
             InformOtherWorldsAboutUs();
         }
 
@@ -145,6 +154,7 @@ namespace Aurora.Modules
             }
             servers.Clear();
         }
+
         #endregion
 
         #region New Connection from a world
@@ -179,10 +189,13 @@ namespace Aurora.Modules
 
             #region Get Our Regions
             ArrayList tempRegions = new ArrayList();
+            
             foreach (Scene scene in m_scenes)
                 tempRegions.Add((object)scene.GridService.GetRegionByUUID(UUID.Zero, scene.RegionInfo.RegionID).ToKeyValuePairs());
-            foreach (KeyValuePair<OpenSim.Services.Interfaces.GridRegion, string> region in IWCConnectedRegions)
+
+            foreach (KeyValuePair<OpenSim.Services.Interfaces.GridRegion, ConnectionIdentifier> region in IWCConnectedRegions)
                 tempRegions.Add((object)region.Key.ToKeyValuePairs());
+            
             #endregion
 
             responseData["AllWorlds"] = tempRegions;
@@ -220,6 +233,7 @@ namespace Aurora.Modules
             request["WorldIdentifier"] = Framework.Utils.Encrypt(Connection.Identifier, Connection.Identifier, Connection.Identifier);
             
             m_log.Info("[IWC MODULE]: Connecting to " + Connection + ".");
+            servers.Add(Connection, false);
             Hashtable result = Framework.Utils.GenericXMLRPCRequest(request, "InterWorldNewWorldConnection", Connection.Connection);
 
             if ((string)result["success"] == "true")
@@ -246,22 +260,25 @@ namespace Aurora.Modules
 
                         #region Add Region to the grid and IWC databases
                         OpenSim.Services.Interfaces.GridRegion region = new OpenSim.Services.Interfaces.GridRegion(regTemp);
-                        m_Scene.GridService.RegisterRegion(UUID.Zero, region);
-                        IWCConnectedRegions.Add(region, Connection.Connection);
+                        if (m_Scene.GridService.GetRegionByUUID(UUID.Zero,region.RegionID) != null)
+                            m_Scene.GridService.RegisterRegion(UUID.Zero, region);
+                        
+                        IWCConnectedRegions.Add(region, Connection);
                         #endregion
                     }
+
+                    servers.Remove(Connection);
                     servers.Add(Connection, true);
+
                     m_log.Info("[IWC MODULE]: Connected to " + Connection + " successfully.");
                 }
                 else
                 {
-                    servers.Add(Connection, false);
                     m_log.Warn("[IWC MODULE]: Did not connect to " + Connection + " successfully. Reason: '" + result["Reason"].ToString() + "'.");
                 }
             }
             else
             {
-                servers.Add(Connection, false);
                 m_log.Warn("[IWC MODULE]: Did not connect to " + Connection + " successfully.");
             }
         }
@@ -270,19 +287,15 @@ namespace Aurora.Modules
 
         #region Finding Users
 
-        Dictionary<UUID, string> ForeignAgents = new Dictionary<UUID, string>();
-        
-        List<UUID> LocalAgents = new List<UUID>();
-        
         public void AddForeignAgent(string client, string homeConnection, string first, string last)
         {
             UUID agent = new UUID(client);
             if(!ForeignAgents.ContainsKey(agent))
                 ForeignAgents.Add(agent, homeConnection);
-            AuroraProfileData profile = PD.GetProfileInfo(agent);
+            AuroraProfileData profile = ProfileDataManager.GetProfileInfo(agent);
             if (profile == null)
             {
-                PD.CreateTemperaryAccount(client, first, last);
+                ProfileDataManager.CreateTemperaryAccount(client, first, last);
             }
         }
 
@@ -326,42 +339,18 @@ namespace Aurora.Modules
 
         public ConnectionIdentifier GetConnectionByRegion(OpenSim.Services.Interfaces.GridRegion region)
         {
-            string connection = "";
+            ConnectionIdentifier connection = null;
             foreach (OpenSim.Services.Interfaces.GridRegion IWCregion in IWCConnectedRegions.Keys)
             {
                 if(IWCregion.RegionHandle == region.RegionHandle)
                     IWCConnectedRegions.TryGetValue(IWCregion, out connection);
             }
-            foreach (ConnectionIdentifier con in Connections)
-            {
-                if (connection == con.Connection)
-                    return con;
-            }
-            return null;
+            return connection;
         }
 
         #endregion
 
         #region Finding regions
-
-        public GridRegionFlags GetRegionFlags(UUID UUID)
-        {
-            GridRegionFlags flags = new GridRegionFlags();
-            foreach (OpenSim.Services.Interfaces.GridRegion region in IWCConnectedRegions.Keys)
-            {
-                int a = region.RegionID.CompareTo(UUID);
-                if (region.RegionID.CompareTo(UUID) == 0)
-                {
-                    if (!OurRegions.Contains(region.RegionID))
-                    {
-                        flags.IsIWCConnected = true;
-                        return flags;
-                    }
-                }
-            }
-            flags.IsIWCConnected = false;
-            return flags;
-        }
 
         public OpenSim.Services.Interfaces.GridRegion GetDefaultRegion(AgentCircuitData aCircuit, out Vector3 pos, out Vector3 lookAt)
         {
@@ -381,11 +370,22 @@ namespace Aurora.Modules
             }
             return null;
         }
+
+        public bool IsRegionForeign(ulong p)
+        {
+            foreach (OpenSim.Services.Interfaces.GridRegion region in IWCConnectedRegions.Keys)
+            {
+                if (region.RegionHandle == p)
+                    return true;
+            }
+            return false;
+        }
+
         #endregion
 
         #region Adding New Presence/Removing New Presence to/from another world
 
-        public bool FireNewIWCUser(AgentCircuitData aCircuit, OpenSim.Services.Interfaces.GridRegion reg, OpenSim.Services.Interfaces.GridRegion finalDestination, out string reason)
+        public bool FireNewIWCRootAgent(AgentCircuitData aCircuit, OpenSim.Services.Interfaces.GridRegion reg, OpenSim.Services.Interfaces.GridRegion finalDestination, bool createPresence, out string reason)
         {
             try
             {
@@ -411,28 +411,26 @@ namespace Aurora.Modules
                     {
                         if (!IsForeignAgent(aCircuit.AgentID))
                         {
-                            reason = "User was not found.";
+                            reason = "Your account was not found.";
                             m_log.Debug("[IWC MODULE]: [FireNewIWCUser] User was not found. Refusing.");
                             return false;
                         }
                     }
                 }
 
-                m_log.Debug("[IWC MODULE]: [FireNewIWCUser] User is ok.");
-
-                bool fired = FireStartPresence(aCircuit, connIdent, finalDestination, out reason);
+                bool fired = FireStartNewRootPresence(aCircuit, connIdent, finalDestination, createPresence, out reason);
                 if (!fired)
                 {
-                    reason = "Login new presence failed.";
-                    m_log.Debug("[IWC MODULE]: [FireNewIWCUser] Login new presence failed.");
+                    reason = "Logging in presence into foreign world failed.";
+                    m_log.Debug("[IWC MODULE]: [FireNewIWCUser] Logging in presence into foreign world failed.");
                     return false;
                 }
 
-                m_log.DebugFormat("[IWC MODULE]: [FireNewIWCUser] Login presence is ok.");
+                if(!IsForeignAgent(aCircuit.AgentID))
+                    if (!IsLocalAgent(aCircuit.AgentID))
+                        AddLocalAgent(aCircuit.AgentID);
 
-                if (!IsLocalAgent(aCircuit.AgentID))
-                    AddLocalAgent(aCircuit.AgentID);
-                m_log.DebugFormat("[IWC MODULE]: [FireNewIWCUser] Local Agent Added.");
+                m_log.DebugFormat("[IWC MODULE]: Local Agent added to Foreign World.");
                 return true;
             }
             catch (Exception ex)
@@ -443,7 +441,7 @@ namespace Aurora.Modules
             }
         }
 
-        private bool FireStartPresence(AgentCircuitData aCircuit, ConnectionIdentifier connection, OpenSim.Services.Interfaces.GridRegion region, out string reason)
+        private bool FireStartNewRootPresence(AgentCircuitData aCircuit, ConnectionIdentifier connection, OpenSim.Services.Interfaces.GridRegion region, bool createPresence, out string reason)
         {
             Hashtable request = new Hashtable();
 
@@ -454,6 +452,7 @@ namespace Aurora.Modules
             request["LastName"] = Framework.Utils.Encrypt(aCircuit.lastname, connection.Identifier, connection.Identifier);
             request["HomeConnection"] = Framework.Utils.Encrypt(connection.Connection, connection.Identifier, connection.Identifier);
             request["RegionID"] = Framework.Utils.Encrypt(region.RegionID.ToString(), connection.Identifier, connection.Identifier);
+            request["AddPresence"] = createPresence.ToString();
 
             OSDMap map = aCircuit.PackAgentCircuitData();
             KeyValuePair<string, string>[] pairs = new KeyValuePair<string, string>[map.Count];
@@ -477,8 +476,8 @@ namespace Aurora.Modules
             request["CircuitValues"] = ListValues;
 
             m_log.Info("[IWC MODULE]: [FireStartPresence] Connecting to " + connection + ".");
-            
-            Hashtable result = Framework.Utils.GenericXMLRPCRequest(request, "InterWorldAddNewPresence", connection.Connection);
+
+            Hashtable result = Framework.Utils.GenericXMLRPCRequest(request, "InterWorldAddNewRootPresence", connection.Connection);
             if ((string)result["success"] == "true")
             {
                 if (result["reason"] == null)
@@ -495,7 +494,7 @@ namespace Aurora.Modules
             }
         }
 
-        private XmlRpcResponse InterWorldAddNewPresence(XmlRpcRequest request, IPEndPoint IPEndPoint)
+        private XmlRpcResponse InterWorldAddNewRootPresence(XmlRpcRequest request, IPEndPoint IPEndPoint)
         {
             if (!a_Enabled)
                 return new XmlRpcResponse();
@@ -509,6 +508,9 @@ namespace Aurora.Modules
             string LastName = Framework.Utils.Decrypt((string)requestData["LastName"], WorldIdentifier, WorldIdentifier);
             string HomeConnection = Framework.Utils.Decrypt((string)requestData["HomeConnection"], WorldIdentifier, WorldIdentifier);
             string RegionUUID = Framework.Utils.Decrypt((string)requestData["RegionID"], WorldIdentifier, WorldIdentifier);
+            bool AddPresence = Convert.ToBoolean(requestData["AddPresence"]);
+            OpenSim.Services.Interfaces.GridRegion foundregion = m_Scene.GridService.GetRegionByUUID(UUID.Zero, new UUID(RegionUUID));
+            
             ArrayList ListKeys = requestData["CircuitKeys"] as ArrayList;
             ArrayList ListValues = requestData["CircuitValues"] as ArrayList;
 
@@ -535,30 +537,54 @@ namespace Aurora.Modules
             bool successful = false;
 
             #region Add New Presence
-            if (!presenceServer.LoginAgent(AgentID, new UUID(SessionID), new UUID(SecureSessionID)))
+            if(AddPresence)
             {
-                reason = "Unable to login presence";
-                m_log.InfoFormat("[IWC MODULE]: [InterWorldAddNewPresence] Presence login failed for foreign agent {0}. Refusing service.",
-                    AgentID);
-                successful = false;
-                responseData["reason"] = reason;
-                responseData["addedpresence"] = successful;
-                response.Value = responseData;
-                return response;
-            }
-            else
-            {
-                m_log.InfoFormat("[IWC MODULE]: [InterWorldAddNewPresence] Presence login allowed for foreign agent {0}.",
-                    AgentID);
-                successful = true;
+                // Kick existing agent.
+                if (presenceServer.GetAgent(new UUID(SessionID)) != null)
+                    presenceServer.LogoutAgent(new UUID(SessionID), new Vector3(), new Vector3());
+                
+                if (!presenceServer.LoginAgent(AgentID, new UUID(SessionID), new UUID(SecureSessionID)))
+                {
+                    reason = "Unable to login presence";
+                    m_log.InfoFormat("[IWC MODULE]: [InterWorldAddNewRootPresence] Presence login failed for foreign agent {0}. Refusing service.",
+                        AgentID);
+                    successful = false;
+                    responseData["reason"] = reason;
+                    responseData["addedpresence"] = successful;
+                    response.Value = responseData;
+                    return response;
+                }
+                else
+                {
+                    m_log.InfoFormat("[IWC MODULE]: [InterWorldAddNewRootPresence] Presence login allowed for foreign agent {0}.",
+                        aCircuit.firstname + " " + aCircuit.lastname);
+                    successful = true;
+                }
             }
             #endregion
+
             //Deal with creating a user for the agent.
-            AddForeignAgent(AgentID, HomeConnection, FirstName, LastName);
-            m_log.Info("[IWC MODULE]: [InterWorldAddNewPresence] Foreign Agent added.");
-            //Launch agent
-            successful = m_Scene.SimulationService.CreateAgent(m_Scene.GridService.GetRegionByUUID(UUID.Zero, new UUID(RegionUUID)), aCircuit, (uint)Constants.TeleportFlags.ViaLogin, out reason);
+            if(!IsForeignAgent(new UUID(AgentID)))
+                AddForeignAgent(AgentID, HomeConnection, FirstName, LastName);
             
+            //Launch agent
+            successful = m_Scene.SimulationService.CreateAgent(foundregion, aCircuit, (uint)Constants.TeleportFlags.ViaLogin, out reason);
+            
+            if(successful)
+                m_log.InfoFormat("[IWC MODULE]: [InterWorldAddNewRootPresence] Foreign agent {0} was able to connect to {1}.",
+                        aCircuit.firstname + " " + aCircuit.lastname, foundregion.RegionName);
+
+            if (!successful)
+            {
+                m_log.InfoFormat("[IWC MODULE]: [InterWorldAddNewRootPresence] Foreign agent {0} was not able to connect to {1}.",
+                        aCircuit.firstname + " " + aCircuit.lastname, foundregion.RegionName);
+                //Kick the agent we just made.
+                presenceServer.LogoutAgent(new UUID(SessionID), new Vector3(), new Vector3());
+                IAgentData agentdata = null;
+                //Just so if something went wrong after the agent was created.
+                if (m_Scene.SimulationService.RetrieveAgent(foundregion, new UUID(AgentID), out agentdata) == true)
+                    m_Scene.SimulationService.CloseAgent(foundregion, new UUID(AgentID));
+            }
             responseData["reason"] = reason;
             responseData["addedpresence"] = successful;
             response.Value = responseData;
@@ -569,16 +595,20 @@ namespace Aurora.Modules
         {
             reason = "";
             ConnectionIdentifier connection = GetForeignAgentsHomeConnection(aCircuit.AgentID);
-            
+
             if (connection == null)
+            {
+                m_log.Info("[IWC MODULE]: Removing Presence for agent "+ aCircuit.firstname + " " +aCircuit.lastname +" failed: Could not find the connection.");
+                reason = "Could not find the foreign agents home connection.";
                 return false;
+            }
             
             Hashtable request = new Hashtable();
 
             request["SessionID"] = Framework.Utils.Encrypt(aCircuit.SessionID.ToString(), connection.Identifier, connection.Identifier);
             request["AgentID"] = Framework.Utils.Encrypt(aCircuit.AgentID.ToString(), connection.Identifier, connection.Identifier);
             
-            m_log.Info("[IWC MODULE]: Connecting to " + connection + ".");
+            m_log.Info("[IWC MODULE]: Removing Presence for agent "+ aCircuit.firstname + " " +aCircuit.lastname +" at " + connection + ".");
             
             Hashtable result = Framework.Utils.GenericXMLRPCRequest(request, "InterWorldRemovePresence", connection.Connection);
             
@@ -588,10 +618,12 @@ namespace Aurora.Modules
                     result["reason"] = "";
 
                 reason = result["reason"].ToString();
+                m_log.Info("[IWC MODULE]: Removed Presence for agent " + aCircuit.firstname + " " + aCircuit.lastname + " successfully.");
                 return Convert.ToBoolean(result["removedpresence"]);
             }
             else
             {
+                m_log.Info("[IWC MODULE]: Removed Presence for agent " + aCircuit.firstname + " " + aCircuit.lastname + " unsuccessfully.");
                 reason = "Can not connect to the region.";
                 return false;
             }
@@ -609,21 +641,25 @@ namespace Aurora.Modules
             string reason = string.Empty;
             bool successful = false;
 
-            #region Add New Presence
+            #region Logout Presence
             if (!presenceServer.LogoutAgent(new UUID(SessionID),new Vector3(),new Vector3()))
             {
                 reason = "Unable to login presence";
-                m_log.Info("[IWC MODULE]: Presence logout failed for foreign agent.");
+                m_log.Info("[IWC MODULE]: Presence logout failed for local agent.");
                 successful = false;
             }
             else
-            {
                 successful = true;
-            }
-            #endregion
-            //Deal with removing the agent.
-            RemoveForeignAgent(AgentID);
 
+            #endregion
+
+            //Deal with removing the agent.
+            if(IsForeignAgent(new UUID(AgentID)))
+                RemoveForeignAgent(AgentID);
+            if (IsLocalAgent(new UUID(AgentID)))
+                RemoveLocalAgent(new UUID(AgentID));
+
+            m_log.Info("[IWC MODULE]: Presence logout was successful for local agent.");
             responseData["reason"] = reason;
             responseData["removedpresence"] = successful;
             response.Value = responseData;
@@ -677,15 +713,5 @@ namespace Aurora.Modules
         }
 
         #endregion
-
-        public bool IsRegionForeign(ulong p)
-        {
-            foreach (OpenSim.Services.Interfaces.GridRegion region in IWCConnectedRegions.Keys)
-            {
-                if (region.RegionHandle == p)
-                    return true;
-            }
-            return false;
-        }
     }
 }
