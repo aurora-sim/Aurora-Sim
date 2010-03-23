@@ -47,8 +47,8 @@ namespace Aurora.Modules
         /// <summary>
         /// Connection, have we asked them for a connection
         /// </summary>
-        public Dictionary<ConnectionIdentifier, bool> Servers = new Dictionary<ConnectionIdentifier, bool>();
-        public Dictionary<ConnectionIdentifier, bool> servers = new Dictionary<ConnectionIdentifier, bool>();
+        public List<ConnectionIdentifier> SuccessfullyConnectedToWorlds = new List<ConnectionIdentifier>();
+        public List<ConnectionIdentifier> UnsuccessfulConnectedToWorlds = new List<ConnectionIdentifier>();
 
         /// <summary>
         /// Foreign agents that are in our world.
@@ -146,13 +146,6 @@ namespace Aurora.Modules
             {
                 AskServerForConnection(Connection);
             }
-            foreach (KeyValuePair<ConnectionIdentifier, bool> con in servers)
-            {
-                if (Servers.ContainsKey(con.Key))
-                    Servers.Remove(con.Key);
-                Servers.Add(con.Key, con.Value);
-            }
-            servers.Clear();
         }
 
         #endregion
@@ -169,19 +162,19 @@ namespace Aurora.Modules
             string SentWorldIdentifier = Framework.Utils.Decrypt((string)requestData["WorldIdentifier"], WorldIdentifier, WorldIdentifier);
 
             #region GetConnection
-            KeyValuePair<ConnectionIdentifier, bool> con = new KeyValuePair<ConnectionIdentifier, bool>();
-            foreach (KeyValuePair<ConnectionIdentifier, bool> connection in servers)
+            ConnectionIdentifier con = null;
+            foreach (ConnectionIdentifier connection in UnsuccessfulConnectedToWorlds)
             {
-                string[] IPs = connection.Key.Connection.Split(':');
+                string[] IPs = connection.Connection.Split(':');
                 string IP = IPs[1].Substring(2);
                 if (Dns.GetHostByName(IP).AddressList[0].ToString() == IPEndPoint.Address.ToString())
                 {
                     con = connection;
                 }
             }
-            foreach (KeyValuePair<ConnectionIdentifier, bool> connection in Servers)
+            foreach (ConnectionIdentifier connection in SuccessfullyConnectedToWorlds)
             {
-                string[] IPs = connection.Key.Connection.Split(':');
+                string[] IPs = connection.Connection.Split(':');
                 string IP = IPs[1].Substring(2);
                 if (Dns.GetHostByName(IP).AddressList[0].ToString() == IPEndPoint.Address.ToString())
                 {
@@ -206,6 +199,13 @@ namespace Aurora.Modules
                 response.Value = responseData;
                 return response;
             }
+            if (con == null)
+            {
+                responseData["Connected"] = "false";
+                responseData["Reason"] = "Blocked Connection";
+                response.Value = responseData;
+                return response;
+            } 
             responseData["Connected"] = "true";
             #endregion
 
@@ -222,7 +222,7 @@ namespace Aurora.Modules
 
             ArrayList RegionInfoKeys = new ArrayList();
             ArrayList RegionInfoValues = new ArrayList();
-            if (GetTrustLevel("High",con.Key))
+            if (GetTrustLevel("High",con))
             {
                 foreach (Scene scene in m_scenes)
                 {
@@ -260,39 +260,36 @@ namespace Aurora.Modules
             response.Value = responseData;
 
             #region Callback on the connecting server
-            foreach (KeyValuePair<ConnectionIdentifier, bool> connection in servers)
+            List<ConnectionIdentifier> NewlyConnectedToWorlds = new List<ConnectionIdentifier>(; 
+            foreach (ConnectionIdentifier connection in UnsuccessfulConnectedToWorlds)
             {
-                string[] IPs = connection.Key.Connection.Split(':');
+                string[] IPs = connection.Connection.Split(':');
                 string IP = IPs[1].Substring(2);
                 if (Dns.GetHostByName(IP).AddressList[0].ToString() == IPEndPoint.Address.ToString())
                 {
-                    if (connection.Value == false)
-                    {
-                        lock (servers)
-                            AskServerForConnection(connection.Key);
-                    }
+                    bool successful = AskServerForConnection(connection);
+                    if(successful)
+                        NewlyConnectedToWorlds.Add(connection);
                 }
             }
-
-            foreach (KeyValuePair<ConnectionIdentifier, bool> connection in servers)
+            foreach(ConnectionIdentifier connnection in NewlyConnectedToWorlds)
             {
-                if (Servers.ContainsKey(connection.Key))
-                    Servers.Remove(connection.Key);
-                Servers.Add(connection.Key, connection.Value);
+                UnsuccessfulConnectedToWorlds.Remove(connnection);
+                SuccessfullyConnectedToWorlds.Add(connnection);
             }
-            servers.Clear();
+            NewlyConnectedToWorlds.Clear();
             #endregion
 
             return response;
         }
 
-        private void AskServerForConnection(ConnectionIdentifier Connection)
+        private bool AskServerForConnection(ConnectionIdentifier Connection)
         {
+            bool successful = false;
             Hashtable request = new Hashtable();
             request["WorldIdentifier"] = Framework.Utils.Encrypt(Connection.Identifier, Connection.Identifier, Connection.Identifier);
             
             m_log.Info("[IWC MODULE]: Connecting to " + Connection + ".");
-            servers.Add(Connection, false);
             Hashtable result = Framework.Utils.GenericXMLRPCRequest(request, "InterWorldNewWorldConnection", Connection.Connection);
 
             if ((string)result["success"] == "true")
@@ -365,8 +362,7 @@ namespace Aurora.Modules
                         #endregion
                     }
 
-                    servers.Remove(Connection);
-                    servers.Add(Connection, true);
+                    successful = true;
 
                     m_log.Info("[IWC MODULE]: Connected to " + Connection + " successfully.");
                 }
@@ -379,6 +375,7 @@ namespace Aurora.Modules
             {
                 m_log.Warn("[IWC MODULE]: Did not connect to " + Connection + " successfully.");
             }
+            return successful;
         }
 
         #endregion
@@ -463,7 +460,7 @@ namespace Aurora.Modules
         {
             string homeConnection = "";
             ForeignAgents.TryGetValue(client, out homeConnection);
-            foreach (ConnectionIdentifier ident in Servers.Keys)
+            foreach (ConnectionIdentifier ident in SuccessfullyConnectedToWorlds)
             {
                 if (ident.Connection == homeConnection)
                     return ident;
