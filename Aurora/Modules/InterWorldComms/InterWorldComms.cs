@@ -71,11 +71,6 @@ namespace Aurora.Modules
         
         private IPresenceService presenceServer;
 
-        /// <summary>
-        /// All Connections
-        /// </summary>
-        public List<ConnectionIdentifier> Connections = new List<ConnectionIdentifier>();
-        
         private IGenericData GD = null;
         private IProfileData ProfileDataManager = null;
 
@@ -140,18 +135,28 @@ namespace Aurora.Modules
                 ident.Identifier = tempIdent[i];
                 ident.TrustLevel = tempTrustLev[i];
                 ident.SessionHash = Guid.NewGuid().ToString();
-                Connections.Add(ident);
+                UnsuccessfulConnectedToWorlds.Add(ident);
             }
-            foreach (ConnectionIdentifier Connection in Connections)
+            List<ConnectionIdentifier> NewlyConnectedToWorlds = new List<ConnectionIdentifier>();
+            foreach (ConnectionIdentifier Connection in UnsuccessfulConnectedToWorlds)
             {
-                AskServerForConnection(Connection);
+                TemperaryCallBackBlock.Add(Connection);
+                bool successful = AskServerForConnection(Connection);
+                if (successful)
+                    NewlyConnectedToWorlds.Add(Connection);
+            }
+            TemperaryCallBackBlock.Clear();
+            foreach (ConnectionIdentifier connnection in NewlyConnectedToWorlds)
+            {
+                UnsuccessfulConnectedToWorlds.Remove(connnection);
+                SuccessfullyConnectedToWorlds.Add(connnection);
             }
         }
 
         #endregion
 
         #region New Connection from a world
-
+        private List<ConnectionIdentifier> TemperaryCallBackBlock = new List<ConnectionIdentifier>();
         public XmlRpcResponse InterWorldNewWorldConnection(XmlRpcRequest request, IPEndPoint IPEndPoint)
         {
             if (!a_Enabled)
@@ -199,6 +204,7 @@ namespace Aurora.Modules
                 response.Value = responseData;
                 return response;
             }
+
             if (con == null)
             {
                 responseData["Connected"] = "false";
@@ -222,7 +228,7 @@ namespace Aurora.Modules
 
             ArrayList RegionInfoKeys = new ArrayList();
             ArrayList RegionInfoValues = new ArrayList();
-            if (GetTrustLevel("High",con))
+            /*if (GetTrustLevel("High",con))
             {
                 foreach (Scene scene in m_scenes)
                 {
@@ -247,7 +253,7 @@ namespace Aurora.Modules
                     RegionInfoKeys.Add(ListKeys);
                     RegionInfoValues.Add(ListValues);
                 }
-            }
+            }*/
 
             responseData["RegionKeys"] = RegionInfoKeys;
             responseData["RegionValues"] = RegionInfoValues;
@@ -263,15 +269,20 @@ namespace Aurora.Modules
             List<ConnectionIdentifier> NewlyConnectedToWorlds = new List<ConnectionIdentifier>(); 
             foreach (ConnectionIdentifier connection in UnsuccessfulConnectedToWorlds)
             {
-                string[] IPs = connection.Connection.Split(':');
-                string IP = IPs[1].Substring(2);
-                if (Dns.GetHostByName(IP).AddressList[0].ToString() == IPEndPoint.Address.ToString())
-                {
-                    bool successful = AskServerForConnection(connection);
-                    if(successful)
-                        NewlyConnectedToWorlds.Add(connection);
+                if (!TemperaryCallBackBlock.Contains(connection))
+                { 
+                    string[] IPs = connection.Connection.Split(':');
+                    string IP = IPs[1].Substring(2);
+                    if (connection.Connection == con.Connection)
+                    {
+                        TemperaryCallBackBlock.Add(connection);
+                        bool successful = AskServerForConnection(connection);
+                        if (successful)
+                            NewlyConnectedToWorlds.Add(connection);
+                    }
                 }
             }
+            TemperaryCallBackBlock.Clear();
             foreach(ConnectionIdentifier connnection in NewlyConnectedToWorlds)
             {
                 UnsuccessfulConnectedToWorlds.Remove(connnection);
@@ -322,7 +333,7 @@ namespace Aurora.Modules
                         ArrayList ListKeys = result["RegionKeys"] as ArrayList;
                         ArrayList ListValues = result["RegionValues"] as ArrayList;
                         int a = 0;
-                        List<RegionInfo> RegionInfos = new List<RegionInfo>();
+                        /*List<RegionInfo> RegionInfos = new List<RegionInfo>();
                         foreach (ArrayList Keys in ListKeys)
                         {
                             ArrayList Values = ListValues[a] as ArrayList;
@@ -357,7 +368,7 @@ namespace Aurora.Modules
                                 if (found)
                                     scene.AddNeighborRegion(info);
                             }
-                        }
+                        }*/
                         IWCConnectedRegions.Add(region, Connection);
                         #endregion
                     }
