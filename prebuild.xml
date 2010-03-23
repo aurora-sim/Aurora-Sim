@@ -2267,6 +2267,7 @@
       <Reference name="Nini.dll" />
       <Reference name="log4net.dll"/>
 	<Reference name="Aurora.Framework"/>
+     <Reference name="Aurora.DataManager"/>
 
       <Files>
         <Match pattern="*.cs" recurse="true"/>
