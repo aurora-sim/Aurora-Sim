@@ -2700,6 +2700,77 @@
         <Match pattern="*.cs" recurse="true"/>
       </Files>
     </Project>
+		<Project frameworkVersion="v3_5" name="Aurora.DataManager.Tests" path="Aurora/DataManagerTests" type="Library">
+          <Configuration name="Debug">
+            <Options>
+              <OutputPath>../../bin/</OutputPath>
+            </Options>
+          </Configuration>
+          <Configuration name="Release">
+            <Options>
+              <OutputPath>../../bin/</OutputPath>
+            </Options>
+          </Configuration>
+
+          <ReferencePath>../../bin/</ReferencePath>
+          <Reference name="System"/>
+          <Reference name="System.Xml"/>
+	    <Reference name="Nini.dll"/>
+<Reference name="nunit.framework.dll"/>
+<Reference name="Aurora.Framework"/>
+<Reference name="OpenSim.Region.Framework"/>
+<Reference name="OpenMetaverseTypes.dll"/>
+<Reference name="OpenMetaverse.dll"/>
+<Reference name="OpenSim.Framework"/>
+<Reference name="Aurora.DataManager.SQLite"/>
+<Reference name="Aurora.DataManager.MySQL"/>
+<Reference name="C5.dll"/>
+          <Files>
+            <Match pattern="*.cs" recurse="true"/>
+          </Files>
+        </Project>
+<Project frameworkVersion="v3_5" name="Aurora.ScriptEngine.DotNetEngine" path="Aurora/DotNetEngine" type="Library">
+      <Configuration name="Debug">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+
+      <ReferencePath>../../bin/</ReferencePath>
+      <ReferencePath>../../bin/</ReferencePath>
+      <Reference name="System"/>
+      <Reference name="System.Data"/>
+      <Reference name="System.Xml"/>
+      <Reference name="System.Runtime.Remoting"/>
+      <Reference name="OpenMetaverseTypes.dll"/>
+      <Reference name="OpenMetaverse.StructuredData.dll"/>
+      <Reference name="RAIL.dll"/>
+      <Reference name="OpenSim.Framework"/>
+      <Reference name="OpenSim.Framework.Console"/>
+      <Reference name="OpenSim.Region.CoreModules" />
+      <Reference name="OpenSim.Region.Framework" />
+      <Reference name="OpenSim.Region.ScriptEngine.Shared"/>
+      <Reference name="OpenSim.Region.ScriptEngine.Shared.Api"/>
+      <Reference name="OpenSim.Region.ScriptEngine.Shared.Api.Runtime"/>
+      <Reference name="OpenSim.Region.ScriptEngine.Shared.CodeTools"/>
+      <Reference name="Microsoft.JScript"/>
+      <Reference name="Nini.dll" />
+      <Reference name="log4net.dll"/>
+      <Reference name="Tools.dll"/>
+
+      <Files>
+        <Match pattern="*.addin.xml" path="Resources" buildAction="EmbeddedResource" recurse="true"/>
+        <Match pattern="*.cs" recurse="true"/>
+      </Files>
+    </Project>
+
+
+
 
   <?include file="addon-modules/*/prebuild*.xml" ?>
 
@@ -2757,39 +2828,6 @@
         <Match pattern="*.cs" recurse="true"/>
       </Files>
     </Project>
-
-	<Project frameworkVersion="v3_5" name="Aurora.DataManager.Tests" path="Aurora/DataManagerTests" type="Library">
-          <Configuration name="Debug">
-            <Options>
-              <OutputPath>../../bin/</OutputPath>
-            </Options>
-          </Configuration>
-          <Configuration name="Release">
-            <Options>
-              <OutputPath>../../bin/</OutputPath>
-            </Options>
-          </Configuration>
-
-          <ReferencePath>../../bin/</ReferencePath>
-          <Reference name="System"/>
-          <Reference name="System.Xml"/>
-	    <Reference name="Nini.dll"/>
-<Reference name="nunit.framework.dll"/>
-<Reference name="Aurora.Framework"/>
-<Reference name="OpenSim.Region.Framework"/>
-<Reference name="OpenMetaverseTypes.dll"/>
-<Reference name="OpenMetaverse.dll"/>
-<Reference name="OpenSim.Framework"/>
-<Reference name="Aurora.DataManager.SQLite"/>
-<Reference name="Aurora.DataManager.MySQL"/>
-<Reference name="C5.dll"/>
-          <Files>
-            <Match pattern="*.cs" recurse="true"/>
-          </Files>
-        </Project>
-
-
-
   </Solution>
 </Prebuild>
 

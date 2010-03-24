@@ -2,6 +2,7 @@ using System.IO;
 using Aurora.DataManager.Repositories;
 using NUnit.Framework;
 using OpenMetaverse;
+using Aurora.Framework;
 
 namespace Aurora.DataManager.Tests
 {

@@ -7,6 +7,7 @@ using Aurora.DataManager.MySQL;
 using Aurora.DataManager.SQLite;
 using C5;
 using NUnit.Framework;
+using Aurora.Framework;
 
 namespace Aurora.DataManager.Tests
 {

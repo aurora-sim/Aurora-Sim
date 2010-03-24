@@ -329,38 +329,6 @@ namespace Aurora.DataManager.SQLite
             }
         }
 
-        public AuroraProfileData GetProfileNotes(UUID agentID, UUID target)
-        {
-            AuroraProfileData UserProfile = new AuroraProfileData();
-            if (UserProfileNotesCache.ContainsKey(target))
-            {
-                UserProfileNotesCache.TryGetValue(target, out UserProfile);
-                return UserProfile;
-            }
-            else
-            {
-                string notes = Query("select notes from usernotes where useruuid = '" + agentID.ToString() + "' AND targetuuid = '" + target + "'")[0];
-                if (notes == "")
-                {
-                    List<string> values = new List<string>();
-                    values.Add(agentID.ToString());
-                    values.Add(target.ToString());
-                    values.Add("Insert your notes here.");
-                    values.Add(System.Guid.NewGuid().ToString());
-                    Insert("usernotes", values.ToArray());
-                    notes = Query("select notes from usernotes where useruuid = '" + agentID.ToString() + "' AND targetuuid = '" + target + "'")[0];
-                }
-                Dictionary<UUID, string> Notes = new Dictionary<UUID, string>();
-                Notes.Add(target, notes);
-
-                UserProfile.Identifier = agentID.ToString();
-                UserProfile.Notes = Notes;
-
-                UserProfileNotesCache.Add(target, UserProfile);
-                return UserProfile;
-            }
-        }
-
         public void UpdateUserProfile(AuroraProfileData Profile)
         {
             List<string> SetValues = new List<string>();
