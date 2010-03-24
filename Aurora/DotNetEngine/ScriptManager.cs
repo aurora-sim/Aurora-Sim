@@ -60,6 +60,9 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         public Dictionary<KeyValuePair<int,int>, KeyValuePair<int,int>>
                 LineMap;
         public ISponsor ScriptSponsor;
+
+        public long EventDelayTicks = 0;
+        public long NextEventTimeTicks = 0;
     }
 
     public class ScriptManager
@@ -574,33 +577,50 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         internal void ExecuteEvent(uint localID, UUID itemID,
                 string FunctionName, DetectParams[] qParams, object[] args)
         {
-            int ExeStage=0;             //        ;^) Ewe Loon, for debuging
-            InstanceData id=null;
-            try                         //        ;^) Ewe Loon,fix
-            {                           //        ;^) Ewe Loon,fix
-                ExeStage = 1;           //        ;^) Ewe Loon, for debuging
+            int Stage=0;
+            InstanceData id = null;
+            //        ;^) Ewe Loon,fix 
+            try 
+            {
+                Stage = 1; 
                 id = GetScript(localID, itemID);
+
                 if (id == null)
                     return;
+
                 if (!id.Running)
                     return;
-                ExeStage = 2;           //        ;^) Ewe Loon, for debuging
-                if (qParams.Length>0)   //        ;^) Ewe Loon,fix
+
+                Stage = 2;
+
+                if (qParams.Length>0)
                     detparms[id] = qParams;
-                ExeStage = 3;           //        ;^) Ewe Loon, for debuging
+
+                Stage = 3;
+
+                if (id.EventDelayTicks != 0)
+                {
+                    if (DateTime.Now.Ticks < id.NextEventTimeTicks)
+                        return;
+                    id.NextEventTimeTicks = DateTime.Now.Ticks + id.EventDelayTicks;
+                }
+
                 id.Script.ExecuteEvent(id.State, FunctionName, args);
-                ExeStage = 4;           //        ;^) Ewe Loon, for debuging
-                if (qParams.Length>0)   //        ;^) Ewe Loon,fix 
+
+                Stage = 4;
+
+                if (qParams.Length>0)   
                     detparms.Remove(id);
-                ExeStage = 5;           //        ;^) Ewe Loon, for debuging
+
+                Stage = 5;
             }
             catch (Exception e)         //        ;^) Ewe Loon, From here down tis fix
             {                          
-                if ((ExeStage == 3)&&(qParams.Length>0))
+                if ((Stage == 3)&&(qParams.Length>0))
                     detparms.Remove(id);
                 SceneObjectPart ob = m_scriptEngine.World.GetSceneObjectPart(localID);
-                m_log.InfoFormat("[Script Error] ,{0},{1},@{2},{3},{4},{5}", ob.Name , FunctionName, ExeStage, e.Message, qParams.Length, detparms.Count);
-                if (ExeStage != 2) throw e;
+                m_log.InfoFormat("[Script Error] ,{0},{1},@{2},{3},{4},{5}", ob.Name , FunctionName, Stage, e.Message, qParams.Length, detparms.Count);
+                if (Stage != 2) throw e;
             }            
         }
 

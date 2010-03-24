@@ -316,8 +316,13 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
         public void SetMinEventDelay(UUID itemID, double delay)
         {
-            // TODO in DotNet, done in XEngine
-            throw new NotImplementedException();
+            InstanceData ID = null;
+            m_ScriptManager.RunningScripts.TryGetValue(itemID, out ID);
+            if(ID == null)
+            {
+                m_log.ErrorFormat("[{0}]: SetMinEventDelay found no InstanceData for script {1}.",ScriptEngineName,itemID.ToString());
+            }
+            ID.EventDelayTicks = (long)delay;
         }
 
         #endregion
