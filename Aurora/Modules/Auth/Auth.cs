@@ -35,6 +35,8 @@ namespace Aurora.Modules
         public void PostInitialise()
         {
             a_DataService = Aurora.DataManager.DataManager.GetGenericPlugin();
+            m_scene.RegisterModuleInterface<IAuthService>(this);
+            m_scene.RegisterModuleInterface<IIWCAuthenticationService>(this);
         }
         
         public void Initialise(Scene scene, IConfigSource source)

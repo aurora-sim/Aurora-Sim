@@ -77,11 +77,15 @@ namespace OpenSim
 
             System.Windows.Forms.Application.EnableVisualStyles();
             System.Windows.Forms.Application.SetCompatibleTextRenderingDefault(false);
-            var window = new AuroraWindow();
-            window.Load += window_Load;            System.Windows.Forms.Application.Run(window);                                                                 }        static void window_Load(object sender, EventArgs eventArgs)
-        {
-            Thread t = new Thread(RunServer);
+            Thread t = new Thread(window_Load);
             t.Start();
+            RunServer();                           
+        }
+
+        static void window_Load()
+        {
+            var window = new AuroraWindow();
+            System.Windows.Forms.Application.Run(window);
         }
 
         static void RunServer()

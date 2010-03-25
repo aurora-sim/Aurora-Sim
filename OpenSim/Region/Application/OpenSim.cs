@@ -142,7 +142,7 @@ namespace OpenSim
                     m_console = new RemoteConsole("Region");
                     ((RemoteConsole)m_console).ReadConfig(m_config.Source);
                     break;
-                case "commandprompt":
+                case "local":
                     m_console = new LocalConsole("Region");
                     break;
                 default:
