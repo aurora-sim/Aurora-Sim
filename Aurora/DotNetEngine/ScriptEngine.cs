@@ -449,7 +449,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                 return;        
             
             id.Running = false;
-            m_ScriptManager._StopScript(localID, itemID);
+            m_ScriptManager.StopScript(localID, itemID);
         }
 
         public void OnGetScriptRunning(IClientAPI controllingClient,

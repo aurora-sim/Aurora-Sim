@@ -133,7 +133,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         /// <summary>
         /// Queue containing events waiting to be executed
         /// </summary>
-        public Queue<QueueItemStruct> eventQueue = new Queue<QueueItemStruct>();
+        public GenericQueue<QueueItemStruct> eventQueue = new GenericQueue<QueueItemStruct>();
         public Scene m_scene;
         private EventQueueThreadClass EQT = null;
 
@@ -160,9 +160,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             m_ScriptEngine = _ScriptEngine;
             m_scene = scene;
             ReadConfig();
-            EQT = new EventQueueThreadClass();
-            //scene.EventManager.OnFrame += OnFrame;
-            //AdjustNumberOfScriptThreads();
+            AdjustNumberOfScriptThreads();
         }
 
         public void ReadConfig()
@@ -376,10 +374,11 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                     QIS.LineMap = id.LineMap;
 
                 // Add it to queue
-                eventQueue.Enqueue(QIS);
+                eventQueue.Enqueue(QIS, QIS.localID);
             }
             return true;
         }
+
         #endregion
 
         #region " Maintenance thread "
@@ -461,5 +460,116 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         //    set { _PleaseShutdown = value; }
         //}
         //private bool _PleaseShutdown = false;
+
+        internal void RemoveFromQueue(uint localID)
+        {
+            eventQueue.Remove(localID);
+        }
+    }
+
+    public class GenericQueue<T>: IEnumerable<T>
+    {
+        private T[] queue;
+        private uint[] queueIDs;
+        private int count = 0;
+        private int capasity = 20000;
+        public GenericQueue(int Capasity)
+        {
+            capasity = Capasity;
+            queue = new T[capasity];
+            queueIDs = new uint[capasity];
+        }
+
+        public GenericQueue()
+        {
+            queue = new T[capasity];
+            queueIDs = new uint[capasity];
+        }
+
+        public void Clear()
+        {
+            queue = new T[capasity];
+            queueIDs = new uint[capasity];
+        }
+
+        public void Enqueue(T queueItem, uint ID)
+        {
+            queue[count] = queueItem;
+            queueIDs[count] = ID;
+            count++;
+        }
+
+        public T Dequeue()
+        {
+            int i = 0;
+            while (i < queueIDs.Length)
+            {
+                if (queueIDs[i] != uint.MinValue)
+                {
+                    queueIDs[i] = uint.MinValue;
+                    queue[i] = default(T);
+                    return queue[i];
+                }
+                if (i > 10)
+                    ShiftQueue();
+                i++;
+            }
+            return default(T);
+        }
+
+        private void ShiftQueue()
+        {
+            Console.WriteLine("\n[DOTNETENGINE]: SHIFTING QUEUE! EXPERIMENTAL!!! CURRENT COUNT "+count+".\n");
+            T[] Tempqueue = new T[capasity];
+            uint[] TempqueueIDs = new uint[capasity];
+            int tempcount = 0;
+            int i = 0;
+            while (i < queueIDs.Length)
+            {
+                if (queueIDs[i] != uint.MinValue)
+                {
+                    Tempqueue[tempcount] = queue[i];
+                    TempqueueIDs[tempcount] = queueIDs[i];
+                    tempcount++;
+                }
+                i++;
+            }
+            count = tempcount;
+            Console.WriteLine("\n[DOTNETENGINE]: SHIFTING QUEUE! EXPERIMENTAL!!! NEW COUNT " + count + ".\n");
+        }
+
+        public void Remove(uint queueID)
+        {
+            int i = 0;
+            lock (queueIDs)
+            {
+                lock (queue)
+                {
+                    foreach (uint ID in queueIDs)
+                    {
+                        if (ID == queueID)
+                        {
+                            queue[count] = default(T);
+                            queueIDs[i] = uint.MinValue;
+                        }
+                        i++;
+                    }
+                }
+            }
+        }
+        public int Count
+        {
+            get { return count; }
+        }
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            return (IEnumerator<T>)queue.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return queue.GetEnumerator();
+        }
     }
 }

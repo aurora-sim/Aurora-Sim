@@ -340,6 +340,8 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             //                  m_scriptEngine.ScriptEngineName);
 
             ReleaseControls(localID, itemID);
+            m_scriptEngine.m_EventQueueManager.RemoveFromQueue(localID);
+
             // Stop long command on script
             AsyncCommandManager.RemoveScript(m_scriptEngine, localID, itemID);
 
@@ -369,6 +371,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             }
         }
 
+        
         private void ReleaseControls(uint localID, UUID itemID)
         {
             SceneObjectPart part = m_scriptEngine.World.GetSceneObjectPart(itemID);
@@ -813,9 +816,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             InstanceData id = GetScript(localID, itemID);
             string script = id.Source;
             StopScript(localID, itemID);
-            SceneObjectPart part = World.GetSceneObjectPart(localID);
-            part.Inventory.GetInventoryItem(itemID).PermsMask = 0;
-            part.Inventory.GetInventoryItem(itemID).PermsGranter = UUID.Zero;
+            
             StartScript(localID, itemID, script, id.StartParam, false);
         }
 
