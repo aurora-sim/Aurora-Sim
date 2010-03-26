@@ -26,6 +26,8 @@
  */
 
 using System;
+using System.Collections;  
+using System.Collections.Generic;  
 using System.Reflection;
 using System.Globalization;
 using System.Runtime.Remoting;
@@ -574,54 +576,82 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         #region Perform event execution in script
 
         // Execute a LL-event-function in Script
-        internal void ExecuteEvent(uint localID, UUID itemID,
+        internal IEnumerable ExecuteEvent(uint localID, UUID itemID,
                 string FunctionName, DetectParams[] qParams, object[] args)
         {
             int Stage=0;
             InstanceData id = null;
-            //        ;^) Ewe Loon,fix 
-            try 
+            //;^) Ewe Loon,fix 
+            yield return null;
+            try
             {
-                Stage = 1; 
+                Stage = 1;
                 id = GetScript(localID, itemID);
+            }
+            catch (Exception e)
+            {
+                SceneObjectPart ob = m_scriptEngine.World.GetSceneObjectPart(localID);
+                m_log.InfoFormat("[Script Error] ,{0},{1},@{2},{3},{4},{5}", ob.Name, FunctionName, Stage, e.Message, qParams.Length, detparms.Count);
+                throw e;
+            }
 
-                if (id == null)
-                    return;
+            yield return null;
+            if (id == null)
+                yield return null;
 
-                if (!id.Running)
-                    return;
-
+            if (!id.Running)
+                yield return null;
+            try
+            {
                 Stage = 2;
-
                 if (qParams.Length>0)
                     detparms[id] = qParams;
+            }
+            catch(Exception e)
+            {
+                SceneObjectPart ob = m_scriptEngine.World.GetSceneObjectPart(localID);
+                m_log.InfoFormat("[Script Error] ,{0},{1},@{2},{3},{4},{5}", ob.Name , FunctionName, Stage, e.Message, qParams.Length, detparms.Count);
+                throw e;
+            }
+            yield return null;
 
-                Stage = 3;
+            Stage = 3;
 
-                if (id.EventDelayTicks != 0)
-                {
-                    if (DateTime.Now.Ticks < id.NextEventTimeTicks)
-                        return;
-                    id.NextEventTimeTicks = DateTime.Now.Ticks + id.EventDelayTicks;
-                }
+            if (id.EventDelayTicks != 0)
+            {
+                if (DateTime.Now.Ticks < id.NextEventTimeTicks)
+                    throw new Exception();
 
+                id.NextEventTimeTicks = DateTime.Now.Ticks + id.EventDelayTicks;
+            }
+
+                
+            try
+            {
                 id.Script.ExecuteEvent(id.State, FunctionName, args);
-
+            }
+            catch(Exception e)
+            {
+                if(qParams.Length>0)
+                    detparms.Remove(id);
+                SceneObjectPart ob = m_scriptEngine.World.GetSceneObjectPart(localID);
+                m_log.InfoFormat("[Script Error] ,{0},{1},@{2},{3},{4},{5}", ob.Name , FunctionName, Stage, e.Message, qParams.Length, detparms.Count);
+                throw e;
+            }
+            yield return null;
+            try
+            {
                 Stage = 4;
 
                 if (qParams.Length>0)   
                     detparms.Remove(id);
-
-                Stage = 5;
             }
-            catch (Exception e)         //        ;^) Ewe Loon, From here down tis fix
-            {                          
-                if ((Stage == 3)&&(qParams.Length>0))
-                    detparms.Remove(id);
+            catch(Exception e)
+            {
                 SceneObjectPart ob = m_scriptEngine.World.GetSceneObjectPart(localID);
-                m_log.InfoFormat("[Script Error] ,{0},{1},@{2},{3},{4},{5}", ob.Name , FunctionName, Stage, e.Message, qParams.Length, detparms.Count);
-                if (Stage != 2) throw e;
-            }            
+                m_log.InfoFormat("[Script Error] ,{0},{1},@{2},{3},{4},{5}", ob.Name, FunctionName, Stage, e.Message, qParams.Length, detparms.Count);
+                throw e;
+            }          
         }
 
         public uint GetLocalID(UUID itemID)

@@ -29,6 +29,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Globalization;
@@ -134,7 +135,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         {
             EventQueueThread = Watchdog.StartThread(EventQueueThreadLoop, "EventQueueManagerThread_" + ThreadCount, MyThreadPriority, true);
 
-
             // Look at this... Don't you wish everyone did that solid
             // coding everywhere? :P
 
@@ -142,6 +142,15 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                 ThreadCount = 0;
 
             ThreadCount++;
+            //while (true)
+            //{
+                //if (!EventQueueThread.IsAlive)
+                //{
+                 //   EventQueueThread = null;
+                 //   m_log.WarnFormat("[{0}]: Restarting the Event Queue after a crash.", ScriptEngineName);
+                 //   EventQueueThread = Watchdog.StartThread(EventQueueThreadLoop, "EventQueueManagerThread_" + ThreadCount, MyThreadPriority, true);
+                //}
+            //}
         }
 
         public void Stop()
@@ -220,7 +229,8 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                 // TODO: Let users in the sim and those entering it and possibly an external watchdog know what has happened
                 m_log.ErrorFormat(
                     "[{0}]: Event queue thread terminating with exception.  PLEASE REBOOT YOUR SIM - SCRIPT EVENTS WILL NOT WORK UNTIL YOU DO.  Exception is {1}", 
-                    ScriptEngineName, e);                
+                    ScriptEngineName, e);
+                EventQueueThread.Abort();
             }
         }
 
@@ -230,8 +240,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             {
                 lastScriptEngine = m_ScriptEngine;
 
-                EventQueueManager.QueueItemStruct QIS = BlankQIS;
-                bool GotItem = false;
+                List<EventQueueManager.QueueItemStruct> GotItem = new List<EventQueueManager.QueueItemStruct>();
 
                 //if (PleaseShutdown)
                 //    return;
@@ -253,126 +262,153 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                     // OBJECT IS NOT GOOD
                     lock (m_ScriptEngine.m_EventQueueManager.eventQueue)
                     {
-                        GotItem = false;
                         for (int qc = 0; qc < m_ScriptEngine.m_EventQueueManager.eventQueue.Count; qc++)
                         {
                             // Get queue item
-                            QIS = m_ScriptEngine.m_EventQueueManager.eventQueue.Dequeue();
-
-                            // Check if object is being processed by
-                            // someone else
-                            if (m_ScriptEngine.m_EventQueueManager.TryLock(
-                                    QIS.localID) == false)
-                            {
-                                // Object is already being processed, requeue it
-                                m_ScriptEngine.m_EventQueueManager.
-                                        eventQueue.Enqueue(QIS);
-                            }
-                            else
-                            {
-                                // We have lock on an object and can process it
-                                GotItem = true;
-                                break;
-                            }
+                            EventQueueManager.QueueItemStruct QIS = m_ScriptEngine.m_EventQueueManager.eventQueue.Dequeue();
+                            GotItem.Add(QIS);
                         }
                     }
-
-                    if (GotItem == true)
+                    List<IEnumerator> NeedingFired = new List<IEnumerator>();
+                    List<uint> NeedingFiredLocalIDs = new List<uint>();
+                    if (GotItem.Count != 0)
                     {
-                        // Execute function
-                        try
+                        foreach (EventQueueManager.QueueItemStruct QIS in GotItem)
                         {
-                            // Only pipe event if land supports it.
-                            if (m_ScriptEngine.World.PipeEventsForScript(
-                                    QIS.localID))
-                            {
-                                lastLocalID = QIS.localID;
-                                lastItemID = QIS.itemID;
-                                LastExecutionStarted = DateTime.Now.Ticks;
-                                KillCurrentScript = false;
-                                InExecution = true;
-                                m_ScriptEngine.m_ScriptManager.ExecuteEvent(
-                                    QIS.localID,
-                                    QIS.itemID,
-                                    QIS.functionName,
-                                    QIS.llDetectParams,
-                                    QIS.param);
-
-                                InExecution = false;
-                            }
-                        }
-                        catch (TargetInvocationException tie)
-                        {
-                            Exception e = tie.InnerException;
-
-                            if (e is SelfDeleteException) // Forward it
-                                throw e;
-
-                            InExecution = false;
-                            string text = FormatException(tie, QIS.LineMap);
-                            
-                            // DISPLAY ERROR INWORLD
-
-//                            if (e.InnerException != null)
-//                            {
-//                                // Send inner exception
-//                                string line = " (unknown line)";
-//                                Regex rx = new Regex(@"SecondLife\.Script\..+[\s:](?<line>\d+)\.?\r?$", RegexOptions.Compiled);
-//                                if (rx.Match(e.InnerException.ToString()).Success)
-//                                    line = " (line " + rx.Match(e.InnerException.ToString()).Result("${line}") + ")";
-//                                text += e.InnerException.Message.ToString() + line;
-//                            }
-//                            else
-//                            {
-//                                text += "\r\n";
-//                                // Send normal
-//                                text += e.Message.ToString();
-//                            }
-//                            if (KillCurrentScript)
-//                                text += "\r\nScript will be deactivated!";
-
+                            // Execute function
                             try
                             {
-                                if (text.Length >= 1100)
-                                    text = text.Substring(0, 1099);
-                                IScriptHost m_host =
-                                    m_ScriptEngine.World.GetSceneObjectPart(QIS.localID);
-                                m_ScriptEngine.World.SimChat(
-                                        Utils.StringToBytes(text),
-                                        ChatTypeEnum.DebugChannel, 2147483647,
-                                        m_host.AbsolutePosition,
-                                        m_host.Name, m_host.UUID, false);
+                                // Only pipe event if land supports it.
+                                if (m_ScriptEngine.World.PipeEventsForScript(
+                                        QIS.localID))
+                                {
+                                    lastLocalID = QIS.localID;
+                                    lastItemID = QIS.itemID;
+                                    LastExecutionStarted = DateTime.Now.Ticks;
+                                    KillCurrentScript = false;
+                                    InExecution = true;
+                                    try
+                                    {
+                                        if (m_ScriptEngine.m_EventQueueManager.TryLock(
+                                        QIS.localID) == false)
+                                        {
+                                            m_ScriptEngine.m_EventQueueManager.
+                                            eventQueue.Enqueue(QIS);
+                                        }
+                                        else
+                                        {
+                                            NeedingFired.Add(m_ScriptEngine.m_ScriptManager.ExecuteEvent(
+                                                QIS.localID,
+                                                QIS.itemID,
+                                                QIS.functionName,
+                                                QIS.llDetectParams,
+                                                QIS.param).GetEnumerator());
+                                            NeedingFiredLocalIDs.Add(QIS.localID);
+                                        }
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        m_log.WarnFormat("[{0}]: Exception thrown in the event executor: {1}", m_ScriptEngine.ScriptEngineName, ex.ToString());
+                                    }
+
+                                    InExecution = false;
+                                }
+                            }
+                            catch (TargetInvocationException tie)
+                            {
+                                Exception e = tie.InnerException;
+
+                                if (e is SelfDeleteException) // Forward it
+                                    throw e;
+
+                                InExecution = false;
+                                string text = FormatException(tie, QIS.LineMap);
+
+                                // DISPLAY ERROR INWORLD
+
+                                //                            if (e.InnerException != null)
+                                //                            {
+                                //                                // Send inner exception
+                                //                                string line = " (unknown line)";
+                                //                                Regex rx = new Regex(@"SecondLife\.Script\..+[\s:](?<line>\d+)\.?\r?$", RegexOptions.Compiled);
+                                //                                if (rx.Match(e.InnerException.ToString()).Success)
+                                //                                    line = " (line " + rx.Match(e.InnerException.ToString()).Result("${line}") + ")";
+                                //                                text += e.InnerException.Message.ToString() + line;
+                                //                            }
+                                //                            else
+                                //                            {
+                                //                                text += "\r\n";
+                                //                                // Send normal
+                                //                                text += e.Message.ToString();
+                                //                            }
+                                //                            if (KillCurrentScript)
+                                //                                text += "\r\nScript will be deactivated!";
+
+                                try
+                                {
+                                    if (text.Length >= 1100)
+                                        text = text.Substring(0, 1099);
+                                    IScriptHost m_host =
+                                        m_ScriptEngine.World.GetSceneObjectPart(QIS.localID);
+                                    m_ScriptEngine.World.SimChat(
+                                            Utils.StringToBytes(text),
+                                            ChatTypeEnum.DebugChannel, 2147483647,
+                                            m_host.AbsolutePosition,
+                                            m_host.Name, m_host.UUID, false);
+                                }
+                                catch (Exception)
+                                {
+                                    m_log.Error("[" +
+                                                ScriptEngineName + "]: " +
+                                                "Unable to send text in-world:\r\n" +
+                                                text);
+                                }
+                                finally
+                                {
+                                    // So we are done sending message in-world
+                                    if (KillCurrentScript)
+                                    {
+                                        m_ScriptEngine.m_EventQueueManager.
+                                                m_ScriptEngine.m_ScriptManager.
+                                                StopScript(
+                                            QIS.localID, QIS.itemID);
+                                    }
+                                }
                             }
                             catch (Exception)
                             {
-                                m_log.Error("[" +
-                                            ScriptEngineName + "]: " +
-                                            "Unable to send text in-world:\r\n" +
-                                            text);
+                                throw;
                             }
                             finally
                             {
-                                // So we are done sending message in-world
-                                if (KillCurrentScript)
-                                {
-                                    m_ScriptEngine.m_EventQueueManager.
-                                            m_ScriptEngine.m_ScriptManager.
-                                            StopScript(
-                                        QIS.localID, QIS.itemID);
-                                }
+                                InExecution = false;
+                                m_ScriptEngine.m_EventQueueManager.ReleaseLock(
+                                        QIS.localID);
                             }
                         }
-                        catch (Exception)
+                    }
+                    if (NeedingFired.Count == 0)
+                        return;
+
+                    lock (NeedingFired)
+                    {
+                        int i = 0;
+                        while (NeedingFired.Count > 0 && i < 1000)
                         {
-                            throw;
-                        }
-                        finally
-                        {
-                            InExecution = false;
-                            m_ScriptEngine.m_EventQueueManager.ReleaseLock(
-                                    QIS.localID);
+                            i++;
+
+                            bool running = NeedingFired[i % NeedingFired.Count].MoveNext();
+
+                            if (!running)
+                            {
+                                m_ScriptEngine.m_EventQueueManager.ReleaseLock(NeedingFiredLocalIDs[i % NeedingFired.Count]);
+                            }
                         }
                     }
+                    NeedingFired.Clear();
+                    NeedingFired = null;
+                    NeedingFiredLocalIDs.Clear();
+                    NeedingFiredLocalIDs = null;
                 }
             }
         }
