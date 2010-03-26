@@ -39,7 +39,6 @@ using OpenSim.Region.Framework.Scenes;
 using OpenSim.Region.ScriptEngine.Interfaces;
 using OpenSim.Region.ScriptEngine.Shared;
 using OpenSim.Region.ScriptEngine.Shared.Api;
-using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
@@ -448,6 +447,17 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             }
         }
 
+        internal void Stop()
+        {
+            foreach (KeyValuePair<uint, Dictionary<UUID, InstanceData>> script in Scripts)
+            {
+                foreach (KeyValuePair<UUID, InstanceData> innerscript in script.Value)
+                {
+                    _StopScript(script.Key, innerscript.Key);
+                }
+            }
+        }
+
         ~ScriptManager()
         {
             // Abort load/unload thread
@@ -579,10 +589,10 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         internal IEnumerable ExecuteEvent(uint localID, UUID itemID,
                 string FunctionName, DetectParams[] qParams, object[] args)
         {
-            int Stage=0;
+            int Stage = 0;
             InstanceData id = null;
             //;^) Ewe Loon,fix 
-            yield return null;
+
             try
             {
                 Stage = 1;
@@ -595,25 +605,24 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                 throw e;
             }
 
-            yield return null;
             if (id == null)
-                yield return null;
+                throw new Exception();
 
             if (!id.Running)
-                yield return null;
+                throw new Exception();
+
             try
             {
                 Stage = 2;
-                if (qParams.Length>0)
+                if (qParams.Length > 0)
                     detparms[id] = qParams;
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 SceneObjectPart ob = m_scriptEngine.World.GetSceneObjectPart(localID);
-                m_log.InfoFormat("[Script Error] ,{0},{1},@{2},{3},{4},{5}", ob.Name , FunctionName, Stage, e.Message, qParams.Length, detparms.Count);
+                m_log.InfoFormat("[Script Error] ,{0},{1},@{2},{3},{4},{5}", ob.Name, FunctionName, Stage, e.Message, qParams.Length, detparms.Count);
                 throw e;
             }
-            yield return null;
 
             Stage = 3;
 
@@ -625,33 +634,54 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                 id.NextEventTimeTicks = DateTime.Now.Ticks + id.EventDelayTicks;
             }
 
-                
+
+            yield return null;
+
             try
             {
                 id.Script.ExecuteEvent(id.State, FunctionName, args);
             }
-            catch(Exception e)
+            catch (SelfDeleteException) // Must delete SOG
             {
-                if(qParams.Length>0)
+                SceneObjectPart part =
+                    m_scriptEngine.World.GetSceneObjectPart(localID);
+                if (part != null && part.ParentGroup != null)
+                    m_scriptEngine.World.DeleteSceneObject(
+                        part.ParentGroup, false);
+            }
+            catch (ScriptDeleteException) // Must delete item
+            {
+                SceneObjectPart part =
+                    m_scriptEngine.World.GetSceneObjectPart(
+                        localID);
+                if (part != null && part.ParentGroup != null)
+                    part.Inventory.RemoveInventoryItem(itemID);
+            }
+            catch (NullReferenceException)
+            {
+            }
+            catch (Exception e)
+            {
+                if (qParams.Length > 0)
                     detparms.Remove(id);
                 SceneObjectPart ob = m_scriptEngine.World.GetSceneObjectPart(localID);
-                m_log.InfoFormat("[Script Error] ,{0},{1},@{2},{3},{4},{5}", ob.Name , FunctionName, Stage, e.Message, qParams.Length, detparms.Count);
+                m_log.InfoFormat("[Script Error] ,{0},{1},@{2},{3},{4},{5}", ob.Name, FunctionName, Stage, e.Message, qParams.Length, detparms.Count);
                 throw e;
             }
-            yield return null;
+
             try
             {
                 Stage = 4;
 
-                if (qParams.Length>0)   
+                if (qParams.Length > 0)
                     detparms.Remove(id);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 SceneObjectPart ob = m_scriptEngine.World.GetSceneObjectPart(localID);
                 m_log.InfoFormat("[Script Error] ,{0},{1},@{2},{3},{4},{5}", ob.Name, FunctionName, Stage, e.Message, qParams.Length, detparms.Count);
                 throw e;
-            }          
+            }
         }
 
         public uint GetLocalID(UUID itemID)

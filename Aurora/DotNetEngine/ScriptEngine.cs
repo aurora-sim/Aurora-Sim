@@ -143,7 +143,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                 return;
 
             // Create all objects we'll be using
-            m_EventQueueManager = new EventQueueManager(this);
+            m_EventQueueManager = new EventQueueManager(this, Sceneworld);
             m_EventManager = new EventManager(this, true);
 
             // We need to start it
@@ -163,6 +163,12 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
         public void RemoveRegion(Scene scene)
         {
+            m_Scene.EventManager.OnScriptReset -= OnScriptReset;
+            m_Scene.EventManager.OnGetScriptRunning -= OnGetScriptRunning;
+            m_Scene.EventManager.OnStartScript -= OnStartScript;
+            m_Scene.EventManager.OnStopScript -= OnStopScript;
+
+            m_ScriptManager.Stop();
         }
 
         public void RegionLoaded(Scene scene)
@@ -443,6 +449,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                 return;        
             
             id.Running = false;
+            m_ScriptManager._StopScript(localID, itemID);
         }
 
         public void OnGetScriptRunning(IClientAPI controllingClient,

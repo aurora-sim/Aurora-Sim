@@ -31,6 +31,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using OpenMetaverse;
 using OpenSim.Region.ScriptEngine.Shared;
+using OpenSim.Region.Framework.Scenes;
 using log4net;
 
 namespace OpenSim.Region.ScriptEngine.DotNetEngine
@@ -133,6 +134,8 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         /// Queue containing events waiting to be executed
         /// </summary>
         public Queue<QueueItemStruct> eventQueue = new Queue<QueueItemStruct>();
+        public Scene m_scene;
+        private EventQueueThreadClass EQT = null;
 
         #region " Queue structures "
         /// <summary>
@@ -152,12 +155,14 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         #endregion
 
         #region " Initialization / Startup "
-        public EventQueueManager(ScriptEngine _ScriptEngine)
+        public EventQueueManager(ScriptEngine _ScriptEngine, Scene scene)
         {
             m_ScriptEngine = _ScriptEngine;
-
+            m_scene = scene;
             ReadConfig();
-            AdjustNumberOfScriptThreads();
+            EQT = new EventQueueThreadClass();
+            //scene.EventManager.OnFrame += OnFrame;
+            //AdjustNumberOfScriptThreads();
         }
 
         public void ReadConfig()
@@ -213,6 +218,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         #endregion
 
         #region " Start / stop script execution threads (ThreadClasses) "
+        
         private void StartNewThreadClass()
         {
             EventQueueThreadClass eqtc = new EventQueueThreadClass();
@@ -352,8 +358,8 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             {
                 if (eventQueue.Count >= EventExecutionMaxQueueSize)
                 {
-                    m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: ERROR: Event execution queue item count is at " + eventQueue.Count + ". Config variable \"EventExecutionMaxQueueSize\" is set to " + EventExecutionMaxQueueSize + ", so ignoring new event.");
-                    m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: Event ignored: localID: " + localID + ", itemID: " + itemID + ", FunctionName: " + FunctionName);
+                    //m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: ERROR: Event execution queue item count is at " + eventQueue.Count + ". Config variable \"EventExecutionMaxQueueSize\" is set to " + EventExecutionMaxQueueSize + ", so ignoring new event.");
+                    //m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: Event ignored: localID: " + localID + ", itemID: " + itemID + ", FunctionName: " + FunctionName);
                     return false;
                 }
 

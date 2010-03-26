@@ -46,7 +46,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
     // Because every thread needs some data set for it
     // (time started to execute current function), it will do its work
     // within a class
-    public class EventQueueThreadClass
+    public class EventQueueThreadClass : System.MarshalByRefObject
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -167,12 +167,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             }
         }
 
-        private EventQueueManager.QueueItemStruct BlankQIS =
-                new EventQueueManager.QueueItemStruct();
-
         private ScriptEngine lastScriptEngine;
-        private uint lastLocalID;
-        private UUID lastItemID;
 
         // Queue processing thread loop
         private void EventQueueThreadLoop()
@@ -197,23 +192,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                                    "]: ThreadAbortException while executing "+
                                    "function.");
                     }
-                    catch (SelfDeleteException) // Must delete SOG
-                    {
-                        SceneObjectPart part =
-                            lastScriptEngine.World.GetSceneObjectPart(
-                                lastLocalID);
-                        if (part != null && part.ParentGroup != null)
-                            lastScriptEngine.World.DeleteSceneObject(
-                                part.ParentGroup, false);
-                    }
-                    catch (ScriptDeleteException) // Must delete item
-                    {
-                        SceneObjectPart part =
-                            lastScriptEngine.World.GetSceneObjectPart(
-                                lastLocalID);
-                        if (part != null && part.ParentGroup != null)
-                            part.Inventory.RemoveInventoryItem(lastItemID);
-                    }
                     catch (Exception e)
                     {
                         m_log.ErrorFormat("[{0}]: Exception {1} thrown", ScriptEngineName, e.GetType().ToString());
@@ -234,8 +212,77 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             }
         }
 
+
         public void DoProcessQueue()
         {
+            try
+            {
+                foreach (ScriptEngine m_ScriptEngine in ScriptEngine.ScriptEngines)
+                {
+                    lastScriptEngine = m_ScriptEngine;
+
+                    List<EventQueueManager.QueueItemStruct> GotItem = new List<EventQueueManager.QueueItemStruct>();
+
+                    if (m_ScriptEngine.m_EventQueueManager == null ||
+                            m_ScriptEngine.m_EventQueueManager.eventQueue == null)
+                        continue;
+
+                    if (m_ScriptEngine.m_EventQueueManager.eventQueue.Count != 0)
+                    {
+                        // Something in queue, process
+                        lock (m_ScriptEngine.m_EventQueueManager.eventQueue)
+                        {
+                            for (int qc = 0; qc < m_ScriptEngine.m_EventQueueManager.eventQueue.Count; qc++)
+                            {
+                                // Get queue item
+                                EventQueueManager.QueueItemStruct QIS = m_ScriptEngine.m_EventQueueManager.eventQueue.Dequeue();
+                                if (m_ScriptEngine.World.PipeEventsForScript(
+                                    QIS.localID))
+                                {
+                                    m_threads.Add(m_ScriptEngine.m_ScriptManager.ExecuteEvent(
+                                        QIS.localID,
+                                        QIS.itemID,
+                                        QIS.functionName,
+                                        QIS.llDetectParams,
+                                        QIS.param).GetEnumerator());
+                                }
+                            }
+                        }
+                    }
+                    
+                    lock (m_threads)
+                    {
+                        if (m_threads.Count == 0)
+                            return;
+
+                        int i = 0;
+                        while (m_threads.Count > 0 && i < m_threads.Count)
+                        {
+                            i++;
+
+                            bool running = m_threads[i % m_threads.Count].MoveNext();
+
+
+                            if (!running)
+                            {
+                                m_threads.Remove(m_threads[i % m_threads.Count]);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                m_log.Info(ex);
+            }
+        }
+
+        public void DoProcessQueueOld()
+        {
+            if (InExecution == true)
+                return;
+            InExecution = true;
+
             foreach (ScriptEngine m_ScriptEngine in ScriptEngine.ScriptEngines)
             {
                 lastScriptEngine = m_ScriptEngine;
@@ -270,7 +317,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                         }
                     }
                     List<IEnumerator> NeedingFired = new List<IEnumerator>();
-                    List<uint> NeedingFiredLocalIDs = new List<uint>();
+                    
                     if (GotItem.Count != 0)
                     {
                         foreach (EventQueueManager.QueueItemStruct QIS in GotItem)
@@ -282,14 +329,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                                 if (m_ScriptEngine.World.PipeEventsForScript(
                                         QIS.localID))
                                 {
-                                    lastLocalID = QIS.localID;
-                                    lastItemID = QIS.itemID;
-                                    LastExecutionStarted = DateTime.Now.Ticks;
-                                    KillCurrentScript = false;
-                                    InExecution = true;
-                                    try
-                                    {
-                                        if (m_ScriptEngine.m_EventQueueManager.TryLock(
+                                    if (m_ScriptEngine.m_EventQueueManager.TryLock(
                                         QIS.localID) == false)
                                         {
                                             m_ScriptEngine.m_EventQueueManager.
@@ -303,15 +343,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                                                 QIS.functionName,
                                                 QIS.llDetectParams,
                                                 QIS.param).GetEnumerator());
-                                            NeedingFiredLocalIDs.Add(QIS.localID);
                                         }
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        m_log.WarnFormat("[{0}]: Exception thrown in the event executor: {1}", m_ScriptEngine.ScriptEngineName, ex.ToString());
-                                    }
-
-                                    InExecution = false;
                                 }
                             }
                             catch (TargetInvocationException tie)
@@ -323,26 +355,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
                                 InExecution = false;
                                 string text = FormatException(tie, QIS.LineMap);
-
-                                // DISPLAY ERROR INWORLD
-
-                                //                            if (e.InnerException != null)
-                                //                            {
-                                //                                // Send inner exception
-                                //                                string line = " (unknown line)";
-                                //                                Regex rx = new Regex(@"SecondLife\.Script\..+[\s:](?<line>\d+)\.?\r?$", RegexOptions.Compiled);
-                                //                                if (rx.Match(e.InnerException.ToString()).Success)
-                                //                                    line = " (line " + rx.Match(e.InnerException.ToString()).Result("${line}") + ")";
-                                //                                text += e.InnerException.Message.ToString() + line;
-                                //                            }
-                                //                            else
-                                //                            {
-                                //                                text += "\r\n";
-                                //                                // Send normal
-                                //                                text += e.Message.ToString();
-                                //                            }
-                                //                            if (KillCurrentScript)
-                                //                                text += "\r\nScript will be deactivated!";
 
                                 try
                                 {
@@ -390,28 +402,12 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                     if (NeedingFired.Count == 0)
                         return;
 
-                    lock (NeedingFired)
-                    {
-                        int i = 0;
-                        while (NeedingFired.Count > 0 && i < 1000)
-                        {
-                            i++;
-
-                            bool running = NeedingFired[i % NeedingFired.Count].MoveNext();
-
-                            if (!running)
-                            {
-                                m_ScriptEngine.m_EventQueueManager.ReleaseLock(NeedingFiredLocalIDs[i % NeedingFired.Count]);
-                            }
-                        }
-                    }
-                    NeedingFired.Clear();
-                    NeedingFired = null;
-                    NeedingFiredLocalIDs.Clear();
-                    NeedingFiredLocalIDs = null;
+                    
                 }
             }
         }
+
+        private readonly List<IEnumerator> m_threads = new List<IEnumerator>();
 
         string FormatException(Exception e, Dictionary<KeyValuePair<int,int>,
                 KeyValuePair<int,int>> LineMap)
