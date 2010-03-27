@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
 using log4net;
@@ -102,10 +103,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         /// </summary>
         private void StopMaintenanceThread()
         {
-#if DEBUG
-            //m_log.Debug("[" + m_ScriptEngine.ScriptEngineName + "]: StopMaintenanceThread() called");
-#endif
-            //PleaseShutdown = true;
             Thread.Sleep(100);
             try
             {
@@ -120,7 +117,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             }
         }
 
-        // private ScriptEngine lastScriptEngine; // Keep track of what ScriptEngine instance we are at so we can give exception
         /// <summary>
         /// A thread should run in this loop and check all running scripts
         /// </summary>
@@ -162,56 +158,55 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                         MaintenanceLoopTicks_Other_Count++;
 
 
-                        //lock (ScriptEngine.ScriptEngines)
-                        //{
-                            foreach (ScriptEngine m_ScriptEngine in new ArrayList(ScriptEngine.ScriptEngines))
+                        foreach (ScriptEngine m_ScriptEngine in new ArrayList(ScriptEngine.ScriptEngines))
+                        {
+                            // lastScriptEngine = m_ScriptEngine;
+                            // Re-reading config every x seconds
+                            if (MaintenanceLoopTicks_Other_Count >= MaintenanceLoopTicks_Other)
                             {
-                                // lastScriptEngine = m_ScriptEngine;
-                                // Re-reading config every x seconds
-                                if (MaintenanceLoopTicks_Other_Count >= MaintenanceLoopTicks_Other)
+                                MaintenanceLoopTicks_Other_ResetCount = true;
+                                if (m_ScriptEngine.RefreshConfigFilens > 0)
                                 {
-                                    MaintenanceLoopTicks_Other_ResetCount = true;
-                                    if (m_ScriptEngine.RefreshConfigFilens > 0)
+                                    // Check if its time to re-read config
+                                    if (DateTime.Now.Ticks - Last_ReReadConfigFilens >
+                                        m_ScriptEngine.RefreshConfigFilens)
                                     {
-                                        // Check if its time to re-read config
-                                        if (DateTime.Now.Ticks - Last_ReReadConfigFilens >
-                                            m_ScriptEngine.RefreshConfigFilens)
+                                        //m_log.Debug("Time passed: " + (DateTime.Now.Ticks - Last_ReReadConfigFilens) + ">" + m_ScriptEngine.RefreshConfigFilens);
+                                        // Its time to re-read config file
+                                        m_ScriptEngine.ReadConfig();
+                                        Last_ReReadConfigFilens = DateTime.Now.Ticks; // Reset time
+                                    }
+
+
+                                    // Adjust number of running script threads if not correct
+                                    if (m_ScriptEngine.m_EventQueueManager != null)
+                                        m_ScriptEngine.m_EventQueueManager.AdjustNumberOfScriptThreads();
+
+                                    // Check if any script has exceeded its max execution time
+                                    if (EventQueueManager.EnforceMaxExecutionTime)
+                                    {
+                                        // We are enforcing execution time
+                                        if (DateTime.Now.Ticks - Last_maxFunctionExecutionTimens >
+                                            EventQueueManager.maxFunctionExecutionTimens)
                                         {
-                                            //m_log.Debug("Time passed: " + (DateTime.Now.Ticks - Last_ReReadConfigFilens) + ">" + m_ScriptEngine.RefreshConfigFilens);
-                                            // Its time to re-read config file
-                                            m_ScriptEngine.ReadConfig();
-                                            Last_ReReadConfigFilens = DateTime.Now.Ticks; // Reset time
-                                        }
-
-
-                                        // Adjust number of running script threads if not correct
-                                        if (m_ScriptEngine.m_EventQueueManager != null)
-                                            m_ScriptEngine.m_EventQueueManager.AdjustNumberOfScriptThreads();
-
-                                        // Check if any script has exceeded its max execution time
-                                        if (EventQueueManager.EnforceMaxExecutionTime)
-                                        {
-                                            // We are enforcing execution time
-                                            if (DateTime.Now.Ticks - Last_maxFunctionExecutionTimens >
-                                                EventQueueManager.maxFunctionExecutionTimens)
-                                            {
-                                                // Its time to check again
-                                                m_ScriptEngine.m_EventQueueManager.CheckScriptMaxExecTime(); // Do check
-                                                Last_maxFunctionExecutionTimens = DateTime.Now.Ticks; // Reset time
-                                            }
+                                            // Its time to check again
+                                            m_ScriptEngine.m_EventQueueManager.CheckScriptMaxExecTime(); // Do check
+                                            Last_maxFunctionExecutionTimens = DateTime.Now.Ticks; // Reset time
                                         }
                                     }
                                 }
-                                if (MaintenanceLoopTicks_ScriptLoadUnload_Count >= MaintenanceLoopTicks_ScriptLoadUnload)
-                                {
-                                    MaintenanceLoopTicks_ScriptLoadUnload_ResetCount = true;
-                                    // LOAD / UNLOAD SCRIPTS
-                                    if (m_ScriptEngine.m_ScriptManager != null)
-                                        m_ScriptEngine.m_ScriptManager.DoScriptLoadUnload();
-                                }
-                                m_ScriptEngine.m_EventQueueManager.CheckThreads();
                             }
-                        //}
+                            if (MaintenanceLoopTicks_ScriptLoadUnload_Count >= MaintenanceLoopTicks_ScriptLoadUnload)
+                            {
+                                MaintenanceLoopTicks_ScriptLoadUnload_ResetCount = true;
+                                // LOAD / UNLOAD SCRIPTS
+                                if (m_ScriptEngine.m_ScriptManager != null)
+                                {
+                                    m_ScriptEngine.m_ScriptManager.DoScriptsLoadUnload();
+                                }
+                            }
+                            m_ScriptEngine.m_EventQueueManager.CheckThreads();
+                        }
                     }
                 }
                 catch(ThreadAbortException)

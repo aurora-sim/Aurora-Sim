@@ -190,9 +190,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                     }
                 }
             }
-            catch (ThreadAbortException)
-            {
-            }
             catch (Exception e)
             {
                 // TODO: Let users in the sim and those entering it and possibly an external watchdog know what has happened
@@ -236,6 +233,10 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                                         QIS.functionName,
                                         QIS.llDetectParams,
                                         QIS.param).GetEnumerator());
+                                }
+                                else
+                                {
+                                    m_ScriptEngine.m_EventQueueManager.eventQueue.Enqueue(QIS, QIS.itemID);
                                 }
                             }
                         }

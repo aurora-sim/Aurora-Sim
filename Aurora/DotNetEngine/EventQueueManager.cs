@@ -502,10 +502,14 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             {
                 lock (queue)
                 {
-                    T queueItem = queue.GetRange(0, 1)[0];
-                    queue.RemoveAt(i);
-                    queueIDs.RemoveAt(i);
-                    return queueItem;
+                    if (queue.Count != 0)
+                    {
+                        T queueItem = queue.GetRange(0, 1)[0];
+                        queue.RemoveAt(i);
+                        queueIDs.RemoveAt(i);
+                        return queueItem;
+                    }
+                    return default(T);
                 }
             }
         }
@@ -534,6 +538,21 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             get { return queue.Count; }
         }
 
+        public int CountOf(UUID itemID)
+        {
+            int i = 0;
+            int count = 0;
+            foreach (UUID queueID in queueIDs)
+            {
+                if (queueID == itemID)
+                {
+                    count++;
+                }
+                i++;
+            }
+            return count;
+        }
+
         public IEnumerator<T> GetEnumerator()
         {
             return (IEnumerator<T>)queue.GetEnumerator();
@@ -542,6 +561,30 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         IEnumerator IEnumerable.GetEnumerator()
         {
             return queue.GetEnumerator();
+        }
+
+        internal T Dequeue(UUID itemID)
+        {
+            int i = 0;
+            lock (queueIDs)
+            {
+                lock (queue)
+                {
+                    while (i < queue.Count)
+                    {
+                        UUID queueID = queueIDs.GetRange(i, 1)[0];
+                        if (queueID == itemID)
+                        {
+                            T queueItem = queue.GetRange(i, 1)[0];
+                            queue.RemoveAt(i);
+                            queueIDs.RemoveAt(i);
+                            return queueItem;
+                        }
+                        i++;
+                    }
+                }
+            }
+            return default(T);
         }
     }
 }

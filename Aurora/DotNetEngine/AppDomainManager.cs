@@ -56,6 +56,8 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
         private int maxScriptsPerAppDomain = 1;
 
+        private string PermissionLevel = "Internet";
+
         // Internal list of all AppDomains
         private List<AppDomainStructure> appDomains =
                 new List<AppDomainStructure>();
@@ -91,6 +93,8 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         {
             maxScriptsPerAppDomain = m_scriptEngine.ScriptConfigSource.GetInt(
                     "ScriptsPerAppDomain", 1);
+            PermissionLevel = m_scriptEngine.ScriptConfigSource.GetString(
+                    "AppDomainPermissions", "Internet");
         }
 
         // Find a free AppDomain, creating one if necessary
@@ -126,8 +130,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             // Create and prepare a new AppDomain
             AppDomainNameCount++;
 
-            // TODO: Currently security match current appdomain
-
             // Construct and initialize settings for a second AppDomain.
             AppDomainSetup ads = new AppDomainSetup();
             ads.ApplicationBase = AppDomain.CurrentDomain.BaseDirectory;
@@ -135,21 +137,101 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             ads.DisallowCodeDownload = true;
             ads.LoaderOptimization = LoaderOptimization.MultiDomainHost;
             ads.ShadowCopyFiles = "false"; // Disable shadowing
-            ads.ConfigurationFile =
-                    AppDomain.CurrentDomain.SetupInformation.ConfigurationFile;
+            ads.ConfigurationFile = AppDomain.CurrentDomain.SetupInformation.ConfigurationFile;
 
-            AppDomain AD = AppDomain.CreateDomain("ScriptAppDomain_" +
-                    AppDomainNameCount, null, ads);
+            AppDomain AD = CreateRestrictedDomain(PermissionLevel, "ScriptAppDomain_" +
+                    AppDomainNameCount,ads);
 
-            //m_log.Info("[" + m_scriptEngine.ScriptEngineName +
-            //           "]: AppDomain Loading: " +
-            //           AssemblyName.GetAssemblyName(
-            //               "OpenSim.Region.ScriptEngine.Shared.dll").ToString());
             AD.Load(AssemblyName.GetAssemblyName(
                         "OpenSim.Region.ScriptEngine.Shared.dll"));
-
             // Return the new AppDomain
             return AD;
+        }
+
+
+        /// From MRMModule.cs by Adam Frisby
+        /// <summary>
+        /// Create an AppDomain that contains policy restricting code to execute
+        /// with only the permissions granted by a named permission set
+        /// </summary>
+        /// <param name="permissionSetName">name of the permission set to restrict to</param>
+        /// <param name="appDomainName">'friendly' name of the appdomain to be created</param>
+        /// <exception cref="ArgumentNullException">
+        /// if <paramref name="permissionSetName"/> is null
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// if <paramref name="permissionSetName"/> is empty
+        /// </exception>
+        /// <returns>AppDomain with a restricted security policy</returns>
+        /// <remarks>Substantial portions of this function from: http://blogs.msdn.com/shawnfa/archive/2004/10/25/247379.aspx
+        /// Valid permissionSetName values are:
+        /// * FullTrust
+        /// * SkipVerification
+        /// * Execution
+        /// * Nothing
+        /// * LocalIntranet
+        /// * Internet
+        /// * Everything
+        /// </remarks>
+        public AppDomain CreateRestrictedDomain(string permissionSetName, string appDomainName, AppDomainSetup ads)
+        {
+            if (permissionSetName == null)
+                throw new ArgumentNullException("permissionSetName");
+            if (permissionSetName.Length == 0)
+                throw new ArgumentOutOfRangeException("permissionSetName", permissionSetName,
+                                                      "Cannot have an empty permission set name");
+
+            // Default to all code getting nothing
+            PolicyStatement emptyPolicy = new PolicyStatement(new PermissionSet(PermissionState.None));
+            UnionCodeGroup policyRoot = new UnionCodeGroup(new AllMembershipCondition(), emptyPolicy);
+
+            bool foundName = false;
+            PermissionSet setIntersection = new PermissionSet(PermissionState.Unrestricted);
+
+            // iterate over each policy level
+            IEnumerator levelEnumerator = SecurityManager.PolicyHierarchy();
+            while (levelEnumerator.MoveNext())
+            {
+                PolicyLevel level = levelEnumerator.Current as PolicyLevel;
+
+                // if this level has defined a named permission set with the
+                // given name, then intersect it with what we've retrieved
+                // from all the previous levels
+                if (level != null)
+                {
+                    PermissionSet levelSet = level.GetNamedPermissionSet(permissionSetName);
+                    if (levelSet != null)
+                    {
+                        foundName = true;
+                        if (setIntersection != null)
+                            setIntersection = setIntersection.Intersect(levelSet);
+                    }
+                }
+            }
+
+            // Intersect() can return null for an empty set, so convert that
+            // to an empty set object. Also return an empty set if we didn't find
+            // the named permission set we were looking for
+            if (setIntersection == null || !foundName)
+                setIntersection = new PermissionSet(PermissionState.None);
+            else
+                setIntersection = new NamedPermissionSet(permissionSetName, setIntersection);
+
+            // if no named permission sets were found, return an empty set,
+            // otherwise return the set that was found
+            PolicyStatement permissions = new PolicyStatement(setIntersection);
+            policyRoot.AddChild(new UnionCodeGroup(new AllMembershipCondition(), permissions));
+
+            // create an AppDomain policy level for the policy tree
+            PolicyLevel appDomainLevel = PolicyLevel.CreateAppDomainLevel();
+            appDomainLevel.RootCodeGroup = policyRoot;
+
+            // create an AppDomain where this policy will be in effect
+            string domainName = appDomainName;
+            AppDomain restrictedDomain = AppDomain.CreateDomain(domainName, null, ads);
+            restrictedDomain.SetAppDomainPolicy(appDomainLevel);
+
+            return restrictedDomain;
         }
 
         // Unload appdomains that are full and have only dead scripts
@@ -183,11 +265,9 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         {
             // Find next available AppDomain to put it in
             AppDomainStructure FreeAppDomain = GetFreeAppDomain();
-
             IScript mbrt = (IScript)
                 FreeAppDomain.CurrentAppDomain.CreateInstanceFromAndUnwrap(
                 FileName, "SecondLife.Script");
-
             FreeAppDomain.ScriptsLoaded++;
             ad = FreeAppDomain.CurrentAppDomain;
 

@@ -35,6 +35,7 @@ using OpenSim.Region;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.ScriptEngine.Shared;
+using OpenSim.Region.ScriptEngine.Interfaces;
 using log4net;
 
 namespace OpenSim.Region.ScriptEngine.DotNetEngine
@@ -71,8 +72,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         public EventManager(ScriptEngine _ScriptEngine, bool performHookUp)
         {
             myScriptEngine = _ScriptEngine;
-            ReadConfig();
-
+            
             if (performHookUp)
             {
                 myScriptEngine.World.EventManager.OnRezScript += OnRezScript;
@@ -117,10 +117,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                     myScriptEngine.World.RequestModuleInterface<IMoneyModule>();
             if (money != null)
                 money.OnObjectPaid+=HandleObjectPaid;
-        }
-
-        public void ReadConfig()
-        {
         }
 
         private void HandleObjectPaid(UUID objectID, UUID agentID, int amount)
@@ -329,21 +325,15 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             if (engine != myScriptEngine.ScriptEngineName)
                 return;
 
-            //m_log.Debug("OnRezScript localID: " + localID +
-            //            " LLUID: " + itemID.ToString() + " Size: " +
-            //            script.Length);
-
             myScriptEngine.m_ScriptManager.StartScript(localID, itemID, script,
-                    startParam, postOnRez);
+                    startParam, postOnRez, (StateSource)stateSource);
         }
 
         public void OnRemoveScript(uint localID, UUID itemID)
         {
-            //m_log.Debug("OnRemoveScript localID: " + localID + " LLUID: " + itemID.ToString());
             myScriptEngine.m_ScriptManager.StopScript(
                 localID,
-                itemID
-                );
+                itemID);
         }
 
         public void money(uint localID, UUID agentID, int amount)
@@ -354,12 +344,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                     new LSL_Types.LSLInteger(amount) },
                     new DetectParams[0]));
         }
-
-        // TODO: Replace placeholders below
-        // NOTE! THE PARAMETERS FOR THESE FUNCTIONS ARE NOT CORRECT!
-        //  These needs to be hooked up to OpenSim during init of this class
-        //   then queued in EventQueueManager.
-        // When queued in EventQueueManager they need to be LSL compatible (name and params)
 
         public void state_exit(uint localID)
         {

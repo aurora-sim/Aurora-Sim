@@ -28,6 +28,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 using System.Xml;
 using log4net;
@@ -41,6 +42,7 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Region.ScriptEngine.Shared;
 using OpenSim.Region.ScriptEngine.Shared.ScriptBase;
+using OpenSim.Region.ScriptEngine.Shared.Api;
 
 namespace OpenSim.Region.ScriptEngine.DotNetEngine
 {
@@ -192,14 +194,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             lock (ScriptEngines)
             {
                 ScriptEngines.Remove(this);
-                foreach (KeyValuePair<uint,Dictionary<UUID, InstanceData>> script in m_ScriptManager.Scripts)
-                {
-                    foreach (KeyValuePair<UUID,InstanceData> itemID in script.Value)
-                    {
-                        m_ScriptManager._StopScript(script.Key, itemID.Key);
-                    }
-                }
-                m_ScriptManager.Scripts.Clear();
+                m_ScriptManager.Stop();
             }
         }
 
@@ -208,7 +203,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             RefreshConfigFileSeconds = ScriptConfigSource.GetInt("RefreshConfig", 0);
 
             if (m_EventQueueManager != null) m_EventQueueManager.ReadConfig();
-            if (m_EventManager != null) m_EventManager.ReadConfig();
             if (m_ScriptManager != null) m_ScriptManager.ReadConfig();
             if (m_AppDomainManager != null) m_AppDomainManager.ReadConfig();
             if (m_MaintenanceThread != null) m_MaintenanceThread.ReadConfig();
@@ -488,7 +482,120 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
         public string GetXMLState(UUID itemID)
         {
-            return "";
+            InstanceData instance = m_ScriptManager.GetScript(m_ScriptManager.GetLocalID(itemID), itemID);
+            //if (instance == null)
+                return "";
+            string xml = Serialize(instance);
+
+            XmlDocument sdoc = new XmlDocument();
+            sdoc.LoadXml(xml);
+            XmlNodeList rootL = sdoc.GetElementsByTagName("ScriptState");
+            XmlNode rootNode = rootL[0];
+
+            // Create <State UUID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+            XmlDocument doc = new XmlDocument();
+            XmlElement stateData = doc.CreateElement("", "State", "");
+            XmlAttribute stateID = doc.CreateAttribute("", "UUID", "");
+            stateID.Value = itemID.ToString();
+            stateData.Attributes.Append(stateID);
+            XmlAttribute assetID = doc.CreateAttribute("", "Asset", "");
+            assetID.Value = instance.AssetID.ToString();
+            stateData.Attributes.Append(assetID);
+            XmlAttribute engineName = doc.CreateAttribute("", "Engine", "");
+            engineName.Value = ScriptEngineName;
+            stateData.Attributes.Append(engineName);
+            doc.AppendChild(stateData);
+
+            // Add <ScriptState>...</ScriptState>
+            XmlNode xmlstate = doc.ImportNode(rootNode, true);
+            stateData.AppendChild(xmlstate);
+
+            string assemName = instance.AssemblyName;
+
+            string fn = Path.GetFileName(assemName);
+
+            string assem = String.Empty;
+
+            if (File.Exists(assemName + ".text"))
+            {
+                FileInfo tfi = new FileInfo(assemName + ".text");
+
+                if (tfi != null)
+                {
+                    Byte[] tdata = new Byte[tfi.Length];
+
+                    try
+                    {
+                        FileStream tfs = File.Open(assemName + ".text",
+                                FileMode.Open, FileAccess.Read);
+                        tfs.Read(tdata, 0, tdata.Length);
+                        tfs.Close();
+
+                        assem = new System.Text.ASCIIEncoding().GetString(tdata);
+                    }
+                    catch (Exception e)
+                    {
+                        m_log.DebugFormat("[XEngine]: Unable to open script textfile {0}, reason: {1}", assemName + ".text", e.Message);
+                    }
+                }
+            }
+            else
+            {
+                FileInfo fi = new FileInfo(assemName);
+
+                if (fi != null)
+                {
+                    Byte[] data = new Byte[fi.Length];
+
+                    try
+                    {
+                        FileStream fs = File.Open(assemName, FileMode.Open, FileAccess.Read);
+                        fs.Read(data, 0, data.Length);
+                        fs.Close();
+
+                        assem = System.Convert.ToBase64String(data);
+                    }
+                    catch (Exception e)
+                    {
+                        m_log.DebugFormat("[XEngine]: Unable to open script assembly {0}, reason: {1}", assemName, e.Message);
+                    }
+
+                }
+            }
+
+            string map = String.Empty;
+
+            if (File.Exists(fn + ".map"))
+            {
+                FileStream mfs = File.Open(fn + ".map", FileMode.Open, FileAccess.Read);
+                StreamReader msr = new StreamReader(mfs);
+
+                map = msr.ReadToEnd();
+
+                msr.Close();
+                mfs.Close();
+            }
+
+            XmlElement assemblyData = doc.CreateElement("", "Assembly", "");
+            XmlAttribute assemblyName = doc.CreateAttribute("", "Filename", "");
+
+            assemblyName.Value = fn;
+            assemblyData.Attributes.Append(assemblyName);
+
+            assemblyData.InnerText = assem;
+
+            stateData.AppendChild(assemblyData);
+
+            XmlElement mapData = doc.CreateElement("", "LineMap", "");
+            XmlAttribute mapName = doc.CreateAttribute("", "Filename", "");
+
+            mapName.Value = fn + ".map";
+            mapData.Attributes.Append(mapName);
+
+            mapData.InnerText = map;
+
+            stateData.AppendChild(mapData);
+            return doc.InnerXml;
         }
 
         public bool CanBeDeleted(UUID itemID)
@@ -503,7 +610,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
         public bool SetXMLState(UUID itemID, string xml)
         {
-            /*if (xml == String.Empty)
+            //if (xml == String.Empty)
                 return false;
 
             XmlDocument doc = new XmlDocument();
@@ -600,8 +707,205 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                 msw.Close();
                 mfs.Close();
             }
-            */
             return true;
+        }
+
+        public string Serialize(InstanceData instance)
+        {
+            bool running = instance.Running;
+
+            XmlDocument xmldoc = new XmlDocument();
+
+            XmlNode xmlnode = xmldoc.CreateNode(XmlNodeType.XmlDeclaration,
+                                                "", "");
+            xmldoc.AppendChild(xmlnode);
+
+            XmlElement rootElement = xmldoc.CreateElement("", "ScriptState",
+                                                          "");
+            xmldoc.AppendChild(rootElement);
+
+            XmlElement state = xmldoc.CreateElement("", "State", "");
+            state.AppendChild(xmldoc.CreateTextNode(instance.State));
+
+            rootElement.AppendChild(state);
+
+            XmlElement run = xmldoc.CreateElement("", "Running", "");
+            run.AppendChild(xmldoc.CreateTextNode(
+                    running.ToString()));
+
+            rootElement.AppendChild(run);
+
+            Dictionary<string, Object> vars = instance.Script.GetVars();
+
+            XmlElement variables = xmldoc.CreateElement("", "Variables", "");
+
+            foreach (KeyValuePair<string, Object> var in vars)
+                WriteTypedValue(xmldoc, variables, "Variable", var.Key,
+                                var.Value);
+
+            rootElement.AppendChild(variables);
+
+            XmlElement queue = xmldoc.CreateElement("", "Queue", "");
+
+            int count = m_EventQueueManager.eventQueue.CountOf(instance.ItemID);
+
+            while (count > 0)
+            {
+                EventQueueManager.QueueItemStruct QIS = m_EventQueueManager.eventQueue.Dequeue(instance.ItemID);
+                EventParams ep = new EventParams(QIS.functionName, QIS.param, QIS.llDetectParams);
+                m_EventQueueManager.eventQueue.Enqueue(QIS, QIS.itemID);
+                count--;
+
+                XmlElement item = xmldoc.CreateElement("", "Item", "");
+                XmlAttribute itemEvent = xmldoc.CreateAttribute("", "event",
+                                                                "");
+                itemEvent.Value = ep.EventName;
+                item.Attributes.Append(itemEvent);
+
+                XmlElement parms = xmldoc.CreateElement("", "Params", "");
+
+                foreach (Object o in ep.Params)
+                    WriteTypedValue(xmldoc, parms, "Param", String.Empty, o);
+
+                item.AppendChild(parms);
+
+                XmlElement detect = xmldoc.CreateElement("", "Detected", "");
+
+                foreach (DetectParams det in ep.DetectParams)
+                {
+                    XmlElement objectElem = xmldoc.CreateElement("", "Object",
+                                                                 "");
+                    XmlAttribute pos = xmldoc.CreateAttribute("", "pos", "");
+                    pos.Value = det.OffsetPos.ToString();
+                    objectElem.Attributes.Append(pos);
+
+                    XmlAttribute d_linkNum = xmldoc.CreateAttribute("",
+                            "linkNum", "");
+                    d_linkNum.Value = det.LinkNum.ToString();
+                    objectElem.Attributes.Append(d_linkNum);
+
+                    XmlAttribute d_group = xmldoc.CreateAttribute("",
+                            "group", "");
+                    d_group.Value = det.Group.ToString();
+                    objectElem.Attributes.Append(d_group);
+
+                    XmlAttribute d_name = xmldoc.CreateAttribute("",
+                            "name", "");
+                    d_name.Value = det.Name.ToString();
+                    objectElem.Attributes.Append(d_name);
+
+                    XmlAttribute d_owner = xmldoc.CreateAttribute("",
+                            "owner", "");
+                    d_owner.Value = det.Owner.ToString();
+                    objectElem.Attributes.Append(d_owner);
+
+                    XmlAttribute d_position = xmldoc.CreateAttribute("",
+                            "position", "");
+                    d_position.Value = det.Position.ToString();
+                    objectElem.Attributes.Append(d_position);
+
+                    XmlAttribute d_rotation = xmldoc.CreateAttribute("",
+                            "rotation", "");
+                    d_rotation.Value = det.Rotation.ToString();
+                    objectElem.Attributes.Append(d_rotation);
+
+                    XmlAttribute d_type = xmldoc.CreateAttribute("",
+                            "type", "");
+                    d_type.Value = det.Type.ToString();
+                    objectElem.Attributes.Append(d_type);
+
+                    XmlAttribute d_velocity = xmldoc.CreateAttribute("",
+                            "velocity", "");
+                    d_velocity.Value = det.Velocity.ToString();
+                    objectElem.Attributes.Append(d_velocity);
+
+                    objectElem.AppendChild(
+                        xmldoc.CreateTextNode(det.Key.ToString()));
+
+                    detect.AppendChild(objectElem);
+                }
+
+                item.AppendChild(detect);
+
+                queue.AppendChild(item);
+            }
+
+            rootElement.AppendChild(queue);
+
+            XmlNode plugins = xmldoc.CreateElement("", "Plugins", "");
+            DumpList(xmldoc, plugins,
+                     new LSL_Types.list(AsyncCommandManager.GetSerializationData(this, instance.ItemID)));
+
+            rootElement.AppendChild(plugins);
+
+            /*if (instance.ScriptTask != null)
+            {
+                if (instance.ScriptTask.PermsMask != 0 && instance.ScriptTask.PermsGranter != UUID.Zero)
+                {
+                    XmlNode permissions = xmldoc.CreateElement("", "Permissions", "");
+                    XmlAttribute granter = xmldoc.CreateAttribute("", "granter", "");
+                    granter.Value = instance.ScriptTask.PermsGranter.ToString();
+                    permissions.Attributes.Append(granter);
+                    XmlAttribute mask = xmldoc.CreateAttribute("", "mask", "");
+                    mask.Value = instance.ScriptTask.PermsMask.ToString();
+                    permissions.Attributes.Append(mask);
+                    rootElement.AppendChild(permissions);
+                }
+            }*/
+
+            if (instance.EventDelayTicks > 0.0)
+            {
+                XmlElement eventDelay = xmldoc.CreateElement("", "MinEventDelay", "");
+                eventDelay.AppendChild(xmldoc.CreateTextNode(instance.EventDelayTicks.ToString()));
+                rootElement.AppendChild(eventDelay);
+            }
+
+            return xmldoc.InnerXml;
+        }
+        private void DumpList(XmlDocument doc, XmlNode parent,
+                LSL_Types.list l)
+        {
+            foreach (Object o in l.Data)
+                WriteTypedValue(doc, parent, "ListItem", "", o);
+        }
+
+        private void WriteTypedValue(XmlDocument doc, XmlNode parent,
+                string tag, string name, object value)
+        {
+            Type t = value.GetType();
+            XmlAttribute typ = doc.CreateAttribute("", "type", "");
+            XmlNode n = doc.CreateElement("", tag, "");
+
+            if (value is LSL_Types.list)
+            {
+                typ.Value = "list";
+                n.Attributes.Append(typ);
+
+                DumpList(doc, n, (LSL_Types.list)value);
+
+                if (name != String.Empty)
+                {
+                    XmlAttribute nam = doc.CreateAttribute("", "name", "");
+                    nam.Value = name;
+                    n.Attributes.Append(nam);
+                }
+
+                parent.AppendChild(n);
+                return;
+            }
+
+            n.AppendChild(doc.CreateTextNode(value.ToString()));
+
+            typ.Value = t.ToString();
+            n.Attributes.Append(typ);
+            if (name != String.Empty)
+            {
+                XmlAttribute nam = doc.CreateAttribute("", "name", "");
+                nam.Value = name;
+                n.Attributes.Append(nam);
+            }
+
+            parent.AppendChild(n);
         }
     }
 }
