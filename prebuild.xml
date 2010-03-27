@@ -2722,6 +2722,7 @@
 <Reference name="OpenMetaverseTypes.dll"/>
 <Reference name="OpenMetaverse.dll"/>
 <Reference name="OpenSim.Framework"/>
+<Reference name="Aurora.DataManager"/>
 <Reference name="Aurora.DataManager.SQLite"/>
 <Reference name="Aurora.DataManager.MySQL"/>
 <Reference name="C5.dll"/>
