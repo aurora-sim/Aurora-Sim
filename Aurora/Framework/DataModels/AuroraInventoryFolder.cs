@@ -3,9 +3,9 @@ using FluentNHibernate.Mapping;
 
 namespace Aurora.Framework
 {
-    public class InventoryFolderMap : ClassMap<InventoryFolder>
+    public class AuroraInventoryFolderMap : ClassMap<AuroraInventoryFolder>
     {
-        public InventoryFolderMap()
+        public AuroraInventoryFolderMap()
         {
             Id(x => x.Id);
             Map(x => x.PreferredAssetType);
@@ -16,12 +16,12 @@ namespace Aurora.Framework
         }
     }
 
-    public class InventoryFolder
+    public class AuroraInventoryFolder
     {
         public virtual int Id { get; set; }
         public virtual int PreferredAssetType { get; set; }
         public virtual string FolderId { get; set; }
-        public virtual InventoryFolder ParentFolder { get; set; }
+        public virtual AuroraInventoryFolder ParentFolder { get; set; }
         public virtual string Name { get; set; }
         public virtual string Owner { get; set; }
     }
