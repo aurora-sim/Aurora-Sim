@@ -209,6 +209,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                                     if (m_ScriptEngine.m_ScriptManager != null)
                                         m_ScriptEngine.m_ScriptManager.DoScriptLoadUnload();
                                 }
+                                m_ScriptEngine.m_EventQueueManager.CheckThreads();
                             }
                         //}
                     }
@@ -224,15 +225,5 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             }
         }
         #endregion
-
-        ///// <summary>
-        ///// If set to true then threads and stuff should try to make a graceful exit
-        ///// </summary>
-        //public bool PleaseShutdown
-        //{
-        //    get { return _PleaseShutdown; }
-        //    set { _PleaseShutdown = value; }
-        //}
-        //private bool _PleaseShutdown = false;
     }
 }

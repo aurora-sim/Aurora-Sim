@@ -133,7 +133,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         /// <summary>
         /// Queue containing events waiting to be executed
         /// </summary>
-        public GenericQueue<QueueItemStruct> eventQueue = new GenericQueue<QueueItemStruct>();
+        public ScriptEventQueue<QueueItemStruct> eventQueue = new ScriptEventQueue<QueueItemStruct>();
         public Scene m_scene;
         private EventQueueThreadClass EQT = null;
 
@@ -288,7 +288,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         /// <param name="FunctionName">Name of the function, will be state + "_event_" + FunctionName</param>
         /// <returns>true if event is found , false if not found</returns>
         /// 
-        public bool CheckEeventQueueForEvent(uint localID, string FunctionName)
+        public bool CheckEventQueueForEvent(uint localID, string FunctionName)
         {
             if (eventQueue.Count > 0)
             {
@@ -451,28 +451,33 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         }
         #endregion
 
-        ///// <summary>
-        ///// If set to true then threads and stuff should try to make a graceful exit
-        ///// </summary>
-        //public bool PleaseShutdown
-        //{
-        //    get { return _PleaseShutdown; }
-        //    set { _PleaseShutdown = value; }
-        //}
-        //private bool _PleaseShutdown = false;
-
         internal void RemoveFromQueue(UUID itemID)
         {
             eventQueue.Remove(itemID);
         }
+
+        internal void CheckThreads()
+        {
+            int i = 0;
+            while(i < eventQueueThreads.Count)
+            {
+                if (!eventQueueThreads[i].EventQueueThread.IsAlive)
+                {
+                    m_log.WarnFormat("[{0}]: EventQueue Thread found dead... Restarting.", m_ScriptEngine.ScriptEngineName);
+                    AbortThreadClass(eventQueueThreads[i]);
+                    StartNewThreadClass();
+                }
+                i++;
+            }
+        }
     }
 
-    public class GenericQueue<T>: IEnumerable<T>
+    public class ScriptEventQueue<T>: IEnumerable<T>
     {
         private List<T> queue;
         private List<UUID> queueIDs; // ItemID
         
-        public GenericQueue()
+        public ScriptEventQueue()
         {
             queue = new List<T>();
             queueIDs = new List<UUID>();

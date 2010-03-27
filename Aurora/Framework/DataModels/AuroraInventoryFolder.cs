@@ -25,4 +25,8 @@ namespace Aurora.Framework
         public virtual string Name { get; set; }
         public virtual string Owner { get; set; }
     }
+
+    public class AuroraInventoryItem
+    {
+    }
 }

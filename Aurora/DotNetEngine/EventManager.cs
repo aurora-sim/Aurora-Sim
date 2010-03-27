@@ -487,7 +487,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
         public void control(uint localID, UUID itemID, UUID agentID, uint held, uint change)
         {
-            if ((change == 0) && (myScriptEngine.m_EventQueueManager.CheckEeventQueueForEvent(localID,"control"))) return;
+            if ((change == 0) && (myScriptEngine.m_EventQueueManager.CheckEventQueueForEvent(localID,"control"))) return;
             myScriptEngine.PostObjectEvent(localID, new EventParams(
                     "control",new object[] {
                     new LSL_Types.LSLString(agentID.ToString()),

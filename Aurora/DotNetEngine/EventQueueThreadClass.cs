@@ -142,15 +142,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                 ThreadCount = 0;
 
             ThreadCount++;
-            //while (true)
-            //{
-                //if (!EventQueueThread.IsAlive)
-                //{
-                 //   EventQueueThread = null;
-                 //   m_log.WarnFormat("[{0}]: Restarting the Event Queue after a crash.", ScriptEngineName);
-                 //   EventQueueThread = Watchdog.StartThread(EventQueueThreadLoop, "EventQueueManagerThread_" + ThreadCount, MyThreadPriority, true);
-                //}
-            //}
         }
 
         public void Stop()
