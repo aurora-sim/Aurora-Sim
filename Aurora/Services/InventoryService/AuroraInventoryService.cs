@@ -15,21 +15,7 @@ namespace Aurora.Services.InventoryService
     /// </summary>
     public class AuroraInventoryService : IInventoryPluginService, IInventoryService
     {
-        private readonly InventoryObjectType animationType;
-        private readonly InventoryObjectType bodyPartType;
-        private readonly InventoryObjectType callingCardType;
-        private readonly InventoryObjectType clothingType;
-        private readonly InventoryObjectType gestureType;
-        private readonly InventoryObjectType landmarkType;
-        private readonly InventoryObjectType lostAndFoundType;
-        private readonly InventoryObjectType notecardType;
-        private readonly InventoryObjectType objectType;
-        private readonly InventoryObjectType photoType;
         private readonly InventoryRepository repository;
-        private readonly InventoryObjectType scriptType;
-        private readonly InventoryObjectType soundType;
-        private readonly InventoryObjectType textureType;
-        private readonly InventoryObjectType trashType;
 
         private const string FOLDER_ANIMATION_NAME = "Animations";
         private const string FOLDER_BODY_PARTS_NAME = "Body Parts";
@@ -60,20 +46,6 @@ namespace Aurora.Services.InventoryService
             #endregion
 
             repository = new InventoryRepository(DataManager.DataManager.DataSessionProvider);
-            animationType = repository.CreateInventoryType("ANIMATION", (int)AssetType.Animation);
-            bodyPartType = repository.CreateInventoryType("BODY_PART", (int)AssetType.Bodypart);
-            callingCardType = repository.CreateInventoryType("CALLING_CARD", (int)AssetType.CallingCard);
-            clothingType = repository.CreateInventoryType("CLOTHING", (int)AssetType.Clothing);
-            gestureType = repository.CreateInventoryType("GESTURE", (int)AssetType.Gesture);
-            landmarkType = repository.CreateInventoryType("LANDMARK", (int)AssetType.Landmark);
-            lostAndFoundType = repository.CreateInventoryType("LOST_AND_FOUND", (int)AssetType.LostAndFoundFolder);
-            notecardType = repository.CreateInventoryType("NOTECARD", (int)AssetType.Notecard);
-            objectType = repository.CreateInventoryType("OBJECT", (int)AssetType.Object);
-            photoType = repository.CreateInventoryType("PHOTO", (int)AssetType.SnapshotFolder);
-            scriptType = repository.CreateInventoryType("SCRIPT", (int)AssetType.LSLText);
-            soundType = repository.CreateInventoryType("SOUND", (int)AssetType.Sound);
-            textureType = repository.CreateInventoryType("TEXTURE", (int)AssetType.Texture);
-            trashType = repository.CreateInventoryType("TRASH", (int)AssetType.TrashFolder);
         }
 
         #region IInventoryService Members
@@ -97,21 +69,20 @@ namespace Aurora.Services.InventoryService
             }
 
             IList<AuroraInventoryFolder> defaultRootFolderSubFolders = repository.GetSubfoldersWithAnyAssetPreferences(defaultRootFolder);
-            EnsureFolderForPreferredTypeUnderFolder(FOLDER_ANIMATION_NAME, animationType, defaultRootFolder);
-            EnsureFolderForPreferredTypeUnderFolder(FOLDER_BODY_PARTS_NAME, bodyPartType, defaultRootFolder);
-            EnsureFolderForPreferredTypeUnderFolder(FOLDER_CALLING_CARDS_NAME, callingCardType, defaultRootFolder);
-            EnsureFolderForPreferredTypeUnderFolder(FOLDER_CLOTHING_NAME, clothingType, defaultRootFolder);
-            EnsureFolderForPreferredTypeUnderFolder(FOLDER_GESTURES_NAME, gestureType, defaultRootFolder);
-            EnsureFolderForPreferredTypeUnderFolder(FOLDER_LANDMARKS_NAME, landmarkType, defaultRootFolder);
-            EnsureFolderForPreferredTypeUnderFolder(FOLDER_LOST_AND_FOUND_NAME, lostAndFoundType, defaultRootFolder);
-            EnsureFolderForPreferredTypeUnderFolder(FOLDER_NOTECARDS, notecardType, defaultRootFolder);
-            EnsureFolderForPreferredTypeUnderFolder(FOLDER_OBJECTS_NAME, objectType, defaultRootFolder);
-            EnsureFolderForPreferredTypeUnderFolder(FOLDER_PHOTO_ALBUM_NAME, photoType, defaultRootFolder);
-            EnsureFolderForPreferredTypeUnderFolder(FOLDER_OBJECTS_NAME, animationType, defaultRootFolder);
-            EnsureFolderForPreferredTypeUnderFolder(FOLDER_SCRIPTS_NAME, scriptType, defaultRootFolder);
-            EnsureFolderForPreferredTypeUnderFolder(FOLDER_SOUNDS_NAME, soundType, defaultRootFolder);
-            EnsureFolderForPreferredTypeUnderFolder(FOLDER_TEXTURES_NAME, textureType, defaultRootFolder);
-            EnsureFolderForPreferredTypeUnderFolder(FOLDER_TRASH_NAME, trashType, defaultRootFolder);
+            EnsureFolderForPreferredTypeUnderFolder(FOLDER_ANIMATION_NAME, (int)AssetType.Animation, defaultRootFolder);
+            EnsureFolderForPreferredTypeUnderFolder(FOLDER_BODY_PARTS_NAME, (int)AssetType.Bodypart, defaultRootFolder);
+            EnsureFolderForPreferredTypeUnderFolder(FOLDER_CALLING_CARDS_NAME, (int)AssetType.CallingCard, defaultRootFolder);
+            EnsureFolderForPreferredTypeUnderFolder(FOLDER_CLOTHING_NAME, (int)AssetType.Clothing, defaultRootFolder);
+            EnsureFolderForPreferredTypeUnderFolder(FOLDER_GESTURES_NAME, (int)AssetType.Gesture, defaultRootFolder);
+            EnsureFolderForPreferredTypeUnderFolder(FOLDER_LANDMARKS_NAME, (int)AssetType.Landmark, defaultRootFolder);
+            EnsureFolderForPreferredTypeUnderFolder(FOLDER_LOST_AND_FOUND_NAME, (int)AssetType.LostAndFoundFolder, defaultRootFolder);
+            EnsureFolderForPreferredTypeUnderFolder(FOLDER_NOTECARDS, (int)AssetType.Notecard, defaultRootFolder);
+            EnsureFolderForPreferredTypeUnderFolder(FOLDER_OBJECTS_NAME, (int)AssetType.Object, defaultRootFolder);
+            EnsureFolderForPreferredTypeUnderFolder(FOLDER_PHOTO_ALBUM_NAME, (int)AssetType.SnapshotFolder, defaultRootFolder);
+            EnsureFolderForPreferredTypeUnderFolder(FOLDER_SCRIPTS_NAME, (int)AssetType.LSLText, defaultRootFolder);
+            EnsureFolderForPreferredTypeUnderFolder(FOLDER_SOUNDS_NAME, (int)AssetType.Sound, defaultRootFolder);
+            EnsureFolderForPreferredTypeUnderFolder(FOLDER_TEXTURES_NAME, (int)AssetType.Texture, defaultRootFolder);
+            EnsureFolderForPreferredTypeUnderFolder(FOLDER_TRASH_NAME, (int)AssetType.TrashFolder, defaultRootFolder);
 
             return result;
         }
@@ -151,7 +122,7 @@ namespace Aurora.Services.InventoryService
 
         public bool PurgeFolder(InventoryFolderBase folder)
         {
-            repository.RemoveFoldersAndItems(folder);
+            repository.RemoveFoldersAndItems(folder.ID);
             return false;
         }
 
@@ -223,16 +194,21 @@ namespace Aurora.Services.InventoryService
 
         public List<InventoryItemBase> GetActiveGestures(UUID userId)
         {
-            IList<InventoryItem> activeGestures = repository.GetActiveInventoryItemsByType(gestureType);
+            IList<AuroraInventoryItem> activeGestures = repository.GetActiveInventoryItemsByType(userId,(int)AssetType.Gesture);
 
             var osActiveGestures = new List<InventoryItemBase>();
 
-            foreach (InventoryItem activeGesture in activeGestures)
+            foreach (var activeGesture in activeGestures)
             {
-                osActiveGestures.Add(ConvertInventoryItemToInventoryItemBase(activeGesture));
+                osActiveGestures.Add(ConvertAuroraInventoryItemToInventoryItemBase(activeGesture));
             }
 
             return osActiveGestures;
+        }
+
+        private InventoryItemBase ConvertAuroraInventoryItemToInventoryItemBase(AuroraInventoryItem activeGesture)
+        {
+            throw new NotImplementedException();
         }
 
         public InventoryFolderBase GetFolderForType(UUID userId, AssetType type)
@@ -255,14 +231,14 @@ namespace Aurora.Services.InventoryService
             List<InventoryFolderBase> Folders = new List<InventoryFolderBase>();
 
             AuroraInventoryFolder newFolder = new AuroraInventoryFolder();
-            newFolder.FolderId = folderId.ToString();
+            newFolder.FolderID = folderId.ToString();
 
             IList<AuroraInventoryFolder> folders = repository.GetChildFolders(repository.GetFolder(newFolder));
             List<InventoryItemBase> Items = new List<InventoryItemBase>();
 
             foreach (AuroraInventoryFolder folder in folders)
             {
-                Items.AddRange(GetFolderItems(userId, new UUID(folder.FolderId)));
+                Items.AddRange(GetFolderItems(userId, new UUID(folder.FolderID)));
                 Folders.Add(ConvertInventoryFolderToInventoryFolderBase(folder));
             }
 
@@ -282,7 +258,7 @@ namespace Aurora.Services.InventoryService
 
         public InventoryItemBase GetItem(InventoryItemBase item)
         {
-            return ConvertInventoryItemToInventoryItemBase(repository.GetItem(ConvertInventoryItemBaseToInventoryItem(item)));
+            return ConvertAuroraInventoryItemToInventoryItemBase(repository.GetItem(item.ID));
         }
 
         public InventoryFolderBase GetFolder(InventoryFolderBase folder)
@@ -292,8 +268,13 @@ namespace Aurora.Services.InventoryService
 
         public bool AddItem(InventoryItemBase item)
         {
-            repository.CreateItem(ConvertInventoryItemBaseToInventoryItem(item));
+            repository.CreateItem(ConvertInventoryItemBaseToAuroraInventoryItem(item));
             return true;
+        }
+
+        private AuroraInventoryItem ConvertInventoryItemBaseToAuroraInventoryItem(InventoryItemBase item)
+        {
+            throw new NotImplementedException();
         }
 
         public bool DeleteItems(UUID userId, List<UUID> itemIDs)
@@ -304,7 +285,7 @@ namespace Aurora.Services.InventoryService
 
         public bool UpdateItem(InventoryItemBase item)
         {
-            repository.UpdateItem(ConvertInventoryItemBaseToInventoryItem(item));
+            repository.UpdateItem(ConvertInventoryItemBaseToAuroraInventoryItem(item));
             return true;
         }
 
@@ -315,17 +296,16 @@ namespace Aurora.Services.InventoryService
 
         public bool LinkItem(IClientAPI client, UUID oldItemID, UUID parentID, uint Callback)
         {
-            InventoryItem item = new InventoryItem(oldItemID);
-            item = repository.GetItem(item);
+            var item = repository.GetItem(oldItemID);
             repository.CreateLinkedItem(item);
             return true;
         }
 
         public bool MoveItems(UUID ownerId, List<InventoryItemBase> items)
         {
-            List<InventoryItem> Items = new List<InventoryItem>();
+            var Items = new List<AuroraInventoryItem>();
             foreach (InventoryItemBase item in items)
-                Items.Add(ConvertInventoryItemBaseToInventoryItem(item));
+                Items.Add(ConvertInventoryItemBaseToAuroraInventoryItem(item));
 
             repository.UpdateItems(Items);
 
@@ -336,11 +316,11 @@ namespace Aurora.Services.InventoryService
 
         public List<InventoryItemBase> GetFolderItems(UUID userId, UUID folderId)
         {
-            List<InventoryItem> items = repository.GetItemsInFolder(ConvertInventoryFolderBaseToInventoryFolder(GetFolder(new InventoryFolderBase(folderId))));
+            IList<AuroraInventoryItem> items = repository.GetItemsInFolder(userId,ConvertInventoryFolderBaseToInventoryFolder(GetFolder(new InventoryFolderBase(folderId))));
             List<InventoryItemBase> Items = new List<InventoryItemBase>();
-            foreach (InventoryItem item in items)
+            foreach (var item in items)
             {
-                Items.Add(ConvertInventoryItemToInventoryItemBase(item));
+                Items.Add(ConvertAuroraInventoryItemToInventoryItemBase(item));
             }
             return Items;
         }
@@ -349,37 +329,37 @@ namespace Aurora.Services.InventoryService
 
         #region IInventoryPluginService
 
-        public void AddInventoryItemType(InventoryObjectType type)
-        {
-            repository.AssignNewInventoryType(type.Name, type.Type);
-        }
-
-        public void EnsureFolderForPreferredTypeUnderFolder(string folderName, InventoryObjectType inventoryObjectType, AuroraInventoryFolder defaultRootFolder)
+        public void EnsureFolderForPreferredTypeUnderFolder(string folderName, int inventoryObjectType, AuroraInventoryFolder defaultRootFolder)
         {
             if (!DoesFolderExistForPreferedType(defaultRootFolder, inventoryObjectType))
             {
-                repository.CreateFolderUnderFolderAndSave(folderName, defaultRootFolder, animationType.Type);
+                repository.CreateFolderUnderFolderAndSave(folderName, defaultRootFolder, inventoryObjectType);
             }
         }
 
-        public bool DoesFolderExistForPreferedType(AuroraInventoryFolder folder, InventoryObjectType inventoryObjectType)
+        public bool DoesFolderExistForPreferedType(AuroraInventoryFolder folder, int inventoryObjectType)
         {
-            return (from f in repository.GetChildFolders(folder) where f.PreferredAssetType == inventoryObjectType.Type select f).Count() > 0;
+            return (from f in repository.GetChildFolders(folder) where f.PreferredAssetType == inventoryObjectType select f).Count() > 0;
         }
 
         public bool AddInventoryItem(UUID user, InventoryItem item)
         {
-            repository.CreateItem(item);
+            repository.CreateItem(ConvertInventoryItemToAuroraInventoryItem(item));
             return true;
+        }
+
+        private AuroraInventoryItem ConvertInventoryItemToAuroraInventoryItem(InventoryItem item)
+        {
+            throw new NotImplementedException();
         }
 
         public InventoryFolderBase ConvertInventoryFolderToInventoryFolderBase(AuroraInventoryFolder folder)
         {
             InventoryFolderBase IFfolder = new InventoryFolderBase();
-            IFfolder.ID = new UUID(folder.FolderId);
+            IFfolder.ID = new UUID(folder.FolderID);
             IFfolder.Name = folder.Name;
             IFfolder.Owner = new UUID(folder.Owner);
-            IFfolder.ParentID = new UUID(folder.ParentFolder.FolderId);
+            IFfolder.ParentID = new UUID(folder.ParentFolder.FolderID);
             IFfolder.Type = (short)folder.PreferredAssetType;
             IFfolder.Version = 1;
             return IFfolder;
@@ -398,7 +378,7 @@ namespace Aurora.Services.InventoryService
             inventoryItemBase.Description = item.Description;
             inventoryItemBase.EveryOnePermissions = (uint)item.Permissions.EveryoneMask;
             inventoryItemBase.Flags = item.Flags;
-            inventoryItemBase.Folder = new UUID(repository.GetParentFolder(inventoryItemBase).FolderId);
+            inventoryItemBase.Folder = UUID.Parse(repository.GetParentFolderOfItem(inventoryItemBase.ID).FolderID);
             inventoryItemBase.GroupID = item.GroupID;
             inventoryItemBase.GroupOwned = item.GroupOwned;
             inventoryItemBase.GroupPermissions = (uint)item.Permissions.GroupMask;
@@ -462,15 +442,11 @@ namespace Aurora.Services.InventoryService
         public AuroraInventoryFolder ConvertInventoryFolderBaseToInventoryFolder(InventoryFolderBase folder)
         {
             AuroraInventoryFolder IFfolder = new AuroraInventoryFolder();
-            IFfolder.FolderId = folder.ID.ToString();
+            IFfolder.FolderID = folder.ID.ToString();
             IFfolder.Name = folder.Name;
             IFfolder.Owner = folder.Owner.ToString();
-            IFfolder.ParentFolder = repository.GetParentFolder(folder);
-            InventoryObjectType type = repository.GetInventoryObjectTypeByType(folder.Type);
-            if (type == null)
-                IFfolder.PreferredAssetType = repository.CreateInventoryType(folder.Name, folder.Type).Type;
-            else
-                IFfolder.PreferredAssetType = type.Type;
+            IFfolder.ParentFolder = repository.GetParentFolderOfFolder(folder.ID);
+            IFfolder.PreferredAssetType = folder.Type;
             return IFfolder;
         }
 

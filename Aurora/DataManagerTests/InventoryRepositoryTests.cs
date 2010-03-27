@@ -31,7 +31,7 @@ namespace Aurora.DataManager.Tests
             Assert.AreEqual(userId.ToString(), folder.Owner);
 
             var rootFolder = repo.GetRootFolder(userId);
-            Assert.AreEqual(folder.Id, rootFolder.Id);
+            Assert.AreEqual(folder.ID, rootFolder.ID);
             Assert.AreEqual(MY_INVENTORY, rootFolder.Name);
             Assert.IsNull(rootFolder.ParentFolder);
             Assert.AreEqual(userId.ToString(), rootFolder.Owner);
@@ -39,14 +39,14 @@ namespace Aurora.DataManager.Tests
 
             var testFolder = repo.CreateFolderAndSave(TEST_FOLDER, rootFolder);
             Assert.AreEqual(TEST_FOLDER, testFolder.Name);
-            Assert.AreEqual(rootFolder.Id, testFolder.ParentFolder.Id);
+            Assert.AreEqual(rootFolder.ID, testFolder.ParentFolder.ID);
             Assert.AreEqual(rootFolder.Owner, testFolder.Owner);
 
             var childFolders = repo.GetChildFolders(rootFolder);
             Assert.AreEqual(1, childFolders.Count);
-            Assert.AreEqual(testFolder.Id, childFolders[0].Id);
+            Assert.AreEqual(testFolder.ID, childFolders[0].ID);
             Assert.AreEqual(TEST_FOLDER, childFolders[0].Name);
-            Assert.AreEqual(rootFolder.Id, childFolders[0].ParentFolder.Id);
+            Assert.AreEqual(rootFolder.ID, childFolders[0].ParentFolder.ID);
             Assert.AreEqual(rootFolder.Owner, childFolders[0].Owner);
         }
     }

@@ -7,9 +7,9 @@ namespace Aurora.Framework
     {
         public AuroraInventoryFolderMap()
         {
-            Id(x => x.Id);
+            Id(x => x.ID);
             Map(x => x.PreferredAssetType);
-            Map(x => x.FolderId);
+            Map(x => x.FolderID);
             References(x => x.ParentFolder);
             Map(x => x.Name);
             Map(x => x.Owner);
@@ -18,9 +18,9 @@ namespace Aurora.Framework
 
     public class AuroraInventoryFolder
     {
-        public virtual int Id { get; set; }
+        public virtual int ID { get; set; }
         public virtual int PreferredAssetType { get; set; }
-        public virtual string FolderId { get; set; }
+        public virtual string FolderID { get; set; }
         public virtual AuroraInventoryFolder ParentFolder { get; set; }
         public virtual string Name { get; set; }
         public virtual string Owner { get; set; }

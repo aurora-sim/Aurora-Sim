@@ -1,22 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using NHibernate;
 using NHibernate.Criterion;
-using OpenMetaverse;
 using Aurora.Framework;
+using OpenMetaverse;
 
 namespace Aurora.DataManager.Repositories
 {
-    public class InventoryRepository : DataManagerRepository, IInventoryData
+    public class InventoryRepository : DataManagerRepository
     {
         public InventoryRepository(DataSessionProvider sessionProvider) : base(sessionProvider) { }
-        public IList<InventoryObjectType> AllInventoryObjectTypes = new List<InventoryObjectType>();
-
-        public IList<InventoryItem> GetActiveInventoryItemsByType(InventoryObjectType gestureType)
-        {
-            return new List<InventoryItem>();
-        }
 
         /// <summary>
         /// Gets the folder that contains all folders.
@@ -45,7 +38,7 @@ namespace Aurora.DataManager.Repositories
                 var folder = new AuroraInventoryFolder();
                 folder.Owner = owner.ToString();
                 folder.Name = folderRootName;
-                folder.FolderId = UUID.Random().ToString();
+                folder.FolderID = UUID.Random().ToString();
                 session.SaveOrUpdate(folder);
                 return folder;
             }
@@ -59,7 +52,7 @@ namespace Aurora.DataManager.Repositories
                 folder.Owner = parentFolder.Owner.ToString();
                 folder.Name = folderName;
                 folder.ParentFolder = parentFolder;
-                folder.FolderId = UUID.Random().ToString();
+                folder.FolderID = UUID.Random().ToString();
                 session.SaveOrUpdate(folder);
                 return folder;
             }
@@ -132,7 +125,7 @@ namespace Aurora.DataManager.Repositories
         /// </summary>
         /// <param name="baseItem"></param>
         /// <returns></returns>
-        public AuroraInventoryFolder GetParentFolder(OpenSim.Framework.InventoryItemBase baseItem)
+        public AuroraInventoryFolder GetParentFolderOfFolder(AuroraInventoryItem baseItem)
         {
             throw new NotImplementedException();
         }
@@ -143,7 +136,7 @@ namespace Aurora.DataManager.Repositories
         /// </summary>
         /// <param name="baseFolder"></param>
         /// <returns></returns>
-        public AuroraInventoryFolder GetParentFolder(OpenSim.Framework.InventoryFolderBase baseFolder)
+        public AuroraInventoryFolder GetParentFolderOfFolder(UUID id)
         {
             throw new NotImplementedException();
         }
@@ -152,7 +145,7 @@ namespace Aurora.DataManager.Repositories
         /// Sets the parentFolder to a new ID.
         /// </summary>
         /// <param name="IFFolder"></param>
-        public void UpdateParentFolder(AuroraInventoryFolder IFFolder)
+        public void UpdateParentFolder(AuroraInventoryFolder folder)
         {
             throw new NotImplementedException();
         }
@@ -169,7 +162,7 @@ namespace Aurora.DataManager.Repositories
                 var rootSubFolders = session.CreateCriteria(typeof(AuroraInventoryFolder)).List<AuroraInventoryFolder>();
                 foreach (var inventoryFolder in rootSubFolders)
                 {
-                    if (folderIds.Contains(UUID.Parse(inventoryFolder.FolderId)))
+                    if (folderIds.Contains(UUID.Parse(inventoryFolder.FolderID)))
                     {
                         session.Delete(inventoryFolder);
                     }
@@ -181,7 +174,7 @@ namespace Aurora.DataManager.Repositories
         /// Removes all the sub units of the given folder.
         /// </summary>
         /// <param name="folder"></param>
-        public void RemoveFoldersAndItems(OpenSim.Framework.InventoryFolderBase folder)
+        public void RemoveFoldersAndItems(UUID folder)
         {
             throw new NotImplementedException();
         }
@@ -199,56 +192,6 @@ namespace Aurora.DataManager.Repositories
             }
         }
 
-        #region IInventoryData
-
-        /// <summary>
-        /// Adds a new InventoryObjectType to the repository.
-        /// </summary>
-        /// <param name="name"></param>
-        /// <param name="assetType"></param>
-        /// <returns></returns>
-        public bool AssignNewInventoryType(string name, int assetType)
-        {
-            if (AllInventoryObjectTypes.Contains(GetInventoryObjectTypeByType(assetType)))
-                return false;
-            CreateInventoryType(name, assetType);
-            return true;
-        }
-
-        public InventoryObjectType CreateInventoryType(string name, int assetType)
-        {
-            InventoryObjectType type = new InventoryObjectType();
-            type.Name = name;
-            type.Type = assetType;
-            AllInventoryObjectTypes.Add(type);
-            return type;
-        }
-
-        /// <summary>
-        /// Gets the InventoryObjectType from its type identifier.
-        /// </summary>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public InventoryObjectType GetInventoryObjectTypeByType(int type)
-        {
-            foreach (InventoryObjectType ot in AllInventoryObjectTypes)
-            {
-                if (ot.Type == type)
-                    return ot;
-            }
-            return null;
-        }
-
-        /// <summary>
-        /// Gets all the current InventoryObjectTypes.
-        /// </summary>
-        /// <returns></returns>
-        public IList<InventoryObjectType> GetAllInventoryTypes()
-        {
-            return AllInventoryObjectTypes;
-        }
-
-        #endregion
 
         public IList<AuroraInventoryFolder> GetChildFolders(AuroraInventoryFolder parentFolder)
         {
@@ -276,9 +219,17 @@ namespace Aurora.DataManager.Repositories
         /// <summary>
         /// Retrives the InventoryItem by its ID.
         /// </summary>
-        /// <param name="inventoryItem"></param>
+        public AuroraInventoryItem GetItem(UUID uuid)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Retrives the InventoryItem by its ID.
+        /// </summary>
+        /// <param name="uuid"></param>
         /// <returns></returns>
-        public InventoryItem GetItem(InventoryItem inventoryItem)
+        public AuroraInventoryItem GetFolder(UUID uuid)
         {
             throw new NotImplementedException();
         }
@@ -306,38 +257,80 @@ namespace Aurora.DataManager.Repositories
         /// Creates a new InventoryItem based off the InventoryItem given.
         /// </summary>
         /// <param name="inventoryItem"></param>
-        public void CreateItem(InventoryItem inventoryItem)
+        public void CreateItem(AuroraInventoryItem inventoryItem)
         {
-            throw new NotImplementedException();
+            using (var session = OpenSession())
+            {
+                session.SaveOrUpdate(inventoryItem);
+            }
         }
 
-        public void CreateItems(IList<InventoryItem> inventoryItem)
+        public void CreateItems(IList<AuroraInventoryItem> inventoryItems)
         {
-            throw new NotImplementedException();
+            using (var session = OpenSession())
+            {
+                foreach (var item in inventoryItems)
+                {
+                    session.SaveOrUpdate(item);
+                }
+            }
         }
 
-        public void UpdateItem(InventoryItem inventoryItem)
+        public void UpdateItem(AuroraInventoryItem inventoryItem)
         {
-            throw new NotImplementedException();
+            using (var session = OpenSession())
+            {
+                session.SaveOrUpdate(inventoryItem);
+            }
         }
 
-        public void UpdateItems(IList<InventoryItem> inventoryItem)
+        public void UpdateItems(IList<AuroraInventoryItem> inventoryItems)
         {
-            throw new NotImplementedException();
+            using (var session = OpenSession())
+            {
+                foreach (var item in inventoryItems)
+                {
+                    session.SaveOrUpdate(item);
+                }
+            }
         }
 
         /// <summary>
         /// Creates a new item with a new UUID, but has a parentItem
         /// </summary>
         /// <param name="item"></param>
-        public void CreateLinkedItem(InventoryItem item)
+        public void CreateLinkedItem(AuroraInventoryItem item)
         {
-            throw new NotImplementedException();
+            
         }
 
-        public List<InventoryItem> GetItemsInFolder(AuroraInventoryFolder inventoryFolder)
+        public IList<AuroraInventoryItem> GetItemsInFolder(UUID userID, AuroraInventoryFolder inventoryFolder)
         {
-            throw new NotImplementedException();
+            using (var session = OpenSession())
+            {
+                return session.CreateCriteria(typeof(AuroraInventoryItem)).Add(Expression.Eq("OwnerID", userID)).Add(Expression.Eq("ParentFolder", inventoryFolder)).List<AuroraInventoryItem>();
+            }
+        }
+
+        public IList<AuroraInventoryItem> GetActiveInventoryItemsByType(UUID userID, int assetType)
+        {
+            using (var session = OpenSession())
+            {
+                return session.CreateCriteria(typeof(AuroraInventoryItem)).Add(Expression.Eq("OwnerID", userID)).Add(Expression.Eq("AssetType", assetType)).List<AuroraInventoryItem>();
+            }
+        }
+
+        public AuroraInventoryFolder GetParentFolderOfItem(UUID id)
+        {
+            using (var session = OpenSession())
+            {
+                var rootFolders = session.CreateCriteria(typeof(AuroraInventoryFolder)).SetFetchSize(1).Add(Expression.Eq("FolderID",id)).List<AuroraInventoryFolder>();
+                if (rootFolders.Count > 0)
+                {
+                    return rootFolders[0];
+                }
+            }
+            return null;
         }
     }
 }
