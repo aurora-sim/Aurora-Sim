@@ -469,88 +469,55 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
     public class GenericQueue<T>: IEnumerable<T>
     {
-        private T[] queue;
-        private uint[] queueIDs;
-        private int count = 0;
-        private int capasity = 20000;
-        public GenericQueue(int Capasity)
-        {
-            capasity = Capasity;
-            queue = new T[capasity];
-            queueIDs = new uint[capasity];
-        }
-
+        private List<T> queue;
+        private List<uint> queueIDs;
+        
         public GenericQueue()
         {
-            queue = new T[capasity];
-            queueIDs = new uint[capasity];
+            queue = new List<T>();
+            queueIDs = new List<uint>();
         }
 
         public void Clear()
         {
-            queue = new T[capasity];
-            queueIDs = new uint[capasity];
+            queue.Clear();
+            queueIDs.Clear();
         }
 
         public void Enqueue(T queueItem, uint ID)
         {
-            queue[count] = queueItem;
-            queueIDs[count] = ID;
-            count++;
+            queue.Add(queueItem);
+            queueIDs.Add(ID);
         }
 
         public T Dequeue()
-        {
-            int i = 0;
-            while (i < queueIDs.Length)
-            {
-                if (queueIDs[i] != uint.MinValue)
-                {
-                    queueIDs[i] = uint.MinValue;
-                    queue[i] = default(T);
-                    return queue[i];
-                }
-                if (i > 10)
-                    ShiftQueue();
-                i++;
-            }
-            return default(T);
-        }
-
-        private void ShiftQueue()
-        {
-            Console.WriteLine("\n[DOTNETENGINE]: SHIFTING QUEUE! EXPERIMENTAL!!! CURRENT COUNT "+count+".\n");
-            T[] Tempqueue = new T[capasity];
-            uint[] TempqueueIDs = new uint[capasity];
-            int tempcount = 0;
-            int i = 0;
-            while (i < queueIDs.Length)
-            {
-                if (queueIDs[i] != uint.MinValue)
-                {
-                    Tempqueue[tempcount] = queue[i];
-                    TempqueueIDs[tempcount] = queueIDs[i];
-                    tempcount++;
-                }
-                i++;
-            }
-            count = tempcount;
-            Console.WriteLine("\n[DOTNETENGINE]: SHIFTING QUEUE! EXPERIMENTAL!!! NEW COUNT " + count + ".\n");
-        }
-
-        public void Remove(uint queueID)
         {
             int i = 0;
             lock (queueIDs)
             {
                 lock (queue)
                 {
-                    foreach (uint ID in queueIDs)
+                    T queueItem = queue.GetRange(0, 1)[0];
+                    queue.RemoveAt(i);
+                    queueIDs.RemoveAt(i);
+                    return queueItem;
+                }
+            }
+        }
+
+        public void Remove(uint queueID)
+        {
+            lock (queueIDs)
+            {
+                lock (queue)
+                {
+                    int i = 0;
+                    while(i < queueIDs.Count)
                     {
-                        if (ID == queueID)
+                        if (queueIDs[i] == queueID)
                         {
-                            queue[count] = default(T);
-                            queueIDs[i] = uint.MinValue;
+                            queue.RemoveAt(i);
+                            queueIDs.RemoveAt(i);
                         }
                         i++;
                     }
@@ -559,7 +526,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         }
         public int Count
         {
-            get { return count; }
+            get { return queue.Count; }
         }
 
         public IEnumerator<T> GetEnumerator()
