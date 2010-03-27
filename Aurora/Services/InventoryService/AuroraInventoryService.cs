@@ -7,7 +7,6 @@ using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Services.Interfaces;
 using Aurora.Framework;
-using InventoryFolder = Aurora.Framework.InventoryFolder;
 
 namespace Aurora.Services.InventoryService
 {
@@ -85,7 +84,7 @@ namespace Aurora.Services.InventoryService
         {
             bool result = false;
 
-            InventoryFolder defaultRootFolder = repository.GetRootFolder(user);
+            AuroraInventoryFolder defaultRootFolder = repository.GetRootFolder(user);
             if (defaultRootFolder == null)
             {
                 defaultRootFolder = repository.CreateRootFolderAndSave(user, FOLDER_ROOT_NAME);
@@ -97,7 +96,7 @@ namespace Aurora.Services.InventoryService
                 plugin.CreateNewInventory(user, defaultRootFolder);
             }
 
-            IList<InventoryFolder> defaultRootFolderSubFolders = repository.GetSubfoldersWithAnyAssetPreferences(defaultRootFolder);
+            IList<AuroraInventoryFolder> defaultRootFolderSubFolders = repository.GetSubfoldersWithAnyAssetPreferences(defaultRootFolder);
             EnsureFolderForPreferredTypeUnderFolder(FOLDER_ANIMATION_NAME, animationType, defaultRootFolder);
             EnsureFolderForPreferredTypeUnderFolder(FOLDER_BODY_PARTS_NAME, bodyPartType, defaultRootFolder);
             EnsureFolderForPreferredTypeUnderFolder(FOLDER_CALLING_CARDS_NAME, callingCardType, defaultRootFolder);
@@ -123,7 +122,7 @@ namespace Aurora.Services.InventoryService
             collection.UserID = userId;
             List<InventoryFolderBase> Folders = new List<InventoryFolderBase>();
             List<InventoryItemBase> Items = new List<InventoryItemBase>();
-            foreach (InventoryFolder folder in repository.GetAllFolders(userId))
+            foreach (AuroraInventoryFolder folder in repository.GetAllFolders(userId))
             {
                 Folders.Add(ConvertInventoryFolderToInventoryFolderBase(folder));
             }
@@ -139,7 +138,7 @@ namespace Aurora.Services.InventoryService
 
         public bool MoveFolder(InventoryFolderBase folder)
         {
-            InventoryFolder IFFolder = ConvertInventoryFolderBaseToInventoryFolder(folder);
+            AuroraInventoryFolder IFFolder = ConvertInventoryFolderBaseToInventoryFolder(folder);
             repository.UpdateParentFolder(IFFolder);
             return true;
         }
@@ -159,8 +158,8 @@ namespace Aurora.Services.InventoryService
         public List<InventoryFolderBase> GetInventorySkeleton(UUID userId)
         {
             List<InventoryFolderBase> Folders = new List<InventoryFolderBase>();
-            IList<InventoryFolder> folders = repository.GetAllFolders(userId);
-            foreach (InventoryFolder folder in folders)
+            IList<AuroraInventoryFolder> folders = repository.GetAllFolders(userId);
+            foreach (AuroraInventoryFolder folder in folders)
             {
                 Folders.Add(ConvertInventoryFolderToInventoryFolderBase(folder));
             }
@@ -171,7 +170,7 @@ namespace Aurora.Services.InventoryService
         {
             List<InventoryFolderImpl> Folders = new List<InventoryFolderImpl>();
             List<InventoryItemBase> Items = new List<InventoryItemBase>();
-            foreach (InventoryFolder folder in repository.GetUserFolders(userId))
+            foreach (AuroraInventoryFolder folder in repository.GetUserFolders(userId))
             {
                 Folders.Add(new InventoryFolderImpl(ConvertInventoryFolderToInventoryFolderBase(folder)));
             }
@@ -186,7 +185,7 @@ namespace Aurora.Services.InventoryService
 
         public InventoryFolderBase GetRootFolder(UUID userId)
         {
-            InventoryFolder folder = repository.GetRootFolder(userId);
+            AuroraInventoryFolder folder = repository.GetRootFolder(userId);
             if (folder == null)
                 return null;
             return ConvertInventoryFolderToInventoryFolderBase(folder);
@@ -194,7 +193,7 @@ namespace Aurora.Services.InventoryService
 
         public bool AddFolder(InventoryFolderBase folder)
         {
-            InventoryFolder IFFolder = ConvertInventoryFolderBaseToInventoryFolder(folder);
+            AuroraInventoryFolder IFFolder = ConvertInventoryFolderBaseToInventoryFolder(folder);
             repository.CreateFolderUnderFolderAndSave(IFFolder.Name, IFFolder.ParentFolder, IFFolder.PreferredAssetType);
             return true;
         }
@@ -238,8 +237,8 @@ namespace Aurora.Services.InventoryService
 
         public InventoryFolderBase GetFolderForType(UUID userId, AssetType type)
         {
-            IList<InventoryFolder> Folders = repository.GetMainFolders(userId);
-            foreach (InventoryFolder folder in Folders)
+            IList<AuroraInventoryFolder> Folders = repository.GetMainFolders(userId);
+            foreach (AuroraInventoryFolder folder in Folders)
             {
                 if (folder.PreferredAssetType == (int)type)
                 {
@@ -255,13 +254,13 @@ namespace Aurora.Services.InventoryService
             InventoryCollection collection = new InventoryCollection();
             List<InventoryFolderBase> Folders = new List<InventoryFolderBase>();
 
-            InventoryFolder newFolder = new InventoryFolder();
+            AuroraInventoryFolder newFolder = new AuroraInventoryFolder();
             newFolder.FolderId = folderId.ToString();
 
-            IList<InventoryFolder> folders = repository.GetChildFolders(repository.GetFolder(newFolder));
+            IList<AuroraInventoryFolder> folders = repository.GetChildFolders(repository.GetFolder(newFolder));
             List<InventoryItemBase> Items = new List<InventoryItemBase>();
 
-            foreach (InventoryFolder folder in folders)
+            foreach (AuroraInventoryFolder folder in folders)
             {
                 Items.AddRange(GetFolderItems(userId, new UUID(folder.FolderId)));
                 Folders.Add(ConvertInventoryFolderToInventoryFolderBase(folder));
@@ -276,7 +275,7 @@ namespace Aurora.Services.InventoryService
 
         public bool UpdateFolder(InventoryFolderBase folder)
         {
-            InventoryFolder IFFolder = ConvertInventoryFolderBaseToInventoryFolder(folder);
+            AuroraInventoryFolder IFFolder = ConvertInventoryFolderBaseToInventoryFolder(folder);
             repository.UpdateFolder(IFFolder);
             return true;
         }
@@ -355,7 +354,7 @@ namespace Aurora.Services.InventoryService
             repository.AssignNewInventoryType(type.Name, type.Type);
         }
 
-        public void EnsureFolderForPreferredTypeUnderFolder(string folderName, InventoryObjectType inventoryObjectType, InventoryFolder defaultRootFolder)
+        public void EnsureFolderForPreferredTypeUnderFolder(string folderName, InventoryObjectType inventoryObjectType, AuroraInventoryFolder defaultRootFolder)
         {
             if (!DoesFolderExistForPreferedType(defaultRootFolder, inventoryObjectType))
             {
@@ -363,7 +362,7 @@ namespace Aurora.Services.InventoryService
             }
         }
 
-        public bool DoesFolderExistForPreferedType(InventoryFolder folder, InventoryObjectType inventoryObjectType)
+        public bool DoesFolderExistForPreferedType(AuroraInventoryFolder folder, InventoryObjectType inventoryObjectType)
         {
             return (from f in repository.GetChildFolders(folder) where f.PreferredAssetType == inventoryObjectType.Type select f).Count() > 0;
         }
@@ -374,7 +373,7 @@ namespace Aurora.Services.InventoryService
             return true;
         }
 
-        public InventoryFolderBase ConvertInventoryFolderToInventoryFolderBase(InventoryFolder folder)
+        public InventoryFolderBase ConvertInventoryFolderToInventoryFolderBase(AuroraInventoryFolder folder)
         {
             InventoryFolderBase IFfolder = new InventoryFolderBase();
             IFfolder.ID = new UUID(folder.FolderId);
@@ -460,9 +459,9 @@ namespace Aurora.Services.InventoryService
             return IIitem;
         }
 
-        public InventoryFolder ConvertInventoryFolderBaseToInventoryFolder(InventoryFolderBase folder)
+        public AuroraInventoryFolder ConvertInventoryFolderBaseToInventoryFolder(InventoryFolderBase folder)
         {
-            InventoryFolder IFfolder = new InventoryFolder();
+            AuroraInventoryFolder IFfolder = new AuroraInventoryFolder();
             IFfolder.FolderId = folder.ID.ToString();
             IFfolder.Name = folder.Name;
             IFfolder.Owner = folder.Owner.ToString();
