@@ -340,7 +340,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             //                  m_scriptEngine.ScriptEngineName);
 
             ReleaseControls(localID, itemID);
-            m_scriptEngine.m_EventQueueManager.RemoveFromQueue(localID);
+            m_scriptEngine.m_EventQueueManager.RemoveFromQueue(itemID);
 
             // Stop long command on script
             AsyncCommandManager.RemoveScript(m_scriptEngine, localID, itemID);

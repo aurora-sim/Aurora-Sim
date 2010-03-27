@@ -374,7 +374,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                     QIS.LineMap = id.LineMap;
 
                 // Add it to queue
-                eventQueue.Enqueue(QIS, QIS.localID);
+                eventQueue.Enqueue(QIS, QIS.itemID);
             }
             return true;
         }
@@ -461,21 +461,21 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         //}
         //private bool _PleaseShutdown = false;
 
-        internal void RemoveFromQueue(uint localID)
+        internal void RemoveFromQueue(UUID itemID)
         {
-            eventQueue.Remove(localID);
+            eventQueue.Remove(itemID);
         }
     }
 
     public class GenericQueue<T>: IEnumerable<T>
     {
         private List<T> queue;
-        private List<uint> queueIDs;
+        private List<UUID> queueIDs; // ItemID
         
         public GenericQueue()
         {
             queue = new List<T>();
-            queueIDs = new List<uint>();
+            queueIDs = new List<UUID>();
         }
 
         public void Clear()
@@ -484,7 +484,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             queueIDs.Clear();
         }
 
-        public void Enqueue(T queueItem, uint ID)
+        public void Enqueue(T queueItem, UUID ID)
         {
             queue.Add(queueItem);
             queueIDs.Add(ID);
@@ -505,7 +505,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             }
         }
 
-        public void Remove(uint queueID)
+        public void Remove(UUID queueID)
         {
             lock (queueIDs)
             {
