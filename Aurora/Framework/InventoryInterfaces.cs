@@ -14,9 +14,6 @@ namespace Aurora.Framework
     }
     public interface IInventoryPluginService
     {
-        void AddInventoryItemType(InventoryObjectType type);
-        void EnsureFolderForPreferredTypeUnderFolder(string folderName, InventoryObjectType inventoryObjectType, AuroraInventoryFolder defaultRootFolder);
-        bool DoesFolderExistForPreferedType(AuroraInventoryFolder folder, InventoryObjectType inventoryObjectType);
         bool AddInventoryItem(UUID user, InventoryItem item);
         InventoryFolderBase ConvertInventoryFolderToInventoryFolderBase(AuroraInventoryFolder folder);
         InventoryItemBase ConvertInventoryItemToInventoryItemBase(InventoryItem item);

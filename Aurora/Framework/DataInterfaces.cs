@@ -29,12 +29,6 @@ namespace Aurora.Framework
         string AbuseReports();
         ObjectMediaURLInfo[] getObjectMediaInfo(string objectID);
     }
-    public interface IInventoryData
-    {
-        bool AssignNewInventoryType(string name, int assetType);
-        InventoryObjectType GetInventoryObjectTypeByType(int type);
-        System.Collections.Generic.IList<InventoryObjectType> GetAllInventoryTypes();
-    }
     
     public interface IGenericData
     {
