@@ -42,6 +42,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
         private int m_CSharpCol;        // the current column of generated C# code
         private List<string> m_warnings = new List<string>();
         private bool IsParentEnumerable = false;
+        private bool IsInLoop = false;
 
         /// <summary>
         /// Creates an 'empty' CSCodeGenerator instance.
@@ -511,8 +512,11 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
 
             // closing brace
             m_braceCount--;
-            if(IsParentEnumerable)
+            if (IsParentEnumerable && !IsInLoop)
                 retstr += GenerateLine("yield return null;");
+            if(IsInLoop)
+                retstr += GenerateLine("yield return null;");
+                
             retstr += GenerateIndentedLine("}");
 
             return retstr;
@@ -722,8 +726,11 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
         private string GenerateWhileStatement(WhileStatement ws)
         {
             string retstr = String.Empty;
-            if(IsParentEnumerable)
+            if (IsParentEnumerable)
+            {
                 retstr += GenerateLine("yield return null;");
+                IsInLoop = true;
+            }
             retstr += GenerateIndented("while (", ws);
             retstr += GenerateNode((SYMBOL) ws.kids.Pop());
             retstr += GenerateLine(")");
@@ -734,7 +741,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             if (indentHere) m_braceCount++;
             retstr += GenerateNode((SYMBOL) ws.kids.Pop());
             if (indentHere) m_braceCount--;
-
+            IsInLoop = false;
             return retstr;
         }
 
@@ -771,8 +778,11 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
         private string GenerateForLoop(ForLoop fl)
         {
             string retstr = String.Empty;
-            if(IsParentEnumerable)
+            if (IsParentEnumerable)
+            {
                 retstr += GenerateLine("yield return null;");
+                IsInLoop = true;
+            }
             retstr += GenerateIndented("for (", fl);
 
             // It's possible that we don't have an assignment, in which case
@@ -800,7 +810,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             if (indentHere) m_braceCount++;
             retstr += GenerateNode((SYMBOL) fl.kids.Pop());
             if (indentHere) m_braceCount--;
-
+            IsInLoop = false;
             return retstr;
         }
 

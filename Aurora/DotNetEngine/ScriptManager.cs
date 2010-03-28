@@ -1042,9 +1042,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                 if (part != null && part.ParentGroup != null)
                     part.Inventory.RemoveInventoryItem(itemID);
             }
-            catch (NullReferenceException)
-            {
-            }
             catch (Exception e)
             {
                 if (qParams.Length > 0)
