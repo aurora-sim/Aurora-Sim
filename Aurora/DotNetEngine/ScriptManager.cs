@@ -924,7 +924,10 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                 if (data != null)
                 {
                     if (!data.Running || data.Disabled)
+                    {
+                        m_log.Info("Script !Running or Disabled");
                         return;
+                    }
                 }
 
                 LUStruct ls = new LUStruct();

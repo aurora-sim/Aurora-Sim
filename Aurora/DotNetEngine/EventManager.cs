@@ -112,7 +112,9 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                     land_collision;
             myScriptEngine.World.EventManager.OnScriptLandColliderEnd += 
                     land_collision_end;
-            
+            myScriptEngine.World.EventManager.OnAttach += attach;
+
+
             IMoneyModule money =
                     myScriptEngine.World.RequestModuleInterface<IMoneyModule>();
             if (money != null)
@@ -471,7 +473,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
         public void control(uint localID, UUID itemID, UUID agentID, uint held, uint change)
         {
-            if ((change == 0) && (myScriptEngine.m_EventQueueManager.CheckEventQueueForEvent(localID,"control"))) return;
             myScriptEngine.PostObjectEvent(localID, new EventParams(
                     "control",new object[] {
                     new LSL_Types.LSLString(agentID.ToString()),
@@ -537,14 +538,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                     new DetectParams[0]));
         }
 
-        public void dataserver(uint localID, UUID itemID)
-        {
-        }
-
-        public void link_message(uint localID, UUID itemID)
-        {
-        }
-
         public void moving_start(uint localID, UUID itemID)
         {
             myScriptEngine.PostObjectEvent(localID, new EventParams(
@@ -557,19 +550,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             myScriptEngine.PostObjectEvent(localID, new EventParams(
                     "moving_end", new object[0],
                     new DetectParams[0]));
-        }
-
-        public void object_rez(uint localID, UUID itemID)
-        {
-        }
-
-        public void remote_data(uint localID, UUID itemID)
-        {
-        }
-
-        // Handled by long commands
-        public void http_response(uint localID, UUID itemID)
-        {
         }
 
         /// <summary>

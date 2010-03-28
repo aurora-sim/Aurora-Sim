@@ -432,14 +432,14 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
         }
 
         private static string CreateCSCompilerScript(string compileScript)
-        {
+        {             
             compileScript = String.Empty +
-                "using OpenSim.Region.ScriptEngine.Shared; using System.Collections.Generic;\r\n" +
-                String.Empty + "namespace SecondLife { " +
-                String.Empty + "public class Script : OpenSim.Region.ScriptEngine.Shared.ScriptBase.ScriptBaseClass { \r\n" +
-                @"public Script() { } " +
+                "using OpenSim.Region.ScriptEngine.Shared;\nusing System;\nusing System.Collections.Generic;\nusing System.Collections;\n" +
+                String.Empty + "namespace SecondLife\n{\n" +
+                String.Empty + "public class Script : OpenSim.Region.ScriptEngine.Shared.ScriptBase.ScriptBaseClass\n{\n" +
+                "public Script()\n {}\nList<IEnumerator> parts = new List<IEnumerator>();\n" +
                 compileScript +
-                "} }\r\n";
+                "\n}\n}";
             return compileScript;
         }
 

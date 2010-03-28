@@ -134,18 +134,12 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         private void Start()
         {
             EventQueueThread = Watchdog.StartThread(EventQueueThreadLoop, "EventQueueManagerThread_" + ThreadCount, MyThreadPriority, true);
-
-            // Look at this... Don't you wish everyone did that solid
-            // coding everywhere? :P
-
-            if (ThreadCount == int.MaxValue)
-                ThreadCount = 0;
-
             ThreadCount++;
         }
 
         public void Stop()
         {
+            Watchdog.RemoveThread();
             if (EventQueueThread != null && EventQueueThread.IsAlive == true)
             {
                 try
@@ -158,8 +152,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             }
         }
 
-        private ScriptEngine lastScriptEngine;
-
         // Queue processing thread loop
         private void EventQueueThreadLoop()
         {
@@ -170,31 +162,13 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             {
                 while (true)
                 {
-                    try
-                    {
-                        while (true)
-                        {
-                            DoProcessQueue();
-                        }
-                    }
-                    catch (ThreadAbortException)
-                    {
-                        m_log.Info("[" + ScriptEngineName +
-                                   "]: ThreadAbortException while executing "+
-                                   "function.");
-                    }
-                    catch (Exception e)
-                    {
-                        m_log.ErrorFormat("[{0}]: Exception {1} thrown", ScriptEngineName, e.GetType().ToString());
-                        throw e;
-                    }
+                    DoProcessQueue();
                 }
             }
             catch (Exception e)
             {
-                // TODO: Let users in the sim and those entering it and possibly an external watchdog know what has happened
                 m_log.ErrorFormat(
-                    "[{0}]: Event queue thread terminating with exception.  PLEASE REBOOT YOUR SIM - SCRIPT EVENTS WILL NOT WORK UNTIL YOU DO.  Exception is {1}", 
+                    "[{0}]: Event queue thread terminating with {1}.",
                     ScriptEngineName, e);
                 EventQueueThread.Abort();
             }
@@ -207,10 +181,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             {
                 foreach (ScriptEngine m_ScriptEngine in ScriptEngine.ScriptEngines)
                 {
-                    lastScriptEngine = m_ScriptEngine;
-
-                    List<EventQueueManager.QueueItemStruct> GotItem = new List<EventQueueManager.QueueItemStruct>();
-
                     if (m_ScriptEngine.m_EventQueueManager == null ||
                             m_ScriptEngine.m_EventQueueManager.eventQueue == null)
                         continue;
@@ -223,7 +193,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                             for (int qc = 0; qc < m_ScriptEngine.m_EventQueueManager.eventQueue.Count; qc++)
                             {
                                 // Get queue item
-                                EventQueueManager.QueueItemStruct QIS = m_ScriptEngine.m_EventQueueManager.eventQueue.Dequeue();
+                                QueueItemStruct QIS = m_ScriptEngine.m_EventQueueManager.eventQueue.Dequeue();
                                 if (m_ScriptEngine.World.PipeEventsForScript(
                                     QIS.localID))
                                 {
@@ -246,72 +216,35 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                     {
                         if (m_threads.Count == 0)
                             return;
-
-                        int i = 0;
-                        while (m_threads.Count > 0 && i < m_threads.Count)
+                        try
                         {
-                            i++;
-
-                            bool running = m_threads[i % m_threads.Count].MoveNext();
-
-
-                            if (!running)
+                            int i = 0;
+                            while (m_threads.Count > 0 && i < m_threads.Count)
                             {
-                                m_threads.Remove(m_threads[i % m_threads.Count]);
+                                i++;
+
+                                bool running = m_threads[i % m_threads.Count].MoveNext();
+
+
+                                if (!running)
+                                {
+                                    m_threads.Remove(m_threads[i % m_threads.Count]);
+                                }
                             }
+                        }
+                        catch (Exception ex)
+                        {
+                            m_log.InfoFormat("[{0}]: Handled exception in the Event Queue: " + ex, ScriptEngineName);
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                m_log.Info(ex);
+                m_log.WarnFormat("[{0}]: Unhandled exception in the Event Queue: " + ex, ScriptEngineName);
             }
         }
 
         private readonly List<IEnumerator> m_threads = new List<IEnumerator>();
-
-        string FormatException(Exception e, Dictionary<KeyValuePair<int,int>,
-                KeyValuePair<int,int>> LineMap)
-        {
-            if (e.InnerException == null)
-                return e.ToString();
-
-            string message = "Runtime error:\n" + e.InnerException.StackTrace;
-            string[] lines = message.Split(new char[] {'\n'});
-
-            foreach (string line in lines)
-            {
-                if (line.Contains("SecondLife.Script"))
-                {
-                    int idx = line.IndexOf(':');
-                    if (idx != -1)
-                    {
-                        string val = line.Substring(idx+1);
-                        int lineNum = 0;
-                        if (int.TryParse(val, out lineNum))
-                        {
-                            KeyValuePair<int, int> pos =
-                                    Compiler.FindErrorPosition(
-                                    lineNum, 0, LineMap);
-
-                            int scriptLine = pos.Key;
-                            int col = pos.Value;
-                            if (scriptLine == 0)
-                                scriptLine++;
-                            if (col == 0)
-                                col++;
-                            message = string.Format("Runtime error:\n" +
-                                    "Line ({0}): {1}", scriptLine - 1,
-                                    e.InnerException.Message);
-
-                            return message;
-                        }
-                    }
-                }
-            }
-
-            return message;
-        }
     }
 }

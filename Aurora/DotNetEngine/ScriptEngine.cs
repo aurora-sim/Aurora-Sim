@@ -423,7 +423,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
         public void OnScriptReset(uint localID, UUID itemID)
         {
-            ResetScript(itemID);
+            m_ScriptManager.ResetScript(localID, itemID);
         }
 
         public void OnStartScript(uint localID, UUID itemID)
@@ -434,6 +434,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
             if (!id.Disabled)
                 id.Running = true;
+            m_ScriptManager.StartScript(localID, itemID, id.Source, id.StartParam, true, id.stateSource);
         }
 
         public void OnStopScript(uint localID, UUID itemID)
@@ -475,6 +476,11 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             return m_ScriptManager.GetApi(itemID, name);
         }
 
+        /// <summary>
+        /// Unneeded for DotNet. Only for xEngine.
+        /// </summary>
+        /// <param name="o"></param>
+        /// <returns></returns>
         public IScriptWorkItem QueueEventHandler(Object o)
         {
             return null;
@@ -596,11 +602,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
             stateData.AppendChild(mapData);
             return doc.InnerXml;
-        }
-
-        public bool CanBeDeleted(UUID itemID)
-        {
-            return true;
         }
 
         public ArrayList GetScriptErrors(UUID itemID)
@@ -751,7 +752,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
             while (count > 0)
             {
-                EventQueueManager.QueueItemStruct QIS = m_EventQueueManager.eventQueue.Dequeue(instance.ItemID);
+                QueueItemStruct QIS = m_EventQueueManager.eventQueue.Dequeue(instance.ItemID);
                 EventParams ep = new EventParams(QIS.functionName, QIS.param, QIS.llDetectParams);
                 m_EventQueueManager.eventQueue.Enqueue(QIS, QIS.itemID);
                 count--;

@@ -125,35 +125,11 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         private static bool KillScriptOnMaxFunctionExecutionTime;
 
         /// <summary>
-        /// List of localID locks for mutex processing of script events
-        /// </summary>
-        private List<uint> objectLocks = new List<uint>();
-        private object tryLockLock = new object(); // Mutex lock object
-
-        /// <summary>
         /// Queue containing events waiting to be executed
         /// </summary>
         public ScriptEventQueue<QueueItemStruct> eventQueue = new ScriptEventQueue<QueueItemStruct>();
         public Scene m_scene;
-        private EventQueueThreadClass EQT = null;
-
-        #region " Queue structures "
-        /// <summary>
-        /// Queue item structure
-        /// </summary>
-        public struct QueueItemStruct
-        {
-            public uint localID;
-            public UUID itemID;
-            public string functionName;
-            public DetectParams[] llDetectParams;
-            public object[] param;
-            public Dictionary<KeyValuePair<int,int>,KeyValuePair<int,int>>
-                    LineMap;
-        }
-
-        #endregion
-
+        
         #region " Initialization / Startup "
         public EventQueueManager(ScriptEngine _ScriptEngine, Scene scene)
         {
@@ -201,8 +177,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                     {
                         AbortThreadClass(EventQueueThread);
                     }
-                    //eventQueueThreads.Clear();
-                    //staticGlobalEventQueueThreads.Clear();
                 }
             }
 
@@ -221,7 +195,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         {
             EventQueueThreadClass eqtc = new EventQueueThreadClass();
             eventQueueThreads.Add(eqtc);
-            //m_log.Debug("[" + m_ScriptEngine.ScriptEngineName + "]: Started new script execution thread. Current thread count: " + eventQueueThreads.Count);
         }
 
         private void AbortThreadClass(EventQueueThreadClass threadClass)
@@ -235,76 +208,10 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             }
             catch (Exception)
             {
-                //m_log.Error("[" + m_ScriptEngine.ScriptEngineName + ":EventQueueManager]: If you see this, could you please report it to Tedd:");
-                //m_log.Error("[" + m_ScriptEngine.ScriptEngineName + ":EventQueueManager]: Script thread execution timeout kill ended in exception: " + ex.ToString());
-            }
-            //m_log.Debug("[" + m_ScriptEngine.ScriptEngineName + "]: Killed script execution thread. Remaining thread count: " + eventQueueThreads.Count);
-        }
-        #endregion
-
-        #region " Mutex locks for queue access "
-        /// <summary>
-        /// Try to get a mutex lock on localID
-        /// </summary>
-        /// <param name="localID"></param>
-        /// <returns></returns>
-        public bool TryLock(uint localID)
-        {
-            lock (tryLockLock)
-            {
-                if (objectLocks.Contains(localID) == true)
-                {
-                    return false;
-                }
-                else
-                {
-                    objectLocks.Add(localID);
-                    return true;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Release mutex lock on localID
-        /// </summary>
-        /// <param name="localID"></param>
-        public void ReleaseLock(uint localID)
-        {
-            lock (tryLockLock)
-            {
-                if (objectLocks.Contains(localID) == true)
-                {
-                    objectLocks.Remove(localID);
-                }
             }
         }
         #endregion
         
-        #region " Check execution queue for a specified Event"
-        /// <summary>
-        /// checks to see if a specified event type is already in the queue
-        /// </summary>
-        /// <param name="localID">Region object ID</param>
-        /// <param name="FunctionName">Name of the function, will be state + "_event_" + FunctionName</param>
-        /// <returns>true if event is found , false if not found</returns>
-        /// 
-        public bool CheckEventQueueForEvent(uint localID, string FunctionName)
-        {
-            if (eventQueue.Count > 0)
-            {
-                lock (eventQueue)
-                {
-                    foreach (EventQueueManager.QueueItemStruct QIS in eventQueue)
-                    {
-                        if ((QIS.functionName == FunctionName) && (QIS.localID == localID))
-                            return true;
-                    }
-                }
-            }
-            return false;
-        }
-        #endregion
-
         #region " Add events to execution queue "
         /// <summary>
         /// Add event to event execution queue
@@ -315,8 +222,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         public bool AddToObjectQueue(uint localID, string FunctionName, DetectParams[] qParams, params object[] param)
         {
             // Determine all scripts in Object and add to their queue
-            //myScriptEngine.log.Info("[" + ScriptEngineName + "]: EventQueueManager Adding localID: " + localID + ", FunctionName: " + FunctionName);
-
+            
             // Do we have any scripts in this object at all? If not, return
             if (m_ScriptEngine.m_ScriptManager.Scripts.ContainsKey(localID) == false)
             {
@@ -449,17 +355,14 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                 }
             }
         }
-        #endregion
 
-        internal void RemoveFromQueue(UUID itemID)
-        {
-            eventQueue.Remove(itemID);
-        }
-
+        /// <summary>
+        /// Checks the event queue threads to see if they have been aborted.
+        /// </summary>
         internal void CheckThreads()
         {
             int i = 0;
-            while(i < eventQueueThreads.Count)
+            while (i < eventQueueThreads.Count)
             {
                 if (!eventQueueThreads[i].EventQueueThread.IsAlive)
                 {
@@ -470,6 +373,27 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                 i++;
             }
         }
+
+        #endregion
+
+        internal void RemoveFromQueue(UUID itemID)
+        {
+            eventQueue.Remove(itemID);
+        }
+    }
+    #region " Queue structures "
+    /// <summary>
+    /// Queue item structure
+    /// </summary>
+    public struct QueueItemStruct
+    {
+        public uint localID;
+        public UUID itemID;
+        public string functionName;
+        public DetectParams[] llDetectParams;
+        public object[] param;
+        public Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>>
+                LineMap;
     }
 
     public class ScriptEventQueue<T>: IEnumerable<T>
@@ -586,5 +510,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             }
             return default(T);
         }
+        #endregion
     }
 }
