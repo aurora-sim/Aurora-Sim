@@ -438,8 +438,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                     remainingKids.Add(kid);
 
             // "state" (function) declaration
-            retstr += GenerateIndented(String.Format("public void {0}_event_{1}(", parentStateName, se.Name), se);
-            IsParentEnumerable = false;
+            retstr += GenerateIndented(String.Format("public IEnumerator {0}_event_{1}(", parentStateName, se.Name), se);
+            IsParentEnumerable = true;
             // print the state arguments, if any
             foreach (SYMBOL kid in argumentDeclarationListKids)
                 retstr += GenerateArgumentDeclarationList((ArgumentDeclarationList) kid);
