@@ -40,8 +40,8 @@ namespace Aurora.Modules
         public void Initialise(Scene scene, IConfigSource source)
         {
             m_scene = scene;
-            m_scene.RegisterModuleInterface<IAuthService>(this);
-            m_scene.RegisterModuleInterface<IIWCAuthenticationService>(this);
+            scene.RegisterModuleInterface<IAuthService>(this);
+            scene.RegisterModuleInterface<IIWCAuthenticationService>(this);
             scene.AddCommand(this, "create userauth", "create userauth", "Creates a new User Auth", CreateUserAuth);
             if (CheckServers.Count == 0)
             {

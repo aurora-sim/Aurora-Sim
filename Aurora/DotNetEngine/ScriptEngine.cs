@@ -581,7 +581,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                     }
                     catch (Exception e)
                     {
-                        m_log.DebugFormat("[XEngine]: Unable to open script textfile {0}, reason: {1}", assemName + ".text", e.Message);
+                        m_log.DebugFormat("[{0}]: Unable to open script textfile {1}, reason: {2}",ScriptEngineName, assemName + ".text", e.Message);
                     }
                 }
             }
@@ -603,7 +603,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                     }
                     catch (Exception e)
                     {
-                        m_log.DebugFormat("[XEngine]: Unable to open script assembly {0}, reason: {1}", assemName, e.Message);
+                        m_log.DebugFormat("[{0}]: Unable to open script assembly {1}, reason: {2}",ScriptEngineName, assemName, e.Message);
                     }
 
                 }

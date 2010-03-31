@@ -104,6 +104,7 @@ namespace Aurora.Modules
 
         public void PostInitialise()
         {
+        	IWCAuthService = m_Scene.RequestModuleInterface<IIWCAuthenticationService>();
             foreach (Scene scene in m_scenes)
             {
                 OurRegions.Add(scene.RegionInfo.RegionID);
@@ -111,7 +112,6 @@ namespace Aurora.Modules
             GD = Aurora.DataManager.DataManager.GetGenericPlugin();
             ProfileDataManager = Aurora.DataManager.DataManager.GetProfilePlugin();
             InformOtherWorldsAboutUs();
-            IWCAuthService = m_Scene.RequestModuleInterface<IIWCAuthenticationService>();
         }
 
         private void InformOtherWorldsAboutUs()
