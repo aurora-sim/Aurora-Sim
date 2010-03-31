@@ -2346,49 +2346,6 @@
       </Files>
     </Project>
 
-    <Project frameworkVersion="v3_5" name="OpenSim.Region.ScriptEngine.XEngine" path="OpenSim/Region/ScriptEngine/XEngine" type="Library">
-      <Configuration name="Debug">
-        <Options>
-          <OutputPath>../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release">
-        <Options>
-          <OutputPath>../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-
-      <ReferencePath>../../../../bin/</ReferencePath>
-      <Reference name="System"/>
-      <Reference name="System.Data"/>
-      <Reference name="System.Web"/>
-      <Reference name="System.Xml"/>
-      <Reference name="OpenMetaverseTypes.dll"/>
-      <Reference name="OpenMetaverse.StructuredData.dll"/>
-      <Reference name="OpenSim" />
-      <Reference name="OpenSim.Framework"/>
-      <Reference name="OpenSim.Framework.Communications"/>
-      <Reference name="OpenSim.Region.Framework" />
-      <Reference name="OpenSim.Region.CoreModules" />
-      <Reference name="OpenSim.Framework.Console"/>
-      <Reference name="OpenSim.Region.ScriptEngine.Shared"/>
-      <Reference name="OpenSim.Region.ScriptEngine.Shared.CodeTools"/>
-      <Reference name="OpenSim.Region.ScriptEngine.Shared.Instance"/>
-      <Reference name="OpenSim.Region.ScriptEngine.Shared.Api"/>
-      <Reference name="SmartThreadPool"/>
-      <Reference name="Nini.dll" />
-      <Reference name="RAIL.dll"/>
-      <Reference name="log4net.dll"/>
-
-      <Files>
-        <Match pattern="*.addin.xml" path="Resources" buildAction="EmbeddedResource" recurse="true"/>
-        <Match pattern="*.cs" recurse="true">
-          <Exclude name="Tests" pattern="Tests" />
-        </Match>
-      </Files>
-    </Project>
-
-
     <Project frameworkVersion="v3_5" name="OpenSim.Region.UserStatistics" path="OpenSim/Region/UserStatistics" type="Library">
       <Configuration name="Debug">
         <Options>

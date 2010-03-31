@@ -49,6 +49,8 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
     [Serializable]
     public class ScriptEngine : INonSharedRegionModule, IScriptEngine, IScriptModule
     {
+        #region Declares 
+
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         public static List<ScriptEngine> ScriptEngines =
@@ -112,6 +114,11 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
         public event ScriptRemoved OnScriptRemoved;
         public event ObjectRemoved OnObjectRemoved;
+        private IXmlRpcRouter m_XmlRpcRouter;
+        
+        #endregion
+
+        #region Constructor
 
         public ScriptEngine()
         {
@@ -122,6 +129,33 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                 ScriptEngines.Add(this);
             }
         }
+        #endregion
+
+        #region Shutdown/Read Configs
+
+        public void Shutdown()
+        {
+            // We are shutting down
+            lock (ScriptEngines)
+            {
+                ScriptEngines.Remove(this);
+                m_ScriptManager.Stop();
+            }
+        }
+
+        public void ReadConfig()
+        {
+            RefreshConfigFileSeconds = ScriptConfigSource.GetInt("RefreshConfig", 0);
+
+            if (m_EventQueueManager != null) m_EventQueueManager.ReadConfig();
+            if (m_ScriptManager != null) m_ScriptManager.ReadConfig();
+            if (m_AppDomainManager != null) m_AppDomainManager.ReadConfig();
+            if (m_MaintenanceThread != null) m_MaintenanceThread.ReadConfig();
+        }
+
+        #endregion
+
+        #region INonSharedRegionModule
 
         public void Initialise(IConfigSource config)
         {
@@ -161,6 +195,13 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             ReadConfig();
 
             m_Scene.StackModuleInterface<IScriptModule>(this);
+
+            m_XmlRpcRouter = m_Scene.RequestModuleInterface<IXmlRpcRouter>();
+            if (m_XmlRpcRouter != null)
+            {
+                OnScriptRemoved += m_XmlRpcRouter.ScriptRemoved;
+                OnObjectRemoved += m_XmlRpcRouter.ObjectRemoved;
+            }
         }
 
         public void RemoveRegion(Scene scene)
@@ -187,26 +228,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
             m_ScriptManager.Start();
         }
-
-        public void Shutdown()
-        {
-            // We are shutting down
-            lock (ScriptEngines)
-            {
-                ScriptEngines.Remove(this);
-                m_ScriptManager.Stop();
-            }
-        }
-
-        public void ReadConfig()
-        {
-            RefreshConfigFileSeconds = ScriptConfigSource.GetInt("RefreshConfig", 0);
-
-            if (m_EventQueueManager != null) m_EventQueueManager.ReadConfig();
-            if (m_ScriptManager != null) m_ScriptManager.ReadConfig();
-            if (m_AppDomainManager != null) m_AppDomainManager.ReadConfig();
-            if (m_MaintenanceThread != null) m_MaintenanceThread.ReadConfig();
-        }
+        #endregion
 
         #region IRegionModule
 
@@ -316,17 +338,18 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
         public void SetMinEventDelay(UUID itemID, double delay)
         {
-            InstanceData ID = null;
-            m_ScriptManager.RunningScripts.TryGetValue(itemID, out ID);
+            InstanceData ID = m_ScriptManager.GetScript(m_ScriptManager.GetLocalID(itemID), itemID);
             if(ID == null)
             {
                 m_log.ErrorFormat("[{0}]: SetMinEventDelay found no InstanceData for script {1}.",ScriptEngineName,itemID.ToString());
+                return;
             }
-            ID.EventDelayTicks = (long)delay;
-            m_ScriptManager.SetScriptInstanceData(ID);
+            m_ScriptManager.SetMinEventDelay(ID, delay);
         }
 
         #endregion
+
+        #region Get/Set Script States/Running
 
         public void SetState(UUID itemID, string state)
         {
@@ -404,6 +427,10 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                 id.Running = state;
         }
 
+        #endregion
+
+        #region Reset
+
         public void ApiResetScript(UUID itemID)
         {
             uint localID = m_ScriptManager.GetLocalID(itemID);
@@ -426,7 +453,9 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         {
             m_ScriptManager.ResetScript(localID, itemID);
         }
+        #endregion
 
+        #region Start/End Scripts
         public void OnStartScript(uint localID, UUID itemID)
         {
             InstanceData id = m_ScriptManager.GetScript(localID, itemID);
@@ -471,11 +500,18 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                            controllingClient.AgentId);
             }
         }
+        #endregion
+
+        #region GetScriptAPI
 
         public IScriptApi GetApi(UUID itemID, string name)
         {
             return m_ScriptManager.GetApi(itemID, name);
         }
+
+        #endregion
+
+        #region xEngine only
 
         /// <summary>
         /// Unneeded for DotNet. Only for xEngine.
@@ -487,6 +523,9 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             return null;
         }
 
+        #endregion
+
+        #region XML Serialization
         public string GetXMLState(UUID itemID)
         {
             InstanceData instance = m_ScriptManager.GetScript(m_ScriptManager.GetLocalID(itemID), itemID);
@@ -909,5 +948,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
             parent.AppendChild(n);
         }
+        #endregion
     }
 }

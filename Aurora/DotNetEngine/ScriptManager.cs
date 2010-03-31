@@ -49,6 +49,8 @@ using OpenSim.Region.ScriptEngine.Shared.CodeTools;
 
 namespace OpenSim.Region.ScriptEngine.DotNetEngine
 {
+    #region InstanceData
+
     public class InstanceData
     {
         public IScript Script;
@@ -72,11 +74,13 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         public uint localID;
     }
 
+    #endregion
+
     public class ScriptManager
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         #region Declares
+
+        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private Thread scriptLoadUnloadThread;
         private static Thread staticScriptLoadUnloadThread = null;
@@ -111,8 +115,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         public Dictionary<uint, Dictionary<UUID, InstanceData>> Scripts =
             new Dictionary<uint, Dictionary<UUID, InstanceData>>();
 
-        public Dictionary<UUID, InstanceData> RunningScripts = new Dictionary<UUID, InstanceData>();
-
         public Compiler LSLCompiler;
 
         public Scene World
@@ -122,11 +124,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
         #endregion
 
-        public void Initialize()
-        {
-            // Create our compiler
-            LSLCompiler = new Compiler(m_scriptEngine);
-        }
+        #region Start/End Scripts
 
         public IEnumerator Microthread_StartScript(uint localID, UUID itemID, string Script,
                 int startParam, bool postOnRez, StateSource stateSource)
@@ -256,7 +254,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             }
             else if (stateSource == StateSource.NewRez)
             {
-                //                    m_log.Debug("[Script] Posted changed(CHANGED_REGION_RESTART) to script");
                 m_scriptEngine.m_EventQueueManager.AddToScriptQueue(localID, itemID, "changed", new DetectParams[0],
                                           new Object[] { new LSL_Types.LSLInteger(256) });
             }
@@ -327,8 +324,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             }
 
             #endregion
-
-            RunningScripts.Add(itemID, id);
         }
 
         public void _StartScript(uint localID, UUID itemID, string Script,
@@ -528,8 +523,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             }
 
             #endregion
-
-            RunningScripts.Add(itemID, id);
         }
 
         public IEnumerator Microthread_StopScript(uint localID, UUID itemID)
@@ -670,7 +663,9 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                 }
             }
         }
-        
+
+        #endregion
+
         #region Error Reporting
         public string[] GetErrors(UUID ItemID)
         {
@@ -707,6 +702,23 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
         #endregion
 
+        #region Object init/shutdown
+
+        public ScriptEngine m_scriptEngine;
+
+        public ScriptManager(ScriptEngine scriptEngine)
+        {
+            m_scriptEngine = scriptEngine;
+        }
+
+        public void Initialize()
+        {
+            // Create our compiler
+            LSLCompiler = new Compiler(m_scriptEngine);
+        }
+
+        #region Config Reader
+
         public void ReadConfig()
         {
             // TODO: Requires sharing of all ScriptManagers to single thread
@@ -717,14 +729,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                     "LoadUnloadMaxQueueSizeBeforeMicrothreading", 100);
         }
 
-        #region Object init/shutdown
-
-        public ScriptEngine m_scriptEngine;
-
-        public ScriptManager(ScriptEngine scriptEngine)
-        {
-            m_scriptEngine = scriptEngine;
-        }
+        #endregion
 
         public void Setup()
         {
@@ -814,15 +819,13 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                             {
                                 parts.Add(Microthread_StopScript(item.localID, item.itemID));
                                 Scripts.Remove(item.localID);
-                                RunningScripts.Remove(item.itemID);
                             }
                             else if (item.Action == LUType.Load)
                             {
-                                if (RunningScripts.ContainsKey(item.itemID))
+                                if (GetScript(item.localID, item.itemID) != null)
                                 {
                                     parts.Add(Microthread_StopScript(item.localID, item.itemID));
                                     Scripts.Remove(item.localID);
-                                    RunningScripts.Remove(item.itemID);
                                 }
                                 parts.Add(Microthread_StartScript(item.localID, item.itemID, item.script,
                                              item.startParam, item.postOnRez, item.stateSource));
@@ -841,15 +844,13 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                             {
                                 _StopScript(item.localID, item.itemID);
                                 Scripts.Remove(item.localID);
-                                RunningScripts.Remove(item.itemID);
                             }
                             else if (item.Action == LUType.Load)
                             {
-                                if (RunningScripts.ContainsKey(item.itemID))
+                                if (GetScript(item.localID, item.itemID) != null)
                                 {
                                     _StopScript(item.localID, item.itemID);
                                     Scripts.Remove(item.localID);
-                                    RunningScripts.Remove(item.itemID);
                                 }
                                 _StartScript(item.localID, item.itemID, item.script,
                                              item.startParam, item.postOnRez, item.stateSource);
@@ -1206,7 +1207,15 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             }
         }
 
+        internal void SetMinEventDelay(InstanceData ID, double delay)
+        {
+            ID.EventDelayTicks = (long)delay;
+            SetScriptInstanceData(ID);
+        }
+
         #endregion
+
+        #region Get/Set DetectParams and start parameters
 
         public DetectParams[] GetDetectParams(InstanceData id)
         {
@@ -1240,6 +1249,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
             return null;
         }
+        #endregion
 
         #region Reset
         public void ResetScript(uint localID, UUID itemID)
