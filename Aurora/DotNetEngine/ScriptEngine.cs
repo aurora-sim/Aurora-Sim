@@ -529,7 +529,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         public string GetXMLState(UUID itemID)
         {
             InstanceData instance = m_ScriptManager.GetScript(m_ScriptManager.GetLocalID(itemID), itemID);
-            //if (instance == null)
+            if (instance == null)
                 return "";
             string xml = Serialize(instance);
 
@@ -651,7 +651,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
         public bool SetXMLState(UUID itemID, string xml)
         {
-            //if (xml == String.Empty)
+            if (xml == String.Empty)
                 return false;
 
             XmlDocument doc = new XmlDocument();

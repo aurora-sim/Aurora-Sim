@@ -212,7 +212,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         }
         #endregion
         
-        #region " Add events to execution queue "
+        #region " Add/Remove events to execution queue "
         /// <summary>
         /// Add event to event execution queue
         /// </summary>
@@ -283,6 +283,11 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                 eventQueue.Enqueue(QIS, QIS.itemID);
             }
             return true;
+        }
+
+        internal void RemoveFromQueue(UUID itemID)
+        {
+            eventQueue.Remove(itemID);
         }
 
         #endregion
@@ -375,12 +380,8 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         }
 
         #endregion
-
-        internal void RemoveFromQueue(UUID itemID)
-        {
-            eventQueue.Remove(itemID);
-        }
     }
+
     #region " Queue structures "
     /// <summary>
     /// Queue item structure
@@ -511,5 +512,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             return default(T);
         }
         #endregion
+
     }
 }
