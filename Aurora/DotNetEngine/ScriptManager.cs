@@ -459,13 +459,11 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             }
             else if (stateSource == StateSource.NewRez)
             {
-                //                    m_log.Debug("[Script] Posted changed(CHANGED_REGION_RESTART) to script");
                 m_scriptEngine.m_EventQueueManager.AddToScriptQueue(localID, itemID, "changed", new DetectParams[0],
                                           new Object[] { new LSL_Types.LSLInteger(256) });
             }
             else if (stateSource == StateSource.PrimCrossing)
             {
-                // CHANGED_REGION
                 m_scriptEngine.m_EventQueueManager.AddToScriptQueue(localID, itemID, "changed", new DetectParams[0],
                                           new Object[] { new LSL_Types.LSLInteger(512) });
             }
@@ -1158,8 +1156,34 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                     Obj.Remove(itemID);
                 }
 
+                Scripts.Remove(localID);
                 // Add to object
                 Obj.Add(itemID, id);
+                Scripts.Add(localID, Obj);
+            }
+        }
+
+        internal void SetScriptInstanceData(InstanceData ID)
+        {
+            lock (scriptLock)
+            {
+                // Create object if it doesn't exist
+                if (Scripts.ContainsKey(ID.localID) == false)
+                {
+                    Scripts.Add(ID.localID, new Dictionary<UUID, InstanceData>());
+                }
+
+                // Delete script if it exists
+                Dictionary<UUID, InstanceData> Obj = new Dictionary<UUID, InstanceData>();
+                Scripts.TryGetValue(ID.localID, out Obj);
+                if (Obj.ContainsKey(ID.ItemID) == true)
+                {
+                    Obj.Remove(ID.ItemID);
+                }
+                Scripts.Remove(ID.localID);
+                // Add to object
+                Obj.Add(ID.ItemID, ID);
+                Scripts.Add(ID.localID, Obj);
             }
         }
 

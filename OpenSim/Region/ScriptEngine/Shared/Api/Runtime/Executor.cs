@@ -187,7 +187,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
                     try
                     {
                         int i = 0;
-                        while (m_threads.Count > 0 && i < m_threads.Count)
+                        while (m_threads.Count > 0 && m_threads.Count != 0)
                         {
                             i++;
                             bool running = m_threads[i % m_threads.Count].MoveNext();
