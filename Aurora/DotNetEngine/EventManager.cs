@@ -98,6 +98,10 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                     at_target;
             myScriptEngine.World.EventManager.OnScriptNotAtTargetEvent +=
                     not_at_target;
+            myScriptEngine.World.EventManager.OnScriptAtRotTargetEvent +=
+                    at_rot_target;
+            myScriptEngine.World.EventManager.OnScriptNotAtRotTargetEvent +=
+                    not_at_rot_target;
             myScriptEngine.World.EventManager.OnScriptControlEvent +=
                     control;
             myScriptEngine.World.EventManager.OnScriptColliderStart +=
