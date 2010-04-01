@@ -67,29 +67,13 @@ namespace OpenSim
         /// </summary>
         public static OpenSimBase m_sim = null;
 
-        private static string[] args;
 
         //could move our main function into OpenSimMain and kill this class
         public static void Main(string[] args)
-        {            Application.args = args;
+        {
             // First line, hook the appdomain to the crash reporter
             AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(Application.CurrentDomain_UnhandledException);
 
-            System.Windows.Forms.Application.EnableVisualStyles();
-            System.Windows.Forms.Application.SetCompatibleTextRenderingDefault(false);
-            Thread t = new Thread(window_Load);
-            t.Start();
-            RunServer();                           
-        }
-
-        static void window_Load()
-        {
-            var window = new AuroraWindow();
-            System.Windows.Forms.Application.Run(window);
-        }
-
-        static void RunServer()
-        {
             // Add the arguments supplied when running the application to the configuration
             ArgvConfigSource configSource = new ArgvConfigSource(args);
 
