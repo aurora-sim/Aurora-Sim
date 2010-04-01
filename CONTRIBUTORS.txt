@@ -1,0 +1,176 @@
+The following people have contributed to OpenSim (Thank you 
+for your effort!)
+
+Add your name in here if you have committed to OpenSim
+
+= Current OpenSim Developers (in very rough order of appearance) =
+These folks represent the current core team for OpenSim, and are the
+people that make the day to day of OpenSim happen.
+
+* MW (Tribal Media AB)
+* Adam Frisby 	(DeepThink Pty Ltd)
+* MingChen 	(DeepThink Pty Ltd)
+* lbsa71 (Tribal Media AB)
+* Sean Dague / sdague (IBM)
+* Tedd
+* justincc
+* Teravus (w3z)
+* Johan Berntsson (3Di)
+* Ckrinke (Charles Krinke)
+* chi11ken (Genkii)
+* adjohn (Genkii)
+* Dr Scofield aka Dirk Husemann (IBM Research - Zurich)
+* dahlia
+* mikem (3Di)
+* Melanie Thielker
+* Homer_Horwitz
+* idb (Ian Brown)
+* Diva (Crista Lopes, University of California, Irvine)
+* nlin (3Di)
+* Arthur Rodrigo S Valadares (IBM)
+
+
+= Past Open Sim Developers =
+These folks are alumns of the OpenSim core group, but are now
+currently not active.  Their great contributions helped get us to
+where we are today.
+
+* Gareth
+* Andy-	
+* MorphW
+* CW
+* Babblefrog
+* Danx0r
+* Dalien
+* Darok
+* Alondria
+
+
+= Additional OpenSim Contributors =
+These folks have contributed code patches to OpenSim to help make it
+what it is today.  
+
+* aduffy70
+* A_Biondi
+* alex_carnell
+* Alan Webb (IBM)
+* BigFootAg
+* BlueWall Slade
+* brianw/Sir_Ahzz
+* CharlieO
+* ChrisDown
+* Chris Yeoh (IBM)
+* coyled
+* Daedius
+* Dong Jun Lan (IBM)
+* DoranZemlja
+* daTwitch 
+* devalnor-#708
+* dmiles (Daxtron Labs)
+* dslake (Intel)
+* FredoChaplin
+* Gerhard
+* Godfrey
+* Grumly57
+* Ewe Loon
+* Fly-Man
+* Flyte Xevious
+* Imaze Rhiano
+* Intimidated
+* Jeremy Bongio (IBM)
+* jhurliman
+* John R Sohn (XenReborn)
+* jonc
+* Junta Kohime
+* Kayne
+* Kevin Cozens
+* kinoc (Daxtron Labs)
+* Kitto Flora
+* KittyLiu
+* Kurt Taylor (IBM)
+* lulurun 
+* M.Igarashi
+* maimedleech
+* Mic Bowman
+* Michelle Argus
+* Michael Cortez (The Flotsam Project, http://osflotsam.org/)
+* Mike Osias (IBM)
+* Mike Pitman (IBM)
+* mikkopa/_someone - RealXtend
+* Misterblue (Intel)
+* Mircea Kitsune
+* mpallari
+* nornalbion
+* Omar Vera Ustariz (IBM)
+* openlifegrid.com
+* otakup0pe
+* ralphos
+* RemedyTomm
+* Revolution
+* Richard Alimi (IBM)
+* Rick Alther (IBM)
+* Rob Smart (IBM)
+* rtomita
+* Ruud Lathorp
+* SachaMagne
+* Salahzar Stenvaag
+* sempuki
+* Snoopy
+* Strawberry Fride
+* tglion
+* tlaukkan/Tommil (Tommi S. E. Laukkanen, Bubble Cloud)
+* tyre
+* VikingErik
+* Vytek
+* webmage (IBM)
+* Xantor
+* Y. Nitta
+* YZh
+* Zackary Geers aka Kunnis Basiat
+* Zha Ewry
+* ziah
+
+
+= LSL Devs =
+
+* Alondria
+* CharlieO
+* Tedd
+* Melanie Thielker
+
+
+= Testers =
+
+* Ai Austin
+* CharlieO (LSL)
+* Ckrinke
+* openlifegrid.com
+
+
+This software uses components from the following developers:
+* Sleepycat Software (Berkeley DB)
+* SQLite (Public Domain)
+* XmlRpcCS (http://xmlrpccs.sf.net/)
+* MySQL, Inc. (MySQL Connector/NET)
+* NUnit (http://www.nunit.org)
+* AGEIA Inc. (PhysX)
+* Russel L. Smith (ODE)
+* Prebuild (http://sourceforge.net/projects/dnpb/)
+* LibOpenMetaverse (http://lib.openmetaverse.org/)
+* DotNetOpenMail v0.5.8b (http://dotnetopenmail.sourceforge.net)
+* Prototype JavaScript Framework ajax (http://www.prototypejs.org/)
+* C5 GENERIC COLLECTION LIBRARY FOR C#/CLI
+* Nini (http://nini.sourceforge.net/)
+* log4net (http://logging.apache.org/log4net/)
+* GlynnTucker.Cache (http://gtcache.sourceforge.net/)
+* NDesk.Options 0.2.1 (http://www.ndesk.org/Options)
+* Json.NET 3.5 Release 6.  The binary used is actually Newtonsoft.Json.Net20.dll for Mono 2.4 compatability (http://james.newtonking.com/projects/json-net.aspx)
+
+Some plugins are based on Cable Beach
+Cable Beach is Copyright (c) 2008 Intel Corporation
+see http://forge.opensimulator.org/gf/project/assetserver/
+
+In addition, we would like to thank:
+* The Mono Project
+* The NANT Developers
+* Microsoft (.NET, MSSQL-Adapters)
