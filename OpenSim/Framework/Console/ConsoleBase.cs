@@ -31,14 +31,13 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Text;
 using System.Threading;
-using System.Windows.Forms;
 using log4net;
 
 namespace OpenSim.Framework.Console
 {
     public class ConsoleBase
     {
-//        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        //        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         protected string prompt = "# ";
 
@@ -79,14 +78,12 @@ namespace OpenSim.Framework.Console
 
         public string CmdPrompt(string p)
         {
-            return InputBox.Show(String.Format("{0}: ", p), "Question").Text;
-            //return ReadLine(String.Format("{0}: ", p), false, true);
+            return ReadLine(String.Format("{0}: ", p), false, true);
         }
 
         public string CmdPrompt(string p, string def)
         {
-            string ret = InputBox.Show(String.Format("{0}: ", p), "Question", def).Text;
-            /*string ret = ReadLine(String.Format("{0} [{1}]: ", p, def), false, true);*/
+            string ret = ReadLine(String.Format("{0} [{1}]: ", p, def), false, true);
             if (ret == String.Empty)
                 ret = def;
 
@@ -110,7 +107,7 @@ namespace OpenSim.Framework.Console
                 }
                 else
                 {
-                    MessageBox.Show("Valid options are" + optstr);
+                    System.Console.WriteLine("Valid options are" + optstr);
                     temp = CmdPrompt(prompt, defaultresponse);
                 }
             }
@@ -126,9 +123,8 @@ namespace OpenSim.Framework.Console
 
         public virtual string ReadLine(string p, bool isCommand, bool e)
         {
-            
-            //System.Console.Write("{0}", p);
-            string cmdinput = InputBox.Show(p, "Question").Text; //System.Console.ReadLine();
+            System.Console.Write("{0}", p);
+            string cmdinput = System.Console.ReadLine();
 
             return cmdinput;
         }
