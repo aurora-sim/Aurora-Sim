@@ -152,5 +152,30 @@ namespace OpenSim.Services.Connectors
             // nope, we don't do this
             return false;
         }
+        public bool SetPasswordHashed(UUID principalID, string passwd)
+        {
+            // nope, we don't do this
+            return false;
+        }
+        public string GetToken(UUID principalID, int lifetime)
+        {
+            Dictionary<string, object> sendData = new Dictionary<string, object>();
+            sendData["LIFETIME"] = lifetime.ToString();
+            sendData["PRINCIPAL"] = principalID.ToString();
+
+            sendData["METHOD"] = "authenticate";
+
+            string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                    m_ServerURI + "/auth/plain",
+                    ServerUtils.BuildQueryString(sendData));
+
+            Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(
+                    reply);
+
+            if (replyData["Result"].ToString() != "Success")
+                return String.Empty;
+
+            return replyData["Token"].ToString();
+        }
     }
 }

@@ -227,6 +227,11 @@ namespace OpenSim.Services.InventoryService
             return false;
         }
 
+        public bool LinkItem(IClientAPI client, UUID oldItemID, UUID parentID, uint Callback)
+        {
+            return false;
+        }
+
         // Unfortunately we need to use the inherited method because of how DeRez works.
         // The viewer sends the folderID hard-wired in the derez message
         //public override bool AddItem(InventoryItemBase item)

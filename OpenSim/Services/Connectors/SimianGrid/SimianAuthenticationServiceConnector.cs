@@ -234,5 +234,13 @@ namespace OpenSim.Services.Connectors.SimianGrid
             else
                 return String.Empty;
         }
+        public bool SetPasswordHashed(UUID principalID, string passwd)
+        {
+            return false;
+        }
+        public string GetToken(UUID principalID, int lifetime)
+        {
+            return "";
+        }
     }
 }

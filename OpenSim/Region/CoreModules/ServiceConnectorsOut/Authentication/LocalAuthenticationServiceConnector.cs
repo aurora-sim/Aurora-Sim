@@ -158,6 +158,16 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Authentication
             return m_AuthenticationService.SetPassword(principalID, passwd);
         }
 
+        public bool SetPasswordHashed(UUID principalID, string passwd)
+        {
+            return m_AuthenticationService.SetPassword(principalID, passwd);
+        }
+
+        public string GetToken(UUID principalID, int passwd)
+        {
+            return m_AuthenticationService.GetToken(principalID, passwd);
+        }
+
         #endregion
 
     }
