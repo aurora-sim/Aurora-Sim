@@ -333,6 +333,11 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Inventory
         }
 
 
+        public override bool LinkItem(IClientAPI client, UUID oldItemID, UUID parentID, uint Callback)
+        {
+            return false;
+        }
+
         #endregion
 
         private UUID GetSessionID(UUID userID)
