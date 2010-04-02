@@ -62,5 +62,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
         {
             return m_MOD_Functions.modSendCommand(module, command, k);
         }
+        public void AAUpdatePrimProperties(LSL_String type, LSL_String Keys, LSL_String Values)
+        {
+            m_MOD_Functions.AAUpdatePrimProperties(type, Keys, Values);
+        }
     }
 }

@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Reflection;
 using log4net;
 using Nini.Config;
@@ -38,11 +39,15 @@ using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using Caps=OpenSim.Framework.Capabilities.Caps;
+using Aurora.DataManager;
+using Aurora.Framework;
 
 namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
 {
     public class ObjectAdd : IRegionModule
     {
+        private IGenericData GenericData = null;
+        private IRegionData RegionData = null;
         private static readonly ILog m_log =
             LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private Scene m_scene;
@@ -56,7 +61,8 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
 
         public void PostInitialise()
         {
-            
+            RegionData = Aurora.DataManager.DataManager.GetRegionPlugin();
+            GenericData = Aurora.DataManager.DataManager.GetGenericPlugin();
         }
 
         public void RegisterCaps(UUID agentID, Caps caps)
@@ -71,6 +77,194 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                                                        {
                                                            return ProcessAdd(m_dhttpMethod, agentID, caps);
                                                        }));
+            
+            caps.RegisterHandler("ObjectMedia",
+                                new RestHTTPHandler("POST", "/CAPS/ObjectMedia/" + capuuid + "/",
+                                                      delegate(Hashtable m_dhttpMethod)
+                                                      {
+                                                          return ProcessObjectMedia(m_dhttpMethod, capuuid);
+                                                      }));
+
+            caps.RegisterHandler("ObjectMediaNavigate",
+                                new RestHTTPHandler("POST", "/CAPS/ObjectMediaNavigate/" + capuuid + "/",
+                                                      delegate(Hashtable m_dhttpMethod)
+                                                      {
+                                                          return ProcessObjectMediaNavigate(m_dhttpMethod, capuuid);
+                                                      }));
+        }
+
+        private Hashtable ProcessObjectMediaNavigate(Hashtable mDhttpMethod, UUID capuuid)
+        {
+            Hashtable responsedata = new Hashtable();
+            responsedata["int_response_code"] = 200; //501; //410; //404;
+            responsedata["content_type"] = "text/plain";
+            responsedata["keepalive"] = false;
+            return responsedata;
+        }
+
+        private Hashtable ProcessObjectMedia(Hashtable mDhttpMethod, UUID objectID)
+        {
+            OSD r = OSDParser.DeserializeLLSDXml((string)mDhttpMethod["requestbody"]);
+            Hashtable responsedata = new Hashtable();
+            responsedata["int_response_code"] = 200; //501; //410; //404;
+            responsedata["content_type"] = "text/plain";
+            responsedata["keepalive"] = false;
+            OSDMap rm = (OSDMap)r;
+
+            if (rm.ContainsKey("verb"))
+            {
+                #region Get
+                if (rm["verb"].ToString() == "GET")
+                {
+                    OSDMap MainMap = new OSDMap();
+                    OSD osd = new OSD();
+                    ObjectMediaURLInfo[] infos = RegionData.getObjectMediaInfo(rm["object_id"].ToString());
+                    OSDArray array = new OSDArray(6);
+                    foreach (ObjectMediaURLInfo info in infos)
+                    {
+                        if (info == null)
+                        {
+                            array.Add(new OSD());
+                            continue;
+                        }
+
+                        OSDMap mediadataMap = new OSDMap();
+                        osd = new OSDString(info.alt_image_enable);
+                        mediadataMap.Add("alt_image_enable", osd);
+
+                        osd = new OSDBoolean(info.auto_loop);
+                        mediadataMap.Add("auto_loop", osd);
+
+                        osd = new OSDBoolean(info.auto_play);
+                        mediadataMap.Add("auto_play", osd);
+
+                        osd = new OSDBoolean(info.auto_scale);
+                        mediadataMap.Add("auto_scale", osd);
+
+                        osd = new OSDBoolean(info.auto_zoom);
+                        mediadataMap.Add("auto_zoom", osd);
+
+                        osd = new OSDInteger(info.controls);
+                        mediadataMap.Add("controls", osd);
+
+                        osd = new OSDString(info.current_url);
+                        mediadataMap.Add("current_url", osd);
+
+                        osd = new OSDBoolean(info.first_click_interact);
+                        mediadataMap.Add("first_click_interact", osd);
+
+                        osd = new OSDInteger(info.height_pixels);
+                        mediadataMap.Add("height_pixels", osd);
+
+                        osd = new OSDString(info.home_url);
+                        mediadataMap.Add("home_url", osd);
+
+                        osd = new OSDInteger(info.perms_control);
+                        mediadataMap.Add("perms_control", osd);
+
+                        osd = new OSDBoolean(info.whitelist_enable);
+                        mediadataMap.Add("whitelist_enable", osd);
+
+                        osd = new OSDInteger(info.width_pixels);
+                        mediadataMap.Add("width_pixels", osd);
+                        array.Add(mediadataMap);
+                    }
+                    osd = new OSDString(objectID.ToString());
+                    MainMap.Add("object_id", osd);
+
+                    MainMap.Add("object_media_data", array);
+
+                    osd = new OSDString("x-mv:000000000" + "1"/*infos[1].object_media_version*/+"/"+new Guid().ToString());
+                    MainMap.Add("object_media_version", osd);
+
+
+                    string response = OSDParser.SerializeLLSDXmlString(MainMap);
+                    responsedata["str_response_string"] = response; //String.Format(@"<llsd><map><key>object_id</key><uuid>{0}</uuid><key>object_media_data</key><array><map><key>alt_image_enable</key><boolean>0</boolean><key>auto_loop</key><boolean>0</boolean><key>auto_play</key><boolean>1</boolean><key>auto_scale</key><boolean>1</boolean><key>auto_zoom</key><boolean>0</boolean><key>controls</key><integer>0</integer><key>current_url</key><string>http://v01.wwweb3d.net/dahliaUnityPlayer/dahliaWebPlayer03.html</string><key>first_click_interact</key><boolean>0</boolean><key>height_pixels</key><integer>0</integer><key>home_url</key><string>http://v01.wwweb3d.net/dahliaUnityPlayer/dahliaWebPlayer03.html</string><key>perms_control</key><integer>7</integer><key>perms_interact</key><integer>7</integer><key>whitelist_enable</key><boolean>0</boolean><key>width_pixels</key><integer>0</integer></map><map><key>alt_image_enable</key><boolean>0</boolean><key>auto_loop</key><boolean>0</boolean><key>auto_play</key><boolean>1</boolean><key>auto_scale</key><boolean>1</boolean><key>auto_zoom</key><boolean>0</boolean><key>controls</key><integer>0</integer><key>current_url</key><string>http://www.google.com/</string><key>first_click_interact</key><boolean>0</boolean><key>height_pixels</key><integer>0</integer><key>home_url</key><string>http://www.google.com</string><key>perms_control</key><integer>7</integer><key>perms_interact</key><integer>7</integer><key>whitelist_enable</key><boolean>0</boolean><key>width_pixels</key><integer>0</integer></map><undef /><undef /><undef /><undef /></array><key>object_media_version</key><string>x-mv:0000000042/79e7c4ad-3361-4736-bced-1f72e6c3dbd4</string></map></llsd>",uuid.ToString());
+                }
+                #endregion
+                #region Update
+                else if (rm["verb"].ToString() == "UPDATE")
+                {
+                    OSDArray media_data_map = (OSDArray)rm["object_media_data"];
+                    int i = 0;
+                    foreach (OSD osd in media_data_map)
+                    {
+                        List<string> Values = new List<string>();
+                        SceneObjectPart part = m_scene.GetSceneObjectPart(new UUID(rm["object_id"].ToString()));
+                        OSDMap map = null;
+                        try
+                        {
+                            map = (OSDMap)osd;
+                        }
+                        catch (Exception ex)
+                        {
+                            Values.Add(rm["object_id"].ToString());
+                            Values.Add(part.OwnerID.ToString());
+                            Values.Add("0");
+                            Values.Add("0");
+                            Values.Add("0");
+                            Values.Add("0");
+                            Values.Add("0");
+                            Values.Add("0");
+                            Values.Add("");
+                            Values.Add("0");
+                            Values.Add("0");
+                            Values.Add("");
+                            Values.Add("0");
+                            Values.Add("0");
+                            Values.Add("");
+                            Values.Add("0");
+                            Values.Add("0");
+                            Values.Add("1");
+                            Values.Add(i.ToString());
+                            GenericData.Insert("assetMediaURL", Values.ToArray());
+                            continue;
+                        }
+
+                        ObjectMediaURLInfo[] info = RegionData.getObjectMediaInfo(rm["object_id"].ToString());
+                        Values.Add(rm["object_id"].ToString());
+                        Values.Add(part.OwnerID.ToString());
+                        Values.Add(map["alt_image_enable"].ToString());
+                        Values.Add(map["auto_loop"].ToString());
+                        Values.Add(map["auto_play"].ToString());
+                        Values.Add(map["auto_scale"].ToString());
+                        Values.Add(map["auto_zoom"].ToString());
+                        Values.Add(map["controls"].ToString());
+                        Values.Add(map["current_url"].ToString());
+                        Values.Add(map["first_click_interact"].ToString());
+                        Values.Add(map["height_pixels"].ToString());
+                        Values.Add(map["home_url"].ToString());
+                        Values.Add(map["perms_control"].ToString());
+                        Values.Add(map["perms_interact"].ToString());
+                        Values.Add(map["whitelist"].ToString());
+                        Values.Add(map["whitelist_enable"].ToString());
+                        Values.Add(map["width_pixels"].ToString());
+                        if (info[i] == null || info[i].object_media_version == null)
+                            Values.Add("1");
+                        else
+                        {
+                            int version = (Convert.ToInt32(info[i].object_media_version) + 1);
+                            Values.Add(version.ToString());
+                        }
+                        Values.Add(i.ToString());
+                        try
+                        {
+                            GenericData.Insert("assetMediaURL", Values.ToArray());
+                        }
+                        catch (Exception ex)
+                        {
+                        }
+                        i++;
+                    }
+                }
+                #endregion
+                else
+                {
+                    m_log.Error("[OBJECTADD] Unknown verb in ObjectMedia: " + rm["verb"].ToString());
+                }
+            }
+
+            return responsedata;
         }
 
         public Hashtable ProcessAdd(Hashtable request, UUID AgentId, Caps cap)
@@ -82,7 +276,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
             responsedata["str_response_string"] = "Request wasn't what was expected";
             ScenePresence avatar;
             
-            if (!m_scene.TryGetScenePresence(AgentId, out avatar))
+            if (!m_scene.TryGetAvatar(AgentId, out avatar))
                 return responsedata;
 
 
@@ -338,12 +532,12 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
             byte[] tmp = obj.AsBinary();
             if (BitConverter.IsLittleEndian)
                 Array.Reverse(tmp);
-            return Utils.BytesToUInt(tmp);
+            return OpenMetaverse.Utils.BytesToUInt(tmp);
 
         }
         private string ConvertUintToBytes(uint val)
         {
-            byte[] resultbytes = Utils.UIntToBytes(val);
+            byte[] resultbytes = OpenMetaverse.Utils.UIntToBytes(val);
             if (BitConverter.IsLittleEndian)
                 Array.Reverse(resultbytes);
             return String.Format("<binary encoding=\"base64\">{0}</binary>",Convert.ToBase64String(resultbytes));

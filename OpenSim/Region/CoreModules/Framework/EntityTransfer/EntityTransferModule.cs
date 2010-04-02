@@ -129,7 +129,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
         #region Agent Teleports
 
-        public void Teleport(ScenePresence sp, ulong regionHandle, Vector3 position, Vector3 lookAt, uint teleportFlags)
+        public virtual void Teleport(ScenePresence sp, ulong regionHandle, Vector3 position, Vector3 lookAt, uint teleportFlags)
         {
             if (!sp.Scene.Permissions.CanTeleport(sp.UUID))
                 return;
@@ -235,7 +235,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             }
         }
 
-        protected void DoTeleport(ScenePresence sp, GridRegion reg, GridRegion finalDestination, Vector3 position, Vector3 lookAt, uint teleportFlags, IEventQueue eq)
+        public virtual void DoTeleport(ScenePresence sp, GridRegion reg, GridRegion finalDestination, Vector3 position, Vector3 lookAt, uint teleportFlags, IEventQueue eq)
         {
             if (reg == null || finalDestination == null)
             {
@@ -546,7 +546,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
         #region Agent Crossings
 
-        public void Cross(ScenePresence agent, bool isFlying)
+        public virtual void Cross(ScenePresence agent, bool isFlying)
         {
             Scene scene = agent.Scene;
             Vector3 pos = agent.AbsolutePosition;
@@ -719,7 +719,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                                                             Vector3 position,
                                                             Scene initiatingScene);
 
-        private void InformClientToInitateTeleportToLocation(ScenePresence agent, uint regionX, uint regionY, Vector3 position, Scene initiatingScene)
+        protected void InformClientToInitateTeleportToLocation(ScenePresence agent, uint regionX, uint regionY, Vector3 position, Scene initiatingScene)
         {
 
             // This assumes that we know what our neighbors are.
@@ -759,7 +759,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             }
         }
 
-        private void InformClientToInitiateTeleportToLocationCompleted(IAsyncResult iar)
+        protected void InformClientToInitiateTeleportToLocationCompleted(IAsyncResult iar)
         {
             InformClientToInitateTeleportToLocationDelegate icon =
                 (InformClientToInitateTeleportToLocationDelegate)iar.AsyncState;
@@ -869,7 +869,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             return agent;
         }
 
-        private void CrossAgentToNewRegionCompleted(IAsyncResult iar)
+        protected void CrossAgentToNewRegionCompleted(IAsyncResult iar)
         {
             CrossAgentToNewRegionDelegate icon = (CrossAgentToNewRegionDelegate)iar.AsyncState;
             ScenePresence agent = icon.EndInvoke(iar);

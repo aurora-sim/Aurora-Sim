@@ -42,5 +42,6 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api.Interfaces
     {
         //Module functions
         string modSendCommand(string modules, string command, string k);
+        void AAUpdatePrimProperties(LSL_String type, LSL_String Keys, LSL_String Values);
     }
 }

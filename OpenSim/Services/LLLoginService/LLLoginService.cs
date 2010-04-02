@@ -43,6 +43,8 @@ using OpenSim.Services.Interfaces;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 using FriendInfo = OpenSim.Services.Interfaces.FriendInfo;
 using OpenSim.Services.Connectors.Hypergrid;
+using Aurora.DataManager;
+using Aurora.Framework;
 
 namespace OpenSim.Services.LLLoginService
 {
@@ -72,9 +74,17 @@ namespace OpenSim.Services.LLLoginService
         private string m_GatekeeperURL;
 
         IConfig m_LoginServerConfig;
+        IConfigSource m_config;
+        IConfig m_AuroraLoginConfig;
+        bool AllowAnonymousLogin;
+        bool AuthenticateUsers;
 
         public LLLoginService(IConfigSource config, ISimulationService simService, ILibraryService libraryService)
         {
+            m_config = config;
+            m_AuroraLoginConfig = config.Configs["AuroraLoginService"];
+            AllowAnonymousLogin = m_AuroraLoginConfig.GetBoolean("AllowAnonymousLogin");
+            AuthenticateUsers = m_AuroraLoginConfig.GetBoolean("AuthenticateUsers");
             m_LoginServerConfig = config.Configs["LoginService"];
             if (m_LoginServerConfig == null)
                 throw new Exception(String.Format("No section LoginService in config file"));
@@ -160,7 +170,40 @@ namespace OpenSim.Services.LLLoginService
                 UserAccount account = m_UserAccountService.GetUserAccount(UUID.Zero, firstName, lastName);
                 if (account == null)
                 {
-                    m_log.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: user not found");
+                    if (!AllowAnonymousLogin)
+                    {
+                        m_log.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: user not found");
+                        return LLFailedLoginResponse.UserProblem;
+                    }
+                    else
+                    {
+                        account = new UserAccount();
+                        account.Created = (int)DateTime.Now.ToFileTime();
+                        account.Email = "";
+                        account.FirstName = firstName;
+                        account.LastName = lastName;
+                        account.PrincipalID = new UUID(new Guid().ToString());
+                        account.ScopeID = UUID.Zero;
+                        account.ServiceURLs = new Dictionary<string,object>();
+                        account.UserFlags = 0;
+                        account.UserLevel = 0;
+                        account.UserTitle = "";
+                        m_UserAccountService.StoreUserAccount(account);
+                        m_AuthenticationService.SetPasswordHashed(account.PrincipalID, passwd);
+                        m_InventoryService.CreateUserInventory(account.PrincipalID);
+                    }
+                }
+
+                IProfileData data = Aurora.DataManager.DataManager.GetProfilePlugin();
+                AuroraProfileData profile = data.GetProfileInfo(account.PrincipalID);
+                if (profile == null)
+                {
+                    CreateUserAuth(account.PrincipalID.ToString(), account.FirstName, account.LastName);
+                    profile = data.GetProfileInfo(account.PrincipalID);
+                }
+                if(profile.PermaBanned == 1 || profile.TempBanned == 1)
+                {
+                    m_log.Info("[LLOGIN SERVICE]: Login failed, reason: user is banned.");
                     return LLFailedLoginResponse.UserProblem;
                 }
 
@@ -169,19 +212,26 @@ namespace OpenSim.Services.LLLoginService
                     m_log.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: login is blocked for user level {0}", account.UserLevel);
                     return LLFailedLoginResponse.LoginBlockedProblem;
                 }
-
-                //
-                // Authenticate this user
-                //
-                if (!passwd.StartsWith("$1$"))
-                    passwd = "$1$" + Util.Md5Hash(passwd);
-                passwd = passwd.Remove(0, 3); //remove $1$
-                string token = m_AuthenticationService.Authenticate(account.PrincipalID, passwd, 30);
                 UUID secureSession = UUID.Zero;
-                if ((token == string.Empty) || (token != string.Empty && !UUID.TryParse(token, out secureSession)))
+                if (AuthenticateUsers)
                 {
-                    m_log.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: authentication failed");
-                    return LLFailedLoginResponse.UserProblem;
+                    //
+                    // Authenticate this user
+                    //
+                    if (!passwd.StartsWith("$1$"))
+                        passwd = "$1$" + Util.Md5Hash(passwd);
+                    passwd = passwd.Remove(0, 3); //remove $1$
+                    string token = m_AuthenticationService.Authenticate(account.PrincipalID, passwd, 30);
+                    if ((token == string.Empty) || (token != string.Empty && !UUID.TryParse(token, out secureSession)))
+                    {
+                        m_log.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: authentication failed");
+                        return LLFailedLoginResponse.UserProblem;
+                    }
+                }
+                else
+                {
+                    string token = m_AuthenticationService.GetToken(account.PrincipalID, 30);
+                    UUID.TryParse(token, out secureSession);
                 }
 
                 //
@@ -716,6 +766,53 @@ namespace OpenSim.Services.LLLoginService
                     break;
             }
         }
+
+
+        public void CreateUserAuth(string UUID, string firstName, string lastName)
+        {
+            List<string> values = new List<string>();
+            values.Add(UUID);
+            values.Add(firstName + " " + lastName);
+            values.Add(firstName);
+            values.Add(lastName);
+            values.Add(" ");
+            values.Add(" ");
+            values.Add("0");
+            values.Add(" ");
+            values.Add(" ");
+            values.Add("0");
+            values.Add("0");
+            values.Add(" ");
+            values.Add(" ");
+            values.Add(" ");
+            values.Add(" ");
+            values.Add("0");
+            values.Add("0");
+            values.Add("0");
+            values.Add("0");
+            values.Add(" ");
+            values.Add(" ");
+            values.Add(" ");
+            values.Add(" ");
+            values.Add("0");
+            values.Add(" ");
+            values.Add("0");
+            values.Add(" ");
+            values.Add(" ");
+            values.Add("0");
+            values.Add("0");
+            values.Add("0");
+            values.Add(" ");
+            values.Add(" ");
+            values.Add(" ");
+            values.Add(" ");
+            values.Add("");
+            values.Add("true");
+            IGenericData GD = Aurora.DataManager.DataManager.GetGenericPlugin();
+            GD.Insert("usersauth", values.ToArray());
+        }
+
+
     }
 
     #endregion

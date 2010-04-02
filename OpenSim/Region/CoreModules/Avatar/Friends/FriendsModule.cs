@@ -637,6 +637,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
                     m_FriendsSimConnector.GrantRights(region, requester, target, myFlags, rights);
                 }
             }
+            m_NeedsListOfFriends.Add(remoteClient.AgentId);
+            SendFriendsOnlineIfNeeded(remoteClient);
         }
 
         #region Local

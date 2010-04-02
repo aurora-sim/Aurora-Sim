@@ -41,6 +41,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
         private int m_CSharpLine;       // the current line of generated C# code
         private int m_CSharpCol;        // the current column of generated C# code
         private List<string> m_warnings = new List<string>();
+        private bool IsParentEnumerable = false;
+        private bool IsInLoop = false;
 
         /// <summary>
         /// Creates an 'empty' CSCodeGenerator instance.
@@ -140,7 +142,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             retstr += GenerateLine();
             foreach (SYMBOL s in m_astRoot.kids)
                 retstr += GenerateNode(s);
-
+            script = "";
             // close braces!
             m_braceCount--;
             //retstr += GenerateIndentedLine("}");
@@ -171,6 +173,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             }
         }
 
+        private string script = "";
         /// <summary>
         /// Recursively called to generate each type of node. Will generate this
         /// node, then all it's children.
@@ -179,73 +182,162 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
         /// <returns>String containing C# code for SYMBOL s.</returns>
         private string GenerateNode(SYMBOL s)
         {
-            string retstr = String.Empty;
-
+            string retstr = "";
             // make sure to put type lower in the inheritance hierarchy first
             // ie: since IdentArgument and ExpressionArgument inherit from
             // Argument, put IdentArgument and ExpressionArgument before Argument
             if (s is GlobalFunctionDefinition)
-                retstr += GenerateGlobalFunctionDefinition((GlobalFunctionDefinition) s);
+            {
+                retstr += GenerateGlobalFunctionDefinition((GlobalFunctionDefinition)s);
+                script += retstr;
+            }
             else if (s is GlobalVariableDeclaration)
-                retstr += GenerateGlobalVariableDeclaration((GlobalVariableDeclaration) s);
+            {
+                retstr += GenerateGlobalVariableDeclaration((GlobalVariableDeclaration)s);
+                script += retstr;
+            }
             else if (s is State)
-                retstr += GenerateState((State) s);
+            {
+                retstr += GenerateState((State)s);
+                script += retstr;
+            }
             else if (s is CompoundStatement)
-                retstr += GenerateCompoundStatement((CompoundStatement) s);
+            {
+                retstr += GenerateCompoundStatement((CompoundStatement)s);
+                script += retstr;
+            }
             else if (s is Declaration)
-                retstr += GenerateDeclaration((Declaration) s);
+            {
+                retstr += GenerateDeclaration((Declaration)s);
+                script += retstr;
+            }
             else if (s is Statement)
-                retstr += GenerateStatement((Statement) s);
+            {
+                retstr += GenerateStatement((Statement)s);
+                script += retstr;
+            }
             else if (s is ReturnStatement)
-                retstr += GenerateReturnStatement((ReturnStatement) s);
+            {
+                retstr += GenerateReturnStatement((ReturnStatement)s);
+                script += retstr;
+            }
             else if (s is JumpLabel)
-                retstr += GenerateJumpLabel((JumpLabel) s);
+            {
+                retstr += GenerateJumpLabel((JumpLabel)s);
+                script += retstr;
+            }
             else if (s is JumpStatement)
-                retstr += GenerateJumpStatement((JumpStatement) s);
+            {
+                retstr += GenerateJumpStatement((JumpStatement)s);
+                script += retstr;
+            }
             else if (s is StateChange)
-                retstr += GenerateStateChange((StateChange) s);
+            {
+                retstr += GenerateStateChange((StateChange)s);
+                script += retstr;
+            }
             else if (s is IfStatement)
-                retstr += GenerateIfStatement((IfStatement) s);
+            {
+                retstr += GenerateIfStatement((IfStatement)s);
+                script += retstr;
+            }
             else if (s is WhileStatement)
-                retstr += GenerateWhileStatement((WhileStatement) s);
+            {
+                retstr += GenerateWhileStatement((WhileStatement)s);
+                script += retstr;
+            }
             else if (s is DoWhileStatement)
-                retstr += GenerateDoWhileStatement((DoWhileStatement) s);
+            {
+                retstr += GenerateDoWhileStatement((DoWhileStatement)s);
+                script += retstr;
+            }
             else if (s is ForLoop)
-                retstr += GenerateForLoop((ForLoop) s);
+            {
+                retstr += GenerateForLoop((ForLoop)s);
+                script += retstr;
+            }
             else if (s is ArgumentList)
-                retstr += GenerateArgumentList((ArgumentList) s);
+            {
+                retstr += GenerateArgumentList((ArgumentList)s);
+                script += retstr;
+            }
             else if (s is Assignment)
-                retstr += GenerateAssignment((Assignment) s);
+            {
+                retstr += GenerateAssignment((Assignment)s);
+                script += retstr;
+            }
             else if (s is BinaryExpression)
-                retstr += GenerateBinaryExpression((BinaryExpression) s);
+            {
+                retstr += GenerateBinaryExpression((BinaryExpression)s);
+                script += retstr;
+            }
             else if (s is ParenthesisExpression)
-                retstr += GenerateParenthesisExpression((ParenthesisExpression) s);
+            {
+                retstr += GenerateParenthesisExpression((ParenthesisExpression)s);
+                script += retstr;
+            }
             else if (s is UnaryExpression)
-                retstr += GenerateUnaryExpression((UnaryExpression) s);
+            {
+                retstr += GenerateUnaryExpression((UnaryExpression)s);
+                script += retstr;
+            }
             else if (s is IncrementDecrementExpression)
-                retstr += GenerateIncrementDecrementExpression((IncrementDecrementExpression) s);
+            {
+                retstr += GenerateIncrementDecrementExpression((IncrementDecrementExpression)s);
+                script += retstr;
+            }
             else if (s is TypecastExpression)
-                retstr += GenerateTypecastExpression((TypecastExpression) s);
+            {
+                retstr += GenerateTypecastExpression((TypecastExpression)s);
+                script += retstr;
+            }
             else if (s is FunctionCall)
-                retstr += GenerateFunctionCall((FunctionCall) s);
+            {
+                retstr += GenerateFunctionCall((FunctionCall)s);
+                script += retstr;
+            }
             else if (s is VectorConstant)
-                retstr += GenerateVectorConstant((VectorConstant) s);
+            {
+                retstr += GenerateVectorConstant((VectorConstant)s);
+                script += retstr;
+            }
             else if (s is RotationConstant)
-                retstr += GenerateRotationConstant((RotationConstant) s);
+            {
+                retstr += GenerateRotationConstant((RotationConstant)s);
+                script += retstr;
+            }
             else if (s is ListConstant)
-                retstr += GenerateListConstant((ListConstant) s);
+            {
+                retstr += GenerateListConstant((ListConstant)s);
+                script += retstr;
+            }
             else if (s is Constant)
-                retstr += GenerateConstant((Constant) s);
+            {
+                retstr += GenerateConstant((Constant)s);
+                script += retstr;
+            }
             else if (s is IdentDotExpression)
-                retstr += Generate(CheckName(((IdentDotExpression) s).Name) + "." + ((IdentDotExpression) s).Member, s);
+            {
+                retstr += Generate(CheckName(((IdentDotExpression)s).Name) + "." + ((IdentDotExpression)s).Member, s);
+                script += retstr;
+            }
             else if (s is IdentExpression)
-                retstr += Generate(CheckName(((IdentExpression) s).Name), s);
+            {
+                retstr += Generate(CheckName(((IdentExpression)s).Name), s);
+                script += retstr;
+            }
             else if (s is IDENT)
-                retstr += Generate(CheckName(((TOKEN) s).yytext), s);
+            {
+                retstr += Generate(CheckName(((TOKEN)s).yytext), s);
+                script += retstr;
+            }
             else
             {
                 foreach (SYMBOL kid in s.kids)
+                {
                     retstr += GenerateNode(kid);
+                    script += retstr;
+                }
             }
 
             return retstr;
@@ -269,15 +361,21 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                     argumentDeclarationListKids.Add(kid);
                 else
                     remainingKids.Add(kid);
-
-            retstr += GenerateIndented(String.Format("{0} {1}(", gf.ReturnType, CheckName(gf.Name)), gf);
-
+            if (gf.ReturnType != "void")
+            {
+                retstr += GenerateIndented(String.Format("{0} {1}(", gf.ReturnType, CheckName(gf.Name)), gf);
+                IsParentEnumerable = false;
+            }
+            else
+            {
+                retstr += GenerateIndented(String.Format("{0} {1}(", "IEnumerator", CheckName(gf.Name)), gf);
+                IsParentEnumerable = true;
+            }
             // print the state arguments, if any
             foreach (SYMBOL kid in argumentDeclarationListKids)
                 retstr += GenerateArgumentDeclarationList((ArgumentDeclarationList) kid);
 
             retstr += GenerateLine(")");
-
             foreach (SYMBOL kid in remainingKids)
                 retstr += GenerateNode(kid);
 
@@ -340,14 +438,14 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                     remainingKids.Add(kid);
 
             // "state" (function) declaration
-            retstr += GenerateIndented(String.Format("public void {0}_event_{1}(", parentStateName, se.Name), se);
-
+            retstr += GenerateIndented(String.Format("public IEnumerator {0}_event_{1}(", parentStateName, se.Name), se);
+            IsParentEnumerable = true;
             // print the state arguments, if any
             foreach (SYMBOL kid in argumentDeclarationListKids)
                 retstr += GenerateArgumentDeclarationList((ArgumentDeclarationList) kid);
 
             retstr += GenerateLine(")");
-
+            
             foreach (SYMBOL kid in remainingKids)
                 retstr += GenerateNode(kid);
 
@@ -414,6 +512,11 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
 
             // closing brace
             m_braceCount--;
+            if (IsParentEnumerable && !IsInLoop)
+                retstr += GenerateLine("yield return null;");
+            if(IsInLoop)
+                retstr += GenerateLine("yield return null;");
+                
             retstr += GenerateIndentedLine("}");
 
             return retstr;
@@ -623,18 +726,22 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
         private string GenerateWhileStatement(WhileStatement ws)
         {
             string retstr = String.Empty;
-
+            if (IsParentEnumerable)
+            {
+                retstr += GenerateLine("yield return null;");
+                IsInLoop = true;
+            }
             retstr += GenerateIndented("while (", ws);
             retstr += GenerateNode((SYMBOL) ws.kids.Pop());
             retstr += GenerateLine(")");
-
+            
             // CompoundStatement handles indentation itself but we need to do it
             // otherwise.
             bool indentHere = ws.kids.Top is Statement;
             if (indentHere) m_braceCount++;
             retstr += GenerateNode((SYMBOL) ws.kids.Pop());
             if (indentHere) m_braceCount--;
-
+            IsInLoop = false;
             return retstr;
         }
 
@@ -671,7 +778,11 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
         private string GenerateForLoop(ForLoop fl)
         {
             string retstr = String.Empty;
-
+            if (IsParentEnumerable)
+            {
+                retstr += GenerateLine("yield return null;");
+                IsInLoop = true;
+            }
             retstr += GenerateIndented("for (", fl);
 
             // It's possible that we don't have an assignment, in which case
@@ -699,7 +810,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             if (indentHere) m_braceCount++;
             retstr += GenerateNode((SYMBOL) fl.kids.Pop());
             if (indentHere) m_braceCount--;
-
+            IsInLoop = false;
             return retstr;
         }
 
@@ -859,14 +970,48 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
         private string GenerateFunctionCall(FunctionCall fc)
         {
             string retstr = String.Empty;
+            
+            bool isEnumerable = false;
+            if (script.Contains("IEnumerator " + fc.Id))
+            {
+                isEnumerable = true;
+            }
 
+            if (isEnumerable)
+            {
+                retstr += Generate("parts.Add(");
+            }
             retstr += Generate(String.Format("{0}(", CheckName(fc.Id)), fc);
 
             foreach (SYMBOL kid in fc.kids)
                 retstr += GenerateNode(kid);
 
             retstr += Generate(")");
+            if (isEnumerable)
+            {
+                retstr += Generate(");\r\n");
+                retstr += GenerateLine("lock (parts)");
+                retstr += GenerateLine("{");
+                retstr += GenerateLine("int i = 0;");
+                retstr += GenerateLine("while (parts.Count > 0 && i < 1000)");
+                retstr += GenerateLine("{");
+                retstr += GenerateLine("i++;");
 
+                retstr += GenerateLine("bool running = false;");
+                retstr += GenerateLine("try");
+                retstr += GenerateLine("{");
+                retstr += GenerateLine("running = parts[i % parts.Count].MoveNext();");
+                retstr += GenerateLine("}");
+                retstr += GenerateLine("catch (Exception ex)");
+                retstr += GenerateLine("{");
+                retstr += GenerateLine("}");
+
+                retstr += GenerateLine("if (!running)");
+                retstr += GenerateLine("parts.Remove(parts[i % parts.Count]);");
+                retstr += GenerateLine("}");
+                retstr += GenerateLine("}");
+                retstr += GenerateLine("parts.Clear()");
+            }
             return retstr;
         }
 

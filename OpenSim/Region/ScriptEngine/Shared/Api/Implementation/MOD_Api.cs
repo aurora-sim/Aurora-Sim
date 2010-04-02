@@ -30,6 +30,7 @@ using System.Reflection;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.Remoting.Lifetime;
+using Aurora.Framework;
 using OpenMetaverse;
 using Nini.Config;
 using OpenSim;
@@ -61,7 +62,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         internal UUID m_itemID;
         internal bool m_MODFunctionsEnabled = false;
         internal IScriptModuleComms m_comms = null;
-
+        internal IGenericData GenericData;
+        
         public void Initialize(IScriptEngine ScriptEngine, SceneObjectPart host, uint localID, UUID itemID)
         {
             m_ScriptEngine = ScriptEngine;
@@ -109,7 +111,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             if (message.Length > 1023)
                 message = message.Substring(0, 1023);
 
-            World.SimChat(Utils.StringToBytes(message),
+            World.SimChat(OpenMetaverse.Utils.StringToBytes(message),
                           ChatTypeEnum.Shout, ScriptBaseClass.DEBUG_CHANNEL, m_host.ParentGroup.RootPart.AbsolutePosition, m_host.Name, m_host.UUID, true);
 
             IWorldComm wComm = m_ScriptEngine.World.RequestModuleInterface<IWorldComm>();
@@ -129,6 +131,29 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             m_comms.RaiseEvent(m_itemID, req.ToString(), module, command, k);
 
             return req.ToString();
+        }
+
+        public void AAUpdatePrimProperties(LSL_String type, LSL_String Keys, LSL_String Values)
+        {
+            if (!m_MODFunctionsEnabled)
+            {
+                MODShoutError("Module command functions not enabled");
+                return;
+            }
+            GenericData = Aurora.DataManager.DataManager.GetGenericPlugin();
+            List<string> SetValues = new List<string>();
+            List<string> SetKeys = new List<string>();
+            List<string> KeyRows = new List<string>();
+            List<string> KeyValues = new List<string>();
+            SetKeys.Add("primType");
+            SetValues.Add(type);
+            SetKeys.Add("primKeys");
+            SetValues.Add(Keys);
+            SetKeys.Add("primValues");
+            SetValues.Add(Values);
+            KeyRows.Add("primUUID");
+            KeyValues.Add(m_host.UUID.ToString());
+            GenericData.Update("auroraprims", SetValues.ToArray(), SetKeys.ToArray(), KeyRows.ToArray(), KeyValues.ToArray());
         }
     }
 }
