@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using Aurora.Framework;
+using OpenSim.Framework;
+using OpenMetaverse;
 
 namespace Aurora.DataManager
 {
@@ -21,6 +23,8 @@ namespace Aurora.DataManager
         public abstract void CloseDatabase();
         public abstract bool TableExists(string table);
         public abstract void CreateTable(string table, ColumnDefinition[] columns);
+        public abstract void StoreRegionWindlightSettings(RegionLightShareData wl);
+        public abstract RegionLightShareData LoadRegionWindlightSettings(UUID regionUUID);
 
         public Version GetAuroraVersion()
         {

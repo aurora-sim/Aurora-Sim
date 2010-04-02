@@ -6,6 +6,8 @@ using System.Linq;
 using System.Reflection;
 using Mono.Data.SqliteClient;
 using Aurora.Framework;
+using OpenSim.Framework;
+using OpenMetaverse;
 
 namespace Aurora.DataManager.SQLite
 {
@@ -365,6 +367,192 @@ namespace Aurora.DataManager.SQLite
             var cmd = new SqliteCommand();
             cmd.CommandText = string.Format("insert into {0} select * from {1}", destinationTableName, sourceTableName);
             ExecuteNonQuery(cmd);
+        }
+        
+        public override RegionLightShareData LoadRegionWindlightSettings(UUID regionUUID)
+        {
+        	RegionLightShareData nWP = new RegionLightShareData();
+        	nWP.OnSave += StoreRegionWindlightSettings;
+
+        	string command = "select * from `regionwindlight` where region_id = "+regionUUID.ToString();
+
+        	SqliteCommand cmd = new SqliteCommand();
+        	cmd.CommandText = command;
+        	IDataReader result = GetReader(cmd);
+        	List<string> retval = new List<string>();
+
+        	if (!result.Read())
+        	{
+        		//No result, so store our default windlight profile and return it
+        		nWP.regionID = regionUUID;
+        		StoreRegionWindlightSettings(nWP);
+        		return nWP;
+        	}
+        	else
+        	{
+        		UUID.TryParse(result["region_id"].ToString(), out nWP.regionID);
+        		nWP.waterColor.X = Convert.ToSingle(result["water_color_r"]);
+        		nWP.waterColor.Y = Convert.ToSingle(result["water_color_g"]);
+        		nWP.waterColor.Z = Convert.ToSingle(result["water_color_b"]);
+        		nWP.waterFogDensityExponent = Convert.ToSingle(result["water_fog_density_exponent"]);
+        		nWP.underwaterFogModifier = Convert.ToSingle(result["underwater_fog_modifier"]);
+        		nWP.reflectionWaveletScale.X = Convert.ToSingle(result["reflection_wavelet_scale_1"]);
+        		nWP.reflectionWaveletScale.Y = Convert.ToSingle(result["reflection_wavelet_scale_2"]);
+        		nWP.reflectionWaveletScale.Z = Convert.ToSingle(result["reflection_wavelet_scale_3"]);
+        		nWP.fresnelScale = Convert.ToSingle(result["fresnel_scale"]);
+        		nWP.fresnelOffset = Convert.ToSingle(result["fresnel_offset"]);
+        		nWP.refractScaleAbove = Convert.ToSingle(result["refract_scale_above"]);
+        		nWP.refractScaleBelow = Convert.ToSingle(result["refract_scale_below"]);
+        		nWP.blurMultiplier = Convert.ToSingle(result["blur_multiplier"]);
+        		nWP.bigWaveDirection.X = Convert.ToSingle(result["big_wave_direction_x"]);
+        		nWP.bigWaveDirection.Y = Convert.ToSingle(result["big_wave_direction_y"]);
+        		nWP.littleWaveDirection.X = Convert.ToSingle(result["little_wave_direction_x"]);
+        		nWP.littleWaveDirection.Y = Convert.ToSingle(result["little_wave_direction_y"]);
+        		UUID.TryParse(result["normal_map_texture"].ToString(), out nWP.normalMapTexture);
+        		nWP.horizon.X = Convert.ToSingle(result["horizon_r"]);
+        		nWP.horizon.Y = Convert.ToSingle(result["horizon_g"]);
+        		nWP.horizon.Z = Convert.ToSingle(result["horizon_b"]);
+        		nWP.horizon.W = Convert.ToSingle(result["horizon_i"]);
+        		nWP.hazeHorizon = Convert.ToSingle(result["haze_horizon"]);
+        		nWP.blueDensity.X = Convert.ToSingle(result["blue_density_r"]);
+        		nWP.blueDensity.Y = Convert.ToSingle(result["blue_density_g"]);
+        		nWP.blueDensity.Z = Convert.ToSingle(result["blue_density_b"]);
+        		nWP.blueDensity.W = Convert.ToSingle(result["blue_density_i"]);
+        		nWP.hazeDensity = Convert.ToSingle(result["haze_density"]);
+        		nWP.densityMultiplier = Convert.ToSingle(result["density_multiplier"]);
+        		nWP.distanceMultiplier = Convert.ToSingle(result["distance_multiplier"]);
+        		nWP.maxAltitude = Convert.ToUInt16(result["max_altitude"]);
+        		nWP.sunMoonColor.X = Convert.ToSingle(result["sun_moon_color_r"]);
+        		nWP.sunMoonColor.Y = Convert.ToSingle(result["sun_moon_color_g"]);
+        		nWP.sunMoonColor.Z = Convert.ToSingle(result["sun_moon_color_b"]);
+        		nWP.sunMoonColor.W = Convert.ToSingle(result["sun_moon_color_i"]);
+        		nWP.sunMoonPosition = Convert.ToSingle(result["sun_moon_position"]);
+        		nWP.ambient.X = Convert.ToSingle(result["ambient_r"]);
+        		nWP.ambient.Y = Convert.ToSingle(result["ambient_g"]);
+        		nWP.ambient.Z = Convert.ToSingle(result["ambient_b"]);
+        		nWP.ambient.W = Convert.ToSingle(result["ambient_i"]);
+        		nWP.eastAngle = Convert.ToSingle(result["east_angle"]);
+        		nWP.sunGlowFocus = Convert.ToSingle(result["sun_glow_focus"]);
+        		nWP.sunGlowSize = Convert.ToSingle(result["sun_glow_size"]);
+        		nWP.sceneGamma = Convert.ToSingle(result["scene_gamma"]);
+        		nWP.starBrightness = Convert.ToSingle(result["star_brightness"]);
+        		nWP.cloudColor.X = Convert.ToSingle(result["cloud_color_r"]);
+        		nWP.cloudColor.Y = Convert.ToSingle(result["cloud_color_g"]);
+        		nWP.cloudColor.Z = Convert.ToSingle(result["cloud_color_b"]);
+        		nWP.cloudColor.W = Convert.ToSingle(result["cloud_color_i"]);
+        		nWP.cloudXYDensity.X = Convert.ToSingle(result["cloud_x"]);
+        		nWP.cloudXYDensity.Y = Convert.ToSingle(result["cloud_y"]);
+        		nWP.cloudXYDensity.Z = Convert.ToSingle(result["cloud_density"]);
+        		nWP.cloudCoverage = Convert.ToSingle(result["cloud_coverage"]);
+        		nWP.cloudScale = Convert.ToSingle(result["cloud_scale"]);
+        		nWP.cloudDetailXYDensity.X = Convert.ToSingle(result["cloud_detail_x"]);
+        		nWP.cloudDetailXYDensity.Y = Convert.ToSingle(result["cloud_detail_y"]);
+        		nWP.cloudDetailXYDensity.Z = Convert.ToSingle(result["cloud_detail_density"]);
+        		nWP.cloudScrollX = Convert.ToSingle(result["cloud_scroll_x"]);
+        		nWP.cloudScrollXLock = Convert.ToBoolean(result["cloud_scroll_x_lock"]);
+        		nWP.cloudScrollY = Convert.ToSingle(result["cloud_scroll_y"]);
+        		nWP.cloudScrollYLock = Convert.ToBoolean(result["cloud_scroll_y_lock"]);
+        		nWP.drawClassicClouds = Convert.ToBoolean(result["draw_classic_clouds"]);
+        	}
+        	return nWP;
+        }
+        
+        public override void StoreRegionWindlightSettings(RegionLightShareData wl)
+        {
+        	var cmd = new SqliteCommand();
+        	cmd.CommandText = "REPLACE INTO `regionwindlight` (`region_id`, `water_color_r`, `water_color_g`, ";
+        	cmd.CommandText += "`water_color_b`, `water_fog_density_exponent`, `underwater_fog_modifier`, ";
+        	cmd.CommandText += "`reflection_wavelet_scale_1`, `reflection_wavelet_scale_2`, `reflection_wavelet_scale_3`, ";
+        	cmd.CommandText += "`fresnel_scale`, `fresnel_offset`, `refract_scale_above`, `refract_scale_below`, ";
+        	cmd.CommandText += "`blur_multiplier`, `big_wave_direction_x`, `big_wave_direction_y`, `little_wave_direction_x`, ";
+        	cmd.CommandText += "`little_wave_direction_y`, `normal_map_texture`, `horizon_r`, `horizon_g`, `horizon_b`, ";
+        	cmd.CommandText += "`horizon_i`, `haze_horizon`, `blue_density_r`, `blue_density_g`, `blue_density_b`, ";
+        	cmd.CommandText += "`blue_density_i`, `haze_density`, `density_multiplier`, `distance_multiplier`, `max_altitude`, ";
+        	cmd.CommandText += "`sun_moon_color_r`, `sun_moon_color_g`, `sun_moon_color_b`, `sun_moon_color_i`, `sun_moon_position`, ";
+        	cmd.CommandText += "`ambient_r`, `ambient_g`, `ambient_b`, `ambient_i`, `east_angle`, `sun_glow_focus`, `sun_glow_size`, ";
+        	cmd.CommandText += "`scene_gamma`, `star_brightness`, `cloud_color_r`, `cloud_color_g`, `cloud_color_b`, `cloud_color_i`, ";
+        	cmd.CommandText += "`cloud_x`, `cloud_y`, `cloud_density`, `cloud_coverage`, `cloud_scale`, `cloud_detail_x`, ";
+        	cmd.CommandText += "`cloud_detail_y`, `cloud_detail_density`, `cloud_scroll_x`, `cloud_scroll_x_lock`, `cloud_scroll_y`, ";
+        	cmd.CommandText += "`cloud_scroll_y_lock`, `draw_classic_clouds`) VALUES (?region_id, ?water_color_r, ";
+        	cmd.CommandText += "?water_color_g, ?water_color_b, ?water_fog_density_exponent, ?underwater_fog_modifier, ?reflection_wavelet_scale_1, ";
+        	cmd.CommandText += "?reflection_wavelet_scale_2, ?reflection_wavelet_scale_3, ?fresnel_scale, ?fresnel_offset, ?refract_scale_above, ";
+        	cmd.CommandText += "?refract_scale_below, ?blur_multiplier, ?big_wave_direction_x, ?big_wave_direction_y, ?little_wave_direction_x, ";
+        	cmd.CommandText += "?little_wave_direction_y, ?normal_map_texture, ?horizon_r, ?horizon_g, ?horizon_b, ?horizon_i, ?haze_horizon, ";
+        	cmd.CommandText += "?blue_density_r, ?blue_density_g, ?blue_density_b, ?blue_density_i, ?haze_density, ?density_multiplier, ";
+        	cmd.CommandText += "?distance_multiplier, ?max_altitude, ?sun_moon_color_r, ?sun_moon_color_g, ?sun_moon_color_b, ";
+        	cmd.CommandText += "?sun_moon_color_i, ?sun_moon_position, ?ambient_r, ?ambient_g, ?ambient_b, ?ambient_i, ?east_angle, ";
+        	cmd.CommandText += "?sun_glow_focus, ?sun_glow_size, ?scene_gamma, ?star_brightness, ?cloud_color_r, ?cloud_color_g, ";
+        	cmd.CommandText += "?cloud_color_b, ?cloud_color_i, ?cloud_x, ?cloud_y, ?cloud_density, ?cloud_coverage, ?cloud_scale, ";
+        	cmd.CommandText += "?cloud_detail_x, ?cloud_detail_y, ?cloud_detail_density, ?cloud_scroll_x, ?cloud_scroll_x_lock, ";
+        	cmd.CommandText += "?cloud_scroll_y, ?cloud_scroll_y_lock, ?draw_classic_clouds)";
+
+        	cmd.Parameters.Add("region_id", wl.regionID);
+        	cmd.Parameters.Add("water_color_r", wl.waterColor.X);
+        	cmd.Parameters.Add("water_color_g", wl.waterColor.Y);
+        	cmd.Parameters.Add("water_color_b", wl.waterColor.Z);
+        	cmd.Parameters.Add("water_fog_density_exponent", wl.waterFogDensityExponent);
+        	cmd.Parameters.Add("underwater_fog_modifier", wl.underwaterFogModifier);
+        	cmd.Parameters.Add("reflection_wavelet_scale_1", wl.reflectionWaveletScale.X);
+        	cmd.Parameters.Add("reflection_wavelet_scale_2", wl.reflectionWaveletScale.Y);
+        	cmd.Parameters.Add("reflection_wavelet_scale_3", wl.reflectionWaveletScale.Z);
+        	cmd.Parameters.Add("fresnel_scale", wl.fresnelScale);
+        	cmd.Parameters.Add("fresnel_offset", wl.fresnelOffset);
+        	cmd.Parameters.Add("refract_scale_above", wl.refractScaleAbove);
+        	cmd.Parameters.Add("refract_scale_below", wl.refractScaleBelow);
+        	cmd.Parameters.Add("blur_multiplier", wl.blurMultiplier);
+        	cmd.Parameters.Add("big_wave_direction_x", wl.bigWaveDirection.X);
+        	cmd.Parameters.Add("big_wave_direction_y", wl.bigWaveDirection.Y);
+        	cmd.Parameters.Add("little_wave_direction_x", wl.littleWaveDirection.X);
+        	cmd.Parameters.Add("little_wave_direction_y", wl.littleWaveDirection.Y);
+        	cmd.Parameters.Add("normal_map_texture", wl.normalMapTexture);
+        	cmd.Parameters.Add("horizon_r", wl.horizon.X);
+        	cmd.Parameters.Add("horizon_g", wl.horizon.Y);
+        	cmd.Parameters.Add("horizon_b", wl.horizon.Z);
+        	cmd.Parameters.Add("horizon_i", wl.horizon.W);
+        	cmd.Parameters.Add("haze_horizon", wl.hazeHorizon);
+        	cmd.Parameters.Add("blue_density_r", wl.blueDensity.X);
+        	cmd.Parameters.Add("blue_density_g", wl.blueDensity.Y);
+        	cmd.Parameters.Add("blue_density_b", wl.blueDensity.Z);
+        	cmd.Parameters.Add("blue_density_i", wl.blueDensity.W);
+        	cmd.Parameters.Add("haze_density", wl.hazeDensity);
+        	cmd.Parameters.Add("density_multiplier", wl.densityMultiplier);
+        	cmd.Parameters.Add("distance_multiplier", wl.distanceMultiplier);
+        	cmd.Parameters.Add("max_altitude", wl.maxAltitude);
+        	cmd.Parameters.Add("sun_moon_color_r", wl.sunMoonColor.X);
+        	cmd.Parameters.Add("sun_moon_color_g", wl.sunMoonColor.Y);
+        	cmd.Parameters.Add("sun_moon_color_b", wl.sunMoonColor.Z);
+        	cmd.Parameters.Add("sun_moon_color_i", wl.sunMoonColor.W);
+        	cmd.Parameters.Add("sun_moon_position", wl.sunMoonPosition);
+        	cmd.Parameters.Add("ambient_r", wl.ambient.X);
+        	cmd.Parameters.Add("ambient_g", wl.ambient.Y);
+        	cmd.Parameters.Add("ambient_b", wl.ambient.Z);
+        	cmd.Parameters.Add("ambient_i", wl.ambient.W);
+        	cmd.Parameters.Add("east_angle", wl.eastAngle);
+        	cmd.Parameters.Add("sun_glow_focus", wl.sunGlowFocus);
+        	cmd.Parameters.Add("sun_glow_size", wl.sunGlowSize);
+        	cmd.Parameters.Add("scene_gamma", wl.sceneGamma);
+        	cmd.Parameters.Add("star_brightness", wl.starBrightness);
+        	cmd.Parameters.Add("cloud_color_r", wl.cloudColor.X);
+        	cmd.Parameters.Add("cloud_color_g", wl.cloudColor.Y);
+        	cmd.Parameters.Add("cloud_color_b", wl.cloudColor.Z);
+        	cmd.Parameters.Add("cloud_color_i", wl.cloudColor.W);
+        	cmd.Parameters.Add("cloud_x", wl.cloudXYDensity.X);
+        	cmd.Parameters.Add("cloud_y", wl.cloudXYDensity.Y);
+        	cmd.Parameters.Add("cloud_density", wl.cloudXYDensity.Z);
+        	cmd.Parameters.Add("cloud_coverage", wl.cloudCoverage);
+        	cmd.Parameters.Add("cloud_scale", wl.cloudScale);
+        	cmd.Parameters.Add("cloud_detail_x", wl.cloudDetailXYDensity.X);
+        	cmd.Parameters.Add("cloud_detail_y", wl.cloudDetailXYDensity.Y);
+        	cmd.Parameters.Add("cloud_detail_density", wl.cloudDetailXYDensity.Z);
+        	cmd.Parameters.Add("cloud_scroll_x", wl.cloudScrollX);
+        	cmd.Parameters.Add("cloud_scroll_x_lock", wl.cloudScrollXLock);
+        	cmd.Parameters.Add("cloud_scroll_y", wl.cloudScrollY);
+        	cmd.Parameters.Add("cloud_scroll_y_lock", wl.cloudScrollYLock);
+        	cmd.Parameters.Add("draw_classic_clouds", wl.drawClassicClouds);
+        	
+        	ExecuteNonQuery(cmd);
+        	CloseReaderCommand(cmd);
+        	
         }
     }
 }

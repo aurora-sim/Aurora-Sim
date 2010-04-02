@@ -235,5 +235,15 @@ namespace Aurora.Modules.DataPlugins
         {
             return null;
         }
+    	
+		public void StoreRegionWindlightSettings(OpenSim.Framework.RegionLightShareData wl)
+		{
+			throw new NotImplementedException();
+		}
+    	
+		public OpenSim.Framework.RegionLightShareData LoadRegionWindlightSettings(OpenMetaverse.UUID regionUUID)
+		{
+			throw new NotImplementedException();
+		}
     }
 }

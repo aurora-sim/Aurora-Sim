@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using OpenMetaverse;
+using OpenSim.Framework;
 
 namespace Aurora.Framework
 {
@@ -54,6 +55,8 @@ namespace Aurora.Framework
         bool VerifyTableExists(string tableName, ColumnDefinition[] columnDefinitions);
         void EnsureTableExists(string tableName, ColumnDefinition[] columnDefinitions);
         void DropTable(string tableName);
+        void StoreRegionWindlightSettings(RegionLightShareData wl);
+        RegionLightShareData LoadRegionWindlightSettings(UUID regionUUID);
     }
 
     public enum DataManagerTechnology

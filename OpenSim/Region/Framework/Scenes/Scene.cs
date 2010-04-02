@@ -51,6 +51,7 @@ using OpenSim.Region.Physics.Manager;
 using Timer=System.Timers.Timer;
 using TPFlags = OpenSim.Framework.Constants.TeleportFlags;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using Aurora.DataManager;
 
 namespace OpenSim.Region.Framework.Scenes
 {
@@ -1721,13 +1722,17 @@ namespace OpenSim.Region.Framework.Scenes
         public void StoreWindlightProfile(RegionLightShareData wl)
         {
             m_regInfo.WindlightSettings = wl;
-            m_storageManager.DataStore.StoreRegionWindlightSettings(wl);
+            Aurora.Framework.IGenericData GD = Aurora.DataManager.DataManager.GetGenericPlugin();
+        	GD.StoreRegionWindlightSettings(wl);
+            //m_storageManager.DataStore.StoreRegionWindlightSettings(wl);
             m_eventManager.TriggerOnSaveNewWindlightProfile();
         }
 
         public void LoadWindlightProfile()
         {
-            m_regInfo.WindlightSettings = m_storageManager.DataStore.LoadRegionWindlightSettings(RegionInfo.RegionID);
+        	Aurora.Framework.IGenericData GD = Aurora.DataManager.DataManager.GetGenericPlugin();
+        	GD.LoadRegionWindlightSettings(RegionInfo.RegionID);
+            //m_regInfo.WindlightSettings = m_storageManager.DataStore.;
             m_eventManager.TriggerOnSaveNewWindlightProfile();
         }
 
