@@ -149,7 +149,7 @@ namespace OpenSim.Region.Framework.Scenes
         private int m_godLevel;
         private int m_userLevel;
 
-        private bool m_invulnerable = true;
+        public bool m_invulnerable = true;
 
         private Vector3 m_lastChildAgentUpdatePosition;
         private Vector3 m_lastChildAgentUpdateCamPosition;
@@ -264,7 +264,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <value>
         /// Script engines present in the scene
         /// </value>
-        private IScriptModule[] m_scriptEngines;
+        public IScriptModule[] m_scriptEngines;
 
         #region Properties
 

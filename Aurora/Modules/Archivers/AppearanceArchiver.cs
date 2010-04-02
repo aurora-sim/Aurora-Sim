@@ -156,7 +156,7 @@ namespace Aurora.Modules
                                 appearance.Owner, uuid));
             }
             ScenePresence SP;
-            m_scene.TryGetAvatar(account.PrincipalID, out SP);
+            m_scene.TryGetScenePresence(account.PrincipalID, out SP);
             foreach (InventoryItemBase itemCopy in items)
             {
                 if (itemCopy == null && SP != null)

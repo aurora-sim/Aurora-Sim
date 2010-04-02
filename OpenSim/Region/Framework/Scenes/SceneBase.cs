@@ -129,7 +129,7 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_eventManager; }
         }
         protected EventManager m_eventManager;
-
+		public Aurora.Framework.AuroraEventManager AuroraEventManager = null;
         protected ScenePermissions m_permissions;
         public ScenePermissions Permissions
         {

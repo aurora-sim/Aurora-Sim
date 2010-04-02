@@ -194,7 +194,7 @@ namespace Aurora.Modules
 		{
 			// this is here because CAPS map requests work even beyond the 10,000 limit.
 			ScenePresence avatarPresence;
-			m_scene.TryGetAvatar(agentID,out avatarPresence);
+			m_scene.TryGetScenePresence(agentID,out avatarPresence);
             UserAccount account = m_scene.UserAccountService.GetUserAccount(UUID.Zero, agentID);
             List<MapBlockData> mapBlocks = new List<MapBlockData>(); ;
 
@@ -284,26 +284,12 @@ namespace Aurora.Modules
 		/// <param name="AgentId">AgentID that logged out</param>
 		private void ClientLoggedOut(UUID AgentId, Scene scene)
 		{
-			List<ScenePresence> presences = m_scene.GetAvatars();
-			int rootcount = 0;
-			for (int i=0;i<presences.Count;i++)
-			{
-				if (presences[i] != null)
-				{
-					if (!presences[i].IsChildAgent)
-						rootcount++;
-				}
-			}
-			if (rootcount <= 1)
-				StopThread();
-
 			lock (m_rootAgents)
-			{
-				if (m_rootAgents.Contains(AgentId))
-				{
-					m_rootAgents.Remove(AgentId);
-				}
-			}
+            {
+                m_rootAgents.Remove(AgentId);
+                if(m_rootAgents.Count == 0)
+                    StopThread();
+            }
 		}
 		#endregion
 
@@ -322,30 +308,28 @@ namespace Aurora.Modules
 
 			requests.Enqueue(st);
 		}
-
-		public virtual void HandleMapItemRequest(IClientAPI remoteClient, uint flags,
-		                                         uint EstateID, bool godlike, uint itemtype, ulong regionhandle)
-		{
-			lock (m_rootAgents)
-			{
-				if (!m_rootAgents.Contains(remoteClient.AgentId))
-					return;
-			}
+public virtual void HandleMapItemRequest(IClientAPI remoteClient, uint flags,
+            uint EstateID, bool godlike, uint itemtype, ulong regionhandle)
+        {
+            lock (m_rootAgents)
+            {
+                if (!m_rootAgents.Contains(remoteClient.AgentId))
+                    return;
+            }
             UserAccount account = m_scene.UserAccountService.GetUserAccount(UUID.Zero, remoteClient.AgentId);
             uint xstart = 0;
-			uint ystart = 0;
-		    OpenMetaverse.Utils.LongToUInts(m_scene.RegionInfo.RegionHandle, out xstart, out ystart);
-			if (itemtype == 6) // we only sevice 6 right now (avatar green dots)
-			{
-				if (regionhandle == 0 || regionhandle == m_scene.RegionInfo.RegionHandle)
-				{
-					// Local Map Item Request
-					List<ScenePresence> avatars = m_scene.GetAvatars();
-					int tc = Environment.TickCount;
-					List<mapItemReply> mapitems = new List<mapItemReply>();
-					mapItemReply mapitem = new mapItemReply();
-					if (avatars.Count == 0 || avatars.Count == 1)
-					{
+            uint ystart = 0;
+            OpenMetaverse.Utils.LongToUInts(m_scene.RegionInfo.RegionHandle, out xstart, out ystart);
+            if (itemtype == 6) // we only sevice 6 right now (avatar green dots)
+            {
+                if (regionhandle == 0 || regionhandle == m_scene.RegionInfo.RegionHandle)
+                {
+                    // Local Map Item Request
+                    int tc = Environment.TickCount;
+                    List<mapItemReply> mapitems = new List<mapItemReply>();
+                    mapItemReply mapitem = new mapItemReply();
+                    if (m_scene.GetRootAgentCount() <= 1)
+                    {
                         if (account.UserLevel == 0)
 						{
 							if(RegionsHidden.ContainsValue(m_scene.RegionInfo.RegionName))
@@ -385,80 +369,45 @@ namespace Aurora.Modules
 							mapitem.Extra2 = 0;
 							mapitems.Add(mapitem);
 						}
-					}
-					else
-					{
-						foreach (ScenePresence av in avatars)
-						{
-							if(av.GodLevel == 0)
-							{
-								// Don't send a green dot for yourself
-								if (av.UUID != remoteClient.AgentId)
-								{
-                                    if (account.UserLevel == 0)
-									{
-										if(RegionsHidden.ContainsValue(m_scene.RegionInfo.RegionName))
-										{
-											if(m_scene.RegionInfo.EstateSettings.EstateOwner == remoteClient.AgentId)
-											{
-												mapitem = new mapItemReply();
-												mapitem.x = (uint)(xstart + av.AbsolutePosition.X);
-												mapitem.y = (uint)(ystart + av.AbsolutePosition.Y);
-												mapitem.id = UUID.Zero;
-												mapitem.name = Util.Md5Hash(m_scene.RegionInfo.RegionName + tc.ToString());
-												mapitem.Extra = 1;
-												mapitem.Extra2 = 0;
-												mapitems.Add(mapitem);
-											}
-										}
-										else
-										{
-											mapitem = new mapItemReply();
-											mapitem.x = (uint)(xstart + av.AbsolutePosition.X);
-											mapitem.y = (uint)(ystart + av.AbsolutePosition.Y);
-											mapitem.id = UUID.Zero;
-											mapitem.name = Util.Md5Hash(m_scene.RegionInfo.RegionName + tc.ToString());
-											mapitem.Extra = 1;
-											mapitem.Extra2 = 0;
-											mapitems.Add(mapitem);
-										}
-									}
-									else
-									{
-										mapitem = new mapItemReply();
-										mapitem.x = (uint)(xstart + av.AbsolutePosition.X);
-										mapitem.y = (uint)(ystart + av.AbsolutePosition.Y);
-										mapitem.id = UUID.Zero;
-										mapitem.name = Util.Md5Hash(m_scene.RegionInfo.RegionName + tc.ToString());
-										mapitem.Extra = 1;
-										mapitem.Extra2 = 0;
-										mapitems.Add(mapitem);
-									}
-								}
-							}
-						}
-					}
-					remoteClient.SendMapItemReply(mapitems.ToArray(), itemtype, flags);
-				}
-				
-				else
-				{
-					// Remote Map Item Request
+                    }
+                    else
+                    {
+                        m_scene.ForEachScenePresence(delegate(ScenePresence sp)
+                        {
+                            // Don't send a green dot for yourself
+                            if (!sp.IsChildAgent && sp.UUID != remoteClient.AgentId)
+                            {
+                                mapitem = new mapItemReply();
+                                mapitem.x = (uint)(xstart + sp.AbsolutePosition.X);
+                                mapitem.y = (uint)(ystart + sp.AbsolutePosition.Y);
+                                mapitem.id = UUID.Zero;
+                                mapitem.name = Util.Md5Hash(m_scene.RegionInfo.RegionName + tc.ToString());
+                                mapitem.Extra = 1;
+                                mapitem.Extra2 = 0;
+                                mapitems.Add(mapitem);
+                            }
+                        });
+                    }
+                    remoteClient.SendMapItemReply(mapitems.ToArray(), itemtype, flags);
+                }
+                else
+                {
+                    // Remote Map Item Request
 
-					// ensures that the blockingqueue doesn't get borked if the GetAgents() timing changes.
-					// Note that we only start up a remote mapItem Request thread if there's users who could
-					// be making requests
-					if (!threadrunning)
-					{
-						m_log.Warn("[WORLD MAP]: Starting new remote request thread manually.  This means that AvatarEnteringParcel never fired!  This needs to be fixed!  Don't Mantis this, as the developers can see it in this message");
-						StartThread(new object());
-					}
+                    // ensures that the blockingqueue doesn't get borked if the GetAgents() timing changes.
+                    // Note that we only start up a remote mapItem Request thread if there's users who could
+                    // be making requests
+                    if (!threadrunning)
+                    {
+                        m_log.Warn("[WORLD MAP]: Starting new remote request thread manually.  This means that AvatarEnteringParcel never fired!  This needs to be fixed!  Don't Mantis this, as the developers can see it in this message");
+                        StartThread(new object());
+                    }
 
-					RequestMapItems("",remoteClient.AgentId,flags,EstateID,godlike,itemtype,regionhandle);
-				}
-				
-			}
-		}
+                    RequestMapItems("",remoteClient.AgentId,flags,EstateID,godlike,itemtype,regionhandle);
+                }
+            }
+        }
+		
 		private void StartThread(object o)
 		{
 			if (threadrunning) return;
@@ -468,6 +417,7 @@ namespace Aurora.Modules
 
 			Watchdog.StartThread(process, "MapItemRequestThread", ThreadPriority.BelowNormal, true);
 		}
+		
 		public void process()
 		{
 			try
@@ -539,7 +489,7 @@ namespace Aurora.Modules
 				if (mrs.agentID != UUID.Zero)
 				{
 					ScenePresence av = null;
-					m_scene.TryGetAvatar(mrs.agentID, out av);
+					m_scene.TryGetScenePresence(mrs.agentID, out av);
 					if (av != null)
 					{
 						if (response.ContainsKey(mrs.itemtype.ToString()))
@@ -742,26 +692,12 @@ namespace Aurora.Modules
 		}
 		private void MakeChildAgent(ScenePresence avatar)
 		{
-			List<ScenePresence> presences = m_scene.GetAvatars();
-			int rootcount = 0;
-			for (int i = 0; i < presences.Count; i++)
-			{
-				if (presences[i] != null)
-				{
-					if (!presences[i].IsChildAgent)
-						rootcount++;
-				}
-			}
-			if (rootcount <= 1)
-				StopThread();
-
 			lock (m_rootAgents)
-			{
-				if (m_rootAgents.Contains(avatar.UUID))
-				{
-					m_rootAgents.Remove(avatar.UUID);
-				}
-			}
+            {
+                m_rootAgents.Remove(avatar.UUID);
+                if (m_rootAgents.Count == 0)
+                    StopThread();
+            }
 		}
 		public void LazySaveGeneratedMaptile(byte[] data, bool temporary)
 		{

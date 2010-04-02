@@ -58,6 +58,10 @@ namespace Aurora.Modules
                 return m_AgentTransferModule;
             }
         }
+        public ISimulationService GetInnerService()
+        {
+            return null;
+        }
 
         private bool m_ModuleEnabled = false;
 

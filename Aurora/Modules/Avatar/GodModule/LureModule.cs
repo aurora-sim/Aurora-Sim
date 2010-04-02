@@ -105,7 +105,7 @@ namespace Aurora.Modules
 			ScenePresence SPTemp;
 			foreach(Scene scene1 in m_scenes)
 			{
-				scene1.TryGetAvatar(targetid,out SPTemp);
+				scene1.TryGetScenePresence(targetid,out SPTemp);
 				if(SPTemp != null)
 				{
 					if(!SPTemp.IsChildAgent)
@@ -177,7 +177,7 @@ namespace Aurora.Modules
 				ScenePresence spTP = null;
 				foreach(Scene scene3 in m_scenes)
 				{
-					scene3.TryGetAvatar(lureID, out spTPTemp);
+					scene3.TryGetScenePresence(lureID, out spTPTemp);
 					if(spTPTemp != null)
 					{
 						if(!spTPTemp.IsChildAgent)

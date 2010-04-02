@@ -124,7 +124,7 @@ namespace Aurora.Modules
             }
             ScenePresence SP = null;
             Scene scene = GetClientScene(remoteClient);
-            scene.TryGetAvatar(remoteClient.AgentId, out SP);
+            scene.TryGetScenePresence(remoteClient.AgentId, out SP);
             // try to fetch from GridServer
             List<GridRegion> regionInfos = m_scene.GridService.GetRegionsByName(UUID.Zero, mapName, 20);
             if (regionInfos == null)

@@ -594,6 +594,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_physicalPrim = physicalPrim;
             m_seeIntoRegionFromNeighbor = SeeIntoRegionFromNeighbor;
 
+            AuroraEventManager = new Aurora.Framework.AuroraEventManager();
             m_eventManager = new EventManager();
             m_permissions = new ScenePermissions(this);
 
@@ -840,6 +841,8 @@ namespace OpenSim.Region.Framework.Scenes
 
             m_regInfo = regInfo;
             m_eventManager = new EventManager();
+            AuroraEventManager = new Aurora.Framework.AuroraEventManager();
+            
 
             m_lastUpdate = Util.EnvironmentTickCount();
         }

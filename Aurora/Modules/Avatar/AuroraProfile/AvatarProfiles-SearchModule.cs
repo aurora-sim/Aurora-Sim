@@ -1549,7 +1549,7 @@ namespace Aurora.Modules
                 }
                 ScenePresence SP;
                 Scene AVscene = (Scene)client.Scene;
-                AVscene.TryGetAvatar(client.AgentId, out SP);
+                AVscene.TryGetScenePresence(client.AgentId, out SP);
                 /*LLClientView rcv;
                 if (SP.ClientView.TryGet(out rcv))
                 {

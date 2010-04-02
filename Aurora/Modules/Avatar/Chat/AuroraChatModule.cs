@@ -190,7 +190,7 @@ namespace Aurora.Modules
                 if (!m_useAuth || m_authList.Contains(c.SenderUUID))
                 {
                     ScenePresence senderSP;
-                    ((Scene)c.Scene).TryGetAvatar(c.SenderUUID, out senderSP);
+                    ((Scene)c.Scene).TryGetScenePresence(c.SenderUUID, out senderSP);
                     string[] message = c.Message.Split('.');
                     if (message[1] == "SayDistance")
                     {

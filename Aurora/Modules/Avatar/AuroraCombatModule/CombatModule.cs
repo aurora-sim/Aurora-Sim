@@ -145,30 +145,19 @@ namespace Aurora.Modules
             {
                 bool foundResult = false;
                 string resultstring = String.Empty;
-                ScenePresence[] allav = DeadAvatar.Scene.GetScenePresences();
-                try
-                {
-                    for (int i = 0; i < allav.Length; i++)
-                    {
-                        ScenePresence av = allav[i];
-
-                        if (av.LocalId == killerObjectLocalID)
+                DeadAvatar.Scene.ForEachScenePresence(delegate(ScenePresence sp)
+                                             {
+                        if (sp.LocalId == killerObjectLocalID)
                         {
-                            av.ControllingClient.SendAlertMessage("You fragged " + DeadAvatar.Firstname + " " + DeadAvatar.Lastname);
-                            resultstring = av.Firstname + " " + av.Lastname;
+                            sp.ControllingClient.SendAlertMessage("You fragged " + DeadAvatar.Firstname + " " + DeadAvatar.Lastname);
+                            resultstring = sp.Firstname + " " + sp.Lastname;
                             foundResult = true;
                             if (FireEvent)
                             {
                                 FireDeadAvatarEvent(resultstring, DeadAvatar);
                             }
                         }
-                    }
-                }
-                catch (InvalidOperationException)
-                {
-
-                }
-
+                                                      });
                 if (!foundResult)
                 {
                     SceneObjectPart part = DeadAvatar.Scene.GetSceneObjectPart(killerObjectLocalID);

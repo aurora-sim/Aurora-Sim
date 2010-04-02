@@ -66,7 +66,7 @@ namespace Aurora.Modules
 			
 			foreach(Scene scene in m_scenes)
 			{
-				scene.TryGetAvatar(client.AgentId, out tPresenceTemp);
+				scene.TryGetScenePresence(client.AgentId, out tPresenceTemp);
 				if(tPresenceTemp != null)
 				{
 					if(tPresenceTemp.IsChildAgent == true)
@@ -109,7 +109,7 @@ namespace Aurora.Modules
 				Scene theScene;
 				foreach(Scene scene in m_scenes)
 				{
-					scene.TryGetAvatar(client.AgentId, out tPresenceTemp);
+					scene.TryGetScenePresence(client.AgentId, out tPresenceTemp);
 					if(tPresenceTemp != null)
 					{
 						if(tPresenceTemp.IsChildAgent == true)
