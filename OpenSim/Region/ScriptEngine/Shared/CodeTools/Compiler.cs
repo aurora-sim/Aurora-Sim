@@ -31,6 +31,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection;
 using System.IO;
+using System.Text;
 using Microsoft.CSharp;
 using Microsoft.JScript;
 using Microsoft.VisualBasic;
@@ -273,12 +274,14 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
         /// </summary>
         /// <param name="Script">LSL script</param>
         /// <returns>Filename to .dll assembly</returns>
-        public void PerformScriptCompile(string Script, string asset, UUID ownerUUID,
-            out string assembly, out Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> linemap)
+        public void PerformScriptCompile(string Script, UUID assetID, UUID ownerUUID, string classSource,
+            out string assembly, out Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> linemap, out string ClassSource, out string randomIdentifier)
         {
+        	string asset = assetID.ToString();
+        	randomIdentifier = "";
             linemap = null;
+            ClassSource = "";
             m_warnings.Clear();
-
             assembly = Path.Combine(ScriptEnginesPath, Path.Combine(
                     m_scriptEngine.World.RegionInfo.RegionID.ToString(),
                     FilePrefix + "_compiled_" + asset + ".dll"));
@@ -361,8 +364,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             }
 
             string compileScript = Script;
-
-            if (language == enumCompileType.lsl)
+			if (language == enumCompileType.lsl)
             {
                 // Its LSL, convert it to C#
                 LSL_Converter = (ICodeConverter)new CSCodeGenerator();
@@ -385,12 +387,13 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                 // Its YP, convert it to C#
                 compileScript = YP_Converter.Convert(Script);
             }
-
+            randomIdentifier = RandomString(36, true);
+            
             switch (language)
             {
                 case enumCompileType.cs:
                 case enumCompileType.lsl:
-                    compileScript = CreateCSCompilerScript(compileScript);
+            		compileScript = CreateCSCompilerScript(compileScript, randomIdentifier, classSource, out ClassSource);
                     break;
                 case enumCompileType.vb:
                     compileScript = CreateVBCompilerScript(compileScript);
@@ -403,7 +406,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                     break;
             }
 
-            assembly = CompileFromDotNetText(compileScript, language, asset, assembly);
+			assembly = CompileFromDotNetText(compileScript, language, asset, assembly);
             return;
         }
 
@@ -431,16 +434,24 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             return compileScript;
         }
 
-        private static string CreateCSCompilerScript(string compileScript)
+        private static string CreateCSCompilerScript(string compileScript, string itemID, string formerScript, out string ClassScript)
         {             
-            compileScript = String.Empty +
-                "using OpenSim.Region.ScriptEngine.Shared;\nusing System;\nusing System.Collections.Generic;\nusing System.Collections;\n" +
-                String.Empty + "namespace SecondLife\n{\n" +
-                String.Empty + "public class Script : OpenSim.Region.ScriptEngine.Shared.ScriptBase.ScriptBaseClass\n{\n" +
-                "public Script()\n {}\nList<IEnumerator> parts = new List<IEnumerator>();\n" +
+        	string compiledScript = "";
+            compiledScript = String.Empty +
+                "using OpenSim.Region.ScriptEngine.Shared;" +
+            	"\nusing System;" +
+            	"\nusing System.Collections.Generic;" +
+            	"\nusing System.Collections;\n" +
+                String.Empty + "namespace SecondLife\n{\n";
+            ClassScript = String.Empty + "public class "+itemID+" : OpenSim.Region.ScriptEngine.Shared.ScriptBase.ScriptBaseClass\n{\n" +
+            	"public " + itemID+"() \n { \n } \n" +
+                "List<IEnumerator> parts = new List<IEnumerator>();\n" +
                 compileScript +
-                "\n}\n}";
-            return compileScript;
+                "\n}" +
+            	formerScript;
+            compiledScript += ClassScript +
+            	"\n}";
+            return compiledScript;
         }
 
         private static string CreateYPCompilerScript(string compileScript)
@@ -820,6 +831,27 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                 linemap = new Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>>();
             }
             return linemap;
+        }
+        
+        /// <summary>
+        /// Generates a random string with the given length
+        /// </summary>
+        /// <param name="size">Size of the string</param>
+        /// <param name="lowerCase">If true, generate lowercase string</param>
+        /// <returns>Random string</returns>
+        private string RandomString(int size, bool lowerCase)
+        {
+        	StringBuilder builder = new StringBuilder();
+        	Random random = new Random();
+        	char ch ;
+        	for(int i=0; i<size; i++)
+        	{
+                ch = System.Convert.ToChar(System.Convert.ToInt32(Math.Floor(26 * random.NextDouble() + 65)));
+        		builder.Append(ch);
+        	}
+        	if(lowerCase)
+        		return builder.ToString().ToLower();
+        	return builder.ToString();
         }
     }
 }

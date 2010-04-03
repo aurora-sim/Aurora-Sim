@@ -26,6 +26,7 @@
  */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.Remoting.Lifetime;
@@ -177,7 +178,30 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
             // Found
             try
             {
-                ev.Invoke(m_Script, args);
+                List<IEnumerator> m_threads = new List<IEnumerator>();
+                m_threads.Add((IEnumerator)ev.Invoke(m_Script, args));
+                lock (m_threads)
+                {
+                    if (m_threads.Count == 0)
+                        return;
+                    try
+                    {
+                        int i = 0;
+                        while (m_threads.Count > 0 && m_threads.Count != 0)
+                        {
+                            i++;
+                            bool running = m_threads[i % m_threads.Count].MoveNext();
+
+                            if (!running)
+                            {
+                                m_threads.Remove(m_threads[i % m_threads.Count]);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                    }
+                }
             }
             catch (TargetInvocationException tie)
             {

@@ -533,6 +533,10 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                 return "";
             string xml = Serialize(instance);
 
+            Type type = instance.Script.GetType();
+            FieldInfo[] mi = type.GetFields();
+            
+			
             XmlDocument sdoc = new XmlDocument();
             sdoc.LoadXml(xml);
             XmlNodeList rootL = sdoc.GetElementsByTagName("ScriptState");

@@ -261,13 +261,13 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             }
         }
 
-        public IScript LoadScript(string FileName, out AppDomain ad)
+        public IScript LoadScript(string FileName, string TypeName, out AppDomain ad)
         {
             // Find next available AppDomain to put it in
             AppDomainStructure FreeAppDomain = GetFreeAppDomain();
             IScript mbrt = (IScript)
                 FreeAppDomain.CurrentAppDomain.CreateInstanceFromAndUnwrap(
-                FileName, "SecondLife.Script");
+                FileName, TypeName);
             FreeAppDomain.ScriptsLoaded++;
             ad = FreeAppDomain.CurrentAppDomain;
 

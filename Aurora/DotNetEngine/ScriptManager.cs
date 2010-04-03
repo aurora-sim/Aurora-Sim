@@ -50,7 +50,13 @@ using OpenSim.Region.ScriptEngine.Shared.CodeTools;
 namespace OpenSim.Region.ScriptEngine.DotNetEngine
 {
     #region InstanceData
-
+	public class InstancesData
+	{
+		public string Source = "";
+        public string AssemblyName = "";
+        public uint localID = 0;
+        public List<InstanceData> Instances = new List<InstanceData>();
+	}
     public class InstanceData
     {
         public IScript Script;
@@ -58,6 +64,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         public bool Running;
         public bool Disabled;
         public string Source;
+        public string ClassSource;
         public int StartParam;
         public StateSource stateSource;
         public AppDomain AppDomain;
@@ -72,6 +79,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         public string AssemblyName;
         public UUID ItemID;
         public uint localID;
+        public string ClassID;
     }
 
     #endregion
@@ -169,12 +177,20 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             CultureInfo USCulture = new CultureInfo("en-US");
             Thread.CurrentThread.CurrentCulture = USCulture;
 
+            InstancesData MacroData = GetMacroScript(localID);
             InstanceData id = new InstanceData();
+            
+            string FormerScript = "";
+            if(MacroData != null)
+            	FormerScript = MacroData.Source;
+            else
+                MacroData = new InstancesData();
+            
             try
             {
                 // Compile (We assume LSL)
                 LSLCompiler.PerformScriptCompile(Script,
-                        assetID.ToString(), taskInventoryItem.OwnerID, out CompiledScriptFile, out id.LineMap);
+                        assetID, taskInventoryItem.OwnerID, FormerScript, out CompiledScriptFile, out id.LineMap, out MacroData.Source, out id.ClassID);
             }
             catch (Exception ex)
             {
@@ -187,7 +203,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             {
                 CompiledScript =
                         m_scriptEngine.m_AppDomainManager.LoadScript(
-                        CompiledScriptFile, out id.AppDomain);
+                        CompiledScriptFile, "SecondLife."+id.ClassID, out id.AppDomain);
             }
             catch (Exception ex)
             {
@@ -200,19 +216,21 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             //id.ScriptSponsor = scriptSponsor;
 
             id.Script = CompiledScript;
-            id.Source = Script;
             id.StartParam = startParam;
             id.State = "default";
             id.Running = true;
             id.Disabled = false;
             id.AssetID = assetID;
-            id.AssemblyName = CompiledScriptFile;
             id.ItemID = itemID;
-            id.localID = localID;
+            
+            MacroData.AssemblyName = CompiledScriptFile;
+            MacroData.localID = localID;
+            MacroData.Instances.Add(id);
 
             // Add it to our script memstruct
             SetScript(localID, itemID, id);
-
+            SetMacroScript(MacroData);
+            
             id.Apis = new Dictionary<string, IScriptApi>();
 
             ApiManager am = new ApiManager();
@@ -369,16 +387,24 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             CultureInfo USCulture = new CultureInfo("en-US");
             Thread.CurrentThread.CurrentCulture = USCulture;
 
+            InstancesData MacroData = GetMacroScript(localID);
             InstanceData id = new InstanceData();
+            
+            string FormerScript = "";
+            if(MacroData != null)
+            	FormerScript = MacroData.Source;
+            else
+                MacroData = new InstancesData();
+            
             try
             {
                 // Compile (We assume LSL)
                 LSLCompiler.PerformScriptCompile(Script,
-                        assetID.ToString(), taskInventoryItem.OwnerID, out CompiledScriptFile, out id.LineMap);
+                        assetID, taskInventoryItem.OwnerID, FormerScript, out CompiledScriptFile, out id.LineMap, out MacroData.Source, out id.ClassID);
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                ShowError(presence, m_host, postOnRez, itemID, e, 1);
+                ShowError(presence, m_host, postOnRez, itemID, ex, 1);
             }
 
             IScript CompiledScript = null;
@@ -386,7 +412,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             {
                 CompiledScript =
                         m_scriptEngine.m_AppDomainManager.LoadScript(
-                        CompiledScriptFile, out id.AppDomain);
+                        CompiledScriptFile, "SecondLife."+id.ClassID, out id.AppDomain);
             }
             catch (Exception ex)
             {
@@ -399,18 +425,20 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             //id.ScriptSponsor = scriptSponsor;
 
             id.Script = CompiledScript;
-            id.Source = Script;
             id.StartParam = startParam;
             id.State = "default";
             id.Running = true;
             id.Disabled = false;
             id.AssetID = assetID;
-            id.AssemblyName = CompiledScriptFile;
-            id.localID = localID;
             id.ItemID = itemID;
+
+            MacroData.AssemblyName = CompiledScriptFile;
+            MacroData.localID = localID;
+            MacroData.Instances.Add(id);
 
             // Add it to our script memstruct
             SetScript(localID, itemID, id);
+            SetMacroScript(MacroData);
 
             id.Apis = new Dictionary<string, IScriptApi>();
 
@@ -1129,6 +1157,30 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                 // Get script
                 Obj.TryGetValue(itemID, out id);
                 return id;
+            }
+        }
+        Dictionary<uint, InstancesData> MacroScripts = new Dictionary<uint, InstancesData>();
+        public InstancesData GetMacroScript(uint localID)
+        {
+            lock (scriptLock)
+            {
+                InstancesData id = null;
+                if (!MacroScripts.ContainsKey(localID))
+                    return null;
+
+                MacroScripts.TryGetValue(localID, out id);
+                return id;
+            }
+        }
+
+        public void SetMacroScript(InstancesData id)
+        {
+            lock (scriptLock)
+            {
+                if (MacroScripts.ContainsKey(id.localID))
+                	MacroScripts.Remove(id.localID);
+
+                MacroScripts.Add(id.localID, id);
             }
         }
 
