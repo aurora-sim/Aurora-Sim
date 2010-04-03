@@ -51,15 +51,23 @@ using OpenSim.Region.ScriptEngine.Shared.CodeTools;
 namespace OpenSim.Region.ScriptEngine.DotNetEngine
 {
     #region InstanceData
+    
 	public class InstancesData
 	{
-		public string Source = "";
+        public Dictionary<UUID, string> Source = new Dictionary<UUID, string>();
         public string AssemblyName = "";
         public uint localID = 0;
         public List<InstanceData> Instances = new List<InstanceData>();
 	}
+	
     public class InstanceData
     {
+    	private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        public InstanceData(ScriptManager engine)
+    	{
+            m_ScriptManager = engine;
+    	}
+        private ScriptManager m_ScriptManager;
         public IScript Script;
         public string State;
         public bool Running;
@@ -81,10 +89,93 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         public UUID ItemID;
         public uint localID;
         public string ClassID;
+        
+        public IEnumerable CloseAndDispose()
+        {
+        	ReleaseControls(localID, ItemID);
+            m_ScriptManager.m_scriptEngine.m_EventManager.state_exit(localID);
+            m_ScriptManager.m_scriptEngine.m_EventQueueManager.RemoveFromQueue(ItemID);
+           
+            // Stop long command on script
+            AsyncCommandManager.RemoveScript(m_ScriptManager.m_scriptEngine, localID, ItemID);
+            yield return null;
+
+            try
+            {
+                // Get AppDomain
+                // Tell script not to accept new requests
+                Running = false;
+                Disabled = true;
+                AppDomain ad = AppDomain;
+                Script.Close();
+                
+                // Remove from internal structure
+                m_ScriptManager.RemoveScript(this);
+
+                // Tell AppDomain that we have stopped script
+                m_ScriptManager.m_scriptEngine.m_AppDomainManager.StopScript(ad);
+            }
+            catch (Exception e) // LEGIT: User Scripting
+            {
+                m_log.Error("[" +
+                            m_ScriptManager.m_scriptEngine.ScriptEngineName +
+                            "]: Exception stopping script localID: " +
+                            localID + " LLUID: " + ItemID.ToString() +
+                            ": " + e.ToString());
+            }
+        }
+        
+        private void ReleaseControls(uint localID, UUID itemID)
+        {
+            SceneObjectPart part = m_ScriptManager.m_scriptEngine.World.GetSceneObjectPart(itemID);
+
+            if (part != null)
+            {
+                int permsMask;
+                UUID permsGranter;
+                lock (part.TaskInventory)
+                {
+                    if (!part.TaskInventory.ContainsKey(itemID))
+                        return;
+
+                    permsGranter = part.TaskInventory[itemID].PermsGranter;
+                    permsMask = part.TaskInventory[itemID].PermsMask;
+                }
+
+                if ((permsMask & ScriptBaseClass.PERMISSION_TAKE_CONTROLS) != 0)
+                {
+                    ScenePresence presence = m_ScriptManager.m_scriptEngine.World.GetScenePresence(permsGranter);
+                    if (presence != null)
+                        presence.UnRegisterControlEventsToScript(localID, itemID);
+                }
+            }
+        }
+
+        internal void Reset()
+        {
+            ReleaseControls(localID, ItemID);
+            m_log.Warn(1);
+            m_ScriptManager.m_scriptEngine.m_EventManager.state_exit(localID);
+            m_log.Warn(2);
+            m_ScriptManager.m_scriptEngine.m_EventQueueManager.RemoveFromQueue(ItemID);
+            m_log.Warn(3);
+            m_ScriptManager.RemoveScript(this);
+            m_log.Warn(4);
+            Running = true;
+            State = "default";
+            m_ScriptManager.SetScriptInstanceData(this);
+            m_log.Warn(5);
+            m_ScriptManager.m_scriptEngine.m_EventQueueManager.AddToScriptQueue(
+                    localID, ItemID, "state_entry", new DetectParams[0],
+                    new object[] { });
+            m_log.Warn(6);
+        }
     }
 
     #endregion
-
+	
+    #region Script Manager
+    
     public class ScriptManager
     {
         #region Declares
@@ -121,8 +212,8 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             Unload = 2
         }
 
-        public Dictionary<uint, Dictionary<UUID, InstanceData>> Scripts =
-            new Dictionary<uint, Dictionary<UUID, InstanceData>>();
+        public Dictionary<uint, InstancesData> MacroScripts = new Dictionary<uint, InstancesData>();
+        public List<InstanceData> Scripts = new List<InstanceData>();
 
         public Compiler LSLCompiler;
 
@@ -179,12 +270,9 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             Thread.CurrentThread.CurrentCulture = USCulture;
 
             InstancesData MacroData = GetMacroScript(localID);
-            InstanceData id = new InstanceData();
+            InstanceData id = new InstanceData(this);
             
-            string FormerScript = "";
-            if(MacroData != null)
-            	FormerScript = MacroData.Source;
-            else
+            if (MacroData == null)
                 MacroData = new InstancesData();
 
             #region Class and interface reader
@@ -212,7 +300,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                 URL = URL.Replace("#Include ", "");
                 Script = Script.Replace("#Include " + URL, "");
                 string webSite = ReadExternalWebsite(URL);
-                FormerScript += webSite + "\n";
+                MacroData.Source.Add(new UUID(Guid.NewGuid()), webSite + "\n");
             }
 
             #endregion
@@ -221,7 +309,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             {
                 // Compile (We assume LSL)
                 LSLCompiler.PerformScriptCompile(Script,
-                        assetID, taskInventoryItem.OwnerID, FormerScript, Inherited, ClassName, out CompiledScriptFile, out id.LineMap, out MacroData.Source, out id.ClassID);
+                        assetID, taskInventoryItem.OwnerID, itemID, MacroData.Source, Inherited, ClassName, out CompiledScriptFile, out id.LineMap, out MacroData.Source, out id.ClassID);
             }
             catch (Exception ex)
             {
@@ -268,8 +356,8 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             MacroData.Instances.Add(id);
 
             // Add it to our script memstruct
-            SetScript(localID, itemID, id);
-            SetMacroScript(MacroData);
+            SetScriptInstanceData(id);
+            UpdateMacroScript(MacroData.localID, id);
             
             id.Apis = new Dictionary<string, IScriptApi>();
 
@@ -286,6 +374,8 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             {
                 CompiledScript.InitApi(kv.Key, kv.Value);
             }
+
+            #region Post Script Events
 
             // Fire the first start-event
             int eventFlags =
@@ -321,10 +411,11 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                 m_scriptEngine.m_EventQueueManager.AddToScriptQueue(localID, itemID, "changed", new DetectParams[0],
                                           new Object[] { new LSL_Types.LSLInteger(512) });
             }
-
-            string[] warnings = LSLCompiler.GetWarnings();
+            #endregion
 
             #region Warnings
+
+            string[] warnings = LSLCompiler.GetWarnings();
 
             if (warnings != null && warnings.Length != 0)
             {
@@ -428,15 +519,13 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             Thread.CurrentThread.CurrentCulture = USCulture;
 
             InstancesData MacroData = GetMacroScript(localID);
-            InstanceData id = new InstanceData();
+            InstanceData id = new InstanceData(this);
             
-            string FormerScript = "";
-            if(MacroData != null)
-            	FormerScript = MacroData.Source;
-            else
+            if(MacroData == null)
                 MacroData = new InstancesData();
 
             #region Class and interface reader
+
             string Inherited = "";
             if (Script.Contains("#Inherited"))
             {
@@ -445,6 +534,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                 Inherited = Inherited.Replace("#Inherited ", "");
                 Script = Script.Replace("#Inherited " + Inherited, "");
             }
+
             string ClassName = "";
             if (Script.Contains("#ClassName "))
             {
@@ -453,6 +543,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                 ClassName = ClassName.Replace("#ClassName ", "");
                 Script = Script.Replace("#ClassName " + ClassName, "");
             }
+
             if (Script.Contains("#Include "))
             {
                 string include = "";
@@ -460,7 +551,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                 include = Script.Split('\n')[line];
                 include = include.Replace("#Include ", "");
                 Script = Script.Replace("#Include " + include, "");
-                FormerScript += include + "\n";
+                MacroData.Source.Add(new UUID(Guid.NewGuid()),include + "\n");
             }
 
             #endregion
@@ -469,7 +560,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             {
                 // Compile (We assume LSL)
                 LSLCompiler.PerformScriptCompile(Script,
-                        assetID, taskInventoryItem.OwnerID, FormerScript, Inherited, ClassName, out CompiledScriptFile, out id.LineMap, out MacroData.Source, out id.ClassID);
+                        assetID, taskInventoryItem.OwnerID, itemID, MacroData.Source, Inherited, ClassName, out CompiledScriptFile, out id.LineMap, out MacroData.Source, out id.ClassID);
             }
             catch (Exception ex)
             {
@@ -515,8 +606,8 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             MacroData.Instances.Add(id);
 
             // Add it to our script memstruct
-            SetScript(localID, itemID, id);
-            SetMacroScript(MacroData);
+            SetScriptInstanceData(id);
+            UpdateMacroScript(MacroData.localID, id);
 
             id.Apis = new Dictionary<string, IScriptApi>();
 
@@ -631,83 +722,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             #endregion
         }
 
-        public IEnumerator Microthread_StopScript(uint localID, UUID itemID)
-        {
-            InstanceData id = GetScript(localID, itemID);
-            if (id == null)
-                throw new NullReferenceException();
-
-            ReleaseControls(localID, itemID);
-            m_scriptEngine.m_EventManager.state_exit(localID);
-            m_scriptEngine.m_EventQueueManager.RemoveFromQueue(itemID);
-           
-            // Stop long command on script
-            AsyncCommandManager.RemoveScript(m_scriptEngine, localID, itemID);
-            yield return null;
-
-            try
-            {
-                // Get AppDomain
-                // Tell script not to accept new requests
-                id.Running = false;
-                id.Disabled = true;
-                AppDomain ad = id.AppDomain;
-                id.Script.Close();
-                
-                // Remove from internal structure
-                RemoveScript(localID, itemID);
-
-                // Tell AppDomain that we have stopped script
-                m_scriptEngine.m_AppDomainManager.StopScript(ad);
-            }
-            catch (Exception e) // LEGIT: User Scripting
-            {
-                m_log.Error("[" +
-                            m_scriptEngine.ScriptEngineName +
-                            "]: Exception stopping script localID: " +
-                            localID + " LLUID: " + itemID.ToString() +
-                            ": " + e.ToString());
-            }
-        }
-
-        public void _StopScript(uint localID, UUID itemID)
-        {
-            InstanceData id = GetScript(localID, itemID);
-            if (id == null)
-                throw new NullReferenceException();
-
-            ReleaseControls(localID, itemID);
-            m_scriptEngine.m_EventManager.state_exit(localID);
-            m_scriptEngine.m_EventQueueManager.RemoveFromQueue(itemID);
-
-            // Stop long command on script
-            AsyncCommandManager.RemoveScript(m_scriptEngine, localID, itemID);
-            
-            try
-            {
-                // Get AppDomain
-                // Tell script not to accept new requests
-                id.Running = false;
-                id.Disabled = true;
-                AppDomain ad = id.AppDomain;
-                id.Script.Close();
-
-                // Remove from internal structure
-                RemoveScript(localID, itemID);
-
-                // Tell AppDomain that we have stopped script
-                m_scriptEngine.m_AppDomainManager.StopScript(ad);
-            }
-            catch (Exception e) // LEGIT: User Scripting
-            {
-                m_log.Error("[" +
-                            m_scriptEngine.ScriptEngineName +
-                            "]: Exception stopping script localID: " +
-                            localID + " LLUID: " + itemID.ToString() +
-                            ": " + e.ToString());
-            }
-        }
-
         private void ShowError(ScenePresence presence, SceneObjectPart m_host, bool postOnRez, UUID itemID, Exception e, int stage)
         {
             if (presence != null && (!postOnRez))
@@ -742,32 +756,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                             e2.Message.ToString());
             }
             throw e;
-        }
-
-        private void ReleaseControls(uint localID, UUID itemID)
-        {
-            SceneObjectPart part = m_scriptEngine.World.GetSceneObjectPart(itemID);
-
-            if (part != null)
-            {
-                int permsMask;
-                UUID permsGranter;
-                lock (part.TaskInventory)
-                {
-                    if (!part.TaskInventory.ContainsKey(itemID))
-                        return;
-
-                    permsGranter = part.TaskInventory[itemID].PermsGranter;
-                    permsMask = part.TaskInventory[itemID].PermsMask;
-                }
-
-                if ((permsMask & ScriptBaseClass.PERMISSION_TAKE_CONTROLS) != 0)
-                {
-                    ScenePresence presence = m_scriptEngine.World.GetScenePresence(permsGranter);
-                    if (presence != null)
-                        presence.UnRegisterControlEventsToScript(localID, itemID);
-                }
-            }
         }
 
         #endregion
@@ -874,12 +862,9 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
         internal void Stop()
         {
-            foreach (KeyValuePair<uint, Dictionary<UUID, InstanceData>> script in Scripts)
+            foreach (InstanceData script in Scripts)
             {
-                foreach (KeyValuePair<UUID, InstanceData> innerscript in script.Value)
-                {
-                    StopScript(script.Key, innerscript.Key);
-                }
+                StopScript(script.localID,script.ItemID);
             }
         }
 
@@ -923,16 +908,22 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
                             if (item.Action == LUType.Unload)
                             {
-                                parts.Add(Microthread_StopScript(item.localID, item.itemID));
-                                Scripts.Remove(item.localID);
+                                InstanceData id = GetScript(item.localID, item.itemID);
+                            	if (id == null)
+                            		throw new NullReferenceException();
+
+                            	parts.Add(id.CloseAndDispose().GetEnumerator());
                             }
                             else if (item.Action == LUType.Load)
                             {
-                                if (GetScript(item.localID, item.itemID) != null)
-                                {
-                                    parts.Add(Microthread_StopScript(item.localID, item.itemID));
-                                    Scripts.Remove(item.localID);
-                                }
+                            	if (GetScript(item.localID, item.itemID) != null)
+                            	{
+                                    InstanceData id = GetScript(item.localID, item.itemID);
+                            		if (id == null)
+                            			throw new NullReferenceException();
+
+                            		parts.Add(id.CloseAndDispose().GetEnumerator());
+                            	}
                                 parts.Add(Microthread_StartScript(item.localID, item.itemID, item.script,
                                              item.startParam, item.postOnRez, item.stateSource));
                             }
@@ -948,15 +939,21 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
                             if (item.Action == LUType.Unload)
                             {
-                                _StopScript(item.localID, item.itemID);
-                                Scripts.Remove(item.localID);
+                                InstanceData id = GetScript(item.localID, item.itemID);
+                            	if (id == null)
+                            		throw new NullReferenceException();
+
+                            	parts.Add(id.CloseAndDispose().GetEnumerator());
                             }
                             else if (item.Action == LUType.Load)
                             {
-                                if (GetScript(item.localID, item.itemID) != null)
-                                {
-                                    _StopScript(item.localID, item.itemID);
-                                    Scripts.Remove(item.localID);
+                            	if (GetScript(item.localID, item.itemID) != null)
+                            	{
+                                    InstanceData id = GetScript(item.localID, item.itemID);
+                            		if (id == null)
+                            			throw new NullReferenceException();
+
+                            		parts.Add(id.CloseAndDispose().GetEnumerator());
                                 }
                                 _StartScript(item.localID, item.itemID, item.script,
                                              item.startParam, item.postOnRez, item.stateSource);
@@ -1173,11 +1170,10 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
         public uint GetLocalID(UUID itemID)
         {
-            foreach (KeyValuePair<uint, Dictionary<UUID, InstanceData> > k
-                    in Scripts)
+            foreach (InstanceData k in Scripts)
             {
-                if (k.Value.ContainsKey(itemID))
-                    return k.Key;
+                if (k.ItemID == itemID)
+                    return k.localID;
             }
             return 0;
         }
@@ -1208,36 +1204,66 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
         public List<UUID> GetScriptKeys(uint localID)
         {
-            if (Scripts.ContainsKey(localID) == false)
-                return new List<UUID>();
-
-            Dictionary<UUID, InstanceData> Obj;
-            Scripts.TryGetValue(localID, out Obj);
-
-            return new List<UUID>(Obj.Keys);
+            List <UUID> keys = new List<UUID>();
+            foreach (InstanceData ID in Scripts)
+            {
+                if (ID.localID == localID)
+                    keys.Add(ID.ItemID);
+            }
+            return keys;
         }
 
         public InstanceData GetScript(uint localID, UUID itemID)
         {
             lock (scriptLock)
             {
-                InstanceData id = null;
-
-                if (Scripts.ContainsKey(localID) == false)
-                    return null;
-
-                Dictionary<UUID, InstanceData> Obj;
-                Scripts.TryGetValue(localID, out Obj);
-                if (Obj==null) return null;
-                if (Obj.ContainsKey(itemID) == false)
-                    return null;
-
-                // Get script
-                Obj.TryGetValue(itemID, out id);
-                return id;
+                foreach (InstanceData ID in Scripts)
+                {
+                    if (ID.localID == localID && ID.ItemID == itemID)
+                        return ID;
+                }
+                return null;
             }
         }
-        Dictionary<uint, InstancesData> MacroScripts = new Dictionary<uint, InstancesData>();
+
+        public void SetScriptInstanceData(InstanceData id)
+        {
+            lock (scriptLock)
+            {
+                for (int i = 0; i < Scripts.Count; i++)
+                {
+                    if (Scripts[i].localID == id.localID && Scripts[i].ItemID == id.ItemID)
+                    {
+                        Scripts[i].Disabled = true;
+                        Scripts[i].Running = false;
+                        Scripts[i].Script.Close();
+                        Scripts[i].Script = null;
+                        Scripts.Remove(Scripts[i]);
+                    }
+                }
+                
+                Scripts.Add(id);
+            }
+        }
+
+        public void RemoveScript(InstanceData id)
+        {
+            lock (scriptLock)
+            {
+                for (int i = 0; i < Scripts.Count; i++)
+                {
+                    if (Scripts[i].localID == id.localID && Scripts[i].ItemID == id.ItemID)
+                    {
+                        Scripts[i].Disabled = true;
+                        Scripts[i].Running = false;
+                        Scripts[i].Script.Close();
+                        Scripts[i].Script = null;
+                        Scripts.Remove(Scripts[i]);
+                    }
+                }
+            }
+        }
+
         public InstancesData GetMacroScript(uint localID)
         {
             lock (scriptLock)
@@ -1251,89 +1277,35 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             }
         }
 
-        public void SetMacroScript(InstancesData id)
+        public void RemoveMacroScript(uint localID, InstanceData id)
         {
             lock (scriptLock)
             {
-                if (MacroScripts.ContainsKey(id.localID))
-                	MacroScripts.Remove(id.localID);
+                InstancesData data = GetMacroScript(localID);
+                MacroScripts.Remove(localID);
 
-                MacroScripts.Add(id.localID, id);
+                data.Instances.Remove(id);
+
+                MacroScripts.Add(localID, data);
             }
         }
 
-        public void SetScript(uint localID, UUID itemID, InstanceData id)
+        public void UpdateMacroScript(uint localID, InstanceData id)
         {
             lock (scriptLock)
             {
-                // Create object if it doesn't exist
-                if (Scripts.ContainsKey(localID) == false)
+                InstancesData data = GetMacroScript(localID);
+                if (data != null)
                 {
-                    Scripts.Add(localID, new Dictionary<UUID, InstanceData>());
+                    data.Instances.Remove(id);
+                    MacroScripts.Remove(localID);
                 }
+                else
+                    data = new InstancesData();
 
-                // Delete script if it exists
-                Dictionary<UUID, InstanceData> Obj;
-                Scripts.TryGetValue(localID, out Obj);
-                if (Obj.ContainsKey(itemID) == true)
-                {
-                    InstanceData ID;
-                    Obj.TryGetValue(itemID, out ID);
-                    ID.Disabled = true;
-                    ID.Running = false;
-                    ID.Script.Close();
-                    ID.Script = null;
-                    ID = null;
-                    Obj.Remove(itemID);
-                }
+                data.Instances.Add(id);
 
-                Scripts.Remove(localID);
-                // Add to object
-                Obj.Add(itemID, id);
-                Scripts.Add(localID, Obj);
-            }
-        }
-
-        internal void SetScriptInstanceData(InstanceData ID)
-        {
-            lock (scriptLock)
-            {
-                // Create object if it doesn't exist
-                if (Scripts.ContainsKey(ID.localID) == false)
-                {
-                    Scripts.Add(ID.localID, new Dictionary<UUID, InstanceData>());
-                }
-
-                // Delete script if it exists
-                Dictionary<UUID, InstanceData> Obj = new Dictionary<UUID, InstanceData>();
-                Scripts.TryGetValue(ID.localID, out Obj);
-                if (Obj.ContainsKey(ID.ItemID) == true)
-                {
-                    Obj.Remove(ID.ItemID);
-                }
-                Scripts.Remove(ID.localID);
-                // Add to object
-                Obj.Add(ID.ItemID, ID);
-                Scripts.Add(ID.localID, Obj);
-            }
-        }
-
-        public void RemoveScript(uint localID, UUID itemID)
-        {
-            if (localID == 0)
-                localID = GetLocalID(itemID);
-
-            // Don't have that object?
-            if (Scripts.ContainsKey(localID) == false)
-                return;
-            // Delete script if it exists
-            Dictionary<UUID, InstanceData> Obj;
-            Scripts.TryGetValue(localID, out Obj);
-            if(Obj == null)
-                return;
-            if (Obj.ContainsKey(itemID) == true)
-            {
-                Obj.Remove(itemID);
+                MacroScripts.Add(localID, data);
             }
         }
 
@@ -1385,21 +1357,13 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         public void ResetScript(uint localID, UUID itemID)
         {
             InstanceData id = GetScript(localID, itemID);
-            ReleaseControls(localID, itemID);
-            m_scriptEngine.m_EventManager.state_exit(localID);
-            m_scriptEngine.m_EventQueueManager.RemoveFromQueue(itemID);
-            m_scriptEngine.m_ScriptManager.RemoveScript(localID, itemID);
-
-            id.Running = true;
-            id.State = "default";
-            SetScript(localID, itemID, id);
-
-            m_scriptEngine.m_EventQueueManager.AddToScriptQueue(
-                    localID, itemID, "state_entry", new DetectParams[0],
-                    new object[] { });
+            m_log.Warn(id.localID);
+            m_log.Warn(id.ItemID);
+            id.Reset();
         }
         #endregion
-
+		
+        #region Other
         public static string ReadExternalWebsite(string URL)
         {
             // External IP Address (get your external IP locally)
@@ -1414,5 +1378,8 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             catch (Exception ex) { }
             return externalIp;
         }
+        #endregion
     }
+    
+    #endregion
 }

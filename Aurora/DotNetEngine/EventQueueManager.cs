@@ -223,13 +223,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         {
             // Determine all scripts in Object and add to their queue
             
-            // Do we have any scripts in this object at all? If not, return
-            if (m_ScriptEngine.m_ScriptManager.Scripts.ContainsKey(localID) == false)
-            {
-                //m_log.Debug("Event \String.Empty + FunctionName + "\" for localID: " + localID + ". No scripts found on this localID.");
-                return false;
-            }
-
             List<UUID> scriptKeys =
                 m_ScriptEngine.m_ScriptManager.GetScriptKeys(localID);
 
