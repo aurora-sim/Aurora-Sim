@@ -27,7 +27,8 @@
 
 using System;
 using System.Collections;  
-using System.Collections.Generic;  
+using System.Collections.Generic;
+using System.Net;
 using System.Reflection;
 using System.Globalization;
 using System.Runtime.Remoting;
@@ -190,17 +191,30 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             string Inherited = "";
             if (Script.Contains("#Inherited"))
             {
-                int line = Script.IndexOf("#Inherited");
-                Inherited = Script[line].ToString().Replace("#Inherited", "");
-                Script = Script.Replace("#Inherited", "");
+                int line = Script.IndexOf("#Inherited ");
+                Inherited = Script.Split('\n')[line];
+                Inherited = Inherited.Replace("#Inherited ", "");
+                Script = Script.Replace("#Inherited " + Inherited, "");
             }
             string ClassName = "";
-            if (Script.Contains("#ClassName"))
+            if (Script.Contains("#ClassName "))
             {
-                int line = Script.IndexOf("#ClassName");
-                ClassName = Script[line].ToString().Replace("#ClassName", "");
-                Script = Script.Replace("#ClassName", "");
+                int line = Script.IndexOf("#ClassName ");
+                ClassName = Script.Split('\n')[line];
+                ClassName = ClassName.Replace("#ClassName ", "");
+                Script = Script.Replace("#ClassName " + ClassName, "");
             }
+            if (Script.Contains("#Include "))
+            {
+                string URL = "";
+                int line = Script.IndexOf("#Include ");
+                URL = Script.Split('\n')[line];
+                URL = URL.Replace("#Include ", "");
+                Script = Script.Replace("#Include " + URL, "");
+                string webSite = ReadExternalWebsite(URL);
+                FormerScript += webSite + "\n";
+            }
+
             #endregion
 
             try
@@ -426,17 +440,29 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             string Inherited = "";
             if (Script.Contains("#Inherited"))
             {
-                int line = Script.IndexOf("#Inherited");
-                Inherited = Script[line].ToString().Replace("#Inherited", "");
-                Script = Script.Replace("#Inherited", "");
+                int line = Script.IndexOf("#Inherited ");
+                Inherited = Script.Split('\n')[line];
+                Inherited = Inherited.Replace("#Inherited ", "");
+                Script = Script.Replace("#Inherited " + Inherited, "");
             }
             string ClassName = "";
-            if (Script.Contains("#ClassName"))
+            if (Script.Contains("#ClassName "))
             {
-                int line = Script.IndexOf("#ClassName");
-                ClassName = Script[line].ToString().Replace("#ClassName", "");
-                Script = Script.Replace("#ClassName", "");
+                int line = Script.IndexOf("#ClassName ");
+                ClassName = Script.Split('\n')[line];
+                ClassName = ClassName.Replace("#ClassName ", "");
+                Script = Script.Replace("#ClassName " + ClassName, "");
             }
+            if (Script.Contains("#Include "))
+            {
+                string include = "";
+                int line = Script.IndexOf("#Include ");
+                include = Script.Split('\n')[line];
+                include = include.Replace("#Include ", "");
+                Script = Script.Replace("#Include " + include, "");
+                FormerScript += include + "\n";
+            }
+
             #endregion
 
             try
@@ -1373,5 +1399,20 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                     new object[] { });
         }
         #endregion
+
+        public static string ReadExternalWebsite(string URL)
+        {
+            // External IP Address (get your external IP locally)
+            String externalIp = "";
+            UTF8Encoding utf8 = new UTF8Encoding();
+
+            WebClient webClient = new WebClient();
+            try
+            {
+                externalIp = utf8.GetString(webClient.DownloadData(URL));
+            }
+            catch (Exception ex) { }
+            return externalIp;
+        }
     }
 }
