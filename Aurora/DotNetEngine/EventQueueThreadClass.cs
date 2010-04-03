@@ -185,6 +185,8 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                             m_ScriptEngine.m_EventQueueManager.eventQueue == null)
                         continue;
 
+                    List<IEnumerator> Events = new List<IEnumerator>();
+                    List<InstanceData> instances = new List<InstanceData>();
                     if (m_ScriptEngine.m_EventQueueManager.eventQueue.Count != 0)
                     {
                         // Something in queue, process
@@ -195,23 +197,22 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                                 // Get queue item
                                 QueueItemStruct QIS = m_ScriptEngine.m_EventQueueManager.eventQueue.Dequeue();
                                 if (m_ScriptEngine.World.PipeEventsForScript(
-                                    QIS.localID))
+                                    QIS.ID.localID))
                                 {
-                                    m_threads.Add(m_ScriptEngine.m_ScriptManager.ExecuteEvent(
-                                        QIS.localID,
-                                        QIS.itemID,
+                                    m_ScriptEngine.m_ScriptManager.ExecuteEvent(
+                                        QIS.ID,
                                         QIS.functionName,
                                         QIS.llDetectParams,
-                                        QIS.param).GetEnumerator());
+                                        QIS.param, out Events, out instances);
                                 }
                                 else
                                 {
-                                    m_ScriptEngine.m_EventQueueManager.eventQueue.Enqueue(QIS, QIS.itemID);
+                                    m_ScriptEngine.m_EventQueueManager.eventQueue.Enqueue(QIS, QIS.ID.ItemID);
                                 }
                             }
                         }
                     }
-                    
+                    m_threads.AddRange(Events);
                     lock (m_threads)
                     {
                         if (m_threads.Count == 0)
@@ -222,10 +223,39 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                             while (m_threads.Count > 0 && i < m_threads.Count)
                             {
                                 i++;
-
-                                bool running = m_threads[i % m_threads.Count].MoveNext();
-
-
+                                bool running = true;
+                                try
+                                {
+                                    running = m_threads[i % m_threads.Count].MoveNext();
+                                }
+                                catch (ThreadAbortException)
+                                {
+                                    m_log.Info("[" + ScriptEngineName +
+                                               "]: ThreadAbortException while executing " +
+                                               "function.");
+                                }
+                                catch (SelfDeleteException) // Must delete SOG
+                                {
+                                    SceneObjectPart part =
+                                        m_ScriptEngine.World.GetSceneObjectPart(
+                                            instances[i % m_threads.Count].localID);
+                                    if (part != null && part.ParentGroup != null)
+                                        m_ScriptEngine.World.DeleteSceneObject(
+                                            part.ParentGroup, false);
+                                }
+                                catch (ScriptDeleteException) // Must delete item
+                                {
+                                    SceneObjectPart part =
+                                        m_ScriptEngine.World.GetSceneObjectPart(
+                                            instances[i % m_threads.Count].localID);
+                                    if (part != null && part.ParentGroup != null)
+                                        part.Inventory.RemoveInventoryItem(instances[i % m_threads.Count].ItemID);
+                                }
+                                catch (Exception e)
+                                {
+                                    m_log.ErrorFormat("[{0}]: Exception {1} thrown", ScriptEngineName, e.GetType().ToString());
+                                    throw e;
+                                }
                                 if (!running)
                                 {
                                     m_threads.Remove(m_threads[i % m_threads.Count]);

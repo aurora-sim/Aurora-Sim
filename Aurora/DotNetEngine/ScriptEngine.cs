@@ -259,8 +259,8 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
         public bool PostScriptEvent(UUID itemID, EventParams p)
         {
-            uint localID = m_ScriptManager.GetLocalID(itemID);
-            return m_EventQueueManager.AddToScriptQueue(localID, itemID,
+            InstanceData ID = m_ScriptManager.GetScriptByLocalID(itemID);
+            return m_EventQueueManager.AddToScriptQueue(ID,
                     p.EventName, p.DetectParams, p.Params);
         }
 
@@ -314,11 +314,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
         public DetectParams GetDetectParams(UUID itemID, int number)
         {
-            uint localID = m_ScriptManager.GetLocalID(itemID);
-            if (localID == 0)
-                return null;
-
-            InstanceData id = m_ScriptManager.GetScript(localID, itemID);
+            InstanceData id = m_ScriptManager.GetScriptByLocalID(itemID);
 
             if (id == null)
                 return null;
@@ -338,7 +334,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
         public void SetMinEventDelay(UUID itemID, double delay)
         {
-            InstanceData ID = m_ScriptManager.GetScript(m_ScriptManager.GetLocalID(itemID), itemID);
+            InstanceData ID = m_ScriptManager.GetScriptByLocalID(itemID);
             if(ID == null)
             {
                 m_log.ErrorFormat("[{0}]: SetMinEventDelay found no InstanceData for script {1}.",ScriptEngineName,itemID.ToString());
@@ -353,11 +349,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
         public void SetState(UUID itemID, string state)
         {
-            uint localID = m_ScriptManager.GetLocalID(itemID);
-            if (localID == 0)
-                return;
-
-            InstanceData id = m_ScriptManager.GetScript(localID, itemID);
+            InstanceData id = m_ScriptManager.GetScriptByLocalID(itemID);
 
             if (id == null)
                 return;
@@ -368,7 +360,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             {
                 try
                 {
-                    m_EventManager.state_exit(localID);
+                    m_EventManager.state_exit(id.localID);
 
                 }
                 catch (AppDomainUnloadedException)
@@ -382,14 +374,14 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
                 try
                 {
-                    int eventFlags = m_ScriptManager.GetStateEventFlags(localID,
+                    int eventFlags = m_ScriptManager.GetStateEventFlags(id.localID,
                             itemID);
 
-                    SceneObjectPart part = m_Scene.GetSceneObjectPart(localID);
+                    SceneObjectPart part = m_Scene.GetSceneObjectPart(id.localID);
                     if (part != null)
                         part.SetScriptEvents(itemID, eventFlags);
 
-                    m_EventManager.state_entry(localID);
+                    m_EventManager.state_entry(id.localID);
                 }
                 catch (AppDomainUnloadedException)
                 {
@@ -402,11 +394,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
         public bool GetScriptState(UUID itemID)
         {
-            uint localID = m_ScriptManager.GetLocalID(itemID);
-            if (localID == 0)
-                return false;
-
-            InstanceData id = m_ScriptManager.GetScript(localID, itemID);
+            InstanceData id = m_ScriptManager.GetScriptByLocalID(itemID);
             if (id == null)
                 return false;
 
@@ -415,11 +403,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
         public void SetScriptState(UUID itemID, bool state)
         {
-            uint localID = m_ScriptManager.GetLocalID(itemID);
-            if (localID == 0)
-                return;
-
-            InstanceData id = m_ScriptManager.GetScript(localID, itemID);
+            InstanceData id = m_ScriptManager.GetScriptByLocalID(itemID);
             if (id == null)
                 return;
 
@@ -433,25 +417,29 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
         public void ApiResetScript(UUID itemID)
         {
-            uint localID = m_ScriptManager.GetLocalID(itemID);
-            if (localID == 0)
+            InstanceData ID = m_ScriptManager.GetScriptByLocalID(itemID);
+            if (ID == null)
                 return;
 
-            m_ScriptManager.ResetScript(localID, itemID);
+            m_ScriptManager.ResetScript(ID);
         }
 
         public void ResetScript(UUID itemID)
         {
-            uint localID = m_ScriptManager.GetLocalID(itemID);
-            if (localID == 0)
+            InstanceData ID = m_ScriptManager.GetScriptByLocalID(itemID);
+            if (ID == null)
                 return;
 
-            m_ScriptManager.ResetScript(localID, itemID);
+            m_ScriptManager.ResetScript(ID);
         }
 
         public void OnScriptReset(uint localID, UUID itemID)
         {
-            m_ScriptManager.ResetScript(localID, itemID);
+            InstanceData ID = m_ScriptManager.GetScript(localID, itemID);
+            if (ID == null)
+                return;
+
+            m_ScriptManager.ResetScript(ID);
         }
         #endregion
 
@@ -480,11 +468,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         public void OnGetScriptRunning(IClientAPI controllingClient,
                 UUID objectID, UUID itemID)
         {
-            uint localID = m_ScriptManager.GetLocalID(itemID);
-            if (localID == 0)
-                return;
-
-            InstanceData id = m_ScriptManager.GetScript(localID, itemID);
+            InstanceData id = m_ScriptManager.GetScriptByLocalID(itemID);
             if (id == null)
                 return;        
 
@@ -528,8 +512,8 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         #region XML Serialization
         public string GetXMLState(UUID itemID)
         {
-            InstanceData instance = m_ScriptManager.GetScript(m_ScriptManager.GetLocalID(itemID), itemID);
-            if (instance == null)
+            InstanceData instance = m_ScriptManager.GetScriptByLocalID(itemID);
+            //if (instance == null)
                 return "";
             string xml = Serialize(instance);
 
@@ -655,7 +639,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
         public bool SetXMLState(UUID itemID, string xml)
         {
-            if (xml == String.Empty)
+            //if (xml == String.Empty)
                 return false;
 
             XmlDocument doc = new XmlDocument();
@@ -798,7 +782,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             {
                 QueueItemStruct QIS = m_EventQueueManager.eventQueue.Dequeue(instance.ItemID);
                 EventParams ep = new EventParams(QIS.functionName, QIS.param, QIS.llDetectParams);
-                m_EventQueueManager.eventQueue.Enqueue(QIS, QIS.itemID);
+                m_EventQueueManager.eventQueue.Enqueue(QIS, QIS.ID.ItemID);
                 count--;
 
                 XmlElement item = xmldoc.CreateElement("", "Item", "");

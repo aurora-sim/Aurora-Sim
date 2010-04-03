@@ -223,14 +223,15 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         {
             // Determine all scripts in Object and add to their queue
             
-            List<UUID> scriptKeys =
-                m_ScriptEngine.m_ScriptManager.GetScriptKeys(localID);
+            InstancesData IDs = m_ScriptEngine.m_ScriptManager.GetMacroScript(localID);
+            if (IDs == null)
+                return false;
 
-            foreach (UUID itemID in scriptKeys)
+            foreach (InstanceData ID in IDs.Instances)
             {
                 // Add to each script in that object
                 // TODO: Some scripts may not subscribe to this event. Should we NOT add it? Does it matter?
-                AddToScriptQueue(localID, itemID, FunctionName, qParams, param);
+                AddToScriptQueue(ID, FunctionName, qParams, param);
             }
             return true;
         }
@@ -244,36 +245,41 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         /// <param name="param">Array of parameters to match event mask</param>
         public bool AddToScriptQueue(uint localID, UUID itemID, string FunctionName, DetectParams[] qParams, params object[] param)
         {
-            List<UUID> keylist = m_ScriptEngine.m_ScriptManager.GetScriptKeys(localID);
-
-            if (!keylist.Contains(itemID)) // We don't manage that script
-            {
-                return false;
-            }
-
             lock (eventQueue)
             {
                 if (eventQueue.Count >= EventExecutionMaxQueueSize)
                 {
-                    //m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: ERROR: Event execution queue item count is at " + eventQueue.Count + ". Config variable \"EventExecutionMaxQueueSize\" is set to " + EventExecutionMaxQueueSize + ", so ignoring new event.");
-                    //m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: Event ignored: localID: " + localID + ", itemID: " + itemID + ", FunctionName: " + FunctionName);
+                    m_log.WarnFormat("[{0}]: Event Queue is above the MaxQueueSize.", m_ScriptEngine.ScriptEngineName);
                     return false;
                 }
 
                 InstanceData id = m_ScriptEngine.m_ScriptManager.GetScript(localID, itemID);
+                if (id == null)
+                    return false;
 
+                return AddToScriptQueue(id, FunctionName, qParams, param);
+            }
+        }
+
+        public bool AddToScriptQueue(InstanceData ID, string FunctionName, DetectParams[] qParams, params object[] param)
+        {
+            lock (eventQueue)
+            {
+                if (eventQueue.Count >= EventExecutionMaxQueueSize)
+                {
+                    m_log.WarnFormat("[{0}]: Event Queue is above the MaxQueueSize.", m_ScriptEngine.ScriptEngineName);
+                    return false;
+                }
                 // Create a structure and add data
                 QueueItemStruct QIS = new QueueItemStruct();
-                QIS.localID = localID;
-                QIS.itemID = itemID;
+                QIS.ID = ID;
                 QIS.functionName = FunctionName;
                 QIS.llDetectParams = qParams;
                 QIS.param = param;
-                if (id != null)
-                    QIS.LineMap = id.LineMap;
+                QIS.LineMap = ID.LineMap;
 
                 // Add it to queue
-                eventQueue.Enqueue(QIS, QIS.itemID);
+                eventQueue.Enqueue(QIS, QIS.ID.ItemID);
             }
             return true;
         }
@@ -381,8 +387,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
     /// </summary>
     public struct QueueItemStruct
     {
-        public uint localID;
-        public UUID itemID;
+        public InstanceData ID;
         public string functionName;
         public DetectParams[] llDetectParams;
         public object[] param;

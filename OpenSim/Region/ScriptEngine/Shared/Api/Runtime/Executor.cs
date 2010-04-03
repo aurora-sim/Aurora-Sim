@@ -38,7 +38,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
 {
     public class Executor
     {
-        // private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
         /// Contains the script to execute functions in.
@@ -133,18 +133,18 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
             return (eventFlags);
         }
 
-        public void ExecuteEvent(string state, string FunctionName, object[] args)
+        public IEnumerator ExecuteEvent(string state, string FunctionName, object[] args)
         {
+            IEnumerator m_threads = null;
             // IMPORTANT: Types and MemberInfo-derived objects require a LOT of memory.
             // Instead use RuntimeTypeHandle, RuntimeFieldHandle and RunTimeHandle (IntPtr) instead!
-
             string EventName = state + "_event_" + FunctionName;
 
-//#if DEBUG
+            //#if DEBUG
             //m_log.Debug("ScriptEngine: Script event function name: " + EventName);
-//#endif
+            //#endif
 
-            if (Events.ContainsKey(EventName) == false)
+            if (!Events.ContainsKey(EventName))
             {
                 // Not found, create
                 Type type = m_Script.GetType();
@@ -167,56 +167,19 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
 
             if (ev == null) // No event by that name!
             {
-                //m_log.Debug("ScriptEngine Can not find any event named: \String.Empty + EventName + "\String.Empty);
-                return;
+                //Console.WriteLine("ScriptEngine Can not find any event named:" + EventName);
+                return m_threads;
             }
 
-//cfk 2-7-08 dont need this right now and the default Linux build has DEBUG defined
+            //cfk 2-7-08 dont need this right now and the default Linux build has DEBUG defined
 #if DEBUG
-            //m_log.Debug("ScriptEngine: Executing function name: " + EventName);
+            //Console.WriteLine("ScriptEngine: Executing function name: " + EventName);
 #endif
+
             // Found
-            try
-            {
-                List<IEnumerator> m_threads = new List<IEnumerator>();
-                m_threads.Add((IEnumerator)ev.Invoke(m_Script, args));
-                lock (m_threads)
-                {
-                    if (m_threads.Count == 0)
-                        return;
-                    try
-                    {
-                        int i = 0;
-                        while (m_threads.Count > 0 && m_threads.Count != 0)
-                        {
-                            i++;
-                            bool running = m_threads[i % m_threads.Count].MoveNext();
-
-                            if (!running)
-                            {
-                                m_threads.Remove(m_threads[i % m_threads.Count]);
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                    }
-                }
-            }
-            catch (TargetInvocationException tie)
-            {
-                // Grab the inner exception and rethrow it, unless the inner
-                // exception is an EventAbortException as this indicates event
-                // invocation termination due to a state change.
-                // DO NOT THROW JUST THE INNER EXCEPTION!
-                // FriendlyErrors depends on getting the whole exception!
-                //
-                if (!(tie.InnerException is EventAbortException))
-                {
-                    throw;
-                }
-            }
-
+            m_threads = ((IEnumerator)ev.Invoke(m_Script, args));
+            
+            return m_threads;
         }
 
         protected void initEventFlags()

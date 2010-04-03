@@ -36,11 +36,13 @@ using System.Collections.Generic;
 using OpenSim.Region.ScriptEngine.Interfaces;
 using OpenSim.Region.ScriptEngine.Shared;
 using OpenSim.Region.ScriptEngine.Shared.Api.Runtime;
+using log4net;
 
 namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
 {
     public partial class ScriptBaseClass : MarshalByRefObject, IScript
     {
+        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private Dictionary<string, MethodInfo> inits = new Dictionary<string, MethodInfo>();
 //        private ScriptSponsor m_sponser;
 
@@ -90,9 +92,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
             return (int)m_Executor.GetStateEventFlags(state);
         }
 
-        public void ExecuteEvent(string state, string FunctionName, object[] args)
+        public IEnumerator ExecuteEvent(string state, string FunctionName, object[] args)
         {
-            m_Executor.ExecuteEvent(state, FunctionName, args);
+            return m_Executor.ExecuteEvent(state, FunctionName, args);
         }
 
         public string[] GetApis()
@@ -226,6 +228,14 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
             // Does what is says on the packet. Nowt, nada, nothing.
             // Required for insertion after a jump label to do what it says on the packet!
             // With a bit of luck the compiler may even optimize it out.
+        }
+
+        public string  Name 
+        {
+            get
+            {
+                return "ScriptBase";
+            }
         }
     }
 }
