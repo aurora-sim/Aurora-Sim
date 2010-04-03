@@ -185,12 +185,29 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             	FormerScript = MacroData.Source;
             else
                 MacroData = new InstancesData();
-            
+
+            #region Class and interface reader
+            string Inherited = "";
+            if (Script.Contains("#Inherited"))
+            {
+                int line = Script.IndexOf("#Inherited");
+                Inherited = Script[line].ToString().Replace("#Inherited", "");
+                Script = Script.Replace("#Inherited", "");
+            }
+            string ClassName = "";
+            if (Script.Contains("#ClassName"))
+            {
+                int line = Script.IndexOf("#ClassName");
+                ClassName = Script[line].ToString().Replace("#ClassName", "");
+                Script = Script.Replace("#ClassName", "");
+            }
+            #endregion
+
             try
             {
                 // Compile (We assume LSL)
                 LSLCompiler.PerformScriptCompile(Script,
-                        assetID, taskInventoryItem.OwnerID, FormerScript, out CompiledScriptFile, out id.LineMap, out MacroData.Source, out id.ClassID);
+                        assetID, taskInventoryItem.OwnerID, FormerScript, Inherited, ClassName, out CompiledScriptFile, out id.LineMap, out MacroData.Source, out id.ClassID);
             }
             catch (Exception ex)
             {
@@ -201,9 +218,18 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             IScript CompiledScript = null;
             try
             {
-                CompiledScript =
-                        m_scriptEngine.m_AppDomainManager.LoadScript(
-                        CompiledScriptFile, "SecondLife."+id.ClassID, out id.AppDomain);
+                if (ClassName != "")
+                {
+                    CompiledScript =
+                            m_scriptEngine.m_AppDomainManager.LoadScript(
+                            CompiledScriptFile, "SecondLife." + ClassName, out id.AppDomain);
+                }
+                else
+                {
+                    CompiledScript =
+                            m_scriptEngine.m_AppDomainManager.LoadScript(
+                            CompiledScriptFile, "SecondLife." + id.ClassID, out id.AppDomain);
+                }
             }
             catch (Exception ex)
             {
@@ -395,12 +421,29 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             	FormerScript = MacroData.Source;
             else
                 MacroData = new InstancesData();
-            
+
+            #region Class and interface reader
+            string Inherited = "";
+            if (Script.Contains("#Inherited"))
+            {
+                int line = Script.IndexOf("#Inherited");
+                Inherited = Script[line].ToString().Replace("#Inherited", "");
+                Script = Script.Replace("#Inherited", "");
+            }
+            string ClassName = "";
+            if (Script.Contains("#ClassName"))
+            {
+                int line = Script.IndexOf("#ClassName");
+                ClassName = Script[line].ToString().Replace("#ClassName", "");
+                Script = Script.Replace("#ClassName", "");
+            }
+            #endregion
+
             try
             {
                 // Compile (We assume LSL)
                 LSLCompiler.PerformScriptCompile(Script,
-                        assetID, taskInventoryItem.OwnerID, FormerScript, out CompiledScriptFile, out id.LineMap, out MacroData.Source, out id.ClassID);
+                        assetID, taskInventoryItem.OwnerID, FormerScript, Inherited, ClassName, out CompiledScriptFile, out id.LineMap, out MacroData.Source, out id.ClassID);
             }
             catch (Exception ex)
             {
@@ -410,9 +453,18 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             IScript CompiledScript = null;
             try
             {
-                CompiledScript =
-                        m_scriptEngine.m_AppDomainManager.LoadScript(
-                        CompiledScriptFile, "SecondLife."+id.ClassID, out id.AppDomain);
+                if (ClassName != "")
+                {
+                    CompiledScript =
+                            m_scriptEngine.m_AppDomainManager.LoadScript(
+                            CompiledScriptFile, "SecondLife." + ClassName, out id.AppDomain);
+                }
+                else
+                {
+                    CompiledScript =
+                            m_scriptEngine.m_AppDomainManager.LoadScript(
+                            CompiledScriptFile, "SecondLife." + id.ClassID, out id.AppDomain);
+                }
             }
             catch (Exception ex)
             {

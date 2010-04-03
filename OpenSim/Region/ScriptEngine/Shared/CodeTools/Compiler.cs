@@ -274,11 +274,14 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
         /// </summary>
         /// <param name="Script">LSL script</param>
         /// <returns>Filename to .dll assembly</returns>
-        public void PerformScriptCompile(string Script, UUID assetID, UUID ownerUUID, string classSource,
-            out string assembly, out Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> linemap, out string ClassSource, out string randomIdentifier)
+        public void PerformScriptCompile(string Script, UUID assetID, UUID ownerUUID, string classSource, string InheritedClases, string ClassName,
+            out string assembly, out Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> linemap, out string ClassSource, out string Identifier)
         {
         	string asset = assetID.ToString();
-        	randomIdentifier = "";
+            if (ClassName != "")
+                Identifier = ClassName;
+            else
+                Identifier = RandomString(36, true);
             linemap = null;
             ClassSource = "";
             m_warnings.Clear();
@@ -387,13 +390,12 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                 // Its YP, convert it to C#
                 compileScript = YP_Converter.Convert(Script);
             }
-            randomIdentifier = RandomString(36, true);
             
             switch (language)
             {
                 case enumCompileType.cs:
                 case enumCompileType.lsl:
-            		compileScript = CreateCSCompilerScript(compileScript, randomIdentifier, classSource, out ClassSource);
+            		compileScript = CreateCSCompilerScript(compileScript, Identifier, classSource, InheritedClases, out ClassSource);
                     break;
                 case enumCompileType.vb:
                     compileScript = CreateVBCompilerScript(compileScript);
@@ -434,7 +436,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             return compileScript;
         }
 
-        private static string CreateCSCompilerScript(string compileScript, string itemID, string formerScript, out string ClassScript)
+        private static string CreateCSCompilerScript(string compileScript, string identifier, string formerScript, string InheritedClasses, out string ClassScript)
         {             
         	string compiledScript = "";
             compiledScript = String.Empty +
@@ -443,12 +445,15 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             	"\nusing System.Collections.Generic;" +
             	"\nusing System.Collections;\n" +
                 String.Empty + "namespace SecondLife\n{\n";
-            ClassScript = String.Empty + "public class "+itemID+" : OpenSim.Region.ScriptEngine.Shared.ScriptBase.ScriptBaseClass\n{\n" +
-            	"public " + itemID+"() \n { \n } \n" +
-                "List<IEnumerator> parts = new List<IEnumerator>();\n" +
-                compileScript +
-                "\n}" +
-            	formerScript;
+            ClassScript = String.Empty + "public class " + identifier + " : OpenSim.Region.ScriptEngine.Shared.ScriptBase.ScriptBaseClass";
+            if (InheritedClasses != "")
+                ClassScript += "," + InheritedClasses;
+            ClassScript += "\n{\n" +
+                     "List<IEnumerator> parts = new List<IEnumerator>();\n" +
+                     compileScript +
+                     "\n}" +
+                     formerScript +
+                     "\n";
             compiledScript += ClassScript +
             	"\n}";
             return compiledScript;
