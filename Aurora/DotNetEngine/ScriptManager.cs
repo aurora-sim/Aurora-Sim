@@ -291,13 +291,13 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                 ClassName = ClassName.Replace("#ClassName ", "");
                 Source = Source.Replace("#ClassName " + ClassName, "");
             }
-            if (Source.Contains("#Include "))
+            if (Source.Contains("#IncludeHTML "))
             {
                 string URL = "";
-                int line = Source.IndexOf("#Include ");
+                int line = Source.IndexOf("#IncludeHTML ");
                 URL = Source.Split('\n')[line];
-                URL = URL.Replace("#Include ", "");
-                Source = Source.Replace("#Include " + URL, "");
+                URL = URL.Replace("#IncludeHTML ", "");
+                Source = Source.Replace("#IncludeHTML " + URL, "");
                 string webSite = ScriptManager.ReadExternalWebsite(URL);
                 KnownSources.Add(URL, webSite + "\n");
             }
