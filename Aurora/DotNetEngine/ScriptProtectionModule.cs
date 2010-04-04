@@ -25,11 +25,27 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         ScriptEngine m_engine;
         Trust TrustLevel = Trust.Full;
         Dictionary<UUID, List<string>> WantedClassesByItemID = new Dictionary<UUID, List<string>>();
-		public ScriptProtectionModule(IConfigSource source, ScriptEngine engine)
+        //First String: ClassName, Second String: Class Source
+        Dictionary<string, string> ClassScripts = new Dictionary<string, string>();
+
+        //String: ClassName, InstanceData: data of the script.
+        Dictionary<string, InstanceData> ClassInstances = new Dictionary<string, InstanceData>();
+        
+        public ScriptProtectionModule(IConfigSource source, ScriptEngine engine)
 		{
 			m_source = source;
             m_engine = engine;
 		}
+
+        public void AddNewClassSource(string ClassName, string SRC, object ID)
+        {
+            if (!ClassScripts.ContainsKey(ClassName))
+            {
+                ClassScripts.Add(ClassName, SRC);
+                if(ID != null)
+                    ClassInstances.Add(ClassName, (InstanceData)ID);
+            }
+        }
 
         public string GetSRC(OpenMetaverse.UUID itemID, uint localID, UUID OwnerID)
         {
@@ -40,7 +56,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                 WantedClassesByItemID.TryGetValue(itemID, out SRCWanted);
                 foreach (string ClassName in SRCWanted)
                 {
-                    InstanceData id = m_engine.m_ScriptManager.ClassInstances[ClassName];
+                    InstanceData id = ClassInstances[ClassName];
                     if (id == null)
                         continue;
 
@@ -52,14 +68,14 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                         if (isSameOwner)
                         {
                             //No checks required
-                            ReturnValue += m_engine.m_ScriptManager.ClassScripts[ClassName];
+                            ReturnValue += ClassScripts[ClassName];
                         }
                         else
                         {
                             if (TrustLevel == Trust.Low)
                                 continue;
                             else
-                                ReturnValue += m_engine.m_ScriptManager.ClassScripts[ClassName];
+                                ReturnValue += ClassScripts[ClassName];
                         }
                     }
                     else
@@ -69,14 +85,14 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                             if (TrustLevel == Trust.Low)
                                 continue;
                             else
-                                ReturnValue += m_engine.m_ScriptManager.ClassScripts[ClassName];
+                                ReturnValue += ClassScripts[ClassName];
                         }
                         else
                         {
                             if (TrustLevel < Trust.Full)
                                 continue;
                             else
-                                ReturnValue += m_engine.m_ScriptManager.ClassScripts[ClassName];
+                                ReturnValue += ClassScripts[ClassName];
                         }
                     }
                 }

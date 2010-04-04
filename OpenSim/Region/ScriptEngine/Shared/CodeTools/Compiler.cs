@@ -274,8 +274,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
         /// </summary>
         /// <param name="Script">LSL script</param>
         /// <returns>Filename to .dll assembly</returns>
-        public void PerformScriptCompile(string Script, UUID assetID, UUID ownerUUID, UUID itemID, Dictionary<string, string> classSource, string InheritedClases, string ClassName, IScriptProtectionModule ScriptProtection, uint localID,
-            out string assembly, out Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> linemap, out Dictionary<string, string> ClassSource, out string Identifier)
+        public void PerformScriptCompile(string Script, UUID assetID, UUID ownerUUID, UUID itemID, string InheritedClases, string ClassName, IScriptProtectionModule ScriptProtection, uint localID,
+            out string assembly, out Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> linemap, out string Identifier)
         {
         	string asset = assetID.ToString();
         	
@@ -285,7 +285,6 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                 Identifier = RandomString(36, true);
             
             linemap = null;
-            ClassSource = new Dictionary<string, string>();
             m_warnings.Clear();
             assembly = Path.Combine(ScriptEnginesPath, Path.Combine(
                     m_scriptEngine.World.RegionInfo.RegionID.ToString(),
@@ -385,7 +384,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             {
                 case enumCompileType.cs:
                 case enumCompileType.lsl:
-            		compileScript = CreateCSCompilerScript(compileScript, Identifier, InheritedClases, itemID, localID, ownerUUID, ScriptProtection, out ClassSource);
+            		compileScript = CreateCSCompilerScript(compileScript, Identifier, InheritedClases, itemID, localID, ownerUUID, ScriptProtection);
                     break;
                 case enumCompileType.vb:
                     compileScript = CreateVBCompilerScript(compileScript);
@@ -438,7 +437,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             return compileScript;
         }
 
-        private static string CreateCSCompilerScript(string compileScript, string identifier, string InheritedClasses, UUID itemID, uint localID, UUID ownerID, IScriptProtectionModule ScriptProtection, out Dictionary<string, string> ClassScript)
+        private static string CreateCSCompilerScript(string compileScript, string identifier, string InheritedClasses, UUID itemID, uint localID, UUID ownerID, IScriptProtectionModule ScriptProtection)
         {             
         	string compiledScript = "";
             compiledScript = String.Empty +
@@ -461,8 +460,6 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             compiledScript += TempClassScript +
                  "\n}";
 
-            ClassScript = new Dictionary<string,string>();
-            ClassScript.Add(identifier, TempClassScript);
             return compiledScript;
         }
 

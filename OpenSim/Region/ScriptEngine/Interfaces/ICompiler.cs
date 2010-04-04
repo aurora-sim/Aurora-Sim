@@ -35,13 +35,14 @@ namespace OpenSim.Region.ScriptEngine.Interfaces
 {
     public interface ICompiler
     {
-        void PerformScriptCompile(string Script, UUID assetID, UUID ownerUUID, UUID itemID, Dictionary<string, string> classSource, string InheritedClases, string ClassName, IScriptProtectionModule ScriptProtection, uint localID,
-            out string assembly, out Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> linemap, out Dictionary<string, string> ClassSource, out string Identifier);
+        void PerformScriptCompile(string Script, UUID assetID, UUID ownerUUID, UUID itemID, string InheritedClases, string ClassName, IScriptProtectionModule ScriptProtection, uint localID,
+            out string assembly, out Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> linemap, out string Identifier);
         string[] GetWarnings();
     }
     public interface IScriptProtectionModule
     {
         void AddWantedSRC(UUID itemID, string ClassName);
         string GetSRC(UUID itemID, uint localID, UUID OwnerID);
+        void AddNewClassSource(string ClassName, string SRC, object ID);
     }
 }

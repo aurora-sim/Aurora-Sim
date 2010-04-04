@@ -101,7 +101,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         public bool PostOnRez;
         public TaskInventoryItem InventoryItem;
         public InstancesData MacroData;
-        public Dictionary<string, string> KnownSources = new Dictionary<string, string>();
         
         public IEnumerable CloseAndDispose()
         {
@@ -299,8 +298,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                 URL = URL.Replace("#IncludeHTML ", "");
                 Source = Source.Replace("#IncludeHTML " + URL, "");
                 string webSite = ScriptManager.ReadExternalWebsite(URL);
-                if(!KnownSources.ContainsKey(URL))
-                    KnownSources.Add(URL, webSite + "\n");
+                m_scriptEngine.ScriptProtection.AddNewClassSource(URL, webSite, null);
                 m_scriptEngine.ScriptProtection.AddWantedSRC(ItemID, URL);
             }
             if (Source.Contains("#Include "))
@@ -319,23 +317,14 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             {
                 // Compile (We assume LSL)
                 m_ScriptManager.LSLCompiler.PerformScriptCompile(Source,
-                        assetID, InventoryItem.OwnerID, ItemID, KnownSources, Inherited, ClassName, m_scriptEngine.ScriptProtection,localID,
-                        out CompiledScriptFile, out LineMap, out KnownSources, out ClassID);
+                        assetID, InventoryItem.OwnerID, ItemID, Inherited, ClassName, m_scriptEngine.ScriptProtection,localID,
+                        out CompiledScriptFile, out LineMap, out ClassID);
             }
             catch (Exception ex)
             {
                 m_ScriptManager.ShowError(presence, m_host, PostOnRez, ItemID, "", ex, 1);
             }
 
-            foreach(KeyValuePair<string, string> KVP in KnownSources)
-            {
-                if (!m_ScriptManager.ClassScripts.ContainsKey(KVP.Key))
-                {
-                    //m_ScriptManager.ClassInstances.Add(
-                    m_ScriptManager.ClassScripts.Add(KVP.Key, KVP.Value);
-                }
-            }
-            
             MacroData.AssemblyName = CompiledScriptFile;
             MacroData.localID = localID;
             MacroData.Instances.Add(this);
@@ -528,11 +517,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         }
 
         public Dictionary<uint, InstancesData> MacroScripts = new Dictionary<uint, InstancesData>();
-        //First String: ClassName, Second String: Class Source
-        public Dictionary<string, string> ClassScripts = new Dictionary<string, string>();
-
-        //String: ClassName, InstanceData: data of the script.
-        public Dictionary<string, InstanceData> ClassInstances = new Dictionary<string, InstanceData>();
         public Compiler LSLCompiler;
 
         public Scene World
