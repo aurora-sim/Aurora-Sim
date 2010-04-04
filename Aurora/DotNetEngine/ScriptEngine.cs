@@ -354,41 +354,17 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             if (id == null)
                 return;
 
-            string currentState = id.State;
-
-            if (currentState != state)
+            if (id.State != state)
             {
-                try
-                {
-                    m_EventManager.state_exit(id.localID);
+            	m_EventManager.state_exit(id.localID);
+            	id.State = state;
+            	int eventFlags = m_ScriptManager.GetStateEventFlags(id.localID,
+            	                                                    itemID);
 
-                }
-                catch (AppDomainUnloadedException)
-                {
-                    m_log.Error("[SCRIPT]: state change called when "+
-                            "script was unloaded.  Nothing to worry about, "+
-                            "but noting the occurance");
-                }
+            	id.part.SetScriptEvents(itemID, eventFlags);
 
-                id.State = state;
-
-                try
-                {
-                    int eventFlags = m_ScriptManager.GetStateEventFlags(id.localID,
-                            itemID);
-
-                    SceneObjectPart part = m_Scene.GetSceneObjectPart(id.localID);
-                    if (part != null)
-                        part.SetScriptEvents(itemID, eventFlags);
-
-                    m_EventManager.state_entry(id.localID);
-                }
-                catch (AppDomainUnloadedException)
-                {
-                    m_log.Error("[SCRIPT]: state change called when "+
-                    "script was unloaded.  Nothing to worry about, but "+
-                    "noting the occurance");
-                }
+            	m_EventManager.state_entry(id.localID);
+            	m_ScriptManager.UpdateScriptInstanceData(id);
             }
         }
 
