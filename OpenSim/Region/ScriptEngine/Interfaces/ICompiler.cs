@@ -29,13 +29,19 @@ using System;
 using System.Collections.Generic;
 using OpenMetaverse;
 using Nini.Config;
+using OpenSim.Region.ScriptEngine.Shared.CodeTools;
 
 namespace OpenSim.Region.ScriptEngine.Interfaces
 {
     public interface ICompiler
     {
-        void PerformScriptCompile(string Script, UUID assetID, UUID ownerUUID, UUID itemID, Dictionary<string, string> classSource, string InheritedClases, string ClassName,
+        void PerformScriptCompile(string Script, UUID assetID, UUID ownerUUID, UUID itemID, Dictionary<string, string> classSource, string InheritedClases, string ClassName, IScriptProtectionModule ScriptProtection, uint localID,
             out string assembly, out Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> linemap, out Dictionary<string, string> ClassSource, out string Identifier);
         string[] GetWarnings();
+    }
+    public interface IScriptProtectionModule
+    {
+        void AddWantedSRC(UUID itemID, string ClassName);
+        string GetSRC(UUID itemID, uint localID, UUID OwnerID);
     }
 }

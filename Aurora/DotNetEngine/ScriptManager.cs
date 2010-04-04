@@ -308,7 +308,8 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             {
                 // Compile (We assume LSL)
                 m_ScriptManager.LSLCompiler.PerformScriptCompile(Source,
-                        assetID, InventoryItem.OwnerID, ItemID, KnownSources, Inherited, ClassName, out CompiledScriptFile, out LineMap, out KnownSources, out ClassID);
+                        assetID, InventoryItem.OwnerID, ItemID, KnownSources, Inherited, ClassName, m_scriptEngine.ScriptProtection,localID,
+                        out CompiledScriptFile, out LineMap, out KnownSources, out ClassID);
             }
             catch (Exception ex)
             {
@@ -317,8 +318,11 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
             foreach(KeyValuePair<string, string> KVP in KnownSources)
             {
-            	if(!m_ScriptManager.ClassScripts.ContainsKey(KVP.Key))
-            		m_ScriptManager.ClassScripts.Add(KVP.Key,KVP.Value);
+                if (!m_ScriptManager.ClassScripts.ContainsKey(KVP.Key))
+                {
+                    //m_ScriptManager.ClassInstances.Add(
+                    m_ScriptManager.ClassScripts.Add(KVP.Key, KVP.Value);
+                }
             }
             
             MacroData.AssemblyName = CompiledScriptFile;
@@ -514,8 +518,10 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
         public Dictionary<uint, InstancesData> MacroScripts = new Dictionary<uint, InstancesData>();
         //First String: ClassName, Second String: Class Source
-        //Only add if it is a reasonable class name and not a randomly generated one
         public Dictionary<string, string> ClassScripts = new Dictionary<string, string>();
+
+        //String: ClassName, InstanceData: data of the script.
+        public Dictionary<string, InstanceData> ClassInstances = new Dictionary<string, InstanceData>();
         public Compiler LSLCompiler;
 
         public Scene World

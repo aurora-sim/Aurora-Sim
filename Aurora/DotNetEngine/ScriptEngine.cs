@@ -115,7 +115,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         public event ScriptRemoved OnScriptRemoved;
         public event ObjectRemoved OnObjectRemoved;
         private IXmlRpcRouter m_XmlRpcRouter;
-        
+        public IScriptProtectionModule ScriptProtection;
         #endregion
 
         #region Constructor
@@ -164,6 +164,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
         public void AddRegion(Scene Sceneworld)
         {
+        	ScriptProtection = (IScriptProtectionModule)new ScriptProtectionModule(m_ConfigSource, this);
             m_log.Info("[" + ScriptEngineName + "]: ScriptEngine initializing");
 
             m_Scene = Sceneworld;

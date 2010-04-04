@@ -274,7 +274,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
         /// </summary>
         /// <param name="Script">LSL script</param>
         /// <returns>Filename to .dll assembly</returns>
-        public void PerformScriptCompile(string Script, UUID assetID, UUID ownerUUID, UUID itemID, Dictionary<string, string> classSource, string InheritedClases, string ClassName,
+        public void PerformScriptCompile(string Script, UUID assetID, UUID ownerUUID, UUID itemID, Dictionary<string, string> classSource, string InheritedClases, string ClassName, IScriptProtectionModule ScriptProtection, uint localID,
             out string assembly, out Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> linemap, out Dictionary<string, string> ClassSource, out string Identifier)
         {
         	string asset = assetID.ToString();
@@ -385,7 +385,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             {
                 case enumCompileType.cs:
                 case enumCompileType.lsl:
-            		compileScript = CreateCSCompilerScript(compileScript, Identifier, classSource, InheritedClases, itemID, out ClassSource);
+            		compileScript = CreateCSCompilerScript(compileScript, Identifier, InheritedClases, itemID, localID, ownerID, ScriptProtection, out ClassSource);
                     break;
                 case enumCompileType.vb:
                     compileScript = CreateVBCompilerScript(compileScript);
@@ -438,7 +438,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             return compileScript;
         }
 
-        private static string CreateCSCompilerScript(string compileScript, string identifier, Dictionary<string, string> formerScript, string InheritedClasses, UUID itemID, out Dictionary<string, string> ClassScript)
+        private static string CreateCSCompilerScript(string compileScript, string identifier, string InheritedClasses, UUID itemID, uint localID, UUID ownerID, IScriptProtectionModule ScriptProtection, out Dictionary<string, string> ClassScript)
         {             
         	string compiledScript = "";
             compiledScript = String.Empty +
@@ -447,6 +447,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             	"\nusing System.Collections.Generic;" +
             	"\nusing System.Collections;\n" +
                 String.Empty + "namespace SecondLife\n{\n";
+
             string TempClassScript = "";
             TempClassScript = String.Empty + "public class " + identifier + " : OpenSim.Region.ScriptEngine.Shared.ScriptBase.ScriptBaseClass";
             if (InheritedClasses != "")
@@ -455,13 +456,12 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                      "List<IEnumerator> parts = new List<IEnumerator>();\n" +
                      compileScript +
                      "\n}";
-            foreach (string SRC in formerScript.Values)
-            {
-                TempClassScript += SRC + "\n";
-            }
+
+            TempClassScript += ScriptProtection.GetSRC(itemID, localID, ownerID);
             compiledScript += TempClassScript +
-            	"\n}";
-            ClassScript = formerScript;
+                 "\n}";
+
+            ClassScript = new Dictionary<string,string>();
             ClassScript.Add(identifier, TempClassScript);
             return compiledScript;
         }
