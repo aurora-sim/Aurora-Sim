@@ -55,7 +55,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
     
 	public class InstancesData
 	{
-        public Dictionary<UUID, string> Source = new Dictionary<UUID, string>();
         public string AssemblyName = "";
         public uint localID = 0;
         public List<InstanceData> Instances = new List<InstanceData>();
@@ -102,7 +101,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         public bool PostOnRez;
         public TaskInventoryItem InventoryItem;
         public InstancesData MacroData;
-        public Dictionary<UUID, string> KnownSources = new Dictionary<UUID, string>();
+        public Dictionary<string, string> KnownSources = new Dictionary<string, string>();
         
         public IEnumerable CloseAndDispose()
         {
@@ -213,16 +212,21 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                 Script.InitApi(kv.Key, kv.Value);
             }
         }
+        
         public void CheckOtherMacro()
         {
+        	/*MacroData = m_ScriptManager.GetMacroScript(localID);
             foreach (InstanceData ID in MacroData.Instances)
             {
+            	if(ID.ItemID == ItemID)
+            		continue;
+            	
                 if (!ID.KnownSources.ContainsKey(ItemID))
                 {
                     m_ScriptManager.StopScript(ID.localID, ID.ItemID);
                     m_ScriptManager.StartScript(ID.localID, ID.ItemID, ID.Source, ID.StartParam, ID.PostOnRez, ID.stateSource);
                 }
-            }
+            }*/
         }
         public IEnumerator Start()
         {
@@ -295,7 +299,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                 URL = URL.Replace("#Include ", "");
                 Source = Source.Replace("#Include " + URL, "");
                 string webSite = ScriptManager.ReadExternalWebsite(URL);
-                MacroData.Source.Add(new UUID(Guid.NewGuid()), webSite + "\n");
+                KnownSources.Add(URL, webSite + "\n");
             }
 
             #endregion
@@ -304,22 +308,25 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             {
                 // Compile (We assume LSL)
                 m_ScriptManager.LSLCompiler.PerformScriptCompile(Source,
-                        assetID, InventoryItem.OwnerID, ItemID, MacroData.Source, Inherited, ClassName, out CompiledScriptFile, out LineMap, out MacroData.Source, out ClassID);
+                        assetID, InventoryItem.OwnerID, ItemID, KnownSources, Inherited, ClassName, out CompiledScriptFile, out LineMap, out KnownSources, out ClassID);
             }
             catch (Exception ex)
             {
                 m_ScriptManager.ShowError(presence, m_host, PostOnRez, ItemID, "", ex, 1);
             }
-            KnownSources = MacroData.Source;
+
+            foreach(KeyValuePair<string, string> KVP in KnownSources)
+            {
+            	if(!m_ScriptManager.ClassScripts.ContainsKey(KVP.Key))
+            		m_ScriptManager.ClassScripts.Add(KVP.Key,KVP.Value);
+            }
+            
             MacroData.AssemblyName = CompiledScriptFile;
             MacroData.localID = localID;
             MacroData.Instances.Add(this);
 
             //Update the Macro first, to allow for the Source to update.
             m_ScriptManager.UpdateMacroScript(MacroData);
-            
-            CheckOtherMacro();
-            
             
             yield return null;
             
@@ -506,7 +513,9 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         }
 
         public Dictionary<uint, InstancesData> MacroScripts = new Dictionary<uint, InstancesData>();
-        
+        //First String: ClassName, Second String: Class Source
+        //Only add if it is a reasonable class name and not a randomly generated one
+        public Dictionary<string, string> ClassScripts = new Dictionary<string, string>();
         public Compiler LSLCompiler;
 
         public Scene World
@@ -518,7 +527,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
         #region Start/End Scripts
 
-        public IEnumerator Microthread_StartScript(uint localID, UUID itemID, string Script,
+        /*public IEnumerator Microthread_StartScript(uint localID, UUID itemID, string Script,
                 int startParam, bool postOnRez, StateSource stateSource)
         {
             // We will initialize and start the script.
@@ -592,7 +601,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                 URL = URL.Replace("#Include ", "");
                 Script = Script.Replace("#Include " + URL, "");
                 string webSite = ReadExternalWebsite(URL);
-                MacroData.Source.Add(new UUID(Guid.NewGuid()), webSite + "\n");
+                id.KnownSources.Add(new UUID(Guid.NewGuid()), webSite + "\n");
             }
 
             #endregion
@@ -974,7 +983,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
             #endregion
         }
-
+        */
         public void ShowError(ScenePresence presence, SceneObjectPart m_host, bool postOnRez, UUID itemID, string compiledFile, Exception e, int stage)
         {
             if (presence != null && (!postOnRez))
@@ -1214,8 +1223,14 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                                 InstanceData id = GetScript(item.localID, item.itemID);
                                 if (id != null)
                                     StopParts.Add(id.CloseAndDispose().GetEnumerator());
-                            	_StartScript(item.localID, item.itemID, item.script,
-                            	             item.startParam, item.postOnRez, item.stateSource);
+                                id = new InstanceData(this);
+                                id.SetParameters(null, item.startParam, "default", true, false, UUID.Zero, item.itemID, item.localID, "", null);
+                                id.Source = item.script;
+                                id.PostOnRez = item.postOnRez;
+                                StartParts.Add(id.Start());
+                            	
+                                //_StartScript(item.localID, item.itemID, item.script,
+                            	//             item.startParam, item.postOnRez, item.stateSource);
                             }
                             i++;
                         }

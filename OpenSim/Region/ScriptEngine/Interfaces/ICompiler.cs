@@ -34,8 +34,8 @@ namespace OpenSim.Region.ScriptEngine.Interfaces
 {
     public interface ICompiler
     {
-        void PerformScriptCompile(string Script, UUID assetID, UUID ownerUUID, UUID itemID, Dictionary<UUID, string> classSource, string InheritedClases, string ClassName,
-            out string assembly, out Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> linemap, out Dictionary<UUID, string> ClassSource, out string Identifier);
+        void PerformScriptCompile(string Script, UUID assetID, UUID ownerUUID, UUID itemID, Dictionary<string, string> classSource, string InheritedClases, string ClassName,
+            out string assembly, out Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> linemap, out Dictionary<string, string> ClassSource, out string Identifier);
         string[] GetWarnings();
     }
 }
