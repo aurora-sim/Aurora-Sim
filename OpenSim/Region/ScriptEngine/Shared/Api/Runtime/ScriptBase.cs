@@ -40,6 +40,7 @@ using log4net;
 
 namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
 {
+    [Serializable]
     public partial class ScriptBaseClass : MarshalByRefObject, IScript
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -92,9 +93,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
             return (int)m_Executor.GetStateEventFlags(state);
         }
 
-        public IEnumerator ExecuteEvent(string state, string FunctionName, object[] args)
+        public void ExecuteEvent(string state, string FunctionName, object[] args)
         {
-            return m_Executor.ExecuteEvent(state, FunctionName, args);
+            m_Executor.ExecuteEvent(state, FunctionName, args);
         }
 
         public string[] GetApis()

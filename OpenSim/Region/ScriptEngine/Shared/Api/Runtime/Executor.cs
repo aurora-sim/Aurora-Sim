@@ -133,15 +133,15 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
             return (eventFlags);
         }
 
-        public IEnumerator ExecuteEvent(string state, string FunctionName, object[] args)
+        List<IEnumerator> m_threads = new List<IEnumerator>();
+        public void ExecuteEvent(string state, string FunctionName, object[] args)
         {
-            IEnumerator m_threads = null;
             // IMPORTANT: Types and MemberInfo-derived objects require a LOT of memory.
             // Instead use RuntimeTypeHandle, RuntimeFieldHandle and RunTimeHandle (IntPtr) instead!
             string EventName = state + "_event_" + FunctionName;
 
             //#if DEBUG
-            //m_log.Debug("ScriptEngine: Script event function name: " + EventName);
+            m_log.Debug("ScriptEngine: Script event function name: " + EventName);
             //#endif
 
             if (!Events.ContainsKey(EventName))
@@ -150,12 +150,12 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
                 Type type = m_Script.GetType();
                 try
                 {
-                    MethodInfo mi = type.GetMethod(EventName);
+                	MethodInfo mi = type.GetMethod(EventName);
                     Events.Add(EventName, mi);
                 }
                 catch
                 {
-                    // m_log.Error("Event "+EventName+" not found.");
+                    //m_log.Error("Event "+EventName+" not found.");
                     // Event name not found, cache it as not found
                     Events.Add(EventName, null);
                 }
@@ -164,22 +164,54 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
             // Get event
             MethodInfo ev = null;
             Events.TryGetValue(EventName, out ev);
-
+            //cfk 2-7-08 dont need this right now and the default Linux build has DEBUG defined
+//#if DEBUG
             if (ev == null) // No event by that name!
             {
                 //Console.WriteLine("ScriptEngine Can not find any event named:" + EventName);
-                return m_threads;
+                return;
             }
+            //else
+            	//Console.WriteLine("ScriptEngine: Executing function name: " + EventName);
+//#end if
+			try
+            {
+                m_threads.Add((IEnumerator)ev.Invoke(m_Script, args));
+                lock (m_threads)
+                {
+                    try
+                    {
+                        int i = 0;
+                        while (m_threads.Count > 0 && m_threads.Count != 0 && i < 25)
+                        {
+                            i++;
+                            bool running = m_threads[i % m_threads.Count].MoveNext();
 
-            //cfk 2-7-08 dont need this right now and the default Linux build has DEBUG defined
-#if DEBUG
-            //Console.WriteLine("ScriptEngine: Executing function name: " + EventName);
-#endif
-
+                            if (!running)
+                            {
+                                m_threads.Remove(m_threads[i % m_threads.Count]);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                    }
+                }
+            }
+            catch (TargetInvocationException tie)
+            {
+                // Grab the inner exception and rethrow it, unless the inner
+                // exception is an EventAbortException as this indicates event
+                // invocation termination due to a state change.
+                // DO NOT THROW JUST THE INNER EXCEPTION!
+                // FriendlyErrors depends on getting the whole exception!
+                //
+                if (!(tie.InnerException is EventAbortException))
+                {
+                    throw;
+                }
+            }
             // Found
-            m_threads = ((IEnumerator)ev.Invoke(m_Script, args));
-            
-            return m_threads;
         }
 
         protected void initEventFlags()

@@ -28,6 +28,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using OpenSim.Region.ScriptEngine.Interfaces;
 
 namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
@@ -38,7 +39,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
         void InitApi(string name, IScriptApi data);
 
         int GetStateEventFlags(string state);
-        IEnumerator ExecuteEvent(string state, string FunctionName, object[] args);
+        void ExecuteEvent(string state, string FunctionName, object[] args);
         Dictionary<string,Object> GetVars();
         void SetVars(Dictionary<string,Object> vars);
         void ResetVars();

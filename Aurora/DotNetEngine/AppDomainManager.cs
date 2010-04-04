@@ -276,7 +276,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
 
         // Increase "dead script" counter for an AppDomain
-        public void StopScript(AppDomain ad)
+        public void UnloadScriptAppDomain(AppDomain ad)
         {
             lock (freeLock)
             {
