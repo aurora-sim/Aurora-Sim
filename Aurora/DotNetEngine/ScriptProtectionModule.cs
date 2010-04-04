@@ -9,7 +9,7 @@ using OpenSim.Framework;
 using OpenSim.Framework.Client;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
-using OpenSim.Region.ScriptEngine.Shared.CodeTools;
+using OpenSim.Region.ScriptEngine.Interfaces;
 
 namespace OpenSim.Region.ScriptEngine.DotNetEngine
 {
@@ -19,11 +19,21 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         Medium = 3,
         Low = 1
     }
+
 	public class ScriptProtectionModule: IScriptProtectionModule
 	{
 		IConfigSource m_source;
         ScriptEngine m_engine;
         Trust TrustLevel = Trust.Full;
+        bool allowMacroScripting = true;
+
+        public bool AllowMacroScripting
+        {
+            get
+            {
+                return allowMacroScripting;
+            }
+        }
         Dictionary<UUID, List<string>> WantedClassesByItemID = new Dictionary<UUID, List<string>>();
         //First String: ClassName, Second String: Class Source
         Dictionary<string, string> ClassScripts = new Dictionary<string, string>();

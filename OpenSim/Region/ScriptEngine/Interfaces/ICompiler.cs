@@ -44,5 +44,6 @@ namespace OpenSim.Region.ScriptEngine.Interfaces
         void AddWantedSRC(UUID itemID, string ClassName);
         string GetSRC(UUID itemID, uint localID, UUID OwnerID);
         void AddNewClassSource(string ClassName, string SRC, object ID);
+        bool AllowMacroScripting { get; }
     }
 }

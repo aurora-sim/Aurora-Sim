@@ -274,41 +274,46 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                 MacroData = new InstancesData();
 
             #region Class and interface reader
+
             string Inherited = "";
-            if (Source.Contains("#Inherited"))
-            {
-                int line = Source.IndexOf("#Inherited ");
-                Inherited = Source.Split('\n')[line];
-                Inherited = Inherited.Replace("#Inherited ", "");
-                Source = Source.Replace("#Inherited " + Inherited, "");
-            }
             string ClassName = "";
-            if (Source.Contains("#ClassName "))
+
+            if (m_scriptEngine.ScriptProtection.AllowMacroScripting)
             {
-                int line = Source.IndexOf("#ClassName ");
-                ClassName = Source.Split('\n')[line];
-                ClassName = ClassName.Replace("#ClassName ", "");
-                Source = Source.Replace("#ClassName " + ClassName, "");
-            }
-            if (Source.Contains("#IncludeHTML "))
-            {
-                string URL = "";
-                int line = Source.IndexOf("#IncludeHTML ");
-                URL = Source.Split('\n')[line];
-                URL = URL.Replace("#IncludeHTML ", "");
-                Source = Source.Replace("#IncludeHTML " + URL, "");
-                string webSite = ScriptManager.ReadExternalWebsite(URL);
-                m_scriptEngine.ScriptProtection.AddNewClassSource(URL, webSite, null);
-                m_scriptEngine.ScriptProtection.AddWantedSRC(ItemID, URL);
-            }
-            if (Source.Contains("#Include "))
-            {
-                string WantedClass = "";
-                int line = Source.IndexOf("#Include ");
-                WantedClass = Source.Split('\n')[line];
-                WantedClass = WantedClass.Replace("#Include ", "");
-                Source = Source.Replace("#Include " + WantedClass, "");
-                m_scriptEngine.ScriptProtection.AddWantedSRC(ItemID, WantedClass);
+                if (Source.Contains("#Inherited"))
+                {
+                    int line = Source.IndexOf("#Inherited ");
+                    Inherited = Source.Split('\n')[line];
+                    Inherited = Inherited.Replace("#Inherited ", "");
+                    Source = Source.Replace("#Inherited " + Inherited, "");
+                }
+                if (Source.Contains("#ClassName "))
+                {
+                    int line = Source.IndexOf("#ClassName ");
+                    ClassName = Source.Split('\n')[line];
+                    ClassName = ClassName.Replace("#ClassName ", "");
+                    Source = Source.Replace("#ClassName " + ClassName, "");
+                }
+                if (Source.Contains("#IncludeHTML "))
+                {
+                    string URL = "";
+                    int line = Source.IndexOf("#IncludeHTML ");
+                    URL = Source.Split('\n')[line];
+                    URL = URL.Replace("#IncludeHTML ", "");
+                    Source = Source.Replace("#IncludeHTML " + URL, "");
+                    string webSite = ScriptManager.ReadExternalWebsite(URL);
+                    m_scriptEngine.ScriptProtection.AddNewClassSource(URL, webSite, null);
+                    m_scriptEngine.ScriptProtection.AddWantedSRC(ItemID, URL);
+                }
+                if (Source.Contains("#Include "))
+                {
+                    string WantedClass = "";
+                    int line = Source.IndexOf("#Include ");
+                    WantedClass = Source.Split('\n')[line];
+                    WantedClass = WantedClass.Replace("#Include ", "");
+                    Source = Source.Replace("#Include " + WantedClass, "");
+                    m_scriptEngine.ScriptProtection.AddWantedSRC(ItemID, WantedClass);
+                }
             }
             
             #endregion
