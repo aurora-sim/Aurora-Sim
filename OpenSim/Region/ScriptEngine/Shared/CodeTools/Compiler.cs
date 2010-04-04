@@ -385,7 +385,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             {
                 case enumCompileType.cs:
                 case enumCompileType.lsl:
-            		compileScript = CreateCSCompilerScript(compileScript, Identifier, InheritedClases, itemID, localID, ownerID, ScriptProtection, out ClassSource);
+            		compileScript = CreateCSCompilerScript(compileScript, Identifier, InheritedClases, itemID, localID, ownerUUID, ScriptProtection, out ClassSource);
                     break;
                 case enumCompileType.vb:
                     compileScript = CreateVBCompilerScript(compileScript);

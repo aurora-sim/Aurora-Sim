@@ -299,9 +299,20 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                 URL = URL.Replace("#IncludeHTML ", "");
                 Source = Source.Replace("#IncludeHTML " + URL, "");
                 string webSite = ScriptManager.ReadExternalWebsite(URL);
-                KnownSources.Add(URL, webSite + "\n");
+                if(!KnownSources.ContainsKey(URL))
+                    KnownSources.Add(URL, webSite + "\n");
+                m_scriptEngine.ScriptProtection.AddWantedSRC(ItemID, URL);
             }
-
+            if (Source.Contains("#Include "))
+            {
+                string WantedClass = "";
+                int line = Source.IndexOf("#Include ");
+                WantedClass = Source.Split('\n')[line];
+                WantedClass = WantedClass.Replace("#Include ", "");
+                Source = Source.Replace("#Include " + WantedClass, "");
+                m_scriptEngine.ScriptProtection.AddWantedSRC(ItemID, WantedClass);
+            }
+            
             #endregion
 
             try
