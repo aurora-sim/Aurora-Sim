@@ -314,19 +314,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                 }
             }
 
-            // Don't recompile if we already have it
-            // Performing 3 file exists tests for every script can still be slow
-            if (File.Exists(assembly) && File.Exists(assembly + ".text") && File.Exists(assembly + ".map"))
-            {
-                // If we have already read this linemap file, then it will be in our dictionary. 
-                // Don't build another copy of the dictionary (saves memory) and certainly
-                // don't keep reading the same file from disk multiple times. 
-                if (!m_lineMaps.ContainsKey(assembly))
-                    m_lineMaps[assembly] = ReadMapFile(assembly + ".map");
-                linemap = m_lineMaps[assembly];
-                return;
-            }
-
+            assembly = CheckAssembly(assembly, 0);
             if (Script == String.Empty)
             {
                 throw new Exception("Cannot find script assembly and no script text present");
@@ -412,6 +400,18 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
 
 			assembly = CompileFromDotNetText(compileScript, language, asset, assembly);
             return;
+        }
+
+        private string CheckAssembly(string assembly, int i)
+        {
+            if (File.Exists(assembly) || File.Exists(assembly + ".text") || File.Exists(assembly + ".map") || File.Exists(assembly.Remove(assembly.Length - 4) + ".pdb"))
+            {
+                assembly = assembly.Remove(assembly.Length - 4);
+                assembly += i + ".dll";
+                i++;
+                return CheckAssembly(assembly, i);
+            }
+            return assembly;
         }
 
         public string[] GetWarnings()
