@@ -29,7 +29,6 @@ using System;
 using System.Collections.Generic;
 using OpenMetaverse;
 using Nini.Config;
-using OpenSim.Region.ScriptEngine.Shared.CodeTools;
 
 namespace OpenSim.Region.ScriptEngine.Interfaces
 {
