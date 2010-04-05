@@ -175,7 +175,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         }
 
 
-        private Dictionary<string, MethodInfo> Events = new Dictionary<string, MethodInfo>();
         public void DoProcessQueue()
         {
             try
@@ -198,8 +197,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                                 if (m_ScriptEngine.World.PipeEventsForScript(
                                     QIS.ID.localID))
                                 {
-                                    m_threads.Add(m_ScriptEngine.m_ScriptManager.ExecuteEvent(
-                                        QIS.ID,
+                                    m_threads.Add(QIS.ID.ExecuteEvent(
                                         QIS.functionName,
                                         QIS.llDetectParams,
                                         QIS.param));
@@ -218,7 +216,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                         try
                         {
                             int i = 0;
-                            while (m_threads.Count > 0 && i < m_threads.Count)
+                            while (m_threads.Count > 0 && i < 1000)
                             {
                                 i++;
                                 bool running = true;
@@ -229,16 +227,18 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                                 catch(NotSupportedException)
                                 {
                                 	//Remove threads that are disabled
-                                	m_threads.Remove(m_threads[i % m_threads.Count]);
+                                	running = false;
                                 }
                                 catch(NullReferenceException)
                                 {
                                 	//Remove threads that dont exist
-                                	m_threads.Remove(m_threads[i % m_threads.Count]);
+                                	running = false;
                                 }
                                 catch(Exception ex)
                                 {
                                 	m_log.Error("Enumerator error: " + ex);
+                                	//Remove erroring threads
+                                	running = false;
                                 }
                                 if (!running)
                                 	m_threads.Remove(m_threads[i % m_threads.Count]);

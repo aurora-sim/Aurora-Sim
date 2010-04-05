@@ -13,27 +13,22 @@ using OpenSim.Region.ScriptEngine.Interfaces;
 
 namespace OpenSim.Region.ScriptEngine.DotNetEngine
 {
-    public enum Trust : int
-    {
-        Full = 5,
-        Medium = 3,
-        Low = 1
-    }
-
-	public class ScriptProtectionModule: IScriptProtectionModule
+    public class ScriptProtectionModule: IScriptProtectionModule
 	{
+		#region Declares
+		
+		private enum Trust : int
+    	{
+        	Full = 5,
+        	Medium = 3,
+        	Low = 1
+    	}
+
 		IConfigSource m_source;
         ScriptEngine m_engine;
         Trust TrustLevel = Trust.Full;
         bool allowMacroScripting = true;
 
-        public bool AllowMacroScripting
-        {
-            get
-            {
-                return allowMacroScripting;
-            }
-        }
         Dictionary<UUID, List<string>> WantedClassesByItemID = new Dictionary<UUID, List<string>>();
         //First String: ClassName, Second String: Class Source
         Dictionary<string, string> ClassScripts = new Dictionary<string, string>();
@@ -41,12 +36,28 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         //String: ClassName, InstanceData: data of the script.
         Dictionary<string, InstanceData> ClassInstances = new Dictionary<string, InstanceData>();
         
+        #endregion
+        
+        #region Constructor
+        
         public ScriptProtectionModule(IConfigSource source, ScriptEngine engine)
 		{
 			m_source = source;
             m_engine = engine;
 		}
-
+        
+		#endregion
+        
+        #region MacroScripting Protection
+        
+        public bool AllowMacroScripting
+        {
+            get
+            {
+                return allowMacroScripting;
+            }
+        }
+        
         public void AddNewClassSource(string ClassName, string SRC, object ID)
         {
             if (!ClassScripts.ContainsKey(ClassName))
@@ -66,44 +77,53 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                 WantedClassesByItemID.TryGetValue(itemID, out SRCWanted);
                 foreach (string ClassName in SRCWanted)
                 {
-                    InstanceData id = ClassInstances[ClassName];
-                    if (id == null)
-                        continue;
-
-                    bool isInSameObject = (id.localID == localID);
-                    bool isSameOwner = (id.InventoryItem.OwnerID == OwnerID);
-                    if (isInSameObject)
-                    {
-                        //Only check for owner
-                        if (isSameOwner)
-                        {
-                            //No checks required
-                            ReturnValue += ClassScripts[ClassName];
-                        }
-                        else
-                        {
-                            if (TrustLevel == Trust.Low)
-                                continue;
-                            else
-                                ReturnValue += ClassScripts[ClassName];
-                        }
-                    }
-                    else
-                    {
-                        if (isSameOwner)
-                        {
-                            if (TrustLevel == Trust.Low)
-                                continue;
-                            else
-                                ReturnValue += ClassScripts[ClassName];
-                        }
-                        else
-                        {
-                            if (TrustLevel < Trust.Full)
-                                continue;
-                            else
-                                ReturnValue += ClassScripts[ClassName];
-                        }
+                	if (!ClassInstances.ContainsKey(ClassName))
+                	{
+                		//Its a web URL
+                		if (TrustLevel == Trust.Low)
+                			continue;
+                		else
+                			ReturnValue += ClassScripts[ClassName];
+                	}
+                	else
+                	{
+                    	InstanceData id = ClassInstances[ClassName];
+                    	
+                    	bool isInSameObject = (id.localID == localID);
+                    	bool isSameOwner = (id.InventoryItem.OwnerID == OwnerID);
+                    	if (isInSameObject)
+                    	{
+                    		//Only check for owner
+                    		if (isSameOwner)
+                    		{
+                    			//No checks required
+                    			ReturnValue += ClassScripts[ClassName];
+                    		}
+                    		else
+                    		{
+                    			if (TrustLevel == Trust.Low)
+                    				continue;
+                    			else
+                    				ReturnValue += ClassScripts[ClassName];
+                    		}
+                    	}
+                    	else
+                    	{
+                    		if (isSameOwner)
+                    		{
+                    			if (TrustLevel == Trust.Low)
+                    				continue;
+                    			else
+                    				ReturnValue += ClassScripts[ClassName];
+                    		}
+                    		else
+                    		{
+                    			if (TrustLevel < Trust.Full)
+                    				continue;
+                    			else
+                    				ReturnValue += ClassScripts[ClassName];
+                    		}
+                    	}
                     }
                 }
             }
@@ -121,5 +141,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             SRCWanted.Add(ClassName);
             WantedClassesByItemID.Add(itemID, SRCWanted);
         }
+        
+        #endregion
     }
 }

@@ -173,18 +173,18 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                 // Kill worker threads
                 lock (eventQueueThreads)
                 {
-                    foreach (EventQueueThreadClass EventQueueThread in new ArrayList(eventQueueThreads))
+                    foreach (EventQueueThreadClass EventQueueThread in eventQueueThreads)
                     {
                         AbortThreadClass(EventQueueThread);
                     }
                 }
             }
 
-                // Remove all entries from our event queue
-                lock (eventQueue)
-                {
-                    eventQueue.Clear();
-                }
+            // Remove all entries from our event queue
+            lock (eventQueue)
+            {
+            	eventQueue.Clear();
+            }
         }
 
         #endregion
@@ -213,6 +213,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         #endregion
         
         #region " Add/Remove events to execution queue "
+        
         /// <summary>
         /// Add event to event execution queue
         /// </summary>
@@ -230,7 +231,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             foreach (InstanceData ID in IDs.Instances)
             {
                 // Add to each script in that object
-                // TODO: Some scripts may not subscribe to this event. Should we NOT add it? Does it matter?
                 AddToScriptQueue(ID, FunctionName, qParams, param);
             }
             return true;
@@ -351,9 +351,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
                             // Abort this thread
                             AbortThreadClass(EventQueueThread);
-
-                            // We do not need to start another, MaintenenceThread will do that for us
-                            //StartNewThreadClass();
                         }
                     }
                 }

@@ -51,7 +51,7 @@ using OpenSim.Region.ScriptEngine.Shared.CodeTools;
 namespace OpenSim.Region.ScriptEngine.DotNetEngine
 {
 
-    #region InstanceData
+    #region InstancesData
     
 	public class InstancesData
 	{
@@ -61,15 +61,27 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         public List<UUID> ItemIDs = new List<UUID>();
 	}
 	
+	#endregion
+	
+	#region InstanceData
+	
     public class InstanceData
     {
-    	private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        public InstanceData(ScriptManager engine)
+    	#region Constructor
+    	
+    	public InstanceData(ScriptManager engine)
     	{
             m_ScriptManager = engine;
             m_scriptEngine = m_ScriptManager.m_scriptEngine;
             World = m_scriptEngine.World;
     	}
+    	
+    	#endregion
+    	
+    	#region Declares
+    	
+    	private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        
         private ScriptManager m_ScriptManager;
         private ScriptEngine m_scriptEngine;
         private Scene World;
@@ -101,7 +113,18 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         public bool PostOnRez;
         public TaskInventoryItem InventoryItem;
         public InstancesData MacroData;
+        public ScenePresence presence;
+        public DetectParams[] LastDetectParams;
         
+        #endregion
+        
+        #region Close Script
+        
+        /// <summary>
+        /// This closes the scrpit, removes it from any known spots, and disposes of itself.
+        /// This function is microthreaded.
+        /// </summary>
+        /// <returns></returns>
         public IEnumerable CloseAndDispose()
         {
         	ReleaseControls(localID, ItemID);
@@ -137,6 +160,11 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             m_log.DebugFormat("[{0}]: Closed Script in " + part.Name, m_ScriptManager.m_scriptEngine.ScriptEngineName);
         }
         
+        /// <summary>
+        /// Removes any permissions the script may have on other avatars.
+        /// </summary>
+        /// <param name="localID"></param>
+        /// <param name="itemID"></param>
         private void ReleaseControls(uint localID, UUID itemID)
         {
             if (part != null)
@@ -154,13 +182,19 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
                 if ((permsMask & ScriptBaseClass.PERMISSION_TAKE_CONTROLS) != 0)
                 {
-                    ScenePresence presence = m_ScriptManager.m_scriptEngine.World.GetScenePresence(permsGranter);
                     if (presence != null)
                         presence.UnRegisterControlEventsToScript(localID, itemID);
                 }
             }
         }
-
+        
+        #endregion
+        
+        #region Reset Script
+        
+		/// <summary>
+		/// This resets the script back to its default state.
+		/// </summary>
         internal void Reset()
         {
             ReleaseControls(localID, ItemID);
@@ -171,26 +205,15 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             m_ScriptManager.m_scriptEngine.m_EventQueueManager.AddToScriptQueue(this, "state_entry", new DetectParams[0],new object[] { });
             m_log.InfoFormat("[{0}]: Reset Script {1}", m_ScriptManager.m_scriptEngine.ScriptEngineName, ItemID);
         }
+        #endregion
+        
+        #region Helpers
         
         public override string ToString()
         {
         	return "localID: "+ localID
         		+", itemID: "+
         		ItemID;
-        }
-
-        public void SetParameters(IScript CompiledScript, int startParam, string state, bool running, bool disabled, UUID assetID, UUID itemID, uint LocalID, string CompiledScriptFile, SceneObjectPart m_host)
-        {
-            Script = CompiledScript;
-            StartParam = startParam;
-            State = state;
-            Running = running;
-            Disabled = disabled;
-            AssetID = assetID;
-            ItemID = itemID;
-            localID = LocalID;
-            AssemblyName = CompiledScriptFile;
-            part = m_host;
         }
 
         internal void SetApis()
@@ -212,30 +235,58 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             }
         }
         
-        public void CheckOtherMacro()
+        public void ShowError(Exception e, int stage)
         {
-        	/*MacroData = m_ScriptManager.GetMacroScript(localID);
-            foreach (InstanceData ID in MacroData.Instances)
+            if (presence != null && (!PostOnRez))
+                presence.ControllingClient.SendAgentAlertMessage(
+                        "Script saved with errors, check debug window!",
+                        false);
+            m_ScriptManager.AddError(ItemID, e.Message.ToString());
+
+            try
             {
-            	if(ID.ItemID == ItemID)
-            		continue;
-            	
-                if (!ID.KnownSources.ContainsKey(ItemID))
-                {
-                    m_ScriptManager.StopScript(ID.localID, ID.ItemID);
-                    m_ScriptManager.StartScript(ID.localID, ID.ItemID, ID.Source, ID.StartParam, ID.PostOnRez, ID.stateSource);
-                }
-            }*/
+                // DISPLAY ERROR INWORLD
+                string text = "Error compiling script in stage "+stage+":\n" +
+                    e.Message.ToString() + " itemID: " + ItemID + ", localID" + localID + ", CompiledFile: " + AssemblyName;
+                m_log.Error(text);
+                if (text.Length > 1100)
+                    text = text.Substring(0, 1099);
+
+                World.SimChat(Utils.StringToBytes(text),
+                        ChatTypeEnum.DebugChannel, 2147483647,
+                        part.AbsolutePosition, part.Name, part.UUID,
+                        false);
+            }
+            catch (Exception e2) // LEGIT: User Scripting
+            {
+                m_log.Error("[" +
+                            m_scriptEngine.ScriptEngineName +
+                            "]: Error displaying error in-world: " +
+                            e2.ToString());
+                m_log.Error("[" +
+                            m_scriptEngine.ScriptEngineName + "]: " +
+                            "Errormessage: Error compiling script:\r\n" +
+                            e2.Message.ToString());
+            }
+            throw e;
         }
+        
+        #endregion
+        
+        #region Start Script
+        
+        /// <summary>
+        /// This starts the script and sets up the variables.
+        /// This function is microthreaded.
+        /// </summary>
+        /// <returns></returns>
         public IEnumerator Start()
         {
             // We will initialize and start the script.
             // It will be up to the script itself to hook up the correct events.
-            string CompiledScriptFile = String.Empty;
-
-            SceneObjectPart m_host = World.GetSceneObjectPart(localID);
-
-            if (null == m_host)
+            part = World.GetSceneObjectPart(localID);
+            
+            if (null == part)
             {
                 m_log.ErrorFormat(
                     "[{0}]: Could not find scene object part corresponding " +
@@ -246,23 +297,22 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             }
 
 
-            UUID assetID = UUID.Zero;
-            if (m_host.TaskInventory.TryGetValue(ItemID, out InventoryItem))
-                assetID = InventoryItem.AssetID;
+            if (part.TaskInventory.TryGetValue(ItemID, out InventoryItem))
+                AssetID = InventoryItem.AssetID;
 
-            ScenePresence presence =
+            presence =
                     World.GetScenePresence(InventoryItem.OwnerID);
             if (presence != null)
             {
                 m_log.DebugFormat(
                     "[{0}]: Starting Script {1} in object {2} by avatar {3}.",
-                    m_scriptEngine.ScriptEngineName, m_host.Inventory.GetInventoryItem(ItemID).Name, m_host.Name, presence.Name);
+                    m_scriptEngine.ScriptEngineName, part.Inventory.GetInventoryItem(ItemID).Name, part.Name, presence.Name);
             }
             else
             {
                 m_log.DebugFormat(
                     "[{0}]: Starting Script {1} in object {2}.",
-                    m_scriptEngine.ScriptEngineName, m_host.Inventory.GetInventoryItem(ItemID).Name, m_host.Name);
+                    m_scriptEngine.ScriptEngineName, part.Inventory.GetInventoryItem(ItemID).Name, part.Name);
             }
             
             CultureInfo USCulture = new CultureInfo("en-US");
@@ -315,6 +365,46 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                     m_scriptEngine.ScriptProtection.AddWantedSRC(ItemID, WantedClass);
                 }
             }
+            else
+            {
+            	if (Source.Contains("#Inherited"))
+                {
+                    int line = Source.IndexOf("#Inherited ");
+                    Inherited = Source.Split('\n')[line];
+                    Inherited = Inherited.Replace("#Inherited ", "");
+                    Source = Source.Replace("#Inherited " + Inherited, "");
+                    Inherited = "";
+                }
+                if (Source.Contains("#ClassName "))
+                {
+                    int line = Source.IndexOf("#ClassName ");
+                    ClassName = Source.Split('\n')[line];
+                    ClassName = ClassName.Replace("#ClassName ", "");
+                    Source = Source.Replace("#ClassName " + ClassName, "");
+                    ClassName = "";
+                }
+                if (Source.Contains("#IncludeHTML "))
+                {
+                    string URL = "";
+                    int line = Source.IndexOf("#IncludeHTML ");
+                    URL = Source.Split('\n')[line];
+                    URL = URL.Replace("#IncludeHTML ", "");
+                    Source = Source.Replace("#IncludeHTML " + URL, "");
+                    string webSite = ScriptManager.ReadExternalWebsite(URL);
+                    URL = "";
+                    webSite = "";
+                }
+                if (Source.Contains("#Include "))
+                {
+                    string WantedClass = "";
+                    int line = Source.IndexOf("#Include ");
+                    WantedClass = Source.Split('\n')[line];
+                    WantedClass = WantedClass.Replace("#Include ", "");
+                    Source = Source.Replace("#Include " + WantedClass, "");
+                    m_scriptEngine.ScriptProtection.AddWantedSRC(ItemID, WantedClass);
+                    WantedClass = "";
+                }
+            }
             
             #endregion
 
@@ -322,42 +412,34 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             {
                 // Compile (We assume LSL)
                 m_ScriptManager.LSLCompiler.PerformScriptCompile(Source,
-                        assetID, InventoryItem.OwnerID, ItemID, Inherited, ClassName, m_scriptEngine.ScriptProtection,localID,
-                        out CompiledScriptFile, out LineMap, out ClassID);
+                        AssetID, InventoryItem.OwnerID, ItemID, Inherited, ClassName, m_scriptEngine.ScriptProtection,localID, this,
+                        out AssemblyName, out LineMap, out ClassID);
             }
             catch (Exception ex)
             {
-                m_ScriptManager.ShowError(presence, m_host, PostOnRez, ItemID, "", ex, 1);
+                ShowError(ex, 1);
             }
 
-            MacroData.AssemblyName = CompiledScriptFile;
-            MacroData.localID = localID;
-            MacroData.Instances.Add(this);
-
-            //Update the Macro first, to allow for the Source to update.
-            m_ScriptManager.UpdateMacroScript(MacroData);
-            
             yield return null;
             
-            IScript CompiledScript = null;
             try
             {
                 if (ClassName != "")
                 {
-                    CompiledScript =
+                    Script =
                             m_scriptEngine.m_AppDomainManager.LoadScript(
-                            CompiledScriptFile, "SecondLife." + ClassName, out AppDomain);
+                            AssemblyName, "SecondLife." + ClassName, out AppDomain);
                 }
                 else
                 {
-                    CompiledScript =
+                    Script =
                             m_scriptEngine.m_AppDomainManager.LoadScript(
-                            CompiledScriptFile, "SecondLife." + ClassID, out AppDomain);
+                            AssemblyName, "SecondLife." + ClassID, out AppDomain);
                 }
             }
             catch (Exception ex)
             {
-                m_ScriptManager.ShowError(presence, m_host, PostOnRez, ItemID, CompiledScriptFile, ex, 2);
+                ShowError(ex, 2);
             }
             //Register the sponsor
             //ISponsor scriptSponsor = new ScriptSponsor();
@@ -365,12 +447,18 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             //lease.Register(scriptSponsor);
             //id.ScriptSponsor = scriptSponsor;
 
-            SetParameters(CompiledScript, StartParam, "default", true, false, assetID, ItemID, localID, CompiledScriptFile, m_host);
+            State = "default";
+            Running = true;
+            Disabled = false;
             
-            MacroData.AssemblyName = CompiledScriptFile;
-            // Add it to our script memstruct
-            //Update the Macro first, to allow for the Source to update.
+            MacroData.ItemIDs.Add(ItemID);
+            MacroData.AssemblyName = AssemblyName;
+            MacroData.localID = localID;
+            MacroData.Instances.Add(this);
+
             m_ScriptManager.UpdateMacroScript(MacroData);
+            
+            // Add it to our script memstruct
             m_ScriptManager.UpdateScriptInstanceData(this);
             
             SetApis();
@@ -378,10 +466,8 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             #region Post Script Events
 
             // Fire the first start-event
-            int eventFlags =
-                    m_scriptEngine.m_ScriptManager.GetStateEventFlags(
-                    localID, ItemID);
-            m_host.SetScriptEvents(ItemID, eventFlags);
+            int eventFlags = Script.GetStateEventFlags(State);
+            part.SetScriptEvents(ItemID, eventFlags);
 
             m_scriptEngine.m_EventQueueManager.AddToScriptQueue(
                     this, "state_entry", new DetectParams[0],
@@ -397,7 +483,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             if (stateSource == StateSource.AttachedRez)
             {
                 m_scriptEngine.m_EventQueueManager.AddToScriptQueue(this, "attach", new DetectParams[0],
-                    new object[] { new LSL_Types.LSLString(m_host.AttachedAvatar.ToString()) });
+                    new object[] { new LSL_Types.LSLString(part.AttachedAvatar.ToString()) });
             }
             else if (stateSource == StateSource.NewRez)
             {
@@ -434,7 +520,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
                         World.SimChat(Utils.StringToBytes(text),
                                 ChatTypeEnum.DebugChannel, 2147483647,
-                                m_host.AbsolutePosition, m_host.Name, m_host.UUID,
+                                part.AbsolutePosition, part.Name, part.UUID,
                                 false);
                     }
                     catch (Exception e2) // LEGIT: User Scripting
@@ -461,23 +547,78 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                 {
                     m_log.DebugFormat(
                         "[{0}]: Started Script {1} in object {2} by avatar {3} successfully.",
-                        m_scriptEngine.ScriptEngineName, m_host.Inventory.GetInventoryItem(ItemID).Name, m_host.Name, presence.Name);
+                        m_scriptEngine.ScriptEngineName, part.Inventory.GetInventoryItem(ItemID).Name, part.Name, presence.Name);
                 }
                 else
                 {
                     m_log.DebugFormat(
                         "[{0}]: Started Script {1} in object {2} successfully.",
-                        m_scriptEngine.ScriptEngineName, InventoryItem.Name, m_host.Name);
+                        m_scriptEngine.ScriptEngineName, InventoryItem.Name, part.Name);
                 }
             }
 
             #endregion
         }
+        
+        #endregion
+        
+        #region Event Processing
+        
+        /// <summary>
+        /// Executes the given event 'FunctionName'  with parameters 'args'.
+        /// This event is microthreaded.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="FunctionName"></param>
+        /// <param name="qParams"></param>
+        /// <param name="args"></param>
+        /// <returns></returns>
+        internal IEnumerator ExecuteEvent(string FunctionName, DetectParams[] qParams, object[] args)
+        {
+        	//;^) Ewe Loon,fix 
+            
+            
+            if (!Running || Disabled)
+                throw new NotSupportedException();
+			
+            if (qParams.Length > 0)
+                LastDetectParams = qParams;
 
+            if (EventDelayTicks != 0)
+            {
+                if (DateTime.Now.Ticks < NextEventTimeTicks)
+                    throw new Exception();
+
+                NextEventTimeTicks = DateTime.Now.Ticks + EventDelayTicks;
+            }
+            
+            yield return null;
+            
+            try
+            {
+                Script.ExecuteEvent(State, FunctionName, args);
+            }
+            catch (SelfDeleteException) // Must delete SOG
+            {
+                if (part != null && part.ParentGroup != null)
+                    m_scriptEngine.World.DeleteSceneObject(
+                        part.ParentGroup, false);
+            }
+            catch (ScriptDeleteException) // Must delete item
+            {
+                if (part != null && part.ParentGroup != null)
+                    part.Inventory.RemoveInventoryItem(ItemID);
+            }
+            catch (Exception e)
+            {
+                LastDetectParams = null;
+                m_log.InfoFormat("[Script Event Error] ,{0},{1},{2},{3},{4}", part.Name, FunctionName, e.Message, qParams.Length, LastDetectParams.Length);
+                throw e;
+            }
+            LastDetectParams = null;
+        }
         
-        
-        
-        
+        #endregion
     }
 
     #endregion
@@ -527,503 +668,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         public Scene World
         {
             get { return m_scriptEngine.World; }
-        }
-
-        #endregion
-
-        #region Start/End Scripts
-
-        /*public IEnumerator Microthread_StartScript(uint localID, UUID itemID, string Script,
-                int startParam, bool postOnRez, StateSource stateSource)
-        {
-            // We will initialize and start the script.
-            // It will be up to the script itself to hook up the correct events.
-            string CompiledScriptFile = String.Empty;
-
-            SceneObjectPart m_host = World.GetSceneObjectPart(localID);
-
-            if (null == m_host)
-            {
-                m_log.ErrorFormat(
-                    "[{0}]: Could not find scene object part corresponding " +
-                    "to localID {1} to start script",
-                    m_scriptEngine.ScriptEngineName, localID);
-
-                throw new NullReferenceException();
-            }
-
-
-            UUID assetID = UUID.Zero;
-            TaskInventoryItem taskInventoryItem = new TaskInventoryItem();
-            if (m_host.TaskInventory.TryGetValue(itemID, out taskInventoryItem))
-                assetID = taskInventoryItem.AssetID;
-
-            ScenePresence presence =
-                    World.GetScenePresence(taskInventoryItem.OwnerID);
-            if (presence != null)
-            {
-                m_log.DebugFormat(
-                    "[{0}]: Starting Script {1} in object {2} by avatar {3}.",
-                    m_scriptEngine.ScriptEngineName, m_host.Inventory.GetInventoryItem(itemID).Name, m_host.Name, presence.Name);
-            }
-            else
-            {
-                m_log.DebugFormat(
-                    "[{0}]: Starting Script {1} in object {2}.",
-                    m_scriptEngine.ScriptEngineName, m_host.Inventory.GetInventoryItem(itemID).Name, m_host.Name);
-            }
-            
-            CultureInfo USCulture = new CultureInfo("en-US");
-            Thread.CurrentThread.CurrentCulture = USCulture;
-
-            InstancesData MacroData = GetMacroScript(localID);
-            InstanceData id = new InstanceData(this);
-            
-            if (MacroData == null)
-                MacroData = new InstancesData();
-
-            #region Class and interface reader
-            string Inherited = "";
-            if (Script.Contains("#Inherited"))
-            {
-                int line = Script.IndexOf("#Inherited ");
-                Inherited = Script.Split('\n')[line];
-                Inherited = Inherited.Replace("#Inherited ", "");
-                Script = Script.Replace("#Inherited " + Inherited, "");
-            }
-            string ClassName = "";
-            if (Script.Contains("#ClassName "))
-            {
-                int line = Script.IndexOf("#ClassName ");
-                ClassName = Script.Split('\n')[line];
-                ClassName = ClassName.Replace("#ClassName ", "");
-                Script = Script.Replace("#ClassName " + ClassName, "");
-            }
-            if (Script.Contains("#Include "))
-            {
-                string URL = "";
-                int line = Script.IndexOf("#Include ");
-                URL = Script.Split('\n')[line];
-                URL = URL.Replace("#Include ", "");
-                Script = Script.Replace("#Include " + URL, "");
-                string webSite = ReadExternalWebsite(URL);
-                id.KnownSources.Add(new UUID(Guid.NewGuid()), webSite + "\n");
-            }
-
-            #endregion
-
-            try
-            {
-                // Compile (We assume LSL)
-                LSLCompiler.PerformScriptCompile(Script,
-                        assetID, taskInventoryItem.OwnerID, itemID, MacroData.Source, Inherited, ClassName, out CompiledScriptFile, out id.LineMap, out MacroData.Source, out id.ClassID);
-            }
-            catch (Exception ex)
-            {
-                ShowError(presence, m_host, postOnRez, itemID, "", ex, 1);
-            }
-
-            yield return null;
-            IScript CompiledScript = null;
-            try
-            {
-                if (ClassName != "")
-                {
-                    CompiledScript =
-                            m_scriptEngine.m_AppDomainManager.LoadScript(
-                            CompiledScriptFile, "SecondLife." + ClassName, out id.AppDomain);
-                }
-                else
-                {
-                    CompiledScript =
-                            m_scriptEngine.m_AppDomainManager.LoadScript(
-                            CompiledScriptFile, "SecondLife." + id.ClassID, out id.AppDomain);
-                }
-            }
-            catch (Exception ex)
-            {
-                ShowError(presence, m_host, postOnRez, itemID, CompiledScriptFile, ex, 2);
-            }
-            //Register the sponsor
-            //ISponsor scriptSponsor = new ScriptSponsor();
-            //ILease lease = (ILease)RemotingServices.GetLifetimeService(CompiledScript as MarshalByRefObject);
-            //lease.Register(scriptSponsor);
-            //id.ScriptSponsor = scriptSponsor;
-
-            id.SetParameters(CompiledScript, startParam, "default", true, false, assetID, itemID, localID, CompiledScriptFile, m_host);
-            
-            MacroData.AssemblyName = CompiledScriptFile;
-            MacroData.localID = localID;
-            MacroData.Instances.Add(id);
-
-            // Add it to our script memstruct
-            //Update the Macro first, to allow for the Source to update.
-            UpdateMacroScript(MacroData);
-            UpdateScriptInstanceData(id);
-            
-            id.SetApis();
-
-            #region Post Script Events
-
-            // Fire the first start-event
-            int eventFlags =
-                    m_scriptEngine.m_ScriptManager.GetStateEventFlags(
-                    localID, itemID);
-            m_host.SetScriptEvents(itemID, eventFlags);
-
-            m_scriptEngine.m_EventQueueManager.AddToScriptQueue(
-                    id, "state_entry", new DetectParams[0],
-                    new object[] { });
-
-            if (postOnRez)
-            {
-                m_scriptEngine.m_EventQueueManager.AddToScriptQueue(
-                    id, "on_rez", new DetectParams[0],
-                    new object[] { new LSL_Types.LSLInteger(startParam) });
-            }
-
-            if (stateSource == StateSource.AttachedRez)
-            {
-                m_scriptEngine.m_EventQueueManager.AddToScriptQueue(id, "attach", new DetectParams[0],
-                    new object[] { new LSL_Types.LSLString(m_host.AttachedAvatar.ToString()) });
-            }
-            else if (stateSource == StateSource.NewRez)
-            {
-                m_scriptEngine.m_EventQueueManager.AddToScriptQueue(id, "changed", new DetectParams[0],
-                                          new Object[] { new LSL_Types.LSLInteger(256) });
-            }
-            else if (stateSource == StateSource.PrimCrossing)
-            {
-                // CHANGED_REGION
-                m_scriptEngine.m_EventQueueManager.AddToScriptQueue(id, "changed", new DetectParams[0],
-                                          new Object[] { new LSL_Types.LSLInteger(512) });
-            }
-            #endregion
-
-            #region Warnings
-
-            string[] warnings = LSLCompiler.GetWarnings();
-
-            if (warnings != null && warnings.Length != 0)
-            {
-                if (presence != null && (!postOnRez))
-                    presence.ControllingClient.SendAgentAlertMessage(
-                            "Script saved with warnings, check debug window!",
-                            false);
-
-                foreach (string warning in warnings)
-                {
-                    try
-                    {
-                        // DISPLAY WARNING INWORLD
-                        string text = "Warning:\n" + warning;
-                        if (text.Length > 1100)
-                            text = text.Substring(0, 1099);
-
-                        World.SimChat(Utils.StringToBytes(text),
-                                ChatTypeEnum.DebugChannel, 2147483647,
-                                m_host.AbsolutePosition, m_host.Name, m_host.UUID,
-                                false);
-                    }
-                    catch (Exception e2) // LEGIT: User Scripting
-                    {
-                        m_log.Error("[" +
-                                m_scriptEngine.ScriptEngineName +
-                                "]: Error displaying warning in-world: " +
-                                e2.ToString());
-                        m_log.Error("[" +
-                                m_scriptEngine.ScriptEngineName + "]: " +
-                                "Warning:\r\n" +
-                                warning);
-                    }
-                }
-            }
-            else
-            {
-                if (presence != null && (!postOnRez))
-                {
-                    presence.ControllingClient.SendAgentAlertMessage(
-                            "Compile successful", false);
-                }
-                if (presence != null)
-                {
-                    m_log.DebugFormat(
-                        "[{0}]: Started Script {1} in object {2} by avatar {3} successfully.",
-                        m_scriptEngine.ScriptEngineName, m_host.Inventory.GetInventoryItem(itemID).Name, m_host.Name, presence.Name);
-                }
-                else
-                {
-                    m_log.DebugFormat(
-                        "[{0}]: Started Script {1} in object {2} successfully.",
-                        m_scriptEngine.ScriptEngineName, m_host.Inventory.GetInventoryItem(itemID).Name, m_host.Name);
-                }
-            }
-
-            #endregion
-        }
-
-        public void _StartScript(uint localID, UUID itemID, string Script,
-                int startParam, bool postOnRez, StateSource stateSource)
-        {
-            // We will initialize and start the script.
-            // It will be up to the script itself to hook up the correct events.
-            string CompiledScriptFile = String.Empty;
-
-            SceneObjectPart m_host = World.GetSceneObjectPart(localID);
-
-            if (null == m_host)
-            {
-                m_log.ErrorFormat(
-                    "[{0}]: Could not find scene object part corresponding " +
-                    "to localID {1} to start script",
-                    m_scriptEngine.ScriptEngineName, localID);
-
-                throw new NullReferenceException();
-            }
-
-
-            UUID assetID = UUID.Zero;
-            TaskInventoryItem taskInventoryItem = new TaskInventoryItem();
-            if (m_host.TaskInventory.TryGetValue(itemID, out taskInventoryItem))
-                assetID = taskInventoryItem.AssetID;
-
-            ScenePresence presence =
-                    World.GetScenePresence(taskInventoryItem.OwnerID);
-            if (presence != null)
-            {
-                m_log.DebugFormat(
-                    "[{0}]: Starting Script {1} in object {2} by avatar {3}.",
-                    m_scriptEngine.ScriptEngineName, m_host.Inventory.GetInventoryItem(itemID).Name, m_host.Name, presence.Name);
-            }
-            else
-            {
-                m_log.DebugFormat(
-                    "[{0}]: Starting Script {1} in object {2}.",
-                    m_scriptEngine.ScriptEngineName, m_host.Inventory.GetInventoryItem(itemID).Name, m_host.Name);
-            }
-
-            CultureInfo USCulture = new CultureInfo("en-US");
-            Thread.CurrentThread.CurrentCulture = USCulture;
-
-            InstancesData MacroData = GetMacroScript(localID);
-            InstanceData id = new InstanceData(this);
-            
-            if (MacroData == null)
-                MacroData = new InstancesData();
-
-            #region Class and interface reader
-            string Inherited = "";
-            if (Script.Contains("#Inherited"))
-            {
-                int line = Script.IndexOf("#Inherited ");
-                Inherited = Script.Split('\n')[line];
-                Inherited = Inherited.Replace("#Inherited ", "");
-                Script = Script.Replace("#Inherited " + Inherited, "");
-            }
-            string ClassName = "";
-            if (Script.Contains("#ClassName "))
-            {
-                int line = Script.IndexOf("#ClassName ");
-                ClassName = Script.Split('\n')[line];
-                ClassName = ClassName.Replace("#ClassName ", "");
-                Script = Script.Replace("#ClassName " + ClassName, "");
-            }
-            if (Script.Contains("#Include "))
-            {
-                string URL = "";
-                int line = Script.IndexOf("#Include ");
-                URL = Script.Split('\n')[line];
-                URL = URL.Replace("#Include ", "");
-                Script = Script.Replace("#Include " + URL, "");
-                string webSite = ReadExternalWebsite(URL);
-                MacroData.Source.Add(new UUID(Guid.NewGuid()), webSite + "\n");
-            }
-
-            #endregion
-
-            try
-            {
-                // Compile (We assume LSL)
-                LSLCompiler.PerformScriptCompile(Script,
-                        assetID, taskInventoryItem.OwnerID, itemID, MacroData.Source, Inherited, ClassName, out CompiledScriptFile, out id.LineMap, out MacroData.Source, out id.ClassID);
-            }
-            catch (Exception ex)
-            {
-                ShowError(presence, m_host, postOnRez, itemID, "", ex, 1);
-            }
-
-            IScript CompiledScript = null;
-            try
-            {
-                if (ClassName != "")
-                {
-                    CompiledScript =
-                            m_scriptEngine.m_AppDomainManager.LoadScript(
-                            CompiledScriptFile, "SecondLife." + ClassName, out id.AppDomain);
-                }
-                else
-                {
-                    CompiledScript =
-                            m_scriptEngine.m_AppDomainManager.LoadScript(
-                            CompiledScriptFile, "SecondLife." + id.ClassID, out id.AppDomain);
-                }
-            }
-            catch (Exception ex)
-            {
-                ShowError(presence, m_host, postOnRez, itemID, CompiledScriptFile, ex, 2);
-            }
-            //Register the sponsor
-            //ISponsor scriptSponsor = new ScriptSponsor();
-            //ILease lease = (ILease)RemotingServices.GetLifetimeService(CompiledScript as MarshalByRefObject);
-            //lease.Register(scriptSponsor);
-            //id.ScriptSponsor = scriptSponsor;
-
-            id.SetParameters(CompiledScript, startParam, "default", true, false, assetID, itemID, localID, CompiledScriptFile, m_host);
-
-            MacroData.AssemblyName = CompiledScriptFile;
-            MacroData.localID = localID;
-            MacroData.Instances.Add(id);
-
-            // Add it to our script memstruct
-            //Update the Macro first, to allow for the Source to update.
-            UpdateMacroScript(MacroData);
-            UpdateScriptInstanceData(id);
-
-
-            id.SetApis();
-            #region Post Script Events
-
-            // Fire the first start-event
-            int eventFlags =
-                    m_scriptEngine.m_ScriptManager.GetStateEventFlags(
-                    localID, itemID);
-
-            m_host.SetScriptEvents(itemID, eventFlags);
-
-            m_scriptEngine.m_EventQueueManager.AddToScriptQueue(
-                    id, "state_entry", new DetectParams[0],
-                    new object[] { });
-
-            if (postOnRez)
-            {
-                m_scriptEngine.m_EventQueueManager.AddToScriptQueue(
-                    id, "on_rez", new DetectParams[0],
-                    new object[] { new LSL_Types.LSLInteger(startParam) });
-            }
-
-            if (stateSource == StateSource.AttachedRez)
-            {
-                m_scriptEngine.m_EventQueueManager.AddToScriptQueue(id, "attach", new DetectParams[0],
-                    new object[] { new LSL_Types.LSLString(m_host.AttachedAvatar.ToString()) });
-            }
-            else if (stateSource == StateSource.NewRez)
-            {
-                m_scriptEngine.m_EventQueueManager.AddToScriptQueue(id, "changed", new DetectParams[0],
-                                          new Object[] { new LSL_Types.LSLInteger(256) });
-            }
-            else if (stateSource == StateSource.PrimCrossing)
-            {
-                // CHANGED_REGION
-                m_scriptEngine.m_EventQueueManager.AddToScriptQueue(id, "changed", new DetectParams[0],
-                                          new Object[] { new LSL_Types.LSLInteger(512) });
-            }
-            #endregion
-
-            #region Warnings
-
-            string[] warnings = LSLCompiler.GetWarnings();
-            if (warnings != null && warnings.Length != 0)
-            {
-                if (presence != null && (!postOnRez))
-                    presence.ControllingClient.SendAgentAlertMessage(
-                            "Script saved with warnings, check debug window!",
-                            false);
-
-                foreach (string warning in warnings)
-                {
-                    try
-                    {
-                        // DISPLAY WARNING INWORLD
-                        string text = "Warning:\n" + warning;
-                        if (text.Length > 1100)
-                            text = text.Substring(0, 1099);
-
-                        World.SimChat(Utils.StringToBytes(text),
-                                ChatTypeEnum.DebugChannel, 2147483647,
-                                m_host.AbsolutePosition, m_host.Name, m_host.UUID,
-                                false);
-                    }
-                    catch (Exception e2) // LEGIT: User Scripting
-                    {
-                        m_log.Error("[" +
-                                m_scriptEngine.ScriptEngineName +
-                                "]: Error displaying warning in-world: " +
-                                e2.ToString());
-                        m_log.Error("[" +
-                                m_scriptEngine.ScriptEngineName + "]: " +
-                                "Warning:\r\n" +
-                                warning);
-                    }
-                }
-            }
-            else
-            {
-                if (presence != null && (!postOnRez))
-                {
-                    presence.ControllingClient.SendAgentAlertMessage(
-                            "Compile successful", false);
-                }
-                if (presence != null)
-                {
-                    m_log.DebugFormat(
-                        "[{0}]: Started Script {1} in object {2} by avatar {3} successfully.",
-                        m_scriptEngine.ScriptEngineName, m_host.Inventory.GetInventoryItem(itemID).Name, m_host.Name, presence.Name);
-                }
-                else
-                {
-                    m_log.DebugFormat(
-                        "[{0}]: Started Script {1} in object {2} successfully.",
-                        m_scriptEngine.ScriptEngineName, m_host.Inventory.GetInventoryItem(itemID).Name, m_host.Name);
-                }
-            }
-
-            #endregion
-        }
-        */
-        public void ShowError(ScenePresence presence, SceneObjectPart m_host, bool postOnRez, UUID itemID, string compiledFile, Exception e, int stage)
-        {
-            if (presence != null && (!postOnRez))
-                presence.ControllingClient.SendAgentAlertMessage(
-                        "Script saved with errors, check debug window!",
-                        false);
-            AddError(itemID, e.Message.ToString());
-
-            try
-            {
-                // DISPLAY ERROR INWORLD
-                string text = "Error compiling script in stage "+stage+":\n" +
-                    e.Message.ToString() + " itemID: " + itemID + ", localID" + m_host.LocalId + ", CompiledFile: " + compiledFile;
-                m_log.Error(text);
-                if (text.Length > 1100)
-                    text = text.Substring(0, 1099);
-
-                World.SimChat(Utils.StringToBytes(text),
-                        ChatTypeEnum.DebugChannel, 2147483647,
-                        m_host.AbsolutePosition, m_host.Name, m_host.UUID,
-                        false);
-            }
-            catch (Exception e2) // LEGIT: User Scripting
-            {
-                m_log.Error("[" +
-                            m_scriptEngine.ScriptEngineName +
-                            "]: Error displaying error in-world: " +
-                            e2.ToString());
-                m_log.Error("[" +
-                            m_scriptEngine.ScriptEngineName + "]: " +
-                            "Errormessage: Error compiling script:\r\n" +
-                            e2.Message.ToString());
-            }
-            throw e;
         }
 
         #endregion
@@ -1081,16 +725,10 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         public ScriptManager(ScriptEngine scriptEngine)
         {
             m_scriptEngine = scriptEngine;
-        }
-
-        public void Initialize()
-        {
-            // Create our compiler
+            ReadConfig();
             LSLCompiler = new Compiler(m_scriptEngine);
         }
-
-        #region Config Reader
-
+        
         public void ReadConfig()
         {
             // TODO: Requires sharing of all ScriptManagers to single thread
@@ -1101,18 +739,9 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                     "LoadUnloadMaxQueueSizeBeforeMicrothreading", 100);
         }
 
-        #endregion
-
-        public void Setup()
-        {
-            ReadConfig();
-            Initialize();
-        }
-
         public void Start()
         {
             m_started = true;
-
 
             AppDomain.CurrentDomain.AssemblyResolve +=
                     new ResolveEventHandler(CurrentDomain_AssemblyResolve);
@@ -1180,68 +809,40 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             List<IEnumerator> StopParts = new List<IEnumerator>();
             lock (LUQueue)
             {
-                if (LUQueue.Count > 0)
-                {
-                    if (LUQueue.Count > MinMicrothreadScriptThreshold)
-                    {
-                        int i = 0;
-                        while (i < LUQueue.Count)
-                        {
-                            LUStruct item = LUQueue.Dequeue();
+            	if (LUQueue.Count > 0)
+            	{
+            		int i = 0;
+            		while (i < LUQueue.Count)
+            		{
+            			LUStruct item = LUQueue.Dequeue();
 
-                            if (item.Action == LUType.Unload)
-                            {
-                            	InstanceData id = GetScript(item.localID, item.itemID);
-                                if (id != null)
-                                    StopParts.Add(id.CloseAndDispose().GetEnumerator());
-                            }
-                            else if (item.Action == LUType.Load)
-                            {
-                            	InstanceData id = GetScript(item.localID, item.itemID);
-                                if (id != null)
-                                    StopParts.Add(id.CloseAndDispose().GetEnumerator());
-                                id = new InstanceData(this);
-                                id.SetParameters(null, item.startParam, "default", true, false, UUID.Zero, item.itemID, item.localID, "", null);
-                                id.Source = item.script;
-                                id.PostOnRez = item.postOnRez;
-                                StartParts.Add(id.Start());
-                            	//StartParts.Add(Microthread_StartScript(item.localID, item.itemID, item.script,
-                                //             item.startParam, item.postOnRez, item.stateSource));
-                            }
-                            i++;
-                        }
-                    }
-                    else
-                    {
-                        int i = 0;
-                        while (i < LUQueue.Count)
-                        {
-                            LUStruct item = LUQueue.Dequeue();
-
-                            if (item.Action == LUType.Unload)
-                            {
-                            	InstanceData id = GetScript(item.localID, item.itemID);
-                            	if (id != null)
-                                    StopParts.Add(id.CloseAndDispose().GetEnumerator());
-                            }
-                            else if (item.Action == LUType.Load)
-                            {
-                                InstanceData id = GetScript(item.localID, item.itemID);
-                                if (id != null)
-                                    StopParts.Add(id.CloseAndDispose().GetEnumerator());
-                                id = new InstanceData(this);
-                                id.SetParameters(null, item.startParam, "default", true, false, UUID.Zero, item.itemID, item.localID, "", null);
-                                id.Source = item.script;
-                                id.PostOnRez = item.postOnRez;
-                                StartParts.Add(id.Start());
-                            	
-                                //_StartScript(item.localID, item.itemID, item.script,
-                            	//             item.startParam, item.postOnRez, item.stateSource);
-                            }
-                            i++;
-                        }
-                    }
-                }
+            			if (item.Action == LUType.Unload)
+            			{
+            				InstanceData id = GetScript(item.localID, item.itemID);
+            				if (id != null)
+            					StopParts.Add(id.CloseAndDispose().GetEnumerator());
+            			}
+            			else if (item.Action == LUType.Load)
+            			{
+            				InstanceData id = GetScript(item.localID, item.itemID);
+            				if (id != null)
+            					StopParts.Add(id.CloseAndDispose().GetEnumerator());
+            				id = new InstanceData(this);
+            				id.ItemID = item.itemID;
+            				id.localID = item.localID;
+            				id.PostOnRez = item.postOnRez;
+            				id.StartParam = item.startParam;
+            				id.stateSource = item.stateSource;
+            				id.State = "default";
+            				id.Running = true;
+            				id.Disabled = false;
+            				id.Source = item.script;
+            				id.PostOnRez = item.postOnRez;
+            				StartParts.Add(id.Start());
+            			}
+            			i++;
+            		}
+            	}
             }
             lock (StopParts)
             {
@@ -1358,109 +959,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             {
                 LUQueue.Enqueue(ls);
             }
-        }
-
-        #endregion
-
-        #region Perform event execution in script
-
-        // Execute a LL-event-function in Script
-        internal IEnumerator ExecuteEvent(InstanceData id,
-                string FunctionName, DetectParams[] qParams, object[] args)
-        {
-        	int Stage = 1;
-            //;^) Ewe Loon,fix 
-            if (id == null)
-                throw new NullReferenceException();
-
-            if (!id.Running)
-                throw new NotSupportedException();
-			
-            try
-            {
-                Stage = 2;
-                if (qParams.Length > 0)
-                    detparms[id] = qParams;
-            }
-            catch (Exception e)
-            {
-                SceneObjectPart ob = m_scriptEngine.World.GetSceneObjectPart(id.localID);
-                m_log.InfoFormat("[Script Error] ,{0},{1},@{2},{3},{4},{5}", ob.Name, FunctionName, Stage, e.Message, qParams.Length, detparms.Count);
-                throw e;
-            }
-
-            Stage = 3;
-
-            if (id.EventDelayTicks != 0)
-            {
-                if (DateTime.Now.Ticks < id.NextEventTimeTicks)
-                    throw new Exception();
-
-                id.NextEventTimeTicks = DateTime.Now.Ticks + id.EventDelayTicks;
-            }
-            yield return null;
-            try
-            {
-                id.Script.ExecuteEvent(id.State, FunctionName, args);
-            }
-            catch (SelfDeleteException) // Must delete SOG
-            {
-                SceneObjectPart part =
-                    m_scriptEngine.World.GetSceneObjectPart(id.localID);
-                if (part != null && part.ParentGroup != null)
-                    m_scriptEngine.World.DeleteSceneObject(
-                        part.ParentGroup, false);
-            }
-            catch (ScriptDeleteException) // Must delete item
-            {
-                SceneObjectPart part =
-                    m_scriptEngine.World.GetSceneObjectPart(
-                        id.localID);
-                if (part != null && part.ParentGroup != null)
-                    part.Inventory.RemoveInventoryItem(id.ItemID);
-            }
-            catch (Exception e)
-            {
-                if (qParams.Length > 0)
-                    detparms.Remove(id);
-                SceneObjectPart ob = m_scriptEngine.World.GetSceneObjectPart(id.localID);
-                m_log.InfoFormat("[Script Error] ,{0},{1},@{2},{3},{4},{5}", ob.Name, FunctionName, Stage, e.Message, qParams.Length, detparms.Count);
-                m_log.Error("ERROR IN EXECUTE EVENT! " + e);
-                throw e;
-            }
-            try
-            {
-                Stage = 4;
-
-                if (qParams.Length > 0)
-                    detparms.Remove(id);
-            }
-            catch (Exception e)
-            {
-                SceneObjectPart ob = m_scriptEngine.World.GetSceneObjectPart(id.localID);
-                m_log.InfoFormat("[Script Error] ,{0},{1},@{2},{3},{4},{5}", ob.Name, FunctionName, Stage, e.Message, qParams.Length, detparms.Count);
-                throw e;
-            }
-        }
-
-        public int GetStateEventFlags(uint localID, UUID itemID)
-        {
-            try
-            {
-                InstanceData id = GetScript(localID, itemID);
-                if (id == null)
-                {
-                    return 0;
-                }
-                int evflags = id.Script.GetStateEventFlags(id.State);
-
-                return (int)evflags;
-            }
-            catch (Exception)
-            {
-            }
-
-            return 0;
         }
 
         #endregion
@@ -1609,52 +1107,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             UpdateScriptInstanceData(ID);
         }
 
-        #endregion
-
-        #region Get/Set DetectParams and start parameters
-
-        public DetectParams[] GetDetectParams(InstanceData id)
-        {
-            if (detparms.ContainsKey(id))
-                return detparms[id];
-
-            return null;
-        }
-
-        public int GetStartParameter(UUID itemID)
-        {
-            InstanceData id = GetScriptByLocalID(itemID);
-
-            if (id == null)
-                return 0;
-
-            return id.StartParam;
-        }
-
-        public IScriptApi GetApi(UUID itemID, string name)
-        {
-            InstanceData id = GetScriptByLocalID(itemID);
-            if (id == null)
-                return null;
-
-            if (id.Apis.ContainsKey(name))
-                return id.Apis[name];
-
-            return null;
-        }
-        #endregion
-
-        #region Reset
-
-        /// <summary>
-        /// Resets the given Script.
-        /// </summary>
-        /// <param name="localID"></param>
-        /// <param name="itemID"></param>
-        public void ResetScript(InstanceData id)
-        {
-            id.Reset();
-        }
         #endregion
 		
         #region Other

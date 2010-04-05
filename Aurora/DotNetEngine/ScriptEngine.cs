@@ -93,15 +93,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             get { return m_ConfigSource; }
         }
 
-        // How many seconds between re-reading config-file.
-        // 0 = never. ScriptEngine will try to adjust to new config changes.
-        public int RefreshConfigFileSeconds {
-            get { return (int)(RefreshConfigFilens / 10000000); }
-            set { RefreshConfigFilens = value * 10000000; }
-        }
-
-        public long RefreshConfigFilens;
-
         public string ScriptEngineName
         {
             get { return "Aurora.DotNetEngine"; }
@@ -118,7 +109,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         public IScriptProtectionModule ScriptProtection;
         #endregion
 
-        #region Constructor
+        #region Constructor and Shutdown
 
         public ScriptEngine()
         {
@@ -129,10 +120,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                 ScriptEngines.Add(this);
             }
         }
-        #endregion
-
-        #region Shutdown/Read Configs
-
+        
         public void Shutdown()
         {
             // We are shutting down
@@ -141,16 +129,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                 ScriptEngines.Remove(this);
                 m_ScriptManager.Stop();
             }
-        }
-
-        public void ReadConfig()
-        {
-            RefreshConfigFileSeconds = ScriptConfigSource.GetInt("RefreshConfig", 0);
-
-            if (m_EventQueueManager != null) m_EventQueueManager.ReadConfig();
-            if (m_ScriptManager != null) m_ScriptManager.ReadConfig();
-            if (m_AppDomainManager != null) m_AppDomainManager.ReadConfig();
-            if (m_MaintenanceThread != null) m_MaintenanceThread.ReadConfig();
         }
 
         #endregion
@@ -162,12 +140,11 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             m_ConfigSource = config;
         }
 
-        public void AddRegion(Scene Sceneworld)
+        public void AddRegion(Scene scene)
         {
-        	ScriptProtection = (IScriptProtectionModule)new ScriptProtectionModule(m_ConfigSource, this);
-            m_log.Info("[" + ScriptEngineName + "]: ScriptEngine initializing");
+        	m_log.Info("[" + ScriptEngineName + "]: ScriptEngine initializing");
 
-            m_Scene = Sceneworld;
+            m_Scene = scene;
 
             // Make sure we have config
             if (ConfigSource.Configs[ScriptEngineName] == null)
@@ -180,20 +157,21 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                 return;
 
             // Create all objects we'll be using
-            m_EventQueueManager = new EventQueueManager(this, Sceneworld);
+            ScriptProtection = (IScriptProtectionModule)new ScriptProtectionModule(m_ConfigSource, this);
+            
+            m_EventQueueManager = new EventQueueManager(this, scene);
             m_EventManager = new EventManager(this, true);
 
             // We need to start it
             m_ScriptManager = new ScriptManager(this);
-            m_ScriptManager.Setup();
+            
             m_AppDomainManager = new AppDomainManager(this);
+            
             if (m_MaintenanceThread == null)
-                m_MaintenanceThread = new MaintenanceThread();
+                m_MaintenanceThread = new MaintenanceThread(this);
 
             m_log.Info("[" + ScriptEngineName + "]: Reading configuration "+
                     "from config section \"" + ScriptEngineName + "\"");
-
-            ReadConfig();
 
             m_Scene.StackModuleInterface<IScriptModule>(this);
 
@@ -211,8 +189,16 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             m_Scene.EventManager.OnGetScriptRunning -= OnGetScriptRunning;
             m_Scene.EventManager.OnStartScript -= OnStartScript;
             m_Scene.EventManager.OnStopScript -= OnStopScript;
+            
+            if (m_XmlRpcRouter != null)
+            {
+                OnScriptRemoved -= m_XmlRpcRouter.ScriptRemoved;
+                OnObjectRemoved -= m_XmlRpcRouter.ObjectRemoved;
+            }
 
-            m_ScriptManager.Stop();
+            m_Scene.UnregisterModuleInterface<IScriptModule>(this);
+            
+			m_ScriptManager.Stop();
         }
 
         public void RegionLoaded(Scene scene)
@@ -229,9 +215,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
             m_ScriptManager.Start();
         }
-        #endregion
-
-        #region IRegionModule
 
         public void Close()
         {
@@ -246,12 +229,11 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         {
             get { return ScriptEngineName; }
         }
+        
+		#endregion
 
-        public bool IsSharedModule
-        {
-            get { return false; }
-        }
-
+		#region Post Object Events
+		
         public bool PostObjectEvent(uint localID, EventParams p)
         {
             return m_EventQueueManager.AddToObjectQueue(localID, p.EventName,
@@ -320,7 +302,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             if (id == null)
                 return null;
 
-            DetectParams[] det = m_ScriptManager.GetDetectParams(id);
+            DetectParams[] det = id.LastDetectParams;
 
             if (number < 0 || number >= det.Length)
                 return null;
@@ -328,9 +310,18 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             return det[number];
         }
 
+        #endregion
+        
+        #region Get/Set Start Parameter and Min Event Delay
+        
         public int GetStartParameter(UUID itemID)
         {
-            return m_ScriptManager.GetStartParameter(itemID);
+            InstanceData id = m_ScriptManager.GetScriptByLocalID(itemID);
+
+            if (id == null)
+                return 0;
+
+            return id.StartParam;
         }
 
         public void SetMinEventDelay(UUID itemID, double delay)
@@ -359,8 +350,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             {
             	m_EventManager.state_exit(id.localID);
             	id.State = state;
-            	int eventFlags = m_ScriptManager.GetStateEventFlags(id.localID,
-            	                                                    itemID);
+            	int eventFlags = id.Script.GetStateEventFlags(id.State);
 
             	id.part.SetScriptEvents(itemID, eventFlags);
 
@@ -398,7 +388,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             if (ID == null)
                 return;
 
-            m_ScriptManager.ResetScript(ID);
+            ID.Reset();
         }
 
         public void ResetScript(UUID itemID)
@@ -407,7 +397,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             if (ID == null)
                 return;
 
-            m_ScriptManager.ResetScript(ID);
+            ID.Reset();
         }
 
         public void OnScriptReset(uint localID, UUID itemID)
@@ -416,7 +406,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             if (ID == null)
                 return;
 
-            m_ScriptManager.ResetScript(ID);
+            ID.Reset();
         }
         #endregion
 
@@ -467,7 +457,14 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
         public IScriptApi GetApi(UUID itemID, string name)
         {
-            return m_ScriptManager.GetApi(itemID, name);
+            InstanceData id = m_ScriptManager.GetScriptByLocalID(itemID);
+            if (id == null)
+                return null;
+
+            if (id.Apis.ContainsKey(name))
+                return id.Apis[name];
+
+            return null;
         }
 
         #endregion
