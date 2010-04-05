@@ -282,7 +282,9 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         /// <returns></returns>
         public IEnumerator Start()
         {
-            // We will initialize and start the script.
+        	DateTime Start = DateTime.Now.ToUniversalTime();
+        	
+        	// We will initialize and start the script.
             // It will be up to the script itself to hook up the correct events.
             part = World.GetSceneObjectPart(localID);
             
@@ -419,7 +421,14 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             {
                 ShowError(ex, 1);
             }
-
+            
+			bool useDebug = false;
+			if(useDebug)
+			{
+            	t = (DateTime.Now.ToUniversalTime() - Start);
+        		m_log.Debug("Stage 1: " + t.TotalSeconds);
+			}
+			
             yield return null;
             
             try
@@ -441,6 +450,13 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             {
                 ShowError(ex, 2);
             }
+            
+            if(useDebug)
+			{
+            	t = (DateTime.Now.ToUniversalTime() - Start);
+        		m_log.Debug("Stage 2: " + t.TotalSeconds);
+            }
+            
             //Register the sponsor
             //ISponsor scriptSponsor = new ScriptSponsor();
             //ILease lease = (ILease)RemotingServices.GetLifetimeService(CompiledScript as MarshalByRefObject);
@@ -496,6 +512,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                 m_scriptEngine.m_EventQueueManager.AddToScriptQueue(this, "changed", new DetectParams[0],
                                           new Object[] { new LSL_Types.LSLInteger(512) });
             }
+            
             #endregion
 
             #region Warnings

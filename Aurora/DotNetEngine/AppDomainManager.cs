@@ -302,14 +302,5 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
             UnloadAppDomains(); // Outsite lock, has its own GetLock
         }
-
-        // If set to true then threads and stuff should try
-        // to make a graceful exit
-        public bool PleaseShutdown
-        {
-            get { return _PleaseShutdown; }
-            set { _PleaseShutdown = value; }
-        }
-        private bool _PleaseShutdown = false;
     }
 }
