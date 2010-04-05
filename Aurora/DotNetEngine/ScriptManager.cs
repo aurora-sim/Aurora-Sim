@@ -425,7 +425,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 			bool useDebug = false;
 			if(useDebug)
 			{
-            	t = (DateTime.Now.ToUniversalTime() - Start);
+            	TimeSpan t = (DateTime.Now.ToUniversalTime() - Start);
         		m_log.Debug("Stage 1: " + t.TotalSeconds);
 			}
 			
@@ -453,7 +453,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             
             if(useDebug)
 			{
-            	t = (DateTime.Now.ToUniversalTime() - Start);
+            	TimeSpan t = (DateTime.Now.ToUniversalTime() - Start);
         		m_log.Debug("Stage 2: " + t.TotalSeconds);
             }
             

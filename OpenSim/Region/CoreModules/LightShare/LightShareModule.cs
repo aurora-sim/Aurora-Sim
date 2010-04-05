@@ -158,7 +158,7 @@ namespace OpenSim.Region.CoreModules.World.LightShare
             else
             {
                 //We probably don't want to spam chat with this.. probably
-                //m_log.Debug("[WINDLIGHT]: Module disabled");
+                m_log.Debug("[WINDLIGHT]: Module disabled");
             }
         }
         public void SendProfileToClient(ScenePresence presence, RegionLightShareData wl)
@@ -175,7 +175,7 @@ namespace OpenSim.Region.CoreModules.World.LightShare
             else
             {
                 //We probably don't want to spam chat with this.. probably
-                //m_log.Debug("[WINDLIGHT]: Module disabled");
+                m_log.Debug("[WINDLIGHT]: Module disabled");
             }
         }
         private void EventManager_OnMakeRootAgent(ScenePresence presence)

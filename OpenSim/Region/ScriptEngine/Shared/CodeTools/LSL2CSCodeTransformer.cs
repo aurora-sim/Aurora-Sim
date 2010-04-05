@@ -159,6 +159,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
         {
             switch (constantType)
             {
+            case "int":
+                return new Constant(p, constantType, "0");
             case "integer":
                 return new Constant(p, constantType, "0");
             case "float":

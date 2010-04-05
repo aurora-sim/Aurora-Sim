@@ -333,7 +333,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             }
             else
             {
-                foreach (SYMBOL kid in s.kids)
+            	foreach (SYMBOL kid in s.kids)
                 {
                     retstr += GenerateNode(kid);
                     script += retstr;

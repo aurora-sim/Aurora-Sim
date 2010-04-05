@@ -1731,8 +1731,8 @@ namespace OpenSim.Region.Framework.Scenes
         public void LoadWindlightProfile()
         {
         	Aurora.Framework.IGenericData GD = Aurora.DataManager.DataManager.GetGenericPlugin();
-        	GD.LoadRegionWindlightSettings(RegionInfo.RegionID);
-            //m_regInfo.WindlightSettings = m_storageManager.DataStore.;
+        	m_regInfo.WindlightSettings = GD.LoadRegionWindlightSettings(RegionInfo.RegionID);
+            //m_regInfo.WindlightSettings = m_storageManager.DataStore.LoadRegionWindlightSettings(RegionInfo.RegionID);
             m_eventManager.TriggerOnSaveNewWindlightProfile();
         }
 
