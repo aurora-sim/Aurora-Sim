@@ -689,7 +689,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             if (fi == null)
             {
                 errtext = String.Empty;
-                errtext += "No compile error. But not able to stat file.";
+                errtext += "No compile error. But not able to start file.";
                 throw new Exception(errtext);
             }
 

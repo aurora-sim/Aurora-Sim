@@ -433,6 +433,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                 }
                 idx++;
             }
+            wl.regionID = m_host.ParentGroup.Scene.RegionInfo.RegionID;
             return wl;
         }
         /// <summary>
