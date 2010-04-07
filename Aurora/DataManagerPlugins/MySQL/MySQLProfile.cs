@@ -478,5 +478,197 @@ namespace Aurora.DataManager.MySQL
             KeyValue.Add(Profile.Identifier);
             Update("usersauth", SetValues.ToArray(), SetRows.ToArray(), KeyRow.ToArray(), KeyValue.ToArray());
         }
+    	public DirPlacesReplyData[] PlacesQuery(string queryText, string category, string table, string wantedValue)
+        {
+        	var cmd = new SqliteCommand();
+            List<DirPlacesReplyData> Data = new List<DirPlacesReplyData>();
+            string query = String.Format("select {0} from {1} where ",
+                                      wantedValue, table);
+            int i = 0;
+            query += "PCategory = '"+category+"' and Pdesc LIKE '%" + queryText + "%' OR PName LIKE '%" + queryText + "%' ";
+                i++;
+            
+            cmd.CommandText = query;
+            IDataReader reader = GetReader(cmd);
+            
+            while (reader.Read())
+            {
+            	int DataCount = 0;
+            	DirPlacesReplyData replyData = new DirPlacesReplyData();
+            	for (int i = 0; i < reader.FieldCount; i++)
+                {
+            		if(DataCount == 0)
+            			replyData.parcelID = new UUID(reader.GetString(i));
+            		if(DataCount == 1)
+            			replyData.name = reader.GetString(i);
+            		if(DataCount == 2)
+            			replyData.forSale = Convert.ToBoolean(reader.GetString(i));
+            		if(DataCount == 3)
+            			replyData.auction = Convert.ToBoolean(reader.GetString(i));
+            		if(DataCount == 4)
+            			replyData.dwell = (float)Convert.ToUInt32(reader.GetString(i));
+                    DataCount++;
+                    if(DataCount == 5)
+                    {
+                    	DataCount = 0;
+                    	Data.Add(replyData);
+                    	replyData = new DirPlacesReplyData();
+                    }
+                }
+            }
+            reader.Close();
+            reader.Dispose();
+            CloseReaderCommand(cmd);
+
+            return Data;
+        }
+		public DirLandReplyData[] LandForSaleQuery(string searchType, string price, string area, string table, string wantedValue)
+        {
+        	var cmd = new SqliteCommand();
+            List<DirLandReplyData> Data = new List<DirLandReplyData>();
+            string query = String.Format("select {0} from {1} where ",
+                                      wantedValue, table);
+            //TODO: Check this searchType ref!
+            if(searchType != 0)
+            	query += "PType = '"+searchType+"' and PPrice <= '" + price + "' and area >= '" + area + "' ";
+            else
+            	query += "PPrice <= '" + price + "' and area >= '" + area + "' ";
+            
+            cmd.CommandText = query;
+            IDataReader reader = GetReader(cmd);
+            
+            while (reader.Read())
+            {
+            	int DataCount = 0;
+            	DirLandReplyData replyData = new DirLandReplyData();
+            	for (int i = 0; i < reader.FieldCount; i++)
+                {
+            		if(DataCount == 0)
+            			replyData.parcelID = new UUID(reader.GetString(i));
+            		if(DataCount == 1)
+            			replyData.name = reader.GetString(i);
+            		if(DataCount == 2)
+            			replyData.forSale = Convert.ToBoolean(reader.GetString(i));
+            		if(DataCount == 3)
+            			replyData.auction = Convert.ToBoolean(reader.GetString(i));
+            		if(DataCount == 4)
+            			replyData.salePrice = (float)Convert.ToUInt32(reader.GetString(i));
+            		if(DataCount == 5)
+            			replyData.actualArea = (float)Convert.ToUInt32(reader.GetString(i));
+                    DataCount++;
+                    if(DataCount == 6)
+                    {
+                    	DataCount = 0;
+                    	Data.Add(replyData);
+                    	replyData = new DirLandReplyData();
+                    }
+                }
+            }
+            reader.Close();
+            reader.Dispose();
+            CloseReaderCommand(cmd);
+
+            return Data;
+        }
+		public DirEventsReplyData[] EventQuery(string queryText, string flags, string table, string wantedValue)
+		{
+			MySqlConnection dbcon = GetLockedConnection();
+			IDbCommand result;
+			IDataReader reader;
+			List<DirEventsReplyData> Data = new List<DirEventsReplyData>();
+            string query = String.Format("select {0} from {1} where ",
+                                      wantedValue, table);
+            query += "and EName LIKE '%" + queryText + "%' and EFlags <= '" + flags + "'";
+            using (result = Query(query, new Dictionary<string, object>(), dbcon))
+			{
+				using (reader = result.ExecuteReader())
+				{
+					try
+					{
+						while (reader.Read())
+						{
+							int DataCount = 0;
+							DirClassifiedReplyData replyData = new DirClassifiedReplyData();
+							for (int i = 0; i < reader.FieldCount; i++)
+							{
+								if(DataCount == 0)
+									replyData.classifiedFlags = new UUID(reader.GetString(i));
+								if(DataCount == 1)
+									replyData.classifiedID = reader.GetString(i);
+								if(DataCount == 2)
+									replyData.creationDate = Convert.ToBoolean(reader.GetString(i));
+								if(DataCount == 3)
+									replyData.expirationDate = (float)Convert.ToUInt32(reader.GetString(i));
+								if(DataCount == 4)
+									replyData.price = (float)Convert.ToUInt32(reader.GetString(i));
+								DataCount++;
+								if(DataCount == 5)
+								{
+									DataCount = 0;
+									Data.Add(replyData);
+									replyData = new DirClassifiedReplyData();
+								}
+							}
+						}
+						return Data;
+					}
+					finally
+					{
+						reader.Close();
+						reader.Dispose();
+						result.Dispose();
+					}
+				}
+			}
+		}
+		public DirClassifiedReplyData[] ClassifiedsQuery(string queryText, string category, string queryFlags)
+		{
+			MySqlConnection dbcon = GetLockedConnection();
+			IDbCommand result;
+			IDataReader reader;
+			List<DirClassifiedReplyData> Data = new List<DirClassifiedReplyData>();
+			string query = "select classifieduuid, name, creationdate, expirationdate, priceforlisting from classifieds where name LIKE '%" + queryText + "%' and category = '"+category+"'";
+			using (result = Query(query, new Dictionary<string, object>(), dbcon))
+			{
+				using (reader = result.ExecuteReader())
+				{
+					try
+					{
+						while (reader.Read())
+						{
+							int DataCount = 0;
+							DirClassifiedReplyData replyData = new DirClassifiedReplyData();
+							for (int i = 0; i < reader.FieldCount; i++)
+							{
+								if(DataCount == 0)
+									replyData.classifiedFlags = new UUID(reader.GetString(i));
+								if(DataCount == 1)
+									replyData.classifiedID = reader.GetString(i);
+								if(DataCount == 2)
+									replyData.creationDate = Convert.ToBoolean(reader.GetString(i));
+								if(DataCount == 3)
+									replyData.expirationDate = (float)Convert.ToUInt32(reader.GetString(i));
+								if(DataCount == 4)
+									replyData.price = (float)Convert.ToUInt32(reader.GetString(i));
+								DataCount++;
+								if(DataCount == 5)
+								{
+									DataCount = 0;
+									Data.Add(replyData);
+									replyData = new DirClassifiedReplyData();
+								}
+							}
+						}
+						return Data;
+					}
+					finally
+					{
+						reader.Close();
+						reader.Dispose();
+						result.Dispose();
+					}
+				}
+			}
+		}
     }
 }

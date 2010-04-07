@@ -38,6 +38,7 @@ namespace OpenSim.Region.ScriptEngine.Interfaces
             out string assembly, out Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> linemap, out string Identifier);
         string[] GetWarnings();
     }
+    
     public interface IScriptProtectionModule
     {
         void AddWantedSRC(UUID itemID, string ClassName);
@@ -47,6 +48,7 @@ namespace OpenSim.Region.ScriptEngine.Interfaces
         ThreatLevel GetThreatLevel();
         void CheckThreatLevel(ThreatLevel level, string function);
     }
+    
     public enum ThreatLevel
     {
         None = 0,

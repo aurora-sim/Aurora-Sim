@@ -142,6 +142,55 @@ namespace Aurora.DataManager.MySQL
                 }
             }
         }
+        
+        public override List<string> Query(string[] keyRow, string[] keyValue, string table, string wantedValue)
+        {
+            MySqlConnection dbcon = GetLockedConnection();
+            IDbCommand result;
+            IDataReader reader;
+            List<string> RetVal = new List<string>();
+            string query = "select " + wantedValue + " from " + table + " where ";
+            int i = 0;
+            foreach (string value in keyValue)
+            {
+                query += keyRow[i] + " = '" + value + "' and ";
+                i++;
+            }
+            query = query.Remove(query.Length - 4);
+            
+            
+            using (result = Query(query, new Dictionary<string, object>(), dbcon))
+            {
+                using (reader = result.ExecuteReader())
+                {
+                    try
+                    {
+                        while (reader.Read())
+                        {
+                            for (int i = 0; i < reader.FieldCount; i++)
+                            {
+                                RetVal.Add(reader.GetString(i));
+                            }
+                        }
+                        if (RetVal.Count == 0)
+                        {
+                            RetVal.Add("");
+                            return RetVal;
+                        }
+                        else
+                        {
+                            return RetVal;
+                        }
+                    }
+                    finally
+                    {
+                        reader.Close();
+                        reader.Dispose();
+                        result.Dispose();
+                    }
+                }
+            }
+        }
 
         public List<string> Query(string keyRow, string keyValue, string table)
         {

@@ -9,6 +9,7 @@ using Mono.Data.SqliteClient;
 using OpenSim.Data;
 using OpenMetaverse;
 using Aurora.Framework;
+using OpenSim.Framework;
 
 namespace Aurora.DataManager.SQLite
 {
@@ -410,6 +411,182 @@ namespace Aurora.DataManager.SQLite
             UserProfilesCache.Add(new UUID(client), UserProfile);
             return UserProfile;
         }
+        
+        public DirPlacesReplyData[] PlacesQuery(string queryText, string category, string table, string wantedValue)
+        {
+        	var cmd = new SqliteCommand();
+            List<DirPlacesReplyData> Data = new List<DirPlacesReplyData>();
+            string query = String.Format("select {0} from {1} where ",
+                                      wantedValue, table);
+            int i = 0;
+            query += "PCategory = '"+category+"' and Pdesc LIKE '%" + queryText + "%' OR PName LIKE '%" + queryText + "%' ";
+                i++;
+            
+            cmd.CommandText = query;
+            IDataReader reader = GetReader(cmd);
+            
+            while (reader.Read())
+            {
+            	int DataCount = 0;
+            	DirPlacesReplyData replyData = new DirPlacesReplyData();
+            	for (int i = 0; i < reader.FieldCount; i++)
+                {
+            		if(DataCount == 0)
+            			replyData.parcelID = new UUID(reader.GetString(i));
+            		if(DataCount == 1)
+            			replyData.name = reader.GetString(i);
+            		if(DataCount == 2)
+            			replyData.forSale = Convert.ToBoolean(reader.GetString(i));
+            		if(DataCount == 3)
+            			replyData.auction = Convert.ToBoolean(reader.GetString(i));
+            		if(DataCount == 4)
+            			replyData.dwell = (float)Convert.ToUInt32(reader.GetString(i));
+                    DataCount++;
+                    if(DataCount == 5)
+                    {
+                    	DataCount = 0;
+                    	Data.Add(replyData);
+                    	replyData = new DirPlacesReplyData();
+                    }
+                }
+            }
+            reader.Close();
+            reader.Dispose();
+            CloseReaderCommand(cmd);
 
+            return Data;
+        }
+		public DirLandReplyData[] LandForSaleQuery(string searchType, string price, string area, string table, string wantedValue)
+        {
+        	var cmd = new SqliteCommand();
+            List<DirLandReplyData> Data = new List<DirLandReplyData>();
+            string query = String.Format("select {0} from {1} where ",
+                                      wantedValue, table);
+            //TODO: Check this searchType ref!
+            if(searchType != 0)
+            	query += "PType = '"+searchType+"' and PPrice <= '" + price + "' and area >= '" + area + "' ";
+            else
+            	query += "PPrice <= '" + price + "' and area >= '" + area + "' ";
+            
+            cmd.CommandText = query;
+            IDataReader reader = GetReader(cmd);
+            
+            while (reader.Read())
+            {
+            	int DataCount = 0;
+            	DirLandReplyData replyData = new DirLandReplyData();
+            	for (int i = 0; i < reader.FieldCount; i++)
+                {
+            		if(DataCount == 0)
+            			replyData.parcelID = new UUID(reader.GetString(i));
+            		if(DataCount == 1)
+            			replyData.name = reader.GetString(i);
+            		if(DataCount == 2)
+            			replyData.forSale = Convert.ToBoolean(reader.GetString(i));
+            		if(DataCount == 3)
+            			replyData.auction = Convert.ToBoolean(reader.GetString(i));
+            		if(DataCount == 4)
+            			replyData.salePrice = (float)Convert.ToUInt32(reader.GetString(i));
+            		if(DataCount == 5)
+            			replyData.actualArea = (float)Convert.ToUInt32(reader.GetString(i));
+                    DataCount++;
+                    if(DataCount == 6)
+                    {
+                    	DataCount = 0;
+                    	Data.Add(replyData);
+                    	replyData = new DirLandReplyData();
+                    }
+                }
+            }
+            reader.Close();
+            reader.Dispose();
+            CloseReaderCommand(cmd);
+
+            return Data;
+        }
+		public DirEventsReplyData[] EventQuery(string queryText, string flags, string table, string wantedValue)
+		{
+			var cmd = new SqliteCommand();
+            List<DirEventsReplyData> Data = new List<DirEventsReplyData>();
+            string query = String.Format("select {0} from {1} where ",
+                                      wantedValue, table);
+            query += "and EName LIKE '%" + queryText + "%' and EFlags <= '" + flags + "'";
+            cmd.CommandText = query;
+            IDataReader reader = GetReader(cmd);
+            
+            while (reader.Read())
+            {
+            	int DataCount = 0;
+            	DirEventsReplyData replyData = new DirEventsReplyData();
+            	for (int i = 0; i < reader.FieldCount; i++)
+                {
+            		if(DataCount == 0)
+            			replyData.ownerID = new UUID(reader.GetString(i));
+            		if(DataCount == 1)
+            			replyData.name = reader.GetString(i);
+            		if(DataCount == 2)
+            			replyData.eventID = Convert.ToBoolean(reader.GetString(i));
+            		if(DataCount == 3)
+            			replyData.date = Convert.ToBoolean(reader.GetString(i));
+            		if(DataCount == 4)
+            			replyData.unixTime = (float)Convert.ToUInt32(reader.GetString(i));
+            		if(DataCount == 5)
+            			replyData.eventFlags = (float)Convert.ToUInt32(reader.GetString(i));
+                    DataCount++;
+                    if(DataCount == 6)
+                    {
+                    	DataCount = 0;
+                    	Data.Add(replyData);
+                    	replyData = new DirEventsReplyData();
+                    }
+                }
+            }
+            reader.Close();
+            reader.Dispose();
+            CloseReaderCommand(cmd);
+
+            return Data;
+		}
+		public DirClassifiedReplyData[] ClassifiedsQuery(string queryText, string category, string queryFlags)
+		{
+			SqliteCommand cmd = new SqliteCommand();
+            List<DirClassifiedReplyData> Data = new List<DirClassifiedReplyData>();
+            string query = "select classifieduuid, name, creationdate, expirationdate, priceforlisting from classifieds where name LIKE '%" + queryText + "%' and category = '"+category+"'";
+            cmd.CommandText = query;
+            IDataReader reader = GetReader(cmd);
+            try
+            {
+            	while (reader.Read())
+            	{
+            		int DataCount = 0;
+            		DirClassifiedReplyData replyData = new DirClassifiedReplyData();
+            		for (int i = 0; i < reader.FieldCount; i++)
+            		{
+            			if(DataCount == 0)
+            				replyData.classifiedFlags = new UUID(reader.GetString(i));
+            			if(DataCount == 1)
+            				replyData.classifiedID = reader.GetString(i);
+            			if(DataCount == 2)
+            				replyData.creationDate = Convert.ToBoolean(reader.GetString(i));
+            			if(DataCount == 3)
+            				replyData.expirationDate = (float)Convert.ToUInt32(reader.GetString(i));
+            			if(DataCount == 4)
+            				replyData.price = (float)Convert.ToUInt32(reader.GetString(i));
+            			DataCount++;
+            			if(DataCount == 5)
+            			{
+            				DataCount = 0;
+            				Data.Add(replyData);
+            				replyData = new DirClassifiedReplyData();
+            			}
+            		}
+            	}
+            }
+            catch (Exception ex){}
+            reader.Close();
+            reader.Dispose();
+            CloseReaderCommand(cmd);
+            return Data;
+		}
     }
 }

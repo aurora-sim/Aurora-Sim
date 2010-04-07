@@ -176,6 +176,7 @@ namespace OpenSim.Region.DataSnapshot
 
                 //scene.OnRestart += OnSimRestart;
                 scene.EventManager.OnShutdown += delegate() { OnSimRestart(scene.RegionInfo); };
+                scene.RegisterModuleInterface<IDataSnapshot>(this);
             }
             else
             {

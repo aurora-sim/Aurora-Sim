@@ -23,6 +23,12 @@ namespace Aurora.Framework
         void UpdateUserProfile(AuroraProfileData Profile);
 
         AuroraProfileData CreateTemperaryAccount(string client, string first, string last);
+        
+        DirPlacesReplyData[] PlacesQuery(string queryText, string category, string table, string wantedValue);
+        DirLandReplyData[] LandForSaleQuery(string searchType, string price, string area, string table, string wantedValue);
+        DirClassifiedReplyData[] ClassifiedsQuery(string queryText, string category, string queryFlags);
+        DirEventsReplyData[] EventQuery(string queryText, string flags, string table, string wantedValue);
+        
     }
     public interface IRegionData
     {
@@ -39,6 +45,7 @@ namespace Aurora.Framework
         /// select wantedValue from table where keyRow = keyValue
         /// </summary>
         List<string> Query(string keyRow, string keyValue, string table, string wantedValue);
+        List<string> Query(string[] keyRow, string[] keyValue, string table, string wantedValue);
         void Insert(string table, string[] values);
         void Delete(string table, string[] keys, string[] values);
         void Insert(string table, string[] values, string updateKey, string updateValue);

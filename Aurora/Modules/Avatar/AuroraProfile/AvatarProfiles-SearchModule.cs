@@ -49,10 +49,6 @@ using FriendInfo = OpenSim.Services.Interfaces.FriendInfo;
 
 namespace Aurora.Modules
 {
-    public class Classified
-    {
-
-    }
     public class AuroraProfileModule : IRegionModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -68,7 +64,7 @@ namespace Aurora.Modules
         private bool m_SearchEnabled = true;
         private bool m_ProfileEnabled = true;
         protected IFriendsService m_FriendsService = null;
-        
+        protected IGroupsModule GroupsModule = null;
         #region IRegionModule Members
 
         public void Initialise(Scene scene, IConfigSource config)
@@ -126,6 +122,7 @@ namespace Aurora.Modules
         {
             ProfileData = Aurora.DataManager.DataManager.GetProfilePlugin();
             GenericData = Aurora.DataManager.DataManager.GetGenericPlugin();
+            GroupsModule = m_scene.RequestModuleInterface<IGroupsModule>();
         }
 
         public void Close()
@@ -147,6 +144,7 @@ namespace Aurora.Modules
             get { return m_scene; }
         }
         #endregion
+        
         public void NewClient(IClientAPI client)
         {
             if (m_ProfileEnabled)
@@ -195,6 +193,7 @@ namespace Aurora.Modules
             client.OnRequestAvatarProperties -= RequestAvatarProperty;
             client.OnUpdateAvatarProperties -= UpdateAvatarProperties;
         }
+        
         public void HandleAvatarClassifiedsRequest(Object sender, string method, List<String> args)
         {
             if (!(sender is IClientAPI))
@@ -840,6 +839,30 @@ namespace Aurora.Modules
                                               charterMember, Profile.FirstLifeAboutText, flags,
                                               Profile.FirstLifeImage, Profile.Image, Profile.ProfileURL, new UUID(Profile.Partner));
         }
+        
+        public void UserPreferencesRequest(IClientAPI remoteClient)
+        {
+            List<string> UserInfo = ProfileData.Query("select imviaemail,visible,email from usersauth where userUUID = '" + remoteClient.AgentId.ToString() + "'");
+            remoteClient.SendUserInfoReply(
+                Convert.ToBoolean(UserInfo[0]),
+                Convert.ToBoolean(UserInfo[1]),
+                UserInfo[2]);
+        }
+
+        public void UpdateUserPreferences(bool imViaEmail, bool visible, IClientAPI remoteClient)
+        {
+            List<string> keys = new List<string>();
+            List<string> values = new List<string>();
+            keys.Add("imviaemail");
+            values.Add(imViaEmail.ToString());
+            keys.Add("visible");
+            values.Add(visible.ToString());
+            List<string> keys2 = new List<string>();
+            List<string> values2 = new List<string>();
+            keys2.Add("UUID");
+            values2.Add(remoteClient.AgentId.ToString());
+            GenericData.Update("users", values.ToArray(), keys.ToArray(), values2.ToArray(), keys2.ToArray());
+        }
 
 
 
@@ -911,154 +934,66 @@ namespace Aurora.Modules
             return RespData;
         }
 
+        //FIXME
         protected void DirPlacesQuery(IClientAPI remoteClient, UUID queryID,
                                       string queryText, int queryFlags, int category, string simName,
                                       int queryStart)
         {
-            Hashtable ReqHash = new Hashtable();
-            ReqHash["text"] = queryText;
-            ReqHash["flags"] = queryFlags.ToString();
-            ReqHash["category"] = category.ToString();
-            ReqHash["sim_name"] = simName;
-            ReqHash["query_start"] = queryStart.ToString();
-
-            Hashtable result = GenericXMLRPCRequest(ReqHash,
-                                                    "dir_places_query");
-
-            if (!Convert.ToBoolean(result["success"]))
-            {
-                remoteClient.SendAgentAlertMessage(
-                    result["errorMessage"].ToString(), false);
-                return;
-            }
-
-            ArrayList dataArray = (ArrayList)result["data"];
-
-            int count = dataArray.Count;
-            if (count > 100)
-                count = 101;
+        	//TODO: Add queryStart!!!
+        	DirPlacesReplyData[] ReturnValues = ProfileData.PlacesQuery(queryText,category.ToString(),"parcels","PID,PName,PForSale,PAuction,PDwell");
 
             DirPlacesReplyData[] data = new DirPlacesReplyData[10];
 
             int i = 0;
-            int newpacketcount = dataArray.Count;
-            foreach (Object o in dataArray)
+            int newpacketcount = ReturnValues.Count;
+            foreach (DirPlacesReplyData d in ReturnValues)
             {
-                Hashtable d = (Hashtable)o;
-                if (newpacketcount >= 20)
-                {
-                    newpacketcount = 0;
-                    remoteClient.SendDirPlacesReply(queryID, data);
-                    data = new DirPlacesReplyData[20];
-                }
-                data[newpacketcount] = new DirPlacesReplyData();
-                data[newpacketcount].parcelID = new UUID(d["parcel_id"].ToString());
-                data[newpacketcount].name = d["name"].ToString();
-                data[newpacketcount].forSale = Convert.ToBoolean(d["for_sale"]);
-                data[newpacketcount].auction = Convert.ToBoolean(d["auction"]);
-                data[newpacketcount].dwell = Convert.ToSingle(d["dwell"]);
-                i++;
-                newpacketcount++;
-                if (i >= count)
-                {
-                    remoteClient.SendDirPlacesReply(queryID, data);
-                    break;
-                }
+            	data[i] = d;
+            	i++;
+            	if(i == 10)
+            	{
+                	remoteClient.SendDirPlacesReply(queryID, data);
+                    i = 0;
+                    data = new DirPlacesReplyData[10];
+            	}
             }
+            if(data[0] != null)
+            	remoteClient.SendDirPlacesReply(queryID, data);
         }
 
         public void DirPopularQuery(IClientAPI remoteClient, UUID queryID, uint queryFlags)
         {
-            Hashtable ReqHash = new Hashtable();
-            ReqHash["flags"] = queryFlags.ToString();
-
-            Hashtable result = GenericXMLRPCRequest(ReqHash,
-                                                    "dir_popular_query");
-
-            if (!Convert.ToBoolean(result["success"]))
-            {
-                remoteClient.SendAgentAlertMessage(
-                    result["errorMessage"].ToString(), false);
-                return;
-            }
-
-            ArrayList dataArray = (ArrayList)result["data"];
-
-            int count = dataArray.Count;
-            if (count > 100)
-                count = 101;
-
-            DirPopularReplyData[] data = new DirPopularReplyData[count];
-
-            int i = 0;
-
-            foreach (Object o in dataArray)
-            {
-                Hashtable d = (Hashtable)o;
-
-                data[i] = new DirPopularReplyData();
-                data[i].parcelID = new UUID(d["parcel_id"].ToString());
-                data[i].name = d["name"].ToString();
-                data[i].dwell = Convert.ToSingle(d["dwell"]);
-                i++;
-                if (i >= count)
-                    break;
-            }
-
-            remoteClient.SendDirPopularReply(queryID, data);
+        	
+        	/// <summary>
+        	/// Decapriated.
+        	/// </summary>
         }
-
+        
+        //FIXME
         public void DirLandQuery(IClientAPI remoteClient, UUID queryID,
                                  uint queryFlags, uint searchType, int price, int area,
                                  int queryStart)
         {
-            Hashtable ReqHash = new Hashtable();
-            ReqHash["flags"] = queryFlags.ToString();
-            ReqHash["type"] = searchType.ToString();
-            ReqHash["price"] = price.ToString();
-            ReqHash["area"] = area.ToString();
-            ReqHash["query_start"] = queryStart.ToString();
+			//TODO: Add queryStart!!!
+            DirLandReplyData ReturnValues = ProfileData.LandForSaleQuery(searchType.ToString(),price.ToString(),area.ToString(),"forsaleparcels","PID,PName,PForSale,PAuction,PSalePrice,PActualArea");
 
-            Hashtable result = GenericXMLRPCRequest(ReqHash,
-                                                    "dir_land_query");
-
-            if (!Convert.ToBoolean(result["success"]))
-            {
-                remoteClient.SendAgentAlertMessage(
-                    result["errorMessage"].ToString(), false);
-                return;
-            }
-
-            ArrayList dataArray = (ArrayList)result["data"];
-
-            int count = dataArray.Count;
-            if (count > 100)
-                count = 101;
-
-            DirLandReplyData[] data = new DirLandReplyData[count];
+            DirLandReplyData[] data = new DirLandReplyData[10];
 
             int i = 0;
-
-            foreach (Object o in dataArray)
+            int newpacketcount = ReturnValues.Count;
+            foreach (DirLandReplyData d in ReturnValues)
             {
-                Hashtable d = (Hashtable)o;
-
-                if (d["name"] == null)
-                    continue;
-
-                data[i] = new DirLandReplyData();
-                data[i].parcelID = new UUID(d["parcel_id"].ToString());
-                data[i].name = d["name"].ToString();
-                data[i].auction = Convert.ToBoolean(d["auction"]);
-                data[i].forSale = Convert.ToBoolean(d["for_sale"]);
-                data[i].salePrice = Convert.ToInt32(d["sale_price"]);
-                data[i].actualArea = Convert.ToInt32(d["area"]);
-                i++;
-                if (i >= count)
-                    break;
+            	data[i] = d;
+            	i++;
+            	if(i == 10)
+            	{
+                	remoteClient.SendDirLandReply(queryID, data);
+                    i = 0;
+                    data = new DirPlacesReplyData[10];
+            	}
             }
-
-            remoteClient.SendDirLandReply(queryID, data);
+            if(data[0] != null)
+            	remoteClient.SendDirLandReply(queryID, data);
         }
 
         public void DirFindQuery(IClientAPI remoteClient, UUID queryID,
@@ -1078,12 +1013,12 @@ namespace Aurora.Modules
             }
         }
 
+        //Finished!
         public void DirPeopleQuery(IClientAPI remoteClient, UUID queryID,
                                    string queryText, uint queryFlags, int queryStart)
         {
             List<UserAccount> accounts = m_Scenes[0].UserAccountService.GetUserAccounts(m_Scenes[0].RegionInfo.ScopeID, queryText);
-
-            DirPeopleReplyData[] data =
+			DirPeopleReplyData[] data =
                     new DirPeopleReplyData[accounts.Count];
 
             int i = 0;
@@ -1092,12 +1027,24 @@ namespace Aurora.Modules
                 AuroraProfileData UserProfile = ProfileData.GetProfileInfo(item.PrincipalID);
                 if (UserProfile.AllowPublish == "1")
                 {
-                    data[i] = new DirPeopleReplyData();
+                	data[i] = new DirPeopleReplyData();
                     data[i].agentID = item.PrincipalID;
                     data[i].firstName = item.FirstName;
                     data[i].lastName = item.LastName;
-                    data[i].group = "";
-                    data[i].online = false;
+                    if(GroupsModule == null)
+                    	data[i].group = "";
+                    else
+                    {
+                    	data[i].group = "";
+                    	GroupMembershipData[] memberships = GroupsModule.GetMembershipData(item.PrincipalID);
+                    	foreach(GroupMembershipData membership in memberships)
+                    	{
+                    		if(membership.Active)
+                    			data[i].group = membership.GroupName;
+                    	}
+                    }
+                    PresenceInfo Pinfo = m_Scenes[0].PresenceService.GetAgents(new string{ item.PrincipalID.ToString() })[0];
+                    data[i].online = (Pinfo == null)
                     data[i].reputation = 0;
                     i++;
                 }
@@ -1106,101 +1053,56 @@ namespace Aurora.Modules
             remoteClient.SendDirPeopleReply(queryID, data);
         }
 
+        //FIXME
         public void DirEventsQuery(IClientAPI remoteClient, UUID queryID,
                                    string queryText, uint queryFlags, int queryStart)
         {
-            Hashtable ReqHash = new Hashtable();
-            ReqHash["text"] = queryText;
-            ReqHash["flags"] = queryFlags.ToString();
-            ReqHash["query_start"] = queryStart.ToString();
+            //TODO: Add queryStart!!!
+            DirEventsReplyData[] ReturnValues = ProfileData.EventQuery(queryText, queryFlags.ToString(),"Events","EOwnerID,EName,EID,EDate,ETime,EFlags");
 
-            Hashtable result = GenericXMLRPCRequest(ReqHash,
-                                                    "dir_events_query");
-
-            if (!Convert.ToBoolean(result["success"]))
+            DirPlacesReplyData[] data = new DirPlacesReplyData[10];
+			int i = 0;
+			
+            foreach (DirEventsReplyData d in ReturnValues)
             {
-                remoteClient.SendAgentAlertMessage("", false);
-                return;
+            	data[i] = d;
+            	i++;
+            	if(i == 10)
+            	{
+                	remoteClient.SendDirEventsReply(queryID, data);
+                    i = 0;
+                    data = new DirPlacesReplyData[10];
+            	}
             }
-
-            ArrayList dataArray = (ArrayList)result["data"];
-
-            int count = dataArray.Count;
-            if (count > 100)
-                count = 101;
-
-            DirEventsReplyData[] data = new DirEventsReplyData[count];
-
-            int i = 0;
-
-            foreach (Object o in dataArray)
-            {
-                Hashtable d = (Hashtable)o;
-
-                data[i] = new DirEventsReplyData();
-                data[i].ownerID = new UUID(d["owner_id"].ToString());
-                data[i].name = d["name"].ToString();
-                data[i].eventID = Convert.ToUInt32(d["event_id"]);
-                data[i].date = d["date"].ToString();
-                data[i].unixTime = Convert.ToUInt32(d["unix_time"]);
-                data[i].eventFlags = Convert.ToUInt32(d["event_flags"]);
-                i++;
-                if (i >= count)
-                    break;
-            }
-
-            remoteClient.SendDirEventsReply(queryID, data);
+            if(data[0] != null)
+            	remoteClient.SendDirEventsReply(queryID, data);
         }
-
+		//FIXME
         public void DirClassifiedQuery(IClientAPI remoteClient, UUID queryID,
                                        string queryText, uint queryFlags, uint category,
                                        int queryStart)
         {
-            Hashtable ReqHash = new Hashtable();
-            ReqHash["text"] = queryText;
-            ReqHash["flags"] = queryFlags.ToString();
-            ReqHash["category"] = category.ToString();
-            ReqHash["query_start"] = queryStart.ToString();
-
-            Hashtable result = GenericXMLRPCRequest(ReqHash,
-                                                    "dir_classified_query");
-
-            if (!Convert.ToBoolean(result["success"]))
+        	//TODO: Add queryStart!!!
+            DirClassifiedReplyData[] ReplyData = ProfileData.ClassifiedsQuery(queryText, category, queryFlags);
+            
+        	DirClassifiedReplyData[] data = new DirClassifiedReplyData[10];
+			int i = 0;
+			
+            foreach (DirClassifiedReplyData d in ReplyData)
             {
-                remoteClient.SendAgentAlertMessage(
-                    result["errorMessage"].ToString(), false);
-                return;
+            	data[i] = d;
+            	i++;
+            	if(i == 10)
+            	{
+                	remoteClient.SendDirClassifiedReply(queryID, data);
+                    i = 0;
+                    data = new DirClassifiedReplyData[10];
+            	}
             }
-
-            ArrayList dataArray = (ArrayList)result["data"];
-
-            int count = dataArray.Count;
-            if (count > 100)
-                count = 101;
-
-            DirClassifiedReplyData[] data = new DirClassifiedReplyData[count];
-
-            int i = 0;
-
-            foreach (Object o in dataArray)
-            {
-                Hashtable d = (Hashtable)o;
-
-                data[i] = new DirClassifiedReplyData();
-                data[i].classifiedID = new UUID(d["classifiedid"].ToString());
-                data[i].name = d["name"].ToString();
-                data[i].classifiedFlags = Convert.ToByte(d["classifiedflags"]);
-                data[i].creationDate = Convert.ToUInt32(d["creation_date"]);
-                data[i].expirationDate = Convert.ToUInt32(d["expiration_date"]);
-                data[i].price = Convert.ToInt32(d["priceforlisting"]);
-                i++;
-                if (i >= count)
-                    break;
-            }
-
             remoteClient.SendDirClassifiedReply(queryID, data);
         }
 
+        //FIXME, TODO, HACK
         public void EventInfoRequest(IClientAPI remoteClient, uint queryEventID)
         {
             Hashtable ReqHash = new Hashtable();
@@ -1247,6 +1149,7 @@ namespace Aurora.Modules
             remoteClient.SendEventInfoReply(data);
         }
 
+        //FIXME, TODO, HACK
         public void ClassifiedInfoRequest(UUID queryClassifiedID, IClientAPI remoteClient)
         {
             Hashtable ReqHash = new Hashtable();
@@ -1296,29 +1199,6 @@ namespace Aurora.Modules
                 Convert.ToByte(d["classifiedflags"]),
                 Convert.ToInt32(d["priceforlisting"]));
         }
-        public void UserPreferencesRequest(IClientAPI remoteClient)
-        {
-            List<string> UserInfo = ProfileData.Query("select imviaemail,visible,email from usersauth where userUUID = '" + remoteClient.AgentId.ToString() + "'");
-            remoteClient.SendUserInfoReply(
-                Convert.ToBoolean(UserInfo[0]),
-                Convert.ToBoolean(UserInfo[1]),
-                UserInfo[2]);
-        }
-
-        public void UpdateUserPreferences(bool imViaEmail, bool visible, IClientAPI remoteClient)
-        {
-            List<string> keys = new List<string>();
-            List<string> values = new List<string>();
-            keys.Add("imviaemail");
-            values.Add(imViaEmail.ToString());
-            keys.Add("visible");
-            values.Add(visible.ToString());
-            List<string> keys2 = new List<string>();
-            List<string> values2 = new List<string>();
-            keys2.Add("UUID");
-            values2.Add(remoteClient.AgentId.ToString());
-            GenericData.Update("users", values.ToArray(), keys.ToArray(), values2.ToArray(), keys2.ToArray());
-        }
 
         public virtual void HandleMapItemRequest(IClientAPI remoteClient, uint flags,
                                                  uint EstateID, bool godlike, uint itemtype, ulong regionhandle)
@@ -1328,6 +1208,7 @@ namespace Aurora.Modules
             OpenMetaverse.Utils.LongToUInts(m_scene.RegionInfo.RegionHandle, out xstart, out ystart);
             List<mapItemReply> mapitems = new List<mapItemReply>();
             mapItemReply mapitem = new mapItemReply();
+            #region Telehub
             if (itemtype == 1) //(Telehub)
             {
                 List<string> Telehubs = ProfileData.Query("select telehubX,telehubY,regionX,regionY from auroraregions");
@@ -1380,86 +1261,38 @@ namespace Aurora.Modules
                 remoteClient.SendMapItemReply(mapitems.ToArray(), itemtype, flags);
                 mapitems.Clear();
             }
-
+			#endregion
             #region 7
             if (itemtype == 7) //(land sales)
             {
-                int tc = Environment.TickCount;
-                Hashtable ReqHash = new Hashtable();
-                ReqHash["flags"] = "163840";
-                ReqHash["type"] = "4294967295 ";
-                ReqHash["price"] = "0";
-                ReqHash["area"] = "0";
-                ReqHash["query_start"] = "0";
-
-                Hashtable result = GenericXMLRPCRequest(ReqHash,
-                                                        "dir_land_query");
-
-                if (!Convert.ToBoolean(result["success"]))
-                {
-                    remoteClient.SendAgentAlertMessage(
-                        result["errorMessage"].ToString(), false);
-                    return;
-                }
-
-                ArrayList dataArray = (ArrayList)result["data"];
-
-                int count = dataArray.Count;
-                if (count > 100)
-                    count = 101;
-
-                DirLandReplyData[] Landdata = new DirLandReplyData[count];
-
-                int i = 0;
-                List<string> ParcelLandingPoint = new List<string>();
-                List<string> ParcelRegionUUID = new List<string>();
-                foreach (Object o in dataArray)
-                {
-                    Hashtable d = (Hashtable)o;
-
-                    if (d["name"] == null)
-                        continue;
-                    Landdata[i] = new DirLandReplyData();
-                    Landdata[i].parcelID = new UUID(d["parcel_id"].ToString());
-                    Landdata[i].name = d["name"].ToString();
-                    Landdata[i].auction = Convert.ToBoolean(d["auction"]);
-                    Landdata[i].forSale = Convert.ToBoolean(d["for_sale"]);
-                    Landdata[i].salePrice = Convert.ToInt32(d["sale_price"]);
-                    Landdata[i].actualArea = Convert.ToInt32(d["area"]);
-                    ParcelLandingPoint[i] = d["landing_point"].ToString();
-                    ParcelRegionUUID[i] = d["region_UUID"].ToString();
-                    i++;
-                    if (i >= count)
-                        break;
-                }
-                i = 0;
+                DirLandReplyData[] Landdata = ProfileData.LandForSaleQuery("4294967295",int.MaxValue.ToString(),"0","forsaleparcels",,"PID,PName,PForSale,PAuction,PSalePrice,PActualArea");
+                    
                 uint locX = 0;
                 uint locY = 0;
                 foreach (DirLandReplyData landDir in Landdata)
                 {
+                	List<string> ParcelInfo = GenericData.Query("PID",landDir.parcelID,"parcels","PLandingX, PLandingY, PRegionID");
                     foreach (Scene scene in m_Scenes)
                     {
-                        if (scene.RegionInfo.RegionID == new UUID(ParcelRegionUUID[i]))
+                        if (scene.RegionInfo.RegionID == new UUID(ParcelInfo[2]))
                         {
                             locX = scene.RegionInfo.RegionLocX;
                             locY = scene.RegionInfo.RegionLocY;
                         }
                     }
-                    string[] landingpoint = ParcelLandingPoint[i].Split('/');
                     mapitem = new mapItemReply();
-                    mapitem.x = (uint)(locX + Convert.ToDecimal(landingpoint[0]));
-                    mapitem.y = (uint)(locY + Convert.ToDecimal(landingpoint[1]));
+                    mapitem.x = (uint)(locX + Convert.ToDecimal(ParcelInfo[0]));
+                    mapitem.y = (uint)(locY + Convert.ToDecimal(ParcelInfo[1]));
                     mapitem.id = landDir.parcelID;
                     mapitem.name = landDir.name;
                     mapitem.Extra = landDir.actualArea;
                     mapitem.Extra2 = landDir.salePrice;
                     mapitems.Add(mapitem);
-                    i++;
                 }
                 remoteClient.SendMapItemReply(mapitems.ToArray(), itemtype, flags);
                 mapitems.Clear();
-            #endregion
             }
+            #endregion
             //Events
             if (itemtype == 2) //(Events)
             {

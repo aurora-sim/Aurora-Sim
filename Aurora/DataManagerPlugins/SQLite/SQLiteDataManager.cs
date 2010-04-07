@@ -118,6 +118,37 @@ namespace Aurora.DataManager.SQLite
 
             return RetVal;
         }
+        
+        public override List<string> Query(string[] keyRow, string[] keyValue, string table, string wantedValue)
+        {
+            var cmd = new SqliteCommand();
+            string query = String.Format("select {0} from {1} where ",
+                                      wantedValue, table);
+            int i = 0;
+            foreach (string value in keyValue)
+            {
+                query += keyRow[i] + " = '" + value + "' and ";
+                i++;
+            }
+            query = query.Remove(query.Length - 4);
+            cmd.CommandText = query;
+            IDataReader reader = GetReader(cmd);
+            var RetVal = new List<string>();
+            while (reader.Read())
+            {
+                for (int i = 0; i < reader.FieldCount; i++)
+                {
+                    RetVal.Add(reader.GetString(i));
+                }
+            }
+            if (RetVal.Count == 0)
+                RetVal.Add("");
+            reader.Close();
+            reader.Dispose();
+            CloseReaderCommand(cmd);
+
+            return RetVal;
+        }
 
         public override void Insert(string table, string[] values)
         {
