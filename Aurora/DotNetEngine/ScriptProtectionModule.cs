@@ -36,6 +36,11 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         //String: ClassName, InstanceData: data of the script.
         Dictionary<string, InstanceData> ClassInstances = new Dictionary<string, InstanceData>();
         
+        //Threat Level for scripts.
+        ThreatLevel m_MaxThreatLevel = 0;
+        bool m_OSFunctionsEnabled = false;
+	    internal Dictionary<string, List<UUID> > m_FunctionPerms = new Dictionary<string, List<UUID> >();
+
         #endregion
         
         #region Constructor
@@ -44,8 +49,132 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 		{
 			m_source = source;
             m_engine = engine;
+            if (m_engine.Config.GetBoolean("AllowOSFunctions", false))
+                m_OSFunctionsEnabled = true;
+
 		}
         
+		#endregion
+		
+		#region ThreatLevels
+		
+		public ThreatLevel GetThreatLevel()
+		{
+			if(m_MaxThreatLevel != 0)
+				return m_MaxThreatLevel;
+			string risk = m_engine.Config.GetString("FunctionThreatLevel", "VeryLow");
+			switch (risk)
+			{
+				case "None":
+					m_MaxThreatLevel = ThreatLevel.None;
+					break;
+				case "VeryLow":
+					m_MaxThreatLevel = ThreatLevel.VeryLow;
+					break;
+				case "Low":
+					m_MaxThreatLevel = ThreatLevel.Low;
+					break;
+				case "Moderate":
+					m_MaxThreatLevel = ThreatLevel.Moderate;
+					break;
+				case "High":
+					m_MaxThreatLevel = ThreatLevel.High;
+					break;
+				case "VeryHigh":
+					m_MaxThreatLevel = ThreatLevel.VeryHigh;
+					break;
+				case "Severe":
+					m_MaxThreatLevel = ThreatLevel.Severe;
+					break;
+				default:
+					break;
+			}
+		}
+		
+		public void CheckThreatLevel(ThreatLevel level, string function)
+        {
+            if (!m_OSFunctionsEnabled)
+                Error("Runtime Error: ", String.Format("{0} permission denied.  All OS functions are disabled.", function)); // throws
+
+            if (!m_FunctionPerms.ContainsKey(function))
+            {
+                string perm = m_engine.Config.GetString("Allow_" + function, "");
+                if (perm == "")
+                {
+                    m_FunctionPerms[function] = null; // a null value is default
+                }
+                else
+                {
+                    bool allowed;
+
+                    if (bool.TryParse(perm, out allowed))
+                    {
+                        // Boolean given
+                        if (allowed)
+                        {
+                            m_FunctionPerms[function] = new List<UUID>();
+                            m_FunctionPerms[function].Add(UUID.Zero);
+                        }
+                        else
+                            m_FunctionPerms[function] = new List<UUID>(); // Empty list = none
+                    }
+                    else
+                    {
+                        m_FunctionPerms[function] = new List<UUID>();
+
+                        string[] ids = perm.Split(new char[] {','});
+                        foreach (string id in ids)
+                        {
+                            string current = id.Trim();
+                            UUID uuid;
+
+                            if (UUID.TryParse(current, out uuid))
+                            {
+                                if (uuid != UUID.Zero)
+                                    m_FunctionPerms[function].Add(uuid);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // If the list is null, then the value was true / undefined
+            // Threat level governs permissions in this case
+            //
+            // If the list is non-null, then it is a list of UUIDs allowed
+            // to use that particular function. False causes an empty
+            // list and therefore means "no one"
+            //
+            // To allow use by anyone, the list contains UUID.Zero
+            //
+            if (m_FunctionPerms[function] == null) // No list = true
+            {
+                if (level > m_MaxThreatLevel)
+                    Error("Runtime Error: ",
+                        String.Format(
+                            "{0} permission denied.  Allowed threat level is {1} but function threat level is {2}.",
+                            function, m_MaxThreatLevel, level));
+            }
+            else
+            {
+                if (!m_FunctionPerms[function].Contains(UUID.Zero))
+                {
+                	//REFACTOR ISSUE!!!
+                    //if (!m_FunctionPerms[function].Contains(m_host.OwnerID))
+                        Error("Runtime Error: ",
+                            String.Format("{0} permission denied.  Prim owner is not in the list of users allowed to execute this function.",
+                            function));
+                }
+            }
+        }
+
+		internal void Error(string surMessage, string msg)
+        {
+            throw new Exception(surMessage + msg);
+        }
+
+        
+		
 		#endregion
         
         #region MacroScripting Protection

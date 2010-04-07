@@ -44,5 +44,18 @@ namespace OpenSim.Region.ScriptEngine.Interfaces
         string GetSRC(UUID itemID, uint localID, UUID OwnerID);
         void AddNewClassSource(string ClassName, string SRC, object ID);
         bool AllowMacroScripting { get; }
+        ThreatLevel GetThreatLevel();
+        void CheckThreatLevel(ThreatLevel level, string function);
     }
+    public enum ThreatLevel
+    {
+        None = 0,
+        Nuisance = 1,
+        VeryLow = 2,
+        Low = 3,
+        Moderate = 4,
+        High = 5,
+        VeryHigh = 6,
+        Severe = 7
+    };
 }

@@ -227,7 +227,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             {
                 Apis[api] = am.CreateApi(api);
                 Apis[api].Initialize(m_ScriptManager.m_scriptEngine, part,
-                        localID, ItemID);
+                        localID, ItemID, m_scriptEngine.ScriptProtection);
             }
 			foreach (KeyValuePair<string, IScriptApi> kv in Apis)
             {
