@@ -24,7 +24,7 @@ namespace Aurora.Framework
 
         AuroraProfileData CreateTemperaryAccount(string client, string first, string last);
         
-        DirPlacesReplyData[] PlacesQuery(string queryText, string category, string table, string wantedValue, int StartQuery);
+		DirPlacesReplyData[] PlacesQuery(string queryText, string category, string table, string wantedValue, int StartQuery);
         DirLandReplyData[] LandForSaleQuery(string searchType, string price, string area, string table, string wantedValue, int StartQuery);
         DirClassifiedReplyData[] ClassifiedsQuery(string queryText, string category, string queryFlags, int StartQuery);
         DirEventsReplyData[] EventQuery(string queryText, string flags, string table, string wantedValue, int StartQuery);
