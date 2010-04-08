@@ -46,6 +46,7 @@ using Aurora.DataManager;
 using OpenSim.Services.Interfaces;
 using OpenSim.Server.Base;
 using FriendInfo = OpenSim.Services.Interfaces.FriendInfo;
+using OpenSim.Region.DataSnapshot.Interfaces;
 
 namespace Aurora.Modules
 {
@@ -65,6 +66,8 @@ namespace Aurora.Modules
         private bool m_ProfileEnabled = true;
         protected IFriendsService m_FriendsService = null;
         protected IGroupsModule GroupsModule = null;
+
+        protected double parserTime = 60000;
         #region IRegionModule Members
 
         public void Initialise(Scene scene, IConfigSource config)
@@ -88,41 +91,37 @@ namespace Aurora.Modules
                 m_FriendsService = ServerUtils.LoadPlugin<IFriendsService>(connector, args);
 
             }
-
-            m_SearchServer = profileConfig.GetString("SearchURL", "");
-            if (m_SearchServer == "")
-            {
-                m_log.Error("[AuroraProfileSearch] No search server, disabling search");
-                m_SearchEnabled = false;
-            }
-            else if (m_FriendsService == null)
+            parserTime = profileConfig.GetDouble("ParserTime", 60000);
+            if (m_FriendsService == null)
             {
                 m_log.Error("[AuroraProfileSearch]: No Connector defined in section Friends, or filed to load, cannot continue");
                 m_ProfileEnabled = false;
+                m_SearchEnabled = false;
             }
-            else if (profileConfig.GetString("Module", Name) != Name)
+            else if (profileConfig.GetString("ProfileModule", Name) != Name)
             {
                 m_ProfileEnabled = false;
             }
-            else
+            else if (profileConfig.GetString("SearchModule", Name) != Name)
             {
-                m_log.Info("[AuroraProfileSearch] Search module is activated");
-                m_SearchEnabled = true;
-                m_ProfileEnabled = true;
+                m_SearchEnabled = false;
             }
+
             if (!m_Scenes.Contains(scene))
                 m_Scenes.Add(scene);
             m_scene = scene;
             m_gConfig = config;
             m_scene.EventManager.OnNewClient += NewClient;
-
         }
-
+        private IDataSnapshot DataSnapShotManager;
         public void PostInitialise()
         {
             ProfileData = Aurora.DataManager.DataManager.GetProfilePlugin();
             GenericData = Aurora.DataManager.DataManager.GetGenericPlugin();
             GroupsModule = m_scene.RequestModuleInterface<IGroupsModule>();
+            DataSnapShotManager = m_scene.RequestModuleInterface<IDataSnapshot>();
+            if (m_SearchEnabled)
+                StartSearch();
         }
 
         public void Close()
@@ -194,6 +193,8 @@ namespace Aurora.Modules
             client.OnUpdateAvatarProperties -= UpdateAvatarProperties;
         }
         
+        #region Profile Module
+
         public void HandleAvatarClassifiedsRequest(Object sender, string method, List<String> args)
         {
             if (!(sender is IClientAPI))
@@ -863,77 +864,9 @@ namespace Aurora.Modules
             values2.Add(remoteClient.AgentId.ToString());
             GenericData.Update("users", values.ToArray(), keys.ToArray(), values2.ToArray(), keys2.ToArray());
         }
+        #endregion
 
-
-
-        ///Start of Search Module!
-
-        //
-        // Make external XMLRPC request
-        //
-        private Hashtable GenericXMLRPCRequest(Hashtable ReqParams, string method)
-        {
-            ArrayList SendParams = new ArrayList();
-            SendParams.Add(ReqParams);
-
-            // Send Request
-            XmlRpcResponse Resp;
-            try
-            {
-                XmlRpcRequest Req = new XmlRpcRequest(method, SendParams);
-                Resp = Req.Send(m_SearchServer, 30000);
-            }
-            catch (WebException ex)
-            {
-                m_log.ErrorFormat("[SEARCH]: Unable to connect to Search " +
-                                  "Server {0}.  Exception {1}", m_SearchServer, ex);
-
-                Hashtable ErrorHash = new Hashtable();
-                ErrorHash["success"] = false;
-                ErrorHash["errorMessage"] = "Unable to search at this time. ";
-                ErrorHash["errorURI"] = "";
-
-                return ErrorHash;
-            }
-            catch (SocketException ex)
-            {
-                m_log.ErrorFormat(
-                    "[SEARCH]: Unable to connect to Search Server {0}. " +
-                    "Exception {1}", m_SearchServer, ex);
-
-                Hashtable ErrorHash = new Hashtable();
-                ErrorHash["success"] = false;
-                ErrorHash["errorMessage"] = "Unable to search at this time. ";
-                ErrorHash["errorURI"] = "";
-
-                return ErrorHash;
-            }
-            catch (XmlException ex)
-            {
-                m_log.ErrorFormat(
-                    "[SEARCH]: Unable to connect to Search Server {0}. " +
-                    "Exception {1}", m_SearchServer, ex);
-
-                Hashtable ErrorHash = new Hashtable();
-                ErrorHash["success"] = false;
-                ErrorHash["errorMessage"] = "Unable to search at this time. ";
-                ErrorHash["errorURI"] = "";
-
-                return ErrorHash;
-            }
-            if (Resp.IsFault)
-            {
-                Hashtable ErrorHash = new Hashtable();
-                ErrorHash["success"] = false;
-                ErrorHash["errorMessage"] = "Unable to search at this time. ";
-                ErrorHash["errorURI"] = "";
-                return ErrorHash;
-            }
-            Hashtable RespData = (Hashtable)Resp.Value;
-
-            return RespData;
-        }
-
+        #region Search Module
         //FIXME
         protected void DirPlacesQuery(IClientAPI remoteClient, UUID queryID,
                                       string queryText, int queryFlags, int category, string simName,
@@ -1099,102 +1032,29 @@ namespace Aurora.Modules
             remoteClient.SendDirClassifiedReply(queryID, data);
         }
 
-        //FIXME, TODO, HACK
         public void EventInfoRequest(IClientAPI remoteClient, uint queryEventID)
         {
-            Hashtable ReqHash = new Hashtable();
-            ReqHash["eventID"] = queryEventID.ToString();
-
-            Hashtable result = GenericXMLRPCRequest(ReqHash,
-                                                    "event_info_query");
-
-            if (!Convert.ToBoolean(result["success"]))
-            {
-                remoteClient.SendAgentAlertMessage(
-                    result["errorMessage"].ToString(), false);
-                return;
-            }
-
-            ArrayList dataArray = (ArrayList)result["data"];
-            if (dataArray.Count == 0)
-            {
-                // something bad happened here, if we could return an
-                // event after the search,
-                // we should be able to find it here
-                // TODO do some (more) sensible error-handling here
-                remoteClient.SendAgentAlertMessage("Couldn't find event.",
-                                                   false);
-                return;
-            }
-
-            Hashtable d = (Hashtable)dataArray[0];
             EventData data = new EventData();
-            data.eventID = Convert.ToUInt32(d["event_id"]);
-            data.creator = d["creator"].ToString();
-            data.name = d["name"].ToString();
-            data.category = d["category"].ToString();
-            data.description = d["description"].ToString();
-            data.date = d["date"].ToString();
-            data.dateUTC = Convert.ToUInt32(d["dateUTC"]);
-            data.duration = Convert.ToUInt32(d["duration"]);
-            data.cover = Convert.ToUInt32(d["covercharge"]);
-            data.amount = Convert.ToUInt32(d["coveramount"]);
-            data.simName = d["simname"].ToString();
-            Vector3.TryParse(d["globalposition"].ToString(), out data.globalPos);
-            data.eventFlags = Convert.ToUInt32(d["eventflags"]);
-
+            data = ProfileData.GetEventInfo(queryEventID.ToString());
             remoteClient.SendEventInfoReply(data);
         }
 
-        //FIXME, TODO, HACK
         public void ClassifiedInfoRequest(UUID queryClassifiedID, IClientAPI remoteClient)
         {
-            Hashtable ReqHash = new Hashtable();
-            ReqHash["classifiedID"] = queryClassifiedID.ToString();
-
-            Hashtable result = GenericXMLRPCRequest(ReqHash,
-                                                    "classifieds_info_query");
-
-            if (!Convert.ToBoolean(result["success"]))
-            {
-                remoteClient.SendAgentAlertMessage(
-                    result["errorMessage"].ToString(), false);
-                return;
-            }
-
-            ArrayList dataArray = (ArrayList)result["data"];
-            if (dataArray.Count == 0)
-            {
-                // something bad happened here, if we could return an
-                // event after the search,
-                // we should be able to find it here
-                // TODO do some (more) sensible error-handling here
-                remoteClient.SendAgentAlertMessage("Couldn't find classified.",
-                                                   false);
-                return;
-            }
-
-            Hashtable d = (Hashtable)dataArray[0];
-
+            List<string> classifiedinfo;
+            classifiedinfo = ProfileData.ReadClassifiedInfoRow(queryClassifiedID.ToString());
             Vector3 globalPos = new Vector3();
-            Vector3.TryParse(d["posglobal"].ToString(), out globalPos);
+            try
+            {
+                Vector3.TryParse(classifiedinfo[10], out globalPos);
+            }
+            catch (Exception ex)
+            {
+                ex = new Exception();
+                globalPos = new Vector3(128, 128, 128);
+            }
+            remoteClient.SendClassifiedInfoReply(queryClassifiedID, new UUID(classifiedinfo[0]), Convert.ToUInt32(classifiedinfo[1]), Convert.ToUInt32(classifiedinfo[2]), Convert.ToUInt32(classifiedinfo[3]), classifiedinfo[4], classifiedinfo[5], new UUID(classifiedinfo[6]), Convert.ToUInt32(classifiedinfo[7]), new UUID(classifiedinfo[8]), classifiedinfo[9], globalPos, classifiedinfo[11], Convert.ToByte(classifiedinfo[12]), Convert.ToInt32(classifiedinfo[13]));
 
-            remoteClient.SendClassifiedInfoReply(
-                new UUID(d["classifieduuid"].ToString()),
-                new UUID(d["creatoruuid"].ToString()),
-                Convert.ToUInt32(d["creationdate"]),
-                Convert.ToUInt32(d["expirationdate"]),
-                Convert.ToUInt32(d["category"]),
-                d["name"].ToString(),
-                d["description"].ToString(),
-                new UUID(d["parceluuid"].ToString()),
-                Convert.ToUInt32(d["parentestate"]),
-                new UUID(d["snapshotuuid"].ToString()),
-                d["simname"].ToString(),
-                globalPos,
-                d["parcelname"].ToString(),
-                Convert.ToByte(d["classifiedflags"]),
-                Convert.ToInt32(d["priceforlisting"]));
         }
 
         public virtual void HandleMapItemRequest(IClientAPI remoteClient, uint flags,
@@ -1387,5 +1247,225 @@ namespace Aurora.Modules
                 }*/
             }
         }
+
+
+        private System.Timers.Timer aTimer = null;
+        private void StartSearch()
+        {
+            aTimer = new System.Timers.Timer(parserTime);
+            aTimer.Elapsed += new System.Timers.ElapsedEventHandler(ParseRegions);
+            aTimer.Enabled = true;
+            
+        }
+
+        private void ParseRegions(object source, System.Timers.ElapsedEventArgs e)
+        {
+            foreach (Scene scene in m_Scenes)
+            {
+                FireParser(scene.RegionInfo.RegionName);
+            }
+        }
+
+        #region XML Info Classes
+
+        private class RegionXMLInfo
+        {
+            public string UUID;
+            public string Name;
+            public string Handle;
+            public string URL;
+            public string UserName;
+            public string UserUUID;
+        }
+
+        private class ObjectXMLInfo
+        {
+            public string UUID;
+            public string RegionUUID;
+            public string ParcelUUID;
+            public string Title;
+            public string Desc;
+            public string Flags;
+        }
+
+        private class ParcelXMLInfo
+        {
+            public string Name;
+            public string UUID;
+            public string InfoUUID;
+            public string Landing;
+            public string Desc;
+            public string Area;
+            public string Category;
+            public string SalePrice;
+            public string Dwell;
+            public string OwnerUUID;
+            public string GroupUUID;
+            public string ForSale;
+            public string Directory;
+            public string Build;
+            public string Script;
+            public string Public;
+        }
+
+        #endregion
+
+        #region Parser
+
+        private void FireParser(string regionName)
+        {
+            XmlDocument doc = DataSnapShotManager.GetSnapshot(regionName);
+            XmlNodeList rootL = doc.GetElementsByTagName("region");
+            XmlNode rootNode = rootL[0];
+            RegionXMLInfo info = new RegionXMLInfo();
+            if (rootNode != null)
+            {
+                XmlNodeList partL = rootNode.ChildNodes;
+
+                foreach (XmlNode part in partL)
+                {
+                    switch (part.Name)
+                    {
+                        case "uuid":
+                            info.UUID = part.InnerText;
+                            break;
+                        case "name":
+                            info.Name = part.InnerText;
+                            break;
+                        case "handle":
+                            info.Handle = part.InnerText;
+                            break;
+                        case "url":
+                            info.URL = part.InnerText;
+                            break;
+                    }
+                }
+                List<string> query = GenericData.Query("regionuuid", info.UUID.ToString(), "regions", "*");
+                if (query.Count != 0)
+                {
+                    GenericData.Delete("regions", new string[] { "regionuuid" }, new string[] { info.UUID.ToString() });
+                    GenericData.Delete("parcels", new string[] { "regionuuid" }, new string[] { info.UUID.ToString() });
+                    GenericData.Delete("objects", new string[] { "regionuuid" }, new string[] { info.UUID.ToString() });
+                    GenericData.Delete("allparcels", new string[] { "regionUUID" }, new string[] { info.UUID.ToString() });
+                    GenericData.Delete("parcelsales", new string[] { "regionUUID" }, new string[] { info.UUID.ToString() });
+                }
+            }
+            XmlNode rootD = doc.GetElementsByTagName("data")[0];
+            XmlNode rootE = doc.GetElementsByTagName("estate")[0];
+            XmlNodeList rootP = doc.GetElementsByTagName("parcel");
+            XmlNodeList rootO = doc.GetElementsByTagName("object");
+            foreach (XmlNode part in rootE)
+            {
+                switch (part.Name)
+                {
+                    case "uuid":
+                        info.UserName = part.InnerText;
+                        break;
+                    case "name":
+                        info.UserUUID = part.InnerText;
+                        break;
+                }
+            }
+            //Add region to the DB.
+            GenericData.Insert("regions", new string[] { info.Name, info.UUID, info.Handle, info.URL, info.UserName, info.UserName });
+            foreach (XmlNode inner in rootP)
+            {
+                foreach (XmlNode part in inner.ChildNodes)
+                {
+                    ParcelXMLInfo PInfo = new ParcelXMLInfo();
+                    switch (part.Name)
+                    {
+                        case "area":
+                            PInfo.Area = part.InnerText;
+                            break;
+                        case "build":
+                            PInfo.Build = part.InnerText;
+                            break;
+                        case "category":
+                            PInfo.Category = part.InnerText;
+                            break;
+                        case "description":
+                            PInfo.Desc = part.InnerText;
+                            break;
+                        case "showinsearch":
+                            PInfo.Directory = part.InnerText;
+                            break;
+                        case "dwell":
+                            PInfo.Dwell = part.InnerText;
+                            break;
+                        case "forsale":
+                            PInfo.ForSale = part.InnerText;
+                            break;
+                        case "groupuuid":
+                            PInfo.GroupUUID = part.ChildNodes[0].InnerText;
+                            break;
+                        case "infouuid":
+                            PInfo.InfoUUID = part.InnerText;
+                            break;
+                        case "location":
+                            PInfo.Landing = part.InnerText;
+                            break;
+                        case "name":
+                            PInfo.Name = part.InnerText;
+                            break;
+                        case "owner":
+                            PInfo.OwnerUUID = part.ChildNodes.Item(0).InnerText;
+                            break;
+                        case "public":
+                            PInfo.Public = part.InnerText;
+                            break;
+                        case "salesprice":
+                            PInfo.SalePrice = part.InnerText;
+                            break;
+                        case "scripts":
+                            PInfo.Script = part.InnerText;
+                            break;
+                        case "uuid":
+                            PInfo.UUID = part.InnerText;
+                            break;
+                    }
+                    GenericData.Insert("allparcels", new string[] { info.UUID, PInfo.Name, PInfo.OwnerUUID, PInfo.GroupUUID, PInfo.Landing, PInfo.UUID, PInfo.InfoUUID, PInfo.Area });
+                    if (Convert.ToBoolean(PInfo.Directory))
+                        GenericData.Insert("parcels", new string[] { info.UUID, PInfo.Name, PInfo.UUID, PInfo.Landing, PInfo.UUID, PInfo.Desc, PInfo.Category, PInfo.Build, PInfo.Script, PInfo.Public, PInfo.Dwell, PInfo.InfoUUID });
+                    //TODO: CHECK THESE 0 AND FALSE VALUES!
+                    if (Convert.ToBoolean(PInfo.ForSale))
+                        GenericData.Insert("parcelsales", new string[] { info.UUID, PInfo.Name, PInfo.UUID, PInfo.Area, PInfo.SalePrice, PInfo.Landing, PInfo.InfoUUID, PInfo.Dwell, "0", "false" });
+                }
+            }
+
+            //Now for objects!
+            foreach (XmlNode inner in rootO)
+            {
+                foreach (XmlNode part in inner.ChildNodes)
+                {
+                    ObjectXMLInfo OInfo = new ObjectXMLInfo();
+                    switch (part.Name)
+                    {
+                        case "uuid":
+                            OInfo.UUID = part.InnerText;
+                            break;
+                        case "regionuuid":
+                            OInfo.RegionUUID = part.InnerText;
+                            break;
+                        case "parceluuid":
+                            OInfo.ParcelUUID = part.InnerText;
+                            break;
+                        case "title":
+                            OInfo.Title = part.InnerText;
+                            break;
+                        case "description":
+                            OInfo.Desc = part.InnerText;
+                            break;
+                        case "flags":
+                            OInfo.Flags = part.InnerText;
+                            break;
+                    }
+                    GenericData.Insert("objects", new string[] { OInfo.UUID, OInfo.ParcelUUID, OInfo.Title, OInfo.Desc, OInfo.RegionUUID });
+                }
+            }
+        }
+        #endregion
+
+        #endregion
     }
 }

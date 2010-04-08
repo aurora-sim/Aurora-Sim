@@ -2443,6 +2443,7 @@
 <Reference name="OpenSim.Services.PresenceService"/>
 <Reference name="OpenSim.Services.Base"/>
 <Reference name="C5.dll"/>
+<Reference name="OpenSim.Region.DataSnapshot"/>
 
           <Files>
             <Match pattern="*.cs" recurse="true"/>

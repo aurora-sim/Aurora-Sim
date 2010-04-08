@@ -28,7 +28,7 @@ namespace Aurora.Framework
         DirLandReplyData[] LandForSaleQuery(string searchType, string price, string area, string table, string wantedValue);
         DirClassifiedReplyData[] ClassifiedsQuery(string queryText, string category, string queryFlags);
         DirEventsReplyData[] EventQuery(string queryText, string flags, string table, string wantedValue);
-        
+        EventData GetEventInfo(string p);
     }
     public interface IRegionData
     {

@@ -586,5 +586,55 @@ namespace Aurora.DataManager.SQLite
             CloseReaderCommand(cmd);
             return Data.ToArray();
 		}
+
+        public EventData GetEventInfo(string EventID)
+        {
+            SqliteCommand cmd = new SqliteCommand();
+            EventData data = new EventData();
+            string query = "select EID, ECreator, EName, ECategory, EDesc, EDate, EDateUTC, EDuration, ECover, EAmount, ESimName, EGlobalPos, EEventFlags from classifieds where EID = '" + EventID + "'";
+            cmd.CommandText = query;
+            IDataReader reader = GetReader(cmd);
+            try
+            {
+                while (reader.Read())
+                {
+                    int DataCount = 0;
+                    for (int i = 0; i < reader.FieldCount; i++)
+                    {
+                        if (i == 0)
+                            data.eventID = Convert.ToUInt32(reader.GetString(i));
+                        if (i == 1)
+                            data.creator = reader.GetString(i);
+                        if (i == 2) 
+                            data.name = reader.GetString(i);
+                        if (i == 3) 
+                            data.category = reader.GetString(i);
+                        if (i == 4) 
+                            data.description = reader.GetString(i);
+                        if (i == 5) 
+                            data.date = reader.GetString(i);
+                        if (i == 6) 
+                            data.dateUTC = Convert.ToUInt32(reader.GetString(i));
+                        if (i == 7) 
+                            data.duration = Convert.ToUInt32(reader.GetString(i));
+                        if (i == 8) 
+                            data.cover = Convert.ToUInt32(reader.GetString(i));
+                        if (i == 9) 
+                            data.amount = Convert.ToUInt32(reader.GetString(i));
+                        if (i == 10) 
+                            data.simName = reader.GetString(i);
+                        if (i == 11) 
+                            Vector3.TryParse(reader.GetString(i), out data.globalPos);
+                        if (i ==12) 
+                            data.eventFlags = Convert.ToUInt32(reader.GetString(i));
+                    }
+                }
+            }
+            catch (Exception ex) { }
+            reader.Close();
+            reader.Dispose();
+            CloseReaderCommand(cmd);
+            return data;
+        }
     }
 }

@@ -269,6 +269,10 @@ namespace Aurora.Modules.DataPlugins
             throw new NotImplementedException();
         }
 
+        public OpenSim.Framework.EventData GetEventInfo(string p)
+        {
+            throw new NotImplementedException();
+        }
         #endregion
     }
 }
