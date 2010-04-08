@@ -89,6 +89,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         public string State;
         public bool Running;
         public bool Disabled;
+        public bool Started = false;
         public string Source;
         public string ClassSource;
         public int StartParam;
@@ -461,11 +462,11 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             catch (Exception ex)
             {
                 //Compile error, deal with it.
-                m_ScriptManager.AddError(ItemID, ex.ToString());
+                m_ScriptManager.AddError(ItemID, ex.Message.ToString());
                 ShowError(ex, 1);
             }
-            
-			bool useDebug = false;
+            Started = true;
+			bool useDebug = true;
 			if(useDebug)
 			{
             	TimeSpan t = (DateTime.Now.ToUniversalTime() - Start);
@@ -492,7 +493,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             catch (Exception ex)
             {
                 //Some other error, deal with it.
-                m_ScriptManager.AddError(ItemID, ex.ToString());
+                m_ScriptManager.AddError(ItemID, ex.Message.ToString());
                 ShowError(ex, 2);
             }
             
@@ -648,13 +649,8 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         // Load/Unload structure
         private struct LUStruct
         {
-            public uint localID;
-            public UUID itemID;
-            public string script;
+            public InstanceData ID;
             public LUType Action;
-            public int startParam;
-            public bool postOnRez;
-            public StateSource stateSource;
         }
 
         private enum LUType
@@ -683,6 +679,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         /// <returns></returns>
         public string[] GetErrors(UUID ItemID)
         {
+        	m_log.Warn("ASKING FOR ERRORS");
             Thread.Sleep(1000);
             if (m_Errors.ContainsKey(ItemID))
             {
@@ -820,27 +817,11 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
             			if (item.Action == LUType.Unload)
             			{
-            				InstanceData id = GetScript(item.localID, item.itemID);
-            				if (id != null)
-            					StopParts.Add(id.CloseAndDispose().GetEnumerator());
+            				StopParts.Add(item.iD.CloseAndDispose().GetEnumerator());
             			}
             			else if (item.Action == LUType.Load)
             			{
-            				InstanceData id = GetScript(item.localID, item.itemID);
-            				if (id != null)
-            					StopParts.Add(id.CloseAndDispose().GetEnumerator());
-            				id = new InstanceData(this);
-            				id.ItemID = item.itemID;
-            				id.localID = item.localID;
-            				id.PostOnRez = item.postOnRez;
-            				id.StartParam = item.startParam;
-            				id.stateSource = item.stateSource;
-            				id.State = "default";
-            				id.Running = true;
-            				id.Disabled = false;
-            				id.Source = item.script;
-            				id.PostOnRez = item.postOnRez;
-            				StartParts.Add(id.Start());
+            				StartParts.Add(item.ID.Start());
             			}
             			i++;
             		}
@@ -910,6 +891,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         /// <param name="localID"></param>
         public void StartScript(uint localID, UUID itemID, string Script, int startParam, bool postOnRez, StateSource statesource)
         {
+        	InstanceData id = null;
             lock (LUQueue)
             {
                 if ((LUQueue.Count >= LoadUnloadMaxQueueSize) && m_started)
@@ -924,16 +906,29 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
                     return;
                 }
-
+                id = GetScript(localID, itemID);
+                if (id != null)
+                	StopScript(localID,itemID);
+                id = new InstanceData(this);
+                id.ItemID = itemID;
+                id.localID = localID;
+                id.PostOnRez = postOnRez;
+                id.StartParam = startParam;
+                id.stateSource = statesource;
+                id.State = "default";
+                id.Running = true;
+                id.Disabled = false;
+                id.Source = Script;
+                id.PostOnRez = postOnRez;
                 LUStruct ls = new LUStruct();
-                ls.localID = localID;
-                ls.itemID = itemID;
-                ls.script = Script;
                 ls.Action = LUType.Load;
-                ls.startParam = startParam;
-                ls.postOnRez = postOnRez;
-                ls.stateSource = statesource;
+                ls.ID = id;
                 LUQueue.Enqueue(ls);
+            }
+            //Needed for script errors to be added correctly. The queue messes that up. 
+            while(id.Started == false)
+            {
+            	Thread.Sleep(2000);
             }
         }
 
@@ -951,15 +946,12 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                 return; 
 
             LUStruct ls = new LUStruct();
-            ls.localID = localID;
-            ls.itemID = itemID;
+            InstanceData id = GetScript(localID, itemID);
+            ls.ID = data;
             ls.Action = LUType.Unload;
-            ls.startParam = 0;
-            ls.postOnRez = false;
-            ls.stateSource = 0;
             lock (LUQueue)
             {
-                LUQueue.Enqueue(ls);
+            	LUQueue.Enqueue(ls);
             }
         }
 
