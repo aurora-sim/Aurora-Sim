@@ -103,7 +103,7 @@ namespace Aurora.DataManager.Tests
                 migrationManager.ExecuteOperation();
                 Assert.AreEqual(testMigrator0.Version, genericData.GetAuroraVersion(), "Version of settings is updated");
             }
-            catch(MigrationOperationException e)
+            catch(MigrationOperationException)
             {
                 Assert.Fail("Something failed during execution we weren't expecting.");  
             }

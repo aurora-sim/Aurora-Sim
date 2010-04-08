@@ -204,7 +204,7 @@ namespace Aurora.DataManager.SQLite
                 CloseReaderCommand(cmd);
             }
                 //Execute the update then...
-            catch (Exception ex)
+            catch (Exception)
             {
                 cmd = new SqliteCommand();
                 query = String.Format("UPDATE {0} SET {1} = '{2}'", table, updateKey, updateValue);

@@ -29,6 +29,7 @@ namespace Aurora.Framework
         DirClassifiedReplyData[] ClassifiedsQuery(string queryText, string category, string queryFlags, int StartQuery);
         DirEventsReplyData[] EventQuery(string queryText, string flags, string table, string wantedValue, int StartQuery);
         EventData GetEventInfo(string p);
+        DirEventsReplyData[] GetAllEventsNearXY(string table, int X, int Y);
     }
     public interface IRegionData
     {

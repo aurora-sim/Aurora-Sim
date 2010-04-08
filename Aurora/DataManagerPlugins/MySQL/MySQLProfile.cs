@@ -599,7 +599,7 @@ namespace Aurora.DataManager.MySQL
 			List<DirEventsReplyData> Data = new List<DirEventsReplyData>();
             string query = String.Format("select {0} from {1} where ",
                                       wantedValue, table);
-            query += "and EName LIKE '%" + queryText + "%' and EFlags <= '" + flags + "'";
+            query += "EName LIKE '%" + queryText + "%' and EFlags <= '" + flags + "'";
             query += " LIMIT "+StartQuery.ToString()+",50";
             using (result = Query(query, new Dictionary<string, object>(), dbcon))
 			{
@@ -646,6 +646,62 @@ namespace Aurora.DataManager.MySQL
 				}
 			}
 		}
+		
+		public DirEventsReplyData[] GetAllEventsNearXY(string table, int X, int Y)
+		{
+			MySqlConnection dbcon = GetLockedConnection();
+			IDbCommand result;
+			IDataReader reader;
+			List<DirEventsReplyData> Data = new List<DirEventsReplyData>();
+            string query = String.Format("select EOwnerID,EName,EID,EDate,EFlags from {0}",
+                                      table);
+            using (result = Query(query, new Dictionary<string, object>(), dbcon))
+			{
+				using (reader = result.ExecuteReader())
+				{
+					try
+					{
+						while (reader.Read())
+						{
+							int DataCount = 0;
+                            DirEventsReplyData replyData = new DirEventsReplyData();
+							for (int i = 0; i < reader.FieldCount; i++)
+							{
+                                if (DataCount == 0)
+                                    replyData.ownerID = new UUID(reader.GetString(i));
+                                if (DataCount == 1)
+                                    replyData.name = reader.GetString(i);
+                                if (DataCount == 2)
+                                    replyData.eventID = Convert.ToUInt32(reader.GetString(i));
+                                if(DataCount == 3)
+            					{
+            						replyData.date = new DateTime(Convert.ToUInt32(reader.GetString(i))).ToString(new System.Globalization.DateTimeFormatInfo());
+            						replyData.unixTime = Convert.ToUInt32(reader.GetString(i));
+            					}
+                                if (DataCount == 4)
+                                    replyData.eventFlags = Convert.ToUInt32(reader.GetString(i));
+								DataCount++;
+								if(DataCount == 5)
+								{
+									DataCount = 0;
+									Data.Add(replyData);
+                                    replyData = new DirEventsReplyData();
+								}
+							}
+						}
+						return Data.ToArray();
+					}
+					finally
+					{
+						reader.Close();
+						reader.Dispose();
+						result.Dispose();
+					}
+				}
+			}
+		}
+		
+		
 		public DirClassifiedReplyData[] ClassifiedsQuery(string queryText, string category, string queryFlags, int StartQuery)
 		{
 			MySqlConnection dbcon = GetLockedConnection();

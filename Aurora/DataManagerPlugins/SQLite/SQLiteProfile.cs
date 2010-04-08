@@ -77,7 +77,7 @@ namespace Aurora.DataManager.SQLite
                     }
                 }
             }
-            catch (Exception ex){}
+            catch (Exception){}
             reader.Close();
             reader.Dispose();
             CloseReaderCommand(cmd);
@@ -323,7 +323,7 @@ namespace Aurora.DataManager.SQLite
                     UserProfilesCache.Add(agentID, UserProfile);
                     return UserProfile;
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     return null;
                 }
@@ -508,7 +508,7 @@ namespace Aurora.DataManager.SQLite
             List<DirEventsReplyData> Data = new List<DirEventsReplyData>();
             string query = String.Format("select {0} from {1} where ",
                                       wantedValue, table);
-            query += "and EName LIKE '%" + queryText + "%' and EFlags <= '" + flags + "'";
+            query += "EName LIKE '%" + queryText + "%' and EFlags <= '" + flags + "'";
             query += " LIMIT "+StartQuery.ToString()+",50";
             cmd.CommandText = query;
             IDataReader reader = GetReader(cmd);
@@ -547,7 +547,52 @@ namespace Aurora.DataManager.SQLite
 
             return Data.ToArray();
 		}
-		public DirClassifiedReplyData[] ClassifiedsQuery(string queryText, string category, string queryFlags, int StartQuery)
+		
+		public DirEventsReplyData[] GetAllEventsNearXY(string table, int X, int Y)
+		{
+			var cmd = new SqliteCommand();
+            List<DirEventsReplyData> Data = new List<DirEventsReplyData>();
+            string query = String.Format("select EOwnerID,EName,EID,EDate,EFlags from {0}",
+                                      table);
+            cmd.CommandText = query;
+            IDataReader reader = GetReader(cmd);
+            
+            while (reader.Read())
+            {
+            	int DataCount = 0;
+            	DirEventsReplyData replyData = new DirEventsReplyData();
+            	for (int i = 0; i < reader.FieldCount; i++)
+                {
+            		if(DataCount == 0)
+            			replyData.ownerID = new UUID(reader.GetString(i));
+            		if(DataCount == 1)
+            			replyData.name = reader.GetString(i);
+            		if(DataCount == 2)
+            			replyData.eventID = Convert.ToUInt32(reader.GetString(i));
+            		if(DataCount == 3)
+            		{
+            			replyData.date = new DateTime(Convert.ToUInt32(reader.GetString(i))).ToString(new System.Globalization.DateTimeFormatInfo());
+            			replyData.unixTime = Convert.ToUInt32(reader.GetString(i));
+            		}
+            		if(DataCount == 4)
+            			replyData.eventFlags = Convert.ToUInt32(reader.GetString(i));
+                    DataCount++;
+                    if(DataCount == 5)
+                    {
+                    	DataCount = 0;
+                    	Data.Add(replyData);
+                    	replyData = new DirEventsReplyData();
+                    }
+                }
+            }
+            reader.Close();
+            reader.Dispose();
+            CloseReaderCommand(cmd);
+
+            return Data.ToArray();
+		}
+		
+    	public DirClassifiedReplyData[] ClassifiedsQuery(string queryText, string category, string queryFlags, int StartQuery)
 		{
 			SqliteCommand cmd = new SqliteCommand();
             List<DirClassifiedReplyData> Data = new List<DirClassifiedReplyData>();
@@ -583,7 +628,7 @@ namespace Aurora.DataManager.SQLite
             		}
             	}
             }
-            catch (Exception ex){}
+            catch (Exception){}
             reader.Close();
             reader.Dispose();
             CloseReaderCommand(cmd);
@@ -601,7 +646,6 @@ namespace Aurora.DataManager.SQLite
             {
                 while (reader.Read())
                 {
-                    int DataCount = 0;
                     for (int i = 0; i < reader.FieldCount; i++)
                     {
                         if (i == 0)
@@ -633,7 +677,7 @@ namespace Aurora.DataManager.SQLite
                     }
                 }
             }
-            catch (Exception ex) { }
+            catch (Exception) { }
             reader.Close();
             reader.Dispose();
             CloseReaderCommand(cmd);

@@ -273,6 +273,11 @@ namespace Aurora.Modules.DataPlugins
         {
             throw new NotImplementedException();
         }
+        
+        public OpenSim.Framework.DirEventsReplyData[] GetAllEventsNearXY(string table, int X, int Y)
+		{
+      		throw new NotImplementedException();
+        }
         #endregion
     }
 }

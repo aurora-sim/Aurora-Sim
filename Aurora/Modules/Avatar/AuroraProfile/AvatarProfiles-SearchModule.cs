@@ -1168,48 +1168,10 @@ namespace Aurora.Modules
             
             if (itemtype == 2) //(Events)
             {
-                /*int tc = Environment.TickCount;
-                Hashtable ReqHash = new Hashtable();
-                ReqHash["text"] = "0|0|";
-                ReqHash["flags"] = "32";
-                ReqHash["query_start"] = "0";
-
-                Hashtable result = GenericXMLRPCRequest(ReqHash,
-                                                        "dir_events_query");
-
-                if (!Convert.ToBoolean(result["success"]))
+            	DirEventsReplyData[] Eventdata = ProfileData.GetAllEventsNearXY("events",0,0);
+                foreach (DirEventsReplyData eventData in Eventdata)
                 {
-                    remoteClient.SendAgentAlertMessage("", false);
-                    return;
-                }
-
-                ArrayList dataArray = (ArrayList)result["data"];
-
-                int count = dataArray.Count;
-                if (count > 100)
-                    count = 101;
-
-                DirEventsReplyData[] Eventdata = new DirEventsReplyData[count];
-
-                int i = 0;
-
-                foreach (Object o in dataArray)
-                {
-                    Hashtable d = (Hashtable)o;
-                    Eventdata[i] = new DirEventsReplyData();
-                    Eventdata[i].ownerID = new UUID(d["owner_id"].ToString());
-                    Eventdata[i].name = d["name"].ToString();
-                    Eventdata[i].eventID = Convert.ToUInt32(d["event_id"]);
-                    Eventdata[i].date = d["date"].ToString();
-                    Eventdata[i].unixTime = Convert.ToUInt32(d["unix_time"]);
-                    Eventdata[i].eventFlags = Convert.ToUInt32(d["event_flags"]);
-                    i++;
-                    if (i >= count)
-                        break;
-                }
-                /*foreach (DirEventsReplyData eventData in Eventdata)
-                {
-                    string globalPos = GenericData.GetSQL("select globalPos from events where eventid = '"+eventData.eventID.ToString()+"'",m_gConfig);
+                	string globalPos = GenericData.Query("EID", eventData.eventID.ToString(), "events", "EGlobalPos")[0];
                     string[] Position = globalPos.Split(',');
                     mapitem = new mapItemReply();
                     mapitem.x = (uint)(Convert.ToDecimal(Position[0]));
@@ -1221,7 +1183,7 @@ namespace Aurora.Modules
                     mapitems.Add(mapitem);
                 }
                 remoteClient.SendMapItemReply(mapitems.ToArray(), itemtype, flags);
-                mapitems.Clear();*/
+                mapitems.Clear();
             }
 
             #endregion
