@@ -914,7 +914,7 @@ namespace Aurora.Modules
                                  int queryStart)
         {
 			//TODO: Add queryStart!!!
-            DirLandReplyData[] ReturnValues = ProfileData.LandForSaleQuery(searchType.ToString(),price.ToString(),area.ToString(),"searchparcelsales","PID,PName,PAuction,PSalePrice,PArea");
+            DirLandReplyData[] ReturnValues = ProfileData.LandForSaleQuery(searchType.ToString(),price.ToString(),area.ToString(),"searchparcelsales","PID,PName,PAuction,PSalePrice,PArea",queryStart);
 
             DirLandReplyData[] data = new DirLandReplyData[10];
 
@@ -996,7 +996,7 @@ namespace Aurora.Modules
                                    string queryText, uint queryFlags, int queryStart)
         {
             //TODO: Add queryStart!!!
-            DirEventsReplyData[] ReturnValues = ProfileData.EventQuery(queryText, queryFlags.ToString(),"events","EOwnerID,EName,EID,EDate,EFlags");
+            DirEventsReplyData[] ReturnValues = ProfileData.EventQuery(queryText, queryFlags.ToString(),"events","EOwnerID,EName,EID,EDate,EFlags",queryStart);
 
             DirEventsReplyData[] data = new DirEventsReplyData[10];
 			int i = 0;
@@ -1020,7 +1020,7 @@ namespace Aurora.Modules
                                        int queryStart)
         {
         	//TODO: Add queryStart!!!
-            DirClassifiedReplyData[] ReplyData = ProfileData.ClassifiedsQuery(queryText, category.ToString(), queryFlags.ToString());
+            DirClassifiedReplyData[] ReplyData = ProfileData.ClassifiedsQuery(queryText, category.ToString(), queryFlags.ToString(),queryStart);
             
         	DirClassifiedReplyData[] data = new DirClassifiedReplyData[10];
 			int i = 0;
@@ -1134,7 +1134,7 @@ namespace Aurora.Modules
 
             if (itemtype == 7) //(land sales)
             {
-                DirLandReplyData[] Landdata = ProfileData.LandForSaleQuery("4294967295",int.MaxValue.ToString(),"0","forsaleparcels","PID,PName,PForSale,PAuction,PSalePrice,PActualArea");
+                DirLandReplyData[] Landdata = ProfileData.LandForSaleQuery("4294967295",int.MaxValue.ToString(),"0","forsaleparcels","PID,PName,PForSale,PAuction,PSalePrice,PActualArea",0);
                     
                 uint locX = 0;
                 uint locY = 0;

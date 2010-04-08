@@ -244,22 +244,22 @@ namespace Aurora.Modules.DataPlugins
 			throw new NotImplementedException();
 		}
 
-        public OpenSim.Framework.DirPlacesReplyData[] PlacesQuery(string queryText, string category, string table, string wantedValue)
+        public OpenSim.Framework.DirPlacesReplyData[] PlacesQuery(string queryText, string category, string table, string wantedValue, int startValue)
         {
             throw new NotImplementedException();
         }
 
-        public OpenSim.Framework.DirLandReplyData[] LandForSaleQuery(string searchType, string price, string area, string table, string wantedValue)
+        public OpenSim.Framework.DirLandReplyData[] LandForSaleQuery(string searchType, string price, string area, string table, string wantedValue, int startValue)
         {
             throw new NotImplementedException();
         }
 
-        public OpenSim.Framework.DirClassifiedReplyData[] ClassifiedsQuery(string queryText, string category, string queryFlags)
+        public OpenSim.Framework.DirClassifiedReplyData[] ClassifiedsQuery(string queryText, string category, string queryFlags, int startValue)
         {
             throw new NotImplementedException();
         }
 
-        public OpenSim.Framework.DirEventsReplyData[] EventQuery(string queryText, string flags, string table, string wantedValue)
+        public OpenSim.Framework.DirEventsReplyData[] EventQuery(string queryText, string flags, string table, string wantedValue, int startValue)
         {
             throw new NotImplementedException();
         }
