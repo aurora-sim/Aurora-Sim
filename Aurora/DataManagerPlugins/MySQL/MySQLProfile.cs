@@ -479,13 +479,14 @@ namespace Aurora.DataManager.MySQL
             KeyValue.Add(Profile.Identifier);
             Update("usersauth", SetValues.ToArray(), SetRows.ToArray(), KeyRow.ToArray(), KeyValue.ToArray());
         }
-    	public DirPlacesReplyData[] PlacesQuery(string queryText, string category, string table, string wantedValue)
+    	public DirPlacesReplyData[] PlacesQuery(string queryText, string category, string table, string wantedValue, int StartQuery)
         {
         	List<DirPlacesReplyData> Data = new List<DirPlacesReplyData>();
             string query = String.Format("select {0} from {1} where ",
                                       wantedValue, table);
-            query += "PCategory = '"+category+"' and Pdesc LIKE '%" + queryText + "%' OR PName LIKE '%" + queryText + "%' ";
+            query += "PCategory = '"+category+"' and Pdesc LIKE '%" + queryText + "%' OR PName LIKE '%" + queryText + "%'";
        
+            query += " LIMIT "+StartQuery.ToString()+",50";
             MySqlConnection dbcon = GetLockedConnection();
             IDbCommand result;
             IDataReader reader;
@@ -531,17 +532,18 @@ namespace Aurora.DataManager.MySQL
                 }
             }
         }
-		public DirLandReplyData[] LandForSaleQuery(string searchType, string price, string area, string table, string wantedValue)
+		public DirLandReplyData[] LandForSaleQuery(string searchType, string price, string area, string table, string wantedValue, int StartQuery)
         {
         	List<DirLandReplyData> Data = new List<DirLandReplyData>();
             string query = String.Format("select {0} from {1} where ",
                                       wantedValue, table);
             //TODO: Check this searchType ref!
             if(searchType != "0")
-            	query += "PType = '"+searchType+"' and PPrice <= '" + price + "' and area >= '" + area + "' ";
+            	query += "PType = '"+searchType+"' and PPrice <= '" + price + "' and area >= '" + area + "'";
             else
-            	query += "PPrice <= '" + price + "' and area >= '" + area + "' ";
+            	query += "PPrice <= '" + price + "' and area >= '" + area + "'";
             
+            query += " LIMIT "+StartQuery.ToString()+",50";
             MySqlConnection dbcon = GetLockedConnection();
 			IDbCommand result;
 			IDataReader reader;
@@ -553,30 +555,30 @@ namespace Aurora.DataManager.MySQL
                     {
                         while (reader.Read())
                         {
-                            int DataCount = 0;
-                            DirLandReplyData replyData = new DirLandReplyData();
-                            for (int i = 0; i < reader.FieldCount; i++)
-                            {
-                                if (DataCount == 0)
-                                    replyData.parcelID = new UUID(reader.GetString(i));
-                                if (DataCount == 1)
-                                    replyData.name = reader.GetString(i);
-                                if (DataCount == 2)
-                                    replyData.forSale = Convert.ToBoolean(reader.GetString(i));
-                                if (DataCount == 3)
-                                    replyData.auction = Convert.ToBoolean(reader.GetString(i));
-                                if (DataCount == 4)
-                                    replyData.salePrice = Convert.ToInt32(reader.GetString(i));
-                                if (DataCount == 5)
-                                    replyData.actualArea = Convert.ToInt32(reader.GetString(i));
-                                DataCount++;
-                                if (DataCount == 6)
-                                {
-                                    DataCount = 0;
-                                    Data.Add(replyData);
-                                    replyData = new DirLandReplyData();
-                                }
-                            }
+                        	int DataCount = 0;
+                        	DirLandReplyData replyData = new DirLandReplyData();
+                        	replyData.forSale = true;
+                        	for (int i = 0; i < reader.FieldCount; i++)
+                        	{
+                        		if(DataCount == 0)
+                        			replyData.parcelID = new UUID(reader.GetString(i));
+                        		if(DataCount == 1)
+                        			replyData.name = reader.GetString(i);
+                        		if(DataCount == 2)
+                        			replyData.auction = Convert.ToBoolean(reader.GetString(i));
+                        		if(DataCount == 3)
+                        			replyData.salePrice = Convert.ToInt32(reader.GetString(i));
+                        		if(DataCount == 4)
+                        			replyData.actualArea = Convert.ToInt32(reader.GetString(i));
+                        		DataCount++;
+                        		if(DataCount == 5)
+                        		{
+                        			DataCount = 0;
+                        			Data.Add(replyData);
+                        			replyData = new DirLandReplyData();
+                        			replyData.forSale = true;
+                        		}
+                        	}
                         }
                         return Data.ToArray();
                     }
@@ -589,7 +591,7 @@ namespace Aurora.DataManager.MySQL
                 }
             }
         }
-		public DirEventsReplyData[] EventQuery(string queryText, string flags, string table, string wantedValue)
+		public DirEventsReplyData[] EventQuery(string queryText, string flags, string table, string wantedValue, int StartQuery)
 		{
 			MySqlConnection dbcon = GetLockedConnection();
 			IDbCommand result;
@@ -598,6 +600,7 @@ namespace Aurora.DataManager.MySQL
             string query = String.Format("select {0} from {1} where ",
                                       wantedValue, table);
             query += "and EName LIKE '%" + queryText + "%' and EFlags <= '" + flags + "'";
+            query += " LIMIT "+StartQuery.ToString()+",50";
             using (result = Query(query, new Dictionary<string, object>(), dbcon))
 			{
 				using (reader = result.ExecuteReader())
@@ -616,11 +619,12 @@ namespace Aurora.DataManager.MySQL
                                     replyData.name = reader.GetString(i);
                                 if (DataCount == 2)
                                     replyData.eventID = Convert.ToUInt32(reader.GetString(i));
-                                if (DataCount == 3)
-                                    replyData.date = reader.GetString(i);
+                                if(DataCount == 3)
+            					{
+            						replyData.date = new DateTime(Convert.ToUInt32(reader.GetString(i))).ToString(new System.Globalization.DateTimeFormatInfo());
+            						replyData.unixTime = Convert.ToUInt32(reader.GetString(i));
+            					}
                                 if (DataCount == 4)
-                                    replyData.unixTime = Convert.ToUInt32(reader.GetString(i));
-                                if (DataCount == 5)
                                     replyData.eventFlags = Convert.ToUInt32(reader.GetString(i));
 								DataCount++;
 								if(DataCount == 5)
@@ -642,14 +646,15 @@ namespace Aurora.DataManager.MySQL
 				}
 			}
 		}
-		public DirClassifiedReplyData[] ClassifiedsQuery(string queryText, string category, string queryFlags)
+		public DirClassifiedReplyData[] ClassifiedsQuery(string queryText, string category, string queryFlags, int StartQuery)
 		{
 			MySqlConnection dbcon = GetLockedConnection();
 			IDbCommand result;
 			IDataReader reader;
             List<DirClassifiedReplyData> Data = new List<DirClassifiedReplyData>();
 			string query = "select classifieduuid, name, creationdate, expirationdate, priceforlisting from classifieds where name LIKE '%" + queryText + "%' and category = '"+category+"'";
-			using (result = Query(query, new Dictionary<string, object>(), dbcon))
+			query += " LIMIT "+StartQuery.ToString()+",50";
+            using (result = Query(query, new Dictionary<string, object>(), dbcon))
 			{
 				using (reader = result.ExecuteReader())
 				{

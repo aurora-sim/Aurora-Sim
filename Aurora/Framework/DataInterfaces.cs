@@ -24,10 +24,10 @@ namespace Aurora.Framework
 
         AuroraProfileData CreateTemperaryAccount(string client, string first, string last);
         
-        DirPlacesReplyData[] PlacesQuery(string queryText, string category, string table, string wantedValue);
-        DirLandReplyData[] LandForSaleQuery(string searchType, string price, string area, string table, string wantedValue);
-        DirClassifiedReplyData[] ClassifiedsQuery(string queryText, string category, string queryFlags);
-        DirEventsReplyData[] EventQuery(string queryText, string flags, string table, string wantedValue);
+        DirPlacesReplyData[] PlacesQuery(string queryText, string category, string table, string wantedValue, int StartQuery);
+        DirLandReplyData[] LandForSaleQuery(string searchType, string price, string area, string table, string wantedValue, int StartQuery);
+        DirClassifiedReplyData[] ClassifiedsQuery(string queryText, string category, string queryFlags, int StartQuery);
+        DirEventsReplyData[] EventQuery(string queryText, string flags, string table, string wantedValue, int StartQuery);
         EventData GetEventInfo(string p);
     }
     public interface IRegionData

@@ -412,13 +412,13 @@ namespace Aurora.DataManager.SQLite
             return UserProfile;
         }
         
-        public DirPlacesReplyData[] PlacesQuery(string queryText, string category, string table, string wantedValue)
+        public DirPlacesReplyData[] PlacesQuery(string queryText, string category, string table, string wantedValue, int StartQuery)
         {
         	var cmd = new SqliteCommand();
             List<DirPlacesReplyData> Data = new List<DirPlacesReplyData>();
             string query = String.Format("select {0} from {1} where ",
                                       wantedValue, table);
-            query += "PCategory = '"+category+"' and Pdesc LIKE '%" + queryText + "%' OR PName LIKE '%" + queryText + "%' ";
+            query += "PCategory = '"+category+"' and Pdesc LIKE '%" + queryText + "%' OR PName LIKE '%" + queryText + "%' LIMIT "+StartQuery.ToString()+",50 ";
             
             cmd.CommandText = query;
             IDataReader reader = GetReader(cmd);
@@ -454,7 +454,7 @@ namespace Aurora.DataManager.SQLite
 
             return Data.ToArray();
         }
-		public DirLandReplyData[] LandForSaleQuery(string searchType, string price, string area, string table, string wantedValue)
+		public DirLandReplyData[] LandForSaleQuery(string searchType, string price, string area, string table, string wantedValue, int StartQuery)
         {
         	var cmd = new SqliteCommand();
             List<DirLandReplyData> Data = new List<DirLandReplyData>();
@@ -462,10 +462,10 @@ namespace Aurora.DataManager.SQLite
                                       wantedValue, table);
             //TODO: Check this searchType ref!
             if(searchType != "0")
-            	query += "PType = '"+searchType+"' and PPrice <= '" + price + "' and area >= '" + area + "' ";
+            	query += "PType = '"+searchType+"' and PPrice <= '" + price + "' and area >= '" + area + "'";
             else
-            	query += "PPrice <= '" + price + "' and area >= '" + area + "' ";
-            
+            	query += "PPrice <= '" + price + "' and area >= '" + area + "'";
+            query += " LIMIT "+StartQuery.ToString()+",50";
             cmd.CommandText = query;
             IDataReader reader = GetReader(cmd);
             
@@ -473,6 +473,7 @@ namespace Aurora.DataManager.SQLite
             {
             	int DataCount = 0;
             	DirLandReplyData replyData = new DirLandReplyData();
+				replyData.forSale = true;
             	for (int i = 0; i < reader.FieldCount; i++)
                 {
             		if(DataCount == 0)
@@ -480,19 +481,18 @@ namespace Aurora.DataManager.SQLite
             		if(DataCount == 1)
             			replyData.name = reader.GetString(i);
             		if(DataCount == 2)
-            			replyData.forSale = Convert.ToBoolean(reader.GetString(i));
-            		if(DataCount == 3)
             			replyData.auction = Convert.ToBoolean(reader.GetString(i));
-            		if(DataCount == 4)
+            		if(DataCount == 3)
             			replyData.salePrice = Convert.ToInt32(reader.GetString(i));
-            		if(DataCount == 5)
+            		if(DataCount == 4)
             			replyData.actualArea = Convert.ToInt32(reader.GetString(i));
                     DataCount++;
-                    if(DataCount == 6)
+                    if(DataCount == 5)
                     {
                     	DataCount = 0;
                     	Data.Add(replyData);
                     	replyData = new DirLandReplyData();
+                    	replyData.forSale = true;
                     }
                 }
             }
@@ -502,13 +502,14 @@ namespace Aurora.DataManager.SQLite
 
             return Data.ToArray();
         }
-		public DirEventsReplyData[] EventQuery(string queryText, string flags, string table, string wantedValue)
+		public DirEventsReplyData[] EventQuery(string queryText, string flags, string table, string wantedValue, int StartQuery)
 		{
 			var cmd = new SqliteCommand();
             List<DirEventsReplyData> Data = new List<DirEventsReplyData>();
             string query = String.Format("select {0} from {1} where ",
                                       wantedValue, table);
             query += "and EName LIKE '%" + queryText + "%' and EFlags <= '" + flags + "'";
+            query += " LIMIT "+StartQuery.ToString()+",50";
             cmd.CommandText = query;
             IDataReader reader = GetReader(cmd);
             
@@ -525,13 +526,14 @@ namespace Aurora.DataManager.SQLite
             		if(DataCount == 2)
             			replyData.eventID = Convert.ToUInt32(reader.GetString(i));
             		if(DataCount == 3)
-            			replyData.date = reader.GetString(i);
-            		if(DataCount == 4)
+            		{
+            			replyData.date = new DateTime(Convert.ToUInt32(reader.GetString(i))).ToString(new System.Globalization.DateTimeFormatInfo());
             			replyData.unixTime = Convert.ToUInt32(reader.GetString(i));
-            		if(DataCount == 5)
+            		}
+            		if(DataCount == 4)
             			replyData.eventFlags = Convert.ToUInt32(reader.GetString(i));
                     DataCount++;
-                    if(DataCount == 6)
+                    if(DataCount == 5)
                     {
                     	DataCount = 0;
                     	Data.Add(replyData);
@@ -545,11 +547,12 @@ namespace Aurora.DataManager.SQLite
 
             return Data.ToArray();
 		}
-		public DirClassifiedReplyData[] ClassifiedsQuery(string queryText, string category, string queryFlags)
+		public DirClassifiedReplyData[] ClassifiedsQuery(string queryText, string category, string queryFlags, int StartQuery)
 		{
 			SqliteCommand cmd = new SqliteCommand();
             List<DirClassifiedReplyData> Data = new List<DirClassifiedReplyData>();
             string query = "select classifieduuid, name, creationdate, expirationdate, priceforlisting from classifieds where name LIKE '%" + queryText + "%' and category = '"+category+"'";
+            query += " LIMIT "+StartQuery.ToString()+",50";
             cmd.CommandText = query;
             IDataReader reader = GetReader(cmd);
             try
