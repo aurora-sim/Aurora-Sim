@@ -246,13 +246,14 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             try
             {
                 // DISPLAY ERROR INWORLD
-                string text = "Error compiling script in stage "+stage+":\n" +
+                string consoletext = "Error compiling script in stage "+stage+":\n" +
                     e.Message.ToString() + " itemID: " + ItemID + ", localID" + localID + ", CompiledFile: " + AssemblyName;
-                m_log.Error(text);
-                if (text.Length > 1100)
-                    text = text.Substring(0, 1099);
+                m_log.Error(consoletext);
+                string inworldtext = "Error compiling script: " + e;
+                if (inworldtext.Length > 1100)
+                    inworldtext = inworldtext.Substring(0, 1099);
 
-                World.SimChat(Utils.StringToBytes(text),
+                World.SimChat(Utils.StringToBytes(inworldtext),
                         ChatTypeEnum.DebugChannel, 2147483647,
                         part.AbsolutePosition, part.Name, part.UUID,
                         false);
@@ -412,13 +413,55 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
             try
             {
-                // Compile (We assume LSL)
-                m_ScriptManager.LSLCompiler.PerformScriptCompile(Source,
-                        AssetID, InventoryItem.OwnerID, ItemID, Inherited, ClassName, m_scriptEngine.ScriptProtection,localID, this,
-                        out AssemblyName, out LineMap, out ClassID);
+                if (m_ScriptManager.PreviouslyCompiled.ContainsKey(Source))
+                {
+                    InstanceData PreviouslyCompiledID;
+                    m_ScriptManager.PreviouslyCompiled.TryGetValue(Source, out PreviouslyCompiledID);
+                    AssemblyName = PreviouslyCompiledID.AssemblyName;
+                    LineMap = PreviouslyCompiledID.LineMap;
+                    ClassID = PreviouslyCompiledID.ClassID;
+                }
+                else
+                {
+                    // Compile (We assume LSL)
+                    m_ScriptManager.LSLCompiler.PerformScriptCompile(Source,
+                            AssetID, InventoryItem.OwnerID, ItemID, Inherited, ClassName, m_scriptEngine.ScriptProtection, localID, this,
+                            out AssemblyName, out LineMap, out ClassID);
+                    m_ScriptManager.PreviouslyCompiled.Add(Source, this);
+                }
+
+                #region Warnings
+
+                string[] compilewarnings = m_ScriptManager.LSLCompiler.GetWarnings();
+
+                if (compilewarnings != null && compilewarnings.Length != 0)
+                {
+                    if (presence != null && (!PostOnRez))
+                        presence.ControllingClient.SendAgentAlertMessage(
+                                "Script saved with warnings, check debug window!",
+                                false);
+
+                    foreach (string warning in compilewarnings)
+                    {
+                        // DISPLAY WARNING INWORLD
+                            string text = "Warning:\n" + warning;
+                            if (text.Length > 1100)
+                                text = text.Substring(0, 1099);
+
+                            World.SimChat(Utils.StringToBytes(text),
+                                    ChatTypeEnum.DebugChannel, 2147483647,
+                                    part.AbsolutePosition, part.Name, part.UUID,
+                                    false);
+                    }
+                }
+
+                #endregion
+
             }
             catch (Exception ex)
             {
+                //Compile error, deal with it.
+                m_ScriptManager.AddError(ItemID, ex.ToString());
                 ShowError(ex, 1);
             }
             
@@ -448,6 +491,8 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             }
             catch (Exception ex)
             {
+                //Some other error, deal with it.
+                m_ScriptManager.AddError(ItemID, ex.ToString());
                 ShowError(ex, 2);
             }
             
@@ -513,67 +558,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                                           new Object[] { new LSL_Types.LSLInteger(512) });
             }
             
-            #endregion
-
-            #region Warnings
-
-            string[] warnings = m_ScriptManager.LSLCompiler.GetWarnings();
-
-            if (warnings != null && warnings.Length != 0)
-            {
-                if (presence != null && (!PostOnRez))
-                    presence.ControllingClient.SendAgentAlertMessage(
-                            "Script saved with warnings, check debug window!",
-                            false);
-
-                foreach (string warning in warnings)
-                {
-                    try
-                    {
-                        // DISPLAY WARNING INWORLD
-                        string text = "Warning:\n" + warning;
-                        if (text.Length > 1100)
-                            text = text.Substring(0, 1099);
-
-                        World.SimChat(Utils.StringToBytes(text),
-                                ChatTypeEnum.DebugChannel, 2147483647,
-                                part.AbsolutePosition, part.Name, part.UUID,
-                                false);
-                    }
-                    catch (Exception e2) // LEGIT: User Scripting
-                    {
-                        m_log.Error("[" +
-                                m_scriptEngine.ScriptEngineName +
-                                "]: Error displaying warning in-world: " +
-                                e2.ToString());
-                        m_log.Error("[" +
-                                m_scriptEngine.ScriptEngineName + "]: " +
-                                "Warning:\r\n" +
-                                warning);
-                    }
-                }
-            }
-            else
-            {
-                if (presence != null && (!PostOnRez))
-                {
-                    presence.ControllingClient.SendAgentAlertMessage(
-                            "Compile successful", false);
-                }
-                if (presence != null)
-                {
-                    m_log.DebugFormat(
-                        "[{0}]: Started Script {1} in object {2} by avatar {3} successfully.",
-                        m_scriptEngine.ScriptEngineName, part.Inventory.GetInventoryItem(ItemID).Name, part.Name, presence.Name);
-                }
-                else
-                {
-                    m_log.DebugFormat(
-                        "[{0}]: Started Script {1} in object {2} successfully.",
-                        m_scriptEngine.ScriptEngineName, InventoryItem.Name, part.Name);
-                }
-            }
-
             #endregion
         }
         
@@ -659,6 +643,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         private Dictionary<InstanceData, DetectParams[]> detparms =
                 new Dictionary<InstanceData, DetectParams[]>();
 		private Dictionary<UUID, List<string>> m_Errors = new Dictionary<UUID, List<string>>();
+        public Dictionary<string, InstanceData> PreviouslyCompiled = new Dictionary<string, InstanceData>();
         
         // Load/Unload structure
         private struct LUStruct
