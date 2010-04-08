@@ -285,6 +285,7 @@ namespace Aurora.DataManager.MySQL
             }
             return retval;
         }
+        
         public List<string> Query(string query)
         {
             MySqlConnection dbcon = GetLockedConnection();
@@ -323,6 +324,7 @@ namespace Aurora.DataManager.MySQL
                 }
             }
         }
+        
         private Dictionary<UUID, AuroraProfileData> UserProfilesCache = new Dictionary<UUID, AuroraProfileData>();
         private Dictionary<UUID, AuroraProfileData> UserProfileNotesCache = new Dictionary<UUID, AuroraProfileData>();
         public AuroraProfileData GetProfileInfo(UUID agentID)
@@ -355,7 +357,7 @@ namespace Aurora.DataManager.MySQL
                     UserProfile.Email = Profile[9];
                     UserProfile.FirstLifeAboutText = Profile[10];
                     UserProfile.FirstLifeImage = new UUID(Profile[11]);
-                    UserProfile.Partner = Profile[12];
+                    UserProfile.Partner = new UUID(Profile[12]);
                     UserProfile.PermaBanned = Convert.ToInt32(Profile[13]);
                     UserProfile.TempBanned = Convert.ToInt32(Profile[14]);
                     UserProfile.Image = new UUID(Profile[15]);
@@ -768,7 +770,6 @@ namespace Aurora.DataManager.MySQL
                     {
                         while (reader.Read())
                         {
-                            int DataCount = 0;
                             for (int i = 0; i < reader.FieldCount; i++)
                             {
                                 if (i == 0)

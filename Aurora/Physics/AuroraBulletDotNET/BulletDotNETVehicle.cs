@@ -10,7 +10,6 @@ namespace Aurora.Physics.BulletDotNETPlugin
 {
     public class BulletDotNETVehicle
     {
-        private int frcount = 0;                                        // Used to limit dynamics debug output to
         // every 100th frame
 
         // Vehicle properties

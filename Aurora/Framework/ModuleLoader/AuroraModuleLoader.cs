@@ -77,7 +77,7 @@ namespace Aurora.Framework
                         }
                     }
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                 }
             }
@@ -135,7 +135,7 @@ namespace Aurora.Framework
                         }
                     }
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                 }
             }

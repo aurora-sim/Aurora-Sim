@@ -86,7 +86,7 @@ namespace Aurora.DataManager.MySQL
                 }
                 return (IDbCommand)dbcommand;
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 // Return null if it fails.
                 return null;

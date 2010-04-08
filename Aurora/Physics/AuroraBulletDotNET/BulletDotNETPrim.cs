@@ -1484,7 +1484,6 @@ namespace Aurora.Physics.BulletDotNETPlugin
         {
             mesh.Append(mesh);
         }
-        bool NeedsMeshApending = false;
         internal void Move(float timestep)
         {
             float fx = 0;

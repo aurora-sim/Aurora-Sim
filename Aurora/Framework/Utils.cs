@@ -249,7 +249,7 @@ namespace Aurora.Framework
                                                            0,
                                                            plainTextBytes.Length);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return "";
             }
@@ -278,7 +278,7 @@ namespace Aurora.Framework
             {
                 externalIp = utf8.GetString(webClient.DownloadData("http://whatismyip.com/automation/n09230945.asp"));
             }
-            catch (Exception ex) { }
+            catch (Exception) { }
             return externalIp;
         }
 
@@ -294,19 +294,19 @@ namespace Aurora.Framework
                 XmlRpcRequest Req = new XmlRpcRequest(method, SendParams);
                 Resp = Req.Send(IPpoint, 30000);
             }
-            catch (WebException ex)
+            catch (WebException)
             {
                 Hashtable ErrorHash = new Hashtable();
                 ErrorHash["success"] = "false";
                 return ErrorHash;
             }
-            catch (SocketException ex)
+            catch (SocketException)
             {
                 Hashtable ErrorHash = new Hashtable();
                 ErrorHash["success"] = "false";
                 return ErrorHash;
             }
-            catch (XmlException ex)
+            catch (XmlException)
             {
                 Hashtable ErrorHash = new Hashtable();
                 ErrorHash["success"] = "false";
@@ -344,19 +344,19 @@ namespace Aurora.Framework
                 XmlRpcRequest Req = new XmlRpcRequest(method, SendParams);
                 Resp = Req.Send(IPpoint, 30000);
             }
-            catch (WebException ex)
+            catch (WebException)
             {
                 Hashtable ErrorHash = new Hashtable();
                 ErrorHash["success"] = "false";
                 return ErrorHash;
             }
-            catch (SocketException ex)
+            catch (SocketException)
             {
                 Hashtable ErrorHash = new Hashtable();
                 ErrorHash["success"] = "false";
                 return ErrorHash;
             }
-            catch (XmlException ex)
+            catch (XmlException)
             {
                 Hashtable ErrorHash = new Hashtable();
                 ErrorHash["success"] = "false";

@@ -61,13 +61,13 @@ namespace Aurora.Physics.BulletDotNETPlugin
         private btDefaultMotionState m_bodyMotionState;
         private btGeneric6DofConstraint m_aMotor;
         // private Vector3 m_movementComparision;
+        private Vector3 m_acceleration;
         private Vector3 m_position;
         private Vector3 m_zeroPosition;
         private bool m_zeroFlag = false;
         private bool m_lastUpdateSent = false;
         private Vector3 m_velocity;
         private Vector3 m_target_velocity;
-        private Vector3 m_acceleration;
         private Vector3 m_rotationalVelocity;
         private bool m_pidControllerActive = true;
         public float PID_D = 80.0f;
