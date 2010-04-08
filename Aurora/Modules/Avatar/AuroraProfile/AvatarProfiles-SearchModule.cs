@@ -883,7 +883,7 @@ namespace Aurora.Modules
                                       int queryStart)
         {
         	//TODO: Add queryStart!!!
-        	DirPlacesReplyData[] ReturnValues = ProfileData.PlacesQuery(queryText,category.ToString(),"parcels","PID,PName,PForSale,PAuction,PDwell");
+        	DirPlacesReplyData[] ReturnValues = ProfileData.PlacesQuery(queryText,category.ToString(),"searchparcels","PID,PName,PForSale,PAuction,PDwell");
 
             DirPlacesReplyData[] data = new DirPlacesReplyData[10];
 
@@ -904,19 +904,17 @@ namespace Aurora.Modules
 
         public void DirPopularQuery(IClientAPI remoteClient, UUID queryID, uint queryFlags)
         {
-        	
         	/// <summary>
         	/// Decapriated.
         	/// </summary>
         }
         
-        //FIXME
         public void DirLandQuery(IClientAPI remoteClient, UUID queryID,
                                  uint queryFlags, uint searchType, int price, int area,
                                  int queryStart)
         {
 			//TODO: Add queryStart!!!
-            DirLandReplyData[] ReturnValues = ProfileData.LandForSaleQuery(searchType.ToString(),price.ToString(),area.ToString(),"forsaleparcels","PID,PName,PForSale,PAuction,PSalePrice,PActualArea");
+            DirLandReplyData[] ReturnValues = ProfileData.LandForSaleQuery(searchType.ToString(),price.ToString(),area.ToString(),"searchparcelsales","PID,PName,PAuction,PSalePrice,PArea");
 
             DirLandReplyData[] data = new DirLandReplyData[10];
 
@@ -952,7 +950,6 @@ namespace Aurora.Modules
             }
         }
 
-        //Finished!
         public void DirPeopleQuery(IClientAPI remoteClient, UUID queryID,
                                    string queryText, uint queryFlags, int queryStart)
         {
@@ -1017,7 +1014,7 @@ namespace Aurora.Modules
             }
             remoteClient.SendDirEventsReply(queryID, data);
         }
-		//FIXME
+		
         public void DirClassifiedQuery(IClientAPI remoteClient, UUID queryID,
                                        string queryText, uint queryFlags, uint category,
                                        int queryStart)
@@ -1280,7 +1277,7 @@ namespace Aurora.Modules
         {
             foreach (Scene scene in m_Scenes)
             {
-                FireParser(scene.RegionInfo.RegionName);
+                FireParser(scene, scene.RegionInfo.RegionName);
             }
         }
 
@@ -1330,7 +1327,7 @@ namespace Aurora.Modules
 
         #region Parser
 
-        private void FireParser(string regionName)
+        private void FireParser(Scene currentScene, string regionName)
         {
             XmlDocument doc = DataSnapShotManager.GetSnapshot(regionName);
             XmlNodeList rootL = doc.GetElementsByTagName("region");
@@ -1358,17 +1355,16 @@ namespace Aurora.Modules
                             break;
                     }
                 }
-                List<string> query = GenericData.Query("regionuuid", info.UUID.ToString(), "regions", "*");
+                List<string> query = GenericData.Query("RID", info.UUID.ToString(), "searchregions", "*");
                 if (query.Count != 0)
                 {
-                    GenericData.Delete("regions", new string[] { "regionuuid" }, new string[] { info.UUID.ToString() });
-                    GenericData.Delete("parcels", new string[] { "regionuuid" }, new string[] { info.UUID.ToString() });
-                    GenericData.Delete("objects", new string[] { "regionuuid" }, new string[] { info.UUID.ToString() });
-                    GenericData.Delete("allparcels", new string[] { "regionUUID" }, new string[] { info.UUID.ToString() });
-                    GenericData.Delete("parcelsales", new string[] { "regionUUID" }, new string[] { info.UUID.ToString() });
+                    GenericData.Delete("searchregions", new string[] { "RID" }, new string[] { info.UUID.ToString() });
+                    GenericData.Delete("searchparcels", new string[] { "RID" }, new string[] { info.UUID.ToString() });
+                    GenericData.Delete("searchobjects", new string[] { "RID" }, new string[] { info.UUID.ToString() });
+                    GenericData.Delete("searchallparcels", new string[] { "RID" }, new string[] { info.UUID.ToString() });
+                    GenericData.Delete("searchparcelsales", new string[] { "RID" }, new string[] { info.UUID.ToString() });
                 }
             }
-            XmlNode rootD = doc.GetElementsByTagName("data")[0];
             XmlNode rootE = doc.GetElementsByTagName("estate")[0];
             XmlNodeList rootP = doc.GetElementsByTagName("parcel");
             XmlNodeList rootO = doc.GetElementsByTagName("object");
@@ -1385,7 +1381,7 @@ namespace Aurora.Modules
                 }
             }
             //Add region to the DB.
-            GenericData.Insert("regions", new string[] { info.Name, info.UUID, info.Handle, info.URL, info.UserName, info.UserName });
+            GenericData.Insert("searchregions", new string[] { info.Name, info.UUID, info.Handle, info.URL, info.UserName, info.UserName });
             foreach (XmlNode inner in rootP)
             {
                 foreach (XmlNode part in inner.ChildNodes)
@@ -1442,12 +1438,14 @@ namespace Aurora.Modules
                             PInfo.UUID = part.InnerText;
                             break;
                     }
-                    GenericData.Insert("allparcels", new string[] { info.UUID, PInfo.Name, PInfo.OwnerUUID, PInfo.GroupUUID, PInfo.Landing, PInfo.UUID, PInfo.InfoUUID, PInfo.Area });
+                    GenericData.Insert("searchallparcels", new string[] { info.UUID, PInfo.Name, PInfo.OwnerUUID, PInfo.GroupUUID, PInfo.Landing, PInfo.UUID, PInfo.InfoUUID, PInfo.Area });
                     if (Convert.ToBoolean(PInfo.Directory))
-                        GenericData.Insert("parcels", new string[] { info.UUID, PInfo.Name, PInfo.UUID, PInfo.Landing, PInfo.UUID, PInfo.Desc, PInfo.Category, PInfo.Build, PInfo.Script, PInfo.Public, PInfo.Dwell, PInfo.InfoUUID });
-                    //TODO: CHECK THESE 0 AND FALSE VALUES!
+                    	GenericData.Insert("searchparcels", new string[] { info.UUID, PInfo.Name, PInfo.UUID, PInfo.Landing, PInfo.Desc, PInfo.Category, PInfo.Build, PInfo.Script, PInfo.Public, PInfo.Dwell, PInfo.InfoUUID, false.ToString(), false.ToString() });
                     if (Convert.ToBoolean(PInfo.ForSale))
-                        GenericData.Insert("parcelsales", new string[] { info.UUID, PInfo.Name, PInfo.UUID, PInfo.Area, PInfo.SalePrice, PInfo.Landing, PInfo.InfoUUID, PInfo.Dwell, "0", "false" });
+                    {
+                    	IAdultVerificationModule AVM = currentScene.RequestModuleInterface<IAdultVerificationModule>();
+                    	GenericData.Insert("searchparcelsales", new string[] { info.UUID, PInfo.Name, PInfo.UUID, PInfo.Area, PInfo.SalePrice, PInfo.Landing, PInfo.InfoUUID, PInfo.Dwell, currentScene.RegionInfo.EstateSettings.EstateID.ToString(), AVM.GetIsRegionMature(currentScene.RegionInfo.RegionID).ToString() });
+                    }
                 }
             }
 
@@ -1478,7 +1476,7 @@ namespace Aurora.Modules
                             OInfo.Flags = part.InnerText;
                             break;
                     }
-                    GenericData.Insert("objects", new string[] { OInfo.UUID, OInfo.ParcelUUID, OInfo.Title, OInfo.Desc, OInfo.RegionUUID });
+                    GenericData.Insert("searchobjects", new string[] { OInfo.UUID, OInfo.ParcelUUID, OInfo.Title, OInfo.Desc, OInfo.RegionUUID });
                 }
             }
         }

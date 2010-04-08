@@ -473,6 +473,7 @@ namespace Aurora.DataManager.SQLite
             {
             	int DataCount = 0;
             	DirLandReplyData replyData = new DirLandReplyData();
+				replyData.forSale = true;
             	for (int i = 0; i < reader.FieldCount; i++)
                 {
             		if(DataCount == 0)
@@ -480,19 +481,18 @@ namespace Aurora.DataManager.SQLite
             		if(DataCount == 1)
             			replyData.name = reader.GetString(i);
             		if(DataCount == 2)
-            			replyData.forSale = Convert.ToBoolean(reader.GetString(i));
-            		if(DataCount == 3)
             			replyData.auction = Convert.ToBoolean(reader.GetString(i));
-            		if(DataCount == 4)
+            		if(DataCount == 3)
             			replyData.salePrice = Convert.ToInt32(reader.GetString(i));
-            		if(DataCount == 5)
+            		if(DataCount == 4)
             			replyData.actualArea = Convert.ToInt32(reader.GetString(i));
                     DataCount++;
-                    if(DataCount == 6)
+                    if(DataCount == 5)
                     {
                     	DataCount = 0;
                     	Data.Add(replyData);
                     	replyData = new DirLandReplyData();
+                    	replyData.forSale = true;
                     }
                 }
             }

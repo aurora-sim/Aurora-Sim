@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text;
+using OpenMetaverse;
 
 namespace Aurora.Framework
 {
@@ -14,5 +15,9 @@ namespace Aurora.Framework
     {
         bool CheckAuthenticationServer(IPEndPoint serverIP);
         bool CheckUserAccount(string Identifier);
+    }
+    public interface IAdultVerificationModule
+    {
+    	bool GetIsRegionMature(UUID regionID);
     }
 }

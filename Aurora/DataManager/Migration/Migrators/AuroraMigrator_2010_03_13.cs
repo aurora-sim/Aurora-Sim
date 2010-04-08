@@ -103,7 +103,8 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("regionX", ColumnTypes.String50),
                 ColDef("regionY", ColumnTypes.String50),
                 ColDef("telehubX", ColumnTypes.String50),
-                ColDef("telehubY", ColumnTypes.String50)
+                ColDef("telehubY", ColumnTypes.String50),
+                ColDef("isMature", ColumnTypes.String50)
                 ));
 
             AddSchema("macban", ColDefs(ColDef("macAddress", ColumnTypes.String50, true)));
@@ -233,6 +234,68 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("cloud_scroll_y_lock", ColumnTypes.String50),
                 ColDef("draw_classic_clouds", ColumnTypes.String50)
                ));
+            
+            #region Search Tables
+            
+            AddSchema("searchparcels", ColDefs(
+                ColDef("RID", ColumnTypes.String50),
+                ColDef("PName", ColumnTypes.String50),
+                ColDef("PID", ColumnTypes.String50, true),
+                ColDef("PLanding", ColumnTypes.String50),
+                ColDef("PDesc", ColumnTypes.String50),
+                ColDef("PCategory", ColumnTypes.String50),
+                ColDef("PBuild", ColumnTypes.String50),
+                ColDef("PScript", ColumnTypes.String50),
+                ColDef("PPublic", ColumnTypes.String50),
+                ColDef("PDwell", ColumnTypes.String50),
+                ColDef("PInfoUUID", ColumnTypes.String50),
+                ColDef("PForSale", ColumnTypes.String50),
+                ColDef("PAuction", ColumnTypes.String50)
+                ));
+            
+            AddSchema("searchparcelsales", ColDefs(
+                ColDef("RID", ColumnTypes.String50),
+                ColDef("PName", ColumnTypes.String50),
+                ColDef("PID", ColumnTypes.String50, true),
+                ColDef("PArea", ColumnTypes.String50),
+                ColDef("PSalePrice", ColumnTypes.String50),
+                ColDef("PLanding", ColumnTypes.String50),
+                ColDef("PInfoUUID", ColumnTypes.String50),
+                ColDef("PDwell", ColumnTypes.String50),
+                ColDef("PEstateID", ColumnTypes.String50),
+                ColDef("PIsMature", ColumnTypes.String50),
+                ColDef("PAuction", ColumnTypes.String50)
+                ));
+            
+            AddSchema("searchallparcels", ColDefs(
+                ColDef("RID", ColumnTypes.String50),
+                ColDef("PName", ColumnTypes.String50),
+                ColDef("PUserID", ColumnTypes.String50),
+                ColDef("PGroupID", ColumnTypes.String50),
+                ColDef("PLanding", ColumnTypes.String50),
+                ColDef("PID", ColumnTypes.String50, true),
+                ColDef("PInfoUUID", ColumnTypes.String50),
+                ColDef("PArea", ColumnTypes.String50)
+                ));
+            
+            AddSchema("searchregions", ColDefs(
+                ColDef("RName", ColumnTypes.String50),
+                ColDef("RID", ColumnTypes.String50, true),
+                ColDef("RHandle", ColumnTypes.String50),
+                ColDef("RURL", ColumnTypes.String50),
+                ColDef("ROwnerID", ColumnTypes.String50),
+                ColDef("RUserName", ColumnTypes.String50)
+                ));
+            
+            AddSchema("searchobjects", ColDefs(
+                ColDef("OID", ColumnTypes.String50, true),
+                ColDef("PID", ColumnTypes.String50),
+                ColDef("OTitle", ColumnTypes.String50),
+                ColDef("ODesc", ColumnTypes.String50),
+                ColDef("RID", ColumnTypes.String50)
+                ));
+            
+            #endregion
         }
 
         protected override void DoCreateDefaults(DataSessionProvider sessionProvider, IGenericData genericData)
