@@ -16,6 +16,7 @@ namespace Aurora.DataManager
         public abstract string Identifier { get; }
         public abstract void ConnectToDatabase(string connectionString);
         public abstract List<string> Query(string keyRow, string keyValue, string table, string wantedValue);
+        public abstract List<string> Query(string[] keyRow, string[] keyValue, string table, string wantedValue);
         public abstract void Insert(string table, string[] values);
         public abstract void Delete(string table, string[] keys, string[] values);
         public abstract void Insert(string table, string[] values, string updateKey, string updateValue);

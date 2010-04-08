@@ -251,7 +251,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Instance
             foreach (string api in am.GetApis())
             {
                 m_Apis[api] = am.CreateApi(api);
-                m_Apis[api].Initialize(engine, part, m_LocalID, itemID);
+                m_Apis[api].Initialize(engine, part, m_LocalID, itemID, null);
         }
 
         try

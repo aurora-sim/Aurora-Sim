@@ -817,9 +817,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
             	m_host.AddScriptLPS(1);
 
-            	IWorldComm wComm = m_ScriptEngine.World.RequestModuleInterface<IWorldComm>();
-            	if (wComm != null)
-                	wComm.DeliverMessage(ChatTypeEnum.Region, channelID, m_host.Name, m_host.UUID, text);
+            	IWorldComm wComm1 = m_ScriptEngine.World.RequestModuleInterface<IWorldComm>();
+            	if (wComm1 != null)
+                	wComm1.DeliverMessage(ChatTypeEnum.Region, channelID, m_host.Name, m_host.UUID, text);
             }
 
             if (text.Length > 1023)

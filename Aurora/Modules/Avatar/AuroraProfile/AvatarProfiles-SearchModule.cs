@@ -945,7 +945,6 @@ namespace Aurora.Modules
             DirPlacesReplyData[] data = new DirPlacesReplyData[10];
 
             int i = 0;
-            int newpacketcount = ReturnValues.Count;
             foreach (DirPlacesReplyData d in ReturnValues)
             {
             	data[i] = d;
@@ -957,8 +956,7 @@ namespace Aurora.Modules
                     data = new DirPlacesReplyData[10];
             	}
             }
-            if(data[0] != null)
-            	remoteClient.SendDirPlacesReply(queryID, data);
+            remoteClient.SendDirPlacesReply(queryID, data);
         }
 
         public void DirPopularQuery(IClientAPI remoteClient, UUID queryID, uint queryFlags)
@@ -975,12 +973,11 @@ namespace Aurora.Modules
                                  int queryStart)
         {
 			//TODO: Add queryStart!!!
-            DirLandReplyData ReturnValues = ProfileData.LandForSaleQuery(searchType.ToString(),price.ToString(),area.ToString(),"forsaleparcels","PID,PName,PForSale,PAuction,PSalePrice,PActualArea");
+            DirLandReplyData[] ReturnValues = ProfileData.LandForSaleQuery(searchType.ToString(),price.ToString(),area.ToString(),"forsaleparcels","PID,PName,PForSale,PAuction,PSalePrice,PActualArea");
 
             DirLandReplyData[] data = new DirLandReplyData[10];
 
             int i = 0;
-            int newpacketcount = ReturnValues.Count;
             foreach (DirLandReplyData d in ReturnValues)
             {
             	data[i] = d;
@@ -989,11 +986,10 @@ namespace Aurora.Modules
             	{
                 	remoteClient.SendDirLandReply(queryID, data);
                     i = 0;
-                    data = new DirPlacesReplyData[10];
+                    data = new DirLandReplyData[10];
             	}
             }
-            if(data[0] != null)
-            	remoteClient.SendDirLandReply(queryID, data);
+            remoteClient.SendDirLandReply(queryID, data);
         }
 
         public void DirFindQuery(IClientAPI remoteClient, UUID queryID,
@@ -1043,8 +1039,10 @@ namespace Aurora.Modules
                     			data[i].group = membership.GroupName;
                     	}
                     }
-                    PresenceInfo Pinfo = m_Scenes[0].PresenceService.GetAgents(new string{ item.PrincipalID.ToString() })[0];
-                    data[i].online = (Pinfo == null)
+                    List<string> user = new List<string>();
+                    user.Add(item.PrincipalID.ToString());
+                    OpenSim.Services.Interfaces.PresenceInfo Pinfo = m_Scenes[0].PresenceService.GetAgents(user.ToArray())[0];
+                    data[i].online = Pinfo.Online;
                     data[i].reputation = 0;
                     i++;
                 }
@@ -1060,7 +1058,7 @@ namespace Aurora.Modules
             //TODO: Add queryStart!!!
             DirEventsReplyData[] ReturnValues = ProfileData.EventQuery(queryText, queryFlags.ToString(),"Events","EOwnerID,EName,EID,EDate,ETime,EFlags");
 
-            DirPlacesReplyData[] data = new DirPlacesReplyData[10];
+            DirEventsReplyData[] data = new DirEventsReplyData[10];
 			int i = 0;
 			
             foreach (DirEventsReplyData d in ReturnValues)
@@ -1071,11 +1069,10 @@ namespace Aurora.Modules
             	{
                 	remoteClient.SendDirEventsReply(queryID, data);
                     i = 0;
-                    data = new DirPlacesReplyData[10];
+                    data = new DirEventsReplyData[10];
             	}
             }
-            if(data[0] != null)
-            	remoteClient.SendDirEventsReply(queryID, data);
+            remoteClient.SendDirEventsReply(queryID, data);
         }
 		//FIXME
         public void DirClassifiedQuery(IClientAPI remoteClient, UUID queryID,
@@ -1083,7 +1080,7 @@ namespace Aurora.Modules
                                        int queryStart)
         {
         	//TODO: Add queryStart!!!
-            DirClassifiedReplyData[] ReplyData = ProfileData.ClassifiedsQuery(queryText, category, queryFlags);
+            DirClassifiedReplyData[] ReplyData = ProfileData.ClassifiedsQuery(queryText, category.ToString(), queryFlags.ToString());
             
         	DirClassifiedReplyData[] data = new DirClassifiedReplyData[10];
 			int i = 0;
@@ -1265,13 +1262,13 @@ namespace Aurora.Modules
             #region 7
             if (itemtype == 7) //(land sales)
             {
-                DirLandReplyData[] Landdata = ProfileData.LandForSaleQuery("4294967295",int.MaxValue.ToString(),"0","forsaleparcels",,"PID,PName,PForSale,PAuction,PSalePrice,PActualArea");
+                DirLandReplyData[] Landdata = ProfileData.LandForSaleQuery("4294967295",int.MaxValue.ToString(),"0","forsaleparcels","PID,PName,PForSale,PAuction,PSalePrice,PActualArea");
                     
                 uint locX = 0;
                 uint locY = 0;
                 foreach (DirLandReplyData landDir in Landdata)
                 {
-                	List<string> ParcelInfo = GenericData.Query("PID",landDir.parcelID,"parcels","PLandingX, PLandingY, PRegionID");
+                	List<string> ParcelInfo = GenericData.Query("PID",landDir.parcelID.ToString(),"parcels","PLandingX, PLandingY, PRegionID");
                     foreach (Scene scene in m_Scenes)
                     {
                         if (scene.RegionInfo.RegionID == new UUID(ParcelInfo[2]))

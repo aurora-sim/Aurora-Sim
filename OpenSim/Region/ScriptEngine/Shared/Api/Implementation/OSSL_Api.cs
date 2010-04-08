@@ -1091,7 +1091,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             if (voiceModule != null)
                 voiceModule.setLandSIPAddress(SIPAddress,land.LandData.GlobalID);
             else
-                OSSLError("osSetParcelSIPAddress: No voice module enabled for this land", m_host);
+                OSSLError("osSetParcelSIPAddress: No voice module enabled for this land");
 
 
         }

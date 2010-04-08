@@ -89,9 +89,10 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 				default:
 					break;
 			}
+            return m_MaxThreatLevel;
 		}
 		
-		public void CheckThreatLevel(ThreatLevel level, string function)
+		public void CheckThreatLevel(ThreatLevel level, string function,SceneObjectPart m_host)
         {
             if (!m_OSFunctionsEnabled)
                 Error("Runtime Error: ", String.Format("{0} permission denied.  All OS functions are disabled.", function)); // throws
@@ -159,8 +160,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             {
                 if (!m_FunctionPerms[function].Contains(UUID.Zero))
                 {
-                	//REFACTOR ISSUE!!!
-                    //if (!m_FunctionPerms[function].Contains(m_host.OwnerID))
+                	if (!m_FunctionPerms[function].Contains(m_host.OwnerID))
                         Error("Runtime Error: ",
                             String.Format("{0} permission denied.  Prim owner is not in the list of users allowed to execute this function.",
                             function));

@@ -418,9 +418,7 @@ namespace Aurora.DataManager.SQLite
             List<DirPlacesReplyData> Data = new List<DirPlacesReplyData>();
             string query = String.Format("select {0} from {1} where ",
                                       wantedValue, table);
-            int i = 0;
             query += "PCategory = '"+category+"' and Pdesc LIKE '%" + queryText + "%' OR PName LIKE '%" + queryText + "%' ";
-                i++;
             
             cmd.CommandText = query;
             IDataReader reader = GetReader(cmd);
@@ -454,7 +452,7 @@ namespace Aurora.DataManager.SQLite
             reader.Dispose();
             CloseReaderCommand(cmd);
 
-            return Data;
+            return Data.ToArray();
         }
 		public DirLandReplyData[] LandForSaleQuery(string searchType, string price, string area, string table, string wantedValue)
         {
@@ -463,7 +461,7 @@ namespace Aurora.DataManager.SQLite
             string query = String.Format("select {0} from {1} where ",
                                       wantedValue, table);
             //TODO: Check this searchType ref!
-            if(searchType != 0)
+            if(searchType != "0")
             	query += "PType = '"+searchType+"' and PPrice <= '" + price + "' and area >= '" + area + "' ";
             else
             	query += "PPrice <= '" + price + "' and area >= '" + area + "' ";
@@ -486,9 +484,9 @@ namespace Aurora.DataManager.SQLite
             		if(DataCount == 3)
             			replyData.auction = Convert.ToBoolean(reader.GetString(i));
             		if(DataCount == 4)
-            			replyData.salePrice = (float)Convert.ToUInt32(reader.GetString(i));
+            			replyData.salePrice = Convert.ToInt32(reader.GetString(i));
             		if(DataCount == 5)
-            			replyData.actualArea = (float)Convert.ToUInt32(reader.GetString(i));
+            			replyData.actualArea = Convert.ToInt32(reader.GetString(i));
                     DataCount++;
                     if(DataCount == 6)
                     {
@@ -502,7 +500,7 @@ namespace Aurora.DataManager.SQLite
             reader.Dispose();
             CloseReaderCommand(cmd);
 
-            return Data;
+            return Data.ToArray();
         }
 		public DirEventsReplyData[] EventQuery(string queryText, string flags, string table, string wantedValue)
 		{
@@ -525,13 +523,13 @@ namespace Aurora.DataManager.SQLite
             		if(DataCount == 1)
             			replyData.name = reader.GetString(i);
             		if(DataCount == 2)
-            			replyData.eventID = Convert.ToBoolean(reader.GetString(i));
+            			replyData.eventID = Convert.ToUInt32(reader.GetString(i));
             		if(DataCount == 3)
-            			replyData.date = Convert.ToBoolean(reader.GetString(i));
+            			replyData.date = reader.GetString(i);
             		if(DataCount == 4)
-            			replyData.unixTime = (float)Convert.ToUInt32(reader.GetString(i));
+            			replyData.unixTime = Convert.ToUInt32(reader.GetString(i));
             		if(DataCount == 5)
-            			replyData.eventFlags = (float)Convert.ToUInt32(reader.GetString(i));
+            			replyData.eventFlags = Convert.ToUInt32(reader.GetString(i));
                     DataCount++;
                     if(DataCount == 6)
                     {
@@ -545,7 +543,7 @@ namespace Aurora.DataManager.SQLite
             reader.Dispose();
             CloseReaderCommand(cmd);
 
-            return Data;
+            return Data.ToArray();
 		}
 		public DirClassifiedReplyData[] ClassifiedsQuery(string queryText, string category, string queryFlags)
 		{
@@ -563,15 +561,15 @@ namespace Aurora.DataManager.SQLite
             		for (int i = 0; i < reader.FieldCount; i++)
             		{
             			if(DataCount == 0)
-            				replyData.classifiedFlags = new UUID(reader.GetString(i));
+            				replyData.classifiedFlags = Convert.ToByte(reader.GetString(i));
             			if(DataCount == 1)
-            				replyData.classifiedID = reader.GetString(i);
+            				replyData.classifiedID = new UUID(reader.GetString(i));
             			if(DataCount == 2)
-            				replyData.creationDate = Convert.ToBoolean(reader.GetString(i));
+            				replyData.creationDate = Convert.ToUInt32(reader.GetString(i));
             			if(DataCount == 3)
-            				replyData.expirationDate = (float)Convert.ToUInt32(reader.GetString(i));
+            				replyData.expirationDate = Convert.ToUInt32(reader.GetString(i));
             			if(DataCount == 4)
-            				replyData.price = (float)Convert.ToUInt32(reader.GetString(i));
+            				replyData.price = Convert.ToInt32(reader.GetString(i));
             			DataCount++;
             			if(DataCount == 5)
             			{
@@ -586,7 +584,7 @@ namespace Aurora.DataManager.SQLite
             reader.Close();
             reader.Dispose();
             CloseReaderCommand(cmd);
-            return Data;
+            return Data.ToArray();
 		}
     }
 }

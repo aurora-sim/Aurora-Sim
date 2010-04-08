@@ -136,7 +136,7 @@ namespace Aurora.DataManager.SQLite
             var RetVal = new List<string>();
             while (reader.Read())
             {
-                for (int i = 0; i < reader.FieldCount; i++)
+                for (i = 0; i < reader.FieldCount; i++)
                 {
                     RetVal.Add(reader.GetString(i));
                 }

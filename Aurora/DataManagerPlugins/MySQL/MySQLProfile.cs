@@ -5,6 +5,7 @@ using System.Text;
 using MySql.Data.MySqlClient;
 using OpenMetaverse;
 using Aurora.Framework;
+using OpenSim.Framework;
 
 namespace Aurora.DataManager.MySQL
 {
@@ -362,7 +363,7 @@ namespace Aurora.DataManager.MySQL
 
                     return UserProfile;
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     return null;
                 }
@@ -480,95 +481,113 @@ namespace Aurora.DataManager.MySQL
         }
     	public DirPlacesReplyData[] PlacesQuery(string queryText, string category, string table, string wantedValue)
         {
-        	var cmd = new SqliteCommand();
-            List<DirPlacesReplyData> Data = new List<DirPlacesReplyData>();
+        	List<DirPlacesReplyData> Data = new List<DirPlacesReplyData>();
             string query = String.Format("select {0} from {1} where ",
                                       wantedValue, table);
-            int i = 0;
             query += "PCategory = '"+category+"' and Pdesc LIKE '%" + queryText + "%' OR PName LIKE '%" + queryText + "%' ";
-                i++;
-            
-            cmd.CommandText = query;
-            IDataReader reader = GetReader(cmd);
-            
-            while (reader.Read())
+       
+            MySqlConnection dbcon = GetLockedConnection();
+            IDbCommand result;
+            IDataReader reader;
+            using (result = Query(query, new Dictionary<string, object>(), dbcon))
             {
-            	int DataCount = 0;
-            	DirPlacesReplyData replyData = new DirPlacesReplyData();
-            	for (int i = 0; i < reader.FieldCount; i++)
+                using (reader = result.ExecuteReader())
                 {
-            		if(DataCount == 0)
-            			replyData.parcelID = new UUID(reader.GetString(i));
-            		if(DataCount == 1)
-            			replyData.name = reader.GetString(i);
-            		if(DataCount == 2)
-            			replyData.forSale = Convert.ToBoolean(reader.GetString(i));
-            		if(DataCount == 3)
-            			replyData.auction = Convert.ToBoolean(reader.GetString(i));
-            		if(DataCount == 4)
-            			replyData.dwell = (float)Convert.ToUInt32(reader.GetString(i));
-                    DataCount++;
-                    if(DataCount == 5)
+                    try
                     {
-                    	DataCount = 0;
-                    	Data.Add(replyData);
-                    	replyData = new DirPlacesReplyData();
+                        while (reader.Read())
+                        {
+                            int DataCount = 0;
+                            DirPlacesReplyData replyData = new DirPlacesReplyData();
+                            for (int i = 0; i < reader.FieldCount; i++)
+                            {
+                                if (DataCount == 0)
+                                    replyData.parcelID = new UUID(reader.GetString(i));
+                                if (DataCount == 1)
+                                    replyData.name = reader.GetString(i);
+                                if (DataCount == 2)
+                                    replyData.forSale = Convert.ToBoolean(reader.GetString(i));
+                                if (DataCount == 3)
+                                    replyData.auction = Convert.ToBoolean(reader.GetString(i));
+                                if (DataCount == 4)
+                                    replyData.dwell = (float)Convert.ToUInt32(reader.GetString(i));
+                                DataCount++;
+                                if (DataCount == 5)
+                                {
+                                    DataCount = 0;
+                                    Data.Add(replyData);
+                                    replyData = new DirPlacesReplyData();
+                                }
+                            }
+                        }
+                        return Data.ToArray();
+                    }
+                    finally
+                    {
+                        reader.Close();
+                        reader.Dispose();
+                        result.Dispose();
                     }
                 }
             }
-            reader.Close();
-            reader.Dispose();
-            CloseReaderCommand(cmd);
-
-            return Data;
         }
 		public DirLandReplyData[] LandForSaleQuery(string searchType, string price, string area, string table, string wantedValue)
         {
-        	var cmd = new SqliteCommand();
-            List<DirLandReplyData> Data = new List<DirLandReplyData>();
+        	List<DirLandReplyData> Data = new List<DirLandReplyData>();
             string query = String.Format("select {0} from {1} where ",
                                       wantedValue, table);
             //TODO: Check this searchType ref!
-            if(searchType != 0)
+            if(searchType != "0")
             	query += "PType = '"+searchType+"' and PPrice <= '" + price + "' and area >= '" + area + "' ";
             else
             	query += "PPrice <= '" + price + "' and area >= '" + area + "' ";
             
-            cmd.CommandText = query;
-            IDataReader reader = GetReader(cmd);
-            
-            while (reader.Read())
-            {
-            	int DataCount = 0;
-            	DirLandReplyData replyData = new DirLandReplyData();
-            	for (int i = 0; i < reader.FieldCount; i++)
+            MySqlConnection dbcon = GetLockedConnection();
+			IDbCommand result;
+			IDataReader reader;
+            using (result = Query(query, new Dictionary<string, object>(), dbcon))
+			{
+                using (reader = result.ExecuteReader())
                 {
-            		if(DataCount == 0)
-            			replyData.parcelID = new UUID(reader.GetString(i));
-            		if(DataCount == 1)
-            			replyData.name = reader.GetString(i);
-            		if(DataCount == 2)
-            			replyData.forSale = Convert.ToBoolean(reader.GetString(i));
-            		if(DataCount == 3)
-            			replyData.auction = Convert.ToBoolean(reader.GetString(i));
-            		if(DataCount == 4)
-            			replyData.salePrice = (float)Convert.ToUInt32(reader.GetString(i));
-            		if(DataCount == 5)
-            			replyData.actualArea = (float)Convert.ToUInt32(reader.GetString(i));
-                    DataCount++;
-                    if(DataCount == 6)
+                    try
                     {
-                    	DataCount = 0;
-                    	Data.Add(replyData);
-                    	replyData = new DirLandReplyData();
+                        while (reader.Read())
+                        {
+                            int DataCount = 0;
+                            DirLandReplyData replyData = new DirLandReplyData();
+                            for (int i = 0; i < reader.FieldCount; i++)
+                            {
+                                if (DataCount == 0)
+                                    replyData.parcelID = new UUID(reader.GetString(i));
+                                if (DataCount == 1)
+                                    replyData.name = reader.GetString(i);
+                                if (DataCount == 2)
+                                    replyData.forSale = Convert.ToBoolean(reader.GetString(i));
+                                if (DataCount == 3)
+                                    replyData.auction = Convert.ToBoolean(reader.GetString(i));
+                                if (DataCount == 4)
+                                    replyData.salePrice = Convert.ToInt32(reader.GetString(i));
+                                if (DataCount == 5)
+                                    replyData.actualArea = Convert.ToInt32(reader.GetString(i));
+                                DataCount++;
+                                if (DataCount == 6)
+                                {
+                                    DataCount = 0;
+                                    Data.Add(replyData);
+                                    replyData = new DirLandReplyData();
+                                }
+                            }
+                        }
+                        return Data.ToArray();
+                    }
+                    finally
+                    {
+                        reader.Close();
+                        reader.Dispose();
+                        result.Dispose();
                     }
                 }
             }
-            reader.Close();
-            reader.Dispose();
-            CloseReaderCommand(cmd);
-
-            return Data;
         }
 		public DirEventsReplyData[] EventQuery(string queryText, string flags, string table, string wantedValue)
 		{
@@ -588,29 +607,31 @@ namespace Aurora.DataManager.MySQL
 						while (reader.Read())
 						{
 							int DataCount = 0;
-							DirClassifiedReplyData replyData = new DirClassifiedReplyData();
+                            DirEventsReplyData replyData = new DirEventsReplyData();
 							for (int i = 0; i < reader.FieldCount; i++)
 							{
-								if(DataCount == 0)
-									replyData.classifiedFlags = new UUID(reader.GetString(i));
-								if(DataCount == 1)
-									replyData.classifiedID = reader.GetString(i);
-								if(DataCount == 2)
-									replyData.creationDate = Convert.ToBoolean(reader.GetString(i));
-								if(DataCount == 3)
-									replyData.expirationDate = (float)Convert.ToUInt32(reader.GetString(i));
-								if(DataCount == 4)
-									replyData.price = (float)Convert.ToUInt32(reader.GetString(i));
+                                if (DataCount == 0)
+                                    replyData.ownerID = new UUID(reader.GetString(i));
+                                if (DataCount == 1)
+                                    replyData.name = reader.GetString(i);
+                                if (DataCount == 2)
+                                    replyData.eventID = Convert.ToUInt32(reader.GetString(i));
+                                if (DataCount == 3)
+                                    replyData.date = reader.GetString(i);
+                                if (DataCount == 4)
+                                    replyData.unixTime = Convert.ToUInt32(reader.GetString(i));
+                                if (DataCount == 5)
+                                    replyData.eventFlags = Convert.ToUInt32(reader.GetString(i));
 								DataCount++;
 								if(DataCount == 5)
 								{
 									DataCount = 0;
 									Data.Add(replyData);
-									replyData = new DirClassifiedReplyData();
+                                    replyData = new DirEventsReplyData();
 								}
 							}
 						}
-						return Data;
+						return Data.ToArray();
 					}
 					finally
 					{
@@ -626,7 +647,7 @@ namespace Aurora.DataManager.MySQL
 			MySqlConnection dbcon = GetLockedConnection();
 			IDbCommand result;
 			IDataReader reader;
-			List<DirClassifiedReplyData> Data = new List<DirClassifiedReplyData>();
+            List<DirClassifiedReplyData> Data = new List<DirClassifiedReplyData>();
 			string query = "select classifieduuid, name, creationdate, expirationdate, priceforlisting from classifieds where name LIKE '%" + queryText + "%' and category = '"+category+"'";
 			using (result = Query(query, new Dictionary<string, object>(), dbcon))
 			{
@@ -641,15 +662,15 @@ namespace Aurora.DataManager.MySQL
 							for (int i = 0; i < reader.FieldCount; i++)
 							{
 								if(DataCount == 0)
-									replyData.classifiedFlags = new UUID(reader.GetString(i));
+									replyData.classifiedFlags = Convert.ToByte(reader.GetString(i));
 								if(DataCount == 1)
-									replyData.classifiedID = reader.GetString(i);
+									replyData.classifiedID = new UUID(reader.GetString(i));
 								if(DataCount == 2)
-									replyData.creationDate = Convert.ToBoolean(reader.GetString(i));
+									replyData.creationDate = Convert.ToUInt32(reader.GetString(i));
 								if(DataCount == 3)
-									replyData.expirationDate = (float)Convert.ToUInt32(reader.GetString(i));
+									replyData.expirationDate = Convert.ToUInt32(reader.GetString(i));
 								if(DataCount == 4)
-									replyData.price = (float)Convert.ToUInt32(reader.GetString(i));
+									replyData.price = Convert.ToInt32(reader.GetString(i));
 								DataCount++;
 								if(DataCount == 5)
 								{
@@ -659,7 +680,7 @@ namespace Aurora.DataManager.MySQL
 								}
 							}
 						}
-						return Data;
+						return Data.ToArray();
 					}
 					finally
 					{

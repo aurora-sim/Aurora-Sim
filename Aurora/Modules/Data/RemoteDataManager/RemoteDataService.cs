@@ -228,9 +228,7 @@ namespace Aurora.Modules.DataPlugins
         {
             throw new NotImplementedException();
         }
-
-        #endregion
-
+        
         private object AskForData(string Type, object[] parameters)
         {
             return null;
@@ -245,5 +243,32 @@ namespace Aurora.Modules.DataPlugins
 		{
 			throw new NotImplementedException();
 		}
+
+        public OpenSim.Framework.DirPlacesReplyData[] PlacesQuery(string queryText, string category, string table, string wantedValue)
+        {
+            throw new NotImplementedException();
+        }
+
+        public OpenSim.Framework.DirLandReplyData[] LandForSaleQuery(string searchType, string price, string area, string table, string wantedValue)
+        {
+            throw new NotImplementedException();
+        }
+
+        public OpenSim.Framework.DirClassifiedReplyData[] ClassifiedsQuery(string queryText, string category, string queryFlags)
+        {
+            throw new NotImplementedException();
+        }
+
+        public OpenSim.Framework.DirEventsReplyData[] EventQuery(string queryText, string flags, string table, string wantedValue)
+        {
+            throw new NotImplementedException();
+        }
+
+        public List<string> Query(string[] keyRow, string[] keyValue, string table, string wantedValue)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
     }
 }

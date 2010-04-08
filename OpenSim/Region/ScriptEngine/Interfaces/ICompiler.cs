@@ -29,6 +29,7 @@ using System;
 using System.Collections.Generic;
 using OpenMetaverse;
 using Nini.Config;
+using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.ScriptEngine.Interfaces
 {
@@ -46,7 +47,7 @@ namespace OpenSim.Region.ScriptEngine.Interfaces
         void AddNewClassSource(string ClassName, string SRC, object ID);
         bool AllowMacroScripting { get; }
         ThreatLevel GetThreatLevel();
-        void CheckThreatLevel(ThreatLevel level, string function);
+        void CheckThreatLevel(ThreatLevel level, string function, SceneObjectPart SOP);
     }
     
     public enum ThreatLevel
