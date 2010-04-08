@@ -540,10 +540,10 @@ namespace Aurora.DataManager.MySQL
             string query = String.Format("select {0} from {1} where ",
                                       wantedValue, table);
             //TODO: Check this searchType ref!
-            if(searchType != "0")
-            	query += "PType = '"+searchType+"' and PPrice <= '" + price + "' and area >= '" + area + "'";
-            else
-            	query += "PPrice <= '" + price + "' and area >= '" + area + "'";
+            //if(searchType != "0")
+            //	query += "PType = '"+searchType+"' and PPrice <= '" + price + "' and area >= '" + area + "'";
+            //else
+            	query += "PSalePrice <= '" + price + "' and PArea >= '" + area + "'";
             
             query += " LIMIT "+StartQuery.ToString()+",50";
             MySqlConnection dbcon = GetLockedConnection();

@@ -877,12 +877,11 @@ namespace Aurora.Modules
         #endregion
 
         #region Search Module
-        //FIXME
+        
         protected void DirPlacesQuery(IClientAPI remoteClient, UUID queryID,
                                       string queryText, int queryFlags, int category, string simName,
                                       int queryStart)
         {
-        	//TODO: Add queryStart!!!
         	DirPlacesReplyData[] ReturnValues = ProfileData.PlacesQuery(queryText,category.ToString(),"searchparcels","PID,PName,PForSale,PAuction,PDwell",queryStart);
 
             DirPlacesReplyData[] data = new DirPlacesReplyData[10];
@@ -913,8 +912,7 @@ namespace Aurora.Modules
                                  uint queryFlags, uint searchType, int price, int area,
                                  int queryStart)
         {
-			//TODO: Add queryStart!!!
-            DirLandReplyData[] ReturnValues = ProfileData.LandForSaleQuery(searchType.ToString(),price.ToString(),area.ToString(),"searchparcelsales","PID,PName,PAuction,PSalePrice,PArea",queryStart);
+			DirLandReplyData[] ReturnValues = ProfileData.LandForSaleQuery(searchType.ToString(),price.ToString(),area.ToString(),"searchparcelsales","PID,PName,PAuction,PSalePrice,PArea",queryStart);
 
             DirLandReplyData[] data = new DirLandReplyData[10];
 
@@ -991,11 +989,9 @@ namespace Aurora.Modules
             remoteClient.SendDirPeopleReply(queryID, data);
         }
 
-        //FIXME
         public void DirEventsQuery(IClientAPI remoteClient, UUID queryID,
                                    string queryText, uint queryFlags, int queryStart)
         {
-            //TODO: Add queryStart!!!
             DirEventsReplyData[] ReturnValues = ProfileData.EventQuery(queryText, queryFlags.ToString(),"events","EOwnerID,EName,EID,EDate,EFlags",queryStart);
 
             DirEventsReplyData[] data = new DirEventsReplyData[10];
@@ -1019,8 +1015,7 @@ namespace Aurora.Modules
                                        string queryText, uint queryFlags, uint category,
                                        int queryStart)
         {
-        	//TODO: Add queryStart!!!
-            DirClassifiedReplyData[] ReplyData = ProfileData.ClassifiedsQuery(queryText, category.ToString(), queryFlags.ToString(),queryStart);
+        	DirClassifiedReplyData[] ReplyData = ProfileData.ClassifiedsQuery(queryText, category.ToString(), queryFlags.ToString(),queryStart);
             
         	DirClassifiedReplyData[] data = new DirClassifiedReplyData[10];
 			int i = 0;
@@ -1134,7 +1129,7 @@ namespace Aurora.Modules
 
             if (itemtype == 7) //(land sales)
             {
-                DirLandReplyData[] Landdata = ProfileData.LandForSaleQuery("4294967295",int.MaxValue.ToString(),"0","forsaleparcels","PID,PName,PForSale,PAuction,PSalePrice,PActualArea",0);
+                DirLandReplyData[] Landdata = ProfileData.LandForSaleQuery("4294967295",int.MaxValue.ToString(),"0","searchparcelsales","PID,PName,PAuction,PSalePrice,PArea",0);
                     
                 uint locX = 0;
                 uint locY = 0;
@@ -1230,6 +1225,7 @@ namespace Aurora.Modules
 
         private void StartSearch()
         {
+        	ParseRegions(null, null);
             aTimer = new System.Timers.Timer(parserTime);
             aTimer.Elapsed += new System.Timers.ElapsedEventHandler(ParseRegions);
             aTimer.Enabled = true;
