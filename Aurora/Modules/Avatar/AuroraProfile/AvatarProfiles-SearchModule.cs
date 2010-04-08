@@ -52,6 +52,8 @@ namespace Aurora.Modules
 {
     public class AuroraProfileModule : IRegionModule
     {
+        #region Declares
+
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private Scene m_scene;
         private IConfigSource m_config;
@@ -61,13 +63,16 @@ namespace Aurora.Modules
         private IGenericData GenericData = null;
         private IConfigSource m_gConfig;
         private List<Scene> m_Scenes = new List<Scene>();
-        private string m_SearchServer = "";
         private bool m_SearchEnabled = true;
         private bool m_ProfileEnabled = true;
         protected IFriendsService m_FriendsService = null;
         protected IGroupsModule GroupsModule = null;
-
+        private System.Timers.Timer aTimer = null;
         protected double parserTime = 60000;
+        private IDataSnapshot DataSnapShotManager;
+
+        #endregion
+
         #region IRegionModule Members
 
         public void Initialise(Scene scene, IConfigSource config)
@@ -113,7 +118,7 @@ namespace Aurora.Modules
             m_gConfig = config;
             m_scene.EventManager.OnNewClient += NewClient;
         }
-        private IDataSnapshot DataSnapShotManager;
+        
         public void PostInitialise()
         {
             ProfileData = Aurora.DataManager.DataManager.GetProfilePlugin();
@@ -142,8 +147,11 @@ namespace Aurora.Modules
         {
             get { return m_scene; }
         }
+
         #endregion
-        
+
+        #region Client
+
         public void NewClient(IClientAPI client)
         {
             if (m_ProfileEnabled)
@@ -192,7 +200,9 @@ namespace Aurora.Modules
             client.OnRequestAvatarProperties -= RequestAvatarProperty;
             client.OnUpdateAvatarProperties -= UpdateAvatarProperties;
         }
-        
+
+        #endregion
+
         #region Profile Module
 
         public void HandleAvatarClassifiedsRequest(Object sender, string method, List<String> args)
@@ -1065,7 +1075,9 @@ namespace Aurora.Modules
             OpenMetaverse.Utils.LongToUInts(m_scene.RegionInfo.RegionHandle, out xstart, out ystart);
             List<mapItemReply> mapitems = new List<mapItemReply>();
             mapItemReply mapitem = new mapItemReply();
+
             #region Telehub
+
             if (itemtype == 1) //(Telehub)
             {
                 List<string> Telehubs = ProfileData.Query("select telehubX,telehubY,regionX,regionY from auroraregions");
@@ -1118,8 +1130,11 @@ namespace Aurora.Modules
                 remoteClient.SendMapItemReply(mapitems.ToArray(), itemtype, flags);
                 mapitems.Clear();
             }
+
 			#endregion
+
             #region 7
+
             if (itemtype == 7) //(land sales)
             {
                 DirLandReplyData[] Landdata = ProfileData.LandForSaleQuery("4294967295",int.MaxValue.ToString(),"0","forsaleparcels","PID,PName,PForSale,PAuction,PSalePrice,PActualArea");
@@ -1149,8 +1164,11 @@ namespace Aurora.Modules
                 remoteClient.SendMapItemReply(mapitems.ToArray(), itemtype, flags);
                 mapitems.Clear();
             }
+
             #endregion
-            //Events
+            
+            #region Events
+            
             if (itemtype == 2) //(Events)
             {
                 /*int tc = Environment.TickCount;
@@ -1208,7 +1226,10 @@ namespace Aurora.Modules
                 remoteClient.SendMapItemReply(mapitems.ToArray(), itemtype, flags);
                 mapitems.Clear();*/
             }
+
+            #endregion
         }
+
         public void OnPlacesQueryRequest(UUID QueryID, UUID TransactionID, string QueryText, uint QueryFlags, byte Category, string SimName, IClientAPI client)
         {
             if (QueryFlags == 64) //Agent Owned
@@ -1248,14 +1269,11 @@ namespace Aurora.Modules
             }
         }
 
-
-        private System.Timers.Timer aTimer = null;
         private void StartSearch()
         {
             aTimer = new System.Timers.Timer(parserTime);
             aTimer.Elapsed += new System.Timers.ElapsedEventHandler(ParseRegions);
             aTimer.Enabled = true;
-            
         }
 
         private void ParseRegions(object source, System.Timers.ElapsedEventArgs e)
