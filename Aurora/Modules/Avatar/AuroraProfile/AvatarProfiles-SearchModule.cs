@@ -1225,10 +1225,14 @@ namespace Aurora.Modules
 
         private void StartSearch()
         {
-        	ParseRegions(null, null);
-            aTimer = new System.Timers.Timer(parserTime);
+        	aTimer = new System.Timers.Timer(parserTime);
             aTimer.Elapsed += new System.Timers.ElapsedEventHandler(ParseRegions);
             aTimer.Enabled = true;
+            aTimer.Start();
+            foreach (Scene scene in m_Scenes)
+            {
+                FireParser(scene, scene.RegionInfo.RegionName);
+            }
         }
 
         private void ParseRegions(object source, System.Timers.ElapsedEventArgs e)
@@ -1288,6 +1292,11 @@ namespace Aurora.Modules
         private void FireParser(Scene currentScene, string regionName)
         {
             XmlDocument doc = DataSnapShotManager.GetSnapshot(regionName);
+            if(doc == null)
+            {
+            	m_log.Error("[SearchModule]: Null ref in the XMLDOC.");
+            	return;
+            }
             XmlNodeList rootL = doc.GetElementsByTagName("region");
             XmlNode rootNode = rootL[0];
             RegionXMLInfo info = new RegionXMLInfo();
