@@ -89,6 +89,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         public string State;
         public bool Running;
         public bool Disabled;
+        public bool Started = false;
         public string Source;
         public string ClassSource;
         public int StartParam;
@@ -242,17 +243,20 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                         "Script saved with errors, check debug window!",
                         false);
             m_ScriptManager.AddError(ItemID, e.Message.ToString());
-
+			Started = true;
+            m_ScriptManager.UpdateScriptInstanceData(this);
+            
             try
             {
                 // DISPLAY ERROR INWORLD
-                string text = "Error compiling script in stage "+stage+":\n" +
+                string consoletext = "Error compiling script in stage "+stage+":\n" +
                     e.Message.ToString() + " itemID: " + ItemID + ", localID" + localID + ", CompiledFile: " + AssemblyName;
-                m_log.Error(text);
-                if (text.Length > 1100)
-                    text = text.Substring(0, 1099);
+                m_log.Error(consoletext);
+                string inworldtext = "Error compiling script: " + e;
+                if (inworldtext.Length > 1100)
+                    inworldtext = inworldtext.Substring(0, 1099);
 
-                World.SimChat(Utils.StringToBytes(text),
+                World.SimChat(Utils.StringToBytes(inworldtext),
                         ChatTypeEnum.DebugChannel, 2147483647,
                         part.AbsolutePosition, part.Name, part.UUID,
                         false);
@@ -409,20 +413,60 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             }
             
             #endregion
-
+			
             try
             {
-                // Compile (We assume LSL)
-                m_ScriptManager.LSLCompiler.PerformScriptCompile(Source,
-                        AssetID, InventoryItem.OwnerID, ItemID, Inherited, ClassName, m_scriptEngine.ScriptProtection,localID, this,
-                        out AssemblyName, out LineMap, out ClassID);
+                if (m_ScriptManager.PreviouslyCompiled.ContainsKey(Source))
+                {
+                    InstanceData PreviouslyCompiledID;
+                    m_ScriptManager.PreviouslyCompiled.TryGetValue(Source, out PreviouslyCompiledID);
+                    AssemblyName = PreviouslyCompiledID.AssemblyName;
+                    LineMap = PreviouslyCompiledID.LineMap;
+                    ClassID = PreviouslyCompiledID.ClassID;
+                }
+                else
+                {
+                    // Compile (We assume LSL)
+                    m_ScriptManager.LSLCompiler.PerformScriptCompile(Source,
+                            AssetID, InventoryItem.OwnerID, ItemID, Inherited, ClassName, m_scriptEngine.ScriptProtection, localID, this,
+                            out AssemblyName, out LineMap, out ClassID);
+                    m_ScriptManager.PreviouslyCompiled.Add(Source, this);
+                }
+
+                #region Warnings
+
+                string[] compilewarnings = m_ScriptManager.LSLCompiler.GetWarnings();
+
+                if (compilewarnings != null && compilewarnings.Length != 0)
+                {
+                    if (presence != null && (!PostOnRez))
+                        presence.ControllingClient.SendAgentAlertMessage(
+                                "Script saved with warnings, check debug window!",
+                                false);
+
+                    foreach (string warning in compilewarnings)
+                    {
+                        // DISPLAY WARNING INWORLD
+                            string text = "Warning:\n" + warning;
+                            if (text.Length > 1100)
+                                text = text.Substring(0, 1099);
+
+                            World.SimChat(Utils.StringToBytes(text),
+                                    ChatTypeEnum.DebugChannel, 2147483647,
+                                    part.AbsolutePosition, part.Name, part.UUID,
+                                    false);
+                    }
+                }
+
+                #endregion
+
             }
             catch (Exception ex)
             {
                 ShowError(ex, 1);
             }
-            
-			bool useDebug = false;
+            Started = true;
+			bool useDebug = true;
 			if(useDebug)
 			{
             	TimeSpan t = (DateTime.Now.ToUniversalTime() - Start);
@@ -514,67 +558,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             }
             
             #endregion
-
-            #region Warnings
-
-            string[] warnings = m_ScriptManager.LSLCompiler.GetWarnings();
-
-            if (warnings != null && warnings.Length != 0)
-            {
-                if (presence != null && (!PostOnRez))
-                    presence.ControllingClient.SendAgentAlertMessage(
-                            "Script saved with warnings, check debug window!",
-                            false);
-
-                foreach (string warning in warnings)
-                {
-                    try
-                    {
-                        // DISPLAY WARNING INWORLD
-                        string text = "Warning:\n" + warning;
-                        if (text.Length > 1100)
-                            text = text.Substring(0, 1099);
-
-                        World.SimChat(Utils.StringToBytes(text),
-                                ChatTypeEnum.DebugChannel, 2147483647,
-                                part.AbsolutePosition, part.Name, part.UUID,
-                                false);
-                    }
-                    catch (Exception e2) // LEGIT: User Scripting
-                    {
-                        m_log.Error("[" +
-                                m_scriptEngine.ScriptEngineName +
-                                "]: Error displaying warning in-world: " +
-                                e2.ToString());
-                        m_log.Error("[" +
-                                m_scriptEngine.ScriptEngineName + "]: " +
-                                "Warning:\r\n" +
-                                warning);
-                    }
-                }
-            }
-            else
-            {
-                if (presence != null && (!PostOnRez))
-                {
-                    presence.ControllingClient.SendAgentAlertMessage(
-                            "Compile successful", false);
-                }
-                if (presence != null)
-                {
-                    m_log.DebugFormat(
-                        "[{0}]: Started Script {1} in object {2} by avatar {3} successfully.",
-                        m_scriptEngine.ScriptEngineName, part.Inventory.GetInventoryItem(ItemID).Name, part.Name, presence.Name);
-                }
-                else
-                {
-                    m_log.DebugFormat(
-                        "[{0}]: Started Script {1} in object {2} successfully.",
-                        m_scriptEngine.ScriptEngineName, InventoryItem.Name, part.Name);
-                }
-            }
-
-            #endregion
         }
         
         #endregion
@@ -659,17 +642,13 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         private Dictionary<InstanceData, DetectParams[]> detparms =
                 new Dictionary<InstanceData, DetectParams[]>();
 		private Dictionary<UUID, List<string>> m_Errors = new Dictionary<UUID, List<string>>();
+        public Dictionary<string, InstanceData> PreviouslyCompiled = new Dictionary<string, InstanceData>();
         
         // Load/Unload structure
         private struct LUStruct
         {
-            public uint localID;
-            public UUID itemID;
-            public string script;
+            public InstanceData ID;
             public LUType Action;
-            public int startParam;
-            public bool postOnRez;
-            public StateSource stateSource;
         }
 
         private enum LUType
@@ -698,11 +677,24 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         /// <returns></returns>
         public string[] GetErrors(UUID ItemID)
         {
-            Thread.Sleep(1000);
-            if (m_Errors.ContainsKey(ItemID))
+        	InstanceData ID = GetScriptByItemlD(ItemID);
+        	while(ID == null)
+        	{
+        		Thread.Sleep(1000);
+        		ID = GetScriptByItemlD(ItemID);
+        		m_log.Warn("id == null");
+        	}
+        	while(ID.Started == false)
+        	{
+        		Thread.Sleep(1000);
+        		m_log.Warn("started == null");
+        	}
+        	m_log.Warn("getting for "+ItemID.ToString());
+        	if (m_Errors.ContainsKey(ItemID))
             {
                 string[] errors = m_Errors[ItemID].ToArray();
                 m_Errors.Remove(ItemID);
+                m_log.Warn(errors);
                 return errors;
             }
             else
@@ -835,27 +827,11 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
             			if (item.Action == LUType.Unload)
             			{
-            				InstanceData id = GetScript(item.localID, item.itemID);
-            				if (id != null)
-            					StopParts.Add(id.CloseAndDispose().GetEnumerator());
+            				StopParts.Add(item.ID.CloseAndDispose().GetEnumerator());
             			}
             			else if (item.Action == LUType.Load)
             			{
-            				InstanceData id = GetScript(item.localID, item.itemID);
-            				if (id != null)
-            					StopParts.Add(id.CloseAndDispose().GetEnumerator());
-            				id = new InstanceData(this);
-            				id.ItemID = item.itemID;
-            				id.localID = item.localID;
-            				id.PostOnRez = item.postOnRez;
-            				id.StartParam = item.startParam;
-            				id.stateSource = item.stateSource;
-            				id.State = "default";
-            				id.Running = true;
-            				id.Disabled = false;
-            				id.Source = item.script;
-            				id.PostOnRez = item.postOnRez;
-            				StartParts.Add(id.Start());
+            				StartParts.Add(item.ID.Start());
             			}
             			i++;
             		}
@@ -925,6 +901,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         /// <param name="localID"></param>
         public void StartScript(uint localID, UUID itemID, string Script, int startParam, bool postOnRez, StateSource statesource)
         {
+        	InstanceData id = null;
             lock (LUQueue)
             {
                 if ((LUQueue.Count >= LoadUnloadMaxQueueSize) && m_started)
@@ -939,15 +916,23 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
                     return;
                 }
-
+                id = GetScript(localID, itemID);
+                if (id != null)
+                	StopScript(localID,itemID);
+                id = new InstanceData(this);
+                id.ItemID = itemID;
+                id.localID = localID;
+                id.PostOnRez = postOnRez;
+                id.StartParam = startParam;
+                id.stateSource = statesource;
+                id.State = "default";
+                id.Running = true;
+                id.Disabled = false;
+                id.Source = Script;
+                id.PostOnRez = postOnRez;
                 LUStruct ls = new LUStruct();
-                ls.localID = localID;
-                ls.itemID = itemID;
-                ls.script = Script;
                 ls.Action = LUType.Load;
-                ls.startParam = startParam;
-                ls.postOnRez = postOnRez;
-                ls.stateSource = statesource;
+                ls.ID = id;
                 LUQueue.Enqueue(ls);
             }
         }
@@ -966,15 +951,12 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                 return; 
 
             LUStruct ls = new LUStruct();
-            ls.localID = localID;
-            ls.itemID = itemID;
+            InstanceData id = GetScript(localID, itemID);
+            ls.ID = data;
             ls.Action = LUType.Unload;
-            ls.startParam = 0;
-            ls.postOnRez = false;
-            ls.stateSource = 0;
             lock (LUQueue)
             {
-                LUQueue.Enqueue(ls);
+            	LUQueue.Enqueue(ls);
             }
         }
 
@@ -999,7 +981,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         /// </summary>
         /// <param name="itemID"></param>
         /// <returns></returns>
-        public InstanceData GetScriptByLocalID(UUID itemID)
+        public InstanceData GetScriptByItemlD(UUID itemID)
         {
             foreach(KeyValuePair<uint, InstancesData> IDs in MacroScripts)
             {
