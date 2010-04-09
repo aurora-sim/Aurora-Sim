@@ -1226,63 +1226,63 @@ namespace Aurora.Modules
         private void StartSearch()
         {
         	aTimer = new System.Timers.Timer(parserTime);
-            aTimer.Elapsed += new System.Timers.ElapsedEventHandler(ParseRegions);
-            aTimer.Enabled = true;
-            aTimer.Start();
-            foreach (Scene scene in m_Scenes)
-            {
-                FireParser(scene, scene.RegionInfo.RegionName);
-            }
+        	aTimer.Elapsed += new System.Timers.ElapsedEventHandler(ParseRegions);
+        	aTimer.Enabled = true;
+        	aTimer.Start();
+        	foreach (Scene scene in m_Scenes)
+        	{
+        		FireParser(scene, scene.RegionInfo.RegionName);
+        	}
         }
 
         private void ParseRegions(object source, System.Timers.ElapsedEventArgs e)
         {
-            foreach (Scene scene in m_Scenes)
-            {
-                FireParser(scene, scene.RegionInfo.RegionName);
-            }
+        	foreach (Scene scene in m_Scenes)
+        	{
+        		FireParser(scene, scene.RegionInfo.RegionName);
+        	}
         }
 
         #region XML Info Classes
 
         private class RegionXMLInfo
         {
-            public string UUID;
-            public string Name;
-            public string Handle;
-            public string URL;
-            public string UserName;
-            public string UserUUID;
+        	public string UUID;
+        	public string Name;
+        	public string Handle;
+        	public string URL;
+        	public string UserName;
+        	public string UserUUID;
         }
 
         private class ObjectXMLInfo
         {
-            public string UUID;
-            public string RegionUUID;
-            public string ParcelUUID;
-            public string Title;
-            public string Desc;
-            public string Flags;
+        	public string UUID;
+        	public string RegionUUID;
+        	public string ParcelUUID;
+        	public string Title;
+        	public string Desc;
+        	public string Flags;
         }
 
         private class ParcelXMLInfo
         {
-            public string Name;
-            public string UUID;
-            public string InfoUUID;
-            public string Landing;
-            public string Desc;
-            public string Area;
-            public string Category;
-            public string SalePrice;
-            public string Dwell;
-            public string OwnerUUID;
-            public string GroupUUID;
-            public string ForSale;
-            public string Directory;
-            public string Build;
-            public string Script;
-            public string Public;
+        	public string Name;
+        	public string UUID;
+        	public string InfoUUID;
+        	public string Landing;
+        	public string Desc;
+        	public string Area;
+        	public string Category;
+        	public string SalePrice;
+        	public string Dwell;
+        	public string OwnerUUID;
+        	public string GroupUUID;
+        	public string ForSale;
+        	public string Directory;
+        	public string Build;
+        	public string Script;
+        	public string Public;
         }
 
         #endregion
@@ -1294,12 +1294,51 @@ namespace Aurora.Modules
         	m_log.Info("[SearchModule]: Starting Search for region "+regionName+".");
         	XmlDocument doc = DataSnapShotManager.GetSnapshot(regionName);
         	if(doc == null)
-            {
-            	m_log.Error("[SearchModule]: Null ref in the XMLDOC.");
-            	return;
-            }
-            XmlNodeList rootL = doc.GetElementsByTagName("region");
+        	{
+        		m_log.Error("[SearchModule]: Null ref in the XMLDOC.");
+        		return;
+        	}
+        	XmlNodeList rootL = doc.GetElementsByTagName("region");
         	RegionXMLInfo info = new RegionXMLInfo();
+        	foreach(XmlNode rootNode in rootL)
+        	{
+        		foreach(XmlNode subRootNode in rootNode.ChildNodes)
+        		{
+        			if(subRootNode.Name == "info")
+        			{
+        				foreach (XmlNode part in subRootNode.ChildNodes)
+        				{
+        					switch (part.Name)
+        					{
+        						case "uuid":
+        							info.UUID = part.InnerText;
+        							break;
+        						case "name":
+        							info.Name = part.InnerText;
+        							break;
+        						case "handle":
+        							info.Handle = part.InnerText;
+        							break;
+        						case "url":
+        							info.URL = part.InnerText;
+        							break;
+        					}
+        				}
+        				
+        				List<string> query = GenericData.Query("RID", info.UUID.ToString(), "searchregions", "*");
+        				if (query[0] != "")
+        				{
+        					GenericData.Delete("searchregions", new string[] { "RID" }, new string[] { info.UUID.ToString() });
+        					GenericData.Delete("searchparcels", new string[] { "RID" }, new string[] { info.UUID.ToString() });
+        					GenericData.Delete("searchobjects", new string[] { "RID" }, new string[] { info.UUID.ToString() });
+        					GenericData.Delete("searchallparcels", new string[] { "RID" }, new string[] { info.UUID.ToString() });
+        					GenericData.Delete("searchparcelsales", new string[] { "RID" }, new string[] { info.UUID.ToString() });
+        				}
+        			}
+        		}
+        	}
+        	
+        	
         	foreach(XmlNode rootNode in rootL)
         	{
         		foreach(XmlNode subRootNode in rootNode.ChildNodes)
@@ -1327,7 +1366,7 @@ namespace Aurora.Modules
         						}
         						GenericData.Insert("searchregions", new string[] { info.Name, info.UUID, info.Handle, info.URL, info.UserName, info.UserName });
         					}
-        					if(part.Name == "object")
+        					if(part.Name == "objectdata")
         					{
         						ObjectXMLInfo OInfo = new ObjectXMLInfo();
         						foreach (XmlNode subpart in part.ChildNodes)
@@ -1356,7 +1395,7 @@ namespace Aurora.Modules
         						}
         						GenericData.Insert("searchobjects", new string[] { OInfo.UUID, OInfo.ParcelUUID, OInfo.Title, OInfo.Desc, OInfo.RegionUUID });
         					}
-        					if(part.Name == "parcel")
+        					if(part.Name == "parceldata")
         					{
         						foreach (XmlNode ppart in part.ChildNodes)
         						{
@@ -1425,37 +1464,6 @@ namespace Aurora.Modules
         							}
         						}
         					}
-        				}
-        			}
-        			if(subRootNode.Name == "info")
-        			{
-        				foreach (XmlNode part in subRootNode.ChildNodes)
-        				{
-        					switch (part.Name)
-        					{
-        						case "uuid":
-        							info.UUID = part.InnerText;
-        							break;
-        						case "name":
-        							info.Name = part.InnerText;
-        							break;
-        						case "handle":
-        							info.Handle = part.InnerText;
-        							break;
-        						case "url":
-        							info.URL = part.InnerText;
-        							break;
-        					}
-        				}
-        				
-        				List<string> query = GenericData.Query("RID", info.UUID.ToString(), "searchregions", "*");
-        				if (query[0] != "")
-        				{
-        					GenericData.Delete("searchregions", new string[] { "RID" }, new string[] { info.UUID.ToString() });
-        					GenericData.Delete("searchparcels", new string[] { "RID" }, new string[] { info.UUID.ToString() });
-        					GenericData.Delete("searchobjects", new string[] { "RID" }, new string[] { info.UUID.ToString() });
-        					GenericData.Delete("searchallparcels", new string[] { "RID" }, new string[] { info.UUID.ToString() });
-        					GenericData.Delete("searchparcelsales", new string[] { "RID" }, new string[] { info.UUID.ToString() });
         				}
         			}
         		}
