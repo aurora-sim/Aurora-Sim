@@ -89,7 +89,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         public string State;
         public bool Running;
         public bool Disabled;
-        public bool Started = false;
         public string Source;
         public string ClassSource;
         public int StartParam;
@@ -116,7 +115,9 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         public InstancesData MacroData;
         public ScenePresence presence;
         public DetectParams[] LastDetectParams;
-        
+        public bool IsCompiling = false;
+        public bool ErrorsWaiting = false;
+            
         #endregion
         
         #region Close Script
@@ -242,9 +243,10 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                 presence.ControllingClient.SendAgentAlertMessage(
                         "Script saved with errors, check debug window!",
                         false);
-            m_ScriptManager.AddError(ItemID, e.Message.ToString());
-			Started = true;
-            m_ScriptManager.UpdateScriptInstanceData(this);
+            
+            m_ScriptManager.Errors[ItemID] = new String[] { e.Message.ToString() };
+            ErrorsWaiting = true;
+			m_ScriptManager.UpdateScriptInstanceData(this);
             
             try
             {
@@ -286,7 +288,9 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         /// <returns></returns>
         public IEnumerator Start()
         {
-        	DateTime Start = DateTime.Now.ToUniversalTime();
+        	IsCompiling = true;
+        	m_ScriptManager.Errors[ItemID] = null;
+			DateTime Start = DateTime.Now.ToUniversalTime();
         	
         	// We will initialize and start the script.
             // It will be up to the script itself to hook up the correct events.
@@ -465,8 +469,9 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             {
                 ShowError(ex, 1);
             }
-            Started = true;
-			bool useDebug = true;
+            m_ScriptManager.Errors[ItemID] = new String[] { "TRUE" };
+            ErrorsWaiting = true;
+            bool useDebug = false;
 			if(useDebug)
 			{
             	TimeSpan t = (DateTime.Now.ToUniversalTime() - Start);
@@ -501,12 +506,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         		m_log.Debug("Stage 2: " + t.TotalSeconds);
             }
             
-            //Register the sponsor
-            //ISponsor scriptSponsor = new ScriptSponsor();
-            //ILease lease = (ILease)RemotingServices.GetLifetimeService(CompiledScript as MarshalByRefObject);
-            //lease.Register(scriptSponsor);
-            //id.ScriptSponsor = scriptSponsor;
-
             State = "default";
             Running = true;
             Disabled = false;
@@ -558,6 +557,8 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             }
             
             #endregion
+            
+            IsCompiling = false;
         }
         
         #endregion
@@ -643,6 +644,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                 new Dictionary<InstanceData, DetectParams[]>();
 		private Dictionary<UUID, List<string>> m_Errors = new Dictionary<UUID, List<string>>();
         public Dictionary<string, InstanceData> PreviouslyCompiled = new Dictionary<string, InstanceData>();
+        public Dictionary<UUID, string[]> Errors = new Dictionary<UUID, string[]>();
         
         // Load/Unload structure
         private struct LUStruct
@@ -677,52 +679,15 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         /// <returns></returns>
         public string[] GetErrors(UUID ItemID)
         {
-        	InstanceData ID = GetScriptByItemlD(ItemID);
-        	while(ID == null)
+        	while(Errors[ItemID] == null)
         	{
-        		Thread.Sleep(1000);
-        		ID = GetScriptByItemlD(ItemID);
-        		m_log.Warn("id == null");
+        		Thread.Sleep(100);
         	}
-        	while(ID.Started == false)
-        	{
-        		Thread.Sleep(1000);
-        		m_log.Warn("started == null");
-        	}
-        	m_log.Warn("getting for "+ItemID.ToString());
-        	if (m_Errors.ContainsKey(ItemID))
-            {
-                string[] errors = m_Errors[ItemID].ToArray();
-                m_Errors.Remove(ItemID);
-                m_log.Warn(errors);
-                return errors;
-            }
-            else
-            {
-                return new string[0];
-            }
-        }
-		
-        /// <summary>
-        /// Adds the given error to the list of known errors.
-        /// </summary>
-        /// <param name="ItemID"></param>
-        /// <param name="Error"></param>
-        public void AddError(UUID ItemID, string Error)
-        {
-            List<string> Errors = new List<string>();
-            if (!m_Errors.ContainsKey(ItemID))
-            {
-                Errors.Add(Error);
-                m_Errors.Add(ItemID, Errors);
-            }
-            else
-            {
-                m_Errors.TryGetValue(ItemID, out Errors);
-                Errors.Add(Error);
-                m_Errors.Remove(ItemID);
-                m_Errors.Add(ItemID, Errors);
-            }
+        	string[] Error = Errors[ItemID];
+        	Errors.Remove(ItemID);
+        	if(Error[0] == "TRUE")
+        		return new string[0];
+        	return Error;
         }
 
         #endregion
@@ -949,8 +914,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             	return;
             if (data.Disabled)
                 return; 
-
-            LUStruct ls = new LUStruct();
+			LUStruct ls = new LUStruct();
             InstanceData id = GetScript(localID, itemID);
             ls.ID = data;
             ls.Action = LUType.Unload;
@@ -981,7 +945,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         /// </summary>
         /// <param name="itemID"></param>
         /// <returns></returns>
-        public InstanceData GetScriptByItemlD(UUID itemID)
+        public InstanceData GetScriptByItemID(UUID itemID)
         {
             foreach(KeyValuePair<uint, InstancesData> IDs in MacroScripts)
             {

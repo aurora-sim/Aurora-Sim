@@ -68,7 +68,7 @@ namespace Aurora.Modules
         protected IFriendsService m_FriendsService = null;
         protected IGroupsModule GroupsModule = null;
         private System.Timers.Timer aTimer = null;
-        protected double parserTime = 60000;
+        protected double parserTime = 3600000;
         private IDataSnapshot DataSnapShotManager;
 
         #endregion
@@ -96,7 +96,7 @@ namespace Aurora.Modules
                 m_FriendsService = ServerUtils.LoadPlugin<IFriendsService>(connector, args);
 
             }
-            parserTime = profileConfig.GetDouble("ParserTime", 60000);
+            parserTime = profileConfig.GetDouble("ParserTime", 3600000);
             if (m_FriendsService == null)
             {
                 m_log.Error("[AuroraProfileSearch]: No Connector defined in section Friends, or filed to load, cannot continue");
