@@ -1397,70 +1397,73 @@ namespace Aurora.Modules
         					}
         					if(part.Name == "parceldata")
         					{
-        						foreach (XmlNode ppart in part.ChildNodes)
+        						foreach (XmlNode pppart in part.ChildNodes)
         						{
-        							ParcelXMLInfo PInfo = new ParcelXMLInfo();
-        							switch (ppart.Name)
+        							foreach (XmlNode ppart in pppart.ChildNodes)
         							{
-        								case "area":
-        									PInfo.Area = ppart.InnerText;
-        									break;
-        								case "build":
-        									PInfo.Build = ppart.InnerText;
-        									break;
-        								case "category":
-        									PInfo.Category = ppart.InnerText;
-        									break;
-        								case "description":
-        									PInfo.Desc = ppart.InnerText;
-        									break;
-        								case "showinsearch":
-        									PInfo.Directory = ppart.InnerText;
-        									break;
-        								case "dwell":
-        									PInfo.Dwell = ppart.InnerText;
-        									break;
-        								case "forsale":
-        									PInfo.ForSale = ppart.InnerText;
-        									break;
-        								case "groupuuid":
-        									PInfo.GroupUUID = ppart.ChildNodes[0].InnerText;
-        									break;
-        								case "infouuid":
-        									PInfo.InfoUUID = ppart.InnerText;
-        									break;
-        								case "location":
-        									PInfo.Landing = ppart.InnerText;
-        									break;
-        								case "name":
-        									PInfo.Name = ppart.InnerText;
-        									break;
-        								case "owner":
-        									PInfo.OwnerUUID = ppart.ChildNodes.Item(0).InnerText;
-        									break;
-        								case "public":
-        									PInfo.Public = ppart.InnerText;
-        									break;
-        								case "salesprice":
-        									PInfo.SalePrice = ppart.InnerText;
-        									break;
-        								case "scripts":
-        									PInfo.Script = ppart.InnerText;
-        									break;
-        								case "uuid":
-        									PInfo.UUID = ppart.InnerText;
-        									break;
-        							}
-        							GenericData.Insert("searchallparcels", new string[] { info.UUID, PInfo.Name, PInfo.OwnerUUID, PInfo.GroupUUID, PInfo.Landing, PInfo.UUID, PInfo.InfoUUID, PInfo.Area });
-        							if (Convert.ToBoolean(PInfo.Directory))
-        								GenericData.Insert("searchparcels", new string[] { info.UUID, PInfo.Name, PInfo.UUID, PInfo.Landing, PInfo.Desc, PInfo.Category, PInfo.Build, PInfo.Script, PInfo.Public, PInfo.Dwell, PInfo.InfoUUID, false.ToString(), false.ToString() });
-        							if (Convert.ToBoolean(PInfo.ForSale))
-        							{
-        								IAdultVerificationModule AVM = currentScene.RequestModuleInterface<IAdultVerificationModule>();
-        								if(AVM != null)
-        									GenericData.Insert("searchparcelsales", new string[] { info.UUID, PInfo.Name, PInfo.UUID, PInfo.Area, PInfo.SalePrice, PInfo.Landing, PInfo.InfoUUID, PInfo.Dwell, currentScene.RegionInfo.EstateSettings.EstateID.ToString(), AVM.GetIsRegionMature(currentScene.RegionInfo.RegionID).ToString() });
-        								else
-        									GenericData.Insert("searchparcelsales", new string[] { info.UUID, PInfo.Name, PInfo.UUID, PInfo.Area, PInfo.SalePrice, PInfo.Landing, PInfo.InfoUUID, PInfo.Dwell, currentScene.RegionInfo.EstateSettings.EstateID.ToString(), false.ToString() });
+        								ParcelXMLInfo PInfo = new ParcelXMLInfo();
+        								switch (ppart.Name)
+        								{
+        									case "area":
+        										PInfo.Area = ppart.InnerText;
+        										break;
+        									case "build":
+        										PInfo.Build = ppart.InnerText;
+        										break;
+        									case "category":
+        										PInfo.Category = ppart.InnerText;
+        										break;
+        									case "description":
+        										PInfo.Desc = ppart.InnerText;
+        										break;
+        									case "showinsearch":
+        										PInfo.Directory = ppart.InnerText;
+        										break;
+        									case "dwell":
+        										PInfo.Dwell = ppart.InnerText;
+        										break;
+        									case "forsale":
+        										PInfo.ForSale = ppart.InnerText;
+        										break;
+        									case "groupuuid":
+        										PInfo.GroupUUID = ppart.ChildNodes[0].InnerText;
+        										break;
+        									case "infouuid":
+        										PInfo.InfoUUID = ppart.InnerText;
+        										break;
+        									case "location":
+        										PInfo.Landing = ppart.InnerText;
+        										break;
+        									case "name":
+        										PInfo.Name = ppart.InnerText;
+        										break;
+        									case "owner":
+        										PInfo.OwnerUUID = ppart.ChildNodes.Item(0).InnerText;
+        										break;
+        									case "public":
+        										PInfo.Public = ppart.InnerText;
+        										break;
+        									case "salesprice":
+        										PInfo.SalePrice = ppart.InnerText;
+        										break;
+        									case "scripts":
+        										PInfo.Script = ppart.InnerText;
+        										break;
+        									case "uuid":
+        										PInfo.UUID = ppart.InnerText;
+        										break;
+        								}
+        								GenericData.Insert("searchallparcels", new string[] { info.UUID, PInfo.Name, PInfo.OwnerUUID, PInfo.GroupUUID, PInfo.Landing, PInfo.UUID, PInfo.InfoUUID, PInfo.Area });
+        								if (Convert.ToBoolean(PInfo.Directory))
+        									GenericData.Insert("searchparcels", new string[] { info.UUID, PInfo.Name, PInfo.UUID, PInfo.Landing, PInfo.Desc, PInfo.Category, PInfo.Build, PInfo.Script, PInfo.Public, PInfo.Dwell, PInfo.InfoUUID, false.ToString(), false.ToString() });
+        								if (Convert.ToBoolean(PInfo.ForSale))
+        								{
+        									IAdultVerificationModule AVM = currentScene.RequestModuleInterface<IAdultVerificationModule>();
+        									if(AVM != null)
+        										GenericData.Insert("searchparcelsales", new string[] { info.UUID, PInfo.Name, PInfo.UUID, PInfo.Area, PInfo.SalePrice, PInfo.Landing, PInfo.InfoUUID, PInfo.Dwell, currentScene.RegionInfo.EstateSettings.EstateID.ToString(), AVM.GetIsRegionMature(currentScene.RegionInfo.RegionID).ToString() });
+        									else
+        										GenericData.Insert("searchparcelsales", new string[] { info.UUID, PInfo.Name, PInfo.UUID, PInfo.Area, PInfo.SalePrice, PInfo.Landing, PInfo.InfoUUID, PInfo.Dwell, currentScene.RegionInfo.EstateSettings.EstateID.ToString(), false.ToString() });
+        								}
         							}
         						}
         					}
