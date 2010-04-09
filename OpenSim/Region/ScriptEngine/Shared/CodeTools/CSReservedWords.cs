@@ -55,7 +55,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                                           "foreach",
                                           "goto",
                                         //"if",
-                                          "implicit","in","int","interface","internal","is",
+                                          "implicit","in"/*,"int"*/,"interface","internal","is",
                                           "lock","long",
                                           "namespace","new","null",
                                           "object","operator","out","override",

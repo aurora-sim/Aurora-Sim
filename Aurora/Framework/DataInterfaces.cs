@@ -36,6 +36,7 @@ namespace Aurora.Framework
         Dictionary<string, string> GetRegionHidden();
         string AbuseReports();
         ObjectMediaURLInfo[] getObjectMediaInfo(string objectID);
+        bool GetIsRegionMature(string region);
     }
     
     public interface IGenericData

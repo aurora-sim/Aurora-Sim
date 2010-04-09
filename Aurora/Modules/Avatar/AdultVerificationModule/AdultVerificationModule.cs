@@ -18,14 +18,17 @@ namespace Aurora.Modules.Avatar.AdultVerificationModule
 {
 	public class AdultVerificationModule: IRegionModule, IAdultVerificationModule
 	{
+		private IGenericData GenericData = null;
+		private IRegionData RegionData = null;
 		public void Initialise(Scene scene, IConfigSource source)
 		{
-			
+			scene.RegisterModuleInterface<IAdultVerificationModule>(this);
 		}
 		
 		public void PostInitialise()
 		{
-			
+			GenericData = Aurora.DataManager.DataManager.GetGenericPlugin();
+			RegionData = Aurora.DataManager.DataManager.GetRegionPlugin();
 		}
 		
 		public void Close(){}
@@ -33,11 +36,10 @@ namespace Aurora.Modules.Avatar.AdultVerificationModule
 		public string Name {get {return "AdultVerificationModule";}}
 		
 		public bool IsSharedModule {get {return true;}}
-		
-		
+
 		public bool GetIsRegionMature(UUID regionID)
 		{
-			return false;
+			return RegionData.GetIsRegionMature(regionID.ToString());
 		}
 	}
 }

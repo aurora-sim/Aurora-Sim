@@ -115,5 +115,27 @@ namespace Aurora.DataManager.MySQL
             }*/
             return infos;
         }
+        
+        public bool GetIsRegionMature(string region)
+        {
+        	string query = "SELECT isMature FROM auroraregions where regionUUID = '"+region+"'";
+            MySqlConnection dbcon = GetLockedConnection();
+            IDbCommand result;
+            IDataReader reader;
+            using (result = Query(query, new Dictionary<string, object>(), dbcon))
+            {
+                using (reader = result.ExecuteReader())
+                {
+                    try
+                    {
+                        if (reader.Read())
+                            return reader.GetBoolean(0);
+                        else
+                            return true;
+                    }
+                    finally{}
+                }
+            }
+        }
     }
 }

@@ -278,6 +278,12 @@ namespace Aurora.Modules.DataPlugins
 		{
       		throw new NotImplementedException();
         }
+        
+        public bool GetIsRegionMature(string uuid)
+		{
+			throw new NotImplementedException();
+		}
+        
         #endregion
     }
 }

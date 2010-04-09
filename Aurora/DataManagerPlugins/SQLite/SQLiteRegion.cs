@@ -119,5 +119,16 @@ namespace Aurora.DataManager.SQLite
 
             return RetVal;
         }
+        public bool GetIsRegionMature(string region)
+        {
+        	string query = "SELECT isMature FROM auroraregions where regionUUID = '"+region+"'";
+            SqliteCommand cmd = new SqliteCommand();
+            cmd.CommandText = query;
+            IDataReader reader = GetReader(cmd);
+            if (reader.Read())
+            	return reader.GetBoolean(0);
+            else
+                return true;
+        }
     }
 }
