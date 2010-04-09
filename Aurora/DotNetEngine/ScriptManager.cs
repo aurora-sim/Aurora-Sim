@@ -681,7 +681,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         {
         	while(Errors[ItemID] == null)
         	{
-        		Thread.Sleep(100);
+        		Thread.Sleep(500);
         	}
         	string[] Error = Errors[ItemID];
         	Errors.Remove(ItemID);

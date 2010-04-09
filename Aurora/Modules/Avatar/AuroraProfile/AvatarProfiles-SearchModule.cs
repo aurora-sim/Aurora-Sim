@@ -1327,6 +1327,35 @@ namespace Aurora.Modules
         						}
         						GenericData.Insert("searchregions", new string[] { info.Name, info.UUID, info.Handle, info.URL, info.UserName, info.UserName });
         					}
+        					if(part.Name == "object")
+        					{
+        						ObjectXMLInfo OInfo = new ObjectXMLInfo();
+        						foreach (XmlNode subpart in part.ChildNodes)
+        						{
+        							switch (subpart.Name)
+        							{
+        								case "uuid":
+        									OInfo.UUID = subpart.InnerText;
+        									break;
+        								case "regionuuid":
+        									OInfo.RegionUUID = subpart.InnerText;
+        									break;
+        								case "parceluuid":
+        									OInfo.ParcelUUID = subpart.InnerText;
+        									break;
+        								case "title":
+        									OInfo.Title = subpart.InnerText;
+        									break;
+        								case "description":
+        									OInfo.Desc = subpart.InnerText;
+        									break;
+        								case "flags":
+        									OInfo.Flags = subpart.InnerText;
+        									break;
+        							}
+        						}
+        						GenericData.Insert("searchobjects", new string[] { OInfo.UUID, OInfo.ParcelUUID, OInfo.Title, OInfo.Desc, OInfo.RegionUUID });
+        					}
         					if(part.Name == "parcel")
         					{
         						foreach (XmlNode ppart in part.ChildNodes)
@@ -1429,102 +1458,6 @@ namespace Aurora.Modules
         					GenericData.Delete("searchparcelsales", new string[] { "RID" }, new string[] { info.UUID.ToString() });
         				}
         			}
-        			//Add region to the DB.
-        			/*foreach (XmlNode inner in rootP)
-        			{
-        				foreach (XmlNode part in inner.ChildNodes)
-        				{
-        					ParcelXMLInfo PInfo = new ParcelXMLInfo();
-        					switch (part.Name)
-        					{
-        						case "area":
-        							PInfo.Area = part.InnerText;
-        							break;
-        						case "build":
-        							PInfo.Build = part.InnerText;
-        							break;
-        						case "category":
-        							PInfo.Category = part.InnerText;
-        							break;
-        						case "description":
-        							PInfo.Desc = part.InnerText;
-        							break;
-        						case "showinsearch":
-        							PInfo.Directory = part.InnerText;
-        							break;
-        						case "dwell":
-        							PInfo.Dwell = part.InnerText;
-        							break;
-        						case "forsale":
-        							PInfo.ForSale = part.InnerText;
-        							break;
-        						case "groupuuid":
-        							PInfo.GroupUUID = part.ChildNodes[0].InnerText;
-        							break;
-        						case "infouuid":
-        							PInfo.InfoUUID = part.InnerText;
-        							break;
-        						case "location":
-        							PInfo.Landing = part.InnerText;
-        							break;
-        						case "name":
-        							PInfo.Name = part.InnerText;
-        							break;
-        						case "owner":
-        							PInfo.OwnerUUID = part.ChildNodes.Item(0).InnerText;
-        							break;
-        						case "public":
-        							PInfo.Public = part.InnerText;
-        							break;
-        						case "salesprice":
-        							PInfo.SalePrice = part.InnerText;
-        							break;
-        						case "scripts":
-        							PInfo.Script = part.InnerText;
-        							break;
-        						case "uuid":
-        							PInfo.UUID = part.InnerText;
-        							break;
-        					}
-        					GenericData.Insert("searchallparcels", new string[] { info.UUID, PInfo.Name, PInfo.OwnerUUID, PInfo.GroupUUID, PInfo.Landing, PInfo.UUID, PInfo.InfoUUID, PInfo.Area });
-        					if (Convert.ToBoolean(PInfo.Directory))
-        						GenericData.Insert("searchparcels", new string[] { info.UUID, PInfo.Name, PInfo.UUID, PInfo.Landing, PInfo.Desc, PInfo.Category, PInfo.Build, PInfo.Script, PInfo.Public, PInfo.Dwell, PInfo.InfoUUID, false.ToString(), false.ToString() });
-        					if (Convert.ToBoolean(PInfo.ForSale))
-        					{
-        						IAdultVerificationModule AVM = currentScene.RequestModuleInterface<IAdultVerificationModule>();
-        						GenericData.Insert("searchparcelsales", new string[] { info.UUID, PInfo.Name, PInfo.UUID, PInfo.Area, PInfo.SalePrice, PInfo.Landing, PInfo.InfoUUID, PInfo.Dwell, currentScene.RegionInfo.EstateSettings.EstateID.ToString(), AVM.GetIsRegionMature(currentScene.RegionInfo.RegionID).ToString() });
-        					}
-        				}
-        			}
-
-        			//Now for objects!
-        			foreach (XmlNode inner in rootO)
-        			{
-        				foreach (XmlNode part in inner.ChildNodes)
-        				{
-        					ObjectXMLInfo OInfo = new ObjectXMLInfo();
-        					switch (part.Name)
-        					{
-        						case "uuid":
-        							OInfo.UUID = part.InnerText;
-        							break;
-        						case "regionuuid":
-        							OInfo.RegionUUID = part.InnerText;
-        							break;
-        						case "parceluuid":
-        							OInfo.ParcelUUID = part.InnerText;
-        							break;
-        						case "title":
-        							OInfo.Title = part.InnerText;
-        							break;
-        						case "description":
-        							OInfo.Desc = part.InnerText;
-        							break;
-        						case "flags":
-        							OInfo.Flags = part.InnerText;
-        							break;
-        					}
-        					GenericData.Insert("searchobjects", new string[] { OInfo.UUID, OInfo.ParcelUUID, OInfo.Title, OInfo.Desc, OInfo.RegionUUID });*/
         		}
         	}
         }
