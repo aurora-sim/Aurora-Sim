@@ -30,10 +30,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using OpenSim.Region.ScriptEngine.Interfaces;
+using OpenSim.Region.ScriptEngine.Shared.ScriptBase;
 
 namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
 {
-    public interface IScript
+    /*public interface IScript
     {
         string[] GetApis();
         void InitApi(string name, IScriptApi data);
@@ -45,6 +46,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
         void ResetVars();
 
         void Close();
+         Executor();
         string Name { get;}
-    }
+    }*/
 }

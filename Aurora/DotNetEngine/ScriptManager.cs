@@ -487,13 +487,13 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                 {
                     Script =
                             m_scriptEngine.m_AppDomainManager.LoadScript(
-                            AssemblyName, "SecondLife." + ClassName, out AppDomain);
+                            AssemblyName, "Script." + ClassName, out AppDomain);
                 }
                 else
                 {
                     Script =
                             m_scriptEngine.m_AppDomainManager.LoadScript(
-                            AssemblyName, "SecondLife." + ClassID, out AppDomain);
+                            AssemblyName, "Script." + ClassID, out AppDomain);
                 }
             }
             catch (Exception ex)
@@ -566,22 +566,10 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         
         #region Event Processing
         
-        /// <summary>
-        /// Executes the given event 'FunctionName'  with parameters 'args'.
-        /// This event is microthreaded.
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="FunctionName"></param>
-        /// <param name="qParams"></param>
-        /// <param name="args"></param>
-        /// <returns></returns>
-        internal IEnumerator ExecuteEvent(string FunctionName, DetectParams[] qParams, object[] args)
+        public void SetEventParams(DetectParams[] qParams)
         {
-        	//;^) Ewe Loon,fix 
-            
-            
-            if (!Running || Disabled)
-                throw new NotSupportedException();
+        	if (!Running || Disabled)
+                return;
 			
             if (qParams.Length > 0)
                 LastDetectParams = qParams;
@@ -593,31 +581,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
                 NextEventTimeTicks = DateTime.Now.Ticks + EventDelayTicks;
             }
-            
-            yield return null;
-            
-            try
-            {
-                Script.ExecuteEvent(State, FunctionName, args);
-            }
-            catch (SelfDeleteException) // Must delete SOG
-            {
-                if (part != null && part.ParentGroup != null)
-                    m_scriptEngine.World.DeleteSceneObject(
-                        part.ParentGroup, false);
-            }
-            catch (ScriptDeleteException) // Must delete item
-            {
-                if (part != null && part.ParentGroup != null)
-                    part.Inventory.RemoveInventoryItem(ItemID);
-            }
-            catch (Exception e)
-            {
-                LastDetectParams = null;
-                m_log.InfoFormat("[Script Event Error] ,{0},{1},{2},{3},{4}", part.Name, FunctionName, e.Message, qParams.Length, LastDetectParams.Length);
-                throw e;
-            }
-            LastDetectParams = null;
         }
         
         #endregion

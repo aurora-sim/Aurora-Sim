@@ -46,6 +46,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
     // Because every thread needs some data set for it
     // (time started to execute current function), it will do its work
     // within a class
+    [Serializable]
     public class EventQueueThreadClass : System.MarshalByRefObject
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -157,20 +158,9 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         {
             CultureInfo USCulture = new CultureInfo("en-US");
             Thread.CurrentThread.CurrentCulture = USCulture;
-
-            try
+            while (true)
             {
-                while (true)
-                {
-                    DoProcessQueue();
-                }
-            }
-            catch (Exception e)
-            {
-                m_log.ErrorFormat(
-                    "[{0}]: Event queue thread terminating with {1}.",
-                    ScriptEngineName, e);
-                EventQueueThread.Abort();
+            	DoProcessQueue();
             }
         }
 
@@ -195,12 +185,35 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                                 // Get queue item
                                 QueueItemStruct QIS = m_ScriptEngine.m_EventQueueManager.eventQueue.Dequeue();
                                 if (m_ScriptEngine.World.PipeEventsForScript(
-                                    QIS.ID.localID))
+                                	QIS.ID.localID))
                                 {
-                                    m_threads.Add(QIS.ID.ExecuteEvent(
-                                        QIS.functionName,
-                                        QIS.llDetectParams,
-                                        QIS.param));
+                                	try
+                                	{
+                                		QIS.ID.SetEventParams(QIS.llDetectParams);
+                                		bool NotFinished = QIS.ID.Script.ExecuteEvent(
+                                			QIS.ID.State,
+                                			QIS.functionName,
+                                			QIS.param);
+                                		if(NotFinished)
+                                		{
+                                			m_ScriptEngine.m_EventQueueManager.eventQueue.Enqueue(QIS, QIS.ID.ItemID);
+                                		}
+                                	}
+                                	catch (SelfDeleteException) // Must delete SOG
+                                	{
+                                		if(QIS.ID.part != null && QIS.ID.part.ParentGroup != null)
+                                			m_ScriptEngine.World.DeleteSceneObject(
+                                				QIS.ID.part.ParentGroup, false);
+                                	}
+                                	catch (ScriptDeleteException) // Must delete item
+                                	{
+                                		if (QIS.ID.part != null && QIS.ID.part.ParentGroup != null)
+                                			QIS.ID.part.Inventory.RemoveInventoryItem(QIS.ID.ItemID);
+                                	}
+                                	catch(Exception ex)
+                                	{
+                                		m_log.Error("Event Queue error: " + ex);
+                                	}
                                 }
                                 else
                                 {
@@ -209,54 +222,12 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                             }
                         }
                     }
-                    lock (m_threads)
-                    {
-                        if (m_threads.Count == 0)
-                            return;
-                        try
-                        {
-                            int i = 0;
-                            while (m_threads.Count > 0 && i < 1000)
-                            {
-                                i++;
-                                bool running = true;
-                                try
-                                {
-                                	running = m_threads[i % m_threads.Count].MoveNext();
-                                }
-                                catch(NotSupportedException)
-                                {
-                                	//Remove threads that are disabled
-                                	running = false;
-                                }
-                                catch(NullReferenceException)
-                                {
-                                	//Remove threads that dont exist
-                                	running = false;
-                                }
-                                catch(Exception ex)
-                                {
-                                	m_log.Error("Enumerator error: " + ex);
-                                	//Remove erroring threads
-                                	running = false;
-                                }
-                                if (!running)
-                                	m_threads.Remove(m_threads[i % m_threads.Count]);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            m_log.InfoFormat("[{0}]: Handled exception in the Event Queue: " + ex, ScriptEngineName);
-                        }
-                    }
                 }
             }
             catch (Exception ex)
             {
-                m_log.WarnFormat("[{0}]: Unhandled exception in the Event Queue: " + ex, ScriptEngineName);
+                m_log.WarnFormat("[{0}]: Unhandled exception in the Event Queue: " + ex.Message + " " + ex.StackTrace, ScriptEngineName);
             }
         }
-
-        private readonly List<IEnumerator> m_threads = new List<IEnumerator>();
     }
 }

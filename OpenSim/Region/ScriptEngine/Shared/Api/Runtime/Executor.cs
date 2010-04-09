@@ -33,13 +33,29 @@ using System.Runtime.Remoting.Lifetime;
 using OpenSim.Region.ScriptEngine.Shared;
 using OpenSim.Region.ScriptEngine.Shared.ScriptBase;
 using log4net;
+using OpenSim.Region.ScriptEngine.Interfaces;
 
 namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
 {
+	public interface IScript
+    {
+        string[] GetApis();
+        void InitApi(string name, IScriptApi data);
+
+        int GetStateEventFlags(string state);
+        bool ExecuteEvent(string state, string FunctionName, object[] args);
+        Dictionary<string,Object> GetVars();
+        void SetVars(Dictionary<string,Object> vars);
+        void ResetVars();
+
+        void Close();
+        string Name { get;}
+    }
+	
     public class Executor
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
+        
         /// <summary>
         /// Contains the script to execute functions in.
         /// </summary>
@@ -134,14 +150,14 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
         }
 
         List<IEnumerator> m_threads = new List<IEnumerator>();
-        public void ExecuteEvent(string state, string FunctionName, object[] args)
+        public bool ExecuteEvent(string state, string FunctionName, object[] args)
         {
             // IMPORTANT: Types and MemberInfo-derived objects require a LOT of memory.
             // Instead use RuntimeTypeHandle, RuntimeFieldHandle and RunTimeHandle (IntPtr) instead!
             string EventName = state + "_event_" + FunctionName;
 
             //#if DEBUG
-            m_log.Debug("ScriptEngine: Script event function name: " + EventName);
+            //m_log.Debug("ScriptEngine: Script event function name: " + EventName);
             //#endif
 
             if (!Events.ContainsKey(EventName))
@@ -155,63 +171,43 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
                 }
                 catch
                 {
-                    //m_log.Error("Event "+EventName+" not found.");
                     // Event name not found, cache it as not found
                     Events.Add(EventName, null);
                 }
             }
-
-            // Get event
-            MethodInfo ev = null;
-            Events.TryGetValue(EventName, out ev);
-            //cfk 2-7-08 dont need this right now and the default Linux build has DEBUG defined
-//#if DEBUG
-            if (ev == null) // No event by that name!
-            {
-                //Console.WriteLine("ScriptEngine Can not find any event named:" + EventName);
-                return;
-            }
-            //else
-            	//Console.WriteLine("ScriptEngine: Executing function name: " + EventName);
-//#end if
-			try
-            {
-                m_threads.Add((IEnumerator)ev.Invoke(m_Script, args));
-                lock (m_threads)
-                {
-                    try
-                    {
-                        int i = 0;
-                        while (m_threads.Count > 0 && m_threads.Count != 0 && i < 25)
-                        {
-                            i++;
-                            bool running = m_threads[i % m_threads.Count].MoveNext();
-
-                            if (!running)
-                            {
-                                m_threads.Remove(m_threads[i % m_threads.Count]);
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                    }
-                }
-            }
-            catch (TargetInvocationException tie)
-            {
-                // Grab the inner exception and rethrow it, unless the inner
-                // exception is an EventAbortException as this indicates event
-                // invocation termination due to a state change.
-                // DO NOT THROW JUST THE INNER EXCEPTION!
-                // FriendlyErrors depends on getting the whole exception!
-                //
-                if (!(tie.InnerException is EventAbortException))
-                {
-                    throw;
-                }
-            }
-            // Found
+			// Get event
+			MethodInfo ev = null;
+			Events.TryGetValue(EventName, out ev);
+			if (ev == null) // No event by that name!
+			{
+				//m_log.Debug("ScriptEngine Can not find any event named:" + EventName);
+				return true;
+			}
+			IEnumerator thread = (IEnumerator)ev.Invoke(m_Script, args);
+			int i = 0;
+			bool notfinished = true;
+			while (notfinished == true && i < 50)
+			{
+				i++;
+				try
+				{
+					notfinished = thread.MoveNext();
+				}
+				catch (TargetInvocationException tie)
+				{
+					// Grab the inner exception and rethrow it, unless the inner
+					// exception is an EventAbortException as this indicates event
+					// invocation termination due to a state change.
+					// DO NOT THROW JUST THE INNER EXCEPTION!
+					// FriendlyErrors depends on getting the whole exception!
+					//
+					if (!(tie.InnerException is EventAbortException))
+					{
+						throw;
+					}
+				}
+			}
+			return notfinished;
         }
 
         protected void initEventFlags()

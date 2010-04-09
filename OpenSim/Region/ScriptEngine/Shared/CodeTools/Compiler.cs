@@ -445,10 +445,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             	"\nusing System;" +
             	"\nusing System.Collections.Generic;" +
             	"\nusing System.Collections;\n" +
-                String.Empty + "namespace SecondLife\n{\n";
-
+                String.Empty + "namespace Script\n{\n";
             string TempClassScript = "";
-            TempClassScript = String.Empty + "public class " + identifier + " : OpenSim.Region.ScriptEngine.Shared.ScriptBase.ScriptBaseClass";
+            TempClassScript = String.Empty + "[Serializable]\n public class " + identifier + " : OpenSim.Region.ScriptEngine.Shared.ScriptBase.ScriptBaseClass";
             if (InheritedClasses != "")
                 TempClassScript += "," + InheritedClasses;
             TempClassScript += "\n{\n" +

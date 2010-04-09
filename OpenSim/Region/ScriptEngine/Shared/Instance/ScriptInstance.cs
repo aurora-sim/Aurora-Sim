@@ -704,8 +704,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Instance
                             m_CurrentEvent = data.EventName;
                             m_EventStart = DateTime.Now;
                             m_InEvent = true;
-
-                            m_Script.ExecuteEvent(State, data.EventName, data.Params);
+							m_Script.ExecuteEvent(State, data.EventName, data.Params);
 
                             m_InEvent = false;
                             m_CurrentEvent = String.Empty;

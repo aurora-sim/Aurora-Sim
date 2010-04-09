@@ -86,16 +86,16 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
 //            m_sponser = new ScriptSponsor();
         }
 
-        private Executor m_Executor = null;
+        public Executor m_Executor = null;
 
         public int GetStateEventFlags(string state)
         {
             return (int)m_Executor.GetStateEventFlags(state);
         }
 
-        public void ExecuteEvent(string state, string FunctionName, object[] args)
+        public bool ExecuteEvent(string state, string FunctionName, object[] args)
         {
-            m_Executor.ExecuteEvent(state, FunctionName, args);
+            return m_Executor.ExecuteEvent(state, FunctionName, args);
         }
 
         public string[] GetApis()

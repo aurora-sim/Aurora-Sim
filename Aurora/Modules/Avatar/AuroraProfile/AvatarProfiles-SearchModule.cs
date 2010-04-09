@@ -1393,7 +1393,8 @@ namespace Aurora.Modules
         									break;
         							}
         						}
-        						GenericData.Insert("searchobjects", new string[] { OInfo.UUID, OInfo.ParcelUUID, OInfo.Title, OInfo.Desc, OInfo.RegionUUID });
+        						if(OInfo.UUID != null)
+        							GenericData.Insert("searchobjects", new string[] { OInfo.UUID, OInfo.ParcelUUID, OInfo.Title, OInfo.Desc, OInfo.RegionUUID });
         					}
         					if(part.Name == "parceldata")
         					{
@@ -1453,6 +1454,8 @@ namespace Aurora.Modules
         										PInfo.UUID = ppart.InnerText;
         										break;
         								}
+        								if(PInfo.UUID == null)
+        									continue;
         								GenericData.Insert("searchallparcels", new string[] { info.UUID, PInfo.Name, PInfo.OwnerUUID, PInfo.GroupUUID, PInfo.Landing, PInfo.UUID, PInfo.InfoUUID, PInfo.Area });
         								if (Convert.ToBoolean(PInfo.Directory))
         									GenericData.Insert("searchparcels", new string[] { info.UUID, PInfo.Name, PInfo.UUID, PInfo.Landing, PInfo.Desc, PInfo.Category, PInfo.Build, PInfo.Script, PInfo.Public, PInfo.Dwell, PInfo.InfoUUID, false.ToString(), false.ToString() });

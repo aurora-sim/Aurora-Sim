@@ -8,11 +8,13 @@ using Mono.Data.SqliteClient;
 using Aurora.Framework;
 using OpenSim.Framework;
 using OpenMetaverse;
+using log4net;
 
 namespace Aurora.DataManager.SQLite
 {
     public class SQLiteLoader : DataManagerBase
     {
+        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         protected List<string> m_ColumnNames;
         private SqliteConnection m_Connection;
 
@@ -58,6 +60,8 @@ namespace Aurora.DataManager.SQLite
 
         protected int ExecuteNonQuery(SqliteCommand cmd)
         {
+        	try
+        	{
             lock (m_Connection)
             {
                 var newConnection =
@@ -67,6 +71,12 @@ namespace Aurora.DataManager.SQLite
 
                 return cmd.ExecuteNonQuery();
             }
+        	}
+        	catch(Exception ex)
+        	{
+        		m_log.Warn("[SQLiteDataManager]: Exception processing command: "+cmd.CommandText +", Exception: " + ex);
+        		return 0;
+        	}
         }
 
         protected IDataReader GetReader(SqliteCommand cmd)
@@ -155,7 +165,7 @@ namespace Aurora.DataManager.SQLite
             var cmd = new SqliteCommand();
 
             string query = "";
-            query = String.Format("insert into '{0}' values ('", table);
+            query = String.Format("insert into {0} values ('", table);
             foreach (string value in values)
             {
                 query = String.Format(query + "{0}','", value);
