@@ -20,13 +20,26 @@ namespace Aurora.Modules.Avatar.AdultVerificationModule
 	{
 		private IGenericData GenericData = null;
 		private IRegionData RegionData = null;
+        private bool m_Enabled = true;
 		public void Initialise(Scene scene, IConfigSource source)
 		{
+            if (source.Configs["AdultVerification"] != null)
+            {
+                if (source.Configs["AdultVerification"].GetString(
+                        "AdultVerification", Name) !=
+                        Name)
+                {
+                    m_Enabled = false;
+                    return;
+                }
+            }
 			scene.RegisterModuleInterface<IAdultVerificationModule>(this);
 		}
 		
 		public void PostInitialise()
 		{
+            if (!m_Enabled)
+                return;
 			GenericData = Aurora.DataManager.DataManager.GetGenericPlugin();
 			RegionData = Aurora.DataManager.DataManager.GetRegionPlugin();
 		}

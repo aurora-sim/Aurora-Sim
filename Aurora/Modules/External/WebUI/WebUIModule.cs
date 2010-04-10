@@ -24,9 +24,20 @@ namespace Aurora.Modules.WebUI
         private IConfigSource m_config;
         private HttpServer.HttpServer server;
         private int HttpPort = 5050;
+        private bool m_Enabled = true;
 
         public void Initialise(Scene scene, IConfigSource config)
         {
+            if (config.Configs["WebUI"] != null)
+            {
+                if (config.Configs["WebUI"].GetBoolean(
+                        "Enabled", true) !=
+                        true)
+                {
+                    m_Enabled = false;
+                    return;
+                }
+            }
             if (!executors.ContainsKey(scene))
             {
                 var executor = new SceneCommandExecutor(scene);
@@ -50,6 +61,8 @@ namespace Aurora.Modules.WebUI
 
         public void PostInitialise()
         {
+            if (!m_Enabled)
+                return;
             Thread t = new Thread(new ThreadStart(RunServer));
             t.Start();
         }

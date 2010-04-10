@@ -73,12 +73,23 @@ namespace Aurora.Modules
 
         private IGenericData GD = null;
         private IProfileData ProfileDataManager = null;
+        private bool m_Enabled = true;
 
         #region IRegionModule 
         public string Name{ get { return "InterWorldComms"; } }
 
         public void Initialise(Scene scene, IConfigSource source)
         {
+            if (source.Configs["AuroraInterWorldConnectors"] != null)
+            {
+                if (source.Configs["AuroraInterWorldConnectors"].GetBoolean(
+                        "Enabled", true) !=
+                        true)
+                {
+                    m_Enabled = false;
+                    return;
+                }
+            }
             m_Scene = scene;
             m_scenes.Add(scene);
             

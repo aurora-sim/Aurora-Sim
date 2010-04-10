@@ -25,15 +25,28 @@ namespace Aurora.Modules
 		private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 		private List<Scene> m_scenes = new List<Scene>();
 		private IConfigSource m_config;
-		
-		public void Initialise(Scene scene, IConfigSource config)
+        private bool m_Enabled = true;
+
+        public void Initialise(Scene scene, IConfigSource source)
 		{
+            if (source.Configs["GodModule"] != null)
+            {
+                if (source.Configs["GodModule"].GetString(
+                        "GodModule", Name) !=
+                        Name)
+                {
+                    m_Enabled = false;
+                    return;
+                }
+            }
 			m_scenes.Add(scene);
-			m_config = config;
+            m_config = source;
 		}
 
 		public void PostInitialise()
 		{
+            if (!m_Enabled)
+                return;
 			foreach(Scene scene in m_scenes)
 			{
 				scene.EventManager.OnNewClient += EventManager_OnNewClient;

@@ -69,14 +69,14 @@ namespace Aurora.Modules
 
             if (null == m_config)
             {
-                m_log.Info("[CHAT]: no config found, plugin disabled");
+                m_log.Info("[AURORACHAT]: no config found, plugin disabled");
                 m_enabled = false;
                 return;
             }
 
             if (!m_config.GetBoolean("enabled", true))
             {
-                m_log.Info("[CHAT]: plugin disabled by configuration");
+                m_log.Info("[AURORACHAT]: plugin disabled by configuration");
                 m_enabled = false;
                 return;
             }
