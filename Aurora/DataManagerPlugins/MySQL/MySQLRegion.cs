@@ -181,5 +181,36 @@ namespace Aurora.DataManager.MySQL
             }
             return report;
         }
+        public OfflineMessage[] GetOfflineMessages(string agentID)
+        {
+            List<OfflineMessage> messages = new List<OfflineMessage>();
+            List<string> Messages = Query("ToUUID", agentID, "offlinemessages", "*");
+            int i = 0;
+            OfflineMessage Message = new OfflineMessage();
+            foreach (string part in Messages)
+            {
+                if (i == 0)
+                    Message.FromUUID = part;
+                if (i == 1)
+                    Message.FromName = part;
+                if (i == 2)
+                    Message.ToUUID = part;
+                if (i == 3)
+                    Message.Message = part;
+                i++;
+                if (i == 4)
+                {
+                    i = 0;
+                    messages.Add(Message);
+                    Message = new OfflineMessage();
+                }
+            }
+            return messages.ToArray();
+        }
+
+        public void AddOfflineMessage(string fromUUID, string fromName, string toUUID, string message)
+        {
+            Insert("offlinemessages", new string[] { fromUUID, fromName, toUUID, message });
+        }
     }
 }

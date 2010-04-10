@@ -60,6 +60,18 @@ namespace Aurora.Framework
         bool GetIsRegionMature(string region);
 
         AbuseReport GetAbuseReport(int formNumber);
+
+        OfflineMessage[] GetOfflineMessages(string agentID);
+
+        void AddOfflineMessage(string fromUUID, string fromName, string toUUID, string message);
+    }
+
+    public class OfflineMessage
+    {
+        public string FromUUID;
+        public string ToUUID;
+        public string FromName;
+        public string Message;
     }
 
     public class AbuseReport

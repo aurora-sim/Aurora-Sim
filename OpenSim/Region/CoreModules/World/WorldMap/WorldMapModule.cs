@@ -81,9 +81,16 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         #region INonSharedRegionModule Members
         public virtual void Initialise (IConfigSource config)
         {
-            IConfig startupConfig = config.Configs["Startup"];
-            if (startupConfig.GetString("WorldMapModule", "WorldMap") == "WorldMap")
-                m_Enabled = true;
+            if (config.Configs["MapModule"] != null)
+            {
+                if (config.Configs["MapModule"].GetString(
+                        "WorldMapModule", "WorldMapModule") !=
+                        "WorldMapModule")
+                {
+                    m_Enabled = false;
+                    return;
+                }
+            }
         }
 
         public virtual void AddRegion (Scene scene)

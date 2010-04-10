@@ -299,6 +299,16 @@ namespace Aurora.Modules.DataPlugins
             throw new NotImplementedException();
         }
 
+        public OfflineMessage[] GetOfflineMessages(string agentID)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void AddOfflineMessage(string fromUUID, string fromName, string toUUID, string message)
+        {
+            throw new NotImplementedException();
+        }
+
         #endregion
     }
 }

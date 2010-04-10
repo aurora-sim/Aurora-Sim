@@ -16,6 +16,7 @@ using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Framework.Client;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules
 {
@@ -51,45 +52,23 @@ namespace Aurora.Modules
 			get { return "AuroraGodModModule"; }
 		}
 
-		public bool IsSharedModule
-		{
-			get { return true; }
-		}
+		public bool IsSharedModule{get { return true; }}
 		
 		public void Close()
 		{
 		}
-		public void GodSaveState(IClientAPI client,UUID agentID)
-		{
-			ScenePresence tPresence = null;
-			ScenePresence tPresenceTemp = null;
-			
-			foreach(Scene scene in m_scenes)
-			{
-				scene.TryGetScenePresence(client.AgentId, out tPresenceTemp);
-				if(tPresenceTemp != null)
-				{
-					if(tPresenceTemp.IsChildAgent == true)
-					{
-					}
-					else
-					{
-						tPresence = tPresenceTemp;
-						if(tPresence.GodLevel >= 0)
-						{
-							MainConsole.Instance.RunCommand("change region "+scene.RegionInfo.RegionName);
-							MainConsole.Instance.RunCommand("save oar " + tPresence.Scene.RegionInfo.RegionName + Util.UnixTimeSinceEpoch().ToString() + ".ss");
-							MainConsole.Instance.RunCommand("change region root");
-						}
-						else
-						{
-							tPresence.ControllingClient.SendAgentAlertMessage("You can not access the god tools.",false);
-						}
-					}
-				}
-			}
-			
-		}
+
+        public void GodSaveState(IClientAPI client, UUID agentID)
+        {
+            UserAccount UA = m_scenes[0].UserAccountService.GetUserAccount(UUID.Zero, client.AgentId);
+            if (UA.UserFlags >= 0)
+            {
+                MainConsole.Instance.RunCommand("change region " + ((Scene)client.Scene).RegionInfo.RegionName);
+                MainConsole.Instance.RunCommand("save oar " + ((Scene)client.Scene).RegionInfo.RegionName + Util.UnixTimeSinceEpoch().ToString() + ".ss");
+                MainConsole.Instance.RunCommand("change region root");
+            }
+        }
+
 		public void GodlikeMessage(IClientAPI client, UUID requester, byte[] Method, byte[] Parameter)
 		{
 			if(Method.ToString() == "telehub")
@@ -97,6 +76,7 @@ namespace Aurora.Modules
 				client.SendAgentAlertMessage("Please contact an administrator to help you with this function.", false);
 			}
 		}
+
 		public void GodUpdateRegionInfoUpdate(IClientAPI client, float BillableFactor, ulong EstateID, ulong RegionFlags, byte[] SimName,int RedirectX, int RedirectY)
 		{
 			string regionConfigPath = Path.Combine(Util.configDir(), "Regions");
@@ -104,34 +84,12 @@ namespace Aurora.Modules
 			int i = 0;
 			foreach (string file in iniFiles)
 			{
-				ScenePresence tPresence = null;
-				ScenePresence tPresenceTemp = null;
-				Scene theScene;
-				foreach(Scene scene in m_scenes)
-				{
-					scene.TryGetScenePresence(client.AgentId, out tPresenceTemp);
-					if(tPresenceTemp != null)
-					{
-						if(tPresenceTemp.IsChildAgent == true)
-						{
-						}
-						else
-						{
-							if(tPresence.GodLevel >= 0)
-							{
-								tPresence = tPresenceTemp;
-								theScene = scene;
-							}
-							else
-							{
-								tPresenceTemp.ControllingClient.SendAgentAlertMessage("You can not access the god tools.",false);
-								return;
-							}
-						}
-					}
-				}
+				UserAccount UA = m_scenes[0].UserAccountService.GetUserAccount(UUID.Zero, client.AgentId);
+                if (UA.UserFlags == 0)
+                    return;
+
 				IConfigSource source = new IniConfigSource(file);
-				IConfig cnf = source.Configs[tPresence.Scene.RegionInfo.RegionName];
+                IConfig cnf = source.Configs[((Scene)client.Scene).RegionInfo.RegionName];
 				if(cnf != null)
 				{
 					IConfig check = source.Configs[Utils.BytesToString(SimName)];
@@ -139,7 +97,7 @@ namespace Aurora.Modules
 					{
 						source.AddConfig(Utils.BytesToString(SimName));
 						IConfig cfgNew = source.Configs[Utils.BytesToString(SimName)];
-						IConfig cfgOld = source.Configs[tPresence.Scene.RegionInfo.RegionName];
+                        IConfig cfgOld = source.Configs[((Scene)client.Scene).RegionInfo.RegionName];
 						string[] oldRegionValues = cfgOld.GetValues();
 						string[] oldRegionKeys = cfgOld.GetKeys();
 						int next = 0;
@@ -158,7 +116,7 @@ namespace Aurora.Modules
 								client.Scene.RegionInfo.RegionLocY = Convert.ToUInt32(RedirectY);
 							}
 						}
-						tPresence.Scene.RegionInfo.RegionName = Utils.BytesToString(SimName);
+                        ((Scene)client.Scene).RegionInfo.RegionName = Utils.BytesToString(SimName);
 						source.Save();
 						
 					}
@@ -169,8 +127,8 @@ namespace Aurora.Modules
 							if(RedirectY != 0)
 							{
 								check.Set("Location",RedirectX.ToString() + "," + RedirectY.ToString());
-								tPresence.Scene.RegionInfo.RegionLocX = Convert.ToUInt32(RedirectX);
-								tPresence.Scene.RegionInfo.RegionLocY = Convert.ToUInt32(RedirectY);
+								((Scene)client.Scene).RegionInfo.RegionLocX = Convert.ToUInt32(RedirectX);
+                                ((Scene)client.Scene).RegionInfo.RegionLocY = Convert.ToUInt32(RedirectY);
 							}
 						}
 					}

@@ -45,9 +45,20 @@ namespace Aurora.Modules
 		private List<Scene> m_scenes = new List<Scene>();
 
 		private IMessageTransferModule m_TransferModule = null;
+        private bool m_Enabled = true;
 
 		public void Initialise(Scene scene, IConfigSource config)
 		{
+            if (config.Configs["Messaging"] != null)
+            {
+                if (config.Configs["Messaging"].GetString(
+                        "LureModule", Name) !=
+                        Name)
+                {
+                    m_Enabled = false;
+                    return;
+                }
+            }
 			m_scenes.Add(scene);
 			scene.EventManager.OnNewClient += OnNewClient;
 			scene.EventManager.OnIncomingInstantMessage += OnGridInstantMessage;
@@ -55,13 +66,14 @@ namespace Aurora.Modules
 
 		void OnNewClient(IClientAPI client)
 		{
-			client.OnInstantMessage += OnInstantMessage;
 			client.OnStartLure += OnStartLure;
 			client.OnTeleportLureRequest += OnTeleportLureRequest;
 		}
 
 		public void PostInitialise()
 		{
+            if (!m_Enabled)
+                return;
 			m_TransferModule = m_scenes[0].RequestModuleInterface<IMessageTransferModule>();
 
 			if (m_TransferModule == null)
@@ -83,38 +95,14 @@ namespace Aurora.Modules
 			get { return true; }
 		}
 
-		public void OnInstantMessage(IClientAPI client, GridInstantMessage im)
-		{
-		}
-		private Scene GetClientScene(IClientAPI client)
-		{
-			foreach(Scene scene in m_scenes)
-			{
-				if (client.Scene.RegionInfo.RegionHandle == scene.RegionInfo.RegionHandle)
-					return scene;
-			}
-			return null;
-		}
 		public void OnStartLure(byte lureType, string message, UUID targetid, IClientAPI client)
 		{
 			if (!(client.Scene is Scene))
 				return;
 			Scene scene = (Scene)(client.Scene);
 			ScenePresence presence = scene.GetScenePresence(client.AgentId);
-			ScenePresence SP = null;
-			ScenePresence SPTemp;
-			foreach(Scene scene1 in m_scenes)
-			{
-				scene1.TryGetScenePresence(targetid,out SPTemp);
-				if(SPTemp != null)
-				{
-					if(!SPTemp.IsChildAgent)
-					{
-						SP = SPTemp;
-					}
-				}
-			}
-			UUID dest = Util.BuildFakeParcelID(
+            OpenSim.Services.Interfaces.UserAccount target = m_scenes[0].UserAccountService.GetUserAccount(UUID.Zero, targetid);
+            UUID dest = Util.BuildFakeParcelID(
 				scene.RegionInfo.RegionHandle,
 				(uint)presence.AbsolutePosition.X,
 				(uint)presence.AbsolutePosition.Y,
@@ -122,7 +110,7 @@ namespace Aurora.Modules
 			GridInstantMessage m;
 			if(presence.GodLevel >= 1)
 			{
-				if(SP.GodLevel >= 1)
+                if (target.UserFlags >= 1)
 				{
 					m = new GridInstantMessage(scene, client.AgentId,
 					                           client.FirstName+" "+client.LastName, targetid,
@@ -173,19 +161,6 @@ namespace Aurora.Modules
 			position.Z = (float)z;
 			try
 			{
-				ScenePresence spTPTemp = null;
-				ScenePresence spTP = null;
-				foreach(Scene scene3 in m_scenes)
-				{
-					scene3.TryGetScenePresence(lureID, out spTPTemp);
-					if(spTPTemp != null)
-					{
-						if(!spTPTemp.IsChildAgent)
-						{
-							spTP = spTPTemp;
-						}
-					}
-				}
 				scene.RequestTeleportLocation(client, handle, position,
 				                              Vector3.Zero, teleportFlags);
 			}

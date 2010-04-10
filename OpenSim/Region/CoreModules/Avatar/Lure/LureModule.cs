@@ -74,6 +74,9 @@ namespace OpenSim.Region.CoreModules.Avatar.Lure
 
         public void RegionLoaded(Scene scene)
         {
+            if (!m_Enabled)
+                return;
+			
             if (m_TransferModule == null)
             {
                 m_TransferModule =

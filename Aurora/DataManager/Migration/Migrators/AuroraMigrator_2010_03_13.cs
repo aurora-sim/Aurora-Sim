@@ -145,6 +145,13 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("Notes", ColumnTypes.String1024)
                 ));
 
+            AddSchema("offlinemessages", ColDefs(
+                ColDef("FromUUID", ColumnTypes.String50),
+                ColDef("FromName", ColumnTypes.String50),
+                ColDef("ToUUID", ColumnTypes.String50),
+                ColDef("Message", ColumnTypes.String1024)
+                ));
+
             AddSchema("assetMediaURL", ColDefs(
                 ColDef("objectUUID", ColumnTypes.String100, true),
                 ColDef("User", ColumnTypes.String100),

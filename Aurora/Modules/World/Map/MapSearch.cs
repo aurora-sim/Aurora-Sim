@@ -59,10 +59,21 @@ namespace Aurora.Modules
 		//private static double time = 60000 /*oneminute*/;
 		private Timer aTimer = new System.Timers.Timer(time);
         private InterWorldComms IWC = null;
+        bool m_Enabled = true;
 
 		#region IRegionModule Members
 		public void Initialise(Scene scene, IConfigSource source)
 		{
+            if (source.Configs["MapModule"] != null)
+            {
+                if (source.Configs["MapModule"].GetString(
+                        "MapModule", "AuroraMapModule") !=
+                        "AuroraMapModule")
+                {
+                    m_Enabled = false;
+                    return;
+                }
+            }
 			m_config = source;
 			if (m_scene == null)
 			{
@@ -85,6 +96,8 @@ namespace Aurora.Modules
 
 		public void PostInitialise()
 		{
+            if (!m_Enabled)
+                return;
             GenericData = Aurora.DataManager.DataManager.GetRegionPlugin();
             RegionsHidden = GenericData.GetRegionHidden();
 			aTimer.Elapsed += new ElapsedEventHandler(OnTimedEvent);
