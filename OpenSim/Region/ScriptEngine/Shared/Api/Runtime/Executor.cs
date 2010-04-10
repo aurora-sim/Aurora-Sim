@@ -37,21 +37,6 @@ using OpenSim.Region.ScriptEngine.Interfaces;
 
 namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
 {
-	public interface IScript
-    {
-        string[] GetApis();
-        void InitApi(string name, IScriptApi data);
-
-        int GetStateEventFlags(string state);
-        bool ExecuteEvent(string state, string FunctionName, object[] args);
-        Dictionary<string,Object> GetVars();
-        void SetVars(Dictionary<string,Object> vars);
-        void ResetVars();
-
-        void Close();
-        string Name { get;}
-    }
-	
     public class Executor
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);

@@ -26,7 +26,7 @@
  */
 
 using System;
-using System.Collections;  
+using System.Collections;
 using System.Collections.Generic;
 using System.Net;
 using System.Reflection;
@@ -50,1009 +50,787 @@ using OpenSim.Region.ScriptEngine.Shared.CodeTools;
 
 namespace OpenSim.Region.ScriptEngine.DotNetEngine
 {
-
-    #region InstancesData
-    
-	public class InstancesData
-	{
-        public string AssemblyName = "";
-        public uint localID = 0;
-        public List<InstanceData> Instances = new List<InstanceData>();
-        public List<UUID> ItemIDs = new List<UUID>();
-	}
-	
-	#endregion
-	
 	#region InstanceData
-	
-    public class InstanceData
-    {
-    	#region Constructor
-    	
-    	public InstanceData(ScriptManager engine)
-    	{
-            m_ScriptManager = engine;
-            m_scriptEngine = m_ScriptManager.m_scriptEngine;
-            World = m_scriptEngine.World;
-    	}
-    	
-    	#endregion
-    	
-    	#region Declares
-    	
-    	private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        
-        private ScriptManager m_ScriptManager;
-        private ScriptEngine m_scriptEngine;
-        private Scene World;
-        public IScript Script;
-        public string State;
-        public bool Running;
-        public bool Disabled;
-        public string Source;
-        public string ClassSource;
-        public int StartParam;
-        public StateSource stateSource;
-        public AppDomain AppDomain;
-        public Dictionary<string, IScriptApi> Apis;
-        public Dictionary<KeyValuePair<int,int>, KeyValuePair<int,int>>
-                LineMap;
-        public ISponsor ScriptSponsor;
 
-        public SceneObjectPart part;
+	public class InstanceData : IInstanceData
+	{
+		#region Constructor
 
-        public long EventDelayTicks = 0;
-        public long NextEventTimeTicks = 0;
-        public UUID AssetID;
-        public string AssemblyName;
-        //This is the UUID of the actual script.
-        public UUID ItemID;
-        //This is the localUUID of the object the script is in.
-        public uint localID;
-        public string ClassID;
-        public bool PostOnRez;
-        public TaskInventoryItem InventoryItem;
-        public InstancesData MacroData;
-        public ScenePresence presence;
-        public DetectParams[] LastDetectParams;
-        public bool IsCompiling = false;
-        public bool ErrorsWaiting = false;
-            
-        #endregion
-        
-        #region Close Script
-        
-        /// <summary>
-        /// This closes the scrpit, removes it from any known spots, and disposes of itself.
-        /// This function is microthreaded.
-        /// </summary>
-        /// <returns></returns>
-        public IEnumerable CloseAndDispose()
-        {
-        	m_ScriptManager.Errors[ItemID] = null;
-        	ReleaseControls(localID, ItemID);
-            // Stop long command on script
-            AsyncCommandManager.RemoveScript(m_ScriptManager.m_scriptEngine, localID, ItemID);
-            m_ScriptManager.m_scriptEngine.m_EventManager.state_exit(localID);
-            m_ScriptManager.m_scriptEngine.m_EventQueueManager.RemoveFromQueue(ItemID);
-           
-            
-            yield return null;
+		public InstanceData(ScriptManager engine)
+		{
+			m_ScriptManager = engine;
+			m_scriptEngine = m_ScriptManager.m_scriptEngine;
+			World = m_scriptEngine.World;
+		}
 
-            try
-            {
-                // Get AppDomain
-                // Tell script not to accept new requests
-                Running = false;
-                Disabled = true;
-                AppDomain ad = AppDomain;
-                Script.Close();
-                // Tell AppDomain that we have stopped script
-                m_ScriptManager.m_scriptEngine.m_AppDomainManager.UnloadScriptAppDomain(ad);
-                // Remove from internal structure
-            	m_ScriptManager.RemoveScript(this);
-            }
-            catch (Exception e) // LEGIT: User Scripting
-            {
-                m_log.Error("[" +
-                            m_ScriptManager.m_scriptEngine.ScriptEngineName +
-                            "]: Exception stopping script localID: " +
-                            localID + " LLUID: " + ItemID.ToString() +
-                            ": " + e.ToString());
-            }
-            m_log.DebugFormat("[{0}]: Closed Script in " + part.Name, m_ScriptManager.m_scriptEngine.ScriptEngineName);
-        }
-        
-        /// <summary>
-        /// Removes any permissions the script may have on other avatars.
-        /// </summary>
-        /// <param name="localID"></param>
-        /// <param name="itemID"></param>
-        private void ReleaseControls(uint localID, UUID itemID)
-        {
-            if (part != null)
-            {
-                int permsMask;
-                UUID permsGranter;
-                lock (part.TaskInventory)
-                {
-                    if (!part.TaskInventory.ContainsKey(itemID))
-                        return;
+		#endregion
 
-                    permsGranter = part.TaskInventory[itemID].PermsGranter;
-                    permsMask = part.TaskInventory[itemID].PermsMask;
-                }
+		#region Declares
 
-                if ((permsMask & ScriptBaseClass.PERMISSION_TAKE_CONTROLS) != 0)
-                {
-                    if (presence != null)
-                        presence.UnRegisterControlEventsToScript(localID, itemID);
-                }
-            }
-        }
-        
-        #endregion
-        
-        #region Reset Script
-        
+		private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
+		private ScriptManager m_ScriptManager;
+		private ScriptEngine m_scriptEngine;
+		private Scene World;
+		public IScript Script;
+		public string State;
+		public bool Running;
+		public bool Disabled;
+		public string Source;
+		public string ClassSource;
+		public int StartParam;
+		public StateSource stateSource;
+		public AppDomain AppDomain;
+		public Dictionary<string, IScriptApi> Apis;
+		public Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> LineMap;
+		public ISponsor ScriptSponsor;
+
+		public SceneObjectPart part;
+
+		public long EventDelayTicks = 0;
+		public long NextEventTimeTicks = 0;
+		public UUID AssetID;
+		public string AssemblyName;
+		//This is the UUID of the actual script.
+		public UUID ItemID;
+		//This is the localUUID of the object the script is in.
+		public uint localID;
+		public string ClassID;
+		public bool PostOnRez;
+		public TaskInventoryItem InventoryItem;
+		public ScenePresence presence;
+		public DetectParams[] LastDetectParams;
+		public bool IsCompiling = false;
+		public bool ErrorsWaiting = false;
+
+		#endregion
+
+		#region Close Script
+
+		/// <summary>
+		/// This closes the scrpit, removes it from any known spots, and disposes of itself.
+		/// This function is microthreaded.
+		/// </summary>
+		/// <returns></returns>
+		public IEnumerable CloseAndDispose()
+		{
+			m_ScriptManager.Errors[ItemID] = null;
+			ReleaseControls(localID, ItemID);
+			// Stop long command on script
+			AsyncCommandManager.RemoveScript(m_ScriptManager.m_scriptEngine, localID, ItemID);
+			m_ScriptManager.m_scriptEngine.m_EventManager.state_exit(localID);
+			m_ScriptManager.m_scriptEngine.m_EventQueueManager.RemoveFromQueue(ItemID);
+
+
+			yield return null;
+
+			try {
+				// Get AppDomain
+				// Tell script not to accept new requests
+				Running = false;
+				Disabled = true;
+				AppDomain ad = AppDomain;
+				Script.Close();
+				// Tell AppDomain that we have stopped script
+				m_ScriptManager.m_scriptEngine.m_AppDomainManager.UnloadScriptAppDomain(ad);
+				// Remove from internal structure
+				m_ScriptManager.RemoveScript(this);
+			// LEGIT: User Scripting
+			} catch (Exception e) {
+				m_log.Error("[" + m_ScriptManager.m_scriptEngine.ScriptEngineName + "]: Exception stopping script localID: " + localID + " LLUID: " + ItemID.ToString() + ": " + e.ToString());
+			}
+			m_log.DebugFormat("[{0}]: Closed Script in " + part.Name, m_ScriptManager.m_scriptEngine.ScriptEngineName);
+		}
+
+		/// <summary>
+		/// Removes any permissions the script may have on other avatars.
+		/// </summary>
+		/// <param name="localID"></param>
+		/// <param name="itemID"></param>
+		private void ReleaseControls(uint localID, UUID itemID)
+		{
+			if (part != null) {
+				int permsMask;
+				UUID permsGranter;
+				lock (part.TaskInventory) {
+					if (!part.TaskInventory.ContainsKey(itemID))
+						return;
+
+					permsGranter = part.TaskInventory[itemID].PermsGranter;
+					permsMask = part.TaskInventory[itemID].PermsMask;
+				}
+
+				if ((permsMask & ScriptBaseClass.PERMISSION_TAKE_CONTROLS) != 0) {
+					if (presence != null)
+						presence.UnRegisterControlEventsToScript(localID, itemID);
+				}
+			}
+		}
+
+		#endregion
+
+		#region Reset Script
+
 		/// <summary>
 		/// This resets the script back to its default state.
 		/// </summary>
-        internal void Reset()
-        {
-            ReleaseControls(localID, ItemID);
-            //Must be posted immediately, otherwise the next line will delete it.
-            m_ScriptManager.m_scriptEngine.m_EventManager.state_exit(localID);
-            m_ScriptManager.m_scriptEngine.m_EventQueueManager.RemoveFromQueue(ItemID);
-            m_ScriptManager.UpdateScriptInstanceData(this);
-            m_ScriptManager.m_scriptEngine.m_EventQueueManager.AddToScriptQueue(this, "state_entry", new DetectParams[0],new object[] { });
-            m_log.InfoFormat("[{0}]: Reset Script {1}", m_ScriptManager.m_scriptEngine.ScriptEngineName, ItemID);
-        }
-        #endregion
-        
-        #region Helpers
-        
-        public override string ToString()
-        {
-        	return "localID: "+ localID
-        		+", itemID: "+
-        		ItemID;
-        }
-
-        internal void SetApis()
-        {
-        	if(part == null)
-        		part = m_ScriptManager.m_scriptEngine.World.GetSceneObjectPart(localID);
-        	Apis = new Dictionary<string, IScriptApi>();
-
-            ApiManager am = new ApiManager();
-            foreach (string api in am.GetApis())
-            {
-                Apis[api] = am.CreateApi(api);
-                Apis[api].Initialize(m_ScriptManager.m_scriptEngine, part,
-                        localID, ItemID, m_scriptEngine.ScriptProtection);
-            }
-			foreach (KeyValuePair<string, IScriptApi> kv in Apis)
-            {
-                Script.InitApi(kv.Key, kv.Value);
-            }
-        }
-        
-        public void ShowError(Exception e, int stage)
-        {
-            if (presence != null && (!PostOnRez))
-                presence.ControllingClient.SendAgentAlertMessage(
-                        "Script saved with errors, check debug window!",
-                        false);
-            
-            m_ScriptManager.Errors[ItemID] = new String[] { e.Message.ToString() };
-            ErrorsWaiting = true;
+		internal void Reset()
+		{
+			ReleaseControls(localID, ItemID);
+			//Must be posted immediately, otherwise the next line will delete it.
+			m_ScriptManager.m_scriptEngine.m_EventManager.state_exit(localID);
+			m_ScriptManager.m_scriptEngine.m_EventQueueManager.RemoveFromQueue(ItemID);
 			m_ScriptManager.UpdateScriptInstanceData(this);
-            
-            try
-            {
-                // DISPLAY ERROR INWORLD
-                string consoletext = "Error compiling script in stage "+stage+":\n" +
-                    e.Message.ToString() + " itemID: " + ItemID + ", localID" + localID + ", CompiledFile: " + AssemblyName;
-                m_log.Error(consoletext);
-                string inworldtext = "Error compiling script: " + e;
-                if (inworldtext.Length > 1100)
-                    inworldtext = inworldtext.Substring(0, 1099);
+			m_ScriptManager.m_scriptEngine.m_EventQueueManager.AddToScriptQueue(this, "state_entry", new DetectParams[0], new object[] {
+				
+			});
+			m_log.InfoFormat("[{0}]: Reset Script {1}", m_ScriptManager.m_scriptEngine.ScriptEngineName, ItemID);
+		}
+		#endregion
 
-                World.SimChat(Utils.StringToBytes(inworldtext),
-                        ChatTypeEnum.DebugChannel, 2147483647,
-                        part.AbsolutePosition, part.Name, part.UUID,
-                        false);
-            }
-            catch (Exception e2) // LEGIT: User Scripting
-            {
-                m_log.Error("[" +
-                            m_scriptEngine.ScriptEngineName +
-                            "]: Error displaying error in-world: " +
-                            e2.ToString());
-                m_log.Error("[" +
-                            m_scriptEngine.ScriptEngineName + "]: " +
-                            "Errormessage: Error compiling script:\r\n" +
-                            e2.Message.ToString());
-            }
-            throw e;
-        }
-        
-        #endregion
-        
-        #region Start Script
-        
-        /// <summary>
-        /// This starts the script and sets up the variables.
-        /// This function is microthreaded.
-        /// </summary>
-        /// <returns></returns>
-        public IEnumerator Start()
-        {
-        	IsCompiling = true;
-        	m_ScriptManager.Errors[ItemID] = null;
+		#region Helpers
+
+		public override string ToString()
+		{
+			return "localID: " + localID + ", itemID: " + ItemID;
+		}
+
+		internal void SetApis()
+		{
+			if (part == null)
+				part = m_ScriptManager.m_scriptEngine.World.GetSceneObjectPart(localID);
+			Apis = new Dictionary<string, IScriptApi>();
+
+			ApiManager am = new ApiManager();
+			foreach (string api in am.GetApis()) {
+				Apis[api] = am.CreateApi(api);
+				Apis[api].Initialize(m_ScriptManager.m_scriptEngine, part, localID, ItemID, m_scriptEngine.ScriptProtection);
+			}
+			foreach (KeyValuePair<string, IScriptApi> kv in Apis) {
+				Script.InitApi(kv.Key, kv.Value);
+			}
+		}
+
+		public void ShowError(Exception e, int stage)
+		{
+			if (presence != null && (!PostOnRez))
+				presence.ControllingClient.SendAgentAlertMessage("Script saved with errors, check debug window!", false);
+
+			m_ScriptManager.Errors[ItemID] = new String[] { e.Message.ToString() };
+			ErrorsWaiting = true;
+			m_ScriptManager.UpdateScriptInstanceData(this);
+
+			try {
+				// DISPLAY ERROR INWORLD
+				string consoletext = "Error compiling script in stage " + stage + ":\n" + e.Message.ToString() + " itemID: " + ItemID + ", localID" + localID + ", CompiledFile: " + AssemblyName;
+				m_log.Error(consoletext);
+				string inworldtext = "Error compiling script: " + e;
+				if (inworldtext.Length > 1100)
+					inworldtext = inworldtext.Substring(0, 1099);
+
+				World.SimChat(Utils.StringToBytes(inworldtext), ChatTypeEnum.DebugChannel, 2147483647, part.AbsolutePosition, part.Name, part.UUID, false);
+			// LEGIT: User Scripting
+			} catch (Exception e2) {
+				m_log.Error("[" + m_scriptEngine.ScriptEngineName + "]: Error displaying error in-world: " + e2.ToString());
+				m_log.Error("[" + m_scriptEngine.ScriptEngineName + "]: " + "Errormessage: Error compiling script:\r\n" + e2.Message.ToString());
+			}
+			throw e;
+		}
+
+		#endregion
+
+		#region Start Script
+
+		/// <summary>
+		/// This starts the script and sets up the variables.
+		/// This function is microthreaded.
+		/// </summary>
+		/// <returns></returns>
+		public IEnumerator Start()
+		{
+			IsCompiling = true;
+			m_ScriptManager.Errors[ItemID] = null;
 			DateTime Start = DateTime.Now.ToUniversalTime();
-        	
-        	// We will initialize and start the script.
-            // It will be up to the script itself to hook up the correct events.
-            part = World.GetSceneObjectPart(localID);
-            
-            if (null == part)
-            {
-                m_log.ErrorFormat(
-                    "[{0}]: Could not find scene object part corresponding " +
-                    "to localID {1} to start script",
-                    m_scriptEngine.ScriptEngineName, localID);
 
-                throw new NullReferenceException();
-            }
+			// We will initialize and start the script.
+			// It will be up to the script itself to hook up the correct events.
+			part = World.GetSceneObjectPart(localID);
+
+			if (null == part) {
+				m_log.ErrorFormat("[{0}]: Could not find scene object part corresponding " + "to localID {1} to start script", m_scriptEngine.ScriptEngineName, localID);
+
+				throw new NullReferenceException();
+			}
 
 
-            if (part.TaskInventory.TryGetValue(ItemID, out InventoryItem))
-                AssetID = InventoryItem.AssetID;
+			if (part.TaskInventory.TryGetValue(ItemID, out InventoryItem))
+				AssetID = InventoryItem.AssetID;
 
-            presence =
-                    World.GetScenePresence(InventoryItem.OwnerID);
-            if (presence != null)
-            {
-                m_log.DebugFormat(
-                    "[{0}]: Starting Script {1} in object {2} by avatar {3}.",
-                    m_scriptEngine.ScriptEngineName, part.Inventory.GetInventoryItem(ItemID).Name, part.Name, presence.Name);
-            }
-            else
-            {
-                m_log.DebugFormat(
-                    "[{0}]: Starting Script {1} in object {2}.",
-                    m_scriptEngine.ScriptEngineName, part.Inventory.GetInventoryItem(ItemID).Name, part.Name);
-            }
-            
-            CultureInfo USCulture = new CultureInfo("en-US");
-            Thread.CurrentThread.CurrentCulture = USCulture;
+			presence = World.GetScenePresence(InventoryItem.OwnerID);
+			if (presence != null) {
+				m_log.DebugFormat("[{0}]: Starting Script {1} in object {2} by avatar {3}.", m_scriptEngine.ScriptEngineName, part.Inventory.GetInventoryItem(ItemID).Name, part.Name, presence.Name);
+			} else {
+				m_log.DebugFormat("[{0}]: Starting Script {1} in object {2}.", m_scriptEngine.ScriptEngineName, part.Inventory.GetInventoryItem(ItemID).Name, part.Name);
+			}
 
-            MacroData = m_ScriptManager.GetMacroScript(localID);
-            
-            if (MacroData == null)
-                MacroData = new InstancesData();
+			CultureInfo USCulture = new CultureInfo("en-US");
+			Thread.CurrentThread.CurrentCulture = USCulture;
 
-            #region Class and interface reader
+			#region Class and interface reader
 
-            string Inherited = "";
-            string ClassName = "";
+			string Inherited = "";
+			string ClassName = "";
 
-            if (m_scriptEngine.ScriptProtection.AllowMacroScripting)
-            {
-                if (Source.Contains("#Inherited"))
-                {
-                    int line = Source.IndexOf("#Inherited ");
-                    Inherited = Source.Split('\n')[line];
-                    Inherited = Inherited.Replace("#Inherited ", "");
-                    Source = Source.Replace("#Inherited " + Inherited, "");
-                }
-                if (Source.Contains("#ClassName "))
-                {
-                    int line = Source.IndexOf("#ClassName ");
-                    ClassName = Source.Split('\n')[line];
-                    ClassName = ClassName.Replace("#ClassName ", "");
-                    Source = Source.Replace("#ClassName " + ClassName, "");
-                }
-                if (Source.Contains("#IncludeHTML "))
-                {
-                    string URL = "";
-                    int line = Source.IndexOf("#IncludeHTML ");
-                    URL = Source.Split('\n')[line];
-                    URL = URL.Replace("#IncludeHTML ", "");
-                    Source = Source.Replace("#IncludeHTML " + URL, "");
-                    string webSite = ScriptManager.ReadExternalWebsite(URL);
-                    m_scriptEngine.ScriptProtection.AddNewClassSource(URL, webSite, null);
-                    m_scriptEngine.ScriptProtection.AddWantedSRC(ItemID, URL);
-                }
-                if (Source.Contains("#Include "))
-                {
-                    string WantedClass = "";
-                    int line = Source.IndexOf("#Include ");
-                    WantedClass = Source.Split('\n')[line];
-                    WantedClass = WantedClass.Replace("#Include ", "");
-                    Source = Source.Replace("#Include " + WantedClass, "");
-                    m_scriptEngine.ScriptProtection.AddWantedSRC(ItemID, WantedClass);
-                }
-            }
-            else
-            {
-            	if (Source.Contains("#Inherited"))
-                {
-                    int line = Source.IndexOf("#Inherited ");
-                    Inherited = Source.Split('\n')[line];
-                    Inherited = Inherited.Replace("#Inherited ", "");
-                    Source = Source.Replace("#Inherited " + Inherited, "");
-                    Inherited = "";
-                }
-                if (Source.Contains("#ClassName "))
-                {
-                    int line = Source.IndexOf("#ClassName ");
-                    ClassName = Source.Split('\n')[line];
-                    ClassName = ClassName.Replace("#ClassName ", "");
-                    Source = Source.Replace("#ClassName " + ClassName, "");
-                    ClassName = "";
-                }
-                if (Source.Contains("#IncludeHTML "))
-                {
-                    string URL = "";
-                    int line = Source.IndexOf("#IncludeHTML ");
-                    URL = Source.Split('\n')[line];
-                    URL = URL.Replace("#IncludeHTML ", "");
-                    Source = Source.Replace("#IncludeHTML " + URL, "");
-                    string webSite = ScriptManager.ReadExternalWebsite(URL);
-                    URL = "";
-                    webSite = "";
-                }
-                if (Source.Contains("#Include "))
-                {
-                    string WantedClass = "";
-                    int line = Source.IndexOf("#Include ");
-                    WantedClass = Source.Split('\n')[line];
-                    WantedClass = WantedClass.Replace("#Include ", "");
-                    Source = Source.Replace("#Include " + WantedClass, "");
-                    m_scriptEngine.ScriptProtection.AddWantedSRC(ItemID, WantedClass);
-                    WantedClass = "";
-                }
-            }
-            
-            #endregion
-			
-            try
-            {
-                if (m_ScriptManager.PreviouslyCompiled.ContainsKey(Source))
-                {
-                    InstanceData PreviouslyCompiledID;
-                    m_ScriptManager.PreviouslyCompiled.TryGetValue(Source, out PreviouslyCompiledID);
-                    AssemblyName = PreviouslyCompiledID.AssemblyName;
-                    LineMap = PreviouslyCompiledID.LineMap;
-                    ClassID = PreviouslyCompiledID.ClassID;
-                }
-                else
-                {
-                    // Compile (We assume LSL)
-                    m_ScriptManager.LSLCompiler.PerformScriptCompile(Source,
-                            AssetID, InventoryItem.OwnerID, ItemID, Inherited, ClassName, m_scriptEngine.ScriptProtection, localID, this,
-                            out AssemblyName, out LineMap, out ClassID);
-                    m_ScriptManager.PreviouslyCompiled.Add(Source, this);
-                }
+			if (m_scriptEngine.ScriptProtection.AllowMacroScripting) {
+				if (Source.Contains("#Inherited")) {
+					int line = Source.IndexOf("#Inherited ");
+					Inherited = Source.Split('\n')[line];
+					Inherited = Inherited.Replace("#Inherited ", "");
+					Source = Source.Replace("#Inherited " + Inherited, "");
+				}
+				if (Source.Contains("#ClassName ")) {
+					int line = Source.IndexOf("#ClassName ");
+					ClassName = Source.Split('\n')[line];
+					ClassName = ClassName.Replace("#ClassName ", "");
+					Source = Source.Replace("#ClassName " + ClassName, "");
+				}
+				if (Source.Contains("#IncludeHTML ")) {
+					string URL = "";
+					int line = Source.IndexOf("#IncludeHTML ");
+					URL = Source.Split('\n')[line];
+					URL = URL.Replace("#IncludeHTML ", "");
+					Source = Source.Replace("#IncludeHTML " + URL, "");
+					string webSite = ScriptManager.ReadExternalWebsite(URL);
+					m_scriptEngine.ScriptProtection.AddNewClassSource(URL, webSite, null);
+					m_scriptEngine.ScriptProtection.AddWantedSRC(ItemID, URL);
+				}
+				if (Source.Contains("#Include ")) {
+					string WantedClass = "";
+					int line = Source.IndexOf("#Include ");
+					WantedClass = Source.Split('\n')[line];
+					WantedClass = WantedClass.Replace("#Include ", "");
+					Source = Source.Replace("#Include " + WantedClass, "");
+					m_scriptEngine.ScriptProtection.AddWantedSRC(ItemID, WantedClass);
+				}
+			} else {
+				if (Source.Contains("#Inherited")) {
+					int line = Source.IndexOf("#Inherited ");
+					Inherited = Source.Split('\n')[line];
+					Inherited = Inherited.Replace("#Inherited ", "");
+					Source = Source.Replace("#Inherited " + Inherited, "");
+					Inherited = "";
+				}
+				if (Source.Contains("#ClassName ")) {
+					int line = Source.IndexOf("#ClassName ");
+					ClassName = Source.Split('\n')[line];
+					ClassName = ClassName.Replace("#ClassName ", "");
+					Source = Source.Replace("#ClassName " + ClassName, "");
+					ClassName = "";
+				}
+				if (Source.Contains("#IncludeHTML ")) {
+					string URL = "";
+					int line = Source.IndexOf("#IncludeHTML ");
+					URL = Source.Split('\n')[line];
+					URL = URL.Replace("#IncludeHTML ", "");
+					Source = Source.Replace("#IncludeHTML " + URL, "");
+					string webSite = ScriptManager.ReadExternalWebsite(URL);
+					URL = "";
+					webSite = "";
+				}
+				if (Source.Contains("#Include ")) {
+					string WantedClass = "";
+					int line = Source.IndexOf("#Include ");
+					WantedClass = Source.Split('\n')[line];
+					WantedClass = WantedClass.Replace("#Include ", "");
+					Source = Source.Replace("#Include " + WantedClass, "");
+					m_scriptEngine.ScriptProtection.AddWantedSRC(ItemID, WantedClass);
+					WantedClass = "";
+				}
+			}
 
-                #region Warnings
+			#endregion
 
-                string[] compilewarnings = m_ScriptManager.LSLCompiler.GetWarnings();
-
-                if (compilewarnings != null && compilewarnings.Length != 0)
-                {
-                    if (presence != null && (!PostOnRez))
-                        presence.ControllingClient.SendAgentAlertMessage(
-                                "Script saved with warnings, check debug window!",
-                                false);
-
-                    foreach (string warning in compilewarnings)
-                    {
-                        // DISPLAY WARNING INWORLD
-                            string text = "Warning:\n" + warning;
-                            if (text.Length > 1100)
-                                text = text.Substring(0, 1099);
-
-                            World.SimChat(Utils.StringToBytes(text),
-                                    ChatTypeEnum.DebugChannel, 2147483647,
-                                    part.AbsolutePosition, part.Name, part.UUID,
-                                    false);
-                    }
-                }
-
-                #endregion
-
-            }
-            catch (Exception ex)
-            {
-                ShowError(ex, 1);
-            }
-            m_ScriptManager.Errors[ItemID] = new String[] { "TRUE" };
-            ErrorsWaiting = true;
-            bool useDebug = false;
-			if(useDebug)
+			try
 			{
-            	TimeSpan t = (DateTime.Now.ToUniversalTime() - Start);
-        		m_log.Debug("Stage 1: " + t.TotalSeconds);
+				InstanceData PreviouslyCompiledID = (InstanceData)m_scriptEngine.ScriptProtection.TryGetPreviouslyCompiledScript(Source);
+				if (PreviouslyCompiledID != null) 
+				{
+					AssemblyName = PreviouslyCompiledID.AssemblyName;
+					LineMap = PreviouslyCompiledID.LineMap;
+					ClassID = PreviouslyCompiledID.ClassID;
+				} 
+				else 
+				{
+					// Compile (We assume LSL)
+					m_ScriptManager.LSLCompiler.PerformScriptCompile(Source, AssetID, InventoryItem.OwnerID, ItemID, Inherited, ClassName, m_scriptEngine.ScriptProtection, localID, this, out AssemblyName,
+					                                                 out LineMap, out ClassID);
+					m_scriptEngine.ScriptProtection.AddPreviouslyCompiled(Source, this);
+				}
+
+				#region Warnings
+
+				string[] compilewarnings = m_ScriptManager.LSLCompiler.GetWarnings();
+
+				if (compilewarnings != null && compilewarnings.Length != 0) {
+					if (presence != null && (!PostOnRez))
+						presence.ControllingClient.SendAgentAlertMessage("Script saved with warnings, check debug window!", false);
+
+					foreach (string warning in compilewarnings) {
+						// DISPLAY WARNING INWORLD
+						string text = "Warning:\n" + warning;
+						if (text.Length > 1100)
+							text = text.Substring(0, 1099);
+
+						World.SimChat(Utils.StringToBytes(text), ChatTypeEnum.DebugChannel, 2147483647, part.AbsolutePosition, part.Name, part.UUID, false);
+					}
+				}
+
+				#endregion
+
+			} 
+			catch (Exception ex) 
+			{
+				ShowError(ex, 1);
 			}
 			
-            yield return null;
-            
-            try
-            {
-                if (ClassName != "")
-                {
-                    Script =
-                            m_scriptEngine.m_AppDomainManager.LoadScript(
-                            AssemblyName, "Script." + ClassName, out AppDomain);
-                }
-                else
-                {
-                    Script =
-                            m_scriptEngine.m_AppDomainManager.LoadScript(
-                            AssemblyName, "Script." + ClassID, out AppDomain);
-                }
-            }
-            catch (Exception ex)
-            {
-                ShowError(ex, 2);
-            }
-            
-            if(useDebug)
+			m_ScriptManager.Errors[ItemID] = new String[] { "TRUE" };
+			ErrorsWaiting = true;
+			bool useDebug = false;
+			if (useDebug) 
 			{
-            	TimeSpan t = (DateTime.Now.ToUniversalTime() - Start);
-        		m_log.Debug("Stage 2: " + t.TotalSeconds);
-            }
-            
-            State = "default";
-            Running = true;
-            Disabled = false;
-            
-            MacroData.ItemIDs.Add(ItemID);
-            MacroData.AssemblyName = AssemblyName;
-            MacroData.localID = localID;
-            MacroData.Instances.Add(this);
+				TimeSpan t = (DateTime.Now.ToUniversalTime() - Start);
+				m_log.Debug("Stage 1: " + t.TotalSeconds);
+			}
 
-            m_ScriptManager.UpdateMacroScript(MacroData);
-            
-            // Add it to our script memstruct
-            m_ScriptManager.UpdateScriptInstanceData(this);
-            
-            SetApis();
+			yield return null;
 
-            #region Post Script Events
+			try 
+			{
+				if (ClassName != "") 
+				{
+					Script = m_scriptEngine.m_AppDomainManager.LoadScript(AssemblyName, "Script." + ClassName, out AppDomain);
+				} 
+				else
+				{
+					Script = m_scriptEngine.m_AppDomainManager.LoadScript(AssemblyName, "Script." + ClassID, out AppDomain);
+				}
+			} 
+			catch (Exception ex) 
+			{
+				ShowError(ex, 2);
+			}
 
-            // Fire the first start-event
-            int eventFlags = Script.GetStateEventFlags(State);
-            part.SetScriptEvents(ItemID, eventFlags);
+			if (useDebug) 
+			{
+				TimeSpan t = (DateTime.Now.ToUniversalTime() - Start);
+				m_log.Debug("Stage 2: " + t.TotalSeconds);
+			}
 
-            m_scriptEngine.m_EventQueueManager.AddToScriptQueue(
-                    this, "state_entry", new DetectParams[0],
-                    new object[] { });
+			State = "default";
+			Running = true;
+			Disabled = false;
 
-            if (PostOnRez)
-            {
-                m_scriptEngine.m_EventQueueManager.AddToScriptQueue(
-                    this, "on_rez", new DetectParams[0],
-                    new object[] { new LSL_Types.LSLInteger(StartParam) });
-            }
+			// Add it to our script memstruct
+			m_ScriptManager.UpdateScriptInstanceData(this);
 
-            if (stateSource == StateSource.AttachedRez)
-            {
-                m_scriptEngine.m_EventQueueManager.AddToScriptQueue(this, "attach", new DetectParams[0],
-                    new object[] { new LSL_Types.LSLString(part.AttachedAvatar.ToString()) });
-            }
-            else if (stateSource == StateSource.NewRez)
-            {
-                m_scriptEngine.m_EventQueueManager.AddToScriptQueue(this, "changed", new DetectParams[0],
-                                          new Object[] { new LSL_Types.LSLInteger(256) });
-            }
-            else if (stateSource == StateSource.PrimCrossing)
-            {
-                // CHANGED_REGION
-                m_scriptEngine.m_EventQueueManager.AddToScriptQueue(this, "changed", new DetectParams[0],
-                                          new Object[] { new LSL_Types.LSLInteger(512) });
-            }
-            
-            #endregion
-            
-            IsCompiling = false;
-        }
-        
-        #endregion
-        
-        #region Event Processing
-        
-        public void SetEventParams(DetectParams[] qParams)
-        {
-        	if (!Running || Disabled)
-                return;
-			
-            if (qParams.Length > 0)
-                LastDetectParams = qParams;
+			SetApis();
 
-            if (EventDelayTicks != 0)
-            {
-                if (DateTime.Now.Ticks < NextEventTimeTicks)
-                    throw new Exception();
+			#region Post Script Events
 
-                NextEventTimeTicks = DateTime.Now.Ticks + EventDelayTicks;
-            }
-        }
-        
-        #endregion
-    }
+			// Fire the first start-event
+			int eventFlags = Script.GetStateEventFlags(State);
+			part.SetScriptEvents(ItemID, eventFlags);
 
-    #endregion
-	
-    #region Script Manager
-    
-    public class ScriptManager
-    {
-        #region Declares
+			m_scriptEngine.m_EventQueueManager.AddToScriptQueue(this, "state_entry", new DetectParams[0], new object[] {
+				
+			});
 
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+			if (PostOnRez) 
+			{
+				m_scriptEngine.m_EventQueueManager.AddToScriptQueue(this, "on_rez", new DetectParams[0], new object[] { new LSL_Types.LSLInteger(StartParam) });
+			}
 
-        private Thread scriptLoadUnloadThread;
-        private static Thread staticScriptLoadUnloadThread = null;
-        private Queue<LUStruct> LUQueue = new Queue<LUStruct>();
-        private static bool PrivateThread;
-        private int LoadUnloadMaxQueueSize;
-        private int MinMicrothreadScriptThreshold;
-        private Object scriptLock = new Object();
-        private bool m_started = false;
-        private Dictionary<InstanceData, DetectParams[]> detparms =
-                new Dictionary<InstanceData, DetectParams[]>();
-		private Dictionary<UUID, List<string>> m_Errors = new Dictionary<UUID, List<string>>();
-        public Dictionary<string, InstanceData> PreviouslyCompiled = new Dictionary<string, InstanceData>();
-        public Dictionary<UUID, string[]> Errors = new Dictionary<UUID, string[]>();
-        
-        // Load/Unload structure
-        private struct LUStruct
-        {
-            public InstanceData ID;
-            public LUType Action;
-        }
+			if (stateSource == StateSource.AttachedRez) 
+			{
+				m_scriptEngine.m_EventQueueManager.AddToScriptQueue(this, "attach", new DetectParams[0], new object[] { new LSL_Types.LSLString(part.AttachedAvatar.ToString()) });
+			} 
+			else if (stateSource == StateSource.NewRez)
+			{
+				m_scriptEngine.m_EventQueueManager.AddToScriptQueue(this, "changed", new DetectParams[0], new Object[] { new LSL_Types.LSLInteger(256) });
+			} 
+			else if (stateSource == StateSource.PrimCrossing)
+			{
+				// CHANGED_REGION
+				m_scriptEngine.m_EventQueueManager.AddToScriptQueue(this, "changed", new DetectParams[0], new Object[] { new LSL_Types.LSLInteger(512) });
+			}
 
-        private enum LUType
-        {
-            Unknown = 0,
-            Load = 1,
-            Unload = 2
-        }
+			#endregion
 
-        public Dictionary<uint, InstancesData> MacroScripts = new Dictionary<uint, InstancesData>();
-        public Compiler LSLCompiler;
+			IsCompiling = false;
+		}
 
-        public Scene World
-        {
-            get { return m_scriptEngine.World; }
-        }
+		#endregion
 
-        #endregion
+		#region Event Processing
 
-        #region Error Reporting
-        
-        /// <summary>
-        /// Gets compile errors for the given itemID.
-        /// </summary>
-        /// <param name="ItemID"></param>
-        /// <returns></returns>
-        public string[] GetErrors(UUID ItemID)
-        {
-        	while(Errors[ItemID] == null)
-        	{
-        		Thread.Sleep(500);
-        	}
-        	string[] Error = Errors[ItemID];
-        	Errors.Remove(ItemID);
-        	if(Error[0] == "TRUE")
-        		return new string[0];
-        	return Error;
-        }
+		public void SetEventParams(DetectParams[] qParams)
+		{
+			if (!Running || Disabled)
+				return;
 
-        #endregion
+			if (qParams.Length > 0)
+				LastDetectParams = qParams;
 
-        #region Object init/shutdown
+			if (EventDelayTicks != 0) 
+			{
+				if (DateTime.Now.Ticks < NextEventTimeTicks)
+					throw new Exception();
 
-        public ScriptEngine m_scriptEngine;
+				NextEventTimeTicks = DateTime.Now.Ticks + EventDelayTicks;
+			}
+		}
 
-        public ScriptManager(ScriptEngine scriptEngine)
-        {
-            m_scriptEngine = scriptEngine;
-            ReadConfig();
-            LSLCompiler = new Compiler(m_scriptEngine);
-        }
-        
-        public void ReadConfig()
-        {
-            // TODO: Requires sharing of all ScriptManagers to single thread
-            PrivateThread = true;
-            LoadUnloadMaxQueueSize = m_scriptEngine.ScriptConfigSource.GetInt(
-                    "LoadUnloadMaxQueueSize", 100);
-            MinMicrothreadScriptThreshold = m_scriptEngine.ScriptConfigSource.GetInt(
-                    "LoadUnloadMaxQueueSizeBeforeMicrothreading", 100);
-        }
+		#endregion
+	}
 
-        public void Start()
-        {
-            m_started = true;
+	#endregion
 
-            AppDomain.CurrentDomain.AssemblyResolve +=
-                    new ResolveEventHandler(CurrentDomain_AssemblyResolve);
+	#region Script Manager
 
-            //
-            // CREATE THREAD
-            // Private or shared
-            //
-            if (PrivateThread)
-            {
-                // Assign one thread per region
-                //scriptLoadUnloadThread = StartScriptLoadUnloadThread();
-            }
-            else
-            {
-                // Shared thread - make sure one exist, then assign it to the private
-                if (staticScriptLoadUnloadThread == null)
-                {
-                    //staticScriptLoadUnloadThread =
-                    //        StartScriptLoadUnloadThread();
-                }
-                scriptLoadUnloadThread = staticScriptLoadUnloadThread;
-            }
-        }
+	public class ScriptManager
+	{
+		#region Declares
 
-        internal void Stop()
-        {
-            foreach (InstancesData script in MacroScripts.Values)
-            {
-                foreach(InstanceData ID in script.Instances)
-                    StopScript(ID.localID,ID.ItemID);
-            }
-        }
+		private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        ~ScriptManager()
-        {
-            // Abort load/unload thread
-            try
-            {
-                if (scriptLoadUnloadThread != null &&
-                        scriptLoadUnloadThread.IsAlive == true)
-                {
-                    scriptLoadUnloadThread.Abort();
-                    //scriptLoadUnloadThread.Join();
-                }
-            }
-            catch
-            {
-            }
-        }
+		private Thread scriptLoadUnloadThread;
+		private static Thread staticScriptLoadUnloadThread = null;
+		private Queue<LUStruct> LUQueue = new Queue<LUStruct>();
+		private static bool PrivateThread;
+		private int LoadUnloadMaxQueueSize;
+		private int MinMicrothreadScriptThreshold;
+		private Object scriptLock = new Object();
+		private bool m_started = false;
+		private Dictionary<InstanceData, DetectParams[]> detparms = new Dictionary<InstanceData, DetectParams[]>();
+		public Dictionary<UUID, string[]> Errors = new Dictionary<UUID, string[]>();
 
-        #endregion
+		// Load/Unload structure
+		private struct LUStruct
+		{
+			public InstanceData ID;
+			public LUType Action;
+		}
 
-        #region Load / Unload scripts (Thread loop)
+		private enum LUType
+		{
+			Unknown = 0,
+			Load = 1,
+			Unload = 2
+		}
 
-        /// <summary>
-        /// Main Loop that starts/stops all scripts in the LUQueue.
-        /// </summary>
-        public void DoScriptsLoadUnload()
-        {
-            if (!m_started)
-                return;
+		public Compiler LSLCompiler;
 
-            List<IEnumerator> StartParts = new List<IEnumerator>();
-            List<IEnumerator> StopParts = new List<IEnumerator>();
-            lock (LUQueue)
-            {
-            	if (LUQueue.Count > 0)
-            	{
-            		int i = 0;
-            		while (i < LUQueue.Count)
-            		{
-            			LUStruct item = LUQueue.Dequeue();
+		public Scene World {
+			get { return m_scriptEngine.World; }
+		}
 
-            			if (item.Action == LUType.Unload)
-            			{
-            				StopParts.Add(item.ID.CloseAndDispose().GetEnumerator());
-            			}
-            			else if (item.Action == LUType.Load)
-            			{
-            				StartParts.Add(item.ID.Start());
-            			}
-            			i++;
-            		}
-            	}
-            }
-            lock (StopParts)
-            {
-                int i = 0;
-                while (StopParts.Count > 0 && i < 1000)
-                {
-                    i++;
+		#endregion
 
-                    bool running = false;
-                    try
-                    {
-                        running = StopParts[i % StopParts.Count].MoveNext();
-                    }
-                    catch (Exception)
-                    {
-                    }
+		#region Error Reporting
 
-                    if (!running)
-                        StopParts.Remove(StopParts[i % StopParts.Count]);
-                }
-            }
-            lock (StartParts)
-            {
-                int i = 0;
-                while (StartParts.Count > 0 && i < 1000)
-                {
-                    i++;
+		/// <summary>
+		/// Gets compile errors for the given itemID.
+		/// </summary>
+		/// <param name="ItemID"></param>
+		/// <returns></returns>
+		public string[] GetErrors(UUID ItemID)
+		{
+			while (Errors[ItemID] == null) {
+				Thread.Sleep(500);
+			}
+			string[] Error = Errors[ItemID];
+			Errors.Remove(ItemID);
+			if (Error[0] == "TRUE")
+				return new string[0];
+			return Error;
+		}
 
-                    bool running = false;
-                    try
-                    {
-                        running = StartParts[i % StartParts.Count].MoveNext();
-                    }
-                    catch (Exception)
-                    {
-                    }
+		#endregion
 
-                    if (!running)
-                        StartParts.Remove(StartParts[i % StartParts.Count]);
-                }
-            }
-        }
+		#region Object init/shutdown
 
-        #endregion
+		public ScriptEngine m_scriptEngine;
 
-        #region Helper functions
+		public ScriptManager(ScriptEngine scriptEngine)
+		{
+			m_scriptEngine = scriptEngine;
+			ReadConfig();
+			LSLCompiler = new Compiler(m_scriptEngine);
+		}
 
-        private static Assembly CurrentDomain_AssemblyResolve(
-                object sender, ResolveEventArgs args)
-        {
-            return Assembly.GetExecutingAssembly().FullName == args.Name ?
-                    Assembly.GetExecutingAssembly() : null;
-        }
+		public void ReadConfig()
+		{
+			// TODO: Requires sharing of all ScriptManagers to single thread
+			PrivateThread = true;
+			LoadUnloadMaxQueueSize = m_scriptEngine.ScriptConfigSource.GetInt("LoadUnloadMaxQueueSize", 100);
+			MinMicrothreadScriptThreshold = m_scriptEngine.ScriptConfigSource.GetInt("LoadUnloadMaxQueueSizeBeforeMicrothreading", 100);
+		}
 
-        #endregion
+		public void Start()
+		{
+			m_started = true;
 
-        #region Start/Stop script queue
+			AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(CurrentDomain_AssemblyResolve);
 
-        /// <summary>
-        /// Fetches, loads and hooks up a script to an objects events
-        /// </summary>
-        /// <param name="itemID"></param>
-        /// <param name="localID"></param>
-        public void StartScript(uint localID, UUID itemID, string Script, int startParam, bool postOnRez, StateSource statesource)
-        {
-        	InstanceData id = null;
-            lock (LUQueue)
-            {
-                if ((LUQueue.Count >= LoadUnloadMaxQueueSize) && m_started)
-                {
-                    m_log.Error("[" +
-                                m_scriptEngine.ScriptEngineName +
-                                "]: ERROR: Load/unload queue item count is at " +
-                                LUQueue.Count +
-                                ". Config variable \"LoadUnloadMaxQueueSize\" "+
-                                "is set to " + LoadUnloadMaxQueueSize +
-                                ", so ignoring new script.");
+			//
+			// CREATE THREAD
+			// Private or shared
+			//
+			if (PrivateThread) {
+				// Assign one thread per region
+				//scriptLoadUnloadThread = StartScriptLoadUnloadThread();
+			} else {
+				// Shared thread - make sure one exist, then assign it to the private
+				if (staticScriptLoadUnloadThread == null) {
+					//staticScriptLoadUnloadThread =
+					//        StartScriptLoadUnloadThread();
+				}
+				scriptLoadUnloadThread = staticScriptLoadUnloadThread;
+			}
+		}
 
-                    return;
-                }
-                id = GetScript(localID, itemID);
-                if (id != null)
-                	StopScript(localID,itemID);
-                id = new InstanceData(this);
-                id.ItemID = itemID;
-                id.localID = localID;
-                id.PostOnRez = postOnRez;
-                id.StartParam = startParam;
-                id.stateSource = statesource;
-                id.State = "default";
-                id.Running = true;
-                id.Disabled = false;
-                id.Source = Script;
-                id.PostOnRez = postOnRez;
-                LUStruct ls = new LUStruct();
-                ls.Action = LUType.Load;
-                ls.ID = id;
-                LUQueue.Enqueue(ls);
-            }
-        }
+		internal void Stop()
+		{
+			foreach (InstanceData ID in m_scriptEngine.ScriptProtection.GetAllScripts())
+					StopScript(ID.localID, ID.ItemID);
+		}
 
-        /// <summary>
-        /// Disables and unloads a script
-        /// </summary>
-        /// <param name="localID"></param>
-        /// <param name="itemID"></param>
-        public void StopScript(uint localID, UUID itemID)
-        {
-            InstanceData data = GetScript(localID, itemID);
-            if(data == null)
-            	return;
-            if (data.Disabled)
-                return; 
+		~ScriptManager()
+		{
+			// Abort load/unload thread
+			try {
+				if (scriptLoadUnloadThread != null && scriptLoadUnloadThread.IsAlive == true) {
+					scriptLoadUnloadThread.Abort();
+					//scriptLoadUnloadThread.Join();
+				}
+			} catch {
+			}
+		}
+
+		#endregion
+
+		#region Load / Unload scripts (Thread loop)
+
+		/// <summary>
+		/// Main Loop that starts/stops all scripts in the LUQueue.
+		/// </summary>
+		public void DoScriptsLoadUnload()
+		{
+			if (!m_started)
+				return;
+
+			List<IEnumerator> StartParts = new List<IEnumerator>();
+			List<IEnumerator> StopParts = new List<IEnumerator>();
+			lock (LUQueue) {
+				if (LUQueue.Count > 0) {
+					int i = 0;
+					while (i < LUQueue.Count) {
+						LUStruct item = LUQueue.Dequeue();
+
+						if (item.Action == LUType.Unload) {
+							StopParts.Add(item.ID.CloseAndDispose().GetEnumerator());
+						} else if (item.Action == LUType.Load) {
+							StartParts.Add(item.ID.Start());
+						}
+						i++;
+					}
+				}
+			}
+			lock (StopParts) {
+				int i = 0;
+				while (StopParts.Count > 0 && i < 1000) {
+					i++;
+
+					bool running = false;
+					try {
+						running = StopParts[i % StopParts.Count].MoveNext();
+					} catch (Exception) {
+					}
+
+					if (!running)
+						StopParts.Remove(StopParts[i % StopParts.Count]);
+				}
+			}
+			lock (StartParts) {
+				int i = 0;
+				while (StartParts.Count > 0 && i < 1000) {
+					i++;
+
+					bool running = false;
+					try {
+						running = StartParts[i % StartParts.Count].MoveNext();
+					} catch (Exception) {
+					}
+
+					if (!running)
+						StartParts.Remove(StartParts[i % StartParts.Count]);
+				}
+			}
+		}
+
+		#endregion
+
+		#region Helper functions
+
+		private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
+		{
+			return Assembly.GetExecutingAssembly().FullName == args.Name ? Assembly.GetExecutingAssembly() : null;
+		}
+
+		#endregion
+
+		#region Start/Stop script queue
+
+		/// <summary>
+		/// Fetches, loads and hooks up a script to an objects events
+		/// </summary>
+		/// <param name="itemID"></param>
+		/// <param name="localID"></param>
+		public void StartScript(uint localID, UUID itemID, string Script, int startParam, bool postOnRez, StateSource statesource)
+		{
+			InstanceData id = null;
+			lock (LUQueue) {
+				if ((LUQueue.Count >= LoadUnloadMaxQueueSize) && m_started) {
+					m_log.Error("[" + m_scriptEngine.ScriptEngineName + "]: ERROR: Load/unload queue item count is at " + LUQueue.Count + ". Config variable \"LoadUnloadMaxQueueSize\" " + "is set to " + LoadUnloadMaxQueueSize + ", so ignoring new script.");
+
+					return;
+				}
+				id = GetScript(localID, itemID);
+				if (id != null)
+					StopScript(localID, itemID);
+				id = new InstanceData(this);
+				id.ItemID = itemID;
+				id.localID = localID;
+				id.PostOnRez = postOnRez;
+				id.StartParam = startParam;
+				id.stateSource = statesource;
+				id.State = "default";
+				id.Running = true;
+				id.Disabled = false;
+				id.Source = Script;
+				id.PostOnRez = postOnRez;
+				LUStruct ls = new LUStruct();
+				ls.Action = LUType.Load;
+				ls.ID = id;
+				LUQueue.Enqueue(ls);
+			}
+		}
+
+		/// <summary>
+		/// Disables and unloads a script
+		/// </summary>
+		/// <param name="localID"></param>
+		/// <param name="itemID"></param>
+		public void StopScript(uint localID, UUID itemID)
+		{
+			InstanceData data = GetScript(localID, itemID);
+			if (data == null)
+				return;
+			if (data.Disabled)
+				return;
 			LUStruct ls = new LUStruct();
-            InstanceData id = GetScript(localID, itemID);
-            ls.ID = data;
-            ls.Action = LUType.Unload;
-            lock (LUQueue)
-            {
-            	LUQueue.Enqueue(ls);
-            }
-        }
+			InstanceData id = GetScript(localID, itemID);
+			ls.ID = data;
+			ls.Action = LUType.Unload;
+			lock (LUQueue) {
+				LUQueue.Enqueue(ls);
+			}
+		}
 
-        #endregion
+		#endregion
 
-        #region Internal functions to keep track of script
+		#region Internal functions to keep track of script
 
-        /// <summary>
-        /// Gets all itemID's of scripts in the given localID.
-        /// </summary>
-        /// <param name="localID"></param>
-        /// <returns></returns>
-        public List<UUID> GetScriptKeys(uint localID)
-        {
-        	if(!MacroScripts.ContainsKey(localID))
-        		return new List<UUID>();
-            return MacroScripts[localID].ItemIDs;
-        }
+		/// <summary>
+		/// Gets all itemID's of scripts in the given localID.
+		/// </summary>
+		/// <param name="localID"></param>
+		/// <returns></returns>
+		public List<UUID> GetScriptKeys(uint localID)
+		{
+			List<UUID> UUIDs = new List<UUID>();
+			foreach(InstanceData ID in m_scriptEngine.ScriptProtection.GetScript(localID) as InstanceData[])
+				UUIDs.Add(ID.ItemID);
+			return UUIDs;
+		}
 
-        /// <summary>
-        /// Gets the localID of an object from its ItemID.
-        /// </summary>
-        /// <param name="itemID"></param>
-        /// <returns></returns>
-        public InstanceData GetScriptByItemID(UUID itemID)
-        {
-            foreach(KeyValuePair<uint, InstancesData> IDs in MacroScripts)
-            {
-                if (IDs.Value.ItemIDs.Contains(itemID))
-                {
-                    for (int i = 0; i < IDs.Value.Instances.Count; i++)
-                    {
-                        if (IDs.Value.Instances[i].ItemID == itemID)
-                        {
-                            return IDs.Value.Instances[i];
-                        }
-                    }
-                }
-            }
-            return null;
-        }
+		/// <summary>
+		/// Gets the script by itemID.
+		/// </summary>
+		/// <param name="itemID"></param>
+		/// <returns></returns>
+		public InstanceData GetScriptByItemID(UUID itemID)
+		{
+			return (InstanceData)m_scriptEngine.ScriptProtection.GetScript(itemID);
+		}
 
-        #region InstanceData
-        
-        /// <summary>
+		#region InstanceData
+
+		/// <summary>
 		/// Gets the InstanceData by the prims local and itemID.
 		/// </summary>
 		/// <param name="localID"></param>
 		/// <param name="itemID"></param>
 		/// <returns></returns>
-        public InstanceData GetScript(uint localID, UUID itemID)
-        {
-            lock (scriptLock)
-            {
-                if (!MacroScripts.ContainsKey(localID))
-                    return null;
-                for (int i = 0; i < MacroScripts[localID].Instances.Count; i++)
-                {
-                    if (MacroScripts[localID].Instances[i].ItemID == itemID)
-                    {
-                        return MacroScripts[localID].Instances[i];
-                    }
-                }
-                return null;
-            }
-        }
-        
+		public InstanceData GetScript(uint localID, UUID itemID)
+		{
+			return (InstanceData)m_scriptEngine.ScriptProtection.GetScript(localID, itemID);
+		}
+
 		/// <summary>
 		/// Updates or adds the given InstanceData to the list of known scripts.
 		/// </summary>
 		/// <param name="id"></param>
-        public void UpdateScriptInstanceData(InstanceData id)
-        {
-            lock (scriptLock)
-            {
-                InstancesData IDs = null;
-                if (MacroScripts.ContainsKey(id.localID))
-                {
-                    MacroScripts.TryGetValue(id.localID, out IDs);
-                    IDs.Instances.Remove(id);
-                    MacroScripts.Remove(id.localID);
-                }
-                else
-                {
-                    IDs = new InstancesData();
-                    IDs.localID = id.localID;
-                    IDs.AssemblyName = id.AssemblyName;
-                }
-                IDs.ItemIDs.Add(id.ItemID);
-                IDs.Instances.Add(id);
-                MacroScripts.Add(id.localID, IDs);
-            }
-        }
+		public void UpdateScriptInstanceData(InstanceData id)
+		{
+			m_scriptEngine.ScriptProtection.AddNewScript(id);
+		}
 
-        /// <summary>
-        /// Removes the given InstanceData from all known scripts.
-        /// </summary>
-        /// <param name="id"></param>
-        public void RemoveScript(InstanceData id)
-        {
-            lock (scriptLock)
-            {
-                InstancesData IDs = null;
-                if (MacroScripts.ContainsKey(id.localID))
-                {
-                    MacroScripts.TryGetValue(id.localID, out IDs);
-                    IDs.Instances.Remove(id);
-                    IDs.ItemIDs.Remove(id.ItemID);
-                    MacroScripts.Remove(id.localID);
-                    MacroScripts.Add(id.localID, IDs);
-                }
-            }
-        }
+		/// <summary>
+		/// Removes the given InstanceData from all known scripts.
+		/// </summary>
+		/// <param name="id"></param>
+		public void RemoveScript(InstanceData id)
+		{
+			m_scriptEngine.ScriptProtection.RemoveScript(id);
+		}
 
-        #endregion
-        
-		#region InstancesData
-        
-		public InstancesData GetMacroScript(uint localID)
-        {
-            lock (scriptLock)
-            {
-                InstancesData id = null;
-                if (!MacroScripts.ContainsKey(localID))
-                    return null;
+		#endregion
 
-                MacroScripts.TryGetValue(localID, out id);
-                return id;
-            }
-        }
+		internal void SetMinEventDelay(InstanceData ID, double delay)
+		{
+			ID.EventDelayTicks = (long)delay;
+			UpdateScriptInstanceData(ID);
+		}
 
-        public void UpdateMacroScript(InstancesData MacroData)
-        {
-            lock (scriptLock)
-            {
-                if (MacroScripts.ContainsKey(MacroData.localID))
-                    MacroScripts.Remove(MacroData.localID);
-                MacroScripts.Add(MacroData.localID, MacroData);
-            }
-        }
+		#endregion
 
-        #endregion
-		
-        internal void SetMinEventDelay(InstanceData ID, double delay)
-        {
-            ID.EventDelayTicks = (long)delay;
-            UpdateScriptInstanceData(ID);
-        }
+		#region Other
+		public static string ReadExternalWebsite(string URL)
+		{
+			// External IP Address (get your external IP locally)
+			String externalIp = "";
+			UTF8Encoding utf8 = new UTF8Encoding();
 
-        #endregion
-		
-        #region Other
-        public static string ReadExternalWebsite(string URL)
-        {
-            // External IP Address (get your external IP locally)
-            String externalIp = "";
-            UTF8Encoding utf8 = new UTF8Encoding();
+			WebClient webClient = new WebClient();
+			try {
+				externalIp = utf8.GetString(webClient.DownloadData(URL));
+			} catch (Exception) {
+			}
+			return externalIp;
+		}
+		#endregion
+	}
 
-            WebClient webClient = new WebClient();
-            try
-            {
-                externalIp = utf8.GetString(webClient.DownloadData(URL));
-            }
-            catch (Exception) { }
-            return externalIp;
-        }
-        #endregion
-    }
-    
-    #endregion
+	#endregion
 }

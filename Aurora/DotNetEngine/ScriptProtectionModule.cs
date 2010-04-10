@@ -40,7 +40,8 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         ThreatLevel m_MaxThreatLevel = 0;
         bool m_OSFunctionsEnabled = false;
 	    internal Dictionary<string, List<UUID> > m_FunctionPerms = new Dictionary<string, List<UUID> >();
-
+		public Dictionary<string, InstanceData> PreviouslyCompiled = new Dictionary<string, InstanceData>();
+        
         #endregion
         
         #region Constructor
@@ -269,6 +270,92 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             }
             SRCWanted.Add(ClassName);
             WantedClassesByItemID.Add(itemID, SRCWanted);
+        }
+        
+        #endregion
+        
+        #region Previously Compiled Scripts
+        
+        public void AddPreviouslyCompiled(string source, IInstanceData ID)
+        {
+        	if(!PreviouslyCompiled.ContainsKey(source))
+        	{
+        		PreviouslyCompiled.Add(source, (InstanceData)ID);
+        	}
+        }
+        
+        public IInstanceData TryGetPreviouslyCompiledScript(string source)
+        {
+        	InstanceData ID = null;
+        	PreviouslyCompiled.TryGetValue(source, out ID);
+        	return (IInstanceData)ID;
+        }
+        private class ScriptItem
+        {
+        	public UUID ItemID;
+        	public uint LocalID;
+        }
+        
+        public Dictionary<UUID, uint> ScriptsItems = new Dictionary<UUID, uint>();
+        public Dictionary<uint, Dictionary<UUID, InstanceData>> Scripts = new Dictionary<uint, Dictionary<UUID, InstanceData>>();
+        public IInstanceData GetScript(uint localID, UUID itemID)
+        {
+        	Dictionary<UUID, InstanceData> Instances = Scripts[localID]; 
+        	return Instances[itemID];
+        }
+        
+        public IInstanceData GetScript(UUID itemID)
+        {
+        	uint LocalID = ScriptsItems[itemID];
+        	return GetScript(LocalID, itemID);
+        }
+        
+        public IInstanceData[] GetScript(uint localID)
+        {
+        	Dictionary<UUID, InstanceData> Instances = Scripts[localID];
+        	List<IInstanceData> RetVal = new List<IInstanceData>();
+        	foreach(InstanceData ID in Instances.Values)
+        	{
+        		RetVal.Add((IInstanceData)ID);
+        	}
+        	return RetVal.ToArray();
+        }
+        
+        public void AddNewScript(IInstanceData Data)
+        {
+        	InstanceData ID = (InstanceData)Data;
+        	ScriptsItems.Add(ID.ItemID, ID.localID);
+        	Dictionary<UUID, InstanceData> Instances = new Dictionary<UUID, InstanceData>();
+        	if(Scripts.ContainsKey(ID.localID))
+        	{
+        		Scripts.TryGetValue(ID.localID, out Instances);
+        		Scripts[ID.localID] = null;
+        	}
+        	Instances.Add(ID.ItemID,ID);
+        	Scripts[ID.localID] = Instances;
+        }
+        
+        public IInstanceData[] GetAllScripts()
+        {
+        	List<IInstanceData> Ids = new List<IInstanceData>();
+        	foreach(Dictionary<UUID, InstanceData> Instances in Scripts.Values)
+        	{
+        		foreach(InstanceData ID in Instances.Values)
+        		{
+        			Ids.Add(ID);
+        		}
+        	}
+        	return Ids.ToArray();
+        }
+        
+        public void RemoveScript(IInstanceData Data)
+        {
+        	InstanceData ID = (InstanceData)Data;
+        	ScriptsItems.Remove(ID.ItemID);
+        	Dictionary<UUID, InstanceData> Instances = new Dictionary<UUID, InstanceData>();
+        	Instances = Scripts[ID.localID];
+        	Instances.Remove(ID.ItemID);
+        	Scripts[ID.localID] = Instances;
         }
         
         #endregion

@@ -224,11 +224,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         {
             // Determine all scripts in Object and add to their queue
             
-            InstancesData IDs = m_ScriptEngine.m_ScriptManager.GetMacroScript(localID);
-            if (IDs == null)
-                return false;
-
-            foreach (InstanceData ID in IDs.Instances)
+            foreach (InstanceData ID in m_ScriptEngine.ScriptProtection.GetScript(localID))
             {
                 // Add to each script in that object
                 AddToScriptQueue(ID, FunctionName, qParams, param);

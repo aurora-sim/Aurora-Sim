@@ -29,7 +29,9 @@ using System;
 using System.Collections.Generic;
 using OpenMetaverse;
 using Nini.Config;
+using OpenSim.Framework;
 using OpenSim.Region.Framework.Scenes;
+using OpenSim.Region.ScriptEngine.Shared;
 
 namespace OpenSim.Region.ScriptEngine.Interfaces
 {
@@ -48,9 +50,17 @@ namespace OpenSim.Region.ScriptEngine.Interfaces
         bool AllowMacroScripting { get; }
         ThreatLevel GetThreatLevel();
         void CheckThreatLevel(ThreatLevel level, string function, SceneObjectPart SOP);
+        IInstanceData TryGetPreviouslyCompiledScript(string source);
+        void AddPreviouslyCompiled(string source, IInstanceData ID);
+        IInstanceData GetScript(uint localID, UUID itemID);
+        IInstanceData GetScript(UUID itemID);
+        IInstanceData[] GetScript(uint localID);
+        void AddNewScript(IInstanceData Data);
+        IInstanceData[] GetAllScripts();
+        void RemoveScript(IInstanceData Data);
     }
-    
-    public enum ThreatLevel
+	
+	public enum ThreatLevel
     {
         None = 0,
         Nuisance = 1,
@@ -61,4 +71,52 @@ namespace OpenSim.Region.ScriptEngine.Interfaces
         VeryHigh = 6,
         Severe = 7
     };
+	
+	public interface IScript
+    {
+        string[] GetApis();
+        void InitApi(string name, IScriptApi data);
+
+        int GetStateEventFlags(string state);
+        bool ExecuteEvent(string state, string FunctionName, object[] args);
+        Dictionary<string,Object> GetVars();
+        void SetVars(Dictionary<string,Object> vars);
+        void ResetVars();
+
+        void Close();
+        string Name { get;}
+    }
+	
+	public class IInstanceData
+	{
+		IScript Script;
+		string State;
+		bool Running;
+		bool Disabled;
+		string Source;
+		string ClassSource;
+		int StartParam;
+		StateSource stateSource;
+		AppDomain AppDomain;
+		Dictionary<string, IScriptApi> Apis;
+		Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> LineMap;
+		
+		SceneObjectPart part;
+
+		long EventDelayTicks = 0;
+		long NextEventTimeTicks = 0;
+		UUID AssetID;
+		string AssemblyName;
+		//This is the UUID of the actual script.
+		UUID ItemID;
+		//This is the localUUID of the object the script is in.
+		uint localID;
+		string ClassID;
+		bool PostOnRez;
+		TaskInventoryItem InventoryItem;
+		ScenePresence presence;
+		DetectParams[] LastDetectParams;
+		bool IsCompiling;
+		bool ErrorsWaiting;
+	}
 }

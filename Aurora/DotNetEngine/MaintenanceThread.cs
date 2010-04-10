@@ -95,7 +95,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         /// </summary>
         private void StopMaintenanceThread()
         {
-            Thread.Sleep(100);
             try
             {
                 if (MaintenanceThreadThread != null && MaintenanceThreadThread.IsAlive)
@@ -103,9 +102,9 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                     MaintenanceThreadThread.Abort();
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                //m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: Exception stopping maintenence thread: " + ex.ToString());
+                m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: Exception stopping maintenence thread: " + ex.ToString());
             }
         }
 
