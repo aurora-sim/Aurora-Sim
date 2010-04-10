@@ -32,7 +32,7 @@ namespace Aurora.DataManager.SQLite
 
         public string AbuseReports()
         {
-            string query = "SELECT Number FROM reports ORDER BY Number DESC";
+            string query = "SELECT ReportNumber FROM reports ORDER BY ReportNumber DESC";
             SqliteCommand cmd = new SqliteCommand();
             cmd.CommandText = query;
             IDataReader reader = GetReader(cmd);

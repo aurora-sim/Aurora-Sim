@@ -54,7 +54,7 @@ namespace Aurora.DataManager.MySQL
         }
         public string AbuseReports()
         {
-            string query = "SELECT Number FROM reports ORDER BY Number DESC";
+            string query = "SELECT ReportNumber FROM reports ORDER BY ReportNumber DESC";
             MySqlConnection dbcon = GetLockedConnection();
             IDbCommand result;
             IDataReader reader;

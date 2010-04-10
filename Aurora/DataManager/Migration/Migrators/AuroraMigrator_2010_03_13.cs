@@ -132,11 +132,17 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("AReporter", ColumnTypes.String100),
                 ColDef("OName", ColumnTypes.String100),
                 ColDef("OUUID", ColumnTypes.String100),
-                ColDef("AName", ColumnTypes.String100, true),
-                ColDef("ADetails", ColumnTypes.String100),
+                ColDef("AName", ColumnTypes.String100),
+                ColDef("Location", ColumnTypes.String100),
+                ColDef("ADetails", ColumnTypes.String512),
                 ColDef("OPos", ColumnTypes.String100),
                 ColDef("Estate", ColumnTypes.String100),
-                ColDef("Summary", ColumnTypes.String100)
+                ColDef("Summary", ColumnTypes.String100),
+                ColDef("ReportNumber", ColumnTypes.String100,true),
+                ColDef("AssignedTo", ColumnTypes.String100),
+                ColDef("Active", ColumnTypes.String100),
+                ColDef("Checked", ColumnTypes.String100),
+                ColDef("Notes", ColumnTypes.String1024)
                 ));
 
             AddSchema("assetMediaURL", ColDefs(
