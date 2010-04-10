@@ -141,22 +141,22 @@ namespace Aurora.Modules.AbuseReportsGUI
 
         private void textBox7_TextChanged(object sender, EventArgs e)
         {
-            GenericData.Update("abusereports", new string[] { AssignedTo.Text }, new string[] { "AssignedTo" }, new string[] { "number" }, new string[] { formNumber.ToString() });
+            GenericData.Update("abusereports", new string[] { AssignedTo.Text }, new string[] { "AssignedTo" }, new string[] { "ReportNumber" }, new string[] { formNumber.ToString() });
         }
 
         private void textBox8_TextChanged(object sender, EventArgs e)
         {
-            GenericData.Update("abusereports", new string[] { Active.Text }, new string[] { "Active" }, new string[] { "number" }, new string[] { formNumber.ToString() });
+            GenericData.Update("abusereports", new string[] { Active.Text }, new string[] { "Active" }, new string[] { "ReportNumber" }, new string[] { formNumber.ToString() });
         }
 
         private void textBox10_TextChanged(object sender, EventArgs e)
         {
-            GenericData.Update("abusereports", new string[] { Checked.Text }, new string[] { "Checked" }, new string[] { "number" }, new string[] { formNumber.ToString() });
+            GenericData.Update("abusereports", new string[] { Checked.Text }, new string[] { "Checked" }, new string[] { "ReportNumber" }, new string[] { formNumber.ToString() });
         }
 
         private void textBox12_TextChanged(object sender, EventArgs e)
         {
-            GenericData.Update("abusereports", new string[] { Notes.Text }, new string[] { "Notes" }, new string[] { "number" }, new string[] { formNumber.ToString() });
+            GenericData.Update("abusereports", new string[] { Notes.Text }, new string[] { "Notes" }, new string[] { "ReportNumber" }, new string[] { formNumber.ToString() });
         }
     }
 }
