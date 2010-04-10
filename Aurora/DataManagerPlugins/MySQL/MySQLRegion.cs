@@ -185,6 +185,7 @@ namespace Aurora.DataManager.MySQL
         {
             List<OfflineMessage> messages = new List<OfflineMessage>();
             List<string> Messages = Query("ToUUID", agentID, "offlinemessages", "*");
+            Delete("offlinemessages", new string[] { "ToUUID" }, new string[] { agentID });
             int i = 0;
             OfflineMessage Message = new OfflineMessage();
             foreach (string part in Messages)
