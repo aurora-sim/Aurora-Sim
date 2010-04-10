@@ -796,14 +796,14 @@ namespace Aurora.Modules
             }
         }
 
-        public void UpdateAvatarProperties(IClientAPI remoteClient, OpenSim.Framework.UserProfileData newProfile/*, bool allowpublish, bool maturepublish*/)
+        public void UpdateAvatarProperties(IClientAPI remoteClient, OpenSim.Framework.UserProfileData newProfile, bool allowpublish, bool maturepublish)
         {
             int allowpublishINT = 0;
             int maturepublishINT = 0;
-            /*if (allowpublish == true)
+            if (allowpublish == true)
                 allowpublishINT = 1;
             if (maturepublish == true)
-                maturepublishINT = 1;*/
+                maturepublishINT = 1;
             AuroraProfileData Profile = ProfileData.GetProfileInfo(remoteClient.AgentId);
             // if it's the profile of the user requesting the update, then we change only a few things.
 
@@ -1299,34 +1299,24 @@ namespace Aurora.Modules
                 List<string> SimNames = new List<string>();
                 List<string> SimXs = new List<string>();
                 List<string> SimYs = new List<string>();
+                List<object> Parcels = null;
                 foreach (Scene scene in m_Scenes)
                 {
                     List<ILandObject> AllParcels = scene.LandChannel.AllParcels();
-                    string simNameTemp = "";
-                    string simX = "";
-                    string simY = "";
                     foreach (ILandObject LandObject in AllParcels)
                     {
                         if (LandObject.LandData.OwnerID == client.AgentId)
                         {
-                            simNameTemp = ProfileData.Query("select regionName from regions where uuid = '" + LandObject.RegionUUID.ToString() + "'")[0];
-                            SimNames.Add(simNameTemp);
-                            simX = ProfileData.Query("select locX from regions where uuid = '" + LandObject.RegionUUID.ToString() + "'")[0];
-                            SimXs.Add(simX);
-                            simY = ProfileData.Query("select locX from regions where uuid = '" + LandObject.RegionUUID.ToString() + "'")[0];
-                            SimYs.Add(simY);
+                            List<string> temp = GenericData.Query("uuid",LandObject.RegionUUID.ToString(), "regions", "regionName,locX,locY");
+                            SimNames.Add(temp[0]);
+                            SimXs.Add(temp[1]);
+                            SimYs.Add(temp[2]);
                             LandQueried.Add(LandObject);
                         }
                     }
                 }
-                ScenePresence SP;
-                Scene AVscene = (Scene)client.Scene;
-                AVscene.TryGetScenePresence(client.AgentId, out SP);
-                /*LLClientView rcv;
-                if (SP.ClientView.TryGet(out rcv))
-                {
-                    rcv.SendPlacesQuery(SimNames, LandQueried, QueryID, client.AgentId, TransactionID, SimXs, SimYs);
-                }*/
+                Parcels = new List<object>(LandQueried.ToArray());
+                client.SendPlacesQuery(SimNames, Parcels, QueryID, client.AgentId, TransactionID, SimXs, SimYs);
             }
         }
 

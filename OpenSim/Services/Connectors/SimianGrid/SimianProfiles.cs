@@ -311,7 +311,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
             }
         }
 
-        private void UpdateAvatarPropertiesHandler(IClientAPI client, UserProfileData profileData)
+        private void UpdateAvatarPropertiesHandler(IClientAPI client, UserProfileData profileData, bool AllowPublish, bool MaturePublish)
         {
             OSDMap map = new OSDMap
             {

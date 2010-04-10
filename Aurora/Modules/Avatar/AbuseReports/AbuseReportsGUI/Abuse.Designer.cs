@@ -28,7 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Abuse));
             this.Category = new System.Windows.Forms.TextBox();
             this.ReporterName = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
@@ -58,6 +57,9 @@
             this.ObjectPos = new System.Windows.Forms.TextBox();
             this.label14 = new System.Windows.Forms.Label();
             this.Notes = new System.Windows.Forms.TextBox();
+            this.label15 = new System.Windows.Forms.Label();
+            this.GotoARNumber = new System.Windows.Forms.TextBox();
+            this.GotoAR = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // Category
@@ -98,11 +100,11 @@
             // 
             this.label3.AutoSize = true;
             this.label3.BackColor = System.Drawing.Color.Transparent;
-            this.label3.Location = new System.Drawing.Point(229, 9);
+            this.label3.Location = new System.Drawing.Point(203, 9);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(25, 13);
+            this.label3.Size = new System.Drawing.Size(77, 13);
             this.label3.TabIndex = 4;
-            this.label3.Text = "Info";
+            this.label3.Text = "Abuse Reports";
             this.label3.TextAlign = System.Drawing.ContentAlignment.TopCenter;
             // 
             // Previous
@@ -133,9 +135,9 @@
             this.label4.BackColor = System.Drawing.Color.Transparent;
             this.label4.Location = new System.Drawing.Point(32, 28);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(68, 13);
+            this.label4.Size = new System.Drawing.Size(82, 13);
             this.label4.TabIndex = 7;
-            this.label4.Text = "Abuse Count";
+            this.label4.Text = "Abuse Report #";
             // 
             // CardNumber
             // 
@@ -321,11 +323,40 @@
             this.Notes.TabIndex = 28;
             this.Notes.TextChanged += new System.EventHandler(this.textBox12_TextChanged);
             // 
+            // label15
+            // 
+            this.label15.AutoSize = true;
+            this.label15.Location = new System.Drawing.Point(128, 371);
+            this.label15.Name = "label15";
+            this.label15.Size = new System.Drawing.Size(104, 13);
+            this.label15.TabIndex = 29;
+            this.label15.Text = "Goto Abuse Report: ";
+            // 
+            // GotoARNumber
+            // 
+            this.GotoARNumber.Location = new System.Drawing.Point(229, 368);
+            this.GotoARNumber.Name = "GotoARNumber";
+            this.GotoARNumber.Size = new System.Drawing.Size(51, 20);
+            this.GotoARNumber.TabIndex = 30;
+            // 
+            // GotoAR
+            // 
+            this.GotoAR.Location = new System.Drawing.Point(282, 366);
+            this.GotoAR.Name = "GotoAR";
+            this.GotoAR.Size = new System.Drawing.Size(47, 23);
+            this.GotoAR.TabIndex = 31;
+            this.GotoAR.Text = "Go";
+            this.GotoAR.UseVisualStyleBackColor = true;
+            this.GotoAR.Click += new System.EventHandler(this.GotoAR_Click);
+            // 
             // Abuse
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(482, 401);
+            this.Controls.Add(this.GotoAR);
+            this.Controls.Add(this.GotoARNumber);
+            this.Controls.Add(this.label15);
             this.Controls.Add(this.Notes);
             this.Controls.Add(this.label14);
             this.Controls.Add(this.label13);
@@ -395,6 +426,9 @@
         private System.Windows.Forms.TextBox ObjectPos;
         private System.Windows.Forms.Label label14;
         private System.Windows.Forms.TextBox Notes;
+        private System.Windows.Forms.Label label15;
+        private System.Windows.Forms.TextBox GotoARNumber;
+        private System.Windows.Forms.Button GotoAR;
     }
 }
 

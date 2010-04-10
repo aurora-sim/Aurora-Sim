@@ -89,7 +89,7 @@ namespace OpenSim.Framework
 
     public delegate void RequestAvatarProperties(IClientAPI remoteClient, UUID avatarID);
 
-    public delegate void UpdateAvatarProperties(IClientAPI remoteClient, UserProfileData ProfileData);
+    public delegate void UpdateAvatarProperties(IClientAPI remoteClient, UserProfileData ProfileData, bool AllowPublish, bool MaturePublish);
 
     public delegate void SetAlwaysRun(IClientAPI remoteClient, bool SetAlwaysRun);
 
@@ -1483,5 +1483,6 @@ namespace OpenSim.Framework
         
         void SendChangeUserRights(UUID agentID, UUID friendID, int rights);
         void SendTextBoxRequest(string message, int chatChannel, string objectname, string ownerFirstName, string ownerLastName, UUID objectId);
+        void SendPlacesQuery(List<string> simNames, List<object> Places, UUID queryID, UUID agentID, UUID transactionID, List<string> Xs, List<string> Ys);
     }
 }

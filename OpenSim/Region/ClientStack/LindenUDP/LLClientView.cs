@@ -1487,6 +1487,68 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             OutPacket(payPriceReply, ThrottleOutPacketType.Task);
         }
 
+        public void SendPlacesQuery(List<string> simNames, List<object> Places, UUID queryID, UUID agentID, UUID transactionID, List<string> Xs, List<string> Ys)
+        {
+            PlacesReplyPacket PlacesReply = new PlacesReplyPacket();
+            PlacesReplyPacket.QueryDataBlock[] Query = new PlacesReplyPacket.QueryDataBlock[Places.Count + 1];
+            int totalarea = 0;
+            for (int i = 1; i < Places.Count + 1; i++)
+            {
+                PlacesReplyPacket.QueryDataBlock QueryBlock = new PlacesReplyPacket.QueryDataBlock();
+                QueryBlock.ActualArea = ((ILandObject)Places[i - 1]).LandData.Area;
+                QueryBlock.BillableArea = ((ILandObject)Places[i - 1]).LandData.Area;
+                QueryBlock.Desc = Utils.StringToBytes(((ILandObject)Places[i - 1]).LandData.Description);
+                QueryBlock.Dwell = ((ILandObject)Places[i - 1]).LandData.Dwell;
+                QueryBlock.Flags = Convert.ToByte("Mainland");
+                QueryBlock.GlobalX = (float)Convert.ToInt32(Xs[i - 1]);
+                QueryBlock.GlobalY = (float)Convert.ToInt32(Ys[i - 1]);
+                QueryBlock.GlobalZ = 0;
+                QueryBlock.Name = Utils.StringToBytes(((ILandObject)Places[i - 1]).LandData.Name);
+                QueryBlock.OwnerID = ((ILandObject)Places[i - 1]).LandData.OwnerID;
+                QueryBlock.Price = ((ILandObject)Places[i - 1]).LandData.SalePrice;
+                QueryBlock.SimName = Utils.StringToBytes(simNames[i - 1]);
+                QueryBlock.SnapshotID = ((ILandObject)Places[i - 1]).LandData.SnapshotID;
+                Query[i] = QueryBlock;
+                totalarea += ((ILandObject)Places[i - 1]).LandData.Area;
+            }
+            PlacesReplyPacket.QueryDataBlock QueryBlock1 = new PlacesReplyPacket.QueryDataBlock();
+            QueryBlock1.ActualArea = totalarea;
+            QueryBlock1.BillableArea = totalarea;
+            QueryBlock1.Desc = Utils.StringToBytes("");
+            QueryBlock1.Dwell = 0;
+            QueryBlock1.Flags = Convert.ToByte(0);
+            QueryBlock1.GlobalX = 0;
+            QueryBlock1.GlobalY = 0;
+            QueryBlock1.GlobalZ = 0;
+            QueryBlock1.Name = Utils.StringToBytes("");
+            QueryBlock1.OwnerID = UUID.Zero;
+            QueryBlock1.Price = 0;
+            QueryBlock1.SimName = Utils.StringToBytes("");
+            QueryBlock1.SnapshotID = UUID.Zero;
+            Query[0] = QueryBlock1;
+            PlacesReply.QueryData = Query;
+            PlacesReply.AgentData = new PlacesReplyPacket.AgentDataBlock();
+            PlacesReply.AgentData.AgentID = agentID;
+            PlacesReply.AgentData.QueryID = queryID;
+            PlacesReply.TransactionData.TransactionID = transactionID;
+            OutPacket(PlacesReply, ThrottleOutPacketType.Task);
+
+            try
+            {
+                IEventQueue eq = Scene.RequestModuleInterface<IEventQueue>();
+                if (eq != null)
+                {
+                    eq.QueryReply(PlacesReply, agentID);
+                }
+            }
+            catch (Exception ex)
+            {
+                m_log.Error("Unable to send group membership data via eventqueue - exception: " + ex.ToString());
+                m_log.Warn("sending places query data via UDP");
+                OutPacket(PlacesReply, ThrottleOutPacketType.Task);
+            }
+        }
+
         public void SendStartPingCheck(byte seq)
         {
             StartPingCheckPacket pc = (StartPingCheckPacket)PacketPool.Instance.GetPacket(PacketType.StartPingCheck);
@@ -5243,7 +5305,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 UserProfile.UserFlags |= Properties.AllowPublish ? 1 : 0;
                 UserProfile.UserFlags |= Properties.MaturePublish ? 2 : 0;
 
-                handlerUpdateAvatarProperties(this, UserProfile);
+                handlerUpdateAvatarProperties(this, UserProfile, Properties.AllowPublish, Properties.MaturePublish);
             }
             return true;
         }

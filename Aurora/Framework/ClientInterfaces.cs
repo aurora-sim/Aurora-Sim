@@ -46,8 +46,8 @@ namespace Aurora.Framework
         public int PermaBanned { get; set; }
         public int TempBanned { get; set; }
         public bool Temperary = false;
-        private string m_AllowPublish;
-        private string m_MaturePublish;
+        private string m_AllowPublish = "1";
+        private string m_MaturePublish = "0";
         private string m_membershipGroup;
         private List<string> m_interests;
         private Dictionary<UUID, string> m_notes;

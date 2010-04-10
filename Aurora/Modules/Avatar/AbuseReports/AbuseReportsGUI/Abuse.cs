@@ -158,5 +158,48 @@ namespace Aurora.Modules.AbuseReportsGUI
         {
             GenericData.Update("abusereports", new string[] { Notes.Text }, new string[] { "Notes" }, new string[] { "ReportNumber" }, new string[] { formNumber.ToString() });
         }
+
+        private void GotoAR_Click(object sender, EventArgs e)
+        {
+            if (GotoARNumber.Text == "")
+                return;
+            formNumber = Convert.ToInt32(GotoARNumber.Text);
+            if (formNumber <= 0)
+                formNumber = 1;
+            GotoARNumber.Text = "";
+            AbuseReport AR = RegionData.GetAbuseReport(formNumber);
+            if (AR.ReportNumber != null)
+            {
+                Category.Text = AR.Category;
+                ReporterName.Text = AR.Reporter;
+                ObjectName.Text = AR.ObjectName;
+                ObjectPos.Text = AR.Position;
+                Abusername.Text = AR.Abuser;
+                Location.Text = AR.Location;
+                Summary.Text = AR.Summary;
+                Details.Text = AR.Details;
+                AssignedTo.Text = AR.AssignedTo;
+                Active.Text = AR.Active;
+                Checked.Text = AR.Checked;
+                Notes.Text = AR.Notes;
+                CardNumber.Text = formNumber.ToString();
+            }
+            else
+            {
+                Category.Text = "";
+                ReporterName.Text = "";
+                ObjectName.Text = "";
+                ObjectPos.Text = "";
+                Abusername.Text = "";
+                Location.Text = "";
+                Summary.Text = "";
+                Details.Text = "";
+                AssignedTo.Text = "";
+                Active.Text = "";
+                Checked.Text = "";
+                Notes.Text = "";
+                CardNumber.Text = formNumber.ToString();
+            }
+        }
     }
 }
