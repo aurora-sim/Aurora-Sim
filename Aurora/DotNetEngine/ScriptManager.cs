@@ -184,6 +184,8 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 		/// </summary>
 		internal void Reset()
 		{
+			if(Script == null)
+				return;
 			ReleaseControls(localID, ItemID);
 			//Must be posted immediately, otherwise the next line will delete it.
 			m_ScriptManager.m_scriptEngine.m_EventManager.state_exit(localID);

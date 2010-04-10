@@ -1368,63 +1368,81 @@ namespace Aurora.Modules
         					}
         					if(part.Name == "objectdata")
         					{
-        						ObjectXMLInfo OInfo = new ObjectXMLInfo();
-        						foreach (XmlNode subpart in part.ChildNodes)
+        						foreach (XmlNode subsubpart in part.ChildNodes)
         						{
-        							switch (subpart.Name)
+        							ObjectXMLInfo OInfo = new ObjectXMLInfo();
+        							foreach (XmlNode subpart in subsubpart.ChildNodes)
         							{
-        								case "uuid":
-        									OInfo.UUID = subpart.InnerText;
-        									break;
-        								case "regionuuid":
-        									OInfo.RegionUUID = subpart.InnerText;
-        									break;
-        								case "parceluuid":
-        									OInfo.ParcelUUID = subpart.InnerText;
-        									break;
-        								case "title":
-        									OInfo.Title = subpart.InnerText;
-        									break;
-        								case "description":
-        									OInfo.Desc = subpart.InnerText;
-        									break;
-        								case "flags":
-        									OInfo.Flags = subpart.InnerText;
-        									break;
+        								switch (subpart.Name)
+        								{
+        									case "uuid":
+        										OInfo.UUID = subpart.InnerText;
+        										break;
+        									case "regionuuid":
+        										OInfo.RegionUUID = subpart.InnerText;
+        										break;
+        									case "parceluuid":
+        										OInfo.ParcelUUID = subpart.InnerText;
+        										break;
+        									case "title":
+        										OInfo.Title = subpart.InnerText;
+        										break;
+        									case "description":
+        										OInfo.Desc = subpart.InnerText;
+        										break;
+        									case "flags":
+        										OInfo.Flags = subpart.InnerText;
+        										break;
+        								}
         							}
+        							if(OInfo.UUID != null)
+        								GenericData.Insert("searchobjects", new string[] { OInfo.UUID, OInfo.ParcelUUID, OInfo.Title, OInfo.Desc, OInfo.RegionUUID });
         						}
-        						if(OInfo.UUID != null)
-        							GenericData.Insert("searchobjects", new string[] { OInfo.UUID, OInfo.ParcelUUID, OInfo.Title, OInfo.Desc, OInfo.RegionUUID });
         					}
         					if(part.Name == "parceldata")
         					{
         						foreach (XmlNode pppart in part.ChildNodes)
         						{
-        							foreach (XmlNode ppart in pppart.ChildNodes)
+        							ParcelXMLInfo PInfo = new ParcelXMLInfo();
+        							foreach(XmlNode att in pppart.Attributes)
         							{
-        								ParcelXMLInfo PInfo = new ParcelXMLInfo();
+        								switch (att.Name)
+        								{
+        									case "build":
+        										PInfo.Build = att.InnerText;
+        										break;
+        									case "category":
+        										PInfo.Category = att.InnerText;
+        										break;
+        									case "showinsearch":
+        										PInfo.Directory = att.InnerText;
+        										break;
+        									case "forsale":
+        										PInfo.ForSale = att.InnerText;
+        										break;
+        									case "public":
+        										PInfo.Public = att.InnerText;
+        										break;
+        									case "salesprice":
+        										PInfo.SalePrice = att.InnerText;
+        										break;
+        									case "scripts":
+        										PInfo.Script = att.InnerText;
+        										break;
+        								}
+        							}
+        							foreach (XmlNode ppart in pppart.ChildNodes)
+        							{							
         								switch (ppart.Name)
         								{
         									case "area":
         										PInfo.Area = ppart.InnerText;
         										break;
-        									case "build":
-        										PInfo.Build = ppart.InnerText;
-        										break;
-        									case "category":
-        										PInfo.Category = ppart.InnerText;
-        										break;
         									case "description":
         										PInfo.Desc = ppart.InnerText;
         										break;
-        									case "showinsearch":
-        										PInfo.Directory = ppart.InnerText;
-        										break;
         									case "dwell":
         										PInfo.Dwell = ppart.InnerText;
-        										break;
-        									case "forsale":
-        										PInfo.ForSale = ppart.InnerText;
         										break;
         									case "groupuuid":
         										PInfo.GroupUUID = ppart.ChildNodes[0].InnerText;
@@ -1441,32 +1459,25 @@ namespace Aurora.Modules
         									case "owner":
         										PInfo.OwnerUUID = ppart.ChildNodes.Item(0).InnerText;
         										break;
-        									case "public":
-        										PInfo.Public = ppart.InnerText;
-        										break;
-        									case "salesprice":
-        										PInfo.SalePrice = ppart.InnerText;
-        										break;
-        									case "scripts":
-        										PInfo.Script = ppart.InnerText;
-        										break;
         									case "uuid":
         										PInfo.UUID = ppart.InnerText;
         										break;
         								}
-        								if(PInfo.UUID == null)
-        									continue;
-        								GenericData.Insert("searchallparcels", new string[] { info.UUID, PInfo.Name, PInfo.OwnerUUID, PInfo.GroupUUID, PInfo.Landing, PInfo.UUID, PInfo.InfoUUID, PInfo.Area });
-        								if (Convert.ToBoolean(PInfo.Directory))
-        									GenericData.Insert("searchparcels", new string[] { info.UUID, PInfo.Name, PInfo.UUID, PInfo.Landing, PInfo.Desc, PInfo.Category, PInfo.Build, PInfo.Script, PInfo.Public, PInfo.Dwell, PInfo.InfoUUID, false.ToString(), false.ToString() });
-        								if (Convert.ToBoolean(PInfo.ForSale))
-        								{
-        									IAdultVerificationModule AVM = currentScene.RequestModuleInterface<IAdultVerificationModule>();
-        									if(AVM != null)
-        										GenericData.Insert("searchparcelsales", new string[] { info.UUID, PInfo.Name, PInfo.UUID, PInfo.Area, PInfo.SalePrice, PInfo.Landing, PInfo.InfoUUID, PInfo.Dwell, currentScene.RegionInfo.EstateSettings.EstateID.ToString(), AVM.GetIsRegionMature(currentScene.RegionInfo.RegionID).ToString() });
-        									else
-        										GenericData.Insert("searchparcelsales", new string[] { info.UUID, PInfo.Name, PInfo.UUID, PInfo.Area, PInfo.SalePrice, PInfo.Landing, PInfo.InfoUUID, PInfo.Dwell, currentScene.RegionInfo.EstateSettings.EstateID.ToString(), false.ToString() });
-        								}
+        							}
+        							if(PInfo.UUID == null)
+        								continue;
+        							if(PInfo.GroupUUID == null)
+        								PInfo.GroupUUID = UUID.Zero.ToString();
+        							GenericData.Insert("searchallparcels", new string[] { info.UUID, PInfo.Name, PInfo.OwnerUUID, PInfo.GroupUUID, PInfo.Landing, PInfo.UUID, PInfo.InfoUUID, PInfo.Area });
+        							if (Convert.ToBoolean(PInfo.Directory))
+        								GenericData.Insert("searchparcels", new string[] { info.UUID, PInfo.Name, PInfo.UUID, PInfo.Landing, PInfo.Desc, PInfo.Category, PInfo.Build, PInfo.Script, PInfo.Public, PInfo.Dwell, PInfo.InfoUUID, false.ToString(), false.ToString() });
+        							if (Convert.ToBoolean(PInfo.ForSale))
+        							{
+        								IAdultVerificationModule AVM = currentScene.RequestModuleInterface<IAdultVerificationModule>();
+        								if(AVM != null)
+        									GenericData.Insert("searchparcelsales", new string[] { info.UUID, PInfo.Name, PInfo.UUID, PInfo.Area, PInfo.SalePrice, PInfo.Landing, PInfo.InfoUUID, PInfo.Dwell, currentScene.RegionInfo.EstateSettings.EstateID.ToString(), AVM.GetIsRegionMature(currentScene.RegionInfo.RegionID).ToString() });
+        								else
+        									GenericData.Insert("searchparcelsales", new string[] { info.UUID, PInfo.Name, PInfo.UUID, PInfo.Area, PInfo.SalePrice, PInfo.Landing, PInfo.InfoUUID, PInfo.Dwell, currentScene.RegionInfo.EstateSettings.EstateID.ToString(), false.ToString() });
         							}
         						}
         					}
