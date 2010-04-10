@@ -53,9 +53,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        public static List<ScriptEngine> ScriptEngines =
-                new List<ScriptEngine>();
-
         private Scene m_Scene;
         public Scene World
         {
@@ -110,25 +107,11 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         #endregion
 
         #region Constructor and Shutdown
-
-        public ScriptEngine()
-        {
-            lock (ScriptEngines)
-            {
-                // Keep a list of ScriptEngines for shared threads
-                // to process all instances
-                ScriptEngines.Add(this);
-            }
-        }
         
         public void Shutdown()
         {
             // We are shutting down
-            lock (ScriptEngines)
-            {
-                ScriptEngines.Remove(this);
-                m_ScriptManager.Stop();
-            }
+            m_ScriptManager.Stop();
         }
 
         #endregion

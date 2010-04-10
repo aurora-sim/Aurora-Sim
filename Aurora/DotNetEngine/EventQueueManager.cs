@@ -31,6 +31,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using OpenMetaverse;
 using OpenSim.Region.ScriptEngine.Shared;
+using OpenSim.Region.ScriptEngine.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using log4net;
 
@@ -128,6 +129,8 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         /// Queue containing events waiting to be executed
         /// </summary>
         public ScriptEventQueue<QueueItemStruct> eventQueue = new ScriptEventQueue<QueueItemStruct>();
+        public Queue<QueueItemStruct> EventQueue2 = new Queue<QueueItemStruct>();
+        public List<UUID> NeedsRemoved = new List<UUID>();
         public Scene m_scene;
         
         #region " Initialization / Startup "
@@ -181,9 +184,9 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             }
 
             // Remove all entries from our event queue
-            lock (eventQueue)
+            lock (EventQueue2)
             {
-            	eventQueue.Clear();
+            	EventQueue2.Clear();
             }
         }
 
@@ -193,7 +196,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         
         private void StartNewThreadClass()
         {
-            EventQueueThreadClass eqtc = new EventQueueThreadClass();
+            EventQueueThreadClass eqtc = new EventQueueThreadClass(m_ScriptEngine);
             eventQueueThreads.Add(eqtc);
         }
 
@@ -215,7 +218,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         #region " Add/Remove events to execution queue "
         
         /// <summary>
-        /// Add event to event execution queue
+        /// Posts event to all objects in the group.
         /// </summary>
         /// <param name="localID">Region object ID</param>
         /// <param name="FunctionName">Name of the function, will be state + "_event_" + FunctionName</param>
@@ -223,17 +226,23 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         public bool AddToObjectQueue(uint localID, string FunctionName, DetectParams[] qParams, params object[] param)
         {
             // Determine all scripts in Object and add to their queue
+            IInstanceData[] datas = m_ScriptEngine.ScriptProtection.GetScript(localID);
             
-            foreach (InstanceData ID in m_ScriptEngine.ScriptProtection.GetScript(localID))
+            if(datas == null)
+            	//No scripts to post to... so it is firing all the events it needs to
+            	return true;
+            
+            foreach (IInstanceData ID in datas)
             {
                 // Add to each script in that object
-                AddToScriptQueue(ID, FunctionName, qParams, param);
+                AddToScriptQueue((InstanceData)ID, FunctionName, qParams, param);
             }
             return true;
         }
 
         /// <summary>
-        /// Add event to event execution queue
+        /// Posts event to the given object.
+        /// NOTE: Use AddToScriptQueue with InstanceData instead if possible.
         /// </summary>
         /// <param name="localID">Region object ID</param>
         /// <param name="itemID">Region script ID</param>
@@ -241,9 +250,9 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         /// <param name="param">Array of parameters to match event mask</param>
         public bool AddToScriptQueue(uint localID, UUID itemID, string FunctionName, DetectParams[] qParams, params object[] param)
         {
-            lock (eventQueue)
+            lock (EventQueue2)
             {
-                if (eventQueue.Count >= EventExecutionMaxQueueSize)
+                if (EventQueue2.Count >= EventExecutionMaxQueueSize)
                 {
                     m_log.WarnFormat("[{0}]: Event Queue is above the MaxQueueSize.", m_ScriptEngine.ScriptEngineName);
                     return false;
@@ -251,17 +260,28 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
                 InstanceData id = m_ScriptEngine.m_ScriptManager.GetScript(localID, itemID);
                 if (id == null)
-                    return false;
+                {
+                	m_log.Warn("RETURNING FALSE IN ASQ");
+                	return false;
+                }
 
                 return AddToScriptQueue(id, FunctionName, qParams, param);
             }
         }
 
+        /// <summary>
+        /// Posts the event to the given object.
+        /// </summary>
+        /// <param name="ID"></param>
+        /// <param name="FunctionName"></param>
+        /// <param name="qParams"></param>
+        /// <param name="param"></param>
+        /// <returns></returns>
         public bool AddToScriptQueue(InstanceData ID, string FunctionName, DetectParams[] qParams, params object[] param)
         {
-            lock (eventQueue)
+            lock (EventQueue2)
             {
-                if (eventQueue.Count >= EventExecutionMaxQueueSize)
+                if (EventQueue2.Count >= EventExecutionMaxQueueSize)
                 {
                     m_log.WarnFormat("[{0}]: Event Queue is above the MaxQueueSize.", m_ScriptEngine.ScriptEngineName);
                     return false;
@@ -273,16 +293,23 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                 QIS.llDetectParams = qParams;
                 QIS.param = param;
                 QIS.LineMap = ID.LineMap;
-
-                // Add it to queue
-                eventQueue.Enqueue(QIS, QIS.ID.ItemID);
+                if (m_ScriptEngine.World.PipeEventsForScript(
+                	QIS.ID.localID))
+                {
+                	// Add it to queue
+                	EventQueue2.Enqueue(QIS);
+                }
             }
             return true;
         }
 
-        internal void RemoveFromQueue(UUID itemID)
+        /// <summary>
+        /// Prepares to remove the script from the event queue.
+        /// </summary>
+        /// <param name="itemID"></param>
+        public void RemoveFromQueue(UUID itemID)
         {
-            eventQueue.Remove(itemID);
+        	NeedsRemoved.Add(itemID);
         }
 
         #endregion
@@ -361,6 +388,11 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             int i = 0;
             while (i < eventQueueThreads.Count)
             {
+            	if(eventQueueThreads[i].EventQueueThread == null)
+            	{
+            		i++;
+            		continue;
+            	}
                 if (!eventQueueThreads[i].EventQueueThread.IsAlive)
                 {
                     m_log.WarnFormat("[{0}]: EventQueue Thread found dead... Restarting.", m_ScriptEngine.ScriptEngineName);
@@ -378,7 +410,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
     /// <summary>
     /// Queue item structure
     /// </summary>
-    public struct QueueItemStruct
+    public class QueueItemStruct
     {
         public InstanceData ID;
         public string functionName;

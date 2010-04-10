@@ -130,13 +130,21 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 				Running = false;
 				Disabled = true;
 				AppDomain ad = AppDomain;
+				if(ad == null || Script == null)
+				{
+					m_ScriptManager.RemoveScript(this);
+					m_log.DebugFormat("[{0}]: Closed Script in " + part.Name, m_ScriptManager.m_scriptEngine.ScriptEngineName);
+					yield break;
+				}
 				Script.Close();
 				// Tell AppDomain that we have stopped script
 				m_ScriptManager.m_scriptEngine.m_AppDomainManager.UnloadScriptAppDomain(ad);
 				// Remove from internal structure
 				m_ScriptManager.RemoveScript(this);
 			// LEGIT: User Scripting
-			} catch (Exception e) {
+			} 
+			catch (Exception e)
+			{
 				m_log.Error("[" + m_ScriptManager.m_scriptEngine.ScriptEngineName + "]: Exception stopping script localID: " + localID + " LLUID: " + ItemID.ToString() + ": " + e.ToString());
 			}
 			m_log.DebugFormat("[{0}]: Closed Script in " + part.Name, m_ScriptManager.m_scriptEngine.ScriptEngineName);
@@ -180,7 +188,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 			//Must be posted immediately, otherwise the next line will delete it.
 			m_ScriptManager.m_scriptEngine.m_EventManager.state_exit(localID);
 			m_ScriptManager.m_scriptEngine.m_EventQueueManager.RemoveFromQueue(ItemID);
-			m_ScriptManager.UpdateScriptInstanceData(this);
 			m_ScriptManager.m_scriptEngine.m_EventQueueManager.AddToScriptQueue(this, "state_entry", new DetectParams[0], new object[] {
 				
 			});
@@ -223,7 +230,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 			try {
 				// DISPLAY ERROR INWORLD
 				string consoletext = "Error compiling script in stage " + stage + ":\n" + e.Message.ToString() + " itemID: " + ItemID + ", localID" + localID + ", CompiledFile: " + AssemblyName;
-				m_log.Error(consoletext);
+				//m_log.Error(consoletext);
 				string inworldtext = "Error compiling script: " + e;
 				if (inworldtext.Length > 1100)
 					inworldtext = inworldtext.Substring(0, 1099);
@@ -545,14 +552,18 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 		/// <returns></returns>
 		public string[] GetErrors(UUID ItemID)
 		{
-			while (Errors[ItemID] == null) {
+			while (Errors[ItemID] == null) 
+			{
 				Thread.Sleep(500);
 			}
-			string[] Error = Errors[ItemID];
-			Errors.Remove(ItemID);
-			if (Error[0] == "TRUE")
-				return new string[0];
-			return Error;
+			lock(Errors)
+			{
+				string[] Error = Errors[ItemID];
+				Errors.Remove(ItemID);
+				if (Error[0] == "TRUE")
+					return new string[0];
+				return Error;
+			}
 		}
 
 		#endregion
@@ -705,9 +716,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
 					return;
 				}
-				id = GetScript(localID, itemID);
-				if (id != null)
-					StopScript(localID, itemID);
 				id = new InstanceData(this);
 				id.ItemID = itemID;
 				id.localID = localID;
@@ -739,9 +747,9 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 			if (data.Disabled)
 				return;
 			LUStruct ls = new LUStruct();
-			InstanceData id = GetScript(localID, itemID);
 			ls.ID = data;
 			ls.Action = LUType.Unload;
+			m_scriptEngine.m_EventQueueManager.RemoveFromQueue(itemID);
 			lock (LUQueue) {
 				LUQueue.Enqueue(ls);
 			}

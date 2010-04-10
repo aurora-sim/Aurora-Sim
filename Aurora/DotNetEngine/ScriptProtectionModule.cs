@@ -290,11 +290,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         	PreviouslyCompiled.TryGetValue(source, out ID);
         	return (IInstanceData)ID;
         }
-        private class ScriptItem
-        {
-        	public UUID ItemID;
-        	public uint LocalID;
-        }
         
         public Dictionary<UUID, uint> ScriptsItems = new Dictionary<UUID, uint>();
         public Dictionary<uint, Dictionary<UUID, InstanceData>> Scripts = new Dictionary<uint, Dictionary<UUID, InstanceData>>();
@@ -303,6 +298,8 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         	if(!Scripts.ContainsKey(localID))
         		return null;
         	Dictionary<UUID, InstanceData> Instances = Scripts[localID]; 
+        	if(!Instances.ContainsKey(itemID))
+        		return null;
         	return Instances[itemID];
         }
         
@@ -360,8 +357,10 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         	ScriptsItems.Remove(ID.ItemID);
         	Dictionary<UUID, InstanceData> Instances = new Dictionary<UUID, InstanceData>();
         	if(Scripts.ContainsKey(ID.localID))
+        	{
         		Instances = Scripts[ID.localID];
-        	Instances.Remove(ID.ItemID);
+        		Instances.Remove(ID.ItemID);
+        	}
         	Scripts[ID.localID] = Instances;
         }
         
