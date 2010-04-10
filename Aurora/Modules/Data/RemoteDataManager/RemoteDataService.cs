@@ -284,6 +284,16 @@ namespace Aurora.Modules.DataPlugins
 			throw new NotImplementedException();
 		}
         
+        public OpenSim.Framework.EventData[] GetEvents()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Classified[] GetClassifieds()
+        {
+            throw new NotImplementedException();
+        }
+
         #endregion
     }
 }
