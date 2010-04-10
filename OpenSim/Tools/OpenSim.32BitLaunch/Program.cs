@@ -29,12 +29,10 @@ using System;
 
 namespace OpenSim._32BitLaunch
 {
-    class Program
+    public class Program
     {
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
-            log4net.Config.XmlConfigurator.Configure();
-
             System.Console.WriteLine("32-bit OpenSim executor");
             System.Console.WriteLine("-----------------------");
             System.Console.WriteLine("");
