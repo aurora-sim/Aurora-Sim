@@ -26,7 +26,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
 		IConfigSource m_source;
         ScriptEngine m_engine;
-        Trust TrustLevel = Trust.Full;
+        Trust MacroTrustLevel = Trust.Medium;
         bool allowMacroScripting = true;
 
         Dictionary<UUID, List<string>> WantedClassesByItemID = new Dictionary<UUID, List<string>>();
@@ -50,9 +50,15 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 		{
 			m_source = source;
             m_engine = engine;
-            if (m_engine.Config.GetBoolean("AllowOSFunctions", false))
-                m_OSFunctionsEnabled = true;
-
+            m_OSFunctionsEnabled = m_engine.Config.GetBoolean("AllowOSFunctions", false);
+            allowMacroScripting = m_engine.Config.GetBoolean("AllowMacroScripting", true);
+            string threat = m_engine.Config.GetString("MacroScriptingTrustLevel", "Full");
+            if (threat == "Medium")
+                MacroTrustLevel = Trust.Medium;
+            if (threat == "Full")
+                MacroTrustLevel = Trust.Full;
+            if (threat == "Low")
+                MacroTrustLevel = Trust.Low;
 		}
         
 		#endregion
@@ -210,7 +216,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                 	if (!ClassInstances.ContainsKey(ClassName))
                 	{
                 		//Its a web URL
-                		if (TrustLevel == Trust.Low)
+                		if (MacroTrustLevel == Trust.Low)
                 			continue;
                 		else
                 			ReturnValue += ClassScripts[ClassName];
@@ -231,7 +237,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                     		}
                     		else
                     		{
-                    			if (TrustLevel == Trust.Low)
+                    			if (MacroTrustLevel == Trust.Low)
                     				continue;
                     			else
                     				ReturnValue += ClassScripts[ClassName];
@@ -241,14 +247,14 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                     	{
                     		if (isSameOwner)
                     		{
-                    			if (TrustLevel == Trust.Low)
+                    			if (MacroTrustLevel == Trust.Low)
                     				continue;
                     			else
                     				ReturnValue += ClassScripts[ClassName];
                     		}
                     		else
                     		{
-                    			if (TrustLevel < Trust.Full)
+                    			if (MacroTrustLevel < Trust.Full)
                     				continue;
                     			else
                     				ReturnValue += ClassScripts[ClassName];
