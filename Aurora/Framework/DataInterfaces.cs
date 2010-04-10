@@ -30,6 +30,27 @@ namespace Aurora.Framework
         DirEventsReplyData[] EventQuery(string queryText, string flags, string table, string wantedValue, int StartQuery);
         EventData GetEventInfo(string p);
         DirEventsReplyData[] GetAllEventsNearXY(string table, int X, int Y);
+        EventData[] GetEvents();
+        Classified[] GetClassifieds();
+
+    }
+    public class Classified
+    {
+        public string UUID;
+        public string CreatorUUID;
+        public string CreationDate;
+        public string ExpirationDate;
+        public string Category;
+        public string Name;
+        public string Description;
+        public string ParcelUUID;
+        public string ParentEstate;
+        public string SnapshotUUID;
+        public string SimName;
+        public string PosGlobal;
+        public string ParcelName;
+        public string ClassifiedFlags;
+        public string PriceForListing;
     }
     public interface IRegionData
     {

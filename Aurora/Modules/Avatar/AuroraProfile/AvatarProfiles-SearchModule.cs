@@ -1062,22 +1062,20 @@ namespace Aurora.Modules
         public virtual void HandleMapItemRequest(IClientAPI remoteClient, uint flags,
                                                  uint EstateID, bool godlike, uint itemtype, ulong regionhandle)
         {
-            uint xstart = 0;
-            uint ystart = 0;
-            OpenMetaverse.Utils.LongToUInts(m_scene.RegionInfo.RegionHandle, out xstart, out ystart);
+            //All the parts are in for this, except for popular places and those are not in as they are not reqested anymore.
+            //Events do not work as the packet needed does not exist.
+
             List<mapItemReply> mapitems = new List<mapItemReply>();
             mapItemReply mapitem = new mapItemReply();
 
             #region Telehub
-
-            if (itemtype == 1) //(Telehub)
+            if (itemtype == (uint)OpenMetaverse.GridItemType.Telehub)
             {
-                List<string> Telehubs = ProfileData.Query("select telehubX,telehubY,regionX,regionY from auroraregions");
+                List<string> Telehubs = ProfileData.Query("select telehubX,telehubY,regionUUID from auroraregions");
                 int i = 0;
                 List<string> TelehubsX = new List<string>();
                 List<string> TelehubsY = new List<string>();
-                List<string> RegionX = new List<string>();
-                List<string> RegionY = new List<string>();
+                List<string> RegionUUIDs = new List<string>();
                 foreach (string info in Telehubs)
                 {
                     if (i == 0)
@@ -1093,12 +1091,7 @@ namespace Aurora.Modules
                     if (i == 2)
                     {
                         if (info != "")
-                            RegionX.Add(info);
-                    }
-                    if (i == 3)
-                    {
-                        if (info != "")
-                            RegionY.Add(info);
+                            RegionUUIDs.Add(info);
                         i = -1;
                     }
                     i += 1;
@@ -1109,25 +1102,29 @@ namespace Aurora.Modules
                 {
                     for (i = 0; i + 1 <= TelehubsX.Count; i++)
                     {
+                        OpenSim.Services.Interfaces.GridRegion region = m_scene.GridService.GetRegionByUUID(UUID.Zero, new UUID(RegionUUIDs[i]));
                         mapitem = new mapItemReply();
-                        mapitem.x = (uint)(Convert.ToUInt32(RegionX[i]) + Convert.ToUInt32(TelehubsX[i]));
-                        mapitem.y = (uint)(Convert.ToUInt32(RegionY[i]) + Convert.ToUInt32(TelehubsY[i]));
+                        mapitem.x = (uint)(region.RegionLocX + Convert.ToUInt32(TelehubsX[i]));
+                        mapitem.y = (uint)(region.RegionLocY + Convert.ToUInt32(TelehubsY[i]));
                         mapitem.id = UUID.Zero;
-                        mapitem.name = Util.Md5Hash(m_scene.RegionInfo.RegionName + tc.ToString());
+                        mapitem.name = Util.Md5Hash(region.RegionName + tc.ToString());
                         mapitem.Extra = 1;
                         mapitem.Extra2 = 0;
                         mapitems.Add(mapitem);
                     }
                 }
-                remoteClient.SendMapItemReply(mapitems.ToArray(), itemtype, flags);
-                mapitems.Clear();
+                if (mapitems.Count != 0)
+                {
+                    remoteClient.SendMapItemReply(mapitems.ToArray(), itemtype, flags);
+                    mapitems.Clear();
+                }
             }
 
 			#endregion
 
-            #region 7
+            #region Land for sale
 
-            if (itemtype == 7) //(land sales)
+            if (itemtype == (uint)OpenMetaverse.GridItemType.LandForSale)
             {
                 DirLandReplyData[] Landdata = ProfileData.LandForSaleQuery("4294967295",int.MaxValue.ToString(),"0","searchparcelsales","PID,PName,PAuction,PSalePrice,PArea",0);
                     
@@ -1135,7 +1132,11 @@ namespace Aurora.Modules
                 uint locY = 0;
                 foreach (DirLandReplyData landDir in Landdata)
                 {
-                	List<string> ParcelInfo = GenericData.Query("PID",landDir.parcelID.ToString(),"parcels","PLandingX, PLandingY, PRegionID");
+                    List<string> ParcelInfo = GenericData.Query("PID", landDir.parcelID.ToString(), "parcels", "PLandingX, PLandingY, PRegionID, PIsMature");
+                    if (Convert.ToBoolean(ParcelInfo[3]))
+                    {
+                        continue;
+                    }
                     foreach (Scene scene in m_Scenes)
                     {
                         if (scene.RegionInfo.RegionID == new UUID(ParcelInfo[2]))
@@ -1153,32 +1154,138 @@ namespace Aurora.Modules
                     mapitem.Extra2 = landDir.salePrice;
                     mapitems.Add(mapitem);
                 }
-                remoteClient.SendMapItemReply(mapitems.ToArray(), itemtype, flags);
-                mapitems.Clear();
+                if (mapitems.Count != 0)
+                {
+                    remoteClient.SendMapItemReply(mapitems.ToArray(), itemtype, flags);
+                    mapitems.Clear();
+                }
+            }
+
+            if (itemtype == (uint)OpenMetaverse.GridItemType.AdultLandForSale)
+            {
+                DirLandReplyData[] Landdata = ProfileData.LandForSaleQuery("4294967295", int.MaxValue.ToString(), "0", "searchparcelsales", "PID,PName,PAuction,PSalePrice,PArea", 0);
+
+                uint locX = 0;
+                uint locY = 0;
+                foreach (DirLandReplyData landDir in Landdata)
+                {
+                    List<string> ParcelInfo = GenericData.Query("PID", landDir.parcelID.ToString(), "parcels", "PLandingX, PLandingY, PRegionID, PIsMature");
+                    if (!Convert.ToBoolean(ParcelInfo[3]))
+                    {
+                        continue;
+                    }
+                    foreach (Scene scene in m_Scenes)
+                    {
+                        if (scene.RegionInfo.RegionID == new UUID(ParcelInfo[2]))
+                        {
+                            locX = scene.RegionInfo.RegionLocX;
+                            locY = scene.RegionInfo.RegionLocY;
+                        }
+                    }
+                    mapitem = new mapItemReply();
+                    mapitem.x = (uint)(locX + Convert.ToDecimal(ParcelInfo[0]));
+                    mapitem.y = (uint)(locY + Convert.ToDecimal(ParcelInfo[1]));
+                    mapitem.id = landDir.parcelID;
+                    mapitem.name = landDir.name;
+                    mapitem.Extra = landDir.actualArea;
+                    mapitem.Extra2 = landDir.salePrice;
+                    mapitems.Add(mapitem);
+                }
+                if (mapitems.Count != 0)
+                {
+                    remoteClient.SendMapItemReply(mapitems.ToArray(), itemtype, flags);
+                    mapitems.Clear();
+                }
             }
 
             #endregion
+
+            #region Events 
             
-            #region Events
-            
-            if (itemtype == 2) //(Events)
+            if (itemtype == (uint)OpenMetaverse.GridItemType.PgEvent)
             {
             	DirEventsReplyData[] Eventdata = ProfileData.GetAllEventsNearXY("events",0,0);
                 foreach (DirEventsReplyData eventData in Eventdata)
                 {
-                	string globalPos = GenericData.Query("EID", eventData.eventID.ToString(), "events", "EGlobalPos")[0];
+                	List<string> query = GenericData.Query("EID", eventData.eventID.ToString(), "events", "EGlobalPos, ESimName, EMature");
+                    string RegionName = query[1];
+                    string globalPos = query[0];
+                    bool Mature = Convert.ToBoolean(query[2]);
+                    if (Mature)
+                        continue;
+                    OpenSim.Services.Interfaces.GridRegion region = m_scene.GridService.GetRegionByName(UUID.Zero, RegionName);
                     string[] Position = globalPos.Split(',');
                     mapitem = new mapItemReply();
-                    mapitem.x = (uint)(Convert.ToDecimal(Position[0]));
-                    mapitem.y = (uint)(Convert.ToDecimal(Position[1]));
+                    mapitem.x = (uint)(region.RegionLocX + Convert.ToUInt32(Position[0]));
+                    mapitem.y = (uint)(region.RegionLocY + Convert.ToUInt32(Position[1]));
                     mapitem.id = eventData.ownerID;
                     mapitem.name = eventData.name;
+                    mapitem.Extra = (int)eventData.eventFlags;
+                    mapitem.Extra2 = (int)eventData.eventFlags;
+                    mapitems.Add(mapitem);
+                }
+                if (mapitems.Count != 0)
+                {
+                    //remoteClient.SendMapItemReply(mapitems.ToArray(), itemtype, flags);
+                    mapitems.Clear();
+                }
+            }
+
+            if (itemtype == (uint)OpenMetaverse.GridItemType.AdultEvent)
+            {
+                DirEventsReplyData[] Eventdata = ProfileData.GetAllEventsNearXY("events", 0, 0);
+                foreach (DirEventsReplyData eventData in Eventdata)
+                {
+                    List<string> query = GenericData.Query("EID", eventData.eventID.ToString(), "events", "EGlobalPos, ESimName, EMature");
+                    string RegionName = query[1];
+                    string globalPos = query[0];
+                    bool Mature = Convert.ToBoolean(query[2]);
+                    if (!Mature)
+                        continue;
+                    OpenSim.Services.Interfaces.GridRegion region = m_scene.GridService.GetRegionByName(UUID.Zero, RegionName);
+                    string[] Position = globalPos.Split(',');
+                    mapitem = new mapItemReply();
+                    mapitem.x = (uint)(region.RegionLocX + Convert.ToUInt32(Position[0]));
+                    mapitem.y = (uint)(region.RegionLocY + Convert.ToUInt32(Position[1]));
+                    mapitem.id = eventData.ownerID;
+                    mapitem.name = eventData.name;
+                    mapitem.Extra = (int)eventData.eventFlags;
+                    mapitem.Extra2 = (int)eventData.eventFlags;
+                    mapitems.Add(mapitem);
+                }
+                if (mapitems.Count != 0)
+                {
+                    //remoteClient.SendMapItemReply(mapitems.ToArray(), itemtype, flags);
+                    mapitems.Clear();
+                }
+            }
+
+            #endregion
+
+            #region Classified
+
+            if (itemtype == (uint)OpenMetaverse.GridItemType.Classified)
+            {
+                Classified[] Classifieds = ProfileData.GetClassifieds();
+                foreach (Classified classified in Classifieds)
+                {
+                    Vector3 Position = new Vector3();
+                    Vector3.TryParse(classified.PosGlobal, out Position);
+                    OpenSim.Services.Interfaces.GridRegion region = m_scene.GridService.GetRegionByName(UUID.Zero, classified.SimName);
+                    mapitem = new mapItemReply();
+                    mapitem.x = (uint)(region.RegionLocX + Convert.ToUInt32(Position.X));
+                    mapitem.y = (uint)(region.RegionLocY + Convert.ToUInt32(Position.Y));
+                    mapitem.id = new UUID(classified.CreatorUUID);
+                    mapitem.name = classified.Name;
                     mapitem.Extra = 0;
                     mapitem.Extra2 = 0;
                     mapitems.Add(mapitem);
                 }
-                remoteClient.SendMapItemReply(mapitems.ToArray(), itemtype, flags);
-                mapitems.Clear();
+                if (mapitems.Count != 0)
+                {
+                    remoteClient.SendMapItemReply(mapitems.ToArray(), itemtype, flags);
+                    mapitems.Clear();
+                }
             }
 
             #endregion

@@ -811,5 +811,126 @@ namespace Aurora.DataManager.MySQL
                 }
             }
         }
+        public EventData[] GetEvents()
+        {
+            MySqlConnection dbcon = GetLockedConnection();
+            IDbCommand result;
+            IDataReader reader;
+            string query = "select EID, ECreator, EName, ECategory, EDesc, EDate, EDateUTC, EDuration, ECover, EAmount, ESimName, EGlobalPos, EEventFlags from classifieds";
+            List<EventData> datas = new List<EventData>();
+            using (result = Query(query, new Dictionary<string, object>(), dbcon))
+            {
+                using (reader = result.ExecuteReader())
+                {
+                    try
+                    {
+                        while (reader.Read())
+                        {
+                            int a = 0;
+                            EventData data = new EventData();
+                            for (int i = 0; i < reader.FieldCount; i++)
+                            {
+                                if (a == 0)
+                                    data.eventID = Convert.ToUInt32(reader.GetString(i));
+                                if (a == 1)
+                                    data.creator = reader.GetString(i);
+                                if (a == 2)
+                                    data.name = reader.GetString(i);
+                                if (a == 3)
+                                    data.category = reader.GetString(i);
+                                if (a == 4)
+                                    data.description = reader.GetString(i);
+                                if (a == 5)
+                                    data.date = reader.GetString(i);
+                                if (a == 6)
+                                    data.dateUTC = Convert.ToUInt32(reader.GetString(i));
+                                if (a == 7)
+                                    data.duration = Convert.ToUInt32(reader.GetString(i));
+                                if (a == 8)
+                                    data.cover = Convert.ToUInt32(reader.GetString(i));
+                                if (a == 9)
+                                    data.amount = Convert.ToUInt32(reader.GetString(i));
+                                if (a == 10)
+                                    data.simName = reader.GetString(i);
+                                if (a == 11)
+                                    Vector3.TryParse(reader.GetString(i), out data.globalPos);
+                                if (a == 12)
+                                    data.eventFlags = Convert.ToUInt32(reader.GetString(i));
+                                a++;
+                                if (a == 13)
+                                {
+                                    a = 0;
+                                    datas.Add(data);
+                                    data = new EventData();
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception) { }
+                }
+            }
+            return datas.ToArray();
+        }
+
+        public Classified[] GetClassifieds()
+        {
+            MySqlConnection dbcon = GetLockedConnection();
+            IDbCommand result;
+            IDataReader reader;
+            List<Classified> Classifieds = new List<Classified>();
+            string query = "select * from classifieds";
+            using (result = Query(query, new Dictionary<string, object>(), dbcon))
+            {
+                using (reader = result.ExecuteReader())
+                {
+                    Classified classified = new Classified();
+                    while (reader.Read())
+                    {
+                        int a = 0;
+                        for (int i = 0; i < reader.FieldCount; i++)
+                        {
+                            if (a == 0)
+                                classified.UUID = reader.GetString(i);
+                            if (a == 1)
+                                classified.CreatorUUID = reader.GetString(i);
+                            if (a == 2)
+                                classified.CreationDate = reader.GetString(i);
+                            if (a == 3)
+                                classified.ExpirationDate = reader.GetString(i);
+                            if (a == 4)
+                                classified.Category = reader.GetString(i);
+                            if (a == 5)
+                                classified.Name = reader.GetString(i);
+                            if (a == 6)
+                                classified.Description = reader.GetString(i);
+                            if (a == 7)
+                                classified.ParcelUUID = reader.GetString(i);
+                            if (a == 8)
+                                classified.ParentEstate = reader.GetString(i);
+                            if (a == 9)
+                                classified.SnapshotUUID = reader.GetString(i);
+                            if (a == 10)
+                                classified.SimName = reader.GetString(i);
+                            if (a == 11)
+                                classified.PosGlobal = reader.GetString(i);
+                            if (a == 12)
+                                classified.ParcelName = reader.GetString(i);
+                            if (a == 13)
+                                classified.ClassifiedFlags = reader.GetString(i);
+                            if (a == 14)
+                                classified.PriceForListing = reader.GetString(i);
+                            a++;
+                            if (a == 15)
+                            {
+                                a = 0;
+                                Classifieds.Add(classified);
+                                classified = new Classified();
+                            }
+                        }
+                    }
+                }
+            }
+            return Classifieds.ToArray();
+        }
     }
 }
