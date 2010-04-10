@@ -61,9 +61,9 @@ namespace Aurora.Modules
                 enabled = false;
                 return;
             }
-            if (cnf.GetBoolean("Enabled",false) == true)
+            enabled = cnf.GetBoolean("Enabled",true);
+            if (!enabled)
             {
-                enabled = false;
                 return;
             }
             m_log.Info("[ABUSE REPORTS MODULE] Enabled");
@@ -74,8 +74,7 @@ namespace Aurora.Modules
                     m_SceneList.Add(scene);
             }
 
-            if(enabled)
-                scene.EventManager.OnNewClient += new EventManager.OnNewClientDelegate(EventManager_OnNewClient);
+            scene.EventManager.OnNewClient += new EventManager.OnNewClientDelegate(EventManager_OnNewClient);
         }
 
         void EventManager_OnNewClient(IClientAPI client)
@@ -145,7 +144,7 @@ namespace Aurora.Modules
             AuroraProfileData reporterProfile = ProfileData.GetProfileInfo(reporter);
         	string ReporterName = reporterProfile.FirstName + " " + reporterProfile.SurName;
             AuroraProfileData AbuserProfile = ProfileData.GetProfileInfo(abuserID);
-        	string AbuserName = AbuserProfile.FirstName + " " + reporterProfile.SurName;
+            string AbuserName = AbuserProfile.FirstName + " " + AbuserProfile.SurName;
         	summery =summery.Replace("\"","`");
         	summery =summery.Replace("|","");
         	summery =summery.Replace(")","");
@@ -187,7 +186,7 @@ namespace Aurora.Modules
             values.Add("No");
             values.Add("");
             values.Add("");
-        	GenericData.Insert("reports",values.ToArray());
+        	GenericData.Insert("abusereports",values.ToArray());
         }
     }
 }
