@@ -39,6 +39,9 @@ using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using Aurora.DataManager;
 using Aurora.Framework;
+using Aurora.Modules.AbuseReportsGUI;
+using OpenSim.Framework.Console;
+using System.Windows.Forms;
 
 namespace Aurora.Modules
 {
@@ -74,7 +77,21 @@ namespace Aurora.Modules
                     m_SceneList.Add(scene);
             }
 
+            MainConsole.Instance.Commands.AddCommand("region", false, "open abusereportsGUI",
+                                          "open abusereportsGUI",
+                                          "Opens the abuse reports GUI", OpenGUI);
             scene.EventManager.OnNewClient += new EventManager.OnNewClientDelegate(EventManager_OnNewClient);
+        }
+
+        protected void OpenGUI(string module, string[] cmdparams)
+        {
+            System.Threading.Thread t = new System.Threading.Thread(new System.Threading.ThreadStart(ThreadProcARGUI));
+            t.Start();
+        }
+
+        public void ThreadProcARGUI()
+        {
+            Application.Run(new Abuse());
         }
 
         void EventManager_OnNewClient(IClientAPI client)

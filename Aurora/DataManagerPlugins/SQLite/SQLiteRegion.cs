@@ -10,7 +10,7 @@ using Aurora.Framework;
 
 namespace Aurora.DataManager.SQLite
 {
-    public class SQLiteRegion: SQLiteLoader, IRegionData
+    public class SQLiteRegion : SQLiteLoader, IRegionData
     {
         public Dictionary<string, string> GetRegionHidden()
         {
@@ -24,7 +24,7 @@ namespace Aurora.DataManager.SQLite
             {
                 for (int i = 0; i < reader.FieldCount; i = i + 2)
                 {
-                     retval.Add(reader.GetValue(i).ToString(), reader.GetValue(i + 1).ToString());
+                    retval.Add(reader.GetValue(i).ToString(), reader.GetValue(i + 1).ToString());
                 }
             }
             return retval;
@@ -121,14 +121,58 @@ namespace Aurora.DataManager.SQLite
         }
         public bool GetIsRegionMature(string region)
         {
-        	string query = "SELECT isMature FROM auroraregions where regionUUID = '"+region+"'";
+            string query = "SELECT isMature FROM auroraregions where regionUUID = '" + region + "'";
             SqliteCommand cmd = new SqliteCommand();
             cmd.CommandText = query;
             IDataReader reader = GetReader(cmd);
             if (reader.Read())
-            	return reader.GetBoolean(0);
+                return reader.GetBoolean(0);
             else
                 return true;
+        }
+
+        public AbuseReport GetAbuseReport(int formNumber)
+        {
+            AbuseReport report = new AbuseReport();
+            List<string> Reports = Query("ReportNumber", formNumber.ToString(), "abusereports", "*");
+            int i = 0;
+            foreach (string part in Reports)
+            {
+                if (i == 0)
+                    report.Category = part;
+                if (i == 1)
+                    report.Reporter = part;
+                if (i == 2)
+                    report.ObjectName = part;
+                if (i == 3)
+                    report.ObjectUUID = part;
+                if (i == 4)
+                    report.Abuser = part;
+                if (i == 5)
+                    report.Location = part;
+                if (i == 6)
+                    report.Details = part;
+                if (i == 7)
+                    report.Position = part;
+                if (i == 8)
+                    report.Estate = part;
+                if (i == 9)
+                    report.Summary = part;
+                if (i == 10)
+                    report.ReportNumber = part;
+                if (i == 11)
+                    report.AssignedTo = part;
+                if (i == 12)
+                    report.Active = part;
+                if (i == 13)
+                    report.Checked = part;
+                if (i == 14)
+                    report.Notes = part;
+                i++;
+                if (i == 15)
+                    i = 0;
+            }
+            return report;
         }
     }
 }

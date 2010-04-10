@@ -58,6 +58,27 @@ namespace Aurora.Framework
         string AbuseReports();
         ObjectMediaURLInfo[] getObjectMediaInfo(string objectID);
         bool GetIsRegionMature(string region);
+
+        AbuseReport GetAbuseReport(int formNumber);
+    }
+
+    public class AbuseReport
+    {
+        public string Category;
+        public string Reporter;
+        public string ObjectName;
+        public string ObjectUUID;
+        public string Abuser;
+        public string Location;
+        public string Details;
+        public string Position;
+        public string Estate;
+        public string Summary;
+        public string ReportNumber;
+        public string AssignedTo;
+        public string Active;
+        public string Checked;
+        public string Notes;
     }
     
     public interface IGenericData

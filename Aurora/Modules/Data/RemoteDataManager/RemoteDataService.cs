@@ -294,6 +294,11 @@ namespace Aurora.Modules.DataPlugins
             throw new NotImplementedException();
         }
 
+        public AbuseReport GetAbuseReport(int formNumber)
+        {
+            throw new NotImplementedException();
+        }
+
         #endregion
     }
 }
