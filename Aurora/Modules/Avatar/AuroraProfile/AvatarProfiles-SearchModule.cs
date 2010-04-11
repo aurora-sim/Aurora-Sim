@@ -829,6 +829,7 @@ namespace Aurora.Modules
 
         private void SendProfile(IClientAPI remoteClient, AuroraProfileData Profile, UUID target, uint agentOnline)
         {
+            UserAccount account = m_scene.UserAccountService.GetUserAccount(UUID.Zero, target);
             Byte[] charterMember;
             if (Profile.CustomType == " ")
             {
@@ -843,10 +844,10 @@ namespace Aurora.Modules
             if (Profile.MembershipGroup != "")
                 membershipGroupINT = 4;
 
-            uint flags = Convert.ToUInt32(Profile.AllowPublish) + Convert.ToUInt32(Profile.MaturePublish) + membershipGroupINT + (uint)agentOnline + (uint)Profile.UserFlags;
+            uint flags = Convert.ToUInt32(Profile.AllowPublish) + Convert.ToUInt32(Profile.MaturePublish) + membershipGroupINT + (uint)agentOnline + (uint)account.UserFlags;
 
             remoteClient.SendAvatarProperties(new UUID(Profile.Identifier), Profile.AboutText,
-                                              Util.ToDateTime(Profile.Created).ToString("M/d/yyyy", CultureInfo.InvariantCulture),
+                                              Util.ToDateTime(account.Created).ToString("M/d/yyyy", CultureInfo.InvariantCulture),
                                               charterMember, Profile.FirstLifeAboutText, flags,
                                               Profile.FirstLifeImage, Profile.Image, Profile.ProfileURL, new UUID(Profile.Partner));
         }
@@ -977,10 +978,11 @@ namespace Aurora.Modules
                     			data[i].group = membership.GroupName;
                     	}
                     }
-                    List<string> user = new List<string>();
-                    user.Add(item.PrincipalID.ToString());
-                    OpenSim.Services.Interfaces.PresenceInfo Pinfo = m_Scenes[0].PresenceService.GetAgents(user.ToArray())[0];
-                    data[i].online = Pinfo.Online;
+                    OpenSim.Services.Interfaces.PresenceInfo[] Pinfo = m_scene.PresenceService.GetAgents(new string[] {item.PrincipalID.ToString()});
+                    if (Pinfo.Length != 0)
+                        data[i].online = Pinfo[0].Online;
+                    else
+                        data[i].online = false;
                     data[i].reputation = 0;
                     i++;
                 }

@@ -198,7 +198,8 @@ namespace OpenSim.Services.PresenceService
                     ret.Online = bool.Parse(d.Data["Online"]);
                     ret.Login = Util.ToDateTime(Convert.ToInt32(
                             d.Data["Login"]));
-                    ret.Logout = Util.ToDateTime(Convert.ToInt32(
+                    if (d.Data.ContainsKey("Logout"))
+                        ret.Logout = Util.ToDateTime(Convert.ToInt32(
                             d.Data["Logout"]));
                     ret.Position = Vector3.Parse(d.Data["Position"]);
                     ret.LookAt = Vector3.Parse(d.Data["LookAt"]);
