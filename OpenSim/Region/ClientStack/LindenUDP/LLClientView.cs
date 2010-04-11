@@ -1499,7 +1499,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 QueryBlock.BillableArea = ((ILandObject)Places[i]).LandData.Area;
                 QueryBlock.Desc = Utils.StringToBytes(((ILandObject)Places[i]).LandData.Description);
                 QueryBlock.Dwell = ((ILandObject)Places[i]).LandData.Dwell;
-                QueryBlock.Flags = ((ILandObject)Places[i]).LandData.Flags;
+                QueryBlock.Flags = 0;
                 QueryBlock.GlobalX = (float)Convert.ToInt32(Xs[i]);
                 QueryBlock.GlobalY = (float)Convert.ToInt32(Ys[i]);
                 QueryBlock.GlobalZ = 0;

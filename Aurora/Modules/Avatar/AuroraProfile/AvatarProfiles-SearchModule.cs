@@ -1329,8 +1329,8 @@ namespace Aurora.Modules
                             }
                             else
                             {
-                                SimXs.Add(((LandObject.LandData.UserLocation.X * 4) + (scene.RegionInfo.RegionLocX * 256)).ToString());
-                                SimYs.Add(((LandObject.LandData.UserLocation.Y * 4) + (scene.RegionInfo.RegionLocY * 256)).ToString());
+                                SimXs.Add(((LandObject.LandData.UserLocation.X) + (scene.RegionInfo.RegionLocX * 256)).ToString());
+                                SimYs.Add(((LandObject.LandData.UserLocation.Y) + (scene.RegionInfo.RegionLocY * 256)).ToString());
                             }
                             LandQueried.Add(LandObject);
                         }
