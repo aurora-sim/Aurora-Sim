@@ -115,6 +115,8 @@ namespace Aurora.Modules
 
         public void PostInitialise()
         {
+            if (!m_Enabled)
+                return;
         	IWCAuthService = m_Scene.RequestModuleInterface<IIWCAuthenticationService>();
             foreach (Scene scene in m_scenes)
             {

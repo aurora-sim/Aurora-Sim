@@ -391,7 +391,7 @@ namespace Aurora.DataManager.MySQL
             }
             else
             {
-                string notes = Query("select notes from usernotes where useruuid = '" + agentID.ToString() + "' AND targetuuid = '" + target + "'")[0];
+                string notes = Query("select notes from usernotes where userid = '" + agentID.ToString() + "' AND targetuuid = '" + target + "'")[0];
                 if (notes == "")
                 {
                     List<string> values = new List<string>();
@@ -400,7 +400,7 @@ namespace Aurora.DataManager.MySQL
                     values.Add("Insert your notes here.");
                     values.Add(System.Guid.NewGuid().ToString());
                     Insert("usernotes", values.ToArray());
-                    notes = Query("select notes from usernotes where useruuid = '" + agentID.ToString() + "' AND targetuuid = '" + target + "'")[0];
+                    notes = "Insert your notes here.";
                 }
                 Dictionary<UUID, string> Notes = new Dictionary<UUID, string>();
                 Notes.Add(target, notes);
