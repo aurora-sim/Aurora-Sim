@@ -101,6 +101,10 @@ namespace OpenSim.Region.CoreModules
             get { return false; }
         }
 
+        public void SetCloudDensity(float density)
+        {
+            m_cloudDensity = density;
+        }
 
         public float CloudCover(int x, int y, int z)
         {

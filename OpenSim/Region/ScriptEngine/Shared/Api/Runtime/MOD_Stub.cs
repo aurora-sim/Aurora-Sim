@@ -66,5 +66,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
         {
             m_MOD_Functions.AAUpdatePrimProperties(type, Keys, Values);
         }
+        public void AASetCloudDensity(LSL_Float density)
+        {
+            m_MOD_Functions.AASetCloudDensity(density);
+        }
     }
 }

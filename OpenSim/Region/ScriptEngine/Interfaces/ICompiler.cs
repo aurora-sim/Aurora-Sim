@@ -49,7 +49,7 @@ namespace OpenSim.Region.ScriptEngine.Interfaces
         void AddNewClassSource(string ClassName, string SRC, object ID);
         bool AllowMacroScripting { get; }
         ThreatLevel GetThreatLevel();
-        void CheckThreatLevel(ThreatLevel level, string function, SceneObjectPart SOP);
+        void CheckThreatLevel(ThreatLevel level, string function, SceneObjectPart m_host, string API);
         IInstanceData TryGetPreviouslyCompiledScript(string source);
         void AddPreviouslyCompiled(string source, IInstanceData ID);
         IInstanceData GetScript(uint localID, UUID itemID);

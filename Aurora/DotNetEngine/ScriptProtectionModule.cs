@@ -38,8 +38,8 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         
         //Threat Level for scripts.
         ThreatLevel m_MaxThreatLevel = 0;
-        bool m_OSFunctionsEnabled = false;
-	    internal Dictionary<string, List<UUID> > m_FunctionPerms = new Dictionary<string, List<UUID> >();
+        List<string> EnabledAPIs = new List<string>();
+        internal Dictionary<string, List<UUID> > m_FunctionPerms = new Dictionary<string, List<UUID> >();
 		public Dictionary<string, InstanceData> PreviouslyCompiled = new Dictionary<string, InstanceData>();
         
         #endregion
@@ -50,7 +50,8 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 		{
 			m_source = source;
             m_engine = engine;
-            m_OSFunctionsEnabled = m_engine.Config.GetBoolean("AllowOSFunctions", false);
+            EnabledAPIs = new List<string>(m_engine.Config.GetString("AllowedAPIs", "").Split(','));
+            
             allowMacroScripting = m_engine.Config.GetBoolean("AllowMacroScripting", true);
             string threat = m_engine.Config.GetString("MacroScriptingTrustLevel", "Full");
             if (threat == "Medium")
@@ -99,10 +100,10 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             return m_MaxThreatLevel;
 		}
 		
-		public void CheckThreatLevel(ThreatLevel level, string function,SceneObjectPart m_host)
+		public void CheckThreatLevel(ThreatLevel level, string function, SceneObjectPart m_host, string API)
         {
-            if (!m_OSFunctionsEnabled)
-                Error("Runtime Error: ", String.Format("{0} permission denied.  All OS functions are disabled.", function)); // throws
+            if (!EnabledAPIs.Contains(API))
+                Error("Runtime Error: ", String.Format("{0} permission denied.  All "+API+" functions are disabled.", function)); // throws
 
             if (!m_FunctionPerms.ContainsKey(function))
             {

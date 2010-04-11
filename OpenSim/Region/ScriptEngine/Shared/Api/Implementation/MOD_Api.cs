@@ -63,6 +63,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         internal bool m_MODFunctionsEnabled = false;
         internal IScriptModuleComms m_comms = null;
         internal IGenericData GenericData;
+        internal IScriptProtectionModule ScriptProtection;
         
         public void Initialize(IScriptEngine ScriptEngine, SceneObjectPart host, uint localID, UUID itemID, IScriptProtectionModule module)
         {
@@ -70,13 +71,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             m_host = host;
             m_localID = localID;
             m_itemID = itemID;
-
-            if (m_ScriptEngine.Config.GetBoolean("AllowMODFunctions", false))
-                m_MODFunctionsEnabled = true;
+            ScriptProtection = module;
 
             m_comms = m_ScriptEngine.World.RequestModuleInterface<IScriptModuleComms>();
-            if (m_comms == null)
-                m_MODFunctionsEnabled = false;
         }
 
         public override Object InitializeLifetimeService()
@@ -120,12 +117,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public string modSendCommand(string module, string command, string k)
         {
-            if (!m_MODFunctionsEnabled)
-            {
-                MODShoutError("Module command functions not enabled");
-                return UUID.Zero.ToString();;
-            }
-
+            ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "modSendCommand", m_host, "AA");
+            
             UUID req = UUID.Random();
 
             m_comms.RaiseEvent(m_itemID, req.ToString(), module, command, k);
@@ -135,11 +128,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void AAUpdatePrimProperties(LSL_String type, LSL_String Keys, LSL_String Values)
         {
-            if (!m_MODFunctionsEnabled)
-            {
-                MODShoutError("Module command functions not enabled");
-                return;
-            }
+            ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "AAUpdatePrimProperties", m_host, "AA");
             GenericData = Aurora.DataManager.DataManager.GetGenericPlugin();
             List<string> SetValues = new List<string>();
             List<string> SetKeys = new List<string>();
@@ -154,6 +143,15 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             KeyRows.Add("primUUID");
             KeyValues.Add(m_host.UUID.ToString());
             GenericData.Update("auroraprims", SetValues.ToArray(), SetKeys.ToArray(), KeyRows.ToArray(), KeyValues.ToArray());
+        }
+
+        public void AASetCloudDensity(LSL_Float density)
+        {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "osTerrainGetHeight", m_host, "AA");
+            if (!World.Permissions.CanIssueEstateCommand(m_host.OwnerID, false))
+                return;
+            ICloudModule CloudModule = m_ScriptEngine.World.RequestModuleInterface<ICloudModule>();
+            CloudModule.SetCloudDensity((float)density);
         }
     }
 }
