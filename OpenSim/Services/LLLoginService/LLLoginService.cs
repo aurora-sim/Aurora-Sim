@@ -800,8 +800,8 @@ namespace OpenSim.Services.LLLoginService
             values.Add(" ");
             values.Add(" ");
             values.Add("0");
-            values.Add("0");
-            values.Add("0");
+            values.Add("true");
+            values.Add("false");
             values.Add(" ");
             values.Add(" ");
             values.Add(" ");

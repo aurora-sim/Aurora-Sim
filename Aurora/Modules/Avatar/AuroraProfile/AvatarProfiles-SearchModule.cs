@@ -663,136 +663,133 @@ namespace Aurora.Modules
         {
             AuroraProfileData targetprofile = ProfileData.GetProfileInfo(target);
             OpenSim.Services.Interfaces.FriendInfo[] friendList = m_FriendsService.GetFriends(target);
-            ScenePresence RequestorSP = m_scene.GetScenePresence(remoteClient.AgentId);
-            ScenePresence TargetSP = m_scene.GetScenePresence(target);
+            UserAccount TargetAccount = m_scene.UserAccountService.GetUserAccount(UUID.Zero, target);
+            UserAccount HuntersAccount = m_scene.UserAccountService.GetUserAccount(UUID.Zero, remoteClient.AgentId);
+            OpenSim.Services.Interfaces.PresenceInfo TargetPI = m_scene.PresenceService.GetAgents(new string[] { target.ToString() })[0];
 
-            if (target != remoteClient.AgentId)
+            if (null != targetprofile)
             {
-                if (ProfileData.Query("select visible from usersauth where userUUID = '" + remoteClient.AgentId.ToString() + "'")[0] == "true")
+                if (target != remoteClient.AgentId)
                 {
-                    foreach (OpenSim.Services.Interfaces.FriendInfo item in friendList)
+                    if (HuntersAccount.UserLevel != 0)
                     {
-                        if (item.PrincipalID == remoteClient.AgentId)
+                        #region God user requesting profile, so send it.
+                        uint agentOnline = 0;
+                        if (TargetPI.Online)
                         {
-                            if (null != targetprofile)
-                            {
-                                uint agentOnline = 0;
-                                /*if (m_scene.PresenceService.GetAgents(
-                                {
-                                    if ((item.MyFlags & (uint)FriendRights.CanSeeOnline) != 0)
-                                    {
-                                        agentOnline = 16;
-                                    }
-                                }*/
-                                SendProfile(remoteClient, targetprofile, target, agentOnline);
-                                remoteClient.SendAvatarInterestsReply(target, Convert.ToUInt32(targetprofile.Interests[0]), targetprofile.Interests[1], Convert.ToUInt32(targetprofile.Interests[2]), targetprofile.Interests[3], targetprofile.Interests[4]);
-                                return;
-                            }
-                            else
-                            {
-                                m_log.Debug("[AvatarProfilesModule]: Got null for profile for " + target.ToString());
-                            }
+                            agentOnline = 16;
                         }
-                    }
-                    if (RequestorSP.GodLevel != 0)
-                    {
-                        if (null != targetprofile)
-                        {
-                            uint agentOnline = 0;
-                            /*if (agent.AgentOnline)
-                            {
-                                agentOnline = 16;
-                            }*/
-                            SendProfile(remoteClient, targetprofile , target, agentOnline);
-                            remoteClient.SendAvatarInterestsReply(target, Convert.ToUInt32(targetprofile.Interests[0]), targetprofile.Interests[1], Convert.ToUInt32(targetprofile.Interests[2]), targetprofile.Interests[3], targetprofile.Interests[4]);
-                            return;
-                        }
-                        else
-                        {
-                            m_log.Debug("[AvatarProfilesModule]: Got null for profile for " + target.ToString());
-                        }
-                    }
-                    Byte[] charterMember;
-                    if (targetprofile.CustomType == "")
-                    {
-                        charterMember = new Byte[1];
-                        charterMember[0] = (Byte)((targetprofile.UserFlags & 0xf00) >> 8);
+                        SendProfile(remoteClient, targetprofile, target, agentOnline);
+                        remoteClient.SendAvatarInterestsReply(target, Convert.ToUInt32(targetprofile.Interests[0]), targetprofile.Interests[1], Convert.ToUInt32(targetprofile.Interests[2]), targetprofile.Interests[3], targetprofile.Interests[4]);
+                        #endregion
                     }
                     else
                     {
-                        charterMember = OpenMetaverse.Utils.StringToBytes(targetprofile.CustomType);
+                        //See if all can see this person
+                        if (ProfileData.Query("select visible from usersauth where userUUID = '" + remoteClient.AgentId.ToString() + "'")[0] == "true")
+                        {
+                            #region Not visible to all, so look through the friends list and send profile.
+
+                            foreach (OpenSim.Services.Interfaces.FriendInfo item in friendList)
+                            {
+                                if (item.PrincipalID == remoteClient.AgentId)
+                                {
+                                    uint agentOnline = 0;
+                                    //Make sure that the friend has the permission to see them.
+                                    if (TargetPI.Online)
+                                    {
+                                        if ((item.MyFlags & (uint)FriendRights.CanSeeOnline) != 0)
+                                        {
+                                            agentOnline = 16;
+                                        }
+                                    }
+
+                                    SendProfile(remoteClient, targetprofile, target, agentOnline);
+                                    remoteClient.SendAvatarInterestsReply(target, Convert.ToUInt32(targetprofile.Interests[0]), targetprofile.Interests[1], Convert.ToUInt32(targetprofile.Interests[2]), targetprofile.Interests[3], targetprofile.Interests[4]);
+                                    return;
+                                }
+                            }
+                            #endregion
+
+                            #region Send the first page without AgentOnline.
+
+                            Byte[] charterMember;
+                            if (targetprofile.CustomType == "")
+                            {
+                                charterMember = new Byte[1];
+                                charterMember[0] = (Byte)((targetprofile.UserFlags & 0xf00) >> 8);
+                            }
+                            else
+                            {
+                                charterMember = OpenMetaverse.Utils.StringToBytes(targetprofile.CustomType);
+                            }
+                            remoteClient.SendAvatarProperties(new UUID(targetprofile.Identifier), "",
+                                                              Util.ToDateTime(TargetAccount.Created).ToString("M/d/yyyy", CultureInfo.InvariantCulture),
+                                                              charterMember, "", (uint)(targetprofile.UserFlags & 0xff),
+                                                              UUID.Zero, UUID.Zero, "", UUID.Zero);
+                            #endregion
+                        }
+                        else
+                        {
+                            //Visible to everyone, so find out if they are online.
+                            uint agentOnline = 0;
+                            if (TargetPI.Online)
+                            {
+                                agentOnline = 16;
+                            }
+                            
+                            #region If on the friends list, send the full profile.
+
+                            foreach (OpenSim.Services.Interfaces.FriendInfo item in friendList)
+                            {
+                                if (item.PrincipalID == remoteClient.AgentId)
+                                {
+                                    if (null != targetprofile)
+                                    {
+                                        SendProfile(remoteClient, targetprofile, target, agentOnline);
+                                        remoteClient.SendAvatarInterestsReply(target, Convert.ToUInt32(targetprofile.Interests[0]), targetprofile.Interests[1], Convert.ToUInt32(targetprofile.Interests[2]), targetprofile.Interests[3], targetprofile.Interests[4]);
+                                        return;
+                                    }
+                                    else
+                                    {
+                                        m_log.Debug("[AuroraProfileModule]: Got null for profile for " + target.ToString());
+                                    }
+                                }
+                            }
+                            #endregion
+
+                            #region Not a friend, so send the first page only.
+
+                            Byte[] charterMember;
+                            if (targetprofile.CustomType == "")
+                            {
+                                charterMember = new Byte[1];
+                                charterMember[0] = (Byte)((targetprofile.UserFlags & 0xf00) >> 8);
+                            }
+                            else
+                            {
+                                charterMember = OpenMetaverse.Utils.StringToBytes(targetprofile.CustomType);
+                            }
+                            remoteClient.SendAvatarProperties(new UUID(targetprofile.Identifier), "",
+                                                              Util.ToDateTime(TargetAccount.Created).ToString("M/d/yyyy", CultureInfo.InvariantCulture),
+                                                              charterMember, "", (uint)(targetprofile.UserFlags & 0xff),
+                                                              UUID.Zero, UUID.Zero, "", UUID.Zero);
+                            #endregion
+                        }
                     }
-                    remoteClient.SendAvatarProperties(new UUID(targetprofile.Identifier), "",
-                                                      Util.ToDateTime(targetprofile.Created).ToString("M/d/yyyy", CultureInfo.InvariantCulture),
-                                                      charterMember, "", (uint)(targetprofile.UserFlags & 0xff),
-                                                      UUID.Zero, UUID.Zero, "", UUID.Zero);
                 }
                 else
                 {
-                    uint agentOnline = 0;
-                    /*if (agent.AgentOnline)
-                    {
-                        agentOnline = 16;
-                    }*/
-
-                    foreach (OpenSim.Services.Interfaces.FriendInfo item in friendList)
-                    {
-                        if (item.PrincipalID == remoteClient.AgentId)
-                        {
-                            if (null != targetprofile)
-                            {
-                                SendProfile(remoteClient, targetprofile, target, agentOnline);
-                                remoteClient.SendAvatarInterestsReply(target, Convert.ToUInt32(targetprofile.Interests[0]), targetprofile.Interests[1], Convert.ToUInt32(targetprofile.Interests[2]), targetprofile.Interests[3], targetprofile.Interests[4]);
-                                return;
-                            }
-                            else
-                            {
-                                m_log.Debug("[AvatarProfilesModule]: Got null for profile for " + target.ToString());
-                            }
-                        }
-                    }
-                    if (RequestorSP.GodLevel != 0)
-                    {
-                        if (null != targetprofile)
-                        {
-                            SendProfile(remoteClient, targetprofile, target, agentOnline);
-                            remoteClient.SendAvatarInterestsReply(target, Convert.ToUInt32(targetprofile.Interests[0]), targetprofile.Interests[1], Convert.ToUInt32(targetprofile.Interests[2]), targetprofile.Interests[3], targetprofile.Interests[4]);
-                            return;
-                        }
-                        else
-                        {
-                            m_log.Debug("[AvatarProfilesModule]: Got null for profile for " + target.ToString());
-                        }
-                    }
-                    Byte[] charterMember;
-                    if (targetprofile.CustomType == "")
-                    {
-                        charterMember = new Byte[1];
-                        charterMember[0] = (Byte)((targetprofile.UserFlags & 0xf00) >> 8);
-                    }
-                    else
-                    {
-                        charterMember = OpenMetaverse.Utils.StringToBytes(targetprofile.CustomType);
-                    }
-                    remoteClient.SendAvatarProperties(new UUID(targetprofile.Identifier), "",
-                                                      Util.ToDateTime(targetprofile.Created).ToString("M/d/yyyy", CultureInfo.InvariantCulture),
-                                                      charterMember, "", (uint)(targetprofile.UserFlags & 0xff),
-                                                      UUID.Zero, UUID.Zero, "", UUID.Zero);
+                    SendProfile(remoteClient, targetprofile, target, 16);
+                    remoteClient.SendAvatarInterestsReply(target, Convert.ToUInt32(targetprofile.Interests[0]), targetprofile.Interests[1], Convert.ToUInt32(targetprofile.Interests[2]), targetprofile.Interests[3], targetprofile.Interests[4]);
                 }
             }
             else
             {
-                if (null != targetprofile)
-                {
-                    SendProfile(remoteClient, targetprofile, target, 0);
-                    remoteClient.SendAvatarInterestsReply(target, Convert.ToUInt32(targetprofile.Interests[0]), targetprofile.Interests[1], Convert.ToUInt32(targetprofile.Interests[2]), targetprofile.Interests[3], targetprofile.Interests[4]);
-                }
-                else
-                {
-                    m_scene.RequestModuleInterface<IAuthService>().CreateUserAuth(target.ToString(), TargetSP.Firstname, TargetSP.Lastname);
-                    m_log.Debug("[AvatarProfilesModule]: Got null for profile for " + target.ToString());
-                    RequestAvatarProperty(remoteClient, target);
-                }
+                ScenePresence TargetSP = m_scene.GetScenePresence(target);
+                m_log.Debug("[AuroraProfileModule]: Got null for profile for " + target.ToString() + ". Creating a new profile for this person.");
+                m_scene.RequestModuleInterface<IAuthService>().CreateUserAuth(target.ToString(), TargetSP.Firstname, TargetSP.Lastname);
+                RequestAvatarProperty(remoteClient, target);
             }
         }
 
@@ -871,9 +868,9 @@ namespace Aurora.Modules
             values.Add(visible.ToString());
             List<string> keys2 = new List<string>();
             List<string> values2 = new List<string>();
-            keys2.Add("UUID");
+            keys2.Add("userUUID");
             values2.Add(remoteClient.AgentId.ToString());
-            GenericData.Update("users", values.ToArray(), keys.ToArray(), values2.ToArray(), keys2.ToArray());
+            GenericData.Update("usersauth", values.ToArray(), keys.ToArray(), keys2.ToArray(), values2.ToArray());
         }
         #endregion
 

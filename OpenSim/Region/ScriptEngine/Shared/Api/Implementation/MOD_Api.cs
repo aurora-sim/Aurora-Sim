@@ -147,10 +147,12 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void AASetCloudDensity(LSL_Float density)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "osTerrainGetHeight", m_host, "AA");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "AASetCloudDensity", m_host, "AA");
             if (!World.Permissions.CanIssueEstateCommand(m_host.OwnerID, false))
                 return;
             ICloudModule CloudModule = m_ScriptEngine.World.RequestModuleInterface<ICloudModule>();
+            if (CloudModule == null)
+                return;
             CloudModule.SetCloudDensity((float)density);
         }
     }
