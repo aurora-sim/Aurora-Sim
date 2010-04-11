@@ -1490,28 +1490,28 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public void SendPlacesQuery(List<string> simNames, List<object> Places, UUID queryID, UUID agentID, UUID transactionID, List<string> Xs, List<string> Ys)
         {
             PlacesReplyPacket PlacesReply = new PlacesReplyPacket();
-            PlacesReplyPacket.QueryDataBlock[] Query = new PlacesReplyPacket.QueryDataBlock[Places.Count + 1];
+            PlacesReplyPacket.QueryDataBlock[] Query = new PlacesReplyPacket.QueryDataBlock[Places.Count];
             int totalarea = 0;
-            for (int i = 1; i < Places.Count + 1; i++)
+            for (int i = 0; i < Places.Count; i++)
             {
                 PlacesReplyPacket.QueryDataBlock QueryBlock = new PlacesReplyPacket.QueryDataBlock();
-                QueryBlock.ActualArea = ((ILandObject)Places[i - 1]).LandData.Area;
-                QueryBlock.BillableArea = ((ILandObject)Places[i - 1]).LandData.Area;
-                QueryBlock.Desc = Utils.StringToBytes(((ILandObject)Places[i - 1]).LandData.Description);
-                QueryBlock.Dwell = ((ILandObject)Places[i - 1]).LandData.Dwell;
-                QueryBlock.Flags = Convert.ToByte("Mainland");
-                QueryBlock.GlobalX = (float)Convert.ToInt32(Xs[i - 1]);
-                QueryBlock.GlobalY = (float)Convert.ToInt32(Ys[i - 1]);
+                QueryBlock.ActualArea = ((ILandObject)Places[i]).LandData.Area;
+                QueryBlock.BillableArea = ((ILandObject)Places[i]).LandData.Area;
+                QueryBlock.Desc = Utils.StringToBytes(((ILandObject)Places[i]).LandData.Description);
+                QueryBlock.Dwell = ((ILandObject)Places[i]).LandData.Dwell;
+                QueryBlock.Flags = ((ILandObject)Places[i]).LandData.Flags;
+                QueryBlock.GlobalX = (float)Convert.ToInt32(Xs[i]);
+                QueryBlock.GlobalY = (float)Convert.ToInt32(Ys[i]);
                 QueryBlock.GlobalZ = 0;
-                QueryBlock.Name = Utils.StringToBytes(((ILandObject)Places[i - 1]).LandData.Name);
-                QueryBlock.OwnerID = ((ILandObject)Places[i - 1]).LandData.OwnerID;
-                QueryBlock.Price = ((ILandObject)Places[i - 1]).LandData.SalePrice;
-                QueryBlock.SimName = Utils.StringToBytes(simNames[i - 1]);
-                QueryBlock.SnapshotID = ((ILandObject)Places[i - 1]).LandData.SnapshotID;
+                QueryBlock.Name = Utils.StringToBytes(((ILandObject)Places[i]).LandData.Name);
+                QueryBlock.OwnerID = ((ILandObject)Places[i]).LandData.OwnerID;
+                QueryBlock.Price = ((ILandObject)Places[i]).LandData.SalePrice;
+                QueryBlock.SimName = Utils.StringToBytes(simNames[i]);
+                QueryBlock.SnapshotID = ((ILandObject)Places[i]).LandData.SnapshotID;
                 Query[i] = QueryBlock;
-                totalarea += ((ILandObject)Places[i - 1]).LandData.Area;
+                totalarea += ((ILandObject)Places[i]).LandData.Area;
             }
-            PlacesReplyPacket.QueryDataBlock QueryBlock1 = new PlacesReplyPacket.QueryDataBlock();
+            /*PlacesReplyPacket.QueryDataBlock QueryBlock1 = new PlacesReplyPacket.QueryDataBlock();
             QueryBlock1.ActualArea = totalarea;
             QueryBlock1.BillableArea = totalarea;
             QueryBlock1.Desc = Utils.StringToBytes("");
@@ -1525,7 +1525,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             QueryBlock1.Price = 0;
             QueryBlock1.SimName = Utils.StringToBytes("");
             QueryBlock1.SnapshotID = UUID.Zero;
-            Query[0] = QueryBlock1;
+            Query[0] = QueryBlock1;*/
             PlacesReply.QueryData = Query;
             PlacesReply.AgentData = new PlacesReplyPacket.AgentDataBlock();
             PlacesReply.AgentData.AgentID = agentID;

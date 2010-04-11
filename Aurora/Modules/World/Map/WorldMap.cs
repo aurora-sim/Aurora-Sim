@@ -661,11 +661,14 @@ public virtual void HandleMapItemRequest(IClientAPI remoteClient, uint flags,
 					mapBlocks.Add(block);
 				}*/
 			}
-            foreach (OpenSim.Services.Interfaces.GridRegion region in IWC.IWCConnectedRegions.Keys)
+            if (IWC != null)
             {
-                MapBlockData block = new MapBlockData();
-                MapBlockFromGridRegion(block, region);
-                mapBlocks.Add(block);
+                foreach (OpenSim.Services.Interfaces.GridRegion region in IWC.IWCConnectedRegions.Keys)
+                {
+                    MapBlockData block = new MapBlockData();
+                    MapBlockFromGridRegion(block, region);
+                    mapBlocks.Add(block);
+                }
             }
 			remoteClient.SendMapBlock(mapBlocks, flag);
 		}

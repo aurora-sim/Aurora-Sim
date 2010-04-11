@@ -1309,10 +1309,29 @@ namespace Aurora.Modules
                     {
                         if (LandObject.LandData.OwnerID == client.AgentId)
                         {
-                            List<string> temp = GenericData.Query("uuid",LandObject.RegionUUID.ToString(), "regions", "regionName,locX,locY");
-                            SimNames.Add(temp[0]);
-                            SimXs.Add(temp[1]);
-                            SimYs.Add(temp[2]);
+                            SimNames.Add(scene.RegionInfo.RegionName);
+                            if (LandObject.LandData.UserLocation == Vector3.Zero)
+                            {
+                                for (int x = 0; x < 64; x++)
+                                {
+                                    for (int y = 0; y < 64; y++)
+                                    {
+                                        if (LandObject.LandBitmap[x, y])
+                                        {
+                                            SimXs.Add(((x * 4)+(scene.RegionInfo.RegionLocX * 256)).ToString());
+                                            SimYs.Add(((y * 4)+(scene.RegionInfo.RegionLocY * 256)).ToString());
+                                            x = (int)Constants.RegionSize;
+                                            y = (int)Constants.RegionSize;
+                                            continue;
+                                        }
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                SimXs.Add(((LandObject.LandData.UserLocation.X * 4) + (scene.RegionInfo.RegionLocX * 256)).ToString());
+                                SimYs.Add(((LandObject.LandData.UserLocation.Y * 4) + (scene.RegionInfo.RegionLocY * 256)).ToString());
+                            }
                             LandQueried.Add(LandObject);
                         }
                     }
