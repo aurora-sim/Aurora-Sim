@@ -1093,7 +1093,13 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                     //msg.timestamp = (uint)Util.UnixTimeSinceEpoch();
                     msg.timestamp = 0;
                     msg.fromAgentName = remoteClient.Name;
-                    msg.message = string.Format("{0} has invited you to join a group. There is no cost to join this group.", remoteClient.Name);
+                    GroupRecord groupInfo = GetGroupRecord(groupID);
+                    string MemberShipCost = ". There is no cost to join this group.";
+                    if(groupInfo.MembershipFee != 0)
+                    {
+                    	MemberShipCost = ". To join, you must pay " +groupInfo.MembershipFee.ToString()+".";
+                    }
+                    msg.message = string.Format("{0} has invited you to join " + groupInfo.GroupName + MemberShipCost, remoteClient.Name);
                     msg.dialog = (byte)OpenMetaverse.InstantMessageDialog.GroupInvitation;
                     msg.fromGroup = true;
                     msg.offline = (byte)0;
