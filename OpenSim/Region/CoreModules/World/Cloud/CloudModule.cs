@@ -104,6 +104,10 @@ namespace OpenSim.Region.CoreModules
         public void SetCloudDensity(float density)
         {
             m_cloudDensity = density;
+            m_scene.ForEachClient(delegate(IClientAPI client)
+            {
+                CloudsToClient(client);
+            });
         }
 
         public float CloudCover(int x, int y, int z)
