@@ -1500,8 +1500,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 QueryBlock.Desc = Utils.StringToBytes(((ILandObject)Places[i]).LandData.Description);
                 QueryBlock.Dwell = ((ILandObject)Places[i]).LandData.Dwell;
                 QueryBlock.Flags = 0;
-                QueryBlock.GlobalX = (float)Convert.ToInt32(Xs[i]);
-                QueryBlock.GlobalY = (float)Convert.ToInt32(Ys[i]);
+                QueryBlock.GlobalX = (float)Convert.ToDouble(Xs[i]);
+                QueryBlock.GlobalY = (float)Convert.ToDouble(Ys[i]);
                 QueryBlock.GlobalZ = 0;
                 QueryBlock.Name = Utils.StringToBytes(((ILandObject)Places[i]).LandData.Name);
                 QueryBlock.OwnerID = ((ILandObject)Places[i]).LandData.OwnerID;
