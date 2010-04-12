@@ -44,5 +44,15 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api.Interfaces
         string modSendCommand(string modules, string command, string k);
         void AAUpdatePrimProperties(LSL_String type, LSL_String Keys, LSL_String Values);
         void AASetCloudDensity(LSL_Float density);
+
+        void AAUpdateDatabase(LSL_String key, LSL_String value, LSL_String token);
+
+        LSL_List AAQueryDatabase(LSL_String key, LSL_String token);
+
+        LSL_Types.list AADeserializeXMLValues(LSL_Types.LSLString xmlFile);
+
+        LSL_Types.list AADeserializeXMLKeys(LSL_Types.LSLString xmlFile);
+
+        LSL_Types.LSLString AASerializeXML(LSL_Types.list keys, LSL_Types.list values);
     }
 }

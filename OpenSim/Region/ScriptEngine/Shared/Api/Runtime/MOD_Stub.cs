@@ -70,5 +70,30 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
         {
             m_MOD_Functions.AASetCloudDensity(density);
         }
+
+        public void AAUpdateDatabase(LSL_String key, LSL_String value, LSL_String token)
+        {
+            m_MOD_Functions.AAUpdateDatabase(key, value, token);
+        }
+
+        public LSL_List AAQueryDatabase(LSL_String key, LSL_String token)
+        {
+            return m_MOD_Functions.AAQueryDatabase(key, token);
+        }
+
+        public LSL_String AASerializeXML(LSL_List keys, LSL_List values)
+        {
+            return m_MOD_Functions.AASerializeXML(keys, values);
+        }
+
+        public LSL_List AADeserializeXMLKeys(LSL_String xmlFile)
+        {
+            return m_MOD_Functions.AADeserializeXMLKeys(xmlFile);
+        }
+
+        public LSL_List AADeserializeXMLValues(LSL_String xmlFile)
+        {
+            return m_MOD_Functions.AADeserializeXMLValues(xmlFile);
+        }
     }
 }

@@ -109,6 +109,10 @@ namespace Aurora.DataManager.Migration.Migrators
 
             AddSchema("macban", ColDefs(ColDef("macAddress", ColumnTypes.String50, true)));
 
+            AddSchema("LSLGenericData", ColDefs(ColDef("Token", ColumnTypes.String50, true),
+                ColDef("Key", ColumnTypes.String50, true),
+                ColDef("Value", ColumnTypes.String50)));
+            
             AddSchema("BannedViewers", ColDefs(ColDef("Client", ColumnTypes.String50, true)));
 
             AddSchema("mutelists", ColDefs(
