@@ -105,10 +105,12 @@ namespace Aurora.Modules
                 IConfig cnf = source.Configs[((Scene)client.Scene).RegionInfo.RegionName];
 				if(cnf != null)
 				{
-					IConfig check = source.Configs[Utils.BytesToString(SimName)];
+                    OpenSim.Services.Interfaces.GridRegion region = ((Scene)client.Scene).GridService.GetRegionByName(UUID.Zero, ((Scene)client.Scene).RegionInfo.RegionName);
+                    ((Scene)client.Scene).GridService.DeregisterRegion(region.RegionID);
+                    IConfig check = source.Configs[Utils.BytesToString(SimName)];
 					if(check == null)
 					{
-						source.AddConfig(Utils.BytesToString(SimName));
+                        source.AddConfig(Utils.BytesToString(SimName));
 						IConfig cfgNew = source.Configs[Utils.BytesToString(SimName)];
                         IConfig cfgOld = source.Configs[((Scene)client.Scene).RegionInfo.RegionName];
 						string[] oldRegionValues = cfgOld.GetValues();
@@ -120,34 +122,38 @@ namespace Aurora.Modules
 							next++;
 						}
 						source.Configs.Remove(cfgOld);
-						if(RedirectX != 0)
-						{
-							if(RedirectY != 0)
-							{
-								cfgNew.Set("Location",RedirectX.ToString() + "," + RedirectY.ToString());
-								client.Scene.RegionInfo.RegionLocX = Convert.ToUInt32(RedirectX);
-								client.Scene.RegionInfo.RegionLocY = Convert.ToUInt32(RedirectY);
-							}
-						}
+                        if (RedirectX != 0 || RedirectY != 0)
+                        {
+                            cfgNew.Set("Location", RedirectX.ToString() + "," + RedirectY.ToString());
+                            if (RedirectX != 0)
+                                client.Scene.RegionInfo.RegionLocX = Convert.ToUInt32(RedirectX);
+                            if (RedirectY != 0)
+                                client.Scene.RegionInfo.RegionLocY = Convert.ToUInt32(RedirectY);
+                            if (RedirectX != 0)
+                                region.RegionLocX = RedirectX;
+                            if (RedirectY != 0)
+                                region.RegionLocY = RedirectY;
+                        }
                         ((Scene)client.Scene).RegionInfo.RegionName = Utils.BytesToString(SimName);
 						source.Save();
-						
+                        region.RegionName = Utils.BytesToString(SimName);
 					}
 					else
 					{
-						if(RedirectX != 0)
-						{
-							if(RedirectY != 0)
-							{
-								check.Set("Location",RedirectX.ToString() + "," + RedirectY.ToString());
-								((Scene)client.Scene).RegionInfo.RegionLocX = Convert.ToUInt32(RedirectX);
-                                ((Scene)client.Scene).RegionInfo.RegionLocY = Convert.ToUInt32(RedirectY);
-							}
-						}
+                        if (RedirectX != 0 || RedirectY != 0)
+                        {
+                            check.Set("Location", RedirectX.ToString() + "," + RedirectY.ToString());
+                            if (RedirectX != 0)
+                                client.Scene.RegionInfo.RegionLocX = Convert.ToUInt32(RedirectX);
+                            if (RedirectY != 0)
+                                client.Scene.RegionInfo.RegionLocY = Convert.ToUInt32(RedirectY);
+                            if (RedirectX != 0)
+                                region.RegionLocX = RedirectX;
+                            if (RedirectY != 0)
+                                region.RegionLocY = RedirectY;
+                        }
 					}
-				}
-				else
-				{
+                    ((Scene)client.Scene).GridService.RegisterRegion(UUID.Zero, region);
 				}
 				i++;
 			}

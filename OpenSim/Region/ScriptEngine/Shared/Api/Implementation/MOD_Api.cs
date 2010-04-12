@@ -174,7 +174,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         public LSL_List AAQueryDatabase(LSL_String key, LSL_String token)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "AAQueryDatabase", m_host, "AA");
-            List<string> query = GenericData.Query(new string[] { "Token", "Key" }, new string[] { token.m_string, find.m_string }, "LSLGenericData", "*");
+            List<string> query = GenericData.Query(new string[] { "Token", "Key" }, new string[] { token.m_string, key.m_string }, "LSLGenericData", "*");
             LSL_List list = new LSL_Types.list(query.ToArray());
             return list;
         }
