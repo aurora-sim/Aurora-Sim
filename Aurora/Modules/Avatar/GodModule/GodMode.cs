@@ -157,7 +157,11 @@ namespace Aurora.Modules
 				}
 				i++;
 			}
-			
+            if (((Scene)client.Scene).RegionInfo.EstateSettings.EstateID != EstateID)
+            {
+                ((Scene)client.Scene).RegionInfo.EstateSettings.EstateID = (uint)EstateID;
+                ((Scene)client.Scene).m_storageManager.EstateDataStore.StoreEstateSettings(((Scene)client.Scene).RegionInfo.EstateSettings);
+            }
 		}
 	}
 }

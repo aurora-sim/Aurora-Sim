@@ -139,7 +139,7 @@ namespace OpenSim.Region.Framework.Scenes
         protected string m_simulatorVersion = "OpenSimulator Server";
 
         protected ModuleLoader m_moduleLoader;
-        protected StorageManager m_storageManager;
+        public StorageManager m_storageManager;
         protected AgentCircuitManager m_authenticateHandler;
 
         protected SceneCommunicationService m_sceneGridService;
