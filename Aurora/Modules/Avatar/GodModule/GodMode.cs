@@ -98,7 +98,11 @@ namespace Aurora.Modules
 			foreach (string file in iniFiles)
 			{
 				UserAccount UA = m_scenes[0].UserAccountService.GetUserAccount(UUID.Zero, client.AgentId);
-                if (UA.UserFlags == 0)
+                ScenePresence SP;
+                m_scenes[0].TryGetScenePresence(client.AgentId, out SP);
+                //if (UA.UserLevel == 0)
+                //    return;
+                if (SP.GodLevel == 0)
                     return;
 
 				IConfigSource source = new IniConfigSource(file);
@@ -142,6 +146,7 @@ namespace Aurora.Modules
 					{
                         if (RedirectX != 0 || RedirectY != 0)
                         {
+                            if (RedirectX == 0)
                             check.Set("Location", RedirectX.ToString() + "," + RedirectY.ToString());
                             if (RedirectX != 0)
                                 client.Scene.RegionInfo.RegionLocX = Convert.ToUInt32(RedirectX);
