@@ -93,10 +93,12 @@ namespace Aurora.Framework
         public string Notes;
     }
     
-    public interface IGenericData
+    public interface IRemoteGenericData
     {
-        string Identifier { get; }
-        void ConnectToDatabase(string connectionString);
+        /// <summary>
+        /// update table set setRow = setValue WHERE keyRow = keyValue
+        /// </summary>
+        void Update(string table, string[] setValues, string[] setRows, string[] keyRows, string[] keyValues);
         /// <summary>
         /// select wantedValue from table where keyRow = keyValue
         /// </summary>
@@ -105,10 +107,16 @@ namespace Aurora.Framework
         void Insert(string table, string[] values);
         void Delete(string table, string[] keys, string[] values);
         void Insert(string table, string[] values, string updateKey, string updateValue);
-        /// <summary>
-        /// update table set setRow = setValue WHERE keyRow = keyValue
-        /// </summary>
-        void Update(string table, string[] setValues, string[] setRows, string[] keyRows, string[] keyValues);
+
+
+        
+        void StoreRegionWindlightSettings(RegionLightShareData wl);
+        RegionLightShareData LoadRegionWindlightSettings(UUID regionUUID);
+    }
+
+    public interface IGenericData : IRemoteGenericData
+    {
+        void ConnectToDatabase(string connectionString);
         void CloseDatabase();
         bool TableExists(string table);
         void CreateTable(string table, ColumnDefinition[] columns);
@@ -118,8 +126,6 @@ namespace Aurora.Framework
         bool VerifyTableExists(string tableName, ColumnDefinition[] columnDefinitions);
         void EnsureTableExists(string tableName, ColumnDefinition[] columnDefinitions);
         void DropTable(string tableName);
-        void StoreRegionWindlightSettings(RegionLightShareData wl);
-        RegionLightShareData LoadRegionWindlightSettings(UUID regionUUID);
     }
 
     public enum DataManagerTechnology

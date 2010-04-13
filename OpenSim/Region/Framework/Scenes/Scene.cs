@@ -1740,7 +1740,7 @@ namespace OpenSim.Region.Framework.Scenes
         public void StoreWindlightProfile(RegionLightShareData wl)
         {
             m_regInfo.WindlightSettings = wl;
-            Aurora.Framework.IGenericData GD = Aurora.DataManager.DataManager.GetGenericPlugin();
+            var GD = Aurora.DataManager.DataManager.GetGenericPlugin();
         	GD.StoreRegionWindlightSettings(wl);
             //m_storageManager.DataStore.StoreRegionWindlightSettings(wl);
             m_eventManager.TriggerOnSaveNewWindlightProfile();
@@ -1748,7 +1748,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void LoadWindlightProfile()
         {
-        	Aurora.Framework.IGenericData GD = Aurora.DataManager.DataManager.GetGenericPlugin();
+        	var GD = Aurora.DataManager.DataManager.GetGenericPlugin();
         	m_regInfo.WindlightSettings = GD.LoadRegionWindlightSettings(RegionInfo.RegionID);
             //m_regInfo.WindlightSettings = m_storageManager.DataStore.LoadRegionWindlightSettings(RegionInfo.RegionID);
             m_eventManager.TriggerOnSaveNewWindlightProfile();
