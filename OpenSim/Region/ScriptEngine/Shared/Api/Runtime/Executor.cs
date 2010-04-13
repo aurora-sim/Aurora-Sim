@@ -166,17 +166,19 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
 			if (ev == null) // No event by that name!
 			{
 				//m_log.Debug("ScriptEngine Can not find any event named:" + EventName);
-				return true;
+				return false;
 			}
 			IEnumerator thread = (IEnumerator)ev.Invoke(m_Script, args);
 			int i = 0;
-			bool notfinished = true;
-			while (notfinished == true && i < 50)
+			bool running = false;
+			while (i < 10)
 			{
 				i++;
 				try
 				{
-					notfinished = thread.MoveNext();
+					running = thread.MoveNext();
+					if(!running)
+						return running;
 				}
 				catch (TargetInvocationException tie)
 				{
@@ -192,7 +194,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
 					}
 				}
 			}
-			return notfinished;
+			return running;
         }
 
         protected void initEventFlags()

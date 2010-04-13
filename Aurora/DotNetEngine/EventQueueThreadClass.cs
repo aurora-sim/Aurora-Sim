@@ -184,12 +184,17 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                             try
                             {
                                 QIS.ID.SetEventParams(QIS.llDetectParams);
-                                bool NotFinished = QIS.ID.Script.ExecuteEvent(
+                                bool Running = QIS.ID.Script.ExecuteEvent(
                                     QIS.ID.State,
                                     QIS.functionName,
                                     QIS.param);
-                                if (NotFinished)
+                                m_log.Warn("Running: " + Running + ", functionName: "+QIS.functionName);
+                                if(!Running)
+                                	continue;
+                                if (Running && !m_ScriptEngine.m_EventQueueManager.NeedsRemoved.Contains(QIS.ID.ItemID))
+                                {
                                     m_ScriptEngine.m_EventQueueManager.EventQueue2.Enqueue(QIS);
+                                }
                             }
                             catch (SelfDeleteException) // Must delete SOG
                             {

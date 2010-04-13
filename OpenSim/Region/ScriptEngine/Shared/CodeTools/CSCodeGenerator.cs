@@ -378,7 +378,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             retstr += GenerateLine(")");
             foreach (SYMBOL kid in remainingKids)
                 retstr += GenerateNode(kid);
-
+			IsParentEnumerable = false;
             return retstr;
         }
 
@@ -505,6 +505,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
 
             // opening brace
             retstr += GenerateIndentedLine("{");
+            if (IsParentEnumerable || IsInLoop)
+                retstr += GenerateLine("yield return null;");
             m_braceCount++;
 
             foreach (SYMBOL kid in cs.kids)
@@ -512,10 +514,6 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
 
             // closing brace
             m_braceCount--;
-            if (IsParentEnumerable && !IsInLoop)
-                retstr += GenerateLine("yield return null;");
-            if(IsInLoop)
-                retstr += GenerateLine("yield return null;");
                 
             retstr += GenerateIndentedLine("}");
 
@@ -646,11 +644,18 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
         private string GenerateReturnStatement(ReturnStatement rs)
         {
             string retstr = String.Empty;
+			
+            if(IsParentEnumerable)
+            {
+            	retstr += Generate("yield break;");
+            }
+            else
+            {
+            	retstr += Generate("return ", rs);
 
-            retstr += Generate("return ", rs);
-
-            foreach (SYMBOL kid in rs.kids)
-                retstr += GenerateNode(kid);
+            	foreach (SYMBOL kid in rs.kids)
+                	retstr += GenerateNode(kid);
+            }
 
             return retstr;
         }
@@ -727,10 +732,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
         {
             string retstr = String.Empty;
             if (IsParentEnumerable)
-            {
-                retstr += GenerateLine("yield return null;");
-                IsInLoop = true;
-            }
+            	IsInLoop = true;
             retstr += GenerateIndented("while (", ws);
             retstr += GenerateNode((SYMBOL) ws.kids.Pop());
             retstr += GenerateLine(")");
