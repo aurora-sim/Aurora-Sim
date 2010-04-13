@@ -165,8 +165,10 @@ namespace Aurora.Modules
 			}
             if (((Scene)client.Scene).RegionInfo.EstateSettings.EstateID != EstateID)
             {
-                ((Scene)client.Scene).RegionInfo.EstateSettings.EstateID = (uint)EstateID;
-                ((Scene)client.Scene).m_storageManager.EstateDataStore.StoreEstateSettings(((Scene)client.Scene).RegionInfo.EstateSettings);
+                List<int> estateIDs = (Scene)client.Scene).EstateService.GetEstates(response);
+                if (estateIDs.Count < 1)
+                    return;
+                ((Scene)client.Scene).EstateService.LinkRegion(((Scene)client.Scene).RegionInfo.RegionID, (int)EstateID);
             }
 		}
 	}

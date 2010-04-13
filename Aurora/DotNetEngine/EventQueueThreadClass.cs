@@ -204,7 +204,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                             }
                             catch (Exception ex)
                             {
-                                m_log.Error("Event Queue error: " + ex);
+                                //m_log.Error("Event Queue error: " + ex);
                             }
                         }
         			}

@@ -139,8 +139,26 @@ namespace OpenSim.Region.Framework.Scenes
         protected string m_simulatorVersion = "OpenSimulator Server";
 
         protected ModuleLoader m_moduleLoader;
-        public StorageManager m_storageManager;
+        protected StorageManager m_storageManager;
         protected AgentCircuitManager m_authenticateHandler;
+
+        protected IEstateService m_EstateService;
+
+        public IEstateService EstateService
+        {
+            get
+            {
+                if (m_EstateService == null)
+                {
+                    m_EstateService = RequestModuleInterface<IEstateService>();
+
+                    if (m_EstateService == null)
+                        throw new Exception("No IEstateService available.");
+                    m_EstateService.Initialise(m_storageManager.EstateDataStore);
+                }
+                return m_EstateService;
+            }
+        }
 
         protected SceneCommunicationService m_sceneGridService;
         public bool LoginsDisabled = true;
@@ -591,7 +609,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_regionName = m_regInfo.RegionName;
             m_datastore = m_regInfo.DataStore;
             m_lastUpdate = Util.EnvironmentTickCount();
-
+            
             m_physicalPrim = physicalPrim;
             m_seeIntoRegionFromNeighbor = SeeIntoRegionFromNeighbor;
 
