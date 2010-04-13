@@ -95,16 +95,15 @@ namespace Aurora.Modules
 			string regionConfigPath = Path.Combine(Util.configDir(), "Regions");
 			string[] iniFiles = Directory.GetFiles(regionConfigPath, "*.ini");
 			int i = 0;
-			foreach (string file in iniFiles)
-			{
-				UserAccount UA = m_scenes[0].UserAccountService.GetUserAccount(UUID.Zero, client.AgentId);
+            UserAccount UA = m_scenes[0].UserAccountService.GetUserAccount(UUID.Zero, client.AgentId);
                 ScenePresence SP;
                 m_scenes[0].TryGetScenePresence(client.AgentId, out SP);
                 //if (UA.UserLevel == 0)
                 //    return;
                 if (SP.GodLevel == 0)
                     return;
-
+			foreach (string file in iniFiles)
+			{
 				IConfigSource source = new IniConfigSource(file);
                 IConfig cnf = source.Configs[((Scene)client.Scene).RegionInfo.RegionName];
 				if(cnf != null)
@@ -165,10 +164,10 @@ namespace Aurora.Modules
 			}
             if (((Scene)client.Scene).RegionInfo.EstateSettings.EstateID != EstateID)
             {
-                EstateSettings estateSettings = ((Scene)client.Scene).EstateService.LoadEstateSettings((int)EstateID);
-                if (estateSettings.EstateID != EstateID)
-                    return;
-                ((Scene)client.Scene).EstateService.LinkRegion(((Scene)client.Scene).RegionInfo.RegionID, (int)EstateID);
+                bool changed = ((Scene)client.Scene).EstateService.LinkRegion(((Scene)client.Scene).RegionInfo.RegionID, (int)EstateID);
+                if (!changed)
+                    SP.ControllingClient.SendAgentAlertMessage("Unable to connecto to the given estate.", false);
+                    
             }
 		}
 	}
