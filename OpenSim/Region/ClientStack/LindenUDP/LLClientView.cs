@@ -324,7 +324,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public event MuteListEntryRemove OnRemoveMuteListEntry;
         public event GodlikeMessage onGodlikeMessage;
         public event GodUpdateRegionInfoUpdate OnGodUpdateRegionInfoUpdate;
-        public event LinkInventoryItem OnLinkInventoryItem;
         
 
         #endregion Events
@@ -4940,7 +4939,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             AddLocalPacketHandler(PacketType.GroupVoteHistoryRequest, HandleGroupVoteHistoryRequest);
             AddLocalPacketHandler(PacketType.SimWideDeletes, HandleSimWideDeletes);
             AddLocalPacketHandler(PacketType.SendPostcard, HandleSendPostcard);
-            AddLocalPacketHandler(PacketType.LinkInventoryItem, HandleLinkInventoryItem);
         }
 
         #region Packet Handlers
@@ -9340,18 +9338,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             if (handlerSendPostcard != null)
             {
                 handlerSendPostcard(this);
-                return true;
-            }
-            return false;
-        }
-        private bool HandleLinkInventoryItem(IClientAPI client, Packet packet)
-        {
-            LinkInventoryItemPacket Packet =
-                (LinkInventoryItemPacket)packet;
-            LinkInventoryItem handlerLinkItem = OnLinkInventoryItem;
-            if (handlerLinkItem != null)
-            {
-                handlerLinkItem(this, Packet.InventoryBlock.OldItemID, Packet.InventoryBlock.FolderID, Packet.InventoryBlock.CallbackID);
                 return true;
             }
             return false;

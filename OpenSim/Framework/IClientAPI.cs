@@ -479,8 +479,6 @@ namespace OpenSim.Framework
     
     public delegate void GodUpdateRegionInfoUpdate(IClientAPI client, float BillableFactor, ulong EstateID, ulong RegionFlags, byte[] SimName,int RedirectX, int RedirectY);
     
-    public delegate void LinkInventoryItem(IClientAPI client, UUID oldItemID, UUID parentID, uint Callback);
-
     public delegate void GodlikeMessage(IClientAPI client, UUID requester, byte[] Method, byte[] Parameter);
     
     public delegate void SaveStateHandler(IClientAPI client,UUID agentID);
@@ -498,8 +496,7 @@ namespace OpenSim.Framework
     public delegate void GroupActiveProposalsRequest(IClientAPI client,UUID agentID, UUID groupID, UUID transactionID, UUID sessionID);
     
     public delegate void GroupVoteHistoryRequest(IClientAPI client,UUID agentID, UUID groupID, UUID transactionID, UUID sessionID);
-    
-    
+
     public delegate void SimWideDeletesDelegate(IClientAPI client,UUID agentID, int flags, UUID targetID);
     
     public delegate void SendPostcard(IClientAPI client);
