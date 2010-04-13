@@ -318,6 +318,11 @@ namespace OpenSim.Services.LLLoginService
                     m_log.DebugFormat("[LLOGIN SERVICE]: Retrieved {0} friends", friendsList.Length);
                 }
 
+                m_log.Warn("where: " + where);
+                m_log.Warn("InternalEndPoint: " + destination.InternalEndPoint.ToString());
+                m_log.Warn("ExternalEndPoint: " + destination.ExternalEndPoint.ToString());
+                m_log.Warn("ExternalHostName: " + destination.ExternalHostName);
+
                 //
                 // Finally, fill out the response and return it
                 //

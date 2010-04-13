@@ -128,15 +128,16 @@ namespace Aurora.Modules
 						source.Configs.Remove(cfgOld);
                         if (RedirectX != 0 || RedirectY != 0)
                         {
-                            cfgNew.Set("Location", RedirectX.ToString() + "," + RedirectY.ToString());
-                            if (RedirectX != 0)
-                                client.Scene.RegionInfo.RegionLocX = Convert.ToUInt32(RedirectX);
-                            if (RedirectY != 0)
-                                client.Scene.RegionInfo.RegionLocY = Convert.ToUInt32(RedirectY);
-                            if (RedirectX != 0)
-                                region.RegionLocX = RedirectX;
-                            if (RedirectY != 0)
-                                region.RegionLocY = RedirectY;
+                            if (RedirectX == 0)
+                                RedirectX = (int)client.Scene.RegionInfo.RegionLocX;
+                            if (RedirectY == 0)
+                                RedirectY = (int)client.Scene.RegionInfo.RegionLocY;
+
+                            check.Set("Location", RedirectX.ToString() + "," + RedirectY.ToString());
+                            client.Scene.RegionInfo.RegionLocX = Convert.ToUInt32(RedirectX);
+                            client.Scene.RegionInfo.RegionLocY = Convert.ToUInt32(RedirectY);
+                            region.RegionLocX = RedirectX;
+                            region.RegionLocY = RedirectY;
                         }
                         ((Scene)client.Scene).RegionInfo.RegionName = Utils.BytesToString(SimName);
 						source.Save();
@@ -147,15 +148,15 @@ namespace Aurora.Modules
                         if (RedirectX != 0 || RedirectY != 0)
                         {
                             if (RedirectX == 0)
+                                RedirectX = (int)client.Scene.RegionInfo.RegionLocX;
+                            if (RedirectY == 0)
+                                RedirectY = (int)client.Scene.RegionInfo.RegionLocY;
+
                             check.Set("Location", RedirectX.ToString() + "," + RedirectY.ToString());
-                            if (RedirectX != 0)
-                                client.Scene.RegionInfo.RegionLocX = Convert.ToUInt32(RedirectX);
-                            if (RedirectY != 0)
-                                client.Scene.RegionInfo.RegionLocY = Convert.ToUInt32(RedirectY);
-                            if (RedirectX != 0)
-                                region.RegionLocX = RedirectX;
-                            if (RedirectY != 0)
-                                region.RegionLocY = RedirectY;
+                            client.Scene.RegionInfo.RegionLocX = Convert.ToUInt32(RedirectX);
+                            client.Scene.RegionInfo.RegionLocY = Convert.ToUInt32(RedirectY);
+                            region.RegionLocX = RedirectX;
+                            region.RegionLocY = RedirectY;
                         }
 					}
                     ((Scene)client.Scene).GridService.RegisterRegion(UUID.Zero, region);
