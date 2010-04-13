@@ -71,7 +71,7 @@ namespace Aurora.Modules
         
         private IPresenceService presenceServer;
 
-        private IGenericData GD = null;
+        private IRemoteGenericData GD = null;
         private IProfileData ProfileDataManager = null;
         private bool m_Enabled = true;
 

@@ -813,7 +813,7 @@ namespace OpenSim.Services.LLLoginService
             values.Add(" ");
             values.Add("");
             values.Add("true");
-            IGenericData GD = Aurora.DataManager.DataManager.GetGenericPlugin();
+            var GD = Aurora.DataManager.DataManager.GetGenericPlugin();
             GD.Insert("usersauth", values.ToArray());
         }
 

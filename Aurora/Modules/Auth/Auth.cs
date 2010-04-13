@@ -18,7 +18,7 @@ namespace Aurora.Modules
     {
         private List<string> CheckServers = new List<string>();
         private List<string> AuthServersBannedList = new List<string>();
-        private IGenericData a_DataService = null;
+        private IRemoteGenericData a_DataService = null;
         private Scene m_scene;
 
         #region IRegionModule Members
@@ -149,7 +149,7 @@ namespace Aurora.Modules
             values.Add(" ");
             values.Add("");
             values.Add("true");
-            IGenericData GD = Aurora.DataManager.DataManager.GetGenericPlugin();
+            var GD = Aurora.DataManager.DataManager.GetGenericPlugin();
             GD.Insert("usersauth", values.ToArray());
         }
 

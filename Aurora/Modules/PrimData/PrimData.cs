@@ -23,7 +23,7 @@ namespace Aurora.Modules
     }
     public class PrimData: IRegionModule
     {
-        IGenericData GenericData;
+        IRemoteGenericData GenericData;
         Scene m_scene;
         INPCModule BotModule;
         public void Initialise(Scene scene, IConfigSource source)

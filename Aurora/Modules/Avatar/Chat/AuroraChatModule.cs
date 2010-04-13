@@ -55,7 +55,7 @@ namespace Aurora.Modules
         private List<UUID> m_authorizedSpeakers = new List<UUID>();
         private List<Scene> m_scenes = new List<Scene>();
 
-        private IGenericData GenericData = null;
+        private IRemoteGenericData GenericData = null;
         private Dictionary<UUID, byte[]> m_MuteCache = new Dictionary<UUID, byte[]>(); private Dictionary<string, List<string>> MuteCache = new Dictionary<string, List<string>>();
         private List<string> FreezeCache = new List<string>();
         internal object m_syncy = new object();

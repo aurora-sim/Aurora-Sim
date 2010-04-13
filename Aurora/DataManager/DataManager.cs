@@ -17,12 +17,12 @@ namespace Aurora.DataManager
 {
     public static class DataManager
     {
-        private static IGenericData plugin = null;
-        public static IGenericData GetGenericPlugin()
+        private static IRemoteGenericData plugin = null;
+        public static IRemoteGenericData GetGenericPlugin()
         {
             return plugin;
         }
-        public static void SetGenericPlugin(IGenericData Plugin)
+        public static void SetRemoteDataPlugin(IRemoteGenericData Plugin)
         {
             plugin = Plugin;
         }

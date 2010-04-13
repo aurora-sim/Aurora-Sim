@@ -18,7 +18,7 @@ namespace Aurora.Modules.Avatar.AdultVerificationModule
 {
 	public class AdultVerificationModule: IRegionModule, IAdultVerificationModule
 	{
-		private IGenericData GenericData = null;
+        private IRemoteGenericData GenericData = null;
 		private IRegionData RegionData = null;
         private bool m_Enabled = true;
 		public void Initialise(Scene scene, IConfigSource source)

@@ -52,7 +52,7 @@ namespace Aurora.Modules
         private bool enabled = false;
         private List<Scene> m_SceneList = new List<Scene>();
         private static char[] charSeparators = new char[] {  };
-        private IGenericData GenericData = null;
+        private IRemoteGenericData GenericData = null;
         private IProfileData ProfileData = null;
         private IRegionData RegionData = null;
 

@@ -12,7 +12,7 @@ namespace Aurora.Modules.AbuseReportsGUI
     public partial class Abuse : Form
     {
         private int formNumber = 1;
-        private IGenericData GenericData;
+        private IRemoteGenericData GenericData;
         private IRegionData RegionData;
         public Abuse()
         {

@@ -50,7 +50,7 @@ namespace Aurora.Modules
                 ProfileData.ConnectToDatabase(ConnectionString);
                 MySQLRegion RegionData = new MySQLRegion();
                 RegionData.ConnectToDatabase(ConnectionString);
-                Aurora.DataManager.DataManager.SetGenericPlugin(GenericData);
+                Aurora.DataManager.DataManager.SetRemoteDataPlugin(GenericData);
                 Aurora.DataManager.DataManager.SetProfilePlugin((IProfileData)ProfileData);
                 Aurora.DataManager.DataManager.SetRegionPlugin((IRegionData)RegionData);
             }
@@ -68,7 +68,7 @@ namespace Aurora.Modules
                 ProfileData.ConnectToDatabase(ConnectionString);
                 SQLiteRegion RegionData = new SQLiteRegion();
                 RegionData.ConnectToDatabase(ConnectionString);
-                Aurora.DataManager.DataManager.SetGenericPlugin(GenericData);
+                Aurora.DataManager.DataManager.SetRemoteDataPlugin(GenericData);
                 Aurora.DataManager.DataManager.SetProfilePlugin((IProfileData)ProfileData);
                 Aurora.DataManager.DataManager.SetRegionPlugin((IRegionData)RegionData);
             }

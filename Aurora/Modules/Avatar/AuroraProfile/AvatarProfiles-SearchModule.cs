@@ -60,7 +60,7 @@ namespace Aurora.Modules
         private Dictionary<string, Dictionary<UUID, string>> ClassifiedsCache = new Dictionary<string, Dictionary<UUID, string>>();
         private Dictionary<string, List<string>> ClassifiedInfoCache = new Dictionary<string, List<string>>();
         private IProfileData ProfileData = null;
-        private IGenericData GenericData = null;
+        private IRemoteGenericData GenericData = null;
         private IConfigSource m_gConfig;
         private List<Scene> m_Scenes = new List<Scene>();
         private bool m_SearchEnabled = true;
