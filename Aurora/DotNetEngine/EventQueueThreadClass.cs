@@ -188,7 +188,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                                     QIS.ID.State,
                                     QIS.functionName,
                                     QIS.param);
-                                m_log.Warn("Running: " + Running + ", functionName: "+QIS.functionName);
+                                //m_log.Warn("Running: " + Running + ", functionName: "+QIS.functionName);
                                 if(!Running)
                                 	continue;
                                 if (Running && !m_ScriptEngine.m_EventQueueManager.NeedsRemoved.Contains(QIS.ID.ItemID))
