@@ -114,13 +114,12 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 		/// <returns></returns>
 		public IEnumerable CloseAndDispose()
 		{
-			m_ScriptManager.Errors[ItemID] = null;
+            m_ScriptManager.m_scriptEngine.m_EventQueueManager.RemoveFromQueue(ItemID);
+            m_ScriptManager.Errors[ItemID] = null;
 			ReleaseControls(localID, ItemID);
 			// Stop long command on script
 			AsyncCommandManager.RemoveScript(m_ScriptManager.m_scriptEngine, localID, ItemID);
 			m_ScriptManager.m_scriptEngine.m_EventManager.state_exit(localID);
-			m_ScriptManager.m_scriptEngine.m_EventQueueManager.RemoveFromQueue(ItemID);
-
 
 			yield return null;
 

@@ -62,6 +62,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         internal UUID m_itemID;
         internal bool m_CMFunctionsEnabled = false;
         internal IScriptModuleComms m_comms = null;
+        internal IScriptProtectionModule ScriptProtection;
 
         public void Initialize(IScriptEngine ScriptEngine, SceneObjectPart host, uint localID, UUID itemID, IScriptProtectionModule module)
         {
@@ -69,6 +70,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             m_host = host;
             m_localID = localID;
             m_itemID = itemID;
+            ScriptProtection = module;
 
             if (m_ScriptEngine.Config.GetBoolean("AllowCareminsterFunctions", false))
                 m_CMFunctionsEnabled = true;
@@ -118,12 +120,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         /// <returns>List of windlight parameters</returns>
         public LSL_List cmGetWindlightScene(LSL_List rules)
         {
-            if (!m_CMFunctionsEnabled)
-            {
-                CMShoutError("Careminster functions are not enabled.");
-                return new LSL_List();
-            }
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "cmGetWindlightScene", m_host, "CM"); m_host.AddScriptLPS(1);
             RegionLightShareData wl = m_host.ParentGroup.Scene.RegionInfo.WindlightSettings;
 
             LSL_List values = new LSL_List();
@@ -443,11 +440,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         /// <returns>success: true or false</returns>
         public int cmSetWindlightScene(LSL_List rules)
         {
-            if (!m_CMFunctionsEnabled)
-            {
-                CMShoutError("Careminster functions are not enabled.");
-                return 0;
-            }
+            ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "cmSetWindlightScene", m_host, "CM");
+            
             if (!World.RegionInfo.EstateSettings.IsEstateManager(m_host.OwnerID) && World.GetScenePresence(m_host.OwnerID).GodLevel < 200)
             {
                 CMShoutError("cmSetWindlightScene can only be used by estate managers or owners.");

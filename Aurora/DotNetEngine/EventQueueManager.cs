@@ -309,7 +309,8 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         /// <param name="itemID"></param>
         public void RemoveFromQueue(UUID itemID)
         {
-        	NeedsRemoved.Add(itemID);
+            if(!NeedsRemoved.Contains(itemID))
+        	    NeedsRemoved.Add(itemID);
         }
 
         #endregion
