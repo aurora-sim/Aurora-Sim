@@ -186,7 +186,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Simulation
 
             foreach (Scene s in m_sceneList)
             {
-                if (s.RegionInfo.RegionHandle == destination.RegionHandle)
+                if (s.RegionInfo.RegionID == destination.RegionID)
                 {
                     m_log.DebugFormat("[LOCAL SIMULATION CONNECTOR]: Found region {0} to send SendCreateChildAgent", destination.RegionName);
                     return s.NewUserConnection(aCircuit, teleportFlags, out reason);

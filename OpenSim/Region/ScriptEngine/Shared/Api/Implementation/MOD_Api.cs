@@ -30,6 +30,7 @@ using System.Reflection;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.Remoting.Lifetime;
+using System.Xml;
 using Aurora.Framework;
 using OpenMetaverse;
 using Nini.Config;
@@ -154,6 +155,71 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             if (CloudModule == null)
                 return;
             CloudModule.SetCloudDensity((float)density);
+        }
+
+        public void AAUpdateDatabase(LSL_String key, LSL_String value, LSL_String token)
+        {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "AAUpdateDatabase", m_host, "AA");
+            List<string> Test = GenericData.Query(new string[] { "Token", "Key" }, new string[] { token.m_string, key.m_string }, "LSLGenericData", "*");
+            if (Test.Count == 0)
+            {
+                GenericData.Insert("LSLGenericData", new string[] { token.m_string, key.m_string, value.m_string });
+            }
+            else
+            {
+                GenericData.Update("LSLGenericData", new string[] { "Value" }, new string[] { value.m_string }, new string[] { "key" }, new string[] { key.m_string });
+            }
+        }
+
+        public LSL_List AAQueryDatabase(LSL_String key, LSL_String token)
+        {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "AAQueryDatabase", m_host, "AA");
+            List<string> query = GenericData.Query(new string[] { "Token", "Key" }, new string[] { token.m_string, key.m_string }, "LSLGenericData", "*");
+            LSL_List list = new LSL_Types.list(query.ToArray());
+            return list;
+        }
+
+        public LSL_String AASerializeXML(LSL_List keys, LSL_List values)
+        {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "AASerializeXML", m_host, "AA");
+            XmlDocument doc = new XmlDocument();
+            for (int i = 0; i < keys.Length; i++)
+            {
+                string key = keys.GetLSLStringItem(i);
+                string value = values.GetLSLStringItem(i);
+                XmlNode node = doc.CreateNode(XmlNodeType.Element, key, "");
+                node.InnerText = value;
+                doc.AppendChild(node);
+            }
+            return new LSL_String(doc.OuterXml);
+        }
+
+        public LSL_List AADeserializeXMLKeys(LSL_String xmlFile)
+        {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "AADeserializeXMLKeys", m_host, "AA");
+            XmlDocument doc = new XmlDocument();
+            doc.LoadXml(xmlFile.m_string);
+            XmlNodeList children = doc.ChildNodes;
+            LSL_List keys = new LSL_Types.list();
+            foreach (XmlNode node in children)
+            {
+                keys.Add(node.Name);
+            }
+            return keys;
+        }
+
+        public LSL_List AADeserializeXMLValues(LSL_String xmlFile)
+        {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "AADeserializeXMLValues", m_host, "AA");
+            XmlDocument doc = new XmlDocument();
+            doc.LoadXml(xmlFile.m_string);
+            XmlNodeList children = doc.ChildNodes;
+            LSL_List values = new LSL_Types.list();
+            foreach (XmlNode node in children)
+            {
+                values.Add(node.InnerText);
+            }
+            return values;
         }
     }
 }

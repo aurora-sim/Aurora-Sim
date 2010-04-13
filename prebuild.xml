@@ -2419,6 +2419,8 @@
                     <Reference name="System"/>
           <Reference name="System.Xml"/>
 <Reference name="System.Drawing"/>
+<Reference name="System.Windows.Forms"/>
+
 	    <Reference name="Nini.dll"/>
 <Reference name="OpenMetaverseTypes.dll"/>
 <Reference name="OpenMetaverse.dll"/>

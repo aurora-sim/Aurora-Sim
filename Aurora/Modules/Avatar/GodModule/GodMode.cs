@@ -98,17 +98,23 @@ namespace Aurora.Modules
 			foreach (string file in iniFiles)
 			{
 				UserAccount UA = m_scenes[0].UserAccountService.GetUserAccount(UUID.Zero, client.AgentId);
-                if (UA.UserFlags == 0)
+                ScenePresence SP;
+                m_scenes[0].TryGetScenePresence(client.AgentId, out SP);
+                //if (UA.UserLevel == 0)
+                //    return;
+                if (SP.GodLevel == 0)
                     return;
 
 				IConfigSource source = new IniConfigSource(file);
                 IConfig cnf = source.Configs[((Scene)client.Scene).RegionInfo.RegionName];
 				if(cnf != null)
 				{
-					IConfig check = source.Configs[Utils.BytesToString(SimName)];
+                    OpenSim.Services.Interfaces.GridRegion region = ((Scene)client.Scene).GridService.GetRegionByName(UUID.Zero, ((Scene)client.Scene).RegionInfo.RegionName);
+                    ((Scene)client.Scene).GridService.DeregisterRegion(region.RegionID);
+                    IConfig check = source.Configs[Utils.BytesToString(SimName)];
 					if(check == null)
 					{
-						source.AddConfig(Utils.BytesToString(SimName));
+                        source.AddConfig(Utils.BytesToString(SimName));
 						IConfig cfgNew = source.Configs[Utils.BytesToString(SimName)];
                         IConfig cfgOld = source.Configs[((Scene)client.Scene).RegionInfo.RegionName];
 						string[] oldRegionValues = cfgOld.GetValues();
@@ -120,38 +126,47 @@ namespace Aurora.Modules
 							next++;
 						}
 						source.Configs.Remove(cfgOld);
-						if(RedirectX != 0)
-						{
-							if(RedirectY != 0)
-							{
-								cfgNew.Set("Location",RedirectX.ToString() + "," + RedirectY.ToString());
-								client.Scene.RegionInfo.RegionLocX = Convert.ToUInt32(RedirectX);
-								client.Scene.RegionInfo.RegionLocY = Convert.ToUInt32(RedirectY);
-							}
-						}
+                        if (RedirectX != 0 || RedirectY != 0)
+                        {
+                            cfgNew.Set("Location", RedirectX.ToString() + "," + RedirectY.ToString());
+                            if (RedirectX != 0)
+                                client.Scene.RegionInfo.RegionLocX = Convert.ToUInt32(RedirectX);
+                            if (RedirectY != 0)
+                                client.Scene.RegionInfo.RegionLocY = Convert.ToUInt32(RedirectY);
+                            if (RedirectX != 0)
+                                region.RegionLocX = RedirectX;
+                            if (RedirectY != 0)
+                                region.RegionLocY = RedirectY;
+                        }
                         ((Scene)client.Scene).RegionInfo.RegionName = Utils.BytesToString(SimName);
 						source.Save();
-						
+                        region.RegionName = Utils.BytesToString(SimName);
 					}
 					else
 					{
-						if(RedirectX != 0)
-						{
-							if(RedirectY != 0)
-							{
-								check.Set("Location",RedirectX.ToString() + "," + RedirectY.ToString());
-								((Scene)client.Scene).RegionInfo.RegionLocX = Convert.ToUInt32(RedirectX);
-                                ((Scene)client.Scene).RegionInfo.RegionLocY = Convert.ToUInt32(RedirectY);
-							}
-						}
+                        if (RedirectX != 0 || RedirectY != 0)
+                        {
+                            if (RedirectX == 0)
+                            check.Set("Location", RedirectX.ToString() + "," + RedirectY.ToString());
+                            if (RedirectX != 0)
+                                client.Scene.RegionInfo.RegionLocX = Convert.ToUInt32(RedirectX);
+                            if (RedirectY != 0)
+                                client.Scene.RegionInfo.RegionLocY = Convert.ToUInt32(RedirectY);
+                            if (RedirectX != 0)
+                                region.RegionLocX = RedirectX;
+                            if (RedirectY != 0)
+                                region.RegionLocY = RedirectY;
+                        }
 					}
-				}
-				else
-				{
+                    ((Scene)client.Scene).GridService.RegisterRegion(UUID.Zero, region);
 				}
 				i++;
 			}
-			
+            if (((Scene)client.Scene).RegionInfo.EstateSettings.EstateID != EstateID)
+            {
+                ((Scene)client.Scene).RegionInfo.EstateSettings.EstateID = (uint)EstateID;
+                ((Scene)client.Scene).m_storageManager.EstateDataStore.StoreEstateSettings(((Scene)client.Scene).RegionInfo.EstateSettings);
+            }
 		}
 	}
 }
