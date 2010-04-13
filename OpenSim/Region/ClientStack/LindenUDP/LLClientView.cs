@@ -182,6 +182,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public event TeleportLocationRequest OnSetStartLocationRequest;
         public event UpdateAvatarProperties OnUpdateAvatarProperties;
         public event CreateNewInventoryItem OnCreateNewInventoryItem;
+        public event LinkInventoryItem OnLinkInventoryItem;
         public event CreateInventoryFolder OnCreateNewInventoryFolder;
         public event UpdateInventoryFolder OnUpdateInventoryFolder;
         public event MoveInventoryFolder OnMoveInventoryFolder;
@@ -643,7 +644,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 if (pprocessor.Async)
                 {
                     object obj = new AsyncPacketProcess(this, pprocessor.method, packet);
-                    Util.FireAndForget(ProcessSpecificPacketAsync,obj);
+                    Util.FireAndForget(ProcessSpecificPacketAsync, obj);
                     result = true;
                 }
                 else
@@ -671,8 +672,17 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public void ProcessSpecificPacketAsync(object state)
         {
             AsyncPacketProcess packetObject = (AsyncPacketProcess)state;
-            packetObject.result = packetObject.Method(packetObject.ClientView, packetObject.Pack);
-            
+
+            try
+            {
+                packetObject.result = packetObject.Method(packetObject.ClientView, packetObject.Pack);
+            }
+            catch (Exception e)
+            {
+                // Make sure that we see any exception caused by the asynchronous operation.
+                m_log.Error(
+                    string.Format("[LLCLIENTVIEW]: Caught exception while processing {0}", packetObject.Pack), e);
+            }            
         }
 
         #endregion Packet Handling
@@ -4804,6 +4814,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             AddLocalPacketHandler(PacketType.UpdateInventoryFolder, HandleUpdateInventoryFolder);
             AddLocalPacketHandler(PacketType.MoveInventoryFolder, HandleMoveInventoryFolder);
             AddLocalPacketHandler(PacketType.CreateInventoryItem, HandleCreateInventoryItem);
+            AddLocalPacketHandler(PacketType.LinkInventoryItem, HandleLinkInventoryItem);
             AddLocalPacketHandler(PacketType.FetchInventory, HandleFetchInventory);
             AddLocalPacketHandler(PacketType.FetchInventoryDescendents, HandleFetchInventoryDescendents);
             AddLocalPacketHandler(PacketType.PurgeInventoryDescendents, HandlePurgeInventoryDescendents);
@@ -7404,6 +7415,38 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             return true;
         }
 
+        private bool HandleLinkInventoryItem(IClientAPI sender, Packet Pack)
+        {
+            LinkInventoryItemPacket createLink = (LinkInventoryItemPacket)Pack;
+
+            #region Packet Session and User Check
+            if (m_checkPackets)
+            {
+                if (createLink.AgentData.SessionID != SessionId ||
+                    createLink.AgentData.AgentID != AgentId)
+                    return true;
+            }
+            #endregion
+
+            LinkInventoryItem linkInventoryItem = OnLinkInventoryItem;
+
+            if (linkInventoryItem != null)
+            {
+                linkInventoryItem(
+                    this,
+                    createLink.InventoryBlock.TransactionID,
+                    createLink.InventoryBlock.FolderID,
+                    createLink.InventoryBlock.CallbackID,
+                    Util.FieldToString(createLink.InventoryBlock.Description),
+                    Util.FieldToString(createLink.InventoryBlock.Name),
+                    createLink.InventoryBlock.InvType,
+                    createLink.InventoryBlock.Type,
+                    createLink.InventoryBlock.OldItemID);
+            }
+
+            return true;
+        }
+
         private bool HandleFetchInventory(IClientAPI sender, Packet Pack)
         {
             if (OnFetchInventory != null)
@@ -7748,12 +7791,15 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         newTaskItem.GroupPermissions = updatetask.InventoryData.GroupMask;
                         newTaskItem.EveryonePermissions = updatetask.InventoryData.EveryoneMask;
                         newTaskItem.NextPermissions = updatetask.InventoryData.NextOwnerMask;
+
+                        // Unused?  Clicking share with group sets GroupPermissions instead, so perhaps this is something
+                        // different
                         //newTaskItem.GroupOwned=updatetask.InventoryData.GroupOwned;
                         newTaskItem.Type = updatetask.InventoryData.Type;
                         newTaskItem.InvType = updatetask.InventoryData.InvType;
                         newTaskItem.Flags = updatetask.InventoryData.Flags;
                         //newTaskItem.SaleType=updatetask.InventoryData.SaleType;
-                        //newTaskItem.SalePrice=updatetask.InventoryData.SalePrice;;
+                        //newTaskItem.SalePrice=updatetask.InventoryData.SalePrice;
                         newTaskItem.Name = Util.FieldToString(updatetask.InventoryData.Name);
                         newTaskItem.Description = Util.FieldToString(updatetask.InventoryData.Description);
                         newTaskItem.CreationDate = (uint)updatetask.InventoryData.CreationDate;
@@ -7761,7 +7807,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                                                    newTaskItem, updatetask.UpdateData.LocalID);
                     }
                 }
-            }
+            }               
 
             return true;
         }
@@ -11165,7 +11211,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         {
             if (m_debugPacketLevel >= 255)
                 m_log.DebugFormat("[CLIENT]: Packet IN {0}", Pack.Type);
-            
+
             if (!ProcessPacketMethod(Pack))
                 m_log.Warn("[CLIENT]: unhandled packet " + Pack.Type);
 
@@ -11367,9 +11413,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                 m_groupPowers.Clear();
 
-                for (int i = 0; i < GroupMembership.Length; i++)
+                if (GroupMembership != null)
                 {
-                    m_groupPowers[GroupMembership[i].GroupID] = GroupMembership[i].GroupPowers;
+                    for (int i = 0; i < GroupMembership.Length; i++)
+                    {
+                        m_groupPowers[GroupMembership[i].GroupID] = GroupMembership[i].GroupPowers;
+                    }
                 }
             }
         }
@@ -11692,6 +11741,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             public PacketMethod method;
             public bool Async;
         }
+        
         public class AsyncPacketProcess
         {
             public bool result = false;
