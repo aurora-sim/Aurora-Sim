@@ -1839,7 +1839,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             if (m_bypassPermissions) return m_bypassPermissionsValue;
 
             IEstateSettingsModule ESM = scene.RequestModuleInterface<IEstateSettingsModule>();
-            return ESM.AllowTeleport(scene.RegionInfo.RegionID, userID);
+            return ESM.AllowTeleport(scene, userID);
         }
 
         private bool CanResetScript(UUID prim, UUID script, UUID agentID, Scene scene)

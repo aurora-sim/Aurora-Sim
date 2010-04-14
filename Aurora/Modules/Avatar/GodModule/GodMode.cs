@@ -195,7 +195,7 @@ namespace Aurora.Modules
 
         public bool IsSharedModule { get { return true; } }
 
-        public bool AllowTeleport(Scene scene, UUID userID)
+        public bool AllowTeleport(IScene scene, UUID userID)
         {
             EstateSettings ES = m_scene.EstateService.LoadEstateSettings(scene.RegionInfo.RegionID, false);
             AuroraProfileData Profile = PD.GetProfileInfo(userID);
