@@ -29,9 +29,9 @@ namespace Aurora.Modules
         public void Initialise(Scene scene, IConfigSource source)
         {
             m_scene = scene;
-            //scene.SceneContents.OnObjectDuplicate += new ObjectDuplicateDelegate(SceneContents_OnObjectDuplicate);
-            //scene.SceneContents.OnObjectCreate += new ObjectCreateDelegate(SceneContents_OnObjectCreate);
-            //scene.SceneContents.OnObjectRemove += new ObjectDeleteDelegate(SceneContents_OnObjectRemove);
+            scene.SceneContents.OnObjectDuplicate += new ObjectDuplicateDelegate(SceneContents_OnObjectDuplicate);
+            scene.SceneContents.OnObjectCreate += new ObjectCreateDelegate(SceneContents_OnObjectCreate);
+            scene.SceneContents.OnObjectRemove += new ObjectDeleteDelegate(SceneContents_OnObjectRemove);
         }
 
         void SceneContents_OnObjectDuplicate(EntityBase original, EntityBase clone)
@@ -39,13 +39,22 @@ namespace Aurora.Modules
             if (GenericData == null)
                 GenericData = Aurora.DataManager.DataManager.GetGenericPlugin();
 
-            SceneObjectGroup group = clone as SceneObjectGroup;
-            List<string> objectData = GenericData.Query("primUUID", group.GetFromItemID().ToString(), "auroraprims", "*");
-            CreateNewObjectData(clone.UUID.ToString());
+            SceneObjectGroup groupclone = clone as SceneObjectGroup;
+            SceneObjectGroup grouporiginal = clone as SceneObjectGroup;
+            List<string> OriginalData = GenericData.Query("primUUID", grouporiginal.RootPart.UUID.ToString(), "auroraprims", "*");
+            List<string> objectData = GenericData.Query("primUUID", groupclone.RootPart.UUID.ToString(), "auroraprims", "*");
             if (objectData.Count == 1)
             {
-                CreateNewObjectData(group.GetFromItemID().ToString());
-                return;
+                if (OriginalData.Count != 1)
+                {
+                    OriginalData[0] = groupclone.RootPart.UUID.ToString();
+                    GenericData.Insert("auroraprims", OriginalData.ToArray());
+                }
+                else
+                {
+                    CreateNewObjectData(groupclone.RootPart.UUID.ToString());
+                    return;
+                }
             }
 
             string Name = objectData[1];
@@ -54,7 +63,7 @@ namespace Aurora.Modules
             string AllValues = objectData[4];
             string[] Keys = AllKeys.Split(',');
             string[] Values = AllValues.Split(',');
-            if (Type == PrimTypes.Normal)
+            if (Type != PrimTypes.Normal)
             {
                 if (Type == PrimTypes.Bot)
                 {
@@ -82,10 +91,10 @@ namespace Aurora.Modules
                     }
                     if (BotModule == null)
                         BotModule = m_scene.RequestModuleInterface<INPCModule>();
-                    BotModule.CreateNPC(FirstName, LastName, group.AbsolutePosition, group.Scene, new UUID(Appearance));
+                    BotModule.CreateNPC(FirstName, LastName, groupclone.AbsolutePosition, groupclone.Scene, new UUID(Appearance));
                     SceneObjectGroup[] objs = new SceneObjectGroup[1];
-                    objs[0] = group;
-                    group.Scene.returnObjects(objs, group.OwnerID);
+                    objs[0] = groupclone;
+                    groupclone.Scene.returnObjects(objs, groupclone.OwnerID);
                 }
             }
         }
@@ -100,23 +109,20 @@ namespace Aurora.Modules
                 GenericData = Aurora.DataManager.DataManager.GetGenericPlugin();
 
             SceneObjectGroup group = obj as SceneObjectGroup;
-            if (group == null)
-                return;
-            string from = group.UUID.ToString();
-            List<string> objectData = GenericData.Query("primUUID", from, "auroraprims", "*");
-
-            if (new UUID(objectData[0]) == UUID.Zero)
+            List<string> objectData = GenericData.Query("primUUID", group.RootPart.UUID.ToString(), "auroraprims", "*");
+            if (objectData.Count == 1)
             {
-                CreateNewObjectData(from);
+                CreateNewObjectData(group.RootPart.UUID.ToString());
                 return;
             }
+
             string Name = objectData[1];
             PrimTypes Type = (PrimTypes)Convert.ToInt32(objectData[2]);
             string AllKeys = objectData[3];
             string AllValues = objectData[4];
             string[] Keys = AllKeys.Split(',');
             string[] Values = AllValues.Split(',');
-            if (Type == PrimTypes.Normal)
+            if (Type != PrimTypes.Normal)
             {
                 if (Type == PrimTypes.Bot)
                 {

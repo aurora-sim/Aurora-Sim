@@ -340,7 +340,7 @@ namespace Aurora.DataManager.MySQL
                 try
                 {
                     List<string> Interests = ReadInterestsInfoRow(agentID.ToString());
-                    List<string> Profile = Query("select userLogin,userPass,userGodLevel,membershipGroup,profileMaturePublish,profileAllowPublish,profileURL,AboutText,CustomType,Email,FirstLifeAboutText,FirstLifeImage,Partner,PermaBanned,TempBanned,Image,IsMinor,ViewMature from usersauth where userUUID = '" + agentID.ToString() + "'");
+                    List<string> Profile = Query("select userLogin,userPass,userGodLevel,membershipGroup,profileMaturePublish,profileAllowPublish,profileURL,AboutText,CustomType,Email,FirstLifeAboutText,FirstLifeImage,Partner,PermaBanned,TempBanned,Image,IsMinor,MatureRating from usersauth where userUUID = '" + agentID.ToString() + "'");
                     if (Profile.Count == 1)
                         return null;
                     if (Profile[2] == " ")
