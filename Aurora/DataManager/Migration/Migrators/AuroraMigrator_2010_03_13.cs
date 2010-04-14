@@ -76,7 +76,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("AArchiveName", ColumnTypes.String50),
                 ColDef("IsNewUser", ColumnTypes.String50),
                 ColDef("IsMinor", ColumnTypes.String50),
-                ColDef("ViewMature", ColumnTypes.String50)
+                ColDef("MatureRating", ColumnTypes.String50)
                 ));
 
             AddSchema("classifieds", ColDefs(

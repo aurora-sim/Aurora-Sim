@@ -326,8 +326,15 @@ namespace OpenSim.Services.LLLoginService
                 //
                 // Finally, fill out the response and return it
                 //
+                string adult = "A";
+                if(profile.Mature == 0)
+                    adult = "P";
+                if(profile.Mature == 1)
+                    adult = "M";
+                if(profile.Mature == 2)
+                    adult = "A";
                 LLLoginResponse response = new LLLoginResponse(account, aCircuit, presence, destination, inventorySkel, friendsList, m_LibraryService,
-                    where, startLocation, position, lookAt, m_WelcomeMessage, home, clientIP);
+                    where, startLocation, position, lookAt, m_WelcomeMessage, home, clientIP, adult, "M");
 
                 m_log.DebugFormat("[LLOGIN SERVICE]: All clear. Sending login response to client.");
                 return response;
@@ -814,7 +821,7 @@ namespace OpenSim.Services.LLLoginService
             values.Add("");
             values.Add("true");
             values.Add("false");
-            values.Add("false");
+            values.Add("2");
             var GD = Aurora.DataManager.DataManager.GetGenericPlugin();
             GD.Insert("usersauth", values.ToArray());
         }

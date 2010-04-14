@@ -69,7 +69,7 @@ namespace Aurora.Framework
         private string m_email = String.Empty;
 
         private string m_ProfileURL = "";
-        private bool m_View_Mature = false;
+        private int m_Mature_Rating = 0;
         private bool m_Is_Minor = false;
 
         public bool Minor
@@ -78,10 +78,10 @@ namespace Aurora.Framework
             set { m_Is_Minor = value; }
         }
 
-        public bool AllowMature
+        public int Mature
         {
-            get { return m_View_Mature; }
-            set { m_View_Mature = value; }
+            get { return m_Mature_Rating; }
+            set { m_Mature_Rating = value; }
         }
 
         public string AllowPublish

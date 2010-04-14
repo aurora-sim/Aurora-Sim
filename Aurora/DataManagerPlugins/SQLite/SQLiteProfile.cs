@@ -321,7 +321,7 @@ namespace Aurora.DataManager.SQLite
                     UserProfile.TempBanned = Convert.ToInt32(Profile[14]);
                     UserProfile.Image = new UUID(Profile[15]);
                     UserProfile.Minor = Convert.ToBoolean(Profile[16]);
-                    UserProfile.AllowMature = Convert.ToBoolean(Profile[17]);
+                    UserProfile.Mature = Convert.ToInt32(Profile[17]);
                     UserProfilesCache.Add(agentID, UserProfile);
                     return UserProfile;
                 }
@@ -363,7 +363,7 @@ namespace Aurora.DataManager.SQLite
             SetValues.Add(Profile.Interests[3]);
             SetValues.Add(Profile.Interests[4]);
             SetValues.Add(Profile.Minor.ToString());
-            SetValues.Add(Profile.AllowMature.ToString());
+            SetValues.Add(Profile.Mature.ToString());
             List<string> KeyValue = new List<string>();
             List<string> KeyRow = new List<string>();
             KeyRow.Add("userUUID");
@@ -404,7 +404,7 @@ namespace Aurora.DataManager.SQLite
             SetValues.Add(Profile.Interests[3]);
             SetValues.Add(Profile.Interests[4]);
             SetValues.Add(Profile.Minor.ToString());
-            SetValues.Add(Profile.AllowMature.ToString());
+            SetValues.Add(Profile.Mature.ToString());
             List<string> KeyValue = new List<string>();
             List<string> KeyRow = new List<string>();
             KeyRow.Add("userUUID");

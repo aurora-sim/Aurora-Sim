@@ -150,7 +150,7 @@ namespace Aurora.Modules
             values.Add("");
             values.Add("true");
             values.Add("false");
-            values.Add("false");
+            values.Add("2");
             var GD = Aurora.DataManager.DataManager.GetGenericPlugin();
             GD.Insert("usersauth", values.ToArray());
         }

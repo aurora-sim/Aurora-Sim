@@ -218,7 +218,7 @@ namespace OpenSim.Services.LLLoginService
         public LLLoginResponse(UserAccount account, AgentCircuitData aCircuit, PresenceInfo pinfo,
             GridRegion destination, List<InventoryFolderBase> invSkel, FriendInfo[] friendsList, ILibraryService libService,
             string where, string startlocation, Vector3 position, Vector3 lookAt, string message,
-            GridRegion home, IPEndPoint clientIP)
+            GridRegion home, IPEndPoint clientIP, string AdultMax, string AdultRating)
             : this()
         {
             FillOutInventoryData(invSkel, libService);
@@ -232,6 +232,8 @@ namespace OpenSim.Services.LLLoginService
             Message = message;
             BuddList = ConvertFriendListItem(friendsList);
             StartLocation = where;
+            AgentAccessMax = AdultMax;
+            AgentAccess = AdultRating;
 
             FillOutHomeData(pinfo, home);
             LookAt = String.Format("[r{0},r{1},r{2}]", lookAt.X, lookAt.Y, lookAt.Z);

@@ -21,15 +21,15 @@ using Aurora.Framework;
 
 namespace Aurora.Modules
 {
-	public class GodModifiers : IRegionModule
-	{
-		private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-		private List<Scene> m_scenes = new List<Scene>();
-		private IConfigSource m_config;
+    public class GodModifiers : IRegionModule
+    {
+        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private List<Scene> m_scenes = new List<Scene>();
+        private IConfigSource m_config;
         private bool m_Enabled = true;
 
         public void Initialise(Scene scene, IConfigSource source)
-		{
+        {
             if (source.Configs["GodModule"] != null)
             {
                 if (source.Configs["GodModule"].GetString(
@@ -40,37 +40,37 @@ namespace Aurora.Modules
                     return;
                 }
             }
-			m_scenes.Add(scene);
+            m_scenes.Add(scene);
             m_config = source;
-		}
+        }
 
-		public void PostInitialise()
-		{
+        public void PostInitialise()
+        {
             if (!m_Enabled)
                 return;
-			foreach(Scene scene in m_scenes)
-			{
-				scene.EventManager.OnNewClient += EventManager_OnNewClient;
-			}
-		}
+            foreach (Scene scene in m_scenes)
+            {
+                scene.EventManager.OnNewClient += EventManager_OnNewClient;
+            }
+        }
 
-        void  EventManager_OnNewClient(IClientAPI client)
+        void EventManager_OnNewClient(IClientAPI client)
         {
             client.onGodlikeMessage += GodlikeMessage;
             client.OnGodUpdateRegionInfoUpdate += GodUpdateRegionInfoUpdate;
             client.OnSaveState += GodSaveState;
         }
 
-		public string Name
-		{
-			get { return "AuroraGodModModule"; }
-		}
+        public string Name
+        {
+            get { return "AuroraGodModModule"; }
+        }
 
-		public bool IsSharedModule{get { return true; }}
-		
-		public void Close()
-		{
-		}
+        public bool IsSharedModule { get { return true; } }
+
+        public void Close()
+        {
+        }
 
         public void GodSaveState(IClientAPI client, UUID agentID)
         {
@@ -83,49 +83,49 @@ namespace Aurora.Modules
             }
         }
 
-		public void GodlikeMessage(IClientAPI client, UUID requester, byte[] Method, byte[] Parameter)
-		{
-			if(Method.ToString() == "telehub")
-			{
-				client.SendAgentAlertMessage("Please contact an administrator to help you with this function.", false);
-			}
-		}
+        public void GodlikeMessage(IClientAPI client, UUID requester, byte[] Method, byte[] Parameter)
+        {
+            if (Method.ToString() == "telehub")
+            {
+                client.SendAgentAlertMessage("Please contact an administrator to help you with this function.", false);
+            }
+        }
 
-		public void GodUpdateRegionInfoUpdate(IClientAPI client, float BillableFactor, ulong EstateID, ulong RegionFlags, byte[] SimName,int RedirectX, int RedirectY)
-		{
-			string regionConfigPath = Path.Combine(Util.configDir(), "Regions");
-			string[] iniFiles = Directory.GetFiles(regionConfigPath, "*.ini");
-			int i = 0;
+        public void GodUpdateRegionInfoUpdate(IClientAPI client, float BillableFactor, ulong EstateID, ulong RegionFlags, byte[] SimName, int RedirectX, int RedirectY)
+        {
+            string regionConfigPath = Path.Combine(Util.configDir(), "Regions");
+            string[] iniFiles = Directory.GetFiles(regionConfigPath, "*.ini");
+            int i = 0;
             UserAccount UA = m_scenes[0].UserAccountService.GetUserAccount(UUID.Zero, client.AgentId);
-                ScenePresence SP;
-                m_scenes[0].TryGetScenePresence(client.AgentId, out SP);
-                //if (UA.UserLevel == 0)
-                //    return;
-                if (SP.GodLevel == 0)
-                    return;
-			foreach (string file in iniFiles)
-			{
-				IConfigSource source = new IniConfigSource(file);
+            ScenePresence SP;
+            m_scenes[0].TryGetScenePresence(client.AgentId, out SP);
+            //if (UA.UserLevel == 0)
+            //    return;
+            if (SP.GodLevel == 0)
+                return;
+            foreach (string file in iniFiles)
+            {
+                IConfigSource source = new IniConfigSource(file);
                 IConfig cnf = source.Configs[((Scene)client.Scene).RegionInfo.RegionName];
-				if(cnf != null)
-				{
+                if (cnf != null)
+                {
                     OpenSim.Services.Interfaces.GridRegion region = ((Scene)client.Scene).GridService.GetRegionByName(UUID.Zero, ((Scene)client.Scene).RegionInfo.RegionName);
                     ((Scene)client.Scene).GridService.DeregisterRegion(region.RegionID);
                     IConfig check = source.Configs[OpenMetaverse.Utils.BytesToString(SimName)];
-					if(check == null)
-					{
+                    if (check == null)
+                    {
                         source.AddConfig(OpenMetaverse.Utils.BytesToString(SimName));
                         IConfig cfgNew = source.Configs[OpenMetaverse.Utils.BytesToString(SimName)];
                         IConfig cfgOld = source.Configs[((Scene)client.Scene).RegionInfo.RegionName];
-						string[] oldRegionValues = cfgOld.GetValues();
-						string[] oldRegionKeys = cfgOld.GetKeys();
-						int next = 0;
-						foreach(string oldkey in oldRegionKeys)
-						{
-							cfgNew.Set(oldRegionKeys[next],oldRegionValues[next]);
-							next++;
-						}
-						source.Configs.Remove(cfgOld);
+                        string[] oldRegionValues = cfgOld.GetValues();
+                        string[] oldRegionKeys = cfgOld.GetKeys();
+                        int next = 0;
+                        foreach (string oldkey in oldRegionKeys)
+                        {
+                            cfgNew.Set(oldRegionKeys[next], oldRegionValues[next]);
+                            next++;
+                        }
+                        source.Configs.Remove(cfgOld);
                         if (RedirectX != 0 || RedirectY != 0)
                         {
                             if (RedirectX == 0)
@@ -140,11 +140,11 @@ namespace Aurora.Modules
                             region.RegionLocY = RedirectY;
                         }
                         ((Scene)client.Scene).RegionInfo.RegionName = OpenMetaverse.Utils.BytesToString(SimName);
-						source.Save();
+                        source.Save();
                         region.RegionName = OpenMetaverse.Utils.BytesToString(SimName);
-					}
-					else
-					{
+                    }
+                    else
+                    {
                         if (RedirectX != 0 || RedirectY != 0)
                         {
                             if (RedirectX == 0)
@@ -158,20 +158,20 @@ namespace Aurora.Modules
                             region.RegionLocX = RedirectX;
                             region.RegionLocY = RedirectY;
                         }
-					}
+                    }
                     ((Scene)client.Scene).GridService.RegisterRegion(UUID.Zero, region);
-				}
-				i++;
-			}
+                }
+                i++;
+            }
             if (((Scene)client.Scene).RegionInfo.EstateSettings.EstateID != EstateID)
             {
                 bool changed = ((Scene)client.Scene).EstateService.LinkRegion(((Scene)client.Scene).RegionInfo.RegionID, (int)EstateID);
                 if (!changed)
                     SP.ControllingClient.SendAgentAlertMessage("Unable to connecto to the given estate.", false);
-                    
+
             }
-		}
-	}
+        }
+    }
 
     public class EstateSettingsModule : IRegionModule, IEstateSettingsModule
     {
@@ -184,25 +184,23 @@ namespace Aurora.Modules
             m_scene = scene;
         }
 
-        public void PostInitialise() 
+        public void PostInitialise()
         {
             PD = Aurora.DataManager.DataManager.GetProfilePlugin();
         }
 
-        public void Close() {}
+        public void Close() { }
 
-        public string Name {get { return "EstateSettingsModule"; }}
+        public string Name { get { return "EstateSettingsModule"; } }
 
-        public bool IsSharedModule {get { return true; }}
+        public bool IsSharedModule { get { return true; } }
 
         public bool AllowTeleport(Scene scene, UUID userID)
         {
             EstateSettings ES = m_scene.EstateService.LoadEstateSettings(scene.RegionInfo.RegionID, false);
             AuroraProfileData Profile = PD.GetProfileInfo(userID);
 
-            if (Profile.AllowMature)
-                return true;
-            if (scene.RegionInfo.RegionSettings.Maturity != 0)
+            if (scene.RegionInfo.RegionSettings.Maturity >= Profile.Mature)
                 return false;
 
             if (ES.DenyMinors && Profile.Minor)
