@@ -2393,7 +2393,6 @@
 <Reference name="FluentNHibernate.dll"/>
 <Reference name="NHibernate.dll"/>
 <Reference name="Aurora.Framework"/>
-<Reference name="OpenSim.Region.Framework"/>
 <Reference name="OpenMetaverseTypes.dll"/>
 <Reference name="OpenMetaverse.dll"/>
 <Reference name="OpenSim.Framework"/>

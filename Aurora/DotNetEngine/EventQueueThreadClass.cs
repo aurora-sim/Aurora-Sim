@@ -176,10 +176,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         			{
         				// Get queue item
         				QueueItemStruct QIS = m_ScriptEngine.m_EventQueueManager.EventQueue2.Dequeue();
-                        if (m_ScriptEngine.m_EventQueueManager.NeedsRemoved.Contains(QIS.ID.ItemID))
-                        {
-                        }
-                        else
+                        if (!m_ScriptEngine.m_EventQueueManager.NeedsRemoved.Contains(QIS.ID.ItemID))
                         {
                             try
                             {
@@ -192,9 +189,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                                 if(!Running)
                                 	continue;
                                 if (Running && !m_ScriptEngine.m_EventQueueManager.NeedsRemoved.Contains(QIS.ID.ItemID))
-                                {
                                     m_ScriptEngine.m_EventQueueManager.EventQueue2.Enqueue(QIS);
-                                }
                             }
                             catch (SelfDeleteException) // Must delete SOG
                             {
