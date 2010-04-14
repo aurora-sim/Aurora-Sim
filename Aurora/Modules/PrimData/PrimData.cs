@@ -19,7 +19,8 @@ namespace Aurora.Modules
     {
         Normal = 0,
         Bot = 1,
-        Oar = 2
+        Oar = 2,
+        Document = 3
     }
     public class PrimData: IRegionModule
     {
@@ -122,6 +123,8 @@ namespace Aurora.Modules
             string AllValues = objectData[4];
             string[] Keys = AllKeys.Split(',');
             string[] Values = AllValues.Split(',');
+            if (Keys.Length == 0 || Values.Length == 0 || Keys.Length != Values.Length)
+                return;
             if (Type != PrimTypes.Normal)
             {
                 if (Type == PrimTypes.Bot)
@@ -129,24 +132,26 @@ namespace Aurora.Modules
                     //Create bot, return object.
                     string FirstName = "";
                     string LastName = "";
-                    string Appearance = "";
+                    UUID Appearance = UUID.Zero;
+                    int i = 0;
                     foreach (string Key in Keys)
                     {
-                        if (Key.StartsWith("FirstName = "))
+                        if (Key.StartsWith("FirstName"))
                         {
-                            FirstName = Key.Split('=')[1];
-                            FirstName.TrimStart(' ');
+                            FirstName = Values[i];
                         }
-                        if (Key.StartsWith("LastName = "))
+                        if (Key.StartsWith("LastName"))
                         {
-                            LastName = Key.Split('=')[1];
-                            LastName.TrimStart('=');
+                            LastName = Values[i];
                         }
-                        if (Key.StartsWith("Appearance = "))
+                        if (Key.StartsWith("Appearance"))
                         {
-                            Appearance = Key.Split('=')[1];
-                            Appearance.TrimStart(' ');
+                            string appearance = Values[i];
+                            bool parsed = UUID.TryParse(appearance, out Appearance);
+                            if (!parsed)
+                                Appearance = UUID.Zero;
                         }
+                        i++;
                     }
                     if(BotModule == null)
                         BotModule = m_scene.RequestModuleInterface<INPCModule>();
@@ -154,6 +159,38 @@ namespace Aurora.Modules
                     SceneObjectGroup[] objs = new SceneObjectGroup[1];
                     objs[0] = group;
                     group.Scene.returnObjects(objs, group.OwnerID);
+                }
+                if (Type == PrimTypes.Document)
+                {
+                    string DocumentName = "";
+                    int i = 0;
+                    foreach (string Key in Keys)
+                    {
+                        if (Key.StartsWith("Name"))
+                        {
+                            DocumentName = Values[i];
+                        }
+                        i++;
+                    }
+                    IList<TaskInventoryItem> items = group.RootPart.Inventory.GetInventoryItems(DocumentName);
+                    string text = "";
+                    if (items.Count == 0)
+                        return;
+                    AssetBase a = m_scene.AssetService.Get(items[0].AssetID.ToString());
+                    if (a != null)
+                    {
+                        System.Text.UTF8Encoding enc = new System.Text.UTF8Encoding();
+                        text = enc.GetString(a.Data);
+                    }
+                    IDynamicTextureManager textureManager = m_scene.RequestModuleInterface<IDynamicTextureManager>();
+                    if (textureManager != null)
+                    {
+                        string data = "";
+                        data += "Text " + text + "; ";
+                        UUID createdTexture =
+                            textureManager.AddDynamicTextureData(m_scene.RegionInfo.RegionID, group.UUID, "vector", data,
+                                                                "256", 0);
+                    }
                 }
             }
         }
