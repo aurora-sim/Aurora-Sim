@@ -17,6 +17,7 @@ using OpenSim.Framework.Client;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
+using Aurora.Framework;
 
 namespace Aurora.Modules
 {
@@ -110,11 +111,11 @@ namespace Aurora.Modules
 				{
                     OpenSim.Services.Interfaces.GridRegion region = ((Scene)client.Scene).GridService.GetRegionByName(UUID.Zero, ((Scene)client.Scene).RegionInfo.RegionName);
                     ((Scene)client.Scene).GridService.DeregisterRegion(region.RegionID);
-                    IConfig check = source.Configs[Utils.BytesToString(SimName)];
+                    IConfig check = source.Configs[OpenMetaverse.Utils.BytesToString(SimName)];
 					if(check == null)
 					{
-                        source.AddConfig(Utils.BytesToString(SimName));
-						IConfig cfgNew = source.Configs[Utils.BytesToString(SimName)];
+                        source.AddConfig(OpenMetaverse.Utils.BytesToString(SimName));
+                        IConfig cfgNew = source.Configs[OpenMetaverse.Utils.BytesToString(SimName)];
                         IConfig cfgOld = source.Configs[((Scene)client.Scene).RegionInfo.RegionName];
 						string[] oldRegionValues = cfgOld.GetValues();
 						string[] oldRegionKeys = cfgOld.GetKeys();
@@ -138,9 +139,9 @@ namespace Aurora.Modules
                             region.RegionLocX = RedirectX;
                             region.RegionLocY = RedirectY;
                         }
-                        ((Scene)client.Scene).RegionInfo.RegionName = Utils.BytesToString(SimName);
+                        ((Scene)client.Scene).RegionInfo.RegionName = OpenMetaverse.Utils.BytesToString(SimName);
 						source.Save();
-                        region.RegionName = Utils.BytesToString(SimName);
+                        region.RegionName = OpenMetaverse.Utils.BytesToString(SimName);
 					}
 					else
 					{
@@ -171,4 +172,43 @@ namespace Aurora.Modules
             }
 		}
 	}
+
+    public class EstateSettingsModule : IRegionModule, IEstateSettingsModule
+    {
+        Scene m_scene;
+        IProfileData PD;
+
+        public void Initialise(Scene scene, IConfigSource source)
+        {
+            scene.RegisterModuleInterface<IEstateSettingsModule>(this);
+            m_scene = scene;
+        }
+
+        public void PostInitialise() 
+        {
+            PD = Aurora.DataManager.DataManager.GetProfilePlugin();
+        }
+
+        public void Close() {}
+
+        public string Name {get { return "EstateSettingsModule"; }}
+
+        public bool IsSharedModule {get { return true; }}
+
+        public bool AllowTeleport(Scene scene, UUID userID)
+        {
+            EstateSettings ES = m_scene.EstateService.LoadEstateSettings(scene.RegionInfo.RegionID, false);
+            AuroraProfileData Profile = PD.GetProfileInfo(userID);
+
+            if (Profile.AllowMature)
+                return true;
+            if (scene.RegionInfo.RegionSettings.Maturity != 0)
+                return false;
+
+            if (ES.DenyMinors && Profile.Minor)
+                return false;
+
+            return true;
+        }
+    }
 }

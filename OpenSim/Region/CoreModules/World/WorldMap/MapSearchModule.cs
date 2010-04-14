@@ -44,8 +44,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
         Scene m_scene = null; // only need one for communication with GridService
         List<Scene> m_scenes = new List<Scene>();
-        bool m_Enabled = true;
-
+        
         #region IRegionModule Members
         public void Initialise(Scene scene, IConfigSource source)
         {
@@ -55,7 +54,6 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                         "MapModule", "MapModule") !=
                         "MapModule")
                 {
-                    m_Enabled = false;
                     return;
                 }
             }

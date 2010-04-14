@@ -286,7 +286,7 @@ namespace Aurora.DataManager.SQLite
                 try
                 {
                     List<string> Interests = ReadInterestsInfoRow(agentID.ToString());
-                    List<string> Profile = Query("select userLogin,userPass,userGodLevel,membershipGroup,profileMaturePublish,profileAllowPublish,profileURL,AboutText,CustomType,Email,FirstLifeAboutText,FirstLifeImage,Partner,PermaBanned,TempBanned,Image from usersauth where userUUID = '" + agentID.ToString() + "'");
+                    List<string> Profile = Query("select userLogin,userPass,userGodLevel,membershipGroup,profileMaturePublish,profileAllowPublish,profileURL,AboutText,CustomType,Email,FirstLifeAboutText,FirstLifeImage,Partner,PermaBanned,TempBanned,Image,IsMinor,ViewMature from usersauth where userUUID = '" + agentID.ToString() + "'");
                     if (Profile.Count == 1)
                         return null;
                     if (Profile[2] == " ")
@@ -320,6 +320,8 @@ namespace Aurora.DataManager.SQLite
                     UserProfile.PermaBanned = Convert.ToInt32(Profile[13]);
                     UserProfile.TempBanned = Convert.ToInt32(Profile[14]);
                     UserProfile.Image = new UUID(Profile[15]);
+                    UserProfile.Minor = Convert.ToBoolean(Profile[16]);
+                    UserProfile.AllowMature = Convert.ToBoolean(Profile[17]);
                     UserProfilesCache.Add(agentID, UserProfile);
                     return UserProfile;
                 }
@@ -346,6 +348,8 @@ namespace Aurora.DataManager.SQLite
             SetRows.Add("profileSkillsMask");
             SetRows.Add("profileSkillsText");
             SetRows.Add("profileLanguages");
+            SetRows.Add("IsMinor");
+            SetRows.Add("ViewMature");
             SetValues.Add(Profile.AboutText);
             SetValues.Add(Profile.AllowPublish);
             SetValues.Add(Profile.FirstLifeAboutText);
@@ -358,6 +362,8 @@ namespace Aurora.DataManager.SQLite
             SetValues.Add(Profile.Interests[2]);
             SetValues.Add(Profile.Interests[3]);
             SetValues.Add(Profile.Interests[4]);
+            SetValues.Add(Profile.Minor.ToString());
+            SetValues.Add(Profile.AllowMature.ToString());
             List<string> KeyValue = new List<string>();
             List<string> KeyRow = new List<string>();
             KeyRow.Add("userUUID");
@@ -382,6 +388,8 @@ namespace Aurora.DataManager.SQLite
             SetRows.Add("profileSkillsMask");
             SetRows.Add("profileSkillsText");
             SetRows.Add("profileLanguages");
+            SetRows.Add("IsMinor");
+            SetRows.Add("ViewMature");
             SetValues.Add(Profile.AboutText);
             SetValues.Add(Profile.AllowPublish);
             SetValues.Add(Profile.Email);
@@ -395,6 +403,8 @@ namespace Aurora.DataManager.SQLite
             SetValues.Add(Profile.Interests[2]);
             SetValues.Add(Profile.Interests[3]);
             SetValues.Add(Profile.Interests[4]);
+            SetValues.Add(Profile.Minor.ToString());
+            SetValues.Add(Profile.AllowMature.ToString());
             List<string> KeyValue = new List<string>();
             List<string> KeyRow = new List<string>();
             KeyRow.Add("userUUID");

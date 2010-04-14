@@ -340,8 +340,21 @@ namespace Aurora.DataManager.MySQL
                 try
                 {
                     List<string> Interests = ReadInterestsInfoRow(agentID.ToString());
-                    List<string> Profile = Query("select userLogin,userPass,userGodLevel,membershipGroup,profileMaturePublish,profileAllowPublish,profileURL,AboutText,CustomType,Email,FirstLifeAboutText,FirstLifeImage,Partner,PermaBanned,TempBanned,Image from usersauth where userUUID = '" + agentID.ToString() + "'");
-
+                    List<string> Profile = Query("select userLogin,userPass,userGodLevel,membershipGroup,profileMaturePublish,profileAllowPublish,profileURL,AboutText,CustomType,Email,FirstLifeAboutText,FirstLifeImage,Partner,PermaBanned,TempBanned,Image,IsMinor,ViewMature from usersauth where userUUID = '" + agentID.ToString() + "'");
+                    if (Profile.Count == 1)
+                        return null;
+                    if (Profile[2] == " ")
+                        Profile[2] = "0";
+                    if (Profile[5] == " ")
+                        Profile[5] = "0";
+                    if (Profile[4] == " ")
+                        Profile[4] = "0";
+                    if (Profile[11] == " ")
+                        Profile[11] = UUID.Zero.ToString();
+                    if (Profile[12] == " ")
+                        Profile[12] = UUID.Zero.ToString();
+                    if (Profile[15] == " ")
+                        Profile[15] = UUID.Zero.ToString();
                     UserProfile.FirstName = Profile[0].Split(' ')[0];
                     UserProfile.SurName = Profile[0].Split(' ')[1];
                     UserProfile.PasswordHash = Profile[1];
@@ -361,6 +374,8 @@ namespace Aurora.DataManager.MySQL
                     UserProfile.PermaBanned = Convert.ToInt32(Profile[13]);
                     UserProfile.TempBanned = Convert.ToInt32(Profile[14]);
                     UserProfile.Image = new UUID(Profile[15]);
+                    UserProfile.Minor = Convert.ToBoolean(Profile[16]);
+                    UserProfile.AllowMature = Convert.ToBoolean(Profile[17]);
                     UserProfilesCache.Add(agentID, UserProfile);
 
                     return UserProfile;
@@ -419,17 +434,33 @@ namespace Aurora.DataManager.MySQL
             List<string> SetValues = new List<string>();
             List<string> SetRows = new List<string>();
             SetRows.Add("AboutText");
-            SetRows.Add("AllowPublish");
+            SetRows.Add("profileAllowPublish");
             SetRows.Add("FirstLifeAboutText");
             SetRows.Add("FirstLifeImage");
             SetRows.Add("Image");
             SetRows.Add("ProfileURL");
+            SetRows.Add("TempBanned");
+            SetRows.Add("profileWantToMask");
+            SetRows.Add("profileWantToText");
+            SetRows.Add("profileSkillsMask");
+            SetRows.Add("profileSkillsText");
+            SetRows.Add("profileLanguages");
+            SetRows.Add("IsMinor");
+            SetRows.Add("ViewMature");
             SetValues.Add(Profile.AboutText);
             SetValues.Add(Profile.AllowPublish);
             SetValues.Add(Profile.FirstLifeAboutText);
             SetValues.Add(Profile.FirstLifeImage.ToString());
             SetValues.Add(Profile.Image.ToString());
             SetValues.Add(Profile.ProfileURL);
+            SetValues.Add(Profile.TempBanned.ToString());
+            SetValues.Add(Profile.Interests[0]);
+            SetValues.Add(Profile.Interests[1]);
+            SetValues.Add(Profile.Interests[2]);
+            SetValues.Add(Profile.Interests[3]);
+            SetValues.Add(Profile.Interests[4]);
+            SetValues.Add(Profile.Minor.ToString());
+            SetValues.Add(Profile.AllowMature.ToString());
             List<string> KeyValue = new List<string>();
             List<string> KeyRow = new List<string>();
             KeyRow.Add("userUUID");
@@ -463,6 +494,8 @@ namespace Aurora.DataManager.MySQL
             SetRows.Add("profileSkillsMask");
             SetRows.Add("profileSkillsText");
             SetRows.Add("profileLanguages");
+            SetRows.Add("IsMinor");
+            SetRows.Add("ViewMature");
             SetValues.Add(Profile.AboutText);
             SetValues.Add(Profile.AllowPublish);
             SetValues.Add(Profile.FirstLifeAboutText);
@@ -475,6 +508,8 @@ namespace Aurora.DataManager.MySQL
             SetValues.Add(Profile.Interests[2]);
             SetValues.Add(Profile.Interests[3]);
             SetValues.Add(Profile.Interests[4]);
+            SetValues.Add(Profile.Minor.ToString());
+            SetValues.Add(Profile.AllowMature.ToString());
             List<string> KeyValue = new List<string>();
             List<string> KeyRow = new List<string>();
             KeyRow.Add("userUUID");

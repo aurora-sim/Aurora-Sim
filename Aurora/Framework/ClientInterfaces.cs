@@ -69,6 +69,20 @@ namespace Aurora.Framework
         private string m_email = String.Empty;
 
         private string m_ProfileURL = "";
+        private bool m_View_Mature = false;
+        private bool m_Is_Minor = false;
+
+        public bool Minor
+        {
+            get { return m_Is_Minor; }
+            set { m_Is_Minor = value; }
+        }
+
+        public bool AllowMature
+        {
+            get { return m_View_Mature; }
+            set { m_View_Mature = value; }
+        }
 
         public string AllowPublish
         {
@@ -106,5 +120,9 @@ namespace Aurora.Framework
             get { return m_Picks; }
             set { m_Picks = value; }
         }
+    }
+    public interface IEstateSettingsModule
+    {
+        public bool AllowTeleport(UUID regionID, UUID userID);
     }
 }

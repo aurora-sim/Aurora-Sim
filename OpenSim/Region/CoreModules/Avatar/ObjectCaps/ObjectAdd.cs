@@ -196,7 +196,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                         {
                             map = (OSDMap)osd;
                         }
-                        catch (Exception ex)
+                        catch (Exception)
                         {
                             Values.Add(rm["object_id"].ToString());
                             Values.Add(part.OwnerID.ToString());
@@ -251,7 +251,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                         {
                             GenericData.Insert("assetMediaURL", Values.ToArray());
                         }
-                        catch (Exception ex)
+                        catch (Exception)
                         {
                         }
                         i++;

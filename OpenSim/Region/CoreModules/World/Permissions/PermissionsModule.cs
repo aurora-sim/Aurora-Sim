@@ -36,6 +36,7 @@ using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
+using Aurora.Framework;
 
 // Temporary fix of wrong GroupPowers constants in OpenMetaverse library
 enum GroupPowers : long
@@ -247,7 +248,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             m_scene.Permissions.OnEditUserInventory += CanEditUserInventory; //NOT YET IMPLEMENTED
             m_scene.Permissions.OnDeleteUserInventory += CanDeleteUserInventory; //NOT YET IMPLEMENTED
             
-            m_scene.Permissions.OnTeleport += CanTeleport; //NOT YET IMPLEMENTED
+            m_scene.Permissions.OnTeleport += CanTeleport;
 
             m_scene.AddCommand(this, "bypass permissions",
                     "bypass permissions <true / false>",
@@ -1837,7 +1838,8 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             DebugPermissionInformation(MethodInfo.GetCurrentMethod().Name);
             if (m_bypassPermissions) return m_bypassPermissionsValue;
 
-            return true;
+            IEstateSettingsModule ESM = scene.RequestModuleInterface<IEstateSettingsModule>();
+            return ESM.AllowTeleport(scene.RegionInfo.RegionID, userID);
         }
 
         private bool CanResetScript(UUID prim, UUID script, UUID agentID, Scene scene)
