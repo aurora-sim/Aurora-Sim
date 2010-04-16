@@ -37,7 +37,6 @@ namespace Aurora.DataManager.SQLite
                             m_FieldMap[f.Name.Substring(2)] = f;
                 }
                 EstateSettings es = new EstateSettings();
-                es.OnSave += StoreEstateSettings;
                 List<string> names = new List<string>(FieldList);
 
                 names.Remove("EstateID");
@@ -111,6 +110,7 @@ namespace Aurora.DataManager.SQLite
             LoadBanList(settings);
             settings.EstateGroups = LoadUUIDList(settings.EstateID, "estate_groups");
             settings.EstateManagers = LoadUUIDList(settings.EstateID, "estate_managers");
+            settings.OnSave += StoreEstateSettings;
             return settings;
         }
 
@@ -212,6 +212,17 @@ namespace Aurora.DataManager.SQLite
 
         public void StoreEstateSettings(OpenSim.Framework.EstateSettings es)
         {
+            if (m_FieldMap.Count == 0)
+            {
+                Type t = typeof(EstateSettings);
+                m_Fields = t.GetFields(BindingFlags.NonPublic |
+                               BindingFlags.Instance |
+                               BindingFlags.DeclaredOnly);
+
+                foreach (FieldInfo f in m_Fields)
+                    if (f.Name.Substring(0, 2) == "m_")
+                        m_FieldMap[f.Name.Substring(2)] = f;
+            }
             List<string> fields = new List<string>(FieldList);
             fields.Remove("EstateID");
 

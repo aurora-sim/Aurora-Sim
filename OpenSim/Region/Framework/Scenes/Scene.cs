@@ -635,7 +635,7 @@ namespace OpenSim.Region.Framework.Scenes
                         if (response == "no")
                         {
                             // Create a new estate
-                            m_regInfo.EstateSettings = m_storageManager.EstateDataStore.LoadEstateSettings(m_regInfo.RegionID, true);
+                            m_regInfo.EstateSettings = EstateService.LoadEstateSettings(m_regInfo.RegionID, true);
 
                             m_regInfo.EstateSettings.EstateName = MainConsole.Instance.CmdPrompt("New estate name", m_regInfo.EstateSettings.EstateName);
                             m_regInfo.EstateSettings.Save();
@@ -647,7 +647,7 @@ namespace OpenSim.Region.Framework.Scenes
                             if (response == "None")
                                 continue;
 
-                            List<int> estateIDs = m_storageManager.EstateDataStore.GetEstates(response);
+                            List<int> estateIDs = EstateService.GetEstates(response);
                             if (estateIDs.Count < 1)
                             {
                                 MainConsole.Instance.Output("The name you have entered matches no known estate. Please try again");
@@ -656,9 +656,9 @@ namespace OpenSim.Region.Framework.Scenes
 
                             int estateID = estateIDs[0];
 
-                            m_regInfo.EstateSettings = m_storageManager.EstateDataStore.LoadEstateSettings(estateID);
+                            m_regInfo.EstateSettings = EstateService.LoadEstateSettings(estateID);
 
-                            if (m_storageManager.EstateDataStore.LinkRegion(m_regInfo.RegionID, estateID))
+                            if (EstateService.LinkRegion(m_regInfo.RegionID, estateID))
                                 break;
 
                             MainConsole.Instance.Output("Joining the estate failed. Please try again.");

@@ -2277,7 +2277,8 @@
 <Reference name="OpenSim.Services.Interfaces"/>
 <Reference name="XMLRPC.dll"/>
 <Reference name="FluentNHibernate.dll"/>
-<Reference name="NHibernate.dll"/>
+<Reference name="Nini.dll" />
+      <Reference name="NHibernate.dll"/>
 
 
           <Files>
