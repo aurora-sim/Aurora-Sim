@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using C5;
 using FluentNHibernate.Cfg;
 using FluentNHibernate.Cfg.Db;
 using NHibernate;
@@ -17,43 +16,81 @@ namespace Aurora.DataManager
 {
     public static class DataManager
     {
-        public static IGenericData plugin = null;
-        public static IGenericData GetGenericPlugin()
+    	#region IGenericData 
+    	
+        public static IGenericData DefaultGenericPlugin = null;
+        public static IList<IGenericData> AllGenericPlugins = (C5.IList<IGenericData>)new List<IGenericData>();
+        public static IGenericData GetDefaultGenericPlugin()
         {
-            return plugin;
+            return DefaultGenericPlugin;
         }
-        public static void SetGenericDataPlugin(IGenericData Plugin)
+        public static void SetDefaultGenericDataPlugin(IGenericData Plugin)
         {
-            plugin = Plugin;
+            DefaultGenericPlugin = Plugin;
         }
-        public static IEstateData estateplugin = null;
-        public static IEstateData GetEstatePlugin()
+        public static void AddGenericPlugin(IGenericData plugin)
         {
-            return estateplugin;
+            AllGenericPlugins.Add(plugin);
         }
-        public static void SetEstatePlugin(IEstateData Plugin)
+        
+        #endregion
+        
+        #region IEstateData
+        
+        public static IEstateData DefaultEstatePlugin = null;
+        public static IList<IEstateData> AllEstatePlugins = (C5.IList<IEstateData>)new List<IEstateData>();
+        public static IEstateData GetDefaultEstatePlugin()
         {
-            estateplugin = Plugin;
+            return DefaultEstatePlugin;
         }
-        public static IProfileData profileplugin = null;
-        public static IProfileData GetProfilePlugin()
+        public static void SetDefaultEstatePlugin(IEstateData Plugin)
         {
-            return profileplugin;
+            DefaultEstatePlugin = Plugin;
+        }
+        public static void AddEstatePlugin(IEstateData plugin)
+        {
+            AllEstatePlugins.Add(plugin);
+        }
+        
+        #endregion
+        
+        #region IProfileData 
+        
+        public static IProfileData DefaultProfilePlugin = null;
+        public static IList<IProfileData> AllProfilePlugins = (C5.IList<IProfileData>)new List<IProfileData>();
+        public static IProfileData GetDefaultProfilePlugin()
+        {
+            return DefaultProfilePlugin;
         }
         public static void SetProfilePlugin(IProfileData Plugin)
         {
-            profileplugin = Plugin;
+            DefaultProfilePlugin = Plugin;
         }
-        public static IRegionData regionplugin = null;
-
-        public static IRegionData GetRegionPlugin()
+        public static void AddProfilePlugin(IProfileData plugin)
         {
-            return regionplugin;
+            AllProfilePlugins.Add(plugin);
         }
-        public static void SetRegionPlugin(IRegionData Plugin)
+        
+        #endregion
+        
+        #region IRegionData
+        
+        public static IRegionData DefaultRegionPlugin = null;
+        public static IList<IRegionData> AllRegionPlugins = (C5.IList<IRegionData>)new List<IRegionData>();
+        public static IRegionData GetDefaultRegionPlugin()
         {
-            regionplugin = Plugin;
+            return DefaultRegionPlugin;
         }
+        public static void SetDefaultRegionPlugin(IRegionData Plugin)
+        {
+            DefaultRegionPlugin = Plugin;
+        }
+        public static void AddRegionPlugin(IRegionData plugin)
+        {
+            AllRegionPlugins.Add(plugin);
+        }
+        
+        #endregion
 
         public static DataSessionProvider DataSessionProvider;
     }

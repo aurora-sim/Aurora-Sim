@@ -46,7 +46,7 @@ namespace Aurora.Modules
 
         public void Initialise(IEstateDataStore dataStore)
         {
-            m_DataStore = Aurora.DataManager.DataManager.GetEstatePlugin();// dataStore;
+            m_DataStore = Aurora.DataManager.DataManager.GetDefaultEstatePlugin();// dataStore;
         }
 
         public OpenSim.Framework.EstateSettings LoadEstateSettings(OpenMetaverse.UUID regionID, bool create)

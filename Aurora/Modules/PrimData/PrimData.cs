@@ -38,7 +38,7 @@ namespace Aurora.Modules
         void SceneContents_OnObjectDuplicate(EntityBase original, EntityBase clone)
         {
             if (GenericData == null)
-                GenericData = Aurora.DataManager.DataManager.GetGenericPlugin();
+                GenericData = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
 
             SceneObjectGroup groupclone = clone as SceneObjectGroup;
             SceneObjectGroup grouporiginal = clone as SceneObjectGroup;
@@ -107,7 +107,7 @@ namespace Aurora.Modules
         void SceneContents_OnObjectCreate(EntityBase obj)
         {
             if (GenericData == null)
-                GenericData = Aurora.DataManager.DataManager.GetGenericPlugin();
+                GenericData = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
 
             SceneObjectGroup group = obj as SceneObjectGroup;
             List<string> objectData = GenericData.Query("primUUID", group.RootPart.UUID.ToString(), "auroraprims", "*");

@@ -109,7 +109,7 @@ namespace Aurora.Modules
 
         public virtual void RegionLoaded(Scene scene)
         {
-            GenericData = Aurora.DataManager.DataManager.GetGenericPlugin();
+            GenericData = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
         }
 
         public virtual void RemoveRegion(Scene scene)

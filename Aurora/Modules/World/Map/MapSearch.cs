@@ -98,7 +98,7 @@ namespace Aurora.Modules
 		{
             if (!m_Enabled)
                 return;
-            GenericData = Aurora.DataManager.DataManager.GetRegionPlugin();
+            GenericData = Aurora.DataManager.DataManager.GetDefaultRegionPlugin();
             RegionsHidden = GenericData.GetRegionHidden();
 			aTimer.Elapsed += new ElapsedEventHandler(OnTimedEvent);
         	aTimer.Enabled = true;

@@ -121,8 +121,8 @@ namespace Aurora.Modules
         
         public void PostInitialise()
         {
-            ProfileData = Aurora.DataManager.DataManager.GetProfilePlugin();
-            GenericData = Aurora.DataManager.DataManager.GetGenericPlugin();
+            ProfileData = Aurora.DataManager.DataManager.GetDefaultProfilePlugin();
+            GenericData = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
             GroupsModule = m_scene.RequestModuleInterface<IGroupsModule>();
             DataSnapShotManager = m_scene.RequestModuleInterface<IDataSnapshot>();
             if (m_SearchEnabled && DataSnapShotManager != null)

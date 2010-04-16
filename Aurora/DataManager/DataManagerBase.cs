@@ -17,14 +17,14 @@ namespace Aurora.DataManager
         public abstract void ConnectToDatabase(string connectionString);
         public abstract List<string> Query(string keyRow, string keyValue, string table, string wantedValue);
         public abstract List<string> Query(string[] keyRow, string[] keyValue, string table, string wantedValue);
-        public abstract void Insert(string table, string[] values);
-        public abstract void Delete(string table, string[] keys, string[] values);
-        public abstract void Insert(string table, string[] values, string updateKey, string updateValue);
-        public abstract void Update(string table, string[] setValues, string[] setRows, string[] keyRows, string[] keyValues);
+        public abstract bool Insert(string table, string[] values);
+        public abstract bool Delete(string table, string[] keys, string[] values);
+        public abstract bool Insert(string table, string[] values, string updateKey, string updateValue);
+        public abstract bool Update(string table, string[] setValues, string[] setRows, string[] keyRows, string[] keyValues);
         public abstract void CloseDatabase();
         public abstract bool TableExists(string table);
         public abstract void CreateTable(string table, ColumnDefinition[] columns);
-        public abstract void StoreRegionWindlightSettings(RegionLightShareData wl);
+        public abstract bool StoreRegionWindlightSettings(RegionLightShareData wl);
         public abstract RegionLightShareData LoadRegionWindlightSettings(UUID regionUUID);
 
         public Version GetAuroraVersion()

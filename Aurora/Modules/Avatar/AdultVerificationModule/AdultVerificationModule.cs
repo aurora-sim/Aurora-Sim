@@ -40,8 +40,8 @@ namespace Aurora.Modules.Avatar.AdultVerificationModule
 		{
             if (!m_Enabled)
                 return;
-			GenericData = Aurora.DataManager.DataManager.GetGenericPlugin();
-			RegionData = Aurora.DataManager.DataManager.GetRegionPlugin();
+			GenericData = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
+			RegionData = Aurora.DataManager.DataManager.GetDefaultRegionPlugin();
 		}
 		
 		public void Close(){}

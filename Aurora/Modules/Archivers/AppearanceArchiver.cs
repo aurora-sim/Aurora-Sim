@@ -34,7 +34,7 @@ namespace Aurora.Modules
 
         void EventManager_OnNewClient(IClientAPI client)
         {
-            var GenericData = Aurora.DataManager.DataManager.GetGenericPlugin();
+            var GenericData = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
             UserAccount account = m_scene.UserAccountService.GetUserAccount(UUID.Zero, client.AgentId);
             string NewUser = GenericData.Query("userUUID", account.PrincipalID.ToString(), "usersauth", "IsNewUser")[0];
             string ArchiveName = GenericData.Query("userUUID", account.PrincipalID.ToString(), "usersauth", "AArchiveName")[0];

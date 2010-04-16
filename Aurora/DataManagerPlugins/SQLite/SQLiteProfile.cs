@@ -216,9 +216,10 @@ namespace Aurora.DataManager.SQLite
             return retval;
         }
 
-        public void InvalidateProfileNotes(UUID target)
+        public bool InvalidateProfileNotes(UUID target)
         {
             UserProfileNotesCache.Remove(target);
+            return true;
         }
 
         public AuroraProfileData GetProfileNotes(UUID agentID, UUID target)
@@ -332,7 +333,7 @@ namespace Aurora.DataManager.SQLite
             }
         }
 
-        public void UpdateUserProfile(AuroraProfileData Profile)
+        public bool UpdateUserProfile(AuroraProfileData Profile)
         {
             List<string> SetValues = new List<string>();
             List<string> SetRows = new List<string>();
@@ -368,10 +369,10 @@ namespace Aurora.DataManager.SQLite
             List<string> KeyRow = new List<string>();
             KeyRow.Add("userUUID");
             KeyValue.Add(Profile.Identifier);
-            Update("usersauth", SetValues.ToArray(), SetRows.ToArray(), KeyRow.ToArray(), KeyValue.ToArray());
+            return Update("usersauth", SetValues.ToArray(), SetRows.ToArray(), KeyRow.ToArray(), KeyValue.ToArray());
         }
 
-        public void FullUpdateUserProfile(AuroraProfileData Profile)
+        public bool FullUpdateUserProfile(AuroraProfileData Profile)
         {
             List<string> SetValues = new List<string>();
             List<string> SetRows = new List<string>();
@@ -409,7 +410,7 @@ namespace Aurora.DataManager.SQLite
             List<string> KeyRow = new List<string>();
             KeyRow.Add("userUUID");
             KeyValue.Add(Profile.Identifier);
-            Update("usersauth", SetValues.ToArray(), SetRows.ToArray(), KeyRow.ToArray(), KeyValue.ToArray());
+            return Update("usersauth", SetValues.ToArray(), SetRows.ToArray(), KeyRow.ToArray(), KeyValue.ToArray());
         }
 
         public AuroraProfileData CreateTemperaryAccount(string client, string first, string last)

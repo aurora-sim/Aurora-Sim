@@ -209,9 +209,9 @@ namespace Aurora.DataManager.MySQL
             return messages.ToArray();
         }
 
-        public void AddOfflineMessage(string fromUUID, string fromName, string toUUID, string message)
+        public bool AddOfflineMessage(string fromUUID, string fromName, string toUUID, string message)
         {
-            Insert("offlinemessages", new string[] { fromUUID, fromName, toUUID, message });
+            return Insert("offlinemessages", new string[] { fromUUID, fromName, toUUID, message });
         }
     }
 }

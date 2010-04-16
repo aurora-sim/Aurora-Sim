@@ -198,7 +198,7 @@ namespace Aurora.DataManager.SQLite
             return RetVal;
         }
 
-        public override void Insert(string table, string[] values)
+        public override bool Insert(string table, string[] values)
         {
             var cmd = new SqliteCommand();
 
@@ -213,9 +213,10 @@ namespace Aurora.DataManager.SQLite
             cmd.CommandText = query;
             ExecuteNonQuery(cmd);
             CloseReaderCommand(cmd);
+            return true;
         }
 
-        public override void Delete(string table, string[] keys, string[] values)
+        public override bool Delete(string table, string[] keys, string[] values)
         {
             var cmd = new SqliteCommand();
 
@@ -231,9 +232,10 @@ namespace Aurora.DataManager.SQLite
             cmd.CommandText = query;
             ExecuteNonQuery(cmd);
             CloseReaderCommand(cmd);
+            return true;
         }
 
-        public override void Insert(string table, string[] values, string updateKey, string updateValue)
+        public override bool Insert(string table, string[] values, string updateKey, string updateValue)
         {
             var cmd = new SqliteCommand();
 
@@ -260,9 +262,10 @@ namespace Aurora.DataManager.SQLite
                 ExecuteNonQuery(cmd);
                 CloseReaderCommand(cmd);
             }
+            return true;
         }
 
-        public override void Update(string table, string[] setValues, string[] setRows, string[] keyRows, string[] keyValues)
+        public override bool Update(string table, string[] setValues, string[] setRows, string[] keyRows, string[] keyValues)
         {
             string query = "update " + table + " set ";
             int i = 0;
@@ -284,6 +287,7 @@ namespace Aurora.DataManager.SQLite
             cmd.CommandText = query;
             ExecuteNonQuery(cmd);
             CloseReaderCommand(cmd);
+            return true;
         }
 
         public override void CloseDatabase()
@@ -451,7 +455,7 @@ namespace Aurora.DataManager.SQLite
         public override RegionLightShareData LoadRegionWindlightSettings(UUID regionUUID)
         {
         	RegionLightShareData nWP = new RegionLightShareData();
-        	nWP.OnSave += StoreRegionWindlightSettings;
+            nWP.OnSave += UpdateRegionWindlightSettings;
 
         	string command = "select * from `regionwindlight` where region_id = "+regionUUID.ToString();
 
@@ -535,39 +539,72 @@ namespace Aurora.DataManager.SQLite
         	}
         	return nWP;
         }
-        
-        public override void StoreRegionWindlightSettings(RegionLightShareData wl)
-        {
-        	var cmd = new SqliteCommand();
-        	cmd.CommandText = "REPLACE INTO `regionwindlight` (`region_id`, `water_color_r`, `water_color_g`, ";
-        	cmd.CommandText += "`water_color_b`, `water_fog_density_exponent`, `underwater_fog_modifier`, ";
-        	cmd.CommandText += "`reflection_wavelet_scale_1`, `reflection_wavelet_scale_2`, `reflection_wavelet_scale_3`, ";
-        	cmd.CommandText += "`fresnel_scale`, `fresnel_offset`, `refract_scale_above`, `refract_scale_below`, ";
-        	cmd.CommandText += "`blur_multiplier`, `big_wave_direction_x`, `big_wave_direction_y`, `little_wave_direction_x`, ";
-        	cmd.CommandText += "`little_wave_direction_y`, `normal_map_texture`, `horizon_r`, `horizon_g`, `horizon_b`, ";
-        	cmd.CommandText += "`horizon_i`, `haze_horizon`, `blue_density_r`, `blue_density_g`, `blue_density_b`, ";
-        	cmd.CommandText += "`blue_density_i`, `haze_density`, `density_multiplier`, `distance_multiplier`, `max_altitude`, ";
-        	cmd.CommandText += "`sun_moon_color_r`, `sun_moon_color_g`, `sun_moon_color_b`, `sun_moon_color_i`, `sun_moon_position`, ";
-        	cmd.CommandText += "`ambient_r`, `ambient_g`, `ambient_b`, `ambient_i`, `east_angle`, `sun_glow_focus`, `sun_glow_size`, ";
-        	cmd.CommandText += "`scene_gamma`, `star_brightness`, `cloud_color_r`, `cloud_color_g`, `cloud_color_b`, `cloud_color_i`, ";
-        	cmd.CommandText += "`cloud_x`, `cloud_y`, `cloud_density`, `cloud_coverage`, `cloud_scale`, `cloud_detail_x`, ";
-        	cmd.CommandText += "`cloud_detail_y`, `cloud_detail_density`, `cloud_scroll_x`, `cloud_scroll_x_lock`, `cloud_scroll_y`, ";
-        	cmd.CommandText += "`cloud_scroll_y_lock`, `draw_classic_clouds`) VALUES ('"+wl.regionID.ToString()+"', '"+wl.waterColor.X+"', ";
-        	cmd.CommandText += "'"+wl.waterColor.Y+"', '"+wl.waterColor.Z+"', '"+wl.waterFogDensityExponent+"', '"+wl.underwaterFogModifier+"', '"+wl.reflectionWaveletScale.X+"', ";
-        	cmd.CommandText += "'"+wl.reflectionWaveletScale.Y+"', '"+wl.reflectionWaveletScale.X+"', '"+wl.fresnelScale+"', '"+wl.fresnelOffset+"', '"+wl.refractScaleAbove+"', ";
-        	cmd.CommandText += "'"+wl.refractScaleBelow+"', '"+wl.blurMultiplier+"', '"+wl.bigWaveDirection.X+"', '"+wl.bigWaveDirection.Y+"', '"+wl.littleWaveDirection.X+"', ";
-        	cmd.CommandText += "'"+wl.littleWaveDirection.Y+"', '"+wl.normalMapTexture+"', '"+wl.horizon.X+"', '"+wl.horizon.Y+"', '"+wl.horizon.Z+"', '"+wl.horizon.W+"', '"+wl.hazeHorizon+"', ";
-        	cmd.CommandText += "'"+wl.blueDensity.X+"', '"+wl.blueDensity.Y+"', '"+wl.blueDensity.Z+"', '"+wl.blueDensity.W+"', '"+wl.hazeDensity+"', '"+wl.densityMultiplier+"', ";
-        	cmd.CommandText += "'"+wl.distanceMultiplier+"', '"+wl.maxAltitude+"', '"+wl.sunMoonColor.X+"', '"+wl.sunMoonColor.Y+"', '"+wl.sunMoonColor.Z+"', ";
-        	cmd.CommandText += "'"+wl.sunMoonColor.W+"', '"+wl.sunMoonPosition+"', '"+wl.ambient.X+"', '"+wl.ambient.Y+"', '"+wl.ambient.Z+"', '"+wl.ambient.W+"', '"+wl.eastAngle+"', ";
-        	cmd.CommandText += "'"+wl.sunGlowFocus+"', '"+wl.sunGlowFocus+"', '"+wl.sceneGamma+"', '"+wl.starBrightness+"', '"+wl.cloudColor.X+"', '"+wl.cloudColor.Y+"', ";
-        	cmd.CommandText += "'"+wl.cloudColor.Z+"', '"+wl.cloudColor.W+"', '"+wl.cloudXYDensity.X+"', '"+wl.cloudXYDensity.Y+"', '"+wl.cloudXYDensity.Z+"', '"+wl.cloudCoverage+"', '"+wl.cloudScale+"', ";
-        	cmd.CommandText += "'"+wl.cloudDetailXYDensity.X+"', '"+wl.cloudDetailXYDensity.Y+"', '"+wl.cloudDetailXYDensity.Z+"', '"+wl.cloudScrollX+"', '"+wl.cloudScrollXLock+"', ";
-        	cmd.CommandText += "'"+wl.cloudScrollY+"', '"+wl.cloudScrollYLock+"', '"+wl.drawClassicClouds+"')";
 
-        	ExecuteNonQuery(cmd);
-        	CloseReaderCommand(cmd);
-        	
+        public override bool StoreRegionWindlightSettings(RegionLightShareData wl)
+        {
+            var cmd = new SqliteCommand();
+            cmd.CommandText = "REPLACE INTO `regionwindlight` (`region_id`, `water_color_r`, `water_color_g`, ";
+            cmd.CommandText += "`water_color_b`, `water_fog_density_exponent`, `underwater_fog_modifier`, ";
+            cmd.CommandText += "`reflection_wavelet_scale_1`, `reflection_wavelet_scale_2`, `reflection_wavelet_scale_3`, ";
+            cmd.CommandText += "`fresnel_scale`, `fresnel_offset`, `refract_scale_above`, `refract_scale_below`, ";
+            cmd.CommandText += "`blur_multiplier`, `big_wave_direction_x`, `big_wave_direction_y`, `little_wave_direction_x`, ";
+            cmd.CommandText += "`little_wave_direction_y`, `normal_map_texture`, `horizon_r`, `horizon_g`, `horizon_b`, ";
+            cmd.CommandText += "`horizon_i`, `haze_horizon`, `blue_density_r`, `blue_density_g`, `blue_density_b`, ";
+            cmd.CommandText += "`blue_density_i`, `haze_density`, `density_multiplier`, `distance_multiplier`, `max_altitude`, ";
+            cmd.CommandText += "`sun_moon_color_r`, `sun_moon_color_g`, `sun_moon_color_b`, `sun_moon_color_i`, `sun_moon_position`, ";
+            cmd.CommandText += "`ambient_r`, `ambient_g`, `ambient_b`, `ambient_i`, `east_angle`, `sun_glow_focus`, `sun_glow_size`, ";
+            cmd.CommandText += "`scene_gamma`, `star_brightness`, `cloud_color_r`, `cloud_color_g`, `cloud_color_b`, `cloud_color_i`, ";
+            cmd.CommandText += "`cloud_x`, `cloud_y`, `cloud_density`, `cloud_coverage`, `cloud_scale`, `cloud_detail_x`, ";
+            cmd.CommandText += "`cloud_detail_y`, `cloud_detail_density`, `cloud_scroll_x`, `cloud_scroll_x_lock`, `cloud_scroll_y`, ";
+            cmd.CommandText += "`cloud_scroll_y_lock`, `draw_classic_clouds`) VALUES ('" + wl.regionID.ToString() + "', '" + wl.waterColor.X + "', ";
+            cmd.CommandText += "'" + wl.waterColor.Y + "', '" + wl.waterColor.Z + "', '" + wl.waterFogDensityExponent + "', '" + wl.underwaterFogModifier + "', '" + wl.reflectionWaveletScale.X + "', ";
+            cmd.CommandText += "'" + wl.reflectionWaveletScale.Y + "', '" + wl.reflectionWaveletScale.X + "', '" + wl.fresnelScale + "', '" + wl.fresnelOffset + "', '" + wl.refractScaleAbove + "', ";
+            cmd.CommandText += "'" + wl.refractScaleBelow + "', '" + wl.blurMultiplier + "', '" + wl.bigWaveDirection.X + "', '" + wl.bigWaveDirection.Y + "', '" + wl.littleWaveDirection.X + "', ";
+            cmd.CommandText += "'" + wl.littleWaveDirection.Y + "', '" + wl.normalMapTexture + "', '" + wl.horizon.X + "', '" + wl.horizon.Y + "', '" + wl.horizon.Z + "', '" + wl.horizon.W + "', '" + wl.hazeHorizon + "', ";
+            cmd.CommandText += "'" + wl.blueDensity.X + "', '" + wl.blueDensity.Y + "', '" + wl.blueDensity.Z + "', '" + wl.blueDensity.W + "', '" + wl.hazeDensity + "', '" + wl.densityMultiplier + "', ";
+            cmd.CommandText += "'" + wl.distanceMultiplier + "', '" + wl.maxAltitude + "', '" + wl.sunMoonColor.X + "', '" + wl.sunMoonColor.Y + "', '" + wl.sunMoonColor.Z + "', ";
+            cmd.CommandText += "'" + wl.sunMoonColor.W + "', '" + wl.sunMoonPosition + "', '" + wl.ambient.X + "', '" + wl.ambient.Y + "', '" + wl.ambient.Z + "', '" + wl.ambient.W + "', '" + wl.eastAngle + "', ";
+            cmd.CommandText += "'" + wl.sunGlowFocus + "', '" + wl.sunGlowFocus + "', '" + wl.sceneGamma + "', '" + wl.starBrightness + "', '" + wl.cloudColor.X + "', '" + wl.cloudColor.Y + "', ";
+            cmd.CommandText += "'" + wl.cloudColor.Z + "', '" + wl.cloudColor.W + "', '" + wl.cloudXYDensity.X + "', '" + wl.cloudXYDensity.Y + "', '" + wl.cloudXYDensity.Z + "', '" + wl.cloudCoverage + "', '" + wl.cloudScale + "', ";
+            cmd.CommandText += "'" + wl.cloudDetailXYDensity.X + "', '" + wl.cloudDetailXYDensity.Y + "', '" + wl.cloudDetailXYDensity.Z + "', '" + wl.cloudScrollX + "', '" + wl.cloudScrollXLock + "', ";
+            cmd.CommandText += "'" + wl.cloudScrollY + "', '" + wl.cloudScrollYLock + "', '" + wl.drawClassicClouds + "')";
+
+            ExecuteNonQuery(cmd);
+            CloseReaderCommand(cmd);
+
+            return true;
+        }
+        public void UpdateRegionWindlightSettings(RegionLightShareData wl)
+        {
+            var cmd = new SqliteCommand();
+            cmd.CommandText = "REPLACE INTO `regionwindlight` (`region_id`, `water_color_r`, `water_color_g`, ";
+            cmd.CommandText += "`water_color_b`, `water_fog_density_exponent`, `underwater_fog_modifier`, ";
+            cmd.CommandText += "`reflection_wavelet_scale_1`, `reflection_wavelet_scale_2`, `reflection_wavelet_scale_3`, ";
+            cmd.CommandText += "`fresnel_scale`, `fresnel_offset`, `refract_scale_above`, `refract_scale_below`, ";
+            cmd.CommandText += "`blur_multiplier`, `big_wave_direction_x`, `big_wave_direction_y`, `little_wave_direction_x`, ";
+            cmd.CommandText += "`little_wave_direction_y`, `normal_map_texture`, `horizon_r`, `horizon_g`, `horizon_b`, ";
+            cmd.CommandText += "`horizon_i`, `haze_horizon`, `blue_density_r`, `blue_density_g`, `blue_density_b`, ";
+            cmd.CommandText += "`blue_density_i`, `haze_density`, `density_multiplier`, `distance_multiplier`, `max_altitude`, ";
+            cmd.CommandText += "`sun_moon_color_r`, `sun_moon_color_g`, `sun_moon_color_b`, `sun_moon_color_i`, `sun_moon_position`, ";
+            cmd.CommandText += "`ambient_r`, `ambient_g`, `ambient_b`, `ambient_i`, `east_angle`, `sun_glow_focus`, `sun_glow_size`, ";
+            cmd.CommandText += "`scene_gamma`, `star_brightness`, `cloud_color_r`, `cloud_color_g`, `cloud_color_b`, `cloud_color_i`, ";
+            cmd.CommandText += "`cloud_x`, `cloud_y`, `cloud_density`, `cloud_coverage`, `cloud_scale`, `cloud_detail_x`, ";
+            cmd.CommandText += "`cloud_detail_y`, `cloud_detail_density`, `cloud_scroll_x`, `cloud_scroll_x_lock`, `cloud_scroll_y`, ";
+            cmd.CommandText += "`cloud_scroll_y_lock`, `draw_classic_clouds`) VALUES ('" + wl.regionID.ToString() + "', '" + wl.waterColor.X + "', ";
+            cmd.CommandText += "'" + wl.waterColor.Y + "', '" + wl.waterColor.Z + "', '" + wl.waterFogDensityExponent + "', '" + wl.underwaterFogModifier + "', '" + wl.reflectionWaveletScale.X + "', ";
+            cmd.CommandText += "'" + wl.reflectionWaveletScale.Y + "', '" + wl.reflectionWaveletScale.X + "', '" + wl.fresnelScale + "', '" + wl.fresnelOffset + "', '" + wl.refractScaleAbove + "', ";
+            cmd.CommandText += "'" + wl.refractScaleBelow + "', '" + wl.blurMultiplier + "', '" + wl.bigWaveDirection.X + "', '" + wl.bigWaveDirection.Y + "', '" + wl.littleWaveDirection.X + "', ";
+            cmd.CommandText += "'" + wl.littleWaveDirection.Y + "', '" + wl.normalMapTexture + "', '" + wl.horizon.X + "', '" + wl.horizon.Y + "', '" + wl.horizon.Z + "', '" + wl.horizon.W + "', '" + wl.hazeHorizon + "', ";
+            cmd.CommandText += "'" + wl.blueDensity.X + "', '" + wl.blueDensity.Y + "', '" + wl.blueDensity.Z + "', '" + wl.blueDensity.W + "', '" + wl.hazeDensity + "', '" + wl.densityMultiplier + "', ";
+            cmd.CommandText += "'" + wl.distanceMultiplier + "', '" + wl.maxAltitude + "', '" + wl.sunMoonColor.X + "', '" + wl.sunMoonColor.Y + "', '" + wl.sunMoonColor.Z + "', ";
+            cmd.CommandText += "'" + wl.sunMoonColor.W + "', '" + wl.sunMoonPosition + "', '" + wl.ambient.X + "', '" + wl.ambient.Y + "', '" + wl.ambient.Z + "', '" + wl.ambient.W + "', '" + wl.eastAngle + "', ";
+            cmd.CommandText += "'" + wl.sunGlowFocus + "', '" + wl.sunGlowFocus + "', '" + wl.sceneGamma + "', '" + wl.starBrightness + "', '" + wl.cloudColor.X + "', '" + wl.cloudColor.Y + "', ";
+            cmd.CommandText += "'" + wl.cloudColor.Z + "', '" + wl.cloudColor.W + "', '" + wl.cloudXYDensity.X + "', '" + wl.cloudXYDensity.Y + "', '" + wl.cloudXYDensity.Z + "', '" + wl.cloudCoverage + "', '" + wl.cloudScale + "', ";
+            cmd.CommandText += "'" + wl.cloudDetailXYDensity.X + "', '" + wl.cloudDetailXYDensity.Y + "', '" + wl.cloudDetailXYDensity.Z + "', '" + wl.cloudScrollX + "', '" + wl.cloudScrollXLock + "', ";
+            cmd.CommandText += "'" + wl.cloudScrollY + "', '" + wl.cloudScrollYLock + "', '" + wl.drawClassicClouds + "')";
+
+            ExecuteNonQuery(cmd);
+            CloseReaderCommand(cmd);
         }
     }
 }

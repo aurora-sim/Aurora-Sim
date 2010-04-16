@@ -14,52 +14,8 @@ using Aurora.DataManager;
 using Aurora.DataManager.MySQL;
 using Aurora.DataManager.SQLite;
 
-namespace Aurora.Modules.DataPlugins
+namespace Aurora.Modules
 {
-    public class RemoteDataService : IRegionModule
-    {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        internal IConfig m_config;
-        string URL = "";
-        string Password = "";
-
-        public void Initialise(Scene scene, IConfigSource source)
-        {
-            m_config = source.Configs["AuroraData"];
-
-            if (null == m_config)
-            {
-                m_log.Error("[AuroraData]: no data plugin found!");
-                return;
-            }
-            string ServiceName = m_config.GetString("Service", "");
-            if (ServiceName != Name)
-                return;
-
-            URL = m_config.GetString("URL", "");
-            Password = m_config.GetString("Password", "");
-
-            RemoteDataConnector connector = new RemoteDataConnector(URL, Password);
-            Aurora.DataManager.DataManager.SetGenericDataPlugin(connector);
-            Aurora.DataManager.DataManager.SetProfilePlugin(connector);
-            Aurora.DataManager.DataManager.SetRegionPlugin(connector);
-        }
-
-        public void PostInitialise(){ }
-
-        public void Close() { }
-
-        public string Name
-        {
-            get { return "RemoteDataService"; }
-        }
-
-        public bool IsSharedModule
-        {
-            get { return true; }
-        }
-    }
-
     public class RemoteDataConnector : IGenericData, IRegionData, IProfileData
     {
         private string URL = "";
@@ -122,18 +78,20 @@ namespace Aurora.Modules.DataPlugins
             return ParseObject<AuroraProfileData>(PerformRemoteOperation("GetProfileNotes", parameters));
         }
 
-        public void InvalidateProfileNotes(UUID target)
+        public bool InvalidateProfileNotes(UUID target)
         {
             var parameters = new Dictionary<string, string>();
             AddParameter(parameters, "target", target);
             PerformRemoteOperation("InvalidateProfileNotes", parameters);
+            return true;
         }
 
-        public void FullUpdateUserProfile(AuroraProfileData Profile)
+        public bool FullUpdateUserProfile(AuroraProfileData Profile)
         {
             var parameters = new Dictionary<string, string>();
             AddParameter(parameters, "Profile", Profile);
             PerformRemoteOperation("FullUpdateUserProfile", parameters);
+            return true;
         }
 
         public List<string> Query(string query)
@@ -150,11 +108,12 @@ namespace Aurora.Modules.DataPlugins
             return ParseObject<AuroraProfileData>(PerformRemoteOperation("GetProfileInfo", parameters));
         }
 
-        public void UpdateUserProfile(AuroraProfileData Profile)
+        public bool UpdateUserProfile(AuroraProfileData Profile)
         {
             var parameters = new Dictionary<string, string>();
             AddParameter(parameters, "Profile", Profile);
             PerformRemoteOperation("UpdateUserProfile", parameters);
+            return true;
         }
 
         public AuroraProfileData CreateTemperaryAccount(string client, string first, string last)
@@ -277,14 +236,15 @@ namespace Aurora.Modules.DataPlugins
             return ParseArray<OfflineMessage>(PerformRemoteOperation("GetOfflineMessages",parameters));
         }
 
-        public void AddOfflineMessage(string fromUUID, string fromName, string toUUID, string message)
+        public bool AddOfflineMessage(string fromUUID, string fromName, string toUUID, string message)
         {
             var parameters = new Dictionary<string, string>();
             AddParameter(parameters,"fromUUID", fromUUID);
             AddParameter(parameters,"fromName", fromName);
             AddParameter(parameters,"toUUID", toUUID);
             AddParameter(parameters,"message", message);
-            PerformRemoteOperation("AddOfflineMessage",parameters);
+            PerformRemoteOperation("AddOfflineMessage", parameters);
+            return true;
         }
 
         private List<T> ParseList<T>(string operation)
@@ -347,7 +307,7 @@ namespace Aurora.Modules.DataPlugins
 
         #endregion
 
-        public void Update(string table, string[] setValues, string[] setRows, string[] keyRows, string[] keyValues)
+        public bool Update(string table, string[] setValues, string[] setRows, string[] keyRows, string[] keyValues)
         {
             var parameters = new Dictionary<string, string>();
             AddParameter(parameters, "table", table);
@@ -356,6 +316,7 @@ namespace Aurora.Modules.DataPlugins
             AddParameter(parameters, "keyRows", keyRows);
             AddParameter(parameters, "keyValues", keyValues);
             PerformRemoteOperation("Update", parameters);
+            return true;
         }
 
         public List<string> Query(string keyRow, string keyValue, string table, string wantedValue)
@@ -378,24 +339,26 @@ namespace Aurora.Modules.DataPlugins
             return ParseList<string>(PerformRemoteOperation("Query", parameters));
         }
 
-        public void Insert(string table, string[] values)
+        public bool Insert(string table, string[] values)
         {
             var parameters = new Dictionary<string, string>();
             AddParameter(parameters, "table", table);
             AddParameter(parameters, "values", values);
             PerformRemoteOperation("Insert", parameters);
+            return true;
         }
 
-        public void Delete(string table, string[] keys, string[] values)
+        public bool Delete(string table, string[] keys, string[] values)
         {
             var parameters = new Dictionary<string, string>();
             AddParameter(parameters, "table", table);
             AddParameter(parameters, "keys", values);
             AddParameter(parameters, "values", values);
             PerformRemoteOperation("Delete", parameters);
+            return true;
         }
 
-        public void Insert(string table, string[] values, string updateKey, string updateValue)
+        public bool Insert(string table, string[] values, string updateKey, string updateValue)
         {
             var parameters = new Dictionary<string, string>();
             AddParameter(parameters, "table", table);
@@ -403,13 +366,15 @@ namespace Aurora.Modules.DataPlugins
             AddParameter(parameters, "updateKey", updateKey);
             AddParameter(parameters, "updateValue", updateValue);
             PerformRemoteOperation("Insert", parameters);
+            return true;
         }
 
-        public void StoreRegionWindlightSettings(RegionLightShareData lightShareData)
+        public bool StoreRegionWindlightSettings(RegionLightShareData lightShareData)
         {
             var parameters = new Dictionary<string, string>();
             AddParameter(parameters, "lightShareData", lightShareData);
             PerformRemoteOperation("StoreRegionWindlightSettings", parameters);
+            return true;
         }
 
         public RegionLightShareData LoadRegionWindlightSettings(UUID regionUUID)

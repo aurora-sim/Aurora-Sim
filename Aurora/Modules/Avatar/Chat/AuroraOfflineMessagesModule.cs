@@ -87,6 +87,7 @@ namespace Aurora.Modules
             if (!enabled)
                 return;
 
+            RegionData = Aurora.DataManager.DataManager.GetDefaultRegionPlugin();
             if (m_TransferModule == null)
             {
                 m_TransferModule = scene.RequestModuleInterface<IMessageTransferModule>();
@@ -120,7 +121,6 @@ namespace Aurora.Modules
                 return;
 
             m_log.Debug("[OFFLINE MESSAGING] Offline messages enabled");
-            RegionData = Aurora.DataManager.DataManager.GetRegionPlugin();
         }
 
         public string Name

@@ -390,9 +390,10 @@ namespace Aurora.DataManager.MySQL
 
 
 
-        public void InvalidateProfileNotes(UUID target)
+        public bool InvalidateProfileNotes(UUID target)
         {
             UserProfileNotesCache.Remove(target);
+            return true;
         }
 
         //Deletion coming up soon!
@@ -429,7 +430,7 @@ namespace Aurora.DataManager.MySQL
         }
 
 
-        public void UpdateUserProfile(AuroraProfileData Profile)
+        public bool UpdateUserProfile(AuroraProfileData Profile)
         {
             List<string> SetValues = new List<string>();
             List<string> SetRows = new List<string>();
@@ -465,7 +466,7 @@ namespace Aurora.DataManager.MySQL
             List<string> KeyRow = new List<string>();
             KeyRow.Add("userUUID");
             KeyValue.Add(Profile.Identifier);
-            Update("usersauth", SetValues.ToArray(), SetRows.ToArray(), KeyRow.ToArray(), KeyValue.ToArray());
+            return Update("usersauth", SetValues.ToArray(), SetRows.ToArray(), KeyRow.ToArray(), KeyValue.ToArray());
         }
 
         public AuroraProfileData CreateTemperaryAccount(string client, string first, string last)
@@ -478,7 +479,7 @@ namespace Aurora.DataManager.MySQL
             return UserProfile;
         }
 
-        public void FullUpdateUserProfile(AuroraProfileData Profile)
+        public bool FullUpdateUserProfile(AuroraProfileData Profile)
         {
             List<string> SetValues = new List<string>();
             List<string> SetRows = new List<string>();
@@ -514,7 +515,7 @@ namespace Aurora.DataManager.MySQL
             List<string> KeyRow = new List<string>();
             KeyRow.Add("userUUID");
             KeyValue.Add(Profile.Identifier);
-            Update("usersauth", SetValues.ToArray(), SetRows.ToArray(), KeyRow.ToArray(), KeyValue.ToArray());
+            return Update("usersauth", SetValues.ToArray(), SetRows.ToArray(), KeyRow.ToArray(), KeyValue.ToArray());
         }
     	public DirPlacesReplyData[] PlacesQuery(string queryText, string category, string table, string wantedValue, int StartQuery)
         {

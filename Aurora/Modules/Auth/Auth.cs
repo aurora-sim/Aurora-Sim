@@ -34,7 +34,7 @@ namespace Aurora.Modules
 
         public void PostInitialise()
         {
-            a_DataService = Aurora.DataManager.DataManager.GetGenericPlugin();
+            a_DataService = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
         }
         
         public void Initialise(Scene scene, IConfigSource source)
@@ -151,7 +151,7 @@ namespace Aurora.Modules
             values.Add("true");
             values.Add("false");
             values.Add("2");
-            var GD = Aurora.DataManager.DataManager.GetGenericPlugin();
+            var GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
             GD.Insert("usersauth", values.ToArray());
         }
 

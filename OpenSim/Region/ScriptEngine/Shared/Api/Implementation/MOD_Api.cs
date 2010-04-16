@@ -130,7 +130,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         public void AAUpdatePrimProperties(LSL_String type, LSL_String Keys, LSL_String Values)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "AAUpdatePrimProperties", m_host, "AA");
-            GenericData = Aurora.DataManager.DataManager.GetGenericPlugin();
+            GenericData = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
             List<string> SetValues = new List<string>();
             List<string> SetKeys = new List<string>();
             List<string> KeyRows = new List<string>();
