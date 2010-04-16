@@ -5,7 +5,7 @@ using Aurora.Framework;
 using Aurora.DataManager;
 using OpenSim.Framework;
 
-namespace Aurora.Modules.Data.DataService
+namespace Aurora.Modules
 {
     public class ProfileData: IProfileData
     {

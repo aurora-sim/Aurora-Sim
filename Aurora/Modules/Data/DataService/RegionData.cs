@@ -4,7 +4,7 @@ using System.Text;
 using Aurora.DataManager;
 using Aurora.Framework;
 
-namespace Aurora.Modules.Data.DataService
+namespace Aurora.Modules
 {
     public class RegionData: IRegionData
     {

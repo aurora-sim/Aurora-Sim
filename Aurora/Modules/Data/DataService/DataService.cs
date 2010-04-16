@@ -86,6 +86,9 @@ namespace Aurora.Modules
                 Aurora.DataManager.DataManager.AddRegionPlugin(connector);
             }
             Aurora.DataManager.DataManager.SetDefaultGenericDataPlugin(new GenericData());
+            Aurora.DataManager.DataManager.SetDefaultEstatePlugin(new EstateData());
+            Aurora.DataManager.DataManager.SetProfilePlugin(new ProfileData());
+            Aurora.DataManager.DataManager.SetDefaultRegionPlugin(new RegionData());
         }
 
         public string Name
