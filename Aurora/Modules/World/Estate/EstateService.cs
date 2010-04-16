@@ -4,8 +4,9 @@ using System.Text;
 using OpenSim.Region.Framework.Interfaces;
 using Aurora.Framework;
 using OpenSim.Framework;
-using OpenSim.Region.Framework;
+using OpenSim.Region.Framework.Scenes;
 using OpenMetaverse;
+using Nini.Config;
 
 namespace Aurora.Modules
 {
