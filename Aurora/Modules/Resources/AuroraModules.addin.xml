@@ -12,7 +12,6 @@
       <RegionModule id="AuroraWorldMapModule"           type="Aurora.Modules.AuroraWorldMapModule" />
       <RegionModule id="IWCSimulationConnectorModule"           type="Aurora.Modules.IWCSimulationConnectorModule" />
       <RegionModule id="AuroraOfflineMessageModule" type="Aurora.Modules.AuroraOfflineMessageModule" />
-      <RegionModule id="EstateService"           type="Aurora.Modules.EstateService" />
       <RegionModule id="AuroraChatModule"           type="Aurora.Modules.AuroraChatModule" />
     </Extension>
 </Addin>
