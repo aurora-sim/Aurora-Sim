@@ -80,7 +80,7 @@ namespace OpenSim.Region.Framework.Scenes
     public delegate bool EditUserInventoryHandler(UUID itemID, UUID userID);
     public delegate bool CopyUserInventoryHandler(UUID itemID, UUID userID);
     public delegate bool DeleteUserInventoryHandler(UUID itemID, UUID userID);
-    public delegate bool TeleportHandler(UUID userID, Scene scene);
+    public delegate bool TeleportHandler(UUID userID, Scene scene, Vector3 Position, out Vector3 newPosition);
     #endregion
 
     public class ScenePermissions
@@ -932,16 +932,17 @@ namespace OpenSim.Region.Framework.Scenes
             }
             return true;
         }
-        
-        public bool CanTeleport(UUID userID)
+
+        public bool CanTeleport(UUID userID, Vector3 Position, out Vector3 newPosition)
         {
+            newPosition = Position;
             TeleportHandler handler = OnTeleport;
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
                 foreach (TeleportHandler h in list)
                 {
-                    if (h(userID, m_scene) == false)
+                    if (h(userID, m_scene, Position, out newPosition) == false)
                         return false;
                 }
             }

@@ -123,6 +123,6 @@ namespace Aurora.Framework
     }
     public interface IEstateSettingsModule
     {
-        bool AllowTeleport(IScene regionID, UUID userID);
+        bool AllowTeleport(IScene regionID, UUID userID, Vector3 Position, out Vector3 newPosition);
     }
 }

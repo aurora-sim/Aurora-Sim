@@ -1833,13 +1833,14 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             return true;
         }
 
-        private bool CanTeleport(UUID userID, Scene scene)
+        private bool CanTeleport(UUID userID, Scene scene, Vector3 Position, out Vector3 newPosition)
         {
+            newPosition = Position;
             DebugPermissionInformation(MethodInfo.GetCurrentMethod().Name);
             if (m_bypassPermissions) return m_bypassPermissionsValue;
 
             IEstateSettingsModule ESM = scene.RequestModuleInterface<IEstateSettingsModule>();
-            return ESM.AllowTeleport(scene, userID);
+            return ESM.AllowTeleport(scene, userID, Position, out newPosition);
         }
 
         private bool CanResetScript(UUID prim, UUID script, UUID agentID, Scene scene)

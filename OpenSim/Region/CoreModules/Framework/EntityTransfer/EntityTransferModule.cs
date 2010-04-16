@@ -131,8 +131,10 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
         public virtual void Teleport(ScenePresence sp, ulong regionHandle, Vector3 position, Vector3 lookAt, uint teleportFlags)
         {
-            if (!sp.Scene.Permissions.CanTeleport(sp.UUID))
+            if (!sp.Scene.Permissions.CanTeleport(sp.UUID, position, out position))
                 return;
+
+
 
             IEventQueue eq = sp.Scene.RequestModuleInterface<IEventQueue>();
 

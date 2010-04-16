@@ -260,9 +260,10 @@ namespace OpenSim.Region.RegionCombinerModule
             return m_rootScene.Permissions.CanDeleteUserInventory(itemid, userid);
         }
 
-        public bool CanTeleport(UUID userid, Scene scene)
+        public bool CanTeleport(UUID userid, Scene scene, Vector3 Position, out Vector3 newPos)
         {
-            return m_rootScene.Permissions.CanTeleport(userid);
+            newPos = Position;
+            return m_rootScene.Permissions.CanTeleport(userid, Vector3.Zero, out newPos);
         }
 
         #endregion
