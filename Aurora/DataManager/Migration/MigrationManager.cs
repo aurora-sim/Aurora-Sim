@@ -8,7 +8,7 @@ namespace Aurora.DataManager.Migration
 {
     public class MigrationManager
     {
-        private readonly IGenericData genericData;
+        private readonly IDataConnector genericData;
         private readonly List<Migrator> migrators = new List<Migrator>();
         private readonly DataSessionProvider sessionProvider;
         private bool executed;
@@ -16,14 +16,14 @@ namespace Aurora.DataManager.Migration
         private IRestorePoint restorePoint;
         private bool rollback;
 
-        public MigrationManager(DataSessionProvider sessionProvider, IGenericData genericData)
+        public MigrationManager(DataSessionProvider sessionProvider, IDataConnector genericData)
         {
             this.sessionProvider = sessionProvider;
             this.genericData = genericData;
             migrators.Add(new AuroraMigrator_2010_03_13());
         }
 
-        public MigrationManager(DataSessionProvider sessionProvider, IGenericData genericData, List<Migrator> migrators)
+        public MigrationManager(DataSessionProvider sessionProvider, IDataConnector genericData, List<Migrator> migrators)
         {
             this.sessionProvider = sessionProvider;
             this.genericData = genericData;

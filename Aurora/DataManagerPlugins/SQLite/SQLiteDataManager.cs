@@ -96,6 +96,26 @@ namespace Aurora.DataManager.SQLite
             cmd.Dispose();
         }
 
+        public List<string> Query(string query)
+        {
+            SqliteCommand cmd = new SqliteCommand();
+            cmd.CommandText = query;
+            IDataReader reader = GetReader(cmd);
+            List<string> RetVal = new List<string>();
+            while (reader.Read())
+            {
+                for (int i = 0; i < reader.FieldCount; i++)
+                {
+                    RetVal.Add(reader.GetString(i));
+                }
+            }
+            if (RetVal.Count == 0)
+                RetVal.Add("");
+
+            CloseReaderCommand(cmd);
+            return RetVal;
+        }
+
         public override List<string> Query(string keyRow, string keyValue, string table, string wantedValue)
         {
             var cmd = new SqliteCommand();

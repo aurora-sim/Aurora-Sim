@@ -17,16 +17,25 @@ namespace Aurora.DataManager
 {
     public static class DataManager
     {
-        private static IRemoteGenericData plugin = null;
-        public static IRemoteGenericData GetGenericPlugin()
+        public static IGenericData plugin = null;
+        public static IGenericData GetGenericPlugin()
         {
             return plugin;
         }
-        public static void SetRemoteDataPlugin(IRemoteGenericData Plugin)
+        public static void SetGenericDataPlugin(IGenericData Plugin)
         {
             plugin = Plugin;
         }
-        private static IProfileData profileplugin = null;
+        public static IEstateData estateplugin = null;
+        public static IEstateData GetEstatePlugin()
+        {
+            return estateplugin;
+        }
+        public static void SetEstatePlugin(IEstateData Plugin)
+        {
+            estateplugin = Plugin;
+        }
+        public static IProfileData profileplugin = null;
         public static IProfileData GetProfilePlugin()
         {
             return profileplugin;
@@ -35,7 +44,7 @@ namespace Aurora.DataManager
         {
             profileplugin = Plugin;
         }
-        private static IRegionData regionplugin = null;
+        public static IRegionData regionplugin = null;
 
         public static IRegionData GetRegionPlugin()
         {

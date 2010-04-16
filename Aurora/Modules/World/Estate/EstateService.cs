@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using System.Text;
 using OpenSim.Region.Framework.Interfaces;
+using Aurora.Framework;
 
 namespace Aurora.Modules
 {
     public class EstateService : ISharedRegionModule, IEstateService
     {
-        IEstateDataStore m_DataStore = null;
+        IEstateData m_DataStore = null;
         public void PostInitialise()
         {
         }
@@ -45,7 +46,7 @@ namespace Aurora.Modules
 
         public void Initialise(IEstateDataStore dataStore)
         {
-            m_DataStore = dataStore;
+            m_DataStore = Aurora.DataManager.DataManager.GetEstatePlugin();// dataStore;
         }
 
         public OpenSim.Framework.EstateSettings LoadEstateSettings(OpenMetaverse.UUID regionID, bool create)

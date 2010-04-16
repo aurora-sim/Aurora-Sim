@@ -11,17 +11,18 @@ using OpenSim.Region.Framework.Scenes;
 using Aurora.DataManager;
 using Aurora.DataManager.MySQL;
 using Aurora.DataManager.SQLite;
+using OpenSim.Framework;
 
 namespace Aurora.Modules
 {
-    public class LocalDataService: IRegionModule
+    public class LocalDataService: IDataService
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         internal IConfig m_config;
         string PluginModule = "";
         string ConnectionString = "";
 
-        public void Initialise(Scene scene, IConfigSource source)
+        public void Initialise(IScene scene, IConfigSource source)
         {
             m_config = source.Configs["AuroraData"];
 
@@ -50,7 +51,7 @@ namespace Aurora.Modules
                 ProfileData.ConnectToDatabase(ConnectionString);
                 MySQLRegion RegionData = new MySQLRegion();
                 RegionData.ConnectToDatabase(ConnectionString);
-                Aurora.DataManager.DataManager.SetRemoteDataPlugin(GenericData);
+                Aurora.DataManager.DataManager.SetGenericDataPlugin(GenericData);
                 Aurora.DataManager.DataManager.SetProfilePlugin((IProfileData)ProfileData);
                 Aurora.DataManager.DataManager.SetRegionPlugin((IRegionData)RegionData);
             }
@@ -68,9 +69,13 @@ namespace Aurora.Modules
                 ProfileData.ConnectToDatabase(ConnectionString);
                 SQLiteRegion RegionData = new SQLiteRegion();
                 RegionData.ConnectToDatabase(ConnectionString);
-                Aurora.DataManager.DataManager.SetRemoteDataPlugin(GenericData);
+                SQLiteEstate EstateData = new SQLiteEstate();
+                EstateData.ConnectToDatabase(ConnectionString);
+                
+                Aurora.DataManager.DataManager.SetGenericDataPlugin(GenericData);
                 Aurora.DataManager.DataManager.SetProfilePlugin((IProfileData)ProfileData);
                 Aurora.DataManager.DataManager.SetRegionPlugin((IRegionData)RegionData);
+                Aurora.DataManager.DataManager.SetEstatePlugin((IEstateData)EstateData);
             }
             else
             {
@@ -78,18 +83,41 @@ namespace Aurora.Modules
             }
         }
 
-        public void PostInitialise() {}
-
-        public void Close() {}
-
         public string Name
         {
             get { return "LocalDataService"; }
         }
-
-        public bool IsSharedModule
+        public IGenericData GetGenericPlugin()
         {
-            get { return true; }
+            return Aurora.DataManager.DataManager.plugin;
+        }
+        public void SetGenericDataPlugin(IGenericData Plugin)
+        {
+            Aurora.DataManager.DataManager.plugin = Plugin;
+        }
+        public IEstateData GetEstatePlugin()
+        {
+            return Aurora.DataManager.DataManager.estateplugin;
+        }
+        public void SetEstatePlugin(IEstateData Plugin)
+        {
+            Aurora.DataManager.DataManager.estateplugin = Plugin;
+        }
+        public IProfileData GetProfilePlugin()
+        {
+            return Aurora.DataManager.DataManager.profileplugin;
+        }
+        public void SetProfilePlugin(IProfileData Plugin)
+        {
+            Aurora.DataManager.DataManager.profileplugin = Plugin;
+        }
+        public IRegionData GetRegionPlugin()
+        {
+            return Aurora.DataManager.DataManager.regionplugin;
+        }
+        public void SetRegionPlugin(IRegionData Plugin)
+        {
+            Aurora.DataManager.DataManager.regionplugin = Plugin;
         }
     }
 }

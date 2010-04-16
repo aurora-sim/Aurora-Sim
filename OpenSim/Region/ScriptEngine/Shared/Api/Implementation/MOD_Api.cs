@@ -63,7 +63,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         internal UUID m_itemID;
         internal bool m_MODFunctionsEnabled = false;
         internal IScriptModuleComms m_comms = null;
-        internal IRemoteGenericData GenericData;
+        internal IGenericData GenericData;
         internal IScriptProtectionModule ScriptProtection;
         
         public void Initialize(IScriptEngine ScriptEngine, SceneObjectPart host, uint localID, UUID itemID, IScriptProtectionModule module)

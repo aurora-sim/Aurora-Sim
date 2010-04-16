@@ -15,13 +15,13 @@ namespace Aurora.DataManager.Migration
 
         #region IRestorePoint Members
 
-        public virtual void DoRestore(DataSessionProvider sessionProvider, IGenericData genericData)
+        public virtual void DoRestore(DataSessionProvider sessionProvider, IDataConnector genericData)
         {
         }
 
         #endregion
 
-        public bool Validate(DataSessionProvider sessionProvider, IGenericData genericData)
+        public bool Validate(DataSessionProvider sessionProvider, IDataConnector genericData)
         {
             if (genericData.GetAuroraVersion() != Version)
             {
@@ -30,39 +30,39 @@ namespace Aurora.DataManager.Migration
             return DoValidate(sessionProvider, genericData);
         }
 
-        protected virtual bool DoValidate(DataSessionProvider sessionProvider, IGenericData genericData)
+        protected virtual bool DoValidate(DataSessionProvider sessionProvider, IDataConnector genericData)
         {
             return false;
         }
 
-        public IRestorePoint PrepareRestorePoint(DataSessionProvider sessionProvider, IGenericData genericData)
+        public IRestorePoint PrepareRestorePoint(DataSessionProvider sessionProvider, IDataConnector genericData)
         {
             DoPrepareRestorePoint(sessionProvider, genericData);
             return this;
         }
 
-        protected virtual void DoPrepareRestorePoint(DataSessionProvider sessionProvider, IGenericData genericData)
+        protected virtual void DoPrepareRestorePoint(DataSessionProvider sessionProvider, IDataConnector genericData)
         {
 
         }
 
-        public void Migrate(DataSessionProvider sessionProvider, IGenericData genericData)
+        public void Migrate(DataSessionProvider sessionProvider, IDataConnector genericData)
         {
             DoMigrate(sessionProvider, genericData);
             genericData.WriteAuroraVersion(Version);
         }
 
-        protected virtual void DoMigrate(DataSessionProvider sessionProvider, IGenericData genericData)
+        protected virtual void DoMigrate(DataSessionProvider sessionProvider, IDataConnector genericData)
         {
         }
 
-        public void CreateDefaults(DataSessionProvider sessionProvider, IGenericData genericData)
+        public void CreateDefaults(DataSessionProvider sessionProvider, IDataConnector genericData)
         {
             DoCreateDefaults(sessionProvider, genericData);
             genericData.WriteAuroraVersion(Version);
         }
 
-        protected virtual void DoCreateDefaults(DataSessionProvider sessionProvider, IGenericData genericData)
+        protected virtual void DoCreateDefaults(DataSessionProvider sessionProvider, IDataConnector genericData)
         {
         }
 
@@ -86,7 +86,7 @@ namespace Aurora.DataManager.Migration
             schema.Add(new Rec<string, ColumnDefinition[]>(table, definitions));
         }
 
-        protected void EnsureAllTablesInSchemaExist(IGenericData genericData)
+        protected void EnsureAllTablesInSchemaExist(IDataConnector genericData)
         {
             foreach (var s in schema)
             {
@@ -94,7 +94,7 @@ namespace Aurora.DataManager.Migration
             }
         }
 
-        protected bool TestThatAllTablesValidate(IGenericData genericData)
+        protected bool TestThatAllTablesValidate(IDataConnector genericData)
         {
             foreach (var s in schema)
             {
@@ -106,7 +106,7 @@ namespace Aurora.DataManager.Migration
             return true;
         }
 
-        protected void CopyAllTablesToTempVersions(IGenericData genericData)
+        protected void CopyAllTablesToTempVersions(IDataConnector genericData)
         {
             foreach (var s in schema)
             {
@@ -114,7 +114,7 @@ namespace Aurora.DataManager.Migration
             }
         }
 
-        protected void RestoreTempTablesToReal(IGenericData genericData)
+        protected void RestoreTempTablesToReal(IDataConnector genericData)
         {
             foreach (var s in schema)
             {
@@ -122,7 +122,7 @@ namespace Aurora.DataManager.Migration
             }
         }
 
-        private void CopyTableToTempVersion(IGenericData genericData, string tablename, ColumnDefinition[] columnDefinitions)
+        private void CopyTableToTempVersion(IDataConnector genericData, string tablename, ColumnDefinition[] columnDefinitions)
         {
             genericData.CopyTableToTable(tablename, GetTempTableNameFromTableName(tablename), columnDefinitions);
         }
@@ -132,12 +132,12 @@ namespace Aurora.DataManager.Migration
             return tablename + "_TEMP";
         }
 
-        private void RestoreTempTableToReal(IGenericData genericData, string tablename, ColumnDefinition[] columnDefinitions)
+        private void RestoreTempTableToReal(IDataConnector genericData, string tablename, ColumnDefinition[] columnDefinitions)
         {
             genericData.CopyTableToTable(GetTempTableNameFromTableName(GetTempTableNameFromTableName(tablename)), tablename, columnDefinitions);
         }
 
-        public void ClearRestorePoint(IGenericData genericData)
+        public void ClearRestorePoint(IDataConnector genericData)
         {
             foreach (var s in schema)
             {
@@ -145,7 +145,7 @@ namespace Aurora.DataManager.Migration
             }
         }
 
-        private void DeleteTempVersion(IGenericData genericData, string tableName)
+        private void DeleteTempVersion(IDataConnector genericData, string tableName)
         {
             string tempTableName = GetTempTableNameFromTableName(tableName);
             if (genericData.TableExists(tempTableName))

@@ -60,7 +60,7 @@ namespace Aurora.Modules
         private Dictionary<string, Dictionary<UUID, string>> ClassifiedsCache = new Dictionary<string, Dictionary<UUID, string>>();
         private Dictionary<string, List<string>> ClassifiedInfoCache = new Dictionary<string, List<string>>();
         private IProfileData ProfileData = null;
-        private IRemoteGenericData GenericData = null;
+        private IGenericData GenericData = null;
         private IConfigSource m_gConfig;
         private List<Scene> m_Scenes = new List<Scene>();
         private bool m_SearchEnabled = true;
@@ -500,7 +500,7 @@ namespace Aurora.Modules
         }
         public void PickInfoUpdate(IClientAPI remoteClient, UUID pickID, UUID creatorID, bool topPick, string name, string desc, UUID snapshotID, int sortOrder, bool enabled)
         {
-            string pick = ProfileData.Query("select pickuuid from userpicks where creatoruuid = '" + creatorID + "' AND pickuuid = '" + pickID.ToString() + "'")[0];
+            string pick = GenericData.Query(new string[]{"creatoruuid","pickuuid"},new string[]{creatorID.ToString(),pickID.ToString()},"userpicks","pickuuid")[0];
             ScenePresence p = World.GetScenePresence(remoteClient.AgentId);
             Vector3 avaPos = p.AbsolutePosition;
 
@@ -686,7 +686,7 @@ namespace Aurora.Modules
                     else
                     {
                         //See if all can see this person
-                        if (ProfileData.Query("select visible from usersauth where userUUID = '" + remoteClient.AgentId.ToString() + "'")[0] == "true")
+                        if (GenericData.Query("userUUID",remoteClient.AgentId.ToString(),"usersauth","visible")[0] == "true")
                         {
                             #region Not visible to all, so look through the friends list and send profile.
 
@@ -851,7 +851,7 @@ namespace Aurora.Modules
         
         public void UserPreferencesRequest(IClientAPI remoteClient)
         {
-            List<string> UserInfo = ProfileData.Query("select imviaemail,visible,email from usersauth where userUUID = '" + remoteClient.AgentId.ToString() + "'");
+            List<string> UserInfo = GenericData.Query("userUUID",remoteClient.AgentId.ToString(),"usersauth","imviaemail,visible,email");
             remoteClient.SendUserInfoReply(
                 Convert.ToBoolean(UserInfo[0]),
                 Convert.ToBoolean(UserInfo[1]),
@@ -1070,7 +1070,7 @@ namespace Aurora.Modules
             #region Telehub
             if (itemtype == (uint)OpenMetaverse.GridItemType.Telehub)
             {
-                List<string> Telehubs = ProfileData.Query("select telehubX,telehubY,regionUUID from auroraregions");
+                List<string> Telehubs = GenericData.Query("","","auroraregions","telehubX,telehubY,regionUUID");
                 int i = 0;
                 List<string> TelehubsX = new List<string>();
                 List<string> TelehubsY = new List<string>();

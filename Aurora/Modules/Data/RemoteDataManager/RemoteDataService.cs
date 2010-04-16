@@ -40,7 +40,7 @@ namespace Aurora.Modules.DataPlugins
             Password = m_config.GetString("Password", "");
 
             RemoteDataConnector connector = new RemoteDataConnector(URL, Password);
-            Aurora.DataManager.DataManager.SetRemoteDataPlugin(connector);
+            Aurora.DataManager.DataManager.SetGenericDataPlugin(connector);
             Aurora.DataManager.DataManager.SetProfilePlugin(connector);
             Aurora.DataManager.DataManager.SetRegionPlugin(connector);
         }
@@ -60,7 +60,7 @@ namespace Aurora.Modules.DataPlugins
         }
     }
 
-    public class RemoteDataConnector : IRemoteGenericData, IRegionData, IProfileData
+    public class RemoteDataConnector : IGenericData, IRegionData, IProfileData
     {
         private string URL = "";
         private string Password = "";

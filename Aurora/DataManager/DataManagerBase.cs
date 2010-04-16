@@ -6,7 +6,7 @@ using OpenMetaverse;
 
 namespace Aurora.DataManager
 {
-    public abstract class DataManagerBase : IGenericData
+    public abstract class DataManagerBase : IDataConnector
     {
         private const string VERSION_TABLE_NAME = "aurora_version";
         private const string COLUMN_VERSION = "version";

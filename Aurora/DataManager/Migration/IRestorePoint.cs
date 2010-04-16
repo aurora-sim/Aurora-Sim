@@ -4,6 +4,6 @@ namespace Aurora.DataManager.Migration
 {
     public interface IRestorePoint
     {
-        void DoRestore(DataSessionProvider sessionProvider, IGenericData genericData);
+        void DoRestore(DataSessionProvider sessionProvider, IDataConnector genericData);
     }
 }

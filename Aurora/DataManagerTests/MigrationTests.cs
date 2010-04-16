@@ -38,27 +38,27 @@ namespace Aurora.DataManager.Tests
                     ));
             }
 
-            protected override void DoCreateDefaults(DataSessionProvider sessionProvider, IGenericData genericData)
+            protected override void DoCreateDefaults(DataSessionProvider sessionProvider, IDataConnector genericData)
             {
                 EnsureAllTablesInSchemaExist(genericData);
             }
 
-            protected override bool DoValidate(DataSessionProvider sessionProvider, IGenericData genericData)
+            protected override bool DoValidate(DataSessionProvider sessionProvider, IDataConnector genericData)
             {
                 return TestThatAllTablesValidate(genericData);
             }
 
-            protected override void DoMigrate(DataSessionProvider sessionProvider, IGenericData genericData)
+            protected override void DoMigrate(DataSessionProvider sessionProvider, IDataConnector genericData)
             {
                 DoCreateDefaults(sessionProvider, genericData);
             }
 
-            protected override void DoPrepareRestorePoint(DataSessionProvider sessionProvider, IGenericData genericData)
+            protected override void DoPrepareRestorePoint(DataSessionProvider sessionProvider, IDataConnector genericData)
             {
                 CopyAllTablesToTempVersions(genericData);
             }
 
-            public override void DoRestore(DataSessionProvider sessionProvider, IGenericData genericData)
+            public override void DoRestore(DataSessionProvider sessionProvider, IDataConnector genericData)
             {
                 RestoreTempTablesToReal(genericData);
             }
@@ -80,7 +80,7 @@ namespace Aurora.DataManager.Tests
 
             CreateEmptyDatabase();
             DataSessionProvider sessionProvider = new DataSessionProvider(technology, connectionString);
-            IGenericData genericData = ((technology==DataManagerTechnology.SQLite)? (IGenericData) new SQLiteLoader():new MySQLDataLoader());
+            IDataConnector genericData = ((technology==DataManagerTechnology.SQLite)? (IDataConnector) new SQLiteLoader():new MySQLDataLoader());
             
             genericData.ConnectToDatabase(connectionString);
 

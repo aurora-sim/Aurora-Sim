@@ -142,19 +142,15 @@ namespace OpenSim.Region.Framework.Scenes
         protected StorageManager m_storageManager;
         protected AgentCircuitManager m_authenticateHandler;
 
-        protected IEstateService m_EstateService;
+        protected Aurora.Framework.IEstateData m_EstateService;
 
-        public IEstateService EstateService
+        public Aurora.Framework.IEstateData EstateService
         {
             get
             {
                 if (m_EstateService == null)
                 {
-                    m_EstateService = RequestModuleInterface<IEstateService>();
-
-                    if (m_EstateService == null)
-                        throw new Exception("No IEstateService available.");
-                    m_EstateService.Initialise(m_storageManager.EstateDataStore);
+                    m_EstateService = Aurora.DataManager.DataManager.GetEstatePlugin();
                 }
                 return m_EstateService;
             }
@@ -609,7 +605,11 @@ namespace OpenSim.Region.Framework.Scenes
             m_regionName = m_regInfo.RegionName;
             m_datastore = m_regInfo.DataStore;
             m_lastUpdate = Util.EnvironmentTickCount();
-            
+            List<Aurora.Framework.IDataService> services = Aurora.Framework.AuroraModuleLoader.PickupModules<Aurora.Framework.IDataService>(Environment.CurrentDirectory, "IDataService");
+            foreach (Aurora.Framework.IDataService service in services)
+            {
+                service.Initialise(this, Config);
+            }
             m_physicalPrim = physicalPrim;
             m_seeIntoRegionFromNeighbor = SeeIntoRegionFromNeighbor;
 
@@ -620,11 +620,12 @@ namespace OpenSim.Region.Framework.Scenes
             m_asyncSceneObjectDeleter = new AsyncSceneObjectGroupDeleter(this);
             m_asyncSceneObjectDeleter.Enabled = true;
 
+            
             // Load region settings
             m_regInfo.RegionSettings = m_storageManager.DataStore.LoadRegionSettings(m_regInfo.RegionID);
-            if (m_storageManager.EstateDataStore != null)
+            if (EstateService != null)
             {
-                m_regInfo.EstateSettings = m_storageManager.EstateDataStore.LoadEstateSettings(m_regInfo.RegionID, false);
+                m_regInfo.EstateSettings = EstateService.LoadEstateSettings(m_regInfo.RegionID, false);
                 if (m_regInfo.EstateSettings.EstateID == 0) // No record at all
                 {
                     MainConsole.Instance.Output("Your region is not part of an estate.");
@@ -1740,17 +1741,15 @@ namespace OpenSim.Region.Framework.Scenes
         public void StoreWindlightProfile(RegionLightShareData wl)
         {
             m_regInfo.WindlightSettings = wl;
-            var GD = Aurora.DataManager.DataManager.GetGenericPlugin();
-        	GD.StoreRegionWindlightSettings(wl);
-            //m_storageManager.DataStore.StoreRegionWindlightSettings(wl);
+            var GD = Aurora.DataManager.DataManager.GetRegionPlugin();
+            GD.StoreRegionWindlightSettings(wl);
             m_eventManager.TriggerOnSaveNewWindlightProfile();
         }
 
         public void LoadWindlightProfile()
         {
-        	var GD = Aurora.DataManager.DataManager.GetGenericPlugin();
+            var GD = Aurora.DataManager.DataManager.GetRegionPlugin();
         	m_regInfo.WindlightSettings = GD.LoadRegionWindlightSettings(RegionInfo.RegionID);
-            //m_regInfo.WindlightSettings = m_storageManager.DataStore.LoadRegionWindlightSettings(RegionInfo.RegionID);
             m_eventManager.TriggerOnSaveNewWindlightProfile();
         }
 

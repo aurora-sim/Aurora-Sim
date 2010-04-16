@@ -253,6 +253,34 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("cloud_scroll_y_lock", ColumnTypes.String50),
                 ColDef("draw_classic_clouds", ColumnTypes.String50)
                ));
+
+            AddSchema("estate_settings", ColDefs(
+                ColDef("EstateID", ColumnTypes.String50),
+                ColDef("EstateName", ColumnTypes.String50),
+                ColDef("AbuseEmailToEstateOwner", ColumnTypes.String1),
+                ColDef("DenyAnonymous", ColumnTypes.String50),
+                ColDef("ResetHomeOnTeleport", ColumnTypes.String50),
+                ColDef("FixedSun", ColumnTypes.String50),
+                ColDef("DenyTransacted", ColumnTypes.String50),
+                ColDef("BlockDwell", ColumnTypes.String50),
+                ColDef("DenyIdentified", ColumnTypes.String50),
+                ColDef("AllowVoice", ColumnTypes.String50),
+                ColDef("UseGlobalTime", ColumnTypes.String50),
+                ColDef("PricePerMeter", ColumnTypes.String50),
+                ColDef("TaxFree", ColumnTypes.String50),
+                ColDef("AllowDirectTeleport", ColumnTypes.String50),
+                ColDef("RedirectGridX", ColumnTypes.String50),
+                ColDef("RedirectGridY", ColumnTypes.String50),
+                ColDef("ParentEstateID", ColumnTypes.String50),
+                ColDef("SunPosition", ColumnTypes.String50),
+                ColDef("EstateSkipScripts", ColumnTypes.String50),
+                ColDef("BillableFactor", ColumnTypes.String50),
+                ColDef("PublicAccess", ColumnTypes.String50),
+                ColDef("AbuseEmail", ColumnTypes.String50),
+                ColDef("EstateOwner", ColumnTypes.String50),
+                ColDef("DenyMinors", ColumnTypes.String50)
+                ));
+
             
             #region Search Tables
             
@@ -333,27 +361,27 @@ namespace Aurora.DataManager.Migration.Migrators
             #endregion
         }
 
-        protected override void DoCreateDefaults(DataSessionProvider sessionProvider, IGenericData genericData)
+        protected override void DoCreateDefaults(DataSessionProvider sessionProvider, IDataConnector genericData)
         {
             EnsureAllTablesInSchemaExist(genericData);
         }
 
-        protected override bool DoValidate(DataSessionProvider sessionProvider, IGenericData genericData)
+        protected override bool DoValidate(DataSessionProvider sessionProvider, IDataConnector genericData)
         {
             return TestThatAllTablesValidate(genericData);
         }
 
-        protected override void DoMigrate(DataSessionProvider sessionProvider, IGenericData genericData)
+        protected override void DoMigrate(DataSessionProvider sessionProvider, IDataConnector genericData)
         {
             DoCreateDefaults(sessionProvider, genericData);
         }
 
-        protected override void DoPrepareRestorePoint(DataSessionProvider sessionProvider, IGenericData genericData)
+        protected override void DoPrepareRestorePoint(DataSessionProvider sessionProvider, IDataConnector genericData)
         {
             CopyAllTablesToTempVersions(genericData);
         }
 
-        public override void DoRestore(DataSessionProvider sessionProvider, IGenericData genericData)
+        public override void DoRestore(DataSessionProvider sessionProvider, IDataConnector genericData)
         {
             RestoreTempTablesToReal(genericData);
         }

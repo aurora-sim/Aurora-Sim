@@ -18,7 +18,7 @@ namespace Aurora.Modules
     {
         private List<string> CheckServers = new List<string>();
         private List<string> AuthServersBannedList = new List<string>();
-        private IRemoteGenericData a_DataService = null;
+        private IGenericData a_DataService = null;
         private Scene m_scene;
 
         #region IRegionModule Members
