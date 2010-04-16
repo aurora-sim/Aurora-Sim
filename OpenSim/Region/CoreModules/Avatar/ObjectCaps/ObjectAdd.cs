@@ -61,8 +61,8 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
 
         public void PostInitialise()
         {
-            RegionData = Aurora.DataManager.DataManager.GetRegionPlugin();
-            GenericData = Aurora.DataManager.DataManager.GetGenericPlugin();
+            RegionData = Aurora.DataManager.DataManager.GetDefaultRegionPlugin();
+            GenericData = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
         }
 
         public void RegisterCaps(UUID agentID, Caps caps)

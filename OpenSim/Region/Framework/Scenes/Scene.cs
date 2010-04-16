@@ -150,7 +150,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (m_EstateService == null)
                 {
-                    m_EstateService = Aurora.DataManager.DataManager.GetEstatePlugin();
+                    m_EstateService = Aurora.DataManager.DataManager.GetDefaultEstatePlugin();
                 }
                 return m_EstateService;
             }
@@ -1741,14 +1741,14 @@ namespace OpenSim.Region.Framework.Scenes
         public void StoreWindlightProfile(RegionLightShareData wl)
         {
             m_regInfo.WindlightSettings = wl;
-            var GD = Aurora.DataManager.DataManager.GetRegionPlugin();
+            var GD = Aurora.DataManager.DataManager.GetDefaultRegionPlugin();
             GD.StoreRegionWindlightSettings(wl);
             m_eventManager.TriggerOnSaveNewWindlightProfile();
         }
 
         public void LoadWindlightProfile()
         {
-            var GD = Aurora.DataManager.DataManager.GetRegionPlugin();
+            var GD = Aurora.DataManager.DataManager.GetDefaultRegionPlugin();
         	m_regInfo.WindlightSettings = GD.LoadRegionWindlightSettings(RegionInfo.RegionID);
             m_eventManager.TriggerOnSaveNewWindlightProfile();
         }

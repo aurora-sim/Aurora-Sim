@@ -17,8 +17,8 @@ namespace Aurora.Modules.AbuseReportsGUI
         public Abuse()
         {
             InitializeComponent();
-            GenericData = Aurora.DataManager.DataManager.GetGenericPlugin();
-            RegionData = Aurora.DataManager.DataManager.GetRegionPlugin();
+            GenericData = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
+            RegionData = Aurora.DataManager.DataManager.GetDefaultRegionPlugin();
         }
 
         private void Form1_Load(object sender, EventArgs e)

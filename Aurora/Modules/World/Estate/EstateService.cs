@@ -22,7 +22,7 @@ namespace Aurora.Modules
 
         public void PostInitialise()
         {
-            PD = Aurora.DataManager.DataManager.GetProfilePlugin();
+            PD = Aurora.DataManager.DataManager.GetDefaultProfilePlugin();
         }
 
         public void Close() { }
@@ -50,7 +50,7 @@ namespace Aurora.Modules
             }
             if (!ES.AllowDirectTeleport)
             {
-                IGenericData GenericData = Aurora.DataManager.DataManager.GetGenericPlugin();
+                IGenericData GenericData = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
                 List<string> Telehubs = GenericData.Query("regionUUID", scene.RegionInfo.RegionID.ToString(), "auroraregions", "telehubX,telehubY");
                 newPosition = new Vector3(Convert.ToInt32(Telehubs[0]), Convert.ToInt32(Telehubs[1]), Position.Z);
             }

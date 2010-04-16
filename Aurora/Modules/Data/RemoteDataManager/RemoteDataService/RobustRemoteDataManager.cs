@@ -5,7 +5,7 @@ using OpenSim.Services.Interfaces;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Server.Handlers.Base;
 
-namespace Aurora.Modules.RemoteDataService
+namespace Aurora.Modules
 {
     public class RobustRemoteDataManager : ServiceConnector
     {

@@ -122,8 +122,8 @@ namespace Aurora.Modules
             {
                 OurRegions.Add(scene.RegionInfo.RegionID);
             }
-            GD = Aurora.DataManager.DataManager.GetGenericPlugin();
-            ProfileDataManager = Aurora.DataManager.DataManager.GetProfilePlugin();
+            GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
+            ProfileDataManager = Aurora.DataManager.DataManager.GetDefaultProfilePlugin();
             InformOtherWorldsAboutUs();
         }
 

@@ -101,9 +101,9 @@ namespace Aurora.Modules
 
         public void PostInitialise()
         {
-            GenericData = Aurora.DataManager.DataManager.GetGenericPlugin();
-            ProfileData = Aurora.DataManager.DataManager.GetProfilePlugin();
-            RegionData = Aurora.DataManager.DataManager.GetRegionPlugin();
+            GenericData = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
+            ProfileData = Aurora.DataManager.DataManager.GetDefaultProfilePlugin();
+            RegionData = Aurora.DataManager.DataManager.GetDefaultRegionPlugin();
         }
 
         public string Name
@@ -158,6 +158,7 @@ namespace Aurora.Modules
         	{
         		Adetails = detailssplit[4];
         	}
+
             AuroraProfileData reporterProfile = ProfileData.GetProfileInfo(reporter);
         	string ReporterName = reporterProfile.FirstName + " " + reporterProfile.SurName;
             AuroraProfileData AbuserProfile = ProfileData.GetProfileInfo(abuserID);
@@ -187,6 +188,15 @@ namespace Aurora.Modules
         		ex = new Exception();
         	}
         	Number += 1;
+            EstateSettings ES = m_SceneList[0].EstateService.LoadEstateSettings(client.Scene.RegionInfo.RegionID, false);
+            if(ES.AbuseEmailToEstateOwner)
+            {
+                IEmailModule Email = m_SceneList[0].RequestModuleInterface<IEmailModule>();
+                if(Email != null)
+                    Email.SendEmail(UUID.Zero, ES.AbuseEmail, "Abuse Report - Number " + Number.ToString(), "This abuse report was submitted by " +
+                        ReporterName + " against " + AbuserName + " at " + Aloc + " in your estate " + Estate +
+                        ". Summary: " + Summery + ". Details: " + Adetails + ".");
+            }
         	List<string> values= new List<string>();
             values.Add(categoryname);
             values.Add(ReporterName);

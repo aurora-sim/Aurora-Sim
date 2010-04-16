@@ -110,7 +110,7 @@ namespace Aurora.DataManager.SQLite
             LoadBanList(settings);
             settings.EstateGroups = LoadUUIDList(settings.EstateID, "estate_groups");
             settings.EstateManagers = LoadUUIDList(settings.EstateID, "estate_managers");
-            settings.OnSave += StoreEstateSettings;
+            settings.OnSave += SaveEstateSettings;
             return settings;
         }
 
@@ -210,7 +210,58 @@ namespace Aurora.DataManager.SQLite
             }
         }
 
-        public void StoreEstateSettings(OpenSim.Framework.EstateSettings es)
+        public bool StoreEstateSettings(OpenSim.Framework.EstateSettings es)
+        {
+            if (m_FieldMap.Count == 0)
+            {
+                Type t = typeof(EstateSettings);
+                m_Fields = t.GetFields(BindingFlags.NonPublic |
+                               BindingFlags.Instance |
+                               BindingFlags.DeclaredOnly);
+
+                foreach (FieldInfo f in m_Fields)
+                    if (f.Name.Substring(0, 2) == "m_")
+                        m_FieldMap[f.Name.Substring(2)] = f;
+            }
+            List<string> fields = new List<string>(FieldList);
+            fields.Remove("EstateID");
+
+            List<string> terms = new List<string>();
+
+            foreach (string f in fields)
+                terms.Add(f + " = :" + f);
+
+            string sql = "update estate_settings set " + String.Join(", ", terms.ToArray()) + " where EstateID = :EstateID";
+
+            SqliteCommand cmd = new SqliteCommand();
+
+            cmd.CommandText = sql;
+
+            foreach (string name in FieldList)
+            {
+                if (m_FieldMap[name].GetValue(es) is bool)
+                {
+                    if ((bool)m_FieldMap[name].GetValue(es))
+                        cmd.Parameters.Add(":" + name, "1");
+                    else
+                        cmd.Parameters.Add(":" + name, "0");
+                }
+                else
+                {
+                    cmd.Parameters.Add(":" + name, m_FieldMap[name].GetValue(es).ToString());
+                }
+            }
+
+            Query(cmd);
+
+            SaveBanList(es);
+            SaveUUIDList(es.EstateID, "estate_managers", es.EstateManagers);
+            SaveUUIDList(es.EstateID, "estate_users", es.EstateAccess);
+            SaveUUIDList(es.EstateID, "estate_groups", es.EstateGroups);
+            return true;
+        }
+
+        public void SaveEstateSettings(OpenSim.Framework.EstateSettings es)
         {
             if (m_FieldMap.Count == 0)
             {

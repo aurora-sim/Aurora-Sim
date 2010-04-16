@@ -16,11 +16,11 @@ namespace Aurora.Framework
         List<string> ReadInterestsInfoRow(string agentID);
         List<string> ReadPickInfoRow(string creator, string pickID);
         AuroraProfileData GetProfileNotes(UUID agentID, UUID target);
-        void InvalidateProfileNotes(UUID target);
-        void FullUpdateUserProfile(AuroraProfileData Profile);
+        bool InvalidateProfileNotes(UUID target);
+        bool FullUpdateUserProfile(AuroraProfileData Profile);
         AuroraProfileData GetProfileInfo(UUID agentID);
 
-        void UpdateUserProfile(AuroraProfileData Profile);
+        bool UpdateUserProfile(AuroraProfileData Profile);
 
         AuroraProfileData CreateTemperaryAccount(string client, string first, string last);
         
@@ -58,21 +58,21 @@ namespace Aurora.Framework
         string AbuseReports();
         ObjectMediaURLInfo[] getObjectMediaInfo(string objectID);
         bool GetIsRegionMature(string region);
-        void StoreRegionWindlightSettings(RegionLightShareData wl);
+        bool StoreRegionWindlightSettings(RegionLightShareData wl);
         RegionLightShareData LoadRegionWindlightSettings(UUID regionUUID);
 
         AbuseReport GetAbuseReport(int formNumber);
 
         OfflineMessage[] GetOfflineMessages(string agentID);
 
-        void AddOfflineMessage(string fromUUID, string fromName, string toUUID, string message);
+        bool AddOfflineMessage(string fromUUID, string fromName, string toUUID, string message);
     }
 
     public interface IEstateData
     {
         EstateSettings LoadEstateSettings(UUID regionID, bool create);
         EstateSettings LoadEstateSettings(int estateID);
-        void StoreEstateSettings(EstateSettings es);
+        bool StoreEstateSettings(EstateSettings es);
         List<int> GetEstates(string search);
         bool LinkRegion(UUID regionID, int estateID);
         List<UUID> GetRegions(int estateID);
@@ -111,15 +111,15 @@ namespace Aurora.Framework
         /// <summary>
         /// update table set setRow = setValue WHERE keyRow = keyValue
         /// </summary>
-        void Update(string table, string[] setValues, string[] setRows, string[] keyRows, string[] keyValues);
+        bool Update(string table, string[] setValues, string[] setRows, string[] keyRows, string[] keyValues);
         /// <summary>
         /// select wantedValue from table where keyRow = keyValue
         /// </summary>
         List<string> Query(string keyRow, string keyValue, string table, string wantedValue);
         List<string> Query(string[] keyRow, string[] keyValue, string table, string wantedValue);
-        void Insert(string table, string[] values);
-        void Delete(string table, string[] keys, string[] values);
-        void Insert(string table, string[] values, string updateKey, string updateValue);
+        bool Insert(string table, string[] values);
+        bool Delete(string table, string[] keys, string[] values);
+        bool Insert(string table, string[] values, string updateKey, string updateValue);
     }
 
     public interface IDataConnector : IGenericData
