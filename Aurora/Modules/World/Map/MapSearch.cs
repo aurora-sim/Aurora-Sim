@@ -52,7 +52,7 @@ namespace Aurora.Modules
 
 		Scene m_scene = null; // only need one for communication with GridService
 		List<Scene> m_scenes = new List<Scene>();
-        private IRegionData GenericData = null;
+        private IRegionData RegionData = null;
 		private IConfigSource m_config;
 		private Dictionary<string, string> RegionsHidden = new Dictionary<string, string>();
 		private static double time = 60000 /*oneminute*/ * 30;
@@ -98,8 +98,8 @@ namespace Aurora.Modules
 		{
             if (!m_Enabled)
                 return;
-            GenericData = Aurora.DataManager.DataManager.GetDefaultRegionPlugin();
-            RegionsHidden = GenericData.GetRegionHidden();
+            RegionData = Aurora.DataManager.DataManager.GetDefaultRegionPlugin();
+            RegionsHidden = RegionData.GetRegionHidden();
 			aTimer.Elapsed += new ElapsedEventHandler(OnTimedEvent);
         	aTimer.Enabled = true;
             IWC = m_scene.RequestModuleInterface<InterWorldComms>();

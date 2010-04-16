@@ -605,11 +605,10 @@ namespace OpenSim.Region.Framework.Scenes
             m_regionName = m_regInfo.RegionName;
             m_datastore = m_regInfo.DataStore;
             m_lastUpdate = Util.EnvironmentTickCount();
-            List<Aurora.Framework.IDataService> services = Aurora.Framework.AuroraModuleLoader.PickupModules<Aurora.Framework.IDataService>(Environment.CurrentDirectory, "IDataService");
-            foreach (Aurora.Framework.IDataService service in services)
-            {
-                service.Initialise(this, Config);
-            }
+
+            Aurora.Services.DataService.LocalDataService service = new Aurora.Services.DataService.LocalDataService();
+            service.Initialise(Config);
+            
             m_physicalPrim = physicalPrim;
             m_seeIntoRegionFromNeighbor = SeeIntoRegionFromNeighbor;
 

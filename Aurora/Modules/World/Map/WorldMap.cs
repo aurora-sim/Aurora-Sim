@@ -73,7 +73,7 @@ namespace Aurora.Modules
 		private Dictionary<UUID, MapRequestState> m_openRequests = new Dictionary<UUID, MapRequestState>();
 		private List<UUID> m_rootAgents = new List<UUID>();
 		private volatile bool threadrunning = false;
-        private IRegionData RegionData = Aurora.DataManager.DataManager.GetDefaultRegionPlugin();
+        private IRegionData RegionData = null;
 		private IConfigSource m_config;
 		private Dictionary<string, string> RegionsHidden = new Dictionary<string, string>();
         private InterWorldComms IWC;
@@ -95,7 +95,6 @@ namespace Aurora.Modules
             m_log.Info("[AuroraWorldMap] Initializing");
             m_config = source;
 			m_Enabled = true;
-			RegionsHidden = RegionData.GetRegionHidden();
 		}
 
 		public virtual void AddRegion (Scene scene)
@@ -128,6 +127,8 @@ namespace Aurora.Modules
 		public virtual void RegionLoaded (Scene scene)
 		{
             IWC = scene.RequestModuleInterface<InterWorldComms>();
+            RegionData = Aurora.DataManager.DataManager.GetDefaultRegionPlugin();
+            RegionsHidden = RegionData.GetRegionHidden();
 		}
 
 

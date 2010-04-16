@@ -6,7 +6,6 @@ using System.Text;
 using System.Threading;
 using Aurora.DataManager;
 using Mono.Data.SqliteClient;
-using OpenSim.Data;
 using OpenMetaverse;
 using Aurora.Framework;
 using OpenSim.Framework;

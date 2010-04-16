@@ -19,10 +19,18 @@ namespace Aurora.DataManager
     	#region IGenericData 
     	
         public static IGenericData DefaultGenericPlugin = null;
-        public static IList<IGenericData> AllGenericPlugins = (C5.IList<IGenericData>)new List<IGenericData>();
+        public static IGenericData RetriverGenericPlugin = null;
+        public static IList<IGenericData> AllGenericPlugins = (System.Collections.Generic.IList<IGenericData>)new List<IGenericData>();
+        
         public static IGenericData GetDefaultGenericPlugin()
         {
+            if (RetriverGenericPlugin != null)
+                return RetriverGenericPlugin;
             return DefaultGenericPlugin;
+        }
+        public static void SetGenericDataRetriver(IGenericData Plugin)
+        {
+            RetriverGenericPlugin = Plugin;
         }
         public static void SetDefaultGenericDataPlugin(IGenericData Plugin)
         {
@@ -38,10 +46,17 @@ namespace Aurora.DataManager
         #region IEstateData
         
         public static IEstateData DefaultEstatePlugin = null;
-        public static IList<IEstateData> AllEstatePlugins = (C5.IList<IEstateData>)new List<IEstateData>();
+        public static IList<IEstateData> AllEstatePlugins = (System.Collections.Generic.IList<IEstateData>)new List<IEstateData>();
+        public static IEstateData RetriverEstatePlugin = null;
         public static IEstateData GetDefaultEstatePlugin()
         {
+            if (RetriverEstatePlugin != null)
+                return RetriverEstatePlugin;
             return DefaultEstatePlugin;
+        }
+        public static void SetEstateDataRetriver(IEstateData Plugin)
+        {
+            RetriverEstatePlugin = Plugin;
         }
         public static void SetDefaultEstatePlugin(IEstateData Plugin)
         {
@@ -57,12 +72,19 @@ namespace Aurora.DataManager
         #region IProfileData 
         
         public static IProfileData DefaultProfilePlugin = null;
-        public static IList<IProfileData> AllProfilePlugins = (C5.IList<IProfileData>)new List<IProfileData>();
+        public static IList<IProfileData> AllProfilePlugins = (System.Collections.Generic.IList<IProfileData>)new List<IProfileData>();
+        public static IProfileData RetriverProfilePlugin = null;
         public static IProfileData GetDefaultProfilePlugin()
         {
+            if (RetriverProfilePlugin != null)
+                return RetriverProfilePlugin;
             return DefaultProfilePlugin;
         }
-        public static void SetProfilePlugin(IProfileData Plugin)
+        public static void SetProfileDataRetriver(IProfileData Plugin)
+        {
+            RetriverProfilePlugin = Plugin;
+        }
+        public static void SetDefaultProfilePlugin(IProfileData Plugin)
         {
             DefaultProfilePlugin = Plugin;
         }
@@ -76,10 +98,17 @@ namespace Aurora.DataManager
         #region IRegionData
         
         public static IRegionData DefaultRegionPlugin = null;
-        public static IList<IRegionData> AllRegionPlugins = (C5.IList<IRegionData>)new List<IRegionData>();
+        public static IList<IRegionData> AllRegionPlugins = (System.Collections.Generic.IList<IRegionData>)new List<IRegionData>();
+        public static IRegionData RetriverRegionPlugin = null;
         public static IRegionData GetDefaultRegionPlugin()
         {
+            if (RetriverRegionPlugin != null)
+                return RetriverRegionPlugin;
             return DefaultRegionPlugin;
+        }
+        public static void SetRegionDataRetriver(IRegionData Plugin)
+        {
+            RetriverRegionPlugin = Plugin;
         }
         public static void SetDefaultRegionPlugin(IRegionData Plugin)
         {

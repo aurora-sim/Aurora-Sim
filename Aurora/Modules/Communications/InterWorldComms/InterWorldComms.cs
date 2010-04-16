@@ -74,6 +74,7 @@ namespace Aurora.Modules
         private IGenericData GD = null;
         private IProfileData ProfileDataManager = null;
         private bool m_Enabled = true;
+        private ConnectionIdentifier CurrentlyAsking = null;
 
         #region IRegionModule 
         public string Name{ get { return "InterWorldComms"; } }
@@ -124,7 +125,8 @@ namespace Aurora.Modules
             }
             GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
             ProfileDataManager = Aurora.DataManager.DataManager.GetDefaultProfilePlugin();
-            InformOtherWorldsAboutUs();
+            System.Threading.Thread thread = new System.Threading.Thread(InformOtherWorldsAboutUs);
+            thread.Start();
         }
 
         private void InformOtherWorldsAboutUs()
@@ -135,36 +137,45 @@ namespace Aurora.Modules
             string[] tempIdent = identifiers.Split(',');
             string trustLevels = m_config.GetString("WorldsToInformTrustLevels", "");
             string[] tempTrustLev = trustLevels.Split(',');
-            int i = 0;
+            int a = 0;
+            List<ConnectionIdentifier> ConnectingTo = new List<ConnectionIdentifier>();
+            List<ConnectionIdentifier> NewlyConnectedToWorlds = new List<ConnectionIdentifier>();
             foreach (string unnneeded in tempConn)
             {
                 ConnectionIdentifier ident = new ConnectionIdentifier();
-                ident.Connection = tempConn[i];
-                ident.Identifier = tempIdent[i];
-                ident.TrustLevel = tempTrustLev[i];
+                ident.Connection = tempConn[a];
+                ident.Identifier = tempIdent[a];
+                ident.TrustLevel = tempTrustLev[a];
                 ident.SessionHash = Guid.NewGuid().ToString();
-                UnsuccessfulConnectedToWorlds.Add(ident);
+                ConnectingTo.Add(ident);
+                a++;
             }
-            List<ConnectionIdentifier> NewlyConnectedToWorlds = new List<ConnectionIdentifier>();
-            foreach (ConnectionIdentifier Connection in UnsuccessfulConnectedToWorlds)
+            for(int i = 0; i < ConnectingTo.Count; i++)
             {
-                TemperaryCallBackBlock.Add(Connection);
-                bool successful = AskServerForConnection(Connection);
+                CurrentlyAsking = ConnectingTo[i];
+                bool successful = AskServerForConnection(ConnectingTo[i]);
                 if (successful)
-                    NewlyConnectedToWorlds.Add(Connection);
+                {
+                    if (!NewlyConnectedToWorlds.Contains(ConnectingTo[i]))
+                        NewlyConnectedToWorlds.Add(ConnectingTo[i]);
+                }
+                else
+                    if (!UnsuccessfulConnectedToWorlds.Contains(ConnectingTo[i]))
+                        UnsuccessfulConnectedToWorlds.Add(ConnectingTo[i]);
+                CurrentlyAsking = null;
             }
-            TemperaryCallBackBlock.Clear();
-            foreach (ConnectionIdentifier connnection in NewlyConnectedToWorlds)
+            foreach (ConnectionIdentifier connection in NewlyConnectedToWorlds)
             {
-                UnsuccessfulConnectedToWorlds.Remove(connnection);
-                SuccessfullyConnectedToWorlds.Add(connnection);
+                if(UnsuccessfulConnectedToWorlds.Contains(connection))
+                    UnsuccessfulConnectedToWorlds.Remove(connection);
+                if(!SuccessfullyConnectedToWorlds.Contains(connection))
+                    SuccessfullyConnectedToWorlds.Add(connection);
             }
         }
 
         #endregion
 
         #region New Connection from a world
-        private List<ConnectionIdentifier> TemperaryCallBackBlock = new List<ConnectionIdentifier>();
         public XmlRpcResponse InterWorldNewWorldConnection(XmlRpcRequest request, IPEndPoint IPEndPoint)
         {
             if (!a_Enabled)
@@ -274,28 +285,33 @@ namespace Aurora.Modules
             response.Value = responseData;
 
             #region Callback on the connecting server
-            List<ConnectionIdentifier> NewlyConnectedToWorlds = new List<ConnectionIdentifier>(); 
-            foreach (ConnectionIdentifier connection in UnsuccessfulConnectedToWorlds)
+            List<ConnectionIdentifier> NewlyConnectedToWorlds = new List<ConnectionIdentifier>();
+
+            for (int i = 0; i < UnsuccessfulConnectedToWorlds.Count; i++)
             {
-                if (!TemperaryCallBackBlock.Contains(connection))
-                { 
-                    string[] IPs = connection.Connection.Split(':');
-                    string IP = IPs[1].Substring(2);
-                    if (connection.Connection == con.Connection)
+                string[] IPs = UnsuccessfulConnectedToWorlds[i].Connection.Split(':');
+                string IP = IPs[1].Substring(2);
+                if (UnsuccessfulConnectedToWorlds[i].Connection == con.Connection)
+                {
+                    if (UnsuccessfulConnectedToWorlds[i] != CurrentlyAsking)
                     {
-                        TemperaryCallBackBlock.Add(connection);
-                        bool successful = AskServerForConnection(connection);
+                        bool successful = AskServerForConnection(UnsuccessfulConnectedToWorlds[i]);
                         if (successful)
-                            NewlyConnectedToWorlds.Add(connection);
+                        {
+                            if (!NewlyConnectedToWorlds.Contains(UnsuccessfulConnectedToWorlds[i]))
+                                NewlyConnectedToWorlds.Add(UnsuccessfulConnectedToWorlds[i]);
+                        }
                     }
                 }
             }
-            TemperaryCallBackBlock.Clear();
-            foreach(ConnectionIdentifier connnection in NewlyConnectedToWorlds)
+            foreach (ConnectionIdentifier connection in NewlyConnectedToWorlds)
             {
-                UnsuccessfulConnectedToWorlds.Remove(connnection);
-                SuccessfullyConnectedToWorlds.Add(connnection);
+                if (UnsuccessfulConnectedToWorlds.Contains(connection))
+                    UnsuccessfulConnectedToWorlds.Remove(connection);
+                if (!SuccessfullyConnectedToWorlds.Contains(connection))
+                    SuccessfullyConnectedToWorlds.Add(connection);
             }
+
             NewlyConnectedToWorlds.Clear();
             #endregion
 

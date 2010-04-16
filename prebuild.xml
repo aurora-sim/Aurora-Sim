@@ -643,6 +643,7 @@
       <Reference name="OpenSim.Region.Physics.Manager"/>
       <Reference name="Aurora.Framework"/>
       <Reference name="Aurora.DataManager"/>
+      <Reference name="Aurora.Services.DataService"/>
 
       <!-- For scripting in funny languages by default -->
       <Reference name="Microsoft.JScript"/>
@@ -2403,6 +2404,42 @@
           </Files>
         </Project>
 
+<Project frameworkVersion="v3_5" name="Aurora.Services.DataService" path="Aurora/Services/DataService" type="Library">
+          <Configuration name="Debug">
+            <Options>
+              <OutputPath>../../../bin/</OutputPath>
+            </Options>
+          </Configuration>
+          <Configuration name="Release">
+            <Options>
+              <OutputPath>../../../bin/</OutputPath>
+            </Options>
+          </Configuration>
+
+          <ReferencePath>../../../bin/</ReferencePath>
+          <Reference name="System"/>
+          <Reference name="System.Xml"/>
+	    <Reference name="Nini.dll"/>
+<Reference name="OpenSim.Services.Interfaces"/>
+<Reference name="OpenSim.Framework.Servers.HttpServer"/>
+<Reference name="OpenSim.Server.Handlers"/>
+<Reference name="Aurora.Framework"/>
+<Reference name="Aurora.DataManager"/>
+<Reference name="Aurora.DataManager.MySQL"/>
+<Reference name="Aurora.DataManager.SQLite"/>
+<Reference name="Nini.dll"/>
+<Reference name="log4net.dll"/>
+<Reference name="OpenMetaverseTypes.dll"/>
+<Reference name="OpenMetaverse.dll"/>
+<Reference name="OpenSim.Framework"/>
+<Reference name="OpenSim.Server.Base"/>
+      <Reference name="System.Core"/>
+      <Reference name="C5.dll" />
+          <Files>
+            <Match pattern="*.cs" recurse="true"/>
+          </Files>
+        </Project>
+
 
 <Project frameworkVersion="v3_5" name="Aurora.DataManager.MySQL" path="Aurora/DataManagerPlugins/MySQL" type="Library">
           <Configuration name="Debug">
@@ -2462,17 +2499,7 @@
 <Reference name="OpenMetaverseTypes.dll"/>
 <Reference name="OpenMetaverse.dll"/>
 <Reference name="C5.dll"/>
-<Reference name="OpenSim"/>
-<Reference name="OpenSim.Data"/>
 <Reference name="OpenSim.Framework"/>
-<Reference name="OpenSim.Framework.Console"/>
-<Reference name="OpenSim.Framework.Communications"/>
-<Reference name="OpenSim.Framework.Communications.Services"/>
-<Reference name="OpenSim.Framework.Communications.Cache"/>
-<Reference name="OpenSim.Framework.Capabilities"/>
-<Reference name="OpenSim.Framework.Servers"/>
-<Reference name="OpenSim.Framework.Servers.HttpServer"/>
-<Reference name="OpenSim.Region.Framework"/>
 <Reference name="OpenSim.Services.Interfaces"/>
 	    <Reference name="Nini.dll"/>
 <Reference name="XMLRPC.dll"/>

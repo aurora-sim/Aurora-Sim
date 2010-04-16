@@ -193,7 +193,7 @@ namespace Aurora.Framework
     }
     public interface IDataService
     {
-        void Initialise(IScene scene, Nini.Config.IConfigSource source);
+        void Initialise(Nini.Config.IConfigSource source);
         IGenericData GetGenericPlugin();
         IEstateData GetEstatePlugin();
         IProfileData GetProfilePlugin();
