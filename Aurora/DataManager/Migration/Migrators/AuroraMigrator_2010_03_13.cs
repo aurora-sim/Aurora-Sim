@@ -357,6 +357,26 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("EFlags", ColumnTypes.String50),
                 ColDef("EMature", ColumnTypes.String50)
                 ));
+
+            AddSchema("estate_map", ColDefs(
+                ColDef("RegionID", ColumnTypes.String50, true),
+                ColDef("EstateID", ColumnTypes.String50)));
+
+            AddSchema("estate_groups", ColDefs(
+                ColDef("EstateID", ColumnTypes.String50, true),
+                ColDef("uuid", ColumnTypes.String50)));
+            AddSchema("estate_managers", ColDefs(
+                ColDef("EstateID", ColumnTypes.String50, true),
+                ColDef("uuid", ColumnTypes.String50)));
+            AddSchema("estate_users", ColDefs(
+                ColDef("EstateID", ColumnTypes.String50, true),
+                ColDef("uuid", ColumnTypes.String50)));
+            AddSchema("estateban", ColDefs(
+                ColDef("EstateID", ColumnTypes.String50, true),
+                ColDef("bannedUUID", ColumnTypes.String50, true),
+                ColDef("bannedIp", ColumnTypes.String50),
+                ColDef("bannedIpHostMask", ColumnTypes.String50),
+                ColDef("bannedNameMask", ColumnTypes.String50)));
             
             #endregion
         }

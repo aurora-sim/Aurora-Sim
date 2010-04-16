@@ -56,7 +56,14 @@ namespace OpenSim.Data.SQLite
             m_log.Info("[ESTATE DB]: Sqlite - connecting: "+m_connectionString);
 
             m_connection = new SqliteConnection(m_connectionString);
-            m_connection.Open();
+            try
+            {
+                m_connection.Open();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("SQLite has errored out on opening the database. If you are on a 64 bit system, please run OpenSim.32BitLaunch.exe and try again. If this is not a 64 bit error :" + ex);
+            }
 
             Assembly assem = GetType().Assembly;
             Migration m = new Migration(m_connection, assem, "EstateStore");

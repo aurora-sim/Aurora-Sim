@@ -116,6 +116,24 @@ namespace Aurora.DataManager.SQLite
             return RetVal;
         }
 
+        public List<string> Query(SqliteCommand cmd)
+        {
+            IDataReader reader = GetReader(cmd);
+            List<string> RetVal = new List<string>();
+            while (reader.Read())
+            {
+                for (int i = 0; i < reader.FieldCount; i++)
+                {
+                    RetVal.Add(reader.GetString(i));
+                }
+            }
+            if (RetVal.Count == 0)
+                RetVal.Add("");
+
+            CloseReaderCommand(cmd);
+            return RetVal;
+        }
+
         public override List<string> Query(string keyRow, string keyValue, string table, string wantedValue)
         {
             var cmd = new SqliteCommand();
