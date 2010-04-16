@@ -16,8 +16,4 @@ namespace Aurora.Framework
         bool CheckAuthenticationServer(IPEndPoint serverIP);
         bool CheckUserAccount(string Identifier);
     }
-    public interface IAdultVerificationModule
-    {
-    	bool GetIsRegionMature(UUID regionID);
-    }
 }

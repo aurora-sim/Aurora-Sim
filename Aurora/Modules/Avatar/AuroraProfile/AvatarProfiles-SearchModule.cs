@@ -61,6 +61,7 @@ namespace Aurora.Modules
         private Dictionary<string, List<string>> ClassifiedInfoCache = new Dictionary<string, List<string>>();
         private IProfileData ProfileData = null;
         private IGenericData GenericData = null;
+        private IRegionData RegionData = null;
         private IConfigSource m_gConfig;
         private List<Scene> m_Scenes = new List<Scene>();
         private bool m_SearchEnabled = true;
@@ -123,6 +124,7 @@ namespace Aurora.Modules
         {
             ProfileData = Aurora.DataManager.DataManager.GetProfilePlugin();
             GenericData = Aurora.DataManager.DataManager.GetGenericPlugin();
+            RegionData = Aurora.DataManager.DataManager.GetRegionPlugin();
             GroupsModule = m_scene.RequestModuleInterface<IGroupsModule>();
             DataSnapShotManager = m_scene.RequestModuleInterface<IDataSnapshot>();
             if (m_SearchEnabled && DataSnapShotManager != null)
@@ -1588,11 +1590,7 @@ namespace Aurora.Modules
         								GenericData.Insert("searchparcels", new string[] { info.UUID, PInfo.Name, PInfo.UUID, PInfo.Landing, PInfo.Desc, PInfo.Category, PInfo.Build, PInfo.Script, PInfo.Public, PInfo.Dwell, PInfo.InfoUUID, false.ToString(), false.ToString() });
         							if (Convert.ToBoolean(PInfo.ForSale))
         							{
-        								IAdultVerificationModule AVM = currentScene.RequestModuleInterface<IAdultVerificationModule>();
-        								if(AVM != null)
-        									GenericData.Insert("searchparcelsales", new string[] { info.UUID, PInfo.Name, PInfo.UUID, PInfo.Area, PInfo.SalePrice, PInfo.Landing, PInfo.InfoUUID, PInfo.Dwell, currentScene.RegionInfo.EstateSettings.EstateID.ToString(), AVM.GetIsRegionMature(currentScene.RegionInfo.RegionID).ToString() });
-        								else
-        									GenericData.Insert("searchparcelsales", new string[] { info.UUID, PInfo.Name, PInfo.UUID, PInfo.Area, PInfo.SalePrice, PInfo.Landing, PInfo.InfoUUID, PInfo.Dwell, currentScene.RegionInfo.EstateSettings.EstateID.ToString(), false.ToString() });
+        								GenericData.Insert("searchparcelsales", new string[] { info.UUID, PInfo.Name, PInfo.UUID, PInfo.Area, PInfo.SalePrice, PInfo.Landing, PInfo.InfoUUID, PInfo.Dwell, currentScene.RegionInfo.EstateSettings.EstateID.ToString(), RegionData.GetIsRegionMature(currentScene.RegionInfo.RegionID.ToString()).ToString() });
         							}
         						}
         					}

@@ -3,85 +3,59 @@ using System.Collections.Generic;
 using System.Text;
 using OpenSim.Region.Framework.Interfaces;
 using Aurora.Framework;
+using OpenSim.Framework;
+using OpenSim.Region.Framework;
+using OpenMetaverse;
 
 namespace Aurora.Modules
 {
-    public class EstateService : ISharedRegionModule, IEstateService
+    public class EstateSettingsModule : IRegionModule, IEstateSettingsModule
     {
-        IEstateData m_DataStore = null;
+        Scene m_scene;
+        IProfileData PD;
+
+        public void Initialise(Scene scene, IConfigSource source)
+        {
+            scene.RegisterModuleInterface<IEstateSettingsModule>(this);
+            m_scene = scene;
+        }
+
         public void PostInitialise()
         {
+            PD = Aurora.DataManager.DataManager.GetProfilePlugin();
         }
 
-        public string Name
-        {
-            get { return "EstateService"; }
-        }
+        public void Close() { }
 
-        public Type ReplaceableInterface
-        {
-            get { return null; }
-        }
+        public string Name { get { return "EstateSettingsModule"; } }
 
-        public void Initialise(Nini.Config.IConfigSource source)
-        {
-        }
+        public bool IsSharedModule { get { return true; } }
 
-        public void Close()
+        public bool AllowTeleport(IScene scene, UUID userID, Vector3 Position, out Vector3 newPosition)
         {
-        }
+            newPosition = Position;
+            EstateSettings ES = m_scene.EstateService.LoadEstateSettings(scene.RegionInfo.RegionID, false);
+            AuroraProfileData Profile = PD.GetProfileInfo(userID);
 
-        public void AddRegion(OpenSim.Region.Framework.Scenes.Scene scene)
-        {
-            scene.RegisterModuleInterface<IEstateService>(this);
-        }
+            if (scene.RegionInfo.RegionSettings.Maturity > Profile.Mature)
+                return false;
 
-        public void RemoveRegion(OpenSim.Region.Framework.Scenes.Scene scene)
-        {
-        }
+            if (ES.DenyMinors && Profile.Minor)
+                return false;
 
-        public void RegionLoaded(OpenSim.Region.Framework.Scenes.Scene scene)
-        {
-        }
+            if (!ES.PublicAccess)
+            {
+                if (!new List<UUID>(ES.EstateManagers).Contains(userID) || ES.EstateOwner != userID)
+                    return false;
+            }
+            if (!ES.AllowDirectTeleport)
+            {
+                IGenericData GenericData = Aurora.DataManager.DataManager.GetGenericPlugin();
+                List<string> Telehubs = GenericData.Query("regionUUID", scene.RegionInfo.RegionID.ToString(), "auroraregions", "telehubX,telehubY");
+                newPosition = new Vector3(Convert.ToInt32(Telehubs[0]), Convert.ToInt32(Telehubs[1]), Position.Z);
+            }
 
-        public void Initialise(IEstateDataStore dataStore)
-        {
-            m_DataStore = Aurora.DataManager.DataManager.GetEstatePlugin();// dataStore;
-        }
-
-        public OpenSim.Framework.EstateSettings LoadEstateSettings(OpenMetaverse.UUID regionID, bool create)
-        {
-            return m_DataStore.LoadEstateSettings(regionID, create);
-        }
-
-        public OpenSim.Framework.EstateSettings LoadEstateSettings(int estateID)
-        {
-            return m_DataStore.LoadEstateSettings(estateID);
-        }
-
-        public void StoreEstateSettings(OpenSim.Framework.EstateSettings es)
-        {
-            m_DataStore.StoreEstateSettings(es);
-        }
-
-        public List<int> GetEstates(string search)
-        {
-            return m_DataStore.GetEstates(search);
-        }
-
-        public bool LinkRegion(OpenMetaverse.UUID regionID, int estateID)
-        {
-            return m_DataStore.LinkRegion(regionID, estateID);
-        }
-
-        public List<OpenMetaverse.UUID> GetRegions(int estateID)
-        {
-            return m_DataStore.GetRegions(estateID);
-        }
-
-        public bool DeleteEstate(int estateID)
-        {
-            return m_DataStore.DeleteEstate(estateID);
+            return true;
         }
     }
 }
