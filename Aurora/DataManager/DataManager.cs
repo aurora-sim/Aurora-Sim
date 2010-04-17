@@ -121,6 +121,33 @@ namespace Aurora.DataManager
         
         #endregion
 
+        #region IGroupData
+
+        public static IGroupsServicesConnector DefaultGroupPlugin = null;
+        public static IGroupsServicesConnector RetriverGroupPlugin = null;
+        public static IList<IGroupsServicesConnector> AllGroupPlugins = (System.Collections.Generic.IList<IGroupsServicesConnector>)new List<IGroupsServicesConnector>();
+
+        public static IGroupsServicesConnector GetDefaultGroupPlugin()
+        {
+            if (RetriverGroupPlugin != null)
+                return RetriverGroupPlugin;
+            return DefaultGroupPlugin;
+        }
+        public static void SetGroupDataRetriver(IGroupsServicesConnector Plugin)
+        {
+            RetriverGroupPlugin = Plugin;
+        }
+        public static void SetDefaultGroupDataPlugin(IGroupsServicesConnector Plugin)
+        {
+            DefaultGroupPlugin = Plugin;
+        }
+        public static void AddGroupPlugin(IGroupsServicesConnector plugin)
+        {
+            AllGroupPlugins.Add(plugin);
+        }
+
+        #endregion
+
         public static DataSessionProvider DataSessionProvider;
     }
 }
