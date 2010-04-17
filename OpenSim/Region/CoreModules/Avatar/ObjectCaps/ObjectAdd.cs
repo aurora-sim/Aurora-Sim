@@ -126,6 +126,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
             cancelresponsedata["int_response_code"] = 200; //501; //410; //404;
             cancelresponsedata["content_type"] = "text/plain";
             cancelresponsedata["keepalive"] = false;
+            cancelresponsedata["str_response_string"] = "";
             return cancelresponsedata;
         }
 
@@ -144,6 +145,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                 cancelresponsedata["int_response_code"] = 200; //501; //410; //404;
                 cancelresponsedata["content_type"] = "text/plain";
                 cancelresponsedata["keepalive"] = false;
+                cancelresponsedata["str_response_string"] = "Updated.";
                 return cancelresponsedata;
             }
             LandUpdateArgs args = new LandUpdateArgs();
@@ -183,6 +185,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
             responsedata["int_response_code"] = 200; //501; //410; //404;
             responsedata["content_type"] = "text/plain";
             responsedata["keepalive"] = false;
+            responsedata["str_response_string"] = "Updated.";
             return responsedata;
         }
 
@@ -192,6 +195,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
             responsedata["int_response_code"] = 200; //501; //410; //404;
             responsedata["content_type"] = "text/plain";
             responsedata["keepalive"] = false;
+            responsedata["str_response_string"] = "";
             return responsedata;
         }
 
@@ -202,6 +206,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
             responsedata["int_response_code"] = 200; //501; //410; //404;
             responsedata["content_type"] = "text/plain";
             responsedata["keepalive"] = false;
+            responsedata["str_response_string"] = "";
             OSDMap rm = (OSDMap)r;
 
             if (rm.ContainsKey("verb"))
