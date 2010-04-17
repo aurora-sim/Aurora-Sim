@@ -38,7 +38,7 @@ namespace Aurora.Modules
             UserAccount account = m_scene.UserAccountService.GetUserAccount(UUID.Zero, client.AgentId);
             string NewUser = GenericData.Query("userUUID", account.PrincipalID.ToString(), "usersauth", "IsNewUser")[0];
             string ArchiveName = GenericData.Query("userUUID", account.PrincipalID.ToString(), "usersauth", "AArchiveName")[0];
-            if (NewUser == "true" && ArchiveName != "" && ArchiveName != null)
+            if (NewUser == "true" && ArchiveName != "" && ArchiveName != null && ArchiveName != " ")
             {
                 LoadAA(account, ArchiveName);
             }

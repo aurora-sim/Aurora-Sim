@@ -697,9 +697,9 @@ namespace OpenSim.Region.CoreModules.Framework.EventQueue
             //m_log.InfoFormat("########### eq ChatterBoxSessionAgentListUpdates #############\n{0}", item);
         }
 
-        public void ParcelProperties(ParcelPropertiesPacket parcelPropertiesPacket, UUID avatarID)
+        public void ParcelProperties(ParcelPropertiesPacket parcelPropertiesPacket, LandData data, UUID avatarID)
         {
-            OSD item = EventQueueHelper.ParcelProperties(parcelPropertiesPacket);
+            OSD item = EventQueueHelper.ParcelProperties(parcelPropertiesPacket, data);
             Enqueue(item, avatarID);
         }
 

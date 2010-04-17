@@ -311,7 +311,7 @@ namespace OpenSim.Region.CoreModules.Framework.EventQueue
             return chatterBoxSessionAgentListUpdates;
         }
 
-        public static OSD ParcelProperties(ParcelPropertiesPacket parcelPropertiesPacket)
+        public static OSD ParcelProperties(ParcelPropertiesPacket parcelPropertiesPacket, OpenSim.Framework.LandData data)
         {
             OSDMap parcelProperties = new OSDMap();
             OSDMap body = new OSDMap();
@@ -327,18 +327,6 @@ namespace OpenSim.Region.CoreModules.Framework.EventQueue
             // packet we construct this event queue message from. This should be refactored in
             // other areas of the code so it can all be send in the same message. Until then we will
             // still send the media info via UDP
-
-            //OSDArray mediaData = new OSDArray();
-            //OSDMap mediaDataMap = new OSDMap();
-            //mediaDataMap.Add("MediaDesc", OSD.FromString(""));
-            //mediaDataMap.Add("MediaHeight", OSD.FromInteger(0));
-            //mediaDataMap.Add("MediaLoop", OSD.FromInteger(0));
-            //mediaDataMap.Add("MediaType", OSD.FromString("type/type"));
-            //mediaDataMap.Add("MediaWidth", OSD.FromInteger(0));
-            //mediaDataMap.Add("ObscureMedia", OSD.FromInteger(0));
-            //mediaDataMap.Add("ObscureMusic", OSD.FromInteger(0));
-            //mediaData.Add(mediaDataMap);
-            //body.Add("MediaData", mediaData);
 
             OSDArray parcelData = new OSDArray();
             OSDMap parcelDataMap = new OSDMap();
@@ -412,6 +400,18 @@ namespace OpenSim.Region.CoreModules.Framework.EventQueue
             UserLookAt.Add(OSD.FromReal(parcelPropertiesPacket.ParcelData.UserLookAt.Y));
             UserLookAt.Add(OSD.FromReal(parcelPropertiesPacket.ParcelData.UserLookAt.Z));
             parcelDataMap.Add("UserLookAt", UserLookAt);
+
+            OSDArray mediaData = new OSDArray();
+            OSDMap mediaDataMap = new OSDMap();
+            mediaDataMap.Add("MediaDesc", OSD.FromString(data.MediaDesc));
+            mediaDataMap.Add("MediaHeight", OSD.FromInteger(data.MediaSize[1]));
+            mediaDataMap.Add("MediaLoop", OSD.FromInteger(data.MediaLoop));
+            mediaDataMap.Add("MediaType", OSD.FromString(data.MediaType));
+            mediaDataMap.Add("MediaWidth", OSD.FromInteger(data.MediaSize[0]));
+            mediaDataMap.Add("ObscureMedia", OSD.FromInteger(data.ObscureMedia));
+            mediaDataMap.Add("ObscureMusic", OSD.FromInteger(data.ObscureMusic));
+            mediaData.Add(mediaDataMap);
+            body.Add("MediaData", mediaData);
 
             parcelData.Add(parcelDataMap);
             body.Add("ParcelData", parcelData);

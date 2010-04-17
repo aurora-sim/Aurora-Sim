@@ -91,6 +91,99 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                                                       {
                                                           return ProcessObjectMediaNavigate(m_dhttpMethod, capuuid);
                                                       }));
+            caps.RegisterHandler("ParcelPropertiesUpdate",
+                                new RestHTTPHandler("POST", "/CAPS/ParcelPropertiesUpdate/" + capuuid + "/",
+                                                      delegate(Hashtable m_dhttpMethod)
+                                                      {
+                                                          return ProcessUpdateParcel(m_dhttpMethod, agentID, capuuid);
+                                                      }));
+            caps.RegisterHandler("UpdateAgentInformation",
+                                new RestHTTPHandler("POST", "/CAPS/UpdateAgentInformation/" + capuuid + "/",
+                                                      delegate(Hashtable m_dhttpMethod)
+                                                      {
+                                                          return ProcessUpdateAgentInfo(m_dhttpMethod, agentID, capuuid);
+                                                      }));
+        }
+
+        private Hashtable ProcessUpdateAgentInfo(Hashtable mDhttpMethod, UUID agentID, UUID capuuid)
+        {
+        	OSD r = OSDParser.DeserializeLLSDXml((string)mDhttpMethod["requestbody"]);
+            OSDMap rm = (OSDMap)r;
+            OSDMap access = (OSDMap)rm["access_prefs"];
+            string Level = access["max"].AsString();
+            int maxLevel = 0;
+            if (Level == "PG")
+                maxLevel = 0;
+            if (Level == "M")
+                maxLevel = 1;
+            if (Level == "A")
+                maxLevel = 2;
+            Aurora.Framework.IProfileData PD = Aurora.DataManager.DataManager.GetDefaultProfilePlugin();
+            AuroraProfileData APD = PD.GetProfileInfo(agentID);
+            APD.Mature = maxLevel;
+            PD.UpdateUserProfile(APD);
+            Hashtable cancelresponsedata = new Hashtable();
+            cancelresponsedata["int_response_code"] = 200; //501; //410; //404;
+            cancelresponsedata["content_type"] = "text/plain";
+            cancelresponsedata["keepalive"] = false;
+            return cancelresponsedata;
+        }
+
+        private Hashtable ProcessUpdateParcel(Hashtable mDhttpMethod, UUID agentID, UUID capuuid)
+        {
+            OSD r = OSDParser.DeserializeLLSDXml((string)mDhttpMethod["requestbody"]);
+            OSDMap rm = (OSDMap)r;
+            
+            ScenePresence SP;
+            m_scene.TryGetScenePresence(agentID, out SP);
+            ILandObject ILO = SP.Scene.LandChannel.GetLandObject(rm["local_id"].AsInteger());
+
+            if (!m_scene.Permissions.CanEditParcel(agentID, ILO))
+            {
+                Hashtable cancelresponsedata = new Hashtable();
+                cancelresponsedata["int_response_code"] = 200; //501; //410; //404;
+                cancelresponsedata["content_type"] = "text/plain";
+                cancelresponsedata["keepalive"] = false;
+                return cancelresponsedata;
+            }
+            LandUpdateArgs args = new LandUpdateArgs();
+            args.AuthBuyerID = new UUID(rm["auth_buyer_id"].AsString());
+            args.MediaAutoScale =  Convert.ToByte(rm["auto_scale"].AsString());
+            args.Category = (ParcelCategory)rm["category"].AsInteger();
+            args.Desc = rm["description"].AsString();
+            args.ParcelFlags = rm["parcel_flags"].AsUInteger();
+            args.GroupID = new UUID(rm["group_id"].AsString());
+            args.LandingType = Convert.ToByte(rm["landing_type"].AsString());
+            args.MediaDesc = rm["media_desc"].AsString();
+            args.MediaHeight = rm["media_height"].AsInteger();
+            args.MediaID = new UUID(rm["media_id"].AsString());
+            args.MediaLoop = rm["media_loop"].AsBoolean();
+            args.MediaType = rm["media_type"].AsString();
+            args.MediaURL = rm["media_url"].AsString();
+            args.MediaWidth = rm["media_width"].AsInteger();
+            args.MusicURL = rm["music_url"].AsString();
+            args.Name = rm["name"].AsString();
+            args.ObscureMedia = rm["obscure_media"].AsInteger() == 1;
+            args.ObscureMusic = rm["obscure_music"].AsInteger() == 1;
+            args.PassHours = rm["pass_hours"].AsInteger();
+            args.PassPrice = rm["pass_price"].AsInteger();
+            args.SalePrice = rm["sale_price"].AsInteger();
+            string snapshot = rm["snapshot_id"].AsString();
+            args.SnapshotID = new UUID(snapshot);
+            Vector3 TempVector = new Vector3();
+            OSDArray loc = (OSDArray)rm["user_location"];
+            TempVector = new Vector3(loc[0].AsInteger(),loc[1].AsInteger(),loc[2].AsInteger());
+            args.UserLocation = TempVector;
+            OSDArray lookat = (OSDArray)rm["user_look_at"];
+            TempVector = new Vector3(lookat[0].AsInteger(), lookat[1].AsInteger(), lookat[2].AsInteger());
+            args.UserLookAt = TempVector;
+
+            SP.ControllingClient.FireUpdateParcel(args, rm["local_id"].AsInteger());
+            Hashtable responsedata = new Hashtable();
+            responsedata["int_response_code"] = 200; //501; //410; //404;
+            responsedata["content_type"] = "text/plain";
+            responsedata["keepalive"] = false;
+            return responsedata;
         }
 
         private Hashtable ProcessObjectMediaNavigate(Hashtable mDhttpMethod, UUID capuuid)

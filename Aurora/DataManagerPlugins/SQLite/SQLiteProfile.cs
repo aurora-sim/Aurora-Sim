@@ -349,7 +349,7 @@ namespace Aurora.DataManager.SQLite
             SetRows.Add("profileSkillsText");
             SetRows.Add("profileLanguages");
             SetRows.Add("IsMinor");
-            SetRows.Add("ViewMature");
+            SetRows.Add("MatureRating");
             SetValues.Add(Profile.AboutText);
             SetValues.Add(Profile.AllowPublish);
             SetValues.Add(Profile.FirstLifeAboutText);
@@ -389,7 +389,7 @@ namespace Aurora.DataManager.SQLite
             SetRows.Add("profileSkillsText");
             SetRows.Add("profileLanguages");
             SetRows.Add("IsMinor");
-            SetRows.Add("ViewMature");
+            SetRows.Add("MatureRating");
             SetValues.Add(Profile.AboutText);
             SetValues.Add(Profile.AllowPublish);
             SetValues.Add(Profile.Email);

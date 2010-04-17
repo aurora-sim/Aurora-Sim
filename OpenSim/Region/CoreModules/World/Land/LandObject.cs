@@ -229,6 +229,12 @@ namespace OpenSim.Region.CoreModules.World.Land
                 newData.SnapshotID = args.SnapshotID;
                 newData.UserLocation = args.UserLocation;
                 newData.UserLookAt = args.UserLookAt;
+                newData.MediaDesc = args.MediaDesc;
+                newData.MediaLoop = (byte)Convert.ToInt32(args.MediaLoop);
+                newData.MediaSize = new int[] { args.MediaWidth, args.MediaHeight };
+                newData.MediaType = args.MediaType;
+                newData.ObscureMedia = Convert.ToByte(args.ObscureMedia);
+                newData.ObscureMusic = Convert.ToByte(args.ObscureMusic);
 
                 m_scene.LandChannel.UpdateLandObject(LandData.LocalID, newData);
 

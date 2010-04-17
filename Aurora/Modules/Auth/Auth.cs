@@ -141,13 +141,13 @@ namespace Aurora.Modules
             values.Add(" ");
             values.Add(" ");
             values.Add("0");
-            values.Add("true");
-            values.Add("false");
+            values.Add("1");
             values.Add(" ");
             values.Add(" ");
             values.Add(" ");
             values.Add(" ");
-            values.Add("");
+            values.Add(" ");
+            values.Add(" ");
             values.Add("true");
             values.Add("false");
             values.Add("2");

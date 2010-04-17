@@ -1169,5 +1169,8 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         public void SendPlacesQuery(List<string> simNames, List<object> Places, UUID queryID, UUID agentID, UUID transactionID, List<string> Xs, List<string> Ys)
         {
         }
+        public void FireUpdateParcel(LandUpdateArgs args, int LocalID)
+        {
+        }
     }
 }

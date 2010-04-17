@@ -456,16 +456,13 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
                 m_log.DebugFormat("[FreeSwitchVoice][PARCELVOICE]: region \"{0}\": Parcel \"{1}\" ({2}): avatar \"{3}\": request: {4}, path: {5}, param: {6}",
                                   scene.RegionInfo.RegionName, land.Name, land.LocalID, avatarName, request, path, param);
 
-                // TODO: EstateSettings don't seem to get propagated...
-                // if (!scene.RegionInfo.EstateSettings.AllowVoice)
-                // {
-                //     m_log.DebugFormat("[FreeSwitchVoice][PARCELVOICE]: region \"{0}\": voice not enabled in estate settings",
-                //                       scene.RegionInfo.RegionName);
-                //     channel_uri = String.Empty;
-                // }
-                // else
-
-                if ((land.Flags & (uint)ParcelFlags.AllowVoiceChat) == 0)
+                if (!scene.RegionInfo.EstateSettings.AllowVoice)
+                {
+                    m_log.DebugFormat("[FreeSwitchVoice][PARCELVOICE]: region \"{0}\": voice not enabled in estate settings",
+                                      scene.RegionInfo.RegionName);
+                    channelUri = String.Empty;
+                }
+                else if ((land.Flags & (uint)ParcelFlags.AllowVoiceChat) == 0)
                 {
                     m_log.DebugFormat("[FreeSwitchVoice][PARCELVOICE]: region \"{0}\": Parcel \"{1}\" ({2}): avatar \"{3}\": voice not enabled for parcel",
                                       scene.RegionInfo.RegionName, land.Name, land.LocalID, avatarName);

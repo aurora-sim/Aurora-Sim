@@ -334,6 +334,69 @@ namespace OpenSim.Framework
             }
         }
 
+        private byte _mediaLoop = 0;
+        /// <summary>
+        /// Type of media
+        /// </summary>
+        public byte MediaLoop
+        {
+            get
+            {
+                return _mediaLoop;
+            }
+            set
+            {
+                _mediaLoop = value;
+            }
+        }
+
+        private byte _ObscureMusic = 0;
+        /// <summary>
+        /// Type of media
+        /// </summary>
+        public byte ObscureMusic
+        {
+            get
+            {
+                return _ObscureMusic;
+            }
+            set
+            {
+                _ObscureMusic = value;
+            }
+        }
+
+        private byte _ObscureMedia = 0;
+        /// <summary>
+        /// Type of media
+        /// </summary>
+        public byte ObscureMedia
+        {
+            get
+            {
+                return _ObscureMedia;
+            }
+            set
+            {
+                _ObscureMedia = value;
+            }
+        }
+
+        private string _mediaDescription = "";
+        /// <summary>
+        /// Parcel Media Description
+        /// </summary>
+        public string MediaDesc
+        {
+            get
+            {
+                return _mediaDescription;
+            }
+            set
+            {
+                _mediaDescription = value;
+            }
+        }
         /// <summary>
         /// Texture Guid to replace with the output of the media stream
         /// </summary>
@@ -371,7 +434,7 @@ namespace OpenSim.Framework
             }
         }
 
-        private string _mediaType = "";
+        private string _mediaType = "none/none";
         public string MediaType
         {
             get

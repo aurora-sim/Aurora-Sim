@@ -8836,11 +8836,11 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             string url = landData.MediaURL;
             string texture = landData.MediaID.ToString();
             bool autoAlign = landData.MediaAutoScale != 0;
-            string mediaType = ""; // TODO these have to be added as soon as LandData supports it
-            string description = "";
-            int width = 0;
-            int height = 0;
-
+            string mediaType = landData.MediaType;
+            string description = landData.MediaDesc;
+            int width = landData.MediaSize[0];
+            int height = landData.MediaSize[1];
+            
             ParcelMediaCommandEnum? commandToSend = null;
             float time = 0.0f; // default is from start
 
@@ -8963,7 +8963,6 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                             ++i;
                         }
                         break;
-
                     case ParcelMediaCommandEnum.Size:
                         if ((i + 2) < commandList.Length)
                         {
@@ -9002,6 +9001,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                     landData.MediaSize[0] = width;
                     landData.MediaSize[1] = height;
                     landData.MediaType = mediaType;
+                    landData.MediaDesc = description;
+                    landData.MediaLoop = loop;
 
                     // do that one last, it will cause a ParcelPropertiesUpdate
                     landObject.SetMediaUrl(url);
@@ -9064,8 +9065,6 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             LSL_List list = new LSL_List();
-            //TO DO: make the implementation for the missing commands
-            //PARCEL_MEDIA_COMMAND_LOOP_SET    float loop      Use this to get or set the parcel's media loop duration. (1.19.1 RC0 or later)
             for (int i = 0; i < aList.Data.Length; i++)
             {
 
@@ -9077,13 +9076,16 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                             list.Add(new LSL_String(World.GetLandData(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).MediaURL));
                             break;
                         case ParcelMediaCommandEnum.Desc:
-                            list.Add(new LSL_String(World.GetLandData(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).Description));
+                            list.Add(new LSL_String(World.GetLandData(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).MediaDesc));
                             break;
                         case ParcelMediaCommandEnum.Texture:
                             list.Add(new LSL_String(World.GetLandData(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).MediaID.ToString()));
                             break;
                         case ParcelMediaCommandEnum.Type:
                             list.Add(new LSL_String(World.GetLandData(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).MediaType));
+                            break;
+                        case ParcelMediaCommandEnum.Loop:
+                            list.Add(new LSL_Integer(World.GetLandData(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).MediaLoop));
                             break;
                         case ParcelMediaCommandEnum.Size:
                             list.Add(new LSL_String(World.GetLandData(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).MediaSize[0]));
