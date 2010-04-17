@@ -855,8 +855,8 @@ namespace Aurora.Modules
         {
             List<string> UserInfo = GenericData.Query("userUUID",remoteClient.AgentId.ToString(),"usersauth","imviaemail,visible,email");
             remoteClient.SendUserInfoReply(
-                Convert.ToBoolean(UserInfo[0]),
-                Convert.ToBoolean(UserInfo[1]),
+            	Convert.ToInt32(UserInfo[0]) == 1,
+                Convert.ToInt32(UserInfo[1]) == 1,
                 UserInfo[2]);
         }
 

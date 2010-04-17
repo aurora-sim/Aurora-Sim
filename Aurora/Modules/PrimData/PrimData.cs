@@ -116,7 +116,11 @@ namespace Aurora.Modules
                 CreateNewObjectData(group.RootPart.UUID.ToString());
                 return;
             }
-
+            if (objectData.Count == 0)
+            {
+                CreateNewObjectData(group.RootPart.UUID.ToString());
+                return;
+            }
             string Name = objectData[1];
             PrimTypes Type = (PrimTypes)Convert.ToInt32(objectData[2]);
             string AllKeys = objectData[3];
