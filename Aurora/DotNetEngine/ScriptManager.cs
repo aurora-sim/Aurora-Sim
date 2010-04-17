@@ -553,7 +553,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 		/// <returns></returns>
 		public string[] GetErrors(UUID ItemID)
 		{
-			while (Errors[ItemID] == null) 
+			while (!Errors.ContainsKey(ItemID)) 
 			{
 				Thread.Sleep(500);
 			}
