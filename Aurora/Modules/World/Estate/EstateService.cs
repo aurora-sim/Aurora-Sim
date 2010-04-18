@@ -35,10 +35,10 @@ namespace Aurora.Modules
         public bool AllowTeleport(IScene scene, UUID userID, Vector3 Position, out Vector3 newPosition)
         {
             newPosition = Position;
-            EstateSettings ES = m_scene.EstateService.LoadEstateSettings(scene.RegionInfo.RegionID, false);
+            EstateSettings ES = ((Scene)scene).EstateService.LoadEstateSettings(scene.RegionInfo.RegionID, false);
             AuroraProfileData Profile = PD.GetProfileInfo(userID);
 
-            if (scene.RegionInfo.RegionSettings.Maturity > Profile.Mature)
+            if (((Scene)scene).RegionInfo.RegionSettings.Maturity > Profile.Mature)
                 return false;
 
             if (ES.DenyMinors && Profile.Minor)
@@ -52,9 +52,16 @@ namespace Aurora.Modules
             if (!ES.AllowDirectTeleport)
             {
                 IGenericData GenericData = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
-                List<string> Telehubs = GenericData.Query("regionUUID", scene.RegionInfo.RegionID.ToString(), "auroraregions", "telehubX,telehubY");
+                List<string> Telehubs = GenericData.Query("regionUUID", ((Scene)scene).RegionInfo.RegionID.ToString(), "auroraregions", "telehubX,telehubY");
                 newPosition = new Vector3(Convert.ToInt32(Telehubs[0]), Convert.ToInt32(Telehubs[1]), Position.Z);
             }
+            ILandObject ILO = ((Scene)scene).LandChannel.GetLandObject(Position.X, Position.Y);
+            if (ILO.LandData.LandingType == 2)
+            {
+                newPosition = new Vector3(0, 0, 0);
+            }
+            if (ILO.LandData.LandingType == 1)
+                newPosition = ILO.LandData.UserLocation;
 
             return true;
         }
