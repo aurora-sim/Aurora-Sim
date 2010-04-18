@@ -5611,12 +5611,15 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         public LSL_String llGetAgentLanguage(string id)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            // This should only return a value if the avatar is in the same region
-            //ckrinke 1-30-09 : This needs to parse the XMLRPC language field supplied
-            //by the client at login. Currently returning only en-us until our I18N
-            //effort gains momentum
             m_host.AddScriptLPS(1);
-            return "en-us";
+            Aurora.Framework.IGenericData GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
+            List<string> query = GD.Query("userUUID", m_host.OwnerID.ToString(), "usersauth", "Lang,LangIsPublic");
+            if (query[1] == "1")
+            {
+                return query[0];
+            }
+            else
+                return "";
         }
 
         public void llAdjustSoundVolume(double volume)
