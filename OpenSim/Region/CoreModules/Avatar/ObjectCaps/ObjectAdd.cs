@@ -304,7 +304,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                     {
                         if (info == null)
                         {
-                            OSDMap nullMap = new OSDMap();
+                            OSD nullMap = new OSD();
                             array.Add(nullMap);
                             continue;
                         }
