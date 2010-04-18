@@ -71,6 +71,9 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         // Handles loading/unloading of scripts into AppDomains
         public AppDomainManager m_AppDomainManager;
 
+        //Handles saving of states.
+        public StateSaverQueue m_StateQueue;
+
         // Thread that does different kinds of maintenance,
         // for example refreshing config and killing scripts
         // that has been running too long
@@ -144,6 +147,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             
             m_EventQueueManager = new EventQueueManager(this, scene);
             m_EventManager = new EventManager(this, true);
+            m_StateQueue = new StateSaverQueue(this);
 
             // We need to start it
             m_ScriptManager = new ScriptManager(this);
