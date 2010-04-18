@@ -349,7 +349,9 @@ namespace OpenSim.Region.CoreModules.World.Land
 
                 if (parcelAvatarIsEntering != null)
                 {
-                    parcelAvatarIsEntering.LandData.Dwell += 1;
+                    EstateSettings ES = m_scene.EstateService.LoadEstateSettings(m_scene.RegionInfo.RegionID, false);
+                    if(!ES.BlockDwell)
+                        parcelAvatarIsEntering.LandData.Dwell += 1;
                     UpdateLandObject(parcelAvatarIsEntering.LandData.LocalID, parcelAvatarIsEntering.LandData);
                     if (avatar.AbsolutePosition.Z < LandChannel.BAN_LINE_SAFETY_HIEGHT)
                     {
