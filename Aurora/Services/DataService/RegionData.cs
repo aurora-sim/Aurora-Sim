@@ -120,6 +120,19 @@ namespace Aurora.Services.DataService
             return null;
         }
 
+        public void AddLandObject(OpenSim.Framework.LandData ILandData)
+        {
+            if (Aurora.DataManager.DataManager.DefaultRegionPlugin != null)
+                Aurora.DataManager.DataManager.DefaultRegionPlugin.AddLandObject(ILandData);
+            else
+            {
+                foreach (IRegionData plugin in Aurora.DataManager.DataManager.AllRegionPlugins)
+                {
+                    plugin.AddLandObject(ILandData);
+                }
+            }
+        }
+
         public OfflineMessage[] GetOfflineMessages(string agentID)
         {
             if (Aurora.DataManager.DataManager.DefaultRegionPlugin != null)

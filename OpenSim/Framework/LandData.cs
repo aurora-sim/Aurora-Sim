@@ -421,7 +421,7 @@ namespace OpenSim.Framework
             }
         }
 
-        private int[] _mediaSize = new int[2];
+        private int[] _mediaSize = new int[] {0,0};
         public int[] MediaSize
         {
             get
@@ -698,6 +698,12 @@ namespace OpenSim.Framework
             landData._userLookAt = _userLookAt;
             landData._otherCleanTime = _otherCleanTime;
             landData._dwell = _dwell;
+            landData._mediaDescription = _mediaDescription;
+            landData._mediaLoop = _mediaLoop;
+            landData._mediaSize = _mediaSize;
+            landData._mediaType = _mediaType;
+            landData._ObscureMedia = _ObscureMedia;
+            landData._ObscureMusic = _ObscureMusic;
 
             landData._parcelAccessList.Clear();
             foreach (ParcelManager.ParcelAccessEntry entry in _parcelAccessList)

@@ -382,5 +382,15 @@ namespace Aurora.Services.DataService
             AddParameter(parameters, "regionUUID", regionUUID);
             return ParseObject<RegionLightShareData>(PerformRemoteOperation("LoadRegionWindlightSettings", parameters));
         }
+
+        #region IRegionData Members
+
+
+        public void AddLandObject(LandData ILandData)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
     }
 }

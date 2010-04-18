@@ -214,5 +214,25 @@ namespace Aurora.DataManager.MySQL
         {
             return Insert("offlinemessages", new string[] { fromUUID, fromName, toUUID, message });
         }
+        public void AddLandObject(OpenSim.Framework.LandData ILandData)
+        {
+            OpenSim.Framework.LandData args = (OpenSim.Framework.LandData)ILandData;
+            try
+            {
+                Delete("auroraland", new string[] { "UUID" }, new string[] { args.GlobalID.ToString() });
+            }
+            catch (Exception) { }
+            List<string> Values = new List<string>();
+            Values.Add(args.GlobalID.ToString());
+            Values.Add(args.LocalID.ToString());
+            Values.Add(args.MediaDesc.ToString());
+            Values.Add(args.MediaSize[1].ToString());
+            Values.Add(args.MediaLoop.ToString());
+            Values.Add(args.MediaType.ToString());
+            Values.Add(args.MediaSize[0].ToString());
+            Values.Add(args.ObscureMedia.ToString());
+            Values.Add(args.ObscureMusic.ToString());
+            Insert("auroraland", Values.ToArray());
+        }
     }
 }

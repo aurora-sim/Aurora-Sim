@@ -57,6 +57,35 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
         {
             m_scene = pScene;
             m_scene.EventManager.OnRegisterCaps += RegisterCaps;
+            m_scene.EventManager.OnLandObjectAdded += AddLandObject;
+            m_scene.EventManager.OnIncomingLandDataFromStorage += new EventManager.IncomingLandDataFromStorage(EventManager_OnIncomingLandDataFromStorage);
+        }
+
+        void EventManager_OnIncomingLandDataFromStorage(List<LandData> data)
+        {
+            Aurora.Framework.IGenericData GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
+            foreach (LandData LD in data)
+            {
+                List<string> Query = GD.Query("UUID", LD.GlobalID.ToString(), "auroraland", "*");
+                if (Query.Count == 0)
+                {
+                    Aurora.DataManager.DataManager.GetDefaultRegionPlugin().AddLandObject(LD);
+                    return;
+                }
+                LD.MediaDesc = Query[2];
+                LD.MediaLoop = Convert.ToByte(Query[4]);
+                LD.MediaType = Query[5];
+                LD.MediaSize = new int[] { Convert.ToInt32(Query[3]), Convert.ToInt32(Query[6]) };
+                LD.ObscureMedia = Convert.ToByte(Query[7]);
+                LD.ObscureMusic = Convert.ToByte(Query[8]);
+            }
+            
+        }
+
+        public void AddLandObject(ILandObject parcel)
+        {
+            Aurora.Framework.IGenericData GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
+            Aurora.DataManager.DataManager.GetDefaultRegionPlugin().AddLandObject(parcel.LandData);
         }
 
         public void PostInitialise()

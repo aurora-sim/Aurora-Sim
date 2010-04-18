@@ -88,6 +88,21 @@ namespace OpenSim.Region.CoreModules.World.Land
             else
                 LandData.GroupID = UUID.Zero;
             LandData.IsGroupOwned = is_group_owned;
+            if (LandData.LocalID == 0)
+                return;
+            Aurora.Framework.IGenericData GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
+            List<string> Query = GD.Query("UUID", LandData.GlobalID.ToString(), "auroraland", "*");
+            if (Query.Count == 0)
+            {
+                Aurora.DataManager.DataManager.GetDefaultRegionPlugin().AddLandObject(LandData);
+                return;
+            }
+            LandData.MediaDesc = Query[2];
+            LandData.MediaLoop = Convert.ToByte(Query[4]);
+            LandData.MediaType = Query[5];
+            LandData.MediaSize = new int[] {Convert.ToInt32(Query[3]),Convert.ToInt32(Query[6])};
+            LandData.ObscureMedia = Convert.ToByte(Query[7]);
+            LandData.ObscureMusic = Convert.ToByte(Query[8]);
         }
 
         #endregion

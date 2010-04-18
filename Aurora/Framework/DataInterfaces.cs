@@ -59,6 +59,7 @@ namespace Aurora.Framework
         ObjectMediaURLInfo getObjectMediaInfo(string objectID, int side);
         bool GetIsRegionMature(string region);
         bool StoreRegionWindlightSettings(RegionLightShareData wl);
+        void AddLandObject(OpenSim.Framework.LandData ILandData);
         RegionLightShareData LoadRegionWindlightSettings(UUID regionUUID);
 
         AbuseReport GetAbuseReport(int formNumber);

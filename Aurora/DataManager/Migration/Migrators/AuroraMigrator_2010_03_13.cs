@@ -254,6 +254,18 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("draw_classic_clouds", ColumnTypes.String50)
                ));
 
+            AddSchema("auroraland", ColDefs(
+                ColDef("UUID", ColumnTypes.String50, true),
+                ColDef("LocalLandID", ColumnTypes.String50),
+                ColDef("media_desc", ColumnTypes.String50),
+                ColDef("media_height", ColumnTypes.String50),
+                ColDef("media_loop", ColumnTypes.String50),
+                ColDef("media_type", ColumnTypes.String50),
+                ColDef("media_width", ColumnTypes.String50),
+                ColDef("obscure_media", ColumnTypes.String50),
+                ColDef("obscure_music", ColumnTypes.String50)
+                ));
+
             AddSchema("estate_settings", ColDefs(
                 ColDef("EstateID", ColumnTypes.String50),
                 ColDef("EstateName", ColumnTypes.String50),
