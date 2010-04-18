@@ -132,6 +132,49 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                                                       {
                                                           return ProcessUpdateAgentInfo(m_dhttpMethod, agentID, capuuid);
                                                       }));
+            caps.RegisterHandler("ServerReleaseNotes",
+                                new RestHTTPHandler("POST", "/CAPS/ServerReleaseNotes/" + capuuid + "/",
+                                                      delegate(Hashtable m_dhttpMethod)
+                                                      {
+                                                          return ProcessServerReleaseNotes(m_dhttpMethod, agentID, capuuid);
+                                                      }));
+            caps.RegisterHandler("UpdateAgentLanguage",
+                                new RestHTTPHandler("POST", "/CAPS/UpdateAgentLanguage/" + capuuid + "/",
+                                                      delegate(Hashtable m_dhttpMethod)
+                                                      {
+                                                          return ProcessUpdateAgentLanguage(m_dhttpMethod, agentID, capuuid);
+                                                      }));
+        }
+
+        private Hashtable ProcessUpdateAgentLanguage(Hashtable m_dhttpMethod, UUID agentID, UUID capuuid)
+        {
+            Hashtable responsedata = new Hashtable();
+            responsedata["int_response_code"] = 200; //501; //410; //404;
+            responsedata["content_type"] = "text/plain";
+            responsedata["keepalive"] = false;
+
+            OSD r = OSDParser.DeserializeLLSDXml((string)m_dhttpMethod["requestbody"]);
+            OSDMap rm = (OSDMap)r;
+            string Lang = rm["language"].AsString();
+            string Public = rm["language_is_public"].AsString();
+            IGenericData GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
+            GD.Update("usersauth", new string[] { Lang, Public }, new string[] { "Lang", "LangIsPublic" }, new string[] { "userUUID" } , new string[] { agentID.ToString() });
+            responsedata["str_response_string"] = "";
+            return responsedata;
+        }
+
+        private Hashtable ProcessServerReleaseNotes(Hashtable m_dhttpMethod, UUID agentID, UUID capuuid)
+        {
+            Hashtable responsedata = new Hashtable();
+            responsedata["int_response_code"] = 200; //501; //410; //404;
+            responsedata["content_type"] = "text/plain";
+            responsedata["keepalive"] = false;
+            
+            OSDMap osd = new OSDMap();
+            osd.Add("ServerReleaseNotes", new OSDString(Aurora.Framework.Utils.GetServerReleaseNotesURL()));
+            string response = OSDParser.SerializeLLSDXmlString(osd);
+            responsedata["str_response_string"] = response;
+            return responsedata;
         }
 
         private Hashtable ProcessUpdateAgentInfo(Hashtable mDhttpMethod, UUID agentID, UUID capuuid)

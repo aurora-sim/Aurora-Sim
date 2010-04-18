@@ -15,6 +15,17 @@ namespace Aurora.Framework
 {
     public static class Utils
     {
+        public static string GetServerReleaseNotesURL()
+        {
+            return "http://" + GetExternalIp() + ":" + OpenSim.Framework.MainServer.Instance.Port.ToString() + "/AuroraServerRelease" + AuroraServerVersion();
+        }
+
+        public static string AuroraServerVersion()
+        {
+            return "0.1";
+        }
+
+
         static string EncryptorType = "SHA1";
         static int EncryptIterations = 2;
         static int KeySize = 256;
