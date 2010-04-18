@@ -4813,7 +4813,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             AddLocalPacketHandler(PacketType.UpdateInventoryFolder, HandleUpdateInventoryFolder);
             AddLocalPacketHandler(PacketType.MoveInventoryFolder, HandleMoveInventoryFolder);
             AddLocalPacketHandler(PacketType.CreateInventoryItem, HandleCreateInventoryItem);
-            //AddLocalPacketHandler(PacketType.LinkInventoryItem, HandleLinkInventoryItem);
+            AddLocalPacketHandler(PacketType.LinkInventoryItem, HandleLinkInventoryItem);
             AddLocalPacketHandler(PacketType.FetchInventory, HandleFetchInventory);
             AddLocalPacketHandler(PacketType.FetchInventoryDescendents, HandleFetchInventoryDescendents);
             AddLocalPacketHandler(PacketType.PurgeInventoryDescendents, HandlePurgeInventoryDescendents);
@@ -7413,7 +7413,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             return true;
         }
 
-        /*private bool HandleLinkInventoryItem(IClientAPI sender, Packet Pack)
+        private bool HandleLinkInventoryItem(IClientAPI sender, Packet Pack)
         {
             LinkInventoryItemPacket createLink = (LinkInventoryItemPacket)Pack;
 
@@ -7443,7 +7443,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
 
             return true;
-        }*/
+        }
 
         private bool HandleFetchInventory(IClientAPI sender, Packet Pack)
         {
