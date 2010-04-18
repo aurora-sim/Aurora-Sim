@@ -42,20 +42,20 @@ namespace Aurora.Services.DataService
             return "";
         }
 
-        public ObjectMediaURLInfo[] getObjectMediaInfo(string objectID)
+        public ObjectMediaURLInfo getObjectMediaInfo(string objectID, int side)
         {
             if (Aurora.DataManager.DataManager.DefaultRegionPlugin != null)
-                return Aurora.DataManager.DataManager.DefaultRegionPlugin.getObjectMediaInfo(objectID);
+                return Aurora.DataManager.DataManager.DefaultRegionPlugin.getObjectMediaInfo(objectID, side);
             else
             {
                 foreach (IRegionData plugin in Aurora.DataManager.DataManager.AllRegionPlugins)
                 {
-                    ObjectMediaURLInfo[] info = plugin.getObjectMediaInfo(objectID);
-                    if (info.Length != 0)
+                    ObjectMediaURLInfo info = plugin.getObjectMediaInfo(objectID, side);
+                    if (info != null)
                         return info;
                 }
             }
-            return new List<ObjectMediaURLInfo>().ToArray();
+            return null;
         }
 
         public bool GetIsRegionMature(string region)

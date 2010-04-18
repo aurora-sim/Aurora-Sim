@@ -191,12 +191,45 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
 
         private Hashtable ProcessObjectMediaNavigate(Hashtable mDhttpMethod, UUID capuuid)
         {
+            OSD r = OSDParser.DeserializeLLSDXml((string)mDhttpMethod["requestbody"]);
             Hashtable responsedata = new Hashtable();
             responsedata["int_response_code"] = 200; //501; //410; //404;
             responsedata["content_type"] = "text/plain";
             responsedata["keepalive"] = false;
             responsedata["str_response_string"] = "";
+            OSDMap rm = (OSDMap)r;
+            List<string> Values = new List<string>();
+            List<string> Keys = new List<string>();
+            string objectUUID = rm["object_id"].AsString();
+            string currentURL = rm["current_url"].AsString();
+            string currentSide = rm["texture_index"].AsString();
+            GenericData.Update("assetMediaURL", new string[] { currentURL }, new string[] { "current_url" }, new string[] {"objectUUID"}, new string[] {objectUUID});
             return responsedata;
+        }
+
+        private void GenerateAssetWebSide(int side, UUID objectUUID, UUID OwnerID)
+        {
+            List<string> Values = new List<string>();
+            Values.Add(objectUUID.ToString());
+            Values.Add(OwnerID.ToString());
+            Values.Add("0");
+            Values.Add("0");
+            Values.Add("0");
+            Values.Add("0");
+            Values.Add("0");
+            Values.Add("0");
+            Values.Add("");
+            Values.Add("0");
+            Values.Add("0");
+            Values.Add("");
+            Values.Add("0");
+            Values.Add("0");
+            Values.Add("");
+            Values.Add("0");
+            Values.Add("0");
+            Values.Add("1");
+            Values.Add(side.ToString());
+            GenericData.Insert("assetMediaURL", Values.ToArray());
         }
 
         private Hashtable ProcessObjectMedia(Hashtable mDhttpMethod, UUID objectID)
@@ -216,16 +249,66 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                 {
                     OSDMap MainMap = new OSDMap();
                     OSD osd = new OSD();
-                    ObjectMediaURLInfo[] infos = RegionData.getObjectMediaInfo(rm["object_id"].ToString());
+
+                    SceneObjectPart part = m_scene.GetSceneObjectPart(new UUID(rm["object_id"].ToString()));
+                    ObjectMediaURLInfo info1 = RegionData.getObjectMediaInfo(rm["object_id"].ToString(), 1);
+                    ObjectMediaURLInfo info2 = RegionData.getObjectMediaInfo(rm["object_id"].ToString(), 2);
+                    ObjectMediaURLInfo info3 = RegionData.getObjectMediaInfo(rm["object_id"].ToString(), 3);
+                    ObjectMediaURLInfo info4 = RegionData.getObjectMediaInfo(rm["object_id"].ToString(), 4);
+                    ObjectMediaURLInfo info5 = RegionData.getObjectMediaInfo(rm["object_id"].ToString(), 5);
+                    ObjectMediaURLInfo info6 = RegionData.getObjectMediaInfo(rm["object_id"].ToString(), 6);
+                    
+                    #region null checks
+                    /*if (info1 == null)
+                    {
+                        GenerateAssetWebSide(1, objectID, part.OwnerID);
+                        info1 = new ObjectMediaURLInfo();
+                    }
+                    if (info2 == null)
+                    {
+                        GenerateAssetWebSide(2, objectID, part.OwnerID);
+                        info2 = new ObjectMediaURLInfo();
+                    }
+                    if (info3 == null)
+                    {
+                        GenerateAssetWebSide(3, objectID, part.OwnerID);
+                        info3 = new ObjectMediaURLInfo();
+                    }
+                    if (info4 == null)
+                    {
+                        GenerateAssetWebSide(4, objectID, part.OwnerID);
+                        info4 = new ObjectMediaURLInfo();
+                    }
+                    if (info5 == null)
+                    {
+                        GenerateAssetWebSide(5, objectID, part.OwnerID);
+                        info5 = new ObjectMediaURLInfo();
+                    }
+                    if (info6 == null)
+                    {
+                        GenerateAssetWebSide(6, objectID, part.OwnerID);
+                        info6 = new ObjectMediaURLInfo();
+                    }*/
+                    #endregion
+
+                    List<ObjectMediaURLInfo> infos = new List<ObjectMediaURLInfo>();
+                    infos.Add(info1);
+                    infos.Add(info2);
+                    infos.Add(info3);
+                    infos.Add(info4);
+                    infos.Add(info5);
+                    infos.Add(info6);
+                    
                     OSDArray array = new OSDArray(6);
                     foreach (ObjectMediaURLInfo info in infos)
                     {
                         if (info == null)
                         {
-                            array.Add(new OSD());
+                            OSDMap nullMap = new OSDMap();
+                            array.Add(nullMap);
                             continue;
                         }
-
+                        
                         OSDMap mediadataMap = new OSDMap();
                         osd = new OSDString(info.alt_image_enable);
                         mediadataMap.Add("alt_image_enable", osd);
@@ -284,42 +367,20 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                 else if (rm["verb"].ToString() == "UPDATE")
                 {
                     OSDArray media_data_map = (OSDArray)rm["object_media_data"];
-                    int i = 0;
+                    SceneObjectPart part = m_scene.GetSceneObjectPart(new UUID(rm["object_id"].ToString()));
+                    int side = 1;
                     foreach (OSD osd in media_data_map)
                     {
-                        List<string> Values = new List<string>();
-                        SceneObjectPart part = m_scene.GetSceneObjectPart(new UUID(rm["object_id"].ToString()));
-                        OSDMap map = null;
-                        try
+                        string type = osd.Type.ToString();
+                        if (type == "Unknown")
                         {
-                            map = (OSDMap)osd;
-                        }
-                        catch (Exception)
-                        {
-                            Values.Add(rm["object_id"].ToString());
-                            Values.Add(part.OwnerID.ToString());
-                            Values.Add("0");
-                            Values.Add("0");
-                            Values.Add("0");
-                            Values.Add("0");
-                            Values.Add("0");
-                            Values.Add("0");
-                            Values.Add("");
-                            Values.Add("0");
-                            Values.Add("0");
-                            Values.Add("");
-                            Values.Add("0");
-                            Values.Add("0");
-                            Values.Add("");
-                            Values.Add("0");
-                            Values.Add("0");
-                            Values.Add("1");
-                            Values.Add(i.ToString());
-                            GenericData.Insert("assetMediaURL", Values.ToArray());
+                            side++;
                             continue;
                         }
+                        List<string> Values = new List<string>();
+                        OSDMap map = (OSDMap)osd;
 
-                        ObjectMediaURLInfo[] info = RegionData.getObjectMediaInfo(rm["object_id"].ToString());
+                        ObjectMediaURLInfo info = RegionData.getObjectMediaInfo(rm["object_id"].ToString(), side);
                         Values.Add(rm["object_id"].ToString());
                         Values.Add(part.OwnerID.ToString());
                         Values.Add(map["alt_image_enable"].ToString());
@@ -337,22 +398,45 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                         Values.Add(map["whitelist"].ToString());
                         Values.Add(map["whitelist_enable"].ToString());
                         Values.Add(map["width_pixels"].ToString());
-                        if (info[i] == null || info[i].object_media_version == null)
+
+                        if (info == null || info.object_media_version == "" || info.object_media_version == " ")
                             Values.Add("1");
                         else
                         {
-                            int version = (Convert.ToInt32(info[i].object_media_version) + 1);
+                            int version = (Convert.ToInt32(info.object_media_version) + 1);
                             Values.Add(version.ToString());
                         }
-                        Values.Add(i.ToString());
+
+                        Values.Add(side.ToString());
                         try
                         {
                             GenericData.Insert("assetMediaURL", Values.ToArray());
                         }
                         catch (Exception)
                         {
+                            List<string> Keys = new List<string>();
+                            Keys.Add("objectUUID");
+                            Keys.Add("User");
+                            Keys.Add("alt_image_enable");
+                            Keys.Add("auto_loop");
+                            Keys.Add("auto_play");
+                            Keys.Add("auto_scale");
+                            Keys.Add("auto_zoom");
+                            Keys.Add("controls");
+                            Keys.Add("current_url");
+                            Keys.Add("first_click_interact");
+                            Keys.Add("height_pixels");
+                            Keys.Add("home_url");
+                            Keys.Add("perms_control");
+                            Keys.Add("perms_interact");
+                            Keys.Add("whitelist");
+                            Keys.Add("whitelist_enable");
+                            Keys.Add("width_pixels");
+                            Keys.Add("object_media_version");
+                            Keys.Add("side");
+                            GenericData.Update("assetMediaURL", Values.ToArray(), Keys.ToArray(), new string[] { "objectUUID", "side" }, new string[] { rm["object_id"].ToString(),side.ToString() });
                         }
-                        i++;
+                        side++;
                     }
                 }
                 #endregion

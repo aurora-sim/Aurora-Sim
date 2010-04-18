@@ -56,7 +56,7 @@ namespace Aurora.Framework
     {
         Dictionary<string, string> GetRegionHidden();
         string AbuseReports();
-        ObjectMediaURLInfo[] getObjectMediaInfo(string objectID);
+        ObjectMediaURLInfo getObjectMediaInfo(string objectID, int side);
         bool GetIsRegionMature(string region);
         bool StoreRegionWindlightSettings(RegionLightShareData wl);
         RegionLightShareData LoadRegionWindlightSettings(UUID regionUUID);

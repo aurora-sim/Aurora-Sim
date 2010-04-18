@@ -194,11 +194,12 @@ namespace Aurora.Services.DataService
             return ParseObject<string>(PerformRemoteOperation("AbuseReports", parameters));
         }
 
-        public ObjectMediaURLInfo[] getObjectMediaInfo(string objectID)
+        public ObjectMediaURLInfo getObjectMediaInfo(string objectID, int side)
         {
             var parameters = new Dictionary<string, string>();
             AddParameter(parameters, "objectID", objectID);
-            return ParseArray<ObjectMediaURLInfo>(PerformRemoteOperation("getObjectMediaInfo", parameters));
+            AddParameter(parameters, "side", side);
+            return ParseObject<ObjectMediaURLInfo>(PerformRemoteOperation("getObjectMediaInfo", parameters));
         }
 
         public bool GetIsRegionMature(string uuid)

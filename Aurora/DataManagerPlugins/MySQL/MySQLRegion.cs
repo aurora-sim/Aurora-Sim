@@ -73,47 +73,48 @@ namespace Aurora.DataManager.MySQL
                 }
             }
         }
-        public ObjectMediaURLInfo[] getObjectMediaInfo(string objectID)
+        public ObjectMediaURLInfo getObjectMediaInfo(string objectID, int side)
         {
-            ObjectMediaURLInfo[] infos = new ObjectMediaURLInfo[6];
             ObjectMediaURLInfo info = new ObjectMediaURLInfo();
-
-            List<string> data = Query("objectUUID", objectID, "assetMediaURL", "*");
+            List<string> data = Query(new string[] {"objectUUID","side"}, new string[] {objectID,side.ToString()}, "assetMediaURL", "*");
             if (data.Count == 1)
-                return infos;
-            infos[1] = info;
-            /*int a = 0;
+                return null;
             for (int i = 0; i < data.Count; ++i)
             {
-                info.alt_image_enable = data[a + 2];
-                info.auto_loop = Convert.ToInt32(data[a + 3]) == 1;
-                info.auto_play = Convert.ToInt32(data[a + 4]) == 1;
-                info.auto_scale = Convert.ToInt32(data[a + 5]) == 1;
-                info.auto_zoom = Convert.ToInt32(data[a + 6]) == 1;
-                info.controls = Convert.ToInt32(data[a + 7]);
-                info.current_url = data[a + 8];
-                info.first_click_interact = Convert.ToInt32(data[a + 9]) == 1;
-                info.height_pixels = Convert.ToInt32(data[a + 10]);
-                info.home_url = data[a + 11];
-                info.perms_control = Convert.ToInt32(data[a + 12]);
-                info.perms_interact = Convert.ToInt32(data[a + 13]);
-                info.whitelist = data[a + 14];
-                info.whitelist_enable = Convert.ToInt32(data[a + 15]) == 1;
-                info.width_pixels = Convert.ToInt32(data[a + 16]);
-                info.object_media_version = data[a + 17];
-                a++;
-                if (i == 18)
-                    a = 18;
-                if (i == 36)
-                    a = 36;
-                if (i == 54)
-                    a = 54;
-                if (i == 72)
-                    a = 72;
-                if (i == 90)
-                    a = 90;
-            }*/
-            return infos;
+                if (i == 2)
+                    info.alt_image_enable = data[i];
+                if (i == 3)
+                    info.auto_loop = Convert.ToInt32(data[i]) == 1;
+                if (i == 4)
+                    info.auto_play = Convert.ToInt32(data[i]) == 1;
+                if (i == 5)
+                    info.auto_scale = Convert.ToInt32(data[i]) == 1;
+                if (i == 6)
+                    info.auto_zoom = Convert.ToInt32(data[i]) == 1;
+                if (i == 7)
+                    info.controls = Convert.ToInt32(data[i]);
+                if (i == 8)
+                    info.current_url = data[i];
+                if (i == 9)
+                    info.first_click_interact = Convert.ToInt32(data[i]) == 1;
+                if (i == 10)
+                    info.height_pixels = Convert.ToInt32(data[i]);
+                if (i == 11)
+                    info.home_url = data[i];
+                if (i == 12)
+                    info.perms_control = Convert.ToInt32(data[i]);
+                if (i == 13)
+                    info.perms_interact = Convert.ToInt32(data[i]);
+                if (i == 14)
+                    info.whitelist = data[i];
+                if (i == 15)
+                    info.whitelist_enable = Convert.ToInt32(data[i]) == 1;
+                if (i == 16)
+                    info.width_pixels = Convert.ToInt32(data[i]);
+                if (i == 17)
+                    info.object_media_version = data[i];
+            }
+            return info;
         }
         
         public bool GetIsRegionMature(string region)

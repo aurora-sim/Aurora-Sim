@@ -177,7 +177,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("whitelist_enable", ColumnTypes.String100),
                 ColDef("width_pixels", ColumnTypes.String100),
                 ColDef("object_media_version", ColumnTypes.String100, true),
-                ColDef("count", ColumnTypes.String100)
+                ColDef("side", ColumnTypes.String100)
                 ));
             
             AddSchema("auroraprims", ColDefs(
