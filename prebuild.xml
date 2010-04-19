@@ -2275,6 +2275,7 @@
 <Reference name="OpenMetaverseTypes.dll"/>
 <Reference name="OpenMetaverse.dll"/>
 <Reference name="OpenSim.Framework"/>
+<Reference name="OpenSim.Framework.Servers.HttpServer"/>
 <Reference name="OpenSim.Services.Interfaces"/>
 <Reference name="XMLRPC.dll"/>
 <Reference name="FluentNHibernate.dll"/>

@@ -173,7 +173,7 @@ namespace OpenSim.Region.Physics.OdePlugin
         private int smallHashspaceLow = -4;
         private int smallHashspaceHigh = 66;
 
-        private float waterlevel = 0f;
+        public float waterlevel = 0f;
         private int framecount = 0;
         //private int m_returncollisions = 10;
 

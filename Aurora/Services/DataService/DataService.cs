@@ -74,6 +74,14 @@ namespace Aurora.Services.DataService
 
             int i = 0;
             string connectionString = m_config.GetString("RemoteConnectionStrings", "");
+            if (connectionString == "")
+            {
+                Aurora.DataManager.DataManager.SetGenericDataRetriver(new GenericData());
+                Aurora.DataManager.DataManager.SetEstateDataRetriver(new EstateData());
+                Aurora.DataManager.DataManager.SetProfileDataRetriver(new ProfileData());
+                Aurora.DataManager.DataManager.SetRegionDataRetriver(new RegionData());
+                return;
+            }
             string[] RemoteConnectionStrings = connectionString.Split(',');
             string connectionPassword = m_config.GetString("RemoteConnectionPasswords", "");
             string[] RemoteConnectionPasswords = connectionPassword.Split(',');

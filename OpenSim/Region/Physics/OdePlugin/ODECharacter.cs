@@ -107,6 +107,9 @@ namespace OpenSim.Region.Physics.OdePlugin
         public bool m_tainted_isPhysical = false; // set when the physical status is tainted (false=not existing in physics engine, true=existing)
         public float MinimumGroundFlightOffset = 3f;
 
+        private bool UseUnderwaterPhysics = true;
+        private bool newlyUnderWater = true;
+                    
         private float m_tainted_CAPSULE_LENGTH; // set when the capsule length changes. 
         private float m_tiltMagnitudeWhenProjectedOnXYPlane = 0.1131371f; // used to introduce a fixed tilt because a straight-up capsule falls through terrain, probably a bug in terrain collider
 
@@ -1057,6 +1060,23 @@ namespace OpenSim.Region.Physics.OdePlugin
             }
             if (vec.IsFinite())
             {
+                if (UseUnderwaterPhysics)
+                {
+                    //Position plus height to av's head is just above water
+                    if ((_position.Z + (CAPSULE_LENGTH / 2)) < _parent_scene.waterlevel)
+                    {
+                        if (newlyUnderWater)
+                            newlyUnderWater = false;
+                    }
+                    else
+                        newlyUnderWater = false;
+                    //Position plus height to av's shoulder (aprox) is just above water
+                    if ((_position.Z + (CAPSULE_LENGTH / 3)) < _parent_scene.waterlevel)
+                    {
+                        vec.Z += (_parent_scene.waterlevel - _position.Z) * PID_P * 2.0f;
+                    }
+                    
+                }
                 doForce(vec);
                 if (!_zeroFlag)
                 {

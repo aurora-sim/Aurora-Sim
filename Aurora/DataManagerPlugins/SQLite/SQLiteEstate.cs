@@ -23,7 +23,11 @@ namespace Aurora.DataManager.SQLite
         {
             string sql = "select EstateID from estate_map where RegionID = '"+regionID.ToString()+"'";
             string EstateID = Query(sql)[0];
-            if (EstateID == "")
+            if (EstateID == "" && !create)
+            {
+                return new EstateSettings();
+            }
+            else if(EstateID == "" && create)
             {
                 if(m_FieldMap.Count == 0)
                 {
