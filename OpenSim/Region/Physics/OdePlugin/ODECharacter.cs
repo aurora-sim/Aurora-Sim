@@ -108,7 +108,10 @@ namespace OpenSim.Region.Physics.OdePlugin
         public float MinimumGroundFlightOffset = 3f;
 
         private bool UseUnderwaterPhysics = true;
-        private bool newlyUnderWater = true;
+        private float lastUnderwaterPush = 0;
+        private bool WasUnderWater = false;
+        private bool ShouldBeWalking = true;
+        private bool StartingUnderWater = true;
                     
         private float m_tainted_CAPSULE_LENGTH; // set when the capsule length changes. 
         private float m_tiltMagnitudeWhenProjectedOnXYPlane = 0.1131371f; // used to introduce a fixed tilt because a straight-up capsule falls through terrain, probably a bug in terrain collider
@@ -1060,22 +1063,38 @@ namespace OpenSim.Region.Physics.OdePlugin
             }
             if (vec.IsFinite())
             {
-                if (UseUnderwaterPhysics)
-                {
-                    //Position plus height to av's head is just above water
-                    if ((_position.Z + (CAPSULE_LENGTH / 2)) < _parent_scene.waterlevel)
+               if (UseUnderwaterPhysics)
+                {   
+                    //Position plus height to av's shoulder (aprox) is just above water
+                    if ((_position.Z + (CAPSULE_LENGTH / 3) - .25f) < _parent_scene.waterlevel)
                     {
-                        if (newlyUnderWater)
-                            newlyUnderWater = false;
+                        if (StartingUnderWater)
+                            ShouldBeWalking = Flying == false;
+                        StartingUnderWater = false;
+                        WasUnderWater = true;
+                        Flying = true;
+                        lastUnderwaterPush = 0;
+                        if (ShouldBeWalking)
+                        {
+                            lastUnderwaterPush += (_parent_scene.waterlevel - _position.Z) * 100 + 10;
+                            vec.Z += lastUnderwaterPush;
+                        }
+                        else
+                        {
+                            lastUnderwaterPush += 8000;
+                            lastUnderwaterPush += (_parent_scene.waterlevel - _position.Z) * 25;
+                            vec.Z += lastUnderwaterPush;
+                        }
                     }
                     else
-                        newlyUnderWater = false;
-                    //Position plus height to av's shoulder (aprox) is just above water
-                    if ((_position.Z + (CAPSULE_LENGTH / 3)) < _parent_scene.waterlevel)
                     {
-                        vec.Z += (_parent_scene.waterlevel - _position.Z) * PID_P * 2.0f;
+                        StartingUnderWater = true;
+                        if (WasUnderWater)
+                        {
+                            WasUnderWater = false;
+                            Flying = true;
+                        }
                     }
-                    
                 }
                 doForce(vec);
                 if (!_zeroFlag)

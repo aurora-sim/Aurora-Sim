@@ -319,6 +319,7 @@ namespace OpenSim.Region.Physics.OdePlugin
         private Vector3 m_worldOffset = Vector3.Zero;
         public Vector2 WorldExtents = new Vector2((int)Constants.RegionSize, (int)Constants.RegionSize);
         private PhysicsScene m_parentScene = null;
+        public bool AllowUnderwaterPhysics = false;
 
         private ODERayCastRequestManager m_rayCastManager;
 
@@ -408,6 +409,7 @@ namespace OpenSim.Region.Physics.OdePlugin
                     gravityx = physicsconfig.GetFloat("world_gravityx", 0f);
                     gravityy = physicsconfig.GetFloat("world_gravityy", 0f);
                     gravityz = physicsconfig.GetFloat("world_gravityz", -9.8f);
+                    AllowUnderwaterPhysics = physicsconfig.GetBoolean("useunderwaterphysics", false);
 
                     worldHashspaceLow = physicsconfig.GetInt("world_hashspace_size_low", -4);
                     worldHashspaceHigh = physicsconfig.GetInt("world_hashspace_size_high", 128);
