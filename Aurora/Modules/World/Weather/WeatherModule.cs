@@ -161,19 +161,66 @@ namespace Aurora.Modules
 
         public void MakeRegionWindLightData(Scene scene, RegionLightShareData RLS)
         {
+            #region Sun position and star brightness
+            RLS.sunMoonPosition += .1f;
+            if (RLS.sunMoonPosition > 1)
+                RLS.sunMoonPosition = 0;
+            if (RLS.sunMoonPosition > .5f)
+                RLS.starBrightness += .5f;
+            else
+                RLS.starBrightness -= .5f;
+            if (RLS.starBrightness > 2)
+                RLS.starBrightness = 2;
+            if (RLS.starBrightness < 0)
+                RLS.starBrightness = 0;
+
+            #endregion
+
+            #region Sunny and clouds
+
             Random random = new Random();
             if (NextSunny)
             {
                 RLS.cloudCoverage -= .05f;
                 if (random.Next(0, 1) == 1)
+                {
                     RLS.cloudScale += .025f;
+                }
                 else
+                {
                     RLS.cloudScale -= .025f;
+                }
             }
             if (CurrentlySunny && !NextSunny)
             {
-                RLS.cloudCoverage -= .05f;
+                RLS.cloudCoverage += .05f;
             }
+            if (CurrentlySunny && NextSunny)
+            {
+                //Clear ambient light changes.
+                RLS.ambient.W = .4f;
+            }
+            
+            #endregion
+
+            #region Rain
+
+            if (CurrentRainy)
+            {
+                RLS.ambient.W -= .1f;
+                RLS.sceneGamma -= .05f;
+            }
+            if (NextSunny && CurrentRainy)
+            {
+                RLS.ambient.W += .1f;
+                RLS.sceneGamma += .05f;
+            }
+            if (CurrentRainy && NextRainy)
+            {
+                RLS.ambient.W -= .05f;
+            }
+
+            #endregion
 
             #region Fog
 
