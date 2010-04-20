@@ -23,7 +23,7 @@ namespace Aurora.Modules
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private Timer timer = new Timer();
-        private List<Scene> Scenes = new List<Scene>();
+        private Dictionary<Scene, WeatherInRegion> Scenes = new Dictionary<Scene, WeatherInRegion>();
         private WeatherType CurrentWeather = WeatherType.Realistic;
         private bool Clouds = true;
 
@@ -42,7 +42,9 @@ namespace Aurora.Modules
 
         public void AddRegion(Scene scene)
         {
-            Scenes.Add(scene);
+            WeatherInRegion WIR = new WeatherInRegion();
+            WIR.Randomize();
+            Scenes.Add(scene, WIR);
             scene.AddCommand(this, "change weather", "Changes weather", "Changes the weather in the current region", ConsoleChangeWeather);
         }
 
@@ -68,7 +70,7 @@ namespace Aurora.Modules
                 else
                 {
                     bool found = false;
-                    foreach (Scene scene in Scenes)
+                    foreach (Scene scene in Scenes.Keys)
                     {
                         if (scene.RegionInfo.RegionName == Region)
                         {
@@ -90,10 +92,103 @@ namespace Aurora.Modules
 
         private void GenerateNewWindlightProfiles()
         {
-            if (CurrentWeather == WeatherType.AlwaysRandom)
+            SendCurrentProfilesToClients();
+            List<Scene> isRaining = new List<Scene>();
+            Random random = new Random();
+            Dictionary<Scene, WeatherInRegion> unfinishedScenes = Scenes;
+            foreach (KeyValuePair<Scene, WeatherInRegion> scene in Scenes)
+            {
+                if (scene.Value.CurrentRainy || scene.Value.NextRainy)
+                    isRaining.Add(scene.Key);
+                scene.Key.RegionInfo.WindlightSettings = scene.Value.MakeRegionWindLightData(scene.Key.RegionInfo.WindlightSettings);
+            }
+
+            #region Move rain
+            if (isRaining.Count > 0)
             {
                 
+                //unfinishedScenes.Remove();
             }
+            #endregion
+            #region Make new rain
+            else
+            {
+                if (random.Next(1) == 1)
+                {
+                    //Make new rain
+                }
+            }
+            #endregion
+            //Make the others sunny
+            foreach (KeyValuePair<Scene, WeatherInRegion> kvp in unfinishedScenes)
+            {
+                kvp.Value.NextRainy = false;
+                kvp.Value.NextSunny = true;
+            }
+        }
+
+        private void SendCurrentProfilesToClients()
+        {
+            foreach (Scene scene in Scenes.Keys)
+            {
+                scene.ForEachScenePresence(SendProfileToClient);
+            }
+        }
+        public void SendProfileToClient(ScenePresence presence)
+        {
+            IClientAPI client = presence.ControllingClient;
+            if (presence.IsChildAgent == false)
+            {
+                List<byte[]> param = compileWindlightSettings(presence.Scene.RegionInfo.WindlightSettings);
+                client.SendGenericMessage("Windlight", param);
+            }
+        }
+
+        private List<byte[]> compileWindlightSettings(RegionLightShareData wl)
+        {
+            byte[] mBlock = new Byte[249];
+            int pos = 0;
+
+            wl.waterColor.ToBytes(mBlock, 0); pos += 12;
+            OpenMetaverse.Utils.FloatToBytes(wl.waterFogDensityExponent).CopyTo(mBlock, pos); pos += 4;
+            OpenMetaverse.Utils.FloatToBytes(wl.underwaterFogModifier).CopyTo(mBlock, pos); pos += 4;
+            wl.reflectionWaveletScale.ToBytes(mBlock, pos); pos += 12;
+            OpenMetaverse.Utils.FloatToBytes(wl.fresnelScale).CopyTo(mBlock, pos); pos += 4;
+            OpenMetaverse.Utils.FloatToBytes(wl.fresnelOffset).CopyTo(mBlock, pos); pos += 4;
+            OpenMetaverse.Utils.FloatToBytes(wl.refractScaleAbove).CopyTo(mBlock, pos); pos += 4;
+            OpenMetaverse.Utils.FloatToBytes(wl.refractScaleBelow).CopyTo(mBlock, pos); pos += 4;
+            OpenMetaverse.Utils.FloatToBytes(wl.blurMultiplier).CopyTo(mBlock, pos); pos += 4;
+            wl.bigWaveDirection.ToBytes(mBlock, pos); pos += 8;
+            wl.littleWaveDirection.ToBytes(mBlock, pos); pos += 8;
+            wl.normalMapTexture.ToBytes(mBlock, pos); pos += 16;
+            wl.horizon.ToBytes(mBlock, pos); pos += 16;
+            OpenMetaverse.Utils.FloatToBytes(wl.hazeHorizon).CopyTo(mBlock, pos); pos += 4;
+            wl.blueDensity.ToBytes(mBlock, pos); pos += 16;
+            OpenMetaverse.Utils.FloatToBytes(wl.hazeDensity).CopyTo(mBlock, pos); pos += 4;
+            OpenMetaverse.Utils.FloatToBytes(wl.densityMultiplier).CopyTo(mBlock, pos); pos += 4;
+            OpenMetaverse.Utils.FloatToBytes(wl.distanceMultiplier).CopyTo(mBlock, pos); pos += 4;
+            wl.sunMoonColor.ToBytes(mBlock, pos); pos += 16;
+            OpenMetaverse.Utils.FloatToBytes(wl.sunMoonPosition).CopyTo(mBlock, pos); pos += 4;
+            wl.ambient.ToBytes(mBlock, pos); pos += 16;
+            OpenMetaverse.Utils.FloatToBytes(wl.eastAngle).CopyTo(mBlock, pos); pos += 4;
+            OpenMetaverse.Utils.FloatToBytes(wl.sunGlowFocus).CopyTo(mBlock, pos); pos += 4;
+            OpenMetaverse.Utils.FloatToBytes(wl.sunGlowSize).CopyTo(mBlock, pos); pos += 4;
+            OpenMetaverse.Utils.FloatToBytes(wl.sceneGamma).CopyTo(mBlock, pos); pos += 4;
+            OpenMetaverse.Utils.FloatToBytes(wl.starBrightness).CopyTo(mBlock, pos); pos += 4;
+            wl.cloudColor.ToBytes(mBlock, pos); pos += 16;
+            wl.cloudXYDensity.ToBytes(mBlock, pos); pos += 12;
+            OpenMetaverse.Utils.FloatToBytes(wl.cloudCoverage).CopyTo(mBlock, pos); pos += 4;
+            OpenMetaverse.Utils.FloatToBytes(wl.cloudScale).CopyTo(mBlock, pos); pos += 4;
+            wl.cloudDetailXYDensity.ToBytes(mBlock, pos); pos += 12;
+            OpenMetaverse.Utils.FloatToBytes(wl.cloudScrollX).CopyTo(mBlock, pos); pos += 4;
+            OpenMetaverse.Utils.FloatToBytes(wl.cloudScrollY).CopyTo(mBlock, pos); pos += 4;
+            OpenMetaverse.Utils.UInt16ToBytes(wl.maxAltitude).CopyTo(mBlock, pos); pos += 2;
+            mBlock[pos] = Convert.ToByte(wl.cloudScrollXLock); pos++;
+            mBlock[pos] = Convert.ToByte(wl.cloudScrollYLock); pos++;
+            mBlock[pos] = Convert.ToByte(wl.drawClassicClouds); pos++;
+            List<byte[]> param = new List<byte[]>();
+            param.Add(mBlock);
+            return param;
         }
 
         void GenerateNewWindlightProfiles(object sender, ElapsedEventArgs e)
@@ -159,7 +254,7 @@ namespace Aurora.Modules
             NextRainy = randomnum == 1;
         }
 
-        public void MakeRegionWindLightData(Scene scene, RegionLightShareData RLS)
+        public RegionLightShareData MakeRegionWindLightData(RegionLightShareData RLS)
         {
             #region Sun position and star brightness
             RLS.sunMoonPosition += .1f;
@@ -351,6 +446,9 @@ namespace Aurora.Modules
                     RLS.cloudScrollY = 10;
             }
             #endregion
+
+            RLS.Save();
+            return RLS;
         }
     }
     public enum WeatherType
