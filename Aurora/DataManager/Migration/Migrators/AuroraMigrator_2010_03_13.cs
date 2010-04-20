@@ -295,6 +295,46 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("DenyMinors", ColumnTypes.String50)
                 ));
 
+            AddSchema("osagent", ColDefs(ColDef("AgentID", ColumnTypes.String50, true),
+                ColDef("ActiveGroupID", ColumnTypes.String50)));
+
+            AddSchema("osgroup", ColDefs(ColDef("GroupID", ColumnTypes.String50, true),
+                ColDef("Name", ColumnTypes.String50),
+                ColDef("Charter", ColumnTypes.String50),
+                ColDef("InsigniaID", ColumnTypes.String50),
+                ColDef("FounderID", ColumnTypes.String50),
+                ColDef("MembershipFee", ColumnTypes.String50),
+                ColDef("OpenEnrollment", ColumnTypes.String50),
+                ColDef("ShowInList", ColumnTypes.String50),
+                ColDef("AllowPublish", ColumnTypes.String50),
+                ColDef("MaturePublish", ColumnTypes.String50),
+                ColDef("OwnerRoleID", ColumnTypes.String50)));
+
+            AddSchema("osgroupinvite", ColDefs(ColDef("InviteID", ColumnTypes.String50, true),
+                ColDef("GroupID", ColumnTypes.String50, true),
+                ColDef("RoleID", ColumnTypes.String50, true),
+                ColDef("AgentID", ColumnTypes.String50, true),
+                ColDef("TMStamp", ColumnTypes.String50)));
+
+            AddSchema("osgroupnotice", ColDefs(ColDef("GroupID", ColumnTypes.String50, true),
+                ColDef("NoticeID", ColumnTypes.String50, true),
+                ColDef("Timestamp", ColumnTypes.String50, true),
+                ColDef("FromName", ColumnTypes.String50),
+                ColDef("Subject", ColumnTypes.String50),
+                ColDef("Message", ColumnTypes.String50),
+                ColDef("BinaryBucket", ColumnTypes.String50)));
+
+            AddSchema("osgrouprolemembership", ColDefs(ColDef("GroupID", ColumnTypes.String50, true),
+                ColDef("RoleID", ColumnTypes.String50, true),
+                ColDef("AgentID", ColumnTypes.String50, true)));
+
+            AddSchema("osrole", ColDefs(ColDef("GroupID", ColumnTypes.String50, true),
+                ColDef("RoleID", ColumnTypes.String50, true),
+                ColDef("Name", ColumnTypes.String50),
+                ColDef("Description", ColumnTypes.String50),
+                ColDef("Title", ColumnTypes.String50),
+                ColDef("Powers", ColumnTypes.String50)));
+
             
             #region Search Tables
             

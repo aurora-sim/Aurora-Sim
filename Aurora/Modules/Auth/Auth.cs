@@ -151,8 +151,8 @@ namespace Aurora.Modules
             values.Add("true");
             values.Add("false");
             values.Add("2");
-            values.Add("1");
             values.Add("en");
+            values.Add("1");
             var GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
             GD.Insert("usersauth", values.ToArray());
         }
