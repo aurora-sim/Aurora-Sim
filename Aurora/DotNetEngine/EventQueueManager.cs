@@ -130,6 +130,10 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         /// </summary>
         public ScriptEventQueue<QueueItemStruct> eventQueue = new ScriptEventQueue<QueueItemStruct>();
         public Queue<QueueItemStruct> EventQueue2 = new Queue<QueueItemStruct>();
+        public List<uint> NewlyUnSuspendedScripts = new List<uint>();
+        /// <summary>
+        /// Removes the script from the event queue so it does not fire anymore events.
+        /// </summary>
         public List<UUID> NeedsRemoved = new List<UUID>();
         public Scene m_scene;
         

@@ -167,7 +167,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         		    m_ScriptEngine.m_EventQueueManager.EventQueue2 == null ||
         		   m_ScriptEngine.m_EventQueueManager.EventQueue2.Count == 0)
         			return;
-
+                List<QueueItemStruct> NeedsToBeRequeued = new List<QueueItemStruct>();
         		// Something in queue, process
         		lock (m_ScriptEngine.m_EventQueueManager.EventQueue2)
         		{
@@ -175,7 +175,21 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         			{
         				// Get queue item
         				QueueItemStruct QIS = m_ScriptEngine.m_EventQueueManager.EventQueue2.Dequeue();
+                        //Suspended scripts get readded
                         if (QIS.ID.Suspended)
+                        {
+                            if (!m_ScriptEngine.m_EventQueueManager.NewlyUnSuspendedScripts.Contains(QIS.ID.localID))
+                            {
+                                NeedsToBeRequeued.Add(QIS);
+                                continue;
+                            }
+                            else
+                            {
+                                QIS.ID.Suspended = false;
+                            }
+                        }
+                        //Clear scripts that shouldn't be in the queue anymore
+                        if (m_ScriptEngine.m_EventQueueManager.NeedsRemoved.Contains(QIS.ID.ItemID))
                             continue;
                         if (!m_ScriptEngine.m_EventQueueManager.NeedsRemoved.Contains(QIS.ID.ItemID))
                         {
@@ -186,11 +200,10 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                                     QIS.ID.State,
                                     QIS.functionName,
                                     QIS.param);
-                                //m_log.Warn("Running: " + Running + ", functionName: "+QIS.functionName);
                                 if(!Running)
                                 	continue;
                                 if (Running && !m_ScriptEngine.m_EventQueueManager.NeedsRemoved.Contains(QIS.ID.ItemID))
-                                    m_ScriptEngine.m_EventQueueManager.EventQueue2.Enqueue(QIS);
+                                    NeedsToBeRequeued.Add(QIS);
                             }
                             catch (SelfDeleteException) // Must delete SOG
                             {
@@ -203,13 +216,17 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                                 if (QIS.ID.part != null && QIS.ID.part.ParentGroup != null)
                                     QIS.ID.part.Inventory.RemoveInventoryItem(QIS.ID.ItemID);
                             }
-                            catch (Exception ex)
+                            catch (Exception)
                             {
                                 //m_log.Error("Event Queue error: " + ex);
                             }
                         }
         			}
         		}
+                foreach (QueueItemStruct QIS in NeedsToBeRequeued)
+                {
+                    m_ScriptEngine.m_EventQueueManager.EventQueue2.Enqueue(QIS);
+                }
                 m_ScriptEngine.m_EventQueueManager.NeedsRemoved.Clear();
         	}
         	catch (Exception ex)

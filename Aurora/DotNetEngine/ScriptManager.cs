@@ -75,15 +75,16 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 		private Scene World;
 		public IScript Script;
 		public string State;
-		public bool Running;
-		public bool Disabled;
-        public bool Suspended;
+		public bool Running = true;
+		public bool Disabled = false;
+        public bool Suspended = true;
+        public bool Compiling = false;
 		public string Source;
 		public string ClassSource;
 		public int StartParam;
 		public StateSource stateSource;
 		public AppDomain AppDomain;
-		public Dictionary<string, IScriptApi> Apis;
+		public Dictionary<string, IScriptApi> Apis = new Dictionary<string,IScriptApi>();
 		public Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> LineMap;
 		public ISponsor ScriptSponsor;
 
@@ -104,6 +105,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 		public DetectParams[] LastDetectParams;
 		public bool m_startedFromSavedState = false;
         public Object[] PluginData = new Object[0];
+        public string CurrentStateXML = "";
 
 		#endregion
 
@@ -119,38 +121,40 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             m_ScriptManager.m_scriptEngine.m_EventQueueManager.RemoveFromQueue(ItemID);
             if (m_ScriptManager.Errors.ContainsKey(ItemID))
                 m_ScriptManager.Errors.Remove(ItemID);
-			ReleaseControls();
-			// Stop long command on script
-			AsyncCommandManager.RemoveScript(m_ScriptManager.m_scriptEngine, localID, ItemID);
-			m_ScriptManager.m_scriptEngine.m_EventManager.state_exit(localID);
+            ReleaseControls();
+            // Stop long command on script
+            AsyncCommandManager.RemoveScript(m_ScriptManager.m_scriptEngine, localID, ItemID);
+            m_ScriptManager.m_scriptEngine.m_EventManager.state_exit(localID);
             m_scriptEngine.m_StateQueue.AddToQueue(this, false);
 
-			yield return null;
+            yield return null;
 
-			try {
-				// Get AppDomain
+            try 
+            {
 				// Tell script not to accept new requests
 				Running = false;
 				Disabled = true;
-				AppDomain ad = AppDomain;
-				if(ad == null || Script == null)
-				{
-					m_ScriptManager.RemoveScript(this);
-					m_log.DebugFormat("[{0}]: Closed Script in " + part.Name, m_ScriptManager.m_scriptEngine.ScriptEngineName);
-					yield break;
-				}
-				Script.Close();
-				// Tell AppDomain that we have stopped script
-				m_ScriptManager.m_scriptEngine.m_AppDomainManager.UnloadScriptAppDomain(ad);
-				// Remove from internal structure
-				m_ScriptManager.RemoveScript(this);
-			// LEGIT: User Scripting
+
+                // Remove from internal structure
+                m_ScriptManager.RemoveScript(this);
+
+                m_log.DebugFormat("[{0}]: Closed Script in " + part.Name, m_ScriptManager.m_scriptEngine.ScriptEngineName);
+                
+                if (AppDomain == null || Script == null)
+				    yield break;
+                
+                try
+                {
+                    // Tell AppDomain that we have stopped script
+                    m_ScriptManager.m_scriptEngine.m_AppDomainManager.UnloadScriptAppDomain(AppDomain);
+                }
+                //Legit: If the script had an error, this can happen... really shouldn't, but it does.
+                catch (AppDomainUnloadedException) { }
 			} 
 			catch (Exception e)
 			{
 				m_log.Error("[" + m_ScriptManager.m_scriptEngine.ScriptEngineName + "]: Exception stopping script localID: " + localID + " LLUID: " + ItemID.ToString() + ": " + e.ToString());
 			}
-			m_log.DebugFormat("[{0}]: Closed Script in " + part.Name, m_ScriptManager.m_scriptEngine.ScriptEngineName);
 		}
 
 		/// <summary>
@@ -269,6 +273,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 		/// <returns></returns>
 		public IEnumerator Start()
 		{
+            Compiling = true;
             if (m_ScriptManager.Errors.ContainsKey(ItemID))
                 m_ScriptManager.Errors.Remove(ItemID);
 			DateTime Start = DateTime.Now.ToUniversalTime();
@@ -290,9 +295,9 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
 			presence = World.GetScenePresence(InventoryItem.OwnerID);
 			if (presence != null)
-                m_log.DebugFormat("[{0}]: Starting Script {1} in object {2} by avatar {3}.", m_scriptEngine.ScriptEngineName, part.Inventory.GetInventoryItem(ItemID).Name, part.Name, presence.Name);
-            else 
-				m_log.DebugFormat("[{0}]: Starting Script {1} in object {2}.", m_scriptEngine.ScriptEngineName, part.Inventory.GetInventoryItem(ItemID).Name, part.Name);
+                m_log.DebugFormat("[{0}]: Starting Script {1} in object {2} by avatar {3}.", m_scriptEngine.ScriptEngineName, InventoryItem.Name, part.Name, presence.Name);
+            else
+                m_log.DebugFormat("[{0}]: Starting Script {1} in object {2}.", m_scriptEngine.ScriptEngineName, InventoryItem.Name, part.Name);
 
 			CultureInfo USCulture = new CultureInfo("en-US");
 			Thread.CurrentThread.CurrentCulture = USCulture;
@@ -546,6 +551,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                 }
             }
 			#endregion
+            Compiling = false;
             //if (m_ScriptManager.Errors.ContainsKey(ItemID))
             //   m_ScriptManager.Errors.Remove(ItemID);
 		}
@@ -1043,6 +1049,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             FileStream fcs = File.Create(Path.Combine(Path.GetDirectoryName(AssemblyName), ItemID.ToString() + ".state"));
             System.Text.UTF8Encoding enc = new System.Text.UTF8Encoding();
             Byte[] buf = enc.GetBytes(doc.InnerXml);
+            CurrentStateXML = doc.InnerXml;
             fcs.Write(buf, 0, buf.Length);
             fcs.Close();
         }
@@ -1298,7 +1305,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 		/// </summary>
 		public void DoScriptsLoadUnload()
 		{
-            Thread.Sleep(SleepTime);
             if (!m_started)
 				return;
 
@@ -1307,12 +1313,16 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 			lock (LUQueue) {
 				if (LUQueue.Count > 0) {
 					int i = 0;
-					while (i < LUQueue.Count) {
+					while (i < LUQueue.Count)
+                    {
 						LUStruct item = LUQueue.Dequeue();
 
-						if (item.Action == LUType.Unload) {
+						if (item.Action == LUType.Unload)
+                        {
 							StopParts.Add(item.ID.CloseAndDispose().GetEnumerator());
-						} else if (item.Action == LUType.Load) {
+						} 
+                        else if (item.Action == LUType.Load)
+                        {
 							StartParts.Add(item.ID.Start());
 						}
 						i++;
@@ -1372,10 +1382,11 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 		public void StartScript(uint localID, UUID itemID, string Script, int startParam, bool postOnRez, StateSource statesource)
 		{
 			InstanceData id = null;
-			lock (LUQueue) {
-				if ((LUQueue.Count >= LoadUnloadMaxQueueSize) && m_started) {
+			lock (LUQueue) 
+            {
+				if ((LUQueue.Count >= LoadUnloadMaxQueueSize) && m_started)
+                {
 					m_log.Error("[" + m_scriptEngine.ScriptEngineName + "]: ERROR: Load/unload queue item count is at " + LUQueue.Count + ". Config variable \"LoadUnloadMaxQueueSize\" " + "is set to " + LoadUnloadMaxQueueSize + ", so ignoring new script.");
-
 					return;
 				}
 				id = new InstanceData(this);
@@ -1387,7 +1398,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 				id.State = "default";
 				id.Running = true;
 				id.Disabled = false;
-                id.Suspended = false;
+                id.Suspended = true;
 				id.Source = Script;
 				id.PostOnRez = postOnRez;
 				LUStruct ls = new LUStruct();
