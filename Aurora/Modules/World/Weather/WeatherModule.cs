@@ -16,19 +16,32 @@ using OpenMetaverse;
 
 namespace Aurora.Modules
 {
+    #region Weather Module
     [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class WeatherModule : ISharedRegionModule
     {
-        #region ISharedRegionModule Members
+        #region Declares
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private Timer timer = new Timer();
         private Dictionary<Scene, WeatherInRegion> Scenes = new Dictionary<Scene, WeatherInRegion>();
         private WeatherType CurrentWeather = WeatherType.Realistic;
         private bool Clouds = true;
+        private bool m_enabled = false;
+        private bool m_paused = false;
+        private IConfig m_config = null;
+        #endregion
+
+        #region ISharedRegionModule Members
 
         public void Initialise(IConfigSource source)
         {
+            m_config = source.Configs["Weather"];
+            if (m_config == null)
+                return;
+            m_enabled = m_config.GetBoolean("Enabled", false);
+            if (!m_enabled)
+                return;
             timer.Interval = 10000;
             timer.Enabled = true;
             timer.Elapsed += new ElapsedEventHandler(GenerateNewWindlightProfiles);
@@ -42,10 +55,14 @@ namespace Aurora.Modules
 
         public void AddRegion(Scene scene)
         {
+            if (!m_enabled)
+                return;
             WeatherInRegion WIR = new WeatherInRegion();
             WIR.Randomize();
             Scenes.Add(scene, WIR);
             scene.AddCommand(this, "change weather", "Changes weather", "Changes the weather in the current region", ConsoleChangeWeather);
+            scene.AddCommand(this, "sync weather", "Syncs weather", "Syncs the weather of all regions to the current region", ConsoleSyncWeather);
+            scene.AddCommand(this, "weather", " weather <on,off,pause>", "Turns the weather on, off, or pauses it", ConsoleChangeEnabled);
         }
 
         public void RemoveRegion(Scene scene)
@@ -56,6 +73,70 @@ namespace Aurora.Modules
         public void RegionLoaded(Scene scene)
         {
 
+        }
+
+        public void PostInitialise() { }
+
+        public string Name
+        {
+            get { return "WeatherModule"; }
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
+        }
+
+        #endregion
+
+        #region Console Commands
+
+        public void ConsoleSyncWeather(string module, string[] cmdparams)
+        {
+            if (cmdparams.Length != 3)
+            {
+                m_log.Warn("Incorrect amount of parameters.");
+                return;
+            }
+            KeyValuePair<Scene, WeatherInRegion> Region = new KeyValuePair<Scene, WeatherInRegion>();
+            foreach (KeyValuePair<Scene, WeatherInRegion> scene in Scenes)
+            {
+                if (scene.Key.RegionInfo.RegionName == cmdparams[2])
+                    Region = scene;
+            }
+            if(Region.Key == null)
+            {
+                m_log.Warn("Region not found.");
+                return;
+            }
+            Dictionary<Scene, WeatherInRegion> NewScenes = new Dictionary<Scene, WeatherInRegion>(); 
+            foreach(KeyValuePair<Scene,WeatherInRegion> kvp in Scenes)
+            {
+                NewScenes.Add(kvp.Key, Region.Value);
+            }
+            Scenes.Clear();
+            Scenes = new Dictionary<Scene, WeatherInRegion>(NewScenes);
+        }
+
+        public void ConsoleChangeEnabled(string module, string[] cmdparams)
+        {
+            if (cmdparams.Length != 2)
+            {
+                m_log.Warn("Wrong amount of parameters!");
+                return;
+            }
+            if (cmdparams[1] == "off")
+            {
+                m_enabled = false;
+                m_paused = false;
+            }
+            if (cmdparams[1] == "on")
+            {
+                m_paused = false;
+                m_enabled = true;
+            }
+            if (cmdparams[1] == "pause")
+                m_paused = true;
         }
 
         public void ConsoleChangeWeather(string module, string[] cmdparams)
@@ -88,10 +169,19 @@ namespace Aurora.Modules
             GenerateNewWindlightProfiles();
         }
 
+        #endregion
 
+        #region Generate new weather in all regions
 
         private void GenerateNewWindlightProfiles()
         {
+            if (!m_enabled)
+                return;
+            if (m_paused)
+            {
+                SendCurrentProfilesToClients();
+                return;
+            }
             SendCurrentProfilesToClients();
             List<Scene> isRaining = new List<Scene>();
             Random random = new Random();
@@ -127,6 +217,15 @@ namespace Aurora.Modules
             }
         }
 
+        private void GenerateNewWindlightProfiles(object sender, ElapsedEventArgs e)
+        {
+            GenerateNewWindlightProfiles();
+        }
+
+        #endregion
+
+        #region Send WindLight info to the client
+
         private void SendCurrentProfilesToClients()
         {
             foreach (Scene scene in Scenes.Keys)
@@ -134,6 +233,7 @@ namespace Aurora.Modules
                 scene.ForEachScenePresence(SendProfileToClient);
             }
         }
+
         public void SendProfileToClient(ScenePresence presence)
         {
             IClientAPI client = presence.ControllingClient;
@@ -191,25 +291,12 @@ namespace Aurora.Modules
             return param;
         }
 
-        void GenerateNewWindlightProfiles(object sender, ElapsedEventArgs e)
-        {
-            GenerateNewWindlightProfiles();
-        }
-
-        public void PostInitialise() { }
-
-        public string Name
-        {
-            get { return "WeatherModule"; }
-        }
-
-        public Type ReplaceableInterface
-        {
-            get { return null; }
-        }
-
         #endregion
     }
+
+    #endregion
+
+    #region WeatherInRegion class
 
     private class WeatherInRegion
     {
@@ -451,6 +538,10 @@ namespace Aurora.Modules
             return RLS;
         }
     }
+
+    #endregion
+
+    #region Enums
     public enum WeatherType
     {
         Sunny = 0,
@@ -461,5 +552,6 @@ namespace Aurora.Modules
         AlwaysRandom = 5,
         Sync = 6
     }
-    
+
+    #endregion
 }
