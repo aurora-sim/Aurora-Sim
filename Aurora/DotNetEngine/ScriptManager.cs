@@ -1180,8 +1180,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 		private Queue<LUStruct> LUQueue = new Queue<LUStruct>();
 		private static bool PrivateThread;
 		private int LoadUnloadMaxQueueSize;
-		private int MinMicrothreadScriptThreshold;
-		private Object scriptLock = new Object();
 		private bool m_started = false;
 		private Dictionary<InstanceData, DetectParams[]> detparms = new Dictionary<InstanceData, DetectParams[]>();
 		public Dictionary<UUID, string[]> Errors = new Dictionary<UUID, string[]>();
@@ -1250,8 +1248,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 			// TODO: Requires sharing of all ScriptManagers to single thread
 			PrivateThread = true;
 			LoadUnloadMaxQueueSize = m_scriptEngine.ScriptConfigSource.GetInt("LoadUnloadMaxQueueSize", 100);
-			MinMicrothreadScriptThreshold = m_scriptEngine.ScriptConfigSource.GetInt("LoadUnloadMaxQueueSizeBeforeMicrothreading", 100);
-            SleepTime = m_scriptEngine.ScriptConfigSource.GetInt("SleepTimeBetweenLoops", 250);
+			SleepTime = m_scriptEngine.ScriptConfigSource.GetInt("SleepTimeBetweenLoops", 250);
 		}
 
 		public void Start()
