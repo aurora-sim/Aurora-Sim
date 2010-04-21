@@ -164,33 +164,24 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         	{
                 Thread.Sleep(SleepTime);
                 if (m_ScriptEngine.m_EventQueueManager == null ||
-        		    m_ScriptEngine.m_EventQueueManager.EventQueue2 == null ||
-        		   m_ScriptEngine.m_EventQueueManager.EventQueue2.Count == 0)
+        		    m_ScriptEngine.m_EventQueueManager.EventQueue == null ||
+        		   m_ScriptEngine.m_EventQueueManager.EventQueue.Count == 0)
         			return;
                 List<QueueItemStruct> NeedsToBeRequeued = new List<QueueItemStruct>();
         		// Something in queue, process
-        		lock (m_ScriptEngine.m_EventQueueManager.EventQueue2)
+        		lock (m_ScriptEngine.m_EventQueueManager.EventQueue)
         		{
-        			for (int qc = 0; qc < m_ScriptEngine.m_EventQueueManager.EventQueue2.Count; qc++)
+        			for (int qc = 0; qc < m_ScriptEngine.m_EventQueueManager.EventQueue.Count; qc++)
         			{
         				// Get queue item
-        				QueueItemStruct QIS = m_ScriptEngine.m_EventQueueManager.EventQueue2.Dequeue();
+        				QueueItemStruct QIS = m_ScriptEngine.m_EventQueueManager.EventQueue.Dequeue();
                         //Suspended scripts get readded
                         if (QIS.ID.Suspended)
                         {
-                            if (!m_ScriptEngine.m_EventQueueManager.NewlyUnSuspendedScripts.Contains(QIS.ID.localID))
-                            {
-                                NeedsToBeRequeued.Add(QIS);
-                                continue;
-                            }
-                            else
-                            {
-                                QIS.ID.Suspended = false;
-                            }
+                            NeedsToBeRequeued.Add(QIS);
+                            return;
                         }
                         //Clear scripts that shouldn't be in the queue anymore
-                        if (m_ScriptEngine.m_EventQueueManager.NeedsRemoved.Contains(QIS.ID.ItemID))
-                            continue;
                         if (!m_ScriptEngine.m_EventQueueManager.NeedsRemoved.Contains(QIS.ID.ItemID))
                         {
                             try
@@ -225,7 +216,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         		}
                 foreach (QueueItemStruct QIS in NeedsToBeRequeued)
                 {
-                    m_ScriptEngine.m_EventQueueManager.EventQueue2.Enqueue(QIS);
+                    m_ScriptEngine.m_EventQueueManager.EventQueue.Enqueue(QIS);
                 }
                 m_ScriptEngine.m_EventQueueManager.NeedsRemoved.Clear();
         	}

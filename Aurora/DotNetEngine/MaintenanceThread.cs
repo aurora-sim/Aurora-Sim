@@ -126,6 +126,11 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                     	{
                     		m_ScriptEngine.m_ScriptManager.DoScriptsLoadUnload();
                     	}
+
+                        foreach(OpenMetaverse.UUID item in Resumeable)
+                        {
+                            m_ScriptEngine.ResumeScript(item);
+                        }
                     	
                     	//Checks the Event Queue threads to make sure they are alive.
                     	m_ScriptEngine.m_EventQueueManager.CheckThreads();
@@ -142,5 +147,13 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             }
         }
         #endregion
+
+        List<OpenMetaverse.UUID> Resumeable = new List<OpenMetaverse.UUID>();
+        //This just lets the maintenance thread pick up the slack for finding the scripts that need to be resumed.
+        internal void AddResumeScript(OpenMetaverse.UUID itemID)
+        {
+            if(!Resumeable.Contains(itemID))
+                Resumeable.Add(itemID);
+        }
     }
 }

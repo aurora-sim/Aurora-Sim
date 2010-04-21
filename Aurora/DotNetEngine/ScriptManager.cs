@@ -77,8 +77,8 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 		public string State;
 		public bool Running = true;
 		public bool Disabled = false;
-        public bool Suspended = true;
         public bool Compiling = false;
+        public bool Suspended = true;
 		public string Source;
 		public string ClassSource;
 		public int StartParam;
@@ -266,6 +266,35 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
 		#region Start Script
 
+        public void FireEvents()
+        {
+            if (m_startedFromSavedState)
+            {
+                if (PostOnRez)
+                    m_scriptEngine.m_EventQueueManager.AddToScriptQueue(this, "on_rez", new DetectParams[0], new object[] { new LSL_Types.LSLInteger(StartParam) });
+
+                if (stateSource == StateSource.AttachedRez)
+                    m_scriptEngine.m_EventQueueManager.AddToScriptQueue(this, "attach", new DetectParams[0], new object[] { new LSL_Types.LSLString(part.AttachedAvatar.ToString()) });
+                else if (stateSource == StateSource.NewRez)
+                    m_scriptEngine.m_EventQueueManager.AddToScriptQueue(this, "changed", new DetectParams[0], new Object[] { new LSL_Types.LSLInteger(256) });
+                else if (stateSource == StateSource.PrimCrossing)
+                    // CHANGED_REGION
+                    m_scriptEngine.m_EventQueueManager.AddToScriptQueue(this, "changed", new DetectParams[0], new Object[] { new LSL_Types.LSLInteger(512) });
+            }
+            else
+            {
+                m_scriptEngine.m_EventQueueManager.AddToScriptQueue(this, "state_entry", new DetectParams[0], new object[] { });
+                if (PostOnRez)
+                {
+                    m_scriptEngine.m_EventQueueManager.AddToScriptQueue(this, "on_rez", new DetectParams[0], new object[] { new LSL_Types.LSLInteger(StartParam) });
+                }
+
+                if (stateSource == StateSource.AttachedRez)
+                {
+                    m_scriptEngine.m_EventQueueManager.AddToScriptQueue(this, "attach", new DetectParams[0], new object[] { new LSL_Types.LSLString(part.AttachedAvatar.ToString()) });
+                }
+            }
+        }
 		/// <summary>
 		/// This starts the script and sets up the variables.
 		/// This function is microthreaded.
@@ -386,7 +415,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 					LineMap = PreviouslyCompiledID.LineMap;
 					ClassID = PreviouslyCompiledID.ClassID;
                     AppDomain = PreviouslyCompiledID.AppDomain;
-                    Apis = PreviouslyCompiledID.Apis;
                     Script = PreviouslyCompiledID.Script;
                     previouslyCompiled = true;
 				} 
@@ -463,10 +491,8 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 			// Add it to our script memstruct
 			m_ScriptManager.UpdateScriptInstanceData(this);
 
-            if (!previouslyCompiled)
-            {
-                SetApis();
-            }
+            //ALWAYS reset up APIs, otherwise m_host doesn't get updated and LSL thinks its in another prim.
+            SetApis();
 
             string savedState = Path.Combine(Path.GetDirectoryName(AssemblyName),
                     ItemID.ToString() + ".state");
@@ -516,42 +542,11 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             {
                 m_scriptEngine.m_StateQueue.AddToQueue(this, true);
             }
+            // Fire the first start-event
+            int eventFlags = Script.GetStateEventFlags(State);
+            part.SetScriptEvents(ItemID, eventFlags);
 
-
-			#region Post Script Events
-
-			// Fire the first start-event
-			int eventFlags = Script.GetStateEventFlags(State);
-			part.SetScriptEvents(ItemID, eventFlags);
-
-			if (m_startedFromSavedState)
-            {
-                if (PostOnRez)
-                    m_scriptEngine.m_EventQueueManager.AddToScriptQueue(this, "on_rez", new DetectParams[0], new object[] { new LSL_Types.LSLInteger(StartParam) });
-
-                if (stateSource == StateSource.AttachedRez)
-                    m_scriptEngine.m_EventQueueManager.AddToScriptQueue(this, "attach", new DetectParams[0], new object[] { new LSL_Types.LSLString(part.AttachedAvatar.ToString()) });
-                else if (stateSource == StateSource.NewRez)
-                    m_scriptEngine.m_EventQueueManager.AddToScriptQueue(this, "changed", new DetectParams[0], new Object[] { new LSL_Types.LSLInteger(256) });
-                else if (stateSource == StateSource.PrimCrossing)
-                    // CHANGED_REGION
-                    m_scriptEngine.m_EventQueueManager.AddToScriptQueue(this, "changed", new DetectParams[0], new Object[] { new LSL_Types.LSLInteger(512) });
-            }
-            else
-            {
-                m_scriptEngine.m_EventQueueManager.AddToScriptQueue(this, "state_entry", new DetectParams[0], new object[] { });
-                if (PostOnRez)
-                {
-                    m_scriptEngine.m_EventQueueManager.AddToScriptQueue(this, "on_rez", new DetectParams[0], new object[] { new LSL_Types.LSLInteger(StartParam) });
-                }
-
-                if (stateSource == StateSource.AttachedRez)
-                {
-                    m_scriptEngine.m_EventQueueManager.AddToScriptQueue(this, "attach", new DetectParams[0], new object[] { new LSL_Types.LSLString(part.AttachedAvatar.ToString()) });
-                }
-            }
-			#endregion
-            Compiling = false;
+			Compiling = false;
             //if (m_ScriptManager.Errors.ContainsKey(ItemID))
             //   m_ScriptManager.Errors.Remove(ItemID);
 		}
@@ -816,87 +811,91 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
             XmlElement queue = xmldoc.CreateElement("", "Queue", "");
 
-            int count = m_scriptEngine.m_EventQueueManager.eventQueue.CountOf(ItemID);
-
-            while (count > 0)
+            QueueItemStruct[] tempQueue = new List<QueueItemStruct>().ToArray();
+            m_scriptEngine.m_EventQueueManager.EventQueue.CopyTo(tempQueue, 0);
+            int count = tempQueue.Length;
+            int i = 0;
+            while (i < count)
             {
-                QueueItemStruct QIS = m_scriptEngine.m_EventQueueManager.eventQueue.Dequeue(ItemID);
-                EventParams ep = new EventParams(QIS.functionName, QIS.param, QIS.llDetectParams);
-                m_scriptEngine.m_EventQueueManager.eventQueue.Enqueue(QIS, QIS.ID.ItemID);
-                count--;
-
-                XmlElement item = xmldoc.CreateElement("", "Item", "");
-                XmlAttribute itemEvent = xmldoc.CreateAttribute("", "event",
-                                                                "");
-                itemEvent.Value = ep.EventName;
-                item.Attributes.Append(itemEvent);
-
-                XmlElement parms = xmldoc.CreateElement("", "Params", "");
-
-                foreach (Object o in ep.Params)
-                    WriteTypedValue(xmldoc, parms, "Param", String.Empty, o);
-
-                item.AppendChild(parms);
-
-                XmlElement detect = xmldoc.CreateElement("", "Detected", "");
-
-                foreach (DetectParams det in ep.DetectParams)
+                QueueItemStruct QIS = tempQueue[i];
+                if (QIS.ID.ItemID == ItemID)
                 {
-                    XmlElement objectElem = xmldoc.CreateElement("", "Object",
-                                                                 "");
-                    XmlAttribute pos = xmldoc.CreateAttribute("", "pos", "");
-                    pos.Value = det.OffsetPos.ToString();
-                    objectElem.Attributes.Append(pos);
+                    EventParams ep = new EventParams(QIS.functionName, QIS.param, QIS.llDetectParams);
+                    count--;
 
-                    XmlAttribute d_linkNum = xmldoc.CreateAttribute("",
-                            "linkNum", "");
-                    d_linkNum.Value = det.LinkNum.ToString();
-                    objectElem.Attributes.Append(d_linkNum);
+                    XmlElement item = xmldoc.CreateElement("", "Item", "");
+                    XmlAttribute itemEvent = xmldoc.CreateAttribute("", "event",
+                                                                    "");
+                    itemEvent.Value = ep.EventName;
+                    item.Attributes.Append(itemEvent);
 
-                    XmlAttribute d_group = xmldoc.CreateAttribute("",
-                            "group", "");
-                    d_group.Value = det.Group.ToString();
-                    objectElem.Attributes.Append(d_group);
+                    XmlElement parms = xmldoc.CreateElement("", "Params", "");
 
-                    XmlAttribute d_name = xmldoc.CreateAttribute("",
-                            "name", "");
-                    d_name.Value = det.Name.ToString();
-                    objectElem.Attributes.Append(d_name);
+                    foreach (Object o in ep.Params)
+                        WriteTypedValue(xmldoc, parms, "Param", String.Empty, o);
 
-                    XmlAttribute d_owner = xmldoc.CreateAttribute("",
-                            "owner", "");
-                    d_owner.Value = det.Owner.ToString();
-                    objectElem.Attributes.Append(d_owner);
+                    item.AppendChild(parms);
 
-                    XmlAttribute d_position = xmldoc.CreateAttribute("",
-                            "position", "");
-                    d_position.Value = det.Position.ToString();
-                    objectElem.Attributes.Append(d_position);
+                    XmlElement detect = xmldoc.CreateElement("", "Detected", "");
 
-                    XmlAttribute d_rotation = xmldoc.CreateAttribute("",
-                            "rotation", "");
-                    d_rotation.Value = det.Rotation.ToString();
-                    objectElem.Attributes.Append(d_rotation);
+                    foreach (DetectParams det in ep.DetectParams)
+                    {
+                        XmlElement objectElem = xmldoc.CreateElement("", "Object",
+                                                                     "");
+                        XmlAttribute pos = xmldoc.CreateAttribute("", "pos", "");
+                        pos.Value = det.OffsetPos.ToString();
+                        objectElem.Attributes.Append(pos);
 
-                    XmlAttribute d_type = xmldoc.CreateAttribute("",
-                            "type", "");
-                    d_type.Value = det.Type.ToString();
-                    objectElem.Attributes.Append(d_type);
+                        XmlAttribute d_linkNum = xmldoc.CreateAttribute("",
+                                "linkNum", "");
+                        d_linkNum.Value = det.LinkNum.ToString();
+                        objectElem.Attributes.Append(d_linkNum);
 
-                    XmlAttribute d_velocity = xmldoc.CreateAttribute("",
-                            "velocity", "");
-                    d_velocity.Value = det.Velocity.ToString();
-                    objectElem.Attributes.Append(d_velocity);
+                        XmlAttribute d_group = xmldoc.CreateAttribute("",
+                                "group", "");
+                        d_group.Value = det.Group.ToString();
+                        objectElem.Attributes.Append(d_group);
 
-                    objectElem.AppendChild(
-                        xmldoc.CreateTextNode(det.Key.ToString()));
+                        XmlAttribute d_name = xmldoc.CreateAttribute("",
+                                "name", "");
+                        d_name.Value = det.Name.ToString();
+                        objectElem.Attributes.Append(d_name);
 
-                    detect.AppendChild(objectElem);
+                        XmlAttribute d_owner = xmldoc.CreateAttribute("",
+                                "owner", "");
+                        d_owner.Value = det.Owner.ToString();
+                        objectElem.Attributes.Append(d_owner);
+
+                        XmlAttribute d_position = xmldoc.CreateAttribute("",
+                                "position", "");
+                        d_position.Value = det.Position.ToString();
+                        objectElem.Attributes.Append(d_position);
+
+                        XmlAttribute d_rotation = xmldoc.CreateAttribute("",
+                                "rotation", "");
+                        d_rotation.Value = det.Rotation.ToString();
+                        objectElem.Attributes.Append(d_rotation);
+
+                        XmlAttribute d_type = xmldoc.CreateAttribute("",
+                                "type", "");
+                        d_type.Value = det.Type.ToString();
+                        objectElem.Attributes.Append(d_type);
+
+                        XmlAttribute d_velocity = xmldoc.CreateAttribute("",
+                                "velocity", "");
+                        d_velocity.Value = det.Velocity.ToString();
+                        objectElem.Attributes.Append(d_velocity);
+
+                        objectElem.AppendChild(
+                            xmldoc.CreateTextNode(det.Key.ToString()));
+
+                        detect.AppendChild(objectElem);
+                    }
+
+                    item.AppendChild(detect);
+                    queue.AppendChild(item);
                 }
-
-                item.AppendChild(detect);
-
-                queue.AppendChild(item);
+                i++;
             }
 
             rootElement.AppendChild(queue);
@@ -1310,6 +1309,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
 			List<IEnumerator> StartParts = new List<IEnumerator>();
 			List<IEnumerator> StopParts = new List<IEnumerator>();
+            List<InstanceData> FireEvents = new List<InstanceData>();
 			lock (LUQueue) {
 				if (LUQueue.Count > 0) {
 					int i = 0;
@@ -1323,6 +1323,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 						} 
                         else if (item.Action == LUType.Load)
                         {
+                            FireEvents.Add(item.ID);
 							StartParts.Add(item.ID.Start());
 						}
 						i++;
@@ -1356,9 +1357,16 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 					}
 
 					if (!running)
+                    {
 						StartParts.Remove(StartParts[i % StartParts.Count]);
+                    }
 				}
 			}
+            foreach (InstanceData ID in FireEvents)
+            {
+                ID.FireEvents();
+            }
+            FireEvents.Clear();
 		}
 
 		#endregion
@@ -1398,8 +1406,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 				id.State = "default";
 				id.Running = true;
 				id.Disabled = false;
-                id.Suspended = true;
-				id.Source = Script;
+                id.Source = Script;
 				id.PostOnRez = postOnRez;
 				LUStruct ls = new LUStruct();
 				ls.Action = LUType.Load;

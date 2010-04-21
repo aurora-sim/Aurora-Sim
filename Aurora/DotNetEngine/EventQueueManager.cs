@@ -128,9 +128,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         /// <summary>
         /// Queue containing events waiting to be executed
         /// </summary>
-        public ScriptEventQueue<QueueItemStruct> eventQueue = new ScriptEventQueue<QueueItemStruct>();
-        public Queue<QueueItemStruct> EventQueue2 = new Queue<QueueItemStruct>();
-        public List<uint> NewlyUnSuspendedScripts = new List<uint>();
+        public Queue<QueueItemStruct> EventQueue = new Queue<QueueItemStruct>();
         /// <summary>
         /// Removes the script from the event queue so it does not fire anymore events.
         /// </summary>
@@ -188,9 +186,9 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             }
 
             // Remove all entries from our event queue
-            lock (EventQueue2)
+            lock (EventQueue)
             {
-            	EventQueue2.Clear();
+            	EventQueue.Clear();
             }
         }
 
@@ -254,9 +252,9 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         /// <param name="param">Array of parameters to match event mask</param>
         public bool AddToScriptQueue(uint localID, UUID itemID, string FunctionName, DetectParams[] qParams, params object[] param)
         {
-            lock (EventQueue2)
+            lock (EventQueue)
             {
-                if (EventQueue2.Count >= EventExecutionMaxQueueSize)
+                if (EventQueue.Count >= EventExecutionMaxQueueSize)
                 {
                     m_log.WarnFormat("[{0}]: Event Queue is above the MaxQueueSize.", m_ScriptEngine.ScriptEngineName);
                     return false;
@@ -283,9 +281,9 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         /// <returns></returns>
         public bool AddToScriptQueue(InstanceData ID, string FunctionName, DetectParams[] qParams, params object[] param)
         {
-            lock (EventQueue2)
+            lock (EventQueue)
             {
-                if (EventQueue2.Count >= EventExecutionMaxQueueSize)
+                if (EventQueue.Count >= EventExecutionMaxQueueSize)
                 {
                     m_log.WarnFormat("[{0}]: Event Queue is above the MaxQueueSize.", m_ScriptEngine.ScriptEngineName);
                     return false;
@@ -301,7 +299,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                 	QIS.ID.localID))
                 {
                 	// Add it to queue
-                	EventQueue2.Enqueue(QIS);
+                	EventQueue.Enqueue(QIS);
                 }
             }
             return true;

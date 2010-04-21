@@ -443,20 +443,16 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         public void SuspendScript(UUID itemID)
         {
             InstanceData ID = m_ScriptManager.GetScriptByItemID(itemID);
-            if (ID == null)
-                return;
             ID.Suspended = true;
         }
 
         public void ResumeScript(UUID itemID)
         {
             InstanceData ID = m_ScriptManager.GetScriptByItemID(itemID);
-            while (ID == null)
-            {
-                System.Threading.Thread.Sleep(250);
-                ID = m_ScriptManager.GetScriptByItemID(itemID);
-            }
-            ID.Suspended = false;
+            if (ID == null)
+                m_MaintenanceThread.AddResumeScript(itemID);
+            else
+                ID.Suspended = false;
         }
 
         #endregion
