@@ -127,9 +127,9 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                     		m_ScriptEngine.m_ScriptManager.DoScriptsLoadUnload();
                     	}
 
-                        foreach(OpenMetaverse.UUID item in Resumeable)
+                        for (int i = 0; i < Resumeable.Count; i++)
                         {
-                            m_ScriptEngine.ResumeScript(item);
+                            m_ScriptEngine.ResumeScript(Resumeable[i]);
                         }
                     	
                     	//Checks the Event Queue threads to make sure they are alive.
