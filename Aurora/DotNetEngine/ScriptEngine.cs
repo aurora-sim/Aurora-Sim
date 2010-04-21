@@ -397,7 +397,8 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         }
         #endregion
 
-        #region Start/End Scripts
+        #region Start/End/Suspend Scripts
+
         public void OnStartScript(uint localID, UUID itemID)
         {
             InstanceData id = m_ScriptManager.GetScript(localID, itemID);
@@ -438,6 +439,19 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                            controllingClient.AgentId);
             }
         }
+
+        public void SuspendScript(UUID itemID)
+        {
+            InstanceData ID = m_ScriptManager.GetScriptByItemID(itemID);
+            ID.Suspended = true;
+        }
+
+        public void ResumeScript(UUID itemID)
+        {
+            InstanceData ID = m_ScriptManager.GetScriptByItemID(itemID);
+            ID.Suspended = false;
+        }
+
         #endregion
 
         #region GetScriptAPI

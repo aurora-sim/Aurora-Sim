@@ -77,6 +77,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 		public string State;
 		public bool Running;
 		public bool Disabled;
+        public bool Suspended;
 		public string Source;
 		public string ClassSource;
 		public int StartParam;
@@ -1383,6 +1384,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 				id.State = "default";
 				id.Running = true;
 				id.Disabled = false;
+                id.Suspended = true;
 				id.Source = Script;
 				id.PostOnRez = postOnRez;
 				LUStruct ls = new LUStruct();

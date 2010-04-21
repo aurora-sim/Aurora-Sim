@@ -176,6 +176,8 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         			{
         				// Get queue item
         				QueueItemStruct QIS = m_ScriptEngine.m_EventQueueManager.EventQueue2.Dequeue();
+                        if (QIS.ID.Suspended)
+                            continue;
                         if (!m_ScriptEngine.m_EventQueueManager.NeedsRemoved.Contains(QIS.ID.ItemID))
                         {
                             try
