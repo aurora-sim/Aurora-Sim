@@ -451,8 +451,11 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         public void ResumeScript(UUID itemID)
         {
             InstanceData ID = m_ScriptManager.GetScriptByItemID(itemID);
-            if (ID == null)
-                return;
+            while (ID == null)
+            {
+                System.Threading.Thread.Sleep(250);
+                ID = m_ScriptManager.GetScriptByItemID(itemID);
+            }
             ID.Suspended = false;
         }
 
