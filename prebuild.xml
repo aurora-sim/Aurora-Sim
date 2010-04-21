@@ -1372,6 +1372,8 @@
       <Reference name="OpenSim.Services.Base" />
       <Reference name="OpenSim.Services.Interfaces" />
       <Reference name="Mono.Addins.dll" />
+      <Reference name="Aurora.DataManager" />
+      <Reference name="Aurora.Framework" />
 
       <!-- For scripting in funny languages by default -->
       <Reference name="Microsoft.JScript"/>

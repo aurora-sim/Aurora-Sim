@@ -298,7 +298,7 @@ namespace Aurora.Modules
 
     #region WeatherInRegion class
 
-    private class WeatherInRegion
+    public class WeatherInRegion
     {
         public bool CurrentlyCloudy = false;
         public bool CurrentlySunny = false;
