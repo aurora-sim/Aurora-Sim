@@ -2306,6 +2306,7 @@
 <Reference name="System.Windows.Forms"/>
 
 	    <Reference name="Nini.dll"/>
+ <Reference name="Mono.Addins.dll"/>
 <Reference name="OpenMetaverseTypes.dll"/>
 <Reference name="OpenMetaverse.dll"/>
 <Reference name="Aurora.DataManager"/>
