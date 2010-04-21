@@ -443,12 +443,16 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         public void SuspendScript(UUID itemID)
         {
             InstanceData ID = m_ScriptManager.GetScriptByItemID(itemID);
+            if (ID == null)
+                return;
             ID.Suspended = true;
         }
 
         public void ResumeScript(UUID itemID)
         {
             InstanceData ID = m_ScriptManager.GetScriptByItemID(itemID);
+            if (ID == null)
+                return;
             ID.Suspended = false;
         }
 

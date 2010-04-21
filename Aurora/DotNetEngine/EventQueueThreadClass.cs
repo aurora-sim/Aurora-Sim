@@ -52,7 +52,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         // How many ms to sleep if queue is empty
-        private static int nothingToDoSleepms;// = 50;
         private static ThreadPriority MyThreadPriority;
 
         public long LastExecutionStarted;
@@ -65,6 +64,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
         private string ScriptEngineName = "ScriptEngine.Common";
         private ScriptEngine m_ScriptEngine;
+        private int SleepTime = 250;
 
         public EventQueueThreadClass(ScriptEngine engine)//EventQueueManager eqm
         {
@@ -85,10 +85,8 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         public void ReadConfig()
         {
         	ScriptEngineName = m_ScriptEngine.ScriptEngineName;
-        	nothingToDoSleepms =
-        		m_ScriptEngine.ScriptConfigSource.GetInt(
-        			"SleepTimeIfNoScriptExecutionMs", 50);
-
+            SleepTime = m_ScriptEngine.ScriptConfigSource.GetInt("SleepTimeBetweenLoops", 250);
+        	
         	string pri = m_ScriptEngine.ScriptConfigSource.GetString(
         		"ScriptThreadPriority", "BelowNormal");
 
@@ -164,7 +162,8 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         {
         	try
         	{
-        		if (m_ScriptEngine.m_EventQueueManager == null ||
+                Thread.Sleep(SleepTime);
+                if (m_ScriptEngine.m_EventQueueManager == null ||
         		    m_ScriptEngine.m_EventQueueManager.EventQueue2 == null ||
         		   m_ScriptEngine.m_EventQueueManager.EventQueue2.Count == 0)
         			return;

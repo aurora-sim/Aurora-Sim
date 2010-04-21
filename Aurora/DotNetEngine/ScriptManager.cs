@@ -1179,6 +1179,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 		private bool m_started = false;
 		private Dictionary<InstanceData, DetectParams[]> detparms = new Dictionary<InstanceData, DetectParams[]>();
 		public Dictionary<UUID, string[]> Errors = new Dictionary<UUID, string[]>();
+        private int SleepTime = 250;
 
 		// Load/Unload structure
 		private struct LUStruct
@@ -1244,6 +1245,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 			PrivateThread = true;
 			LoadUnloadMaxQueueSize = m_scriptEngine.ScriptConfigSource.GetInt("LoadUnloadMaxQueueSize", 100);
 			MinMicrothreadScriptThreshold = m_scriptEngine.ScriptConfigSource.GetInt("LoadUnloadMaxQueueSizeBeforeMicrothreading", 100);
+            SleepTime = m_scriptEngine.ScriptConfigSource.GetInt("SleepTimeBetweenLoops", 250);
 		}
 
 		public void Start()
@@ -1296,7 +1298,8 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 		/// </summary>
 		public void DoScriptsLoadUnload()
 		{
-			if (!m_started)
+            Thread.Sleep(SleepTime);
+            if (!m_started)
 				return;
 
 			List<IEnumerator> StartParts = new List<IEnumerator>();
@@ -1384,7 +1387,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 				id.State = "default";
 				id.Running = true;
 				id.Disabled = false;
-                id.Suspended = true;
+                id.Suspended = false;
 				id.Source = Script;
 				id.PostOnRez = postOnRez;
 				LUStruct ls = new LUStruct();
@@ -1512,9 +1515,12 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         public Queue<StateQueueItem> StateQueue = new Queue<StateQueueItem>();
         Thread thread = null;
         IScriptEngine m_ScriptEngine = null;
-        public StateSaverQueue(IScriptEngine engine)
+        private int SleepTime = 250;
+        
+        public StateSaverQueue(ScriptEngine engine)
         {
             m_ScriptEngine = engine;
+            SleepTime = engine.ScriptConfigSource.GetInt("SleepTimeBetweenLoops", 250);
             thread = Watchdog.StartThread(RunLoop, "StateQueueThread", ThreadPriority.BelowNormal, true);
         }
 
@@ -1543,6 +1549,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
         public void DoQueue()
         {
+            Thread.Sleep(SleepTime);
             List<IEnumerator> Parts = new List<IEnumerator>();
             while (StateQueue.Count != 0)
             {
