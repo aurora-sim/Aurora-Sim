@@ -118,7 +118,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             if (in_startup)
             {
                 in_startup = false;
-                //DeleteOldFiles();
+                DeleteOldFiles();
             }
 
             // Map name and enum type of our supported languages
@@ -219,7 +219,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                 }
             }
 
-            foreach (string file in Directory.GetFiles(Path.Combine(ScriptEnginesPath,
+            /*foreach (string file in Directory.GetFiles(Path.Combine(ScriptEnginesPath,
                      m_scriptEngine.World.RegionInfo.RegionID.ToString()), FilePrefix + "_compiled*"))
             {
                 try
@@ -242,7 +242,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                 {
                     m_log.Error("[Compiler]: Exception trying delete old script file \"" + file + "\": " + ex.ToString());
                 }
-            }
+            }*/
         }
 
         ////private ICodeCompiler icc = codeProvider.CreateCompiler();
@@ -288,7 +288,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             m_warnings.Clear();
             assembly = Path.Combine(ScriptEnginesPath, Path.Combine(
                     m_scriptEngine.World.RegionInfo.RegionID.ToString(),
-                    FilePrefix + "_compiled_" + asset + ".dll"));
+                    FilePrefix + "_compiled_" + itemID.ToString() + ".dll"));
 
             if (!Directory.Exists(ScriptEnginesPath))
             {

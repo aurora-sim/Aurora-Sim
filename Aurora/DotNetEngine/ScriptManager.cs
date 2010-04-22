@@ -125,7 +125,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             // Stop long command on script
             AsyncCommandManager.RemoveScript(m_ScriptManager.m_scriptEngine, localID, ItemID);
             m_ScriptManager.m_scriptEngine.m_EventManager.state_exit(localID);
-            m_scriptEngine.m_StateQueue.AddToQueue(this, false);
+            //m_scriptEngine.m_StateQueue.AddToQueue(this, false);
 
             yield return null;
 
@@ -337,7 +337,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             }
             AssemblyName = Path.Combine("ScriptEngines", Path.Combine(
                     m_scriptEngine.World.RegionInfo.RegionID.ToString(),
-                    FilePrefix + "_compiled_" + AssetID.ToString() + ".dll"));
+                    FilePrefix + "_compiled_" + ItemID.ToString() + ".dll"));
             string savedState = Path.Combine(Path.GetDirectoryName(AssemblyName),
                     ItemID.ToString() + ".state");
             
@@ -454,7 +454,15 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                     InstanceData PreviouslyCompiledID = (InstanceData)m_scriptEngine.ScriptProtection.TryGetPreviouslyCompiledScript(Source);
                     if (PreviouslyCompiledID != null)
                     {
-                        AssemblyName = PreviouslyCompiledID.AssemblyName;
+                        FileInfo fi = new FileInfo(PreviouslyCompiledID.AssemblyName);
+                        FileStream stream = fi.OpenRead();
+                        Byte[] data = new Byte[fi.Length];
+                        stream.Read(data, 0, data.Length);
+                        FileStream sfs = File.Create(AssemblyName);
+                        sfs.Write(data, 0, data.Length);
+                        sfs.Close();
+                        stream.Close();
+
                         LineMap = PreviouslyCompiledID.LineMap;
                         ClassID = PreviouslyCompiledID.ClassID;
                         AppDomain = PreviouslyCompiledID.AppDomain;
@@ -818,8 +826,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         {
             XmlDocument doc = new XmlDocument();
 
-            Dictionary<string, object> vars = Script.GetVars();
-
             doc.LoadXml(xml);
 
             XmlNodeList rootL = doc.GetElementsByTagName("ScriptState");
@@ -873,11 +879,11 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
             rootElement.AppendChild(run);
 
-            XmlElement ClassID = xmldoc.CreateElement("", "ClassID", "");
-            ClassID.AppendChild(xmldoc.CreateTextNode(
+            XmlElement classID = xmldoc.CreateElement("", "ClassID", "");
+            classID.AppendChild(xmldoc.CreateTextNode(
                     ClassID.ToString()));
 
-            rootElement.AppendChild(ClassID);
+            rootElement.AppendChild(classID);
 
             Dictionary<string, Object> vars = Script.GetVars();
 
