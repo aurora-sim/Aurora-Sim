@@ -465,23 +465,39 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                     InstanceData PreviouslyCompiledID = (InstanceData)m_scriptEngine.ScriptProtection.TryGetPreviouslyCompiledScript(Source);
                     if (PreviouslyCompiledID != null)
                     {
-                        FileInfo fi = new FileInfo(PreviouslyCompiledID.AssemblyName);
-                        FileStream stream = fi.OpenRead();
-                        Byte[] data = new Byte[fi.Length];
-                        stream.Read(data, 0, data.Length);
-                        FileStream sfs = File.Create(AssemblyName);
-                        sfs.Write(data, 0, data.Length);
-                        sfs.Close();
-                        stream.Close();
-
-                        fi = new FileInfo(PreviouslyCompiledID.AssemblyName + ".map");
-                        stream = fi.OpenRead();
-                        data = new Byte[fi.Length];
-                        stream.Read(data, 0, data.Length);
-                        sfs = File.Create(AssemblyName + ".map");
-                        sfs.Write(data, 0, data.Length);
-                        sfs.Close();
-                        stream.Close();
+                        if (!File.Exists(PreviouslyCompiledID.AssemblyName))
+                        {
+                            FileInfo fi = new FileInfo(PreviouslyCompiledID.AssemblyName);
+                            FileStream stream = fi.OpenRead();
+                            Byte[] data = new Byte[fi.Length];
+                            stream.Read(data, 0, data.Length);
+                            FileStream sfs = File.Create(AssemblyName);
+                            sfs.Write(data, 0, data.Length);
+                            sfs.Close();
+                            stream.Close();
+                        }
+                        if (!File.Exists(PreviouslyCompiledID.AssemblyName + ".map"))
+                        {
+                            FileInfo fi = new FileInfo(PreviouslyCompiledID.AssemblyName + ".map");
+                            FileStream stream = fi.OpenRead();
+                            Byte[] data = new Byte[fi.Length];
+                            stream.Read(data, 0, data.Length);
+                            FileStream sfs = File.Create(AssemblyName + ".map");
+                            sfs.Write(data, 0, data.Length);
+                            sfs.Close();
+                            stream.Close();
+                        }
+                        if (!File.Exists(PreviouslyCompiledID.AssemblyName + ".text"))
+                        {
+                            FileInfo fi = new FileInfo(PreviouslyCompiledID.AssemblyName + ".text");
+                            FileStream stream = fi.OpenRead();
+                            Byte[] data = new Byte[fi.Length];
+                            stream.Read(data, 0, data.Length);
+                            FileStream sfs = File.Create(AssemblyName + ".text");
+                            sfs.Write(data, 0, data.Length);
+                            sfs.Close();
+                            stream.Close();
+                        }
 
                         LineMap = PreviouslyCompiledID.LineMap;
                         ClassID = PreviouslyCompiledID.ClassID;
