@@ -513,6 +513,8 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         public bool SetXMLState(UUID itemID, string xml)
         {
             InstanceData instance = m_ScriptManager.GetScriptByItemID(itemID);
+            if (instance == null)
+                return false;
             instance.Deserialize(xml);
             return true;
         }
