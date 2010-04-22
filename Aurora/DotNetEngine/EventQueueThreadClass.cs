@@ -52,7 +52,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         // How many ms to sleep if queue is empty
-        private static int nothingToDoSleepms;// = 50;
         private static ThreadPriority MyThreadPriority;
 
         public long LastExecutionStarted;
@@ -65,6 +64,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
         private string ScriptEngineName = "ScriptEngine.Common";
         private ScriptEngine m_ScriptEngine;
+        private int SleepTime = 250;
 
         public EventQueueThreadClass(ScriptEngine engine)//EventQueueManager eqm
         {
@@ -85,10 +85,8 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         public void ReadConfig()
         {
         	ScriptEngineName = m_ScriptEngine.ScriptEngineName;
-        	nothingToDoSleepms =
-        		m_ScriptEngine.ScriptConfigSource.GetInt(
-        			"SleepTimeIfNoScriptExecutionMs", 50);
-
+            SleepTime = m_ScriptEngine.ScriptConfigSource.GetInt("SleepTimeBetweenLoops", 250);
+        	
         	string pri = m_ScriptEngine.ScriptConfigSource.GetString(
         		"ScriptThreadPriority", "BelowNormal");
 
@@ -164,32 +162,45 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         {
         	try
         	{
-        		if (m_ScriptEngine.m_EventQueueManager == null ||
-        		    m_ScriptEngine.m_EventQueueManager.EventQueue2 == null ||
-        		   m_ScriptEngine.m_EventQueueManager.EventQueue2.Count == 0)
+                Thread.Sleep(SleepTime);
+                if (m_ScriptEngine.m_EventQueueManager == null ||
+        		    m_ScriptEngine.m_EventQueueManager.EventQueue == null ||
+        		   m_ScriptEngine.m_EventQueueManager.EventQueue.Count == 0)
         			return;
-
+                List<QueueItemStruct> NeedsToBeRequeued = new List<QueueItemStruct>();
         		// Something in queue, process
-        		lock (m_ScriptEngine.m_EventQueueManager.EventQueue2)
+        		lock (m_ScriptEngine.m_EventQueueManager.EventQueue)
         		{
-        			for (int qc = 0; qc < m_ScriptEngine.m_EventQueueManager.EventQueue2.Count; qc++)
+        			for (int qc = 0; qc < m_ScriptEngine.m_EventQueueManager.EventQueue.Count; qc++)
         			{
         				// Get queue item
-        				QueueItemStruct QIS = m_ScriptEngine.m_EventQueueManager.EventQueue2.Dequeue();
+        				QueueItemStruct QIS = m_ScriptEngine.m_EventQueueManager.EventQueue.Dequeue();
+                        //Suspended scripts get readded
+                        if (QIS.ID.Suspended)
+                        {
+                            NeedsToBeRequeued.Add(QIS);
+                            return;
+                        }
+                        //Clear scripts that shouldn't be in the queue anymore
                         if (!m_ScriptEngine.m_EventQueueManager.NeedsRemoved.Contains(QIS.ID.ItemID))
                         {
                             try
                             {
                                 QIS.ID.SetEventParams(QIS.llDetectParams);
-                                bool Running = QIS.ID.Script.ExecuteEvent(
+                                int Running = 0;
+                                Running = QIS.ID.Script.ExecuteEvent(
                                     QIS.ID.State,
                                     QIS.functionName,
-                                    QIS.param);
-                                //m_log.Warn("Running: " + Running + ", functionName: "+QIS.functionName);
-                                if(!Running)
+                                    QIS.param, QIS.CurrentlyAt);
+                                //Finished with nothing left.
+                                if(Running == 0)
                                 	continue;
-                                if (Running && !m_ScriptEngine.m_EventQueueManager.NeedsRemoved.Contains(QIS.ID.ItemID))
-                                    m_ScriptEngine.m_EventQueueManager.EventQueue2.Enqueue(QIS);
+                                //Did not finish and returned where it should start now
+                                if (Running != 0 && !m_ScriptEngine.m_EventQueueManager.NeedsRemoved.Contains(QIS.ID.ItemID))
+                                {
+                                    QIS.CurrentlyAt = Running;
+                                    NeedsToBeRequeued.Add(QIS);
+                                }
                             }
                             catch (SelfDeleteException) // Must delete SOG
                             {
@@ -202,13 +213,17 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                                 if (QIS.ID.part != null && QIS.ID.part.ParentGroup != null)
                                     QIS.ID.part.Inventory.RemoveInventoryItem(QIS.ID.ItemID);
                             }
-                            catch (Exception ex)
+                            catch (Exception)
                             {
                                 //m_log.Error("Event Queue error: " + ex);
                             }
                         }
         			}
         		}
+                foreach (QueueItemStruct QIS in NeedsToBeRequeued)
+                {
+                    m_ScriptEngine.m_EventQueueManager.EventQueue.Enqueue(QIS);
+                }
                 m_ScriptEngine.m_EventQueueManager.NeedsRemoved.Clear();
         	}
         	catch (Exception ex)

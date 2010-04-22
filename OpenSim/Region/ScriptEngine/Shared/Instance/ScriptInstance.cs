@@ -95,6 +95,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Instance
         private bool m_startedFromSavedState;
         private UUID m_CurrentStateHash;
         private UUID m_RegionID;
+        private bool m_Suspended = false;
 
         private Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>>
                 m_LineMap;
@@ -638,6 +639,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.Instance
         /// <returns></returns>
         public object EventProcessor()
         {
+            if (m_Suspended)
+                return 0;
+
             lock (m_Script)
             {
                 EventParams data = null;
@@ -704,7 +708,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Instance
                             m_CurrentEvent = data.EventName;
                             m_EventStart = DateTime.Now;
                             m_InEvent = true;
-							m_Script.ExecuteEvent(State, data.EventName, data.Params);
+							m_Script.ExecuteEvent(State, data.EventName, data.Params,0);
 
                             m_InEvent = false;
                             m_CurrentEvent = String.Empty;
@@ -1009,6 +1013,16 @@ namespace OpenSim.Region.ScriptEngine.Shared.Instance
         public UUID RegionID
         {
             get { return m_RegionID; }
+        }
+
+        public void Suspend()
+        {
+            m_Suspended = true;
+        }
+
+        public void Resume()
+        {
+            m_Suspended = false;
         }
     }
 }

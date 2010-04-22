@@ -93,9 +93,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
             return (int)m_Executor.GetStateEventFlags(state);
         }
 
-        public bool ExecuteEvent(string state, string FunctionName, object[] args)
+        public int ExecuteEvent(string state, string FunctionName, object[] args, int startingposition)
         {
-            return m_Executor.ExecuteEvent(state, FunctionName, args);
+            return m_Executor.ExecuteEvent(state, FunctionName, args, startingposition);
         }
 
         public string[] GetApis()

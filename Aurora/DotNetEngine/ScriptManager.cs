@@ -75,14 +75,16 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 		private Scene World;
 		public IScript Script;
 		public string State;
-		public bool Running;
-		public bool Disabled;
+		public bool Running = true;
+		public bool Disabled = false;
+        public bool Compiling = false;
+        public bool Suspended = true;
 		public string Source;
 		public string ClassSource;
 		public int StartParam;
 		public StateSource stateSource;
 		public AppDomain AppDomain;
-		public Dictionary<string, IScriptApi> Apis;
+		public Dictionary<string, IScriptApi> Apis = new Dictionary<string,IScriptApi>();
 		public Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> LineMap;
 		public ISponsor ScriptSponsor;
 
@@ -103,6 +105,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 		public DetectParams[] LastDetectParams;
 		public bool m_startedFromSavedState = false;
         public Object[] PluginData = new Object[0];
+        public string CurrentStateXML = "";
 
 		#endregion
 
@@ -118,38 +121,40 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             m_ScriptManager.m_scriptEngine.m_EventQueueManager.RemoveFromQueue(ItemID);
             if (m_ScriptManager.Errors.ContainsKey(ItemID))
                 m_ScriptManager.Errors.Remove(ItemID);
-			ReleaseControls();
-			// Stop long command on script
-			AsyncCommandManager.RemoveScript(m_ScriptManager.m_scriptEngine, localID, ItemID);
-			m_ScriptManager.m_scriptEngine.m_EventManager.state_exit(localID);
+            ReleaseControls();
+            // Stop long command on script
+            AsyncCommandManager.RemoveScript(m_ScriptManager.m_scriptEngine, localID, ItemID);
+            m_ScriptManager.m_scriptEngine.m_EventManager.state_exit(localID);
             m_scriptEngine.m_StateQueue.AddToQueue(this, false);
 
-			yield return null;
+            yield return null;
 
-			try {
-				// Get AppDomain
+            try 
+            {
 				// Tell script not to accept new requests
 				Running = false;
 				Disabled = true;
-				AppDomain ad = AppDomain;
-				if(ad == null || Script == null)
-				{
-					m_ScriptManager.RemoveScript(this);
-					m_log.DebugFormat("[{0}]: Closed Script in " + part.Name, m_ScriptManager.m_scriptEngine.ScriptEngineName);
-					yield break;
-				}
-				Script.Close();
-				// Tell AppDomain that we have stopped script
-				m_ScriptManager.m_scriptEngine.m_AppDomainManager.UnloadScriptAppDomain(ad);
-				// Remove from internal structure
-				m_ScriptManager.RemoveScript(this);
-			// LEGIT: User Scripting
+
+                // Remove from internal structure
+                m_ScriptManager.RemoveScript(this);
+
+                m_log.DebugFormat("[{0}]: Closed Script in " + part.Name, m_ScriptManager.m_scriptEngine.ScriptEngineName);
+                
+                if (AppDomain == null || Script == null)
+				    yield break;
+                
+                try
+                {
+                    // Tell AppDomain that we have stopped script
+                    m_ScriptManager.m_scriptEngine.m_AppDomainManager.UnloadScriptAppDomain(AppDomain);
+                }
+                //Legit: If the script had an error, this can happen... really shouldn't, but it does.
+                catch (AppDomainUnloadedException) { }
 			} 
 			catch (Exception e)
 			{
 				m_log.Error("[" + m_ScriptManager.m_scriptEngine.ScriptEngineName + "]: Exception stopping script localID: " + localID + " LLUID: " + ItemID.ToString() + ": " + e.ToString());
 			}
-			m_log.DebugFormat("[{0}]: Closed Script in " + part.Name, m_ScriptManager.m_scriptEngine.ScriptEngineName);
 		}
 
 		/// <summary>
@@ -261,6 +266,35 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
 		#region Start Script
 
+        public void FireEvents()
+        {
+            if (m_startedFromSavedState)
+            {
+                if (PostOnRez)
+                    m_scriptEngine.m_EventQueueManager.AddToScriptQueue(this, "on_rez", new DetectParams[0], new object[] { new LSL_Types.LSLInteger(StartParam) });
+
+                if (stateSource == StateSource.AttachedRez)
+                    m_scriptEngine.m_EventQueueManager.AddToScriptQueue(this, "attach", new DetectParams[0], new object[] { new LSL_Types.LSLString(part.AttachedAvatar.ToString()) });
+                else if (stateSource == StateSource.NewRez)
+                    m_scriptEngine.m_EventQueueManager.AddToScriptQueue(this, "changed", new DetectParams[0], new Object[] { new LSL_Types.LSLInteger(256) });
+                else if (stateSource == StateSource.PrimCrossing)
+                    // CHANGED_REGION
+                    m_scriptEngine.m_EventQueueManager.AddToScriptQueue(this, "changed", new DetectParams[0], new Object[] { new LSL_Types.LSLInteger(512) });
+            }
+            else
+            {
+                m_scriptEngine.m_EventQueueManager.AddToScriptQueue(this, "state_entry", new DetectParams[0], new object[] { });
+                if (PostOnRez)
+                {
+                    m_scriptEngine.m_EventQueueManager.AddToScriptQueue(this, "on_rez", new DetectParams[0], new object[] { new LSL_Types.LSLInteger(StartParam) });
+                }
+
+                if (stateSource == StateSource.AttachedRez)
+                {
+                    m_scriptEngine.m_EventQueueManager.AddToScriptQueue(this, "attach", new DetectParams[0], new object[] { new LSL_Types.LSLString(part.AttachedAvatar.ToString()) });
+                }
+            }
+        }
 		/// <summary>
 		/// This starts the script and sets up the variables.
 		/// This function is microthreaded.
@@ -268,6 +302,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 		/// <returns></returns>
 		public IEnumerator Start()
 		{
+            Compiling = true;
             if (m_ScriptManager.Errors.ContainsKey(ItemID))
                 m_ScriptManager.Errors.Remove(ItemID);
 			DateTime Start = DateTime.Now.ToUniversalTime();
@@ -289,9 +324,9 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
 			presence = World.GetScenePresence(InventoryItem.OwnerID);
 			if (presence != null)
-                m_log.DebugFormat("[{0}]: Starting Script {1} in object {2} by avatar {3}.", m_scriptEngine.ScriptEngineName, part.Inventory.GetInventoryItem(ItemID).Name, part.Name, presence.Name);
-            else 
-				m_log.DebugFormat("[{0}]: Starting Script {1} in object {2}.", m_scriptEngine.ScriptEngineName, part.Inventory.GetInventoryItem(ItemID).Name, part.Name);
+                m_log.DebugFormat("[{0}]: Starting Script {1} in object {2} by avatar {3}.", m_scriptEngine.ScriptEngineName, InventoryItem.Name, part.Name, presence.Name);
+            else
+                m_log.DebugFormat("[{0}]: Starting Script {1} in object {2}.", m_scriptEngine.ScriptEngineName, InventoryItem.Name, part.Name);
 
 			CultureInfo USCulture = new CultureInfo("en-US");
 			Thread.CurrentThread.CurrentCulture = USCulture;
@@ -380,7 +415,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 					LineMap = PreviouslyCompiledID.LineMap;
 					ClassID = PreviouslyCompiledID.ClassID;
                     AppDomain = PreviouslyCompiledID.AppDomain;
-                    Apis = PreviouslyCompiledID.Apis;
                     Script = PreviouslyCompiledID.Script;
                     previouslyCompiled = true;
 				} 
@@ -457,10 +491,8 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 			// Add it to our script memstruct
 			m_ScriptManager.UpdateScriptInstanceData(this);
 
-            if (!previouslyCompiled)
-            {
-                SetApis();
-            }
+            //ALWAYS reset up APIs, otherwise m_host doesn't get updated and LSL thinks its in another prim.
+            SetApis();
 
             string savedState = Path.Combine(Path.GetDirectoryName(AssemblyName),
                     ItemID.ToString() + ".state");
@@ -510,41 +542,11 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             {
                 m_scriptEngine.m_StateQueue.AddToQueue(this, true);
             }
+            // Fire the first start-event
+            int eventFlags = Script.GetStateEventFlags(State);
+            part.SetScriptEvents(ItemID, eventFlags);
 
-
-			#region Post Script Events
-
-			// Fire the first start-event
-			int eventFlags = Script.GetStateEventFlags(State);
-			part.SetScriptEvents(ItemID, eventFlags);
-
-			if (m_startedFromSavedState)
-            {
-                if (PostOnRez)
-                    m_scriptEngine.m_EventQueueManager.AddToScriptQueue(this, "on_rez", new DetectParams[0], new object[] { new LSL_Types.LSLInteger(StartParam) });
-
-                if (stateSource == StateSource.AttachedRez)
-                    m_scriptEngine.m_EventQueueManager.AddToScriptQueue(this, "attach", new DetectParams[0], new object[] { new LSL_Types.LSLString(part.AttachedAvatar.ToString()) });
-                else if (stateSource == StateSource.NewRez)
-                    m_scriptEngine.m_EventQueueManager.AddToScriptQueue(this, "changed", new DetectParams[0], new Object[] { new LSL_Types.LSLInteger(256) });
-                else if (stateSource == StateSource.PrimCrossing)
-                    // CHANGED_REGION
-                    m_scriptEngine.m_EventQueueManager.AddToScriptQueue(this, "changed", new DetectParams[0], new Object[] { new LSL_Types.LSLInteger(512) });
-            }
-            else
-            {
-                m_scriptEngine.m_EventQueueManager.AddToScriptQueue(this, "state_entry", new DetectParams[0], new object[] { });
-                if (PostOnRez)
-                {
-                    m_scriptEngine.m_EventQueueManager.AddToScriptQueue(this, "on_rez", new DetectParams[0], new object[] { new LSL_Types.LSLInteger(StartParam) });
-                }
-
-                if (stateSource == StateSource.AttachedRez)
-                {
-                    m_scriptEngine.m_EventQueueManager.AddToScriptQueue(this, "attach", new DetectParams[0], new object[] { new LSL_Types.LSLString(part.AttachedAvatar.ToString()) });
-                }
-            }
-			#endregion
+			Compiling = false;
             //if (m_ScriptManager.Errors.ContainsKey(ItemID))
             //   m_ScriptManager.Errors.Remove(ItemID);
 		}
@@ -809,87 +811,91 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
             XmlElement queue = xmldoc.CreateElement("", "Queue", "");
 
-            int count = m_scriptEngine.m_EventQueueManager.eventQueue.CountOf(ItemID);
-
-            while (count > 0)
+            QueueItemStruct[] tempQueue = new List<QueueItemStruct>().ToArray();
+            m_scriptEngine.m_EventQueueManager.EventQueue.CopyTo(tempQueue, 0);
+            int count = tempQueue.Length;
+            int i = 0;
+            while (i < count)
             {
-                QueueItemStruct QIS = m_scriptEngine.m_EventQueueManager.eventQueue.Dequeue(ItemID);
-                EventParams ep = new EventParams(QIS.functionName, QIS.param, QIS.llDetectParams);
-                m_scriptEngine.m_EventQueueManager.eventQueue.Enqueue(QIS, QIS.ID.ItemID);
-                count--;
-
-                XmlElement item = xmldoc.CreateElement("", "Item", "");
-                XmlAttribute itemEvent = xmldoc.CreateAttribute("", "event",
-                                                                "");
-                itemEvent.Value = ep.EventName;
-                item.Attributes.Append(itemEvent);
-
-                XmlElement parms = xmldoc.CreateElement("", "Params", "");
-
-                foreach (Object o in ep.Params)
-                    WriteTypedValue(xmldoc, parms, "Param", String.Empty, o);
-
-                item.AppendChild(parms);
-
-                XmlElement detect = xmldoc.CreateElement("", "Detected", "");
-
-                foreach (DetectParams det in ep.DetectParams)
+                QueueItemStruct QIS = tempQueue[i];
+                if (QIS.ID.ItemID == ItemID)
                 {
-                    XmlElement objectElem = xmldoc.CreateElement("", "Object",
-                                                                 "");
-                    XmlAttribute pos = xmldoc.CreateAttribute("", "pos", "");
-                    pos.Value = det.OffsetPos.ToString();
-                    objectElem.Attributes.Append(pos);
+                    EventParams ep = new EventParams(QIS.functionName, QIS.param, QIS.llDetectParams);
+                    count--;
 
-                    XmlAttribute d_linkNum = xmldoc.CreateAttribute("",
-                            "linkNum", "");
-                    d_linkNum.Value = det.LinkNum.ToString();
-                    objectElem.Attributes.Append(d_linkNum);
+                    XmlElement item = xmldoc.CreateElement("", "Item", "");
+                    XmlAttribute itemEvent = xmldoc.CreateAttribute("", "event",
+                                                                    "");
+                    itemEvent.Value = ep.EventName;
+                    item.Attributes.Append(itemEvent);
 
-                    XmlAttribute d_group = xmldoc.CreateAttribute("",
-                            "group", "");
-                    d_group.Value = det.Group.ToString();
-                    objectElem.Attributes.Append(d_group);
+                    XmlElement parms = xmldoc.CreateElement("", "Params", "");
 
-                    XmlAttribute d_name = xmldoc.CreateAttribute("",
-                            "name", "");
-                    d_name.Value = det.Name.ToString();
-                    objectElem.Attributes.Append(d_name);
+                    foreach (Object o in ep.Params)
+                        WriteTypedValue(xmldoc, parms, "Param", String.Empty, o);
 
-                    XmlAttribute d_owner = xmldoc.CreateAttribute("",
-                            "owner", "");
-                    d_owner.Value = det.Owner.ToString();
-                    objectElem.Attributes.Append(d_owner);
+                    item.AppendChild(parms);
 
-                    XmlAttribute d_position = xmldoc.CreateAttribute("",
-                            "position", "");
-                    d_position.Value = det.Position.ToString();
-                    objectElem.Attributes.Append(d_position);
+                    XmlElement detect = xmldoc.CreateElement("", "Detected", "");
 
-                    XmlAttribute d_rotation = xmldoc.CreateAttribute("",
-                            "rotation", "");
-                    d_rotation.Value = det.Rotation.ToString();
-                    objectElem.Attributes.Append(d_rotation);
+                    foreach (DetectParams det in ep.DetectParams)
+                    {
+                        XmlElement objectElem = xmldoc.CreateElement("", "Object",
+                                                                     "");
+                        XmlAttribute pos = xmldoc.CreateAttribute("", "pos", "");
+                        pos.Value = det.OffsetPos.ToString();
+                        objectElem.Attributes.Append(pos);
 
-                    XmlAttribute d_type = xmldoc.CreateAttribute("",
-                            "type", "");
-                    d_type.Value = det.Type.ToString();
-                    objectElem.Attributes.Append(d_type);
+                        XmlAttribute d_linkNum = xmldoc.CreateAttribute("",
+                                "linkNum", "");
+                        d_linkNum.Value = det.LinkNum.ToString();
+                        objectElem.Attributes.Append(d_linkNum);
 
-                    XmlAttribute d_velocity = xmldoc.CreateAttribute("",
-                            "velocity", "");
-                    d_velocity.Value = det.Velocity.ToString();
-                    objectElem.Attributes.Append(d_velocity);
+                        XmlAttribute d_group = xmldoc.CreateAttribute("",
+                                "group", "");
+                        d_group.Value = det.Group.ToString();
+                        objectElem.Attributes.Append(d_group);
 
-                    objectElem.AppendChild(
-                        xmldoc.CreateTextNode(det.Key.ToString()));
+                        XmlAttribute d_name = xmldoc.CreateAttribute("",
+                                "name", "");
+                        d_name.Value = det.Name.ToString();
+                        objectElem.Attributes.Append(d_name);
 
-                    detect.AppendChild(objectElem);
+                        XmlAttribute d_owner = xmldoc.CreateAttribute("",
+                                "owner", "");
+                        d_owner.Value = det.Owner.ToString();
+                        objectElem.Attributes.Append(d_owner);
+
+                        XmlAttribute d_position = xmldoc.CreateAttribute("",
+                                "position", "");
+                        d_position.Value = det.Position.ToString();
+                        objectElem.Attributes.Append(d_position);
+
+                        XmlAttribute d_rotation = xmldoc.CreateAttribute("",
+                                "rotation", "");
+                        d_rotation.Value = det.Rotation.ToString();
+                        objectElem.Attributes.Append(d_rotation);
+
+                        XmlAttribute d_type = xmldoc.CreateAttribute("",
+                                "type", "");
+                        d_type.Value = det.Type.ToString();
+                        objectElem.Attributes.Append(d_type);
+
+                        XmlAttribute d_velocity = xmldoc.CreateAttribute("",
+                                "velocity", "");
+                        d_velocity.Value = det.Velocity.ToString();
+                        objectElem.Attributes.Append(d_velocity);
+
+                        objectElem.AppendChild(
+                            xmldoc.CreateTextNode(det.Key.ToString()));
+
+                        detect.AppendChild(objectElem);
+                    }
+
+                    item.AppendChild(detect);
+                    queue.AppendChild(item);
                 }
-
-                item.AppendChild(detect);
-
-                queue.AppendChild(item);
+                i++;
             }
 
             rootElement.AppendChild(queue);
@@ -1042,6 +1048,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             FileStream fcs = File.Create(Path.Combine(Path.GetDirectoryName(AssemblyName), ItemID.ToString() + ".state"));
             System.Text.UTF8Encoding enc = new System.Text.UTF8Encoding();
             Byte[] buf = enc.GetBytes(doc.InnerXml);
+            CurrentStateXML = doc.InnerXml;
             fcs.Write(buf, 0, buf.Length);
             fcs.Close();
         }
@@ -1173,11 +1180,10 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 		private Queue<LUStruct> LUQueue = new Queue<LUStruct>();
 		private static bool PrivateThread;
 		private int LoadUnloadMaxQueueSize;
-		private int MinMicrothreadScriptThreshold;
-		private Object scriptLock = new Object();
 		private bool m_started = false;
 		private Dictionary<InstanceData, DetectParams[]> detparms = new Dictionary<InstanceData, DetectParams[]>();
 		public Dictionary<UUID, string[]> Errors = new Dictionary<UUID, string[]>();
+        private int SleepTime = 250;
 
 		// Load/Unload structure
 		private struct LUStruct
@@ -1242,7 +1248,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 			// TODO: Requires sharing of all ScriptManagers to single thread
 			PrivateThread = true;
 			LoadUnloadMaxQueueSize = m_scriptEngine.ScriptConfigSource.GetInt("LoadUnloadMaxQueueSize", 100);
-			MinMicrothreadScriptThreshold = m_scriptEngine.ScriptConfigSource.GetInt("LoadUnloadMaxQueueSizeBeforeMicrothreading", 100);
+			SleepTime = m_scriptEngine.ScriptConfigSource.GetInt("SleepTimeBetweenLoops", 250);
 		}
 
 		public void Start()
@@ -1295,20 +1301,26 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 		/// </summary>
 		public void DoScriptsLoadUnload()
 		{
-			if (!m_started)
+            if (!m_started)
 				return;
 
 			List<IEnumerator> StartParts = new List<IEnumerator>();
 			List<IEnumerator> StopParts = new List<IEnumerator>();
+            List<InstanceData> FireEvents = new List<InstanceData>();
 			lock (LUQueue) {
 				if (LUQueue.Count > 0) {
 					int i = 0;
-					while (i < LUQueue.Count) {
+					while (i < LUQueue.Count)
+                    {
 						LUStruct item = LUQueue.Dequeue();
 
-						if (item.Action == LUType.Unload) {
+						if (item.Action == LUType.Unload)
+                        {
 							StopParts.Add(item.ID.CloseAndDispose().GetEnumerator());
-						} else if (item.Action == LUType.Load) {
+						} 
+                        else if (item.Action == LUType.Load)
+                        {
+                            FireEvents.Add(item.ID);
 							StartParts.Add(item.ID.Start());
 						}
 						i++;
@@ -1342,9 +1354,16 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 					}
 
 					if (!running)
+                    {
 						StartParts.Remove(StartParts[i % StartParts.Count]);
+                    }
 				}
 			}
+            foreach (InstanceData ID in FireEvents)
+            {
+                ID.FireEvents();
+            }
+            FireEvents.Clear();
 		}
 
 		#endregion
@@ -1368,10 +1387,11 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 		public void StartScript(uint localID, UUID itemID, string Script, int startParam, bool postOnRez, StateSource statesource)
 		{
 			InstanceData id = null;
-			lock (LUQueue) {
-				if ((LUQueue.Count >= LoadUnloadMaxQueueSize) && m_started) {
+			lock (LUQueue) 
+            {
+				if ((LUQueue.Count >= LoadUnloadMaxQueueSize) && m_started)
+                {
 					m_log.Error("[" + m_scriptEngine.ScriptEngineName + "]: ERROR: Load/unload queue item count is at " + LUQueue.Count + ". Config variable \"LoadUnloadMaxQueueSize\" " + "is set to " + LoadUnloadMaxQueueSize + ", so ignoring new script.");
-
 					return;
 				}
 				id = new InstanceData(this);
@@ -1383,7 +1403,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 				id.State = "default";
 				id.Running = true;
 				id.Disabled = false;
-				id.Source = Script;
+                id.Source = Script;
 				id.PostOnRez = postOnRez;
 				LUStruct ls = new LUStruct();
 				ls.Action = LUType.Load;
@@ -1510,9 +1530,12 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         public Queue<StateQueueItem> StateQueue = new Queue<StateQueueItem>();
         Thread thread = null;
         IScriptEngine m_ScriptEngine = null;
-        public StateSaverQueue(IScriptEngine engine)
+        private int SleepTime = 250;
+        
+        public StateSaverQueue(ScriptEngine engine)
         {
             m_ScriptEngine = engine;
+            SleepTime = engine.ScriptConfigSource.GetInt("SleepTimeBetweenLoops", 250);
             thread = Watchdog.StartThread(RunLoop, "StateQueueThread", ThreadPriority.BelowNormal, true);
         }
 
@@ -1541,6 +1564,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
         public void DoQueue()
         {
+            Thread.Sleep(SleepTime);
             List<IEnumerator> Parts = new List<IEnumerator>();
             while (StateQueue.Count != 0)
             {

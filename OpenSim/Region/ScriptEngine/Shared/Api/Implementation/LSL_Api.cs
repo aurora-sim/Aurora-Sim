@@ -6102,6 +6102,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             ps.BurstSpeedMax = 1.0f;
             ps.BurstRate = 0.1f;
             ps.PartMaxAge = 10.0f;
+            ps.BurstPartCount = 10;
             return ps;
         }
 

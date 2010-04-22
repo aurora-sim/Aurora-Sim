@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections;
 using OpenMetaverse;
 using Nini.Config;
 using OpenSim.Framework;
@@ -78,7 +79,7 @@ namespace OpenSim.Region.ScriptEngine.Interfaces
         void InitApi(string name, IScriptApi data);
 
         int GetStateEventFlags(string state);
-        bool ExecuteEvent(string state, string FunctionName, object[] args);
+        int ExecuteEvent(string state, string FunctionName, object[] args, int startingposition);
         Dictionary<string,Object> GetVars();
         void SetVars(Dictionary<string,Object> vars);
         void ResetVars();

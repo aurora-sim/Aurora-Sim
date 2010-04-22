@@ -16,19 +16,32 @@ using OpenMetaverse;
 
 namespace Aurora.Modules
 {
+    #region Weather Module
     [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class WeatherModule : ISharedRegionModule
     {
-        #region ISharedRegionModule Members
+        #region Declares
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private Timer timer = new Timer();
-        private List<Scene> Scenes = new List<Scene>();
+        private Dictionary<Scene, WeatherInRegion> Scenes = new Dictionary<Scene, WeatherInRegion>();
         private WeatherType CurrentWeather = WeatherType.Realistic;
         private bool Clouds = true;
+        private bool m_enabled = false;
+        private bool m_paused = false;
+        private IConfig m_config = null;
+        #endregion
+
+        #region ISharedRegionModule Members
 
         public void Initialise(IConfigSource source)
         {
+            m_config = source.Configs["Weather"];
+            if (m_config == null)
+                return;
+            m_enabled = m_config.GetBoolean("Enabled", false);
+            if (!m_enabled)
+                return;
             timer.Interval = 10000;
             timer.Enabled = true;
             timer.Elapsed += new ElapsedEventHandler(GenerateNewWindlightProfiles);
@@ -42,8 +55,14 @@ namespace Aurora.Modules
 
         public void AddRegion(Scene scene)
         {
-            Scenes.Add(scene);
+            if (!m_enabled)
+                return;
+            WeatherInRegion WIR = new WeatherInRegion();
+            WIR.Randomize();
+            Scenes.Add(scene, WIR);
             scene.AddCommand(this, "change weather", "Changes weather", "Changes the weather in the current region", ConsoleChangeWeather);
+            scene.AddCommand(this, "sync weather", "Syncs weather", "Syncs the weather of all regions to the current region", ConsoleSyncWeather);
+            scene.AddCommand(this, "weather", " weather <on,off,pause>", "Turns the weather on, off, or pauses it", ConsoleChangeEnabled);
         }
 
         public void RemoveRegion(Scene scene)
@@ -54,6 +73,70 @@ namespace Aurora.Modules
         public void RegionLoaded(Scene scene)
         {
 
+        }
+
+        public void PostInitialise() { }
+
+        public string Name
+        {
+            get { return "WeatherModule"; }
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
+        }
+
+        #endregion
+
+        #region Console Commands
+
+        public void ConsoleSyncWeather(string module, string[] cmdparams)
+        {
+            if (cmdparams.Length != 3)
+            {
+                m_log.Warn("Incorrect amount of parameters.");
+                return;
+            }
+            KeyValuePair<Scene, WeatherInRegion> Region = new KeyValuePair<Scene, WeatherInRegion>();
+            foreach (KeyValuePair<Scene, WeatherInRegion> scene in Scenes)
+            {
+                if (scene.Key.RegionInfo.RegionName == cmdparams[2])
+                    Region = scene;
+            }
+            if(Region.Key == null)
+            {
+                m_log.Warn("Region not found.");
+                return;
+            }
+            Dictionary<Scene, WeatherInRegion> NewScenes = new Dictionary<Scene, WeatherInRegion>(); 
+            foreach(KeyValuePair<Scene,WeatherInRegion> kvp in Scenes)
+            {
+                NewScenes.Add(kvp.Key, Region.Value);
+            }
+            Scenes.Clear();
+            Scenes = new Dictionary<Scene, WeatherInRegion>(NewScenes);
+        }
+
+        public void ConsoleChangeEnabled(string module, string[] cmdparams)
+        {
+            if (cmdparams.Length != 2)
+            {
+                m_log.Warn("Wrong amount of parameters!");
+                return;
+            }
+            if (cmdparams[1] == "off")
+            {
+                m_enabled = false;
+                m_paused = false;
+            }
+            if (cmdparams[1] == "on")
+            {
+                m_paused = false;
+                m_enabled = true;
+            }
+            if (cmdparams[1] == "pause")
+                m_paused = true;
         }
 
         public void ConsoleChangeWeather(string module, string[] cmdparams)
@@ -68,7 +151,7 @@ namespace Aurora.Modules
                 else
                 {
                     bool found = false;
-                    foreach (Scene scene in Scenes)
+                    foreach (Scene scene in Scenes.Keys)
                     {
                         if (scene.RegionInfo.RegionName == Region)
                         {
@@ -86,37 +169,136 @@ namespace Aurora.Modules
             GenerateNewWindlightProfiles();
         }
 
+        #endregion
 
+        #region Generate new weather in all regions
 
         private void GenerateNewWindlightProfiles()
         {
-            if (CurrentWeather == WeatherType.AlwaysRandom)
+            if (!m_enabled)
+                return;
+            if (m_paused)
+            {
+                SendCurrentProfilesToClients();
+                return;
+            }
+            SendCurrentProfilesToClients();
+            List<Scene> isRaining = new List<Scene>();
+            Random random = new Random();
+            Dictionary<Scene, WeatherInRegion> unfinishedScenes = Scenes;
+            foreach (KeyValuePair<Scene, WeatherInRegion> scene in Scenes)
+            {
+                if (scene.Value.CurrentRainy || scene.Value.NextRainy)
+                    isRaining.Add(scene.Key);
+                scene.Key.RegionInfo.WindlightSettings = scene.Value.MakeRegionWindLightData(scene.Key.RegionInfo.WindlightSettings);
+            }
+
+            #region Move rain
+            if (isRaining.Count > 0)
             {
                 
+                //unfinishedScenes.Remove();
+            }
+            #endregion
+            #region Make new rain
+            else
+            {
+                if (random.Next(1) == 1)
+                {
+                    //Make new rain
+                }
+            }
+            #endregion
+            //Make the others sunny
+            foreach (KeyValuePair<Scene, WeatherInRegion> kvp in unfinishedScenes)
+            {
+                kvp.Value.NextRainy = false;
+                kvp.Value.NextSunny = true;
             }
         }
 
-        void GenerateNewWindlightProfiles(object sender, ElapsedEventArgs e)
+        private void GenerateNewWindlightProfiles(object sender, ElapsedEventArgs e)
         {
             GenerateNewWindlightProfiles();
         }
 
-        public void PostInitialise() { }
+        #endregion
 
-        public string Name
+        #region Send WindLight info to the client
+
+        private void SendCurrentProfilesToClients()
         {
-            get { return "WeatherModule"; }
+            foreach (Scene scene in Scenes.Keys)
+            {
+                scene.ForEachScenePresence(SendProfileToClient);
+            }
         }
 
-        public Type ReplaceableInterface
+        public void SendProfileToClient(ScenePresence presence)
         {
-            get { return null; }
+            IClientAPI client = presence.ControllingClient;
+            if (presence.IsChildAgent == false)
+            {
+                List<byte[]> param = compileWindlightSettings(presence.Scene.RegionInfo.WindlightSettings);
+                client.SendGenericMessage("Windlight", param);
+            }
+        }
+
+        private List<byte[]> compileWindlightSettings(RegionLightShareData wl)
+        {
+            byte[] mBlock = new Byte[249];
+            int pos = 0;
+
+            wl.waterColor.ToBytes(mBlock, 0); pos += 12;
+            OpenMetaverse.Utils.FloatToBytes(wl.waterFogDensityExponent).CopyTo(mBlock, pos); pos += 4;
+            OpenMetaverse.Utils.FloatToBytes(wl.underwaterFogModifier).CopyTo(mBlock, pos); pos += 4;
+            wl.reflectionWaveletScale.ToBytes(mBlock, pos); pos += 12;
+            OpenMetaverse.Utils.FloatToBytes(wl.fresnelScale).CopyTo(mBlock, pos); pos += 4;
+            OpenMetaverse.Utils.FloatToBytes(wl.fresnelOffset).CopyTo(mBlock, pos); pos += 4;
+            OpenMetaverse.Utils.FloatToBytes(wl.refractScaleAbove).CopyTo(mBlock, pos); pos += 4;
+            OpenMetaverse.Utils.FloatToBytes(wl.refractScaleBelow).CopyTo(mBlock, pos); pos += 4;
+            OpenMetaverse.Utils.FloatToBytes(wl.blurMultiplier).CopyTo(mBlock, pos); pos += 4;
+            wl.bigWaveDirection.ToBytes(mBlock, pos); pos += 8;
+            wl.littleWaveDirection.ToBytes(mBlock, pos); pos += 8;
+            wl.normalMapTexture.ToBytes(mBlock, pos); pos += 16;
+            wl.horizon.ToBytes(mBlock, pos); pos += 16;
+            OpenMetaverse.Utils.FloatToBytes(wl.hazeHorizon).CopyTo(mBlock, pos); pos += 4;
+            wl.blueDensity.ToBytes(mBlock, pos); pos += 16;
+            OpenMetaverse.Utils.FloatToBytes(wl.hazeDensity).CopyTo(mBlock, pos); pos += 4;
+            OpenMetaverse.Utils.FloatToBytes(wl.densityMultiplier).CopyTo(mBlock, pos); pos += 4;
+            OpenMetaverse.Utils.FloatToBytes(wl.distanceMultiplier).CopyTo(mBlock, pos); pos += 4;
+            wl.sunMoonColor.ToBytes(mBlock, pos); pos += 16;
+            OpenMetaverse.Utils.FloatToBytes(wl.sunMoonPosition).CopyTo(mBlock, pos); pos += 4;
+            wl.ambient.ToBytes(mBlock, pos); pos += 16;
+            OpenMetaverse.Utils.FloatToBytes(wl.eastAngle).CopyTo(mBlock, pos); pos += 4;
+            OpenMetaverse.Utils.FloatToBytes(wl.sunGlowFocus).CopyTo(mBlock, pos); pos += 4;
+            OpenMetaverse.Utils.FloatToBytes(wl.sunGlowSize).CopyTo(mBlock, pos); pos += 4;
+            OpenMetaverse.Utils.FloatToBytes(wl.sceneGamma).CopyTo(mBlock, pos); pos += 4;
+            OpenMetaverse.Utils.FloatToBytes(wl.starBrightness).CopyTo(mBlock, pos); pos += 4;
+            wl.cloudColor.ToBytes(mBlock, pos); pos += 16;
+            wl.cloudXYDensity.ToBytes(mBlock, pos); pos += 12;
+            OpenMetaverse.Utils.FloatToBytes(wl.cloudCoverage).CopyTo(mBlock, pos); pos += 4;
+            OpenMetaverse.Utils.FloatToBytes(wl.cloudScale).CopyTo(mBlock, pos); pos += 4;
+            wl.cloudDetailXYDensity.ToBytes(mBlock, pos); pos += 12;
+            OpenMetaverse.Utils.FloatToBytes(wl.cloudScrollX).CopyTo(mBlock, pos); pos += 4;
+            OpenMetaverse.Utils.FloatToBytes(wl.cloudScrollY).CopyTo(mBlock, pos); pos += 4;
+            OpenMetaverse.Utils.UInt16ToBytes(wl.maxAltitude).CopyTo(mBlock, pos); pos += 2;
+            mBlock[pos] = Convert.ToByte(wl.cloudScrollXLock); pos++;
+            mBlock[pos] = Convert.ToByte(wl.cloudScrollYLock); pos++;
+            mBlock[pos] = Convert.ToByte(wl.drawClassicClouds); pos++;
+            List<byte[]> param = new List<byte[]>();
+            param.Add(mBlock);
+            return param;
         }
 
         #endregion
     }
 
-    private class WeatherInRegion
+    #endregion
+
+    #region WeatherInRegion class
+
+    public class WeatherInRegion
     {
         public bool CurrentlyCloudy = false;
         public bool CurrentlySunny = false;
@@ -159,7 +341,7 @@ namespace Aurora.Modules
             NextRainy = randomnum == 1;
         }
 
-        public void MakeRegionWindLightData(Scene scene, RegionLightShareData RLS)
+        public RegionLightShareData MakeRegionWindLightData(RegionLightShareData RLS)
         {
             #region Sun position and star brightness
             RLS.sunMoonPosition += .1f;
@@ -351,8 +533,15 @@ namespace Aurora.Modules
                     RLS.cloudScrollY = 10;
             }
             #endregion
+
+            RLS.Save();
+            return RLS;
         }
     }
+
+    #endregion
+
+    #region Enums
     public enum WeatherType
     {
         Sunny = 0,
@@ -363,5 +552,6 @@ namespace Aurora.Modules
         AlwaysRandom = 5,
         Sync = 6
     }
-    
+
+    #endregion
 }

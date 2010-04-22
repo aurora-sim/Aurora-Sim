@@ -397,7 +397,8 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         }
         #endregion
 
-        #region Start/End Scripts
+        #region Start/End/Suspend Scripts
+
         public void OnStartScript(uint localID, UUID itemID)
         {
             InstanceData id = m_ScriptManager.GetScript(localID, itemID);
@@ -438,6 +439,22 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                            controllingClient.AgentId);
             }
         }
+
+        public void SuspendScript(UUID itemID)
+        {
+            InstanceData ID = m_ScriptManager.GetScriptByItemID(itemID);
+            ID.Suspended = true;
+        }
+
+        public void ResumeScript(UUID itemID)
+        {
+            InstanceData ID = m_ScriptManager.GetScriptByItemID(itemID);
+            if (ID == null)
+                m_MaintenanceThread.AddResumeScript(itemID);
+            else
+                ID.Suspended = false;
+        }
+
         #endregion
 
         #region GetScriptAPI
@@ -471,126 +488,21 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         #endregion
 
         #region XML Serialization
+
         public string GetXMLState(UUID itemID)
         {
             InstanceData instance = m_ScriptManager.GetScriptByItemID(itemID);
-            //if (instance == null)
-                return "";
-            string xml = Serialize(instance);
-
-            Type type = instance.Script.GetType();
-            FieldInfo[] mi = type.GetFields();
-            
-			
-            XmlDocument sdoc = new XmlDocument();
-            sdoc.LoadXml(xml);
-            XmlNodeList rootL = sdoc.GetElementsByTagName("ScriptState");
-            XmlNode rootNode = rootL[0];
-
-            // Create <State UUID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
-            XmlDocument doc = new XmlDocument();
-            XmlElement stateData = doc.CreateElement("", "State", "");
-            XmlAttribute stateID = doc.CreateAttribute("", "UUID", "");
-            stateID.Value = itemID.ToString();
-            stateData.Attributes.Append(stateID);
-            XmlAttribute assetID = doc.CreateAttribute("", "Asset", "");
-            assetID.Value = instance.AssetID.ToString();
-            stateData.Attributes.Append(assetID);
-            XmlAttribute engineName = doc.CreateAttribute("", "Engine", "");
-            engineName.Value = ScriptEngineName;
-            stateData.Attributes.Append(engineName);
-            doc.AppendChild(stateData);
-
-            // Add <ScriptState>...</ScriptState>
-            XmlNode xmlstate = doc.ImportNode(rootNode, true);
-            stateData.AppendChild(xmlstate);
-
-            string assemName = instance.AssemblyName;
-
-            string fn = Path.GetFileName(assemName);
-
-            string assem = String.Empty;
-
-            if (File.Exists(assemName + ".text"))
+            IEnumerator enumerator = instance.Serialize();
+            bool running = true;
+            while (running)
             {
-                FileInfo tfi = new FileInfo(assemName + ".text");
-
-                if (tfi != null)
+                try
                 {
-                    Byte[] tdata = new Byte[tfi.Length];
-
-                    try
-                    {
-                        FileStream tfs = File.Open(assemName + ".text",
-                                FileMode.Open, FileAccess.Read);
-                        tfs.Read(tdata, 0, tdata.Length);
-                        tfs.Close();
-
-                        assem = new System.Text.ASCIIEncoding().GetString(tdata);
-                    }
-                    catch (Exception e)
-                    {
-                        m_log.DebugFormat("[{0}]: Unable to open script textfile {1}, reason: {2}",ScriptEngineName, assemName + ".text", e.Message);
-                    }
+                    running = enumerator.MoveNext();
                 }
+                catch (Exception) { }
             }
-            else
-            {
-                FileInfo fi = new FileInfo(assemName);
-
-                if (fi != null)
-                {
-                    Byte[] data = new Byte[fi.Length];
-
-                    try
-                    {
-                        FileStream fs = File.Open(assemName, FileMode.Open, FileAccess.Read);
-                        fs.Read(data, 0, data.Length);
-                        fs.Close();
-
-                        assem = System.Convert.ToBase64String(data);
-                    }
-                    catch (Exception e)
-                    {
-                        m_log.DebugFormat("[{0}]: Unable to open script assembly {1}, reason: {2}",ScriptEngineName, assemName, e.Message);
-                    }
-
-                }
-            }
-
-            string map = String.Empty;
-
-            if (File.Exists(fn + ".map"))
-            {
-                FileStream mfs = File.Open(fn + ".map", FileMode.Open, FileAccess.Read);
-                StreamReader msr = new StreamReader(mfs);
-
-                map = msr.ReadToEnd();
-
-                msr.Close();
-                mfs.Close();
-            }
-
-            XmlElement assemblyData = doc.CreateElement("", "Assembly", "");
-            XmlAttribute assemblyName = doc.CreateAttribute("", "Filename", "");
-
-            assemblyName.Value = fn;
-            assemblyData.Attributes.Append(assemblyName);
-
-            assemblyData.InnerText = assem;
-
-            stateData.AppendChild(assemblyData);
-
-            XmlElement mapData = doc.CreateElement("", "LineMap", "");
-            XmlAttribute mapName = doc.CreateAttribute("", "Filename", "");
-
-            mapName.Value = fn + ".map";
-            mapData.Attributes.Append(mapName);
-
-            mapData.InnerText = map;
-
-            stateData.AppendChild(mapData);
-            return doc.InnerXml;
+            return instance.CurrentStateXML;
         }
 
         public ArrayList GetScriptErrors(UUID itemID)
@@ -600,302 +512,11 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
         public bool SetXMLState(UUID itemID, string xml)
         {
-            //if (xml == String.Empty)
+            InstanceData instance = m_ScriptManager.GetScriptByItemID(itemID);
+            if (instance == null)
                 return false;
-
-            XmlDocument doc = new XmlDocument();
-
-            try
-            {
-                doc.LoadXml(xml);
-            }
-            catch (Exception)
-            {
-                m_log.Error("[XEngine]: Exception decoding XML data from region transfer");
-                return false;
-            }
-
-            XmlNodeList rootL = doc.GetElementsByTagName("State");
-            if (rootL.Count < 1)
-                return false;
-
-            XmlElement rootE = (XmlElement)rootL[0];
-
-            if (rootE.GetAttribute("Engine") != ScriptEngineName)
-                return false;
-
-            //          On rez from inventory, that ID will have changed. It was only
-            //          advisory anyway. So we don't check it anymore.
-            //
-            //            if (rootE.GetAttribute("UUID") != itemID.ToString())
-            //                return;
-
-            XmlNodeList stateL = rootE.GetElementsByTagName("ScriptState");
-
-            if (stateL.Count != 1)
-                return false;
-
-            XmlElement stateE = (XmlElement)stateL[0];
-
-            if (World.m_trustBinaries)
-            {
-                XmlNodeList assemL = rootE.GetElementsByTagName("Assembly");
-
-                if (assemL.Count != 1)
-                    return false;
-
-                XmlElement assemE = (XmlElement)assemL[0];
-
-                string fn = assemE.GetAttribute("Filename");
-                string base64 = assemE.InnerText;
-
-                string path = Path.Combine("ScriptEngines", World.RegionInfo.RegionID.ToString());
-                path = Path.Combine(path, fn);
-
-                if (!File.Exists(path))
-                {
-                    Byte[] filedata = Convert.FromBase64String(base64);
-
-                    FileStream fs = File.Create(path);
-                    fs.Write(filedata, 0, filedata.Length);
-                    fs.Close();
-
-                    fs = File.Create(path + ".text");
-                    StreamWriter sw = new StreamWriter(fs);
-
-                    sw.Write(base64);
-
-                    sw.Close();
-                    fs.Close();
-                }
-            }
-
-            string statepath = Path.Combine("ScriptEngines", World.RegionInfo.RegionID.ToString());
-            statepath = Path.Combine(statepath, itemID.ToString() + ".state");
-
-            FileStream sfs = File.Create(statepath);
-            StreamWriter ssw = new StreamWriter(sfs);
-
-            ssw.Write(stateE.OuterXml);
-
-            ssw.Close();
-            sfs.Close();
-
-            XmlNodeList mapL = rootE.GetElementsByTagName("LineMap");
-            if (mapL.Count > 0)
-            {
-                XmlElement mapE = (XmlElement)mapL[0];
-
-                string mappath = Path.Combine("ScriptEngines", World.RegionInfo.RegionID.ToString());
-                mappath = Path.Combine(mappath, mapE.GetAttribute("Filename"));
-
-                FileStream mfs = File.Create(mappath);
-                StreamWriter msw = new StreamWriter(mfs);
-
-                msw.Write(mapE.InnerText);
-
-                msw.Close();
-                mfs.Close();
-            }
+            instance.Deserialize(xml);
             return true;
-        }
-
-        public string Serialize(InstanceData instance)
-        {
-            bool running = instance.Running;
-
-            XmlDocument xmldoc = new XmlDocument();
-
-            XmlNode xmlnode = xmldoc.CreateNode(XmlNodeType.XmlDeclaration,
-                                                "", "");
-            xmldoc.AppendChild(xmlnode);
-
-            XmlElement rootElement = xmldoc.CreateElement("", "ScriptState",
-                                                          "");
-            xmldoc.AppendChild(rootElement);
-
-            XmlElement state = xmldoc.CreateElement("", "State", "");
-            state.AppendChild(xmldoc.CreateTextNode(instance.State));
-
-            rootElement.AppendChild(state);
-
-            XmlElement run = xmldoc.CreateElement("", "Running", "");
-            run.AppendChild(xmldoc.CreateTextNode(
-                    running.ToString()));
-
-            rootElement.AppendChild(run);
-
-            Dictionary<string, Object> vars = instance.Script.GetVars();
-
-            XmlElement variables = xmldoc.CreateElement("", "Variables", "");
-
-            foreach (KeyValuePair<string, Object> var in vars)
-                WriteTypedValue(xmldoc, variables, "Variable", var.Key,
-                                var.Value);
-
-            rootElement.AppendChild(variables);
-
-            XmlElement queue = xmldoc.CreateElement("", "Queue", "");
-
-            int count = m_EventQueueManager.eventQueue.CountOf(instance.ItemID);
-
-            while (count > 0)
-            {
-                QueueItemStruct QIS = m_EventQueueManager.eventQueue.Dequeue(instance.ItemID);
-                EventParams ep = new EventParams(QIS.functionName, QIS.param, QIS.llDetectParams);
-                m_EventQueueManager.eventQueue.Enqueue(QIS, QIS.ID.ItemID);
-                count--;
-
-                XmlElement item = xmldoc.CreateElement("", "Item", "");
-                XmlAttribute itemEvent = xmldoc.CreateAttribute("", "event",
-                                                                "");
-                itemEvent.Value = ep.EventName;
-                item.Attributes.Append(itemEvent);
-
-                XmlElement parms = xmldoc.CreateElement("", "Params", "");
-
-                foreach (Object o in ep.Params)
-                    WriteTypedValue(xmldoc, parms, "Param", String.Empty, o);
-
-                item.AppendChild(parms);
-
-                XmlElement detect = xmldoc.CreateElement("", "Detected", "");
-
-                foreach (DetectParams det in ep.DetectParams)
-                {
-                    XmlElement objectElem = xmldoc.CreateElement("", "Object",
-                                                                 "");
-                    XmlAttribute pos = xmldoc.CreateAttribute("", "pos", "");
-                    pos.Value = det.OffsetPos.ToString();
-                    objectElem.Attributes.Append(pos);
-
-                    XmlAttribute d_linkNum = xmldoc.CreateAttribute("",
-                            "linkNum", "");
-                    d_linkNum.Value = det.LinkNum.ToString();
-                    objectElem.Attributes.Append(d_linkNum);
-
-                    XmlAttribute d_group = xmldoc.CreateAttribute("",
-                            "group", "");
-                    d_group.Value = det.Group.ToString();
-                    objectElem.Attributes.Append(d_group);
-
-                    XmlAttribute d_name = xmldoc.CreateAttribute("",
-                            "name", "");
-                    d_name.Value = det.Name.ToString();
-                    objectElem.Attributes.Append(d_name);
-
-                    XmlAttribute d_owner = xmldoc.CreateAttribute("",
-                            "owner", "");
-                    d_owner.Value = det.Owner.ToString();
-                    objectElem.Attributes.Append(d_owner);
-
-                    XmlAttribute d_position = xmldoc.CreateAttribute("",
-                            "position", "");
-                    d_position.Value = det.Position.ToString();
-                    objectElem.Attributes.Append(d_position);
-
-                    XmlAttribute d_rotation = xmldoc.CreateAttribute("",
-                            "rotation", "");
-                    d_rotation.Value = det.Rotation.ToString();
-                    objectElem.Attributes.Append(d_rotation);
-
-                    XmlAttribute d_type = xmldoc.CreateAttribute("",
-                            "type", "");
-                    d_type.Value = det.Type.ToString();
-                    objectElem.Attributes.Append(d_type);
-
-                    XmlAttribute d_velocity = xmldoc.CreateAttribute("",
-                            "velocity", "");
-                    d_velocity.Value = det.Velocity.ToString();
-                    objectElem.Attributes.Append(d_velocity);
-
-                    objectElem.AppendChild(
-                        xmldoc.CreateTextNode(det.Key.ToString()));
-
-                    detect.AppendChild(objectElem);
-                }
-
-                item.AppendChild(detect);
-
-                queue.AppendChild(item);
-            }
-
-            rootElement.AppendChild(queue);
-
-            XmlNode plugins = xmldoc.CreateElement("", "Plugins", "");
-            DumpList(xmldoc, plugins,
-                     new LSL_Types.list(AsyncCommandManager.GetSerializationData(this, instance.ItemID)));
-
-            rootElement.AppendChild(plugins);
-
-            /*if (instance.ScriptTask != null)
-            {
-                if (instance.ScriptTask.PermsMask != 0 && instance.ScriptTask.PermsGranter != UUID.Zero)
-                {
-                    XmlNode permissions = xmldoc.CreateElement("", "Permissions", "");
-                    XmlAttribute granter = xmldoc.CreateAttribute("", "granter", "");
-                    granter.Value = instance.ScriptTask.PermsGranter.ToString();
-                    permissions.Attributes.Append(granter);
-                    XmlAttribute mask = xmldoc.CreateAttribute("", "mask", "");
-                    mask.Value = instance.ScriptTask.PermsMask.ToString();
-                    permissions.Attributes.Append(mask);
-                    rootElement.AppendChild(permissions);
-                }
-            }*/
-
-            if (instance.EventDelayTicks > 0.0)
-            {
-                XmlElement eventDelay = xmldoc.CreateElement("", "MinEventDelay", "");
-                eventDelay.AppendChild(xmldoc.CreateTextNode(instance.EventDelayTicks.ToString()));
-                rootElement.AppendChild(eventDelay);
-            }
-
-            return xmldoc.InnerXml;
-        }
-        private void DumpList(XmlDocument doc, XmlNode parent,
-                LSL_Types.list l)
-        {
-            foreach (Object o in l.Data)
-                WriteTypedValue(doc, parent, "ListItem", "", o);
-        }
-
-        private void WriteTypedValue(XmlDocument doc, XmlNode parent,
-                string tag, string name, object value)
-        {
-            Type t = value.GetType();
-            XmlAttribute typ = doc.CreateAttribute("", "type", "");
-            XmlNode n = doc.CreateElement("", tag, "");
-
-            if (value is LSL_Types.list)
-            {
-                typ.Value = "list";
-                n.Attributes.Append(typ);
-
-                DumpList(doc, n, (LSL_Types.list)value);
-
-                if (name != String.Empty)
-                {
-                    XmlAttribute nam = doc.CreateAttribute("", "name", "");
-                    nam.Value = name;
-                    n.Attributes.Append(nam);
-                }
-
-                parent.AppendChild(n);
-                return;
-            }
-
-            n.AppendChild(doc.CreateTextNode(value.ToString()));
-
-            typ.Value = t.ToString();
-            n.Attributes.Append(typ);
-            if (name != String.Empty)
-            {
-                XmlAttribute nam = doc.CreateAttribute("", "name", "");
-                nam.Value = name;
-                n.Attributes.Append(nam);
-            }
-
-            parent.AppendChild(n);
         }
         #endregion
     }

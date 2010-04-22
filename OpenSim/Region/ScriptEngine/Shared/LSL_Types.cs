@@ -1407,6 +1407,10 @@ namespace OpenSim.Region.ScriptEngine.Shared
                 {
                     return false;
                 }
+                else if (s.m_string == OpenMetaverse.UUID.Zero.ToString())
+                {
+                    return false;
+                }
                 else
                 {
                     return true;
