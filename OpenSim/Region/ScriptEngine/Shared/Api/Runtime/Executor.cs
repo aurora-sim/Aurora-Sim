@@ -134,8 +134,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
             return (eventFlags);
         }
 
-        List<IEnumerator> m_threads = new List<IEnumerator>();
-        public bool ExecuteEvent(string state, string FunctionName, object[] args)
+        public int ExecuteEvent(string state, string FunctionName, object[] args, int StartingPosition)
         {
             // IMPORTANT: Types and MemberInfo-derived objects require a LOT of memory.
             // Instead use RuntimeTypeHandle, RuntimeFieldHandle and RunTimeHandle (IntPtr) instead!
@@ -166,19 +165,19 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
 			if (ev == null) // No event by that name!
 			{
 				//m_log.Debug("ScriptEngine Can not find any event named:" + EventName);
-				return false;
+                return 0;
 			}
 			IEnumerator thread = (IEnumerator)ev.Invoke(m_Script, args);
-			int i = 0;
+            int i = StartingPosition;
 			bool running = false;
-			while (i < 10)
+            while (i < i + 10)
 			{
 				i++;
 				try
 				{
 					running = thread.MoveNext();
 					if(!running)
-						return running;
+						return 0;
 				}
 				catch (TargetInvocationException tie)
 				{
@@ -194,7 +193,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
 					}
 				}
 			}
-			return running;
+            return i;
         }
 
         protected void initEventFlags()

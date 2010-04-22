@@ -187,14 +187,20 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                             try
                             {
                                 QIS.ID.SetEventParams(QIS.llDetectParams);
-                                bool Running = QIS.ID.Script.ExecuteEvent(
+                                int Running = 0;
+                                Running = QIS.ID.Script.ExecuteEvent(
                                     QIS.ID.State,
                                     QIS.functionName,
-                                    QIS.param);
-                                if(!Running)
+                                    QIS.param, QIS.CurrentlyAt);
+                                //Finished with nothing left.
+                                if(Running == 0)
                                 	continue;
-                                if (Running && !m_ScriptEngine.m_EventQueueManager.NeedsRemoved.Contains(QIS.ID.ItemID))
+                                //Did not finish and returned where it should start now
+                                if (Running != 0 && !m_ScriptEngine.m_EventQueueManager.NeedsRemoved.Contains(QIS.ID.ItemID))
+                                {
+                                    QIS.CurrentlyAt = Running;
                                     NeedsToBeRequeued.Add(QIS);
+                                }
                             }
                             catch (SelfDeleteException) // Must delete SOG
                             {

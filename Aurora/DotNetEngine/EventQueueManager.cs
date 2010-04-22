@@ -421,6 +421,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         public object[] param;
         public Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>>
                 LineMap;
+        public int CurrentlyAt = 0;
     }
 
     public class ScriptEventQueue<T>: IEnumerable<T>
