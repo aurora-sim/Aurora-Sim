@@ -1453,6 +1453,46 @@ namespace OpenSim.Region.ScriptEngine.Shared
             {
                 return new LSLString(s1.m_string + s2.m_string);
             }
+            public static LSLString operator +(LSLString s1, LSLFloat s2)
+            {
+                return new LSLString(s1.m_string + s2.ToString());
+            }
+            public static LSLString operator +(LSLString s1, LSLInteger s2)
+            {
+                return new LSLString(s1.m_string + s2.ToString());
+            }
+            public static LSLString operator +(LSLString s1, LSL_Types.Quaternion s2)
+            {
+                return new LSLString(s1.m_string + s2.ToString());
+            }
+            public static LSLString operator +(LSLString s1, LSL_Types.Vector3 s2)
+            {
+                return new LSLString(s1.m_string + s2.ToString());
+            }
+            public static LSLString operator +(LSLString s1, list s2)
+            {
+                return new LSLString(s1.m_string + s2.ToPrettyString());
+            }
+            public static LSLString operator +(LSL_Types.Vector3 s1, LSLString s2)
+            {
+                return new LSLString(s1.ToString() + s2.m_string);
+            }
+            public static LSLString operator +(LSL_Types.Quaternion s1, LSLString s2)
+            {
+                return new LSLString(s1.ToString() + s2.m_string);
+            }
+            public static LSLString operator +(LSL_Types.LSLInteger s1, LSLString s2)
+            {
+                return new LSLString(s1.ToString() + s2.m_string);
+            }
+            public static LSLString operator +(LSL_Types.LSLFloat s1, LSLString s2)
+            {
+                return new LSLString(s1.ToString() + s2.m_string);
+            }
+            public static LSLString operator +(LSL_Types.list s1, LSLString s2)
+            {
+                return new LSLString(s1.ToPrettyString() + s2.m_string);
+            }
 
             public static explicit operator double(LSLString s)
             {
