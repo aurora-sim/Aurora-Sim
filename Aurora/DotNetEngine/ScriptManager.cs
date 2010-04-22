@@ -465,7 +465,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                     InstanceData PreviouslyCompiledID = (InstanceData)m_scriptEngine.ScriptProtection.TryGetPreviouslyCompiledScript(Source);
                     if (PreviouslyCompiledID != null)
                     {
-                        if (!File.Exists(PreviouslyCompiledID.AssemblyName))
+                        if (File.Exists(PreviouslyCompiledID.AssemblyName))
                         {
                             FileInfo fi = new FileInfo(PreviouslyCompiledID.AssemblyName);
                             FileStream stream = fi.OpenRead();
@@ -476,7 +476,18 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                             sfs.Close();
                             stream.Close();
                         }
-                        if (!File.Exists(PreviouslyCompiledID.AssemblyName + ".map"))
+                        if (File.Exists(PreviouslyCompiledID.ItemID.ToString() + ".state"))
+                        {
+                            FileInfo fi = new FileInfo(PreviouslyCompiledID.ItemID.ToString() + ".state");
+                            FileStream stream = fi.OpenRead();
+                            Byte[] data = new Byte[fi.Length];
+                            stream.Read(data, 0, data.Length);
+                            FileStream sfs = File.Create(ItemID.ToString() + ".state");
+                            sfs.Write(data, 0, data.Length);
+                            sfs.Close();
+                            stream.Close();
+                        }
+                        if (File.Exists(PreviouslyCompiledID.AssemblyName + ".map"))
                         {
                             FileInfo fi = new FileInfo(PreviouslyCompiledID.AssemblyName + ".map");
                             FileStream stream = fi.OpenRead();
@@ -487,7 +498,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                             sfs.Close();
                             stream.Close();
                         }
-                        if (!File.Exists(PreviouslyCompiledID.AssemblyName + ".text"))
+                        if (File.Exists(PreviouslyCompiledID.AssemblyName + ".text"))
                         {
                             FileInfo fi = new FileInfo(PreviouslyCompiledID.AssemblyName + ".text");
                             FileStream stream = fi.OpenRead();
@@ -1138,7 +1149,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             yield return null;
             string map = String.Empty;
 
-            if (File.Exists(fn + ".map"))
+            if (File.Exists(AssemblyName + ".map"))
             {
                 FileStream mfs = File.Open(fn + ".map", FileMode.Open, FileAccess.Read);
                 StreamReader msr = new StreamReader(mfs);
@@ -1170,7 +1181,8 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             stateData.AppendChild(mapData);
 
             yield return null;
-            FileStream fcs = File.Create(Path.Combine(Path.GetDirectoryName(AssemblyName), ItemID.ToString() + ".state"));
+            string path = Path.Combine(Path.GetDirectoryName(AssemblyName), ItemID.ToString() + ".state");
+            FileStream fcs = File.Create(path);
             System.Text.UTF8Encoding enc = new System.Text.UTF8Encoding();
             Byte[] buf = enc.GetBytes(doc.InnerXml);
             CurrentStateXML = doc.InnerXml;
