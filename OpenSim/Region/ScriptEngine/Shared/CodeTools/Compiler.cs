@@ -118,7 +118,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             if (in_startup)
             {
                 in_startup = false;
-                DeleteOldFiles();
+                //DeleteOldFiles();
             }
 
             // Map name and enum type of our supported languages
@@ -812,7 +812,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
         }
 
 
-        private static Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> ReadMapFile(string filename)
+        public static Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> ReadMapFile(string filename)
         {
             Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> linemap;
             try

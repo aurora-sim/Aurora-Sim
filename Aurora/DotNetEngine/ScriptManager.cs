@@ -330,8 +330,18 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 
 			CultureInfo USCulture = new CultureInfo("en-US");
 			Thread.CurrentThread.CurrentCulture = USCulture;
-
-			#region Class and interface reader
+            string FilePrefix = "CommonCompiler";
+            foreach (char c in Path.GetInvalidFileNameChars())
+            {
+                FilePrefix = FilePrefix.Replace(c, '_');
+            }
+            AssemblyName = Path.Combine("ScriptEngines", Path.Combine(
+                    m_scriptEngine.World.RegionInfo.RegionID.ToString(),
+                    FilePrefix + "_compiled_" + AssetID.ToString() + ".dll"));
+            string savedState = Path.Combine(Path.GetDirectoryName(AssemblyName),
+                    ItemID.ToString() + ".state");
+            
+            #region Class and interface reader
 
 			string Inherited = "";
 			string ClassName = "";
@@ -406,52 +416,87 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 			#endregion
 
             bool previouslyCompiled = false;
-			try
-			{
-				InstanceData PreviouslyCompiledID = (InstanceData)m_scriptEngine.ScriptProtection.TryGetPreviouslyCompiledScript(Source);
-				if (PreviouslyCompiledID != null) 
-				{
-					AssemblyName = PreviouslyCompiledID.AssemblyName;
-					LineMap = PreviouslyCompiledID.LineMap;
-					ClassID = PreviouslyCompiledID.ClassID;
-                    AppDomain = PreviouslyCompiledID.AppDomain;
-                    Script = PreviouslyCompiledID.Script;
-                    previouslyCompiled = true;
-				} 
-				else 
-				{
-					// Compile (We assume LSL)
-					m_ScriptManager.LSLCompiler.PerformScriptCompile(Source, AssetID, InventoryItem.OwnerID, ItemID, Inherited, ClassName, m_scriptEngine.ScriptProtection, localID, this, out AssemblyName,
-					                                                 out LineMap, out ClassID);
-					m_scriptEngine.ScriptProtection.AddPreviouslyCompiled(Source, this);
-				}
+            if (File.Exists(AssemblyName) && File.Exists(savedState) && File.Exists(AssemblyName + ".map"))
+            {
+                //Find the linemap
+                LineMap = OpenSim.Region.ScriptEngine.Shared.CodeTools.Compiler.ReadMapFile(AssemblyName + ".map");
+                //Find the classID
+                string xml = String.Empty;
+                try
+                {
+                    FileInfo fi = new FileInfo(savedState);
+                    int size = (int)fi.Length;
+                    if (size < 512000)
+                    {
+                        using (FileStream fs = File.Open(savedState,
+                                                         FileMode.Open, FileAccess.Read, FileShare.None))
+                        {
+                            System.Text.UTF8Encoding enc =
+                                new System.Text.UTF8Encoding();
 
-				#region Warnings
+                            Byte[] data = new Byte[size];
+                            fs.Read(data, 0, size);
 
-				string[] compilewarnings = m_ScriptManager.LSLCompiler.GetWarnings();
+                            xml = enc.GetString(data);
 
-				if (compilewarnings != null && compilewarnings.Length != 0) {
-					if (presence != null && (!PostOnRez))
-						presence.ControllingClient.SendAgentAlertMessage("Script saved with warnings, check debug window!", false);
+                            FindClassID(xml);
+                        }
+                    }
+                }
+                catch (Exception) { }
+                //Dont set to previously compiled, otherwise we wont have the script loaded into the app domain.
+                previouslyCompiled = false;
+            }
+            else
+            {
+                try
+                {
+                    InstanceData PreviouslyCompiledID = (InstanceData)m_scriptEngine.ScriptProtection.TryGetPreviouslyCompiledScript(Source);
+                    if (PreviouslyCompiledID != null)
+                    {
+                        AssemblyName = PreviouslyCompiledID.AssemblyName;
+                        LineMap = PreviouslyCompiledID.LineMap;
+                        ClassID = PreviouslyCompiledID.ClassID;
+                        AppDomain = PreviouslyCompiledID.AppDomain;
+                        Script = PreviouslyCompiledID.Script;
+                        previouslyCompiled = true;
+                    }
+                    else
+                    {
+                        // Compile (We assume LSL)
+                        m_ScriptManager.LSLCompiler.PerformScriptCompile(Source, AssetID, InventoryItem.OwnerID, ItemID, Inherited, ClassName, m_scriptEngine.ScriptProtection, localID, this, out AssemblyName,
+                                                                         out LineMap, out ClassID);
+                        m_scriptEngine.ScriptProtection.AddPreviouslyCompiled(Source, this);
+                    }
 
-					foreach (string warning in compilewarnings) {
-						// DISPLAY WARNING INWORLD
-						string text = "Warning:\n" + warning;
-						if (text.Length > 1100)
-							text = text.Substring(0, 1099);
+                    #region Warnings
 
-						World.SimChat(Utils.StringToBytes(text), ChatTypeEnum.DebugChannel, 2147483647, part.AbsolutePosition, part.Name, part.UUID, false);
-					}
-				}
+                    string[] compilewarnings = m_ScriptManager.LSLCompiler.GetWarnings();
 
-				#endregion
+                    if (compilewarnings != null && compilewarnings.Length != 0)
+                    {
+                        if (presence != null && (!PostOnRez))
+                            presence.ControllingClient.SendAgentAlertMessage("Script saved with warnings, check debug window!", false);
 
-			} 
-			catch (Exception ex) 
-			{
-				ShowError(ex, 1);
-			}
-			if(presence != null)
+                        foreach (string warning in compilewarnings)
+                        {
+                            // DISPLAY WARNING INWORLD
+                            string text = "Warning:\n" + warning;
+                            if (text.Length > 1100)
+                                text = text.Substring(0, 1099);
+
+                            World.SimChat(Utils.StringToBytes(text), ChatTypeEnum.DebugChannel, 2147483647, part.AbsolutePosition, part.Name, part.UUID, false);
+                        }
+                    }
+
+                    #endregion
+                }
+                catch (Exception ex)
+                {
+                    ShowError(ex, 1);
+                }
+            }
+            if(presence != null)
 			    m_ScriptManager.Errors[ItemID] = new String[] { "SUCCESSFULL" };
             
 
@@ -494,8 +539,6 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             //ALWAYS reset up APIs, otherwise m_host doesn't get updated and LSL thinks its in another prim.
             SetApis();
 
-            string savedState = Path.Combine(Path.GetDirectoryName(AssemblyName),
-                    ItemID.ToString() + ".state");
             if (File.Exists(savedState))
             {
                 yield return null;
@@ -620,6 +663,9 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                             break;
                         case "Plugins":
                             PluginData = ReadList(part).Data;
+                            break;
+                        case "ClassID":
+                            ClassID = part.InnerText;
                             break;
                         case "Queue":
                             XmlNodeList itemL = part.ChildNodes;
@@ -768,6 +814,37 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             }
         }
 
+        public void FindClassID(string xml)
+        {
+            XmlDocument doc = new XmlDocument();
+
+            Dictionary<string, object> vars = Script.GetVars();
+
+            doc.LoadXml(xml);
+
+            XmlNodeList rootL = doc.GetElementsByTagName("ScriptState");
+            if (rootL.Count != 1)
+            {
+                return;
+            }
+            XmlNode rootNode = rootL[0];
+
+            if (rootNode != null)
+            {
+                XmlNodeList partL = rootNode.ChildNodes;
+
+                foreach (XmlNode part in partL)
+                {
+                    switch (part.Name)
+                    {
+                        case "ClassID":
+                            ClassID = part.InnerText;
+                            break;
+                    }
+                }
+            }
+        }
+
         public IEnumerator Serialize()
         {
             //Update PluginData
@@ -795,6 +872,12 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                     running.ToString()));
 
             rootElement.AppendChild(run);
+
+            XmlElement ClassID = xmldoc.CreateElement("", "ClassID", "");
+            ClassID.AppendChild(xmldoc.CreateTextNode(
+                    ClassID.ToString()));
+
+            rootElement.AppendChild(ClassID);
 
             Dictionary<string, Object> vars = Script.GetVars();
 
