@@ -346,20 +346,24 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 			string Inherited = "";
 			string ClassName = "";
 
-			if (m_scriptEngine.ScriptProtection.AllowMacroScripting) {
-				if (Source.Contains("#Inherited")) {
+			if (m_scriptEngine.ScriptProtection.AllowMacroScripting) 
+            {
+				if (Source.Contains("#Inherited")) 
+                {
 					int line = Source.IndexOf("#Inherited ");
 					Inherited = Source.Split('\n')[line];
 					Inherited = Inherited.Replace("#Inherited ", "");
 					Source = Source.Replace("#Inherited " + Inherited, "");
 				}
-				if (Source.Contains("#ClassName ")) {
+				if (Source.Contains("#ClassName ")) 
+                {
 					int line = Source.IndexOf("#ClassName ");
 					ClassName = Source.Split('\n')[line];
 					ClassName = ClassName.Replace("#ClassName ", "");
 					Source = Source.Replace("#ClassName " + ClassName, "");
 				}
-				if (Source.Contains("#IncludeHTML ")) {
+				if (Source.Contains("#IncludeHTML "))
+                {
 					string URL = "";
 					int line = Source.IndexOf("#IncludeHTML ");
 					URL = Source.Split('\n')[line];
@@ -369,7 +373,8 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 					m_scriptEngine.ScriptProtection.AddNewClassSource(URL, webSite, null);
 					m_scriptEngine.ScriptProtection.AddWantedSRC(ItemID, URL);
 				}
-				if (Source.Contains("#Include ")) {
+				if (Source.Contains("#Include ")) 
+                {
 					string WantedClass = "";
 					int line = Source.IndexOf("#Include ");
 					WantedClass = Source.Split('\n')[line];
@@ -377,22 +382,27 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 					Source = Source.Replace("#Include " + WantedClass, "");
 					m_scriptEngine.ScriptProtection.AddWantedSRC(ItemID, WantedClass);
 				}
-			} else {
-				if (Source.Contains("#Inherited")) {
+			} 
+            else 
+            {
+				if (Source.Contains("#Inherited")) 
+                {
 					int line = Source.IndexOf("#Inherited ");
 					Inherited = Source.Split('\n')[line];
 					Inherited = Inherited.Replace("#Inherited ", "");
 					Source = Source.Replace("#Inherited " + Inherited, "");
 					Inherited = "";
 				}
-				if (Source.Contains("#ClassName ")) {
+				if (Source.Contains("#ClassName ")) 
+                {
 					int line = Source.IndexOf("#ClassName ");
 					ClassName = Source.Split('\n')[line];
 					ClassName = ClassName.Replace("#ClassName ", "");
 					Source = Source.Replace("#ClassName " + ClassName, "");
 					ClassName = "";
 				}
-				if (Source.Contains("#IncludeHTML ")) {
+				if (Source.Contains("#IncludeHTML ")) 
+                {
 					string URL = "";
 					int line = Source.IndexOf("#IncludeHTML ");
 					URL = Source.Split('\n')[line];
@@ -402,7 +412,8 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 					URL = "";
 					webSite = "";
 				}
-				if (Source.Contains("#Include ")) {
+				if (Source.Contains("#Include ")) 
+                {
 					string WantedClass = "";
 					int line = Source.IndexOf("#Include ");
 					WantedClass = Source.Split('\n')[line];
@@ -459,6 +470,15 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                         Byte[] data = new Byte[fi.Length];
                         stream.Read(data, 0, data.Length);
                         FileStream sfs = File.Create(AssemblyName);
+                        sfs.Write(data, 0, data.Length);
+                        sfs.Close();
+                        stream.Close();
+
+                        fi = new FileInfo(PreviouslyCompiledID.AssemblyName + ".map");
+                        stream = fi.OpenRead();
+                        data = new Byte[fi.Length];
+                        stream.Read(data, 0, data.Length);
+                        sfs = File.Create(AssemblyName + ".map");
                         sfs.Write(data, 0, data.Length);
                         sfs.Close();
                         stream.Close();
