@@ -1,0 +1,13 @@
+<Addin id="Aurora.ScriptEngine.AuroraDotNetEngine" version="0.2">
+    <Runtime>
+        <Import assembly="Aurora.ScriptEngine.AuroraDotNetEngine.dll"/>
+    </Runtime>
+
+    <Dependencies>
+        <Addin id="OpenSim" version="0.5" />
+    </Dependencies>
+
+    <Extension path = "/OpenSim/RegionModules">
+        <RegionModule id="AuroraDotNetEngine" type="Aurora.ScriptEngine.AuroraDotNetEngine.ScriptEngine" />
+    </Extension>
+</Addin>

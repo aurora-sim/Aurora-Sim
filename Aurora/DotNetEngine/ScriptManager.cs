@@ -518,9 +518,10 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
                     }
                     else
                     {
+                        string assemtext;
                         // Compile (We assume LSL)
                         m_ScriptManager.LSLCompiler.PerformScriptCompile(Source, AssetID, InventoryItem.OwnerID, ItemID, Inherited, ClassName, m_scriptEngine.ScriptProtection, localID, this, out AssemblyName,
-                                                                         out LineMap, out ClassID);
+                                                                         out LineMap, out ClassID, out assemtext);
                         m_scriptEngine.ScriptProtection.AddPreviouslyCompiled(Source, this);
                     }
 

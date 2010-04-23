@@ -275,7 +275,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
         /// <param name="Script">LSL script</param>
         /// <returns>Filename to .dll assembly</returns>
         public void PerformScriptCompile(string Script, UUID assetID, UUID ownerUUID, UUID itemID, string InheritedClases, string ClassName, IScriptProtectionModule ScriptProtection, uint localID, object InstanceData,
-            out string assembly, out Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> linemap, out string Identifier)
+            out string assembly, out Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> linemap, out string Identifier, out string AssemblyText)
         {
         	string asset = assetID.ToString();
         	
@@ -397,7 +397,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                     break;
             }
 
-			assembly = CompileFromDotNetText(compileScript, language, asset, assembly);
+			assembly = CompileFromDotNetText(compileScript, language, asset, assembly, out AssemblyText);
             return;
         }
 
@@ -496,7 +496,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
         /// </summary>
         /// <param name="Script">CS script</param>
         /// <returns>Filename to .dll assembly</returns>
-        internal string CompileFromDotNetText(string Script, enumCompileType lang, string asset, string assembly)
+        internal string CompileFromDotNetText(string Script, enumCompileType lang, string asset, string assembly, out string AssemblyText)
         {
             string ext = "." + lang.ToString();
 
@@ -709,11 +709,11 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
 
             // Convert to base64
             //
-            string filetext = System.Convert.ToBase64String(data);
+            AssemblyText = System.Convert.ToBase64String(data);
 
             System.Text.ASCIIEncoding enc = new System.Text.ASCIIEncoding();
 
-            Byte[] buf = enc.GetBytes(filetext);
+            Byte[] buf = enc.GetBytes(AssemblyText);
 
             FileStream sfs = File.Create(assembly + ".text");
             sfs.Write(buf, 0, buf.Length);
@@ -833,6 +833,37 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                     KeyValuePair<int, int> v = new KeyValuePair<int, int>(vk, vv);
 
                     linemap[k] = v;
+                }
+            }
+            catch
+            {
+                linemap = new Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>>();
+            }
+            return linemap;
+        }
+
+        public static Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> ReadMapFileFromString(string text)
+        {
+            Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> linemap;
+            try
+            {
+                linemap = new Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>>();
+
+                string line;
+                int i = 0;
+                while ((line = text.Split('\n')[i]) != null)
+                {
+                    String[] parts = line.Split(new Char[] { ',' });
+                    int kk = System.Convert.ToInt32(parts[0]);
+                    int kv = System.Convert.ToInt32(parts[1]);
+                    int vk = System.Convert.ToInt32(parts[2]);
+                    int vv = System.Convert.ToInt32(parts[3]);
+
+                    KeyValuePair<int, int> k = new KeyValuePair<int, int>(kk, kv);
+                    KeyValuePair<int, int> v = new KeyValuePair<int, int>(vk, vv);
+
+                    linemap[k] = v;
+                    i++;
                 }
             }
             catch
