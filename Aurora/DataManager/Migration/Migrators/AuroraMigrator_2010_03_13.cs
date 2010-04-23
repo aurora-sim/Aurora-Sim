@@ -335,6 +335,21 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("Title", ColumnTypes.String50),
                 ColDef("Powers", ColumnTypes.String50)));
 
+            AddSchema("auroraDotNetStateSaves", ColDefs(
+                ColDef("State", ColumnTypes.String50),
+                ColDef("ItemID", ColumnTypes.String50),
+                ColDef("Source", ColumnTypes.String8196),
+                ColDef("LineMap", ColumnTypes.String8196),
+                ColDef("Running", ColumnTypes.String50),
+                ColDef("Variables", ColumnTypes.String8196),
+                ColDef("Plugins", ColumnTypes.String8196),
+                ColDef("ClassID", ColumnTypes.String50),
+                ColDef("Queue", ColumnTypes.String50),
+                ColDef("Permissions", ColumnTypes.String50),
+                ColDef("MinEventDelay", ColumnTypes.String50),
+                ColDef("AssemblyText", ColumnTypes.String8196)
+                ));
+
             
             #region Search Tables
             

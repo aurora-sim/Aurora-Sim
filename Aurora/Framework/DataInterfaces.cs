@@ -213,6 +213,7 @@ namespace Aurora.Framework
         String512,
         String45,
         String1024,
+        String8196,
         String2,
         String1,
         String100

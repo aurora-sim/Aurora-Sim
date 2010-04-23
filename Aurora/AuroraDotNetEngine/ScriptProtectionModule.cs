@@ -334,12 +334,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public void AddNewScript(IInstanceData Data)
         {
         	ScriptData ID = (ScriptData)Data;
+            if (ScriptsItems.ContainsKey(ID.ItemID))
+                ScriptsItems.Remove(ID.ItemID);
         	ScriptsItems.Add(ID.ItemID, ID.localID);
         	Dictionary<UUID, ScriptData> Instances = new Dictionary<UUID, ScriptData>();
         	if(Scripts.ContainsKey(ID.localID))
         	{
         		Scripts.TryGetValue(ID.localID, out Instances);
-        		Scripts[ID.localID] = null;
+                Scripts.Remove(ID.localID);
         	}
         	Instances.Add(ID.ItemID,ID);
         	Scripts[ID.localID] = Instances;

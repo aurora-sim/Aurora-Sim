@@ -436,6 +436,8 @@ namespace Aurora.DataManager.MySQL
                     return "VARCHAR(512)";
                 case ColumnTypes.String1024:
                     return "VARCHAR(1024)";
+                case ColumnTypes.String8196:
+                    return "VARCHAR(8196)";
                 case ColumnTypes.Date:
                     return "DATE";
                 default:

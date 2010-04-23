@@ -172,7 +172,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 StateQueueItem item = m_ScriptEngine.StateQueue.Dequeue();
                 if (item.Create)
-                    Parts.Add(item.ID.Serialize());
+                    //Parts.Add(item.ID.Serialize());
+                    item.ID.SerializeDatabase();
                 else
                     RemoveState(item.ID);
                 lock (Parts)
@@ -336,6 +337,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             List<IEnumerator> StartParts = new List<IEnumerator>();
             List<IEnumerator> StopParts = new List<IEnumerator>();
+            List<IEnumerator> ReuploadParts = new List<IEnumerator>();
             List<ScriptData> FireEvents = new List<ScriptData>();
             lock (m_ScriptEngine.LUQueue)
             {
@@ -355,8 +357,33 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                             FireEvents.Add(item.ID);
                             StartParts.Add(item.ID.Start());
                         }
+                        else if (item.Action == LUType.Reupload)
+                        {
+                            FireEvents.Add(item.ID);
+                            ReuploadParts.Add(item.ID.Start());
+                        }
                         i++;
                     }
+                }
+            }
+            lock (ReuploadParts)
+            {
+                int i = 0;
+                while (ReuploadParts.Count > 0 && i < 1000)
+                {
+                    i++;
+
+                    bool running = false;
+                    try
+                    {
+                        running = ReuploadParts[i % ReuploadParts.Count].MoveNext();
+                    }
+                    catch (Exception)
+                    {
+                    }
+
+                    if (!running)
+                        ReuploadParts.Remove(ReuploadParts[i % ReuploadParts.Count]);
                 }
             }
             lock (StopParts)

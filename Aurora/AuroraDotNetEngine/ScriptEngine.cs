@@ -618,7 +618,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public string GetXMLState(UUID itemID)
         {
             ScriptData instance = GetScriptByItemID(itemID);
-            IEnumerator enumerator = instance.Serialize();
+            /*IEnumerator enumerator = instance.Serialize();
             bool running = true;
             while (running)
             {
@@ -628,7 +628,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 }
                 catch (Exception) { }
             }
-            return instance.CurrentStateXML;
+            return instance.CurrentStateXML;*/
+            instance.SerializeDatabase();
+            return "";
         }
 
         public ArrayList GetScriptErrors(UUID itemID)
@@ -641,7 +643,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             ScriptData instance = GetScriptByItemID(itemID);
             if (instance == null)
                 return false;
-            instance.Deserialize(xml);
+            //instance.Deserialize(xml);
+            instance.DeserializeDatabase();
             return true;
         }
         #endregion
@@ -785,28 +788,54 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public void StartScript(uint localID, UUID itemID, string Script, int startParam, bool postOnRez, StateSource statesource)
         {
             ScriptData id = null;
-            lock (LUQueue)
+            id = GetScript(localID, itemID);
+            //Its a change of the script source, needs to be recompiled and such.
+            if (id != null)
             {
-                if ((LUQueue.Count >= LoadUnloadMaxQueueSize))
+                lock (LUQueue)
                 {
-                    m_log.Error("[" + ScriptEngineName + "]: ERROR: Load/unload queue item count is at " + LUQueue.Count + ". Config variable \"LoadUnloadMaxQueueSize\" " + "is set to " + LoadUnloadMaxQueueSize + ", so ignoring new script.");
-                    return;
+                    if ((LUQueue.Count >= LoadUnloadMaxQueueSize))
+                    {
+                        m_log.Error("[" + ScriptEngineName + "]: ERROR: Load/unload queue item count is at " + LUQueue.Count + ". Config variable \"LoadUnloadMaxQueueSize\" " + "is set to " + LoadUnloadMaxQueueSize + ", so ignoring new script.");
+                        return;
+                    }
+                    id.PostOnRez = postOnRez;
+                    id.StartParam = startParam;
+                    id.stateSource = statesource;
+                    id.State = "default";
+                    id.Running = true;
+                    id.Disabled = false;
+                    id.Source = Script;
+                    LUStruct ls = new LUStruct();
+                    ls.Action = LUType.Reupload;
+                    ls.ID = id;
+                    LUQueue.Enqueue(ls);
                 }
-                id = new ScriptData(this);
-                id.ItemID = itemID;
-                id.localID = localID;
-                id.PostOnRez = postOnRez;
-                id.StartParam = startParam;
-                id.stateSource = statesource;
-                id.State = "default";
-                id.Running = true;
-                id.Disabled = false;
-                id.Source = Script;
-                id.PostOnRez = postOnRez;
-                LUStruct ls = new LUStruct();
-                ls.Action = LUType.Load;
-                ls.ID = id;
-                LUQueue.Enqueue(ls);
+            }
+            else
+            {
+                lock (LUQueue)
+                {
+                    if ((LUQueue.Count >= LoadUnloadMaxQueueSize))
+                    {
+                        m_log.Error("[" + ScriptEngineName + "]: ERROR: Load/unload queue item count is at " + LUQueue.Count + ". Config variable \"LoadUnloadMaxQueueSize\" " + "is set to " + LoadUnloadMaxQueueSize + ", so ignoring new script.");
+                        return;
+                    }
+                    id = new ScriptData(this);
+                    id.ItemID = itemID;
+                    id.localID = localID;
+                    id.StartParam = startParam;
+                    id.stateSource = statesource;
+                    id.State = "default";
+                    id.Running = true;
+                    id.Disabled = false;
+                    id.Source = Script;
+                    id.PostOnRez = postOnRez;
+                    LUStruct ls = new LUStruct();
+                    ls.Action = LUType.Load;
+                    ls.ID = id;
+                    LUQueue.Enqueue(ls);
+                }
             }
         }
 
@@ -913,6 +942,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
     {
         Unknown = 0,
         Load = 1,
-        Unload = 2
+        Unload = 2,
+        Reupload = 3
     }
 }

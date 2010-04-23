@@ -197,7 +197,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (isScriptRunning)
             {
-                part.Inventory.RemoveScriptInstance(item.ItemID, false);
+                //part.Inventory.RemoveScriptInstance(item.ItemID, false);
             }
 
             // Update item with new asset
