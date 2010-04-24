@@ -663,7 +663,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 #region Queue
                 XmlDocument doc = new XmlDocument();
                 doc.LoadXml(StateSave[8]);
-                XmlNodeList itemL = doc.ChildNodes;
+                XmlNode mainNode = doc.FirstChild;
+                XmlNodeList itemL = mainNode.ChildNodes;
                 foreach (XmlNode item in itemL)
                 {
                     List<Object> parms = new List<Object>();
@@ -791,7 +792,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public void SerializeDatabase()
         {
-            //Update PluginData
             List<string> Insert = new List<string>();
             Insert.Add(State);
             Insert.Add(ItemID.ToString());
@@ -827,6 +827,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //Queue
             #region Queue
             XmlDocument xmldoc = new XmlDocument();
+            XmlNode mainNode = xmldoc.CreateElement("", "Item", "");
             XmlElement queue = xmldoc.CreateElement("", "Queue", "");
 
             QueueItemStruct[] tempQueue = new QueueItemStruct[ScriptEngine.EventQueue.Count];
@@ -915,7 +916,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 }
                 i++;
             }
-            Insert.Add(queue.InnerXml);
+            mainNode.AppendChild(queue);
+            Insert.Add(mainNode.InnerXml);
 
             #endregion
 
@@ -930,7 +932,36 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             
             Insert.Add(EventDelayTicks.ToString());
             Insert.Add(AssemblyName);
-            GenericData.Insert("auroraDotNetStateSaves", Insert.ToArray());
+            try
+            {
+                GenericData.Insert("auroraDotNetStateSaves", Insert.ToArray());
+            }
+            catch (Exception)
+            {
+                //Needs to be updated then
+                List<string> Keys = new List<string>();
+                Keys.Add("State");
+                Keys.Add("ItemID");
+                Keys.Add("Source");
+                Keys.Add("LineMap");
+                Keys.Add("Running");
+                Keys.Add("Variables");
+                Keys.Add("Plugins");
+                Keys.Add("ClassID");
+                Keys.Add("Queue");
+                Keys.Add("Permissions");
+                Keys.Add("MinEventDelay");
+                Keys.Add("AssemblyName");
+                try
+                {
+                    GenericData.Update("auroraDotNetStateSaves", Insert.ToArray(), Keys.ToArray(), new string[] { "ItemID" }, new string[] { ItemID.ToString() });
+                }
+                catch (Exception ex)
+                {
+                    //Throw this one... Something is very wrong.
+                    throw ex;
+                }
+            }
         }
 
         #region Helpers

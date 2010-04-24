@@ -337,7 +337,7 @@ namespace Aurora.DataManager.Migration.Migrators
 
             AddSchema("auroraDotNetStateSaves", ColDefs(
                 ColDef("State", ColumnTypes.String50),
-                ColDef("ItemID", ColumnTypes.String50),
+                ColDef("ItemID", ColumnTypes.String50, true),
                 ColDef("Source", ColumnTypes.String8196),
                 ColDef("LineMap", ColumnTypes.String8196),
                 ColDef("Running", ColumnTypes.String50),
