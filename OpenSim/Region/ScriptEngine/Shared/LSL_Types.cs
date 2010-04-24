@@ -1429,31 +1429,6 @@ namespace OpenSim.Region.ScriptEngine.Shared
                 return new LSLString(s);
             }
 
-            static public implicit operator LSLString(LSL_Types.list s)
-            {
-                return new LSLString(s.ToPrettyString());
-            }
-
-            static public implicit operator LSLString(LSL_Types.LSLFloat s)
-            {
-                return new LSLString(s.ToString());
-            }
-
-            static public implicit operator LSLString(LSL_Types.LSLInteger s)
-            {
-                return new LSLString(s.ToString());
-            }
-
-            static public implicit operator LSLString(LSL_Types.Quaternion s)
-            {
-                return new LSLString(s.ToString());
-            }
-
-            static public implicit operator LSLString(LSL_Types.Vector3 s)
-            {
-                return new LSLString(s.ToString());
-            }
-
             public static string ToString(LSLString s)
             {
                 return s.m_string;

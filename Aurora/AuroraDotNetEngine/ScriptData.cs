@@ -62,7 +62,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             m_ScriptEngine = engine;
             World = m_ScriptEngine.World;
-            GenericData = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
+            foreach (IGenericData GD in Aurora.DataManager.DataManager.AllGenericPlugins)
+            {
+                if(GD.Identifier == "SQLiteStateSaver")
+                {
+                    GenericData = GD;
+                }
+            }
+            if (GenericData == null)
+                GenericData = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
         }
 
         #endregion
@@ -88,7 +96,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public Dictionary<string, IScriptApi> Apis = new Dictionary<string, IScriptApi>();
         public Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> LineMap;
         public ISponsor ScriptSponsor;
-        private IGenericData GenericData;
+        public IGenericData GenericData;
 
         public SceneObjectPart part;
 

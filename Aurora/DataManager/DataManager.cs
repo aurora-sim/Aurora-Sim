@@ -149,5 +149,6 @@ namespace Aurora.DataManager
         #endregion
 
         public static DataSessionProvider DataSessionProvider;
+        public static DataSessionProvider StateSaveDataSessionProvider;
     }
 }

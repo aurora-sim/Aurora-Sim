@@ -185,7 +185,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public void RemoveState(ScriptData ID)
         {
-            Aurora.DataManager.DataManager.GetDefaultGenericPlugin().Delete("auroraDotNetStateSaves", new string[] { "ItemID" }, new string[] { ID.ItemID.ToString() });
+            ID.GenericData.Delete("auroraDotNetStateSaves", new string[] { "ItemID" }, new string[] { ID.ItemID.ToString() });
         }
 
         #endregion

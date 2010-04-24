@@ -55,9 +55,19 @@ namespace Aurora.Services.DataService
                 SQLiteLoader GenericData = new SQLiteLoader();
                 GenericData.ConnectToDatabase(ConnectionString);
 
+                //SQLite needs a second database for ScriptSaves, otherwise it locks it up...
+                string ScriptConnectionString = m_config.GetString("ScriptConnectionString", "");
+                DataManager.DataManager.StateSaveDataSessionProvider = new DataSessionProvider(DataManagerTechnology.SQLite, ScriptConnectionString);
+                SQLiteStateSaver ScriptSaverData = new SQLiteStateSaver();
+                ScriptSaverData.ConnectToDatabase(ScriptConnectionString);
+
                 var migrationManager = new MigrationManager(DataManager.DataManager.DataSessionProvider, GenericData);
                 migrationManager.DetermineOperation();
                 migrationManager.ExecuteOperation();
+
+                var statesavemigrationManager = new MigrationManager(DataManager.DataManager.StateSaveDataSessionProvider, ScriptSaverData);
+                statesavemigrationManager.DetermineOperation();
+                statesavemigrationManager.ExecuteOperation();
 
                 SQLiteProfile ProfileData = new SQLiteProfile();
                 ProfileData.ConnectToDatabase(ConnectionString);
@@ -67,9 +77,10 @@ namespace Aurora.Services.DataService
                 EstateData.ConnectToDatabase(ConnectionString);
                 
                 Aurora.DataManager.DataManager.AddGenericPlugin(GenericData);
-                Aurora.DataManager.DataManager.AddProfilePlugin((IProfileData)ProfileData);
-                Aurora.DataManager.DataManager.AddRegionPlugin((IRegionData)RegionData);
-                Aurora.DataManager.DataManager.AddEstatePlugin((IEstateData)EstateData);
+                Aurora.DataManager.DataManager.AddGenericPlugin(ScriptSaverData);
+                Aurora.DataManager.DataManager.AddProfilePlugin(ProfileData);
+                Aurora.DataManager.DataManager.AddRegionPlugin(RegionData);
+                Aurora.DataManager.DataManager.AddEstatePlugin(EstateData);
             }
 
             int i = 0;
