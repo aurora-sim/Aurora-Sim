@@ -343,8 +343,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         		Scripts.TryGetValue(ID.localID, out Instances);
                 Scripts.Remove(ID.localID);
         	}
+            if (Instances.ContainsKey(ID.ItemID))
+                Instances.Remove(ID.ItemID);
         	Instances.Add(ID.ItemID,ID);
-        	Scripts[ID.localID] = Instances;
+        	Scripts.Add(ID.localID,Instances);
         }
         
         public IInstanceData[] GetAllScripts()

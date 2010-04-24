@@ -458,7 +458,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }*/
             if (GenericData.Query("ItemID", ItemID.ToString(), "auroraDotNetStateSaves", "*").Count > 1)
             {
-                DeserializeDatabase();
+                FindRequiredForCompileless();
             }
             else
             {
@@ -517,6 +517,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     ShowError(ex, 1);
                 }
             }
+
             if (presence != null)
                 m_ScriptEngine.Errors[ItemID] = new String[] { "SUCCESSFULL" };
 
@@ -560,7 +561,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //ALWAYS reset up APIs, otherwise m_host doesn't get updated and LSL thinks its in another prim.
             SetApis();
 
-            if (CurrentStateXML != string.Empty)
+            if (GenericData.Query("ItemID", ItemID.ToString(), "auroraDotNetStateSaves", "*").Count > 1)
             {
                 yield return null;
                 DeserializeDatabase();
@@ -820,6 +821,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
         }
 
+        public void FindRequiredForCompileless()
+        {
+            List<string> StateSave = GenericData.Query("ItemID", ItemID.ToString(), "auroraDotNetStateSaves", "ClassID,LineMap");
+            ClassID = StateSave[0];
+            LineMap = OpenSim.Region.ScriptEngine.Shared.CodeTools.Compiler.ReadMapFileFromString(StateSave[1]);
+        }
+
         public void DeserializeDatabase()
         {
             Dictionary<string, object> vars = new Dictionary<string,object>();
@@ -832,6 +840,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             foreach (string var in varsmap.Split(';'))
             {
+                if (var == "")
+                    break;
                 vars.Add(var.Split(',')[0],(object)var.Split(',')[1]);
             }
             Script.SetVars(vars);

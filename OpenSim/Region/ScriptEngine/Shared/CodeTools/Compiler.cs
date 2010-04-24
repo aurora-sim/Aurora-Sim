@@ -851,9 +851,11 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
 
                 string line;
                 int i = 0;
-                while ((line = text.Split('\n')[i]) != null)
+                while ((line = text.Split(';')[i]) != null)
                 {
-                    String[] parts = line.Split(new Char[] { ',' });
+                    if (line == "")
+                        break;
+                    String[] parts = line.Split(',');
                     int kk = System.Convert.ToInt32(parts[0]);
                     int kv = System.Convert.ToInt32(parts[1]);
                     int vk = System.Convert.ToInt32(parts[2]);
