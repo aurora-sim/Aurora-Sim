@@ -275,7 +275,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
         /// <param name="Script">LSL script</param>
         /// <returns>Filename to .dll assembly</returns>
         public void PerformScriptCompile(string Script, UUID assetID, UUID ownerUUID, UUID itemID, string InheritedClases, string ClassName, IScriptProtectionModule ScriptProtection, uint localID, object InstanceData,
-            out string assembly, out Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> linemap, out string Identifier, out string AssemblyText)
+            out string assembly, out Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> linemap, out string Identifier)
         {
         	string asset = assetID.ToString();
         	
@@ -397,7 +397,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                     break;
             }
 
-			assembly = CompileFromDotNetText(compileScript, language, asset, assembly, out AssemblyText);
+			assembly = CompileFromDotNetText(compileScript, language, asset, assembly);
             return;
         }
 
@@ -496,7 +496,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
         /// </summary>
         /// <param name="Script">CS script</param>
         /// <returns>Filename to .dll assembly</returns>
-        internal string CompileFromDotNetText(string Script, enumCompileType lang, string asset, string assembly, out string AssemblyText)
+        internal string CompileFromDotNetText(string Script, enumCompileType lang, string asset, string assembly)
         {
             string ext = "." + lang.ToString();
 
@@ -707,7 +707,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                 throw new Exception(errtext);
             }
 
-            // Convert to base64
+            /*// Convert to base64
             //
             AssemblyText = System.Convert.ToBase64String(data);
 
@@ -717,7 +717,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
 
             FileStream sfs = File.Create(assembly + ".text");
             sfs.Write(buf, 0, buf.Length);
-            sfs.Close();
+            sfs.Close();*/
 
             return assembly;
         }

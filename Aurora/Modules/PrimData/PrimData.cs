@@ -30,9 +30,9 @@ namespace Aurora.Modules
         public void Initialise(Scene scene, IConfigSource source)
         {
             m_scene = scene;
-            scene.SceneContents.OnObjectDuplicate += new ObjectDuplicateDelegate(SceneContents_OnObjectDuplicate);
-            scene.SceneContents.OnObjectCreate += new ObjectCreateDelegate(SceneContents_OnObjectCreate);
-            scene.SceneContents.OnObjectRemove += new ObjectDeleteDelegate(SceneContents_OnObjectRemove);
+            //scene.SceneContents.OnObjectDuplicate += new ObjectDuplicateDelegate(SceneContents_OnObjectDuplicate);
+            //scene.SceneContents.OnObjectCreate += new ObjectCreateDelegate(SceneContents_OnObjectCreate);
+            //scene.SceneContents.OnObjectRemove += new ObjectDeleteDelegate(SceneContents_OnObjectRemove);
         }
 
         void SceneContents_OnObjectDuplicate(EntityBase original, EntityBase clone)

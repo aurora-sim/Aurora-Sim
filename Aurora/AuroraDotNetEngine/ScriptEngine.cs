@@ -569,6 +569,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public void SuspendScript(UUID itemID)
         {
             ScriptData ID = GetScriptByItemID(itemID);
+            if (ID == null)
+                return;
             ID.Suspended = true;
         }
 
@@ -578,7 +580,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (ID == null)
                 m_MaintenanceThread.AddResumeScript(itemID);
             else
+            {
                 ID.Suspended = false;
+                m_MaintenanceThread.RemoveResumeScript(itemID);
+            }
         }
 
         #endregion
@@ -618,18 +623,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public string GetXMLState(UUID itemID)
         {
             ScriptData instance = GetScriptByItemID(itemID);
-            /*IEnumerator enumerator = instance.Serialize();
-            bool running = true;
-            while (running)
+            if (instance != null)
             {
-                try
-                {
-                    running = enumerator.MoveNext();
-                }
-                catch (Exception) { }
+                instance.SerializeDatabase();
             }
-            return instance.CurrentStateXML;*/
-            instance.SerializeDatabase();
             return "";
         }
 
@@ -643,7 +640,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             ScriptData instance = GetScriptByItemID(itemID);
             if (instance == null)
                 return false;
-            //instance.Deserialize(xml);
             instance.DeserializeDatabase();
             return true;
         }
@@ -860,8 +856,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     bool running = true;
                     try
                     {
-                        IEnumerator enumerator = id.Start(true);
-                        while (running)
+                        /*IEnumerator enumerator = */id.Start(true);
+                        /*while (running)
                         {
                             try
                             {
@@ -870,7 +866,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                             catch (Exception ex)
                             {
                             }
-                        }
+                        }*/
                     }
                     catch (Exception ex) { }
                 }

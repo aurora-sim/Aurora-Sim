@@ -276,15 +276,11 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                             {
                                 kvp.Value.CreatorID = m_scene.RegionInfo.EstateSettings.EstateOwner;
                             }
-                            if ((int)InventoryType.LSL == kvp.Value.InvType)
-                            {
-                                part.Inventory.CreateScriptInstance(kvp.Value, 0, true, m_scene.DefaultScriptEngine, 0);
-                            }
                         }
                     }
                 }
 
-                if (m_scene.AddRestoredSceneObject(sceneObject, true, false))
+                if (!m_scene.AddRestoredSceneObject(sceneObject, true, false))
                 {
                     sceneObjectsLoadedCount++;
                     sceneObject.CreateScriptInstances(0, false, m_scene.DefaultScriptEngine, 0);

@@ -108,8 +108,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public bool m_startedFromSavedState = false;
         public Object[] PluginData = new Object[0];
         public string CurrentStateXML = "";
-        public string AssemblyText = "";
-
+        
         #endregion
 
         #region Close Script
@@ -121,29 +120,51 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <returns></returns>
         public IEnumerable CloseAndDispose()
         {
+            // Tell script not to accept new requests
+            Running = false;
+            Disabled = true;
+            
             m_ScriptEngine.RemoveFromEventQueue(ItemID);
             if (m_ScriptEngine.Errors.ContainsKey(ItemID))
                 m_ScriptEngine.Errors.Remove(ItemID);
             ReleaseControls();
+
+            #region Clean out script parts
+            /* 
+            part.RemoveParticleSystem();
+            part.SetText("");
+            Primitive.TextureAnimation tani= new Primitive.TextureAnimation();
+            tani.Flags = Primitive.TextureAnimMode.ANIM_OFF;
+            tani.Face = 255;
+            tani.Length = 0;
+            tani.Rate = 0;
+            tani.SizeX = 0;
+            tani.SizeY = 0;
+            tani.Start = 0;
+            part.AddTextureAnimation(tani);
+            part.AngularVelocity = Vector3.Zero;
+
+
+            part.ScheduleTerseUpdate();
+            part.SendTerseUpdateToAllClients();
+            part.ParentGroup.HasGroupChanged = true;
+            part.ParentGroup.ScheduleGroupForFullUpdate();
+            */
+            #endregion
             // Stop long command on script
             AsyncCommandManager.RemoveScript(m_ScriptEngine, localID, ItemID);
             m_ScriptEngine.m_EventManager.state_exit(localID);
-            //m_scriptEngine.m_StateQueue.AddToQueue(this, false);
-
+            
             yield return null;
 
             try
             {
-                // Tell script not to accept new requests
-                Running = false;
-                Disabled = true;
-
                 // Remove from internal structure
                 m_ScriptEngine.RemoveScript(this);
 
                 m_log.DebugFormat("[{0}]: Closed Script in " + part.Name, m_ScriptEngine.ScriptEngineName);
 
-                if (AppDomain == null || Script == null)
+                if (AppDomain == null)
                     yield break;
 
                 try
@@ -301,11 +322,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// This function is microthreaded.
         /// </summary>
         /// <returns></returns>
-        public IEnumerator Start(bool reupload)
+        public void Start(bool reupload)
         {
             Compiling = true;
             CurrentStateXML = "";
-            AssemblyText = "";
             
             if (m_ScriptEngine.Errors.ContainsKey(ItemID))
                 m_ScriptEngine.Errors.Remove(ItemID);
@@ -426,101 +446,82 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             #endregion
 
-            bool previouslyCompiled = false;
-            /*if (File.Exists(AssemblyName) && File.Exists(savedState) && Loading)
-            {
-                //Find the classID and linemap
-                try
-                {
-                    FileInfo fi = new FileInfo(savedState);
-                    int size = (int)fi.Length;
-                    if (size < 512000)
-                    {
-                        using (FileStream fs = File.Open(savedState,
-                                                         FileMode.Open, FileAccess.Read, FileShare.None))
-                        {
-                            System.Text.UTF8Encoding enc =
-                                new System.Text.UTF8Encoding();
-
-                            Byte[] data = new Byte[size];
-                            fs.Read(data, 0, size);
-
-                            CurrentStateXML = enc.GetString(data);
-
-                            FindRequiredForCompileless(CurrentStateXML);
-                            m_startedFromSavedState = true;
-                        }
-                    }
-                }
-                catch (Exception) { }
-                //Dont set to previously compiled, otherwise we wont have the script loaded into the app domain.
-                previouslyCompiled = false;
-            }*/
+            bool NeedsToCreateNewAppDomain = true;
+            ScriptData PreviouslyCompiledID = (ScriptData)m_ScriptEngine.ScriptProtection.TryGetPreviouslyCompiledScript(Source);
             if (GenericData.Query("ItemID", ItemID.ToString(), "auroraDotNetStateSaves", "*").Count > 1 && Loading)
             {
                 FindRequiredForCompileless();
+                if (PreviouslyCompiledID != null)
+                {
+                    FileInfo fi = new FileInfo(PreviouslyCompiledID.AssemblyName);
+                    FileStream stream = fi.OpenRead();
+                    Byte[] data = new Byte[fi.Length];
+                    stream.Read(data, 0, data.Length);
+                    FileStream sfs = File.Create(AssemblyName);
+                    sfs.Write(data, 0, data.Length);
+                    sfs.Close();
+                    stream.Close();
+
+                    ClassID = PreviouslyCompiledID.ClassID;
+                    AppDomain = PreviouslyCompiledID.AppDomain;
+                    Script = PreviouslyCompiledID.Script;
+                    NeedsToCreateNewAppDomain = false;
+                }
             }
             else
             {
-                try
+                if (PreviouslyCompiledID != null)
                 {
-                    ScriptData PreviouslyCompiledID = (ScriptData)m_ScriptEngine.ScriptProtection.TryGetPreviouslyCompiledScript(Source);
-                    if (PreviouslyCompiledID != null)
-                    {
-                        FileInfo fi = new FileInfo(PreviouslyCompiledID.AssemblyName);
-                        FileStream stream = fi.OpenRead();
-                        Byte[] data = new Byte[fi.Length];
-                        stream.Read(data, 0, data.Length);
-                        FileStream sfs = File.Create(AssemblyName);
-                        sfs.Write(data, 0, data.Length);
-                        sfs.Close();
-                        stream.Close();
+                    FileInfo fi = new FileInfo(PreviouslyCompiledID.AssemblyName);
+                    FileStream stream = fi.OpenRead();
+                    Byte[] data = new Byte[fi.Length];
+                    stream.Read(data, 0, data.Length);
+                    FileStream sfs = File.Create(AssemblyName);
+                    sfs.Write(data, 0, data.Length);
+                    sfs.Close();
+                    stream.Close();
 
-                        LineMap = PreviouslyCompiledID.LineMap;
-                        ClassID = PreviouslyCompiledID.ClassID;
-                        AppDomain = PreviouslyCompiledID.AppDomain;
-                        Script = PreviouslyCompiledID.Script;
-                        previouslyCompiled = true;
-                    }
-                    else
-                    {
-                        // Compile (We assume LSL)
-                        m_ScriptEngine.LSLCompiler.PerformScriptCompile(Source, AssetID, InventoryItem.OwnerID, ItemID, Inherited, ClassName, m_ScriptEngine.ScriptProtection, localID, this, out AssemblyName,
-                                                                         out LineMap, out ClassID, out AssemblyText);
-                        m_ScriptEngine.ScriptProtection.AddPreviouslyCompiled(Source, this);
-                    }
-
-                    #region Warnings
-
-                    string[] compilewarnings = m_ScriptEngine.LSLCompiler.GetWarnings();
-
-                    if (compilewarnings != null && compilewarnings.Length != 0)
-                    {
-                        if (presence != null && (!PostOnRez))
-                            presence.ControllingClient.SendAgentAlertMessage("Script saved with warnings, check debug window!", false);
-
-                        foreach (string warning in compilewarnings)
-                        {
-                            // DISPLAY WARNING INWORLD
-                            string text = "Warning:\n" + warning;
-                            if (text.Length > 1100)
-                                text = text.Substring(0, 1099);
-
-                            World.SimChat(OpenMetaverse.Utils.StringToBytes(text), ChatTypeEnum.DebugChannel, 2147483647, part.AbsolutePosition, part.Name, part.UUID, false);
-                        }
-                    }
-
-                    #endregion
+                    ClassID = PreviouslyCompiledID.ClassID;
+                    LineMap = PreviouslyCompiledID.LineMap;
+                    AssemblyName = PreviouslyCompiledID.AssemblyName;
+                    AppDomain = PreviouslyCompiledID.AppDomain;
+                    Script = PreviouslyCompiledID.Script;
+                    NeedsToCreateNewAppDomain = false;
                 }
-                catch (Exception ex)
+                else
                 {
-                    ShowError(ex, 1, reupload);
+                    try
+                    {
+                        m_ScriptEngine.LSLCompiler.PerformScriptCompile(Source, AssetID, InventoryItem.OwnerID, ItemID, Inherited, ClassName, m_ScriptEngine.ScriptProtection, localID, this, out AssemblyName,
+                                                                             out LineMap, out ClassID);
+                        #region Warnings
+
+                        string[] compilewarnings = m_ScriptEngine.LSLCompiler.GetWarnings();
+
+                        if (compilewarnings != null && compilewarnings.Length != 0)
+                        {
+                            if (presence != null && (!PostOnRez))
+                                presence.ControllingClient.SendAgentAlertMessage("Script saved with warnings, check debug window!", false);
+
+                            foreach (string warning in compilewarnings)
+                            {
+                                // DISPLAY WARNING INWORLD
+                                string text = "Warning:\n" + warning;
+                                if (text.Length > 1100)
+                                    text = text.Substring(0, 1099);
+
+                                World.SimChat(OpenMetaverse.Utils.StringToBytes(text), ChatTypeEnum.DebugChannel, 2147483647, part.AbsolutePosition, part.Name, part.UUID, false);
+                            }
+                        }
+
+                        #endregion
+                    }
+                    catch (Exception ex)
+                    {
+                        ShowError(ex, 1, reupload);
+                    }
                 }
             }
-
-            if (reupload)
-                m_ScriptEngine.Errors[ItemID] = new String[] { "SUCCESSFULL" };
-
 
             bool useDebug = true;
             if (useDebug)
@@ -529,8 +530,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 m_log.Debug("Stage 1: " + t.TotalSeconds);
             }
 
-            yield return null;
-            if (!previouslyCompiled)
+            if (NeedsToCreateNewAppDomain)
             {
                 try
                 {
@@ -538,12 +538,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         Script = m_ScriptEngine.m_AppDomainManager.LoadScript(AssemblyName, "Script." + ClassName, out AppDomain);
                     else
                         Script = m_ScriptEngine.m_AppDomainManager.LoadScript(AssemblyName, "Script." + ClassID, out AppDomain);
+                    m_ScriptEngine.ScriptProtection.AddPreviouslyCompiled(Source, this);
                 }
                 catch (Exception ex)
                 {
                     ShowError(ex, 2, reupload);
                 }
             }
+
+            if (reupload)
+                m_ScriptEngine.Errors[ItemID] = new String[] { "SUCCESSFULL" };
 
             if (useDebug)
             {
@@ -563,7 +567,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             if (GenericData.Query("ItemID", ItemID.ToString(), "auroraDotNetStateSaves", "*").Count > 1)
             {
-                yield return null;
                 DeserializeDatabase();
                 //Deserialize(CurrentStateXML);
 
@@ -628,207 +631,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         #region Serialize
 
-        public void Deserialize(string xml)
-        {
-            XmlDocument doc = new XmlDocument();
-
-            Dictionary<string, object> vars = Script.GetVars();
-
-            doc.LoadXml(xml);
-
-            XmlNodeList rootL = doc.GetElementsByTagName("ScriptState");
-            if (rootL.Count != 1)
-            {
-                return;
-            }
-            XmlNode rootNode = rootL[0];
-
-            if (rootNode != null)
-            {
-                object varValue;
-                XmlNodeList partL = rootNode.ChildNodes;
-
-                foreach (XmlNode part in partL)
-                {
-                    switch (part.Name)
-                    {
-                        case "State":
-                            State = part.InnerText;
-                            break;
-                        case "LineMap":
-                            LineMap = OpenSim.Region.ScriptEngine.Shared.CodeTools.Compiler.ReadMapFileFromString(part.InnerText);
-                            break;
-                        case "Running":
-                            Running = bool.Parse(part.InnerText);
-                            break;
-                        case "Variables":
-                            XmlNodeList varL = part.ChildNodes;
-                            foreach (XmlNode var in varL)
-                            {
-                                string varName;
-                                varValue = ReadTypedValue(var, out varName);
-
-                                if (vars.ContainsKey(varName))
-                                    vars[varName] = varValue;
-                            }
-                            Script.SetVars(vars);
-                            break;
-                        case "Plugins":
-                            PluginData = ReadList(part).Data;
-                            break;
-                        case "ClassID":
-                            ClassID = part.InnerText;
-                            break;
-                        case "Queue":
-                            XmlNodeList itemL = part.ChildNodes;
-                            foreach (XmlNode item in itemL)
-                            {
-                                List<Object> parms = new List<Object>();
-                                List<DetectParams> detected =
-                                        new List<DetectParams>();
-
-                                string eventName =
-                                        item.Attributes.GetNamedItem("event").Value;
-                                XmlNodeList eventL = item.ChildNodes;
-                                foreach (XmlNode evt in eventL)
-                                {
-                                    switch (evt.Name)
-                                    {
-                                        case "Params":
-                                            XmlNodeList prms = evt.ChildNodes;
-                                            foreach (XmlNode pm in prms)
-                                                parms.Add(ReadTypedValue(pm));
-
-                                            break;
-                                        case "Detected":
-                                            XmlNodeList detL = evt.ChildNodes;
-                                            foreach (XmlNode det in detL)
-                                            {
-                                                string vect =
-                                                        det.Attributes.GetNamedItem(
-                                                        "pos").Value;
-                                                LSL_Types.Vector3 v =
-                                                        new LSL_Types.Vector3(vect);
-
-                                                int d_linkNum = 0;
-                                                UUID d_group = UUID.Zero;
-                                                string d_name = String.Empty;
-                                                UUID d_owner = UUID.Zero;
-                                                LSL_Types.Vector3 d_position =
-                                                    new LSL_Types.Vector3();
-                                                LSL_Types.Quaternion d_rotation =
-                                                    new LSL_Types.Quaternion();
-                                                int d_type = 0;
-                                                LSL_Types.Vector3 d_velocity =
-                                                    new LSL_Types.Vector3();
-
-                                                try
-                                                {
-                                                    string tmp;
-
-                                                    tmp = det.Attributes.GetNamedItem(
-                                                            "linkNum").Value;
-                                                    int.TryParse(tmp, out d_linkNum);
-
-                                                    tmp = det.Attributes.GetNamedItem(
-                                                            "group").Value;
-                                                    UUID.TryParse(tmp, out d_group);
-
-                                                    d_name = det.Attributes.GetNamedItem(
-                                                            "name").Value;
-
-                                                    tmp = det.Attributes.GetNamedItem(
-                                                            "owner").Value;
-                                                    UUID.TryParse(tmp, out d_owner);
-
-                                                    tmp = det.Attributes.GetNamedItem(
-                                                            "position").Value;
-                                                    d_position =
-                                                        new LSL_Types.Vector3(tmp);
-
-                                                    tmp = det.Attributes.GetNamedItem(
-                                                            "rotation").Value;
-                                                    d_rotation =
-                                                        new LSL_Types.Quaternion(tmp);
-
-                                                    tmp = det.Attributes.GetNamedItem(
-                                                            "type").Value;
-                                                    int.TryParse(tmp, out d_type);
-
-                                                    tmp = det.Attributes.GetNamedItem(
-                                                            "velocity").Value;
-                                                    d_velocity =
-                                                        new LSL_Types.Vector3(tmp);
-
-                                                }
-                                                catch (Exception) // Old version XML
-                                                {
-                                                }
-
-                                                UUID uuid = new UUID();
-                                                UUID.TryParse(det.InnerText,
-                                                        out uuid);
-
-                                                DetectParams d = new DetectParams();
-                                                d.Key = uuid;
-                                                d.OffsetPos = v;
-                                                d.LinkNum = d_linkNum;
-                                                d.Group = d_group;
-                                                d.Name = d_name;
-                                                d.Owner = d_owner;
-                                                d.Position = d_position;
-                                                d.Rotation = d_rotation;
-                                                d.Type = d_type;
-                                                d.Velocity = d_velocity;
-
-                                                detected.Add(d);
-                                            }
-                                            break;
-                                    }
-                                }
-                                EventParams ep = new EventParams(
-                                        eventName, parms.ToArray(),
-                                        detected.ToArray());
-
-                                m_ScriptEngine.PostScriptEvent(ItemID, ep);
-                            }
-                            break;
-                        case "Permissions":
-                            string tmpPerm;
-                            int mask = 0;
-                            tmpPerm = part.Attributes.GetNamedItem("mask").Value;
-                            if (tmpPerm != null)
-                            {
-                                int.TryParse(tmpPerm, out mask);
-                                if (mask != 0)
-                                {
-                                    tmpPerm = part.Attributes.GetNamedItem("granter").Value;
-                                    if (tmpPerm != null)
-                                    {
-                                        UUID granter = new UUID();
-                                        UUID.TryParse(tmpPerm, out granter);
-                                        if (granter != UUID.Zero)
-                                        {
-                                            InventoryItem.PermsMask = mask;
-                                            InventoryItem.PermsGranter = granter;
-                                        }
-                                    }
-                                }
-                            }
-                            break;
-                        case "MinEventDelay":
-                            double minEventDelay = 0.0;
-                            double.TryParse(part.InnerText, NumberStyles.Float, Culture.NumberFormatInfo, out minEventDelay);
-                            EventDelayTicks = (long)minEventDelay;
-                            break;
-                    }
-                }
-            }
-        }
-
         public void FindRequiredForCompileless()
         {
-            List<string> StateSave = GenericData.Query("ItemID", ItemID.ToString(), "auroraDotNetStateSaves", "ClassID,LineMap");
+            List<string> StateSave = GenericData.Query("ItemID", ItemID.ToString(), "auroraDotNetStateSaves", "ClassID, LineMap");
             ClassID = StateSave[0];
             LineMap = OpenSim.Region.ScriptEngine.Shared.CodeTools.Compiler.ReadMapFileFromString(StateSave[1]);
         }
@@ -857,8 +662,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 plugins.Add(plugin);
             }
             PluginData = plugins.ToArray();
-            ClassID = StateSave[7];
-
+            
             #region Queue
             XmlDocument doc = new XmlDocument();
             doc.LoadXml(StateSave[8]);
@@ -984,7 +788,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             double minEventDelay = 0.0;
             double.TryParse(StateSave[10], NumberStyles.Float, Culture.NumberFormatInfo, out minEventDelay);
             EventDelayTicks = (long)minEventDelay;
-            AssemblyText = StateSave[11];
         }
 
         public void SerializeDatabase()
@@ -1127,291 +930,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             Insert.Add(perms);
             
             Insert.Add(EventDelayTicks.ToString());
-            Insert.Add(AssemblyText);
             GenericData.Insert("auroraDotNetStateSaves", Insert.ToArray());
-        }
-
-        public void FindRequiredForCompileless(string xml)
-        {
-            XmlDocument doc = new XmlDocument();
-
-            doc.LoadXml(xml);
-
-            XmlNodeList rootL = doc.GetElementsByTagName("ScriptState");
-            if (rootL.Count != 1)
-            {
-                return;
-            }
-            XmlNode rootNode = rootL[0];
-
-            if (rootNode != null)
-            {
-                XmlNodeList partL = rootNode.ChildNodes;
-
-                foreach (XmlNode part in partL)
-                {
-                    switch (part.Name)
-                    {
-                        case "ClassID":
-                            ClassID = part.InnerText;
-                            break;
-                        case "LineMap":
-                            LineMap = OpenSim.Region.ScriptEngine.Shared.CodeTools.Compiler.ReadMapFileFromString(part.InnerText);
-                            break;
-                    }
-                }
-            }
-        }
-
-        public IEnumerator Serialize()
-        {
-            //Update PluginData
-            PluginData = AsyncCommandManager.GetSerializationData(m_ScriptEngine, ItemID);
-
-            bool running = Running;
-
-            XmlDocument xmldoc = new XmlDocument();
-
-            XmlNode xmlnode = xmldoc.CreateNode(XmlNodeType.XmlDeclaration,
-                                                "", "");
-            xmldoc.AppendChild(xmlnode);
-
-            XmlElement rootElement = xmldoc.CreateElement("", "ScriptState",
-                                                          "");
-            xmldoc.AppendChild(rootElement);
-
-            XmlElement state = xmldoc.CreateElement("", "State", "");
-            state.AppendChild(xmldoc.CreateTextNode(State));
-
-            rootElement.AppendChild(state);
-
-            XmlElement run = xmldoc.CreateElement("", "Running", "");
-            run.AppendChild(xmldoc.CreateTextNode(
-                    running.ToString()));
-
-            rootElement.AppendChild(run);
-
-            XmlElement classID = xmldoc.CreateElement("", "ClassID", "");
-            classID.AppendChild(xmldoc.CreateTextNode(
-                    ClassID.ToString()));
-
-            rootElement.AppendChild(classID);
-
-            Dictionary<string, Object> vars = Script.GetVars();
-
-            XmlElement variables = xmldoc.CreateElement("", "Variables", "");
-
-            foreach (KeyValuePair<string, Object> var in vars)
-                WriteTypedValue(xmldoc, variables, "Variable", var.Key,
-                                var.Value);
-
-            rootElement.AppendChild(variables);
-
-            yield return null;
-            #region Queue
-
-            XmlElement queue = xmldoc.CreateElement("", "Queue", "");
-
-            QueueItemStruct[] tempQueue = new QueueItemStruct[m_ScriptEngine.EventQueue.Count];
-            m_ScriptEngine.EventQueue.CopyTo(tempQueue, 0);
-            int count = tempQueue.Length;
-            int i = 0;
-            while (i < count)
-            {
-                QueueItemStruct QIS = tempQueue[i];
-                if (QIS.ID.ItemID == ItemID)
-                {
-                    EventParams ep = new EventParams(QIS.functionName, QIS.param, QIS.llDetectParams);
-                    count--;
-
-                    XmlElement item = xmldoc.CreateElement("", "Item", "");
-                    XmlAttribute itemEvent = xmldoc.CreateAttribute("", "event",
-                                                                    "");
-                    itemEvent.Value = ep.EventName;
-                    item.Attributes.Append(itemEvent);
-
-                    XmlElement parms = xmldoc.CreateElement("", "Params", "");
-
-                    foreach (Object o in ep.Params)
-                        WriteTypedValue(xmldoc, parms, "Param", String.Empty, o);
-
-                    item.AppendChild(parms);
-
-                    XmlElement detect = xmldoc.CreateElement("", "Detected", "");
-
-                    foreach (DetectParams det in ep.DetectParams)
-                    {
-                        XmlElement objectElem = xmldoc.CreateElement("", "Object",
-                                                                     "");
-                        XmlAttribute pos = xmldoc.CreateAttribute("", "pos", "");
-                        pos.Value = det.OffsetPos.ToString();
-                        objectElem.Attributes.Append(pos);
-
-                        XmlAttribute d_linkNum = xmldoc.CreateAttribute("",
-                                "linkNum", "");
-                        d_linkNum.Value = det.LinkNum.ToString();
-                        objectElem.Attributes.Append(d_linkNum);
-
-                        XmlAttribute d_group = xmldoc.CreateAttribute("",
-                                "group", "");
-                        d_group.Value = det.Group.ToString();
-                        objectElem.Attributes.Append(d_group);
-
-                        XmlAttribute d_name = xmldoc.CreateAttribute("",
-                                "name", "");
-                        d_name.Value = det.Name.ToString();
-                        objectElem.Attributes.Append(d_name);
-
-                        XmlAttribute d_owner = xmldoc.CreateAttribute("",
-                                "owner", "");
-                        d_owner.Value = det.Owner.ToString();
-                        objectElem.Attributes.Append(d_owner);
-
-                        XmlAttribute d_position = xmldoc.CreateAttribute("",
-                                "position", "");
-                        d_position.Value = det.Position.ToString();
-                        objectElem.Attributes.Append(d_position);
-
-                        XmlAttribute d_rotation = xmldoc.CreateAttribute("",
-                                "rotation", "");
-                        d_rotation.Value = det.Rotation.ToString();
-                        objectElem.Attributes.Append(d_rotation);
-
-                        XmlAttribute d_type = xmldoc.CreateAttribute("",
-                                "type", "");
-                        d_type.Value = det.Type.ToString();
-                        objectElem.Attributes.Append(d_type);
-
-                        XmlAttribute d_velocity = xmldoc.CreateAttribute("",
-                                "velocity", "");
-                        d_velocity.Value = det.Velocity.ToString();
-                        objectElem.Attributes.Append(d_velocity);
-
-                        objectElem.AppendChild(
-                            xmldoc.CreateTextNode(det.Key.ToString()));
-
-                        detect.AppendChild(objectElem);
-                    }
-
-                    item.AppendChild(detect);
-                    queue.AppendChild(item);
-                }
-                i++;
-            }
-
-            rootElement.AppendChild(queue);
-
-            #endregion
-
-            XmlNode plugins = xmldoc.CreateElement("", "Plugins", "");
-            DumpList(xmldoc, plugins,
-                     new LSL_Types.list(AsyncCommandManager.GetSerializationData(m_ScriptEngine, ItemID)));
-
-            rootElement.AppendChild(plugins);
-
-            if (InventoryItem != null)
-            {
-                if (InventoryItem.PermsMask != 0 && InventoryItem.PermsGranter != UUID.Zero)
-                {
-                    XmlNode permissions = xmldoc.CreateElement("", "Permissions", "");
-                    XmlAttribute granter = xmldoc.CreateAttribute("", "granter", "");
-                    granter.Value = InventoryItem.PermsGranter.ToString();
-                    permissions.Attributes.Append(granter);
-                    XmlAttribute mask = xmldoc.CreateAttribute("", "mask", "");
-                    mask.Value = InventoryItem.PermsMask.ToString();
-                    permissions.Attributes.Append(mask);
-                    rootElement.AppendChild(permissions);
-                }
-            }
-
-            if (EventDelayTicks > 0.0)
-            {
-                XmlElement eventDelay = xmldoc.CreateElement("", "MinEventDelay", "");
-                eventDelay.AppendChild(xmldoc.CreateTextNode(EventDelayTicks.ToString()));
-                rootElement.AppendChild(eventDelay);
-            }
-
-            Type type = Script.GetType();
-            FieldInfo[] mi = type.GetFields();
-            XmlNodeList rootL = xmldoc.GetElementsByTagName("ScriptState");
-            XmlNode rootNode = rootL[0];
-
-            // Create <State UUID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
-            XmlDocument doc = new XmlDocument();
-            XmlElement stateData = doc.CreateElement("", "State", "");
-            XmlAttribute stateID = doc.CreateAttribute("", "UUID", "");
-            stateID.Value = ItemID.ToString();
-            stateData.Attributes.Append(stateID);
-            XmlAttribute assetID = doc.CreateAttribute("", "Asset", "");
-            assetID.Value = AssetID.ToString();
-            stateData.Attributes.Append(assetID);
-            XmlAttribute engineName = doc.CreateAttribute("", "Engine", "");
-            engineName.Value = m_ScriptEngine.ScriptEngineName;
-            stateData.Attributes.Append(engineName);
-            doc.AppendChild(stateData);
-
-            // Add <ScriptState>...</ScriptState>
-            XmlNode xmlstate = doc.ImportNode(rootNode, true);
-            stateData.AppendChild(xmlstate);
-
-            string assemName = AssemblyName;
-
-            string fn = Path.GetFileName(assemName);
-
-            if (AssemblyText == "")
-            {
-                FileInfo fi = new FileInfo(assemName);
-
-                if (fi != null)
-                {
-                    Byte[] data = new Byte[fi.Length];
-
-                    try
-                    {
-                        FileStream fs = File.Open(assemName, FileMode.Open, FileAccess.Read);
-                        fs.Read(data, 0, data.Length);
-                        fs.Close();
-
-                        AssemblyText = System.Convert.ToBase64String(data);
-                    }
-                    catch (Exception e)
-                    {
-                        m_log.DebugFormat("[{0}]: Unable to open script assembly {1}, reason: {2}", m_ScriptEngine.ScriptEngineName, assemName, e.Message);
-                    }
-                }
-            }
-
-            yield return null;
-            string map = String.Empty;
-
-            foreach (KeyValuePair<KeyValuePair<int, int>, KeyValuePair<int, int>> kvp in LineMap)
-            {
-                KeyValuePair<int, int> k = kvp.Key;
-                KeyValuePair<int, int> v = kvp.Value;
-                map += String.Format("{0},{1},{2},{3}\n", k.Key, k.Value, v.Key, v.Value);
-            }
-
-            XmlElement assemblyData = doc.CreateElement("", "Assembly", "");
-            XmlAttribute assemblyName = doc.CreateAttribute("", "Filename", "");
-
-            assemblyName.Value = fn;
-            assemblyData.Attributes.Append(assemblyName);
-
-            assemblyData.InnerText = AssemblyText;
-
-            stateData.AppendChild(assemblyData);
-
-            XmlElement mapData = doc.CreateElement("", "LineMap", "");
-            mapData.AppendChild(doc.CreateTextNode(map));
-
-            stateData.AppendChild(mapData);
-
-            FileStream fcs = File.Create(Path.Combine(Path.GetDirectoryName(AssemblyName), "DotNet"+ItemID.ToString() + ".state"));
-            System.Text.UTF8Encoding enc = new System.Text.UTF8Encoding();
-            Byte[] buf = enc.GetBytes(doc.InnerXml);
-            CurrentStateXML = doc.InnerXml;
-            fcs.Write(buf, 0, buf.Length);
-            fcs.Close();
         }
 
         #region Helpers

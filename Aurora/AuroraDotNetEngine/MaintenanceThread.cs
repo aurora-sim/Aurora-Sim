@@ -149,7 +149,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         {
                             m_ScriptEngine.ResumeScript(Resumeable[i]);
                         }
-                        Resumeable.Clear();
                         AdjustNumberOfScriptThreads();
                     	//Checks the Event Queue threads to make sure they are alive.
                     	CheckThreads();
@@ -221,6 +220,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             if(!Resumeable.Contains(itemID))
                 Resumeable.Add(itemID);
+        }
+
+        internal void RemoveResumeScript(OpenMetaverse.UUID itemID)
+        {
+            if (Resumeable.Contains(itemID))
+                Resumeable.Remove(itemID);
         }
 
         private void StartNewThreadClass()
@@ -355,12 +360,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         else if (item.Action == LUType.Load)
                         {
                             FireEvents.Add(item.ID);
-                            StartParts.Add(item.ID.Start(false));
+                            /*StartParts.Add(*/item.ID.Start(false)/*)*/;
                         }
                         else if (item.Action == LUType.Reupload)
                         {
                             FireEvents.Add(item.ID);
-                            ReuploadParts.Add(item.ID.Start(true));
+                            /*ReuploadParts.Add(*/item.ID.Start(true)/*)*/;
                         }
                         i++;
                     }
