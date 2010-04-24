@@ -9565,7 +9565,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             if (reqID != UUID.Zero)
                 return reqID.ToString();
             else
-                return null;
+                return new LSL_String();
         }
 
 

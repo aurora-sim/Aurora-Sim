@@ -1429,6 +1429,31 @@ namespace OpenSim.Region.ScriptEngine.Shared
                 return new LSLString(s);
             }
 
+            static public implicit operator LSLString(LSL_Types.list s)
+            {
+                return new LSLString(s.ToPrettyString());
+            }
+
+            static public implicit operator LSLString(LSL_Types.LSLFloat s)
+            {
+                return new LSLString(s.ToString());
+            }
+
+            static public implicit operator LSLString(LSL_Types.LSLInteger s)
+            {
+                return new LSLString(s.ToString());
+            }
+
+            static public implicit operator LSLString(LSL_Types.Quaternion s)
+            {
+                return new LSLString(s.ToString());
+            }
+
+            static public implicit operator LSLString(LSL_Types.Vector3 s)
+            {
+                return new LSLString(s.ToString());
+            }
+
             public static string ToString(LSLString s)
             {
                 return s.m_string;
@@ -1507,11 +1532,6 @@ namespace OpenSim.Region.ScriptEngine.Shared
             public static explicit operator LSLString(double d)
             {
                 return new LSLString(d);
-            }
-
-            public static explicit operator LSLString(LSLFloat f)
-            {
-                return new LSLString(f);
             }
 
             static public explicit operator LSLString(bool b)

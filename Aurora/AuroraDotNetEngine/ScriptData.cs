@@ -520,7 +520,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 }
             }
 
-            bool useDebug = false;
+            bool useDebug = true;
             if (useDebug)
             {
                 TimeSpan t = (DateTime.Now.ToUniversalTime() - Start);
