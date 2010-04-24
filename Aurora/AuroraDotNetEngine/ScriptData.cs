@@ -464,6 +464,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     Script = PreviouslyCompiledID.Script;
                     NeedsToCreateNewAppDomain = false;
                 }
+                else
+                {
+                    m_ScriptEngine.ScriptProtection.AddPreviouslyCompiled(Source, this);
+                }
             }
             else
             {
@@ -491,6 +495,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     {
                         m_ScriptEngine.LSLCompiler.PerformScriptCompile(Source, AssetID, InventoryItem.OwnerID, ItemID, Inherited, ClassName, m_ScriptEngine.ScriptProtection, localID, this, out AssemblyName,
                                                                              out LineMap, out ClassID);
+                        m_ScriptEngine.ScriptProtection.AddPreviouslyCompiled(Source, this);
                         #region Warnings
 
                         string[] compilewarnings = m_ScriptEngine.LSLCompiler.GetWarnings();
@@ -535,14 +540,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         Script = m_ScriptEngine.m_AppDomainManager.LoadScript(AssemblyName, "Script." + ClassName, out AppDomain);
                     else
                         Script = m_ScriptEngine.m_AppDomainManager.LoadScript(AssemblyName, "Script." + ClassID, out AppDomain);
-                    m_ScriptEngine.ScriptProtection.AddPreviouslyCompiled(Source, this);
                 }
                 catch (Exception ex)
                 {
                     ShowError(ex, 2, reupload);
                 }
             }
-
+            
             if (reupload)
                 m_ScriptEngine.Errors[ItemID] = new String[] { "SUCCESSFULL" };
 
