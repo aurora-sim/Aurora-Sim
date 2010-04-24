@@ -443,14 +443,20 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 FindRequiredForCompileless();
                 if (PreviouslyCompiledID != null)
                 {
-                    FileInfo fi = new FileInfo(PreviouslyCompiledID.AssemblyName);
-                    FileStream stream = fi.OpenRead();
-                    Byte[] data = new Byte[fi.Length];
-                    stream.Read(data, 0, data.Length);
-                    FileStream sfs = File.Create(AssemblyName);
-                    sfs.Write(data, 0, data.Length);
-                    sfs.Close();
-                    stream.Close();
+                    if (AssemblyName != PreviouslyCompiledID.AssemblyName)
+                    {
+                        FileInfo fi = new FileInfo(PreviouslyCompiledID.AssemblyName);
+                        FileStream stream = fi.OpenRead();
+                        Byte[] data = new Byte[fi.Length];
+                        stream.Read(data, 0, data.Length);
+                        FileStream sfs = File.Create(AssemblyName);
+                        sfs.Write(data, 0, data.Length);
+                        fi = null;
+                        sfs.Close();
+                        sfs.Dispose();
+                        stream.Close();
+                        stream.Dispose();
+                    }
 
                     ClassID = PreviouslyCompiledID.ClassID;
                     AppDomain = PreviouslyCompiledID.AppDomain;
@@ -513,7 +519,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 }
             }
 
-            bool useDebug = true;
+            bool useDebug = false;
             if (useDebug)
             {
                 TimeSpan t = (DateTime.Now.ToUniversalTime() - Start);
