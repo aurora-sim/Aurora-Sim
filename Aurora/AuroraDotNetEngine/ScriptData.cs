@@ -115,10 +115,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         /// <summary>
         /// This closes the scrpit, removes it from any known spots, and disposes of itself.
-        /// This function is microthreaded.
         /// </summary>
         /// <returns></returns>
-        public IEnumerable CloseAndDispose()
+        public void CloseAndDispose()
         {
             // Tell script not to accept new requests
             Running = false;
@@ -155,8 +154,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             AsyncCommandManager.RemoveScript(m_ScriptEngine, localID, ItemID);
             m_ScriptEngine.m_EventManager.state_exit(localID);
             
-            yield return null;
-
             try
             {
                 // Remove from internal structure
@@ -165,7 +162,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 m_log.DebugFormat("[{0}]: Closed Script in " + part.Name, m_ScriptEngine.ScriptEngineName);
 
                 if (AppDomain == null)
-                    yield break;
+                    return;
 
                 try
                 {

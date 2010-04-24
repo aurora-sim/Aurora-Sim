@@ -853,20 +853,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     id.Disabled = false;
                     ScriptProtection.RemovePreviouslyCompiled(id.Source);
                     id.Source = script;
-                    bool running = true;
                     try
                     {
-                        /*IEnumerator enumerator = */id.Start(true);
-                        /*while (running)
-                        {
-                            try
-                            {
-                                running = enumerator.MoveNext();
-                            }
-                            catch (Exception ex)
-                            {
-                            }
-                        }*/
+                        id.Start(true);
                     }
                     catch (Exception ex) { }
                 }

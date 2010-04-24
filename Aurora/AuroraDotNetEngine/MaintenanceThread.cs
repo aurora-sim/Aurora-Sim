@@ -355,81 +355,27 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
                         if (item.Action == LUType.Unload)
                         {
-                            StopParts.Add(item.ID.CloseAndDispose().GetEnumerator());
+                            item.ID.CloseAndDispose();
                         }
                         else if (item.Action == LUType.Load)
                         {
                             FireEvents.Add(item.ID);
-                            /*StartParts.Add(*/item.ID.Start(false)/*)*/;
+                            try
+                            {
+                                item.ID.Start(false);
+                            }
+                            catch (Exception) { }
                         }
                         else if (item.Action == LUType.Reupload)
                         {
                             FireEvents.Add(item.ID);
-                            /*ReuploadParts.Add(*/item.ID.Start(true)/*)*/;
+                            try
+                            {
+                                item.ID.Start(true);
+                            }
+                            catch (Exception) { }
                         }
                         i++;
-                    }
-                }
-            }
-            lock (ReuploadParts)
-            {
-                int i = 0;
-                while (ReuploadParts.Count > 0 && i < 1000)
-                {
-                    i++;
-
-                    bool running = false;
-                    try
-                    {
-                        running = ReuploadParts[i % ReuploadParts.Count].MoveNext();
-                    }
-                    catch (Exception)
-                    {
-                    }
-
-                    if (!running)
-                        ReuploadParts.Remove(ReuploadParts[i % ReuploadParts.Count]);
-                }
-            }
-            lock (StopParts)
-            {
-                int i = 0;
-                while (StopParts.Count > 0 && i < 1000)
-                {
-                    i++;
-
-                    bool running = false;
-                    try
-                    {
-                        running = StopParts[i % StopParts.Count].MoveNext();
-                    }
-                    catch (Exception)
-                    {
-                    }
-
-                    if (!running)
-                        StopParts.Remove(StopParts[i % StopParts.Count]);
-                }
-            }
-            lock (StartParts)
-            {
-                int i = 0;
-                while (StartParts.Count > 0 && i < 1000)
-                {
-                    i++;
-
-                    bool running = false;
-                    try
-                    {
-                        running = StartParts[i % StartParts.Count].MoveNext();
-                    }
-                    catch (Exception)
-                    {
-                    }
-
-                    if (!running)
-                    {
-                        StartParts.Remove(StartParts[i % StartParts.Count]);
                     }
                 }
             }
