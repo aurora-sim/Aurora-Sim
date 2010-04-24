@@ -630,9 +630,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public void FindRequiredForCompileless()
         {
-            List<string> StateSave = GenericData.Query("ItemID", ItemID.ToString(), "auroraDotNetStateSaves", "ClassID, LineMap");
+            List<string> StateSave = GenericData.Query("ItemID", ItemID.ToString(), "auroraDotNetStateSaves", "ClassID, LineMap, AssemblyName");
             ClassID = StateSave[0];
             LineMap = OpenSim.Region.ScriptEngine.Shared.CodeTools.Compiler.ReadMapFileFromString(StateSave[1]);
+            AssemblyName = StateSave[2];
         }
 
         public void DeserializeDatabase()
@@ -640,7 +641,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             Dictionary<string, object> vars = new Dictionary<string,object>();
             List<string> StateSave = GenericData.Query("ItemID", ItemID.ToString(), "auroraDotNetStateSaves", "*");
             State = StateSave[0];
-            LineMap = OpenSim.Region.ScriptEngine.Shared.CodeTools.Compiler.ReadMapFileFromString(StateSave[3]);
             Running = bool.Parse(StateSave[4]);
             
             string varsmap = StateSave[5];
@@ -928,6 +928,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             Insert.Add(perms);
             
             Insert.Add(EventDelayTicks.ToString());
+            Insert.Add(AssemblyName);
             GenericData.Insert("auroraDotNetStateSaves", Insert.ToArray());
         }
 
