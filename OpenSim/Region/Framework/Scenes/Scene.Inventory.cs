@@ -216,7 +216,7 @@ namespace OpenSim.Region.Framework.Scenes
                 //
                 //part.Inventory.CreateScriptInstance(item.ItemID, 0, false, DefaultScriptEngine, 0);
                 part.Inventory.UpdateScriptInstance(item.ItemID, 0, false, DefaultScriptEngine, 0);
-                errors = part.Inventory.GetScriptErrors(item.ItemID);
+                errors = part.Inventory.GetScriptErrors(item.ItemID, DefaultScriptEngine);
             }
             else
             {

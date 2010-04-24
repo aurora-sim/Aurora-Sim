@@ -355,12 +355,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         else if (item.Action == LUType.Load)
                         {
                             FireEvents.Add(item.ID);
-                            StartParts.Add(item.ID.Start());
+                            StartParts.Add(item.ID.Start(false));
                         }
                         else if (item.Action == LUType.Reupload)
                         {
                             FireEvents.Add(item.ID);
-                            ReuploadParts.Add(item.ID.Start());
+                            ReuploadParts.Add(item.ID.Start(true));
                         }
                         i++;
                     }

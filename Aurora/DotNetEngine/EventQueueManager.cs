@@ -228,13 +228,13 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         public bool AddToObjectQueue(uint localID, string FunctionName, DetectParams[] qParams, params object[] param)
         {
             // Determine all scripts in Object and add to their queue
-            IInstanceData[] datas = m_ScriptEngine.ScriptProtection.GetScript(localID);
+            IScriptData[] datas = m_ScriptEngine.ScriptProtection.GetScript(localID);
             
             if(datas == null)
             	//No scripts to post to... so it is firing all the events it needs to
             	return true;
             
-            foreach (IInstanceData ID in datas)
+            foreach (IScriptData ID in datas)
             {
                 // Add to each script in that object
                 AddToScriptQueue((InstanceData)ID, FunctionName, qParams, param);

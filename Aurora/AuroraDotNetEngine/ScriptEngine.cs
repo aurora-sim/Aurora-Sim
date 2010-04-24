@@ -658,13 +658,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public bool AddToObjectQueue(uint localID, string FunctionName, DetectParams[] qParams, params object[] param)
         {
             // Determine all scripts in Object and add to their queue
-            IInstanceData[] datas = ScriptProtection.GetScript(localID);
+            IScriptData[] datas = ScriptProtection.GetScript(localID);
 
             if (datas == null)
                 //No scripts to post to... so it is firing all the events it needs to
                 return true;
 
-            foreach (IInstanceData ID in datas)
+            foreach (IScriptData ID in datas)
             {
                 // Add to each script in that object
                 AddToScriptQueue((ScriptData)ID, FunctionName, qParams, param);
@@ -805,6 +805,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     id.State = "default";
                     id.Running = true;
                     id.Disabled = false;
+                    ScriptProtection.RemovePreviouslyCompiled(id.Source);
                     id.Source = Script;
                     LUStruct ls = new LUStruct();
                     ls.Action = LUType.Reupload;
@@ -854,19 +855,24 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     id.State = "default";
                     id.Running = true;
                     id.Disabled = false;
+                    ScriptProtection.RemovePreviouslyCompiled(id.Source);
                     id.Source = script;
                     bool running = true;
-                    IEnumerator enumerator = id.Start();
-                    while (running)
+                    try
                     {
-                        try
+                        IEnumerator enumerator = id.Start(true);
+                        while (running)
                         {
-                            running = enumerator.MoveNext();
-                        }
-                        catch (Exception)
-                        {
+                            try
+                            {
+                                running = enumerator.MoveNext();
+                            }
+                            catch (Exception ex)
+                            {
+                            }
                         }
                     }
+                    catch (Exception ex) { }
                 }
             }
             else
@@ -909,6 +915,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (data.Disabled)
                 return;
             LUStruct ls = new LUStruct();
+            ScriptProtection.RemovePreviouslyCompiled(data.Source);      
             ls.ID = data;
             ls.Action = LUType.Unload;
             RemoveFromEventQueue(itemID);

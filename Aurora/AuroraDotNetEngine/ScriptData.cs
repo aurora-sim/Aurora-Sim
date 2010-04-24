@@ -54,7 +54,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
     #region InstanceData
 
-    public class ScriptData : IInstanceData
+    public class ScriptData : IScriptData
     {
         #region Constructor
 
@@ -239,12 +239,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
         }
 
-        public void ShowError(Exception e, int stage)
+        public void ShowError(Exception e, int stage, bool reupload)
         {
             if (presence != null && (!PostOnRez))
                 presence.ControllingClient.SendAgentAlertMessage("Script saved with errors, check debug window!", false);
 
-            if (presence != null)
+            if (reupload)
                 m_ScriptEngine.Errors[ItemID] = new String[] { e.Message.ToString() };
             
             try
@@ -301,7 +301,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// This function is microthreaded.
         /// </summary>
         /// <returns></returns>
-        public IEnumerator Start()
+        public IEnumerator Start(bool reupload)
         {
             Compiling = true;
             CurrentStateXML = "";
@@ -456,7 +456,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 //Dont set to previously compiled, otherwise we wont have the script loaded into the app domain.
                 previouslyCompiled = false;
             }*/
-            if (GenericData.Query("ItemID", ItemID.ToString(), "auroraDotNetStateSaves", "*").Count > 1)
+            if (GenericData.Query("ItemID", ItemID.ToString(), "auroraDotNetStateSaves", "*").Count > 1 && Loading)
             {
                 FindRequiredForCompileless();
             }
@@ -514,15 +514,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 }
                 catch (Exception ex)
                 {
-                    ShowError(ex, 1);
+                    ShowError(ex, 1, reupload);
                 }
             }
 
-            if (presence != null)
+            if (reupload)
                 m_ScriptEngine.Errors[ItemID] = new String[] { "SUCCESSFULL" };
 
 
-            bool useDebug = false;
+            bool useDebug = true;
             if (useDebug)
             {
                 TimeSpan t = (DateTime.Now.ToUniversalTime() - Start);
@@ -541,7 +541,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 }
                 catch (Exception ex)
                 {
-                    ShowError(ex, 2);
+                    ShowError(ex, 2, reupload);
                 }
             }
 
@@ -596,6 +596,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 m_log.DebugFormat("[{0}]: Started Script {1} in object {2} by avatar {3}.", m_ScriptEngine.ScriptEngineName, InventoryItem.Name, part.Name, presence.Name);
             else
                 m_log.DebugFormat("[{0}]: Started Script {1} in object {2}.", m_ScriptEngine.ScriptEngineName, InventoryItem.Name, part.Name);
+            if (useDebug)
+            {
+                TimeSpan t = (DateTime.Now.ToUniversalTime() - Start);
+                m_log.Debug("Stage 3: " + t.TotalSeconds);
+            }
         }
 
         #endregion
@@ -857,8 +862,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             #region Queue
             XmlDocument doc = new XmlDocument();
             doc.LoadXml(StateSave[8]);
-            XmlNode queue = doc.FirstChild;
-            XmlNodeList itemL = queue.ChildNodes;
+            XmlNodeList itemL = doc.ChildNodes;
             foreach (XmlNode item in itemL)
             {
                 List<Object> parms = new List<Object>();

@@ -51,14 +51,15 @@ namespace OpenSim.Region.ScriptEngine.Interfaces
         bool AllowMacroScripting { get; }
         ThreatLevel GetThreatLevel();
         void CheckThreatLevel(ThreatLevel level, string function, SceneObjectPart m_host, string API);
-        IInstanceData TryGetPreviouslyCompiledScript(string source);
-        void AddPreviouslyCompiled(string source, IInstanceData ID);
-        IInstanceData GetScript(uint localID, UUID itemID);
-        IInstanceData GetScript(UUID itemID);
-        IInstanceData[] GetScript(uint localID);
-        void AddNewScript(IInstanceData Data);
-        IInstanceData[] GetAllScripts();
-        void RemoveScript(IInstanceData Data);
+        IScriptData TryGetPreviouslyCompiledScript(string source);
+        void AddPreviouslyCompiled(string source, IScriptData ID);
+        void RemovePreviouslyCompiled(string source);
+        IScriptData GetScript(uint localID, UUID itemID);
+        IScriptData GetScript(UUID itemID);
+        IScriptData[] GetScript(uint localID);
+        void AddNewScript(IScriptData Data);
+        IScriptData[] GetAllScripts();
+        void RemoveScript(IScriptData Data);
     }
 	
 	public enum ThreatLevel
@@ -88,7 +89,7 @@ namespace OpenSim.Region.ScriptEngine.Interfaces
         string Name { get;}
     }
 	
-	public class IInstanceData
+	public class IScriptData
 	{
 		IScript Script;
 		string State;

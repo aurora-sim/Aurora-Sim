@@ -53,7 +53,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
 {
 	#region InstanceData
 
-	public class InstanceData : IInstanceData
+	public class InstanceData : IScriptData
 	{
 		#region Constructor
 

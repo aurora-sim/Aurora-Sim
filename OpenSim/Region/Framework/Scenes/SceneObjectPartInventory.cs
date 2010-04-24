@@ -205,7 +205,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public ArrayList GetScriptErrors(UUID itemID)
+        public ArrayList GetScriptErrors(UUID itemID, string DefaultScriptEngine)
         {
             ArrayList ret = new ArrayList();
 
@@ -217,9 +217,12 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (e != null)
                 {
-                    ArrayList errors = e.GetScriptErrors(itemID);
-                    foreach (Object line in errors)
-                        ret.Add(line);
+                    if (e.ScriptEngineName == DefaultScriptEngine)
+                    {
+                        ArrayList errors = e.GetScriptErrors(itemID);
+                        foreach (Object line in errors)
+                            ret.Add(line);
+                    }
                 }
             }
 

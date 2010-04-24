@@ -283,24 +283,35 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         
         #region Previously Compiled Scripts
         
-        public void AddPreviouslyCompiled(string source, IInstanceData ID)
+        public void AddPreviouslyCompiled(string source, IScriptData ID)
         {
         	if(!PreviouslyCompiled.ContainsKey(source))
         	{
         		PreviouslyCompiled.Add(source, (ScriptData)ID);
         	}
         }
+
+        public void RemovePreviouslyCompiled(string source)
+        {
+            if (PreviouslyCompiled.ContainsKey(source))
+            {
+                PreviouslyCompiled.Remove(source);
+            }
+        }
         
-        public IInstanceData TryGetPreviouslyCompiledScript(string source)
+        public IScriptData TryGetPreviouslyCompiledScript(string source)
         {
         	ScriptData ID = null;
         	PreviouslyCompiled.TryGetValue(source, out ID);
-        	return (IInstanceData)ID;
+            //Just as a check...
+            if (ID.Source != source)
+                return null;
+        	return (IScriptData)ID;
         }
         
         public Dictionary<UUID, uint> ScriptsItems = new Dictionary<UUID, uint>();
         public Dictionary<uint, Dictionary<UUID, ScriptData>> Scripts = new Dictionary<uint, Dictionary<UUID, ScriptData>>();
-        public IInstanceData GetScript(uint localID, UUID itemID)
+        public IScriptData GetScript(uint localID, UUID itemID)
         {
         	if(!Scripts.ContainsKey(localID))
         		return null;
@@ -310,7 +321,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         	return Instances[itemID];
         }
         
-        public IInstanceData GetScript(UUID itemID)
+        public IScriptData GetScript(UUID itemID)
         {
         	if(!ScriptsItems.ContainsKey(itemID))
         		return null;
@@ -318,20 +329,20 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         	return GetScript(LocalID, itemID);
         }
         
-        public IInstanceData[] GetScript(uint localID)
+        public IScriptData[] GetScript(uint localID)
         {
         	if(!Scripts.ContainsKey(localID))
         		return null;
         	Dictionary<UUID, ScriptData> Instances = Scripts[localID];
-        	List<IInstanceData> RetVal = new List<IInstanceData>();
+        	List<IScriptData> RetVal = new List<IScriptData>();
         	foreach(ScriptData ID in Instances.Values)
         	{
-        		RetVal.Add((IInstanceData)ID);
+        		RetVal.Add((IScriptData)ID);
         	}
         	return RetVal.ToArray();
         }
         
-        public void AddNewScript(IInstanceData Data)
+        public void AddNewScript(IScriptData Data)
         {
         	ScriptData ID = (ScriptData)Data;
             if (ScriptsItems.ContainsKey(ID.ItemID))
@@ -349,9 +360,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         	Scripts.Add(ID.localID,Instances);
         }
         
-        public IInstanceData[] GetAllScripts()
+        public IScriptData[] GetAllScripts()
         {
-        	List<IInstanceData> Ids = new List<IInstanceData>();
+        	List<IScriptData> Ids = new List<IScriptData>();
         	foreach(Dictionary<UUID, ScriptData> Instances in Scripts.Values)
         	{
         		foreach(ScriptData ID in Instances.Values)
@@ -362,7 +373,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         	return Ids.ToArray();
         }
         
-        public void RemoveScript(IInstanceData Data)
+        public void RemoveScript(IScriptData Data)
         {
         	ScriptData ID = (ScriptData)Data;
         	ScriptsItems.Remove(ID.ItemID);

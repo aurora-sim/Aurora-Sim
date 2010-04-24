@@ -283,7 +283,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         
         #region Previously Compiled Scripts
         
-        public void AddPreviouslyCompiled(string source, IInstanceData ID)
+        public void AddPreviouslyCompiled(string source, IScriptData ID)
         {
         	if(!PreviouslyCompiled.ContainsKey(source))
         	{
@@ -291,16 +291,16 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         	}
         }
         
-        public IInstanceData TryGetPreviouslyCompiledScript(string source)
+        public IScriptData TryGetPreviouslyCompiledScript(string source)
         {
         	InstanceData ID = null;
         	PreviouslyCompiled.TryGetValue(source, out ID);
-        	return (IInstanceData)ID;
+        	return (IScriptData)ID;
         }
         
         public Dictionary<UUID, uint> ScriptsItems = new Dictionary<UUID, uint>();
         public Dictionary<uint, Dictionary<UUID, InstanceData>> Scripts = new Dictionary<uint, Dictionary<UUID, InstanceData>>();
-        public IInstanceData GetScript(uint localID, UUID itemID)
+        public IScriptData GetScript(uint localID, UUID itemID)
         {
         	if(!Scripts.ContainsKey(localID))
         		return null;
@@ -310,7 +310,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         	return Instances[itemID];
         }
         
-        public IInstanceData GetScript(UUID itemID)
+        public IScriptData GetScript(UUID itemID)
         {
         	if(!ScriptsItems.ContainsKey(itemID))
         		return null;
@@ -318,20 +318,20 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         	return GetScript(LocalID, itemID);
         }
         
-        public IInstanceData[] GetScript(uint localID)
+        public IScriptData[] GetScript(uint localID)
         {
         	if(!Scripts.ContainsKey(localID))
         		return null;
         	Dictionary<UUID, InstanceData> Instances = Scripts[localID];
-        	List<IInstanceData> RetVal = new List<IInstanceData>();
+        	List<IScriptData> RetVal = new List<IScriptData>();
         	foreach(InstanceData ID in Instances.Values)
         	{
-        		RetVal.Add((IInstanceData)ID);
+        		RetVal.Add((IScriptData)ID);
         	}
         	return RetVal.ToArray();
         }
         
-        public void AddNewScript(IInstanceData Data)
+        public void AddNewScript(IScriptData Data)
         {
         	InstanceData ID = (InstanceData)Data;
         	ScriptsItems.Add(ID.ItemID, ID.localID);
@@ -345,9 +345,9 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         	Scripts[ID.localID] = Instances;
         }
         
-        public IInstanceData[] GetAllScripts()
+        public IScriptData[] GetAllScripts()
         {
-        	List<IInstanceData> Ids = new List<IInstanceData>();
+        	List<IScriptData> Ids = new List<IScriptData>();
         	foreach(Dictionary<UUID, InstanceData> Instances in Scripts.Values)
         	{
         		foreach(InstanceData ID in Instances.Values)
@@ -358,7 +358,7 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         	return Ids.ToArray();
         }
         
-        public void RemoveScript(IInstanceData Data)
+        public void RemoveScript(IScriptData Data)
         {
         	InstanceData ID = (InstanceData)Data;
         	ScriptsItems.Remove(ID.ItemID);
@@ -371,6 +371,16 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
         	Scripts[ID.localID] = Instances;
         }
         
+        #endregion
+
+        #region IScriptProtectionModule Members
+
+
+        public void RemovePreviouslyCompiled(string source)
+        {
+            throw new NotImplementedException();
+        }
+
         #endregion
     }
 }
