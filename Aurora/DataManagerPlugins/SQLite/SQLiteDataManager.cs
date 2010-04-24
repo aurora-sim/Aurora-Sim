@@ -206,7 +206,7 @@ namespace Aurora.DataManager.SQLite
             query = String.Format("insert into {0} values ('", table);
             foreach (string value in values)
             {
-                query = String.Format(query + "{0}','", value);
+                query = query + value + "','";
             }
             query = query.Remove(query.Length - 2);
             query += ")";

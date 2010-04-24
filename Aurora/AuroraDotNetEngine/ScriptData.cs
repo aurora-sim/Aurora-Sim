@@ -830,7 +830,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             
             string varsmap = StateSave[5];
 
-            foreach (string var in varsmap.Split('\n'))
+            foreach (string var in varsmap.Split(';'))
             {
                 vars.Add(var.Split(',')[0],(object)var.Split(',')[1]);
             }
@@ -987,7 +987,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 KeyValuePair<int, int> k = kvp.Key;
                 KeyValuePair<int, int> v = kvp.Value;
-                map += String.Format("{0},{1},{2},{3}\n", k.Key, k.Value, v.Key, v.Value);
+                map += String.Format("{0},{1},{2},{3};", k.Key, k.Value, v.Key, v.Value);
             }
             Insert.Add(map);
             

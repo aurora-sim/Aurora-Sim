@@ -50,5 +50,7 @@ namespace OpenSim.Region.Framework.Interfaces
         void ResumeScript(UUID itemID);
 
         ArrayList GetScriptErrors(UUID itemID);
+
+        void UpdateScript(uint localID, UUID itemID, string script, int startParam, bool postOnRez, int stateSource);
     }
 }

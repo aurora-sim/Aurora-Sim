@@ -519,5 +519,15 @@ namespace OpenSim.Region.ScriptEngine.DotNetEngine
             return true;
         }
         #endregion
+
+        #region IScriptModule Members
+
+
+        public void UpdateScript(uint localID, UUID itemID, string script, int startParam, bool postOnRez, int stateSource)
+        {
+            m_ScriptManager.StartScript(localID, itemID, script, startParam, postOnRez, (StateSource)stateSource);
+        }
+
+        #endregion
     }
 }

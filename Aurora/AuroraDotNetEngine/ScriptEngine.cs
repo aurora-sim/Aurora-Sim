@@ -839,6 +839,63 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
         }
 
+        public void UpdateScript(uint localID, UUID itemID, string script, int startParam, bool postOnRez, int stateSource)
+        {
+            ScriptData id = null;
+            id = GetScript(localID, itemID);
+            //Its a change of the script source, needs to be recompiled and such.
+            if (id != null)
+            {
+                lock (LUQueue)
+                {
+                    id.PostOnRez = postOnRez;
+                    id.StartParam = startParam;
+                    id.stateSource = (StateSource)stateSource;
+                    id.State = "default";
+                    id.Running = true;
+                    id.Disabled = false;
+                    id.Source = script;
+                    bool running = true;
+                    IEnumerator enumerator = id.Start();
+                    while (running)
+                    {
+                        try
+                        {
+                            running = enumerator.MoveNext();
+                        }
+                        catch (Exception)
+                        {
+                        }
+                    }
+                }
+            }
+            else
+            {
+                lock (LUQueue)
+                {
+                    if ((LUQueue.Count >= LoadUnloadMaxQueueSize))
+                    {
+                        m_log.Error("[" + ScriptEngineName + "]: ERROR: Load/unload queue item count is at " + LUQueue.Count + ". Config variable \"LoadUnloadMaxQueueSize\" " + "is set to " + LoadUnloadMaxQueueSize + ", so ignoring new script.");
+                        return;
+                    }
+                    id = new ScriptData(this);
+                    id.ItemID = itemID;
+                    id.localID = localID;
+                    id.StartParam = startParam;
+                    id.stateSource = (StateSource)stateSource;
+                    id.State = "default";
+                    id.Running = true;
+                    id.Disabled = false;
+                    id.Source = script;
+                    id.PostOnRez = postOnRez;
+                    LUStruct ls = new LUStruct();
+                    ls.Action = LUType.Load;
+                    ls.ID = id;
+                    LUQueue.Enqueue(ls);
+                }
+            }
+        }
+
         /// <summary>
         /// Disables and unloads a script
         /// </summary>
