@@ -580,10 +580,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 // We loaded state, don't force a re-save
                 m_startedFromSavedState = true;
             }
-            else
-            {
-                m_ScriptEngine.AddToStateSaverQueue(this, true);
-            }
+
+            m_ScriptEngine.AddToStateSaverQueue(this, true);
             
             int eventFlags = Script.GetStateEventFlags(State);
             part.SetScriptEvents(ItemID, eventFlags);

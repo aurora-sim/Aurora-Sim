@@ -12,7 +12,7 @@ using log4net;
 
 namespace Aurora.DataManager.SQLite
 {
-    public class SQLiteLoader : DataManagerBase
+    public class SQLiteStateSaver : DataManagerBase
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         protected List<string> m_ColumnNames;
@@ -23,7 +23,7 @@ namespace Aurora.DataManager.SQLite
 
         public override string Identifier
         {
-            get { return "SQLiteConnector"; }
+            get { return "SQLiteStateSaver"; }
         }
 
         public override void ConnectToDatabase(string connectionString)
