@@ -72,13 +72,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private ScriptEngine m_ScriptEngine;
-        private Scene World;
+        public Scene World;
         public IScript Script;
         public string State;
         public bool Running = true;
         public bool Disabled = false;
         public bool Compiling = false;
-        public bool Suspended = true;
+        public bool Suspended = false;
         public bool Loading = true;
         public string Source;
         public string ClassSource;
@@ -464,10 +464,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     Script = PreviouslyCompiledID.Script;
                     NeedsToCreateNewAppDomain = false;
                 }
-                else
-                {
-                    m_ScriptEngine.ScriptProtection.AddPreviouslyCompiled(Source, this);
-                }
             }
             else
             {
@@ -495,7 +491,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     {
                         m_ScriptEngine.LSLCompiler.PerformScriptCompile(Source, AssetID, InventoryItem.OwnerID, ItemID, Inherited, ClassName, m_ScriptEngine.ScriptProtection, localID, this, out AssemblyName,
                                                                              out LineMap, out ClassID);
-                        m_ScriptEngine.ScriptProtection.AddPreviouslyCompiled(Source, this);
                         #region Warnings
 
                         string[] compilewarnings = m_ScriptEngine.LSLCompiler.GetWarnings();
@@ -525,7 +520,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 }
             }
 
-            bool useDebug = true;
+            bool useDebug = false;
             if (useDebug)
             {
                 TimeSpan t = (DateTime.Now.ToUniversalTime() - Start);
@@ -540,6 +535,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         Script = m_ScriptEngine.m_AppDomainManager.LoadScript(AssemblyName, "Script." + ClassName, out AppDomain);
                     else
                         Script = m_ScriptEngine.m_AppDomainManager.LoadScript(AssemblyName, "Script." + ClassID, out AppDomain);
+                    m_ScriptEngine.ScriptProtection.AddPreviouslyCompiled(Source, this);
                 }
                 catch (Exception ex)
                 {
@@ -652,8 +648,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             foreach (string var in varsmap.Split(';'))
             {
                 if (var == "")
-                    break;
-                vars.Add(var.Split(',')[0],(object)var.Split(',')[1]);
+                    continue;
+                string value = var.Split(',')[1].Replace("\n", "");
+                vars.Add(var.Split(',')[0], (object)value);
             }
             Script.SetVars(vars);
 
@@ -800,7 +797,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             Source = Source.Replace("\n", " ");
             Insert.Add(Source);
             //LineMap
-            string map = String.Empty;
+            LSL_Types.LSLString map = String.Empty;
             foreach (KeyValuePair<KeyValuePair<int, int>, KeyValuePair<int, int>> kvp in LineMap)
             {
                 KeyValuePair<int, int> k = kvp.Key;
@@ -831,8 +828,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             XmlDocument xmldoc = new XmlDocument();
             XmlElement queue = xmldoc.CreateElement("", "Queue", "");
 
-            QueueItemStruct[] tempQueue = new QueueItemStruct[m_ScriptEngine.EventQueue.Count];
-            m_ScriptEngine.EventQueue.CopyTo(tempQueue, 0);
+            QueueItemStruct[] tempQueue = new QueueItemStruct[ScriptEngine.EventQueue.Count];
+            ScriptEngine.EventQueue.CopyTo(tempQueue, 0);
             int count = tempQueue.Length;
             int i = 0;
             while (i < count)

@@ -55,11 +55,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         private ScriptEngine m_ScriptEngine;
         internal static List<EventQueue> eventQueueThreads = new List<EventQueue>();                             // Thread pool that we work on
         private int SleepTime = 250;
+        private int numberOfEventQueueThreads = 1;
 
         public MaintenanceThread(ScriptEngine Engine)
         {
             AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(CurrentDomain_AssemblyResolve);
             m_ScriptEngine = Engine;
+            numberOfEventQueueThreads = m_ScriptEngine.numberOfEventQueueThreads;
             ReadConfig();
 
             // Start maintenance thread
@@ -256,18 +258,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public void AdjustNumberOfScriptThreads()
         {
             // Is there anything here for us to do?
-            if (eventQueueThreads.Count == m_ScriptEngine.numberOfEventQueueThreads)
+            if (eventQueueThreads.Count == numberOfEventQueueThreads)
                 return;
 
             lock (eventQueueThreads)
             {
-                int diff = m_ScriptEngine.numberOfEventQueueThreads - eventQueueThreads.Count;
+                int diff = numberOfEventQueueThreads - eventQueueThreads.Count;
                 // Positive number: Start
                 // Negative number: too many are running
                 if (diff > 0)
                 {
                     // We need to add more threads
-                    for (int ThreadCount = eventQueueThreads.Count; ThreadCount < m_ScriptEngine.numberOfEventQueueThreads; ThreadCount++)
+                    for (int ThreadCount = eventQueueThreads.Count; ThreadCount < numberOfEventQueueThreads; ThreadCount++)
                     {
                         StartNewThreadClass();
                     }

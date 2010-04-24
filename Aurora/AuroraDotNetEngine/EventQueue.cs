@@ -158,18 +158,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         	try
         	{
                 Thread.Sleep(SleepTime);
-                if (m_ScriptEngine.EventQueue.Count == 0)
+                if (ScriptEngine.EventQueue.Count == 0)
         			return;
                 List<QueueItemStruct> NeedsToBeRequeued = new List<QueueItemStruct>();
         		// Something in queue, process
-        		lock (m_ScriptEngine.EventQueue)
+                lock (ScriptEngine.EventQueue)
         		{
                     LastExecutionStarted = DateTime.Now.Ticks;
                     InExecution = true;
-        			for (int qc = 0; qc < m_ScriptEngine.EventQueue.Count; qc++)
+                    for (int qc = 0; qc < ScriptEngine.EventQueue.Count; qc++)
         			{
         				// Get queue item
-        				QueueItemStruct QIS = m_ScriptEngine.EventQueue.Dequeue();
+                        QueueItemStruct QIS = ScriptEngine.EventQueue.Dequeue();
                         //Suspended scripts get readded
                         if (QIS.ID.Suspended)
                         {
@@ -217,7 +217,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         		}
                 foreach (QueueItemStruct QIS in NeedsToBeRequeued)
                 {
-                    m_ScriptEngine.EventQueue.Enqueue(QIS);
+                    ScriptEngine.EventQueue.Enqueue(QIS);
                 }
                 InExecution = true;
                 m_ScriptEngine.NeedsRemoved.Clear();

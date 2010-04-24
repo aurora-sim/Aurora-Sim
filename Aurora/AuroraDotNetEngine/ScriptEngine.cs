@@ -61,6 +61,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             get { return m_Scene; }
         }
 
+        private static List<ScriptEngine> m_ScriptEngines =
+                new List<ScriptEngine>();
+
         // Handles and queues incoming events from OpenSim
         public EventManager m_EventManager;
 
@@ -104,23 +107,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public event ObjectRemoved OnObjectRemoved;
         private IXmlRpcRouter m_XmlRpcRouter;
         public IScriptProtectionModule ScriptProtection;
-        #endregion
-
-        #region Constructor and Shutdown
-        
-        public void Shutdown()
-        {
-            // We are shutting down
-            foreach (ScriptData ID in ScriptProtection.GetAllScripts())
-            {
-                StopScript(ID.localID, ID.ItemID);
-            }
-        }
-
-        #endregion
-
-        #region INonSharedRegionModule
-
         /// <summary>
         /// Number of event queue threads in use.
         /// </summary>
@@ -134,7 +120,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <summary>
         /// Queue containing events waiting to be executed.
         /// </summary>
-        public Queue<QueueItemStruct> EventQueue = new Queue<QueueItemStruct>();
+        public static Queue<QueueItemStruct> EventQueue = new Queue<QueueItemStruct>();
 
         /// <summary>
         /// Queue containing scripts that need to have states saved or deleted.
@@ -175,12 +161,30 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// </summary>
         public bool KillScriptOnMaxFunctionExecutionTime;
 
+        #endregion
+
+        #region Constructor and Shutdown
+        
+        public void Shutdown()
+        {
+            // We are shutting down
+            foreach (ScriptData ID in ScriptProtection.GetAllScripts())
+            {
+                StopScript(ID.localID, ID.ItemID);
+            }
+        }
+
+        #endregion
+
+        #region INonSharedRegionModule
+
         public void Initialise(IConfigSource config)
         {
             m_ConfigSource = config;
             ScriptConfigSource = config.Configs[ScriptEngineName];
             if (ScriptConfigSource == null)
                 return;
+
             LoadUnloadMaxQueueSize = ScriptConfigSource.GetInt("LoadUnloadMaxQueueSize", 100);
             numberOfEventQueueThreads = ScriptConfigSource.GetInt("NumberOfScriptThreads", 2);
             maxFunctionExecutionTimems = ScriptConfigSource.GetInt("MaxEventExecutionTimeMs", 5000);
@@ -191,19 +195,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public void AddRegion(Scene scene)
         {
-        	m_log.Info("[" + ScriptEngineName + "]: ScriptEngine initializing");
-
-            m_Scene = scene;
-
             // Make sure we have config
             if (ConfigSource.Configs[ScriptEngineName] == null)
                 ConfigSource.AddConfig(ScriptEngineName);
 
-            ScriptConfigSource = ConfigSource.Configs[ScriptEngineName];
-
             m_enabled = ScriptConfigSource.GetBoolean("Enabled", true);
             if (!m_enabled)
                 return;
+
+            ScriptConfigSource = ConfigSource.Configs[ScriptEngineName];
+
+        	m_log.Info("[" + ScriptEngineName + "]: ScriptEngine initializing");
+            m_Scene = scene;
 
             // Create all objects we'll be using
             ScriptProtection = (IScriptProtectionModule)new ScriptProtectionModule(m_ConfigSource, this);
@@ -215,8 +218,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             
             m_AppDomainManager = new AppDomainManager(this);
             
-            if (m_MaintenanceThread == null)
-                m_MaintenanceThread = new MaintenanceThread(this);
+            m_MaintenanceThread = new MaintenanceThread(this);
 
             m_log.Info("[" + ScriptEngineName + "]: Reading configuration "+
                     "from config section \"" + ScriptEngineName + "\"");
@@ -228,6 +230,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 OnScriptRemoved += m_XmlRpcRouter.ScriptRemoved;
                 OnObjectRemoved += m_XmlRpcRouter.ObjectRemoved;
+            }
+
+            lock (m_ScriptEngines)
+            {
+                m_ScriptEngines.Add(this);
             }
 
             scene.EventManager.OnRezScript += OnRezScript;

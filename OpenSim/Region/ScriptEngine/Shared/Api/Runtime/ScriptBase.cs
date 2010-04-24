@@ -200,20 +200,50 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
                         Array.Copy(data, 0, v.Data, 0, data.Length);
                         m_Fields[var.Key].SetValue(this, v);
                     }
-                    else if (m_Fields[var.Key].FieldType == typeof(LSL_Types.LSLInteger) ||
-                            m_Fields[var.Key].FieldType == typeof(LSL_Types.LSLString) ||
-                            m_Fields[var.Key].FieldType == typeof(LSL_Types.LSLFloat) ||
-                            m_Fields[var.Key].FieldType == typeof(Int32) ||
-                            m_Fields[var.Key].FieldType == typeof(Double) ||
-                            m_Fields[var.Key].FieldType == typeof(Single) ||
-                            m_Fields[var.Key].FieldType == typeof(String) ||
-                            m_Fields[var.Key].FieldType == typeof(Byte) ||
-                            m_Fields[var.Key].FieldType == typeof(short) ||
-                            m_Fields[var.Key].FieldType == typeof(LSL_Types.Vector3) ||
-                            m_Fields[var.Key].FieldType == typeof(LSL_Types.Quaternion)
-                        )
+                    else if (m_Fields[var.Key].FieldType == typeof(LSL_Types.LSLInteger))
                     {
-                        m_Fields[var.Key].SetValue(this, var.Value);
+                        m_Fields[var.Key].SetValue(this, (LSL_Types.LSLInteger)var.Value);
+                    }
+
+                    else if(m_Fields[var.Key].FieldType == typeof(LSL_Types.LSLString))
+                    {
+                        m_Fields[var.Key].SetValue(this, (LSL_Types.LSLString)var.Value);
+                    }
+                    else if (m_Fields[var.Key].FieldType == typeof(LSL_Types.LSLFloat))
+                    {
+                        m_Fields[var.Key].SetValue(this, (LSL_Types.LSLFloat)var.Value);
+                    }
+                    else if (m_Fields[var.Key].FieldType == typeof(Int32))
+                    {
+                        m_Fields[var.Key].SetValue(this, (Int32)var.Value);
+                    }
+                    else if (m_Fields[var.Key].FieldType == typeof(Double))
+                    {
+                        m_Fields[var.Key].SetValue(this, (Double)var.Value);
+                    }
+                    else if (m_Fields[var.Key].FieldType == typeof(Single))
+                    {
+                        m_Fields[var.Key].SetValue(this, (Single)var.Value);
+                    }
+                    else if (m_Fields[var.Key].FieldType == typeof(String))
+                    {
+                        m_Fields[var.Key].SetValue(this, (String)var.Value);
+                    }
+                    else if (m_Fields[var.Key].FieldType == typeof(Byte))
+                    {
+                        m_Fields[var.Key].SetValue(this, (Byte)var.Value);
+                    }
+                    else if (m_Fields[var.Key].FieldType == typeof(short))
+                    {
+                        m_Fields[var.Key].SetValue(this, (short)var.Value);
+                    }
+                    else if (m_Fields[var.Key].FieldType == typeof(LSL_Types.Quaternion))
+                    {
+                        m_Fields[var.Key].SetValue(this, (LSL_Types.Quaternion)var.Value);
+                    }
+                    else if (m_Fields[var.Key].FieldType == typeof(LSL_Types.Vector3))
+                    {
+                        m_Fields[var.Key].SetValue(this, (LSL_Types.Vector3)var.Value);
                     }
                 }
             }

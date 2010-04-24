@@ -304,7 +304,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         	ScriptData ID = null;
         	PreviouslyCompiled.TryGetValue(source, out ID);
             //Just as a check...
-            if (ID == null ||ID.Source != source)
+            if (ID == null)
                 return null;
         	return (IScriptData)ID;
         }
