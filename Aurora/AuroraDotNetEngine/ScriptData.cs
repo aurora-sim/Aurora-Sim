@@ -107,7 +107,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public DetectParams[] LastDetectParams;
         public bool m_startedFromSavedState = false;
         public Object[] PluginData = new Object[0];
-        public string CurrentStateXML = "";
         
         #endregion
 
@@ -322,14 +321,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public void Start(bool reupload)
         {
             Compiling = true;
-            CurrentStateXML = "";
-            
             if (m_ScriptEngine.Errors.ContainsKey(ItemID))
                 m_ScriptEngine.Errors.Remove(ItemID);
+
             DateTime Start = DateTime.Now.ToUniversalTime();
 
-            // We will initialize and start the script.
-            // It will be up to the script itself to hook up the correct events.
             part = World.GetSceneObjectPart(localID);
 
             if (null == part)
@@ -338,7 +334,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
                 throw new NullReferenceException();
             }
-
 
             if (part.TaskInventory.TryGetValue(ItemID, out InventoryItem))
                 AssetID = InventoryItem.AssetID;
@@ -355,9 +350,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             AssemblyName = Path.Combine("ScriptEngines", Path.Combine(
                     m_ScriptEngine.World.RegionInfo.RegionID.ToString(),
                     FilePrefix + "_compiled_" + ItemID.ToString() + ".dll"));
-            string savedState = Path.Combine(Path.GetDirectoryName(AssemblyName),
-                    "DotNet" + ItemID.ToString() + ".state");
-
+            
             #region Class and interface reader
 
             string Inherited = "";
@@ -552,10 +545,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 m_log.Debug("Stage 2: " + t.TotalSeconds);
             }
 
-            State = "default";
-            Running = true;
-            Disabled = false;
-
             // Add it to our script memstruct
             m_ScriptEngine.UpdateScriptInstanceData(this);
 
@@ -565,8 +554,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (GenericData.Query("ItemID", ItemID.ToString(), "auroraDotNetStateSaves", "*").Count > 1)
             {
                 DeserializeDatabase();
-                //Deserialize(CurrentStateXML);
-
+                
                 AsyncCommandManager.CreateFromData(m_ScriptEngine,
                     localID, ItemID, part.UUID,
                     PluginData);
@@ -582,25 +570,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 m_ScriptEngine.AddToStateSaverQueue(this, true);
             }
-            // Fire the first start-event
+            
             int eventFlags = Script.GetStateEventFlags(State);
             part.SetScriptEvents(ItemID, eventFlags);
 
             Compiling = false;
             Loading = false;
-            //if (m_ScriptManager.Errors.ContainsKey(ItemID))
-            //   m_ScriptManager.Errors.Remove(ItemID);
-            // Add it to our script memstruct
-            m_ScriptEngine.UpdateScriptInstanceData(this);
+
+            TimeSpan time = (DateTime.Now.ToUniversalTime() - Start);
             if (presence != null)
-                m_log.DebugFormat("[{0}]: Started Script {1} in object {2} by avatar {3}.", m_ScriptEngine.ScriptEngineName, InventoryItem.Name, part.Name, presence.Name);
+                m_log.DebugFormat("[{0}]: Started Script {1} in object {2} by avatar {3} in {4} seconds.", m_ScriptEngine.ScriptEngineName, InventoryItem.Name, part.Name, presence.Name, time.TotalSeconds);
             else
-                m_log.DebugFormat("[{0}]: Started Script {1} in object {2}.", m_ScriptEngine.ScriptEngineName, InventoryItem.Name, part.Name);
-            if (useDebug)
-            {
-                TimeSpan t = (DateTime.Now.ToUniversalTime() - Start);
-                m_log.Debug("Stage 3: " + t.TotalSeconds);
-            }
+                m_log.DebugFormat("[{0}]: Started Script {1} in object {2} in {3} seconds.", m_ScriptEngine.ScriptEngineName, InventoryItem.Name, part.Name, time.TotalSeconds);
         }
 
         #endregion
@@ -652,7 +633,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 string value = var.Split(',')[1].Replace("\n", "");
                 vars.Add(var.Split(',')[0], (object)value);
             }
-            Script.SetVars(vars);
+            if (vars.Count != 0)
+            {
+                Script.SetVars(vars);
+            }
 
             List<object> plugins = new List<object>();
             foreach (object plugin in StateSave[6])
@@ -660,123 +644,125 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 plugins.Add(plugin);
             }
             PluginData = plugins.ToArray();
-            
-            #region Queue
-            XmlDocument doc = new XmlDocument();
-            doc.LoadXml(StateSave[8]);
-            XmlNodeList itemL = doc.ChildNodes;
-            foreach (XmlNode item in itemL)
+            if (StateSave[8] != "")
             {
-                List<Object> parms = new List<Object>();
-                List<DetectParams> detected =
-                        new List<DetectParams>();
-
-                string eventName =
-                        item.Attributes.GetNamedItem("event").Value;
-                XmlNodeList eventL = item.ChildNodes;
-                foreach (XmlNode evt in eventL)
+                #region Queue
+                XmlDocument doc = new XmlDocument();
+                doc.LoadXml(StateSave[8]);
+                XmlNodeList itemL = doc.ChildNodes;
+                foreach (XmlNode item in itemL)
                 {
-                    switch (evt.Name)
+                    List<Object> parms = new List<Object>();
+                    List<DetectParams> detected =
+                            new List<DetectParams>();
+
+                    string eventName =
+                            item.Attributes.GetNamedItem("event").Value;
+                    XmlNodeList eventL = item.ChildNodes;
+                    foreach (XmlNode evt in eventL)
                     {
-                        case "Params":
-                            XmlNodeList prms = evt.ChildNodes;
-                            foreach (XmlNode pm in prms)
-                                parms.Add(ReadTypedValue(pm));
+                        switch (evt.Name)
+                        {
+                            case "Params":
+                                XmlNodeList prms = evt.ChildNodes;
+                                foreach (XmlNode pm in prms)
+                                    parms.Add(ReadTypedValue(pm));
 
-                            break;
-                        case "Detected":
-                            XmlNodeList detL = evt.ChildNodes;
-                            foreach (XmlNode det in detL)
-                            {
-                                string vect =
-                                        det.Attributes.GetNamedItem(
-                                        "pos").Value;
-                                LSL_Types.Vector3 v =
-                                        new LSL_Types.Vector3(vect);
-
-                                int d_linkNum = 0;
-                                UUID d_group = UUID.Zero;
-                                string d_name = String.Empty;
-                                UUID d_owner = UUID.Zero;
-                                LSL_Types.Vector3 d_position =
-                                    new LSL_Types.Vector3();
-                                LSL_Types.Quaternion d_rotation =
-                                    new LSL_Types.Quaternion();
-                                int d_type = 0;
-                                LSL_Types.Vector3 d_velocity =
-                                    new LSL_Types.Vector3();
-
-                                try
+                                break;
+                            case "Detected":
+                                XmlNodeList detL = evt.ChildNodes;
+                                foreach (XmlNode det in detL)
                                 {
-                                    string tmp;
+                                    string vect =
+                                            det.Attributes.GetNamedItem(
+                                            "pos").Value;
+                                    LSL_Types.Vector3 v =
+                                            new LSL_Types.Vector3(vect);
 
-                                    tmp = det.Attributes.GetNamedItem(
-                                            "linkNum").Value;
-                                    int.TryParse(tmp, out d_linkNum);
+                                    int d_linkNum = 0;
+                                    UUID d_group = UUID.Zero;
+                                    string d_name = String.Empty;
+                                    UUID d_owner = UUID.Zero;
+                                    LSL_Types.Vector3 d_position =
+                                        new LSL_Types.Vector3();
+                                    LSL_Types.Quaternion d_rotation =
+                                        new LSL_Types.Quaternion();
+                                    int d_type = 0;
+                                    LSL_Types.Vector3 d_velocity =
+                                        new LSL_Types.Vector3();
 
-                                    tmp = det.Attributes.GetNamedItem(
-                                            "group").Value;
-                                    UUID.TryParse(tmp, out d_group);
+                                    try
+                                    {
+                                        string tmp;
 
-                                    d_name = det.Attributes.GetNamedItem(
-                                            "name").Value;
+                                        tmp = det.Attributes.GetNamedItem(
+                                                "linkNum").Value;
+                                        int.TryParse(tmp, out d_linkNum);
 
-                                    tmp = det.Attributes.GetNamedItem(
-                                            "owner").Value;
-                                    UUID.TryParse(tmp, out d_owner);
+                                        tmp = det.Attributes.GetNamedItem(
+                                                "group").Value;
+                                        UUID.TryParse(tmp, out d_group);
 
-                                    tmp = det.Attributes.GetNamedItem(
-                                            "position").Value;
-                                    d_position =
-                                        new LSL_Types.Vector3(tmp);
+                                        d_name = det.Attributes.GetNamedItem(
+                                                "name").Value;
 
-                                    tmp = det.Attributes.GetNamedItem(
-                                            "rotation").Value;
-                                    d_rotation =
-                                        new LSL_Types.Quaternion(tmp);
+                                        tmp = det.Attributes.GetNamedItem(
+                                                "owner").Value;
+                                        UUID.TryParse(tmp, out d_owner);
 
-                                    tmp = det.Attributes.GetNamedItem(
-                                            "type").Value;
-                                    int.TryParse(tmp, out d_type);
+                                        tmp = det.Attributes.GetNamedItem(
+                                                "position").Value;
+                                        d_position =
+                                            new LSL_Types.Vector3(tmp);
 
-                                    tmp = det.Attributes.GetNamedItem(
-                                            "velocity").Value;
-                                    d_velocity =
-                                        new LSL_Types.Vector3(tmp);
+                                        tmp = det.Attributes.GetNamedItem(
+                                                "rotation").Value;
+                                        d_rotation =
+                                            new LSL_Types.Quaternion(tmp);
 
+                                        tmp = det.Attributes.GetNamedItem(
+                                                "type").Value;
+                                        int.TryParse(tmp, out d_type);
+
+                                        tmp = det.Attributes.GetNamedItem(
+                                                "velocity").Value;
+                                        d_velocity =
+                                            new LSL_Types.Vector3(tmp);
+
+                                    }
+                                    catch (Exception) // Old version XML
+                                    {
+                                    }
+
+                                    UUID uuid = new UUID();
+                                    UUID.TryParse(det.InnerText,
+                                            out uuid);
+
+                                    DetectParams d = new DetectParams();
+                                    d.Key = uuid;
+                                    d.OffsetPos = v;
+                                    d.LinkNum = d_linkNum;
+                                    d.Group = d_group;
+                                    d.Name = d_name;
+                                    d.Owner = d_owner;
+                                    d.Position = d_position;
+                                    d.Rotation = d_rotation;
+                                    d.Type = d_type;
+                                    d.Velocity = d_velocity;
+
+                                    detected.Add(d);
                                 }
-                                catch (Exception) // Old version XML
-                                {
-                                }
-
-                                UUID uuid = new UUID();
-                                UUID.TryParse(det.InnerText,
-                                        out uuid);
-
-                                DetectParams d = new DetectParams();
-                                d.Key = uuid;
-                                d.OffsetPos = v;
-                                d.LinkNum = d_linkNum;
-                                d.Group = d_group;
-                                d.Name = d_name;
-                                d.Owner = d_owner;
-                                d.Position = d_position;
-                                d.Rotation = d_rotation;
-                                d.Type = d_type;
-                                d.Velocity = d_velocity;
-
-                                detected.Add(d);
-                            }
-                            break;
+                                break;
+                        }
                     }
-                }
-                EventParams ep = new EventParams(
-                        eventName, parms.ToArray(),
-                        detected.ToArray());
+                    EventParams ep = new EventParams(
+                            eventName, parms.ToArray(),
+                            detected.ToArray());
 
-                m_ScriptEngine.PostScriptEvent(ItemID, ep);
+                    m_ScriptEngine.PostScriptEvent(ItemID, ep);
+                }
             }
-#endregion
+            #endregion
 
             if(StateSave[9] != "")
             {
@@ -786,6 +772,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             double minEventDelay = 0.0;
             double.TryParse(StateSave[10], NumberStyles.Float, Culture.NumberFormatInfo, out minEventDelay);
             EventDelayTicks = (long)minEventDelay;
+            AssemblyName = StateSave[11];
         }
 
         public void SerializeDatabase()

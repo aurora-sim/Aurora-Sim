@@ -166,57 +166,35 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 }
             }
         }
+
+        #endregion
+
+        #region State Queue
+
         public void DoStateQueue()
         {
-            List<IEnumerator> Parts = new List<IEnumerator>();
             while (m_ScriptEngine.StateQueue.Count != 0)
             {
                 StateQueueItem item = m_ScriptEngine.StateQueue.Dequeue();
                 if (item.Create)
-                    //Parts.Add(item.ID.Serialize());
                     item.ID.SerializeDatabase();
                 else
                     RemoveState(item.ID);
-                lock (Parts)
-                {
-                    int i = 0;
-                    while (Parts.Count > 0 && i < 1000)
-                    {
-                        i++;
-
-                        bool running = false;
-                        try
-                        {
-                            running = Parts[i % Parts.Count].MoveNext();
-                        }
-                        catch (Exception ex)
-                        {
-                            m_log.Error(ex);
-                        }
-
-                        if (!running)
-                            Parts.Remove(Parts[i % Parts.Count]);
-                    }
-                }
             }
         }
 
         public void RemoveState(ScriptData ID)
         {
-            string savedState = Path.Combine(Path.GetDirectoryName(ID.AssemblyName),
-                    ID.ItemID.ToString() + ".state");
-            try
-            {
-                if (File.Exists(savedState))
-                {
-                    File.Delete(savedState);
-                }
-            }
-            catch (Exception) { }
+            Aurora.DataManager.DataManager.GetDefaultGenericPlugin().Delete("auroraDotNetStateSaves", new string[] { "ItemID" }, new string[] { ID.ItemID.ToString() });
         }
+
         #endregion
 
+        #region Resume Scripts
+
+        //Scripts that need to be unsuspended, but havnt finished starting yet.
         List<OpenMetaverse.UUID> Resumeable = new List<OpenMetaverse.UUID>();
+
         //This just lets the maintenance thread pick up the slack for finding the scripts that need to be resumed.
         internal void AddResumeScript(OpenMetaverse.UUID itemID)
         {
@@ -224,11 +202,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 Resumeable.Add(itemID);
         }
 
+        //Removes a script from the list after it has been successfully resumed.
         internal void RemoveResumeScript(OpenMetaverse.UUID itemID)
         {
             if (Resumeable.Contains(itemID))
                 Resumeable.Remove(itemID);
         }
+
+        #endregion
+
+        #region Thread Classes
 
         private void StartNewThreadClass()
         {
@@ -337,6 +320,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 i++;
             }
         }
+
+        #endregion
+
+        #region Script Load and Unload Queue
+
         /// <summary>
         /// Main Loop that starts/stops all scripts in the LUQueue.
         /// </summary>
@@ -348,37 +336,34 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             List<ScriptData> FireEvents = new List<ScriptData>();
             lock (m_ScriptEngine.LUQueue)
             {
-                if (m_ScriptEngine.LUQueue.Count > 0)
+                int i = 0;
+                while (i < m_ScriptEngine.LUQueue.Count)
                 {
-                    int i = 0;
-                    while (i < m_ScriptEngine.LUQueue.Count)
-                    {
-                        LUStruct item = m_ScriptEngine.LUQueue.Dequeue();
+                    LUStruct item = m_ScriptEngine.LUQueue.Dequeue();
 
-                        if (item.Action == LUType.Unload)
-                        {
-                            item.ID.CloseAndDispose();
-                        }
-                        else if (item.Action == LUType.Load)
-                        {
-                            FireEvents.Add(item.ID);
-                            try
-                            {
-                                item.ID.Start(false);
-                            }
-                            catch (Exception) { }
-                        }
-                        else if (item.Action == LUType.Reupload)
-                        {
-                            FireEvents.Add(item.ID);
-                            try
-                            {
-                                item.ID.Start(true);
-                            }
-                            catch (Exception) { }
-                        }
-                        i++;
+                    if (item.Action == LUType.Unload)
+                    {
+                        item.ID.CloseAndDispose();
                     }
+                    else if (item.Action == LUType.Load)
+                    {
+                        FireEvents.Add(item.ID);
+                        try
+                        {
+                            item.ID.Start(false);
+                        }
+                        catch (Exception ex) { m_log.Warn(ex); }
+                    }
+                    else if (item.Action == LUType.Reupload)
+                    {
+                        FireEvents.Add(item.ID);
+                        try
+                        {
+                            item.ID.Start(true);
+                        }
+                        catch (Exception) { }
+                    }
+                    i++;
                 }
             }
             foreach (ScriptData ID in FireEvents)
@@ -387,6 +372,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             FireEvents.Clear();
         }
+
+        #endregion
 
         private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
         {
