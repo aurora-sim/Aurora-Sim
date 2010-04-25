@@ -409,9 +409,9 @@ namespace OpenSim.Framework
                 if (source.Configs[configName] == null)
                     saveFile = true;
 
-                ReadNiniConfig(source, configName);
+                bool update = ReadNiniConfig(source, configName);
 
-                if (configName != String.Empty && saveFile)
+                if (configName != String.Empty && (saveFile || update))
                     source.Save(filename);
 
                 RegionFile = filename;
@@ -652,10 +652,11 @@ namespace OpenSim.Framework
             m_internalEndPoint = tmpEPE;
         }
 
-        private void ReadNiniConfig(IConfigSource source, string name)
+        //Returns true if the source should be updated. Returns false if it does not.
+        private bool ReadNiniConfig(IConfigSource source, string name)
         {
 //            bool creatingNew = false;
-
+            bool NeedsUpdate = false;
             if (source.Configs.Count == 0)
             {
                 MainConsole.Instance.Output("=====================================\n");
@@ -672,6 +673,7 @@ namespace OpenSim.Framework
                 source.AddConfig(name);
 
 //                creatingNew = true;
+                NeedsUpdate = true;
             }
 
             if (name == String.Empty)
@@ -680,7 +682,7 @@ namespace OpenSim.Framework
             if (source.Configs[name] == null)
             {
                 source.AddConfig(name);
-
+                NeedsUpdate = true;
 //                creatingNew = true;
             }
 
@@ -692,6 +694,7 @@ namespace OpenSim.Framework
 
             if (regionUUID == String.Empty)
             {
+                NeedsUpdate = true;
                 UUID newID = UUID.Random();
 
                 regionUUID = MainConsole.Instance.CmdPrompt("Region UUID", newID.ToString());
@@ -706,6 +709,7 @@ namespace OpenSim.Framework
 
             if (location == String.Empty)
             {
+                NeedsUpdate = true;
                 location = MainConsole.Instance.CmdPrompt("Region Location", "1000,1000");
                 config.Set("Location", location);
             }
@@ -728,6 +732,7 @@ namespace OpenSim.Framework
             }
             else
             {
+                NeedsUpdate = true;
                 address = IPAddress.Parse(MainConsole.Instance.CmdPrompt("Internal IP address", "0.0.0.0"));
                 config.Set("InternalAddress", address.ToString());
             }
@@ -740,6 +745,7 @@ namespace OpenSim.Framework
             }
             else
             {
+                NeedsUpdate = true;
                 port = Convert.ToInt32(MainConsole.Instance.CmdPrompt("Internal port", "9000"));
                 config.Set("InternalPort", port);
             }
@@ -752,6 +758,7 @@ namespace OpenSim.Framework
             }
             else
             {
+                NeedsUpdate = true;
                 m_allow_alternate_ports = Convert.ToBoolean(MainConsole.Instance.CmdPrompt("Allow alternate ports", "False"));
 
                 config.Set("AllowAlternatePorts", m_allow_alternate_ports.ToString());
@@ -767,6 +774,7 @@ namespace OpenSim.Framework
             }
             else
             {
+                NeedsUpdate = true;
                 externalName = MainConsole.Instance.CmdPrompt("External host name", "SYSTEMIP");
                 config.Set("ExternalHostName", externalName);
             }
@@ -777,6 +785,13 @@ namespace OpenSim.Framework
                 m_externalHostName = externalName;
 
             m_regionType = config.GetString("RegionType", String.Empty);
+
+            if (m_regionType == String.Empty)
+            {
+                NeedsUpdate = true;
+                m_regionType = MainConsole.Instance.CmdPrompt("Region Type", "Mainland");
+                config.Set("RegionType", m_regionType);
+            }
 
             // Prim stuff
             //
@@ -792,6 +807,7 @@ namespace OpenSim.Framework
             // Multi-tenancy
             //
             ScopeID = new UUID(config.GetString("ScopeID", UUID.Zero.ToString()));
+            return NeedsUpdate;
         }
 
         private void WriteNiniConfig(IConfigSource source)
