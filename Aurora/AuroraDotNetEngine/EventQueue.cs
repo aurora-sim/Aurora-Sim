@@ -176,6 +176,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                             NeedsToBeRequeued.Add(QIS);
                             continue;
                         }
+                        //Disabled or not running scripts dont get events saved.
+                        if (QIS.ID.Disabled)
+                            continue;
+                        if (!QIS.ID.Running)
+                            continue;
                         //Clear scripts that shouldn't be in the queue anymore
                         if (!m_ScriptEngine.NeedsRemoved.Contains(QIS.ID.ItemID))
                         {

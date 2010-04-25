@@ -650,6 +650,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             double.TryParse(StateSave[10], NumberStyles.Float, Culture.NumberFormatInfo, out minEventDelay);
             EventDelayTicks = (long)minEventDelay;
             AssemblyName = StateSave[11];
+            Disabled = Convert.ToBoolean(StateSave[12]);
 
             // Add it to our script memstruct
             m_ScriptEngine.UpdateScriptInstanceData(this);
@@ -919,6 +920,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             
             Insert.Add(EventDelayTicks.ToString());
             Insert.Add(AssemblyName);
+            Insert.Add(Disabled);
             try
             {
                 GenericData.Insert("auroraDotNetStateSaves", Insert.ToArray());

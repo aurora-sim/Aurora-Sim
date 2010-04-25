@@ -347,7 +347,8 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("Queue", ColumnTypes.String50),
                 ColDef("Permissions", ColumnTypes.String50),
                 ColDef("MinEventDelay", ColumnTypes.String50),
-                ColDef("AssemblyName", ColumnTypes.String8196)
+                ColDef("AssemblyName", ColumnTypes.String8196),
+                ColDef("Disabled", ColumnTypes.String45)
                 ));
 
             
