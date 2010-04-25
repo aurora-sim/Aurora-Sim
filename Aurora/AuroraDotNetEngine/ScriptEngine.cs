@@ -170,7 +170,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             // We are shutting down
             foreach (ScriptData ID in ScriptProtection.GetAllScripts())
             {
-                ID.CloseAndDispose();
+                try
+                {
+                    ID.CloseAndDispose();
+                }
+                catch (Exception)
+                {
+                }
             }
         }
 

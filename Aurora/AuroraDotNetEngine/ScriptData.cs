@@ -325,7 +325,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         }
         /// <summary>
         /// This starts the script and sets up the variables.
-        /// This function is microthreaded.
         /// </summary>
         /// <returns></returns>
         public void Start(bool reupload)
