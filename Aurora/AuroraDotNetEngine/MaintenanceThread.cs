@@ -352,7 +352,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         {
                             item.ID.Start(false);
                         }
-                        catch (Exception ex) { m_log.Warn(ex); }
+                        catch (Exception ex) { m_log.Warn(ex); FireEvents.Remove(item.ID);}
                     }
                     else if (item.Action == LUType.Reupload)
                     {
@@ -361,7 +361,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         {
                             item.ID.Start(true);
                         }
-                        catch (Exception) { }
+                        catch (Exception ex) { m_log.Warn(ex); FireEvents.Remove(item.ID); }
                     }
                     i++;
                 }

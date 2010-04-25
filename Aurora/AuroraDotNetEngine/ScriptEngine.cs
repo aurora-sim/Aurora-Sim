@@ -866,14 +866,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     id.Disabled = false;
                     ScriptProtection.RemovePreviouslyCompiled(id.Source);
                     id.Source = script;
+                    bool successfullyCompiled = true;
                     try
                     {
                         id.Start(true);
                     }
-                    catch (Exception) { }
+                    catch (Exception) { successfullyCompiled = false; }
                     if (id == null)
                         return;
-                    id.FireEvents();
+                    if(successfullyCompiled)
+                        id.FireEvents();
                 }
             }
             else

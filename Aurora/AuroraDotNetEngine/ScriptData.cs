@@ -941,6 +941,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 Keys.Add("Permissions");
                 Keys.Add("MinEventDelay");
                 Keys.Add("AssemblyName");
+                Keys.Add("Disabled");
                 try
                 {
                     GenericData.Update("auroraDotNetStateSaves", Insert.ToArray(), Keys.ToArray(), new string[] { "ItemID" }, new string[] { ItemID.ToString() });
