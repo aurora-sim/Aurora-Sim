@@ -397,6 +397,7 @@ namespace OpenSim.Region.Framework.Scenes
         private double m_reprioritization_interval = 5000.0;
         private double m_root_reprioritization_distance = 10.0;
         private double m_child_reprioritization_distance = 20.0;
+        private bool RunScriptsInAttachments = false;
 
         private object m_deleting_scene_object = new object();
 
@@ -708,6 +709,9 @@ namespace OpenSim.Region.Framework.Scenes
 
             try
             {
+                IConfig aurorastartupConfig = m_config.Configs["AuroraStartup"];
+                if(aurorastartupConfig != null)
+                    RunScriptsInAttachments = aurorastartupConfig.GetBoolean("AllowRunningOfScriptsInAttachments", false);
                 // Region config overrides global config
                 //
                 IConfig startupConfig = m_config.Configs["Startup"];
@@ -4209,6 +4213,8 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (parcel != null)
                 {
+                    if (part.IsAttachment() && RunScriptsInAttachments)
+                        return true;
                     if ((parcel.LandData.Flags & (uint)ParcelFlags.AllowOtherScripts) != 0)
                     {
                         return true;
@@ -4228,7 +4234,9 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                     else
                     {
-                        if (part.OwnerID == parcel.LandData.OwnerID)
+                        //Gods should be able to run scripts. 
+                        // -- Revolution
+                        if (part.OwnerID == parcel.LandData.OwnerID || Permissions.IsGod(part.OwnerID))
                         {
                             return true;
                         }
