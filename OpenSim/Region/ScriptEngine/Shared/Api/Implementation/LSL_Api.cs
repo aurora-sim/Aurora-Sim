@@ -1936,7 +1936,12 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             {
                 Primitive.TextureEntryFace texface;
                 texface = tex.GetFace((uint)face);
-                return texface.TextureID.ToString();
+                TaskInventoryItem item = null;
+                m_host.TaskInventory.TryGetValue(texface.TextureID, out item);
+                if (item != null)
+                    return item.Name.ToString();
+                else
+                    return texface.TextureID.ToString();
             }
             else
             {
