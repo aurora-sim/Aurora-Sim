@@ -461,7 +461,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             // Disconnect an agent if no packets are received for some time
             //FIXME: Make 60 an .ini setting
-            if ((Environment.TickCount & Int32.MaxValue) - udpClient.TickLastPacketReceived > 1000 * 60)
+            if ((Environment.TickCount & Int32.MaxValue) - udpClient.TickLastPacketReceived > 1000 * 60 && !udpClient.IsPaused)
             {
                 m_log.Warn("[LLUDPSERVER]: Ack timeout, disconnecting " + udpClient.AgentID);
 
