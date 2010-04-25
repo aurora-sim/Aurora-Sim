@@ -3971,7 +3971,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     new ObjectPropertiesPacket.ObjectDataBlock();
 
             block.ItemID = ItemID;
-            block.CreationDate = CreationDate;
+            block.CreationDate = CreationDate * 1000000;
             block.CreatorID = CreatorUUID;
             block.FolderID = FolderUUID;
             block.FromTaskID = FromTaskUUID;
