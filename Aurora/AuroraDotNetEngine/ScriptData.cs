@@ -52,7 +52,7 @@ using Aurora.Framework;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
-    #region InstanceData
+    #region ScriptData
 
     public class ScriptData : IScriptData
     {

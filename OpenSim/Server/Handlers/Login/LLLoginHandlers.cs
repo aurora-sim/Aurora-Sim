@@ -83,7 +83,8 @@ namespace OpenSim.Server.Handlers.Login
                     //MAC BANNING START
                     string mac = (string)requestData["mac"];
                     Aurora.Framework.IGenericData GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
-                    if (GD.Query("macAddress",mac,"macban","*")[0] == mac)
+                    string[] found = GD.Query("macAddress",mac,"macban","*").ToArray();
+                    if (found.Length > 0)
                     {
                         m_log.InfoFormat("Mac is in the list");
                         return new XmlRpcResponse();
@@ -91,8 +92,8 @@ namespace OpenSim.Server.Handlers.Login
                     //MAC BANNING END
 
                     //Viewer Ban Start
-
-                    if (GD.Query("Client", clientVersion, "BannedViewers", "*")[0] == clientVersion)
+                    string[] clientfound = GD.Query("Client", clientVersion, "BannedViewers", "*").ToArray();
+                    if (clientfound.Length > 0)
                     {
                         return new XmlRpcResponse();
                     }
