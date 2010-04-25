@@ -541,12 +541,12 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api.Plugins
                 ts.localID = localID;
                 ts.itemID = itemID;
 
-                ts.interval = (double)data[idx];
+                ts.interval = (long)Convert.ToDouble(data[idx]);
                 ts.name = (string)data[idx+1];
-                ts.keyID = (UUID)data[idx+2];
-                ts.type = (int)data[idx+3];
-                ts.range = (double)data[idx+4];
-                ts.arc = (double)data[idx+5];
+                ts.keyID = new UUID(data[idx+2].ToString());
+                ts.type = Convert.ToInt32(data[idx+3]);
+                ts.range = Convert.ToDouble(data[idx+4]);
+                ts.arc = Convert.ToDouble(data[idx + 5]);
                 ts.host = part;
 
                 ts.next =

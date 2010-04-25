@@ -108,6 +108,11 @@ namespace Aurora.Services.DataService
             return false;
         }
 
+        public string Identifier
+        {
+            get { return "GenericDataRetriever"; }
+        }
+
         #endregion
     }
 }

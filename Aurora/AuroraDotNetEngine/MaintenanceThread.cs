@@ -55,11 +55,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         private ScriptEngine m_ScriptEngine;
         internal static List<EventQueue> eventQueueThreads = new List<EventQueue>();                             // Thread pool that we work on
         private int SleepTime = 250;
+        private int numberOfEventQueueThreads = 1;
 
         public MaintenanceThread(ScriptEngine Engine)
         {
             AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(CurrentDomain_AssemblyResolve);
             m_ScriptEngine = Engine;
+            numberOfEventQueueThreads = m_ScriptEngine.numberOfEventQueueThreads;
             ReadConfig();
 
             // Start maintenance thread
@@ -149,7 +151,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         {
                             m_ScriptEngine.ResumeScript(Resumeable[i]);
                         }
-                        Resumeable.Clear();
                         AdjustNumberOfScriptThreads();
                     	//Checks the Event Queue threads to make sure they are alive.
                     	CheckThreads();
@@ -165,62 +166,52 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 }
             }
         }
+
+        #endregion
+
+        #region State Queue
+
         public void DoStateQueue()
         {
-            List<IEnumerator> Parts = new List<IEnumerator>();
             while (m_ScriptEngine.StateQueue.Count != 0)
             {
                 StateQueueItem item = m_ScriptEngine.StateQueue.Dequeue();
                 if (item.Create)
-                    Parts.Add(item.ID.Serialize());
+                    item.ID.SerializeDatabase();
                 else
                     RemoveState(item.ID);
-                lock (Parts)
-                {
-                    int i = 0;
-                    while (Parts.Count > 0 && i < 1000)
-                    {
-                        i++;
-
-                        bool running = false;
-                        try
-                        {
-                            running = Parts[i % Parts.Count].MoveNext();
-                        }
-                        catch (Exception ex)
-                        {
-                            m_log.Error(ex);
-                        }
-
-                        if (!running)
-                            Parts.Remove(Parts[i % Parts.Count]);
-                    }
-                }
             }
         }
 
         public void RemoveState(ScriptData ID)
         {
-            string savedState = Path.Combine(Path.GetDirectoryName(ID.AssemblyName),
-                    ID.ItemID.ToString() + ".state");
-            try
-            {
-                if (File.Exists(savedState))
-                {
-                    File.Delete(savedState);
-                }
-            }
-            catch (Exception) { }
+            ID.GenericData.Delete("auroraDotNetStateSaves", new string[] { "ItemID" }, new string[] { ID.ItemID.ToString() });
         }
+
         #endregion
 
+        #region Resume Scripts
+
+        //Scripts that need to be unsuspended, but havnt finished starting yet.
         List<OpenMetaverse.UUID> Resumeable = new List<OpenMetaverse.UUID>();
+
         //This just lets the maintenance thread pick up the slack for finding the scripts that need to be resumed.
         internal void AddResumeScript(OpenMetaverse.UUID itemID)
         {
             if(!Resumeable.Contains(itemID))
                 Resumeable.Add(itemID);
         }
+
+        //Removes a script from the list after it has been successfully resumed.
+        internal void RemoveResumeScript(OpenMetaverse.UUID itemID)
+        {
+            if (Resumeable.Contains(itemID))
+                Resumeable.Remove(itemID);
+        }
+
+        #endregion
+
+        #region Thread Classes
 
         private void StartNewThreadClass()
         {
@@ -250,18 +241,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public void AdjustNumberOfScriptThreads()
         {
             // Is there anything here for us to do?
-            if (eventQueueThreads.Count == m_ScriptEngine.numberOfEventQueueThreads)
+            if (eventQueueThreads.Count == numberOfEventQueueThreads)
                 return;
 
             lock (eventQueueThreads)
             {
-                int diff = m_ScriptEngine.numberOfEventQueueThreads - eventQueueThreads.Count;
+                int diff = numberOfEventQueueThreads - eventQueueThreads.Count;
                 // Positive number: Start
                 // Negative number: too many are running
                 if (diff > 0)
                 {
                     // We need to add more threads
-                    for (int ThreadCount = eventQueueThreads.Count; ThreadCount < m_ScriptEngine.numberOfEventQueueThreads; ThreadCount++)
+                    for (int ThreadCount = eventQueueThreads.Count; ThreadCount < numberOfEventQueueThreads; ThreadCount++)
                     {
                         StartNewThreadClass();
                     }
@@ -329,6 +320,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 i++;
             }
         }
+
+        #endregion
+
+        #region Script Load and Unload Queue
+
         /// <summary>
         /// Main Loop that starts/stops all scripts in the LUQueue.
         /// </summary>
@@ -336,69 +332,38 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             List<IEnumerator> StartParts = new List<IEnumerator>();
             List<IEnumerator> StopParts = new List<IEnumerator>();
+            List<IEnumerator> ReuploadParts = new List<IEnumerator>();
             List<ScriptData> FireEvents = new List<ScriptData>();
             lock (m_ScriptEngine.LUQueue)
             {
-                if (m_ScriptEngine.LUQueue.Count > 0)
-                {
-                    int i = 0;
-                    while (i < m_ScriptEngine.LUQueue.Count)
-                    {
-                        LUStruct item = m_ScriptEngine.LUQueue.Dequeue();
-
-                        if (item.Action == LUType.Unload)
-                        {
-                            StopParts.Add(item.ID.CloseAndDispose().GetEnumerator());
-                        }
-                        else if (item.Action == LUType.Load)
-                        {
-                            FireEvents.Add(item.ID);
-                            StartParts.Add(item.ID.Start());
-                        }
-                        i++;
-                    }
-                }
-            }
-            lock (StopParts)
-            {
                 int i = 0;
-                while (StopParts.Count > 0 && i < 1000)
+                while (i < m_ScriptEngine.LUQueue.Count)
                 {
+                    LUStruct item = m_ScriptEngine.LUQueue.Dequeue();
+
+                    if (item.Action == LUType.Unload)
+                    {
+                        item.ID.CloseAndDispose();
+                    }
+                    else if (item.Action == LUType.Load)
+                    {
+                        FireEvents.Add(item.ID);
+                        try
+                        {
+                            item.ID.Start(false);
+                        }
+                        catch (Exception ex) { m_log.Warn(ex); }
+                    }
+                    else if (item.Action == LUType.Reupload)
+                    {
+                        FireEvents.Add(item.ID);
+                        try
+                        {
+                            item.ID.Start(true);
+                        }
+                        catch (Exception) { }
+                    }
                     i++;
-
-                    bool running = false;
-                    try
-                    {
-                        running = StopParts[i % StopParts.Count].MoveNext();
-                    }
-                    catch (Exception)
-                    {
-                    }
-
-                    if (!running)
-                        StopParts.Remove(StopParts[i % StopParts.Count]);
-                }
-            }
-            lock (StartParts)
-            {
-                int i = 0;
-                while (StartParts.Count > 0 && i < 1000)
-                {
-                    i++;
-
-                    bool running = false;
-                    try
-                    {
-                        running = StartParts[i % StartParts.Count].MoveNext();
-                    }
-                    catch (Exception)
-                    {
-                    }
-
-                    if (!running)
-                    {
-                        StartParts.Remove(StartParts[i % StartParts.Count]);
-                    }
                 }
             }
             foreach (ScriptData ID in FireEvents)
@@ -407,6 +372,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             FireEvents.Clear();
         }
+
+        #endregion
 
         private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
         {

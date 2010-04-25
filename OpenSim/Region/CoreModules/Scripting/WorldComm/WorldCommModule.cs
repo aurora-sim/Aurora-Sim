@@ -594,9 +594,9 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
 
                 lock (m_listeners)
                 {
-                    if (!m_listeners.ContainsKey((int)item[2]))
-                        m_listeners.Add((int)item[2], new List<ListenerInfo>());
-                    m_listeners[(int)item[2]].Add(info);
+                    if (!m_listeners.ContainsKey(Convert.ToInt32(item[2])))
+                        m_listeners.Add(Convert.ToInt32(item[2]), new List<ListenerInfo>());
+                    m_listeners[Convert.ToInt32(item[2])].Add(info);
                 }
 
                 idx+=6;
@@ -656,10 +656,10 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
 
         public static ListenerInfo FromData(uint localID, UUID ItemID, UUID hostID, Object[] data)
         {
-            ListenerInfo linfo = new ListenerInfo((int)data[1], localID,
-                    ItemID, hostID, (int)data[2], (string)data[3],
-                    (UUID)data[4], (string)data[5]);
-            linfo.m_active=(bool)data[0];
+            ListenerInfo linfo = new ListenerInfo(Convert.ToInt32(data[1]), localID,
+                    ItemID, hostID, Convert.ToInt32(data[2]), (string)data[3],
+                    new UUID(data[4].ToString()), (string)data[5]);
+            linfo.m_active=Convert.ToBoolean(data[0]);
 
             return linfo;
         }

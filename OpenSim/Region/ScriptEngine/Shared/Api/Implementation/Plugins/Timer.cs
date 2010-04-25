@@ -162,8 +162,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api.Plugins
 
                 ts.localID = localID;
                 ts.itemID = itemID;
-                ts.interval = (long)data[idx];
-                ts.next = DateTime.Now.Ticks + (long)data[idx+1];
+                ts.interval =(long)Convert.ToDouble(data[idx]);
+                ts.next = DateTime.Now.Ticks + (long)Convert.ToDouble(data[idx+1]);
                 idx += 2;
 
                 lock (TimerListLock)

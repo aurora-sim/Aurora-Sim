@@ -319,13 +319,11 @@ namespace Aurora.DataManager.SQLite
         {
             List<int> result = new List<int>();
 
-            string sql = "select EstateID from estate_settings where estate_settings.EstateName :EstateName";
+            string sql = "select EstateID from estate_settings where EstateName = '" + search + "'";
 
             SqliteCommand cmd = new SqliteCommand();
 
             cmd.CommandText = sql;
-            cmd.Parameters.Add(":EstateName", search);
-
             IDataReader r = GetReader(cmd);
 
             while (r.Read())

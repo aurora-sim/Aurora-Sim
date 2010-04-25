@@ -72,8 +72,8 @@ namespace OpenSim.Region.Framework.Interfaces
         /// Start all the scripts contained in this entity's inventory
         /// </summary>
         void CreateScriptInstances(int startParam, bool postOnRez, string engine, int stateSource);
-        
-        ArrayList GetScriptErrors(UUID itemID);
+
+        ArrayList GetScriptErrors(UUID itemID, string DefaultScriptEngine);
         void ResumeScripts();
 
         /// <summary>
@@ -105,6 +105,15 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="stateSource"></param>
         void CreateScriptInstance(UUID itemId, int startParam, bool postOnRez, string engine, int stateSource);
 
+        /// <summary>
+        /// Updates a script instance in this prim's inventory.
+        /// </summary>
+        /// <param name="itemId"></param>
+        /// <param name="startParam"></param>
+        /// <param name="postOnRez"></param>
+        /// <param name="engine"></param>
+        /// <param name="stateSource"></param>
+        void UpdateScriptInstance(UUID itemId, int startParam, bool postOnRez, string engine, int stateSource);
         /// <summary>
         /// Stop a script which is in this prim's inventory.
         /// </summary>

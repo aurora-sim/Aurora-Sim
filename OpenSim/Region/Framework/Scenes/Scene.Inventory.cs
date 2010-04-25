@@ -197,7 +197,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (isScriptRunning)
             {
-                part.Inventory.RemoveScriptInstance(item.ItemID, false);
+                //part.Inventory.RemoveScriptInstance(item.ItemID, false);
             }
 
             // Update item with new asset
@@ -214,8 +214,9 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 // Needs to determine which engine was running it and use that
                 //
-                part.Inventory.CreateScriptInstance(item.ItemID, 0, false, DefaultScriptEngine, 0);
-                errors = part.Inventory.GetScriptErrors(item.ItemID);
+                //part.Inventory.CreateScriptInstance(item.ItemID, 0, false, DefaultScriptEngine, 0);
+                part.Inventory.UpdateScriptInstance(item.ItemID, 0, false, DefaultScriptEngine, 0);
+                errors = part.Inventory.GetScriptErrors(item.ItemID, DefaultScriptEngine);
             }
             else
             {

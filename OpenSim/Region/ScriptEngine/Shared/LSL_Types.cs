@@ -1509,11 +1509,6 @@ namespace OpenSim.Region.ScriptEngine.Shared
                 return new LSLString(d);
             }
 
-            public static explicit operator LSLString(LSLFloat f)
-            {
-                return new LSLString(f);
-            }
-
             static public explicit operator LSLString(bool b)
             {
                 if (b)

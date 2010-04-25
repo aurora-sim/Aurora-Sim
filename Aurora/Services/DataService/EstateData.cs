@@ -77,7 +77,18 @@ namespace Aurora.Services.DataService
 
         public bool LinkRegion(OpenMetaverse.UUID regionID, int estateID)
         {
-            throw new NotImplementedException();
+            if (Aurora.DataManager.DataManager.DefaultEstatePlugin != null)
+                return Aurora.DataManager.DataManager.DefaultEstatePlugin.LinkRegion(regionID, estateID);
+            else
+            {
+                foreach (IEstateData plugin in Aurora.DataManager.DataManager.AllEstatePlugins)
+                {
+                    bool success = plugin.LinkRegion(regionID, estateID);
+                    if (success)
+                        return success;
+                }
+            }
+            return false;
         }
 
         public List<OpenMetaverse.UUID> GetRegions(int estateID)

@@ -182,6 +182,7 @@ namespace Aurora.Framework
         bool Insert(string table, string[] values);
         bool Delete(string table, string[] keys, string[] values);
         bool Insert(string table, string[] values, string updateKey, string updateValue);
+        string Identifier { get; }
     }
 
     public interface IDataConnector : IGenericData
@@ -196,6 +197,7 @@ namespace Aurora.Framework
         bool VerifyTableExists(string tableName, ColumnDefinition[] columnDefinitions);
         void EnsureTableExists(string tableName, ColumnDefinition[] columnDefinitions);
         void DropTable(string tableName);
+        string Identifier { get; }
     }
 
     public enum DataManagerTechnology
@@ -213,6 +215,7 @@ namespace Aurora.Framework
         String512,
         String45,
         String1024,
+        String8196,
         String2,
         String1,
         String100
