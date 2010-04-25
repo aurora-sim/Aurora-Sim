@@ -80,6 +80,25 @@ namespace OpenSim.Server.Handlers.Login
                         clientVersion = requestData["version"].ToString();
                     // We should do something interesting with the client version...
 
+                    //MAC BANNING START
+                    string mac = (string)requestData["mac"];
+                    Aurora.Framework.IGenericData GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
+                    if (GD.Query("macAddress",mac,"macban","*")[0] == mac)
+                    {
+                        m_log.InfoFormat("Mac is in the list");
+                        return new XmlRpcResponse();
+                    }
+                    //MAC BANNING END
+
+                    //Viewer Ban Start
+
+                    if (GD.Query("Client", clientVersion, "BannedViewers", "*")[0] == clientVersion)
+                    {
+                        return new XmlRpcResponse();
+                    }
+
+                    //Viewer ban end
+
                     m_log.InfoFormat("[LOGIN]: XMLRPC Login Requested for {0} {1}, starting in {2}, using {3}", first, last, startLocation, clientVersion);
 
                     LoginResponse reply = null;
