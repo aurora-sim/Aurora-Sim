@@ -126,6 +126,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <returns></returns>
         public void CloseAndDispose()
         {
+            //Save the state
+            SerializeDatabase();
             // Tell script not to accept new requests
             Running = false;
             Disabled = true;
