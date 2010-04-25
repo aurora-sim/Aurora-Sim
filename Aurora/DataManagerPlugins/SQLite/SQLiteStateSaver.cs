@@ -79,8 +79,8 @@ namespace Aurora.DataManager.SQLite
             }
             catch (Exception ex)
             {
-                m_log.Warn("[SQLiteDataManager]: Exception processing command: " + cmd.CommandText + ", Exception: " + ex);
-                return 0;
+                //m_log.Warn("[SQLiteDataManager]: Exception processing command: " + cmd.CommandText + ", Exception: " + ex);
+                throw ex;
             }
         }
 

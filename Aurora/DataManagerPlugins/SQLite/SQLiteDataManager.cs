@@ -80,7 +80,7 @@ namespace Aurora.DataManager.SQLite
             catch (Exception ex)
             {
                 m_log.Warn("[SQLiteDataManager]: Exception processing command: " + cmd.CommandText + ", Exception: " + ex);
-                return 0;
+                throw ex;
             }
         }
 

@@ -864,7 +864,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     {
                         id.Start(true);
                     }
-                    catch (Exception ex) { }
+                    catch (Exception) { }
+                    if (id == null)
+                        return;
+                    id.FireEvents();
                 }
             }
             else

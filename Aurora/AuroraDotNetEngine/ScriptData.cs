@@ -559,16 +559,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 m_log.Debug("Stage 2: " + t.TotalSeconds);
             }
 
-            // Add it to our script memstruct
-            m_ScriptEngine.UpdateScriptInstanceData(this);
-
             //ALWAYS reset up APIs, otherwise m_host doesn't get updated and LSL thinks its in another prim.
             SetApis();
 
-            if (GenericData.Query("ItemID", ItemID.ToString(), "auroraDotNetStateSaves", "*").Count > 1)
+            if (GenericData.Query("ItemID", ItemID.ToString(), "auroraDotNetStateSaves", "*").Count > 1 && Loading)
             {
                 DeserializeDatabase();
-                
+
                 AsyncCommandManager.CreateFromData(m_ScriptEngine,
                     localID, ItemID, part.UUID,
                     PluginData);
@@ -579,6 +576,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
                 // We loaded state, don't force a re-save
                 m_startedFromSavedState = true;
+            }
+            else
+            {
+                // Add it to our script memstruct
+                m_ScriptEngine.UpdateScriptInstanceData(this);
             }
 
             m_ScriptEngine.AddToStateSaverQueue(this, true);
@@ -651,11 +653,30 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
 
             List<object> plugins = new List<object>();
-            foreach (object plugin in StateSave[6])
+            object[] pluginsSaved = StateSave[6].Split(',');
+            if (pluginsSaved.Length != 1)
             {
-                plugins.Add(plugin);
+                foreach (object plugin in pluginsSaved)
+                {
+                    if (plugin == null)
+                        continue;
+                    plugins.Add(plugin);
+                }
             }
             PluginData = plugins.ToArray();
+            if (StateSave[9] != "")
+            {
+                InventoryItem.PermsMask = int.Parse(StateSave[9].Split(',')[0], NumberStyles.Integer, Culture.NumberFormatInfo);
+                InventoryItem.PermsGranter = new UUID(StateSave[9].Split(',')[1]);
+            }
+            double minEventDelay = 0.0;
+            double.TryParse(StateSave[10], NumberStyles.Float, Culture.NumberFormatInfo, out minEventDelay);
+            EventDelayTicks = (long)minEventDelay;
+            AssemblyName = StateSave[11];
+
+            // Add it to our script memstruct
+            m_ScriptEngine.UpdateScriptInstanceData(this);
+            
             if (StateSave[8] != "")
             {
                 #region Queue
@@ -774,18 +795,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
                     m_ScriptEngine.PostScriptEvent(ItemID, ep);
                 }
+                #endregion
             }
-            #endregion
-
-            if(StateSave[9] != "")
-            {
-                InventoryItem.PermsMask = int.Parse(StateSave[9].Split(',')[0], NumberStyles.Integer, Culture.NumberFormatInfo);
-                InventoryItem.PermsGranter = new UUID(StateSave[9].Split(',')[1]);
-            }
-            double minEventDelay = 0.0;
-            double.TryParse(StateSave[10], NumberStyles.Float, Culture.NumberFormatInfo, out minEventDelay);
-            EventDelayTicks = (long)minEventDelay;
-            AssemblyName = StateSave[11];
         }
 
         public void SerializeDatabase()
@@ -793,8 +804,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             List<string> Insert = new List<string>();
             Insert.Add(State);
             Insert.Add(ItemID.ToString());
-            Source = Source.Replace("\n", " ");
-            Insert.Add(Source);
+            string source = Source.Replace("\n", " ");
+            source = source.Replace("'", " ");
+            Insert.Add(source);
             //LineMap
             LSL_Types.LSLString map = String.Empty;
             foreach (KeyValuePair<KeyValuePair<int, int>, KeyValuePair<int, int>> kvp in LineMap)
@@ -818,7 +830,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             object[] Plugins = AsyncCommandManager.GetSerializationData(m_ScriptEngine, ItemID);
             string plugins = "";
             foreach (object plugin in Plugins)
-                plugins += plugin;
+                plugins += plugin + ",";
             Insert.Add(plugins);
 
             Insert.Add(ClassID);
