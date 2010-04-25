@@ -211,10 +211,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return;
 
             //Register the console commands
-            scene.AddCommand(this, "DotNet restart all scripts", "Restarts all scripts in the sim", "Restarts all scripts in the sim", RestartAllScripts);
-            scene.AddCommand(this, "DotNet stop all scripts", "Stops all scripts in the sim", "Stops all scripts in the sim", StopAllScripts);
-            scene.AddCommand(this, "DotNet start all scripts", "Restarts all scripts in the sim", "Restarts all scripts in the sim", StartAllScripts);
-            scene.AddCommand(this, "DotNet wipe state saves", "Restarts all scripts in the sim", "Restarts all scripts in the sim", WipeAllStateSaves);
+            scene.AddCommand(this, "DotNet restart all scripts", "DotNet restart all scripts", "Restarts all scripts in the sim", RestartAllScripts);
+            scene.AddCommand(this, "DotNet stop all scripts", "DotNet stop all scripts", "Stops all scripts in the sim", StopAllScripts);
+            scene.AddCommand(this, "DotNet start all scripts", "DotNet start all scripts", "Restarts all scripts in the sim", StartAllScripts);
+            scene.AddCommand(this, "DotNet wipe state saves", "DotNet wipe state saves", "Restarts all scripts in the sim", WipeAllStateSaves);
             
             ScriptConfigSource = ConfigSource.Configs[ScriptEngineName];
 

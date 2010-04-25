@@ -24,7 +24,7 @@ namespace Aurora.Modules
         {
             scene.RegisterModuleInterface<IEstateSettingsModule>(this);
             m_scene = scene;
-            scene.AddCommand(this, "set regionsetting", "Sets a region setting", "Sets a region setting for the given region. Valid params: Maturity - 0(PG),1(Mature),2(Adult); AddEstateBan,RemoveEstateBan,AddEstateManager,RemoveEstateManager - First name, Last name", SetRegionInfoOption);
+            scene.AddCommand(this, "set regionsetting", "set regionsetting", "Sets a region setting for the given region. Valid params: Maturity - 0(PG),1(Mature),2(Adult); AddEstateBan,RemoveEstateBan,AddEstateManager,RemoveEstateManager - First name, Last name", SetRegionInfoOption);
         }
 
         protected void SetRegionInfoOption(string module, string[] cmdparams)
