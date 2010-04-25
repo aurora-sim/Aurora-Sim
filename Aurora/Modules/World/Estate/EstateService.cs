@@ -1,17 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Text;
 using OpenSim.Region.Framework.Interfaces;
 using Aurora.Framework;
 using OpenSim.Framework;
+using OpenSim.Framework.Console;
 using OpenSim.Region.Framework.Scenes;
 using OpenMetaverse;
 using Nini.Config;
+using log4net;
 
 namespace Aurora.Modules
 {
     public class EstateSettingsModule : IRegionModule, IEstateSettingsModule
     {
+        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
         Scene m_scene;
         IProfileData PD;
 
@@ -19,6 +24,50 @@ namespace Aurora.Modules
         {
             scene.RegisterModuleInterface<IEstateSettingsModule>(this);
             m_scene = scene;
+            scene.AddCommand(this, "set regionsetting", "Sets a region setting", "Sets a region setting for the given region. Valid params: Maturity - 0(PG),1(Mature),2(Adult); AddEstateBan,RemoveEstateBan,AddEstateManager,RemoveEstateManager - First name, Last name", SetRegionInfoOption);
+        }
+
+        protected void SetRegionInfoOption(string module, string[] cmdparams)
+        {
+            #region 3 Params needed
+            if (cmdparams.Length < 3)
+            {
+                m_log.Warn("Not enough parameters!");
+                return;
+            }
+            EstateSettings ES = m_scene.EstateService.LoadEstateSettings(m_scene.RegionInfo.RegionID, false);
+            if (cmdparams[2] == "Maturity")
+            {
+                m_scene.RegionInfo.RegionSettings.Maturity = Convert.ToInt32(cmdparams[3]);
+            }
+            #endregion
+            #region 4 Params needed
+            if (cmdparams.Length < 4)
+            {
+                m_log.Warn("Not enough parameters!");
+                return;
+            }
+            if (cmdparams[2] == "AddEstateBan")
+            {
+                EstateBan EB = new EstateBan();
+                EB.BannedUserID = m_scene.UserAccountService.GetUserAccount(UUID.Zero,cmdparams[3],cmdparams[4]).PrincipalID;
+                ES.AddBan(EB);
+            }
+            if (cmdparams[2] == "AddEstateManager")
+            {
+                ES.AddEstateManager(m_scene.UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]).PrincipalID);
+            }
+            if (cmdparams[2] == "RemoveEstateBan")
+            {
+                ES.RemoveBan(m_scene.UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]).PrincipalID);
+            }
+            if (cmdparams[2] == "RemoveEstateManager")
+            {
+                ES.RemoveEstateManager(m_scene.UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]).PrincipalID);
+            }
+            #endregion
+            m_scene.RegionInfo.RegionSettings.Save();
+            ES.Save();
         }
 
         public void PostInitialise()
@@ -75,6 +124,7 @@ namespace Aurora.Modules
             return true;
         }
 
+        #region Helpers
         private Vector3 GetPositionAtGround(Scene scene, float x, float y)
         {
             return new Vector3(x, y, GetGroundHeight(scene, x, y));
@@ -183,5 +233,6 @@ namespace Aurora.Modules
 
             return parcelsNear;
         }
+        #endregion
     }
 }
