@@ -285,7 +285,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             int idx = 0;
             int len;
 
-            while (idx < data.Length)
+            while (idx < data.Length - 1)
             {
                 string type = data[idx].ToString();
                 len = Convert.ToInt32(data[idx+1]);

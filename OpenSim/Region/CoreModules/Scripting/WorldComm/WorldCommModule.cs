@@ -594,7 +594,7 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
 
                 lock (m_listeners)
                 {
-                    if (!m_listeners.ContainsKey((int)item[2]))
+                    if (!m_listeners.ContainsKey(Convert.ToInt32(item[2])))
                         m_listeners.Add(Convert.ToInt32(item[2]), new List<ListenerInfo>());
                     m_listeners[Convert.ToInt32(item[2])].Add(info);
                 }
