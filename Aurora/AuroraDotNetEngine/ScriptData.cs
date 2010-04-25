@@ -920,7 +920,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             
             Insert.Add(EventDelayTicks.ToString());
             Insert.Add(AssemblyName);
-            Insert.Add(Disabled);
+            Insert.Add(Disabled.ToString());
             try
             {
                 GenericData.Insert("auroraDotNetStateSaves", Insert.ToArray());

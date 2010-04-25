@@ -4213,7 +4213,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (parcel != null)
                 {
-                    if (part.IsAttachment() && RunScriptsInAttachments)
+                    if (part.IsAttachment && RunScriptsInAttachments)
                         return true;
                     if ((parcel.LandData.Flags & (uint)ParcelFlags.AllowOtherScripts) != 0)
                     {
