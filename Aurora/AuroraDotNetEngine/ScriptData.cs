@@ -179,7 +179,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     m_ScriptEngine.m_AppDomainManager.UnloadScriptAppDomain(AppDomain);
                 }
                 //Legit: If the script had an error, this can happen... really shouldn't, but it does.
-                catch (AppDomainUnloadedException) { }
+                catch (Exception) { }
             }
             catch (Exception e)
             {
@@ -452,21 +452,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 FindRequiredForCompileless();
                 if (PreviouslyCompiledID != null)
                 {
-                    if (AssemblyName != PreviouslyCompiledID.AssemblyName)
-                    {
-                        FileInfo fi = new FileInfo(PreviouslyCompiledID.AssemblyName);
-                        FileStream stream = fi.OpenRead();
-                        Byte[] data = new Byte[fi.Length];
-                        stream.Read(data, 0, data.Length);
-                        FileStream sfs = File.Create(AssemblyName);
-                        sfs.Write(data, 0, data.Length);
-                        fi = null;
-                        sfs.Close();
-                        sfs.Dispose();
-                        stream.Close();
-                        stream.Dispose();
-                    }
-
                     ClassID = PreviouslyCompiledID.ClassID;
                     AppDomain = PreviouslyCompiledID.AppDomain;
                     Script = PreviouslyCompiledID.Script;
@@ -477,15 +462,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 if (PreviouslyCompiledID != null)
                 {
-                    FileInfo fi = new FileInfo(PreviouslyCompiledID.AssemblyName);
-                    FileStream stream = fi.OpenRead();
-                    Byte[] data = new Byte[fi.Length];
-                    stream.Read(data, 0, data.Length);
-                    FileStream sfs = File.Create(AssemblyName);
-                    sfs.Write(data, 0, data.Length);
-                    sfs.Close();
-                    stream.Close();
-
                     ClassID = PreviouslyCompiledID.ClassID;
                     LineMap = PreviouslyCompiledID.LineMap;
                     AssemblyName = PreviouslyCompiledID.AssemblyName;
