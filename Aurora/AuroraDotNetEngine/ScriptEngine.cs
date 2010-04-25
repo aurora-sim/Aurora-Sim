@@ -45,6 +45,7 @@ using OpenSim.Region.ScriptEngine.Shared;
 using OpenSim.Region.ScriptEngine.Shared.ScriptBase;
 using OpenSim.Region.ScriptEngine.Shared.CodeTools;
 using OpenSim.Region.ScriptEngine.Shared.Api;
+using OpenSim.Framework.Console;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
@@ -209,6 +210,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (!m_enabled)
                 return;
 
+            //Register the console commands
+            scene.AddCommand(this, "DotNet restart all scripts", "Restarts all scripts in the sim", "Restarts all scripts in the sim", RestartAllScripts);
+            scene.AddCommand(this, "DotNet stop all scripts", "Stops all scripts in the sim", "Stops all scripts in the sim", StopAllScripts);
+            scene.AddCommand(this, "DotNet start all scripts", "Restarts all scripts in the sim", "Restarts all scripts in the sim", StartAllScripts);
+            scene.AddCommand(this, "DotNet wipe state saves", "Restarts all scripts in the sim", "Restarts all scripts in the sim", WipeAllStateSaves);
+            
             ScriptConfigSource = ConfigSource.Configs[ScriptEngineName];
 
         	m_log.Info("[" + ScriptEngineName + "]: ScriptEngine initializing");
@@ -244,6 +251,95 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
 
             scene.EventManager.OnRezScript += OnRezScript;
+        }
+
+        protected void RestartAllScripts(string module, string[] cmdparams)
+        {
+            string go = MainConsole.Instance.CmdPrompt("Are you sure you want to restart all scripts? (This also wipes the script state saves database, which could cause loss of information in your scripts)", "no");
+            if (go == "yes" || go == "Yes")
+            {
+                foreach (ScriptData ID in ScriptProtection.GetAllScripts())
+                {
+                    try
+                    {
+                        m_MaintenanceThread.RemoveState(ID);
+                        ID.Start(false);
+                    }
+                    catch (Exception)
+                    {
+                    }
+                }
+            }
+            else
+            {
+                m_log.Info("Not restarting all scripts");
+            }
+        }
+
+        protected void StartAllScripts(string module, string[] cmdparams)
+        {
+            string go = MainConsole.Instance.CmdPrompt("Are you sure you want to restart all scripts?", "no");
+            if (go == "yes" || go == "Yes")
+            {
+                foreach (ScriptData ID in ScriptProtection.GetAllScripts())
+                {
+                    try
+                    {
+                        ID.Start(true);
+                    }
+                    catch (Exception)
+                    {
+                    }
+                }
+            }
+            else
+            {
+                m_log.Info("Not restarting all scripts");
+            }
+        }
+
+        protected void WipeAllStateSaves(string module, string[] cmdparams)
+        {
+            string go = MainConsole.Instance.CmdPrompt("Are you sure you want to wipe the state save database? (This could cause loss of information in your scripts)", "no");
+            if (go == "yes" || go == "Yes")
+            {
+                foreach (ScriptData ID in ScriptProtection.GetAllScripts())
+                {
+                    try
+                    {
+                        m_MaintenanceThread.RemoveState(ID);
+                    }
+                    catch (Exception)
+                    {
+                    }
+                }
+            }
+            else
+            {
+                m_log.Info("Not wiping the state save database");
+            }
+        }
+
+        protected void StopAllScripts(string module, string[] cmdparams)
+        {
+            string go = MainConsole.Instance.CmdPrompt("Are you sure you want to stop all scripts?", "no");
+            if (go == "yes" || go == "Yes")
+            {
+                foreach (ScriptData ID in ScriptProtection.GetAllScripts())
+                {
+                    try
+                    {
+                        ID.CloseAndDispose();
+                    }
+                    catch (Exception)
+                    {
+                    }
+                }
+            }
+            else
+            {
+                m_log.Info("Not restarting all scripts");
+            }
         }
 
         public void RemoveRegion(Scene scene)
