@@ -2193,6 +2193,47 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         /// <summary>
+        /// Synchronously delete the given object from the scene.
+        /// This keeps scripts alive.
+        /// </summary>
+        /// <param name="group">Object Id</param>
+        /// <param name="silent">Suppress broadcasting changes to other clients.</param>
+        public void RemoveSceneObject(SceneObjectGroup group, bool silent)
+        {
+            //            m_log.DebugFormat("[SCENE]: Deleting scene object {0} {1}", group.Name, group.UUID);
+
+            //SceneObjectPart rootPart = group.GetChildPart(group.UUID);
+
+            foreach (SceneObjectPart part in group.Children.Values)
+            {
+                if (part.IsJoint() && ((part.ObjectFlags & (uint)PrimFlags.Physics) != 0))
+                {
+                    PhysicsScene.RequestJointDeletion(part.Name); // FIXME: what if the name changed?
+                }
+                else if (part.PhysActor != null)
+                {
+                    PhysicsScene.RemovePrim(part.PhysActor);
+                    part.PhysActor = null;
+                }
+            }
+            //            if (rootPart.PhysActor != null)
+            //            {
+            //                PhysicsScene.RemovePrim(rootPart.PhysActor);
+            //                rootPart.PhysActor = null;
+            //            }
+
+            if (UnlinkSceneObject(group.UUID, false))
+            {
+                EventManager.TriggerObjectBeingRemovedFromScene(group);
+                EventManager.TriggerParcelPrimCountTainted();
+            }
+
+            group.DeleteGroup(silent);
+
+            //            m_log.DebugFormat("[SCENE]: Exit DeleteSceneObject() for {0} {1}", group.Name, group.UUID);
+        }
+
+        /// <summary>
         /// Unlink the given object from the scene.  Unlike delete, this just removes the record of the object - the
         /// object itself is not destroyed.
         /// </summary>

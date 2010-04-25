@@ -55,5 +55,6 @@ namespace OpenSim.Framework
         public UUID terrainDetail1;
         public UUID terrainDetail2;
         public UUID terrainDetail3;
+        public byte[] RegionType;
     }
 }

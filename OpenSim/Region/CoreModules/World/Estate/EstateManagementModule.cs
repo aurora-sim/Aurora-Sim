@@ -797,6 +797,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
             args.terrainDetail1 = m_scene.RegionInfo.RegionSettings.TerrainTexture2;
             args.terrainDetail2 = m_scene.RegionInfo.RegionSettings.TerrainTexture3;
             args.terrainDetail3 = m_scene.RegionInfo.RegionSettings.TerrainTexture4;
+            args.RegionType = Utils.StringToBytes(m_scene.RegionInfo.RegionType);
 
             remoteClient.SendRegionHandshake(m_scene.RegionInfo,args);
         }

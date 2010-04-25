@@ -749,7 +749,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             handshake.RegionInfo3.CPURatio = 1;
 
             handshake.RegionInfo3.ColoName = Utils.EmptyBytes;
-            handshake.RegionInfo3.ProductName = Utils.EmptyBytes;
+            handshake.RegionInfo3.ProductName = args.RegionType;
             handshake.RegionInfo3.ProductSKU = Utils.EmptyBytes;
 
             OutPacket(handshake, ThrottleOutPacketType.Task);
