@@ -501,7 +501,8 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                         group.RootPart.ObjectFlags |= (uint)PrimFlags.Phantom;
                         group.RootPart.IsAttachment = true;
                     }
-
+                    if(RezSelected)
+                        group.RootPart.AddFlag(PrimFlags.CreateSelected);
                     // For attachments, we must make sure that only a single object update occurs after we've finished
                     // all the necessary operations.
                     m_Scene.AddNewSceneObject(group, true, false);
