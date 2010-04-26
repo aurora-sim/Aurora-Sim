@@ -1686,7 +1686,7 @@ namespace OpenSim.Region.OptionalModules.Agent.InternetRelayClientView.Server
         {
         }
 
-        public void SendPlacesQuery(List<string> simNames, List<object> Places, UUID queryID, UUID agentID, UUID transactionID, List<string> Xs, List<string> Ys)
+        public void SendPlacesQuery(List<string> simNames, List<object> Places, UUID queryID, UUID agentID, UUID transactionID, List<string> Xs, List<string> Ys, RegionInfo[] infos)
         {
         }
         public void FireUpdateParcel(LandUpdateArgs args, int LocalID)
