@@ -1496,7 +1496,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             OutPacket(payPriceReply, ThrottleOutPacketType.Task);
         }
 
-        public void SendPlacesQuery(List<string> simNames, List<object> Places, UUID queryID, UUID agentID, UUID transactionID, List<string> Xs, List<string> Ys)
+        public void SendPlacesQuery(List<string> simNames, List<object> Places, UUID queryID, UUID agentID, UUID transactionID, List<string> Xs, List<string> Ys, OpenSim.Framework.RegionInfo[] info)
         {
             PlacesReplyPacket PlacesReply = new PlacesReplyPacket();
             PlacesReplyPacket.QueryDataBlock[] Query = new PlacesReplyPacket.QueryDataBlock[Places.Count];
@@ -1520,34 +1520,18 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 Query[i] = QueryBlock;
                 totalarea += ((ILandObject)Places[i]).LandData.Area;
             }
-            /*PlacesReplyPacket.QueryDataBlock QueryBlock1 = new PlacesReplyPacket.QueryDataBlock();
-            QueryBlock1.ActualArea = totalarea;
-            QueryBlock1.BillableArea = totalarea;
-            QueryBlock1.Desc = Utils.StringToBytes("");
-            QueryBlock1.Dwell = 0;
-            QueryBlock1.Flags = Convert.ToByte(0);
-            QueryBlock1.GlobalX = 0;
-            QueryBlock1.GlobalY = 0;
-            QueryBlock1.GlobalZ = 0;
-            QueryBlock1.Name = Utils.StringToBytes("");
-            QueryBlock1.OwnerID = UUID.Zero;
-            QueryBlock1.Price = 0;
-            QueryBlock1.SimName = Utils.StringToBytes("");
-            QueryBlock1.SnapshotID = UUID.Zero;
-            Query[0] = QueryBlock1;*/
             PlacesReply.QueryData = Query;
             PlacesReply.AgentData = new PlacesReplyPacket.AgentDataBlock();
             PlacesReply.AgentData.AgentID = agentID;
             PlacesReply.AgentData.QueryID = queryID;
             PlacesReply.TransactionData.TransactionID = transactionID;
-            OutPacket(PlacesReply, ThrottleOutPacketType.Task);
-
+            
             try
             {
                 IEventQueue eq = Scene.RequestModuleInterface<IEventQueue>();
                 if (eq != null)
                 {
-                    eq.QueryReply(PlacesReply, agentID);
+                    eq.QueryReply(PlacesReply, agentID, info);
                 }
             }
             catch (Exception ex)

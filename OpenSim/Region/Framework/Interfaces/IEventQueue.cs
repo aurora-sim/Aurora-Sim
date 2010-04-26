@@ -56,6 +56,6 @@ namespace OpenSim.Region.Framework.Interfaces
                                                bool isModerator, bool textMute);
         void ParcelProperties(ParcelPropertiesPacket parcelPropertiesPacket, OpenSim.Framework.LandData data, UUID avatarID);
         void GroupMembership(AgentGroupDataUpdatePacket groupUpdate, UUID avatarID);
-        void QueryReply(PlacesReplyPacket placesReply, UUID avatarID);
+        void QueryReply(PlacesReplyPacket placesReply, UUID avatarID, OpenSim.Framework.RegionInfo[] info);
     }
 }

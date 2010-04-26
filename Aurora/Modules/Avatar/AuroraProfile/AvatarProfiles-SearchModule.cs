@@ -1300,6 +1300,7 @@ namespace Aurora.Modules
                 List<string> SimNames = new List<string>();
                 List<string> SimXs = new List<string>();
                 List<string> SimYs = new List<string>();
+                List<OpenSim.Framework.RegionInfo> RegionInfos = new List<OpenSim.Framework.RegionInfo>();
                 List<object> Parcels = null;
                 foreach (Scene scene in m_Scenes)
                 {
@@ -1319,6 +1320,7 @@ namespace Aurora.Modules
                                         {
                                             SimXs.Add(((x * 4)+(scene.RegionInfo.RegionLocX * 256)).ToString());
                                             SimYs.Add(((y * 4)+(scene.RegionInfo.RegionLocY * 256)).ToString());
+                                            RegionInfos.Add(scene.RegionInfo);
                                             x = (int)Constants.RegionSize;
                                             y = (int)Constants.RegionSize;
                                             continue;
@@ -1336,7 +1338,7 @@ namespace Aurora.Modules
                     }
                 }
                 Parcels = new List<object>(LandQueried.ToArray());
-                client.SendPlacesQuery(SimNames, Parcels, QueryID, client.AgentId, TransactionID, SimXs, SimYs);
+                client.SendPlacesQuery(SimNames, Parcels, QueryID, client.AgentId, TransactionID, SimXs, SimYs, RegionInfos.ToArray());
             }
         }
 

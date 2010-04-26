@@ -1485,7 +1485,7 @@ namespace OpenSim.Framework
         
         void SendChangeUserRights(UUID agentID, UUID friendID, int rights);
         void SendTextBoxRequest(string message, int chatChannel, string objectname, string ownerFirstName, string ownerLastName, UUID objectId);
-        void SendPlacesQuery(List<string> simNames, List<object> Places, UUID queryID, UUID agentID, UUID transactionID, List<string> Xs, List<string> Ys);
+        void SendPlacesQuery(List<string> simNames, List<object> Places, UUID queryID, UUID agentID, UUID transactionID, List<string> Xs, List<string> Ys, OpenSim.Framework.RegionInfo[] info);
         void FireUpdateParcel(LandUpdateArgs args, int LocalID);
     }
 }
