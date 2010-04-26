@@ -50,12 +50,25 @@ namespace Aurora.DataManager.SQLite
 
         protected IDataReader ExecuteReader(SqliteCommand cmd)
         {
-            var newConnection =
-                (SqliteConnection) ((ICloneable) m_Connection).Clone();
-            newConnection.Open();
-            cmd.Connection = newConnection;
-            SqliteDataReader reader = cmd.ExecuteReader();
-            return reader;
+            try
+            {
+                var newConnection =
+                    (SqliteConnection)((ICloneable)m_Connection).Clone();
+                newConnection.Open();
+                cmd.Connection = newConnection;
+                SqliteDataReader reader = cmd.ExecuteReader();
+                return reader;
+            }
+            catch (Mono.Data.SqliteClient.SqliteBusyException)
+            {
+                System.Threading.Thread.Sleep(5);
+                return ExecuteReader(cmd);
+            }
+            catch (Exception ex)
+            {
+                //m_log.Warn("[SQLiteDataManager]: Exception processing command: " + cmd.CommandText + ", Exception: " + ex);
+                throw ex;
+            }
         }
 
         protected int ExecuteNonQuery(SqliteCommand cmd)

@@ -63,8 +63,12 @@ namespace OpenSim.Services.AssetService
 
                 string loaderArgs = assetConfig.GetString("AssetLoaderArgs",
                         String.Empty);
-
-                bool assetLoaderEnabled = assetConfig.GetBoolean("AssetLoaderEnabled", true);
+                bool assetLoaderEnabled = true;
+                IConfig auroraConfig = config.Configs["AuroraStartup"];
+                if (auroraConfig != null)
+                {
+                    assetLoaderEnabled = auroraConfig.GetBoolean("AssetLoaderEnabled", true);
+                }
 
                 if (assetLoaderEnabled)
                 {
@@ -74,6 +78,8 @@ namespace OpenSim.Services.AssetService
                             {
                                 Store(a);
                             });
+                    auroraConfig.Set("AssetLoaderEnabled", false);
+                    auroraConfig.ConfigSource.Save();
                 }
                 
                 m_log.Info("[ASSET SERVICE]: Local asset service enabled");

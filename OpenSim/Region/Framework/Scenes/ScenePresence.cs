@@ -383,6 +383,8 @@ namespace OpenSim.Region.Framework.Scenes
             set { m_allowMovement = value; }
         }
 
+        protected bool ClientIsStarting = true;
+
         public bool SetAlwaysRun
         {
             get
@@ -1121,7 +1123,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_isChildAgent = false;
             bool m_flying = ((m_AgentControlFlags & AgentManager.ControlFlags.AGENT_CONTROL_FLY) != 0);
             MakeRootAgent(AbsolutePosition, m_flying);
-
+            
             if ((m_callbackURI != null) && !m_callbackURI.Equals(""))
             {
                 m_log.DebugFormat("[SCENE PRESENCE]: Releasing agent in URI {0}", m_callbackURI);
@@ -2536,7 +2538,16 @@ namespace OpenSim.Region.Framework.Scenes
         public void SendWearables()
         {
             m_log.DebugFormat("[SCENE]: Received request for wearables of {0}", Name);
-            
+            //This fixes t-pose on login by sending an animation for the avatar so it has something to display.
+            //  -- Revolution
+            if (ClientIsStarting)
+            {
+                if (m_physicsActor.Flying)
+                    Animator.TrySetMovementAnimation("HOVER");
+                else
+                    Animator.TrySetMovementAnimation("STAND");
+                ClientIsStarting = false;
+            }
             ControllingClient.SendWearables(m_appearance.Wearables, m_appearance.Serial++);
         }
 
