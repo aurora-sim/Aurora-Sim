@@ -243,15 +243,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         #region Helpers
 
+        //Makes ToString look nicer
         public override string ToString()
         {
             return "localID: " + localID + ", itemID: " + ItemID;
         }
 
+        /// <summary>
+        /// Sets up the APIs for the script
+        /// </summary>
         internal void SetApis()
         {
-            if (part == null)
-                part = m_ScriptEngine.World.GetSceneObjectPart(localID);
             Apis = new Dictionary<string, IScriptApi>();
 
             ApiManager am = new ApiManager();
@@ -298,6 +300,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         #region Start Script
 
+        /// <summary>
+        /// Fires the events after the compiling has occured
+        /// </summary>
         public void FireEvents()
         {
             if (m_startedFromSavedState)
@@ -323,33 +328,47 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     m_ScriptEngine.AddToScriptQueue(this, "attach", new DetectParams[0], new object[] { new LSL_Types.LSLString(part.AttachedAvatar.ToString()) });
             }
         }
+
         /// <summary>
         /// This starts the script and sets up the variables.
         /// </summary>
         /// <returns></returns>
         public void Start(bool reupload)
         {
+            //Clear out the removing of events for this script.
+            if (m_ScriptEngine.NeedsRemoved.Contains(ItemID))
+                m_ScriptEngine.NeedsRemoved.Remove(ItemID);
+
             Compiling = true;
+
+            //Remove any script errors that might be waiting.
             if (m_ScriptEngine.Errors.ContainsKey(ItemID))
                 m_ScriptEngine.Errors.Remove(ItemID);
+
 
             DateTime Start = DateTime.Now.ToUniversalTime();
 
             part = World.GetSceneObjectPart(localID);
 
+            //No SOP, no compile.
             if (null == part)
             {
                 m_log.ErrorFormat("[{0}]: Could not find scene object part corresponding " + "to localID {1} to start script", m_ScriptEngine.ScriptEngineName, localID);
-
                 throw new NullReferenceException();
             }
 
+            //Find the asset ID
             if (part.TaskInventory.TryGetValue(ItemID, out InventoryItem))
                 AssetID = InventoryItem.AssetID;
 
+            //Try to find the avatar who started this.
             presence = World.GetScenePresence(InventoryItem.OwnerID);
+
+            //Set the thread culture and etc.
             CultureInfo USCulture = new CultureInfo("en-US");
             Thread.CurrentThread.CurrentCulture = USCulture;
+
+            //Attempt to find previously compiled assemblys
             string FilePrefix = "CommonCompiler";
             foreach (char c in Path.GetInvalidFileNameChars())
             {
@@ -360,6 +379,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     m_ScriptEngine.World.RegionInfo.RegionID.ToString(),
                     FilePrefix + "_compiled_" + ItemID.ToString() + ".dll"));
             
+            //Macrothreading
             #region Class and interface reader
 
             string Inherited = "";
@@ -446,10 +466,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             #endregion
 
             bool NeedsToCreateNewAppDomain = true;
+
+            //Try to find a previously compiled script in this instance
             ScriptData PreviouslyCompiledID = (ScriptData)m_ScriptEngine.ScriptProtection.TryGetPreviouslyCompiledScript(Source);
+            
             if (GenericData.Query("ItemID", ItemID.ToString(), "auroraDotNetStateSaves", "*").Count > 1 && Loading)
             {
+                //Retrive the needed parts for a compileless start from the state save.
                 FindRequiredForCompileless();
+                //If the previous compile is there, retrive that and don't load the app domain.
                 if (PreviouslyCompiledID != null)
                 {
                     ClassID = PreviouslyCompiledID.ClassID;
@@ -460,6 +485,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             else
             {
+                //If the previous compile is there, retrive that and don't load the app domain.
                 if (PreviouslyCompiledID != null)
                 {
                     ClassID = PreviouslyCompiledID.ClassID;
@@ -469,6 +495,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     Script = PreviouslyCompiledID.Script;
                     NeedsToCreateNewAppDomain = false;
                 }
+                //Otherwise, compile the script.
                 else
                 {
                     try
@@ -511,6 +538,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 m_log.Debug("Stage 1: " + t.TotalSeconds);
             }
 
+            //Create the app domain if needed.
             if (NeedsToCreateNewAppDomain)
             {
                 try
@@ -527,6 +555,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 }
             }
             
+            //If its a reupload, an avatar is waiting for the script errors
             if (reupload)
                 m_ScriptEngine.Errors[ItemID] = new String[] { "SUCCESSFULL" };
 
@@ -539,6 +568,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //ALWAYS reset up APIs, otherwise m_host doesn't get updated and LSL thinks its in another prim.
             SetApis();
 
+            //Now do the full state save finding now that we have an app domain.
             if (GenericData.Query("ItemID", ItemID.ToString(), "auroraDotNetStateSaves", "*").Count > 1 && Loading)
             {
                 DeserializeDatabase();
@@ -556,15 +586,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             else
             {
-                // Add it to our script memstruct
+                // Add it to our script memstruct so it can be found by other scripts
                 m_ScriptEngine.UpdateScriptInstanceData(this);
             }
 
+            //Make a new state save now
             m_ScriptEngine.AddToStateSaverQueue(this, true);
             
+            //Set the event flags
             int eventFlags = Script.GetStateEventFlags(State);
             part.SetScriptEvents(ItemID, eventFlags);
 
+            //All done, compiled successfully
             Compiling = false;
             Loading = false;
 
@@ -600,6 +633,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         #region Serialize
 
+        /// <summary>
+        /// Finds all the required parts so that we don't have to compile the script.
+        /// </summary>
         public void FindRequiredForCompileless()
         {
             List<string> StateSave = GenericData.Query("ItemID", ItemID.ToString(), "auroraDotNetStateSaves", "ClassID, LineMap, AssemblyName");
@@ -608,6 +644,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             AssemblyName = StateSave[2];
         }
 
+        /// <summary>
+        /// This pulls everything from the state save and sets the script back up to its previous state.
+        /// </summary>
         public void DeserializeDatabase()
         {
             Dictionary<string, object> vars = new Dictionary<string,object>();
@@ -777,6 +816,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
         }
 
+        /// <summary>
+        /// This saves the script to a database so that it can be reloaded in exactly the same state it was before it was closed.
+        /// </summary>
         public void SerializeDatabase()
         {
             List<string> Insert = new List<string>();
@@ -1065,6 +1107,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         #endregion
 
+        #region Other
+
         public string ReadExternalWebsite(string URL)
         {
             // External IP Address (get your external IP locally)
@@ -1081,6 +1125,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             return externalIp;
         }
+        #endregion
     }
 
     #endregion

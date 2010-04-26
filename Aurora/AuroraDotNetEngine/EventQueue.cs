@@ -40,6 +40,7 @@ using OpenSim.Region.Framework.Scenes;
 using OpenSim.Region.Framework.Scenes.Scripting;
 using OpenSim.Region.ScriptEngine.Shared;
 using OpenSim.Region.ScriptEngine.Shared.CodeTools;
+using Amib.Threading;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
@@ -47,190 +48,92 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        // How many ms to sleep if queue is empty
-        private static ThreadPriority MyThreadPriority;
-
-        public long LastExecutionStarted;
-        public bool InExecution = false;
-        public bool KillCurrentScript = false;
-
-        //This thread
-        public Thread EventQueueThread;
-        
         private ScriptEngine m_ScriptEngine;
-        private int SleepTime = 250;
 
-        public EventQueue(ScriptEngine engine)//EventQueueManager eqm
+        public EventQueue(ScriptEngine engine)
         {
         	m_ScriptEngine = engine;
-            CultureInfo USCulture = new CultureInfo("en-US");
-            Thread.CurrentThread.CurrentCulture = USCulture;
-
-            //eventQueueManager = eqm;
-            ReadConfig();
-            Start();
         }
 
-        ~EventQueue()
+        public object DoProcessQueue(object SleepTime)
         {
-            Stop();
-        }
-
-        public void ReadConfig()
-        {
-        	SleepTime = m_ScriptEngine.ScriptConfigSource.GetInt("SleepTimeBetweenLoops", 250);
-        	
-        	string pri = m_ScriptEngine.ScriptConfigSource.GetString(
-        		"ScriptThreadPriority", "BelowNormal");
-
-        	switch (pri.ToLower())
+            Thread.Sleep((int)SleepTime);
+            try
         	{
-        		case "lowest":
-        			MyThreadPriority = ThreadPriority.Lowest;
-        			break;
-        		case "belownormal":
-        			MyThreadPriority = ThreadPriority.BelowNormal;
-        			break;
-        		case "normal":
-        			MyThreadPriority = ThreadPriority.Normal;
-        			break;
-        		case "abovenormal":
-        			MyThreadPriority = ThreadPriority.AboveNormal;
-        			break;
-        		case "highest":
-        			MyThreadPriority = ThreadPriority.Highest;
-        			break;
-        		default:
-        			MyThreadPriority = ThreadPriority.BelowNormal;
-        			m_log.Error(
-        				"[ScriptEngine.DotNetEngine]: Unknown "+
-        				"priority type \"" + pri +
-        				"\" in config file. Defaulting to "+
-        				"\"BelowNormal\".");
-        			break;
-        	}
-        	// Now set that priority
-        	if (EventQueueThread != null)
-        		if (EventQueueThread.IsAlive)
-        			EventQueueThread.Priority = MyThreadPriority;
-        }
-
-        /// <summary>
-        /// Start thread
-        /// </summary>
-        private void Start()
-        {
-            EventQueueThread = Watchdog.StartThread(EventQueueThreadLoop, "EventQueueManagerThread_" + m_ScriptEngine.EventQueueThreadCount, MyThreadPriority, true);
-        }
-
-        public void Stop()
-        {
-            Watchdog.RemoveThread();
-            m_ScriptEngine.EventQueueThreadCount--;
-            if (EventQueueThread != null && EventQueueThread.IsAlive == true)
-            {
-                try
-                {
-                    EventQueueThread.Abort();               // Send abort
-                }
-                catch (Exception)
-                {
-                }
-            }
-        }
-
-        // Queue processing thread loop
-        private void EventQueueThreadLoop()
-        {
-            CultureInfo USCulture = new CultureInfo("en-US");
-            Thread.CurrentThread.CurrentCulture = USCulture;
-            while (true)
-            {
-                if (KillCurrentScript)
-                    Stop();
-            	DoProcessQueue();
-            }
-        }
-
-
-        public void DoProcessQueue()
-        {
-        	try
-        	{
-                Thread.Sleep(SleepTime);
-                if (ScriptEngine.EventQueue.Count == 0)
-        			return;
-                List<QueueItemStruct> NeedsToBeRequeued = new List<QueueItemStruct>();
-        		// Something in queue, process
                 lock (ScriptEngine.EventQueue)
-        		{
-                    LastExecutionStarted = DateTime.Now.Ticks;
-                    InExecution = true;
-                    for (int qc = 0; qc < ScriptEngine.EventQueue.Count; qc++)
-        			{
-        				// Get queue item
-                        QueueItemStruct QIS = ScriptEngine.EventQueue.Dequeue();
-                        //Suspended scripts get readded
-                        if (QIS.ID.Suspended)
-                        {
-                            NeedsToBeRequeued.Add(QIS);
-                            continue;
-                        }
-                        //Disabled or not running scripts dont get events saved.
-                        if (QIS.ID.Disabled)
-                            continue;
-                        if (!QIS.ID.Running)
-                            continue;
-                        //Clear scripts that shouldn't be in the queue anymore
-                        if (!m_ScriptEngine.NeedsRemoved.Contains(QIS.ID.ItemID))
-                        {
-                            try
-                            {
-                                QIS.ID.SetEventParams(QIS.llDetectParams);
-                                int Running = 0;
-                                Running = QIS.ID.Script.ExecuteEvent(
-                                    QIS.ID.State,
-                                    QIS.functionName,
-                                    QIS.param, QIS.CurrentlyAt);
-                                //Finished with nothing left.
-                                if(Running == 0)
-                                	continue;
-                                //Did not finish and returned where it should start now
-                                if (Running != 0 && !m_ScriptEngine.NeedsRemoved.Contains(QIS.ID.ItemID))
-                                {
-                                    QIS.CurrentlyAt = Running;
-                                    NeedsToBeRequeued.Add(QIS);
-                                }
-                            }
-                            catch (SelfDeleteException) // Must delete SOG
-                            {
-                                if (QIS.ID.part != null && QIS.ID.part.ParentGroup != null)
-                                    m_ScriptEngine.World.DeleteSceneObject(
-                                        QIS.ID.part.ParentGroup, false);
-                            }
-                            catch (ScriptDeleteException) // Must delete item
-                            {
-                                if (QIS.ID.part != null && QIS.ID.part.ParentGroup != null)
-                                    QIS.ID.part.Inventory.RemoveInventoryItem(QIS.ID.ItemID);
-                            }
-                            catch (Exception)
-                            {
-                                //m_log.Error("Event Queue error: " + ex);
-                            }
-                        }
-        			}
-        		}
-                foreach (QueueItemStruct QIS in NeedsToBeRequeued)
                 {
-                    ScriptEngine.EventQueue.Enqueue(QIS);
+                    if (ScriptEngine.EventQueue.Count == 0)
+                    {
+                        m_ScriptEngine.m_ThreadPool.QueueWorkItem(new WorkItemCallback(this.DoProcessQueue), SleepTime);
+                        return 0;
+                    }
+                    // Something in queue, process
+                    QueueItemStruct QIS = ScriptEngine.EventQueue.Dequeue();
+
+                    //Suspended scripts get readded
+                    if (QIS.ID.Suspended)
+                    {
+                        ScriptEngine.EventQueue.Enqueue(QIS);
+                        m_ScriptEngine.m_ThreadPool.QueueWorkItem(new WorkItemCallback(this.DoProcessQueue), SleepTime);
+                        return 0;
+                    }
+                    //Disabled or not running scripts dont get events saved.
+                    if (QIS.ID.Disabled)
+                    {
+                        m_ScriptEngine.m_ThreadPool.QueueWorkItem(new WorkItemCallback(this.DoProcessQueue), SleepTime);
+                        return 0;
+                    }
+                    if (!QIS.ID.Running)
+                    {
+                        m_ScriptEngine.m_ThreadPool.QueueWorkItem(new WorkItemCallback(this.DoProcessQueue), SleepTime);
+                        return 0;
+                    }
+
+                    //Clear scripts that shouldn't be in the queue anymore
+                    if (!m_ScriptEngine.NeedsRemoved.Contains(QIS.ID.ItemID))
+                    {
+                        try
+                        {
+                            QIS.ID.SetEventParams(QIS.llDetectParams);
+                            int Running = 0;
+                            Running = QIS.ID.Script.ExecuteEvent(
+                                QIS.ID.State,
+                                QIS.functionName,
+                                QIS.param, QIS.CurrentlyAt);
+                            //Finished with nothing left.
+                            if (Running == 0)
+                            {
+                                m_ScriptEngine.m_ThreadPool.QueueWorkItem(new WorkItemCallback(this.DoProcessQueue), SleepTime);
+                                return 0;
+                            }
+                            //Did not finish and returned where it should start now
+                            if (Running != 0 && !m_ScriptEngine.NeedsRemoved.Contains(QIS.ID.ItemID))
+                            {
+                                QIS.CurrentlyAt = Running;
+                                ScriptEngine.EventQueue.Enqueue(QIS);
+                            }
+                        }
+                        catch (SelfDeleteException) // Must delete SOG
+                        {
+                            if (QIS.ID.part != null && QIS.ID.part.ParentGroup != null)
+                                m_ScriptEngine.World.DeleteSceneObject(
+                                    QIS.ID.part.ParentGroup, false);
+                        }
+                        catch (ScriptDeleteException) // Must delete item
+                        {
+                            if (QIS.ID.part != null && QIS.ID.part.ParentGroup != null)
+                                QIS.ID.part.Inventory.RemoveInventoryItem(QIS.ID.ItemID);
+                        }
+                        catch (Exception) { }
+                    }
                 }
-                InExecution = true;
-                m_ScriptEngine.NeedsRemoved.Clear();
         	}
         	catch (Exception ex)
         	{
-                m_log.WarnFormat("[{0}]: Handled exception stage 2 in the Event Queue: " + ex.Message + " " + ex.StackTrace, m_ScriptEngine.ScriptEngineName);
+                m_log.WarnFormat("[{0}]: Handled exception stage 2 in the Event Queue: " + ex.Message, m_ScriptEngine.ScriptEngineName);
         	}
+            m_ScriptEngine.m_ThreadPool.QueueWorkItem(new WorkItemCallback(this.DoProcessQueue), SleepTime);
+            return 0;
         }
     }
 }

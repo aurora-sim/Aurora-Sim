@@ -46,6 +46,7 @@ using OpenSim.Region.ScriptEngine.Shared.ScriptBase;
 using OpenSim.Region.ScriptEngine.Shared.CodeTools;
 using OpenSim.Region.ScriptEngine.Shared.Api;
 using OpenSim.Framework.Console;
+using Amib.Threading;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
@@ -62,27 +63,24 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             get { return m_Scene; }
         }
 
-        private static List<ScriptEngine> m_ScriptEngines =
-                new List<ScriptEngine>();
-
         // Handles and queues incoming events from OpenSim
         public EventManager m_EventManager;
 
         // Handles loading/unloading of scripts into AppDomains
         public AppDomainManager m_AppDomainManager;
 
+        //The compiler for all scripts
         public Compiler LSLCompiler;
 
+        //Queue that handles the loading and unloading of scripts
         public Queue<LUStruct> LUQueue = new Queue<LUStruct>();
 
-        // Thread that does different kinds of maintenance,
-        // for example refreshing config and killing scripts
-        // that has been running too long
         public static MaintenanceThread m_MaintenanceThread;
 
         private IConfigSource m_ConfigSource;
         public IConfig ScriptConfigSource;
         private bool m_enabled = false;
+        public SmartThreadPool m_ThreadPool;
 
         public IConfig Config
         {
@@ -108,11 +106,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public event ObjectRemoved OnObjectRemoved;
         private IXmlRpcRouter m_XmlRpcRouter;
         public IScriptProtectionModule ScriptProtection;
-        /// <summary>
-        /// Number of event queue threads in use.
-        /// </summary>
-        public int EventQueueThreadCount = 0;
-
+        
         /// <summary>
         /// Removes the script from the event queue so it does not fire anymore events.
         /// </summary>
@@ -127,40 +121,56 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// Queue containing scripts that need to have states saved or deleted.
         /// </summary>
         public Queue<StateQueueItem> StateQueue = new Queue<StateQueueItem>();
-        /// <summary>
-        /// How many threads to process queue with
-        /// </summary>
-        public int numberOfEventQueueThreads;
-
+        
         /// <summary>
         /// Maximum events in the event queue at any one time
         /// </summary>
         public int EventExecutionMaxQueueSize;
 
         /// <summary>
-        /// Maximum time one function can use for execution before we perform a thread kill.
+        /// Time for each of the smart thread pool threads to sleep before doing the queues.
         /// </summary>
-        public int maxFunctionExecutionTimems
-        {
-            get { return (int)(maxFunctionExecutionTimens / 10000); }
-            set { maxFunctionExecutionTimens = value * 10000; }
-        }
+        public int SleepTime;
 
         /// <summary>
-        /// Contains nanoseconds version of maxFunctionExecutionTimems so that it matches time calculations better (performance reasons).
-        /// WARNING! ONLY UPDATE maxFunctionExecutionTimems, NEVER THIS DIRECTLY.
+        /// Number of threads that should be running  to deal with starting and stopping scripts
         /// </summary>
-        public long maxFunctionExecutionTimens;
+        public int NumberOfStartStopThreads;
 
         /// <summary>
-        /// Enforce max execution time for events
+        /// Number of threads that should be running to save the states
         /// </summary>
-        public bool EnforceMaxExecutionTime;
+        public int NumberOfStateSavingThreads;
 
         /// <summary>
-        /// Kill script (unload) when it exceeds execution time
+        /// Number of Event Queue threads that should be running
         /// </summary>
-        public bool KillScriptOnMaxFunctionExecutionTime;
+        public int NumberOfEventQueueThreads;
+
+        /// <summary>
+        /// Maximum threads to run in all regions.
+        /// </summary>
+        public int MaxThreads;
+
+        /// <summary>
+        /// Time the thread can be idle.
+        /// </summary>
+        public int IdleTimeout;
+
+        /// <summary>
+        /// Minimum threads to run in all regions.
+        /// </summary>
+        public int MinThreads;
+
+        /// <summary>
+        /// Priority of the threads.
+        /// </summary>
+        public ThreadPriority ThreadPriority;
+
+        /// <summary>
+        /// Size of the stack.
+        /// </summary>
+        public int StackSize;
 
         #endregion
 
@@ -175,9 +185,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 {
                     ID.CloseAndDispose();
                 }
-                catch (Exception)
-                {
-                }
+                catch (Exception) { }
             }
         }
 
@@ -192,12 +200,46 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (ScriptConfigSource == null)
                 return;
 
+            NumberOfEventQueueThreads = ScriptConfigSource.GetInt("NumberOfEventQueueThreads", 5);
+            NumberOfStateSavingThreads = ScriptConfigSource.GetInt("NumberOfStateSavingThreads", 1);
+            NumberOfStartStopThreads = ScriptConfigSource.GetInt("NumberOfStartStopThreads", 1);
+            SleepTime = ScriptConfigSource.GetInt("SleepTime", 50);
             LoadUnloadMaxQueueSize = ScriptConfigSource.GetInt("LoadUnloadMaxQueueSize", 100);
-            numberOfEventQueueThreads = ScriptConfigSource.GetInt("NumberOfScriptThreads", 2);
-            maxFunctionExecutionTimems = ScriptConfigSource.GetInt("MaxEventExecutionTimeMs", 5000);
-            EnforceMaxExecutionTime = ScriptConfigSource.GetBoolean("EnforceMaxEventExecutionTime", true);
-            KillScriptOnMaxFunctionExecutionTime = ScriptConfigSource.GetBoolean("DeactivateScriptOnTimeout", false);
             EventExecutionMaxQueueSize = ScriptConfigSource.GetInt("EventExecutionMaxQueueSize", 300);
+
+            IdleTimeout = ScriptConfigSource.GetInt("IdleTimeout", 20);
+            MaxThreads = ScriptConfigSource.GetInt("MaxThreads", 100);
+            MinThreads = ScriptConfigSource.GetInt("MinThreads", 2);
+            string pri = ScriptConfigSource.GetString(
+                "ThreadPriority", "BelowNormal");
+
+            switch (pri.ToLower())
+            {
+                case "lowest":
+                    ThreadPriority = ThreadPriority.Lowest;
+                    break;
+                case "belownormal":
+                    ThreadPriority = ThreadPriority.BelowNormal;
+                    break;
+                case "normal":
+                    ThreadPriority = ThreadPriority.Normal;
+                    break;
+                case "abovenormal":
+                    ThreadPriority = ThreadPriority.AboveNormal;
+                    break;
+                case "highest":
+                    ThreadPriority = ThreadPriority.Highest;
+                    break;
+                default:
+                    ThreadPriority = ThreadPriority.BelowNormal;
+                    m_log.Error(
+                        "[ScriptEngine.DotNetEngine]: Unknown " +
+                        "priority type \"" + pri +
+                        "\" in config file. Defaulting to " +
+                        "\"BelowNormal\".");
+                    break;
+            }
+            StackSize = ScriptConfigSource.GetInt("StackSize", 2);
         }
 
         public void AddRegion(Scene scene)
@@ -210,6 +252,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (!m_enabled)
                 return;
 
+            STPStartInfo startInfo = new STPStartInfo();
+            startInfo.IdleTimeout = IdleTimeout * 1000; // convert to seconds as stated in .ini
+            startInfo.MaxWorkerThreads = MaxThreads;
+            startInfo.MinWorkerThreads = MinThreads;
+            startInfo.ThreadPriority = ThreadPriority;
+            startInfo.StackSize = StackSize;
+            startInfo.StartSuspended = true;
+
+            m_ThreadPool = new SmartThreadPool(startInfo);
             //Register the console commands
             scene.AddCommand(this, "DotNet restart all scripts", "DotNet restart all scripts", "Restarts all scripts in the sim", RestartAllScripts);
             scene.AddCommand(this, "DotNet stop all scripts", "DotNet stop all scripts", "Stops all scripts in the sim", StopAllScripts);
@@ -245,13 +296,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 OnObjectRemoved += m_XmlRpcRouter.ObjectRemoved;
             }
 
-            lock (m_ScriptEngines)
-            {
-                m_ScriptEngines.Add(this);
-            }
-
             scene.EventManager.OnRezScript += OnRezScript;
         }
+
+        #region Console Commands
 
         protected void RestartAllScripts(string module, string[] cmdparams)
         {
@@ -342,6 +390,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
         }
 
+        #endregion
+
         public void RemoveRegion(Scene scene)
         {
             m_Scene.EventManager.OnScriptReset -= OnScriptReset;
@@ -365,6 +415,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (!m_enabled)
                 return;
 
+            m_ThreadPool.Start();
             m_EventManager.HookUpEvents();
 
             m_Scene.EventManager.OnScriptReset += OnScriptReset;
