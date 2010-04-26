@@ -61,6 +61,7 @@ namespace OpenSim.Region.Framework.Scenes
         
         private Timer m_inventoryTicker = new Timer(2000);
         private readonly Queue<DeleteToInventoryHolder> m_inventoryDeletes = new Queue<DeleteToInventoryHolder>();
+        private readonly Queue<DeleteToInventoryHolder> m_toinventoryDeletes = new Queue<DeleteToInventoryHolder>();
         private Scene m_scene;
         
         public AsyncSceneObjectGroupDeleter(Scene scene)
@@ -109,11 +110,8 @@ namespace OpenSim.Region.Framework.Scenes
         private void InventoryRunDeleteTimer(object sender, ElapsedEventArgs e)
         {
             m_log.Debug("[SCENE]: Starting send to inventory loop");
-            
-            while (InventoryDeQueueAndDelete())
-            {
-                //m_log.Debug("[SCENE]: Sent item successfully to inventory, continuing...");
-            }
+
+            InventoryDeQueueAndDelete();
         }
 
         /// <summary>
@@ -128,28 +126,45 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 lock (m_inventoryDeletes)
                 {
-                    int left = m_inventoryDeletes.Count;
-                    if (left > 0)
+                    while (m_inventoryDeletes.Count > 0)
                     {
                         x = m_inventoryDeletes.Dequeue();
 
                         m_log.DebugFormat(
-                            "[SCENE]: Sending object to user's inventory, {0} item(s) remaining.", left);
+                            "[SCENE]: Deleting objects, {0} item(s) remaining.", m_inventoryDeletes.Count);
                         
                         try
                         {
                             IInventoryAccessModule invAccess = m_scene.RequestModuleInterface<IInventoryAccessModule>();
-                            if (invAccess != null)
-                                invAccess.DeleteToInventory(x.action, x.folderID, x.objectGroup, x.remoteClient);
                             if (x.permissionToDelete)
                                 m_scene.DeleteSceneObject(x.objectGroup, false);
+                            m_toinventoryDeletes.Enqueue(x);
                         }
                         catch (Exception e)
                         {
                             m_log.DebugFormat("Exception background sending object: " + e);
                         }
-                        
-                        return true;
+                    }
+                }
+                lock (m_toinventoryDeletes)
+                {
+                    while (m_toinventoryDeletes.Count > 0)
+                    {
+                        x = m_toinventoryDeletes.Dequeue();
+
+                        m_log.DebugFormat(
+                            "[SCENE]: Sending object to user's inventory, {0} item(s) remaining.", m_toinventoryDeletes.Count);
+
+                        try
+                        {
+                            IInventoryAccessModule invAccess = m_scene.RequestModuleInterface<IInventoryAccessModule>();
+                            if (invAccess != null)
+                                invAccess.DeleteToInventory(x.action, x.folderID, x.objectGroup, x.remoteClient);
+                        }
+                        catch (Exception e)
+                        {
+                            m_log.DebugFormat("Exception background sending object: " + e);
+                        }
                     }
                 }
             }

@@ -126,17 +126,27 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <returns></returns>
         public void CloseAndDispose()
         {
-            //Save the state
-            SerializeDatabase();
+            if (Script == null || AppDomain == null)
+            {
+                //Save the state
+                //Must be called directly or it wont be processed in time
+                SerializeDatabase();
+                //Fire this directly so its not closed before its fired
+                SetEventParams(new DetectParams[0]);
+                Script.ExecuteEvent(State,
+                                    "state_exit",
+                                    new object[0], 0);
+            }
+            ReleaseControls();
             // Tell script not to accept new requests
+            //These are fine to set as the state wont be saved again
             Running = false;
             Disabled = true;
             
             m_ScriptEngine.RemoveFromEventQueue(ItemID);
             if (m_ScriptEngine.Errors.ContainsKey(ItemID))
                 m_ScriptEngine.Errors.Remove(ItemID);
-            ReleaseControls();
-
+            
             #region Clean out script parts
             /* 
             part.RemoveParticleSystem();
@@ -159,31 +169,32 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             part.ParentGroup.ScheduleGroupForFullUpdate();
             */
             #endregion
-            // Stop long command on script
-            AsyncCommandManager.RemoveScript(m_ScriptEngine, localID, ItemID);
-            m_ScriptEngine.m_EventManager.state_exit(localID);
-            
-            try
+            if (Script == null || AppDomain == null)
             {
-                // Remove from internal structure
-                m_ScriptEngine.RemoveScript(this);
-
-                m_log.DebugFormat("[{0}]: Closed Script in " + part.Name, m_ScriptEngine.ScriptEngineName);
-
-                if (AppDomain == null)
-                    return;
-
+                // Stop long command on script
+                AsyncCommandManager.RemoveScript(m_ScriptEngine, localID, ItemID);
                 try
                 {
-                    // Tell AppDomain that we have stopped script
-                    m_ScriptEngine.m_AppDomainManager.UnloadScriptAppDomain(AppDomain);
+                    // Remove from internal structure
+                    m_ScriptEngine.RemoveScript(this);
+
+                    m_log.DebugFormat("[{0}]: Closed Script in " + part.Name, m_ScriptEngine.ScriptEngineName);
+
+                    if (AppDomain == null)
+                        return;
+
+                    try
+                    {
+                        // Tell AppDomain that we have stopped script
+                        m_ScriptEngine.m_AppDomainManager.UnloadScriptAppDomain(AppDomain);
+                    }
+                    //Legit: If the script had an error, this can happen... really shouldn't, but it does.
+                    catch (Exception) { }
                 }
-                //Legit: If the script had an error, this can happen... really shouldn't, but it does.
-                catch (Exception) { }
-            }
-            catch (Exception e)
-            {
-                m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: Exception stopping script localID: " + localID + " LLUID: " + ItemID.ToString() + ": " + e.ToString());
+                catch (Exception e)
+                {
+                    m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: Exception stopping script localID: " + localID + " LLUID: " + ItemID.ToString() + ": " + e.ToString());
+                }
             }
         }
 

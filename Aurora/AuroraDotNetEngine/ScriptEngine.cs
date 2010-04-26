@@ -702,7 +702,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (id == null)
                 return;        
             
-            id.Running = false;
             StopScript(localID, itemID);
         }
 
@@ -1061,8 +1060,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             ScriptData data = GetScript(localID, itemID);
             if (data == null)
-                return;
-            if (data.Disabled)
                 return;
             LUStruct ls = new LUStruct();
             ScriptProtection.RemovePreviouslyCompiled(data.Source);      

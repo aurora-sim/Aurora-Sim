@@ -184,7 +184,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     {
                         item.ID.Start(false);
                     }
-                    catch (Exception ex) { m_log.Warn(ex); successfullyLoaded = false; }
+                    catch (Exception ex) { /*m_log.Warn(ex);*/ successfullyLoaded = false; }
                 }
                 else if (item.Action == LUType.Reupload)
                 {
@@ -192,7 +192,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     {
                         item.ID.Start(true);
                     }
-                    catch (Exception ex) { m_log.Warn(ex); successfullyLoaded = false; }
+                    catch (Exception ex) { /*m_log.Warn(ex);*/ successfullyLoaded = false; }
                 }
                 if(successfullyLoaded)
                     item.ID.FireEvents();
