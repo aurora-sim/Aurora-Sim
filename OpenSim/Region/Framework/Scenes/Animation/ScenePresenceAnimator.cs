@@ -57,6 +57,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
 
         private int m_animTickFall;
         private int m_animTickJump;
+        private int m_timesBeforeSlowFlyIsOff = 0;
         
         /// <value>
         /// The scene presence that this animator applies to
@@ -192,17 +193,31 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             {
                 m_animTickFall = 0;
                 m_animTickJump = 0;
-
                 if (move.X != 0f || move.Y != 0f)
                 {
-                    return (m_scenePresence.Scene.m_useFlySlow ? "FLYSLOW" : "FLY");
+                    if(m_scenePresence.Scene.m_useFlySlow )
+                    {
+                        if (m_timesBeforeSlowFlyIsOff < 15)
+                        {
+                            m_timesBeforeSlowFlyIsOff++;
+                            return "FLYSLOW";
+                        }
+                        else
+                            return "FLY";
+                    }
+                    else
+                    {
+                        return "FLY";
+                    }
                 }
                 else if (move.Z > 0f)
                 {
+                    m_timesBeforeSlowFlyIsOff = 0;
                     return "HOVER_UP";
                 }
                 else if (move.Z < 0f)
                 {
+                    m_timesBeforeSlowFlyIsOff = 0;
                     if (actor != null && actor.IsColliding)
                         return "LAND";
                     else
@@ -210,6 +225,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                 }
                 else
                 {
+                    m_timesBeforeSlowFlyIsOff = 0;
                     return "HOVER";
                 }
             }

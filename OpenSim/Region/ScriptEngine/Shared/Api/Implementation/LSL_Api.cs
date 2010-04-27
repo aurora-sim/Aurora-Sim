@@ -2359,7 +2359,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
             m_host.Sound = KeyOrName(sound);
             m_host.SoundGain = volume;
-            m_host.SoundFlags = 1;      // looping
+            m_host.SoundFlags = (int)SoundFlags.Loop;      // looping
             m_host.SoundRadius = 20;    // Magic number, 20 seems reasonable. Make configurable?
 
             m_host.ScheduleFullUpdate();
@@ -5639,7 +5639,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
-            NotImplemented("llSetSoundQueueing");
+            m_host.SetSoundQueueing(queue);
         }
 
         public void llSetSoundRadius(double radius)

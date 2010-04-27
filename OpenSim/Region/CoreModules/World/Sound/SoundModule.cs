@@ -77,6 +77,8 @@ namespace OpenSim.Region.CoreModules.World.Sound
                 else
                     gain = (float)((double)gain * ((radius - dis) / radius));
 
+                if (sp.Scene.GetSceneObjectPart(objectID).m_UseSoundQueue == 1)
+                    flags += (int)OpenMetaverse.SoundFlags.Queue;
                 sp.ControllingClient.SendPlayAttachedSound(soundID, objectID, ownerID, (float)gain, flags);
             });
         }

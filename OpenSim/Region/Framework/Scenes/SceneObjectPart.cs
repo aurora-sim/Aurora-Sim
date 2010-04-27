@@ -145,6 +145,9 @@ namespace OpenSim.Region.Framework.Scenes
         [XmlIgnore]
         public Vector3 StatusSandboxPos;
 
+        [XmlIgnore]
+        public int m_UseSoundQueue = 0;
+
         // TODO: This needs to be persisted in next XML version update!
         [XmlIgnore]
         public readonly int[] PayPrice = {-2,-2,-2,-2,-2};
@@ -4695,6 +4698,11 @@ namespace OpenSim.Region.Framework.Scenes
         public Color4 GetTextColor()
         {
             return new Color4((byte)Color.R, (byte)Color.G, (byte)Color.B, (byte)(0xFF - Color.A));
+        }
+
+        public void SetSoundQueueing(int queue)
+        {
+            m_UseSoundQueue = queue;
         }
     }
 }
