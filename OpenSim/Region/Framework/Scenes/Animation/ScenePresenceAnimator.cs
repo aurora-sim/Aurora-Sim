@@ -145,6 +145,8 @@ namespace OpenSim.Region.Framework.Scenes.Animation
         {
             const float FALL_DELAY = 0.33f;
             const float PREJUMP_DELAY = 0.25f;
+            const float SOFTLAND_FORCE = -0.4f;
+            const float SLOWFLY_DELAY = 25f;
 
             #region Inputs
             if (m_scenePresence.SitGround)
@@ -188,35 +190,54 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             #endregion Inputs
 
             #region Flying
-
             if (actor != null && actor.Flying)
             {
                 m_animTickFall = 0;
                 m_animTickJump = 0;
                 if (move.X != 0f || move.Y != 0f)
                 {
-                    if(m_scenePresence.Scene.m_useFlySlow )
+                    if (move.Z == 0)
                     {
-                        if (m_timesBeforeSlowFlyIsOff < 15)
+                        //TODO: Make this aware if under water physics are enabled before doing this second part of the check
+                        //This check makes the underwater part look better as when you are 'swimming' (which is walking), this will play the slow fly instead of the flying animations
+                        //which screws it up. As said above, this needs fixed.
+                        if (m_scenePresence.Scene.m_useFlySlow && actor.Position.Z > m_scenePresence.Scene.RegionInfo.RegionSettings.WaterHeight)
                         {
-                            m_timesBeforeSlowFlyIsOff++;
+                            if (m_timesBeforeSlowFlyIsOff < SLOWFLY_DELAY)
+                            {
+                                m_timesBeforeSlowFlyIsOff++;
+                                return "FLYSLOW";
+                            }
+                            else
+                                return "FLY";
+                        }
+                        else
+                        {
+                            return "FLY";
+                        }
+                    }
+                    else if (move.Z > 0)
+                    {
+                        if (m_scenePresence.Scene.m_useFlySlow)
+                        {
                             return "FLYSLOW";
                         }
                         else
+                        {
                             return "FLY";
+                        }
                     }
-                    else
-                    {
-                        return "FLY";
-                    }
+                    return "FLY";
                 }
                 else if (move.Z > 0f)
                 {
+                    //This is for the slow fly timer
                     m_timesBeforeSlowFlyIsOff = 0;
                     return "HOVER_UP";
                 }
                 else if (move.Z < 0f)
                 {
+                    //This is for the slow fly timer
                     m_timesBeforeSlowFlyIsOff = 0;
                     if (actor != null && actor.IsColliding)
                         return "LAND";
@@ -225,11 +246,12 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                 }
                 else
                 {
+                    //This is for the slow fly timer
                     m_timesBeforeSlowFlyIsOff = 0;
                     return "HOVER";
                 }
             }
-
+            m_timesBeforeSlowFlyIsOff = 0;
             #endregion Flying
 
             #region Falling/Floating/Landing
@@ -256,23 +278,8 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             #endregion Falling/Floating/Landing
 
             #region Ground Movement
-
-            if (m_movementAnimation == "FALLDOWN")
-            {
-                m_animTickFall = Environment.TickCount;
-
-                // TODO: SOFT_LAND support
-                return "LAND";
-            }
-            else if (m_movementAnimation == "LAND")
-            {
-                float landElapsed = (float)(Environment.TickCount - m_animTickFall) / 1000f;
-                if ((m_animTickFall != 0) && (landElapsed <= FALL_DELAY))
-                    return "LAND";
-            }
-
-            m_animTickFall = 0;
-
+            //This needs to be in front of landing, otherwise you get odd landing effects sometimes when one jumps
+            // -- Revolution
             if (move.Z > 0f)
             {
                 // Jumping
@@ -282,7 +289,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                     m_animTickJump = Environment.TickCount;
                     return "PREJUMP";
                 }
-                else if (Environment.TickCount - m_animTickJump > PREJUMP_DELAY * 1000.0f)
+                else if (m_animTickJump != 0 && Environment.TickCount - m_animTickJump > PREJUMP_DELAY * 55.0f)
                 {
                     // Start actual jump
                     if (m_animTickJump == -1)
@@ -296,7 +303,32 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                     return "JUMP";
                 }
             }
-            else
+
+            if (m_movementAnimation == "FALLDOWN")
+            {
+                m_animTickFall = Environment.TickCount;
+                
+                //This is an experimentally found variable, but it makes soft landings look good.
+                // -- Revolution
+                if (actor.Velocity.Z < SOFTLAND_FORCE)
+                    return "LAND";
+                return "SOFT_LAND";
+            }
+            else if (m_movementAnimation == "LAND")
+            {
+                float landElapsed = (float)(Environment.TickCount - m_animTickFall) / 1000f;
+                if ((m_animTickFall != 0) && (landElapsed <= FALL_DELAY))
+                {
+                    //See note above about soft landings
+                    if (actor.Velocity.Z < SOFTLAND_FORCE)
+                        return "LAND";
+                    return "SOFT_LAND";
+                }
+            }
+
+            m_animTickFall = 0;
+            
+            if(move.Z <= 0f)
             {
                 // Not jumping
                 m_animTickJump = 0;
@@ -320,7 +352,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                         return "STAND";
                 }
             }
-
+            
             #endregion Ground Movement
 
             return m_movementAnimation;
