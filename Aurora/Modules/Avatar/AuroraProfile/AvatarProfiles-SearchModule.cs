@@ -1064,8 +1064,7 @@ namespace Aurora.Modules
                                                  uint EstateID, bool godlike, uint itemtype, ulong regionhandle)
         {
             //All the parts are in for this, except for popular places and those are not in as they are not reqested anymore.
-            //Events do not work as the packet needed does not exist.
-
+            
             List<mapItemReply> mapitems = new List<mapItemReply>();
             mapItemReply mapitem = new mapItemReply();
 
@@ -1209,6 +1208,7 @@ namespace Aurora.Modules
                 foreach (DirEventsReplyData eventData in Eventdata)
                 {
                 	List<string> query = GenericData.Query("EID", eventData.eventID.ToString(), "events", "EGlobalPos, ESimName, EMature");
+                    
                     string RegionName = query[1];
                     string globalPos = query[0];
                     bool Mature = Convert.ToBoolean(query[2]);
@@ -1221,13 +1221,12 @@ namespace Aurora.Modules
                     mapitem.y = (uint)(region.RegionLocY + Convert.ToUInt32(Position[1]));
                     mapitem.id = eventData.ownerID;
                     mapitem.name = eventData.name;
-                    mapitem.Extra = (int)eventData.eventFlags;
-                    mapitem.Extra2 = (int)eventData.eventFlags;
+                    mapitem.Extra2 = (int)DirectoryManager.EventFlags.PG;
                     mapitems.Add(mapitem);
                 }
                 if (mapitems.Count != 0)
                 {
-                    //remoteClient.SendMapItemReply(mapitems.ToArray(), itemtype, flags);
+                    remoteClient.SendMapItemReply(mapitems.ToArray(), itemtype, flags);
                     mapitems.Clear();
                 }
             }
@@ -1250,13 +1249,39 @@ namespace Aurora.Modules
                     mapitem.y = (uint)(region.RegionLocY + Convert.ToUInt32(Position[1]));
                     mapitem.id = eventData.ownerID;
                     mapitem.name = eventData.name;
-                    mapitem.Extra = (int)eventData.eventFlags;
-                    mapitem.Extra2 = (int)eventData.eventFlags;
+                    mapitem.Extra2 = (int)DirectoryManager.EventFlags.Adult;
                     mapitems.Add(mapitem);
                 }
                 if (mapitems.Count != 0)
                 {
-                    //remoteClient.SendMapItemReply(mapitems.ToArray(), itemtype, flags);
+                    remoteClient.SendMapItemReply(mapitems.ToArray(), itemtype, flags);
+                    mapitems.Clear();
+                }
+            }
+            if (itemtype == (uint)OpenMetaverse.GridItemType.MatureEvent)
+            {
+                DirEventsReplyData[] Eventdata = ProfileData.GetAllEventsNearXY("events", 0, 0);
+                foreach (DirEventsReplyData eventData in Eventdata)
+                {
+                    List<string> query = GenericData.Query("EID", eventData.eventID.ToString(), "events", "EGlobalPos, ESimName, EMature");
+                    string RegionName = query[1];
+                    string globalPos = query[0];
+                    bool Mature = Convert.ToBoolean(query[2]);
+                    if (!Mature)
+                        continue;
+                    OpenSim.Services.Interfaces.GridRegion region = m_scene.GridService.GetRegionByName(UUID.Zero, RegionName);
+                    string[] Position = globalPos.Split(',');
+                    mapitem = new mapItemReply();
+                    mapitem.x = (uint)(region.RegionLocX + Convert.ToUInt32(Position[0]));
+                    mapitem.y = (uint)(region.RegionLocY + Convert.ToUInt32(Position[1]));
+                    mapitem.id = eventData.ownerID;
+                    mapitem.name = eventData.name;
+                    mapitem.Extra2 = (int)DirectoryManager.EventFlags.Mature;
+                    mapitems.Add(mapitem);
+                }
+                if (mapitems.Count != 0)
+                {
+                    remoteClient.SendMapItemReply(mapitems.ToArray(), itemtype, flags);
                     mapitems.Clear();
                 }
             }
