@@ -465,7 +465,7 @@ namespace OpenSim.Region.Framework.Scenes
                 effect.TypeData = args[i].TypeData;
                 effectBlockArray[i] = effect;
                 //Save the color
-                if (effect.Type == 7)
+                if (effect.Type == 7 || effect.Type == 9)
                 {
                     SP.EffectColor = args[i].Color;
                 }

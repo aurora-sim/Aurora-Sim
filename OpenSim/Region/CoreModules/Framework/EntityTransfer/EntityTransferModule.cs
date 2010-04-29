@@ -1494,7 +1494,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     // We remove the object here
                     try
                     {
-                        grp.Scene.RemoveSceneObject(grp, silent);
+                        grp.Scene.DeleteSceneObject(grp, silent);
                     }
                     catch (Exception e)
                     {

@@ -2351,10 +2351,16 @@ namespace OpenSim.Region.Framework.Scenes
                 if (m_parentID == 0 && m_physicsActor != null || m_parentID != 0) // Check that we have a physics actor or we're sitting on something
                     CheckForBorderCrossing();
                 CheckForSignificantMovement(); // sends update to the modules.
-
-                SendViewerEffects();
+                if (SendEffectPackets > 7)
+                {
+                    SendViewerEffects();
+                    SendEffectPackets = -1;
+                }
+                SendEffectPackets++;
             }
         }
+
+        private int SendEffectPackets = -1;
 
         #endregion
 
@@ -2367,6 +2373,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (!IsSelecting)
                 return;
+
             SceneObjectPart SOP = Scene.GetSceneObjectPart(SelectedLocalID);
             OpenMetaverse.Packets.ViewerEffectPacket.EffectBlock[] effectBlockArray = new OpenMetaverse.Packets.ViewerEffectPacket.EffectBlock[1];
             

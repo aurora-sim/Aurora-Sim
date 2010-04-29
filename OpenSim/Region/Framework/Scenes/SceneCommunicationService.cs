@@ -173,7 +173,9 @@ namespace OpenSim.Region.Framework.Scenes
             }
             else
             {
-                m_log.InfoFormat("[INTERGRID]: Failed to inform neighbour {0}-{1} that I'm here.", x / Constants.RegionSize, y / Constants.RegionSize);
+                if(m_scene.GridService != null)
+                    if(m_scene.GridService.GetRegionByPosition(UUID.Zero,(int)x,(int)y) != null)
+                        m_log.InfoFormat("[INTERGRID]: Failed to inform neighbour {0}-{1} that I'm here.", x / Constants.RegionSize, y / Constants.RegionSize);
             }
         }
 
