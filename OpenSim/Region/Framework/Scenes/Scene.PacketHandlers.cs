@@ -146,6 +146,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     if (((SceneObjectGroup) ent).LocalId == primLocalID)
                     {
+
                         ((SceneObjectGroup) ent).GetProperties(remoteClient);
                         ((SceneObjectGroup) ent).IsSelected = true;
                         // A prim is only tainted if it's allowed to be edited by the person clicking it.
@@ -174,6 +175,11 @@ namespace OpenSim.Region.Framework.Scenes
                    }
                 }
             }
+            
+            ScenePresence SP;
+            TryGetScenePresence(remoteClient.AgentId, out SP);
+            SP.SelectedLocalID = primLocalID;
+            SP.IsSelecting = true;
         }
 
         /// <summary>
@@ -183,6 +189,15 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="remoteClient"></param>
         public void DeselectPrim(uint primLocalID, IClientAPI remoteClient)
         {
+            //Do this first... As if its null, this wont be fired.
+            ScenePresence SP;
+            TryGetScenePresence(remoteClient.AgentId, out SP);
+            if (SP.SelectedLocalID == primLocalID)
+            {
+                SP.SelectedLocalID = 0;
+                SP.IsSelecting = false;
+            }
+
             SceneObjectPart part = GetSceneObjectPart(primLocalID);
             if (part == null)
                 return;
@@ -437,6 +452,8 @@ namespace OpenSim.Region.Framework.Scenes
         {
             // TODO: don't create new blocks if recycling an old packet
             ViewerEffectPacket.EffectBlock[] effectBlockArray = new ViewerEffectPacket.EffectBlock[args.Count];
+            ScenePresence SP;
+            TryGetScenePresence(remoteClient.AgentId, out SP);
             for (int i = 0; i < args.Count; i++)
             {
                 ViewerEffectPacket.EffectBlock effect = new ViewerEffectPacket.EffectBlock();
@@ -447,6 +464,11 @@ namespace OpenSim.Region.Framework.Scenes
                 effect.Type = args[i].Type;
                 effect.TypeData = args[i].TypeData;
                 effectBlockArray[i] = effect;
+                //Save the color
+                if (effect.Type == 7)
+                {
+                    SP.EffectColor = args[i].Color;
+                }
             }
 
             ForEachClient(

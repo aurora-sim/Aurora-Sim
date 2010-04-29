@@ -261,12 +261,32 @@ namespace OpenSim.Region.Framework.Scenes
 
         ulong m_rootRegionHandle;
 
+        private bool m_IsSelecting = false;
+        private uint m_SelectedLocalID = 0;
+        private byte[] m_EffectColor = new Color4(1, 0.01568628f, 0, 1).GetBytes();
+
         /// <value>
         /// Script engines present in the scene
         /// </value>
         public IScriptModule[] m_scriptEngines;
 
         #region Properties
+
+        public uint SelectedLocalID
+        {
+            set { m_SelectedLocalID = value; }
+            get { return m_SelectedLocalID; }
+        }
+        public byte[] EffectColor
+        {
+            set { m_EffectColor = value; }
+            get { return m_EffectColor; }
+        }
+        public bool IsSelecting
+        {
+            set { m_IsSelecting = value; }
+            get { return m_IsSelecting; }
+        }
 
         /// <summary>
         /// Physical scene representation of this Avatar.
@@ -2331,12 +2351,45 @@ namespace OpenSim.Region.Framework.Scenes
                 if (m_parentID == 0 && m_physicsActor != null || m_parentID != 0) // Check that we have a physics actor or we're sitting on something
                     CheckForBorderCrossing();
                 CheckForSignificantMovement(); // sends update to the modules.
+
+                SendViewerEffects();
             }
         }
 
         #endregion
 
         #region Update Client(s)
+
+        /// <summary>
+        /// This sends the little particles to the client if they are selecting something or such
+        /// </summary>
+        public void SendViewerEffects()
+        {
+            if (!IsSelecting)
+                return;
+            SceneObjectPart SOP = Scene.GetSceneObjectPart(SelectedLocalID);
+            OpenMetaverse.Packets.ViewerEffectPacket.EffectBlock[] effectBlockArray = new OpenMetaverse.Packets.ViewerEffectPacket.EffectBlock[1];
+            
+            OpenMetaverse.Packets.ViewerEffectPacket.EffectBlock effect = new OpenMetaverse.Packets.ViewerEffectPacket.EffectBlock();
+            effect.AgentID = UUID;
+            effect.Color = EffectColor;
+            effect.Duration = 0.9f;
+            effect.ID = UUID.Random(); //This seems to be what is passed by SL when its send from the server
+            effect.Type = 7; //Beam; couldn't find a enum for this
+            byte[] part = new byte[56];
+            UUID.ToBytes(part, 0);
+            SOP.UUID.ToBytes(part, 16);
+            new Vector3d(SOP.AbsolutePosition).ToBytes(part, 32);
+            effect.TypeData = part;
+            effectBlockArray[0] = effect;
+
+            m_scene.ForEachClient(
+                delegate(IClientAPI client)
+                {
+                    client.SendViewerEffect(effectBlockArray);
+                }
+            );
+        }
 
         /// <summary>
         /// Sends a location update to the client connected to this scenePresence
