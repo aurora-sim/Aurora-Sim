@@ -70,6 +70,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     // Something in queue, process
                     QueueItemStruct QIS = ScriptEngine.EventQueue.Dequeue();
 
+                    if (QIS.ID == null)
+                    {
+                        //Readd it... Maybe the script hasn't been started yet?
+                        ScriptEngine.EventQueue.Enqueue(QIS);
+                        m_ScriptEngine.m_ThreadPool.QueueWorkItem(new WorkItemCallback(this.DoProcessQueue), SleepTime);
+                        return 0;
+                    }
                     //Suspended scripts get readded
                     if (QIS.ID.Suspended)
                     {
