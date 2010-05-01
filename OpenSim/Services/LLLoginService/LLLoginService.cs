@@ -157,7 +157,7 @@ namespace OpenSim.Services.LLLoginService
         {
         }
 
-        public LoginResponse Login(string firstName, string lastName, string passwd, string startLocation, IPEndPoint clientIP)
+        public LoginResponse Login(string firstName, string lastName, string passwd, string startLocation, UUID scopeID, IPEndPoint clientIP)
         {
             bool success = false;
             UUID session = UUID.Random();
@@ -167,7 +167,7 @@ namespace OpenSim.Services.LLLoginService
                 //
                 // Get the account and check that it exists
                 //
-                UserAccount account = m_UserAccountService.GetUserAccount(UUID.Zero, firstName, lastName);
+                UserAccount account = m_UserAccountService.GetUserAccount(scopeID, firstName, lastName);
                 if (account == null)
                 {
                     if (!AllowAnonymousLogin)
@@ -269,7 +269,7 @@ namespace OpenSim.Services.LLLoginService
                     // Get the home region
                     if ((presence.HomeRegionID != UUID.Zero) && m_GridService != null)
                     {
-                        home = m_GridService.GetRegionByUUID(account.ScopeID, presence.HomeRegionID);
+                        home = m_GridService.GetRegionByUUID(scopeID, presence.HomeRegionID);
                     }
                 }
 
@@ -280,7 +280,7 @@ namespace OpenSim.Services.LLLoginService
                 Vector3 position = Vector3.Zero;
                 Vector3 lookAt = Vector3.Zero;
                 GridRegion gatekeeper = null;
-                GridRegion destination = FindDestination(account, presence, session, startLocation, out gatekeeper, out where, out position, out lookAt);
+                GridRegion destination = FindDestination(account, scopeID, presence, session, startLocation, out gatekeeper, out where, out position, out lookAt);
                 if (destination == null)
                 {
                     m_PresenceService.LogoutAgent(session, presence.Position, presence.LookAt);
@@ -343,7 +343,7 @@ namespace OpenSim.Services.LLLoginService
             }
         }
 
-        protected GridRegion FindDestination(UserAccount account, PresenceInfo pinfo, UUID sessionID, string startLocation, out GridRegion gatekeeper, out string where, out Vector3 position, out Vector3 lookAt)
+        protected GridRegion FindDestination(UserAccount account, UUID scopeID, PresenceInfo pinfo, UUID sessionID, string startLocation, out GridRegion gatekeeper, out string where, out Vector3 position, out Vector3 lookAt)
         {
             m_log.DebugFormat("[LLOGIN SERVICE]: FindDestination for start location {0}", startLocation);
 
@@ -375,7 +375,7 @@ namespace OpenSim.Services.LLLoginService
                 }
                 else
                 {
-                    region = m_GridService.GetRegionByUUID(account.ScopeID, pinfo.HomeRegionID);
+                    region = m_GridService.GetRegionByUUID(scopeID, pinfo.HomeRegionID);
 
                     if (null == region)
                     {
@@ -389,7 +389,7 @@ namespace OpenSim.Services.LLLoginService
                 
                 if (tryDefaults)
                 {
-                    List<GridRegion> defaults = m_GridService.GetDefaultRegions(account.ScopeID);
+                    List<GridRegion> defaults = m_GridService.GetDefaultRegions(scopeID);
                     if (defaults != null && defaults.Count > 0)
                     {
                         region = defaults[0];
@@ -399,7 +399,7 @@ namespace OpenSim.Services.LLLoginService
                     {
                         m_log.WarnFormat("[LLOGIN SERVICE]: User {0} {1} does not have a valid home and this grid does not have default locations. Attempting to find random region",
                             account.FirstName, account.LastName);
-                        defaults = m_GridService.GetRegionsByName(account.ScopeID, "", 1);
+                        defaults = m_GridService.GetRegionsByName(scopeID, "", 1);
                         if (defaults != null && defaults.Count > 0)
                         {
                             region = defaults[0];
@@ -420,9 +420,9 @@ namespace OpenSim.Services.LLLoginService
 
                 GridRegion region = null;
 
-                if (pinfo.RegionID.Equals(UUID.Zero) || (region = m_GridService.GetRegionByUUID(account.ScopeID, pinfo.RegionID)) == null)
+                if (pinfo.RegionID.Equals(UUID.Zero) || (region = m_GridService.GetRegionByUUID(scopeID, pinfo.RegionID)) == null)
                 {
-                    List<GridRegion> defaults = m_GridService.GetDefaultRegions(account.ScopeID);
+                    List<GridRegion> defaults = m_GridService.GetDefaultRegions(scopeID);
                     if (defaults != null && defaults.Count > 0)
                     {
                         region = defaults[0];
@@ -431,7 +431,7 @@ namespace OpenSim.Services.LLLoginService
                     else
                     {
                         m_log.Info("[LLOGIN SERVICE]: Last Region Not Found Attempting to find random region");
-                        defaults = m_GridService.GetRegionsByName(account.ScopeID, "", 1);
+                        defaults = m_GridService.GetRegionsByName(scopeID, "", 1);
                         if (defaults != null && defaults.Count > 0)
                         {
                             region = defaults[0];
@@ -462,20 +462,20 @@ namespace OpenSim.Services.LLLoginService
                 }
                 else
                 {
-                    position = new Vector3(float.Parse(uriMatch.Groups["x"].Value),
-                                           float.Parse(uriMatch.Groups["y"].Value),
-                                           float.Parse(uriMatch.Groups["z"].Value));
+                    position = new Vector3(float.Parse(uriMatch.Groups["x"].Value, Culture.NumberFormatInfo),
+                                           float.Parse(uriMatch.Groups["y"].Value, Culture.NumberFormatInfo),
+                                           float.Parse(uriMatch.Groups["z"].Value, Culture.NumberFormatInfo));
 
                     string regionName = uriMatch.Groups["region"].ToString();
                     if (regionName != null)
                     {
                         if (!regionName.Contains("@"))
                         {
-                            List<GridRegion> regions = m_GridService.GetRegionsByName(account.ScopeID, regionName, 1);
+                            List<GridRegion> regions = m_GridService.GetRegionsByName(scopeID, regionName, 1);
                             if ((regions == null) || (regions != null && regions.Count == 0))
                             {
                                 m_log.InfoFormat("[LLLOGIN SERVICE]: Got Custom Login URI {0}, can't locate region {1}. Trying defaults.", startLocation, regionName);
-                                regions = m_GridService.GetDefaultRegions(UUID.Zero);
+                                regions = m_GridService.GetDefaultRegions(scopeID);
                                 if (regions != null && regions.Count > 0)
                                 {
                                     where = "safe"; 
@@ -518,7 +518,7 @@ namespace OpenSim.Services.LLLoginService
                     }
                     else
                     {
-                        List<GridRegion> defaults = m_GridService.GetDefaultRegions(account.ScopeID);
+                        List<GridRegion> defaults = m_GridService.GetDefaultRegions(scopeID);
                         if (defaults != null && defaults.Count > 0)
                         {
                             where = "safe"; 

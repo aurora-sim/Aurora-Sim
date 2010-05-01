@@ -149,7 +149,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
 
             if (m_FriendsService == null)
             {
-                m_log.Error("[FRIENDS]: No Connector defined in section Friends, or filed to load, cannot continue");
+                m_log.Error("[FRIENDS]: No Connector defined in section Friends, or failed to load, cannot continue");
                 throw new Exception("Connector load error");
             }
 
@@ -365,6 +365,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
         List<UUID> GetOnlineFriends(UUID userID)
         {
             List<string> friendList = new List<string>();
+            List<UUID> online = new List<UUID>();
 
             foreach (FriendInfo fi in m_Friends[userID].Friends)
             {
@@ -372,9 +373,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
                     friendList.Add(fi.Friend);
             }
 
-            PresenceInfo[] presence = PresenceService.GetAgents(friendList.ToArray());
+            if (friendList.Count == 0)
+                // no friends whatsoever
+                return online;
 
-            List<UUID> online = new List<UUID>();
+            PresenceInfo[] presence = PresenceService.GetAgents(friendList.ToArray());
 
             foreach (PresenceInfo pi in presence)
             {
