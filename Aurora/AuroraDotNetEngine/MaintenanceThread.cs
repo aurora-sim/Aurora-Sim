@@ -52,58 +52,60 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             m_ScriptEngine = Engine;
             for (int i = 0; i <= Engine.NumberOfEventQueueThreads; i++)
             {
-                EventQueue eqtc = new EventQueue(m_ScriptEngine);
-                Engine.m_ThreadPool.QueueWorkItem(new WorkItemCallback(eqtc.DoProcessQueue), Engine.SleepTime);
+                EventQueue eqtc = new EventQueue(m_ScriptEngine, Engine.SleepTime);
+                Watchdog.StartThread(eqtc.DoProcessQueue, "EventQueueThread", ThreadPriority.Normal, true);
             }
             for (int i = 0; i <= Engine.NumberOfStateSavingThreads; i++)
             {
-                Engine.m_ThreadPool.QueueWorkItem(new WorkItemCallback(this.StateSavingMaintenance), Engine.SleepTime);
+                Watchdog.StartThread(StateSavingMaintenance, "StateSavingMaintenance", ThreadPriority.Normal, true);
             }
             for (int i = 0; i <= Engine.NumberOfStartStopThreads; i++)
             {
-                Engine.m_ThreadPool.QueueWorkItem(new WorkItemCallback(this.StartEndScriptMaintenance), Engine.SleepTime);
+                Watchdog.StartThread(StartEndScriptMaintenance, "StartEndScriptMaintenance", ThreadPriority.Normal, true);
             }
         }
 
         #region " Maintenance thread "
 
-        public object StartEndScriptMaintenance(object sleepTime)
+        public void StartEndScriptMaintenance()
         {
-            try
+            while (true)
             {
-                Thread.Sleep((int)sleepTime); // Sleep before next pass
-
-                // LOAD / UNLOAD SCRIPTS
-                DoScriptsLoadUnload();
-                lock (Resumeable)
+                try
                 {
-                    for (int i = 0; i < Resumeable.Count; i++)
+                    Thread.Sleep(m_ScriptEngine.SleepTime); // Sleep before next pass
+
+                    // LOAD / UNLOAD SCRIPTS
+                    DoScriptsLoadUnload();
+                    lock (Resumeable)
                     {
-                        m_ScriptEngine.ResumeScript(Resumeable[i]);
+                        for (int i = 0; i < Resumeable.Count; i++)
+                        {
+                            m_ScriptEngine.ResumeScript(Resumeable[i]);
+                        }
                     }
                 }
+                catch (Exception ex)
+                {
+                    m_log.ErrorFormat("Exception in StartEndScriptMaintenance. Exception: {0}", ex.ToString());
+                }
             }
-            catch (Exception ex)
-            {
-                m_log.ErrorFormat("Exception in StartEndScriptMaintenance. Exception: {0}", ex.ToString());
-            }
-            m_ScriptEngine.m_ThreadPool.QueueWorkItem(new WorkItemCallback(this.StartEndScriptMaintenance), sleepTime);
-            return 0;
         }
 
-        public object StateSavingMaintenance(object sleepTime)
+        public void StateSavingMaintenance()
         {
-            try
+            while (true)
             {
-                Thread.Sleep((int)sleepTime); // Sleep before next pass
-                DoStateQueue();
+                try
+                {
+                    Thread.Sleep(m_ScriptEngine.SleepTime); // Sleep before next pass
+                    DoStateQueue();
+                }
+                catch (Exception ex)
+                {
+                    m_log.ErrorFormat("Exception in StateSavingMaintenance. Exception: {0}", ex.ToString());
+                }
             }
-            catch (Exception ex)
-            {
-                m_log.ErrorFormat("Exception in StateSavingMaintenance. Exception: {0}", ex.ToString());
-            }
-            m_ScriptEngine.m_ThreadPool.QueueWorkItem(new WorkItemCallback(this.StateSavingMaintenance), sleepTime);
-            return 0;
         }
 
         #endregion
@@ -112,16 +114,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public void DoStateQueue()
         {
-            lock (m_ScriptEngine.StateQueue)
+            if (m_ScriptEngine.StateQueue.Count != 0)
             {
-                if (m_ScriptEngine.StateQueue.Count != 0)
-                {
-                    StateQueueItem item = m_ScriptEngine.StateQueue.Dequeue();
-                    if (item.Create)
-                        item.ID.SerializeDatabase();
-                    else
-                        RemoveState(item.ID);
-                }
+                StateQueueItem item = null;
+                m_ScriptEngine.StateQueue.Dequeue(out item);
+                if (item == null)
+                    return;
+                if (item.Create)
+                    item.ID.SerializeDatabase();
+                else
+                    RemoveState(item.ID);
             }
         }
 
@@ -160,42 +162,37 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// </summary>
         public void DoScriptsLoadUnload()
         {
-            lock (m_ScriptEngine.LUQueue)
+            if (m_ScriptEngine.LUQueue.Count == 0)
+                return;
+
+            LUStruct item;
+            m_ScriptEngine.LUQueue.Dequeue(out item);
+            if (item == null)
+                return;
+
+            if (item.Action == LUType.Unload)
             {
-                if (m_ScriptEngine.LUQueue.Count == 0)
-                    return;
-
-                bool successfullyLoaded = true;
-                LUStruct item = m_ScriptEngine.LUQueue.Dequeue();
-
-                if (item.Action == LUType.Unload)
+                try
                 {
-                    try
-                    {
-                        //Never fire events for an unload.
-                        successfullyLoaded = false;
-                        item.ID.CloseAndDispose();
-                    }
-                    catch (Exception ex) { m_log.Warn(ex); }
+                    item.ID.CloseAndDispose();
                 }
-                else if (item.Action == LUType.Load)
+                catch (Exception ex) { m_log.Warn(ex); }
+            }
+            else if (item.Action == LUType.Load)
+            {
+                try
                 {
-                    try
-                    {
-                        item.ID.Start(false);
-                    }
-                    catch (Exception ex) { /*m_log.Warn(ex);*/ successfullyLoaded = false; }
+                    item.ID.Start(false);
                 }
-                else if (item.Action == LUType.Reupload)
+                catch (Exception ex) { /*m_log.Warn(ex);*/ }
+            }
+            else if (item.Action == LUType.Reupload)
+            {
+                try
                 {
-                    try
-                    {
-                        item.ID.Start(true);
-                    }
-                    catch (Exception ex) { /*m_log.Warn(ex);*/ successfullyLoaded = false; }
+                    item.ID.Start(true);
                 }
-                if(successfullyLoaded)
-                    item.ID.FireEvents();
+                catch (Exception ex) { /*m_log.Warn(ex);*/ }
             }
         }
 

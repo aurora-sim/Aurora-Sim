@@ -73,7 +73,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public Compiler LSLCompiler;
 
         //Queue that handles the loading and unloading of scripts
-        public Queue<LUStruct> LUQueue = new Queue<LUStruct>();
+        public OpenSim.Framework.LocklessQueue<LUStruct> LUQueue = new OpenSim.Framework.LocklessQueue<LUStruct>();
 
         public static MaintenanceThread m_MaintenanceThread;
 
@@ -110,17 +110,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <summary>
         /// Removes the script from the event queue so it does not fire anymore events.
         /// </summary>
-        public List<UUID> NeedsRemoved = new List<UUID>();
+        public Dictionary<UUID, uint> NeedsRemoved = new Dictionary<UUID, uint>();
 
         /// <summary>
         /// Queue containing events waiting to be executed.
         /// </summary>
-        public static Queue<QueueItemStruct> EventQueue = new Queue<QueueItemStruct>();
+        public static OpenSim.Framework.LocklessQueue<QueueItemStruct> EventQueue = new OpenSim.Framework.LocklessQueue<QueueItemStruct>();
 
         /// <summary>
         /// Queue containing scripts that need to have states saved or deleted.
         /// </summary>
-        public Queue<StateQueueItem> StateQueue = new Queue<StateQueueItem>();
+        public OpenSim.Framework.LocklessQueue<StateQueueItem> StateQueue = new OpenSim.Framework.LocklessQueue<StateQueueItem>();
         
         /// <summary>
         /// Maximum events in the event queue at any one time
@@ -310,6 +310,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 {
                     try
                     {
+                        ScriptProtection.RemovePreviouslyCompiled(ID.Source);
                         m_MaintenanceThread.RemoveState(ID);
                         ID.Start(false);
                     }
@@ -377,6 +378,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 {
                     try
                     {
+                        ScriptProtection.RemovePreviouslyCompiled(ID.Source);
                         ID.CloseAndDispose();
                     }
                     catch (Exception)
@@ -879,6 +881,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 QIS.functionName = FunctionName;
                 QIS.llDetectParams = qParams;
                 QIS.param = param;
+                if (ID == null)
+                    return false;
                 QIS.LineMap = ID.LineMap;
                 if (World.PipeEventsForScript(
                     QIS.ID.localID))
@@ -894,10 +898,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// Prepares to remove the script from the event queue.
         /// </summary>
         /// <param name="itemID"></param>
-        public void RemoveFromEventQueue(UUID itemID)
+        public void RemoveFromEventQueue(UUID itemID, uint localID)
         {
-            if (!NeedsRemoved.Contains(itemID))
-                NeedsRemoved.Add(itemID);
+            if (!NeedsRemoved.ContainsKey(itemID))
+                NeedsRemoved.Add(itemID, localID);
         }
 
         /// <summary>
@@ -1012,16 +1016,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     id.Disabled = false;
                     ScriptProtection.RemovePreviouslyCompiled(id.Source);
                     id.Source = script;
-                    bool successfullyCompiled = true;
                     try
                     {
                         id.Start(true);
                     }
-                    catch (Exception) { successfullyCompiled = false; }
-                    if (id == null)
-                        return;
-                    if(successfullyCompiled)
-                        id.FireEvents();
+                    catch (Exception) { }
                 }
             }
             else
@@ -1043,10 +1042,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     id.Disabled = false;
                     id.Source = script;
                     id.PostOnRez = postOnRez;
-                    LUStruct ls = new LUStruct();
-                    ls.Action = LUType.Load;
-                    ls.ID = id;
-                    LUQueue.Enqueue(ls);
+                    try
+                    {
+                        id.Start(true);
+                    }
+                    catch (Exception) { }
                 }
             }
         }
@@ -1065,7 +1065,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             ScriptProtection.RemovePreviouslyCompiled(data.Source);      
             ls.ID = data;
             ls.Action = LUType.Unload;
-            RemoveFromEventQueue(itemID);
+            RemoveFromEventQueue(itemID, localID);
             lock (LUQueue)
             {
                 LUQueue.Enqueue(ls);
@@ -1121,6 +1121,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <param name="id"></param>
         public void RemoveScript(ScriptData id)
         {
+            ScriptProtection.RemovePreviouslyCompiled(id.Source);
             ScriptProtection.RemoveScript(id);
         }
     }
@@ -1143,7 +1144,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public bool Create;
     }
     // Load/Unload structure
-    public struct LUStruct
+    public class LUStruct
     {
         public ScriptData ID;
         public LUType Action;

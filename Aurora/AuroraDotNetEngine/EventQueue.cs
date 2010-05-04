@@ -50,97 +50,122 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         private ScriptEngine m_ScriptEngine;
 
-        public EventQueue(ScriptEngine engine)
+        private int SleepTime;
+
+        public EventQueue(ScriptEngine engine, int sleep)
         {
         	m_ScriptEngine = engine;
+            SleepTime = sleep;
         }
 
-        public object DoProcessQueue(object SleepTime)
+        public void DoProcessQueue()
         {
-            Thread.Sleep((int)SleepTime);
-            try
-        	{
-                lock (ScriptEngine.EventQueue)
+            while (true)
+            {
+                Thread.Sleep(SleepTime);
+                try
                 {
                     if (ScriptEngine.EventQueue.Count == 0)
                     {
-                        m_ScriptEngine.m_ThreadPool.QueueWorkItem(new WorkItemCallback(this.DoProcessQueue), SleepTime);
-                        return 0;
+                        continue;
                     }
                     // Something in queue, process
-                    QueueItemStruct QIS = ScriptEngine.EventQueue.Dequeue();
+                    QueueItemStruct QIS = null;
+                    ScriptEngine.EventQueue.Dequeue(out QIS);
+                    if (QIS == null)
+                        continue;
 
                     if (QIS.ID == null)
                     {
                         //Readd it... Maybe the script hasn't been started yet?
                         ScriptEngine.EventQueue.Enqueue(QIS);
-                        m_ScriptEngine.m_ThreadPool.QueueWorkItem(new WorkItemCallback(this.DoProcessQueue), SleepTime);
-                        return 0;
+                        continue;
                     }
                     //Suspended scripts get readded
                     if (QIS.ID.Suspended)
                     {
                         ScriptEngine.EventQueue.Enqueue(QIS);
-                        m_ScriptEngine.m_ThreadPool.QueueWorkItem(new WorkItemCallback(this.DoProcessQueue), SleepTime);
-                        return 0;
+                        continue;
                     }
                     //Disabled or not running scripts dont get events saved.
                     if (QIS.ID.Disabled)
                     {
-                        m_ScriptEngine.m_ThreadPool.QueueWorkItem(new WorkItemCallback(this.DoProcessQueue), SleepTime);
-                        return 0;
+                        continue;
                     }
                     if (!QIS.ID.Running)
                     {
-                        m_ScriptEngine.m_ThreadPool.QueueWorkItem(new WorkItemCallback(this.DoProcessQueue), SleepTime);
-                        return 0;
+                        continue;
                     }
 
                     //Clear scripts that shouldn't be in the queue anymore
-                    if (!m_ScriptEngine.NeedsRemoved.Contains(QIS.ID.ItemID))
+                    if (m_ScriptEngine.NeedsRemoved.ContainsKey(QIS.ID.ItemID))
                     {
-                        try
+                        //Check the localID too...
+                        uint localID = 0;
+                        m_ScriptEngine.NeedsRemoved.TryGetValue(QIS.ID.ItemID, out localID);
+                        if (localID == QIS.ID.localID)
                         {
-                            QIS.ID.SetEventParams(QIS.llDetectParams);
-                            int Running = 0;
-                            Running = QIS.ID.Script.ExecuteEvent(
-                                QIS.ID.State,
-                                QIS.functionName,
-                                QIS.param, QIS.CurrentlyAt);
-                            //Finished with nothing left.
-                            if (Running == 0)
-                            {
-                                m_ScriptEngine.m_ThreadPool.QueueWorkItem(new WorkItemCallback(this.DoProcessQueue), SleepTime);
-                                return 0;
-                            }
-                            //Did not finish and returned where it should start now
-                            if (Running != 0 && !m_ScriptEngine.NeedsRemoved.Contains(QIS.ID.ItemID))
-                            {
-                                QIS.CurrentlyAt = Running;
-                                ScriptEngine.EventQueue.Enqueue(QIS);
-                            }
+                            continue;
                         }
-                        catch (SelfDeleteException) // Must delete SOG
+                        else
                         {
-                            if (QIS.ID.part != null && QIS.ID.part.ParentGroup != null)
-                                m_ScriptEngine.World.DeleteSceneObject(
-                                    QIS.ID.part.ParentGroup, false);
+                            //Remove it then.
+                            m_ScriptEngine.NeedsRemoved.Remove(QIS.ID.ItemID);
                         }
-                        catch (ScriptDeleteException) // Must delete item
-                        {
-                            if (QIS.ID.part != null && QIS.ID.part.ParentGroup != null)
-                                QIS.ID.part.Inventory.RemoveInventoryItem(QIS.ID.ItemID);
-                        }
-                        catch (Exception) { }
                     }
+                    try
+                    {
+                        QIS.ID.SetEventParams(QIS.llDetectParams);
+                        int Running = 0;
+                        Running = QIS.ID.Script.ExecuteEvent(
+                            QIS.ID.State,
+                            QIS.functionName,
+                            QIS.param, QIS.CurrentlyAt);
+                        //Finished with nothing left.
+                        if (Running == 0)
+                        {
+                            continue;
+                        }
+                        //Did not finish and returned where it should start now
+                        if (Running != 0)
+                        {
+                            if (m_ScriptEngine.NeedsRemoved.ContainsKey(QIS.ID.ItemID))
+                            {
+                                //Check the localID too...
+                                uint localID = 0;
+                                m_ScriptEngine.NeedsRemoved.TryGetValue(QIS.ID.ItemID, out localID);
+                                if (localID == QIS.ID.localID)
+                                {
+                                    continue;
+                                }
+                                else
+                                {
+                                    //Remove it then.
+                                    m_ScriptEngine.NeedsRemoved.Remove(QIS.ID.ItemID);
+                                }
+                            }
+                            QIS.CurrentlyAt = Running;
+                            ScriptEngine.EventQueue.Enqueue(QIS);
+                        }
+                    }
+                    catch (SelfDeleteException) // Must delete SOG
+                    {
+                        if (QIS.ID.part != null && QIS.ID.part.ParentGroup != null)
+                            m_ScriptEngine.World.DeleteSceneObject(
+                                QIS.ID.part.ParentGroup, false);
+                    }
+                    catch (ScriptDeleteException) // Must delete item
+                    {
+                        if (QIS.ID.part != null && QIS.ID.part.ParentGroup != null)
+                            QIS.ID.part.Inventory.RemoveInventoryItem(QIS.ID.ItemID);
+                    }
+                    catch (Exception) { }
                 }
-        	}
-        	catch (Exception ex)
-        	{
-                m_log.WarnFormat("[{0}]: Handled exception stage 2 in the Event Queue: " + ex.Message, m_ScriptEngine.ScriptEngineName);
-        	}
-            m_ScriptEngine.m_ThreadPool.QueueWorkItem(new WorkItemCallback(this.DoProcessQueue), SleepTime);
-            return 0;
+                catch (Exception ex)
+                {
+                    m_log.WarnFormat("[{0}]: Handled exception stage 2 in the Event Queue: " + ex.Message, m_ScriptEngine.ScriptEngineName);
+                }
+            }
         }
     }
 }

@@ -126,7 +126,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <returns></returns>
         public void CloseAndDispose()
         {
-            if (Script == null || AppDomain == null)
+            if (Script != null)
             {
                 //Save the state
                 //Must be called directly or it wont be processed in time
@@ -142,8 +142,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //These are fine to set as the state wont be saved again
             Running = false;
             Disabled = true;
-            
-            m_ScriptEngine.RemoveFromEventQueue(ItemID);
+
+            m_ScriptEngine.RemoveFromEventQueue(ItemID, localID);
             if (m_ScriptEngine.Errors.ContainsKey(ItemID))
                 m_ScriptEngine.Errors.Remove(ItemID);
             
@@ -169,7 +169,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             part.ParentGroup.ScheduleGroupForFullUpdate();
             */
             #endregion
-            if (Script == null || AppDomain == null)
+            if (Script != null)
             {
                 // Stop long command on script
                 AsyncCommandManager.RemoveScript(m_ScriptEngine, localID, ItemID);
@@ -177,8 +177,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 {
                     // Remove from internal structure
                     m_ScriptEngine.RemoveScript(this);
-
-                    m_log.DebugFormat("[{0}]: Closed Script in " + part.Name, m_ScriptEngine.ScriptEngineName);
 
                     if (AppDomain == null)
                         return;
@@ -196,6 +194,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: Exception stopping script localID: " + localID + " LLUID: " + ItemID.ToString() + ": " + e.ToString());
                 }
             }
+            m_log.DebugFormat("[{0}]: Closed Script {1} in " + part.Name, m_ScriptEngine.ScriptEngineName, InventoryItem.Name);
         }
 
         /// <summary>
@@ -238,7 +237,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //Must be posted immediately, otherwise the next line will delete it.
             m_ScriptEngine.m_EventManager.state_exit(localID);
             //Remove items from the queue.
-            m_ScriptEngine.RemoveFromEventQueue(ItemID);
+            m_ScriptEngine.RemoveFromEventQueue(ItemID, localID);
             //Reset the state to default
             State = "default";
             //Tell the SOP about the change.
@@ -247,6 +246,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //Reset all variables back to their original values.
             Script.ResetVars();
             //Fire state_entry
+            if (m_ScriptEngine.NeedsRemoved.ContainsKey(ItemID))
+                m_ScriptEngine.NeedsRemoved.Remove(ItemID);
             m_ScriptEngine.AddToScriptQueue(this, "state_entry", new DetectParams[0], new object[] { });
             m_log.InfoFormat("[{0}]: Reset Script {1}", m_ScriptEngine.ScriptEngineName, ItemID);
         }
@@ -347,7 +348,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public void Start(bool reupload)
         {
             //Clear out the removing of events for this script.
-            if (m_ScriptEngine.NeedsRemoved.Contains(ItemID))
+            if (m_ScriptEngine.NeedsRemoved.ContainsKey(ItemID))
                 m_ScriptEngine.NeedsRemoved.Remove(ItemID);
 
             Compiling = true;
@@ -480,31 +481,20 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             //Try to find a previously compiled script in this instance
             ScriptData PreviouslyCompiledID = (ScriptData)m_ScriptEngine.ScriptProtection.TryGetPreviouslyCompiledScript(Source);
-            
-            if (GenericData.Query("ItemID", ItemID.ToString(), "auroraDotNetStateSaves", "*").Count > 1 && Loading)
+
+            if (!reupload && GenericData.Query("ItemID", ItemID.ToString(), "auroraDotNetStateSaves", "*").Count > 1 && Loading)
             {
                 //Retrive the needed parts for a compileless start from the state save.
                 FindRequiredForCompileless();
-                //If the previous compile is there, retrive that and don't load the app domain.
-                if (PreviouslyCompiledID != null)
-                {
-                    ClassID = PreviouslyCompiledID.ClassID;
-                    AppDomain = PreviouslyCompiledID.AppDomain;
-                    Script = PreviouslyCompiledID.Script;
-                    NeedsToCreateNewAppDomain = false;
-                }
             }
             else
             {
-                //If the previous compile is there, retrive that and don't load the app domain.
+                //If the previous compile is there, retrive that
                 if (PreviouslyCompiledID != null)
                 {
                     ClassID = PreviouslyCompiledID.ClassID;
                     LineMap = PreviouslyCompiledID.LineMap;
                     AssemblyName = PreviouslyCompiledID.AssemblyName;
-                    AppDomain = PreviouslyCompiledID.AppDomain;
-                    Script = PreviouslyCompiledID.Script;
-                    NeedsToCreateNewAppDomain = false;
                 }
                 //Otherwise, compile the script.
                 else
@@ -580,7 +570,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             SetApis();
 
             //Now do the full state save finding now that we have an app domain.
-            if (GenericData.Query("ItemID", ItemID.ToString(), "auroraDotNetStateSaves", "*").Count > 1 && Loading)
+            if (!reupload && GenericData.Query("ItemID", ItemID.ToString(), "auroraDotNetStateSaves", "*").Count > 1 && Loading)
             {
                 DeserializeDatabase();
 
@@ -607,6 +597,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //Set the event flags
             int eventFlags = Script.GetStateEventFlags(State);
             part.SetScriptEvents(ItemID, eventFlags);
+
+            FireEvents();
 
             //All done, compiled successfully
             Compiling = false;
@@ -850,7 +842,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             
             Insert.Add(Running.ToString());
             //Vars
-            Dictionary<string, Object> vars = Script.GetVars();
+            Dictionary<string, Object> vars = new Dictionary<string,object>();
+            if (Script != null)
+                vars = Script.GetVars();
             string varsmap = "";
             foreach (KeyValuePair<string, Object> var in vars)
             {
@@ -871,13 +865,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             XmlNode mainNode = xmldoc.CreateElement("", "Item", "");
             XmlElement queue = xmldoc.CreateElement("", "Queue", "");
 
-            QueueItemStruct[] tempQueue = new QueueItemStruct[ScriptEngine.EventQueue.Count];
-            ScriptEngine.EventQueue.CopyTo(tempQueue, 0);
-            int count = tempQueue.Length;
+            OpenSim.Framework.LocklessQueue<QueueItemStruct> tempQueue = new OpenSim.Framework.LocklessQueue<QueueItemStruct>();
+            tempQueue = ScriptEngine.EventQueue;
+            int count = tempQueue.Count;
             int i = 0;
             while (i < count)
             {
-                QueueItemStruct QIS = tempQueue[i];
+                QueueItemStruct QIS = null;
+                tempQueue.Dequeue(out QIS);
+                if(QIS == null)
+                    continue;
                 if (QIS.ID.ItemID == ItemID)
                 {
                     EventParams ep = new EventParams(QIS.functionName, QIS.param, QIS.llDetectParams);
