@@ -4596,6 +4596,7 @@ namespace OpenSim.Region.Framework.Scenes
                     foreach (SceneObjectPart child in partList)
                     {
                         child.Inventory.ChangeInventoryOwner(remoteClient.AgentId);
+                        child.TriggerScriptChangedEvent(Changed.OWNER);
                         child.ApplyNextOwnerPermissions();
                     }
                 }
@@ -4605,6 +4606,8 @@ namespace OpenSim.Region.Framework.Scenes
 
                 group.HasGroupChanged = true;
                 part.GetProperties(remoteClient);
+                part.TriggerScriptChangedEvent(Changed.OWNER);
+                group.ResumeScripts();
                 part.ScheduleFullUpdate();
 
                 break;
