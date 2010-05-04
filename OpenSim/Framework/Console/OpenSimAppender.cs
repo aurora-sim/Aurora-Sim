@@ -36,9 +36,9 @@ namespace OpenSim.Framework.Console
     /// </summary>
     public class OpenSimAppender : AnsiColorTerminalAppender
     {
-        private ConsoleBase m_console = null;
+        private ICommandConsole m_console = null;
 
-        public ConsoleBase Console
+        public ICommandConsole Console
         {
             get { return m_console; }
             set { m_console = value; }

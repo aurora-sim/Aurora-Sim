@@ -35,98 +35,19 @@ using log4net;
 
 namespace OpenSim.Framework.Console
 {
-    public class ConsoleBase
+    public interface ICommandConsole
     {
-//        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
-        protected string prompt = "# ";
-
-        public object ConsoleScene = null;
-
-        /// <summary>
-        /// The default prompt text.
-        /// </summary>
-        public string DefaultPrompt
-        {
-            set { m_defaultPrompt = value; }
-            get { return m_defaultPrompt; }
-        }
-        protected string m_defaultPrompt;
-
-        public ConsoleBase(string defaultPrompt)
-        {
-            DefaultPrompt = defaultPrompt;
-        }
-
-        public virtual void LockOutput()
-        {
-        }
-
-        public virtual void UnlockOutput()
-        {
-        }
-
-        public virtual void Output(string text, string level)
-        {
-            Output(text);
-        }
-
-        public virtual void Output(string text)
-        {
-            System.Console.WriteLine(text);
-        }
-
-        public string CmdPrompt(string p)
-        {
-            return ReadLine(String.Format("{0}: ", p), false, true);
-        }
-
-        public string CmdPrompt(string p, string def)
-        {
-            string ret = ReadLine(String.Format("{0} [{1}]: ", p, def), false, true);
-            if (ret == String.Empty)
-                ret = def;
-
-            return ret;
-        }
-
-        // Displays a command prompt and returns a default value, user may only enter 1 of 2 options
-        public string CmdPrompt(string prompt, string defaultresponse, List<string> options)
-        {
-            bool itisdone = false;
-            string optstr = String.Empty;
-            foreach (string s in options)
-                optstr += " " + s;
-
-            string temp = CmdPrompt(prompt, defaultresponse);
-            while (itisdone == false)
-            {
-                if (options.Contains(temp))
-                {
-                    itisdone = true;
-                }
-                else
-                {
-                    System.Console.WriteLine("Valid options are" + optstr);
-                    temp = CmdPrompt(prompt, defaultresponse);
-                }
-            }
-            return temp;
-        }
-
-        // Displays a prompt and waits for the user to enter a string, then returns that string
-        // (Done with no echo and suitable for passwords)
-        public string PasswdPrompt(string p)
-        {
-            return ReadLine(p, false, false);
-        }
-
-        public virtual string ReadLine(string p, bool isCommand, bool e)
-        {
-            System.Console.Write("{0}", p);
-            string cmdinput = System.Console.ReadLine();
-
-            return cmdinput;
-        }
+        void Initialise(string defaultPrompt);
+        string Name { get; }
+        string DefaultPrompt { get; set; }
+        void LockOutput();
+        void UnlockOutput();
+        void Output(string text, string level);
+        void Output(string text);
+        string CmdPrompt(string p);
+        string CmdPrompt(string p, string def);
+        string CmdPrompt(string prompt, string defaultresponse, List<string> options);
+        string PasswdPrompt(string p);
+        string ReadLine(string p, bool isCommand, bool e);
     }
 }

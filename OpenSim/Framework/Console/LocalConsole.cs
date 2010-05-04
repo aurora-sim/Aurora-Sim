@@ -74,8 +74,9 @@ namespace OpenSim.Framework.Console
             return Colors[(Math.Abs(input.ToUpper().GetHashCode()) % Colors.Length)];
         }
 
-        public LocalConsole(string defaultPrompt) : base(defaultPrompt)
+        public override string Name
         {
+            get { return "LocalConsole"; }
         }
 
         private void AddToHistory(string text)
@@ -182,6 +183,8 @@ namespace OpenSim.Framework.Console
 
             return left;
         }
+
+        protected string prompt = "# ";
 
         private void Show()
         {

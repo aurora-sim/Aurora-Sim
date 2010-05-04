@@ -8,6 +8,7 @@ namespace Aurora.Framework
 {
     public static class AuroraModuleLoader
     {
+        static bool firstLoad = true;
         /// <summary>
         /// Gets all modules found in the given directory. 
         /// Identifier is the name of the interface.
@@ -16,14 +17,40 @@ namespace Aurora.Framework
         /// <param name="moduleDir"></param>
         /// <param name="identifier"></param>
         /// <returns></returns>
+        
         public static List<T> PickupModules<T>(string moduleDir, string identifier)
         {
-            DirectoryInfo dir = new DirectoryInfo(moduleDir);
             List<T> modules = new List<T>();
-
-            foreach (FileInfo fileInfo in dir.GetFiles("*.dll"))
+            if (firstLoad)
             {
-                modules.AddRange(LoadRegionModules<T>(fileInfo.FullName, identifier));
+                DirectoryInfo dir = new DirectoryInfo(moduleDir);
+                firstLoad = false;
+                foreach (FileInfo fileInfo in dir.GetFiles("*.dll"))
+                {
+                    modules.AddRange(LoadRegionModules<T>(fileInfo.FullName, identifier));
+                }
+            }
+            else
+            {
+                try
+                {
+                    foreach (Type pluginType in LoadedDlls)
+                    {
+                        if (pluginType.IsPublic)
+                        {
+                            if (!pluginType.IsAbstract)
+                            {
+                                if (pluginType.GetInterface(identifier) != null)
+                                {
+                                    modules.Add((T)Activator.CreateInstance(pluginType));
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                }
             }
             return modules;
         }
@@ -41,6 +68,7 @@ namespace Aurora.Framework
             }
             return initializedModules;
         }
+        private static List<Type> LoadedDlls = new List<Type>();
         private static Dictionary<string, Assembly> LoadedAssemblys = new Dictionary<string, Assembly>();
         private static T[] LoadModules<T>(string dllName, string identifier)
         {
@@ -65,11 +93,13 @@ namespace Aurora.Framework
                 {
                     foreach (Type pluginType in pluginAssembly.GetTypes())
                     {
-                        if (pluginType.IsPublic)
+                        if (!LoadedDlls.Contains(pluginType))
+                            LoadedDlls.Add(pluginType);
+                        if (pluginType.GetInterface(identifier) != null)
                         {
-                            if (!pluginType.IsAbstract)
+                            if (pluginType.IsPublic)
                             {
-                                if (pluginType.GetInterface(identifier) != null)
+                                if (!pluginType.IsAbstract)
                                 {
                                     modules.Add((T)Activator.CreateInstance(pluginType));
                                 }

@@ -62,8 +62,9 @@ namespace OpenSim.Framework.Console
         private string m_UserName = String.Empty;
         private string m_Password = String.Empty;
 
-        public RemoteConsole(string defaultPrompt) : base(defaultPrompt)
+        public override string Name
         {
+            get { return "RemoteConsole"; }
         }
 
         public void ReadConfig(IConfigSource config)

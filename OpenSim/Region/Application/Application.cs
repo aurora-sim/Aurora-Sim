@@ -144,15 +144,15 @@ namespace OpenSim
 
             // load Crash directory config
             m_crashDir = configSource.Configs["Startup"].GetString("crash_dir", m_crashDir);
-
-            if (background)
-            {
-                m_sim = new OpenSimBackground(configSource);
-                m_sim.Startup();
-            }
-            else
-            {
-                m_sim = new OpenSim(configSource);
+            //REFACTOR ISSUE: Needs to be changed so this works again
+            //if (background)
+            //{
+            //    m_sim = new OpenSimBackground(configSource);
+            //    m_sim.Startup();
+            //}
+            //else
+            //{
+                m_sim = new OpenSimBase(configSource);
 
                 m_sim.Startup();
 
@@ -168,7 +168,7 @@ namespace OpenSim
                         m_log.ErrorFormat("Command error: {0}", e);
                     }
                 }
-            }
+            //}
         }
 
         private static bool _IsHandlingException = false; // Make sure we don't go recursive on ourself

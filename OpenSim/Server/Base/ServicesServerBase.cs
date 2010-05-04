@@ -154,17 +154,18 @@ namespace OpenSim.Server.Base
 
             if (consoleType == "basic")
             {
-                MainConsole.Instance = new CommandConsole(prompt);
+                MainConsole.Instance = new CommandConsole();
             }
             else if (consoleType == "rest")
             {
-                MainConsole.Instance = new RemoteConsole(prompt);
+                MainConsole.Instance = new RemoteConsole();
                 ((RemoteConsole)MainConsole.Instance).ReadConfig(Config);
             }
             else
             {
-                MainConsole.Instance = new LocalConsole(prompt);
+                MainConsole.Instance = new LocalConsole();
             }
+            MainConsole.Instance.Initialise(prompt);
 
             // Configure the appenders for log4net
             //

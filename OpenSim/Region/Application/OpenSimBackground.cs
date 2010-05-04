@@ -35,7 +35,7 @@ namespace OpenSim
     /// <summary>
     /// Consoleless OpenSimulator region server
     /// </summary>
-    public class OpenSimBackground : OpenSim
+    public class OpenSimBackground : OpenSimBase
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -50,8 +50,6 @@ namespace OpenSim
         /// </summary>
         public override void Startup()
         {
-            m_gui = false;
-
             base.Startup();
 
             m_log.InfoFormat("[OPENSIM MAIN]: Startup complete, serving {0} region{1}",
