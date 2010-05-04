@@ -5624,7 +5624,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                 return query[0];
             }
             else
-                return "";
+                return "en-us";
         }
 
         public void llAdjustSoundVolume(double volume)

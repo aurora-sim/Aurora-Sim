@@ -299,5 +299,15 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Inventory
         #endregion
 
 
+
+        #region IInventoryService Members
+
+
+        public bool LinkItem(IClientAPI client, UUID oldItemID, UUID parentID, uint Callback)
+        {
+            return false;
+        }
+
+        #endregion
     }
 }

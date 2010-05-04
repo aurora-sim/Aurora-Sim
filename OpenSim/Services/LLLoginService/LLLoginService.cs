@@ -76,15 +76,18 @@ namespace OpenSim.Services.LLLoginService
         IConfig m_LoginServerConfig;
         IConfigSource m_config;
         IConfig m_AuroraLoginConfig;
-        bool AllowAnonymousLogin;
-        bool AuthenticateUsers;
+        bool AllowAnonymousLogin = false;
+        bool AuthenticateUsers = true;
 
         public LLLoginService(IConfigSource config, ISimulationService simService, ILibraryService libraryService)
         {
             m_config = config;
             m_AuroraLoginConfig = config.Configs["AuroraLoginService"];
-            AllowAnonymousLogin = m_AuroraLoginConfig.GetBoolean("AllowAnonymousLogin");
-            AuthenticateUsers = m_AuroraLoginConfig.GetBoolean("AuthenticateUsers");
+            if (m_AuroraLoginConfig != null)
+            {
+                AllowAnonymousLogin = m_AuroraLoginConfig.GetBoolean("AllowAnonymousLogin");
+                AuthenticateUsers = m_AuroraLoginConfig.GetBoolean("AuthenticateUsers");
+            }
             m_LoginServerConfig = config.Configs["LoginService"];
             if (m_LoginServerConfig == null)
                 throw new Exception(String.Format("No section LoginService in config file"));
@@ -195,22 +198,27 @@ namespace OpenSim.Services.LLLoginService
                 }
 
                 IProfileData data = Aurora.DataManager.DataManager.GetDefaultProfilePlugin();
-                AuroraProfileData profile = data.GetProfileInfo(account.PrincipalID);
-                if (profile == null)
+                //Already tried to find it before this, so its not there at all.
+                AuroraProfileData profile = null;
+                if (data != null)
                 {
-                    CreateUserAuth(account.PrincipalID.ToString(), account.FirstName, account.LastName);
                     profile = data.GetProfileInfo(account.PrincipalID);
-                }
-                if(profile.PermaBanned == 1 || profile.TempBanned == 1)
-                {
-                    m_log.Info("[LLOGIN SERVICE]: Login failed, reason: user is banned.");
-                    return LLFailedLoginResponse.UserProblem;
-                }
+                    if (profile == null)
+                    {
+                        CreateUserAuth(account.PrincipalID.ToString(), account.FirstName, account.LastName);
+                        profile = data.GetProfileInfo(account.PrincipalID);
+                    }
+                    if (profile.PermaBanned == 1 || profile.TempBanned == 1)
+                    {
+                        m_log.Info("[LLOGIN SERVICE]: Login failed, reason: user is banned.");
+                        return LLFailedLoginResponse.UserProblem;
+                    }
 
-                if (account.UserLevel < m_MinLoginLevel)
-                {
-                    m_log.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: login is blocked for user level {0}", account.UserLevel);
-                    return LLFailedLoginResponse.LoginBlockedProblem;
+                    if (account.UserLevel < m_MinLoginLevel)
+                    {
+                        m_log.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: login is blocked for user level {0}", account.UserLevel);
+                        return LLFailedLoginResponse.LoginBlockedProblem;
+                    }
                 }
                 UUID secureSession = UUID.Zero;
                 if (AuthenticateUsers)
@@ -322,12 +330,15 @@ namespace OpenSim.Services.LLLoginService
                 // Finally, fill out the response and return it
                 //
                 string adult = "A";
-                if(profile.Mature == 0)
-                    adult = "P";
-                if(profile.Mature == 1)
-                    adult = "M";
-                if(profile.Mature == 2)
-                    adult = "A";
+                if (profile != null)
+                {
+                    if (profile.Mature == 0)
+                        adult = "P";
+                    if (profile.Mature == 1)
+                        adult = "M";
+                    if (profile.Mature == 2)
+                        adult = "A";
+                }
                 LLLoginResponse response = new LLLoginResponse(account, aCircuit, presence, destination, inventorySkel, friendsList, m_LibraryService,
                     where, startLocation, position, lookAt, m_WelcomeMessage, home, clientIP, "A", adult);
 

@@ -78,8 +78,11 @@ namespace OpenSim.Services.AssetService
                             {
                                 Store(a);
                             });
-                    auroraConfig.Set("AssetLoaderEnabled", false);
-                    auroraConfig.ConfigSource.Save();
+                    if (auroraConfig != null)
+                    {
+                        auroraConfig.Set("AssetLoaderEnabled", false);
+                        auroraConfig.ConfigSource.Save();
+                    }
                 }
                 
                 m_log.Info("[ASSET SERVICE]: Local asset service enabled");

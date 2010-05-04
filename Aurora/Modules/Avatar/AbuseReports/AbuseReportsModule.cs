@@ -160,10 +160,14 @@ namespace Aurora.Modules
         	}
 
             AuroraProfileData reporterProfile = ProfileData.GetProfileInfo(reporter);
-        	string ReporterName = reporterProfile.FirstName + " " + reporterProfile.SurName;
+            string ReporterName = "";
+            string AbuserName = "";
+            if (reporterProfile != null)
+                ReporterName = reporterProfile.FirstName + " " + reporterProfile.SurName;
             AuroraProfileData AbuserProfile = ProfileData.GetProfileInfo(abuserID);
-            string AbuserName = AbuserProfile.FirstName + " " + AbuserProfile.SurName;
-        	summery =summery.Replace("\"","`");
+            if (AbuserProfile != null)
+                AbuserName = AbuserProfile.FirstName + " " + AbuserProfile.SurName;
+            summery = summery.Replace("\"", "`");
         	summery =summery.Replace("|","");
         	summery =summery.Replace(")","");
         	summery =summery.Replace("(","");

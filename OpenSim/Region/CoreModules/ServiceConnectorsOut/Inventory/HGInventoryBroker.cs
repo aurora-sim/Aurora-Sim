@@ -552,7 +552,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Inventory
             return connector;
         }
 
-        public override bool LinkItem(IClientAPI client, UUID oldItemID, UUID parentID, uint Callback)
+        public bool LinkItem(IClientAPI client, UUID oldItemID, UUID parentID, uint Callback)
         {
             return false;
         }

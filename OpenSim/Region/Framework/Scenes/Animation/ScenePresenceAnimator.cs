@@ -162,13 +162,13 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             Vector3 left = Vector3.Transform(Vector3.UnitY, rotMatrix);
 
             // Check control flags
-            bool heldForward = 
+            bool heldForward =
                 (((controlFlags & AgentManager.ControlFlags.AGENT_CONTROL_AT_POS) == AgentManager.ControlFlags.AGENT_CONTROL_AT_POS) || ((controlFlags & AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_AT_POS) == AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_AT_POS));
             bool heldBack = (controlFlags & AgentManager.ControlFlags.AGENT_CONTROL_AT_NEG) == AgentManager.ControlFlags.AGENT_CONTROL_AT_NEG;
             bool heldLeft = (controlFlags & AgentManager.ControlFlags.AGENT_CONTROL_LEFT_POS) == AgentManager.ControlFlags.AGENT_CONTROL_LEFT_POS;
             bool heldRight = (controlFlags & AgentManager.ControlFlags.AGENT_CONTROL_LEFT_NEG) == AgentManager.ControlFlags.AGENT_CONTROL_LEFT_NEG;
-            //bool heldTurnLeft = (controlFlags & AgentManager.ControlFlags.AGENT_CONTROL_TURN_LEFT) == AgentManager.ControlFlags.AGENT_CONTROL_TURN_LEFT;
-            //bool heldTurnRight = (controlFlags & AgentManager.ControlFlags.AGENT_CONTROL_TURN_RIGHT) == AgentManager.ControlFlags.AGENT_CONTROL_TURN_RIGHT;
+            bool heldTurnLeft = (controlFlags & AgentManager.ControlFlags.AGENT_CONTROL_TURN_LEFT) == AgentManager.ControlFlags.AGENT_CONTROL_TURN_LEFT;
+            bool heldTurnRight = (controlFlags & AgentManager.ControlFlags.AGENT_CONTROL_TURN_RIGHT) == AgentManager.ControlFlags.AGENT_CONTROL_TURN_RIGHT;
             bool heldUp = (controlFlags & AgentManager.ControlFlags.AGENT_CONTROL_UP_POS) == AgentManager.ControlFlags.AGENT_CONTROL_UP_POS;
             bool heldDown = (controlFlags & AgentManager.ControlFlags.AGENT_CONTROL_UP_NEG) == AgentManager.ControlFlags.AGENT_CONTROL_UP_NEG;
             //bool flying = (controlFlags & AgentManager.ControlFlags.AGENT_CONTROL_FLY) == AgentManager.ControlFlags.AGENT_CONTROL_FLY;
@@ -182,10 +182,20 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             if (heldRight) { move.X -= left.X; move.Y -= left.Y; }
             if (heldUp) { move.Z += 1; }
             if (heldDown) { move.Z -= 1; }
+            bool jumping = m_animTickJump != 0;
+            float fallVelocity = (actor != null) ? actor.Velocity.Z : 0.0f;
+
+            if (heldTurnLeft && !heldForward && !heldBack && !jumping && actor != null && !actor.Flying && move.Z == 0 && fallVelocity == 0.0f)
+            {
+                return "TURNLEFT";
+            }
+            if (heldTurnRight && !heldForward && !heldBack && !jumping && actor != null && !actor.Flying && move.Z == 0 && fallVelocity == 0.0f)
+            {
+                return "TURNRIGHT";
+            }
 
             // Is the avatar trying to move?
-//            bool moving = (move != Vector3.Zero);
-            bool jumping = m_animTickJump != 0;
+            //            bool moving = (move != Vector3.Zero);
 
             #endregion Inputs
 
@@ -259,8 +269,6 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             if (actor == null || !actor.IsColliding)
             {
                 float fallElapsed = (float)(Environment.TickCount - m_animTickFall) / 1000f;
-                float fallVelocity = (actor != null) ? actor.Velocity.Z : 0.0f;
-
                 if (m_animTickFall == 0 || (fallElapsed > FALL_DELAY && fallVelocity >= 0.0f))
                 {
                     // Just started falling
@@ -278,6 +286,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             #endregion Falling/Floating/Landing
 
             #region Ground Movement
+
             //This needs to be in front of landing, otherwise you get odd landing effects sometimes when one jumps
             // -- Revolution
             if (move.Z > 0f)
@@ -292,22 +301,27 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                 else if (m_animTickJump != 0 && Environment.TickCount - m_animTickJump > PREJUMP_DELAY * 55.0f)
                 {
                     // Start actual jump
-                    if (m_animTickJump == -1)
+                    if (m_animTickJump == -2)
                     {
                         // Already jumping! End the current jump
-                        m_animTickJump = 0;
+                        m_animTickJump = -1;
                         return "JUMP";
                     }
 
-                    m_animTickJump = -1;
+                    m_animTickJump = -2;
                     return "JUMP";
                 }
             }
 
+            if (move.Z < 0f && m_animTickJump != 0)
+            {
+                return "JUMP";
+            }
+            m_animTickJump = 0;
             if (m_movementAnimation == "FALLDOWN")
             {
                 m_animTickFall = Environment.TickCount;
-                
+
                 //This is an experimentally found variable, but it makes soft landings look good.
                 // -- Revolution
                 if (actor.Velocity.Z < SOFTLAND_FORCE)
@@ -327,8 +341,8 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             }
 
             m_animTickFall = 0;
-            
-            if(move.Z <= 0f)
+
+            if (move.Z <= 0f)
             {
                 // Not jumping
                 m_animTickJump = 0;
@@ -352,7 +366,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                         return "STAND";
                 }
             }
-            
+
             #endregion Ground Movement
 
             return m_movementAnimation;

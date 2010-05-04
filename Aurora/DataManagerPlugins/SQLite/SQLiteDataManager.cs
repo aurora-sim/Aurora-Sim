@@ -274,9 +274,11 @@ namespace Aurora.DataManager.SQLite
         {
             string query = "update " + table + " set ";
             int i = 0;
+            Dictionary<string, object> parameters = new Dictionary<string, object>();
             foreach (string value in setValues)
             {
-                query += setRows[i] + " = '" + value + "',";
+                query += "`" + setRows[i] + "` = @" + setRows[i] + " ,";
+                parameters["@" + setRows[i]] = value;
                 i++;
             }
             i = 0;
@@ -284,12 +286,19 @@ namespace Aurora.DataManager.SQLite
             query += " where ";
             foreach (string value in keyValues)
             {
-                query += keyRows[i] + " = '" + value + "' and";
+                query += keyRows[i];
+                query += " = '";
+                query += value;
+                query += "' and";
                 i++;
             }
             query = query.Remove(query.Length - 4);
             var cmd = new SqliteCommand();
             cmd.CommandText = query;
+            foreach (KeyValuePair<string, object> kvp in parameters)
+            {
+                cmd.Parameters.Add(kvp.Key, kvp.Value);
+            }
             ExecuteNonQuery(cmd);
             CloseReaderCommand(cmd);
             return true;

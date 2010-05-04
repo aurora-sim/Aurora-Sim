@@ -1343,6 +1343,10 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (m_allowMovement)
             {
+                // Disallow movement while sitting on the ground, or weird things happen if you try to move in mouselook.
+                // --mirceakitsune (Mantis #0004628)
+                if (SitGround)
+                    return;
                 if (agentData.UseClientAgentPosition)
                 {
                     m_moveToPositionInProgress = (agentData.ClientAgentPosition - AbsolutePosition).Length() > 0.2f;
@@ -2375,6 +2379,9 @@ namespace OpenSim.Region.Framework.Scenes
                 return;
 
             SceneObjectPart SOP = Scene.GetSceneObjectPart(SelectedLocalID);
+            if (SOP == null)
+                return;
+            
             OpenMetaverse.Packets.ViewerEffectPacket.EffectBlock[] effectBlockArray = new OpenMetaverse.Packets.ViewerEffectPacket.EffectBlock[1];
             
             OpenMetaverse.Packets.ViewerEffectPacket.EffectBlock effect = new OpenMetaverse.Packets.ViewerEffectPacket.EffectBlock();

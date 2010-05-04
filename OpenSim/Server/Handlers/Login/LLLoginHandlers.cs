@@ -53,8 +53,11 @@ namespace OpenSim.Server.Handlers.Login
 
         private ILoginService m_LocalService;
 
-        public LLLoginHandlers(ILoginService service)
+        private IConfigSource m_Config;
+
+        public LLLoginHandlers(ILoginService service, IConfigSource config)
         {
+            m_Config = config;
             m_LocalService = service;
         }
 
@@ -86,22 +89,32 @@ namespace OpenSim.Server.Handlers.Login
                     //MAC BANNING START
                     string mac = (string)requestData["mac"];
                     Aurora.Framework.IGenericData GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
-                    string[] found = GD.Query("macAddress",mac,"macban","*").ToArray();
-                    if (found.Length > 0)
+                    if (GD == null)
                     {
-                        m_log.InfoFormat("Mac is in the list");
-                        return new XmlRpcResponse();
+                        Aurora.Framework.IDataService IDS = new Aurora.Services.DataService.LocalDataService();
+                        IDS.Initialise(m_Config);
+                        GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
                     }
-                    //MAC BANNING END
-
-                    //Viewer Ban Start
-                    string[] clientfound = GD.Query("Client", clientVersion, "BannedViewers", "*").ToArray();
-                    if (clientfound.Length > 0)
+                    //We tried... might as well skip it
+                    if (GD != null)
                     {
-                        return new XmlRpcResponse();
-                    }
+                        string[] found = GD.Query("macAddress", mac, "macban", "*").ToArray();
+                        if (found.Length > 0)
+                        {
+                            m_log.InfoFormat("Mac is in the list");
+                            return new XmlRpcResponse();
+                        }
+                        //MAC BANNING END
 
-                    //Viewer ban end
+                        //Viewer Ban Start
+                        string[] clientfound = GD.Query("Client", clientVersion, "BannedViewers", "*").ToArray();
+                        if (clientfound.Length > 0)
+                        {
+                            return new XmlRpcResponse();
+                        }
+
+                        //Viewer ban end
+                    }
 
                     m_log.InfoFormat("[LOGIN]: XMLRPC Login Requested for {0} {1}, starting in {2}, using {3}", first, last, startLocation, clientVersion);
 
