@@ -1263,7 +1263,9 @@ namespace OpenSim.Region.Framework.Scenes
             }
             m_lastUpdate = Util.EnvironmentTickCount();
 
-            HeartbeatThread = Watchdog.StartThread(Heartbeat, "Heartbeat for region " + RegionInfo.RegionName, ThreadPriority.Normal, false);
+            SceneHeartbeat shb = new SceneHeartbeat(this);
+
+            HeartbeatThread = Watchdog.StartThread(shb.Heartbeat, "Heartbeat for region " + RegionInfo.RegionName, ThreadPriority.Normal, false);
         }
 
         /// <summary>
@@ -1363,6 +1365,191 @@ namespace OpenSim.Region.Framework.Scenes
         #endregion
 
         #region Update Methods
+
+        private class SceneHeartbeat
+        {
+            Scene m_scene;
+            public SceneHeartbeat(Scene scene)
+            {
+                m_scene = scene;
+            }
+
+            /// <summary>
+            /// Performs per-frame updates regularly
+            /// </summary>
+            public void Heartbeat()
+            {
+                try
+                {
+                    Update();
+
+                    m_scene.m_lastUpdate = Util.EnvironmentTickCount();
+                    m_scene.m_firstHeartbeat = false;
+                }
+                catch (ThreadAbortException)
+                {
+                }
+            }
+
+            public void Update()
+            {
+                float physicsFPS;
+                int maintc;
+
+                while (!m_scene.shuttingdown)
+                {
+                    TimeSpan SinceLastFrame = DateTime.UtcNow - m_scene.m_lastupdate;
+                    physicsFPS = 0f;
+
+                    maintc = Util.EnvironmentTickCount();
+                    int tmpFrameMS = maintc;
+                    m_scene.tempOnRezMS = m_scene.eventMS = m_scene.backupMS = m_scene.terrainMS = m_scene.landMS = 0;
+
+                    // Increment the frame counter
+                    ++m_scene.m_frame;
+
+                    try
+                    {
+                        // Check if any objects have reached their targets
+                        m_scene.CheckAtTargets();
+
+                        // Update SceneObjectGroups that have scheduled themselves for updates
+                        // Objects queue their updates onto all scene presences
+                        if (m_scene.m_frame % m_scene.m_update_objects == 0)
+                            m_scene.m_sceneGraph.UpdateObjectGroups();
+
+                        // Run through all ScenePresences looking for updates
+                        // Presence updates and queued object updates for each presence are sent to clients
+                        if (m_scene.m_frame % m_scene.m_update_presences == 0)
+                            m_scene.m_sceneGraph.UpdatePresences();
+
+                        int tmpPhysicsMS2 = Util.EnvironmentTickCount();
+                        if ((m_scene.m_frame % m_scene.m_update_physics == 0) && m_scene.m_physics_enabled)
+                            m_scene.m_sceneGraph.UpdatePreparePhysics();
+                        m_scene.physicsMS2 = Util.EnvironmentTickCountSubtract(tmpPhysicsMS2);
+
+                        if (m_scene.m_frame % m_scene.m_update_entitymovement == 0)
+                            m_scene.m_sceneGraph.UpdateScenePresenceMovement();
+
+                        int tmpPhysicsMS = Util.EnvironmentTickCount();
+                        if (m_scene.m_frame % m_scene.m_update_physics == 0)
+                        {
+                            if (m_scene.m_physics_enabled)
+                                physicsFPS = m_scene.m_sceneGraph.UpdatePhysics(Math.Max(SinceLastFrame.TotalSeconds, m_scene.m_timespan));
+                            if (m_scene.SynchronizeScene != null)
+                                m_scene.SynchronizeScene(m_scene);
+                        }
+                        m_scene.physicsMS = Util.EnvironmentTickCountSubtract(tmpPhysicsMS);
+
+                        // Delete temp-on-rez stuff
+                        if (m_scene.m_frame % m_scene.m_update_backup == 0)
+                        {
+                            int tmpTempOnRezMS = Util.EnvironmentTickCount();
+                            m_scene.CleanTempObjects();
+                            m_scene.tempOnRezMS = Util.EnvironmentTickCountSubtract(tmpTempOnRezMS);
+                        }
+
+                        if (m_scene.RegionStatus != RegionStatus.SlaveScene)
+                        {
+                            if (m_scene.m_frame % m_scene.m_update_events == 0)
+                            {
+                                int evMS = Util.EnvironmentTickCount();
+                                m_scene.UpdateEvents();
+                                m_scene.eventMS = Util.EnvironmentTickCountSubtract(evMS); ;
+                            }
+
+                            if (m_scene.m_frame % m_scene.m_update_backup == 0)
+                            {
+                                int backMS = Util.EnvironmentTickCount();
+                                m_scene.UpdateStorageBackup();
+                                m_scene.backupMS = Util.EnvironmentTickCountSubtract(backMS);
+                            }
+
+                            if (m_scene.m_frame % m_scene.m_update_terrain == 0)
+                            {
+                                int terMS = Util.EnvironmentTickCount();
+                                m_scene.UpdateTerrain();
+                                m_scene.terrainMS = Util.EnvironmentTickCountSubtract(terMS);
+                            }
+
+                            if (m_scene.m_frame % m_scene.m_update_land == 0)
+                            {
+                                int ldMS = Util.EnvironmentTickCount();
+                                m_scene.UpdateLand();
+                                m_scene.landMS = Util.EnvironmentTickCountSubtract(ldMS);
+                            }
+
+                            m_scene.frameMS = Util.EnvironmentTickCountSubtract(tmpFrameMS);
+                            m_scene.otherMS = m_scene.tempOnRezMS + m_scene.eventMS + m_scene.backupMS + m_scene.terrainMS + m_scene.landMS;
+                            m_scene.lastCompletedFrame = Util.EnvironmentTickCount();
+
+                            // if (m_frame%m_update_avatars == 0)
+                            //   UpdateInWorldTime();
+                            m_scene.StatsReporter.AddPhysicsFPS(physicsFPS);
+                            m_scene.StatsReporter.AddTimeDilation(m_scene.TimeDilation);
+                            m_scene.StatsReporter.AddFPS(1);
+                            m_scene.StatsReporter.SetRootAgents(m_scene.m_sceneGraph.GetRootAgentCount());
+                            m_scene.StatsReporter.SetChildAgents(m_scene.m_sceneGraph.GetChildAgentCount());
+                            m_scene.StatsReporter.SetObjects(m_scene.m_sceneGraph.GetTotalObjectsCount());
+                            m_scene.StatsReporter.SetActiveObjects(m_scene.m_sceneGraph.GetActiveObjectsCount());
+                            m_scene.StatsReporter.addFrameMS(m_scene.frameMS);
+                            m_scene.StatsReporter.addPhysicsMS(m_scene.physicsMS + m_scene.physicsMS2);
+                            m_scene.StatsReporter.addOtherMS(m_scene.otherMS);
+                            m_scene.StatsReporter.SetActiveScripts(m_scene.m_sceneGraph.GetActiveScriptsCount());
+                            m_scene.StatsReporter.addScriptLines(m_scene.m_sceneGraph.GetScriptLPS());
+                        }
+
+                        if (m_scene.LoginsDisabled && m_scene.m_frame == 20)
+                        {
+                            // In 99.9% of cases it is a bad idea to manually force garbage collection. However,
+                            // this is a rare case where we know we have just went through a long cycle of heap
+                            // allocations, and there is no more work to be done until someone logs in
+                            GC.Collect();
+
+                            IConfig startupConfig = m_scene.m_config.Configs["Startup"];
+                            if (startupConfig == null || !startupConfig.GetBoolean("StartDisabled", false))
+                            {
+                                m_log.DebugFormat("[REGION]: Enabling logins for {0}", m_scene.RegionInfo.RegionName);
+                                m_scene.LoginsDisabled = false;
+                            }
+                        }
+                    }
+                    catch (NotImplementedException)
+                    {
+                        throw;
+                    }
+                    catch (AccessViolationException e)
+                    {
+                        m_log.Error("[REGION]: Failed with exception " + e.ToString() + " On Region: " + m_scene.RegionInfo.RegionName);
+                    }
+                    //catch (NullReferenceException e)
+                    //{
+                    //   m_log.Error("[REGION]: Failed with exception " + e.ToString() + " On Region: " + RegionInfo.RegionName);
+                    //}
+                    catch (InvalidOperationException e)
+                    {
+                        m_log.Error("[REGION]: Failed with exception " + e.ToString() + " On Region: " + m_scene.RegionInfo.RegionName);
+                    }
+                    catch (Exception e)
+                    {
+                        m_log.Error("[REGION]: Failed with exception " + e.ToString() + " On Region: " + m_scene.RegionInfo.RegionName);
+                    }
+                    finally
+                    {
+                        m_scene.m_lastupdate = DateTime.UtcNow;
+                    }
+
+                    maintc = Util.EnvironmentTickCountSubtract(maintc);
+                    maintc = (int)(m_scene.m_timespan * 1000) - maintc;
+
+                    if (maintc > 0)
+                        Thread.Sleep(maintc);
+
+                    // Tell the watchdog that this thread is still alive
+                    Watchdog.UpdateThread();
+                }
+            }
+        }
 
         /// <summary>
         /// Performs per-frame updates regularly

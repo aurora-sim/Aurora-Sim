@@ -1488,7 +1488,7 @@ namespace OpenSim
 
                 // Carrying on now causes a lot of confusion down the
                 // line - we need to get the user's attention
-                Environment.Exit(1);
+                throw e;
             }
 
             // We need to do this after we've initialized the
