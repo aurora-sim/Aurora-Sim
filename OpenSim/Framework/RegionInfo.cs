@@ -425,11 +425,14 @@ namespace OpenSim.Framework
         private bool ReadNiniConfig(IConfigSource source, string name)
         {
 //            bool creatingNew = false;
-            MainConsole.Instance.Output("=====================================\n");
-            MainConsole.Instance.Output("We are now going to ask a couple of questions about your region.\n");
-            MainConsole.Instance.Output("You can press 'enter' without typing anything to use the default\n");
-            MainConsole.Instance.Output("the default is displayed between [ ] brackets.\n");
-            MainConsole.Instance.Output("=====================================\n");
+            if (name == String.Empty || source.Configs.Count == 0)
+            {
+                MainConsole.Instance.Output("=====================================\n");
+                MainConsole.Instance.Output("We are now going to ask a couple of questions about your region.\n");
+                MainConsole.Instance.Output("You can press 'enter' without typing anything to use the default\n");
+                MainConsole.Instance.Output("the default is displayed between [ ] brackets.\n");
+                MainConsole.Instance.Output("=====================================\n");
+            }
 
             bool NeedsUpdate = false;
             if (name == String.Empty)
