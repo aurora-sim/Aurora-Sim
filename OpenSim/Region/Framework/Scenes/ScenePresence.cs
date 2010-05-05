@@ -1304,6 +1304,10 @@ namespace OpenSim.Region.Framework.Scenes
                     m_scene.PhysicsScene.RaycastWorld(m_pos, Vector3.Normalize(m_CameraCenter - posAdjusted), Vector3.Distance(m_CameraCenter, posAdjusted) + 0.3f, RayCastCameraCallback);
                 }
             }
+            if (!m_CameraCenter.IsFinite())
+            {
+                m_CameraCenter = new Vector3(128, 128, 128);
+            }
 
             lock (scriptedcontrols)
             {
