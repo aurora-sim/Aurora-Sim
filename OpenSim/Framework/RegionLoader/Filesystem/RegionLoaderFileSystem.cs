@@ -29,11 +29,20 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Nini.Config;
+using OpenSim.Framework.Console;
 
 namespace OpenSim.Framework.RegionLoader.Filesystem
 {
     public class RegionLoaderFileSystem : IRegionLoader
     {
+        public string Name
+        {
+            get
+            {
+                return "RegionLoaderFileSystem";
+            }
+        }
+
         private IConfigSource m_configSource;
 
         public void SetIniConfigSource(IConfigSource configSource)
@@ -65,8 +74,11 @@ namespace OpenSim.Framework.RegionLoader.Filesystem
 
             if (configFiles.Length == 0 && iniFiles.Length == 0)
             {
-                new RegionInfo("DEFAULT REGION CONFIG", Path.Combine(regionConfigPath, "Regions.ini"), false, m_configSource);
-                iniFiles = Directory.GetFiles(regionConfigPath, "*.ini");
+                if (MainConsole.Instance.CmdPrompt("Would you like to create a new region?", "yes") == "yes")
+                {
+                    new RegionInfo("DEFAULT REGION CONFIG", Path.Combine(regionConfigPath, "Regions.ini"), false, m_configSource);
+                    iniFiles = Directory.GetFiles(regionConfigPath, "*.ini");
+                }
             }
 
             List<RegionInfo> regionInfos = new List<RegionInfo>();
@@ -91,7 +103,8 @@ namespace OpenSim.Framework.RegionLoader.Filesystem
                 regionInfos.Add(regionInfo);
                 i++;
             }
-
+            if (regionInfos.Count == 0)
+                return null;
             return regionInfos.ToArray();
         }
     }

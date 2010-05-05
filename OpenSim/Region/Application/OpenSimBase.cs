@@ -142,11 +142,6 @@ namespace OpenSim
         /// <param name="configSource"></param>
         public OpenSimBase(IConfigSource configSource) : base()
         {
-            LoadConfigSettings(configSource);
-        }
-
-        protected void LoadConfigSettings(IConfigSource configSource)
-        {
             m_configLoader = new ConfigurationLoader();
             m_config = m_configLoader.LoadConfigSettings(configSource, out m_configSettings, out m_networkServersInfo);
             IConfig networkConfig = m_config.Source.Configs["Network"];
@@ -425,7 +420,7 @@ namespace OpenSim
 
             m_console.Commands.AddCommand("region", false, "create region",
                                           "create region",
-                                          "Create a new region", HandleCreateRegion);
+                                          "Create a new region Ex. create region <filename.ini>", HandleCreateRegion);
 
             m_console.Commands.AddCommand("region", false, "restart",
                                           "restart",
@@ -623,12 +618,13 @@ namespace OpenSim
         /// <param name="cmd">0,1,region name, region XML file</param>
         private void HandleCreateRegion(string module, string[] cmd)
         {
-            if (cmd.Length < 4)
+            if (cmd.Length < 3)
             {
-                MainConsole.Instance.Output("Usage: create region <region name> <region_file.ini>");
+                MainConsole.Instance.Output("Usage: create region <region_file.ini>");
                 return;
             }
-            if (cmd[3].EndsWith(".xml"))
+            //Decapriates .xml files --Revolution
+            /*if (cmd[3].EndsWith(".xml"))
             {
                 string regionsDir = ConfigSource.Source.Configs["Startup"].GetString("regionload_regionsdir", "Regions").Trim();
                 string regionFile = String.Format("{0}/{1}", regionsDir, cmd[3]);
@@ -637,22 +633,22 @@ namespace OpenSim
                     regionFile = cmd[3];
 
                 IScene scene;
-                CreateRegion(new RegionInfo(cmd[2], regionFile, false, ConfigSource.Source), true, out scene);
+                CreateRegion(new RegionInfo("", regionFile, false, ConfigSource.Source), true, out scene);
             }
-            else if (cmd[3].EndsWith(".ini"))
+            else */if (cmd[2].EndsWith(".ini"))
             {
                 string regionsDir = ConfigSource.Source.Configs["Startup"].GetString("regionload_regionsdir", "Regions").Trim();
-                string regionFile = String.Format("{0}/{1}", regionsDir, cmd[3]);
+                string regionFile = String.Format("{0}/{1}", regionsDir, cmd[2]);
                 // Allow absolute and relative specifiers
-                if (cmd[3].StartsWith("/") || cmd[3].StartsWith("\\") || cmd[3].StartsWith(".."))
-                    regionFile = cmd[3];
+                if (cmd[2].StartsWith("/") || cmd[2].StartsWith("\\") || cmd[2].StartsWith(".."))
+                    regionFile = cmd[2];
 
                 IScene scene;
-                CreateRegion(new RegionInfo(cmd[2], regionFile, false, ConfigSource.Source, cmd[2]), true, out scene);
+                CreateRegion(new RegionInfo("", regionFile, false, ConfigSource.Source, ""), true, out scene);
             }
             else
             {
-                MainConsole.Instance.Output("Usage: create region <region name> <region_file.ini>");
+                MainConsole.Instance.Output("Usage: create region <region_file.ini>");
                 return;
             }
         }

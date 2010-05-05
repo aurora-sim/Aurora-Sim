@@ -31,6 +31,7 @@ namespace OpenSim.Framework
 {
     public interface IRegionLoader
     {
+        string Name { get; }
         void SetIniConfigSource(IConfigSource configSource);
         RegionInfo[] LoadRegions();
     }

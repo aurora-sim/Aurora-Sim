@@ -37,6 +37,14 @@ namespace OpenSim.Framework.RegionLoader.Web
 {
     public class RegionLoaderWebServer : IRegionLoader
     {
+        public string Name
+        {
+            get
+            {
+                return "RegionLoaderWebServer";
+            }
+        }
+
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private IConfigSource m_configSource;
