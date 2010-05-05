@@ -104,21 +104,24 @@ namespace Aurora.Modules
                 List<string> Telehubs = GenericData.Query("regionUUID", ((Scene)scene).RegionInfo.RegionID.ToString(), "auroraregions", "telehubX,telehubY");
                 newPosition = new Vector3(Convert.ToInt32(Telehubs[0]), Convert.ToInt32(Telehubs[1]), Position.Z);
             }
-            ILandObject ILO = ((Scene)scene).LandChannel.GetLandObject(Position.X, Position.Y);
-            if (ILO.LandData.LandingType == 2)
+            else
             {
-                List<ILandObject> Parcels = ParcelsNearPoint(((Scene)scene), Position, ILO);
-                if (Parcels.Count == 0)
+                ILandObject ILO = ((Scene)scene).LandChannel.GetLandObject(Position.X, Position.Y);
+                if (ILO.LandData.LandingType == 2)
                 {
-                    ScenePresence SP;
-                    ((Scene)scene).TryGetScenePresence(userID, out SP);
-                    newPosition = GetNearestRegionEdgePosition(SP);
+                    List<ILandObject> Parcels = ParcelsNearPoint(((Scene)scene), Position, ILO);
+                    if (Parcels.Count == 0)
+                    {
+                        ScenePresence SP;
+                        ((Scene)scene).TryGetScenePresence(userID, out SP);
+                        newPosition = GetNearestRegionEdgePosition(SP);
+                    }
+                    else
+                        newPosition = Parcels[0].LandData.UserLocation;
                 }
-                else
-                    newPosition = Parcels[0].LandData.UserLocation;
+                if (ILO.LandData.LandingType == 1)
+                    newPosition = ILO.LandData.UserLocation;
             }
-            if (ILO.LandData.LandingType == 1)
-                newPosition = ILO.LandData.UserLocation;
 
 
             return true;

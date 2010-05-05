@@ -1551,33 +1551,36 @@ namespace Aurora.Modules
         						foreach (XmlNode pppart in part.ChildNodes)
         						{
         							ParcelXMLInfo PInfo = new ParcelXMLInfo();
-        							foreach(XmlNode att in pppart.Attributes)
-        							{
-        								switch (att.Name)
-        								{
-        									case "build":
-        										PInfo.Build = att.InnerText;
-        										break;
-        									case "category":
-        										PInfo.Category = att.InnerText;
-        										break;
-        									case "showinsearch":
-        										PInfo.Directory = att.InnerText;
-        										break;
-        									case "forsale":
-        										PInfo.ForSale = att.InnerText;
-        										break;
-        									case "public":
-        										PInfo.Public = att.InnerText;
-        										break;
-        									case "salesprice":
-        										PInfo.SalePrice = att.InnerText;
-        										break;
-        									case "scripts":
-        										PInfo.Script = att.InnerText;
-        										break;
-        								}
-        							}
+                                    if (pppart.Attributes != null)
+                                    {
+                                        foreach (XmlNode att in pppart.Attributes)
+                                        {
+                                            switch (att.Name)
+                                            {
+                                                case "build":
+                                                    PInfo.Build = att.InnerText;
+                                                    break;
+                                                case "category":
+                                                    PInfo.Category = att.InnerText;
+                                                    break;
+                                                case "showinsearch":
+                                                    PInfo.Directory = att.InnerText;
+                                                    break;
+                                                case "forsale":
+                                                    PInfo.ForSale = att.InnerText;
+                                                    break;
+                                                case "public":
+                                                    PInfo.Public = att.InnerText;
+                                                    break;
+                                                case "salesprice":
+                                                    PInfo.SalePrice = att.InnerText;
+                                                    break;
+                                                case "scripts":
+                                                    PInfo.Script = att.InnerText;
+                                                    break;
+                                            }
+                                        }
+                                    }
         							foreach (XmlNode ppart in pppart.ChildNodes)
         							{							
         								switch (ppart.Name)

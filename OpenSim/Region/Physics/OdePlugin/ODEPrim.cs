@@ -296,7 +296,9 @@ namespace OpenSim.Region.Physics.OdePlugin
                     m_taintselected = value;
                     m_isSelected = value;
                 }
-                if (m_isSelected) disableBodySoft();
+                //Fixes the bug when you would edit a prim and would fall through it.
+                // --Revolution
+                //if (m_isSelected) disableBodySoft();
             }
         }
 
