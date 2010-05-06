@@ -1252,10 +1252,6 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void StartTimer()
         {
-            //m_log.Debug("[SCENE]: Starting timer");
-            //m_heartbeatTimer.Enabled = true;
-            //m_heartbeatTimer.Interval = (int)(m_timespan * 1000);
-            //m_heartbeatTimer.Elapsed += new ElapsedEventHandler(Heartbeat);
             if (HeartbeatThread != null)
             {
                 HeartbeatThread.Abort();
@@ -1263,10 +1259,16 @@ namespace OpenSim.Region.Framework.Scenes
             }
             m_lastUpdate = Util.EnvironmentTickCount();
 
-            SceneHeartbeat shb = new SceneHeartbeat(this);
-
-            HeartbeatThread = Watchdog.StartThread(shb.Heartbeat, "Heartbeat for region " + RegionInfo.RegionName, ThreadPriority.Normal, false);
+            ScenePhysicsHeartbeat shb = new ScenePhysicsHeartbeat(this);
+            SceneBackupHeartbeat sbhb = new SceneBackupHeartbeat(this);
+            SceneUpdateHeartbeat suhb = new SceneUpdateHeartbeat(this);
+            sceneTracker.Init();
+            sceneTracker.AddSceneHeartbeat(suhb, out HeartbeatThread);
+            sceneTracker.AddSceneHeartbeat(shb, out HeartbeatThread);
+            sceneTracker.AddSceneHeartbeat(sbhb, out HeartbeatThread);
+            //HeartbeatThread = Watchdog.StartThread(shb.Heartbeat, "Heartbeat for region " + RegionInfo.RegionName, ThreadPriority.Normal, false);
         }
+        SceneTracker sceneTracker = new SceneTracker();
 
         /// <summary>
         /// Sets up references to modules required by the scene
@@ -1366,18 +1368,102 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Update Methods
 
-        private class SceneHeartbeat
+        #region Scene Heartbeat parts
+
+        private class SceneTracker
         {
-            Scene m_scene;
-            public SceneHeartbeat(Scene scene)
+            Thread thread = null;
+            List<ISceneHeartbeat> AllHeartbeats = new List<ISceneHeartbeat>();
+            public void Init()
             {
+                thread = new Thread(Check);
+                thread.Name = "SceneHeartbeatTracker";
+                thread.Start();
+            }
+
+            private void Check()
+            {
+                while (true)
+                {
+                    Thread.Sleep(50);
+                    foreach (ISceneHeartbeat hb in AllHeartbeats)
+                    {
+                        CheckThread(hb);
+                    }
+                }
+            }
+
+            private void CheckThread(ISceneHeartbeat hb)
+            {
+                if (hb.LastUpdate == new DateTime())
+                    return;
+                TimeSpan ts = DateTime.UtcNow - hb.LastUpdate;
+                if (ts.Seconds > 5)
+                {
+                    hb.ShouldExit = true;
+                }
+            }
+
+            public void AddSceneHeartbeat(ISceneHeartbeat heartbeat, out Thread thread)
+            {
+                m_log.Warn("[SceneHeartbeatTracker]: " + heartbeat.type + " has been started");
+                thread = new Thread(heartbeat.Heartbeat);
+                thread.Name = "SceneHeartbeat";
+                thread.Start();
+                heartbeat.ThreadIsClosing += ThreadDieing;
+                AllHeartbeats.Add(heartbeat);
+            }
+
+            public void ThreadDieing(ISceneHeartbeat heartbeat)
+            {
+                m_log.Warn("[SceneHeartbeatTracker]: " + heartbeat.type + " has been found dead, attempting to revive...");
+                //Time to start a new one
+                if (heartbeat.type == "SceneBackupHeartbeat")
+                {
+                    SceneBackupHeartbeat sbhb = new SceneBackupHeartbeat(heartbeat.m_scene);
+                    AddSceneHeartbeat(sbhb, out heartbeat.m_scene.HeartbeatThread);
+                }
+                if (heartbeat.type == "ScenePhysicsHeartbeat")
+                {
+                    ScenePhysicsHeartbeat shb = new ScenePhysicsHeartbeat(heartbeat.m_scene);
+                    AddSceneHeartbeat(shb, out heartbeat.m_scene.HeartbeatThread);
+                }
+                if (heartbeat.type == "SceneUpdateHeartbeat")
+                {
+                    SceneUpdateHeartbeat suhb = new SceneUpdateHeartbeat(heartbeat.m_scene);
+                    AddSceneHeartbeat(suhb, out heartbeat.m_scene.HeartbeatThread);
+                }
+                
+            }
+        }
+
+        private class ISceneHeartbeat
+        {
+            public delegate void ThreadClosing(ISceneHeartbeat heartbeat);
+            public Scene m_scene;
+            public bool ShouldExit;
+            public DateTime LastUpdate;
+            public virtual void Heartbeat() { }
+            public string type;
+            public event ThreadClosing ThreadIsClosing;
+            public void FireThreadClosing(ISceneHeartbeat sh)
+            {
+                ThreadIsClosing(sh);
+            }
+        }
+
+        private class SceneBackupHeartbeat : ISceneHeartbeat
+        {
+            public SceneBackupHeartbeat(Scene scene)
+            {
+                type = "SceneBackupHeartbeat";
                 m_scene = scene;
             }
 
             /// <summary>
             /// Performs per-frame updates regularly
             /// </summary>
-            public void Heartbeat()
+            public override void Heartbeat()
             {
                 try
                 {
@@ -1389,14 +1475,27 @@ namespace OpenSim.Region.Framework.Scenes
                 catch (ThreadAbortException)
                 {
                 }
+                catch (Exception ex)
+                {
+                    m_log.Error("[Scene]: Failed with " + ex);
+                }
             }
 
-            public void Update()
+            private void CheckExit()
+            {
+                if (!ShouldExit)
+                    return;
+                //Lets kill this thing
+                FireThreadClosing(this);
+                throw new Exception();
+            }
+
+            private void Update()
             {
                 float physicsFPS;
                 int maintc;
 
-                while (!m_scene.shuttingdown)
+                while (!m_scene.shuttingdown && !ShouldExit)
                 {
                     TimeSpan SinceLastFrame = DateTime.UtcNow - m_scene.m_lastupdate;
                     physicsFPS = 0f;
@@ -1410,45 +1509,6 @@ namespace OpenSim.Region.Framework.Scenes
 
                     try
                     {
-                        // Check if any objects have reached their targets
-                        m_scene.CheckAtTargets();
-
-                        // Update SceneObjectGroups that have scheduled themselves for updates
-                        // Objects queue their updates onto all scene presences
-                        if (m_scene.m_frame % m_scene.m_update_objects == 0)
-                            m_scene.m_sceneGraph.UpdateObjectGroups();
-
-                        // Run through all ScenePresences looking for updates
-                        // Presence updates and queued object updates for each presence are sent to clients
-                        if (m_scene.m_frame % m_scene.m_update_presences == 0)
-                            m_scene.m_sceneGraph.UpdatePresences();
-
-                        int tmpPhysicsMS2 = Util.EnvironmentTickCount();
-                        if ((m_scene.m_frame % m_scene.m_update_physics == 0) && m_scene.m_physics_enabled)
-                            m_scene.m_sceneGraph.UpdatePreparePhysics();
-                        m_scene.physicsMS2 = Util.EnvironmentTickCountSubtract(tmpPhysicsMS2);
-
-                        if (m_scene.m_frame % m_scene.m_update_entitymovement == 0)
-                            m_scene.m_sceneGraph.UpdateScenePresenceMovement();
-
-                        int tmpPhysicsMS = Util.EnvironmentTickCount();
-                        if (m_scene.m_frame % m_scene.m_update_physics == 0)
-                        {
-                            if (m_scene.m_physics_enabled)
-                                physicsFPS = m_scene.m_sceneGraph.UpdatePhysics(Math.Max(SinceLastFrame.TotalSeconds, m_scene.m_timespan));
-                            if (m_scene.SynchronizeScene != null)
-                                m_scene.SynchronizeScene(m_scene);
-                        }
-                        m_scene.physicsMS = Util.EnvironmentTickCountSubtract(tmpPhysicsMS);
-
-                        // Delete temp-on-rez stuff
-                        if (m_scene.m_frame % m_scene.m_update_backup == 0)
-                        {
-                            int tmpTempOnRezMS = Util.EnvironmentTickCount();
-                            m_scene.CleanTempObjects();
-                            m_scene.tempOnRezMS = Util.EnvironmentTickCountSubtract(tmpTempOnRezMS);
-                        }
-
                         if (m_scene.RegionStatus != RegionStatus.SlaveScene)
                         {
                             if (m_scene.m_frame % m_scene.m_update_events == 0)
@@ -1457,28 +1517,31 @@ namespace OpenSim.Region.Framework.Scenes
                                 m_scene.UpdateEvents();
                                 m_scene.eventMS = Util.EnvironmentTickCountSubtract(evMS); ;
                             }
-
+                            CheckExit();
                             if (m_scene.m_frame % m_scene.m_update_backup == 0)
                             {
                                 int backMS = Util.EnvironmentTickCount();
                                 m_scene.UpdateStorageBackup();
                                 m_scene.backupMS = Util.EnvironmentTickCountSubtract(backMS);
                             }
-
+                            CheckExit();
+                            
                             if (m_scene.m_frame % m_scene.m_update_terrain == 0)
                             {
                                 int terMS = Util.EnvironmentTickCount();
                                 m_scene.UpdateTerrain();
                                 m_scene.terrainMS = Util.EnvironmentTickCountSubtract(terMS);
                             }
-
+                            CheckExit();
+                            
                             if (m_scene.m_frame % m_scene.m_update_land == 0)
                             {
                                 int ldMS = Util.EnvironmentTickCount();
                                 m_scene.UpdateLand();
                                 m_scene.landMS = Util.EnvironmentTickCountSubtract(ldMS);
                             }
-
+                            CheckExit();
+                            
                             m_scene.frameMS = Util.EnvironmentTickCountSubtract(tmpFrameMS);
                             m_scene.otherMS = m_scene.tempOnRezMS + m_scene.eventMS + m_scene.backupMS + m_scene.terrainMS + m_scene.landMS;
                             m_scene.lastCompletedFrame = Util.EnvironmentTickCount();
@@ -1512,6 +1575,247 @@ namespace OpenSim.Region.Framework.Scenes
                                 m_log.DebugFormat("[REGION]: Enabling logins for {0}", m_scene.RegionInfo.RegionName);
                                 m_scene.LoginsDisabled = false;
                             }
+                        } 
+                        CheckExit();
+                    }
+                    catch (NotImplementedException)
+                    {
+                        throw;
+                    }
+                    catch (AccessViolationException e)
+                    {
+                        m_log.Error("[REGION]: Failed with exception " + e.ToString() + " On Region: " + m_scene.RegionInfo.RegionName);
+                    }
+                    //catch (NullReferenceException e)
+                    //{
+                    //   m_log.Error("[REGION]: Failed with exception " + e.ToString() + " On Region: " + RegionInfo.RegionName);
+                    //}
+                    catch (InvalidOperationException e)
+                    {
+                        m_log.Error("[REGION]: Failed with exception " + e.ToString() + " On Region: " + m_scene.RegionInfo.RegionName);
+                    }
+                    catch (Exception e)
+                    {
+                        m_log.Error("[REGION]: Failed with exception " + e.ToString() + " On Region: " + m_scene.RegionInfo.RegionName);
+                    }
+                    finally
+                    {
+                        LastUpdate = DateTime.UtcNow;
+                        m_scene.m_lastupdate = DateTime.UtcNow;
+                    }
+
+                    maintc = Util.EnvironmentTickCountSubtract(maintc);
+                    maintc = (int)(m_scene.m_timespan * 1000) - maintc;
+
+                    if (maintc > 0)
+                        Thread.Sleep(maintc);
+                    try
+                    {
+                        CheckExit();
+                    }
+                    catch { }
+                }
+            }
+        }
+
+        private class ScenePhysicsHeartbeat : ISceneHeartbeat
+        {
+            public ScenePhysicsHeartbeat(Scene scene)
+            {
+                type = "ScenePhysicsHeartbeat";
+                m_scene = scene;
+            }
+
+            /// <summary>
+            /// Performs per-frame updates regularly
+            /// </summary>
+            public override void Heartbeat()
+            {
+                try
+                {
+                    Update();
+
+                    m_scene.m_lastUpdate = Util.EnvironmentTickCount();
+                    m_scene.m_firstHeartbeat = false;
+                }
+                catch (ThreadAbortException)
+                {
+                }
+                catch(Exception ex)
+                {
+                    m_log.Error("[Scene]: Failed with " + ex);
+                }
+            }
+
+            private void CheckExit()
+            {
+                if (!ShouldExit)
+                    return;
+                //Lets kill this thing
+                FireThreadClosing(this);
+                throw new Exception();
+            }
+
+            private void Update()
+            {
+                float physicsFPS;
+                int maintc;
+
+                while (!m_scene.shuttingdown && !ShouldExit)
+                {
+                    TimeSpan SinceLastFrame = DateTime.UtcNow - m_scene.m_lastupdate;
+                    physicsFPS = 0f;
+
+                    maintc = Util.EnvironmentTickCount();
+                    int tmpFrameMS = maintc;
+                    m_scene.tempOnRezMS = m_scene.eventMS = m_scene.backupMS = m_scene.terrainMS = m_scene.landMS = 0;
+
+                    // Increment the frame counter
+                    ++m_scene.m_frame;
+
+                    try
+                    {
+                        int tmpPhysicsMS2 = Util.EnvironmentTickCount();
+                        if ((m_scene.m_frame % m_scene.m_update_physics == 0) && m_scene.m_physics_enabled)
+                            m_scene.m_sceneGraph.UpdatePreparePhysics();
+                        m_scene.physicsMS2 = Util.EnvironmentTickCountSubtract(tmpPhysicsMS2);
+                        CheckExit();
+                            
+                        if (m_scene.m_frame % m_scene.m_update_entitymovement == 0)
+                            m_scene.m_sceneGraph.UpdateScenePresenceMovement();
+                        CheckExit();
+                            
+                        int tmpPhysicsMS = Util.EnvironmentTickCount();
+                        if (m_scene.m_frame % m_scene.m_update_physics == 0)
+                        {
+                            if (m_scene.m_physics_enabled)
+                                physicsFPS = m_scene.m_sceneGraph.UpdatePhysics(Math.Max(SinceLastFrame.TotalSeconds, m_scene.m_timespan));
+                            if (m_scene.SynchronizeScene != null)
+                                m_scene.SynchronizeScene(m_scene);
+                        }
+                        CheckExit();
+                            
+                        m_scene.physicsMS = Util.EnvironmentTickCountSubtract(tmpPhysicsMS);
+                    }
+                    catch (NotImplementedException)
+                    {
+                        throw;
+                    }
+                    catch (AccessViolationException e)
+                    {
+                        m_log.Error("[REGION]: Failed with exception " + e.ToString() + " On Region: " + m_scene.RegionInfo.RegionName);
+                    }
+                    //catch (NullReferenceException e)
+                    //{
+                    //   m_log.Error("[REGION]: Failed with exception " + e.ToString() + " On Region: " + RegionInfo.RegionName);
+                    //}
+                    catch (InvalidOperationException e)
+                    {
+                        m_log.Error("[REGION]: Failed with exception " + e.ToString() + " On Region: " + m_scene.RegionInfo.RegionName);
+                    }
+                    catch (Exception e)
+                    {
+                        m_log.Error("[REGION]: Failed with exception " + e.ToString() + " On Region: " + m_scene.RegionInfo.RegionName);
+                    }
+                    finally
+                    {
+                        LastUpdate = DateTime.UtcNow;
+                        m_scene.m_lastupdate = DateTime.UtcNow;
+                    }
+
+                    maintc = Util.EnvironmentTickCountSubtract(maintc);
+                    maintc = (int)(m_scene.m_timespan * 1000) - maintc;
+
+                    if (maintc > 0)
+                        Thread.Sleep(maintc);
+                    try
+                    {
+                        CheckExit();
+                    }
+                    catch { }
+                }
+            }
+        }
+
+        private class SceneUpdateHeartbeat : ISceneHeartbeat
+        {
+            public SceneUpdateHeartbeat(Scene scene)
+            {
+                type = "SceneUpdateHeartbeat";
+                m_scene = scene;
+            }
+
+            /// <summary>
+            /// Performs per-frame updates regularly
+            /// </summary>
+            public override void Heartbeat()
+            {
+                try
+                {
+                    Update();
+
+                    m_scene.m_lastUpdate = Util.EnvironmentTickCount();
+                    m_scene.m_firstHeartbeat = false;
+                }
+                catch (ThreadAbortException)
+                {
+                }
+                catch(Exception ex)
+                {
+                    m_log.Error("[Scene]: Failed with " + ex);
+                }
+            }
+
+            private void CheckExit()
+            {
+                if (!ShouldExit)
+                    return;
+                //Lets kill this thing
+                FireThreadClosing(this);
+                throw new Exception();
+            }
+
+            private void Update()
+            {
+                float physicsFPS;
+                int maintc;
+
+                while (!m_scene.shuttingdown && !ShouldExit)
+                {
+                    TimeSpan SinceLastFrame = DateTime.UtcNow - m_scene.m_lastupdate;
+                    physicsFPS = 0f;
+
+                    maintc = Util.EnvironmentTickCount();
+                    int tmpFrameMS = maintc;
+                    m_scene.tempOnRezMS = m_scene.eventMS = m_scene.backupMS = m_scene.terrainMS = m_scene.landMS = 0;
+
+                    // Increment the frame counter
+                    ++m_scene.m_frame;
+
+                    try
+                    {
+                        // Check if any objects have reached their targets
+                        m_scene.CheckAtTargets();
+                        CheckExit();
+                            
+                        // Update SceneObjectGroups that have scheduled themselves for updates
+                        // Objects queue their updates onto all scene presences
+                        if (m_scene.m_frame % m_scene.m_update_objects == 0)
+                            m_scene.m_sceneGraph.UpdateObjectGroups();
+                        CheckExit();
+                            
+                        // Run through all ScenePresences looking for updates
+                        // Presence updates and queued object updates for each presence are sent to clients
+                        if (m_scene.m_frame % m_scene.m_update_presences == 0)
+                            m_scene.m_sceneGraph.UpdatePresences();
+                        CheckExit();
+                            
+                        // Delete temp-on-rez stuff
+                        if (m_scene.m_frame % m_scene.m_update_backup == 0)
+                        {
+                            int tmpTempOnRezMS = Util.EnvironmentTickCount();
+                            m_scene.CleanTempObjects();
+                            m_scene.tempOnRezMS = Util.EnvironmentTickCountSubtract(tmpTempOnRezMS);
                         }
                     }
                     catch (NotImplementedException)
@@ -1536,6 +1840,7 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                     finally
                     {
+                        LastUpdate = DateTime.UtcNow;
                         m_scene.m_lastupdate = DateTime.UtcNow;
                     }
 
@@ -1544,42 +1849,16 @@ namespace OpenSim.Region.Framework.Scenes
 
                     if (maintc > 0)
                         Thread.Sleep(maintc);
-
-                    // Tell the watchdog that this thread is still alive
-                    Watchdog.UpdateThread();
+                    try
+                    {
+                        CheckExit();
+                    }
+                    catch { }
                 }
             }
         }
 
-        /// <summary>
-        /// Performs per-frame updates regularly
-        /// </summary>
-        private void Heartbeat()
-        {
-            if (!Monitor.TryEnter(m_heartbeatLock))
-            {
-                Watchdog.RemoveThread();
-                return;
-            }
-
-            try
-            {
-                Update();
-
-                m_lastUpdate = Util.EnvironmentTickCount();
-                m_firstHeartbeat = false;
-            }
-            catch (ThreadAbortException)
-            {
-            }
-            finally
-            {
-                Monitor.Pulse(m_heartbeatLock);
-                Monitor.Exit(m_heartbeatLock);
-            }
-
-            Watchdog.RemoveThread();
-        }
+        #endregion
 
         /// <summary>
         /// Performs per-frame updates on the scene, this should be the central scene loop
@@ -1742,8 +2021,6 @@ namespace OpenSim.Region.Framework.Scenes
                 Watchdog.UpdateThread();
             }
         }
-
-        
 
         public void AddGroupTarget(SceneObjectGroup grp)
         {
