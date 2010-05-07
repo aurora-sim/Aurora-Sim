@@ -35,7 +35,6 @@ using OpenMetaverse;
 using log4net;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes.Scripting;
 
 namespace OpenSim.Region.Framework.Scenes
 {

@@ -687,6 +687,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 InventoryItem.PermsMask = int.Parse(StateSave[9].Split(',')[0], NumberStyles.Integer, Culture.NumberFormatInfo);
                 InventoryItem.PermsGranter = new UUID(StateSave[9].Split(',')[1]);
+                m_ScriptEngine.PostScriptEvent(ItemID, new EventParams(
+                            "run_time_permissions", new Object[] {
+                            new LSL_Types.LSLInteger(InventoryItem.PermsMask) },
+                            new DetectParams[0]));
             }
             double minEventDelay = 0.0;
             double.TryParse(StateSave[10], NumberStyles.Float, Culture.NumberFormatInfo, out minEventDelay);

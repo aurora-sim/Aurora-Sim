@@ -606,5 +606,20 @@ namespace OpenSim.Services.Connectors
 
         #endregion
 
+
+        #region IGridService Members
+
+
+        public GridRegion IncomingNewRegion(GridRegion region)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void ClosingRegion(GridRegion region)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
     }
 }

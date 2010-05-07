@@ -525,5 +525,20 @@ namespace OpenSim.Services.GridService
                 m_Database.Store(r);
             }
         }
+
+        #region IGridService Members
+
+
+        public GridRegion IncomingNewRegion(GridRegion region)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void ClosingRegion(GridRegion region)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
     }
 }
