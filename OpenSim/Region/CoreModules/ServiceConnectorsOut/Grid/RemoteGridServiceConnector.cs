@@ -52,12 +52,16 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Grid
 
         private IGridService m_LocalGridService;
 
+        private GridCache m_GridCache;
+
         public RemoteGridServicesConnector()
         {
+            m_GridCache = new GridCache();
         }
 
         public RemoteGridServicesConnector(IConfigSource source)
         {
+            m_GridCache = new GridCache();
             InitialiseServices(source);
         }
 
@@ -137,6 +141,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Grid
 
         public override string RegisterRegion(UUID scopeID, GridRegion regionInfo)
         {
+            m_GridCache.AddRegion(regionInfo);
             string msg = m_LocalGridService.RegisterRegion(scopeID, regionInfo);
 
             if (msg == String.Empty)
@@ -147,6 +152,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Grid
 
         public override bool DeregisterRegion(UUID regionID)
         {
+            m_GridCache.RemoveRegion(regionID);
             if (m_LocalGridService.DeregisterRegion(regionID))
                 return base.DeregisterRegion(regionID);
 
@@ -163,19 +169,28 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Grid
 
         public override GridRegion GetRegionByUUID(UUID scopeID, UUID regionID)
         {
-            GridRegion rinfo = m_LocalGridService.GetRegionByUUID(scopeID, regionID);
+            GridRegion rinfo = m_GridCache.GetRegionByUUID(regionID);
+
+            if (rinfo == null) 
+                rinfo = m_LocalGridService.GetRegionByUUID(scopeID, regionID);
             if (rinfo == null)
                 rinfo = base.GetRegionByUUID(scopeID, regionID);
 
+            m_GridCache.AddRegion(rinfo);
             return rinfo;
         }
 
         public override GridRegion GetRegionByPosition(UUID scopeID, int x, int y)
         {
-            GridRegion rinfo = m_LocalGridService.GetRegionByPosition(scopeID, x, y);
-            if (rinfo == null)
+            bool found = false;
+            GridRegion rinfo = m_GridCache.GetRegionByPosition(x, y, out found);
+
+            if (!found && rinfo == null)
+                rinfo = m_LocalGridService.GetRegionByPosition(scopeID, x, y);
+            if (!found && rinfo == null)
                 rinfo = base.GetRegionByPosition(scopeID, x, y);
 
+            m_GridCache.AddRegion(rinfo, x, y);
             return rinfo;
         }
 
@@ -185,6 +200,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Grid
             if (rinfo == null)
                 rinfo = base.GetRegionByName(scopeID, regionName);
 
+            m_GridCache.AddRegion(rinfo);
             return rinfo;
         }
 
@@ -200,10 +216,16 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Grid
                 rinfo.AddRange(grinfo);
             }
 
+            m_GridCache.AddRegions(rinfo);
             return rinfo;
         }
 
         // Let's not override GetRegionRange -- let's get them all from the grid server
+        public override List<GridRegion> GetRegionRange(UUID scopeID, int xmin, int xmax, int ymin, int ymax)
+        {
+
+            return base.GetRegionRange(scopeID, xmin, xmax, ymin, ymax);
+        }
 
         public override int GetRegionFlags(UUID scopeID, UUID regionID)
         {
@@ -214,5 +236,149 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Grid
             return flags;
         }
         #endregion
+    }
+
+    public class GridCache
+    {
+        private class GridRegionCache
+        {
+            public GridRegion region;
+            public int locX;
+            public int locY;
+            public DateTime LastUpdated;
+            public bool IsNull = false;
+        }
+
+        private List<GridRegionCache> cache = new List<GridRegionCache>();
+        public void AddRegion(GridRegion regionInfo)
+        {
+            if (regionInfo == null)
+                return;
+            GridRegionCache newcache = new GridRegionCache();
+            newcache.LastUpdated = DateTime.UtcNow;
+            newcache.locX = regionInfo.RegionLocX;
+            newcache.locY = regionInfo.RegionLocY;
+            newcache.region = regionInfo;
+            bool found = false;
+            for (int i = 0; i < cache.Count; i++)
+            {
+                if (cache[i].region.RegionID == regionInfo.RegionID)
+                {
+                    found = true;
+                    TimeSpan ts = cache[i].LastUpdated - DateTime.UtcNow;
+                    if (ts.Hours > 1)
+                    {
+                        cache[i] = newcache;
+                    }
+                }
+            }
+            if (!found)
+                cache.Add(newcache);
+        }
+
+        public void RemoveRegion(UUID regionID)
+        {
+            for (int i = 0; i < cache.Count; i++)
+            {
+                if (cache[i].region.RegionID == regionID)
+                {
+                    cache.Remove(cache[i]);
+                    return;
+                }
+            }
+        }
+
+        public void AddRegions(List<GridRegion> rinfo)
+        {
+            foreach (GridRegion region in rinfo)
+            {
+                AddRegion(region);
+            }
+        }
+
+        public GridRegion GetRegionByPosition(int x, int y, out bool found)
+        {
+            found = false;
+            for (int i = 0; i < cache.Count; i++)
+            {
+                if (cache[i].locX == x)
+                {
+                    if (cache[i].locY == y)
+                    {
+                        found = true;
+                        return cache[i].region;
+                    }
+                }
+            }
+            return null;
+        }
+
+        internal GridRegion GetRegionByUUID(UUID regionID)
+        {
+            for (int i = 0; i < cache.Count; i++)
+            {
+                if (cache[i].region == null)
+                    continue;
+                if (cache[i].region.RegionID == regionID)
+                {
+                    return cache[i].region;
+                }
+            }
+            return null;
+        }
+
+        internal void AddRegion(GridRegion regionInfo, int x, int y)
+        {
+            GridRegionCache newcache = new GridRegionCache();
+            newcache.LastUpdated = DateTime.UtcNow;
+            newcache.locX = x;
+            newcache.locY = y;
+            newcache.region = regionInfo;
+            bool found = false;
+            for (int i = 0; i < cache.Count; i++)
+            {
+                if (regionInfo != null)
+                {
+                    if (cache[i].region == null)
+                    {
+                        if (cache[i].locX == x && cache[i].locY == y)
+                        {
+                            found = true;
+                            TimeSpan ts = cache[i].LastUpdated - DateTime.UtcNow;
+                            if (ts.Hours > 1)
+                            {
+                                cache[i] = newcache;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (cache[i].region.RegionID == regionInfo.RegionID)
+                        {
+                            found = true;
+                            TimeSpan ts = cache[i].LastUpdated - DateTime.UtcNow;
+                            if (ts.Hours > 1)
+                            {
+                                cache[i] = newcache;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    if (cache[i].locX == x && cache[i].locY == y)
+                    {
+                        found = true;
+                        TimeSpan ts = cache[i].LastUpdated - DateTime.UtcNow;
+                        if (ts.Hours > 1)
+                        {
+                            cache[i] = newcache;
+                        }
+                    }
+                }
+            }
+            if (!found)
+                cache.Add(newcache);
+        }
     }
 }

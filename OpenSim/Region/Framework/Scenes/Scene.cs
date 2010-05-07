@@ -965,6 +965,8 @@ namespace OpenSim.Region.Framework.Scenes
                     regInfo.ScopeID = otherRegion.ScopeID;
                     regInfo.ExternalHostName = otherRegion.ExternalHostName;
                     GridRegion r = new GridRegion(regInfo);
+                    //This updates us about new neighbors in the cache
+                    GridService.GetNeighbours(UUID.Zero, this.RegionInfo.RegionID);
                     try
                     {
                         ForEachScenePresence(delegate(ScenePresence agent)

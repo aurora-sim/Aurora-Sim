@@ -214,6 +214,7 @@ namespace Aurora.Modules
 			                                                              (int)(m_scene.RegionInfo.RegionLocX + 50) * (int)Constants.RegionSize,
 			                                                              (int)(m_scene.RegionInfo.RegionLocY - 50) * (int)Constants.RegionSize,
 			                                                              (int)(m_scene.RegionInfo.RegionLocY + 50) * (int)Constants.RegionSize);
+
 			foreach (OpenSim.Services.Interfaces.GridRegion r in regions)
 			{
 				if(account.UserLevel == 0)
@@ -565,27 +566,23 @@ public virtual void HandleMapItemRequest(IClientAPI remoteClient, uint flags,
 				// this should return one mapblock at most.
 				// (diva note: why?? in that case we should GetRegionByPosition)
 				// But make sure: Look whether the one we requested is in there
-				List<GridRegion> regions = m_scene.GridService.GetRegionRange(m_scene.RegionInfo.ScopeID,
+                GridRegion region = m_scene.GridService.GetRegionByPosition(m_scene.RegionInfo.ScopeID,
 				                                                              minX * (int)Constants.RegionSize,
-				                                                              maxX * (int)Constants.RegionSize,
-				                                                              minY * (int)Constants.RegionSize,
-				                                                              maxY * (int)Constants.RegionSize);
+				                                                              maxX * (int)Constants.RegionSize);
                 UserAccount account = m_scene.UserAccountService.GetUserAccount(UUID.Zero, remoteClient.AgentId);
-				if (regions != null)
+                if (region != null)
 				{
-					foreach (OpenSim.Services.Interfaces.GridRegion r in regions)
-					{
-						if ((r.RegionLocX == minX * (int)Constants.RegionSize) &&
-						    (r.RegionLocY == minY * (int)Constants.RegionSize))
+                    if ((region.RegionLocX == minX * (int)Constants.RegionSize) &&
+                            (region.RegionLocY == minY * (int)Constants.RegionSize))
 						{
                             if(account.UserLevel == 0)
                             {
-								if(RegionsHidden.ContainsValue(r.RegionName))
+                                if (RegionsHidden.ContainsValue(region.RegionName))
 								{
-									if(r.EstateOwner == remoteClient.AgentId)
+                                    if (region.EstateOwner == remoteClient.AgentId)
 									{
 										MapBlockData block = new MapBlockData();
-										MapBlockFromGridRegion(block, r);
+                                        MapBlockFromGridRegion(block, region);
 										response.Add(block);
 									}
 								}
@@ -593,19 +590,17 @@ public virtual void HandleMapItemRequest(IClientAPI remoteClient, uint flags,
 								{
 									// found it => add it to response
 									MapBlockData block = new MapBlockData();
-									MapBlockFromGridRegion(block, r);
+                                    MapBlockFromGridRegion(block, region);
 									response.Add(block);
 								}
 							}
 							else
 							{
 								MapBlockData block = new MapBlockData();
-								MapBlockFromGridRegion(block, r);
+                                MapBlockFromGridRegion(block, region);
 								response.Add(block);
 							}
 						}
-						
-					}
 				}
                 if (response.Count == 0)
 				{
