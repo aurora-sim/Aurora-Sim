@@ -1262,13 +1262,14 @@ namespace OpenSim.Region.Framework.Scenes
             ScenePhysicsHeartbeat shb = new ScenePhysicsHeartbeat(this);
             SceneBackupHeartbeat sbhb = new SceneBackupHeartbeat(this);
             SceneUpdateHeartbeat suhb = new SceneUpdateHeartbeat(this);
-            sceneTracker.Init();
             sceneTracker.AddSceneHeartbeat(suhb, out HeartbeatThread);
             sceneTracker.AddSceneHeartbeat(shb, out HeartbeatThread);
             sceneTracker.AddSceneHeartbeat(sbhb, out HeartbeatThread);
+            //Start this after the threads are started.
+            sceneTracker.Init();
             //HeartbeatThread = Watchdog.StartThread(shb.Heartbeat, "Heartbeat for region " + RegionInfo.RegionName, ThreadPriority.Normal, false);
         }
-        SceneTracker sceneTracker = new SceneTracker();
+        AuroraThreadTracker sceneTracker = new AuroraThreadTracker();
 
         /// <summary>
         /// Sets up references to modules required by the scene
@@ -1370,89 +1371,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Scene Heartbeat parts
 
-        private class SceneTracker
-        {
-            Thread thread = null;
-            List<ISceneHeartbeat> AllHeartbeats = new List<ISceneHeartbeat>();
-            public void Init()
-            {
-                thread = new Thread(Check);
-                thread.Name = "SceneHeartbeatTracker";
-                thread.Start();
-            }
-
-            private void Check()
-            {
-                while (true)
-                {
-                    Thread.Sleep(50);
-                    foreach (ISceneHeartbeat hb in AllHeartbeats)
-                    {
-                        CheckThread(hb);
-                    }
-                }
-            }
-
-            private void CheckThread(ISceneHeartbeat hb)
-            {
-                if (hb.LastUpdate == new DateTime())
-                    return;
-                TimeSpan ts = DateTime.UtcNow - hb.LastUpdate;
-                if (ts.Seconds > 5)
-                {
-                    hb.ShouldExit = true;
-                }
-            }
-
-            public void AddSceneHeartbeat(ISceneHeartbeat heartbeat, out Thread thread)
-            {
-                m_log.Warn("[SceneHeartbeatTracker]: " + heartbeat.type + " has been started");
-                thread = new Thread(heartbeat.Heartbeat);
-                thread.Name = "SceneHeartbeat";
-                thread.Start();
-                heartbeat.ThreadIsClosing += ThreadDieing;
-                AllHeartbeats.Add(heartbeat);
-            }
-
-            public void ThreadDieing(ISceneHeartbeat heartbeat)
-            {
-                m_log.Warn("[SceneHeartbeatTracker]: " + heartbeat.type + " has been found dead, attempting to revive...");
-                //Time to start a new one
-                if (heartbeat.type == "SceneBackupHeartbeat")
-                {
-                    SceneBackupHeartbeat sbhb = new SceneBackupHeartbeat(heartbeat.m_scene);
-                    AddSceneHeartbeat(sbhb, out heartbeat.m_scene.HeartbeatThread);
-                }
-                if (heartbeat.type == "ScenePhysicsHeartbeat")
-                {
-                    ScenePhysicsHeartbeat shb = new ScenePhysicsHeartbeat(heartbeat.m_scene);
-                    AddSceneHeartbeat(shb, out heartbeat.m_scene.HeartbeatThread);
-                }
-                if (heartbeat.type == "SceneUpdateHeartbeat")
-                {
-                    SceneUpdateHeartbeat suhb = new SceneUpdateHeartbeat(heartbeat.m_scene);
-                    AddSceneHeartbeat(suhb, out heartbeat.m_scene.HeartbeatThread);
-                }
-                
-            }
-        }
-
-        private class ISceneHeartbeat
-        {
-            public delegate void ThreadClosing(ISceneHeartbeat heartbeat);
-            public Scene m_scene;
-            public bool ShouldExit;
-            public DateTime LastUpdate;
-            public virtual void Heartbeat() { }
-            public string type;
-            public event ThreadClosing ThreadIsClosing;
-            public void FireThreadClosing(ISceneHeartbeat sh)
-            {
-                ThreadIsClosing(sh);
-            }
-        }
-
-        private class SceneBackupHeartbeat : ISceneHeartbeat
+        public class SceneBackupHeartbeat : IThread
         {
             public SceneBackupHeartbeat(Scene scene)
             {
@@ -1463,7 +1382,7 @@ namespace OpenSim.Region.Framework.Scenes
             /// <summary>
             /// Performs per-frame updates regularly
             /// </summary>
-            public override void Heartbeat()
+            public override void Start()
             {
                 try
                 {
@@ -1490,6 +1409,7 @@ namespace OpenSim.Region.Framework.Scenes
                 throw new Exception();
             }
 
+            bool firstRun = true;
             private void Update()
             {
                 float physicsFPS;
@@ -1562,8 +1482,9 @@ namespace OpenSim.Region.Framework.Scenes
                             m_scene.StatsReporter.addScriptLines(m_scene.m_sceneGraph.GetScriptLPS());
                         }
 
-                        if (m_scene.LoginsDisabled && m_scene.m_frame == 20)
+                        if (firstRun)
                         {
+                            firstRun = false;
                             // In 99.9% of cases it is a bad idea to manually force garbage collection. However,
                             // this is a rare case where we know we have just went through a long cycle of heap
                             // allocations, and there is no more work to be done until someone logs in
@@ -1618,7 +1539,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        private class ScenePhysicsHeartbeat : ISceneHeartbeat
+        public class ScenePhysicsHeartbeat : IThread
         {
             public ScenePhysicsHeartbeat(Scene scene)
             {
@@ -1629,7 +1550,7 @@ namespace OpenSim.Region.Framework.Scenes
             /// <summary>
             /// Performs per-frame updates regularly
             /// </summary>
-            public override void Heartbeat()
+            public override void Start()
             {
                 try
                 {
@@ -1737,7 +1658,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        private class SceneUpdateHeartbeat : ISceneHeartbeat
+        public class SceneUpdateHeartbeat : IThread
         {
             public SceneUpdateHeartbeat(Scene scene)
             {
@@ -1748,7 +1669,7 @@ namespace OpenSim.Region.Framework.Scenes
             /// <summary>
             /// Performs per-frame updates regularly
             /// </summary>
-            public override void Heartbeat()
+            public override void Start()
             {
                 try
                 {
@@ -1777,14 +1698,12 @@ namespace OpenSim.Region.Framework.Scenes
 
             private void Update()
             {
-                float physicsFPS;
                 int maintc;
 
                 while (!m_scene.shuttingdown && !ShouldExit)
                 {
                     TimeSpan SinceLastFrame = DateTime.UtcNow - m_scene.m_lastupdate;
-                    physicsFPS = 0f;
-
+                    
                     maintc = Util.EnvironmentTickCount();
                     int tmpFrameMS = maintc;
                     m_scene.tempOnRezMS = m_scene.eventMS = m_scene.backupMS = m_scene.terrainMS = m_scene.landMS = 0;
@@ -3347,6 +3266,8 @@ namespace OpenSim.Region.Framework.Scenes
         public virtual void SubscribeToClientGodEvents(IClientAPI client)
         {
             IGodsModule godsModule = RequestModuleInterface<IGodsModule>();
+            if (godsModule == null)
+                return;
             client.OnGodKickUser += godsModule.KickUser;
             client.OnRequestGodlikePowers += godsModule.RequestGodlikePowers;
         }

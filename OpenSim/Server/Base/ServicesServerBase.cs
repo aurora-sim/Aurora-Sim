@@ -165,6 +165,7 @@ namespace OpenSim.Server.Base
             {
                 MainConsole.Instance = new LocalConsole();
             }
+            MainConsole.Instance.DefaultPrompt = prompt;
             MainConsole.Instance.Initialise(prompt);
 
             // Configure the appenders for log4net

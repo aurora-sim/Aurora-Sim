@@ -100,10 +100,10 @@ namespace Aurora.Services.DataService
             {
                 if (remoteconnection == "")
                     continue;
-                RemoteDataConnector connector = new RemoteDataConnector(RemoteConnectionStrings[i], RemoteConnectionPasswords[i]);
-                Aurora.DataManager.DataManager.AddGenericPlugin(connector);
-                Aurora.DataManager.DataManager.AddProfilePlugin(connector);
-                Aurora.DataManager.DataManager.AddRegionPlugin(connector);
+                //RemoteDataConnector connector = new RemoteDataConnector(RemoteConnectionStrings[i], RemoteConnectionPasswords[i]);
+                //Aurora.DataManager.DataManager.AddGenericPlugin(connector);
+                //Aurora.DataManager.DataManager.AddProfilePlugin(connector);
+                //Aurora.DataManager.DataManager.AddRegionPlugin(connector);
             }
             Aurora.DataManager.DataManager.SetGenericDataRetriver(new GenericData());
             Aurora.DataManager.DataManager.SetEstateDataRetriver(new EstateData());

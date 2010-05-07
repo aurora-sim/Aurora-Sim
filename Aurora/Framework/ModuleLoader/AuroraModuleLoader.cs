@@ -8,6 +8,7 @@ namespace Aurora.Framework
 {
     public static class AuroraModuleLoader
     {
+        static List<string> dllBlackList;
         static bool firstLoad = true;
         /// <summary>
         /// Gets all modules found in the given directory. 
@@ -23,6 +24,79 @@ namespace Aurora.Framework
             List<T> modules = new List<T>();
             if (firstLoad)
             {
+                dllBlackList = new List<string>();
+                dllBlackList.Add("NHibernate.ByteCode.Castle.dll");
+                dllBlackList.Add("Antlr3.Runtime.dll");
+                dllBlackList.Add("AprSharp.dll");
+                dllBlackList.Add("Axiom.MathLib.dll");
+                dllBlackList.Add("BclExtras35.dll");
+                dllBlackList.Add("BulletDotNET.dll");
+                dllBlackList.Add("C5.dll");
+                dllBlackList.Add("Castle.Core.dll");
+                dllBlackList.Add("Castle.DynamicProxy.dll");
+                dllBlackList.Add("Castle.DynamicProxy2.dll");
+                dllBlackList.Add("CookComputing.XmlRpcV2.dll");
+                dllBlackList.Add("CSJ2K.dll");
+                dllBlackList.Add("DotNetOpenId.dll");
+                dllBlackList.Add("DotNetOpenMail.dll");
+                dllBlackList.Add("DotSets.dll");
+                dllBlackList.Add("Fadd.dll");
+                dllBlackList.Add("Fadd.Globalization.Yaml.dll");
+                dllBlackList.Add("FluentNHibernate.dll");
+                dllBlackList.Add("GlynnTucker.Cache.dll");
+                dllBlackList.Add("Google.ProtocolBuffers.dll");
+                dllBlackList.Add("HttpServer.dll");
+                dllBlackList.Add("Iesi.Collections.dll");
+                dllBlackList.Add("intl3_svn.dll");
+                dllBlackList.Add("Kds.Serialization.dll");
+                dllBlackList.Add("libapr.dll");
+                dllBlackList.Add("libapriconv.dll");
+                dllBlackList.Add("libaprutil.dll");
+                dllBlackList.Add("libbulletnet.dll");
+                dllBlackList.Add("libdb44d.dll");
+                dllBlackList.Add("libdb_dotNET43.dll");
+                dllBlackList.Add("libeay32.dll");
+                dllBlackList.Add("log4net.dll");
+                dllBlackList.Add("Modified.XnaDevRu.BulletX.dll");
+                dllBlackList.Add("Mono.Addins.dll");
+                dllBlackList.Add("Mono.Data.SqliteClient.dll");
+                dllBlackList.Add("Mono.GetOptions.dll");
+                dllBlackList.Add("Mono.PEToolkit.dll");
+                dllBlackList.Add("Mono.Security.dll");
+                dllBlackList.Add("MonoXnaCompactMaths.dll");
+                dllBlackList.Add("MXP.dll");
+                dllBlackList.Add("MySql.Data.dll");
+                dllBlackList.Add("NDesk.Options.dll");
+                dllBlackList.Add("Newtonsoft.Json.dll");
+                dllBlackList.Add("NHibernate.ByteCode.Castle.dll");
+                dllBlackList.Add("NHibernate.dll");
+                dllBlackList.Add("HttpServer_OpenSim.dll");
+                dllBlackList.Add("Nini.dll");
+                dllBlackList.Add("Npgsql.dll");
+                dllBlackList.Add("nunit.framework.dll");
+                dllBlackList.Add("ode.dll");
+                dllBlackList.Add("Ode.NET.dll");
+                dllBlackList.Add("openjpeg-dotnet-x86_64.dll");
+                dllBlackList.Add("openjpeg-dotnet.dll");
+                dllBlackList.Add("OpenMetaverse.dll");
+                dllBlackList.Add("OpenMetaverse.Http.dll");
+                dllBlackList.Add("OpenMetaverse.StructuredData.dll");
+                dllBlackList.Add("OpenMetaverse.Utilities.dll");
+                dllBlackList.Add("OpenMetaverseTypes.dll");
+                dllBlackList.Add("PhysX-wrapper.dll");
+                dllBlackList.Add("PhysX_Wrapper_Dotnet.dll");
+                dllBlackList.Add("protobuf-net.dll");
+                dllBlackList.Add("PumaCode.SvnDotNet.dll");
+                dllBlackList.Add("RAIL.dll");
+                dllBlackList.Add("SmartThreadPool.dll");
+                dllBlackList.Add("sqlite3.dll");
+                dllBlackList.Add("ssleay32.dll");
+                dllBlackList.Add("SubversionSharp.dll");
+                dllBlackList.Add("svn_client-1.dll");
+                dllBlackList.Add("System.Data.SQLite.dll");
+                dllBlackList.Add("Tools.dll");
+                dllBlackList.Add("XMLRPC.dll");
+                dllBlackList.Add("xunit.dll");
                 DirectoryInfo dir = new DirectoryInfo(moduleDir);
                 firstLoad = false;
                 foreach (FileInfo fileInfo in dir.GetFiles("*.dll"))
@@ -54,6 +128,7 @@ namespace Aurora.Framework
             }
             return modules;
         }
+
         private static List<T> LoadRegionModules<T>(string dllName, string identifier)
         {
             T[] modules = LoadModules<T>(dllName, identifier);
@@ -73,7 +148,8 @@ namespace Aurora.Framework
         private static T[] LoadModules<T>(string dllName, string identifier)
         {
             List<T> modules = new List<T>();
-
+            if (dllBlackList.Contains(dllName))
+                return modules.ToArray();
             Assembly pluginAssembly;
             if (!LoadedAssemblys.TryGetValue(dllName, out pluginAssembly))
             {
