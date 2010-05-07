@@ -224,7 +224,9 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Grid
         public override List<GridRegion> GetRegionRange(UUID scopeID, int xmin, int xmax, int ymin, int ymax)
         {
 
-            return base.GetRegionRange(scopeID, xmin, xmax, ymin, ymax);
+            List <GridRegion> regions =  base.GetRegionRange(scopeID, xmin, xmax, ymin, ymax);
+            m_GridCache.AddRegions(regions);
+            return regions;
         }
 
         public override int GetRegionFlags(UUID scopeID, UUID regionID)
@@ -262,13 +264,28 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Grid
             bool found = false;
             for (int i = 0; i < cache.Count; i++)
             {
-                if (cache[i].region.RegionID == regionInfo.RegionID)
+                if (cache[i].region == null)
                 {
-                    found = true;
-                    TimeSpan ts = cache[i].LastUpdated - DateTime.UtcNow;
-                    if (ts.Hours > 1)
+                    if (cache[i].locX == newcache.region.RegionLocX && cache[i].locY == newcache.region.RegionLocY)
                     {
-                        cache[i] = newcache;
+                        found = true;
+                        TimeSpan ts = cache[i].LastUpdated - DateTime.UtcNow;
+                        if (ts.Hours > 1)
+                        {
+                            cache[i] = newcache;
+                        }
+                    }
+                }
+                else
+                {
+                    if (cache[i].region.RegionID == regionInfo.RegionID)
+                    {
+                        found = true;
+                        TimeSpan ts = cache[i].LastUpdated - DateTime.UtcNow;
+                        if (ts.Hours > 1)
+                        {
+                            cache[i] = newcache;
+                        }
                     }
                 }
             }
