@@ -801,7 +801,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             ScriptData instance = GetScriptByItemID(itemID);
             if (instance == null)
                 return false;
-            instance.DeserializeDatabase();
+            instance.DeserializeDatabaseFromItemID();
             return true;
         }
         #endregion

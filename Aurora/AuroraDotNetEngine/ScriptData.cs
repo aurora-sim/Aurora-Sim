@@ -106,6 +106,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public string AssemblyName;
         //This is the UUID of the actual script.
         public UUID ItemID;
+        public UUID UserInventoryItemID;
         //This is the localUUID of the object the script is in.
         public uint localID;
         public string ClassID;
@@ -373,6 +374,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (part.TaskInventory.TryGetValue(ItemID, out InventoryItem))
                 AssetID = InventoryItem.AssetID;
 
+            UserInventoryItemID = part.FromUserInventoryItemID;
             //Try to find the avatar who started this.
             presence = World.GetScenePresence(InventoryItem.OwnerID);
 
@@ -485,7 +487,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (!reupload && GenericData.Query("ItemID", ItemID.ToString(), "auroraDotNetStateSaves", "*").Count > 1 && Loading)
             {
                 //Retrive the needed parts for a compileless start from the state save.
-                FindRequiredForCompileless();
+                FindRequiredForCompilelessFromItemID();
+            }
+            else if (!reupload && GenericData.Query("UserInventoryItemID", UserInventoryItemID.ToString(), "auroraDotNetStateSaves", "*").Count > 1 && Loading && UserInventoryItemID != UUID.Zero)
+            {
+                //Retrive the needed parts for a compileless start from the state save.
+                FindRequiredForCompilelessFromInventoryID();
             }
             else
             {
@@ -572,7 +579,22 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //Now do the full state save finding now that we have an app domain.
             if (!reupload && GenericData.Query("ItemID", ItemID.ToString(), "auroraDotNetStateSaves", "*").Count > 1 && Loading)
             {
-                DeserializeDatabase();
+                DeserializeDatabaseFromItemID();
+
+                AsyncCommandManager.CreateFromData(m_ScriptEngine,
+                    localID, ItemID, part.UUID,
+                    PluginData);
+
+                // we get new rez events on sim restart, too
+                // but if there is state, then we fire the change
+                // event
+
+                // We loaded state, don't force a re-save
+                m_startedFromSavedState = true;
+            }
+            else if (!reupload && GenericData.Query("UserInventoryItemID", UserInventoryItemID.ToString(), "auroraDotNetStateSaves", "*").Count > 1 && Loading && UserInventoryItemID != UUID.Zero)
+            {
+                DeserializeDatabaseFromInventoryID();
 
                 AsyncCommandManager.CreateFromData(m_ScriptEngine,
                     localID, ItemID, part.UUID,
@@ -639,7 +661,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <summary>
         /// Finds all the required parts so that we don't have to compile the script.
         /// </summary>
-        public void FindRequiredForCompileless()
+        public void FindRequiredForCompilelessFromItemID()
         {
             List<string> StateSave = GenericData.Query("ItemID", ItemID.ToString(), "auroraDotNetStateSaves", "ClassID, LineMap, AssemblyName");
             ClassID = StateSave[0];
@@ -648,15 +670,40 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         }
 
         /// <summary>
+        /// Finds all the required parts so that we don't have to compile the script.
+        /// </summary>
+        public void FindRequiredForCompilelessFromInventoryID()
+        {
+            List<string> StateSave = GenericData.Query("UserInventoryItemID", UserInventoryItemID.ToString(), "auroraDotNetStateSaves", "ClassID, LineMap, AssemblyName");
+            ClassID = StateSave[0];
+            LineMap = OpenSim.Region.ScriptEngine.Shared.CodeTools.Compiler.ReadMapFileFromString(StateSave[1]);
+            AssemblyName = StateSave[2];
+        }
+
+        /// <summary>
         /// This pulls everything from the state save and sets the script back up to its previous state.
         /// </summary>
-        public void DeserializeDatabase()
+        public void DeserializeDatabaseFromItemID()
         {
-            Dictionary<string, object> vars = new Dictionary<string,object>();
             List<string> StateSave = GenericData.Query("ItemID", ItemID.ToString(), "auroraDotNetStateSaves", "*");
+            Deserialize(StateSave);
+        }
+
+        /// <summary>
+        /// This pulls everything from the state save and sets the script back up to its previous state.
+        /// </summary>
+        public void DeserializeDatabaseFromInventoryID()
+        {
+            List<string> StateSave = GenericData.Query("UserInventoryItemID", UserInventoryItemID.ToString(), "auroraDotNetStateSaves", "*");
+            Deserialize(StateSave);
+        }
+
+        private void Deserialize(List<string> StateSave)
+        {
+            Dictionary<string, object> vars = new Dictionary<string, object>();
             State = StateSave[0];
             Running = bool.Parse(StateSave[4]);
-            
+
             string varsmap = StateSave[5];
 
             foreach (string var in varsmap.Split(';'))
@@ -697,10 +744,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             EventDelayTicks = (long)minEventDelay;
             AssemblyName = StateSave[11];
             Disabled = Convert.ToBoolean(StateSave[12]);
-
+            UserInventoryItemID = UUID.Parse(StateSave[13]);
             // Add it to our script memstruct
             m_ScriptEngine.UpdateScriptInstanceData(this);
-            
+
             if (StateSave[8] != "")
             {
                 #region Queue
@@ -975,6 +1022,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             Insert.Add(EventDelayTicks.ToString());
             Insert.Add(AssemblyName);
             Insert.Add(Disabled.ToString());
+            Insert.Add(UserInventoryItemID.ToString());
             try
             {
                 GenericData.Insert("auroraDotNetStateSaves", Insert.ToArray());
@@ -996,6 +1044,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 Keys.Add("MinEventDelay");
                 Keys.Add("AssemblyName");
                 Keys.Add("Disabled");
+                Keys.Add("UserInventoryItemID");
                 try
                 {
                     GenericData.Update("auroraDotNetStateSaves", Insert.ToArray(), Keys.ToArray(), new string[] { "ItemID" }, new string[] { ItemID.ToString() });
