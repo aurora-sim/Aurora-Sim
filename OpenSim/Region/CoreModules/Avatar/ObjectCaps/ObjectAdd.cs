@@ -190,7 +190,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                 maxLevel = 1;
             if (Level == "A")
                 maxLevel = 2;
-            Aurora.DataManager.Frontends.ProfileFrontend data = new Aurora.DataManager.Frontends.ProfileFrontend();
+            Aurora.DataManager.Frontends.ProfileFrontend data = new Aurora.DataManager.Frontends.ProfileFrontend(false,"");
             IUserProfileInfo profile = data.GetUserProfile(agentID);
             profile.MaturityRating = maxLevel;
             data.UpdateUserProfile(profile);

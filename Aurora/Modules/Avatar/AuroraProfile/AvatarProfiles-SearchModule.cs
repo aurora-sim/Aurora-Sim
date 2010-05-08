@@ -124,7 +124,12 @@ namespace Aurora.Modules
         
         public void PostInitialise()
         {
-            ProfileFrontend = new ProfileFrontend();
+            IConfig AuroraDataConfig = m_gConfig.Configs["AuroraData"];
+            string connectionString = AuroraDataConfig.GetString("RemoteConnectionStrings", "");
+            if(connectionString == "")
+                ProfileFrontend = new ProfileFrontend(false,"");
+            else
+                ProfileFrontend = new ProfileFrontend(true, connectionString);
             ProfileData = Aurora.DataManager.DataManager.GetDefaultProfilePlugin();
             GenericData = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
             RegionData = Aurora.DataManager.DataManager.GetDefaultRegionPlugin();

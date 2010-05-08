@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using Aurora.Framework;
 using Aurora.DataManager;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 
 namespace Aurora.DataManager.Frontends
@@ -12,8 +14,12 @@ namespace Aurora.DataManager.Frontends
     {
         private Dictionary<UUID, IUserProfileInfo> UserProfilesCache = new Dictionary<UUID, IUserProfileInfo>();
         private IGenericData GD = null;
-        public ProfileFrontend()
+        private bool m_useExternal = false;
+        private string m_ExternalRequest = "";
+        public ProfileFrontend(bool useExternal, string external)
         {
+            m_useExternal = useExternal;
+            m_ExternalRequest = external;
             GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
         }
         
@@ -128,12 +134,24 @@ namespace Aurora.DataManager.Frontends
                 UserProfilesCache.TryGetValue(agentID, out UserProfile);
                 return UserProfile;
             }
+            /*else if (m_useExternal)
+            {
+                Hashtable request = new Hashtable();
+                request["Type"] = "GetProfile";
+                Hashtable result = Aurora.Framework.Utils.GenericXMLRPCRequest(request, "aurora_data", m_ExternalRequest);
+                ArrayList ListValues = result["profile"] as ArrayList;
+                if (ListValues == null)
+                    return null;
+                OSDMap map = ListValues[0] as OSDMap;
+                UserProfile.Unpack(map);
+                return UserProfile;
+            }*/
             else
             {
                 try
                 {
                     ProfileInterests Interests = ReadInterestsInfoRow(agentID.ToString());
-                    List<string> userauthReturns = GD.Query("userUUID",agentID.ToString(),"usersauth","userLogin,userPass,userGodLevel,membershipGroup,profileMaturePublish,profileAllowPublish,profileURL,AboutText,CustomType,Email,FirstLifeAboutText,FirstLifeImage,Partner,PermaBanned,TempBanned,Image,IsMinor,MatureRating,Created");
+                    List<string> userauthReturns = GD.Query("userUUID", agentID.ToString(), "usersauth", "userLogin,userPass,userGodLevel,membershipGroup,profileMaturePublish,profileAllowPublish,profileURL,AboutText,CustomType,Email,FirstLifeAboutText,FirstLifeImage,Partner,PermaBanned,TempBanned,Image,IsMinor,MatureRating,Created");
                     List<string> notesReturns = GD.Query("userid", agentID.ToString(), "profilenotes", "targetuuid,notes");
                     UserProfile.Classifieds = ReadClassifedRow(agentID.ToString());
                     UserProfile.Picks = ReadPickRequestsRow(agentID.ToString());
@@ -168,7 +186,7 @@ namespace Aurora.DataManager.Frontends
                     UserProfile.AllowPublish = userauthReturns[5];
                     UserProfile.MaturePublish = userauthReturns[4];
                     UserProfile.ProfileAboutText = userauthReturns[7];
-                    UserProfile.Email = userauthReturns[9];
+                    //UserProfile.Email = userauthReturns[9];
                     UserProfile.ProfileFirstText = userauthReturns[10];
                     UserProfile.ProfileFirstImage = new UUID(userauthReturns[12]);
                     UserProfile.Partner = new UUID(userauthReturns[12]);

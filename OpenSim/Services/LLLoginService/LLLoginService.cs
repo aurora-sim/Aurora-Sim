@@ -254,7 +254,7 @@ namespace OpenSim.Services.LLLoginService
                     }
                 }
 
-                Aurora.DataManager.Frontends.ProfileFrontend data = new Aurora.DataManager.Frontends.ProfileFrontend();
+                Aurora.DataManager.Frontends.ProfileFrontend data = new Aurora.DataManager.Frontends.ProfileFrontend(false, "");
                 //Already tried to find it before this, so its not there at all.
                 IUserProfileInfo profile = null;
                 if (data != null)

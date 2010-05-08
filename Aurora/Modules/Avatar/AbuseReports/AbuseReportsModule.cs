@@ -159,7 +159,7 @@ namespace Aurora.Modules
         		Adetails = detailssplit[4];
         	}
 
-            Aurora.DataManager.Frontends.ProfileFrontend data = new Aurora.DataManager.Frontends.ProfileFrontend();
+            Aurora.DataManager.Frontends.ProfileFrontend data = new Aurora.DataManager.Frontends.ProfileFrontend(false, "");
             IUserProfileInfo reporterProfile = data.GetUserProfile(reporter);
             string ReporterName = "";
             string AbuserName = "";

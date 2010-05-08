@@ -20,6 +20,11 @@ namespace Aurora.Framework
             return "http://" + GetExternalIp() + ":" + OpenSim.Framework.MainServer.Instance.Port.ToString() + "/AuroraServerRelease" + AuroraServerVersion();
         }
 
+        public static string GetAddress()
+        {
+            return "http://" + GetExternalIp() + ":" + OpenSim.Framework.MainServer.Instance.Port.ToString();
+        }
+
         public static string AuroraServerVersion()
         {
             return "0.1";

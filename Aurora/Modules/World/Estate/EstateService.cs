@@ -85,7 +85,7 @@ namespace Aurora.Modules
         {
             newPosition = Position;
             EstateSettings ES = ((Scene)scene).EstateService.LoadEstateSettings(scene.RegionInfo.RegionID, false);
-            Aurora.DataManager.Frontends.ProfileFrontend data = new Aurora.DataManager.Frontends.ProfileFrontend();
+            Aurora.DataManager.Frontends.ProfileFrontend data = new Aurora.DataManager.Frontends.ProfileFrontend(false, "");
             IUserProfileInfo Profile = data.GetUserProfile(userID);
             
             if (((Scene)scene).RegionInfo.RegionSettings.Maturity > Profile.MaturityRating)

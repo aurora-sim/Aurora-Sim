@@ -59,7 +59,7 @@ namespace Aurora.Modules
                 return;
             }
             UserAccount account = m_scene.UserAccountService.GetUserAccount(UUID.Zero, cmdparams[2], cmdparams[3]);
-            Aurora.DataManager.Frontends.ProfileFrontend data = new Aurora.DataManager.Frontends.ProfileFrontend();
+            Aurora.DataManager.Frontends.ProfileFrontend data = new Aurora.DataManager.Frontends.ProfileFrontend(false, "");
             IUserProfileInfo profile = data.GetUserProfile(account.PrincipalID);
             StreamWriter writer = new StreamWriter(cmdparams[4]);
             writer.Write("<profile>\n");
@@ -69,7 +69,7 @@ namespace Aurora.Modules
             writer.Write(account.UserTitle + "\n");
             writer.Write(profile.ProfileAboutText + "\n");
             writer.Write(profile.AllowPublish + "\n");
-            writer.Write(profile.Email + "\n");
+            //writer.Write(profile.Email + "\n");
             writer.Write(profile.ProfileFirstText + "\n");
             writer.Write(profile.ProfileFirstImage.ToString() + "\n");
             writer.Write(profile.ProfileImage.ToString() + "\n");

@@ -44,7 +44,7 @@ namespace Aurora.Modules
             }
             if (NewUser.Count == 0 && ArchiveName.Count == 0)
             {
-                Aurora.DataManager.Frontends.ProfileFrontend PF = new Aurora.DataManager.Frontends.ProfileFrontend();
+                Aurora.DataManager.Frontends.ProfileFrontend PF = new Aurora.DataManager.Frontends.ProfileFrontend(false, "");
                 PF.CreateNewProfile(account.PrincipalID, account.FirstName, account.LastName);
             }
             List<string> SetRow = new List<string>();
