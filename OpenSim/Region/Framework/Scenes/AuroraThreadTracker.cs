@@ -12,7 +12,7 @@ namespace OpenSim.Region.Framework.Scenes
     {
         public delegate void ThreadClosing(IThread heartbeat);
         public Scene m_scene;
-        public bool ShouldExit;
+        public bool ShouldExit = false;
         public DateTime LastUpdate;
         public virtual void Start() { }
         public string type;
@@ -39,6 +39,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         private void Check(object sender, ElapsedEventArgs e)
         {
+            FixThreadCount();
             for(int i = 0; i < AllHeartbeats.Count; i++)
             {
                 try
@@ -46,6 +47,45 @@ namespace OpenSim.Region.Framework.Scenes
                     CheckThread(AllHeartbeats[i]);
                 }
                 catch { }
+            }
+        }
+
+        private void FixThreadCount()
+        {
+            if (AllHeartbeats.Count > 3)
+            {
+                //Make sure to kill off the right ones...
+                //m_log.Warn("[SceneHeartbeatTracker]: Fixing thread count... " + AllHeartbeats.Count + " found. ");
+                bool foundPhysics = false;
+                bool foundBackup = false;
+                bool foundUpdate = false;
+                for (int i = 0; i < AllHeartbeats.Count; i++)
+                {
+                    IThread hb = AllHeartbeats[i];
+                    if (hb == null)
+                        continue;
+                    if (hb.type == "SceneUpdateHeartbeat" && foundUpdate)
+                    {
+                        //m_log.Warn("[SceneHeartbeatTracker]: Killing " + hb.type);
+                        hb.ShouldExit = true;
+                    }
+                    if (hb.type == "SceneBackupHeartbeat" && foundBackup)
+                    {
+                        //m_log.Warn("[SceneHeartbeatTracker]: Killing " + hb.type);
+                        hb.ShouldExit = true;
+                    }
+                    if (hb.type == "ScenePhysicsHeartbeat" && foundPhysics)
+                    {
+                        //m_log.Warn("[SceneHeartbeatTracker]: Killing " + hb.type);
+                        hb.ShouldExit = true;
+                    }
+                    if (hb.type == "SceneBackupHeartbeat" && !foundBackup)
+                        foundBackup = true;
+                    if (hb.type == "ScenePhysicsHeartbeat" && !foundPhysics)
+                        foundPhysics = true;
+                    if (hb.type == "SceneUpdateHeartbeat" && !foundUpdate)
+                        foundUpdate = true;
+                }
             }
         }
 
@@ -59,7 +99,7 @@ namespace OpenSim.Region.Framework.Scenes
                 AllHeartbeats.Remove(hb);
                 System.Threading.Thread thread;
                 hb.ShouldExit = true;
-                m_log.Warn("[SceneHeartbeatTracker]: " + hb.type + " has been found dead, attempting to revive...");
+                //m_log.Warn("[SceneHeartbeatTracker]: " + hb.type + " has been found dead, attempting to revive...");
                 //Time to start a new one
                 if (hb.type == "SceneBackupHeartbeat")
                 {
@@ -91,7 +131,8 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void ThreadDieing(IThread heartbeat)
         {
-            m_log.Warn("[SceneHeartbeatTracker]: " + heartbeat.type + " has been found dead, attempting to revive...");
+            AllHeartbeats.Remove(heartbeat);
+            //m_log.Warn("[SceneHeartbeatTracker]: " + heartbeat.type + " has been found dead, attempting to revive...");
         }
     }
 }

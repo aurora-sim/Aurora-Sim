@@ -858,13 +858,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             AsyncBeginSend(buffer);
         }
 
-        private bool IsClientAuthorized(UseCircuitCodePacket useCircuitCode, out AuthenticateResponse sessionInfo)
+        private bool IsClientAuthorized(UseCircuitCodePacket useCircuitCode, IPEndPoint remoteEndPoint, out AuthenticateResponse sessionInfo)
         {
             UUID agentID = useCircuitCode.CircuitCode.ID;
             UUID sessionID = useCircuitCode.CircuitCode.SessionID;
             uint circuitCode = useCircuitCode.CircuitCode.Code;
 
-            sessionInfo = m_circuitManager.AuthenticateSession(sessionID, agentID, circuitCode);
+            sessionInfo = m_circuitManager.AuthenticateSession(sessionID, agentID, circuitCode, remoteEndPoint);
             return sessionInfo.Authorised;
         }
 
@@ -877,7 +877,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             if (m_scene.RegionStatus != RegionStatus.SlaveScene)
             {
                 AuthenticateResponse sessionInfo;
-                if (IsClientAuthorized(useCircuitCode, out sessionInfo))
+                if (IsClientAuthorized(useCircuitCode, remoteEndPoint, out sessionInfo))
                 {
                     AddClient(circuitCode, agentID, sessionID, remoteEndPoint, sessionInfo);
                 }

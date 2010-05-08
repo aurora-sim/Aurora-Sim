@@ -1482,7 +1482,7 @@ namespace OpenSim.Region.Framework.Scenes
                             m_scene.StatsReporter.SetActiveScripts(m_scene.m_sceneGraph.GetActiveScriptsCount());
                             m_scene.StatsReporter.addScriptLines(m_scene.m_sceneGraph.GetScriptLPS());
                         }
-
+                        CheckExit();
                         if (firstRun)
                         {
                             firstRun = false;
@@ -1597,6 +1597,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                     try
                     {
+                        CheckExit();
                         int tmpPhysicsMS2 = Util.EnvironmentTickCount();
                         if ((m_scene.m_frame % m_scene.m_update_physics == 0) && m_scene.m_physics_enabled)
                             m_scene.m_sceneGraph.UpdatePreparePhysics();

@@ -502,9 +502,8 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                 {
                     if (sp.UserLevel >= 200)
                         return true;
-                    return false;
+                    //return false;
                 }
-
                 UserAccount account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, user);
                 if (account != null)
                 {

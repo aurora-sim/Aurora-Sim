@@ -25,13 +25,15 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System.Net;
+
 namespace OpenSim.Framework
 {
     public class AuthenticateResponse
     {
         public bool Authorised;
         public Login LoginInfo;
-
+        
         public AuthenticateResponse()
         {
         }

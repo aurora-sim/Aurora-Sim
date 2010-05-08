@@ -137,9 +137,9 @@ namespace OpenSim.Region.CoreModules.Framework.EventQueue
             {
                 if (!queues.ContainsKey(agentId))
                 {
-                    m_log.DebugFormat(
-                        "[EVENTQUEUE]: Adding new queue for agent {0} in region {1}", 
-                        agentId, m_scene.RegionInfo.RegionName);
+                    //m_log.DebugFormat(
+                    //    "[EVENTQUEUE]: Adding new queue for agent {0} in region {1}", 
+                    //    agentId, m_scene.RegionInfo.RegionName);
                     
                     queues[agentId] = new Queue<OSD>();
                 }

@@ -96,7 +96,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
         {
             UUID capID = UUID.Random();
 
-            m_log.Info("[GETTEXTURE]: /CAPS/" + capID);
+            //m_log.Info("[GETTEXTURE]: /CAPS/" + capID);
             caps.RegisterHandler("GetTexture", new StreamHandler("GET", "/CAPS/" + capID, ProcessGetTexture));
         }
 

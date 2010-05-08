@@ -229,9 +229,9 @@ namespace Aurora.Modules
             {
                 if (s.RegionInfo.RegionHandle == destination.RegionHandle)
                 {
-                    m_log.DebugFormat(
-                        "[LOCAL SIMULATION CONNECTOR]: Found region {0} {1} to send AgentUpdate",
-                        s.RegionInfo.RegionName, destination.RegionHandle);
+                    //m_log.DebugFormat(
+                    //    "[LOCAL SIMULATION CONNECTOR]: Found region {0} {1} to send AgentUpdate",
+                    //    s.RegionInfo.RegionName, destination.RegionHandle);
 
                     s.IncomingChildAgentDataUpdate(cAgentData);
                     return true;

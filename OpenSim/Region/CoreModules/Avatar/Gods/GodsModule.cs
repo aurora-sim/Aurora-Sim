@@ -45,11 +45,13 @@ namespace OpenSim.Region.CoreModules.Avatar.Gods
         public void Initialise(Scene scene, IConfigSource source)
         {
             m_scene = scene;
-            m_dialogModule = m_scene.RequestModuleInterface<IDialogModule>();
             m_scene.RegisterModuleInterface<IGodsModule>(this);
         }
-        
-        public void PostInitialise() {}
+
+        public void PostInitialise()
+        {
+            m_dialogModule = m_scene.RequestModuleInterface<IDialogModule>();
+        }
         public void Close() {}
         public string Name { get { return "Gods Module"; } }
         public bool IsSharedModule { get { return false; } }

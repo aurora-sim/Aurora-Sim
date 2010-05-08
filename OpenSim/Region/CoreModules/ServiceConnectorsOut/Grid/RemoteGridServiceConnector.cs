@@ -169,7 +169,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Grid
 
         public override GridRegion GetRegionByUUID(UUID scopeID, UUID regionID)
         {
-            GridRegion rinfo = m_GridCache.GetRegionByUUID(regionID);
+            GridRegion rinfo = null;//m_GridCache.GetRegionByUUID(regionID);
 
             if (rinfo == null) 
                 rinfo = m_LocalGridService.GetRegionByUUID(scopeID, regionID);
@@ -183,7 +183,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Grid
         public override GridRegion GetRegionByPosition(UUID scopeID, int x, int y)
         {
             bool found = false;
-            GridRegion rinfo = m_GridCache.GetRegionByPosition(x, y, out found);
+            GridRegion rinfo = null;//m_GridCache.GetRegionByPosition(x, y, out found);
 
             if (!found && rinfo == null)
                 rinfo = m_LocalGridService.GetRegionByPosition(scopeID, x, y);

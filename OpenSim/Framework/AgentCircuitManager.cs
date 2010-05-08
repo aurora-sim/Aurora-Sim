@@ -26,6 +26,7 @@
  */
 
 using System.Collections.Generic;
+using System.Net;
 using OpenMetaverse;
 
 namespace OpenSim.Framework
@@ -37,7 +38,7 @@ namespace OpenSim.Framework
     {
         public Dictionary<uint, AgentCircuitData> AgentCircuits = new Dictionary<uint, AgentCircuitData>();
 
-        public virtual AuthenticateResponse AuthenticateSession(UUID sessionID, UUID agentID, uint circuitcode)
+        public virtual AuthenticateResponse AuthenticateSession(UUID sessionID, UUID agentID, uint circuitcode, IPEndPoint IP)
         {
             AgentCircuitData validcircuit = null;
             if (AgentCircuits.ContainsKey(circuitcode))
@@ -45,6 +46,7 @@ namespace OpenSim.Framework
                 validcircuit = AgentCircuits[circuitcode];
             }
             AuthenticateResponse user = new AuthenticateResponse();
+            //User never logged in... they shouldn't be attempting to connect
             if (validcircuit == null)
             {
                 //don't have this circuit code in our list
@@ -52,6 +54,7 @@ namespace OpenSim.Framework
                 return (user);
             }
 
+            //There is a session found... just is the sessionID right
             if ((sessionID == validcircuit.SessionID) && (agentID == validcircuit.AgentID))
             {
                 user.Authorised = true;
@@ -67,8 +70,27 @@ namespace OpenSim.Framework
             }
             else
             {
-                // Invalid
-                user.Authorised = false;
+                if (agentID == validcircuit.AgentID && validcircuit.IP != null)
+                {
+                    if (validcircuit.IP == IP)
+                    {
+                        user.Authorised = true;
+                        user.LoginInfo = new Login();
+                        user.LoginInfo.Agent = agentID;
+                        user.LoginInfo.Session = sessionID;
+                        user.LoginInfo.SecureSession = validcircuit.SecureSessionID;
+                        user.LoginInfo.First = validcircuit.firstname;
+                        user.LoginInfo.Last = validcircuit.lastname;
+                        user.LoginInfo.InventoryFolder = validcircuit.InventoryFolder;
+                        user.LoginInfo.BaseFolder = validcircuit.BaseFolder;
+                        user.LoginInfo.StartPos = validcircuit.startpos;
+                    }
+                }
+                else
+                {
+                    // Invalid
+                    user.Authorised = false;
+                }
             }
 
             return (user);

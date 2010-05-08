@@ -29,6 +29,7 @@ using System;
 using System.Collections.Generic;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using System.Net;
 
 namespace OpenSim.Framework
 {
@@ -113,6 +114,8 @@ namespace OpenSim.Framework
         public Vector3 startpos;
 
         public Dictionary<string, object> ServiceURLs;
+
+        public IPEndPoint IP;
 
         public AgentCircuitData()
         {

@@ -309,7 +309,7 @@ namespace OpenSim.Services.LLLoginService
                 // Instantiate/get the simulation interface and launch an agent at the destination
                 //
                 string reason = string.Empty;
-                AgentCircuitData aCircuit = LaunchAgentAtGrid(gatekeeper, destination, account, avatar, session, secureSession, position, where, out where, out reason);
+                AgentCircuitData aCircuit = LaunchAgentAtGrid(gatekeeper, destination, account, avatar, session, secureSession, position, where, clientIP, out where, out reason);
 
                 if (aCircuit == null)
                 {
@@ -585,7 +585,7 @@ namespace OpenSim.Services.LLLoginService
         }
 
         protected AgentCircuitData LaunchAgentAtGrid(GridRegion gatekeeper, GridRegion destination, UserAccount account, AvatarData avatar,
-            UUID session, UUID secureSession, Vector3 position, string currentWhere, out string where, out string reason)
+            UUID session, UUID secureSession, Vector3 position, string currentWhere, IPEndPoint IP, out string where, out string reason)
         {
             where = currentWhere;
             ISimulationService simConnector = null;
@@ -625,7 +625,7 @@ namespace OpenSim.Services.LLLoginService
             if (m_UserAgentService == null && simConnector != null)
             {
                 circuitCode = (uint)Util.RandomClass.Next(); ;
-                aCircuit = MakeAgent(destination, account, avatar, session, secureSession, circuitCode, position);
+                aCircuit = MakeAgent(destination, account, avatar, session, secureSession, circuitCode, position, IP);
                 success = LaunchAgentDirectly(simConnector, destination, aCircuit, out reason);
                 if (!success && m_GridService != null)
                 {
@@ -650,7 +650,7 @@ namespace OpenSim.Services.LLLoginService
             if (m_UserAgentService != null)
             {
                 circuitCode = (uint)Util.RandomClass.Next(); ;
-                aCircuit = MakeAgent(destination, account, avatar, session, secureSession, circuitCode, position);
+                aCircuit = MakeAgent(destination, account, avatar, session, secureSession, circuitCode, position, IP);
                 success = LaunchAgentIndirectly(gatekeeper, destination, aCircuit, out reason);
                 if (!success && m_GridService != null)
                 {
@@ -679,7 +679,7 @@ namespace OpenSim.Services.LLLoginService
         }
 
         private AgentCircuitData MakeAgent(GridRegion region, UserAccount account, 
-            AvatarData avatar, UUID session, UUID secureSession, uint circuit, Vector3 position)
+            AvatarData avatar, UUID session, UUID secureSession, uint circuit, Vector3 position, IPEndPoint IP)
         {
             AgentCircuitData aCircuit = new AgentCircuitData();
 
@@ -700,6 +700,7 @@ namespace OpenSim.Services.LLLoginService
             aCircuit.SecureSessionID = secureSession;
             aCircuit.SessionID = session;
             aCircuit.startpos = position;
+            aCircuit.IP = IP;
             SetServiceURLs(aCircuit, account);
 
             return aCircuit;

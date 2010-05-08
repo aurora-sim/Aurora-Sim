@@ -1077,16 +1077,17 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             try
             {
-                //for (int y = 0; y < 16; y++)
-                //{
-                //    for (int x = 0; x < 16; x++)
-                //    {
-                //        SendLayerData(x, y, map);
-                //    }
-                //}
+                for (int y = 0; y < 16; y++)
+                {
+                    for (int x = 0; x < 4; x++)
+                    {
+                        int xx = x * 4;
+                        SendLayerPacket(map, xx, y);
+                    }
+                }
 
                 // Send LayerData in a spiral pattern. Fun!
-                SendLayerTopRight(map, 0, 0, 15, 15);
+                //SendLayerTopRight(map, 0, 0, 15, 15);
             }
             catch (Exception e)
             {
@@ -1128,17 +1129,38 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <param name="map">heightmap</param>
         /// <param name="px">X coordinate for patches 0..12</param>
         /// <param name="py">Y coordinate for patches 0..15</param>
-        // private void SendLayerPacket(float[] map, int y, int x)
-        // {
-        //     int[] patches = new int[4];
-        //     patches[0] = x + 0 + y * 16;
-        //     patches[1] = x + 1 + y * 16;
-        //     patches[2] = x + 2 + y * 16;
-        //     patches[3] = x + 3 + y * 16;
+        private void SendLayerPacket(float[] map, int x, int y)
+        {
+            float[] heightmap = (map.Length == 65536) ?
+                 map :
+                 LLHeightFieldMoronize(map);
 
-        //     Packet layerpack = LLClientView.TerrainManager.CreateLandPacket(map, patches);
-        //     OutPacket(layerpack, ThrottleOutPacketType.Land);
-        // }
+                try
+            {
+                int[] patches = new int[4];
+                patches[0] = x + 0 + y * 16;
+                patches[1] = x + 1 + y * 16;
+                patches[2] = x + 2 + y * 16;
+                patches[3] = x + 3 + y * 16;
+
+                LayerDataPacket layerpack = TerrainCompressor.CreateLandPacket(heightmap, patches);
+                OutPacket(layerpack, ThrottleOutPacketType.Resend);
+            }
+            catch (Exception e)
+            {
+                try
+                {
+                    SendLayerData(x, y, heightmap);
+                    SendLayerData(x + 1, y, heightmap);
+                    SendLayerData(x + 2, y, heightmap);
+                    SendLayerData(x + 3, y, heightmap);
+                }
+                catch (Exception ex)
+                {
+                    m_log.Error("[CLIENT]: SendLayerData() Failed with exception: " + ex.Message, ex);
+                }
+            }
+        }
 
         /// <summary>
         /// Sends a specified patch to a client
@@ -1156,7 +1178,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     LLHeightFieldMoronize(map);
 
                 LayerDataPacket layerpack = TerrainCompressor.CreateLandPacket(heightmap, patches);
-                layerpack.Header.Reliable = true;
+                layerpack.Header.Reliable = false;
 
                 OutPacket(layerpack, ThrottleOutPacketType.Task);
             }
