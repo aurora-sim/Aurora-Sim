@@ -78,7 +78,8 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("IsMinor", ColumnTypes.String50),
                 ColDef("MatureRating", ColumnTypes.String50),
                 ColDef("Lang", ColumnTypes.String50),
-                ColDef("LangIsPublic", ColumnTypes.String50)
+                ColDef("LangIsPublic", ColumnTypes.String50),
+                ColDef("Created", ColumnTypes.String50)
                 ));
 
             AddSchema("classifieds", ColDefs(

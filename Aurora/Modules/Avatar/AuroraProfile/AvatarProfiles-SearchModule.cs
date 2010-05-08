@@ -156,6 +156,15 @@ namespace Aurora.Modules
 
         public void NewClient(IClientAPI client)
         {
+            AuroraProfileData APD = ProfileData.GetProfileInfo(client.AgentId);
+            if (APD == null)
+            {
+                Aurora.Framework.IAuthService IAS = m_scene.RequestModuleInterface<IAuthService>();
+                if (IAS != null)
+                {
+                    IAS.CreateUserAuth(client.AgentId.ToString(), client.FirstName, client.LastName);
+                }
+            }
             if (m_ProfileEnabled)
             {
                 client.OnRequestAvatarProperties += RequestAvatarProperty;
@@ -726,7 +735,7 @@ namespace Aurora.Modules
                                 charterMember = OpenMetaverse.Utils.StringToBytes(targetprofile.CustomType);
                             }
                             remoteClient.SendAvatarProperties(new UUID(targetprofile.Identifier), "",
-                                                              Util.ToDateTime(TargetAccount.Created).ToString("M/d/yyyy", CultureInfo.InvariantCulture),
+                                                              Util.ToDateTime(targetprofile.Created).ToString("M/d/yyyy", CultureInfo.InvariantCulture),
                                                               charterMember, "", (uint)(targetprofile.UserFlags & 0xff),
                                                               UUID.Zero, UUID.Zero, "", UUID.Zero);
                             #endregion
@@ -773,7 +782,7 @@ namespace Aurora.Modules
                                 charterMember = OpenMetaverse.Utils.StringToBytes(targetprofile.CustomType);
                             }
                             remoteClient.SendAvatarProperties(new UUID(targetprofile.Identifier), "",
-                                                              Util.ToDateTime(TargetAccount.Created).ToString("M/d/yyyy", CultureInfo.InvariantCulture),
+                                                              Util.ToDateTime(targetprofile.Created).ToString("M/d/yyyy", CultureInfo.InvariantCulture),
                                                               charterMember, "", (uint)(targetprofile.UserFlags & 0xff),
                                                               UUID.Zero, UUID.Zero, "", UUID.Zero);
                             #endregion
@@ -846,7 +855,7 @@ namespace Aurora.Modules
             uint flags = Convert.ToUInt32(Profile.AllowPublish) + Convert.ToUInt32(Profile.MaturePublish) + membershipGroupINT + (uint)agentOnline + (uint)account.UserFlags;
 
             remoteClient.SendAvatarProperties(new UUID(Profile.Identifier), Profile.AboutText,
-                                              Util.ToDateTime(account.Created).ToString("M/d/yyyy", CultureInfo.InvariantCulture),
+                                              Util.ToDateTime(Profile.Created).ToString("M/d/yyyy", CultureInfo.InvariantCulture),
                                               charterMember, Profile.FirstLifeAboutText, flags,
                                               Profile.FirstLifeImage, Profile.Image, Profile.ProfileURL, new UUID(Profile.Partner));
         }

@@ -286,7 +286,7 @@ namespace Aurora.DataManager.SQLite
                 try
                 {
                     List<string> Interests = ReadInterestsInfoRow(agentID.ToString());
-                    List<string> Profile = Query("select userLogin,userPass,userGodLevel,membershipGroup,profileMaturePublish,profileAllowPublish,profileURL,AboutText,CustomType,Email,FirstLifeAboutText,FirstLifeImage,Partner,PermaBanned,TempBanned,Image,IsMinor,MatureRating from usersauth where userUUID = '" + agentID.ToString() + "'");
+                    List<string> Profile = Query("select userLogin,userPass,userGodLevel,membershipGroup,profileMaturePublish,profileAllowPublish,profileURL,AboutText,CustomType,Email,FirstLifeAboutText,FirstLifeImage,Partner,PermaBanned,TempBanned,Image,IsMinor,MatureRating,Created from usersauth where userUUID = '" + agentID.ToString() + "'");
                     if (Profile.Count == 1)
                         return null;
                     if (Profile[2] == " ")
@@ -322,6 +322,7 @@ namespace Aurora.DataManager.SQLite
                     UserProfile.Image = new UUID(Profile[15]);
                     UserProfile.Minor = Convert.ToBoolean(Profile[16]);
                     UserProfile.Mature = Convert.ToInt32(Profile[17]);
+                    UserProfile.Created = Convert.ToInt32(Profile[18]);
                     UserProfilesCache.Add(agentID, UserProfile);
                     return UserProfile;
                 }

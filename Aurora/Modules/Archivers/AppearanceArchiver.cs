@@ -36,11 +36,19 @@ namespace Aurora.Modules
         {
             var GenericData = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
             UserAccount account = m_scene.UserAccountService.GetUserAccount(UUID.Zero, client.AgentId);
-            string NewUser = GenericData.Query("userUUID", account.PrincipalID.ToString(), "usersauth", "IsNewUser")[0];
-            string ArchiveName = GenericData.Query("userUUID", account.PrincipalID.ToString(), "usersauth", "AArchiveName")[0];
-            if (NewUser == "true" && ArchiveName != "" && ArchiveName != null && ArchiveName != " ")
+            List<string> NewUser = GenericData.Query("userUUID", account.PrincipalID.ToString(), "usersauth", "IsNewUser");
+            List<string> ArchiveName = GenericData.Query("userUUID", account.PrincipalID.ToString(), "usersauth", "AArchiveName");
+            if (NewUser.Count != 0 && ArchiveName.Count != 0 && NewUser != null && NewUser[0] == "true" && ArchiveName != null && ArchiveName[0] != "" && ArchiveName[0] != " ")
             {
-                LoadAA(account, ArchiveName);
+                LoadAA(account, ArchiveName[0]);
+            }
+            if (NewUser.Count == 0 && ArchiveName.Count == 0)
+            {
+                Aurora.Framework.IAuthService IAS = m_scene.RequestModuleInterface<IAuthService>();
+                if (IAS != null)
+                {
+                    IAS.CreateUserAuth(account.PrincipalID.ToString(), account.FirstName, account.LastName);
+                }
             }
             List<string> SetRow = new List<string>();
             List<string> SetValue = new List<string>();

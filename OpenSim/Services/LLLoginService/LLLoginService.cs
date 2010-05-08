@@ -830,6 +830,7 @@ namespace OpenSim.Services.LLLoginService
             values.Add("2");
             values.Add("en");
             values.Add("1");
+            values.Add(Util.UnixTimeSinceEpoch().ToString());
             var GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
             GD.Insert("usersauth", values.ToArray());
         }
