@@ -44,6 +44,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
 {
     public class Compiler : ICompiler
     {
+        #region Declares
+
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         // * Uses "LSL2Converter" to convert LSL to C# if necessary.
@@ -72,6 +74,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
         private Dictionary<string, bool> AllowedCompilers = new Dictionary<string, bool>(StringComparer.CurrentCultureIgnoreCase);
         private Dictionary<string, enumCompileType> LanguageMapping = new Dictionary<string, enumCompileType>(StringComparer.CurrentCultureIgnoreCase);
 
+        public bool firstStartup = true;
         private string FilePrefix;
         private string ScriptEnginesPath = "ScriptEngines";
         // mapping between LSL and C# line/column numbers
@@ -94,48 +97,48 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
         private Dictionary<string, Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>>> m_lineMaps =
             new Dictionary<string, Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>>>();
 
+        #endregion
+
+        #region Setup
+
         public Compiler(IScriptEngine scriptEngine)
         {
             m_scriptEngine = scriptEngine;
             ReadConfig();
         }
 
-        public bool in_startup = true;
         public void ReadConfig()
         {
             // Get some config
             WriteScriptSourceToDebugFile = m_scriptEngine.Config.GetBoolean("WriteScriptSourceToDebugFile", false);
             CompileWithDebugInformation = m_scriptEngine.Config.GetBoolean("CompileWithDebugInformation", true);
+            
+            MakeFilePrefixSafe();
+            // First time we start? Make sure the directory exists
+            MakeSureDirectoryExists();
+            //Set up the compilers
+            MapCompilers();
+            //Find the default compiler
+            FindDefaultCompiler();
+        }
 
+        public void MakeFilePrefixSafe()
+        {
             // Get file prefix from scriptengine name and make it file system safe:
             FilePrefix = "CommonCompiler";
             foreach (char c in Path.GetInvalidFileNameChars())
             {
                 FilePrefix = FilePrefix.Replace(c, '_');
             }
+        }
 
-            // First time we start? Delete old files
-            if (in_startup)
-            {
-                in_startup = false;
-                DeleteOldFiles();
-            }
-
-            // Map name and enum type of our supported languages
-            LanguageMapping.Add(enumCompileType.cs.ToString(), enumCompileType.cs);
-            LanguageMapping.Add(enumCompileType.vb.ToString(), enumCompileType.vb);
-            LanguageMapping.Add(enumCompileType.lsl.ToString(), enumCompileType.lsl);
-            LanguageMapping.Add(enumCompileType.js.ToString(), enumCompileType.js);
-            LanguageMapping.Add(enumCompileType.yp.ToString(), enumCompileType.yp);
-
+        public void FindDefaultCompiler()
+        {
             // Allowed compilers
             string allowComp = m_scriptEngine.Config.GetString("AllowedCompilers", "lsl");
             AllowedCompilers.Clear();
 
-#if DEBUG
             m_log.Debug("[Compiler]: Allowed languages: " + allowComp);
-#endif
-
 
             foreach (string strl in allowComp.Split(','))
             {
@@ -143,12 +146,6 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                 if (!LanguageMapping.ContainsKey(strlan))
                 {
                     m_log.Error("[Compiler]: Config error. Compiler is unable to recognize language type \"" + strlan + "\" specified in \"AllowedCompilers\".");
-                }
-                else
-                {
-#if DEBUG
-                    //m_log.Debug("[Compiler]: Config OK. Compiler recognized language type \"" + strlan + "\" specified in \"AllowedCompilers\".");
-#endif
                 }
                 AllowedCompilers.Add(strlan, true);
             }
@@ -174,23 +171,32 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             }
             else
             {
-#if DEBUG
-                //                m_log.Debug("[Compiler]: " +
-                //                                            "Config OK. Default language \"" + defaultCompileLanguage + "\" specified in \"DefaultCompileLanguage\" is recognized as a valid language.");
-#endif
                 // LANGUAGE IS IN ALLOW-LIST
                 DefaultCompileLanguage = LanguageMapping[defaultCompileLanguage];
             }
 
             // We now have an allow-list, a mapping list, and a default language
+        }
 
+        public void MapCompilers()
+        {
+            // Map name and enum type of our supported languages
+            LanguageMapping.Add(enumCompileType.cs.ToString(), enumCompileType.cs);
+            LanguageMapping.Add(enumCompileType.vb.ToString(), enumCompileType.vb);
+            LanguageMapping.Add(enumCompileType.lsl.ToString(), enumCompileType.lsl);
+            LanguageMapping.Add(enumCompileType.js.ToString(), enumCompileType.js);
+            LanguageMapping.Add(enumCompileType.yp.ToString(), enumCompileType.yp);
         }
 
         /// <summary>
-        /// Delete old script files
+        /// Create the directories if needed
         /// </summary>
-        private void DeleteOldFiles()
+        private void MakeSureDirectoryExists()
         {
+            if (!firstStartup)
+                return;
+            firstStartup = false;
+                
             // CREATE FOLDER IF IT DOESNT EXIST
             if (!Directory.Exists(ScriptEnginesPath))
             {
@@ -218,49 +224,11 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                                             m_scriptEngine.World.RegionInfo.RegionID.ToString()) + "\": " + ex.ToString());
                 }
             }
-
-            /*foreach (string file in Directory.GetFiles(Path.Combine(ScriptEnginesPath,
-                     m_scriptEngine.World.RegionInfo.RegionID.ToString()), FilePrefix + "_compiled*"))
-            {
-                try
-                {
-                    File.Delete(file);
-                }
-                catch (Exception ex)
-                {
-                    m_log.Error("[Compiler]: Exception trying delete old script file \"" + file + "\": " + ex.ToString());
-                }
-            }
-            foreach (string file in Directory.GetFiles(Path.Combine(ScriptEnginesPath,
-                    m_scriptEngine.World.RegionInfo.RegionID.ToString()), FilePrefix + "_source*"))
-            {
-                try
-                {
-                    File.Delete(file);
-                }
-                catch (Exception ex)
-                {
-                    m_log.Error("[Compiler]: Exception trying delete old script file \"" + file + "\": " + ex.ToString());
-                }
-            }*/
         }
 
-        ////private ICodeCompiler icc = codeProvider.CreateCompiler();
-        //public string CompileFromFile(string LSOFileName)
-        //{
-        //    switch (Path.GetExtension(LSOFileName).ToLower())
-        //    {
-        //        case ".txt":
-        //        case ".lsl":
-        //            Common.ScriptEngineBase.Shared.SendToDebug("Source code is LSL, converting to CS");
-        //            return CompileFromLSLText(File.ReadAllText(LSOFileName));
-        //        case ".cs":
-        //            Common.ScriptEngineBase.Shared.SendToDebug("Source code is CS");
-        //            return CompileFromCSText(File.ReadAllText(LSOFileName));
-        //        default:
-        //            throw new Exception("Unknown script type.");
-        //    }
-        //}
+        #endregion
+
+        #region Find the output
 
         public string GetCompilerOutput(string assetID)
         {
@@ -273,6 +241,10 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
         {
             return GetCompilerOutput(assetID.ToString());
         }
+
+        #endregion
+
+        #region Compile script
 
         /// <summary>
         /// Converts script from LSL to CS and calls CompileFromCSText
@@ -900,5 +872,6 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
         		return builder.ToString().ToLower();
         	return builder.ToString();
         }
+        #endregion
     }
 }

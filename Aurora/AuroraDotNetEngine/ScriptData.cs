@@ -373,7 +373,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //Find the asset ID
             if (part.TaskInventory.TryGetValue(ItemID, out InventoryItem))
                 AssetID = InventoryItem.AssetID;
-
+            //Try to see if this was rezzed from someone's inventory
             UserInventoryItemID = part.FromUserInventoryItemID;
             //Try to find the avatar who started this.
             presence = World.GetScenePresence(InventoryItem.OwnerID);

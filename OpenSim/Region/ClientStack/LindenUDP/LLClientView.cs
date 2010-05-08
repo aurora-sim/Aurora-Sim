@@ -4734,6 +4734,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             AddLocalPacketHandler(PacketType.AgentSetAppearance, HandlerAgentSetAppearance);
             AddLocalPacketHandler(PacketType.AgentIsNowWearing, HandlerAgentIsNowWearing);
             AddLocalPacketHandler(PacketType.RezSingleAttachmentFromInv, HandlerRezSingleAttachmentFromInv);
+            AddLocalPacketHandler(PacketType.RezRestoreToWorld, HandlerRezRestoreToWorld);
             AddLocalPacketHandler(PacketType.RezMultipleAttachmentsFromInv, HandleRezMultipleAttachmentsFromInv);
             AddLocalPacketHandler(PacketType.DetachAttachmentIntoInv, HandleDetachAttachmentIntoInv);
             AddLocalPacketHandler(PacketType.ObjectAttach, HandleObjectAttach);
@@ -5704,6 +5705,29 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                 handlerRezSingleAttachment(this, rez.ObjectData.ItemID,
                                            rez.ObjectData.AttachmentPt);
+            }
+
+            return true;
+        }
+
+        private bool HandlerRezRestoreToWorld(IClientAPI sender, Packet Pack)
+        {
+            RezSingleAttachmentFromInv handlerRezSingleAttachment = OnRezSingleAttachmentFromInv;
+            if (handlerRezSingleAttachment != null)
+            {
+                RezRestoreToWorldPacket rez = (RezRestoreToWorldPacket)Pack;
+
+                #region Packet Session and User Check
+                if (m_checkPackets)
+                {
+                    if (rez.AgentData.SessionID != SessionId ||
+                        rez.AgentData.AgentID != AgentId)
+                        return true;
+                }
+                #endregion
+
+                handlerRezSingleAttachment(this, rez.InventoryData.ItemID,
+                                           0);
             }
 
             return true;
