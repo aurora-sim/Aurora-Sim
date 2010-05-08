@@ -63,29 +63,6 @@ namespace OpenSim.Services.PresenceService
             data.SessionID = sessionID;
             data.Data = new Dictionary<string, string>();
             data.Data["SecureSessionID"] = secureSessionID.ToString();
-<<<<<<< HEAD
-            data.Data["Online"] = "true";
-            data.Data["Login"] = Util.UnixTimeSinceEpoch().ToString();
-            if (d != null && d.Length > 0)
-            {
-                data.Data["HomeRegionID"] = d[0].Data["HomeRegionID"];
-                data.Data["HomePosition"] = d[0].Data["HomePosition"];
-                data.Data["HomeLookAt"] = d[0].Data["HomeLookAt"];
-                if(data.Data.ContainsKey("Position"))
-                    data.Data["Position"] = d[0].Data["Position"];
-                if (data.Data.ContainsKey("LookAt"))
-                    data.Data["LookAt"] = d[0].Data["LookAt"];
-
-                data.RegionID = d[0].RegionID;
-            }
-            else
-            {
-                data.Data["HomeRegionID"] = UUID.Zero.ToString();
-                data.Data["HomePosition"] = new Vector3(128, 128, 0).ToString();
-                data.Data["HomeLookAt"] = new Vector3(0, 1, 0).ToString();
-            }
-=======
->>>>>>> d72769930aebb14ae4bfee9803adb13fbb44eb8b
             
             m_Database.Store(data);
 
@@ -157,20 +134,6 @@ namespace OpenSim.Services.PresenceService
 
                     ret.UserID = d.UserID;
                     ret.RegionID = d.RegionID;
-<<<<<<< HEAD
-                    ret.Online = bool.Parse(d.Data["Online"]);
-                    ret.Login = Util.ToDateTime(Convert.ToInt32(
-                            d.Data["Login"]));
-                    if (d.Data.ContainsKey("Logout"))
-                        ret.Logout = Util.ToDateTime(Convert.ToInt32(
-                            d.Data["Logout"]));
-                    ret.Position = Vector3.Parse(d.Data["Position"]);
-                    ret.LookAt = Vector3.Parse(d.Data["LookAt"]);
-                    ret.HomeRegionID = new UUID(d.Data["HomeRegionID"]);
-                    ret.HomePosition = Vector3.Parse(d.Data["HomePosition"]);
-                    ret.HomeLookAt = Vector3.Parse(d.Data["HomeLookAt"]);
-=======
->>>>>>> d72769930aebb14ae4bfee9803adb13fbb44eb8b
 
                     info.Add(ret);
                 }

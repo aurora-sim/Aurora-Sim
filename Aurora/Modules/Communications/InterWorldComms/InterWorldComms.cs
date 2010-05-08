@@ -458,10 +458,10 @@ namespace Aurora.Modules
             UUID agent = new UUID(client);
             if(!ForeignAgents.ContainsKey(agent))
                 ForeignAgents.Add(agent, homeConnection);
-            AuroraProfileData profile = ProfileDataManager.GetProfileInfo(agent);
+            IUserProfileInfo profile = ProfileDataManager.GetProfileInfo(agent);
             if (profile == null)
             {
-                ProfileDataManager.CreateTemperaryAccount(client, first, last);
+                //ProfileDataManager.CreateTemperaryAccount(client, first, last);
             }
         }
 
@@ -720,7 +720,7 @@ namespace Aurora.Modules
             {
                 // Kick existing agent.
                 if (presenceServer.GetAgent(new UUID(SessionID)) != null)
-                    presenceServer.LogoutAgent(new UUID(SessionID), new Vector3(), new Vector3());
+                    presenceServer.LogoutAgent(new UUID(SessionID));
                 
                 if (!presenceServer.LoginAgent(AgentID, new UUID(SessionID), new UUID(SecureSessionID)))
                 {
@@ -758,7 +758,7 @@ namespace Aurora.Modules
                 m_log.InfoFormat("[IWC MODULE]: [InterWorldAddNewRootPresence] Foreign agent {0} was not able to connect to {1}.",
                         aCircuit.firstname + " " + aCircuit.lastname, foundregion.RegionName);
                 //Kick the agent we just made.
-                presenceServer.LogoutAgent(new UUID(SessionID), new Vector3(), new Vector3());
+                presenceServer.LogoutAgent(new UUID(SessionID));
                 IAgentData agentdata = null;
                 //Just so if something went wrong after the agent was created.
                 if (m_Scene.SimulationService.RetrieveAgent(foundregion, new UUID(AgentID), out agentdata) == true)
@@ -821,7 +821,7 @@ namespace Aurora.Modules
             bool successful = false;
 
             #region Logout Presence
-            if (!presenceServer.LogoutAgent(new UUID(SessionID),new Vector3(),new Vector3()))
+            if (!presenceServer.LogoutAgent(new UUID(SessionID)))
             {
                 reason = "Unable to login presence";
                 m_log.Info("[IWC MODULE]: Presence logout failed for local agent.");

@@ -318,6 +318,17 @@ namespace OpenSim.Region.Framework.Scenes
                 return m_AvatarService;
             }
         }
+
+        protected IGridUserService m_GridUserService;
+        public IGridUserService GridUserService
+        {
+            get
+            {
+                if (m_GridUserService == null)
+                    m_GridUserService = RequestModuleInterface<IGridUserService>();
+                return m_GridUserService;
+            }
+        }
         
         protected IXMLRPC m_xmlrpcModule;
         protected IWorldComm m_worldCommModule;
@@ -665,6 +676,10 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
             }
+
+            MainConsole.Instance.Commands.AddCommand("region", false, "reload estate",
+                                          "reload estate",
+                                          "Reload the estate data", HandleReloadEstate);
 
             //Bind Storage Manager functions to some land manager functions for this scene
             EventManager.OnLandObjectAdded +=
@@ -1334,8 +1349,8 @@ namespace OpenSim.Region.Framework.Scenes
                             if (defaultRegions != null && defaultRegions.Count >= 1)
                                 home = defaultRegions[0];
 
-                            if (PresenceService != null && home != null)
-                                PresenceService.SetHomeLocation(account.PrincipalID.ToString(), home.RegionID, new Vector3(128, 128, 0), new Vector3(0, 1, 0));
+                            if (GridUserService != null && home != null)
+                                GridUserService.SetHome(account.PrincipalID.ToString(), home.RegionID, new Vector3(128, 128, 0), new Vector3(0, 1, 0));
                             else
                                 m_log.WarnFormat("[USER ACCOUNT SERVICE]: Unable to set home for account {0} {1}.",
                                    first, last);
@@ -3548,7 +3563,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="flags"></param>
         public virtual void SetHomeRezPoint(IClientAPI remoteClient, ulong regionHandle, Vector3 position, Vector3 lookAt, uint flags)
         {
-            if (PresenceService.SetHomeLocation(remoteClient.AgentId.ToString(), RegionInfo.RegionID, position, lookAt))
+            if (GridUserService != null && GridUserService.SetHome(remoteClient.AgentId.ToString(), RegionInfo.RegionID, position, lookAt))
                 // FUBAR ALERT: this needs to be "Home position set." so the viewer saves a home-screenshot.
                 m_dialogModule.SendAlertToUser(remoteClient, "Home position set.");
             else
@@ -3996,7 +4011,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             OpenSim.Services.Interfaces.PresenceInfo pinfo = presence.GetAgent(agent.SessionID);
 
-            if (pinfo == null || (pinfo != null && pinfo.Online == false))
+            if (pinfo == null)
             {
                 reason = String.Format("Failed to verify user {0} {1}, access denied to region {2}.", agent.firstname, agent.lastname, RegionInfo.RegionName);
                 return false;
@@ -5524,6 +5539,61 @@ namespace OpenSim.Region.Framework.Scenes
         private Vector3 GetPositionAtGround(float x, float y)
         {
             return new Vector3(x, y, GetGroundHeight(x, y));
+        }
+        public List<UUID> GetEstateRegions(int estateID)
+        {
+            if (m_storageManager.EstateDataStore == null)
+                return new List<UUID>();
+
+            return m_storageManager.EstateDataStore.GetRegions(estateID);
+        }
+
+        public void ReloadEstateData()
+        {
+            m_regInfo.EstateSettings = m_storageManager.EstateDataStore.LoadEstateSettings(m_regInfo.RegionID, false);
+
+            TriggerEstateSunUpdate();
+        }
+
+        public void TriggerEstateSunUpdate()
+        {
+            float sun;
+            if (RegionInfo.RegionSettings.UseEstateSun)
+            {
+                sun = (float)RegionInfo.EstateSettings.SunPosition;
+                if (RegionInfo.EstateSettings.UseGlobalTime)
+                {
+                    sun = EventManager.GetCurrentTimeAsSunLindenHour() - 6.0f;
+                }
+
+                // 
+                EventManager.TriggerEstateToolsSunUpdate(
+                        RegionInfo.RegionHandle,
+                        RegionInfo.EstateSettings.FixedSun,
+                        RegionInfo.RegionSettings.UseEstateSun,
+                        sun);
+            }
+            else
+            {
+                // Use the Sun Position from the Region Settings
+                sun = (float)RegionInfo.RegionSettings.SunPosition - 6.0f;
+
+                EventManager.TriggerEstateToolsSunUpdate(
+                        RegionInfo.RegionHandle,
+                        RegionInfo.RegionSettings.FixedSun,
+                        RegionInfo.RegionSettings.UseEstateSun,
+                        sun);
+            }
+        }
+
+        private void HandleReloadEstate(string module, string[] cmd)
+        {
+            if (MainConsole.Instance.ConsoleScene == null ||
+                (MainConsole.Instance.ConsoleScene is Scene &&
+                (Scene)MainConsole.Instance.ConsoleScene == this))
+            {
+                ReloadEstateData();
+            }
         }
     }
 }

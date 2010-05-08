@@ -10,21 +10,7 @@ namespace Aurora.Framework
 {
     public interface IProfileData
     {
-        List<string> ReadClassifiedInfoRow(string classifiedID);
-        Dictionary<UUID, string> ReadClassifedRow(string creatoruuid);
-        Dictionary<UUID, string> ReadPickRow(string creator);
-        List<string> ReadInterestsInfoRow(string agentID);
-        List<string> ReadPickInfoRow(string creator, string pickID);
-        AuroraProfileData GetProfileNotes(UUID agentID, UUID target);
-        bool InvalidateProfileNotes(UUID target);
-        bool FullUpdateUserProfile(AuroraProfileData Profile);
-        AuroraProfileData GetProfileInfo(UUID agentID);
-
-        bool UpdateUserProfile(AuroraProfileData Profile);
-
-        AuroraProfileData CreateTemperaryAccount(string client, string first, string last);
-        
-		DirPlacesReplyData[] PlacesQuery(string queryText, string category, string table, string wantedValue, int StartQuery);
+        DirPlacesReplyData[] PlacesQuery(string queryText, string category, string table, string wantedValue, int StartQuery);
         DirLandReplyData[] LandForSaleQuery(string searchType, string price, string area, string table, string wantedValue, int StartQuery);
         DirClassifiedReplyData[] ClassifiedsQuery(string queryText, string category, string queryFlags, int StartQuery);
         DirEventsReplyData[] EventQuery(string queryText, string flags, string table, string wantedValue, int StartQuery);
@@ -33,24 +19,6 @@ namespace Aurora.Framework
         EventData[] GetEvents();
         Classified[] GetClassifieds();
 
-    }
-    public class Classified
-    {
-        public string UUID;
-        public string CreatorUUID;
-        public string CreationDate;
-        public string ExpirationDate;
-        public string Category;
-        public string Name;
-        public string Description;
-        public string ParcelUUID;
-        public string ParentEstate;
-        public string SnapshotUUID;
-        public string SimName;
-        public string PosGlobal;
-        public string ParcelName;
-        public string ClassifiedFlags;
-        public string PriceForListing;
     }
     public interface IRegionData
     {

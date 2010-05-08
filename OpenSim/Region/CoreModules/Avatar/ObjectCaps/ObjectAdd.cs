@@ -190,10 +190,10 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                 maxLevel = 1;
             if (Level == "A")
                 maxLevel = 2;
-            Aurora.Framework.IProfileData PD = Aurora.DataManager.DataManager.GetDefaultProfilePlugin();
-            AuroraProfileData APD = PD.GetProfileInfo(agentID);
-            APD.Mature = maxLevel;
-            PD.UpdateUserProfile(APD);
+            Aurora.DataManager.Frontends.ProfileFrontend data = new Aurora.DataManager.Frontends.ProfileFrontend();
+            IUserProfileInfo profile = data.GetUserProfile(agentID);
+            profile.MaturityRating = maxLevel;
+            data.UpdateUserProfile(profile);
             Hashtable cancelresponsedata = new Hashtable();
             cancelresponsedata["int_response_code"] = 200; //501; //410; //404;
             cancelresponsedata["content_type"] = "text/plain";

@@ -47,6 +47,7 @@ using OpenSim.Services.Interfaces;
 using OpenSim.Server.Base;
 using FriendInfo = OpenSim.Services.Interfaces.FriendInfo;
 using OpenSim.Region.DataSnapshot.Interfaces;
+using Aurora.DataManager.Frontends;
 
 namespace Aurora.Modules
 {
@@ -59,6 +60,7 @@ namespace Aurora.Modules
         private IConfigSource m_config;
         private Dictionary<string, Dictionary<UUID, string>> ClassifiedsCache = new Dictionary<string, Dictionary<UUID, string>>();
         private Dictionary<string, List<string>> ClassifiedInfoCache = new Dictionary<string, List<string>>();
+        private ProfileFrontend ProfileFrontend = null;
         private IProfileData ProfileData = null;
         private IGenericData GenericData = null;
         private IRegionData RegionData = null;
@@ -122,6 +124,7 @@ namespace Aurora.Modules
         
         public void PostInitialise()
         {
+            ProfileFrontend = new ProfileFrontend();
             ProfileData = Aurora.DataManager.DataManager.GetDefaultProfilePlugin();
             GenericData = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
             RegionData = Aurora.DataManager.DataManager.GetDefaultRegionPlugin();
@@ -145,32 +148,22 @@ namespace Aurora.Modules
             get { return false; }
         }
 
-        public Scene World
-        {
-            get { return m_scene; }
-        }
-
         #endregion
 
         #region Client
 
         public void NewClient(IClientAPI client)
         {
-            AuroraProfileData APD = ProfileData.GetProfileInfo(client.AgentId);
-            if (APD == null)
-            {
-                Aurora.Framework.IAuthService IAS = m_scene.RequestModuleInterface<IAuthService>();
-                if (IAS != null)
-                {
-                    IAS.CreateUserAuth(client.AgentId.ToString(), client.FirstName, client.LastName);
-                }
-            }
+            IUserProfileInfo userProfile = ProfileFrontend.GetUserProfile(client.AgentId);
+            if (userProfile == null)
+                ProfileFrontend.CreateNewProfile(client.AgentId, client.FirstName, client.LastName);
+
             if (m_ProfileEnabled)
             {
                 client.OnRequestAvatarProperties += RequestAvatarProperty;
                 client.OnUpdateAvatarProperties += UpdateAvatarProperties;
                 client.AddGenericPacketHandler("avatarclassifiedsrequest", HandleAvatarClassifiedsRequest);
-                client.OnClassifiedInfoRequest += ProfileClassifiedInfoRequest;
+                client.OnClassifiedInfoRequest += ClassifiedInfoRequest;
                 client.OnClassifiedInfoUpdate += ClassifiedInfoUpdate;
                 client.OnClassifiedDelete += ClassifiedDelete;
                 client.OnClassifiedGodDelete += GodClassifiedDelete;
@@ -200,7 +193,6 @@ namespace Aurora.Modules
                 client.OnDirClassifiedQuery += DirClassifiedQuery;
                 // Response after Directory Queries
                 client.OnEventInfoRequest += EventInfoRequest;
-                client.OnClassifiedInfoRequest += ClassifiedInfoRequest;
                 client.OnMapItemRequest += HandleMapItemRequest;
                 client.OnPlacesQuery += OnPlacesQueryRequest;
             }
@@ -222,53 +214,57 @@ namespace Aurora.Modules
                 return;
 
             IClientAPI remoteClient = (IClientAPI)sender;
-            ScenePresence sp = m_scene.GetScenePresence(remoteClient.AgentId);
-            OpenSim.Services.Interfaces.FriendInfo[] friendList = m_FriendsService.GetFriends(new UUID(args[0]));
-            Dictionary<UUID, string> classifieds;
-            if (new UUID(args[0]) != remoteClient.AgentId)
+            Dictionary<UUID, string> classifieds = new Dictionary<UUID, string>();
+            bool isFriend = IsFriendOfUser(remoteClient.AgentId, new UUID(args[0]));
+            if (isFriend)
             {
-                foreach (OpenSim.Services.Interfaces.FriendInfo item in friendList)
+                IUserProfileInfo profile = ProfileFrontend.GetUserProfile(new UUID(args[0]));
+                foreach (Classified classified in profile.Classifieds)
                 {
-                    if (item.PrincipalID == remoteClient.AgentId)
-                    {
-                        classifieds = ProfileData.ReadClassifedRow(args[0]);
-                        remoteClient.SendAvatarClassifiedReply(new UUID(args[0]), classifieds);
-                        return;
-                    }
+                    classifieds.Add(new UUID(classified.ClassifiedUUID), classified.Name);
                 }
-                if (sp.GodLevel != 0)
-                {
-                    classifieds = ProfileData.ReadClassifedRow(args[0]);
-                    remoteClient.SendAvatarClassifiedReply(new UUID(args[0]), classifieds);
-                }
+                remoteClient.SendAvatarClassifiedReply(new UUID(args[0]), classifieds);
             }
             else
             {
-                classifieds = ProfileData.ReadClassifedRow(args[0]);
                 remoteClient.SendAvatarClassifiedReply(new UUID(args[0]), classifieds);
-            }
+            }          
         }
-        private void ProfileClassifiedInfoRequest(UUID classifiedID, IClientAPI client)
+
+        public bool IsFriendOfUser(UUID friend, UUID requested)
         {
-            if (!(client is IClientAPI))
+            OpenSim.Services.Interfaces.FriendInfo[] friendList = m_FriendsService.GetFriends(requested);
+            if (friend == requested)
+                return true;
+
+            foreach (OpenSim.Services.Interfaces.FriendInfo item in friendList)
             {
-                m_log.Debug("sender isnt IClientAPI");
-                return;
+                if (item.PrincipalID == friend)
+                {
+                    return true;
+                }
             }
-            IClientAPI remoteClient = (IClientAPI)client;
-            List<string> classifiedinfo;
-            classifiedinfo = ProfileData.ReadClassifiedInfoRow(classifiedID.ToString());
+            ScenePresence sp = m_scene.GetScenePresence(friend);
+            if (sp.GodLevel != 0)
+                return true;
+            return false;
+        }
+
+        public void ClassifiedInfoRequest(UUID queryClassifiedID, IClientAPI remoteClient)
+        {
+            Classified classified = ProfileFrontend.ReadClassifiedInfoRow(queryClassifiedID.ToString());
             Vector3 globalPos = new Vector3();
             try
             {
-                Vector3.TryParse(classifiedinfo[10], out globalPos);
+                Vector3.TryParse(classified.PosGlobal, out globalPos);
             }
-            catch (Exception ex)
+            catch
             {
-                ex = new Exception();
                 globalPos = new Vector3(128, 128, 128);
             }
-            remoteClient.SendClassifiedInfoReply(classifiedID, new UUID(classifiedinfo[0]), Convert.ToUInt32(classifiedinfo[1]), Convert.ToUInt32(classifiedinfo[2]), Convert.ToUInt32(classifiedinfo[3]), classifiedinfo[4], classifiedinfo[5], new UUID(classifiedinfo[6]), Convert.ToUInt32(classifiedinfo[7]), new UUID(classifiedinfo[8]), classifiedinfo[9], globalPos, classifiedinfo[11], Convert.ToByte(classifiedinfo[12]), Convert.ToInt32(classifiedinfo[13]));
+
+            remoteClient.SendClassifiedInfoReply(queryClassifiedID, new UUID(classified.CreatorUUID), Convert.ToUInt32(classified.CreationDate), Convert.ToUInt32(classified.ExpirationDate), Convert.ToUInt32(classified.Category), classified.Name, classified.Description, new UUID(classified.ParcelUUID), Convert.ToUInt32(classified.ParentEstate), new UUID(classified.SnapshotUUID), classified.SimName, globalPos, classified.ParcelName, Convert.ToByte(classified.ClassifiedFlags), Convert.ToInt32(classified.PriceForListing));
+
         }
         public void ClassifiedInfoUpdate(UUID queryclassifiedID, uint queryCategory, string queryName, string queryDescription, UUID queryParcelID,
                                          uint queryParentEstate, UUID querySnapshotID, Vector3 queryGlobalPos, byte queryclassifiedFlags,
@@ -286,12 +282,12 @@ namespace Aurora.Modules
             string classifiedFlags = queryclassifiedFlags.ToString();
             string classifiedPrice = queryclassifiedPrice.ToString();
 
-            ScenePresence p = World.GetScenePresence(remoteClient.AgentId);
+            ScenePresence p = m_scene.GetScenePresence(remoteClient.AgentId);
             Vector3 avaPos = p.AbsolutePosition;
             string parceluuid = p.currentParcelUUID.ToString();
             Vector3 posGlobal = new Vector3(remoteClient.Scene.RegionInfo.RegionLocX * Constants.RegionSize + avaPos.X, remoteClient.Scene.RegionInfo.RegionLocY * Constants.RegionSize + avaPos.Y, avaPos.Z);
             string pos_global = posGlobal.ToString();
-            ILandObject parcel = World.LandChannel.GetLandObject(p.AbsolutePosition.X, p.AbsolutePosition.Y);
+            ILandObject parcel = m_scene.LandChannel.GetLandObject(p.AbsolutePosition.X, p.AbsolutePosition.Y);
             string parcelname = parcel.LandData.Name;
             string creationdate = Util.UnixTimeSinceEpoch().ToString();
             int expirationdt = Util.UnixTimeSinceEpoch() + (365 * 24 * 60 * 60);
@@ -332,6 +328,7 @@ namespace Aurora.Modules
             values.Add(classifiedFlags);
             values.Add(classifiedPrice);
             GenericData.Insert("classifieds", values.ToArray());
+            ProfileFrontend.RemoveFromCache(remoteClient.AgentId);
         }
         public void ClassifiedDelete(UUID queryClassifiedID, IClientAPI remoteClient)
         {
@@ -339,8 +336,8 @@ namespace Aurora.Modules
             List<string> values = new List<string>();
             keys.Add("classifieduuid");
             values.Add(queryClassifiedID.ToString());
-            GenericData.Delete("classifieds",keys.ToArray(), values.ToArray());
-
+            GenericData.Delete("classifieds", keys.ToArray(), values.ToArray());
+            ProfileFrontend.RemoveFromCache(remoteClient.AgentId);
         }
         public void GodClassifiedDelete(UUID queryClassifiedID, IClientAPI remoteClient)
         {
@@ -352,6 +349,7 @@ namespace Aurora.Modules
                 keys.Add("classifieduuid");
                 values.Add(queryClassifiedID.ToString());
                 GenericData.Delete("classifieds", keys.ToArray(), values.ToArray());
+                ProfileFrontend.RemoveFromCache(remoteClient.AgentId);
             }
         }
         public void HandleAvatarPicksRequest(Object sender, string method, List<String> args)
@@ -362,58 +360,21 @@ namespace Aurora.Modules
                 return;
             }
             IClientAPI remoteClient = (IClientAPI)sender;
-            ScenePresence sp = m_scene.GetScenePresence(remoteClient.AgentId);
-            OpenSim.Services.Interfaces.FriendInfo[] friendList = m_FriendsService.GetFriends(new UUID(args[0]));
-            if (new UUID(args[0]) != remoteClient.AgentId)
+            Dictionary<UUID, string> picks = new Dictionary<UUID, string>();
+            bool isFriend = IsFriendOfUser(remoteClient.AgentId, new UUID(args[0]));
+            if (isFriend)
             {
-                foreach (OpenSim.Services.Interfaces.FriendInfo item in friendList)
-                {
-                    if (item.PrincipalID == remoteClient.AgentId)
-                    {
-                        Dictionary<UUID, string> pickuuid = ProfileData.ReadPickRow(args[0]);
-                        Dictionary<UUID, string> picks = new Dictionary<UUID, string>();
+                IUserProfileInfo profile = ProfileFrontend.GetUserProfile(new UUID(args[0]));
 
-                        if (pickuuid == null)
-                        {
-                            remoteClient.SendAvatarPicksReply(new UUID(args[0]), picks);
-                        }
-                        else
-                        {
-                            picks = pickuuid;
-                            remoteClient.SendAvatarPicksReply(new UUID(args[0]), picks);
-                        }
-                    }
-                }
-                if (sp.GodLevel != 0)
+                foreach (ProfilePickInfo pick in profile.Picks)
                 {
-                    Dictionary<UUID, string> pickuuid = ProfileData.ReadPickRow(args[0]);
-                    Dictionary<UUID, string> picks = new Dictionary<UUID, string>();
-
-                    if (pickuuid == null)
-                    {
-                        remoteClient.SendAvatarPicksReply(new UUID(args[0]), picks);
-                    }
-                    else
-                    {
-                        picks = pickuuid;
-                        remoteClient.SendAvatarPicksReply(new UUID(args[0]), picks);
-                    }
+                    picks.Add(new UUID(pick.pickuuid), pick.name);
                 }
+                remoteClient.SendAvatarPicksReply(new UUID(args[0]), picks);
             }
             else
             {
-                Dictionary<UUID, string> pickuuid = ProfileData.ReadPickRow(args[0]);
-                Dictionary<UUID, string> picks = new Dictionary<UUID, string>();
-
-                if (pickuuid == null)
-                {
-                    remoteClient.SendAvatarPicksReply(new UUID(args[0]), picks);
-                }
-                else
-                {
-                    picks = pickuuid;
-                    remoteClient.SendAvatarPicksReply(new UUID(args[0]), picks);
-                }
+                remoteClient.SendAvatarPicksReply(new UUID(args[0]), picks);
             }
         }
         public void HandlePickInfoRequest(Object sender, string method, List<String> args)
@@ -424,14 +385,12 @@ namespace Aurora.Modules
                 return;
             }
             IClientAPI remoteClient = (IClientAPI)sender;
-            string avatar_id = args[0];
-            string pick_id = args[1];
-
-            List<string> pickinfo = ProfileData.ReadPickInfoRow(avatar_id,pick_id);
+            
+            ProfilePickInfo pick = ProfileFrontend.ReadPickInfoRow(args[1]);
             Vector3 globalPos = new Vector3();
             try
             {
-                Vector3.TryParse(pickinfo[10], out globalPos);
+                Vector3.TryParse(pick.posglobal, out globalPos);
             }
             catch (Exception ex)
             {
@@ -442,63 +401,11 @@ namespace Aurora.Modules
             int ten = 0;
             bool twelve = false;
 
-            #region Check for null values
-
-            if (pickinfo[0] == null)
-            {
-                pickinfo[0] = "";
-            }
-            if (pickinfo[1] == null)
-            {
-                pickinfo[1] = "";
-            }
-            if (pickinfo[2] == null)
-            {
-                pickinfo[2] = "false";
-            }
-            if (pickinfo[3] == null)
-            {
-                pickinfo[3] = "";
-            }
-            if (pickinfo[4] == null)
-            {
-                pickinfo[4] = "";
-            }
-            if (pickinfo[5] == null)
-            {
-                pickinfo[5] = "";
-            }
-            if (pickinfo[6] == null)
-            {
-                pickinfo[6] = "";
-            }
-            if (pickinfo[7] == null)
-            {
-                pickinfo[7] = "";
-            }
-            if (pickinfo[8] == null)
-            {
-                pickinfo[8] = "";
-            }
-            if (pickinfo[9] == null)
-            {
-                pickinfo[9] = "";
-            }
-            if (pickinfo[11] == null)
-            {
-                pickinfo[11] = "0";
-            }
-            if (pickinfo[12] == null)
-            {
-                pickinfo[12] = "false";
-            }
-            #endregion
-
             try
             {
-                two = Convert.ToBoolean(pickinfo[2]);
-                ten = Convert.ToInt32(pickinfo[11]);
-                twelve = Convert.ToBoolean(pickinfo[12]);
+                two = Convert.ToBoolean(pick.toppick);
+                ten = Convert.ToInt32(pick.sortorder);
+                twelve = Convert.ToBoolean(pick.enabled);
             }
             catch (Exception ex)
             {
@@ -507,12 +414,12 @@ namespace Aurora.Modules
                 ten = 0;
                 twelve = true;
             }
-            remoteClient.SendPickInfoReply(new UUID(pickinfo[0]), new UUID(pickinfo[1]), two, new UUID(pickinfo[3]), pickinfo[4], pickinfo[5], new UUID(pickinfo[6]), pickinfo[7], pickinfo[8], pickinfo[9], globalPos, ten, twelve);
+            remoteClient.SendPickInfoReply(new UUID(pick.pickuuid), new UUID(pick.creatoruuid), two, new UUID(pick.parceluuid), pick.name, pick.description, new UUID(pick.snapshotuuid), pick.user, pick.originalname, pick.simname, globalPos, ten, twelve);
         }
         public void PickInfoUpdate(IClientAPI remoteClient, UUID pickID, UUID creatorID, bool topPick, string name, string desc, UUID snapshotID, int sortOrder, bool enabled)
         {
             string pick = GenericData.Query(new string[]{"creatoruuid","pickuuid"},new string[]{creatorID.ToString(),pickID.ToString()},"userpicks","pickuuid")[0];
-            ScenePresence p = World.GetScenePresence(remoteClient.AgentId);
+            ScenePresence p = m_scene.GetScenePresence(remoteClient.AgentId);
             Vector3 avaPos = p.AbsolutePosition;
 
             string parceluuid = p.currentParcelUUID.ToString();
@@ -520,9 +427,9 @@ namespace Aurora.Modules
 
             string pos_global = posGlobal.ToString();
 
-            ILandObject targetlandObj = World.LandChannel.GetLandObject(avaPos.X, avaPos.Y);
+            ILandObject targetlandObj = m_scene.LandChannel.GetLandObject(avaPos.X, avaPos.Y);
             UUID ownerid = targetlandObj.LandData.OwnerID;
-            ScenePresence parcelowner = World.GetScenePresence(ownerid);
+            ScenePresence parcelowner = m_scene.GetScenePresence(ownerid);
             string parcelfirst;
             string parcellast;
             try
@@ -599,6 +506,7 @@ namespace Aurora.Modules
                 values2.Add(pickID.ToString());
                 GenericData.Update("userpicks", values.ToArray(), keys.ToArray(), keys2.ToArray(), values2.ToArray());
             }
+            ProfileFrontend.RemoveFromCache(remoteClient.AgentId);
         }
         public void GodPickDelete(IClientAPI remoteClient, UUID AgentID, UUID PickID, UUID queryID)
         {
@@ -610,6 +518,7 @@ namespace Aurora.Modules
                 keys.Add("pickuuid");
                 values.Add(PickID.ToString());
                 GenericData.Delete("userpicks", keys.ToArray(), values.ToArray());
+                ProfileFrontend.RemoveFromCache(remoteClient.AgentId);
             }
         }
         public void PickDelete(IClientAPI remoteClient, UUID queryPickID)
@@ -619,6 +528,7 @@ namespace Aurora.Modules
             keys.Add("pickuuid");
             values.Add(queryPickID.ToString());
             GenericData.Delete("userpicks", keys.ToArray(), values.ToArray());
+            ProfileFrontend.RemoveFromCache(remoteClient.AgentId);
         }
         public void HandleAvatarNotesRequest(Object sender, string method, List<String> args)
         {
@@ -628,9 +538,13 @@ namespace Aurora.Modules
                 return;
             }
             IClientAPI remoteClient = (IClientAPI)sender;
-            AuroraProfileData UserProfile = ProfileData.GetProfileNotes(remoteClient.AgentId, new UUID(args[0]));
+            IUserProfileInfo UPI = ProfileFrontend.GetUserProfile(remoteClient.AgentId);
             string notes;
-            UserProfile.Notes.TryGetValue(new UUID(args[0]), out notes);
+            UPI.Notes.TryGetValue(new UUID(args[0]), out notes);
+            if (notes == null || notes == "")
+            {
+                AvatarNotesUpdate(remoteClient, new UUID(args[0]), "");
+            }
             remoteClient.SendAvatarNotesReply(new UUID(args[0]), notes);
         }
         public void AvatarNotesUpdate(IClientAPI remoteClient, UUID queryTargetID, string queryNotes)
@@ -651,18 +565,19 @@ namespace Aurora.Modules
             keys2.Add("targetuuid");
             values2.Add(queryTargetID.ToString());
             GenericData.Update("usernotes", values.ToArray(), keys.ToArray(), keys2.ToArray(), values2.ToArray());
-            ProfileData.InvalidateProfileNotes(queryTargetID);
+            ProfileFrontend.RemoveFromCache(remoteClient.AgentId);
         }
 
         public void AvatarInterestsUpdate(IClientAPI remoteClient, uint wantmask, string wanttext, uint skillsmask, string skillstext, string languages)
         {
-            AuroraProfileData targetprofile = ProfileData.GetProfileInfo(remoteClient.AgentId);
-            targetprofile.Interests[0] = wantmask.ToString();
-            targetprofile.Interests[1] = wanttext;
-            targetprofile.Interests[2] = skillsmask.ToString();
-            targetprofile.Interests[3] = skillstext;
-            targetprofile.Interests[4] = languages;
-            ProfileData.UpdateUserProfile(targetprofile);
+            IUserProfileInfo UPI = ProfileFrontend.GetUserProfile(remoteClient.AgentId);
+            UPI.Interests.WantToMask = wantmask.ToString();
+            UPI.Interests.WantToText = wanttext;
+            UPI.Interests.CanDoMask = skillsmask.ToString();
+            UPI.Interests.CanDoText = skillstext;
+            UPI.Interests.Languages = languages;
+            ProfileFrontend.UpdateUserProfile(UPI);
+            ProfileFrontend.RemoveFromCache(remoteClient.AgentId);
         }
 
         /// <summary>
@@ -672,135 +587,65 @@ namespace Aurora.Modules
         /// <param name="avatarID"></param>
         public void RequestAvatarProperty(IClientAPI remoteClient, UUID target)
         {
-            AuroraProfileData targetprofile = ProfileData.GetProfileInfo(target);
-            OpenSim.Services.Interfaces.FriendInfo[] friendList = m_FriendsService.GetFriends(target);
+            IUserProfileInfo UPI = ProfileFrontend.GetUserProfile(target);
+            OpenSim.Services.Interfaces.GridUserInfo TargetPI = m_scene.GridUserService.GetGridUserInfo(target.ToString());
             UserAccount TargetAccount = m_scene.UserAccountService.GetUserAccount(UUID.Zero, target);
-            UserAccount HuntersAccount = m_scene.UserAccountService.GetUserAccount(UUID.Zero, remoteClient.AgentId);
-            OpenSim.Services.Interfaces.PresenceInfo TargetPI = m_scene.PresenceService.GetAgents(new string[] { target.ToString() })[0];
-
-            if (null != targetprofile)
+            bool isFriend = IsFriendOfUser(remoteClient.AgentId, target);
+            if (isFriend)
             {
-                if (target != remoteClient.AgentId)
+                uint agentOnline = 0;
+                if (TargetPI.Online)
                 {
-                    if (HuntersAccount.UserLevel != 0)
-                    {
-                        #region God user requesting profile, so send it.
-                        uint agentOnline = 0;
-                        if (TargetPI.Online)
-                        {
-                            agentOnline = 16;
-                        }
-                        SendProfile(remoteClient, targetprofile, target, agentOnline);
-                        remoteClient.SendAvatarInterestsReply(target, Convert.ToUInt32(targetprofile.Interests[0]), targetprofile.Interests[1], Convert.ToUInt32(targetprofile.Interests[2]), targetprofile.Interests[3], targetprofile.Interests[4]);
-                        #endregion
-                    }
-                    else
-                    {
-                        //See if all can see this person
-                        if (GenericData.Query("userUUID",remoteClient.AgentId.ToString(),"usersauth","visible")[0] == "true")
-                        {
-                            #region Not visible to all, so look through the friends list and send profile.
-
-                            foreach (OpenSim.Services.Interfaces.FriendInfo item in friendList)
-                            {
-                                if (item.PrincipalID == remoteClient.AgentId)
-                                {
-                                    uint agentOnline = 0;
-                                    //Make sure that the friend has the permission to see them.
-                                    if (TargetPI.Online)
-                                    {
-                                        if ((item.MyFlags & (uint)FriendRights.CanSeeOnline) != 0)
-                                        {
-                                            agentOnline = 16;
-                                        }
-                                    }
-
-                                    SendProfile(remoteClient, targetprofile, target, agentOnline);
-                                    remoteClient.SendAvatarInterestsReply(target, Convert.ToUInt32(targetprofile.Interests[0]), targetprofile.Interests[1], Convert.ToUInt32(targetprofile.Interests[2]), targetprofile.Interests[3], targetprofile.Interests[4]);
-                                    return;
-                                }
-                            }
-                            #endregion
-
-                            #region Send the first page without AgentOnline.
-
-                            Byte[] charterMember;
-                            if (targetprofile.CustomType == "")
-                            {
-                                charterMember = new Byte[1];
-                                charterMember[0] = (Byte)((targetprofile.UserFlags & 0xf00) >> 8);
-                            }
-                            else
-                            {
-                                charterMember = OpenMetaverse.Utils.StringToBytes(targetprofile.CustomType);
-                            }
-                            remoteClient.SendAvatarProperties(new UUID(targetprofile.Identifier), "",
-                                                              Util.ToDateTime(targetprofile.Created).ToString("M/d/yyyy", CultureInfo.InvariantCulture),
-                                                              charterMember, "", (uint)(targetprofile.UserFlags & 0xff),
-                                                              UUID.Zero, UUID.Zero, "", UUID.Zero);
-                            #endregion
-                        }
-                        else
-                        {
-                            //Visible to everyone, so find out if they are online.
-                            uint agentOnline = 0;
-                            if (TargetPI.Online)
-                            {
-                                agentOnline = 16;
-                            }
-                            
-                            #region If on the friends list, send the full profile.
-
-                            foreach (OpenSim.Services.Interfaces.FriendInfo item in friendList)
-                            {
-                                if (item.PrincipalID == remoteClient.AgentId)
-                                {
-                                    if (null != targetprofile)
-                                    {
-                                        SendProfile(remoteClient, targetprofile, target, agentOnline);
-                                        remoteClient.SendAvatarInterestsReply(target, Convert.ToUInt32(targetprofile.Interests[0]), targetprofile.Interests[1], Convert.ToUInt32(targetprofile.Interests[2]), targetprofile.Interests[3], targetprofile.Interests[4]);
-                                        return;
-                                    }
-                                    else
-                                    {
-                                        m_log.Debug("[AuroraProfileModule]: Got null for profile for " + target.ToString());
-                                    }
-                                }
-                            }
-                            #endregion
-
-                            #region Not a friend, so send the first page only.
-
-                            Byte[] charterMember;
-                            if (targetprofile.CustomType == "")
-                            {
-                                charterMember = new Byte[1];
-                                charterMember[0] = (Byte)((targetprofile.UserFlags & 0xf00) >> 8);
-                            }
-                            else
-                            {
-                                charterMember = OpenMetaverse.Utils.StringToBytes(targetprofile.CustomType);
-                            }
-                            remoteClient.SendAvatarProperties(new UUID(targetprofile.Identifier), "",
-                                                              Util.ToDateTime(targetprofile.Created).ToString("M/d/yyyy", CultureInfo.InvariantCulture),
-                                                              charterMember, "", (uint)(targetprofile.UserFlags & 0xff),
-                                                              UUID.Zero, UUID.Zero, "", UUID.Zero);
-                            #endregion
-                        }
-                    }
+                    agentOnline = 16;
                 }
-                else
-                {
-                    SendProfile(remoteClient, targetprofile, target, 16);
-                    remoteClient.SendAvatarInterestsReply(target, Convert.ToUInt32(targetprofile.Interests[0]), targetprofile.Interests[1], Convert.ToUInt32(targetprofile.Interests[2]), targetprofile.Interests[3], targetprofile.Interests[4]);
-                }
+                SendProfile(remoteClient, UPI, target, agentOnline);
             }
             else
             {
-                ScenePresence TargetSP = m_scene.GetScenePresence(target);
-                m_log.Debug("[AuroraProfileModule]: Got null for profile for " + target.ToString() + ". Creating a new profile for this person.");
-                m_scene.RequestModuleInterface<IAuthService>().CreateUserAuth(target.ToString(), TargetSP.Firstname, TargetSP.Lastname);
-                RequestAvatarProperty(remoteClient, target);
+                //See if all can see this person
+                if (GenericData.Query("userUUID", remoteClient.AgentId.ToString(), "usersauth", "visible")[0] == "true")
+                {
+                    //Not a friend, so send the first page only and if they are online
+                    uint agentOnline = 0;
+                    if (TargetPI.Online)
+                    {
+                        agentOnline = 16;
+                    }
+                    
+                    Byte[] charterMember;
+                    if (UPI.MembershipGroup == "")
+                    {
+                        charterMember = new Byte[1];
+                        charterMember[0] = (Byte)((TargetAccount.UserFlags & 0xf00) >> 8);
+                    }
+                    else
+                    {
+                        charterMember = OpenMetaverse.Utils.StringToBytes(UPI.MembershipGroup);
+                    }
+                    remoteClient.SendAvatarProperties(UPI.PrincipleID, "",
+                                                      Util.ToDateTime(UPI.Created).ToString("M/d/yyyy", CultureInfo.InvariantCulture),
+                                                      charterMember, "", (uint)(TargetAccount.UserFlags & agentOnline),
+                                                      UUID.Zero, UUID.Zero, "", UUID.Zero);
+                }
+                else
+                {
+                    //Not a friend, so send the first page only.
+
+                    Byte[] charterMember;
+                    if (UPI.MembershipGroup == "")
+                    {
+                        charterMember = new Byte[1];
+                        charterMember[0] = (Byte)((TargetAccount.UserFlags & 0xf00) >> 8);
+                    }
+                    else
+                    {
+                        charterMember = OpenMetaverse.Utils.StringToBytes(UPI.MembershipGroup);
+                    }
+                    remoteClient.SendAvatarProperties(UPI.PrincipleID, "",
+                                                      Util.ToDateTime(UPI.Created).ToString("M/d/yyyy", CultureInfo.InvariantCulture),
+                                                      charterMember, "", (uint)(TargetAccount.UserFlags),
+                                                      UUID.Zero, UUID.Zero, "", UUID.Zero);
+                }
             }
         }
 
@@ -812,52 +657,53 @@ namespace Aurora.Modules
                 allowpublishINT = 1;
             if (maturepublish == true)
                 maturepublishINT = 1;
-            AuroraProfileData Profile = ProfileData.GetProfileInfo(remoteClient.AgentId);
+            IUserProfileInfo UPI = ProfileFrontend.GetUserProfile(newProfile.ID);
             // if it's the profile of the user requesting the update, then we change only a few things.
 
-            if (remoteClient.AgentId.ToString() == Profile.Identifier)
+            if (remoteClient.AgentId == UPI.PrincipleID)
             {
-                Profile.Image = newProfile.Image;
-                Profile.FirstLifeImage = newProfile.FirstLifeImage;
-                Profile.AboutText = newProfile.AboutText;
-                Profile.FirstLifeAboutText = newProfile.FirstLifeAboutText;
+                UPI.ProfileImage = newProfile.Image;
+                UPI.ProfileFirstImage = newProfile.FirstLifeImage;
+                UPI.ProfileAboutText = newProfile.AboutText;
+                UPI.ProfileFirstText = newProfile.FirstLifeAboutText;
                 if (newProfile.ProfileUrl != "")
                 {
-                    Profile.ProfileURL = newProfile.ProfileUrl;
+                    UPI.ProfileURL = newProfile.ProfileUrl;
                 }
             }
             else
                 return;
 
-            Profile.AllowPublish = allowpublishINT.ToString();
-            Profile.MaturePublish = maturepublishINT.ToString();
-            ProfileData.UpdateUserProfile(Profile);
-            SendProfile(remoteClient, Profile, remoteClient.AgentId, 16);
+            UPI.AllowPublish = allowpublishINT.ToString();
+            UPI.MaturePublish = maturepublishINT.ToString();
+            ProfileFrontend.UpdateUserProfile(UPI);
+            SendProfile(remoteClient, UPI, remoteClient.AgentId, 16);
+            ProfileFrontend.RemoveFromCache(remoteClient.AgentId);
         }
 
-        private void SendProfile(IClientAPI remoteClient, AuroraProfileData Profile, UUID target, uint agentOnline)
+        private void SendProfile(IClientAPI remoteClient, IUserProfileInfo Profile, UUID target, uint agentOnline)
         {
             UserAccount account = m_scene.UserAccountService.GetUserAccount(UUID.Zero, target);
             Byte[] charterMember;
-            if (Profile.CustomType == " ")
+            if (Profile.MembershipGroup == " ")
             {
                 charterMember = new Byte[1];
-                charterMember[0] = (Byte)((Profile.UserFlags & 0xf00) >> 8);
+                charterMember[0] = (Byte)((account.UserFlags & 0xf00) >> 8);
             }
             else
             {
-                charterMember = OpenMetaverse.Utils.StringToBytes(Profile.CustomType);
+                charterMember = OpenMetaverse.Utils.StringToBytes(Profile.MembershipGroup);
             }
             uint membershipGroupINT = 0;
             if (Profile.MembershipGroup != "")
                 membershipGroupINT = 4;
 
             uint flags = Convert.ToUInt32(Profile.AllowPublish) + Convert.ToUInt32(Profile.MaturePublish) + membershipGroupINT + (uint)agentOnline + (uint)account.UserFlags;
-
-            remoteClient.SendAvatarProperties(new UUID(Profile.Identifier), Profile.AboutText,
+            remoteClient.SendAvatarInterestsReply(target, Convert.ToUInt32(Profile.Interests.WantToMask), Profile.Interests.WantToText, Convert.ToUInt32(Profile.Interests.CanDoMask), Profile.Interests.CanDoText, Profile.Interests.Languages);
+            remoteClient.SendAvatarProperties(Profile.PrincipleID, Profile.ProfileAboutText,
                                               Util.ToDateTime(Profile.Created).ToString("M/d/yyyy", CultureInfo.InvariantCulture),
-                                              charterMember, Profile.FirstLifeAboutText, flags,
-                                              Profile.FirstLifeImage, Profile.Image, Profile.ProfileURL, new UUID(Profile.Partner));
+                                              charterMember, Profile.ProfileFirstText, flags,
+                                              Profile.ProfileFirstImage, Profile.ProfileImage, Profile.ProfileURL, new UUID(Profile.Partner));
         }
         
         public void UserPreferencesRequest(IClientAPI remoteClient)
@@ -882,6 +728,7 @@ namespace Aurora.Modules
             keys2.Add("userUUID");
             values2.Add(remoteClient.AgentId.ToString());
             GenericData.Update("usersauth", values.ToArray(), keys.ToArray(), keys2.ToArray(), values2.ToArray());
+            ProfileFrontend.RemoveFromCache(remoteClient.AgentId);
         }
         #endregion
 
@@ -967,7 +814,7 @@ namespace Aurora.Modules
             int i = 0;
             foreach (UserAccount item in accounts)
             {
-                AuroraProfileData UserProfile = ProfileData.GetProfileInfo(item.PrincipalID);
+                IUserProfileInfo UserProfile = ProfileFrontend.GetUserProfile(item.PrincipalID);
                 if (UserProfile.AllowPublish == "1")
                 {
                 	data[i] = new DirPeopleReplyData();
@@ -986,11 +833,8 @@ namespace Aurora.Modules
                     			data[i].group = membership.GroupName;
                     	}
                     }
-                    OpenSim.Services.Interfaces.PresenceInfo[] Pinfo = m_scene.PresenceService.GetAgents(new string[] {item.PrincipalID.ToString()});
-                    if (Pinfo.Length != 0)
-                        data[i].online = Pinfo[0].Online;
-                    else
-                        data[i].online = false;
+                    OpenSim.Services.Interfaces.GridUserInfo Pinfo = m_scene.GridUserService.GetGridUserInfo(item.PrincipalID.ToString());
+                    data[i].online = Pinfo.Online;
                     data[i].reputation = 0;
                     i++;
                 }
@@ -1049,24 +893,6 @@ namespace Aurora.Modules
             EventData data = new EventData();
             data = ProfileData.GetEventInfo(queryEventID.ToString());
             remoteClient.SendEventInfoReply(data);
-        }
-
-        public void ClassifiedInfoRequest(UUID queryClassifiedID, IClientAPI remoteClient)
-        {
-            List<string> classifiedinfo;
-            classifiedinfo = ProfileData.ReadClassifiedInfoRow(queryClassifiedID.ToString());
-            Vector3 globalPos = new Vector3();
-            try
-            {
-                Vector3.TryParse(classifiedinfo[10], out globalPos);
-            }
-            catch (Exception ex)
-            {
-                ex = new Exception();
-                globalPos = new Vector3(128, 128, 128);
-            }
-            remoteClient.SendClassifiedInfoReply(queryClassifiedID, new UUID(classifiedinfo[0]), Convert.ToUInt32(classifiedinfo[1]), Convert.ToUInt32(classifiedinfo[2]), Convert.ToUInt32(classifiedinfo[3]), classifiedinfo[4], classifiedinfo[5], new UUID(classifiedinfo[6]), Convert.ToUInt32(classifiedinfo[7]), new UUID(classifiedinfo[8]), classifiedinfo[9], globalPos, classifiedinfo[11], Convert.ToByte(classifiedinfo[12]), Convert.ToInt32(classifiedinfo[13]));
-
         }
 
         public virtual void HandleMapItemRequest(IClientAPI remoteClient, uint flags,

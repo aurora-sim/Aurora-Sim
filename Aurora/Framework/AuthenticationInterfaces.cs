@@ -9,7 +9,6 @@ namespace Aurora.Framework
 {
     public interface IAuthService
     {
-        void CreateUserAuth(string UUID, string firstName, string lastName);
     }
     public interface IIWCAuthenticationService
     {

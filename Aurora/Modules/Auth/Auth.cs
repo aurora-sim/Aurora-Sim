@@ -43,7 +43,6 @@ namespace Aurora.Modules
             m_scene = scene;
             scene.RegisterModuleInterface<IAuthService>(this);
             scene.RegisterModuleInterface<IIWCAuthenticationService>(this);
-            scene.AddCommand(this, "create userauth", "create userauth", "Creates a new User Auth", CreateUserAuth);
             if (CheckServers.Count == 0)
             {
                 string bannedAuthServers = source.Configs["AuroraAuth"].GetString("BannedAuthServers", "");
@@ -87,76 +86,6 @@ namespace Aurora.Modules
         public bool CheckUserAccount(string Identifier)
         {
             return true;
-        }
-
-        #endregion
-
-        #region IAuthService
-
-        protected void CreateUserAuth(string module, string[] cmdparams)
-        {
-            string firstName = "";
-            string lastName = "";
-
-            if (cmdparams.Length < 3)
-                firstName = MainConsole.Instance.CmdPrompt("First name", "Default");
-            else firstName = cmdparams[2];
-
-            if (cmdparams.Length < 4)
-                lastName = MainConsole.Instance.CmdPrompt("Last name", "User");
-            else lastName = cmdparams[3];
-
-            UserAccount account = m_scene.UserAccountService.GetUserAccount(UUID.Zero, firstName, lastName);
-            CreateUserAuth(account.PrincipalID.ToString(), firstName, lastName);
-        }
-
-        public void CreateUserAuth(string UUID, string firstName, string lastName)
-        {
-            List<string> values = new List<string>();
-            values.Add(UUID);
-            values.Add(firstName + " " + lastName);
-            values.Add(firstName);
-            values.Add(lastName);
-            values.Add(" ");
-            values.Add(" ");
-            values.Add("0");
-            values.Add(" ");
-            values.Add(" ");
-            values.Add("0");
-            values.Add("0");
-            values.Add(" ");
-            values.Add(" ");
-            values.Add(" ");
-            values.Add(" ");
-            values.Add("0");
-            values.Add("0");
-            values.Add("1");
-            values.Add("0");
-            values.Add(" ");
-            values.Add(" ");
-            values.Add(" ");
-            values.Add(" ");
-            values.Add("0");
-            values.Add(" ");
-            values.Add("0");
-            values.Add(" ");
-            values.Add(" ");
-            values.Add("0");
-            values.Add("1");
-            values.Add(" ");
-            values.Add(" ");
-            values.Add(" ");
-            values.Add(" ");
-            values.Add(" ");
-            values.Add(" ");
-            values.Add("true");
-            values.Add("false");
-            values.Add("2");
-            values.Add("en");
-            values.Add("1");
-            values.Add(Util.UnixTimeSinceEpoch().ToString());
-            var GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
-            GD.Insert("usersauth", values.ToArray());
         }
 
         #endregion

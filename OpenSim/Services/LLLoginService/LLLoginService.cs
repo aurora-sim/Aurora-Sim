@@ -254,16 +254,16 @@ namespace OpenSim.Services.LLLoginService
                     }
                 }
 
-                IProfileData data = Aurora.DataManager.DataManager.GetDefaultProfilePlugin();
+                Aurora.DataManager.Frontends.ProfileFrontend data = new Aurora.DataManager.Frontends.ProfileFrontend();
                 //Already tried to find it before this, so its not there at all.
-                AuroraProfileData profile = null;
+                IUserProfileInfo profile = null;
                 if (data != null)
                 {
-                    profile = data.GetProfileInfo(account.PrincipalID);
+                    profile = data.GetUserProfile(account.PrincipalID);
                     if (profile == null)
                     {
-                        CreateUserAuth(account.PrincipalID.ToString(), account.FirstName, account.LastName);
-                        profile = data.GetProfileInfo(account.PrincipalID);
+                        data.CreateNewProfile(account.PrincipalID, account.FirstName, account.LastName);
+                        profile = data.GetUserProfile(account.PrincipalID);
                     }
                     if (profile.PermaBanned == 1 || profile.TempBanned == 1)
                     {
@@ -394,11 +394,11 @@ namespace OpenSim.Services.LLLoginService
                 string adult = "A";
                 if (profile != null)
                 {
-                    if (profile.Mature == 0)
+                    if (profile.MaturityRating == 0)
                         adult = "P";
-                    if (profile.Mature == 1)
+                    if (profile.MaturityRating == 1)
                         adult = "M";
-                    if (profile.Mature == 2)
+                    if (profile.MaturityRating == 2)
                         adult = "A";
                 }
                 LLLoginResponse response = new LLLoginResponse(account, aCircuit, guinfo, destination, inventorySkel, friendsList, m_LibraryService,
@@ -842,58 +842,6 @@ namespace OpenSim.Services.LLLoginService
                     break;
             }
         }
-
-
-        public void CreateUserAuth(string UUID, string firstName, string lastName)
-        {
-            List<string> values = new List<string>();
-            values.Add(UUID);
-            values.Add(firstName + " " + lastName);
-            values.Add(firstName);
-            values.Add(lastName);
-            values.Add(" ");
-            values.Add(" ");
-            values.Add("0");
-            values.Add(" ");
-            values.Add(" ");
-            values.Add("0");
-            values.Add("0");
-            values.Add(" ");
-            values.Add(" ");
-            values.Add(" ");
-            values.Add(" ");
-            values.Add("0");
-            values.Add("0");
-            values.Add("1");
-            values.Add("0");
-            values.Add(" ");
-            values.Add(" ");
-            values.Add(" ");
-            values.Add(" ");
-            values.Add("0");
-            values.Add(" ");
-            values.Add("0");
-            values.Add(" ");
-            values.Add(" ");
-            values.Add("0");
-            values.Add("1");
-            values.Add(" ");
-            values.Add(" ");
-            values.Add(" ");
-            values.Add(" ");
-            values.Add(" ");
-            values.Add(" ");
-            values.Add("true");
-            values.Add("false");
-            values.Add("2");
-            values.Add("en");
-            values.Add("1");
-            values.Add(Util.UnixTimeSinceEpoch().ToString());
-            var GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
-            GD.Insert("usersauth", values.ToArray());
-        }
-
-
     }
 
     #endregion

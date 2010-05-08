@@ -14,14 +14,16 @@ namespace Aurora.DataManager.Migration.Migrators
 
             schema = new List<Rec<string, ColumnDefinition[]>>();
 
-            AddSchema("usernotes", ColDefs(
+            #region Profile
+
+            AddSchema("profilenotes", ColDefs(
                 ColDef("userid", ColumnTypes.String50),
                 ColDef("targetuuid", ColumnTypes.String50),
                 ColDef("notes", ColumnTypes.String512),
                 ColDef("noteUUID", ColumnTypes.String50, true)
                 ));
 
-            AddSchema("userpicks", ColDefs(
+            AddSchema("profilepicks", ColDefs(
                 ColDef("pickuuid", ColumnTypes.String50, true),
                 ColDef("creatoruuid", ColumnTypes.String50),
                 ColDef("toppick", ColumnTypes.String512),
@@ -36,6 +38,26 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("sortorder", ColumnTypes.String50),
                 ColDef("enabled", ColumnTypes.String50)
                 ));
+
+            AddSchema("profileclassifieds", ColDefs(
+                ColDef("classifieduuid", ColumnTypes.String50, true),
+                ColDef("creatoruuid", ColumnTypes.String50),
+                ColDef("creationdate", ColumnTypes.String512),
+                ColDef("expirationdate", ColumnTypes.String50),
+                ColDef("category", ColumnTypes.String50),
+                ColDef("name", ColumnTypes.String50),
+                ColDef("description", ColumnTypes.String50),
+                ColDef("parceluuid", ColumnTypes.String50),
+                ColDef("parentestate", ColumnTypes.String50),
+                ColDef("snapshotuuid", ColumnTypes.String50),
+                ColDef("simname", ColumnTypes.String50),
+                ColDef("posglobal", ColumnTypes.String50),
+                ColDef("parcelname", ColumnTypes.String50),
+                ColDef("classifiedflags", ColumnTypes.String50),
+                ColDef("priceforlisting", ColumnTypes.String50)
+                ));
+
+            #endregion
 
             AddSchema("usersauth", ColDefs(
                 ColDef("userUUID", ColumnTypes.String50, true),
@@ -80,24 +102,6 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("Lang", ColumnTypes.String50),
                 ColDef("LangIsPublic", ColumnTypes.String50),
                 ColDef("Created", ColumnTypes.String50)
-                ));
-
-            AddSchema("classifieds", ColDefs(
-                ColDef("classifieduuid", ColumnTypes.String50, true),
-                ColDef("creatoruuid", ColumnTypes.String50),
-                ColDef("creationdate", ColumnTypes.String512),
-                ColDef("expirationdate", ColumnTypes.String50),
-                ColDef("category", ColumnTypes.String50),
-                ColDef("name", ColumnTypes.String50),
-                ColDef("description", ColumnTypes.String50),
-                ColDef("parceluuid", ColumnTypes.String50),
-                ColDef("parentestate", ColumnTypes.String50),
-                ColDef("snapshotuuid", ColumnTypes.String50),
-                ColDef("simname", ColumnTypes.String50),
-                ColDef("posglobal", ColumnTypes.String50),
-                ColDef("parcelname", ColumnTypes.String50),
-                ColDef("classifiedflags", ColumnTypes.String50),
-                ColDef("priceforlisting", ColumnTypes.String50)
                 ));
             
             AddSchema("auroraregions", ColDefs(

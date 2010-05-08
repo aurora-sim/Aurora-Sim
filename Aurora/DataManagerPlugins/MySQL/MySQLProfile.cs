@@ -431,7 +431,7 @@ namespace Aurora.DataManager.MySQL
         }
 
 
-        public bool UpdateUserProfile(AuroraProfileData Profile)
+        public bool FullUpdateUserProfile(AuroraProfileData Profile)
         {
             List<string> SetValues = new List<string>();
             List<string> SetRows = new List<string>();
@@ -480,45 +480,7 @@ namespace Aurora.DataManager.MySQL
             return UserProfile;
         }
 
-        public bool FullUpdateUserProfile(AuroraProfileData Profile)
-        {
-            List<string> SetValues = new List<string>();
-            List<string> SetRows = new List<string>();
-            SetRows.Add("AboutText");
-            SetRows.Add("profileAllowPublish");
-            SetRows.Add("FirstLifeAboutText");
-            SetRows.Add("FirstLifeImage");
-            SetRows.Add("Image");
-            SetRows.Add("ProfileURL");
-            SetRows.Add("TempBanned");
-            SetRows.Add("profileWantToMask");
-            SetRows.Add("profileWantToText");
-            SetRows.Add("profileSkillsMask");
-            SetRows.Add("profileSkillsText");
-            SetRows.Add("profileLanguages");
-            SetRows.Add("IsMinor");
-            SetRows.Add("MatureRating");
-            SetValues.Add(Profile.AboutText);
-            SetValues.Add(Profile.AllowPublish);
-            SetValues.Add(Profile.FirstLifeAboutText);
-            SetValues.Add(Profile.FirstLifeImage.ToString());
-            SetValues.Add(Profile.Image.ToString());
-            SetValues.Add(Profile.ProfileURL);
-            SetValues.Add(Profile.TempBanned.ToString());
-            SetValues.Add(Profile.Interests[0]);
-            SetValues.Add(Profile.Interests[1]);
-            SetValues.Add(Profile.Interests[2]);
-            SetValues.Add(Profile.Interests[3]);
-            SetValues.Add(Profile.Interests[4]);
-            SetValues.Add(Profile.Minor.ToString());
-            SetValues.Add(Profile.Mature.ToString());
-            List<string> KeyValue = new List<string>();
-            List<string> KeyRow = new List<string>();
-            KeyRow.Add("userUUID");
-            KeyValue.Add(Profile.Identifier);
-            return Update("usersauth", SetValues.ToArray(), SetRows.ToArray(), KeyRow.ToArray(), KeyValue.ToArray());
-        }
-    	public DirPlacesReplyData[] PlacesQuery(string queryText, string category, string table, string wantedValue, int StartQuery)
+        public DirPlacesReplyData[] PlacesQuery(string queryText, string category, string table, string wantedValue, int StartQuery)
         {
         	List<DirPlacesReplyData> Data = new List<DirPlacesReplyData>();
             string query = String.Format("select {0} from {1} where ",
@@ -927,7 +889,7 @@ namespace Aurora.DataManager.MySQL
                         for (int i = 0; i < reader.FieldCount; i++)
                         {
                             if (a == 0)
-                                classified.UUID = reader.GetString(i);
+                                classified.ClassifiedUUID = reader.GetString(i);
                             if (a == 1)
                                 classified.CreatorUUID = reader.GetString(i);
                             if (a == 2)

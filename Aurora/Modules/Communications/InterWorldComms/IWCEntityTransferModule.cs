@@ -1053,7 +1053,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 AgentCircuitData aCircuit = ((Scene)(obj.Scene)).AuthenticateHandler.GetAgentCircuitData(obj.CircuitCode);
                 ((Scene)(obj.Scene)).AuthenticateHandler.RemoveCircuit(aCircuit.circuitcode);
                 ((Scene)(obj.Scene)).RemoveClient(obj.AgentId);
-                m_aScene.PresenceService.LogoutAgent(aCircuit.SessionID, new Vector3(), new Vector3());
+                m_aScene.PresenceService.LogoutAgent(aCircuit.SessionID);
             }
             else if (obj.IsLoggingOut)
             {

@@ -12,7 +12,7 @@ namespace OpenSim.Framework.Console
     /// </summary>
     public class MockConsole : CommandConsole
     {
-        public MockConsole(string defaultPrompt) : base(defaultPrompt)
+        public MockConsole(string defaultPrompt) : base()
         {
         }
         public override void Output(string text)
