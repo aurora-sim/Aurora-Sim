@@ -36,14 +36,6 @@ namespace OpenSim.Services.Interfaces
     {
         public string UserID;
         public UUID RegionID;
-        public bool Online;
-        public DateTime Login;
-        public DateTime Logout;
-        public Vector3 Position;
-        public Vector3 LookAt;
-        public UUID HomeRegionID;
-        public Vector3 HomePosition;
-        public Vector3 HomeLookAt;
 
         public PresenceInfo()
         {
@@ -55,23 +47,6 @@ namespace OpenSim.Services.Interfaces
                 UserID = kvp["UserID"].ToString();
             if (kvp.ContainsKey("RegionID"))
                 UUID.TryParse(kvp["RegionID"].ToString(), out RegionID);
-            if (kvp.ContainsKey("login"))
-                DateTime.TryParse(kvp["login"].ToString(), out Login);
-            if (kvp.ContainsKey("logout"))
-                DateTime.TryParse(kvp["logout"].ToString(), out Logout);
-            if (kvp.ContainsKey("lookAt"))
-                Vector3.TryParse(kvp["lookAt"].ToString(), out LookAt);
-            if (kvp.ContainsKey("online"))
-                Boolean.TryParse(kvp["online"].ToString(), out Online);
-            if (kvp.ContainsKey("position"))
-                Vector3.TryParse(kvp["position"].ToString(), out Position);
-            if (kvp.ContainsKey("HomeRegionID"))
-                UUID.TryParse(kvp["HomeRegionID"].ToString(), out HomeRegionID);
-            if (kvp.ContainsKey("HomePosition"))
-                Vector3.TryParse(kvp["HomePosition"].ToString(), out HomePosition);
-            if (kvp.ContainsKey("HomeLookAt"))
-                Vector3.TryParse(kvp["HomeLookAt"].ToString(), out HomeLookAt);
-
         }
 
         public Dictionary<string, object> ToKeyValuePairs()
@@ -79,47 +54,18 @@ namespace OpenSim.Services.Interfaces
             Dictionary<string, object> result = new Dictionary<string, object>();
             result["UserID"] = UserID;
             result["RegionID"] = RegionID.ToString();
-            result["online"] = Online.ToString();
-            result["login"] = Login.ToString();
-            result["logout"] = Logout.ToString();
-            result["position"] = Position.ToString();
-            result["lookAt"] = LookAt.ToString();
-            result["HomeRegionID"] = HomeRegionID.ToString();
-            result["HomePosition"] = HomePosition.ToString();
-            result["HomeLookAt"] = HomeLookAt.ToString();
 
             return result;
-        }
-
-        public static PresenceInfo[] GetOnlinePresences(PresenceInfo[] pinfos)
-        {
-            if (pinfos == null)
-                return null;
-
-            List<PresenceInfo> lst = new List<PresenceInfo>(pinfos);
-            lst = lst.FindAll(delegate(PresenceInfo each) { return each.Online; });
-
-            return lst.ToArray();
-        }
-
-        public static PresenceInfo GetOnlinePresence(PresenceInfo[] pinfos)
-        {
-            pinfos = GetOnlinePresences(pinfos);
-            if (pinfos != null && pinfos.Length >= 1)
-                return pinfos[0];
-
-            return null;
         }
     }
 
     public interface IPresenceService
     {
         bool LoginAgent(string userID, UUID sessionID, UUID secureSessionID);
-        bool LogoutAgent(UUID sessionID, Vector3 position, Vector3 lookAt);
+        bool LogoutAgent(UUID sessionID);
         bool LogoutRegionAgents(UUID regionID);
 
-        bool ReportAgent(UUID sessionID, UUID regionID, Vector3 position, Vector3 lookAt);
-        bool SetHomeLocation(string userID, UUID regionID, Vector3 position, Vector3 lookAt);
+        bool ReportAgent(UUID sessionID, UUID regionID);
 
         PresenceInfo GetAgent(UUID sessionID);
         PresenceInfo[] GetAgents(string[] userIDs);

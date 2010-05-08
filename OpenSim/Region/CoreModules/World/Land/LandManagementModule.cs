@@ -1148,6 +1148,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                     land.LandData.OwnerID = ownerID;
                     land.LandData.GroupID = UUID.Zero;
                     land.LandData.IsGroupOwned = false;
+                    land.LandData.Flags &= ~(uint) (ParcelFlags.ForSale | ParcelFlags.ForSaleObjects | ParcelFlags.SellParcelObjects | ParcelFlags.ShowDirectory);
 
                     m_scene.ForEachClient(SendParcelOverlay);
                     land.SendLandUpdateToClient(true, remote_client);
@@ -1170,6 +1171,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                     land.LandData.OwnerID = m_scene.RegionInfo.EstateSettings.EstateOwner;
                     land.LandData.GroupID = UUID.Zero;
                     land.LandData.IsGroupOwned = false;
+                    land.LandData.Flags &= ~(uint) (ParcelFlags.ForSale | ParcelFlags.ForSaleObjects | ParcelFlags.SellParcelObjects | ParcelFlags.ShowDirectory);
                     m_scene.ForEachClient(SendParcelOverlay);
                     land.SendLandUpdateToClient(true, remote_client);
                 }
@@ -1192,6 +1194,10 @@ namespace OpenSim.Region.CoreModules.World.Land
                     land.LandData.ClaimDate = Util.UnixTimeSinceEpoch();
                     land.LandData.GroupID = UUID.Zero;
                     land.LandData.IsGroupOwned = false;
+                    land.LandData.SalePrice = 0;
+                    land.LandData.AuthBuyerID = UUID.Zero;
+                    land.LandData.Flags &= ~(uint) (ParcelFlags.ForSale | ParcelFlags.ForSaleObjects | ParcelFlags.SellParcelObjects | ParcelFlags.ShowDirectory);
+
                     m_scene.ForEachClient(SendParcelOverlay);
                     land.SendLandUpdateToClient(true, remote_client);
                 }

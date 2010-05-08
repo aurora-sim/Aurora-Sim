@@ -535,8 +535,8 @@ namespace OpenSim.Region.Framework.Scenes
         {
             // FIXME MAYBE: We're not handling sortOrder!
 
-            // TODO: This code for looking in the folder for the library should be folded back into the
-            // CachedUserInfo so that this class doesn't have to know the details (and so that multiple libraries, etc.
+            // TODO: This code for looking in the folder for the library should be folded somewhere else
+            // so that this class doesn't have to know the details (and so that multiple libraries, etc.
             // can be handled transparently).
             InventoryFolderImpl fold = null;
             if (LibraryService != null && LibraryService.LibraryRootFolder != null)

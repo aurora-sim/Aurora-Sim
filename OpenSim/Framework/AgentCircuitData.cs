@@ -109,6 +109,11 @@ namespace OpenSim.Framework
         public string ServiceSessionID = string.Empty;
 
         /// <summary>
+        /// Viewer's version string
+        /// </summary>
+        public string Viewer;
+
+        /// <summary>
         /// Position the Agent's Avatar starts in the region
         /// </summary>
         public Vector3 startpos;
@@ -139,6 +144,7 @@ namespace OpenSim.Framework
             BaseFolder = new UUID(cAgent.BaseFolder);
             CapsPath = cAgent.CapsPath;
             ChildrenCapSeeds = cAgent.ChildrenCapSeeds;
+            Viewer = cAgent.Viewer;
         }
 
         /// <summary>
@@ -176,6 +182,7 @@ namespace OpenSim.Framework
             args["service_session_id"] = OSD.FromString(ServiceSessionID);
             args["start_pos"] = OSD.FromString(startpos.ToString());
             args["appearance_serial"] = OSD.FromInteger(Appearance.Serial);
+            args["viewer"] = OSD.FromString(Viewer);
 
             if (Appearance != null)
             {
@@ -275,6 +282,8 @@ namespace OpenSim.Framework
                 SessionID = args["session_id"].AsUUID();
             if (args["service_session_id"] != null)
                 ServiceSessionID = args["service_session_id"].AsString();
+            if (args["viewer"] != null)
+                Viewer = args["viewer"].AsString();
 
             if (args["start_pos"] != null)
                 Vector3.TryParse(args["start_pos"].AsString(), out startpos);
@@ -342,6 +351,7 @@ namespace OpenSim.Framework
         public float startposx;
         public float startposy;
         public float startposz;
+        public string Viewer;
 
         public sAgentCircuitData()
         {
@@ -363,6 +373,7 @@ namespace OpenSim.Framework
             BaseFolder = cAgent.BaseFolder.Guid;
             CapsPath = cAgent.CapsPath;
             ChildrenCapSeeds = cAgent.ChildrenCapSeeds;
+            Viewer = cAgent.Viewer;
         }
     }
 }
