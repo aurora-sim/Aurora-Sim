@@ -11,7 +11,7 @@ using MySql.Data.MySqlClient;
 
 namespace Aurora.DataManager.MySQL
 {
-    public class SQLiteEstate : MySQLDataLoader, IEstateData
+    public class MySQLEstate : MySQLDataLoader, IEstateData
     {
         #region IEstateData Members
 

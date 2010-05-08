@@ -45,9 +45,12 @@ namespace Aurora.Services.DataService
                 ProfileData.ConnectToDatabase(ConnectionString);
                 MySQLRegion RegionData = new MySQLRegion();
                 RegionData.ConnectToDatabase(ConnectionString);
+                MySQLEstate EstateData = new MySQLEstate();
+                EstateData.ConnectToDatabase(ConnectionString);
                 Aurora.DataManager.DataManager.AddGenericPlugin(GenericData);
                 Aurora.DataManager.DataManager.AddProfilePlugin((IProfileData)ProfileData);
                 Aurora.DataManager.DataManager.AddRegionPlugin((IRegionData)RegionData);
+                Aurora.DataManager.DataManager.AddEstatePlugin(EstateData);
             }
             else if (PluginModule == "SQLite")
             {
