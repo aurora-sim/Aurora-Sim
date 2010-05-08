@@ -347,7 +347,13 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
 
                 linemap = ((CSCodeGenerator)LSL_Converter).PositionMap;
                 // Write the linemap to a file and save it in our dictionary for next time. 
-                m_lineMaps[assembly] = linemap;
+                if (assembly != null && linemap != null)
+                {
+                    if (m_lineMaps.ContainsKey(assembly))
+                        m_lineMaps[assembly] = linemap;
+                    else
+                        m_lineMaps.Add(assembly, linemap);
+                }
                 //WriteMapFile(assembly + ".map", linemap);
             }
 

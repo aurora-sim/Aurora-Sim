@@ -1063,8 +1063,8 @@ namespace OpenSim.Region.Physics.OdePlugin
             }
             if (vec.IsFinite())
             {
-               if (UseUnderwaterPhysics)
-                {   
+                if (UseUnderwaterPhysics)
+                {
                     //Position plus height to av's shoulder (aprox) is just above water
                     if ((_position.Z + (CAPSULE_LENGTH / 3) - .25f) < _parent_scene.waterlevel)
                     {
@@ -1095,6 +1095,11 @@ namespace OpenSim.Region.Physics.OdePlugin
                             Flying = true;
                         }
                     }
+                }
+                float height = _parent_scene.GetTerrainHeightAtXY(_position.X, _position.Y);
+                if (_position.Z <= height)
+                {
+                    _position.Z = height;
                 }
                 doForce(vec);
                 if (!_zeroFlag)

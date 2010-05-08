@@ -3448,7 +3448,7 @@ namespace OpenSim.Region.Physics.OdePlugin
 
             const float scale = 1.0f;
             const float offset = 0.0f;
-            const float thickness = 0.2f;
+            const float thickness = 0.5f;
             const int wrap = 0;
 
             int regionsize = (int) Constants.RegionSize + 2;
