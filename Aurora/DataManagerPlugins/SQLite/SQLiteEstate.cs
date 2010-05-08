@@ -57,6 +57,9 @@ namespace Aurora.DataManager.SQLite
                     EstateID = QueryResults[0];
                 if (EstateID == "0")
                     EstateID = "100";
+                int estateID = Convert.ToInt32(EstateID);
+                estateID++;
+                EstateID = estateID.ToString();
                 cmd.CommandText = "insert into estate_settings (EstateID," + String.Join(",", names.ToArray()) + ") values ("+EstateID+", :" + String.Join(", :", names.ToArray()) + ")";
                 cmd.Parameters.Clear();
 
