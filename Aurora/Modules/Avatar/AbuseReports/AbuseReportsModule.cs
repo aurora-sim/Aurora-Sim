@@ -159,14 +159,15 @@ namespace Aurora.Modules
         		Adetails = detailssplit[4];
         	}
 
-            AuroraProfileData reporterProfile = ProfileData.GetProfileInfo(reporter);
+            Aurora.DataManager.Frontends.ProfileFrontend data = new Aurora.DataManager.Frontends.ProfileFrontend();
+            IUserProfileInfo reporterProfile = data.GetUserProfile(reporter);
             string ReporterName = "";
             string AbuserName = "";
             if (reporterProfile != null)
-                ReporterName = reporterProfile.FirstName + " " + reporterProfile.SurName;
-            AuroraProfileData AbuserProfile = ProfileData.GetProfileInfo(abuserID);
+                ReporterName = reporterProfile.FirstName + " " + reporterProfile.LastName;
+            IUserProfileInfo AbuserProfile = data.GetUserProfile(abuserID);
             if (AbuserProfile != null)
-                AbuserName = AbuserProfile.FirstName + " " + AbuserProfile.SurName;
+                AbuserName = AbuserProfile.FirstName + " " + AbuserProfile.LastName;
             summery = summery.Replace("\"", "`");
         	summery =summery.Replace("|","");
         	summery =summery.Replace(")","");

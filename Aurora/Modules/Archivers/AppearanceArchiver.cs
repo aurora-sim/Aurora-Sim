@@ -44,11 +44,8 @@ namespace Aurora.Modules
             }
             if (NewUser.Count == 0 && ArchiveName.Count == 0)
             {
-                Aurora.Framework.IAuthService IAS = m_scene.RequestModuleInterface<IAuthService>();
-                if (IAS != null)
-                {
-                    IAS.CreateUserAuth(account.PrincipalID.ToString(), account.FirstName, account.LastName);
-                }
+                Aurora.DataManager.Frontends.ProfileFrontend PF = new Aurora.DataManager.Frontends.ProfileFrontend();
+                PF.CreateNewProfile(account.PrincipalID, account.FirstName, account.LastName);
             }
             List<string> SetRow = new List<string>();
             List<string> SetValue = new List<string>();

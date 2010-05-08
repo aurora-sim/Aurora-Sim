@@ -59,23 +59,21 @@ namespace Aurora.Modules
                 return;
             }
             UserAccount account = m_scene.UserAccountService.GetUserAccount(UUID.Zero, cmdparams[2], cmdparams[3]);
-            AuroraProfileData profile = Aurora.DataManager.DataManager.GetDefaultProfilePlugin().GetProfileInfo(account.PrincipalID);
+            Aurora.DataManager.Frontends.ProfileFrontend data = new Aurora.DataManager.Frontends.ProfileFrontend();
+            IUserProfileInfo profile = data.GetUserProfile(account.PrincipalID);
             StreamWriter writer = new StreamWriter(cmdparams[4]);
             writer.Write("<profile>\n");
             writer.Write(account.Email + "\n");
             writer.Write(account.UserFlags.ToString() + "\n");
             writer.Write(account.UserLevel.ToString() + "\n");
             writer.Write(account.UserTitle + "\n");
-            writer.Write(profile.AboutText + "\n");
+            writer.Write(profile.ProfileAboutText + "\n");
             writer.Write(profile.AllowPublish + "\n");
             writer.Write(profile.Email + "\n");
-            writer.Write(profile.FirstLifeAboutText + "\n");
-            writer.Write(profile.FirstLifeImage.ToString() + "\n");
-            writer.Write(profile.Image.ToString() + "\n");
-            foreach (string interest in profile.Interests)
-            {
-                writer.Write(interest);
-            }
+            writer.Write(profile.ProfileFirstText + "\n");
+            writer.Write(profile.ProfileFirstImage.ToString() + "\n");
+            writer.Write(profile.ProfileImage.ToString() + "\n");
+            writer.Write(profile.Interests.WantToMask);
             writer.Write(profile.MembershipGroup + "\n");
             writer.Write(profile.Notes);
             writer.Write(profile.Partner + "\n");

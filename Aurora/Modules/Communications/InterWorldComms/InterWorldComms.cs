@@ -458,11 +458,11 @@ namespace Aurora.Modules
             UUID agent = new UUID(client);
             if(!ForeignAgents.ContainsKey(agent))
                 ForeignAgents.Add(agent, homeConnection);
-            IUserProfileInfo profile = ProfileDataManager.GetProfileInfo(agent);
-            if (profile == null)
-            {
+            //IUserProfileInfo profile = ProfileDataManager.GetProfileInfo(agent);
+            //if (profile == null)
+            //{
                 //ProfileDataManager.CreateTemperaryAccount(client, first, last);
-            }
+            //}
         }
 
         public void RemoveForeignAgent(string client)

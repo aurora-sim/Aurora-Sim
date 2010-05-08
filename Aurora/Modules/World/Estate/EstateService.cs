@@ -85,12 +85,13 @@ namespace Aurora.Modules
         {
             newPosition = Position;
             EstateSettings ES = ((Scene)scene).EstateService.LoadEstateSettings(scene.RegionInfo.RegionID, false);
-            AuroraProfileData Profile = PD.GetProfileInfo(userID);
-
-            if (((Scene)scene).RegionInfo.RegionSettings.Maturity > Profile.Mature)
+            Aurora.DataManager.Frontends.ProfileFrontend data = new Aurora.DataManager.Frontends.ProfileFrontend();
+            IUserProfileInfo Profile = data.GetUserProfile(userID);
+            
+            if (((Scene)scene).RegionInfo.RegionSettings.Maturity > Profile.MaturityRating)
                 return false;
 
-            if (ES.DenyMinors && Profile.Minor)
+            if (ES.DenyMinors && Profile.IsMinor)
                 return false;
 
             if (!ES.PublicAccess)
