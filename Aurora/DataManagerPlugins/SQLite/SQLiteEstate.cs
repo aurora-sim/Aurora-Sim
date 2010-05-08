@@ -46,9 +46,15 @@ namespace Aurora.DataManager.SQLite
                 names.Remove("EstateID");
 
                 SqliteCommand cmd = new SqliteCommand();
-                cmd.CommandText = "select LAST_INSERT_ROWID() as id";
+                cmd.CommandText = "select EstateID from estate_map ORDER BY EstateID DESC";
                 cmd.Parameters.Clear();
-                EstateID = Query(cmd)[0];
+                List<string> QueryResults = Query(cmd);
+                if (QueryResults == null && QueryResults.Count == 0 || QueryResults[0] == "")
+                {
+                    EstateID = "100";
+                }
+                else
+                    EstateID = QueryResults[0];
                 if (EstateID == "0")
                     EstateID = "100";
                 cmd.CommandText = "insert into estate_settings (EstateID," + String.Join(",", names.ToArray()) + ") values ("+EstateID+", :" + String.Join(", :", names.ToArray()) + ")";
