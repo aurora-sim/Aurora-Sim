@@ -544,11 +544,14 @@ namespace Aurora.Modules
             if (notes == null || notes == "")
             {
                 AvatarNotesUpdate(remoteClient, new UUID(args[0]), "");
+                UPI = ProfileFrontend.GetUserProfile(remoteClient.AgentId);
+                UPI.Notes.TryGetValue(new UUID(args[0]), out notes);
             }
             remoteClient.SendAvatarNotesReply(new UUID(args[0]), notes);
         }
         public void AvatarNotesUpdate(IClientAPI remoteClient, UUID queryTargetID, string queryNotes)
         {
+            IUserProfileInfo UPI = ProfileFrontend.GetUserProfile(remoteClient.AgentId);
             string notes;
             if (queryNotes == "")
             {
@@ -563,8 +566,13 @@ namespace Aurora.Modules
             List<string> keys2 = new List<string>();
             List<string> values2 = new List<string>();
             keys2.Add("targetuuid");
+            keys2.Add("userid");
             values2.Add(queryTargetID.ToString());
-            GenericData.Update("usernotes", values.ToArray(), keys.ToArray(), keys2.ToArray(), values2.ToArray());
+            values2.Add(remoteClient.AgentId.ToString());
+            if(UPI.Notes.Count == 0)
+                GenericData.Insert("profilenotes", new string[] { remoteClient.AgentId.ToString(), queryTargetID.ToString(), notes, UUID.Random().ToString()});
+            else
+                GenericData.Update("profilenotes", values.ToArray(), keys.ToArray(), keys2.ToArray(), values2.ToArray());
             ProfileFrontend.RemoveFromCache(remoteClient.AgentId);
         }
 
@@ -815,6 +823,31 @@ namespace Aurora.Modules
             foreach (UserAccount item in accounts)
             {
                 IUserProfileInfo UserProfile = ProfileFrontend.GetUserProfile(item.PrincipalID);
+                if (UserProfile == null)
+                {
+                    data[i] = new DirPeopleReplyData();
+                    data[i].agentID = item.PrincipalID;
+                    data[i].firstName = item.FirstName;
+                    data[i].lastName = item.LastName;
+                    if (GroupsModule == null)
+                        data[i].group = "";
+                    else
+                    {
+                        data[i].group = "";
+                        GroupMembershipData[] memberships = GroupsModule.GetMembershipData(item.PrincipalID);
+                        foreach (GroupMembershipData membership in memberships)
+                        {
+                            if (membership.Active)
+                                data[i].group = membership.GroupName;
+                        }
+                    }
+                    OpenSim.Services.Interfaces.GridUserInfo Pinfo = m_scene.GridUserService.GetGridUserInfo(item.PrincipalID.ToString());
+                    if(Pinfo != null)
+                        data[i].online = true;
+                    data[i].reputation = 0;
+                    i++;
+                    continue;
+                }
                 if (UserProfile.AllowPublish == "1")
                 {
                 	data[i] = new DirPeopleReplyData();

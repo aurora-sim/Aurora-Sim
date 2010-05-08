@@ -22,7 +22,7 @@ namespace Aurora.DataManager.MySQL
         public OpenSim.Framework.EstateSettings LoadEstateSettings(OpenMetaverse.UUID regionID, bool create)
         {
             string sql = "select EstateID from estate_map where RegionID = '"+regionID.ToString()+"'";
-            string EstateID = Query(sql)[0];
+            string EstateID = QueryList(sql)[0];
             if (EstateID == "" && !create)
             {
                 return new EstateSettings();
@@ -45,7 +45,7 @@ namespace Aurora.DataManager.MySQL
 
                 names.Remove("EstateID");
 
-                List<string> QueryResults = Query("select EstateID from estate_map ORDER BY EstateID DESC");
+                List<string> QueryResults = QueryList("select EstateID from estate_map ORDER BY EstateID DESC");
                 if (QueryResults == null && QueryResults.Count == 0 || QueryResults[0] == "")
                 {
                     EstateID = "100";
@@ -60,7 +60,7 @@ namespace Aurora.DataManager.MySQL
                 MySqlCommand cmd;
                 MySqlConnection dbcon = GetLockedConnection();
                 cmd = (MySqlCommand)dbcon.CreateCommand();
-                cmd.CommandText = "insert into estate_settings (EstateID," + String.Join(",", names.ToArray()) + ") values (" + EstateID + ", :" + String.Join(", :", names.ToArray()) + ")";
+                cmd.CommandText = "insert into estate_settings (EstateID," + String.Join(",", names.ToArray()) + ") values (" + EstateID + ", ?" + String.Join(", ?", names.ToArray()) + ")";
                 cmd.Parameters.Clear();
 
                 foreach (string name in FieldList)
@@ -68,13 +68,13 @@ namespace Aurora.DataManager.MySQL
                     if (m_FieldMap[name].GetValue(es) is bool)
                     {
                         if ((bool)m_FieldMap[name].GetValue(es))
-                            cmd.Parameters.Add(":"+name, "1");
+                            cmd.Parameters.Add("?"+name, "1");
                         else
-                            cmd.Parameters.Add(":"+name, "0");
+                            cmd.Parameters.Add("?"+name, "0");
                     }
                     else
                     {
-                        cmd.Parameters.Add(":"+name, m_FieldMap[name].GetValue(es).ToString());
+                        cmd.Parameters.Add("?"+name, m_FieldMap[name].GetValue(es).ToString());
                     }
                 }
                 ExecuteCommand(cmd);
@@ -89,114 +89,10 @@ namespace Aurora.DataManager.MySQL
             get { return new List<string>(m_FieldMap.Keys).ToArray(); }
         }
 
-        public bool ExecuteCommand(MySqlCommand query)
-        {
-            IDataReader reader;
-
-            using (reader = query.ExecuteReader())
-            {
-                reader.Close();
-                reader.Dispose();
-            }
-            return true;
-        }
-
-        public bool ExecuteCommand(string query)
-        {
-            MySqlConnection dbcon = GetLockedConnection();
-            IDbCommand result;
-            IDataReader reader;
-
-            using (result = Query(query, new Dictionary<string, object>(), dbcon))
-            {
-                using (reader = result.ExecuteReader())
-                {
-                    reader.Close();
-                    reader.Dispose();
-                    result.Dispose();
-                }
-            }
-            return true;
-        }
-
-        public List<string> Query(MySqlCommand query)
-        {
-            List<string> RetVal = new List<string>();
-            IDataReader reader;
-
-            using (reader = query.ExecuteReader())
-            {
-                try
-                {
-                    while (reader.Read())
-                    {
-                        for (int i = 0; i < reader.FieldCount; i++)
-                        {
-                            RetVal.Add(reader.GetString(i));
-                        }
-                    }
-                    if (RetVal.Count == 0)
-                    {
-                        RetVal.Add("");
-                        return RetVal;
-                    }
-                    else
-                    {
-                        return RetVal;
-                    }
-                }
-                finally
-                {
-                    reader.Close();
-                    reader.Dispose();
-                }
-            }
-            return RetVal;
-        }
-
-        public List<string> Query(string sql)
-        {
-            MySqlConnection dbcon = GetLockedConnection();
-            IDbCommand result;
-            IDataReader reader;
-            List<string> RetVal = new List<string>();
-            using (result = Query(sql, new Dictionary<string, object>(), dbcon))
-            {
-                using (reader = result.ExecuteReader())
-                {
-                    try
-                    {
-                        while (reader.Read())
-                        {
-                            for (int i = 0; i < reader.FieldCount; i++)
-                            {
-                                RetVal.Add(reader.GetString(i));
-                            }
-                        }
-                        if (RetVal.Count == 0)
-                        {
-                            RetVal.Add("");
-                            return RetVal;
-                        }
-                        else
-                        {
-                            return RetVal;
-                        }
-                    }
-                    finally
-                    {
-                        reader.Close();
-                        reader.Dispose();
-                        result.Dispose();
-                    }
-                }
-            }
-        }
-
         public OpenSim.Framework.EstateSettings LoadEstateSettings(int estateID)
         {
             string sql = "select * from estate_settings where EstateID = " + estateID.ToString();
-            List<string> results = Query(sql);
+            List<string> results = QueryList(sql);
             EstateSettings settings = new EstateSettings();
             settings.AbuseEmail = results[21];
             settings.AbuseEmailToEstateOwner = results[2] == "1";
@@ -239,8 +135,8 @@ namespace Aurora.DataManager.MySQL
             MySqlConnection dbcon = GetLockedConnection();
             cmd = (MySqlCommand)dbcon.CreateCommand();
                 
-            cmd.CommandText = "select bannedUUID from estateban where EstateID = :EstateID";
-            cmd.Parameters.Add(":EstateID", es.EstateID);
+            cmd.CommandText = "select bannedUUID from estateban where EstateID = ?EstateID";
+            cmd.Parameters.Add("?EstateID", es.EstateID);
 
             IDataReader reader = reader = cmd.ExecuteReader();
 
@@ -267,8 +163,8 @@ namespace Aurora.DataManager.MySQL
             MySqlConnection dbcon = GetLockedConnection();
             cmd = (MySqlCommand)dbcon.CreateCommand();
                 
-            cmd.CommandText = "select uuid from " + table + " where EstateID = :EstateID";
-            cmd.Parameters.Add(":EstateID", EstateID);
+            cmd.CommandText = "select uuid from " + table + " where EstateID = ?EstateID";
+            cmd.Parameters.Add("?EstateID", EstateID);
 
             IDataReader reader = cmd.ExecuteReader();
 
@@ -292,18 +188,18 @@ namespace Aurora.DataManager.MySQL
             MySqlConnection dbcon = GetLockedConnection();
             cmd = (MySqlCommand)dbcon.CreateCommand();
                 
-            cmd.CommandText = "delete from estateban where EstateID = :EstateID";
-            cmd.Parameters.Add(":EstateID", es.EstateID.ToString());
+            cmd.CommandText = "delete from estateban where EstateID = ?EstateID";
+            cmd.Parameters.Add("?EstateID", es.EstateID.ToString());
 
             Query(cmd);
             cmd.Parameters.Clear();
 
-            cmd.CommandText = "insert into estateban (EstateID, bannedUUID, bannedIp, bannedIpHostMask, bannedNameMask) values ( :EstateID, :bannedUUID, '', '', '' )";
+            cmd.CommandText = "insert into estateban (EstateID, bannedUUID, bannedIp, bannedIpHostMask, bannedNameMask) values ( ?EstateID, ?bannedUUID, '', '', '' )";
 
             foreach (EstateBan b in es.EstateBans)
             {
-                cmd.Parameters.Add(":EstateID", es.EstateID.ToString());
-                cmd.Parameters.Add(":bannedUUID", b.BannedUserID.ToString());
+                cmd.Parameters.Add("?EstateID", es.EstateID.ToString());
+                cmd.Parameters.Add("?bannedUUID", b.BannedUserID.ToString());
 
                 Query(cmd);
                 cmd.Parameters.Clear();
@@ -316,19 +212,19 @@ namespace Aurora.DataManager.MySQL
             MySqlConnection dbcon = GetLockedConnection();
             cmd = (MySqlCommand)dbcon.CreateCommand();
                 
-            cmd.CommandText = "delete from " + table + " where EstateID = :EstateID";
-            cmd.Parameters.Add(":EstateID", EstateID.ToString());
+            cmd.CommandText = "delete from " + table + " where EstateID = ?EstateID";
+            cmd.Parameters.Add("?EstateID", EstateID.ToString());
 
             Query(cmd);
 
             cmd.Parameters.Clear();
 
-            cmd.CommandText = "insert into " + table + " (EstateID, uuid) values ( :EstateID, :uuid )";
+            cmd.CommandText = "insert into " + table + " (EstateID, uuid) values ( ?EstateID, ?uuid )";
 
             foreach (UUID uuid in data)
             {
-                cmd.Parameters.Add(":EstateID", EstateID.ToString());
-                cmd.Parameters.Add(":uuid", uuid.ToString());
+                cmd.Parameters.Add("?EstateID", EstateID.ToString());
+                cmd.Parameters.Add("?uuid", uuid.ToString());
 
                 Query(cmd);
                 cmd.Parameters.Clear();
@@ -354,9 +250,9 @@ namespace Aurora.DataManager.MySQL
             List<string> terms = new List<string>();
 
             foreach (string f in fields)
-                terms.Add(f + " = :" + f);
+                terms.Add(f + " = ?" + f);
 
-            string sql = "update estate_settings set " + String.Join(", ", terms.ToArray()) + " where EstateID = :EstateID";
+            string sql = "update estate_settings set " + String.Join(", ", terms.ToArray()) + " where EstateID = ?EstateID";
 
             MySqlCommand cmd;
             MySqlConnection dbcon = GetLockedConnection();
@@ -369,13 +265,13 @@ namespace Aurora.DataManager.MySQL
                 if (m_FieldMap[name].GetValue(es) is bool)
                 {
                     if ((bool)m_FieldMap[name].GetValue(es))
-                        cmd.Parameters.Add(":" + name, "1");
+                        cmd.Parameters.Add("?" + name, "1");
                     else
-                        cmd.Parameters.Add(":" + name, "0");
+                        cmd.Parameters.Add("?" + name, "0");
                 }
                 else
                 {
-                    cmd.Parameters.Add(":" + name, m_FieldMap[name].GetValue(es).ToString());
+                    cmd.Parameters.Add("?" + name, m_FieldMap[name].GetValue(es).ToString());
                 }
             }
 
@@ -407,9 +303,9 @@ namespace Aurora.DataManager.MySQL
             List<string> terms = new List<string>();
 
             foreach (string f in fields)
-                terms.Add(f + " = :" + f);
+                terms.Add(f + " = ?" + f);
 
-            string sql = "update estate_settings set " + String.Join(", ", terms.ToArray()) + " where EstateID = :EstateID";
+            string sql = "update estate_settings set " + String.Join(", ", terms.ToArray()) + " where EstateID = ?EstateID";
 
             MySqlCommand cmd;
             MySqlConnection dbcon = GetLockedConnection();
@@ -422,13 +318,13 @@ namespace Aurora.DataManager.MySQL
                 if (m_FieldMap[name].GetValue(es) is bool)
                 {
                     if ((bool)m_FieldMap[name].GetValue(es))
-                        cmd.Parameters.Add(":" + name, "1");
+                        cmd.Parameters.Add("?" + name, "1");
                     else
-                        cmd.Parameters.Add(":" + name, "0");
+                        cmd.Parameters.Add("?" + name, "0");
                 }
                 else
                 {
-                    cmd.Parameters.Add(":" + name, m_FieldMap[name].GetValue(es).ToString());
+                    cmd.Parameters.Add("?" + name, m_FieldMap[name].GetValue(es).ToString());
                 }
             }
 
@@ -468,9 +364,9 @@ namespace Aurora.DataManager.MySQL
             MySqlConnection dbcon = GetLockedConnection();
             cmd = (MySqlCommand)dbcon.CreateCommand();
 
-            cmd.CommandText = "insert into estate_map values (:RegionID, :EstateID)";
-            cmd.Parameters.Add(":RegionID", regionID.ToString());
-            cmd.Parameters.Add(":EstateID", estateID.ToString());
+            cmd.CommandText = "insert into estate_map values (?RegionID, ?EstateID)";
+            cmd.Parameters.Add("?RegionID", regionID.ToString());
+            cmd.Parameters.Add("?EstateID", estateID.ToString());
 
             if (Query(cmd).Count == 0)
                 return false;
@@ -481,7 +377,7 @@ namespace Aurora.DataManager.MySQL
         public List<OpenMetaverse.UUID> GetRegions(int estateID)
         {
             string sql = "select RegionID from estate_map where EstateID = '" + estateID.ToString() + "'";
-            List<string> RegionIDs = Query(sql);
+            List<string> RegionIDs = QueryList(sql);
             List<UUID> regions = new List<UUID>();
             foreach(string RegionID in RegionIDs)
                 regions.Add(new UUID(RegionID));
@@ -494,43 +390,43 @@ namespace Aurora.DataManager.MySQL
             MySqlConnection dbcon = GetLockedConnection();
             cmd = (MySqlCommand)dbcon.CreateCommand();
 
-            cmd.CommandText = "delete from estateban where EstateID = :EstateID";
-            cmd.Parameters.Add(":EstateID", estateID.ToString());
+            cmd.CommandText = "delete from estateban where EstateID = ?EstateID";
+            cmd.Parameters.Add("?EstateID", estateID.ToString());
 
             Query(cmd);
 
             cmd = (MySqlCommand)dbcon.CreateCommand();
 
-            cmd.CommandText = "delete from estate_groups where EstateID = :EstateID";
-            cmd.Parameters.Add(":EstateID", estateID.ToString());
+            cmd.CommandText = "delete from estate_groups where EstateID = ?EstateID";
+            cmd.Parameters.Add("?EstateID", estateID.ToString());
 
             Query(cmd);
 
             cmd = (MySqlCommand)dbcon.CreateCommand();
 
-            cmd.CommandText = "delete from estate_managers where EstateID = :EstateID";
-            cmd.Parameters.Add(":EstateID", estateID.ToString());
+            cmd.CommandText = "delete from estate_managers where EstateID = ?EstateID";
+            cmd.Parameters.Add("?EstateID", estateID.ToString());
 
             Query(cmd);
 
             cmd = (MySqlCommand)dbcon.CreateCommand();
 
-            cmd.CommandText = "delete from estate_map where EstateID = :EstateID";
-            cmd.Parameters.Add(":EstateID", estateID.ToString());
+            cmd.CommandText = "delete from estate_map where EstateID = ?EstateID";
+            cmd.Parameters.Add("?EstateID", estateID.ToString());
 
             Query(cmd);
 
             cmd = (MySqlCommand)dbcon.CreateCommand();
 
-            cmd.CommandText = "delete from estate_settings where EstateID = :EstateID";
-            cmd.Parameters.Add(":EstateID", estateID.ToString());
+            cmd.CommandText = "delete from estate_settings where EstateID = ?EstateID";
+            cmd.Parameters.Add("?EstateID", estateID.ToString());
 
             Query(cmd);
 
             cmd = (MySqlCommand)dbcon.CreateCommand();
 
-            cmd.CommandText = "delete from estate_users where EstateID = :EstateID";
-            cmd.Parameters.Add(":EstateID", estateID.ToString());
+            cmd.CommandText = "delete from estate_users where EstateID = ?EstateID";
+            cmd.Parameters.Add("?EstateID", estateID.ToString());
 
             Query(cmd);
             return true;

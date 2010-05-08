@@ -134,7 +134,7 @@ namespace Aurora.DataManager.Frontends
                 {
                     ProfileInterests Interests = ReadInterestsInfoRow(agentID.ToString());
                     List<string> userauthReturns = GD.Query("userUUID",agentID.ToString(),"usersauth","userLogin,userPass,userGodLevel,membershipGroup,profileMaturePublish,profileAllowPublish,profileURL,AboutText,CustomType,Email,FirstLifeAboutText,FirstLifeImage,Partner,PermaBanned,TempBanned,Image,IsMinor,MatureRating,Created");
-                    List<string> notesReturns = GD.Query("userid", agentID.ToString(),"profilenotes","targetuuid,notes");
+                    List<string> notesReturns = GD.Query("userid", agentID.ToString(), "profilenotes", "targetuuid,notes");
                     UserProfile.Classifieds = ReadClassifedRow(agentID.ToString());
                     UserProfile.Picks = ReadPickRequestsRow(agentID.ToString());
                     Dictionary<UUID, string> Notes = new Dictionary<UUID, string>();
@@ -145,7 +145,7 @@ namespace Aurora.DataManager.Frontends
                             Notes.Add(new UUID(notesReturns[i]), notesReturns[i + 1]);
                         }
                     }
-                    if (userauthReturns.Count == 1)
+                    if (userauthReturns.Count == 1 || userauthReturns.Count == 0)
                         return null;
                     if (userauthReturns[2] == " ")
                         userauthReturns[2] = "0";
@@ -182,7 +182,7 @@ namespace Aurora.DataManager.Frontends
                     UserProfilesCache.Add(agentID, UserProfile);
                     return UserProfile;
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
                     return null;
                 }

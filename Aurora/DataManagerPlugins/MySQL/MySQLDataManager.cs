@@ -16,7 +16,6 @@ namespace Aurora.DataManager.MySQL
 {
     public class MySQLDataLoader : DataManagerBase
     {
-        MySqlConnection MySQLConn = null;
         readonly Mutex m_lock = new Mutex(false);
         string connectionString = "";
 
@@ -27,16 +26,6 @@ namespace Aurora.DataManager.MySQL
 
         public MySqlConnection GetLockedConnection()
         {
-            if (MySQLConn != null)
-            {
-                if (MySQLConn.Ping())
-                {
-                    return MySQLConn;
-                }
-                MySQLConn.Close();
-                MySQLConn.Open();
-                return MySQLConn;
-            }
             try
             {
                 m_lock.WaitOne();
@@ -54,11 +43,10 @@ namespace Aurora.DataManager.MySQL
                 try
                 {
                     dbcon.Open();
-                    MySQLConn = dbcon;
                 }
                 catch (Exception e)
                 {
-                    MySQLConn = null;
+                    dbcon.Dispose();
                     throw new Exception("[MySQLData] Connection error while using connection string [" + connectionString + "]", e);
                 }
                 return dbcon;
@@ -96,7 +84,115 @@ namespace Aurora.DataManager.MySQL
         public override void ConnectToDatabase(string connectionstring)
         {
             connectionString = connectionstring;
-            GetLockedConnection();
+            MySqlConnection dbcon = GetLockedConnection();
+            dbcon.Close();
+            dbcon.Dispose();
+        }
+
+        public List<string> Query(MySqlCommand query)
+        {
+            List<string> RetVal = new List<string>();
+            IDataReader reader;
+
+            using (reader = query.ExecuteReader())
+            {
+                try
+                {
+                    while (reader.Read())
+                    {
+                        for (int i = 0; i < reader.FieldCount; i++)
+                        {
+                            RetVal.Add(reader.GetString(i));
+                        }
+                    }
+                    if (RetVal.Count == 0)
+                    {
+                        RetVal.Add("");
+                        return RetVal;
+                    }
+                    else
+                    {
+                        return RetVal;
+                    }
+                }
+                finally
+                {
+                    reader.Close();
+                    reader.Dispose();
+                    CloseDatabase(query.Connection);
+                }
+            }
+        }
+
+        public List<string> QueryList(string sql)
+        {
+            MySqlConnection dbcon = GetLockedConnection();
+            IDbCommand result;
+            IDataReader reader;
+            List<string> RetVal = new List<string>();
+            using (result = Query(sql, new Dictionary<string, object>(), dbcon))
+            {
+                using (reader = result.ExecuteReader())
+                {
+                    try
+                    {
+                        while (reader.Read())
+                        {
+                            for (int i = 0; i < reader.FieldCount; i++)
+                            {
+                                RetVal.Add(reader.GetString(i));
+                            }
+                        }
+                        if (RetVal.Count == 0)
+                        {
+                            RetVal.Add("");
+                            return RetVal;
+                        }
+                        else
+                        {
+                            return RetVal;
+                        }
+                    }
+                    finally
+                    {
+                        reader.Close();
+                        reader.Dispose();
+                        result.Dispose();
+                        CloseDatabase(dbcon);
+                    }
+                }
+            }
+        }
+
+        public bool ExecuteCommand(MySqlCommand query)
+        {
+            IDataReader reader;
+
+            using (reader = query.ExecuteReader())
+            {
+                reader.Close();
+                reader.Dispose();
+            }
+            return true;
+        }
+
+        public bool ExecuteCommand(string query)
+        {
+            MySqlConnection dbcon = GetLockedConnection();
+            IDbCommand result;
+            IDataReader reader;
+
+            using (result = Query(query, new Dictionary<string, object>(), dbcon))
+            {
+                using (reader = result.ExecuteReader())
+                {
+                    reader.Close();
+                    reader.Dispose();
+                    result.Dispose();
+                }
+            }
+            CloseDatabase(dbcon);
+            return true;
         }
 
         public override List<string> Query(string keyRow, string keyValue, string table, string wantedValue)
@@ -106,10 +202,16 @@ namespace Aurora.DataManager.MySQL
             IDataReader reader;
             List<string> RetVal = new List<string>();
             string query = "";
-            if(keyRow == "")
-                query = "select " + wantedValue + " from " + table;
+            if (keyRow == "")
+            {
+                query = String.Format("select {0} from {1}",
+                                      wantedValue, table);
+            }
             else
-                query = "select " + wantedValue + " from " + table + " where " + keyRow + " = " + keyValue;
+            {
+                query = String.Format("select {0} from {1} where {2} = '{3}'",
+                                      wantedValue, table, keyRow, keyValue);
+            }
             using (result = Query(query, new Dictionary<string, object>(), dbcon))
             {
                 using (reader = result.ExecuteReader())
@@ -138,6 +240,7 @@ namespace Aurora.DataManager.MySQL
                         reader.Close();
                         reader.Dispose();
                         result.Dispose();
+                        CloseDatabase(dbcon);
                     }
                 }
             }
@@ -149,7 +252,8 @@ namespace Aurora.DataManager.MySQL
             IDbCommand result;
             IDataReader reader;
             List<string> RetVal = new List<string>();
-            string query = "select " + wantedValue + " from " + table + " where ";
+            string query = String.Format("select {0} from {1} where ",
+                                      wantedValue, table);
             int i = 0;
             foreach (string value in keyValue)
             {
@@ -187,6 +291,7 @@ namespace Aurora.DataManager.MySQL
                         reader.Close();
                         reader.Dispose();
                         result.Dispose();
+                        CloseDatabase(dbcon);
                     }
                 }
             }
@@ -226,6 +331,7 @@ namespace Aurora.DataManager.MySQL
                         reader.Close();
                         reader.Dispose();
                         result.Dispose();
+                        CloseDatabase(dbcon);
                     }
                 }
             }
@@ -236,29 +342,35 @@ namespace Aurora.DataManager.MySQL
             MySqlConnection dbcon = GetLockedConnection();
             IDbCommand result;
             IDataReader reader;
-            string query = "update '" + table + "' set '";
+            string query = "update " + table + " set ";
             int i = 0;
+            Dictionary<string, object> parameters = new Dictionary<string, object>();
             foreach (string value in setValues)
             {
-                query += setRows[i] + "' = '" + value + "',";
+                query += "`" + setRows[i] + "` = @" + setRows[i] + " ,";
+                parameters["@" + setRows[i]] = value;
                 i++;
             }
             i = 0;
             query = query.Remove(query.Length - 1);
-            query += " WHERE '";
+            query += " where ";
             foreach (string value in keyValues)
             {
-                query += keyRows[i] + "' = '" + value + "' AND";
+                query += keyRows[i];
+                query += " = '";
+                query += value;
+                query += "' and";
                 i++;
             }
-            query = query.Remove(query.Length - 3);
-            using (result = Query(query, new Dictionary<string, object>(), dbcon))
+            query = query.Remove(query.Length - 4);
+            using (result = Query(query, parameters, dbcon))
             {
                 using (reader = result.ExecuteReader())
                 {
                     reader.Close();
                     reader.Dispose();
                     result.Dispose();
+                    CloseDatabase(dbcon);
                 }
             }
             return true;
@@ -283,15 +395,21 @@ namespace Aurora.DataManager.MySQL
             string query = "insert into " + table + " VALUES("+valuesString+")";
             using (result = Query(query, new Dictionary<string, object>(), dbcon))
             {
-                using (reader = result.ExecuteReader())
+                try
                 {
-                    reader.Close();
-                    reader.Dispose();
-                    result.Dispose();
+                    using (reader = result.ExecuteReader())
+                    {
+                        reader.Close();
+                        reader.Dispose();
+                        result.Dispose();
+                        CloseDatabase(dbcon);
+                    }
                 }
+                catch { }
             }
             return true;
         }
+
         public override bool Insert(string table, string[] values, string updateKey, string updateValue)
         {
             MySqlConnection dbcon = GetLockedConnection();
@@ -310,10 +428,12 @@ namespace Aurora.DataManager.MySQL
                     reader.Close();
                     reader.Dispose();
                     result.Dispose();
+                    CloseDatabase(dbcon);
                 }
             }
             return true;
         }
+        
         public override bool Delete(string table, string[] keys, string[] values)
         {
             MySqlConnection dbcon = GetLockedConnection();
@@ -333,6 +453,7 @@ namespace Aurora.DataManager.MySQL
                 {
                 }
             }
+            CloseDatabase(dbcon);
             return true;
         }
 
@@ -361,15 +482,22 @@ namespace Aurora.DataManager.MySQL
                         reader.Close();
                         reader.Dispose();
                         result.Dispose();
+                        CloseDatabase(dbcon);
                     }
                 }
             }
         }
 
+        public void CloseDatabase(MySqlConnection connection)
+        {
+            connection.Close();
+            connection.Dispose();
+        }
+
         public override void CloseDatabase()
         {
-            this.MySQLConn.Close();
-            MySQLConn.Dispose();
+            //this.GetLockedConnection().Close();
+            //GetLockedConnection().Dispose();
         }
 
         public override void CreateTable(string table, ColumnDefinition[] columns)
@@ -409,9 +537,11 @@ namespace Aurora.DataManager.MySQL
 
             string query = string.Format("create table " + table + " ( {0} {1}) ", columnDefinition, multiplePrimaryString);
 
-            MySqlCommand dbcommand = MySQLConn.CreateCommand();
+            MySqlConnection dbcon = GetLockedConnection();
+            MySqlCommand dbcommand = dbcon.CreateCommand();
             dbcommand.CommandText = query;
             dbcommand.ExecuteNonQuery();
+            CloseDatabase(dbcon);
         }
 
         private string GetColumnTypeStringSymbol(ColumnTypes type)
@@ -447,26 +577,31 @@ namespace Aurora.DataManager.MySQL
 
         public override void DropTable(string tableName)
         {
-            MySqlCommand dbcommand = MySQLConn.CreateCommand();
+            MySqlConnection dbcon = GetLockedConnection();
+            MySqlCommand dbcommand = dbcon.CreateCommand();
             dbcommand.CommandText = string.Format("drop table {0}", tableName); ;
             dbcommand.ExecuteNonQuery();
+            CloseDatabase(dbcon);
         }
 
         protected override void CopyAllDataBetweenMatchingTables(string sourceTableName, string destinationTableName, ColumnDefinition[] columnDefinitions)
         {
-            MySqlCommand dbcommand = MySQLConn.CreateCommand();
+            MySqlConnection dbcon = GetLockedConnection();
+            MySqlCommand dbcommand = dbcon.CreateCommand();
             dbcommand.CommandText = string.Format("insert into {0} select * from {1}", destinationTableName, sourceTableName);
             dbcommand.ExecuteNonQuery();
+            CloseDatabase(dbcon);
         }
 
         public override bool TableExists(string table)
-       {
-            MySqlCommand dbcommand = MySQLConn.CreateCommand();
-            dbcommand.CommandText = string.Format("select table_name from information_schema.tables where table_schema=database() and table_name='{0}'", table);
+        {
+            MySqlConnection dbcon = GetLockedConnection();
+            MySqlCommand dbcommand = dbcon.CreateCommand();
+            dbcommand.CommandText = string.Format("select table_name from information_schema.tables where table_schema=database() and table_name='{0}'", table.ToLower());
             var rdr = dbcommand.ExecuteReader();
 
             var ret = false;
-            if( rdr.Read())
+            if (rdr.Read())
             {
                 ret = true;
             }
@@ -474,6 +609,7 @@ namespace Aurora.DataManager.MySQL
             rdr.Close();
             rdr.Dispose();
             dbcommand.Dispose();
+            CloseDatabase(dbcon);
             return ret;
         }
 
@@ -482,7 +618,8 @@ namespace Aurora.DataManager.MySQL
             var defs = new List<ColumnDefinition>();
 
 
-            MySqlCommand dbcommand = MySQLConn.CreateCommand();
+            MySqlConnection dbcon = GetLockedConnection();
+            MySqlCommand dbcommand = dbcon.CreateCommand();
             dbcommand.CommandText = string.Format("desc {0}", tableName);
             var rdr = dbcommand.ExecuteReader();
             while (rdr.Read())
@@ -495,6 +632,7 @@ namespace Aurora.DataManager.MySQL
             rdr.Close();
             rdr.Dispose();
             dbcommand.Dispose();
+            CloseDatabase(dbcon);
             return defs;
         }
 
@@ -505,6 +643,8 @@ namespace Aurora.DataManager.MySQL
             switch (tStr)
             {
                 case "int(11)":
+                    return ColumnTypes.Integer;
+                case "integer":
                     return ColumnTypes.Integer;
                 case "text":
                     return ColumnTypes.String;
@@ -524,6 +664,8 @@ namespace Aurora.DataManager.MySQL
                     return ColumnTypes.String1024;
                 case "date":
                     return ColumnTypes.Date;
+                case "varchar(8196)":
+                    return ColumnTypes.String8196;
                 default:
                     throw new Exception("You've discovered some type in MySQL that's not reconized by Aurora, please place the correct conversion in ConvertTypeToColumnType.");
             }
@@ -531,89 +673,98 @@ namespace Aurora.DataManager.MySQL
         public override RegionLightShareData LoadRegionWindlightSettings(UUID regionUUID)
         {
         	IDbCommand reader;
-        	IDataReader result;
+            IDataReader result;
         	RegionLightShareData nWP = new RegionLightShareData();
             nWP.OnSave += UpdateRegionWindlightSettings;
 
         	string command = "select * from `regionwindlight` where region_id = " + regionUUID.ToString();
-        	using (reader = Query(command, new Dictionary<string, object>(), MySQLConn))
+            MySqlConnection dbcon = GetLockedConnection();
+            using (reader = Query(command, new Dictionary<string, object>(), dbcon))
         	{
-        		using (result = reader.ExecuteReader())
-        		{
-        			if (!result.Read())
-        			{
-        				//No result, so store our default windlight profile and return it
-        				nWP.regionID = regionUUID;
-        				StoreRegionWindlightSettings(nWP);
-        				return nWP;
-        			}
-        			else
-        			{
-        				UUID.TryParse(result["region_id"].ToString(), out nWP.regionID);
-        				nWP.waterColor.X = Convert.ToSingle(result["water_color_r"]);
-        				nWP.waterColor.Y = Convert.ToSingle(result["water_color_g"]);
-        				nWP.waterColor.Z = Convert.ToSingle(result["water_color_b"]);
-        				nWP.waterFogDensityExponent = Convert.ToSingle(result["water_fog_density_exponent"]);
-        				nWP.underwaterFogModifier = Convert.ToSingle(result["underwater_fog_modifier"]);
-        				nWP.reflectionWaveletScale.X = Convert.ToSingle(result["reflection_wavelet_scale_1"]);
-        				nWP.reflectionWaveletScale.Y = Convert.ToSingle(result["reflection_wavelet_scale_2"]);
-        				nWP.reflectionWaveletScale.Z = Convert.ToSingle(result["reflection_wavelet_scale_3"]);
-        				nWP.fresnelScale = Convert.ToSingle(result["fresnel_scale"]);
-        				nWP.fresnelOffset = Convert.ToSingle(result["fresnel_offset"]);
-        				nWP.refractScaleAbove = Convert.ToSingle(result["refract_scale_above"]);
-        				nWP.refractScaleBelow = Convert.ToSingle(result["refract_scale_below"]);
-        				nWP.blurMultiplier = Convert.ToSingle(result["blur_multiplier"]);
-        				nWP.bigWaveDirection.X = Convert.ToSingle(result["big_wave_direction_x"]);
-        				nWP.bigWaveDirection.Y = Convert.ToSingle(result["big_wave_direction_y"]);
-        				nWP.littleWaveDirection.X = Convert.ToSingle(result["little_wave_direction_x"]);
-        				nWP.littleWaveDirection.Y = Convert.ToSingle(result["little_wave_direction_y"]);
-        				UUID.TryParse(result["normal_map_texture"].ToString(), out nWP.normalMapTexture);
-        				nWP.horizon.X = Convert.ToSingle(result["horizon_r"]);
-        				nWP.horizon.Y = Convert.ToSingle(result["horizon_g"]);
-        				nWP.horizon.Z = Convert.ToSingle(result["horizon_b"]);
-        				nWP.horizon.W = Convert.ToSingle(result["horizon_i"]);
-        				nWP.hazeHorizon = Convert.ToSingle(result["haze_horizon"]);
-        				nWP.blueDensity.X = Convert.ToSingle(result["blue_density_r"]);
-        				nWP.blueDensity.Y = Convert.ToSingle(result["blue_density_g"]);
-        				nWP.blueDensity.Z = Convert.ToSingle(result["blue_density_b"]);
-        				nWP.blueDensity.W = Convert.ToSingle(result["blue_density_i"]);
-        				nWP.hazeDensity = Convert.ToSingle(result["haze_density"]);
-        				nWP.densityMultiplier = Convert.ToSingle(result["density_multiplier"]);
-        				nWP.distanceMultiplier = Convert.ToSingle(result["distance_multiplier"]);
-        				nWP.maxAltitude = Convert.ToUInt16(result["max_altitude"]);
-        				nWP.sunMoonColor.X = Convert.ToSingle(result["sun_moon_color_r"]);
-        				nWP.sunMoonColor.Y = Convert.ToSingle(result["sun_moon_color_g"]);
-        				nWP.sunMoonColor.Z = Convert.ToSingle(result["sun_moon_color_b"]);
-        				nWP.sunMoonColor.W = Convert.ToSingle(result["sun_moon_color_i"]);
-        				nWP.sunMoonPosition = Convert.ToSingle(result["sun_moon_position"]);
-        				nWP.ambient.X = Convert.ToSingle(result["ambient_r"]);
-        				nWP.ambient.Y = Convert.ToSingle(result["ambient_g"]);
-        				nWP.ambient.Z = Convert.ToSingle(result["ambient_b"]);
-        				nWP.ambient.W = Convert.ToSingle(result["ambient_i"]);
-        				nWP.eastAngle = Convert.ToSingle(result["east_angle"]);
-        				nWP.sunGlowFocus = Convert.ToSingle(result["sun_glow_focus"]);
-        				nWP.sunGlowSize = Convert.ToSingle(result["sun_glow_size"]);
-        				nWP.sceneGamma = Convert.ToSingle(result["scene_gamma"]);
-        				nWP.starBrightness = Convert.ToSingle(result["star_brightness"]);
-        				nWP.cloudColor.X = Convert.ToSingle(result["cloud_color_r"]);
-        				nWP.cloudColor.Y = Convert.ToSingle(result["cloud_color_g"]);
-        				nWP.cloudColor.Z = Convert.ToSingle(result["cloud_color_b"]);
-        				nWP.cloudColor.W = Convert.ToSingle(result["cloud_color_i"]);
-        				nWP.cloudXYDensity.X = Convert.ToSingle(result["cloud_x"]);
-        				nWP.cloudXYDensity.Y = Convert.ToSingle(result["cloud_y"]);
-        				nWP.cloudXYDensity.Z = Convert.ToSingle(result["cloud_density"]);
-        				nWP.cloudCoverage = Convert.ToSingle(result["cloud_coverage"]);
-        				nWP.cloudScale = Convert.ToSingle(result["cloud_scale"]);
-        				nWP.cloudDetailXYDensity.X = Convert.ToSingle(result["cloud_detail_x"]);
-        				nWP.cloudDetailXYDensity.Y = Convert.ToSingle(result["cloud_detail_y"]);
-        				nWP.cloudDetailXYDensity.Z = Convert.ToSingle(result["cloud_detail_density"]);
-        				nWP.cloudScrollX = Convert.ToSingle(result["cloud_scroll_x"]);
-        				nWP.cloudScrollXLock = Convert.ToBoolean(result["cloud_scroll_x_lock"]);
-        				nWP.cloudScrollY = Convert.ToSingle(result["cloud_scroll_y"]);
-        				nWP.cloudScrollYLock = Convert.ToBoolean(result["cloud_scroll_y_lock"]);
-        				nWP.drawClassicClouds = Convert.ToBoolean(result["draw_classic_clouds"]);
-        			}
-        		}
+                try
+                {
+                    using (result = reader.ExecuteReader())
+                    {
+                        if (!result.Read())
+                        {
+                            //No result, so store our default windlight profile and return it
+                            nWP.regionID = regionUUID;
+                            StoreRegionWindlightSettings(nWP);
+                            return nWP;
+                        }
+                        else
+                        {
+                            UUID.TryParse(result["region_id"].ToString(), out nWP.regionID);
+                            nWP.waterColor.X = Convert.ToSingle(result["water_color_r"]);
+                            nWP.waterColor.Y = Convert.ToSingle(result["water_color_g"]);
+                            nWP.waterColor.Z = Convert.ToSingle(result["water_color_b"]);
+                            nWP.waterFogDensityExponent = Convert.ToSingle(result["water_fog_density_exponent"]);
+                            nWP.underwaterFogModifier = Convert.ToSingle(result["underwater_fog_modifier"]);
+                            nWP.reflectionWaveletScale.X = Convert.ToSingle(result["reflection_wavelet_scale_1"]);
+                            nWP.reflectionWaveletScale.Y = Convert.ToSingle(result["reflection_wavelet_scale_2"]);
+                            nWP.reflectionWaveletScale.Z = Convert.ToSingle(result["reflection_wavelet_scale_3"]);
+                            nWP.fresnelScale = Convert.ToSingle(result["fresnel_scale"]);
+                            nWP.fresnelOffset = Convert.ToSingle(result["fresnel_offset"]);
+                            nWP.refractScaleAbove = Convert.ToSingle(result["refract_scale_above"]);
+                            nWP.refractScaleBelow = Convert.ToSingle(result["refract_scale_below"]);
+                            nWP.blurMultiplier = Convert.ToSingle(result["blur_multiplier"]);
+                            nWP.bigWaveDirection.X = Convert.ToSingle(result["big_wave_direction_x"]);
+                            nWP.bigWaveDirection.Y = Convert.ToSingle(result["big_wave_direction_y"]);
+                            nWP.littleWaveDirection.X = Convert.ToSingle(result["little_wave_direction_x"]);
+                            nWP.littleWaveDirection.Y = Convert.ToSingle(result["little_wave_direction_y"]);
+                            UUID.TryParse(result["normal_map_texture"].ToString(), out nWP.normalMapTexture);
+                            nWP.horizon.X = Convert.ToSingle(result["horizon_r"]);
+                            nWP.horizon.Y = Convert.ToSingle(result["horizon_g"]);
+                            nWP.horizon.Z = Convert.ToSingle(result["horizon_b"]);
+                            nWP.horizon.W = Convert.ToSingle(result["horizon_i"]);
+                            nWP.hazeHorizon = Convert.ToSingle(result["haze_horizon"]);
+                            nWP.blueDensity.X = Convert.ToSingle(result["blue_density_r"]);
+                            nWP.blueDensity.Y = Convert.ToSingle(result["blue_density_g"]);
+                            nWP.blueDensity.Z = Convert.ToSingle(result["blue_density_b"]);
+                            nWP.blueDensity.W = Convert.ToSingle(result["blue_density_i"]);
+                            nWP.hazeDensity = Convert.ToSingle(result["haze_density"]);
+                            nWP.densityMultiplier = Convert.ToSingle(result["density_multiplier"]);
+                            nWP.distanceMultiplier = Convert.ToSingle(result["distance_multiplier"]);
+                            nWP.maxAltitude = Convert.ToUInt16(result["max_altitude"]);
+                            nWP.sunMoonColor.X = Convert.ToSingle(result["sun_moon_color_r"]);
+                            nWP.sunMoonColor.Y = Convert.ToSingle(result["sun_moon_color_g"]);
+                            nWP.sunMoonColor.Z = Convert.ToSingle(result["sun_moon_color_b"]);
+                            nWP.sunMoonColor.W = Convert.ToSingle(result["sun_moon_color_i"]);
+                            nWP.sunMoonPosition = Convert.ToSingle(result["sun_moon_position"]);
+                            nWP.ambient.X = Convert.ToSingle(result["ambient_r"]);
+                            nWP.ambient.Y = Convert.ToSingle(result["ambient_g"]);
+                            nWP.ambient.Z = Convert.ToSingle(result["ambient_b"]);
+                            nWP.ambient.W = Convert.ToSingle(result["ambient_i"]);
+                            nWP.eastAngle = Convert.ToSingle(result["east_angle"]);
+                            nWP.sunGlowFocus = Convert.ToSingle(result["sun_glow_focus"]);
+                            nWP.sunGlowSize = Convert.ToSingle(result["sun_glow_size"]);
+                            nWP.sceneGamma = Convert.ToSingle(result["scene_gamma"]);
+                            nWP.starBrightness = Convert.ToSingle(result["star_brightness"]);
+                            nWP.cloudColor.X = Convert.ToSingle(result["cloud_color_r"]);
+                            nWP.cloudColor.Y = Convert.ToSingle(result["cloud_color_g"]);
+                            nWP.cloudColor.Z = Convert.ToSingle(result["cloud_color_b"]);
+                            nWP.cloudColor.W = Convert.ToSingle(result["cloud_color_i"]);
+                            nWP.cloudXYDensity.X = Convert.ToSingle(result["cloud_x"]);
+                            nWP.cloudXYDensity.Y = Convert.ToSingle(result["cloud_y"]);
+                            nWP.cloudXYDensity.Z = Convert.ToSingle(result["cloud_density"]);
+                            nWP.cloudCoverage = Convert.ToSingle(result["cloud_coverage"]);
+                            nWP.cloudScale = Convert.ToSingle(result["cloud_scale"]);
+                            nWP.cloudDetailXYDensity.X = Convert.ToSingle(result["cloud_detail_x"]);
+                            nWP.cloudDetailXYDensity.Y = Convert.ToSingle(result["cloud_detail_y"]);
+                            nWP.cloudDetailXYDensity.Z = Convert.ToSingle(result["cloud_detail_density"]);
+                            nWP.cloudScrollX = Convert.ToSingle(result["cloud_scroll_x"]);
+                            nWP.cloudScrollXLock = Convert.ToBoolean(result["cloud_scroll_x_lock"]);
+                            nWP.cloudScrollY = Convert.ToSingle(result["cloud_scroll_y"]);
+                            nWP.cloudScrollYLock = Convert.ToBoolean(result["cloud_scroll_y_lock"]);
+                            nWP.drawClassicClouds = Convert.ToBoolean(result["draw_classic_clouds"]);
+                        }
+                    }
+                }
+                finally
+                {
+                    reader.Dispose();
+                    CloseDatabase(dbcon);
+                }
         	}
         	
         	return nWP;
@@ -621,7 +772,8 @@ namespace Aurora.DataManager.MySQL
 
         public override bool StoreRegionWindlightSettings(RegionLightShareData wl)
         {
-            using (MySqlCommand cmd = MySQLConn.CreateCommand())
+            MySqlConnection dbcon = GetLockedConnection();
+            using (MySqlCommand cmd = dbcon.CreateCommand())
             {
                 cmd.CommandText = "REPLACE INTO `regionwindlight` (`region_id`, `water_color_r`, `water_color_g`, ";
                 cmd.CommandText += "`water_color_b`, `water_fog_density_exponent`, `underwater_fog_modifier`, ";
@@ -715,11 +867,13 @@ namespace Aurora.DataManager.MySQL
 
                 cmd.ExecuteNonQuery();
             }
+            CloseDatabase(dbcon);
             return true;
         }
         public void UpdateRegionWindlightSettings(RegionLightShareData wl)
         {
-            using (MySqlCommand cmd = MySQLConn.CreateCommand())
+            MySqlConnection dbcon = GetLockedConnection();
+            using (MySqlCommand cmd = dbcon.CreateCommand())
             {
                 cmd.CommandText = "REPLACE INTO `regionwindlight` (`region_id`, `water_color_r`, `water_color_g`, ";
                 cmd.CommandText += "`water_color_b`, `water_fog_density_exponent`, `underwater_fog_modifier`, ";
@@ -812,6 +966,7 @@ namespace Aurora.DataManager.MySQL
                 cmd.Parameters.AddWithValue("draw_classic_clouds", wl.drawClassicClouds);
 
                 cmd.ExecuteNonQuery();
+                CloseDatabase(dbcon);
             }
         }
     }
