@@ -7,9 +7,6 @@ using OpenMetaverse;
 
 namespace Aurora.Framework
 {
-    public interface IAuthService
-    {
-    }
     public interface IIWCAuthenticationService
     {
         bool CheckAuthenticationServer(IPEndPoint serverIP);

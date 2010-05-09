@@ -51,7 +51,7 @@ using Aurora.DataManager.Frontends;
 
 namespace Aurora.Modules
 {
-    public class AuroraProfileModule : IRegionModule
+    public class AuroraProfileModule : ISharedRegionModule
     {
         #region Declares
 
@@ -78,9 +78,10 @@ namespace Aurora.Modules
 
         #region IRegionModule Members
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialise(IConfigSource config)
         {
             m_config = config;
+            m_gConfig = config;
             IConfig profileConfig = config.Configs["Profile"];
             if (profileConfig == null)
             {
@@ -114,22 +115,30 @@ namespace Aurora.Modules
             {
                 m_SearchEnabled = false;
             }
+        }
+
+        public void AddRegion(Scene scene)
+        {
+            IConfig AuroraDataConfig = m_gConfig.Configs["AuroraData"];
+            string connectionString = AuroraDataConfig.GetString("RemoteConnectionStrings", "");
+            if (connectionString == "")
+                ProfileFrontend = new ProfileFrontend(false, "");
+            else
+                ProfileFrontend = new ProfileFrontend(true, connectionString);
 
             if (!m_Scenes.Contains(scene))
                 m_Scenes.Add(scene);
             m_scene = scene;
-            m_gConfig = config;
             m_scene.EventManager.OnNewClient += NewClient;
         }
-        
-        public void PostInitialise()
+
+        public void RemoveRegion(Scene scene)
         {
-            IConfig AuroraDataConfig = m_gConfig.Configs["AuroraData"];
-            string connectionString = AuroraDataConfig.GetString("RemoteConnectionStrings", "");
-            if(connectionString == "")
-                ProfileFrontend = new ProfileFrontend(false,"");
-            else
-                ProfileFrontend = new ProfileFrontend(true, connectionString);
+
+        }
+
+        public void RegionLoaded(Scene scene)
+        {
             ProfileData = Aurora.DataManager.DataManager.GetDefaultProfilePlugin();
             GenericData = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
             RegionData = Aurora.DataManager.DataManager.GetDefaultRegionPlugin();
@@ -137,6 +146,15 @@ namespace Aurora.Modules
             DataSnapShotManager = m_scene.RequestModuleInterface<IDataSnapshot>();
             if (m_SearchEnabled && DataSnapShotManager != null)
                 StartSearch();
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
+        }
+
+        public void PostInitialise()
+        {
         }
 
         public void Close()

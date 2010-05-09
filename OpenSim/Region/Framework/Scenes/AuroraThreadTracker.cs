@@ -121,7 +121,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void AddSceneHeartbeat(IThread heartbeat, out System.Threading.Thread thread)
         {
-            m_log.Warn("[SceneHeartbeatTracker]: " + heartbeat.type + " has been started");
+            //m_log.Warn("[SceneHeartbeatTracker]: " + heartbeat.type + " has been started");
             thread = new System.Threading.Thread(heartbeat.Start);
             thread.Name = "SceneHeartbeat";
             thread.Start();

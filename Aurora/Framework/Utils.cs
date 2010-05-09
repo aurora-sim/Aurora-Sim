@@ -30,7 +30,6 @@ namespace Aurora.Framework
             return "0.1";
         }
 
-
         static string EncryptorType = "SHA1";
         static int EncryptIterations = 2;
         static int KeySize = 256;

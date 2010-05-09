@@ -15,7 +15,7 @@ using OpenSim.Framework;
 
 namespace Aurora.Modules
 {
-    public class Auth: IRegionModule, IIWCAuthenticationService, IAuthService
+    public class Auth: ISharedRegionModule, IIWCAuthenticationService
     {
         private List<string> CheckServers = new List<string>();
         private List<string> AuthServersBannedList = new List<string>();
@@ -35,14 +35,11 @@ namespace Aurora.Modules
 
         public void PostInitialise()
         {
-            a_DataService = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
+            
         }
-        
-        public void Initialise(Scene scene, IConfigSource source)
+
+        public void Initialise(IConfigSource source)
         {
-            m_scene = scene;
-            scene.RegisterModuleInterface<IAuthService>(this);
-            scene.RegisterModuleInterface<IIWCAuthenticationService>(this);
             if (CheckServers.Count == 0)
             {
                 string bannedAuthServers = source.Configs["AuroraAuth"].GetString("BannedAuthServers", "");
@@ -56,9 +53,26 @@ namespace Aurora.Modules
             }
         }
 
-        public bool IsSharedModule
+        public void AddRegion(Scene scene)
         {
-            get { return true; }
+            m_scene = scene;
+            scene.RegisterModuleInterface<IIWCAuthenticationService>(this);
+            a_DataService = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
+        }
+
+        public void RemoveRegion(Scene scene)
+        {
+
+        }
+
+        public void RegionLoaded(Scene scene)
+        {
+
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
         }
 
         #endregion

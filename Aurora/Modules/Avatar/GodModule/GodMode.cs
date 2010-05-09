@@ -21,14 +21,14 @@ using Aurora.Framework;
 
 namespace Aurora.Modules
 {
-    public class GodModifiers : IRegionModule
+    public class GodModifiers : ISharedRegionModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private List<Scene> m_scenes = new List<Scene>();
         private IConfigSource m_config;
         private bool m_Enabled = true;
 
-        public void Initialise(Scene scene, IConfigSource source)
+        public void Initialise(IConfigSource source)
         {
             if (source.Configs["GodModule"] != null)
             {
@@ -40,18 +40,33 @@ namespace Aurora.Modules
                     return;
                 }
             }
-            m_scenes.Add(scene);
             m_config = source;
+        }
+
+        public void AddRegion(Scene scene)
+        {
+            m_scenes.Add(scene);
+        }
+
+        public void RemoveRegion(Scene scene)
+        {
+
+        }
+
+        public void RegionLoaded(Scene scene)
+        {
+            if (!m_Enabled)
+                return;
+            scene.EventManager.OnNewClient += EventManager_OnNewClient;
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
         }
 
         public void PostInitialise()
         {
-            if (!m_Enabled)
-                return;
-            foreach (Scene scene in m_scenes)
-            {
-                scene.EventManager.OnNewClient += EventManager_OnNewClient;
-            }
         }
 
         void EventManager_OnNewClient(IClientAPI client)

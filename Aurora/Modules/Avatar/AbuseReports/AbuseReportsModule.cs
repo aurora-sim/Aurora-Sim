@@ -45,7 +45,7 @@ using System.Windows.Forms;
 
 namespace Aurora.Modules
 {
-    public class AbuseReports : IRegionModule
+    public class AbuseReports : ISharedRegionModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -56,9 +56,9 @@ namespace Aurora.Modules
         private IProfileData ProfileData = null;
         private IRegionData RegionData = null;
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialise(IConfigSource source)
         {
-            IConfig cnf = config.Configs["AbuseReports"];
+            IConfig cnf = source.Configs["AbuseReports"];
             if (cnf == null)
             {
                 enabled = false;
@@ -70,7 +70,10 @@ namespace Aurora.Modules
                 return;
             }
             m_log.Info("[ABUSE REPORTS MODULE] Enabled");
-            
+        }
+
+        public void AddRegion(Scene scene)
+        {
             lock (m_SceneList)
             {
                 if (!m_SceneList.Contains(scene))
@@ -81,6 +84,21 @@ namespace Aurora.Modules
                                           "open abusereportsGUI",
                                           "Opens the abuse reports GUI", OpenGUI);
             scene.EventManager.OnNewClient += new EventManager.OnNewClientDelegate(EventManager_OnNewClient);
+        }
+
+        public void RemoveRegion(Scene scene)
+        {
+
+        }
+
+        public void RegionLoaded(Scene scene)
+        {
+
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
         }
 
         protected void OpenGUI(string module, string[] cmdparams)

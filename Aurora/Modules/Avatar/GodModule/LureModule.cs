@@ -38,7 +38,7 @@ using TPFlags = OpenSim.Framework.Constants.TeleportFlags;
 
 namespace Aurora.Modules
 {
-	public class LureModule : IRegionModule
+	public class LureModule : ISharedRegionModule
 	{
 		private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -47,7 +47,7 @@ namespace Aurora.Modules
 		private IMessageTransferModule m_TransferModule = null;
         private bool m_Enabled = true;
 
-		public void Initialise(Scene scene, IConfigSource config)
+		public void Initialise(IConfigSource config)
 		{
             if (config.Configs["Messaging"] != null)
             {
@@ -59,10 +59,35 @@ namespace Aurora.Modules
                     return;
                 }
             }
-			m_scenes.Add(scene);
-			scene.EventManager.OnNewClient += OnNewClient;
-			scene.EventManager.OnIncomingInstantMessage += OnGridInstantMessage;
 		}
+
+        public void AddRegion(Scene scene)
+        {
+            m_scenes.Add(scene);
+            scene.EventManager.OnNewClient += OnNewClient;
+            scene.EventManager.OnIncomingInstantMessage += OnGridInstantMessage;
+        }
+
+        public void RemoveRegion(Scene scene)
+        {
+
+        }
+
+        public void RegionLoaded(Scene scene)
+        {
+            if (!m_Enabled)
+                return;
+            m_TransferModule = m_scenes[0].RequestModuleInterface<IMessageTransferModule>();
+
+            if (m_TransferModule == null)
+                m_log.Error("[INSTANT MESSAGE]: No message transfer module, " +
+                            "lures will not work!");
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
+        }
 
 		void OnNewClient(IClientAPI client)
 		{
@@ -72,13 +97,6 @@ namespace Aurora.Modules
 
 		public void PostInitialise()
 		{
-            if (!m_Enabled)
-                return;
-			m_TransferModule = m_scenes[0].RequestModuleInterface<IMessageTransferModule>();
-
-			if (m_TransferModule == null)
-				m_log.Error("[INSTANT MESSAGE]: No message transfer module, "+
-				            "lures will not work!");
 		}
 
 		public void Close()

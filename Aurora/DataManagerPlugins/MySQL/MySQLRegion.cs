@@ -29,6 +29,9 @@ namespace Aurora.DataManager.MySQL
                     finally
                     {
                         reader.Close();
+                        result.Dispose();
+                        reader.Dispose();
+                        CloseDatabase(dbcon);
                     }
                 }
             }
@@ -69,7 +72,13 @@ namespace Aurora.DataManager.MySQL
                         else
                             return "";
                     }
-                    finally{}
+                    finally
+                    {
+                        reader.Close();
+                        result.Dispose();
+                        reader.Dispose();
+                        CloseDatabase(dbcon);
+                    }
                 }
             }
         }
@@ -134,7 +143,13 @@ namespace Aurora.DataManager.MySQL
                         else
                             return true;
                     }
-                    finally{}
+                    finally
+                    {
+                        reader.Close();
+                        result.Dispose();
+                        reader.Dispose();
+                        CloseDatabase(dbcon);
+                    }
                 }
             }
         }

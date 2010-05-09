@@ -172,6 +172,7 @@ namespace Aurora.DataManager.MySQL
             {
                 reader.Close();
                 reader.Dispose();
+                CloseDatabase(query.Connection);
             }
             return true;
         }
@@ -193,6 +194,46 @@ namespace Aurora.DataManager.MySQL
             }
             CloseDatabase(dbcon);
             return true;
+        }
+
+        public List<string> Query(string query)
+        {
+            MySqlConnection dbcon = GetLockedConnection();
+            IDbCommand result;
+            IDataReader reader;
+            List<string> RetVal = new List<string>();
+            using (result = Query(query, new Dictionary<string, object>(), dbcon))
+            {
+                using (reader = result.ExecuteReader())
+                {
+                    try
+                    {
+                        while (reader.Read())
+                        {
+                            for (int i = 0; i < reader.FieldCount; i++)
+                            {
+                                RetVal.Add(reader.GetString(i));
+                            }
+                        }
+                        if (RetVal.Count == 0)
+                        {
+                            RetVal.Add("");
+                            return RetVal;
+                        }
+                        else
+                        {
+                            return RetVal;
+                        }
+                    }
+                    finally
+                    {
+                        reader.Close();
+                        reader.Dispose();
+                        result.Dispose();
+                        CloseDatabase(dbcon);
+                    }
+                }
+            }
         }
 
         public override List<string> Query(string keyRow, string keyValue, string table, string wantedValue)
@@ -455,37 +496,6 @@ namespace Aurora.DataManager.MySQL
             }
             CloseDatabase(dbcon);
             return true;
-        }
-
-        public string Query(string query)
-        {
-            MySqlConnection dbcon = GetLockedConnection();
-            IDbCommand result;
-            IDataReader reader;
-            using (result = Query(query, new Dictionary<string, object>(), dbcon))
-            {
-                using (reader = result.ExecuteReader())
-                {
-                    try
-                    {
-                        if (reader.Read())
-                        {
-                            return reader.GetString(0);
-                        }
-                        else
-                        {
-                            return "";
-                        }
-                    }
-                    finally
-                    {
-                        reader.Close();
-                        reader.Dispose();
-                        result.Dispose();
-                        CloseDatabase(dbcon);
-                    }
-                }
-            }
         }
 
         public void CloseDatabase(MySqlConnection connection)

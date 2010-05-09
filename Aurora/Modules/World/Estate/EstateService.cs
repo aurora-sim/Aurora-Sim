@@ -13,18 +13,38 @@ using log4net;
 
 namespace Aurora.Modules
 {
-    public class EstateSettingsModule : IRegionModule, IEstateSettingsModule
+    public class EstateSettingsModule : ISharedRegionModule, IEstateSettingsModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         Scene m_scene;
         IProfileData PD;
 
-        public void Initialise(Scene scene, IConfigSource source)
+        public void Initialise(IConfigSource source)
         {
+        }
+
+        public void AddRegion(Scene scene)
+        {
+            PD = Aurora.DataManager.DataManager.GetDefaultProfilePlugin();
             scene.RegisterModuleInterface<IEstateSettingsModule>(this);
             m_scene = scene;
             scene.AddCommand(this, "set regionsetting", "set regionsetting", "Sets a region setting for the given region. Valid params: Maturity - 0(PG),1(Mature),2(Adult); AddEstateBan,RemoveEstateBan,AddEstateManager,RemoveEstateManager - First name, Last name", SetRegionInfoOption);
+        }
+
+        public void RemoveRegion(Scene scene)
+        {
+
+        }
+
+        public void RegionLoaded(Scene scene)
+        {
+            
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
         }
 
         protected void SetRegionInfoOption(string module, string[] cmdparams)
@@ -72,7 +92,6 @@ namespace Aurora.Modules
 
         public void PostInitialise()
         {
-            PD = Aurora.DataManager.DataManager.GetDefaultProfilePlugin();
         }
 
         public void Close() { }
