@@ -104,10 +104,10 @@ namespace Aurora.Modules
         {
             newPosition = Position;
             EstateSettings ES = ((Scene)scene).EstateService.LoadEstateSettings(scene.RegionInfo.RegionID, false);
-            Aurora.DataManager.Frontends.ProfileFrontend data = new Aurora.DataManager.Frontends.ProfileFrontend(false, "");
-            IUserProfileInfo Profile = data.GetUserProfile(userID);
+            Aurora.DataManager.Frontends.AgentFrontend data = new Aurora.DataManager.Frontends.AgentFrontend();
+            IAgentInfo Profile = data.GetAgent(userID);
             
-            if (((Scene)scene).RegionInfo.RegionSettings.Maturity > Profile.MaturityRating)
+            if (((Scene)scene).RegionInfo.RegionSettings.Maturity > Profile.MaxMaturity)
                 return false;
 
             if (ES.DenyMinors && Profile.IsMinor)

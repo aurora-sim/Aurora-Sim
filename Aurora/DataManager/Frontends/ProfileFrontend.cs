@@ -49,7 +49,7 @@ namespace Aurora.DataManager.Frontends
             return classified;
         }
 
-        public Classified[] ReadClassifedRow(string creatoruuid)
+        private Classified[] ReadClassifedRow(string creatoruuid)
         {
             List<Classified> Classifieds = new List<Classified>();
             List<string> query = GD.Query("creatoruuid", creatoruuid, "profileclassifieds", "classifieduuid");
@@ -65,7 +65,7 @@ namespace Aurora.DataManager.Frontends
             return Classifieds.ToArray();
         }
 
-        public ProfilePickInfo[] ReadPickRequestsRow(string creator)
+        private ProfilePickInfo[] ReadPickRequestsRow(string creator)
         {
             List<string> query = GD.Query("creatoruuid", creator, "profilepicks", "pickuuid");
             List<ProfilePickInfo> Picks = new List<ProfilePickInfo>();
@@ -105,10 +105,10 @@ namespace Aurora.DataManager.Frontends
             return pick;
         }
 
-        public ProfileInterests ReadInterestsInfoRow(string agentID)
+        private ProfileInterests ReadInterestsInfoRow(string agentID)
         {
             ProfileInterests interests = new ProfileInterests();
-            List<string> results = GD.Query("userUUID", agentID, "usersauth", "profileWantToMask,profileWantToText,profileSkillsMask,profileSkillsText,profileLanguages");
+            List<string> results = GD.Query("PrincipalID", agentID, "profilegeneral", "WantToMask,WantToText,SkillsMask,SkillsText,Languages");
 
             try
             {
@@ -134,165 +134,132 @@ namespace Aurora.DataManager.Frontends
                 UserProfilesCache.TryGetValue(agentID, out UserProfile);
                 return UserProfile;
             }
-            /*else if (m_useExternal)
-            {
-                Hashtable request = new Hashtable();
-                request["Type"] = "GetProfile";
-                Hashtable result = Aurora.Framework.Utils.GenericXMLRPCRequest(request, "aurora_data", m_ExternalRequest);
-                ArrayList ListValues = result["profile"] as ArrayList;
-                if (ListValues == null)
-                    return null;
-                OSDMap map = ListValues[0] as OSDMap;
-                UserProfile.Unpack(map);
-                return UserProfile;
-            }*/
             else
             {
-                try
+                List<string> userauthReturns = GD.Query("PrincipalID", agentID.ToString(), "profilegeneral", "AllowPublish,MaturePublish,Partner,WebURL,AboutText,FirstLifeAboutText,Image,FirstLifeImage,CustomType,Visible,IMViaEmail,MembershipGroup,AArchiveName,IsNewUser,Created");
+                UserProfile.Classifieds = ReadClassifedRow(agentID.ToString());
+                UserProfile.Interests = ReadInterestsInfoRow(agentID.ToString());
+                UserProfile.Picks = ReadPickRequestsRow(agentID.ToString());
+
+                #region Notes
+                List<string> notesReturns = GD.Query("userid", agentID.ToString(), "profilenotes", "targetuuid,notes");
+                Dictionary<UUID, string> Notes = new Dictionary<UUID, string>();
+                if (notesReturns.Count != 0)
                 {
-                    ProfileInterests Interests = ReadInterestsInfoRow(agentID.ToString());
-                    List<string> userauthReturns = GD.Query("userUUID", agentID.ToString(), "usersauth", "userLogin,userPass,userGodLevel,membershipGroup,profileMaturePublish,profileAllowPublish,profileURL,AboutText,CustomType,Email,FirstLifeAboutText,FirstLifeImage,Partner,PermaBanned,TempBanned,Image,IsMinor,MatureRating,Created");
-                    List<string> notesReturns = GD.Query("userid", agentID.ToString(), "profilenotes", "targetuuid,notes");
-                    UserProfile.Classifieds = ReadClassifedRow(agentID.ToString());
-                    UserProfile.Picks = ReadPickRequestsRow(agentID.ToString());
-                    Dictionary<UUID, string> Notes = new Dictionary<UUID, string>();
-                    if (notesReturns.Count != 0)
+                    for (int i = 0; i < notesReturns.Count; i = i + 2)
                     {
-                        for (int i = 0; i < notesReturns.Count; i = i + 2)
-                        {
-                            Notes.Add(new UUID(notesReturns[i]), notesReturns[i + 1]);
-                        }
+                        Notes.Add(new UUID(notesReturns[i]), notesReturns[i + 1]);
                     }
-                    if (userauthReturns.Count == 1 || userauthReturns.Count == 0)
-                        return null;
-                    if (userauthReturns[2] == " ")
-                        userauthReturns[2] = "0";
-                    if (userauthReturns[5] == " ")
-                        userauthReturns[5] = "0";
-                    if (userauthReturns[4] == " ")
-                        userauthReturns[4] = "0";
-                    if (userauthReturns[11] == " ")
-                        userauthReturns[11] = UUID.Zero.ToString();
-                    if (userauthReturns[12] == " ")
-                        userauthReturns[12] = UUID.Zero.ToString();
-                    if (userauthReturns[15] == " ")
-                        userauthReturns[15] = UUID.Zero.ToString();
-                    UserProfile.FirstName = userauthReturns[0].Split(' ')[0];
-                    UserProfile.LastName = userauthReturns[0].Split(' ')[1];
-                    UserProfile.PrincipleID = agentID;
-                    UserProfile.ProfileURL = userauthReturns[6];
-                    UserProfile.Interests = Interests;
-                    UserProfile.MembershipGroup = userauthReturns[3];
-                    UserProfile.AllowPublish = userauthReturns[5];
-                    UserProfile.MaturePublish = userauthReturns[4];
-                    UserProfile.ProfileAboutText = userauthReturns[7];
-                    //UserProfile.Email = userauthReturns[9];
-                    UserProfile.ProfileFirstText = userauthReturns[10];
-                    UserProfile.ProfileFirstImage = new UUID(userauthReturns[12]);
-                    UserProfile.Partner = new UUID(userauthReturns[12]);
-                    UserProfile.PermaBanned = Convert.ToInt32(userauthReturns[13]);
-                    UserProfile.TempBanned = Convert.ToInt32(userauthReturns[14]);
-                    UserProfile.ProfileImage = new UUID(userauthReturns[15]);
-                    UserProfile.IsMinor = Convert.ToBoolean(userauthReturns[16]);
-                    UserProfile.MaturityRating = Convert.ToInt32(userauthReturns[17]);
-                    UserProfile.Created = Convert.ToInt32(userauthReturns[18]);
-                    UserProfile.Notes = Notes;
-                    UserProfilesCache.Add(agentID, UserProfile);
-                    return UserProfile;
                 }
-                catch (Exception ex)
-                {
+                UserProfile.Notes = Notes;
+                #endregion
+
+                if (userauthReturns.Count == 1 || userauthReturns.Count == 0)
                     return null;
-                }
+
+                UserProfile.PrincipalID = agentID;
+                UserProfile.AllowPublish = bool.Parse(userauthReturns[0]);
+                UserProfile.MaturePublish = bool.Parse(userauthReturns[1]);
+                UserProfile.Partner = new UUID(userauthReturns[2]);
+                UserProfile.WebURL = userauthReturns[3];
+                UserProfile.AboutText = userauthReturns[4];
+                UserProfile.FirstLifeAboutText = userauthReturns[5];
+                UserProfile.Image = new UUID(userauthReturns[6]);
+                UserProfile.FirstLifeImage = new UUID(userauthReturns[7]);
+                UserProfile.CustomType = userauthReturns[8];
+                UserProfile.Visible = Convert.ToBoolean(userauthReturns[9]);
+                UserProfile.IMViaEmail = Convert.ToBoolean(userauthReturns[10]);
+                UserProfile.MembershipGroup = userauthReturns[11];
+                UserProfile.AArchiveName = userauthReturns[12];
+                UserProfile.IsNewUser = Convert.ToBoolean(userauthReturns[13]);
+                UserProfile.Created = Convert.ToInt32(userauthReturns[14]);
+
+                UserProfilesCache.Add(agentID, UserProfile);
+                return UserProfile;
             }
         }
 
         public bool UpdateUserProfile(IUserProfileInfo Profile)
         {
-            List<string> SetValues = new List<string>();
+            List<object> SetValues = new List<object>();
             List<string> SetRows = new List<string>();
+            SetRows.Add("AllowPublish");
+            SetRows.Add("MaturePublish");
+            SetRows.Add("Partner");
+            SetRows.Add("WebURL");
             SetRows.Add("AboutText");
-            SetRows.Add("profileAllowPublish");
             SetRows.Add("FirstLifeAboutText");
-            SetRows.Add("FirstLifeImage");
             SetRows.Add("Image");
-            SetRows.Add("ProfileURL");
-            SetRows.Add("TempBanned");
-            SetRows.Add("profileWantToMask");
-            SetRows.Add("profileWantToText");
-            SetRows.Add("profileSkillsMask");
-            SetRows.Add("profileSkillsText");
-            SetRows.Add("profileLanguages");
-            SetRows.Add("IsMinor");
-            SetRows.Add("MatureRating");
-            SetValues.Add(Profile.ProfileAboutText);
+            SetRows.Add("FirstLifeImage");
+            SetRows.Add("CustomType");
+            SetRows.Add("Visible");
+            SetRows.Add("IMViaEmail");
+            SetRows.Add("MembershipGroup");
+            SetRows.Add("AArchiveName");
+            SetRows.Add("IsNewUser");
+            SetRows.Add("Created");
+            //Interests
+            SetRows.Add("WantToMask");
+            SetRows.Add("WantToText");
+            SetRows.Add("CanDoMask");
+            SetRows.Add("CanDoText");
+            SetRows.Add("Languages");
             SetValues.Add(Profile.AllowPublish);
-            SetValues.Add(Profile.ProfileFirstText);
-            SetValues.Add(Profile.ProfileFirstImage.ToString());
-            SetValues.Add(Profile.ProfileImage.ToString());
-            SetValues.Add(Profile.ProfileURL);
-            SetValues.Add(Profile.TempBanned.ToString());
+            SetValues.Add(Profile.MaturePublish);
+            SetValues.Add(Profile.Partner);
+            SetValues.Add(Profile.WebURL);
+            SetValues.Add(Profile.AboutText);
+            SetValues.Add(Profile.FirstLifeAboutText);
+            SetValues.Add(Profile.Image);
+            SetValues.Add(Profile.FirstLifeImage);
+            SetValues.Add(Profile.CustomType);
+            SetValues.Add(Profile.Visible);
+            SetValues.Add(Profile.IMViaEmail);
+            SetValues.Add(Profile.MembershipGroup);
+            SetValues.Add(Profile.AArchiveName);
+            SetValues.Add(Profile.IsNewUser);
+            SetValues.Add(Profile.Created);
+            //Interests
             SetValues.Add(Profile.Interests.WantToMask);
             SetValues.Add(Profile.Interests.WantToText);
             SetValues.Add(Profile.Interests.CanDoMask);
             SetValues.Add(Profile.Interests.CanDoText);
             SetValues.Add(Profile.Interests.Languages);
-            SetValues.Add(Profile.IsMinor.ToString());
-            SetValues.Add(Profile.MaturityRating.ToString());
-            List<string> KeyValue = new List<string>();
+            List<object> KeyValue = new List<object>();
             List<string> KeyRow = new List<string>();
-            KeyRow.Add("userUUID");
-            KeyValue.Add(Profile.PrincipleID.ToString());
-            return GD.Update("usersauth", SetValues.ToArray(), SetRows.ToArray(), KeyRow.ToArray(), KeyValue.ToArray());
+            KeyRow.Add("PrincipalID");
+            KeyValue.Add(Profile.PrincipalID.ToString());
+            RemoveFromCache(Profile.PrincipalID);
+            UserProfilesCache.Add(Profile.PrincipalID, Profile);
+            return GD.Update("profilegeneral", SetValues.ToArray(), SetRows.ToArray(), KeyRow.ToArray(), KeyValue.ToArray());
         }
 
         public void CreateNewProfile(UUID UUID, string firstName, string lastName)
         {
-            List<string> values = new List<string>();
+            List<object> values = new List<object>();
             values.Add(UUID.ToString());
-            values.Add(firstName + " " + lastName);
-            values.Add(firstName);
-            values.Add(lastName);
-            values.Add(" ");
-            values.Add(" ");
-            values.Add("0");
-            values.Add(" ");
-            values.Add(" ");
-            values.Add("0");
-            values.Add("0");
+            values.Add(true);
+            values.Add(true);
+            values.Add(UUID.Zero);
             values.Add(" ");
             values.Add(" ");
             values.Add(" ");
-            values.Add(" ");
-            values.Add("0");
-            values.Add("0");
-            values.Add("1");
-            values.Add("0");
-            values.Add(" ");
-            values.Add(" ");
-            values.Add(" ");
+            values.Add(UUID.Zero);
+            values.Add(UUID.Zero);
             values.Add(" ");
             values.Add("0");
             values.Add(" ");
             values.Add("0");
             values.Add(" ");
             values.Add(" ");
-            values.Add("0");
-            values.Add("1");
+            values.Add(true);
+            values.Add(false);
             values.Add(" ");
             values.Add(" ");
-            values.Add(" ");
-            values.Add(" ");
-            values.Add(" ");
-            values.Add(" ");
-            values.Add("true");
-            values.Add("false");
-            values.Add("2");
-            values.Add("en");
-            values.Add("1");
+            values.Add(true);
             values.Add(Util.UnixTimeSinceEpoch().ToString());
             var GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
-            GD.Insert("usersauth", values.ToArray());
+            GD.Insert("profilegeneral", values.ToArray());
         }
 
         public void RemoveFromCache(UUID ID)

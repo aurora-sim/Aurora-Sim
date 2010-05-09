@@ -12,6 +12,7 @@ using OpenSim.Services.Interfaces;
 using OpenMetaverse;
 using log4net;
 using Aurora.Framework;
+using Aurora.DataManager.Frontends;
 
 namespace Aurora.Modules
 {
@@ -19,6 +20,7 @@ namespace Aurora.Modules
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         Scene m_scene;
+        private ProfileFrontend ProfileFrontend;
         public void Initialise(Scene scene, Nini.Config.IConfigSource source)
         {
             if(m_scene == null)
@@ -35,30 +37,24 @@ namespace Aurora.Modules
         void EventManager_OnNewClient(IClientAPI client)
         {
             var GenericData = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
+            IUserProfileInfo UPI = ProfileFrontend.GetUserProfile(client.AgentId);
             UserAccount account = m_scene.UserAccountService.GetUserAccount(UUID.Zero, client.AgentId);
-            List<string> NewUser = GenericData.Query("userUUID", account.PrincipalID.ToString(), "usersauth", "IsNewUser");
-            List<string> ArchiveName = GenericData.Query("userUUID", account.PrincipalID.ToString(), "usersauth", "AArchiveName");
-            if (NewUser.Count != 0 && ArchiveName.Count != 0 && NewUser != null && NewUser[0] == "true" && ArchiveName != null && ArchiveName[0] != "" && ArchiveName[0] != " ")
+            if (UPI == null)
             {
-                LoadAA(account, ArchiveName[0]);
+                ProfileFrontend.CreateNewProfile(account.PrincipalID, account.FirstName, account.LastName);
             }
-            if (NewUser.Count == 0 && ArchiveName.Count == 0)
+            if (UPI.IsNewUser && UPI.AArchiveName != " ")
             {
-                Aurora.DataManager.Frontends.ProfileFrontend PF = new Aurora.DataManager.Frontends.ProfileFrontend(false, "");
-                PF.CreateNewProfile(account.PrincipalID, account.FirstName, account.LastName);
+                LoadAA(account, UPI.AArchiveName);
             }
-            List<string> SetRow = new List<string>();
-            List<string> SetValue = new List<string>();
-            SetRow.Add("IsNewUser");
-            SetValue.Add("false");
-            List<string> KeyRow = new List<string>();
-            List<string> KeyValue = new List<string>();
-            KeyRow.Add("userUUID");
-            KeyValue.Add(account.PrincipalID.ToString());
-            GenericData.Update("usersauth", SetValue.ToArray(), SetRow.ToArray(), KeyRow.ToArray(), KeyValue.ToArray());
+            UPI.IsNewUser = false;
+            ProfileFrontend.UpdateUserProfile(UPI);
         }
 
-        public void PostInitialise(){}
+        public void PostInitialise()
+        {
+            ProfileFrontend = new ProfileFrontend(false, "");
+        }
 
         public void Close(){}
 

@@ -229,6 +229,29 @@ namespace Aurora.Modules
 
         #endregion
 
+        #region Helpers
+
+        private bool IsFriendOfUser(UUID friend, UUID requested)
+        {
+            OpenSim.Services.Interfaces.FriendInfo[] friendList = m_FriendsService.GetFriends(requested);
+            if (friend == requested)
+                return true;
+
+            foreach (OpenSim.Services.Interfaces.FriendInfo item in friendList)
+            {
+                if (item.PrincipalID == friend)
+                {
+                    return true;
+                }
+            }
+            ScenePresence sp = m_scene.GetScenePresence(friend);
+            if (sp.GodLevel != 0)
+                return true;
+            return false;
+        }
+
+        #endregion
+
         #region Profile Module
 
         public void HandleAvatarClassifiedsRequest(Object sender, string method, List<String> args)
@@ -252,25 +275,6 @@ namespace Aurora.Modules
             {
                 remoteClient.SendAvatarClassifiedReply(new UUID(args[0]), classifieds);
             }          
-        }
-
-        public bool IsFriendOfUser(UUID friend, UUID requested)
-        {
-            OpenSim.Services.Interfaces.FriendInfo[] friendList = m_FriendsService.GetFriends(requested);
-            if (friend == requested)
-                return true;
-
-            foreach (OpenSim.Services.Interfaces.FriendInfo item in friendList)
-            {
-                if (item.PrincipalID == friend)
-                {
-                    return true;
-                }
-            }
-            ScenePresence sp = m_scene.GetScenePresence(friend);
-            if (sp.GodLevel != 0)
-                return true;
-            return false;
         }
 
         public void ClassifiedInfoRequest(UUID queryClassifiedID, IClientAPI remoteClient)
@@ -598,7 +602,6 @@ namespace Aurora.Modules
                 GenericData.Update("profilenotes", values.ToArray(), keys.ToArray(), keys2.ToArray(), values2.ToArray());
             ProfileFrontend.RemoveFromCache(remoteClient.AgentId);
         }
-
         public void AvatarInterestsUpdate(IClientAPI remoteClient, uint wantmask, string wanttext, uint skillsmask, string skillstext, string languages)
         {
             IUserProfileInfo UPI = ProfileFrontend.GetUserProfile(remoteClient.AgentId);
@@ -608,14 +611,8 @@ namespace Aurora.Modules
             UPI.Interests.CanDoText = skillstext;
             UPI.Interests.Languages = languages;
             ProfileFrontend.UpdateUserProfile(UPI);
-            ProfileFrontend.RemoveFromCache(remoteClient.AgentId);
         }
 
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="remoteClient"></param>
-        /// <param name="avatarID"></param>
         public void RequestAvatarProperty(IClientAPI remoteClient, UUID target)
         {
             IUserProfileInfo UPI = ProfileFrontend.GetUserProfile(target);
@@ -634,7 +631,7 @@ namespace Aurora.Modules
             else
             {
                 //See if all can see this person
-                if (GenericData.Query("userUUID", remoteClient.AgentId.ToString(), "usersauth", "visible")[0] == "true")
+                if (UPI.Visible)
                 {
                     //Not a friend, so send the first page only and if they are online
                     uint agentOnline = 0;
@@ -653,7 +650,7 @@ namespace Aurora.Modules
                     {
                         charterMember = OpenMetaverse.Utils.StringToBytes(UPI.MembershipGroup);
                     }
-                    remoteClient.SendAvatarProperties(UPI.PrincipleID, "",
+                    remoteClient.SendAvatarProperties(UPI.PrincipalID, "",
                                                       Util.ToDateTime(UPI.Created).ToString("M/d/yyyy", CultureInfo.InvariantCulture),
                                                       charterMember, "", (uint)(TargetAccount.UserFlags & agentOnline),
                                                       UUID.Zero, UUID.Zero, "", UUID.Zero);
@@ -672,7 +669,7 @@ namespace Aurora.Modules
                     {
                         charterMember = OpenMetaverse.Utils.StringToBytes(UPI.MembershipGroup);
                     }
-                    remoteClient.SendAvatarProperties(UPI.PrincipleID, "",
+                    remoteClient.SendAvatarProperties(UPI.PrincipalID, "",
                                                       Util.ToDateTime(UPI.Created).ToString("M/d/yyyy", CultureInfo.InvariantCulture),
                                                       charterMember, "", (uint)(TargetAccount.UserFlags),
                                                       UUID.Zero, UUID.Zero, "", UUID.Zero);
@@ -682,34 +679,21 @@ namespace Aurora.Modules
 
         public void UpdateAvatarProperties(IClientAPI remoteClient, OpenSim.Framework.UserProfileData newProfile, bool allowpublish, bool maturepublish)
         {
-            int allowpublishINT = 0;
-            int maturepublishINT = 0;
-            if (allowpublish == true)
-                allowpublishINT = 1;
-            if (maturepublish == true)
-                maturepublishINT = 1;
             IUserProfileInfo UPI = ProfileFrontend.GetUserProfile(newProfile.ID);
-            // if it's the profile of the user requesting the update, then we change only a few things.
-
-            if (remoteClient.AgentId == UPI.PrincipleID)
+            
+            UPI.Image = newProfile.Image;
+            UPI.FirstLifeImage = newProfile.FirstLifeImage;
+            UPI.AboutText = newProfile.AboutText;
+            UPI.FirstLifeAboutText = newProfile.FirstLifeAboutText;
+            if (newProfile.ProfileUrl != "")
             {
-                UPI.ProfileImage = newProfile.Image;
-                UPI.ProfileFirstImage = newProfile.FirstLifeImage;
-                UPI.ProfileAboutText = newProfile.AboutText;
-                UPI.ProfileFirstText = newProfile.FirstLifeAboutText;
-                if (newProfile.ProfileUrl != "")
-                {
-                    UPI.ProfileURL = newProfile.ProfileUrl;
-                }
+                UPI.WebURL = newProfile.ProfileUrl;
             }
-            else
-                return;
 
-            UPI.AllowPublish = allowpublishINT.ToString();
-            UPI.MaturePublish = maturepublishINT.ToString();
+            UPI.AllowPublish = allowpublish;
+            UPI.MaturePublish = maturepublish;
             ProfileFrontend.UpdateUserProfile(UPI);
             SendProfile(remoteClient, UPI, remoteClient.AgentId, 16);
-            ProfileFrontend.RemoveFromCache(remoteClient.AgentId);
         }
 
         private void SendProfile(IClientAPI remoteClient, IUserProfileInfo Profile, UUID target, uint agentOnline)
@@ -731,35 +715,25 @@ namespace Aurora.Modules
 
             uint flags = Convert.ToUInt32(Profile.AllowPublish) + Convert.ToUInt32(Profile.MaturePublish) + membershipGroupINT + (uint)agentOnline + (uint)account.UserFlags;
             remoteClient.SendAvatarInterestsReply(target, Convert.ToUInt32(Profile.Interests.WantToMask), Profile.Interests.WantToText, Convert.ToUInt32(Profile.Interests.CanDoMask), Profile.Interests.CanDoText, Profile.Interests.Languages);
-            remoteClient.SendAvatarProperties(Profile.PrincipleID, Profile.ProfileAboutText,
+            remoteClient.SendAvatarProperties(Profile.PrincipalID, Profile.AboutText,
                                               Util.ToDateTime(Profile.Created).ToString("M/d/yyyy", CultureInfo.InvariantCulture),
-                                              charterMember, Profile.ProfileFirstText, flags,
-                                              Profile.ProfileFirstImage, Profile.ProfileImage, Profile.ProfileURL, new UUID(Profile.Partner));
+                                              charterMember, Profile.FirstLifeAboutText, flags,
+                                              Profile.FirstLifeImage, Profile.Image, Profile.WebURL, new UUID(Profile.Partner));
         }
         
         public void UserPreferencesRequest(IClientAPI remoteClient)
         {
-            List<string> UserInfo = GenericData.Query("userUUID",remoteClient.AgentId.ToString(),"usersauth","imviaemail,visible,email");
-            remoteClient.SendUserInfoReply(
-            	Convert.ToInt32(UserInfo[0]) == 1,
-                Convert.ToInt32(UserInfo[1]) == 1,
-                UserInfo[2]);
+            IUserProfileInfo UPI = ProfileFrontend.GetUserProfile(remoteClient.AgentId);
+            UserAccount account = m_scene.UserAccountService.GetUserAccount(UUID.Zero, remoteClient.AgentId);
+            remoteClient.SendUserInfoReply(UPI.Visible, UPI.IMViaEmail, account.Email);
         }
 
         public void UpdateUserPreferences(bool imViaEmail, bool visible, IClientAPI remoteClient)
         {
-            List<string> keys = new List<string>();
-            List<string> values = new List<string>();
-            keys.Add("imviaemail");
-            values.Add(imViaEmail.ToString());
-            keys.Add("visible");
-            values.Add(visible.ToString());
-            List<string> keys2 = new List<string>();
-            List<string> values2 = new List<string>();
-            keys2.Add("userUUID");
-            values2.Add(remoteClient.AgentId.ToString());
-            GenericData.Update("usersauth", values.ToArray(), keys.ToArray(), keys2.ToArray(), values2.ToArray());
-            ProfileFrontend.RemoveFromCache(remoteClient.AgentId);
+            IUserProfileInfo UPI = ProfileFrontend.GetUserProfile(remoteClient.AgentId);
+            UPI.Visible = visible;
+            UPI.IMViaEmail = imViaEmail;
+            ProfileFrontend.UpdateUserProfile(UPI);
         }
         #endregion
 
@@ -871,7 +845,7 @@ namespace Aurora.Modules
                     i++;
                     continue;
                 }
-                if (UserProfile.AllowPublish == "1")
+                if (UserProfile.AllowPublish)
                 {
                 	data[i] = new DirPeopleReplyData();
                     data[i].agentID = item.PrincipalID;

@@ -57,52 +57,49 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("priceforlisting", ColumnTypes.String50)
                 ));
 
-            #endregion
-
-            AddSchema("usersauth", ColDefs(
-                ColDef("userUUID", ColumnTypes.String50, true),
-                ColDef("userLogin", ColumnTypes.String50),
-                ColDef("userFirst", ColumnTypes.String512),
-                ColDef("userLast", ColumnTypes.String50),
-                ColDef("userEmail", ColumnTypes.String50),
-                ColDef("userPass", ColumnTypes.String50),
-                ColDef("userMac", ColumnTypes.String50),
-                ColDef("userIP", ColumnTypes.String50),
-                ColDef("userAcceptTOS", ColumnTypes.String50),
-                ColDef("userGodLevel", ColumnTypes.String50),
-                ColDef("userRealFirst", ColumnTypes.String50),
-                ColDef("userRealLast", ColumnTypes.String50),
-                ColDef("userAddress", ColumnTypes.String50),
-                ColDef("userZip", ColumnTypes.String50),
-                ColDef("userCountry", ColumnTypes.String50),
-                ColDef("tempBanned", ColumnTypes.String50),
-                ColDef("permaBanned", ColumnTypes.String50),
-                ColDef("profileAllowPublish", ColumnTypes.String50),
-                ColDef("profileMaturePublish", ColumnTypes.String50),
-                ColDef("profileURL", ColumnTypes.String50),
-                ColDef("AboutText", ColumnTypes.String50),
-                ColDef("Email", ColumnTypes.String50),
-                ColDef("CustomType", ColumnTypes.String50),
-                ColDef("profileWantToMask", ColumnTypes.String50),
-                ColDef("profileWantToText", ColumnTypes.String50),
-                ColDef("profileSkillsMask", ColumnTypes.String50),
-                ColDef("profileSkillsText", ColumnTypes.String50),
-                ColDef("profileLanguages", ColumnTypes.String50),
-                ColDef("visible", ColumnTypes.String50),
-                ColDef("imviaemail", ColumnTypes.String50),
-                ColDef("membershipGroup", ColumnTypes.String50),
-                ColDef("FirstLifeAboutText", ColumnTypes.String50),
-                ColDef("FirstLifeImage", ColumnTypes.String50),
+            AddSchema("profilegeneral", ColDefs(
+                ColDef("PrincipalID", ColumnTypes.String50, true),
+                ColDef("AllowPublish", ColumnTypes.String50),
+                ColDef("MaturePublish", ColumnTypes.String512),
                 ColDef("Partner", ColumnTypes.String50),
+                ColDef("WebURL", ColumnTypes.String50),
+                ColDef("AboutText", ColumnTypes.String50),
+                ColDef("FirstLifeAboutText", ColumnTypes.String50),
                 ColDef("Image", ColumnTypes.String50),
+                ColDef("FirstLifeImage", ColumnTypes.String50),
+                ColDef("CustomType", ColumnTypes.String50),
+                ColDef("WantToMask", ColumnTypes.String50),
+                ColDef("WantToText", ColumnTypes.String50),
+                ColDef("CanDoMask", ColumnTypes.String50),
+                ColDef("CanDoText", ColumnTypes.String50),
+                ColDef("Languages", ColumnTypes.String50),
+                ColDef("Visible", ColumnTypes.String50),
+                ColDef("IMViaEmail", ColumnTypes.String50),
+                ColDef("MembershipGroup", ColumnTypes.String50),
                 ColDef("AArchiveName", ColumnTypes.String50),
                 ColDef("IsNewUser", ColumnTypes.String50),
-                ColDef("IsMinor", ColumnTypes.String50),
-                ColDef("MatureRating", ColumnTypes.String50),
-                ColDef("Lang", ColumnTypes.String50),
-                ColDef("LangIsPublic", ColumnTypes.String50),
                 ColDef("Created", ColumnTypes.String50)
                 ));
+
+            AddSchema("agentgeneral", ColDefs(
+                ColDef("PrincipalID", ColumnTypes.String50),
+                ColDef("Mac", ColumnTypes.String50),
+                ColDef("IP", ColumnTypes.String512),
+                ColDef("AcceptTOS", ColumnTypes.String512),
+                ColDef("RealFirst", ColumnTypes.String512),
+                ColDef("RealLast", ColumnTypes.String512),
+                ColDef("Address", ColumnTypes.String512),
+                ColDef("Zip", ColumnTypes.String512),
+                ColDef("Country", ColumnTypes.String512),
+                ColDef("TempBanned", ColumnTypes.String512),
+                ColDef("PermaBanned", ColumnTypes.String512),
+                ColDef("IsMinor", ColumnTypes.String512),
+                ColDef("MaxMaturity", ColumnTypes.String512),
+                ColDef("Language", ColumnTypes.String512),
+                ColDef("LanguageIsPublic", ColumnTypes.String512)
+                ));
+
+            #endregion
             
             AddSchema("auroraregions", ColDefs(
                 ColDef("regionName", ColumnTypes.String50),

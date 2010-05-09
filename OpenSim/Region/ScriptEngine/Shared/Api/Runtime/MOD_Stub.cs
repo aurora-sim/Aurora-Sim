@@ -50,6 +50,10 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
     {
         public IMOD_Api m_MOD_Functions;
 
+        public void Dispose()
+        {
+        }
+
         public void ApiTypeMOD(IScriptApi api)
         {
             if (!(api is IMOD_Api))

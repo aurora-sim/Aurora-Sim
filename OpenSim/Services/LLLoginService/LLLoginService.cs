@@ -254,18 +254,18 @@ namespace OpenSim.Services.LLLoginService
                     }
                 }
 
-                Aurora.DataManager.Frontends.ProfileFrontend data = new Aurora.DataManager.Frontends.ProfileFrontend(false, "");
+                Aurora.DataManager.Frontends.AgentFrontend data = new Aurora.DataManager.Frontends.AgentFrontend();
                 //Already tried to find it before this, so its not there at all.
-                IUserProfileInfo profile = null;
+                IAgentInfo agent = null;
                 if (data != null)
                 {
-                    profile = data.GetUserProfile(account.PrincipalID);
-                    if (profile == null)
+                    agent = data.GetAgent(account.PrincipalID);
+                    if (agent == null)
                     {
-                        data.CreateNewProfile(account.PrincipalID, account.FirstName, account.LastName);
-                        profile = data.GetUserProfile(account.PrincipalID);
+                        data.CreateNewAgent(account.PrincipalID);
+                        agent = data.GetAgent(account.PrincipalID);
                     }
-                    if (profile.PermaBanned == 1 || profile.TempBanned == 1)
+                    if (agent.PermaBanned == 1 || agent.TempBanned == 1)
                     {
                         m_log.Info("[LLOGIN SERVICE]: Login failed, reason: user is banned.");
                         return LLFailedLoginResponse.UserProblem;
@@ -392,13 +392,13 @@ namespace OpenSim.Services.LLLoginService
                 // Finally, fill out the response and return it
                 //
                 string adult = "A";
-                if (profile != null)
+                if (agent != null)
                 {
-                    if (profile.MaturityRating == 0)
+                    if (agent.MaxMaturity == 0)
                         adult = "P";
-                    if (profile.MaturityRating == 1)
+                    if (agent.MaxMaturity == 1)
                         adult = "M";
-                    if (profile.MaturityRating == 2)
+                    if (agent.MaxMaturity == 2)
                         adult = "A";
                 }
                 LLLoginResponse response = new LLLoginResponse(account, aCircuit, guinfo, destination, inventorySkel, friendsList, m_LibraryService,

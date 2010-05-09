@@ -155,10 +155,11 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
 
             OSD r = OSDParser.DeserializeLLSDXml((string)m_dhttpMethod["requestbody"]);
             OSDMap rm = (OSDMap)r;
-            string Lang = rm["language"].AsString();
-            string Public = rm["language_is_public"].AsString();
-            IGenericData GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
-            GD.Update("usersauth", new string[] { Lang, Public }, new string[] { "Lang", "LangIsPublic" }, new string[] { "userUUID" } , new string[] { agentID.ToString() });
+            Aurora.DataManager.Frontends.AgentFrontend AgentFrontend = new Aurora.DataManager.Frontends.AgentFrontend();
+            IAgentInfo IAI = AgentFrontend.GetAgent(agentID);
+            IAI.Language = rm["language"].AsString();
+            IAI.LanguageIsPublic = bool.Parse(rm["language_is_public"].AsString());
+            AgentFrontend.UpdateAgent(IAI);
             responsedata["str_response_string"] = "";
             return responsedata;
         }
@@ -190,10 +191,10 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                 maxLevel = 1;
             if (Level == "A")
                 maxLevel = 2;
-            Aurora.DataManager.Frontends.ProfileFrontend data = new Aurora.DataManager.Frontends.ProfileFrontend(false,"");
-            IUserProfileInfo profile = data.GetUserProfile(agentID);
-            profile.MaturityRating = maxLevel;
-            data.UpdateUserProfile(profile);
+            Aurora.DataManager.Frontends.AgentFrontend data = new Aurora.DataManager.Frontends.AgentFrontend();
+            IAgentInfo agent = data.GetAgent(agentID);
+            agent.MaxMaturity = maxLevel;
+            data.UpdateAgent(agent);
             Hashtable cancelresponsedata = new Hashtable();
             cancelresponsedata["int_response_code"] = 200; //501; //410; //404;
             cancelresponsedata["content_type"] = "text/plain";

@@ -101,6 +101,8 @@ namespace Aurora.DataManager.SQLite
             cmd.Dispose();
         }
 
+        #region Non Generic Data
+
         public List<string> Query(string query)
         {
             SqliteCommand cmd = new SqliteCommand();
@@ -139,7 +141,9 @@ namespace Aurora.DataManager.SQLite
             return RetVal;
         }
 
-        public override List<string> Query(string keyRow, string keyValue, string table, string wantedValue)
+        #endregion
+
+        public override List<string> Query(string keyRow, object keyValue, string table, string wantedValue)
         {
             var cmd = new SqliteCommand();
             string query = "";
@@ -151,7 +155,7 @@ namespace Aurora.DataManager.SQLite
             else
             {
                 query = String.Format("select {0} from {1} where {2} = '{3}'",
-                                      wantedValue, table, keyRow, keyValue);
+                                      wantedValue, table, keyRow, keyValue.ToString());
             }
             cmd.CommandText = query;
             IDataReader reader = GetReader(cmd);
@@ -171,16 +175,16 @@ namespace Aurora.DataManager.SQLite
 
             return RetVal;
         }
-        
-        public override List<string> Query(string[] keyRow, string[] keyValue, string table, string wantedValue)
+
+        public override List<string> Query(string[] keyRow, object[] keyValue, string table, string wantedValue)
         {
             var cmd = new SqliteCommand();
             string query = String.Format("select {0} from {1} where ",
                                       wantedValue, table);
             int i = 0;
-            foreach (string value in keyValue)
+            foreach (object value in keyValue)
             {
-                query += keyRow[i] + " = '" + value + "' and ";
+                query += keyRow[i] + " = '" + value.ToString() + "' and ";
                 i++;
             }
             query = query.Remove(query.Length - 4);
@@ -203,15 +207,15 @@ namespace Aurora.DataManager.SQLite
             return RetVal;
         }
 
-        public override bool Insert(string table, string[] values)
+        public override bool Insert(string table, object[] values)
         {
             var cmd = new SqliteCommand();
 
             string query = "";
             query = String.Format("insert into {0} values ('", table);
-            foreach (string value in values)
+            foreach (object value in values)
             {
-                query = query + value + "','";
+                query += value.ToString() + "','";
             }
             query = query.Remove(query.Length - 2);
             query += ")";
@@ -221,16 +225,16 @@ namespace Aurora.DataManager.SQLite
             return true;
         }
 
-        public override bool Delete(string table, string[] keys, string[] values)
+        public override bool Delete(string table, string[] keys, object[] values)
         {
             var cmd = new SqliteCommand();
 
             string query = String.Format("delete from '{0}' where ", table);
             ;
             int i = 0;
-            foreach (string value in values)
+            foreach (object value in values)
             {
-                query += keys[i] + " = '" + value + "' and ";
+                query += keys[i] + " = '" + value.ToString() + "' and ";
                 i++;
             }
             query = query.Remove(query.Length - 4);
@@ -240,15 +244,15 @@ namespace Aurora.DataManager.SQLite
             return true;
         }
 
-        public override bool Insert(string table, string[] values, string updateKey, string updateValue)
+        public override bool Insert(string table, object[] values, string updateKey, object updateValue)
         {
             var cmd = new SqliteCommand();
 
             string query = "";
             query = String.Format("insert into '{0}' values ('", table);
-            foreach (string value in values)
+            foreach (object value in values)
             {
-                query = String.Format(query + "{0}','", value);
+                query = String.Format(query + "{0}','", value.ToString());
             }
             query = query.Remove(query.Length - 2);
             query += ")";
@@ -262,7 +266,7 @@ namespace Aurora.DataManager.SQLite
             catch (Exception)
             {
                 cmd = new SqliteCommand();
-                query = String.Format("UPDATE {0} SET {1} = '{2}'", table, updateKey, updateValue);
+                query = String.Format("UPDATE {0} SET {1} = '{2}'", table, updateKey, updateValue.ToString());
                 cmd.CommandText = query;
                 ExecuteNonQuery(cmd);
                 CloseReaderCommand(cmd);
@@ -270,25 +274,25 @@ namespace Aurora.DataManager.SQLite
             return true;
         }
 
-        public override bool Update(string table, string[] setValues, string[] setRows, string[] keyRows, string[] keyValues)
+        public override bool Update(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues)
         {
             string query = "update " + table + " set ";
             int i = 0;
             Dictionary<string, object> parameters = new Dictionary<string, object>();
-            foreach (string value in setValues)
+            foreach (object value in setValues)
             {
                 query += "`" + setRows[i] + "` = @" + setRows[i] + " ,";
-                parameters["@" + setRows[i]] = value;
+                parameters["@" + setRows[i]] = value.ToString();
                 i++;
             }
             i = 0;
             query = query.Remove(query.Length - 1);
             query += " where ";
-            foreach (string value in keyValues)
+            foreach (object value in keyValues)
             {
                 query += keyRows[i];
                 query += " = '";
-                query += value;
+                query += value.ToString();
                 query += "' and";
                 i++;
             }

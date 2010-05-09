@@ -5613,11 +5613,11 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
-            Aurora.Framework.IGenericData GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
-            List<string> query = GD.Query("userUUID", m_host.OwnerID.ToString(), "usersauth", "Lang,LangIsPublic");
-            if (query[1] == "1")
+            Aurora.DataManager.Frontends.AgentFrontend AgentFrontend = new Aurora.DataManager.Frontends.AgentFrontend();
+            Aurora.Framework.IAgentInfo Agent = AgentFrontend.GetAgent(new UUID(id));
+            if (Agent.LanguageIsPublic)
             {
-                return query[0];
+                return Agent.Language;
             }
             else
                 return "en-us";

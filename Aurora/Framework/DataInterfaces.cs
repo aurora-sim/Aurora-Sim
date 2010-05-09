@@ -141,15 +141,15 @@ namespace Aurora.Framework
         /// <summary>
         /// update table set setRow = setValue WHERE keyRow = keyValue
         /// </summary>
-        bool Update(string table, string[] setValues, string[] setRows, string[] keyRows, string[] keyValues);
+        bool Update(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues);
         /// <summary>
         /// select wantedValue from table where keyRow = keyValue
         /// </summary>
-        List<string> Query(string keyRow, string keyValue, string table, string wantedValue);
-        List<string> Query(string[] keyRow, string[] keyValue, string table, string wantedValue);
-        bool Insert(string table, string[] values);
-        bool Delete(string table, string[] keys, string[] values);
-        bool Insert(string table, string[] values, string updateKey, string updateValue);
+        List<string> Query(string keyRow, object keyValue, string table, string wantedValue);
+        List<string> Query(string[] keyRow, object[] keyValue, string table, string wantedValue);
+        bool Insert(string table, object[] values);
+        bool Delete(string table, string[] keys, object[] values);
+        bool Insert(string table, object[] values, string updateKey, object updateValue);
         string Identifier { get; }
     }
 

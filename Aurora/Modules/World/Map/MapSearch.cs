@@ -55,9 +55,9 @@ namespace Aurora.Modules
         private IRegionData RegionData = null;
 		private IConfigSource m_config;
 		private Dictionary<string, string> RegionsHidden = new Dictionary<string, string>();
-		private static double time = 60000 /*oneminute*/ * 30;
-		//private static double time = 60000 /*oneminute*/;
-		private Timer aTimer = new System.Timers.Timer(time);
+		private double minutes = 30;
+        private double oneminute = 60000;
+		private Timer aTimer;
         private InterWorldComms IWC = null;
         bool m_Enabled = true;
 
@@ -83,14 +83,13 @@ namespace Aurora.Modules
 
 			scene.EventManager.OnNewClient += OnNewClient;
 		}
-		// Specify what you want to happen when the Elapsed event is
-		// raised.
+
 		private void OnTimedEvent(object source, ElapsedEventArgs e)
 		{
-			//m_log.DebugFormat("The Elapsed event was raised at {0}", e.SignalTime);
+			m_log.DebugFormat("The Elapsed event was raised at {0}", DateTime.Now);
 			foreach(Scene scene in m_scenes)
 			{
-				scene.CreateTerrainTexture(false);
+				scene.CreateTerrainTexture();
 			}
 		}
 
@@ -98,11 +97,12 @@ namespace Aurora.Modules
 		{
             if (!m_Enabled)
                 return;
-            RegionData = Aurora.DataManager.DataManager.GetDefaultRegionPlugin();
-            RegionsHidden = RegionData.GetRegionHidden();
+            //Needs the new grid frontend
+            //RegionData = Aurora.DataManager.DataManager.GetDefaultRegionPlugin();
+            //RegionsHidden = RegionData.GetRegionHidden();
+            aTimer = new System.Timers.Timer(oneminute /** minutes*/);
 			aTimer.Elapsed += new ElapsedEventHandler(OnTimedEvent);
         	aTimer.Enabled = true;
-            IWC = m_scene.RequestModuleInterface<InterWorldComms>();
 		}
 
 		public void Close()

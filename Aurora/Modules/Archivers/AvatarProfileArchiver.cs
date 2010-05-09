@@ -67,18 +67,18 @@ namespace Aurora.Modules
             writer.Write(account.UserFlags.ToString() + "\n");
             writer.Write(account.UserLevel.ToString() + "\n");
             writer.Write(account.UserTitle + "\n");
-            writer.Write(profile.ProfileAboutText + "\n");
+            writer.Write(profile.AboutText + "\n");
             writer.Write(profile.AllowPublish + "\n");
             //writer.Write(profile.Email + "\n");
-            writer.Write(profile.ProfileFirstText + "\n");
-            writer.Write(profile.ProfileFirstImage.ToString() + "\n");
-            writer.Write(profile.ProfileImage.ToString() + "\n");
+            writer.Write(profile.FirstLifeAboutText + "\n");
+            writer.Write(profile.FirstLifeImage.ToString() + "\n");
+            writer.Write(profile.Image.ToString() + "\n");
             writer.Write(profile.Interests.WantToMask);
             writer.Write(profile.MembershipGroup + "\n");
             writer.Write(profile.Notes);
             writer.Write(profile.Partner + "\n");
             writer.Write(profile.Picks);
-            writer.Write(profile.ProfileURL+"\n");
+            writer.Write(profile.WebURL+"\n");
             writer.Write("</profile>\n");
         }
     }

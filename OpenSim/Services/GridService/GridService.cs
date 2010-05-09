@@ -62,13 +62,13 @@ namespace OpenSim.Services.GridService
             : base(config)
         {
             m_log.DebugFormat("[GRID SERVICE]: Starting...");
-            m_GridCache = new GridCache();
+
             m_config = config;
             IConfig gridConfig = config.Configs["GridService"];
             if (gridConfig != null)
             {
                 m_DeleteOnUnregister = gridConfig.GetBoolean("DeleteOnUnregister", true);
-                
+
                 string authService = gridConfig.GetString("AuthenticationService", String.Empty);
 
                 if (authService != String.Empty)
@@ -79,7 +79,7 @@ namespace OpenSim.Services.GridService
                 m_AllowDuplicateNames = gridConfig.GetBoolean("AllowDuplicateNames", m_AllowDuplicateNames);
                 m_AllowHypergridMapSearch = gridConfig.GetBoolean("AllowHypergridMapSearch", m_AllowHypergridMapSearch);
             }
-            
+
             if (m_RootInstance == null)
             {
                 m_RootInstance = this;
@@ -150,11 +150,11 @@ namespace OpenSim.Services.GridService
 
             if ((region != null) && (region.RegionID != regionInfos.RegionID))
             {
-                m_log.WarnFormat("[GRID SERVICE]: Region {0} tried to register in coordinates {1}, {2} which are already in use in scope {3}.", 
+                m_log.WarnFormat("[GRID SERVICE]: Region {0} tried to register in coordinates {1}, {2} which are already in use in scope {3}.",
                     regionInfos.RegionID, regionInfos.RegionLocX, regionInfos.RegionLocY, scopeID);
                 return "Region overlaps another region";
             }
-            if ((region != null) && (region.RegionID == regionInfos.RegionID) && 
+            if ((region != null) && (region.RegionID == regionInfos.RegionID) &&
                 ((region.posX != regionInfos.RegionLocX) || (region.posY != regionInfos.RegionLocY)))
             {
                 if ((Convert.ToInt32(region.Data["flags"]) & (int)OpenSim.Data.RegionFlags.NoMove) != 0)
@@ -183,7 +183,7 @@ namespace OpenSim.Services.GridService
                     {
                         if (d.RegionID != regionInfos.RegionID)
                         {
-                            m_log.WarnFormat("[GRID SERVICE]: Region {0} tried to register duplicate name with ID {1}.", 
+                            m_log.WarnFormat("[GRID SERVICE]: Region {0} tried to register duplicate name with ID {1}.",
                                 regionInfos.RegionName, regionInfos.RegionID);
                             return "Duplicate region name";
                         }
@@ -194,7 +194,7 @@ namespace OpenSim.Services.GridService
             // Everything is ok, let's register
             RegionData rdata = RegionInfo2RegionData(regionInfos);
             rdata.ScopeID = scopeID;
-            
+
             if (region != null)
             {
                 int oldFlags = Convert.ToInt32(region.Data["flags"]);
@@ -233,7 +233,7 @@ namespace OpenSim.Services.GridService
             }
 
             m_GridCache.AddRegion(regionInfos);
-            m_log.DebugFormat("[GRID SERVICE]: Region {0} ({1}) registered successfully at {2}-{3}", 
+            m_log.DebugFormat("[GRID SERVICE]: Region {0} ({1}) registered successfully at {2}-{3}",
                 regionInfos.RegionName, regionInfos.RegionID, regionInfos.RegionLocX, regionInfos.RegionLocY);
 
             return String.Empty;
@@ -277,7 +277,7 @@ namespace OpenSim.Services.GridService
             if (region != null)
             {
                 // Not really? Maybe?
-                List<RegionData> rdatas = m_Database.Get(region.posX - (int)Constants.RegionSize, region.posY - (int)Constants.RegionSize, 
+                List<RegionData> rdatas = m_Database.Get(region.posX - (int)Constants.RegionSize, region.posY - (int)Constants.RegionSize,
                     region.posX + (int)Constants.RegionSize, region.posY + (int)Constants.RegionSize, scopeID);
 
                 foreach (RegionData rdata in rdatas)
@@ -304,7 +304,7 @@ namespace OpenSim.Services.GridService
         public GridRegion GetRegionByPosition(UUID scopeID, int x, int y)
         {
             bool found;
-            GridRegion rinfo = m_GridCache.GetRegionByPosition(x,y,out found);
+            GridRegion rinfo = m_GridCache.GetRegionByPosition(x, y, out found);
             if (found)
             {
                 if (rinfo != null)
@@ -362,7 +362,7 @@ namespace OpenSim.Services.GridService
             }
             List<RegionData> rdatas = m_Database.Get("%" + name + "%", scopeID);
 
-            
+
             if (rdatas != null)
             {
                 foreach (RegionData rdata in rdatas)
@@ -427,7 +427,7 @@ namespace OpenSim.Services.GridService
             return rinfo;
         }
 
-        #endregion 
+        #endregion
 
         public List<GridRegion> GetDefaultRegions(UUID scopeID)
         {
@@ -508,7 +508,7 @@ namespace OpenSim.Services.GridService
         {
             OpenSim.Data.RegionFlags f = (OpenSim.Data.RegionFlags)prev;
 
-            string[] parts = flags.Split(new char[] {',', ' '}, StringSplitOptions.RemoveEmptyEntries);
+            string[] parts = flags.Split(new char[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
             foreach (string p in parts)
             {

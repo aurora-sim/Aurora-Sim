@@ -428,13 +428,56 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             	"\nusing System;" +
             	"\nusing System.Collections.Generic;" +
             	"\nusing System.Collections;\n" +
-                String.Empty + "namespace Script\n{\n";
+                "using System.Timers;\n" +
+                "namespace Script\n{\n";
             string TempClassScript = "";
-            TempClassScript = String.Empty + "[Serializable]\n public class " + identifier + " : OpenSim.Region.ScriptEngine.Shared.ScriptBase.ScriptBaseClass";
+            TempClassScript = String.Empty + "[Serializable]\n public class " + identifier + " : OpenSim.Region.ScriptEngine.Shared.ScriptBase.ScriptBaseClass, IDisposable";
             if (InheritedClasses != "")
                 TempClassScript += "," + InheritedClasses;
             TempClassScript += "\n{\n" +
-                     "List<IEnumerator> parts = new List<IEnumerator>();\n" +
+                     "List<IEnumerator> parts = new List<IEnumerator>();\n";
+            TempClassScript += "System.Timers.Timer aTimer = new System.Timers.Timer(250);\n";
+            TempClassScript += "public " + identifier + "()\n{\n";
+            TempClassScript += "aTimer.Elapsed += new System.Timers.ElapsedEventHandler(Timer);\n";
+            TempClassScript += "aTimer.Enabled = true;\n";
+            TempClassScript += "aTimer.Start();\n";
+            TempClassScript += "}\n";
+            TempClassScript += "~" + identifier + "()\n{\n";
+            TempClassScript += "aTimer.Stop();\n";
+            TempClassScript += "aTimer.Dispose();\n";
+            TempClassScript += "}\n";
+            TempClassScript += "public void Dispose()\n";
+            TempClassScript += "{\n";
+            TempClassScript += "aTimer.Stop();\n";
+            TempClassScript += "aTimer.Dispose();\n";
+            TempClassScript += "}\n";
+        
+            TempClassScript += "public void Timer(object source, System.Timers.ElapsedEventArgs e)\n{\n";
+            TempClassScript += "lock (parts)\n";
+            TempClassScript += "{\n";
+            TempClassScript += "int i = 0;\n";
+            TempClassScript += "if(parts.Count == 0)\n";
+            TempClassScript += "return;";
+            TempClassScript += "while (parts.Count > 0 && i < 1000)\n";
+            TempClassScript += "{\n";
+            TempClassScript += "i++;\n";
+
+            TempClassScript += "bool running = false;\n";
+            TempClassScript += "try\n";
+            TempClassScript += "{\n";
+            TempClassScript += "running = parts[i % parts.Count].MoveNext();\n";
+            TempClassScript += "}\n";
+            TempClassScript += "catch (Exception ex)\n";
+            TempClassScript += "{\n";
+            TempClassScript += "}\n";
+
+            TempClassScript += "if (!running)\n";
+            TempClassScript += "parts.Remove(parts[i % parts.Count]);\n";
+            TempClassScript += "}\n";
+            TempClassScript += "}\n";
+            TempClassScript += "}\n";
+
+            TempClassScript +=
                      compileScript +
                      "\n}";
 
@@ -528,7 +571,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                     "OpenSim.Region.ScriptEngine.Shared.dll"));
             parameters.ReferencedAssemblies.Add(Path.Combine(rootPath,
                     "OpenSim.Region.ScriptEngine.Shared.Api.Runtime.dll"));
-
+            parameters.ReferencedAssemblies.Add("System.dll");
+            
             if (lang == enumCompileType.yp)
             {
                 parameters.ReferencedAssemblies.Add(Path.Combine(rootPath,

@@ -174,6 +174,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 // Stop long command on script
                 AsyncCommandManager.RemoveScript(m_ScriptEngine, localID, ItemID);
+                Script.Close();
+                Script.Dispose();
+                Script = null;
                 try
                 {
                     // Remove from internal structure

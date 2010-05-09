@@ -15,12 +15,12 @@ namespace Aurora.DataManager
 
         public abstract string Identifier { get; }
         public abstract void ConnectToDatabase(string connectionString);
-        public abstract List<string> Query(string keyRow, string keyValue, string table, string wantedValue);
-        public abstract List<string> Query(string[] keyRow, string[] keyValue, string table, string wantedValue);
-        public abstract bool Insert(string table, string[] values);
-        public abstract bool Delete(string table, string[] keys, string[] values);
-        public abstract bool Insert(string table, string[] values, string updateKey, string updateValue);
-        public abstract bool Update(string table, string[] setValues, string[] setRows, string[] keyRows, string[] keyValues);
+        public abstract List<string> Query(string keyRow, object keyValue, string table, string wantedValue);
+        public abstract List<string> Query(string[] keyRow, object[] keyValue, string table, string wantedValue);
+        public abstract bool Insert(string table, object[] values);
+        public abstract bool Delete(string table, string[] keys, object[] values);
+        public abstract bool Insert(string table, object[] values, string updateKey, object updateValue);
+        public abstract bool Update(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues);
         public abstract void CloseDatabase();
         public abstract bool TableExists(string table);
         public abstract void CreateTable(string table, ColumnDefinition[] columns);

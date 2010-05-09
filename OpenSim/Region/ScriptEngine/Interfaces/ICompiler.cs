@@ -74,7 +74,7 @@ namespace OpenSim.Region.ScriptEngine.Interfaces
         Severe = 7
     };
 	
-	public interface IScript
+	public interface IScript: IDisposable
     {
         string[] GetApis();
         void InitApi(string name, IScriptApi data);

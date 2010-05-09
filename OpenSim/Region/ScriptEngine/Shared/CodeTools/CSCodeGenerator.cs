@@ -121,7 +121,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             }
 
             m_astRoot = codeTransformer.Transform();
-
+            OriginalScript = script;
             string retstr = String.Empty;
 
             // standard preamble
@@ -174,6 +174,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
         }
 
         private string script = "";
+        private string OriginalScript = "";
         /// <summary>
         /// Recursively called to generate each type of node. Will generate this
         /// node, then all it's children.
@@ -974,6 +975,17 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             string retstr = String.Empty;
             
             bool isEnumerable = false;
+            string tempString = "";
+            foreach (SYMBOL kid in fc.kids)
+                tempString += GenerateNode(kid);
+            //Cuts up to the line
+            string tempscript = OriginalScript;//OriginalScript.Split(new string[]{fc.Id});
+            tempscript = tempscript.Remove(0, fc.Id.Length + 1);
+
+            if (OriginalScript.Contains(fc.Id + "(" + tempscript.Split(')')[0] + ")" + "\n{"))
+            {
+                 isEnumerable = true;
+            }
             if (script.Contains("IEnumerator " + fc.Id))
             {
                 isEnumerable = true;
@@ -984,35 +996,12 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                 retstr += Generate("parts.Add(");
             }
             retstr += Generate(String.Format("{0}(", CheckName(fc.Id)), fc);
-
-            foreach (SYMBOL kid in fc.kids)
-                retstr += GenerateNode(kid);
-
+            retstr += tempString;
+            
             retstr += Generate(")");
             if (isEnumerable)
             {
                 retstr += Generate(");\r\n");
-                retstr += GenerateLine("lock (parts)");
-                retstr += GenerateLine("{");
-                retstr += GenerateLine("int i = 0;");
-                retstr += GenerateLine("while (parts.Count > 0 && i < 1000)");
-                retstr += GenerateLine("{");
-                retstr += GenerateLine("i++;");
-
-                retstr += GenerateLine("bool running = false;");
-                retstr += GenerateLine("try");
-                retstr += GenerateLine("{");
-                retstr += GenerateLine("running = parts[i % parts.Count].MoveNext();");
-                retstr += GenerateLine("}");
-                retstr += GenerateLine("catch (Exception ex)");
-                retstr += GenerateLine("{");
-                retstr += GenerateLine("}");
-
-                retstr += GenerateLine("if (!running)");
-                retstr += GenerateLine("parts.Remove(parts[i % parts.Count]);");
-                retstr += GenerateLine("}");
-                retstr += GenerateLine("}");
-                retstr += GenerateLine("parts.Clear()");
             }
             return retstr;
         }

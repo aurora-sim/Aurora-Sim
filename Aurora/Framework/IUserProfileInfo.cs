@@ -6,8 +6,13 @@ using OpenMetaverse.StructuredData;
 
 namespace Aurora.Framework
 {
-    public class IUserProfileInfo
+    public class IAgentInfo
     {
+        /// <summary>
+        /// The ID value for this user
+        /// </summary>
+        public UUID PrincipalID = UUID.Zero;
+
         /// <summary>
         /// Banned forever
         /// </summary>
@@ -19,24 +24,148 @@ namespace Aurora.Framework
         public int TempBanned = 0;
 
         /// <summary>
-        /// Is this account temperary?
+        /// Max maturity rating the user wishes to see
         /// </summary>
-        public bool Temperary = false;
+        public int MaxMaturity = 2;
+
+        /// <summary>
+        /// Is this user a minor?
+        /// </summary>
+        public bool IsMinor = false;
+
+        /// <summary>
+        /// Current Mac Address
+        /// </summary>
+        public string Mac = "";
+
+        /// <summary>
+        /// Current IP Address
+        /// </summary>
+        public string IP = "";
+
+        /// <summary>
+        /// Did this user accept the TOS?
+        /// </summary>
+        public bool AcceptTOS = false;
+
+        /// <summary>
+        /// User's first name
+        /// </summary>
+        public string RealFirst = "";
+
+        /// <summary>
+        /// User's last name
+        /// </summary>
+        public string RealLast = "";
+
+        /// <summary>
+        /// User's address
+        /// </summary>
+        public string RealAddress = "";
+
+        /// <summary>
+        /// User's Zip code
+        /// </summary>
+        public string RealZip = "";
+
+        /// <summary>
+        /// Current IP Address
+        /// </summary>
+        public string RealCountry = "";
+
+        /// <summary>
+        /// Current language
+        /// </summary>
+        public string Language = "en-us";
+
+        /// <summary>
+        /// Is the users language public
+        /// </summary>
+        public bool LanguageIsPublic = true;
+        
+    }
+
+    public class IUserProfileInfo
+    {
+        /// <summary>
+        /// The ID value for this user
+        /// </summary>
+        public UUID PrincipalID;
 
         /// <summary>
         /// Show in search
         /// </summary>
-        public string AllowPublish = "1";
+        public bool AllowPublish = true;
 
         /// <summary>
         /// Allow for mature publishing
         /// </summary>
-        public string MaturePublish = "0";
+        public bool MaturePublish = false;
+
+        /// <summary>
+        /// The partner of this user
+        /// </summary>
+        public UUID Partner;
+
+        /// <summary>
+        /// the web address of the Profile URL
+        /// </summary>
+        public string WebURL = "";
+
+        /// <summary>
+        /// The about text listed in a users profile.
+        /// </summary>
+        public string AboutText = String.Empty;
+
+        /// <summary>
+        /// The first life about text listed in a users profile
+        /// </summary>
+        public string FirstLifeAboutText = String.Empty;
+
+        /// <summary>
+        /// The profile image for an avatar stored on the asset server
+        /// </summary>
+        public UUID Image;
+
+        /// <summary>
+        /// The profile image for the users first life tab
+        /// </summary>
+        public UUID FirstLifeImage;
+
+        /// <summary>
+        /// The type of the user
+        /// </summary>
+        public string CustomType;
+
+        /// <summary>
+        /// Is this user's online status visible to others?
+        /// </summary>
+        public bool Visible;
+
+        /// <summary>
+        /// Should IM's be sent to the user's email?
+        /// </summary>
+        public bool IMViaEmail;
+
+        /// <summary>
+        /// The appearance archive to load for this user
+        /// </summary>
+        public string AArchiveName;
+
+        /// <summary>
+        /// Is the user a new user?
+        /// </summary>
+        public bool IsNewUser;
 
         /// <summary>
         /// The group that the user is assigned to, ex: Premium
         /// </summary>
         public string MembershipGroup;
+
+        /// <summary>
+        /// A UNIX Timestamp (seconds since epoch) for the users creation
+        /// </summary>
+        public int Created;
 
         /// <summary>
         /// The interests of the user
@@ -58,76 +187,10 @@ namespace Aurora.Framework
         /// </summary>
         public Classified[] Classifieds;
 
-        /// <summary>
-        /// The about text listed in a users profile.
-        /// </summary>
-        public string ProfileAboutText = String.Empty;
-
-        /// <summary>
-        /// The profile image for the users first life tab
-        /// </summary>
-        public UUID ProfileFirstImage;
-
-        /// <summary>
-        /// The first life about text listed in a users profile
-        /// </summary>
-        public string ProfileFirstText = String.Empty;
-
-        /// <summary>
-        /// The profile image for an avatar stored on the asset server
-        /// </summary>
-        public UUID ProfileImage;
-
-        /// <summary>
-        /// the web address of the Profile URL
-        /// </summary>
-        public string ProfileURL = "";
-
-        /// <summary>
-        /// Max maturity rating the user wishes to see
-        /// </summary>
-        public int MaturityRating = 0;
-
-        /// <summary>
-        /// Is this user a minor?
-        /// </summary>
-        public bool IsMinor = false;
-
-        /// <summary>
-        /// The ID value for this user
-        /// </summary>
-        public UUID PrincipleID;
-
-        /// <summary>
-        /// The first component of a users account name
-        /// </summary>
-        public string FirstName;
-
-        /// <summary>
-        /// The second component of a users account name
-        /// </summary>
-        public string LastName;
-
-        /// <summary>
-        /// A UNIX Timestamp (seconds since epoch) for the users creation
-        /// </summary>
-        public int Created;
-
-        /// <summary>
-        /// The partner of this user
-        /// </summary>
-        public UUID Partner;
-
         public OSDMap Pack()
         {
             OSDMap main = new OSDMap();
-            OSDString OSDS = new OSDString(PermaBanned.ToString());
-            main["PermaBanned"] = OSDS;
-            OSDS = new OSDString(TempBanned.ToString());
-            main["TempBanned"] = OSDS;
-            OSDS = new OSDString(Temperary.ToString());
-            main["Temperary"] = OSDS;
-            OSDS = new OSDString(AllowPublish.ToString());
+            OSDString OSDS = new OSDString(AllowPublish.ToString());
             main["AllowPublish"] = OSDS;
             OSDS = new OSDString(MaturePublish.ToString());
             main["MaturePublish"] = OSDS;
@@ -152,20 +215,16 @@ namespace Aurora.Framework
             //End Classifieds
 
 
-            OSDS = new OSDString(ProfileAboutText.ToString());
-            main["ProfileAboutText"] = OSDS;
-            OSDS = new OSDString(ProfileFirstImage.ToString());
-            main["ProfileFirstImage"] = OSDS;
-            OSDS = new OSDString(ProfileFirstText.ToString());
-            main["ProfileFirstText"] = OSDS;
-            OSDS = new OSDString(ProfileImage.ToString());
-            main["ProfileImage"] = OSDS;
-            OSDS = new OSDString(ProfileURL.ToString());
-            main["ProfileURL"] = OSDS;
-            OSDS = new OSDString(MaturityRating.ToString());
-            main["MaturityRating"] = OSDS;
-            OSDS = new OSDString(IsMinor.ToString());
-            main["IsMinor"] = OSDS;
+            OSDS = new OSDString(AboutText.ToString());
+            main["AboutText"] = OSDS;
+            OSDS = new OSDString(FirstLifeImage.ToString());
+            main["FirstImage"] = OSDS;
+            OSDS = new OSDString(FirstLifeAboutText.ToString());
+            main["FirstText"] = OSDS;
+            OSDS = new OSDString(Image.ToString());
+            main["Image"] = OSDS;
+            OSDS = new OSDString(WebURL.ToString());
+            main["WebURL"] = OSDS;
             OSDS = new OSDString(Created.ToString());
             main["Created"] = OSDS;
             OSDS = new OSDString(Partner.ToString());
@@ -175,11 +234,8 @@ namespace Aurora.Framework
 
         public void Unpack(OSDMap main)
         {
-            PermaBanned = Convert.ToInt32(main["PermaBanned"].ToString());
-            TempBanned = Convert.ToInt32(main["TempBanned"].ToString());
-            Temperary = Convert.ToBoolean(main["Temperary"].ToString());
-            AllowPublish = main["AllowPublish"].ToString();
-            MaturePublish = main["MaturePublish"].ToString();
+            AllowPublish = bool.Parse(main["AllowPublish"].ToString());
+            MaturePublish = bool.Parse(main["MaturePublish"].ToString());
 
             //Interests
             Interests = new ProfileInterests();
@@ -197,13 +253,11 @@ namespace Aurora.Framework
             //End Classifieds
 
 
-            ProfileAboutText = main["ProfileAboutText"].ToString();
-            ProfileFirstImage = new UUID(main["ProfileFirstImage"].ToString());
-            ProfileFirstText = main["ProfileFirstText"].ToString();
-            ProfileImage = new UUID(main["ProfileImage"].ToString());
-            ProfileURL = main["ProfileURL"].ToString();
-            MaturityRating = Convert.ToInt32(main["MaturityRating"]);
-            IsMinor = Convert.ToBoolean(main["IsMinor"].ToString());
+            AboutText = main["AboutText"].ToString();
+            FirstLifeImage = new UUID(main["FirstImage"].ToString());
+            FirstLifeAboutText = main["FirstText"].ToString();
+            Image = new UUID(main["Image"].ToString());
+            WebURL = main["WebURL"].ToString();
             Created = Convert.ToInt32(main["Created"].ToString());
             Partner = new UUID(main["Partner"].ToString());
         }

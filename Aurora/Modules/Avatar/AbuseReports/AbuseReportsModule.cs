@@ -177,13 +177,12 @@ namespace Aurora.Modules
         		Adetails = detailssplit[4];
         	}
 
-            Aurora.DataManager.Frontends.ProfileFrontend data = new Aurora.DataManager.Frontends.ProfileFrontend(false, "");
-            IUserProfileInfo reporterProfile = data.GetUserProfile(reporter);
+            OpenSim.Services.Interfaces.UserAccount reporterProfile = m_SceneList[0].UserAccountService.GetUserAccount(UUID.Zero, reporter);
             string ReporterName = "";
             string AbuserName = "";
             if (reporterProfile != null)
                 ReporterName = reporterProfile.FirstName + " " + reporterProfile.LastName;
-            IUserProfileInfo AbuserProfile = data.GetUserProfile(abuserID);
+            OpenSim.Services.Interfaces.UserAccount AbuserProfile = m_SceneList[0].UserAccountService.GetUserAccount(UUID.Zero, abuserID);
             if (AbuserProfile != null)
                 AbuserName = AbuserProfile.FirstName + " " + AbuserProfile.LastName;
             summery = summery.Replace("\"", "`");

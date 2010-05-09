@@ -41,7 +41,7 @@ using log4net;
 namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
 {
     [Serializable]
-    public partial class ScriptBaseClass : MarshalByRefObject, IScript
+    public partial class ScriptBaseClass : MarshalByRefObject, IScript, IDisposable
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private Dictionary<string, MethodInfo> inits = new Dictionary<string, MethodInfo>();

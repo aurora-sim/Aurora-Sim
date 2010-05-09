@@ -12,7 +12,8 @@
       <RegionModule id="AuroraWorldMapModule"           type="Aurora.Modules.AuroraWorldMapModule" />
       <RegionModule id="IWCSimulationConnectorModule"           type="Aurora.Modules.IWCSimulationConnectorModule" />
       <RegionModule id="AuroraOfflineMessageModule" type="Aurora.Modules.AuroraOfflineMessageModule" />
-      <RegionModule id="Auth"           type="Aurora.Modules.Auth" />
+	  <RegionModule id="AuroraChatModule"           type="Aurora.Modules.AuroraChatModule" />
+	  <RegionModule id="Auth"           type="Aurora.Modules.Auth" />
       <RegionModule id="AbuseReports"           type="Aurora.Modules.AbuseReports" />
 	  <RegionModule id="AuroraProfileModule"           type="Aurora.Modules.AuroraProfileModule" />
 	  <RegionModule id="GodModifiers"           type="Aurora.Modules.GodModifiers" />

@@ -10,7 +10,7 @@ namespace Aurora.Services.DataService
     {
         #region IGenericData Members
 
-        public bool Update(string table, string[] setValues, string[] setRows, string[] keyRows, string[] keyValues)
+        public bool Update(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues)
         {
             if (Aurora.DataManager.DataManager.DefaultGenericPlugin != null)
                 Aurora.DataManager.DataManager.DefaultGenericPlugin.Update(table, setValues, setRows, keyRows, keyValues);
@@ -26,7 +26,7 @@ namespace Aurora.Services.DataService
             return false;
         }
 
-        public List<string> Query(string keyRow, string keyValue, string table, string wantedValue)
+        public List<string> Query(string keyRow, object keyValue, string table, string wantedValue)
         {
             if (Aurora.DataManager.DataManager.DefaultGenericPlugin != null)
                 return Aurora.DataManager.DataManager.DefaultGenericPlugin.Query(keyRow, keyValue, table, wantedValue);
@@ -43,7 +43,7 @@ namespace Aurora.Services.DataService
             return new List<string>();
         }
 
-        public List<string> Query(string[] keyRow, string[] keyValue, string table, string wantedValue)
+        public List<string> Query(string[] keyRow, object[] keyValue, string table, string wantedValue)
         {
             if (Aurora.DataManager.DataManager.DefaultGenericPlugin != null)
                 return Aurora.DataManager.DataManager.DefaultGenericPlugin.Query(keyRow, keyValue, table, wantedValue);
@@ -60,7 +60,7 @@ namespace Aurora.Services.DataService
             return new List<string>();
         }
 
-        public bool Insert(string table, string[] values)
+        public bool Insert(string table, object[] values)
         {
             if (Aurora.DataManager.DataManager.DefaultGenericPlugin != null)
                 Aurora.DataManager.DataManager.DefaultGenericPlugin.Insert(table, values);
@@ -76,7 +76,7 @@ namespace Aurora.Services.DataService
             return false;
         }
 
-        public bool Delete(string table, string[] keys, string[] values)
+        public bool Delete(string table, string[] keys, object[] values)
         {
             if (Aurora.DataManager.DataManager.DefaultGenericPlugin != null)
                 Aurora.DataManager.DataManager.DefaultGenericPlugin.Delete(table, keys, values);
@@ -92,7 +92,7 @@ namespace Aurora.Services.DataService
             return false;
         }
 
-        public bool Insert(string table, string[] values, string updateKey, string updateValue)
+        public bool Insert(string table, object[] values, string updateKey, object updateValue)
         {
             if (Aurora.DataManager.DataManager.DefaultGenericPlugin != null)
                 Aurora.DataManager.DataManager.DefaultGenericPlugin.Insert(table, values, updateKey, updateValue);
