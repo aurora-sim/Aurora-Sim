@@ -32,7 +32,10 @@ namespace Aurora.DataManager.MySQL
                 if (m_connection.Ping())
                     return m_connection;
                 else
-                    CloseDatabase(m_connection);
+                {
+                    m_connection.Open();
+                    return m_connection;
+                }
             }
             try
             {
@@ -508,8 +511,8 @@ namespace Aurora.DataManager.MySQL
 
         public void CloseDatabase(MySqlConnection connection)
         {
-            connection.Close();
-            connection.Dispose();
+            //connection.Close();
+            //connection.Dispose();
         }
 
         public override void CloseDatabase()
