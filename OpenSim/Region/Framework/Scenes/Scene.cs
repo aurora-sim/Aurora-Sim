@@ -5357,8 +5357,8 @@ namespace OpenSim.Region.Framework.Scenes
             if (m_firstHeartbeat)
                 return;
 
-            if (Util.EnvironmentTickCountSubtract(m_lastUpdate) > 2000)
-                StartTimer();
+            //if (Util.EnvironmentTickCountSubtract(m_lastUpdate) > 2000)
+            //    StartTimer();
         }
 
         public override ISceneObject DeserializeObject(string representation)

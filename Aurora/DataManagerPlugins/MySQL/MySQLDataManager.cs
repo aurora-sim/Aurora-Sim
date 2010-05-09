@@ -18,6 +18,7 @@ namespace Aurora.DataManager.MySQL
     {
         readonly Mutex m_lock = new Mutex(false);
         string connectionString = "";
+        private MySqlConnection m_connection = null;
 
         public override string Identifier
         {
@@ -26,6 +27,13 @@ namespace Aurora.DataManager.MySQL
 
         public MySqlConnection GetLockedConnection()
         {
+            if (m_connection != null)
+            {
+                if (m_connection.Ping())
+                    return m_connection;
+                else
+                    CloseDatabase(m_connection);
+            }
             try
             {
                 m_lock.WaitOne();
@@ -37,20 +45,19 @@ namespace Aurora.DataManager.MySQL
                 return GetLockedConnection();
             }
 
-            MySqlConnection dbcon = null;
             try
             {
-                dbcon = new MySqlConnection(connectionString);
+                m_connection = new MySqlConnection(connectionString);
                 try
                 {
-                    dbcon.Open();
+                    m_connection.Open();
                 }
                 catch (Exception e)
                 {
-                    dbcon.Dispose();
-                    throw new Exception("[MySQLData] Connection error while using connection string [" + connectionString + "]", e);
+                    m_connection.Dispose();
+                    throw new Exception("[MySQLData] Connection error", e);
                 }
-                return dbcon;
+                return m_connection;
             }
             catch (Exception e)
             {
