@@ -110,15 +110,15 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Inventory
                     s.TryGetScenePresence(clientID, out sp);
                     if ((sp != null) && !sp.IsChildAgent && (s != scene))
                     {
-                        m_log.DebugFormat("[INVENTORY CACHE]: OnClientClosed in {0}, but user {1} still in sim. Keeping system folders in cache",
-                            scene.RegionInfo.RegionName, clientID);
+                        //m_log.DebugFormat("[INVENTORY CACHE]: OnClientClosed in {0}, but user {1} still in sim. Keeping system folders in cache",
+                        //    scene.RegionInfo.RegionName, clientID);
                         return;
                     }
                 }
 
-                m_log.DebugFormat(
-                    "[INVENTORY CACHE]: OnClientClosed in {0}, user {1} out of sim. Dropping system folders",
-                    scene.RegionInfo.RegionName, clientID);
+                //m_log.DebugFormat(
+                //    "[INVENTORY CACHE]: OnClientClosed in {0}, user {1} out of sim. Dropping system folders",
+                //    scene.RegionInfo.RegionName, clientID);
                 DropCachedSystemFolders(clientID);
                 DropInventoryServiceURL(clientID);
             }

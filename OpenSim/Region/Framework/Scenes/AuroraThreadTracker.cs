@@ -94,7 +94,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (hb.LastUpdate == new DateTime())
                 return;
             TimeSpan ts = DateTime.UtcNow - hb.LastUpdate;
-            if (ts.Seconds > 5)
+            if (ts.Seconds > 10)
             {
                 AllHeartbeats.Remove(hb);
                 System.Threading.Thread thread;

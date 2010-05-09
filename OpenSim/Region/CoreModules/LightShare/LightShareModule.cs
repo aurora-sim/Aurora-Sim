@@ -180,7 +180,7 @@ namespace OpenSim.Region.CoreModules.World.LightShare
         }
         private void EventManager_OnMakeRootAgent(ScenePresence presence)
         {
-            m_log.Debug("[WINDLIGHT]: Sending windlight scene to new client");
+            //m_log.Debug("[WINDLIGHT]: Sending windlight scene to new client");
             SendProfileToClient(presence);
         }
         private void EventManager_OnSendNewWindlightProfileTargeted(RegionLightShareData wl, UUID pUUID)

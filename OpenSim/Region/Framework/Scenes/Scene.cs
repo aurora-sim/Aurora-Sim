@@ -1387,6 +1387,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Scene Heartbeat parts
 
+        public bool firstRun = true;
         public class SceneBackupHeartbeat : IThread
         {
             public SceneBackupHeartbeat(Scene scene)
@@ -1425,7 +1426,6 @@ namespace OpenSim.Region.Framework.Scenes
                 throw new Exception();
             }
 
-            bool firstRun = true;
             private void Update()
             {
                 float physicsFPS;
@@ -1498,9 +1498,9 @@ namespace OpenSim.Region.Framework.Scenes
                             m_scene.StatsReporter.addScriptLines(m_scene.m_sceneGraph.GetScriptLPS());
                         }
                         CheckExit();
-                        if (firstRun)
+                        if (m_scene.firstRun)
                         {
-                            firstRun = false;
+                            m_scene.firstRun = false;
                             // In 99.9% of cases it is a bad idea to manually force garbage collection. However,
                             // this is a rare case where we know we have just went through a long cycle of heap
                             // allocations, and there is no more work to be done until someone logs in
