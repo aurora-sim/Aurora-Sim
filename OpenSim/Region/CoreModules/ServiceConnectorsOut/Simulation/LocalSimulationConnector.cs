@@ -188,7 +188,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Simulation
             {
                 if (s.RegionInfo.RegionID == destination.RegionID)
                 {
-                    m_log.DebugFormat("[LOCAL SIMULATION CONNECTOR]: Found region {0} to send SendCreateChildAgent", destination.RegionName);
+                    //m_log.DebugFormat("[LOCAL SIMULATION CONNECTOR]: Found region {0} to send SendCreateChildAgent", destination.RegionName);
                     return s.NewUserConnection(aCircuit, teleportFlags, out reason);
                 }
             }
@@ -207,9 +207,9 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Simulation
             {
                 if (s.RegionInfo.RegionHandle == destination.RegionHandle)
                 {
-                    m_log.DebugFormat(
-                        "[LOCAL SIMULATION CONNECTOR]: Found region {0} {1} to send AgentUpdate",
-                        s.RegionInfo.RegionName, destination.RegionHandle);
+                    //m_log.DebugFormat(
+                    //    "[LOCAL SIMULATION CONNECTOR]: Found region {0} {1} to send AgentUpdate",
+                    //    s.RegionInfo.RegionName, destination.RegionHandle);
 
                     s.IncomingChildAgentDataUpdate(cAgentData);
                     return true;

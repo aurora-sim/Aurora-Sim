@@ -95,8 +95,8 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Inventory
             Dictionary<AssetType, InventoryFolderBase> folders = CacheSystemFolders(presence.UUID);
             CacheInventoryServiceURL(presence.Scene, presence.UUID);
             
-            m_log.DebugFormat("[INVENTORY CACHE]: OnMakeRootAgent in {0}, fetched system folders for {1} {2}: count {3}", 
-                presence.Scene.RegionInfo.RegionName, presence.Firstname, presence.Lastname, folders.Count);
+            //m_log.DebugFormat("[INVENTORY CACHE]: OnMakeRootAgent in {0}, fetched system folders for {1} {2}: count {3}", 
+            //    presence.Scene.RegionInfo.RegionName, presence.Firstname, presence.Lastname, folders.Count);
 
         }
 

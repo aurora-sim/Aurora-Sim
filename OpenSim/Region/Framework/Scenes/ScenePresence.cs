@@ -2608,7 +2608,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void SendWearables()
         {
-            m_log.DebugFormat("[SCENE]: Received request for wearables of {0}", Name);
+            //m_log.DebugFormat("[SCENE]: Received request for wearables of {0}", Name);
             //This fixes t-pose on login by sending an animation for the avatar so it has something to display.
             //  -- Revolution
             if (ClientIsStarting)

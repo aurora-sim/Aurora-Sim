@@ -200,7 +200,7 @@ namespace OpenSim.Region.CoreModules.Framework.EventQueue
 
         private void ClientClosed(UUID AgentID, Scene scene)
         {
-            m_log.DebugFormat("[EVENTQUEUE]: Closed client {0} in region {1}", AgentID, m_scene.RegionInfo.RegionName);
+            //m_log.DebugFormat("[EVENTQUEUE]: Closed client {0} in region {1}", AgentID, m_scene.RegionInfo.RegionName);
 
             int count = 0;
             while (queues.ContainsKey(AgentID) && queues[AgentID].Count > 0 && count++ < 5)

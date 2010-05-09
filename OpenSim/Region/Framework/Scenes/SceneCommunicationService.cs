@@ -276,7 +276,7 @@ namespace OpenSim.Region.Framework.Scenes
         protected void SendCloseChildAgentAsync(UUID agentID, ulong regionHandle)
         {
 
-            m_log.Debug("[INTERGRID]: Sending close agent to " + regionHandle);
+            //m_log.Debug("[INTERGRID]: Sending close agent to " + regionHandle);
             // let's do our best, but there's not much we can do if the neighbour doesn't accept.
 
             //m_commsProvider.InterRegion.TellRegionToCloseChildConnection(regionHandle, agentID);

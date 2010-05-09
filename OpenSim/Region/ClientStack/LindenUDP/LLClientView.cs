@@ -507,9 +507,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// </summary>
         public void Close()
         {
-            m_log.DebugFormat(
-                "[CLIENT]: Close has been called for {0} attached to scene {1}",
-                Name, m_scene.RegionInfo.RegionName);
+            //m_log.DebugFormat(
+            //    "[CLIENT]: Close has been called for {0} attached to scene {1}",
+            //    Name, m_scene.RegionInfo.RegionName);
 
             // Send the STOP packet
             DisableSimulatorPacket disable = (DisableSimulatorPacket)PacketPool.Instance.GetPacket(PacketType.DisableSimulator);
@@ -540,9 +540,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             m_udpClient.Shutdown();
             m_avatarTerseUpdates = null;
             
-            m_log.InfoFormat("[CLIENTVIEW] Memory pre  GC {0}", System.GC.GetTotalMemory(false));
+            //m_log.InfoFormat("[CLIENTVIEW] Memory pre  GC {0}", System.GC.GetTotalMemory(false));
             GC.Collect();
-            m_log.InfoFormat("[CLIENTVIEW] Memory post GC {0}", System.GC.GetTotalMemory(true));
+            //m_log.InfoFormat("[CLIENTVIEW] Memory post GC {0}", System.GC.GetTotalMemory(true));
         }
 
         public void Kick(string message)
@@ -10888,7 +10888,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <returns></returns>
         protected virtual bool Logout(IClientAPI client)
         {
-            m_log.InfoFormat("[CLIENT]: Got a logout request for {0} in {1}", Name, Scene.RegionInfo.RegionName);
+            //m_log.InfoFormat("[CLIENT]: Got a logout request for {0} in {1}", Name, Scene.RegionInfo.RegionName);
 
             Action<IClientAPI> handlerLogout = OnLogout;
 

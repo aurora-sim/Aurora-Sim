@@ -145,9 +145,9 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             {
                 if (regionHandle == sp.Scene.RegionInfo.RegionHandle)
                 {
-                    m_log.DebugFormat(
-                        "[ENTITY TRANSFER MODULE]: RequestTeleportToLocation {0} within {1}",
-                        position, sp.Scene.RegionInfo.RegionName);
+                    // m_log.DebugFormat(
+                    //    "[ENTITY TRANSFER MODULE]: RequestTeleportToLocation {0} within {1}",
+                    //    position, sp.Scene.RegionInfo.RegionName);
 
                     // Teleport within the same region
                     if (IsOutsideRegion(sp.Scene, position) || position.Z < 0)
@@ -198,8 +198,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                             sp.ControllingClient.SendTeleportFailed("Problem at destination");
                             return;
                         }
-                        m_log.DebugFormat("[ENTITY TRANSFER MODULE]: Final destination is x={0} y={1} uuid={2}",
-                            finalDestination.RegionLocX / Constants.RegionSize, finalDestination.RegionLocY / Constants.RegionSize, finalDestination.RegionID);
+                        //m_log.DebugFormat("[ENTITY TRANSFER MODULE]: Final destination is x={0} y={1} uuid={2}",
+                        //    finalDestination.RegionLocX / Constants.RegionSize, finalDestination.RegionLocY / Constants.RegionSize, finalDestination.RegionID);
 
                         //
                         // This is it
@@ -245,9 +245,9 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 return;
             }
 
-            m_log.DebugFormat(
-                "[ENTITY TRANSFER MODULE]: Request Teleport to {0}:{1}:{2}/{3}",
-                reg.ExternalHostName, reg.HttpPort, finalDestination.RegionName, position);
+            //m_log.DebugFormat(
+            //    "[ENTITY TRANSFER MODULE]: Request Teleport to {0}:{1}:{2}/{3}",
+            //    reg.ExternalHostName, reg.HttpPort, finalDestination.RegionName, position);
 
             uint newRegionX = (uint)(reg.RegionHandle >> 40);
             uint newRegionY = (((uint)(reg.RegionHandle)) >> 8);
@@ -455,9 +455,9 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 // REFACTORING PROBLEM. Well, not a problem, but this method is HORRIBLE!
                 if (sp.Scene.NeedSceneCacheClear(sp.UUID))
                 {
-                    m_log.DebugFormat(
-                        "[ENTITY TRANSFER MODULE]: User {0} is going to another region, profile cache removed",
-                        sp.UUID);
+                    //m_log.DebugFormat(
+                    //    "[ENTITY TRANSFER MODULE]: User {0} is going to another region, profile cache removed",
+                    //    sp.UUID);
                 }
             }
             else
@@ -526,7 +526,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
         public virtual void TeleportHome(UUID id, IClientAPI client)
         {
-            m_log.DebugFormat("[ENTITY TRANSFER MODULE]: Request to teleport {0} {1} home", client.FirstName, client.LastName);
+            //m_log.DebugFormat("[ENTITY TRANSFER MODULE]: Request to teleport {0} {1} home", client.FirstName, client.LastName);
 
             //OpenSim.Services.Interfaces.PresenceInfo pinfo = m_aScene.PresenceService.GetAgent(client.SessionId);
             GridUserInfo uinfo = m_aScene.GridUserService.GetGridUserInfo(client.AgentId.ToString());
@@ -759,7 +759,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 new Byte[0]);
                 im.SendInstantMessage(m, delegate(bool success)
                 {
-                    m_log.DebugFormat("[ENTITY TRANSFER MODULE]: Client Initiating Teleport sending IM success = {0}", success);
+                    //m_log.DebugFormat("[ENTITY TRANSFER MODULE]: Client Initiating Teleport sending IM success = {0}", success);
                 });
 
             }
@@ -780,7 +780,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         /// </summary>
         protected ScenePresence CrossAgentToNewRegionAsync(ScenePresence agent, Vector3 pos, uint neighbourx, uint neighboury, bool isFlying)
         {
-            m_log.DebugFormat("[ENTITY TRANSFER MODULE]: Crossing agent {0} {1} to {2}-{3}", agent.Firstname, agent.Lastname, neighbourx, neighboury);
+            //m_log.DebugFormat("[ENTITY TRANSFER MODULE]: Crossing agent {0} {1} to {2}-{3}", agent.Firstname, agent.Lastname, neighbourx, neighboury);
 
             Scene m_scene = agent.Scene;
             ulong neighbourHandle = Utils.UIntsToLong((uint)(neighbourx * Constants.RegionSize), (uint)(neighboury * Constants.RegionSize));
@@ -864,8 +864,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 // REFACTORING PROBLEM. Well, not a problem, but this method is HORRIBLE!
                 if (agent.Scene.NeedSceneCacheClear(agent.UUID))
                 {
-                    m_log.DebugFormat(
-                        "[ENTITY TRANSFER MODULE]: User {0} is going to another region", agent.UUID);
+                    //m_log.DebugFormat(
+                    //    "[ENTITY TRANSFER MODULE]: User {0} is going to another region", agent.UUID);
                 }
             }
 
@@ -1106,7 +1106,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             Utils.LongToUInts(reg.RegionHandle, out x, out y);
             x = x / Constants.RegionSize;
             y = y / Constants.RegionSize;
-            m_log.Info("[ENTITY TRANSFER MODULE]: Starting to inform client about neighbour " + x + ", " + y + "(" + endPoint.ToString() + ")");
+            //m_log.Info("[ENTITY TRANSFER MODULE]: Starting to inform client about neighbour " + x + ", " + y + "(" + endPoint.ToString() + ")");
 
             string capsPath = "http://" + reg.ExternalHostName + ":" + reg.HttpPort
                   + "/CAPS/" + a.CapsPath + "0000/";
@@ -1129,9 +1129,9 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     }
                     #endregion
 
-                    m_log.DebugFormat("[ENTITY TRANSFER MODULE]: {0} is sending {1} EnableSimulator for neighbor region {2} @ {3} " +
-                        "and EstablishAgentCommunication with seed cap {4}",
-                        m_scene.RegionInfo.RegionName, sp.Name, reg.RegionName, reg.RegionHandle, capsPath);
+                    //m_log.DebugFormat("[ENTITY TRANSFER MODULE]: {0} is sending {1} EnableSimulator for neighbor region {2} @ {3} " +
+                    //    "and EstablishAgentCommunication with seed cap {4}",
+                    //    m_scene.RegionInfo.RegionName, sp.Name, reg.RegionName, reg.RegionHandle, capsPath);
 
                     eq.EnableSimulator(reg.RegionHandle, endPoint, sp.UUID);
                     eq.EstablishAgentCommunication(sp.UUID, endPoint, capsPath);
@@ -1142,7 +1142,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     // TODO: make Event Queue disablable!
                 }
 
-                m_log.Info("[ENTITY TRANSFER MODULE]: Completed inform client about neighbour " + endPoint.ToString());
+                //m_log.Info("[ENTITY TRANSFER MODULE]: Completed inform client about neighbour " + endPoint.ToString());
 
             }
 
@@ -1553,7 +1553,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                         gobj.AbsolutePosition = gobj.RootPart.AttachedPos;
                         gobj.RootPart.IsAttachment = false;
                         //gobj.RootPart.LastOwnerID = gobj.GetFromAssetID();
-                        m_log.DebugFormat("[ENTITY TRANSFER MODULE]: Sending attachment {0} to region {1}", gobj.UUID, destination.RegionName);
+                        //m_log.DebugFormat("[ENTITY TRANSFER MODULE]: Sending attachment {0} to region {1}", gobj.UUID, destination.RegionName);
                         CrossPrimGroupIntoNewRegion(destination, gobj, silent);
                     }
                 }

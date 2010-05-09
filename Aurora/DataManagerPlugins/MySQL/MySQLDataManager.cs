@@ -37,9 +37,10 @@ namespace Aurora.DataManager.MySQL
                 return GetLockedConnection();
             }
 
+            MySqlConnection dbcon = null;
             try
             {
-                MySqlConnection dbcon = new MySqlConnection(connectionString);
+                dbcon = new MySqlConnection(connectionString);
                 try
                 {
                     dbcon.Open();
