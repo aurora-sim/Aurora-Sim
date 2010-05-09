@@ -70,9 +70,9 @@ namespace OpenSim.Framework
             }
             else
             {
-                if (agentID == validcircuit.AgentID && validcircuit.IP != null)
+                if (agentID == validcircuit.AgentID && validcircuit.IP != null && validcircuit.IP != "")
                 {
-                    if (validcircuit.IP == IP)
+                    if (validcircuit.IP == IP.Address.ToString())
                     {
                         user.Authorised = true;
                         user.LoginInfo = new Login();

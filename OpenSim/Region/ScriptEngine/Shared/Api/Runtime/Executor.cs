@@ -155,8 +155,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
                 }
                 catch
                 {
-                    // Event name not found, cache it as not found
-                    Events.Add(EventName, null);
+                    if (!Events.ContainsKey(EventName))
+                        // Event name not found, cache it as not found
+                        Events.Add(EventName, null);
                 }
             }
 			// Get event

@@ -756,7 +756,7 @@ namespace OpenSim.Services.LLLoginService
             aCircuit.SecureSessionID = secureSession;
             aCircuit.SessionID = session;
             aCircuit.startpos = position;
-            aCircuit.IP = IP;
+            aCircuit.IP = IP.Address.ToString();
             aCircuit.Viewer = viewer;
             SetServiceURLs(aCircuit, account);
 

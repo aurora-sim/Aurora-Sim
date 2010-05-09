@@ -39,7 +39,6 @@ namespace OpenSim._32BitLaunch
             System.Console.WriteLine("This application is compiled for 32-bit CPU and will run under WOW32 or similar.");
             System.Console.WriteLine("All 64-bit incompatibilities should be gone.");
             System.Console.WriteLine("");
-            System.Threading.Thread.Sleep(300);
             try
             {
                 global::OpenSim.Application.Main(args);

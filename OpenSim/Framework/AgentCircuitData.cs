@@ -120,7 +120,7 @@ namespace OpenSim.Framework
 
         public Dictionary<string, object> ServiceURLs;
 
-        public IPEndPoint IP;
+        public string IP;
 
         public AgentCircuitData()
         {
@@ -145,6 +145,7 @@ namespace OpenSim.Framework
             CapsPath = cAgent.CapsPath;
             ChildrenCapSeeds = cAgent.ChildrenCapSeeds;
             Viewer = cAgent.Viewer;
+            IP = cAgent.IP;
         }
 
         /// <summary>
@@ -183,6 +184,7 @@ namespace OpenSim.Framework
             args["start_pos"] = OSD.FromString(startpos.ToString());
             args["appearance_serial"] = OSD.FromInteger(Appearance.Serial);
             args["viewer"] = OSD.FromString(Viewer);
+            args["ip"] = OSD.FromString(IP);
 
             if (Appearance != null)
             {
@@ -284,6 +286,8 @@ namespace OpenSim.Framework
                 ServiceSessionID = args["service_session_id"].AsString();
             if (args["viewer"] != null)
                 Viewer = args["viewer"].AsString();
+            if (args["ip"] != null)
+                IP = args["ip"].AsString();
 
             if (args["start_pos"] != null)
                 Vector3.TryParse(args["start_pos"].AsString(), out startpos);
@@ -352,6 +356,7 @@ namespace OpenSim.Framework
         public float startposy;
         public float startposz;
         public string Viewer;
+        public string IP;
 
         public sAgentCircuitData()
         {
@@ -374,6 +379,7 @@ namespace OpenSim.Framework
             CapsPath = cAgent.CapsPath;
             ChildrenCapSeeds = cAgent.ChildrenCapSeeds;
             Viewer = cAgent.Viewer;
+            IP = cAgent.IP;
         }
     }
 }
