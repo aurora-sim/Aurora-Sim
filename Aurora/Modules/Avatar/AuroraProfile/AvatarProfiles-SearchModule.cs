@@ -47,7 +47,6 @@ using OpenSim.Services.Interfaces;
 using OpenSim.Server.Base;
 using FriendInfo = OpenSim.Services.Interfaces.FriendInfo;
 using OpenSim.Region.DataSnapshot.Interfaces;
-using Aurora.DataManager.Frontends;
 
 namespace Aurora.Modules
 {
@@ -60,7 +59,7 @@ namespace Aurora.Modules
         private IConfigSource m_config;
         private Dictionary<string, Dictionary<UUID, string>> ClassifiedsCache = new Dictionary<string, Dictionary<UUID, string>>();
         private Dictionary<string, List<string>> ClassifiedInfoCache = new Dictionary<string, List<string>>();
-        private ProfileFrontend ProfileFrontend = null;
+        private IProfileConnector ProfileFrontend = null;
         private IProfileData ProfileData = null;
         private IGenericData GenericData = null;
         private IRegionData RegionData = null;
@@ -119,12 +118,7 @@ namespace Aurora.Modules
 
         public void AddRegion(Scene scene)
         {
-            IConfig AuroraDataConfig = m_gConfig.Configs["AuroraData"];
-            string connectionString = AuroraDataConfig.GetString("RemoteConnectionStrings", "");
-            if (connectionString == "")
-                ProfileFrontend = new ProfileFrontend(false, "");
-            else
-                ProfileFrontend = new ProfileFrontend(true, connectionString);
+            ProfileFrontend = DataManager.DataManager.IProfileConnector;
 
             if (!m_Scenes.Contains(scene))
                 m_Scenes.Add(scene);
@@ -927,54 +921,26 @@ namespace Aurora.Modules
             #region Telehub
             if (itemtype == (uint)OpenMetaverse.GridItemType.Telehub)
             {
-                GridFrontend GF = new GridFrontend();
-
-                /*int i = 0;
-                List<string> TelehubsX = new List<string>();
-                List<string> TelehubsY = new List<string>();
-                List<string> RegionUUIDs = new List<string>();
-                foreach (string info in Telehubs)
-                {
-                    if (i == 0)
-                    {
-                        if(info != "")
-                            TelehubsX.Add(info);
-                    }
-                    if (i == 1)
-                    {
-                        if (info != "")
-                            TelehubsY.Add(info);
-                    }
-                    if (i == 2)
-                    {
-                        if (info != "")
-                            RegionUUIDs.Add(info);
-                        i = -1;
-                    }
-                    i += 1;
-                }
+                IGridConnector GF = DataManager.DataManager.IGridConnector;
+                uint xstart = 0;
+                uint ystart = 0;
+                OpenMetaverse.Utils.LongToUInts(m_scene.RegionInfo.RegionHandle, out xstart, out ystart);
+                OpenSim.Services.Interfaces.GridRegion GR = m_scene.GridService.GetRegionByPosition(UUID.Zero, (int)xstart, (int)ystart);
+                Vector3 Position;
                 int tc = Environment.TickCount;
-                i = 0;
-                if (TelehubsX.Count != 0)
+                if (GF.FindTelehub(GR.RegionID, out Position))
                 {
-                    for (i = 0; i + 1 <= TelehubsX.Count; i++)
-                    {
-                        OpenSim.Services.Interfaces.GridRegion region = m_scene.GridService.GetRegionByUUID(UUID.Zero, new UUID(RegionUUIDs[i]));
-                        mapitem = new mapItemReply();
-                        mapitem.x = (uint)(region.RegionLocX + Convert.ToUInt32(TelehubsX[i]));
-                        mapitem.y = (uint)(region.RegionLocY + Convert.ToUInt32(TelehubsY[i]));
-                        mapitem.id = UUID.Zero;
-                        mapitem.name = Util.Md5Hash(region.RegionName + tc.ToString());
-                        mapitem.Extra = 1;
-                        mapitem.Extra2 = 0;
-                        mapitems.Add(mapitem);
-                    }
-                }
-                if (mapitems.Count != 0)
-                {
+                    mapitem = new mapItemReply();
+                    mapitem.x = (uint)(GR.RegionLocX + Position.X);
+                    mapitem.y = (uint)(GR.RegionLocX + Position.X);
+                    mapitem.id = GR.RegionID;
+                    mapitem.name = Util.Md5Hash(GR.RegionName + tc.ToString());
+                    mapitem.Extra = 1;
+                    mapitem.Extra2 = 0;
+                    mapitems.Add(mapitem);
                     remoteClient.SendMapItemReply(mapitems.ToArray(), itemtype, flags);
                     mapitems.Clear();
-                }*/
+                }
             }
 
 			#endregion
@@ -1478,7 +1444,7 @@ namespace Aurora.Modules
         							GenericData.Insert("searchallparcels", new string[] { info.UUID, PInfo.Name, PInfo.OwnerUUID, PInfo.GroupUUID, PInfo.Landing, PInfo.UUID, PInfo.InfoUUID, PInfo.Area });
         							if (Convert.ToBoolean(PInfo.Directory))
         								GenericData.Insert("searchparcels", new string[] { info.UUID, PInfo.Name, PInfo.UUID, PInfo.Landing, PInfo.Desc, PInfo.Category, PInfo.Build, PInfo.Script, PInfo.Public, PInfo.Dwell, PInfo.InfoUUID, false.ToString(), false.ToString() });
-                                    GridRegionFlags flags = new Aurora.DataManager.Frontends.GridFrontend().GetRegionFlags(currentScene.RegionInfo.RegionID);
+                                    GridRegionFlags flags = DataManager.DataManager.IGridConnector.GetRegionFlags(currentScene.RegionInfo.RegionID);
                                     if (Convert.ToBoolean(PInfo.ForSale))
         							{
                                         GenericData.Insert("searchparcelsales", new string[] { info.UUID, PInfo.Name, PInfo.UUID, PInfo.Area, PInfo.SalePrice, PInfo.Landing, PInfo.InfoUUID, PInfo.Dwell, currentScene.RegionInfo.EstateSettings.EstateID.ToString(), ((flags & GridRegionFlags.Hidden) == GridRegionFlags.Hidden).ToString() });

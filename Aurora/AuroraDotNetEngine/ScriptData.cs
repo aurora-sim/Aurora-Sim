@@ -62,13 +62,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             m_ScriptEngine = engine;
             World = m_ScriptEngine.World;
-            foreach (IGenericData GD in Aurora.DataManager.DataManager.AllGenericPlugins)
+            /*foreach (IGenericData GD in Aurora.DataManager.DataManager.AllGenericPlugins)
             {
                 if(GD.Identifier == "SQLiteStateSaver")
                 {
                     GenericData = GD;
                 }
-            }
+            }*/
             if (GenericData == null)
                 GenericData = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
         }

@@ -47,10 +47,10 @@ namespace Aurora.Services.DataService
                 RegionData.ConnectToDatabase(ConnectionString);
                 MySQLEstate EstateData = new MySQLEstate();
                 EstateData.ConnectToDatabase(ConnectionString);
-                Aurora.DataManager.DataManager.AddGenericPlugin(GenericData);
-                Aurora.DataManager.DataManager.AddProfilePlugin((IProfileData)ProfileData);
-                Aurora.DataManager.DataManager.AddRegionPlugin((IRegionData)RegionData);
-                Aurora.DataManager.DataManager.AddEstatePlugin(EstateData);
+                Aurora.DataManager.DataManager.SetDefaultGenericDataPlugin(GenericData);
+                Aurora.DataManager.DataManager.SetDefaultProfilePlugin((IProfileData)ProfileData);
+                Aurora.DataManager.DataManager.SetDefaultRegionPlugin((IRegionData)RegionData);
+                Aurora.DataManager.DataManager.SetDefaultEstatePlugin(EstateData);
             }
             else if (PluginModule == "SQLite")
             {
@@ -78,40 +78,28 @@ namespace Aurora.Services.DataService
                 RegionData.ConnectToDatabase(ConnectionString);
                 SQLiteEstate EstateData = new SQLiteEstate();
                 EstateData.ConnectToDatabase(ConnectionString);
-                
-                Aurora.DataManager.DataManager.AddGenericPlugin(GenericData);
-                Aurora.DataManager.DataManager.AddGenericPlugin(ScriptSaverData);
-                Aurora.DataManager.DataManager.AddProfilePlugin(ProfileData);
-                Aurora.DataManager.DataManager.AddRegionPlugin(RegionData);
-                Aurora.DataManager.DataManager.AddEstatePlugin(EstateData);
+
+                Aurora.DataManager.DataManager.SetDefaultGenericDataPlugin(GenericData);
+                Aurora.DataManager.DataManager.SetDefaultProfilePlugin((IProfileData)ProfileData);
+                Aurora.DataManager.DataManager.SetDefaultRegionPlugin((IRegionData)RegionData);
+                Aurora.DataManager.DataManager.SetDefaultEstatePlugin(EstateData);
             }
 
-            int i = 0;
-            string connectionString = m_config.GetString("RemoteConnectionStrings", "");
-            if (connectionString == "")
+            string Connector = m_config.GetString("Connector", "LocalConnector");
+            if (Connector == "LocalConnector")
             {
-                Aurora.DataManager.DataManager.SetGenericDataRetriver(new GenericData());
-                Aurora.DataManager.DataManager.SetEstateDataRetriver(new EstateData());
-                Aurora.DataManager.DataManager.SetProfileDataRetriver(new ProfileData());
-                Aurora.DataManager.DataManager.SetRegionDataRetriver(new RegionData());
+                DataManager.DataManager.IGridConnector = new LocalGridConnector();
+                DataManager.DataManager.IProfileConnector = new LocalProfileConnector();
+                DataManager.DataManager.IAgentConnector = new LocalAgentConnector();
                 return;
             }
-            string[] RemoteConnectionStrings = connectionString.Split(',');
-            string connectionPassword = m_config.GetString("RemoteConnectionPasswords", "");
-            string[] RemoteConnectionPasswords = connectionPassword.Split(',');
-            foreach (string remoteconnection in RemoteConnectionStrings)
+            if (Connector != "RemoteConnector")
             {
-                if (remoteconnection == "")
-                    continue;
-                //RemoteDataConnector connector = new RemoteDataConnector(RemoteConnectionStrings[i], RemoteConnectionPasswords[i]);
-                //Aurora.DataManager.DataManager.AddGenericPlugin(connector);
-                //Aurora.DataManager.DataManager.AddProfilePlugin(connector);
-                //Aurora.DataManager.DataManager.AddRegionPlugin(connector);
+                m_log.Error("[AuroraDataService]: No Connector found with that name!");
+                return;
             }
-            Aurora.DataManager.DataManager.SetGenericDataRetriver(new GenericData());
-            Aurora.DataManager.DataManager.SetEstateDataRetriver(new EstateData());
-            Aurora.DataManager.DataManager.SetProfileDataRetriver(new ProfileData());
-            Aurora.DataManager.DataManager.SetRegionDataRetriver(new RegionData());
+            string RemoteConnectionString = m_config.GetString("ConnectionString", "");
+            
         }
 
         public string Name

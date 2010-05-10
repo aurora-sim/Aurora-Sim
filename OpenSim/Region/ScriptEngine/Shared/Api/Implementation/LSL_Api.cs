@@ -5613,7 +5613,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
-            Aurora.DataManager.Frontends.AgentFrontend AgentFrontend = new Aurora.DataManager.Frontends.AgentFrontend();
+            Aurora.Framework.IAgentConnector AgentFrontend = Aurora.DataManager.DataManager.IAgentConnector;
             Aurora.Framework.IAgentInfo Agent = AgentFrontend.GetAgent(new UUID(id));
             if (Agent.LanguageIsPublic)
             {
