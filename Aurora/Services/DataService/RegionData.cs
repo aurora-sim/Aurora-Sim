@@ -10,22 +10,6 @@ namespace Aurora.Services.DataService
     {
         #region IRegionData Members
 
-        public Dictionary<string, string> GetRegionHidden()
-        {
-            if (Aurora.DataManager.DataManager.DefaultRegionPlugin != null)
-                return Aurora.DataManager.DataManager.DefaultRegionPlugin.GetRegionHidden();
-            else
-            {
-                foreach (IRegionData plugin in Aurora.DataManager.DataManager.AllRegionPlugins)
-                {
-                    Dictionary<string, string> success = plugin.GetRegionHidden();
-                    if (success != null && success.Count != 0)
-                        return success;
-                }
-            }
-            return new Dictionary<string, string>();
-        }
-
         public string AbuseReports()
         {
             if (Aurora.DataManager.DataManager.DefaultRegionPlugin != null)
@@ -56,20 +40,6 @@ namespace Aurora.Services.DataService
                 }
             }
             return null;
-        }
-
-        public bool GetIsRegionMature(string region)
-        {
-            if (Aurora.DataManager.DataManager.DefaultRegionPlugin != null)
-                return Aurora.DataManager.DataManager.DefaultRegionPlugin.GetIsRegionMature(region);
-            else
-            {
-                foreach (IRegionData plugin in Aurora.DataManager.DataManager.AllRegionPlugins)
-                {
-                    return plugin.GetIsRegionMature(region);
-                }
-            }
-            return false;
         }
 
         public bool StoreRegionWindlightSettings(OpenSim.Framework.RegionLightShareData wl)

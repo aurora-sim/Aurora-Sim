@@ -22,10 +22,8 @@ namespace Aurora.Framework
     }
     public interface IRegionData
     {
-        Dictionary<string, string> GetRegionHidden();
         string AbuseReports();
         ObjectMediaURLInfo getObjectMediaInfo(string objectID, int side);
-        bool GetIsRegionMature(string region);
         bool StoreRegionWindlightSettings(RegionLightShareData wl);
         void AddLandObject(OpenSim.Framework.LandData ILandData);
         RegionLightShareData LoadRegionWindlightSettings(UUID regionUUID);

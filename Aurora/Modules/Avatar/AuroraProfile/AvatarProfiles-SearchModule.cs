@@ -1486,9 +1486,10 @@ namespace Aurora.Modules
         							GenericData.Insert("searchallparcels", new string[] { info.UUID, PInfo.Name, PInfo.OwnerUUID, PInfo.GroupUUID, PInfo.Landing, PInfo.UUID, PInfo.InfoUUID, PInfo.Area });
         							if (Convert.ToBoolean(PInfo.Directory))
         								GenericData.Insert("searchparcels", new string[] { info.UUID, PInfo.Name, PInfo.UUID, PInfo.Landing, PInfo.Desc, PInfo.Category, PInfo.Build, PInfo.Script, PInfo.Public, PInfo.Dwell, PInfo.InfoUUID, false.ToString(), false.ToString() });
-        							if (Convert.ToBoolean(PInfo.ForSale))
+                                    GridRegionFlags flags = new Aurora.DataManager.Frontends.GridFrontend().GetRegionFlags(currentScene.RegionInfo.RegionID);
+                                    if (Convert.ToBoolean(PInfo.ForSale))
         							{
-        								GenericData.Insert("searchparcelsales", new string[] { info.UUID, PInfo.Name, PInfo.UUID, PInfo.Area, PInfo.SalePrice, PInfo.Landing, PInfo.InfoUUID, PInfo.Dwell, currentScene.RegionInfo.EstateSettings.EstateID.ToString(), RegionData.GetIsRegionMature(currentScene.RegionInfo.RegionID.ToString()).ToString() });
+                                        GenericData.Insert("searchparcelsales", new string[] { info.UUID, PInfo.Name, PInfo.UUID, PInfo.Area, PInfo.SalePrice, PInfo.Landing, PInfo.InfoUUID, PInfo.Dwell, currentScene.RegionInfo.EstateSettings.EstateID.ToString(), ((flags & GridRegionFlags.Hidden) == GridRegionFlags.Hidden).ToString() });
         							}
         						}
         					}

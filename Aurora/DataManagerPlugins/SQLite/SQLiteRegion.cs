@@ -12,24 +12,6 @@ namespace Aurora.DataManager.SQLite
 {
     public class SQLiteRegion : SQLiteLoader, IRegionData
     {
-        public Dictionary<string, string> GetRegionHidden()
-        {
-            SqliteCommand cmd = new SqliteCommand();
-            string query = "";
-            query = String.Format("select RegionHandle,regionName from auroraregions where hidden = '{0}'", "1");
-            cmd.CommandText = query;
-            IDataReader reader = GetReader(cmd);
-            Dictionary<string, string> retval = new Dictionary<string, string>();
-            while (reader.Read())
-            {
-                for (int i = 0; i < reader.FieldCount; i = i + 2)
-                {
-                    retval.Add(reader.GetValue(i).ToString(), reader.GetValue(i + 1).ToString());
-                }
-            }
-            return retval;
-        }
-
         public string AbuseReports()
         {
             string query = "SELECT ReportNumber FROM reports ORDER BY ReportNumber DESC";
@@ -88,18 +70,6 @@ namespace Aurora.DataManager.SQLite
             }
             return info;
         }
-        public bool GetIsRegionMature(string region)
-        {
-            string query = "SELECT isMature FROM auroraregions where regionUUID = '" + region + "'";
-            SqliteCommand cmd = new SqliteCommand();
-            cmd.CommandText = query;
-            IDataReader reader = GetReader(cmd);
-            if (reader.Read())
-                return reader.GetBoolean(0);
-            else
-                return true;
-        }
-
         public AbuseReport GetAbuseReport(int formNumber)
         {
             AbuseReport report = new AbuseReport();
