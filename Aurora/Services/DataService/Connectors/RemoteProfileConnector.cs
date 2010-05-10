@@ -15,7 +15,7 @@ using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
 using OpenSim.Server.Base;
 
-namespace Aurora.DataManager.Connectors
+namespace Aurora.Services.DataService
 {
     public class RemoteProfileConnector : IProfileConnector
     {

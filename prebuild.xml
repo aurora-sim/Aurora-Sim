@@ -2467,7 +2467,9 @@
           <Reference name="System.Xml"/>
 	    <Reference name="Nini.dll"/>
 <Reference name="OpenSim.Services.Interfaces"/>
+<Reference name="OpenSim.Server.Base"/>
 <Reference name="Aurora.Framework"/>
+<Reference name="OpenSim.Framework.Servers.HttpServer"/>
 <Reference name="Aurora.DataManager"/>
 <Reference name="Aurora.DataManager.MySQL"/>
 <Reference name="Aurora.DataManager.SQLite"/>
