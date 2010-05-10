@@ -648,7 +648,7 @@ namespace OpenSim.Region.Framework.Scenes
                             m_regInfo.EstateSettings = EstateService.LoadEstateSettings(m_regInfo.RegionID, true);
 
                             m_regInfo.EstateSettings.EstateName = MainConsole.Instance.CmdPrompt("New estate name", m_regInfo.EstateSettings.EstateName);
-                            m_regInfo.EstateSettings.EstatePass = MainConsole.Instance.CmdPrompt("New estate password (to keep others from joining your estate)", m_regInfo.EstateSettings.EstatePass);
+                            m_regInfo.EstateSettings.EstatePass = Util.Md5Hash(MainConsole.Instance.CmdPrompt("New estate password (to keep others from joining your estate)", m_regInfo.EstateSettings.EstatePass));
                             m_regInfo.EstateSettings.Save();
                             break;
                         }
@@ -665,7 +665,6 @@ namespace OpenSim.Region.Framework.Scenes
                                 continue;
                             }
                             string password = MainConsole.Instance.CmdPrompt("Password for the estate", "None");
-                            password = Util.Md5Hash(password);
                             int estateID = estateIDs[0];
 
                             m_regInfo.EstateSettings = EstateService.LoadEstateSettings(estateID);
