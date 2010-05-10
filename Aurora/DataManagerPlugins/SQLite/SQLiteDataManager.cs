@@ -293,7 +293,7 @@ namespace Aurora.DataManager.SQLite
                 query += keyRows[i];
                 query += " = '";
                 query += value.ToString();
-                query += "' and";
+                query += "' and ";
                 i++;
             }
             query = query.Remove(query.Length - 4);

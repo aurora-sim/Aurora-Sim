@@ -481,8 +481,12 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
                 UUID principalID = new UUID(im.fromAgentID);
                 UUID friendID = new UUID(im.toAgentID);
 
-                m_log.DebugFormat("[FRIENDS]: {0} offered friendship to {1}", principalID, friendID);
+                //Can't trust the incoming name for friend offers, so we have to find it ourselves.
+                UserAccount sender = m_Scenes[0].UserAccountService.GetUserAccount(UUID.Zero, principalID);
+                im.fromAgentName = sender.FirstName + " " + sender.LastName;
+                UserAccount reciever = m_Scenes[0].UserAccountService.GetUserAccount(UUID.Zero, friendID);
 
+                m_log.DebugFormat("[FRIENDS]: {0} offered friendship to {1}", sender.FirstName + " " + sender.LastName, reciever.FirstName + " " + reciever.LastName);
                 // This user wants to be friends with the other user.
                 // Let's add the relation backwards, in case the other is not online
                 FriendsService.StoreFriend(friendID, principalID.ToString(), 0);
