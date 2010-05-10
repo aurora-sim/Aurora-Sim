@@ -638,16 +638,17 @@ namespace OpenSim.Region.Framework.Scenes
                 m_regInfo.EstateSettings = EstateService.LoadEstateSettings(m_regInfo.RegionID, false);
                 if (m_regInfo.EstateSettings.EstateID == 0) // No record at all
                 {
-                    MainConsole.Instance.Output("Your region is not part of an estate.");
+                    MainConsole.Instance.Output("Your region " + m_regInfo.RegionName + " is not part of an estate.");
                     while (true)
                     {
-                        string response = MainConsole.Instance.CmdPrompt("Do you wish to join an existing estate?", "no", new List<string>() {"yes", "no"});
+                        string response = MainConsole.Instance.CmdPrompt("Do you wish to join an existing estate for " + m_regInfo.RegionName + "?", "no", new List<string>() { "yes", "no" });
                         if (response == "no")
                         {
                             // Create a new estate
                             m_regInfo.EstateSettings = EstateService.LoadEstateSettings(m_regInfo.RegionID, true);
 
                             m_regInfo.EstateSettings.EstateName = MainConsole.Instance.CmdPrompt("New estate name", m_regInfo.EstateSettings.EstateName);
+                            m_regInfo.EstateSettings.EstatePass = MainConsole.Instance.CmdPrompt("New estate password (to keep others from joining your estate)", m_regInfo.EstateSettings.EstatePass);
                             m_regInfo.EstateSettings.Save();
                             break;
                         }
@@ -663,12 +664,13 @@ namespace OpenSim.Region.Framework.Scenes
                                 MainConsole.Instance.Output("The name you have entered matches no known estate. Please try again");
                                 continue;
                             }
-
+                            string password = MainConsole.Instance.CmdPrompt("Password for the estate", "None");
+                            password = Util.Md5Hash(password);
                             int estateID = estateIDs[0];
 
                             m_regInfo.EstateSettings = EstateService.LoadEstateSettings(estateID);
 
-                            if (EstateService.LinkRegion(m_regInfo.RegionID, estateID))
+                            if (EstateService.LinkRegion(m_regInfo.RegionID, estateID, password))
                                 break;
 
                             MainConsole.Instance.Output("Joining the estate failed. Please try again.");

@@ -127,6 +127,8 @@ namespace Aurora.DataManager.SQLite
             return settings;
         }
 
+        #region Helpers
+
         private void LoadBanList(EstateSettings es)
         {
             es.ClearBans();
@@ -222,6 +224,8 @@ namespace Aurora.DataManager.SQLite
                 cmd.Parameters.Clear();
             }
         }
+
+        #endregion
 
         public bool StoreEstateSettings(OpenSim.Framework.EstateSettings es)
         {
@@ -344,9 +348,14 @@ namespace Aurora.DataManager.SQLite
             return result;
         }
 
-        public bool LinkRegion(OpenMetaverse.UUID regionID, int estateID)
+        public bool LinkRegion(OpenMetaverse.UUID regionID, int estateID, string password)
         {
             SqliteCommand cmd = new SqliteCommand();
+            List<string> queriedpassword = Query("select EstatePass from estate_settings where EstateID = '" + estateID.ToString() + "'");
+            if (queriedpassword.Count == 0)
+                return false;
+            if (Util.Md5Hash(password) != queriedpassword[0])
+                return false;
 
             cmd.CommandText = "insert into estate_map values (:RegionID, :EstateID)";
             cmd.Parameters.Add(":RegionID", regionID.ToString());

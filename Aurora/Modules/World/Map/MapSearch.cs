@@ -52,13 +52,11 @@ namespace Aurora.Modules
 
 		Scene m_scene = null; // only need one for communication with GridService
 		List<Scene> m_scenes = new List<Scene>();
-        private IRegionData RegionData = null;
-		private IConfigSource m_config;
+        private IConfigSource m_config;
 		private Dictionary<string, string> RegionsHidden = new Dictionary<string, string>();
 		private double minutes = 30;
         private double oneminute = 60000;
 		private Timer aTimer;
-        private InterWorldComms IWC = null;
         bool m_Enabled = true;
 
 		#region IRegionModule Members
@@ -123,10 +121,10 @@ namespace Aurora.Modules
 
 		#endregion
 
-		private void OnNewClient(IClientAPI client)
-		{
-			client.OnMapNameRequest += OnMapNameRequest;
-		}
+        private void OnNewClient(IClientAPI client)
+        {
+            client.OnMapNameRequest += OnMapNameRequest;
+        }
 
         private void OnMapNameRequest(IClientAPI remoteClient, string mapName)
         {
@@ -135,15 +133,15 @@ namespace Aurora.Modules
                 remoteClient.SendAlertMessage("Use a search string with at least 1 characters");
                 return;
             }
-            ScenePresence SP = null;
-            Scene scene = GetClientScene(remoteClient);
-            scene.TryGetScenePresence(remoteClient.AgentId, out SP);
             // try to fetch from GridServer
             List<GridRegion> regionInfos = m_scene.GridService.GetRegionsByName(UUID.Zero, mapName, 20);
             if (regionInfos == null)
             {
                 m_log.Warn("[MAPSEARCHMODULE]: RequestNamedRegions returned null. Old gridserver?");
-                return;
+                // service wasn't available; maybe still an old GridServer. Try the old API, though it will return only one region
+                regionInfos = new List<GridRegion>();
+                GridRegion info = m_scene.GridService.GetRegionByName(UUID.Zero, mapName);
+                if (info != null) regionInfos.Add(info);
             }
 
             List<MapBlockData> blocks = new List<MapBlockData>();
@@ -151,55 +149,21 @@ namespace Aurora.Modules
             MapBlockData data;
             if (regionInfos.Count > 0)
             {
-                foreach (OpenSim.Services.Interfaces.GridRegion info in regionInfos)
+                foreach (GridRegion info in regionInfos)
                 {
-                    if (SP.GodLevel == 0)
-                    {
-                        if (RegionsHidden.ContainsValue(info.RegionName))
-                        {
-                            if (info.EstateOwner == remoteClient.AgentId)
-                            {
-                                data = new MapBlockData();
-                                data.Agents = 0;
-                                data.Access = info.Access;
-                                data.MapImageId = info.TerrainImage;
-                                data.Name = info.RegionName;
-                                data.RegionFlags = 0;
-                                data.WaterHeight = 0;
-                                data.X = (ushort)(info.RegionLocX / Constants.RegionSize);
-                                data.Y = (ushort)(info.RegionLocY / Constants.RegionSize);
-                                blocks.Add(data);
-                            }
-                        }
-                        else
-                        {
-                            data = new MapBlockData();
-                            data.Agents = 0;
-                            data.Access = info.Access;
-                            data.MapImageId = info.TerrainImage;
-                            data.Name = info.RegionName;
-                            data.RegionFlags = 0;
-                            data.WaterHeight = 0;
-                            data.X = (ushort)(info.RegionLocX / Constants.RegionSize);
-                            data.Y = (ushort)(info.RegionLocY / Constants.RegionSize);
-                            blocks.Add(data);
-                        }
-                    }
-                    else
-                    {
-                        data = new MapBlockData();
-                        data.Agents = 0;
-                        data.Access = info.Access;
-                        data.MapImageId = info.TerrainImage;
-                        data.Name = info.RegionName;
-                        data.RegionFlags = 0;
-                        data.WaterHeight = 0;
-                        data.X = (ushort)(info.RegionLocX / Constants.RegionSize);
-                        data.Y = (ushort)(info.RegionLocY / Constants.RegionSize);
-                        blocks.Add(data);
-                    }
+                    data = new MapBlockData();
+                    data.Agents = 0;
+                    data.Access = info.Access;
+                    data.MapImageId = info.TerrainImage;
+                    data.Name = info.RegionName;
+                    data.RegionFlags = 0; // TODO not used?
+                    data.WaterHeight = 0; // not used
+                    data.X = (ushort)(info.RegionLocX / Constants.RegionSize);
+                    data.Y = (ushort)(info.RegionLocY / Constants.RegionSize);
+                    blocks.Add(data);
                 }
             }
+
             // final block, closing the search result
             data = new MapBlockData();
             data.Agents = 0;
@@ -212,13 +176,8 @@ namespace Aurora.Modules
             data.Y = 0;
             blocks.Add(data);
 
-            remoteClient.SendMapBlock(blocks, 0);
+            remoteClient.SendMapBlock(blocks, 2);
         }   
-
-		private bool IsHypergridOn()
-		{
-			return false;
-		}
 
 		private Scene GetClientScene(IClientAPI client)
 		{

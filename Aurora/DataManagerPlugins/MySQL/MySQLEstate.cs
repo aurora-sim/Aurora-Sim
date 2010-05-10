@@ -358,8 +358,14 @@ namespace Aurora.DataManager.MySQL
             return result;
         }
 
-        public bool LinkRegion(OpenMetaverse.UUID regionID, int estateID)
+        public bool LinkRegion(OpenMetaverse.UUID regionID, int estateID, string password)
         {
+            List<string> queriedpassword = Query("select EstatePass from estate_settings where EstateID = '" + estateID.ToString() + "'");
+            if (queriedpassword.Count == 0)
+                return false;
+            if (Util.Md5Hash(password) != queriedpassword[0])
+                return false;
+
             MySqlCommand cmd;
             MySqlConnection dbcon = GetLockedConnection();
             cmd = (MySqlCommand)dbcon.CreateCommand();

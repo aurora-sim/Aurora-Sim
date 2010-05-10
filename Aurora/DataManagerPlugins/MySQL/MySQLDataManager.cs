@@ -438,6 +438,8 @@ namespace Aurora.DataManager.MySQL
 
             foreach (object value in values)
             {
+                if (value == null)
+                    continue;
                 if (valuesString != string.Empty)
                 {
                     valuesString += ", ";

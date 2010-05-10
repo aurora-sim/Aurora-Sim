@@ -61,6 +61,7 @@ namespace OpenSim.Services.GridService
         public GridService(IConfigSource config)
             : base(config)
         {
+            m_GridCache = new GridCache();
             m_log.DebugFormat("[GRID SERVICE]: Starting...");
 
             m_config = config;

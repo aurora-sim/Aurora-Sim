@@ -82,7 +82,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ));
 
             AddSchema("agentgeneral", ColDefs(
-                ColDef("PrincipalID", ColumnTypes.String50),
+                ColDef("PrincipalID", ColumnTypes.String50, true),
                 ColDef("Mac", ColumnTypes.String50),
                 ColDef("IP", ColumnTypes.String512),
                 ColDef("AcceptTOS", ColumnTypes.String512),
@@ -101,16 +101,18 @@ namespace Aurora.DataManager.Migration.Migrators
 
             #endregion
             
-            AddSchema("auroraregions", ColDefs(
-                ColDef("regionName", ColumnTypes.String50),
-                ColDef("regionHandle", ColumnTypes.String50),
-                ColDef("hidden", ColumnTypes.String1),
-                ColDef("regionUUID", ColumnTypes.String50, true),
-                ColDef("regionX", ColumnTypes.String50),
-                ColDef("regionY", ColumnTypes.String50),
-                ColDef("telehubX", ColumnTypes.String50),
-                ColDef("telehubY", ColumnTypes.String50),
-                ColDef("isMature", ColumnTypes.String50)
+            AddSchema("regionflags", ColDefs(
+                ColDef("RegionID", ColumnTypes.String50, true),
+                ColDef("Flags", ColumnTypes.String50)
+                ));
+
+            AddSchema("telehubs", ColDefs(
+                ColDef("RegionID", ColumnTypes.String50, true),
+                ColDef("RegionX", ColumnTypes.String50),
+                ColDef("RegionY", ColumnTypes.String50),
+                ColDef("TelehubX", ColumnTypes.String50),
+                ColDef("TelehubY", ColumnTypes.String50),
+                ColDef("TelehubZ", ColumnTypes.String50)
                 ));
 
             AddSchema("macban", ColDefs(ColDef("macAddress", ColumnTypes.String50, true)));
@@ -270,33 +272,6 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("obscure_music", ColumnTypes.String50)
                 ));
 
-            AddSchema("estate_settings", ColDefs(
-                ColDef("EstateID", ColumnTypes.String50),
-                ColDef("EstateName", ColumnTypes.String50),
-                ColDef("AbuseEmailToEstateOwner", ColumnTypes.String1),
-                ColDef("DenyAnonymous", ColumnTypes.String50),
-                ColDef("ResetHomeOnTeleport", ColumnTypes.String50),
-                ColDef("FixedSun", ColumnTypes.String50),
-                ColDef("DenyTransacted", ColumnTypes.String50),
-                ColDef("BlockDwell", ColumnTypes.String50),
-                ColDef("DenyIdentified", ColumnTypes.String50),
-                ColDef("AllowVoice", ColumnTypes.String50),
-                ColDef("UseGlobalTime", ColumnTypes.String50),
-                ColDef("PricePerMeter", ColumnTypes.String50),
-                ColDef("TaxFree", ColumnTypes.String50),
-                ColDef("AllowDirectTeleport", ColumnTypes.String50),
-                ColDef("RedirectGridX", ColumnTypes.String50),
-                ColDef("RedirectGridY", ColumnTypes.String50),
-                ColDef("ParentEstateID", ColumnTypes.String50),
-                ColDef("SunPosition", ColumnTypes.String50),
-                ColDef("EstateSkipScripts", ColumnTypes.String50),
-                ColDef("BillableFactor", ColumnTypes.String50),
-                ColDef("PublicAccess", ColumnTypes.String50),
-                ColDef("AbuseEmail", ColumnTypes.String50),
-                ColDef("EstateOwner", ColumnTypes.String50),
-                ColDef("DenyMinors", ColumnTypes.String50)
-                ));
-
             AddSchema("osagent", ColDefs(ColDef("AgentID", ColumnTypes.String50, true),
                 ColDef("ActiveGroupID", ColumnTypes.String50)));
 
@@ -430,6 +405,37 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("EFlags", ColumnTypes.String50),
                 ColDef("EMature", ColumnTypes.String50)
                 ));
+            #endregion
+
+            #region Estates
+
+            AddSchema("estate_settings", ColDefs(
+                ColDef("EstateID", ColumnTypes.String50),
+                ColDef("EstateName", ColumnTypes.String50),
+                ColDef("AbuseEmailToEstateOwner", ColumnTypes.String1),
+                ColDef("DenyAnonymous", ColumnTypes.String50),
+                ColDef("ResetHomeOnTeleport", ColumnTypes.String50),
+                ColDef("FixedSun", ColumnTypes.String50),
+                ColDef("DenyTransacted", ColumnTypes.String50),
+                ColDef("BlockDwell", ColumnTypes.String50),
+                ColDef("DenyIdentified", ColumnTypes.String50),
+                ColDef("AllowVoice", ColumnTypes.String50),
+                ColDef("UseGlobalTime", ColumnTypes.String50),
+                ColDef("PricePerMeter", ColumnTypes.String50),
+                ColDef("TaxFree", ColumnTypes.String50),
+                ColDef("AllowDirectTeleport", ColumnTypes.String50),
+                ColDef("RedirectGridX", ColumnTypes.String50),
+                ColDef("RedirectGridY", ColumnTypes.String50),
+                ColDef("ParentEstateID", ColumnTypes.String50),
+                ColDef("SunPosition", ColumnTypes.String50),
+                ColDef("EstateSkipScripts", ColumnTypes.String50),
+                ColDef("BillableFactor", ColumnTypes.String50),
+                ColDef("PublicAccess", ColumnTypes.String50),
+                ColDef("AbuseEmail", ColumnTypes.String50),
+                ColDef("EstateOwner", ColumnTypes.String50),
+                ColDef("DenyMinors", ColumnTypes.String50),
+                ColDef("EstatePass", ColumnTypes.String50)
+                ));
 
             AddSchema("estate_map", ColDefs(
                 ColDef("RegionID", ColumnTypes.String50, true),
@@ -438,12 +444,15 @@ namespace Aurora.DataManager.Migration.Migrators
             AddSchema("estate_groups", ColDefs(
                 ColDef("EstateID", ColumnTypes.String50, true),
                 ColDef("uuid", ColumnTypes.String50)));
+
             AddSchema("estate_managers", ColDefs(
                 ColDef("EstateID", ColumnTypes.String50, true),
                 ColDef("uuid", ColumnTypes.String50)));
+
             AddSchema("estate_users", ColDefs(
                 ColDef("EstateID", ColumnTypes.String50, true),
                 ColDef("uuid", ColumnTypes.String50)));
+
             AddSchema("estateban", ColDefs(
                 ColDef("EstateID", ColumnTypes.String50, true),
                 ColDef("bannedUUID", ColumnTypes.String50, true),

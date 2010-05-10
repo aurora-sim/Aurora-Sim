@@ -75,15 +75,15 @@ namespace Aurora.Services.DataService
             return new List<int>();
         }
 
-        public bool LinkRegion(OpenMetaverse.UUID regionID, int estateID)
+        public bool LinkRegion(OpenMetaverse.UUID regionID, int estateID, string password)
         {
             if (Aurora.DataManager.DataManager.DefaultEstatePlugin != null)
-                return Aurora.DataManager.DataManager.DefaultEstatePlugin.LinkRegion(regionID, estateID);
+                return Aurora.DataManager.DataManager.DefaultEstatePlugin.LinkRegion(regionID, estateID, password);
             else
             {
                 foreach (IEstateData plugin in Aurora.DataManager.DataManager.AllEstatePlugins)
                 {
-                    bool success = plugin.LinkRegion(regionID, estateID);
+                    bool success = plugin.LinkRegion(regionID, estateID, password);
                     if (success)
                         return success;
                 }

@@ -180,7 +180,7 @@ namespace Aurora.Modules
             }
             if (((Scene)client.Scene).RegionInfo.EstateSettings.EstateID != EstateID)
             {
-                bool changed = ((Scene)client.Scene).EstateService.LinkRegion(((Scene)client.Scene).RegionInfo.RegionID, (int)EstateID);
+                bool changed = ((Scene)client.Scene).EstateService.LinkRegion(((Scene)client.Scene).RegionInfo.RegionID, (int)EstateID, ((Scene)client.Scene).RegionInfo.EstateSettings.EstatePass);
                 if (!changed)
                     SP.ControllingClient.SendAgentAlertMessage("Unable to connecto to the given estate.", false);
 

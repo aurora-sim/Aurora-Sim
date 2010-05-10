@@ -43,7 +43,7 @@ namespace Aurora.Framework
         EstateSettings LoadEstateSettings(int estateID);
         bool StoreEstateSettings(EstateSettings es);
         List<int> GetEstates(string search);
-        bool LinkRegion(UUID regionID, int estateID);
+        bool LinkRegion(UUID regionID, int estateID, string password);
         List<UUID> GetRegions(int estateID);
         bool DeleteEstate(int estateID);
     }

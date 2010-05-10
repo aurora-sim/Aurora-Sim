@@ -58,6 +58,14 @@ namespace OpenSim.Framework
             set { m_EstateName = value; }
         }
 
+        private string m_EstatePass = "";
+
+        public string EstatePass
+        {
+            get { return m_EstatePass; }
+            set { m_EstatePass = value; }
+        }
+
         private uint m_ParentEstateID = 1;
 
         public uint ParentEstateID
