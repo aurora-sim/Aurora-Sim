@@ -54,10 +54,7 @@ namespace Aurora.Modules
 		List<Scene> m_scenes = new List<Scene>();
         private IConfigSource m_config;
 		private Dictionary<string, string> RegionsHidden = new Dictionary<string, string>();
-		private double minutes = 30;
-        private double oneminute = 60000;
-		private Timer aTimer;
-        bool m_Enabled = true;
+		bool m_Enabled = true;
 
 		#region IRegionModule Members
 		public void Initialise(Scene scene, IConfigSource source)
@@ -82,15 +79,6 @@ namespace Aurora.Modules
 			scene.EventManager.OnNewClient += OnNewClient;
 		}
 
-		private void OnTimedEvent(object source, ElapsedEventArgs e)
-		{
-			m_log.DebugFormat("The Elapsed event was raised at {0}", DateTime.Now);
-			foreach(Scene scene in m_scenes)
-			{
-				scene.CreateTerrainTexture();
-			}
-		}
-
 		public void PostInitialise()
 		{
             if (!m_Enabled)
@@ -98,9 +86,6 @@ namespace Aurora.Modules
             //Needs the new grid frontend
             //RegionData = Aurora.DataManager.DataManager.GetDefaultRegionPlugin();
             //RegionsHidden = RegionData.GetRegionHidden();
-            aTimer = new System.Timers.Timer(oneminute /** minutes*/);
-			aTimer.Elapsed += new ElapsedEventHandler(OnTimedEvent);
-        	aTimer.Enabled = true;
 		}
 
 		public void Close()

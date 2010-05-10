@@ -108,7 +108,7 @@ namespace Aurora.DataManager.Frontends
         private ProfileInterests ReadInterestsInfoRow(string agentID)
         {
             ProfileInterests interests = new ProfileInterests();
-            List<string> results = GD.Query("PrincipalID", agentID, "profilegeneral", "WantToMask,WantToText,SkillsMask,SkillsText,Languages");
+            List<string> results = GD.Query("PrincipalID", agentID, "profilegeneral", "WantToMask,WantToText,CanDoMask,CanDoText,Languages");
 
             try
             {

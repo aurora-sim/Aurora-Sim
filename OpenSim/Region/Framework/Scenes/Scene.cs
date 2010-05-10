@@ -633,50 +633,12 @@ namespace OpenSim.Region.Framework.Scenes
             
             // Load region settings
             m_regInfo.RegionSettings = m_storageManager.DataStore.LoadRegionSettings(m_regInfo.RegionID);
-            if (EstateService != null)
-            {
-                m_regInfo.EstateSettings = EstateService.LoadEstateSettings(m_regInfo.RegionID, false);
-                if (m_regInfo.EstateSettings.EstateID == 0) // No record at all
-                {
-                    MainConsole.Instance.Output("Your region " + m_regInfo.RegionName + " is not part of an estate.");
-                    while (true)
-                    {
-                        string response = MainConsole.Instance.CmdPrompt("Do you wish to join an existing estate for " + m_regInfo.RegionName + "?", "no", new List<string>() { "yes", "no" });
-                        if (response == "no")
-                        {
-                            // Create a new estate
-                            m_regInfo.EstateSettings = EstateService.LoadEstateSettings(m_regInfo.RegionID, true);
+            FindEstateInfo();
 
-                            m_regInfo.EstateSettings.EstateName = MainConsole.Instance.CmdPrompt("New estate name", m_regInfo.EstateSettings.EstateName);
-                            m_regInfo.EstateSettings.EstatePass = Util.Md5Hash(MainConsole.Instance.CmdPrompt("New estate password (to keep others from joining your estate)", m_regInfo.EstateSettings.EstatePass));
-                            m_regInfo.EstateSettings.Save();
-                            break;
-                        }
-                        else
-                        {
-                            response = MainConsole.Instance.CmdPrompt("Estate name to join", "None");
-                            if (response == "None")
-                                continue;
-
-                            List<int> estateIDs = EstateService.GetEstates(response);
-                            if (estateIDs.Count < 1)
-                            {
-                                MainConsole.Instance.Output("The name you have entered matches no known estate. Please try again");
-                                continue;
-                            }
-                            string password = MainConsole.Instance.CmdPrompt("Password for the estate", "");
-                            int estateID = estateIDs[0];
-
-                            m_regInfo.EstateSettings = EstateService.LoadEstateSettings(estateID);
-
-                            if (EstateService.LinkRegion(m_regInfo.RegionID, estateID, password))
-                                break;
-
-                            MainConsole.Instance.Output("Joining the estate failed. Please try again.");
-                        }
-                    }
-                }
-            }
+            //Create the region flags database.
+            Aurora.DataManager.Frontends.GridFrontend GF = new Aurora.DataManager.Frontends.GridFrontend();
+            if (GF.GetRegionFlags(m_regInfo.RegionID) == (Aurora.DataManager.Frontends.GridRegionFlags)(-1))
+                GF.CreateRegion(m_regInfo.RegionID);
 
             MainConsole.Instance.Commands.AddCommand("region", false, "reload estate",
                                           "reload estate",
@@ -845,6 +807,54 @@ namespace OpenSim.Region.Framework.Scenes
             catch
             {
                 m_log.Warn("[SCENE]: Failed to load StartupConfig");
+            }
+        }
+
+        private void FindEstateInfo()
+        {
+            if (EstateService != null)
+            {
+                m_regInfo.EstateSettings = EstateService.LoadEstateSettings(m_regInfo.RegionID, false);
+                if (m_regInfo.EstateSettings.EstateID == 0) // No record at all
+                {
+                    MainConsole.Instance.Output("Your region " + m_regInfo.RegionName + " is not part of an estate.");
+                    while (true)
+                    {
+                        string response = MainConsole.Instance.CmdPrompt("Do you wish to join an existing estate for " + m_regInfo.RegionName + "?", "no", new List<string>() { "yes", "no" });
+                        if (response == "no")
+                        {
+                            // Create a new estate
+                            m_regInfo.EstateSettings = EstateService.LoadEstateSettings(m_regInfo.RegionID, true);
+
+                            m_regInfo.EstateSettings.EstateName = MainConsole.Instance.CmdPrompt("New estate name", m_regInfo.EstateSettings.EstateName);
+                            m_regInfo.EstateSettings.EstatePass = Util.Md5Hash(MainConsole.Instance.CmdPrompt("New estate password (to keep others from joining your estate)", m_regInfo.EstateSettings.EstatePass));
+                            m_regInfo.EstateSettings.Save();
+                            break;
+                        }
+                        else
+                        {
+                            response = MainConsole.Instance.CmdPrompt("Estate name to join", "None");
+                            if (response == "None")
+                                continue;
+
+                            List<int> estateIDs = EstateService.GetEstates(response);
+                            if (estateIDs.Count < 1)
+                            {
+                                MainConsole.Instance.Output("The name you have entered matches no known estate. Please try again");
+                                continue;
+                            }
+                            string password = MainConsole.Instance.CmdPrompt("Password for the estate", "");
+                            int estateID = estateIDs[0];
+
+                            m_regInfo.EstateSettings = EstateService.LoadEstateSettings(estateID);
+
+                            if (EstateService.LinkRegion(m_regInfo.RegionID, estateID, password))
+                                break;
+
+                            MainConsole.Instance.Output("Joining the estate failed. Please try again.");
+                        }
+                    }
+                }
             }
         }
 

@@ -3,13 +3,15 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 using OpenSim.Region.Framework.Interfaces;
-using Aurora.Framework;
 using OpenSim.Framework;
 using OpenSim.Framework.Console;
 using OpenSim.Region.Framework.Scenes;
 using OpenMetaverse;
 using Nini.Config;
 using log4net;
+using Aurora.Framework;
+using Aurora.DataManager;
+using Aurora.DataManager.Frontends;
 
 namespace Aurora.Modules
 {
@@ -19,6 +21,7 @@ namespace Aurora.Modules
 
         Scene m_scene;
         IProfileData PD;
+        GridFrontend GridFrontend;
 
         public void Initialise(IConfigSource source)
         {
@@ -26,7 +29,8 @@ namespace Aurora.Modules
 
         public void AddRegion(Scene scene)
         {
-            PD = Aurora.DataManager.DataManager.GetDefaultProfilePlugin();
+            GridFrontend = new GridFrontend();
+            PD = DataManager.DataManager.GetDefaultProfilePlugin();
             scene.RegisterModuleInterface<IEstateSettingsModule>(this);
             m_scene = scene;
             scene.AddCommand(this, "set regionsetting", "set regionsetting", "Sets a region setting for the given region. Valid params: Maturity - 0(PG),1(Mature),2(Adult); AddEstateBan,RemoveEstateBan,AddEstateManager,RemoveEstateManager - First name, Last name", SetRegionInfoOption);
@@ -58,7 +62,29 @@ namespace Aurora.Modules
             EstateSettings ES = m_scene.EstateService.LoadEstateSettings(m_scene.RegionInfo.RegionID, false);
             if (cmdparams[2] == "Maturity")
             {
-                m_scene.RegionInfo.RegionSettings.Maturity = Convert.ToInt32(cmdparams[3]);
+                GridRegionFlags flags = GridFrontend.GetRegionFlags(m_scene.RegionInfo.RegionID);
+                if (cmdparams[3] == "PG")
+                {
+                    flags = flags & GridRegionFlags.PG;
+                    m_scene.RegionInfo.RegionSettings.Maturity = 0;
+                }
+                else if (cmdparams[3] == "Mature")
+                {
+                    flags = flags & GridRegionFlags.Mature;
+                    m_scene.RegionInfo.RegionSettings.Maturity = 1;
+                }
+                else if (cmdparams[3] == "Adult")
+                {
+                    flags = flags & GridRegionFlags.Adult;
+                    m_scene.RegionInfo.RegionSettings.Maturity = 2;
+                }
+                else
+                {
+                    m_log.Warn("Your parameter did not match any existing parameters. Try PG, Mature, or Adult");
+                    return;
+                }
+                GridFrontend.SetRegionFlags(m_scene.RegionInfo.RegionID, flags);
+                m_scene.RegionInfo.RegionSettings.Save();
             }
             #endregion
             #region 4 Params needed
@@ -120,9 +146,9 @@ namespace Aurora.Modules
             }
             if (!ES.AllowDirectTeleport)
             {
-                IGenericData GenericData = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
-                List<string> Telehubs = GenericData.Query("regionUUID", ((Scene)scene).RegionInfo.RegionID.ToString(), "auroraregions", "telehubX,telehubY");
-                newPosition = new Vector3(Convert.ToInt32(Telehubs[0]), Convert.ToInt32(Telehubs[1]), Position.Z);
+                if (!GridFrontend.FindTelehub(m_scene.RegionInfo.RegionID, out newPosition))
+                    //Revert the position from 0,0,0 then since there is not one.
+                    newPosition = Position;
             }
             else
             {

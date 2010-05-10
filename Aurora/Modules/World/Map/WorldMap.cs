@@ -80,7 +80,10 @@ namespace Aurora.Modules
         private volatile bool threadrunning = false;
         private IConfigSource m_config;
         //private int CacheRegionsDistance = 256;
-		private Dictionary<string, string> RegionsHidden = new Dictionary<string, string>();
+        private double minutes = 30;
+        private double oneminute = 60000;
+        private System.Timers.Timer aTimer;
+        private Dictionary<string, string> RegionsHidden = new Dictionary<string, string>();
         
 		#region INonSharedRegionModule Members
         public virtual void Initialise(IConfigSource source)
@@ -138,7 +141,15 @@ namespace Aurora.Modules
             //This needs the new grid frontend first.
             //RegionData = Aurora.DataManager.DataManager.GetDefaultRegionPlugin();
             //RegionsHidden = RegionData.GetRegionHidden();
-		}
+            aTimer = new System.Timers.Timer(oneminute * minutes);
+            aTimer.Elapsed += OnTimedEvent;
+            aTimer.Enabled = true;
+        }
+
+        private void OnTimedEvent(object source, System.Timers.ElapsedEventArgs e)
+        {
+            m_scene.CreateTerrainTexture();
+        }
 
 
 		public virtual void Close()
