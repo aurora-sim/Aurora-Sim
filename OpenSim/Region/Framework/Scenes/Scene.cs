@@ -664,7 +664,7 @@ namespace OpenSim.Region.Framework.Scenes
                                 MainConsole.Instance.Output("The name you have entered matches no known estate. Please try again");
                                 continue;
                             }
-                            string password = MainConsole.Instance.CmdPrompt("Password for the estate", "None");
+                            string password = MainConsole.Instance.CmdPrompt("Password for the estate", "");
                             int estateID = estateIDs[0];
 
                             m_regInfo.EstateSettings = EstateService.LoadEstateSettings(estateID);
