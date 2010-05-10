@@ -566,7 +566,7 @@ namespace Aurora.Modules
             }
             IClientAPI remoteClient = (IClientAPI)sender;
             IUserProfileInfo UPI = ProfileFrontend.GetUserProfile(remoteClient.AgentId);
-            string notes;
+            string notes = "";
             UPI.Notes.TryGetValue(new UUID(args[0]), out notes);
             if (notes == null || notes == "")
             {
@@ -586,21 +586,12 @@ namespace Aurora.Modules
             }
             else
                 notes = queryNotes;
-            List<string> keys = new List<string>();
-            List<string> values = new List<string>();
-            keys.Add("notes");
-            values.Add(notes);
-            List<string> keys2 = new List<string>();
-            List<string> values2 = new List<string>();
-            keys2.Add("targetuuid");
-            keys2.Add("userid");
-            values2.Add(queryTargetID.ToString());
-            values2.Add(remoteClient.AgentId.ToString());
-            if(UPI.Notes.Count == 0)
-                GenericData.Insert("profilenotes", new string[] { remoteClient.AgentId.ToString(), queryTargetID.ToString(), notes, UUID.Random().ToString()});
-            else
-                GenericData.Update("profilenotes", values.ToArray(), keys.ToArray(), keys2.ToArray(), values2.ToArray());
-            ProfileFrontend.RemoveFromCache(remoteClient.AgentId);
+            string oldNotes;
+            if (UPI.Notes.TryGetValue(queryTargetID, out oldNotes))
+                UPI.Notes.Remove(queryTargetID);
+            
+            UPI.Notes.Add(queryTargetID, notes);
+            ProfileFrontend.UpdateUserNotes(remoteClient.AgentId, queryTargetID,notes, UPI);
         }
         public void AvatarInterestsUpdate(IClientAPI remoteClient, uint wantmask, string wanttext, uint skillsmask, string skillstext, string languages)
         {
@@ -936,8 +927,9 @@ namespace Aurora.Modules
             #region Telehub
             if (itemtype == (uint)OpenMetaverse.GridItemType.Telehub)
             {
-                List<string> Telehubs = GenericData.Query("","","auroraregions","telehubX,telehubY,regionUUID");
-                int i = 0;
+                GridFrontend GF = new GridFrontend();
+
+                /*int i = 0;
                 List<string> TelehubsX = new List<string>();
                 List<string> TelehubsY = new List<string>();
                 List<string> RegionUUIDs = new List<string>();
@@ -982,7 +974,7 @@ namespace Aurora.Modules
                 {
                     remoteClient.SendMapItemReply(mapitems.ToArray(), itemtype, flags);
                     mapitems.Clear();
-                }
+                }*/
             }
 
 			#endregion

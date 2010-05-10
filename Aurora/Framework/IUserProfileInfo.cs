@@ -175,6 +175,8 @@ namespace Aurora.Framework
         /// <summary>
         /// All of the notes of the user
         /// </summary>
+        /// UUID - target agent
+        /// string - notes
         public Dictionary<UUID, string> Notes;
 
         /// <summary>

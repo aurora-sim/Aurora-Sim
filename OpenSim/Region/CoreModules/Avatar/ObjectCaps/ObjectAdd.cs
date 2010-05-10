@@ -158,7 +158,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
             Aurora.DataManager.Frontends.AgentFrontend AgentFrontend = new Aurora.DataManager.Frontends.AgentFrontend();
             IAgentInfo IAI = AgentFrontend.GetAgent(agentID);
             IAI.Language = rm["language"].AsString();
-            IAI.LanguageIsPublic = bool.Parse(rm["language_is_public"].AsString());
+            IAI.LanguageIsPublic = int.Parse(rm["language_is_public"].AsString()) == 1;
             AgentFrontend.UpdateAgent(IAI);
             responsedata["str_response_string"] = "";
             return responsedata;

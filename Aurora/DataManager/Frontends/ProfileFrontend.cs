@@ -126,6 +126,17 @@ namespace Aurora.DataManager.Frontends
             return interests;
         }
 
+        public void UpdateUserNotes(UUID agentID, UUID targetAgentID, string notes, IUserProfileInfo UPI)
+        {
+            if (UPI.Notes.Count == 0)
+                GD.Insert("profilenotes", new object[] { agentID, targetAgentID, notes, UUID.Random().ToString() });
+            else
+                GD.Update("profilenotes", new object[] { notes }, new string[]{"notes"}, new string[]{"userid","targetuuid"}, new object[]{agentID,targetAgentID});
+            RemoveFromCache(agentID);
+            UserProfilesCache.Add(agentID, UPI);
+
+        }
+
         public IUserProfileInfo GetUserProfile(UUID agentID)
         {
             IUserProfileInfo UserProfile = new IUserProfileInfo();
@@ -173,8 +184,8 @@ namespace Aurora.DataManager.Frontends
                 UserProfile.AArchiveName = userauthReturns[12];
                 UserProfile.IsNewUser = Convert.ToBoolean(userauthReturns[13]);
                 UserProfile.Created = Convert.ToInt32(userauthReturns[14]);
-
-                UserProfilesCache.Add(agentID, UserProfile);
+                if (!UserProfilesCache.ContainsKey(agentID))
+                    UserProfilesCache.Add(agentID, UserProfile);
                 return UserProfile;
             }
         }
