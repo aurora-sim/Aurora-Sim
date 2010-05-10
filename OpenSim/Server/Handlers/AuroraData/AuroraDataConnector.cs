@@ -52,8 +52,8 @@ namespace OpenSim.Server.Handlers.AuroraData
                     {
                         case "GetProfile":
                             IUserProfileInfo UPI = ProfileFrontend.GetUserProfile(new UUID((string)requestData["TargetUser"]));
-                            OSDMap profile = UPI.Pack();
-                            Hash["profile"] = new ArrayList(new string[]{profile.ToString()});
+                            //OSDMap profile = UPI.Pack();
+                            //Hash["profile"] = new ArrayList(new string[]{profile.ToString()});
                             break;
                     }
                 }

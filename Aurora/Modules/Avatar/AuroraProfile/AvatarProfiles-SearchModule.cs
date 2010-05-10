@@ -567,12 +567,12 @@ namespace Aurora.Modules
             IClientAPI remoteClient = (IClientAPI)sender;
             IUserProfileInfo UPI = ProfileFrontend.GetUserProfile(remoteClient.AgentId);
             string notes = "";
-            UPI.Notes.TryGetValue(new UUID(args[0]), out notes);
+            UPI.Notes.TryGetValue(args[0], out notes);
             if (notes == null || notes == "")
             {
                 AvatarNotesUpdate(remoteClient, new UUID(args[0]), "");
                 UPI = ProfileFrontend.GetUserProfile(remoteClient.AgentId);
-                UPI.Notes.TryGetValue(new UUID(args[0]), out notes);
+                UPI.Notes.TryGetValue(args[0], out notes);
             }
             remoteClient.SendAvatarNotesReply(new UUID(args[0]), notes);
         }
@@ -587,10 +587,10 @@ namespace Aurora.Modules
             else
                 notes = queryNotes;
             string oldNotes;
-            if (UPI.Notes.TryGetValue(queryTargetID, out oldNotes))
-                UPI.Notes.Remove(queryTargetID);
+            if (UPI.Notes.TryGetValue(queryTargetID.ToString(), out oldNotes))
+                UPI.Notes.Remove(queryTargetID.ToString());
             
-            UPI.Notes.Add(queryTargetID, notes);
+            UPI.Notes.Add(queryTargetID.ToString(), notes);
             ProfileFrontend.UpdateUserNotes(remoteClient.AgentId, queryTargetID,notes, UPI);
         }
         public void AvatarInterestsUpdate(IClientAPI remoteClient, uint wantmask, string wanttext, uint skillsmask, string skillstext, string languages)

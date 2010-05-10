@@ -154,12 +154,12 @@ namespace Aurora.DataManager.Frontends
 
                 #region Notes
                 List<string> notesReturns = GD.Query("userid", agentID.ToString(), "profilenotes", "targetuuid,notes");
-                Dictionary<UUID, string> Notes = new Dictionary<UUID, string>();
+                Dictionary<string, string> Notes = new Dictionary<string, string>();
                 if (notesReturns.Count != 0)
                 {
                     for (int i = 0; i < notesReturns.Count; i = i + 2)
                     {
-                        Notes.Add(new UUID(notesReturns[i]), notesReturns[i + 1]);
+                        Notes.Add(notesReturns[i], notesReturns[i + 1]);
                     }
                 }
                 UserProfile.Notes = Notes;
