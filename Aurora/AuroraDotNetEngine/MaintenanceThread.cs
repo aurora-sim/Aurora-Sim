@@ -34,6 +34,7 @@ using System.Threading;
 using log4net;
 using OpenSim.Framework;
 using Amib.Threading;
+using Aurora.Framework;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
@@ -43,13 +44,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
     public class MaintenanceThread
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
+        private IScriptDataConnector ScriptFrontend;
         private ScriptEngine m_ScriptEngine;
         
         public MaintenanceThread(ScriptEngine Engine)
         {
             AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(CurrentDomain_AssemblyResolve);
             m_ScriptEngine = Engine;
+            ScriptFrontend = Aurora.DataManager.DataManager.IScriptDataConnector;
             for (int i = 0; i <= Engine.NumberOfEventQueueThreads; i++)
             {
                 EventQueue eqtc = new EventQueue(m_ScriptEngine, Engine.SleepTime);
@@ -129,7 +131,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public void RemoveState(ScriptData ID)
         {
-            ID.GenericData.Delete("auroraDotNetStateSaves", new string[] { "ItemID" }, new string[] { ID.ItemID.ToString() });
+            ScriptFrontend.DeleteStateSave(ID.ItemID);
         }
 
         #endregion

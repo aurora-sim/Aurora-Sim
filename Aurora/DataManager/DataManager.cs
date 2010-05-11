@@ -87,6 +87,7 @@ namespace Aurora.DataManager
         public static IProfileConnector IProfileConnector;
         public static IGridConnector IGridConnector;
         public static IAgentConnector IAgentConnector;
+        public static IScriptDataConnector IScriptDataConnector;
 
 
         #endregion

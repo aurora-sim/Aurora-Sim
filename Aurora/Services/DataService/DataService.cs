@@ -31,11 +31,13 @@ namespace Aurora.Services.DataService
             
             PluginModule = m_config.GetString("PluginModule", "");
             ConnectionString = m_config.GetString("ConnectionString", "");
+            IGenericData ScriptSaveDataConnector = null;
             if (PluginModule == "MySQL")
             {
                 DataManager.DataManager.DataSessionProvider = new DataSessionProvider(DataManagerTechnology.MySql, ConnectionString);
                 MySQLDataLoader GenericData = new MySQLDataLoader();
                 GenericData.ConnectToDatabase(ConnectionString);
+                ScriptSaveDataConnector = GenericData;
 
                 var migrationManager = new MigrationManager(DataManager.DataManager.DataSessionProvider, GenericData);
                 migrationManager.DetermineOperation();
@@ -63,7 +65,8 @@ namespace Aurora.Services.DataService
                 DataManager.DataManager.StateSaveDataSessionProvider = new DataSessionProvider(DataManagerTechnology.SQLite, ScriptConnectionString);
                 SQLiteStateSaver ScriptSaverData = new SQLiteStateSaver();
                 ScriptSaverData.ConnectToDatabase(ScriptConnectionString);
-
+                ScriptSaveDataConnector = ScriptSaverData;
+                
                 var migrationManager = new MigrationManager(DataManager.DataManager.DataSessionProvider, GenericData);
                 migrationManager.DetermineOperation();
                 migrationManager.ExecuteOperation();
@@ -85,22 +88,23 @@ namespace Aurora.Services.DataService
                 Aurora.DataManager.DataManager.SetDefaultEstatePlugin(EstateData);
             }
 
+            DataManager.DataManager.IScriptDataConnector = new LocalScriptDataConnector(ScriptSaveDataConnector);
             string Connector = m_config.GetString("Connector", "LocalConnector");
-            //if (Connector == "LocalConnector")
-            //{
+            if (Connector == "LocalConnector")
+            {
                 DataManager.DataManager.IAgentConnector = new LocalAgentConnector();
                 DataManager.DataManager.IGridConnector = new LocalGridConnector();
                 DataManager.DataManager.IProfileConnector = new LocalProfileConnector();
-            //    return;
-            //}
+                return;
+            }
             if (Connector != "RemoteConnector")
             {
                 m_log.Error("[AuroraDataService]: No Connector found with that name!");
                 return;
             }
             string RemoteConnectionString = m_config.GetString("RemoteServerURI", "");
-            //DataManager.DataManager.IAgentConnector = new RemoteAgentConnector(RemoteConnectionString);
-            //DataManager.DataManager.IGridConnector = new RemoteGridConnector(RemoteConnectionString);
+            DataManager.DataManager.IAgentConnector = new RemoteAgentConnector(RemoteConnectionString);
+            DataManager.DataManager.IGridConnector = new RemoteGridConnector(RemoteConnectionString);
             DataManager.DataManager.IProfileConnector = new RemoteProfileConnector(RemoteConnectionString);
         }
 

@@ -62,15 +62,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             m_ScriptEngine = engine;
             World = m_ScriptEngine.World;
-            /*foreach (IGenericData GD in Aurora.DataManager.DataManager.AllGenericPlugins)
-            {
-                if(GD.Identifier == "SQLiteStateSaver")
-                {
-                    GenericData = GD;
-                }
-            }*/
-            if (GenericData == null)
-                GenericData = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
+            ScriptFrontend = Aurora.DataManager.DataManager.IScriptDataConnector;
         }
 
         #endregion
@@ -96,7 +88,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public Dictionary<string, IScriptApi> Apis = new Dictionary<string, IScriptApi>();
         public Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> LineMap;
         public ISponsor ScriptSponsor;
-        public IGenericData GenericData;
 
         public SceneObjectPart part;
 
@@ -116,6 +107,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public DetectParams[] LastDetectParams;
         public bool m_startedFromSavedState = false;
         public Object[] PluginData = new Object[0];
+        private StateSave LastStateSave = null;
+        private IScriptDataConnector ScriptFrontend;
         
         #endregion
 
@@ -395,7 +388,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             AssemblyName = Path.Combine("ScriptEngines", Path.Combine(
                     m_ScriptEngine.World.RegionInfo.RegionID.ToString(),
                     FilePrefix + "_compiled_" + ItemID.ToString() + ".dll"));
-            
+         
             //Macrothreading
             #region Class and interface reader
 
@@ -487,15 +480,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //Try to find a previously compiled script in this instance
             ScriptData PreviouslyCompiledID = (ScriptData)m_ScriptEngine.ScriptProtection.TryGetPreviouslyCompiledScript(Source);
 
-            if (!reupload && GenericData.Query("ItemID", ItemID.ToString(), "auroraDotNetStateSaves", "*").Count > 1 && Loading)
+            if (!reupload && Loading)
             {
                 //Retrive the needed parts for a compileless start from the state save.
-                FindRequiredForCompilelessFromItemID();
-            }
-            else if (!reupload && GenericData.Query("UserInventoryItemID", UserInventoryItemID.ToString(), "auroraDotNetStateSaves", "*").Count > 1 && Loading && UserInventoryItemID != UUID.Zero)
-            {
-                //Retrive the needed parts for a compileless start from the state save.
-                FindRequiredForCompilelessFromInventoryID();
+                LastStateSave = ScriptFrontend.GetStateSave(ItemID, UserInventoryItemID);
+                if(LastStateSave != null)
+                    FindRequiredForCompileless();
             }
             else
             {
@@ -580,24 +570,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             SetApis();
 
             //Now do the full state save finding now that we have an app domain.
-            if (!reupload && GenericData.Query("ItemID", ItemID.ToString(), "auroraDotNetStateSaves", "*").Count > 1 && Loading)
+            if (!reupload && LastStateSave != null && Loading)
             {
-                DeserializeDatabaseFromItemID();
-
-                AsyncCommandManager.CreateFromData(m_ScriptEngine,
-                    localID, ItemID, part.UUID,
-                    PluginData);
-
-                // we get new rez events on sim restart, too
-                // but if there is state, then we fire the change
-                // event
-
-                // We loaded state, don't force a re-save
-                m_startedFromSavedState = true;
-            }
-            else if (!reupload && GenericData.Query("UserInventoryItemID", UserInventoryItemID.ToString(), "auroraDotNetStateSaves", "*").Count > 1 && Loading && UserInventoryItemID != UUID.Zero)
-            {
-                DeserializeDatabaseFromInventoryID();
+                DeserializeDatabase();
 
                 AsyncCommandManager.CreateFromData(m_ScriptEngine,
                     localID, ItemID, part.UUID,
@@ -664,98 +639,44 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <summary>
         /// Finds all the required parts so that we don't have to compile the script.
         /// </summary>
-        public void FindRequiredForCompilelessFromItemID()
+        public void FindRequiredForCompileless()
         {
-            List<string> StateSave = GenericData.Query("ItemID", ItemID.ToString(), "auroraDotNetStateSaves", "ClassID, LineMap, AssemblyName");
-            ClassID = StateSave[0];
-            LineMap = OpenSim.Region.ScriptEngine.Shared.CodeTools.Compiler.ReadMapFileFromString(StateSave[1]);
-            AssemblyName = StateSave[2];
+            ClassID = LastStateSave.ClassName;
+            LineMap = OpenSim.Region.ScriptEngine.Shared.CodeTools.Compiler.ReadMapFileFromString(LastStateSave.LineMap);
+            AssemblyName = LastStateSave.AssemblyName;
         }
 
-        /// <summary>
-        /// Finds all the required parts so that we don't have to compile the script.
-        /// </summary>
-        public void FindRequiredForCompilelessFromInventoryID()
-        {
-            List<string> StateSave = GenericData.Query("UserInventoryItemID", UserInventoryItemID.ToString(), "auroraDotNetStateSaves", "ClassID, LineMap, AssemblyName");
-            ClassID = StateSave[0];
-            LineMap = OpenSim.Region.ScriptEngine.Shared.CodeTools.Compiler.ReadMapFileFromString(StateSave[1]);
-            AssemblyName = StateSave[2];
-        }
-
-        /// <summary>
-        /// This pulls everything from the state save and sets the script back up to its previous state.
-        /// </summary>
-        public void DeserializeDatabaseFromItemID()
-        {
-            List<string> StateSave = GenericData.Query("ItemID", ItemID.ToString(), "auroraDotNetStateSaves", "*");
-            Deserialize(StateSave);
-        }
-
-        /// <summary>
-        /// This pulls everything from the state save and sets the script back up to its previous state.
-        /// </summary>
-        public void DeserializeDatabaseFromInventoryID()
-        {
-            List<string> StateSave = GenericData.Query("UserInventoryItemID", UserInventoryItemID.ToString(), "auroraDotNetStateSaves", "*");
-            Deserialize(StateSave);
-        }
-
-        private void Deserialize(List<string> StateSave)
+        private void DeserializeDatabase()
         {
             Dictionary<string, object> vars = new Dictionary<string, object>();
-            State = StateSave[0];
-            Running = bool.Parse(StateSave[4]);
+            State = LastStateSave.State;
+            Running = LastStateSave.Running;
 
-            string varsmap = StateSave[5];
-
-            foreach (string var in varsmap.Split(';'))
-            {
-                if (var == "")
-                    continue;
-                string value = var.Split(',')[1].Replace("\n", "");
-                vars.Add(var.Split(',')[0], (object)value);
-            }
             if (vars.Count != 0)
-            {
-                Script.SetVars(vars);
-            }
+                Script.SetVars((Dictionary<string, object>)LastStateSave.Variables);
 
-            List<object> plugins = new List<object>();
-            object[] pluginsSaved = StateSave[6].Split(',');
-            if (pluginsSaved.Length != 1)
+            PluginData = (object[])LastStateSave.Plugins;
+            if (LastStateSave.Permissions != "")
             {
-                foreach (object plugin in pluginsSaved)
-                {
-                    if (plugin == null)
-                        continue;
-                    plugins.Add(plugin);
-                }
-            }
-            PluginData = plugins.ToArray();
-            if (StateSave[9] != "")
-            {
-                InventoryItem.PermsMask = int.Parse(StateSave[9].Split(',')[0], NumberStyles.Integer, Culture.NumberFormatInfo);
-                InventoryItem.PermsGranter = new UUID(StateSave[9].Split(',')[1]);
+                InventoryItem.PermsMask = int.Parse(LastStateSave.Permissions.Split(',')[0], NumberStyles.Integer, Culture.NumberFormatInfo);
+                InventoryItem.PermsGranter = new UUID(LastStateSave.Permissions.Split(',')[1]);
                 m_ScriptEngine.PostScriptEvent(ItemID, new EventParams(
                             "run_time_permissions", new Object[] {
                             new LSL_Types.LSLInteger(InventoryItem.PermsMask) },
                             new DetectParams[0]));
             }
-            double minEventDelay = 0.0;
-            double.TryParse(StateSave[10], NumberStyles.Float, Culture.NumberFormatInfo, out minEventDelay);
-            EventDelayTicks = (long)minEventDelay;
-            AssemblyName = StateSave[11];
-            Disabled = Convert.ToBoolean(StateSave[12]);
-            UserInventoryItemID = UUID.Parse(StateSave[13]);
+            EventDelayTicks = (long)LastStateSave.MinEventDelay;
+            AssemblyName = LastStateSave.AssemblyName;
+            Disabled = LastStateSave.Disabled;
+            UserInventoryItemID = LastStateSave.UserInventoryID;
             // Add it to our script memstruct
             m_ScriptEngine.UpdateScriptInstanceData(this);
 
-            if (StateSave[8] != "")
+            if (LastStateSave.Queue != "")
             {
                 #region Queue
                 XmlDocument doc = new XmlDocument();
-                doc.LoadXml(StateSave[8]);
+                doc.LoadXml(LastStateSave.Queue);
                 XmlNode mainNode = doc.FirstChild;
                 XmlNodeList itemL = mainNode.ChildNodes;
                 foreach (XmlNode item in itemL)
@@ -878,12 +799,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// </summary>
         public void SerializeDatabase()
         {
-            List<string> Insert = new List<string>();
-            Insert.Add(State);
-            Insert.Add(ItemID.ToString());
+            StateSave Insert = new StateSave();
+            Insert.State = State;
+            Insert.ItemID = ItemID;
             string source = Source.Replace("\n", " ");
-            source = source.Replace("'", " ");
-            Insert.Add(source);
+            Insert.Source = source.Replace("'", " ");
             //LineMap
             LSL_Types.LSLString map = String.Empty;
             foreach (KeyValuePair<KeyValuePair<int, int>, KeyValuePair<int, int>> kvp in LineMap)
@@ -892,9 +812,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 KeyValuePair<int, int> v = kvp.Value;
                 map += String.Format("{0},{1},{2},{3};", k.Key, k.Value, v.Key, v.Value);
             }
-            Insert.Add(map);
+            Insert.LineMap = map;
             
-            Insert.Add(Running.ToString());
+            Insert.Running = Running;
             //Vars
             Dictionary<string, Object> vars = new Dictionary<string,object>();
             if (Script != null)
@@ -904,15 +824,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 varsmap += var.Key + "," + var.Value + "\n";
             }
-            Insert.Add(varsmap);
+            Insert.Variables = varsmap;
             //Plugins
             object[] Plugins = AsyncCommandManager.GetSerializationData(m_ScriptEngine, ItemID);
             string plugins = "";
             foreach (object plugin in Plugins)
                 plugins += plugin + ",";
-            Insert.Add(plugins);
+            Insert.Plugins = plugins;
 
-            Insert.Add(ClassID);
+            Insert.ClassName = ClassID;
             //Queue
             #region Queue
             XmlDocument xmldoc = new XmlDocument();
@@ -1009,7 +929,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 i++;
             }
             mainNode.AppendChild(queue);
-            Insert.Add(mainNode.InnerXml);
+            Insert.Queue = mainNode.InnerXml;
 
             #endregion
 
@@ -1020,44 +940,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 perms += InventoryItem.PermsGranter.ToString() + "," + InventoryItem.PermsMask.ToString();
 
             }
-            Insert.Add(perms);
+            Insert.Permissions = perms;
             
-            Insert.Add(EventDelayTicks.ToString());
-            Insert.Add(AssemblyName);
-            Insert.Add(Disabled.ToString());
-            Insert.Add(UserInventoryItemID.ToString());
-            try
-            {
-                GenericData.Insert("auroraDotNetStateSaves", Insert.ToArray());
-            }
-            catch (Exception)
-            {
-                //Needs to be updated then
-                List<string> Keys = new List<string>();
-                Keys.Add("State");
-                Keys.Add("ItemID");
-                Keys.Add("Source");
-                Keys.Add("LineMap");
-                Keys.Add("Running");
-                Keys.Add("Variables");
-                Keys.Add("Plugins");
-                Keys.Add("ClassID");
-                Keys.Add("Queue");
-                Keys.Add("Permissions");
-                Keys.Add("MinEventDelay");
-                Keys.Add("AssemblyName");
-                Keys.Add("Disabled");
-                Keys.Add("UserInventoryItemID");
-                try
-                {
-                    GenericData.Update("auroraDotNetStateSaves", Insert.ToArray(), Keys.ToArray(), new string[] { "ItemID" }, new string[] { ItemID.ToString() });
-                }
-                catch (Exception ex)
-                {
-                    //Throw this one... Something is very wrong.
-                    throw ex;
-                }
-            }
+            Insert.MinEventDelay = EventDelayTicks;
+            Insert.AssemblyName = AssemblyName;
+            Insert.Disabled = Disabled;
+            Insert.UserInventoryID = UserInventoryItemID;
+            ScriptFrontend.SaveStateSave(Insert);
         }
 
         #region Helpers

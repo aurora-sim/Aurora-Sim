@@ -798,10 +798,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public bool SetXMLState(UUID itemID, string xml)
         {
-            ScriptData instance = GetScriptByItemID(itemID);
-            if (instance == null)
-                return false;
-            instance.DeserializeDatabaseFromItemID();
             return true;
         }
         #endregion
