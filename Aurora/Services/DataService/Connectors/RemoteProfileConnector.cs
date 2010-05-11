@@ -44,7 +44,46 @@ namespace Aurora.Services.DataService
 
         public void UpdateUserNotes(UUID agentID, UUID targetAgentID, string notes, IUserProfileInfo UPI)
         {
-            throw new NotImplementedException();
+            Dictionary<string, object> sendData = new Dictionary<string, object>();
+
+            sendData["PRINCIPALID"] = agentID.ToString();
+            sendData["TARGETID"] = targetAgentID.ToString();
+            sendData["NOTES"] = notes.ToString();
+            sendData["PROFILE"] = UPI.ToKeyValuePairs();
+            sendData["METHOD"] = "updateusernotes";
+
+            string reqString = ServerUtils.BuildQueryString(sendData);
+
+            try
+            {
+                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                        m_ServerURI + "/auroradata",
+                        reqString);
+                if (reply != string.Empty)
+                {
+                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+
+                    if (replyData != null)
+                    {
+                        if (replyData.ContainsKey("result") && (replyData["result"].ToString().ToLower() == "null"))
+                        {
+                            m_log.DebugFormat("[AuroraRemoteProfileConnector]: UpdateUserNotes {0} received null response",
+                                UPI.PrincipalID);
+                        }
+                    }
+
+                    else
+                    {
+                        m_log.DebugFormat("[AuroraRemoteProfileConnector]: UpdateUserNotes {0} received null response",
+                            UPI.PrincipalID);
+                    }
+
+                }
+            }
+            catch (Exception e)
+            {
+                m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.Message);
+            }
         }
 
         public IUserProfileInfo GetUserProfile(UUID PrincipalID)
@@ -67,10 +106,8 @@ namespace Aurora.Services.DataService
 
                     if (replyData != null)
                     {
-                        if (replyData.ContainsKey("result") && (replyData["result"].ToString().ToLower() == "null"))
-                        {
+                        if (!replyData.ContainsKey("result"))
                             return null;
-                        }
 
                         
                         Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
@@ -105,17 +142,130 @@ namespace Aurora.Services.DataService
 
         public bool UpdateUserProfile(IUserProfileInfo Profile)
         {
-            throw new NotImplementedException();
+            Dictionary<string, object> sendData = new Dictionary<string, object>();
+
+            sendData["PRINCIPALID"] = Profile.PrincipalID.ToString();
+            sendData["PROFILE"] = Profile.ToKeyValuePairs();
+            sendData["METHOD"] = "updateprofile";
+
+            string reqString = ServerUtils.BuildQueryString(sendData);
+
+            try
+            {
+                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                        m_ServerURI + "/auroradata",
+                        reqString);
+                if (reply != string.Empty)
+                {
+                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+
+                    if (replyData != null)
+                    {
+                        if (replyData.ContainsKey("result") && (replyData["result"].ToString().ToLower() == "null"))
+                        {
+                            m_log.DebugFormat("[AuroraRemoteProfileConnector]: UpdateProfile {0} received null response",
+                                Profile.PrincipalID);
+                            return false;
+                        }
+                    }
+
+                    else
+                    {
+                        m_log.DebugFormat("[AuroraRemoteProfileConnector]: UpdateProfile {0} received null response",
+                            Profile.PrincipalID);
+                        return false;
+                    }
+
+                }
+                return true;
+            }
+            catch (Exception e)
+            {
+                m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.Message);
+            }
+            return false;
         }
 
-        public void CreateNewProfile(UUID UUID, string firstName, string lastName)
+        public void CreateNewProfile(UUID PrincipalID)
         {
-            throw new NotImplementedException();
+            Dictionary<string, object> sendData = new Dictionary<string, object>();
+
+            sendData["PRINCIPALID"] = PrincipalID.ToString();
+            sendData["METHOD"] = "createprofile";
+
+            string reqString = ServerUtils.BuildQueryString(sendData);
+
+            try
+            {
+                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                        m_ServerURI + "/auroradata",
+                        reqString);
+                if (reply != string.Empty)
+                {
+                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+
+                    if (replyData != null)
+                    {
+                        if (replyData.ContainsKey("result") && (replyData["result"].ToString().ToLower() == "null"))
+                        {
+                            m_log.DebugFormat("[AuroraRemoteProfileConnector]: CreateNewProfile {0} received null response",
+                                PrincipalID);
+                        }
+                    }
+
+                    else
+                    {
+                        m_log.DebugFormat("[AuroraRemoteProfileConnector]: CreateNewProfile {0} received null response",
+                            PrincipalID);
+                    }
+
+                }
+            }
+            catch (Exception e)
+            {
+                m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.Message);
+            }
         }
 
-        public void RemoveFromCache(UUID ID)
+        public void RemoveFromCache(UUID PrincipalID)
         {
-            throw new NotImplementedException();
+            Dictionary<string, object> sendData = new Dictionary<string, object>();
+
+            sendData["PRINCIPALID"] = PrincipalID.ToString();
+            sendData["METHOD"] = "removefromcache";
+
+            string reqString = ServerUtils.BuildQueryString(sendData);
+
+            try
+            {
+                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                        m_ServerURI + "/auroradata",
+                        reqString);
+                if (reply != string.Empty)
+                {
+                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+
+                    if (replyData != null)
+                    {
+                        if (replyData.ContainsKey("result") && (replyData["result"].ToString().ToLower() == "null"))
+                        {
+                            m_log.DebugFormat("[AuroraRemoteProfileConnector]: RemoveFromCache {0} received null response",
+                                PrincipalID);
+                        }
+                    }
+
+                    else
+                    {
+                        m_log.DebugFormat("[AuroraRemoteProfileConnector]: RemoveFromCache {0} received null response",
+                            PrincipalID);
+                    }
+
+                }
+            }
+            catch (Exception e)
+            {
+                m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.Message);
+            }
         }
 
         #endregion

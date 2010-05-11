@@ -266,24 +266,26 @@ namespace Aurora.Framework
             Dictionary<string, object> result = new Dictionary<string, object>();
             result["PrincipalID"] = PrincipalID.ToString();
             result["AllowPublish"] = AllowPublish.ToString();
-            result["MaturePublish"] = MaturePublish;
+            result["MaturePublish"] = MaturePublish.ToString();
             result["WantToMask"] = Interests.WantToMask;
             result["WantToText"] = Interests.WantToText;
             result["CanDoMask"] = Interests.CanDoMask;
             result["CanDoText"] = Interests.CanDoText;
             result["Languages"] = Interests.Languages;
             result["AboutText"] = AboutText.ToString();
-            result["FirstLifeImage"] = FirstLifeImage;
+            result["FirstLifeImage"] = FirstLifeImage.ToString();
             result["FirstLifeAboutText"] = FirstLifeAboutText;
-            result["Image"] = Image;
+            result["Image"] = Image.ToString();
             result["WebURL"] = WebURL;
-            result["Created"] = Created;
-            result["Partner"] = Partner;
+            result["Created"] = Created.ToString();
+            result["Partner"] = Partner.ToString();
 
             //Classifieds
             Dictionary<string, object> ClassifiedsKVP = new Dictionary<string, object>();
             foreach(Classified CFI in Classifieds)
             {
+                if (CFI.ClassifiedUUID == "")
+                    continue;
                 Dictionary<string, object> Classified = new Dictionary<string, object>();
                 Classified["Category"] = CFI.Category;
                 Classified["ClassifiedFlags"] = CFI.ClassifiedFlags;
@@ -308,6 +310,8 @@ namespace Aurora.Framework
             Dictionary<string, object> PicksKVP = new Dictionary<string, object>();
             foreach (ProfilePickInfo PPI in Picks)
             {
+                if (PPI.pickuuid == "")
+                    continue;
                 Dictionary<string, object> Pick = new Dictionary<string, object>();
                 Pick["Category"] = PPI.creatoruuid;
                 Pick["ClassifiedFlags"] = PPI.description;
@@ -334,8 +338,8 @@ namespace Aurora.Framework
 
         public IUserProfileInfo(Dictionary<string, object> main)
         {
-            AllowPublish = bool.Parse(main["AllowPublish"].ToString());
-            MaturePublish = bool.Parse(main["MaturePublish"].ToString());
+            AllowPublish = Convert.ToBoolean(main["AllowPublish"].ToString());
+            MaturePublish = Convert.ToBoolean(main["MaturePublish"].ToString());
 
             //Interests
             Interests = new ProfileInterests();
@@ -349,56 +353,65 @@ namespace Aurora.Framework
             //Picks
             Dictionary<string, Dictionary<string, object>> AllPicksKVP = main["Picks"] as Dictionary<string, Dictionary<string, object>>;
             List<ProfilePickInfo> AllPicks = new List<ProfilePickInfo>();
-            foreach (Dictionary<string, object> PPI in AllPicksKVP.Values)
+            if (AllPicksKVP != null)
             {
-                ProfilePickInfo Pick = new ProfilePickInfo();
-                Pick.creatoruuid = PPI["creatoruuid"].ToString();
-                Pick.description = PPI["description"].ToString();
-                Pick.enabled = PPI["enabled"].ToString();
-                Pick.name = PPI["name"].ToString();
-                Pick.originalname = PPI["originalname"].ToString();
-                Pick.parceluuid = PPI["parceluuid"].ToString();
-                Pick.pickuuid = PPI["pickuuid"].ToString();
-                Pick.posglobal = PPI["posglobal"].ToString();
-                Pick.simname = PPI["simname"].ToString();
-                Pick.snapshotuuid = PPI["snapshotuuid"].ToString();
-                Pick.sortorder = PPI["sortorder"].ToString();
-                Pick.toppick = PPI["toppick"].ToString();
-                Pick.user = PPI["user"].ToString();
-                AllPicks.Add(Pick);
+                foreach (Dictionary<string, object> PPI in AllPicksKVP.Values)
+                {
+                    ProfilePickInfo Pick = new ProfilePickInfo();
+                    Pick.creatoruuid = PPI["creatoruuid"].ToString();
+                    Pick.description = PPI["description"].ToString();
+                    Pick.enabled = PPI["enabled"].ToString();
+                    Pick.name = PPI["name"].ToString();
+                    Pick.originalname = PPI["originalname"].ToString();
+                    Pick.parceluuid = PPI["parceluuid"].ToString();
+                    Pick.pickuuid = PPI["pickuuid"].ToString();
+                    Pick.posglobal = PPI["posglobal"].ToString();
+                    Pick.simname = PPI["simname"].ToString();
+                    Pick.snapshotuuid = PPI["snapshotuuid"].ToString();
+                    Pick.sortorder = PPI["sortorder"].ToString();
+                    Pick.toppick = PPI["toppick"].ToString();
+                    Pick.user = PPI["user"].ToString();
+                    AllPicks.Add(Pick);
+                }
             }
             Picks = AllPicks.ToArray();
 
             //Classifieds
             Dictionary<string, Dictionary<string, object>> AllClassifiedsKVP = main["Classifieds"] as Dictionary<string, Dictionary<string, object>>;
             List<Classified> AllClassifieds = new List<Classified>();
-            foreach (Dictionary<string, object> PPI in AllPicksKVP.Values)
+            if (AllPicksKVP != null)
             {
-                Classified Classified = new Classified();
-                Classified.Category = PPI["Category"].ToString();
-                Classified.ClassifiedFlags = PPI["ClassifiedFlags"].ToString();
-                Classified.ClassifiedUUID = PPI["ClassifiedUUID"].ToString();
-                Classified.CreationDate = PPI["CreationDate"].ToString();
-                Classified.CreatorUUID = PPI["CreatorUUID"].ToString();
-                Classified.Description = PPI["Description"].ToString();
-                Classified.ExpirationDate = PPI["ExpirationDate"].ToString();
-                Classified.Name = PPI["Name"].ToString();
-                Classified.ParcelName = PPI["ParcelName"].ToString();
-                Classified.ParcelUUID = PPI["ParcelUUID"].ToString();
-                Classified.ParentEstate = PPI["ParentEstate"].ToString();
-                Classified.PosGlobal = PPI["PosGlobal"].ToString();
-                Classified.PriceForListing = PPI["PriceForListing"].ToString();
-                Classified.SimName = PPI["SimName"].ToString();
-                Classified.SnapshotUUID = PPI["SnapshotUUID"].ToString();
-                AllClassifieds.Add(Classified);
+                foreach (Dictionary<string, object> PPI in AllPicksKVP.Values)
+                {
+                    Classified Classified = new Classified();
+                    Classified.Category = PPI["Category"].ToString();
+                    Classified.ClassifiedFlags = PPI["ClassifiedFlags"].ToString();
+                    Classified.ClassifiedUUID = PPI["ClassifiedUUID"].ToString();
+                    Classified.CreationDate = PPI["CreationDate"].ToString();
+                    Classified.CreatorUUID = PPI["CreatorUUID"].ToString();
+                    Classified.Description = PPI["Description"].ToString();
+                    Classified.ExpirationDate = PPI["ExpirationDate"].ToString();
+                    Classified.Name = PPI["Name"].ToString();
+                    Classified.ParcelName = PPI["ParcelName"].ToString();
+                    Classified.ParcelUUID = PPI["ParcelUUID"].ToString();
+                    Classified.ParentEstate = PPI["ParentEstate"].ToString();
+                    Classified.PosGlobal = PPI["PosGlobal"].ToString();
+                    Classified.PriceForListing = PPI["PriceForListing"].ToString();
+                    Classified.SimName = PPI["SimName"].ToString();
+                    Classified.SnapshotUUID = PPI["SnapshotUUID"].ToString();
+                    AllClassifieds.Add(Classified);
+                }
             }
             Classifieds = AllClassifieds.ToArray();
 
-            Notes = main["Notes"] as Dictionary<string, string>;
-
+            Dictionary<string, string> notes = main["Notes"] as Dictionary<string, string>;
+            if (notes != null)
+            {
+                Notes = notes;
+            }
             AboutText = main["AboutText"].ToString();
-            FirstLifeImage = new UUID(main["FirstImage"].ToString());
-            FirstLifeAboutText = main["FirstText"].ToString();
+            FirstLifeImage = new UUID(main["FirstLifeImage"].ToString());
+            FirstLifeAboutText = main["FirstLifeAboutText"].ToString();
             Image = new UUID(main["Image"].ToString());
             WebURL = main["WebURL"].ToString();
             Created = Convert.ToInt32(main["Created"].ToString());

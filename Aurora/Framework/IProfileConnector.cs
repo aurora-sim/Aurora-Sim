@@ -16,7 +16,7 @@ namespace Aurora.Framework
 		void UpdateUserNotes(UUID agentID, UUID targetAgentID, string notes, IUserProfileInfo UPI);
 		IUserProfileInfo GetUserProfile(UUID agentID);
 		bool UpdateUserProfile(IUserProfileInfo Profile);
-		void CreateNewProfile(UUID UUID, string firstName, string lastName);
+		void CreateNewProfile(UUID UUID);
 		void RemoveFromCache(UUID ID);
 	}
 }

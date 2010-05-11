@@ -33,7 +33,6 @@ namespace OpenSim.Server.Handlers.AuroraData
 
             LocalDataService LDS = new Aurora.Services.DataService.LocalDataService();
             LDS.Initialise(config);
-            ProfileFrontend = DataManager.IProfileConnector;
             server.AddStreamHandler(new AuroraDataServerPostHandler());
         }
     }

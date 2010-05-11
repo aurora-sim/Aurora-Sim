@@ -40,7 +40,7 @@ namespace Aurora.Modules
             UserAccount account = m_scene.UserAccountService.GetUserAccount(UUID.Zero, client.AgentId);
             if (UPI == null)
             {
-                ProfileFrontend.CreateNewProfile(account.PrincipalID, account.FirstName, account.LastName);
+                ProfileFrontend.CreateNewProfile(account.PrincipalID);
             }
             if (UPI.IsNewUser && UPI.AArchiveName != " ")
             {

@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Net;
@@ -98,8 +99,8 @@ namespace OpenSim.Server.Handlers.Login
                     //We tried... might as well skip it
                     if (GD != null)
                     {
-                        string[] found = GD.Query("macAddress", mac, "macban", "*").ToArray();
-                        if (found.Length > 0)
+                        List<string> found = GD.Query("macAddress", mac, "macban", "*");
+                        if (found.Count != 1 || found[0] != "")
                         {
                             m_log.InfoFormat("Mac is in the list");
                             return new XmlRpcResponse();
@@ -107,8 +108,8 @@ namespace OpenSim.Server.Handlers.Login
                         //MAC BANNING END
 
                         //Viewer Ban Start
-                        string[] clientfound = GD.Query("Client", clientVersion, "BannedViewers", "*").ToArray();
-                        if (clientfound.Length > 0)
+                        List<string> clientfound = GD.Query("Client", clientVersion, "BannedViewers", "*");
+                        if (clientfound.Count != 1 || clientfound[0] != "")
                         {
                             return new XmlRpcResponse();
                         }

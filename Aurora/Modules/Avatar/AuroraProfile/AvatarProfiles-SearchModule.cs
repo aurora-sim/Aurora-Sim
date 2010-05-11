@@ -173,7 +173,7 @@ namespace Aurora.Modules
         {
             IUserProfileInfo userProfile = ProfileFrontend.GetUserProfile(client.AgentId);
             if (userProfile == null)
-                ProfileFrontend.CreateNewProfile(client.AgentId, client.FirstName, client.LastName);
+                ProfileFrontend.CreateNewProfile(client.AgentId);
 
             if (m_ProfileEnabled)
             {

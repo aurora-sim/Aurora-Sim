@@ -1800,7 +1800,7 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         CheckExit();
                     }
-                    catch { }
+                    catch(Exception) { }
                 }
             }
         }

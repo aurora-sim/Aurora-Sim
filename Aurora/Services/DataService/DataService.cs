@@ -86,21 +86,21 @@ namespace Aurora.Services.DataService
             }
 
             string Connector = m_config.GetString("Connector", "LocalConnector");
-            if (Connector == "LocalConnector")
-            {
+            //if (Connector == "LocalConnector")
+            //{
                 DataManager.DataManager.IAgentConnector = new LocalAgentConnector();
                 DataManager.DataManager.IGridConnector = new LocalGridConnector();
                 DataManager.DataManager.IProfileConnector = new LocalProfileConnector();
-                return;
-            }
+            //    return;
+            //}
             if (Connector != "RemoteConnector")
             {
                 m_log.Error("[AuroraDataService]: No Connector found with that name!");
                 return;
             }
             string RemoteConnectionString = m_config.GetString("RemoteServerURI", "");
-            DataManager.DataManager.IAgentConnector = new RemoteAgentConnector(RemoteConnectionString);
-            DataManager.DataManager.IGridConnector = new RemoteGridConnector(RemoteConnectionString);
+            //DataManager.DataManager.IAgentConnector = new RemoteAgentConnector(RemoteConnectionString);
+            //DataManager.DataManager.IGridConnector = new RemoteGridConnector(RemoteConnectionString);
             DataManager.DataManager.IProfileConnector = new RemoteProfileConnector(RemoteConnectionString);
         }
 

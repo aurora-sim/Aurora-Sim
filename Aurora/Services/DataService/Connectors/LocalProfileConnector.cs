@@ -240,7 +240,7 @@ namespace Aurora.Services.DataService
 			return GD.Update("profilegeneral", SetValues.ToArray(), SetRows.ToArray(), KeyRow.ToArray(), KeyValue.ToArray());
 		}
 
-		public void CreateNewProfile(UUID UUID, string firstName, string lastName)
+		public void CreateNewProfile(UUID UUID)
 		{
 			List<object> values = new List<object>();
 			values.Add(UUID.ToString());
