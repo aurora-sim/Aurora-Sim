@@ -170,7 +170,7 @@ namespace Aurora.Services.DataService
             }
         }
 
-        public void AddTelehub(UUID regionID, Vector3 position, int regionPosX, int regionPosY)
+        public void AddTelehub(Telehub telehub)
         {
             throw new NotImplementedException();
         }
@@ -216,7 +216,7 @@ namespace Aurora.Services.DataService
             }
         }
 
-        public bool FindTelehub(UUID regionID, out Vector3 position)
+        public Telehub FindTelehub(UUID regionID)
         {
             throw new NotImplementedException();
         }

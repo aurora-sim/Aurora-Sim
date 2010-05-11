@@ -61,30 +61,30 @@ namespace Aurora.Services.DataService
 		/// <param name="position">Telehub position</param>
 		/// <param name="regionPosX">Region Position in meters</param>
 		/// <param name="regionPosY">Region Position in meters</param>
-		public void AddTelehub(UUID regionID, Vector3 position, int regionPosX, int regionPosY)
+		public void AddTelehub(Telehub telehub)
 		{
 			//Look for a telehub first.
-			Vector3 oldPos = Vector3.Zero;
-			if (FindTelehub(regionID, out oldPos)) {
+			if (FindTelehub(new UUID(telehub.RegionID)) != null)
+            {
 				//Found one, time to update it.
 				GD.Update("telehubs", new object[] {
-					position.X,
-					position.Y,
-					position.Z
+					telehub.TelehubX,
+					telehub.TelehubY,
+					telehub.TelehubZ
 				}, new string[] {
 					"TelehubX",
 					"TelehubY",
 					"TelehubZ"
-				}, new string[] { "RegionID" }, new object[] { regionID });
+				}, new string[] { "RegionID" }, new object[] { telehub.RegionID });
 			} else {
 				//Make a new one
 				List<object> values = new List<object>();
-				values.Add(regionID);
-				values.Add(regionPosX);
-				values.Add(regionPosY);
-				values.Add(position.X);
-				values.Add(position.Y);
-				values.Add(position.Z);
+                values.Add(telehub.RegionID);
+                values.Add(telehub.RegionLocX);
+                values.Add(telehub.RegionLocY);
+                values.Add(telehub.TelehubX);
+                values.Add(telehub.TelehubY);
+                values.Add(telehub.TelehubZ);
 				GD.Insert("telehubs", values.ToArray());
 			}
 		}
@@ -97,7 +97,7 @@ namespace Aurora.Services.DataService
 		{
 			//Look for a telehub first.
 			Vector3 oldPos = Vector3.Zero;
-			if (FindTelehub(regionID, out oldPos)) {
+			if (FindTelehub(regionID) != null) {
 				GD.Delete("telehubs", new string[] { "RegionID" }, new object[] { regionID });
 			}
 		}
@@ -108,16 +108,21 @@ namespace Aurora.Services.DataService
 		/// <param name="regionID">Region ID</param>
 		/// <param name="position">The position of the telehub</param>
 		/// <returns></returns>
-		public bool FindTelehub(UUID regionID, out Vector3 position)
+        public Telehub FindTelehub(UUID regionID)
 		{
-			position = Vector3.Zero;
-			List<string> telehubposition = GD.Query("RegionID", regionID, "telehubs", "TelehubX,TelehubY,TelehubZ");
+            Telehub telehub = new Telehub();
+			List<string> telehubposition = GD.Query("RegionID", regionID, "telehubs", "RegionLocX,RegionLocY,TelehubX,TelehubY,TelehubZ");
 			//Not the right number of values, so its not there.
-			if (telehubposition.Count != 3)
-				return false;
+			if (telehubposition.Count != 5)
+                return null;
 
-			position = new Vector3(int.Parse(telehubposition[0]), int.Parse(telehubposition[1]), int.Parse(telehubposition[2]));
-			return true;
+            telehub.RegionLocX = Convert.ToInt32(telehubposition[4]);
+            telehub.RegionLocY = Convert.ToInt32(telehubposition[4]);
+            telehub.TelehubX = Convert.ToInt32(telehubposition[4]);
+            telehub.TelehubY = Convert.ToInt32(telehubposition[4]);
+            telehub.TelehubZ = Convert.ToInt32(telehubposition[4]);
+
+            return telehub;
 		}
 	}
 }

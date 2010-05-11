@@ -145,9 +145,9 @@ namespace Aurora.Modules
             }
             if (!ES.AllowDirectTeleport)
             {
-                if (!GridFrontend.FindTelehub(m_scene.RegionInfo.RegionID, out newPosition))
-                    //Revert the position from 0,0,0 then since there is not one.
-                    newPosition = Position;
+                Telehub telehub = GridFrontend.FindTelehub(m_scene.RegionInfo.RegionID);
+                if (telehub != null)
+                    newPosition = new Vector3(telehub.TelehubX, telehub.TelehubY, telehub.TelehubZ);
             }
             else
             {

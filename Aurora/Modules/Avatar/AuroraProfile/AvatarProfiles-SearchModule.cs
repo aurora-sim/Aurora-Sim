@@ -926,13 +926,13 @@ namespace Aurora.Modules
                 uint ystart = 0;
                 OpenMetaverse.Utils.LongToUInts(m_scene.RegionInfo.RegionHandle, out xstart, out ystart);
                 OpenSim.Services.Interfaces.GridRegion GR = m_scene.GridService.GetRegionByPosition(UUID.Zero, (int)xstart, (int)ystart);
-                Vector3 Position;
                 int tc = Environment.TickCount;
-                if (GF.FindTelehub(GR.RegionID, out Position))
+                Telehub telehub = GF.FindTelehub(GR.RegionID);
+                if (telehub != null)
                 {
                     mapitem = new mapItemReply();
-                    mapitem.x = (uint)(GR.RegionLocX + Position.X);
-                    mapitem.y = (uint)(GR.RegionLocX + Position.X);
+                    mapitem.x = (uint)(GR.RegionLocX + telehub.TelehubX);
+                    mapitem.y = (uint)(GR.RegionLocY + telehub.TelehubY);
                     mapitem.id = GR.RegionID;
                     mapitem.name = Util.Md5Hash(GR.RegionName + tc.ToString());
                     mapitem.Extra = 1;

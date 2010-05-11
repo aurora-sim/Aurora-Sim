@@ -11,9 +11,9 @@ namespace Aurora.Framework
 		GridRegionFlags GetRegionFlags(UUID regionID);
 		void SetRegionFlags(UUID regionID, GridRegionFlags flags);
 		void CreateRegion(UUID regionID);
-		void AddTelehub(UUID regionID, Vector3 position, int regionPosX, int regionPosY);
+		void AddTelehub(Telehub telehub);
 		void RemoveTelehub(UUID regionID);
-		bool FindTelehub(UUID regionID, out Vector3 position);
+        Telehub FindTelehub(UUID regionID);
     }
     [Flags()]
     public enum GridRegionFlags : int
