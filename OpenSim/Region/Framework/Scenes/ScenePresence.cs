@@ -140,7 +140,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         private bool m_startAnimationSet;
 
-        //private Vector3 m_requestedSitOffset = new Vector3();
+        private Vector3 m_requestedSitOffset = new Vector3();
 
         private Vector3 m_LastFinitePos;
 
@@ -1826,7 +1826,7 @@ namespace OpenSim.Region.Framework.Scenes
                     autopilot = false;
                 }
 
-                pos = part.AbsolutePosition + offset;
+                pos = part.AbsolutePosition/* + offset*/;
                 //if (Math.Abs(part.AbsolutePosition.Z - AbsolutePosition.Z) > 1)
                 //{
                    // offset = pos;
@@ -1858,7 +1858,10 @@ namespace OpenSim.Region.Framework.Scenes
                 cameraEyeOffset = part.GetCameraEyeOffset();
                 forceMouselook = part.GetForceMouselook();
             }
-
+            const float SitFudgeFactor = .15f;
+            AbsolutePosition = part.AbsolutePosition /*+ offset*/;
+            AbsolutePosition = new Vector3(AbsolutePosition.X + (part.Scale.X / 2), AbsolutePosition.Y /*+ (part.Scale.Y / 2)*/, AbsolutePosition.Z + (Appearance.AvatarHeight / 2) + (part.Scale.Z / 2) - SitFudgeFactor);
+            Rotation = part.RotationOffset;
             ControllingClient.SendSitResponse(targetID, offset, sitOrientation, autopilot, cameraAtOffset, cameraEyeOffset, forceMouselook);
             m_requestedSitTargetUUID = targetID;
             // This calls HandleAgentSit twice, once from here, and the client calls
@@ -1890,14 +1893,14 @@ namespace OpenSim.Region.Framework.Scenes
                     m_nextSitAnimation = part.SitAnimation;
                 }
                 m_requestedSitTargetID = part.LocalId;
-                //m_requestedSitOffset = offset;
+                m_requestedSitOffset = offset;
                 m_requestedSitTargetUUID = targetID;
                 
                 m_log.DebugFormat("[SIT]: Client requested Sit Position: {0}", offset);
                 
                 if (m_scene.PhysicsScene.SupportsRayCast())
                 {
-                    //m_scene.PhysicsScene.RaycastWorld(Vector3.Zero,Vector3.Zero, 0.01f,new RaycastCallback());
+                    //m_scene.PhysicsScene.RaycastWorld(Vector3.Zero,Vector3.Zero, 0.01f, SitRayCastAvatarPositionResponse);
                     //SitRayCastAvatarPosition(part);
                     //return;
                 }
@@ -1907,12 +1910,9 @@ namespace OpenSim.Region.Framework.Scenes
                 
                 m_log.Warn("Sit requested on unknown object: " + targetID.ToString());
             }
-
-            
-
             SendSitResponse(remoteClient, targetID, offset, Quaternion.Identity);
         }
-        /*
+        
         public void SitRayCastAvatarPosition(SceneObjectPart part)
         {
             Vector3 EndRayCastPosition = part.AbsolutePosition + m_requestedSitOffset;
@@ -1961,7 +1961,7 @@ namespace OpenSim.Region.Framework.Scenes
             Vector3 StartRayCastPosition = AbsolutePosition; StartRayCastPosition.Z = CameraPosition.Z;
             Vector3 direction = Vector3.Normalize(EndRayCastPosition - StartRayCastPosition);
             float distance = Vector3.Distance(EndRayCastPosition, StartRayCastPosition);
-            m_scene.PhysicsScene.RaycastWorld(StartRayCastPosition, direction, distance, SitRayCastAvatarPositionCameraZResponse);
+            m_scene.PhysicsScene.RaycastWorld(StartRayCastPosition, direction, distance, SitRayCastCameraPositionResponse);
         }
 
         public void SitRayCastAvatarPositionCameraZResponse(bool hitYN, Vector3 collisionPoint, uint localid, float pdistance, Vector3 normal)
@@ -2102,7 +2102,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             SendSitResponse(ControllingClient, m_requestedSitTargetUUID, collisionPoint - m_requestedSitOffset, Quaternion.Identity);
         }
-        */
+        
         public void HandleAgentRequestSit(IClientAPI remoteClient, UUID agentID, UUID targetID, Vector3 offset, string sitAnimation)
         {
             if (m_parentID != 0)
@@ -2123,7 +2123,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (part != null)
             {
                 m_requestedSitTargetID = part.LocalId; 
-                //m_requestedSitOffset = offset;
+                m_requestedSitOffset = offset;
                 m_requestedSitTargetUUID = targetID;
 
                 m_log.DebugFormat("[SIT]: Client requested Sit Position: {0}", offset);
