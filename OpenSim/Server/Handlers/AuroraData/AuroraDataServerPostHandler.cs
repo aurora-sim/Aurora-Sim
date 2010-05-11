@@ -11,7 +11,6 @@ using System.Xml.Serialization;
 using System.Collections.Generic;
 using OpenSim.Server.Base;
 using OpenSim.Services.Interfaces;
-using FriendInfo = OpenSim.Services.Interfaces.FriendInfo;
 using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenMetaverse;
@@ -25,6 +24,10 @@ namespace OpenSim.Server.Handlers.AuroraData
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private IProfileConnector ProfileConnector = null;
+        private IAgentConnector AgentConnector = null;
+        private IGridConnector GridConnector = null;
+
+
         public AuroraDataServerPostHandler() :
             base("POST", "/auroradata")
         {
@@ -62,10 +65,16 @@ namespace OpenSim.Server.Handlers.AuroraData
                         return RemoveFromCache(request);
                     case "updateusernotes":
                         return UpdateUserNotes(request);
-                    /*case "removefromcache":
+                    case "getclassified":
                         return RemoveFromCache(request);
-                    case "removefromcache":
-                        return RemoveFromCache(request);*/
+                    case "getpick":
+                        return RemoveFromCache(request);
+                    case "getagent":
+                        return GetAgent(request);
+                    case "updateagent":
+                        return UpdateAgent(request);
+                    case "createagent":
+                        return CreateAgent(request);
 
                 }
                 m_log.DebugFormat("[AuroraDataServerPostHandler]: unknown method {0} request {1}", method.Length, method);
@@ -118,6 +127,53 @@ namespace OpenSim.Server.Handlers.AuroraData
             return encoding.GetBytes(xmlString);
         }
 
+        byte[] GetPick(Dictionary<string, object> request)
+        {
+            string pickID = "";
+            if (request.ContainsKey("PICKID"))
+                pickID = request["PICKID"].ToString();
+            else
+                m_log.WarnFormat("[AuroraDataServerPostHandler]: no pickID in request to get pick");
+
+            ProfilePickInfo Pick = ProfileConnector.ReadPickInfoRow(pickID);
+            Dictionary<string, object> result = new Dictionary<string, object>();
+            if (Pick == null)
+                result["result"] = "null";
+            else
+            {
+                result["result"] = Pick.ToKeyValuePairs();
+            }
+
+            string xmlString = ServerUtils.BuildXmlResponse(result);
+            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
+
+        }
+
+        byte[] GetClassified(Dictionary<string, object> request)
+        {
+            string classifiedID = "";
+            if (request.ContainsKey("CLASSIFIEDID"))
+                classifiedID = request["CLASSIFIEDID"].ToString();
+            else
+                m_log.WarnFormat("[AuroraDataServerPostHandler]: no classifiedID in request to get classifed");
+
+            Classified Classified = ProfileConnector.ReadClassifiedInfoRow(classifiedID);
+            Dictionary<string, object> result = new Dictionary<string, object>();
+            if (Classified == null)
+                result["result"] = "null";
+            else
+            {
+                result["result"] = Classified.ToKeyValuePairs();
+            }
+
+            string xmlString = ServerUtils.BuildXmlResponse(result);
+            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
+        }
+
         byte[] GetProfile(Dictionary<string, object> request)
         {
             UUID principalID = UUID.Zero;
@@ -139,7 +195,6 @@ namespace OpenSim.Server.Handlers.AuroraData
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
-
         }
 
         byte[] UpdateProfile(Dictionary<string, object> request)
@@ -201,6 +256,78 @@ namespace OpenSim.Server.Handlers.AuroraData
                 m_log.WarnFormat("[AuroraDataServerPostHandler]: no principalID in request to get profile");
 
             ProfileConnector.RemoveFromCache(principalID);
+            result["result"] = "Successful";
+
+            string xmlString = ServerUtils.BuildXmlResponse(result);
+            m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
+        }
+
+        byte[] GetAgent(Dictionary<string, object> request)
+        {
+            UUID principalID = UUID.Zero;
+            if (request.ContainsKey("PRINCIPALID"))
+                UUID.TryParse(request["PRINCIPALID"].ToString(), out principalID);
+            else
+                m_log.WarnFormat("[AuroraDataServerPostHandler]: no principalID in request to get agent");
+
+            IAgentInfo Agent = AgentConnector.GetAgent(principalID);
+            Dictionary<string, object> result = new Dictionary<string, object>();
+            if (Agent == null)
+                result["result"] = "null";
+            else
+            {
+                result["result"] = Agent.ToKeyValuePairs();
+            }
+
+            string xmlString = ServerUtils.BuildXmlResponse(result);
+            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
+        }
+
+        byte[] UpdateAgent(Dictionary<string, object> request)
+        {
+            Dictionary<string, object> result = new Dictionary<string, object>();
+
+            UUID principalID = UUID.Zero;
+            if (request.ContainsKey("PRINCIPALID"))
+                UUID.TryParse(request["PRINCIPALID"].ToString(), out principalID);
+            else
+            {
+                m_log.WarnFormat("[AuroraDataServerPostHandler]: no principalID in request to update agent");
+                result["result"] = "null";
+                string FailedxmlString = ServerUtils.BuildXmlResponse(result);
+                m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", FailedxmlString);
+                UTF8Encoding Failedencoding = new UTF8Encoding();
+                return Failedencoding.GetBytes(FailedxmlString);
+            }
+
+            Dictionary<string, object> newProfile = new Dictionary<string, object>();
+            if (request.ContainsKey("AGENT"))
+                newProfile = request["AGENT"] as Dictionary<string, object>;
+
+            IAgentInfo Agent = new IAgentInfo(newProfile);
+            AgentConnector.UpdateAgent(Agent);
+            result["result"] = "Successful";
+
+            string xmlString = ServerUtils.BuildXmlResponse(result);
+            m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
+        }
+
+        byte[] CreateAgent(Dictionary<string, object> request)
+        {
+            Dictionary<string, object> result = new Dictionary<string, object>();
+            UUID principalID = UUID.Zero;
+            if (request.ContainsKey("PRINCIPALID"))
+                UUID.TryParse(request["PRINCIPALID"].ToString(), out principalID);
+            else
+                m_log.WarnFormat("[AuroraDataServerPostHandler]: no principalID in request to get profile");
+
+            AgentConnector.CreateNewAgent(principalID);
             result["result"] = "Successful";
 
             string xmlString = ServerUtils.BuildXmlResponse(result);

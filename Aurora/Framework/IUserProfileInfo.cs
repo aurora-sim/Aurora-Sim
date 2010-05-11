@@ -286,23 +286,7 @@ namespace Aurora.Framework
             {
                 if (CFI.ClassifiedUUID == "")
                     continue;
-                Dictionary<string, object> Classified = new Dictionary<string, object>();
-                Classified["Category"] = CFI.Category;
-                Classified["ClassifiedFlags"] = CFI.ClassifiedFlags;
-                Classified["ClassifiedUUID"] = CFI.ClassifiedUUID;
-                Classified["CreationDate"] = CFI.CreationDate;
-                Classified["CreatorUUID"] = CFI.CreatorUUID;
-                Classified["Description"] = CFI.Description;
-                Classified["ExpirationDate"] = CFI.ExpirationDate;
-                Classified["Name"] = CFI.Name;
-                Classified["ParcelName"] = CFI.ParcelName;
-                Classified["ParcelUUID"] = CFI.ParcelUUID;
-                Classified["ParentEstate"] = CFI.ParentEstate;
-                Classified["PosGlobal"] = CFI.PosGlobal;
-                Classified["PriceForListing"] = CFI.PriceForListing;
-                Classified["SimName"] = CFI.SimName;
-                Classified["SnapshotUUID"] = CFI.SnapshotUUID;
-                ClassifiedsKVP[CFI.ClassifiedUUID.ToString()] = Classified;
+                ClassifiedsKVP[CFI.ClassifiedUUID.ToString()] = CFI.ToKeyValuePairs();
             }
             result["Classifieds"] = ClassifiedsKVP;
 
@@ -312,20 +296,7 @@ namespace Aurora.Framework
             {
                 if (PPI.pickuuid == "")
                     continue;
-                Dictionary<string, object> Pick = new Dictionary<string, object>();
-                Pick["Category"] = PPI.creatoruuid;
-                Pick["ClassifiedFlags"] = PPI.description;
-                Pick["ClassifiedUUID"] = PPI.name;
-                Pick["CreationDate"] = PPI.originalname;
-                Pick["CreatorUUID"] = PPI.parceluuid;
-                Pick["Description"] = PPI.pickuuid;
-                Pick["Name"] = PPI.posglobal;
-                Pick["ParcelName"] = PPI.simname;
-                Pick["ParcelUUID"] = PPI.snapshotuuid;
-                Pick["ParentEstate"] = PPI.sortorder;
-                Pick["PosGlobal"] = PPI.toppick;
-                Pick["PriceForListing"] = PPI.user;
-                PicksKVP[PPI.pickuuid.ToString()] = Pick;
+                PicksKVP[PPI.pickuuid.ToString()] = PPI.ToKeyValuePairs();
             }
             result["Picks"] = PicksKVP;
 
@@ -357,20 +328,7 @@ namespace Aurora.Framework
             {
                 foreach (Dictionary<string, object> PPI in AllPicksKVP.Values)
                 {
-                    ProfilePickInfo Pick = new ProfilePickInfo();
-                    Pick.creatoruuid = PPI["creatoruuid"].ToString();
-                    Pick.description = PPI["description"].ToString();
-                    Pick.enabled = PPI["enabled"].ToString();
-                    Pick.name = PPI["name"].ToString();
-                    Pick.originalname = PPI["originalname"].ToString();
-                    Pick.parceluuid = PPI["parceluuid"].ToString();
-                    Pick.pickuuid = PPI["pickuuid"].ToString();
-                    Pick.posglobal = PPI["posglobal"].ToString();
-                    Pick.simname = PPI["simname"].ToString();
-                    Pick.snapshotuuid = PPI["snapshotuuid"].ToString();
-                    Pick.sortorder = PPI["sortorder"].ToString();
-                    Pick.toppick = PPI["toppick"].ToString();
-                    Pick.user = PPI["user"].ToString();
+                    ProfilePickInfo Pick = new ProfilePickInfo(PPI);
                     AllPicks.Add(Pick);
                 }
             }
@@ -383,22 +341,7 @@ namespace Aurora.Framework
             {
                 foreach (Dictionary<string, object> PPI in AllPicksKVP.Values)
                 {
-                    Classified Classified = new Classified();
-                    Classified.Category = PPI["Category"].ToString();
-                    Classified.ClassifiedFlags = PPI["ClassifiedFlags"].ToString();
-                    Classified.ClassifiedUUID = PPI["ClassifiedUUID"].ToString();
-                    Classified.CreationDate = PPI["CreationDate"].ToString();
-                    Classified.CreatorUUID = PPI["CreatorUUID"].ToString();
-                    Classified.Description = PPI["Description"].ToString();
-                    Classified.ExpirationDate = PPI["ExpirationDate"].ToString();
-                    Classified.Name = PPI["Name"].ToString();
-                    Classified.ParcelName = PPI["ParcelName"].ToString();
-                    Classified.ParcelUUID = PPI["ParcelUUID"].ToString();
-                    Classified.ParentEstate = PPI["ParentEstate"].ToString();
-                    Classified.PosGlobal = PPI["PosGlobal"].ToString();
-                    Classified.PriceForListing = PPI["PriceForListing"].ToString();
-                    Classified.SimName = PPI["SimName"].ToString();
-                    Classified.SnapshotUUID = PPI["SnapshotUUID"].ToString();
+                    Classified Classified = new Classified(PPI);
                     AllClassifieds.Add(Classified);
                 }
             }
@@ -429,6 +372,25 @@ namespace Aurora.Framework
 
     public class Classified
     {
+        public Classified() { }
+        public Classified(Dictionary<string, object> KVP)
+        {
+            Category = KVP["Category"].ToString();
+            ClassifiedFlags = KVP["ClassifiedFlags"].ToString();
+            ClassifiedUUID = KVP["ClassifiedUUID"].ToString();
+            CreationDate = KVP["CreationDate"].ToString();
+            CreatorUUID = KVP["CreatorUUID"].ToString();
+            Description = KVP["Description"].ToString();
+            ExpirationDate = KVP["ExpirationDate"].ToString();
+            Name = KVP["Name"].ToString();
+            ParcelName = KVP["ParcelName"].ToString();
+            ParcelUUID = KVP["ParcelUUID"].ToString();
+            ParentEstate = KVP["ParentEstate"].ToString();
+            PosGlobal = KVP["PosGlobal"].ToString();
+            PriceForListing = KVP["PriceForListing"].ToString();
+            SimName = KVP["SimName"].ToString();
+            SnapshotUUID = KVP["SnapshotUUID"].ToString();
+        }
         public string ClassifiedUUID;
         public string CreatorUUID;
         public string CreationDate;
@@ -444,10 +406,48 @@ namespace Aurora.Framework
         public string ParcelName;
         public string ClassifiedFlags;
         public string PriceForListing;
+
+        public Dictionary<string, object> ToKeyValuePairs()
+        {
+            Dictionary<string, object> Classified = new Dictionary<string, object>();
+            Classified["Category"] = Category;
+            Classified["ClassifiedFlags"] = ClassifiedFlags;
+            Classified["ClassifiedUUID"] = ClassifiedUUID;
+            Classified["CreationDate"] = CreationDate;
+            Classified["CreatorUUID"] = CreatorUUID;
+            Classified["Description"] = Description;
+            Classified["ExpirationDate"] = ExpirationDate;
+            Classified["Name"] = Name;
+            Classified["ParcelName"] = ParcelName;
+            Classified["ParcelUUID"] = ParcelUUID;
+            Classified["ParentEstate"] = ParentEstate;
+            Classified["PosGlobal"] = PosGlobal;
+            Classified["PriceForListing"] = PriceForListing;
+            Classified["SimName"] = SimName;
+            Classified["SnapshotUUID"] = SnapshotUUID;
+            return Classified;
+        }
     }
 
     public class ProfilePickInfo
     {
+        public ProfilePickInfo() { }
+        public ProfilePickInfo(Dictionary<string, object> KVP)
+        {
+            creatoruuid = KVP["creatoruuid"].ToString();
+            description = KVP["description"].ToString();
+            enabled = KVP["enabled"].ToString();
+            name = KVP["name"].ToString();
+            originalname = KVP["originalname"].ToString();
+            parceluuid = KVP["parceluuid"].ToString();
+            pickuuid = KVP["pickuuid"].ToString();
+            posglobal = KVP["posglobal"].ToString();
+            simname = KVP["simname"].ToString();
+            snapshotuuid = KVP["snapshotuuid"].ToString();
+            sortorder = KVP["sortorder"].ToString();
+            toppick = KVP["toppick"].ToString();
+            user = KVP["user"].ToString();
+        }
         public string pickuuid;
         public string creatoruuid;
         public string toppick;
@@ -461,5 +461,23 @@ namespace Aurora.Framework
         public string posglobal;
         public string sortorder;
         public string enabled;
+
+        public Dictionary<string, object> ToKeyValuePairs()
+        {
+            Dictionary<string, object> Pick = new Dictionary<string, object>();
+            Pick["Category"] = creatoruuid;
+            Pick["ClassifiedFlags"] = description;
+            Pick["ClassifiedUUID"] = name;
+            Pick["CreationDate"] = originalname;
+            Pick["CreatorUUID"] = parceluuid;
+            Pick["Description"] = pickuuid;
+            Pick["Name"] = posglobal;
+            Pick["ParcelName"] = simname;
+            Pick["ParcelUUID"] = snapshotuuid;
+            Pick["ParentEstate"] = sortorder;
+            Pick["PosGlobal"] = toppick;
+            Pick["PriceForListing"] = user;
+            return Pick;
+        }
     }
 }

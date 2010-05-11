@@ -34,12 +34,110 @@ namespace Aurora.Services.DataService
 
         public Classified ReadClassifiedInfoRow(string classifiedID)
         {
-            throw new NotImplementedException();
+            Dictionary<string, object> sendData = new Dictionary<string, object>();
+
+            sendData["CLASSIFIEDID"] = classifiedID.ToString();
+            sendData["METHOD"] = "getclassified";
+
+            string reqString = ServerUtils.BuildQueryString(sendData);
+
+            try
+            {
+                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                        m_ServerURI + "/auroradata",
+                        reqString);
+                if (reply != string.Empty)
+                {
+                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+
+                    if (replyData != null)
+                    {
+                        if (!replyData.ContainsKey("result"))
+                            return null;
+
+
+                        Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
+                        Classified classified = null;
+                        foreach (object f in replyvalues)
+                        {
+                            if (f is Dictionary<string, object>)
+                            {
+                                classified = new Classified((Dictionary<string, object>)f);
+                            }
+                            else
+                                m_log.DebugFormat("[AuroraRemoteProfileConnector]: GetClassified {0} received invalid response type {1}",
+                                    classifiedID, f.GetType());
+                        }
+                        // Success
+                        return classified;
+                    }
+
+                    else
+                        m_log.DebugFormat("[AuroraRemoteProfileConnector]: GetClassified {0} received null response",
+                            classifiedID);
+
+                }
+            }
+            catch (Exception e)
+            {
+                m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.Message);
+            }
+
+            return null;
         }
 
         public ProfilePickInfo ReadPickInfoRow(string pickID)
         {
-            throw new NotImplementedException();
+            Dictionary<string, object> sendData = new Dictionary<string, object>();
+
+            sendData["PICKID"] = pickID.ToString();
+            sendData["METHOD"] = "getpick";
+
+            string reqString = ServerUtils.BuildQueryString(sendData);
+
+            try
+            {
+                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                        m_ServerURI + "/auroradata",
+                        reqString);
+                if (reply != string.Empty)
+                {
+                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+
+                    if (replyData != null)
+                    {
+                        if (!replyData.ContainsKey("result"))
+                            return null;
+
+
+                        Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
+                        ProfilePickInfo pick = null;
+                        foreach (object f in replyvalues)
+                        {
+                            if (f is Dictionary<string, object>)
+                            {
+                                pick = new ProfilePickInfo((Dictionary<string, object>)f);
+                            }
+                            else
+                                m_log.DebugFormat("[AuroraRemoteProfileConnector]: GetPick {0} received invalid response type {1}",
+                                    pickID, f.GetType());
+                        }
+                        // Success
+                        return pick;
+                    }
+
+                    else
+                        m_log.DebugFormat("[AuroraRemoteProfileConnector]: GetPick {0} received null response",
+                            pickID);
+
+                }
+            }
+            catch (Exception e)
+            {
+                m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.Message);
+            }
+
+            return null;
         }
 
         public void UpdateUserNotes(UUID agentID, UUID targetAgentID, string notes, IUserProfileInfo UPI)
