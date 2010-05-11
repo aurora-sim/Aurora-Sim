@@ -1167,6 +1167,7 @@
       <Reference name="OpenSim.Server.Base"/>
       <Reference name="OpenSim.Services.Base" />
       <Reference name="OpenSim.Services.Interfaces"/>
+      <Reference name="Aurora.Services.DataService"/>
       <Reference name="XMLRPC.dll" />
       <Reference name="Nini.dll" />
       <Reference name="log4net.dll"/>
@@ -1592,6 +1593,7 @@
 
       <ReferencePath>../../../bin/</ReferencePath>
       <Reference name="Mono.Addins.dll" />
+      <Reference name="Aurora.Framework"/>
       <Reference name="System"/>
       <Reference name="System.Xml"/>
       <Reference name="OpenMetaverseTypes.dll" />
@@ -2011,6 +2013,7 @@
       <Reference name="OpenMetaverseTypes.dll"/>
       <Reference name="OpenMetaverse.dll"/>
       <Reference name="Mono.Data.Sqlite"/>
+      <Reference name="Mono.Data.SqliteClient"/>
       <Reference name="Mono.Addins.dll" />
       <Reference name="log4net.dll"/>
 
@@ -2313,6 +2316,7 @@
 <Reference name="System.Core"/>
 <Reference name="OpenMetaverseTypes.dll"/>
 <Reference name="OpenMetaverse.dll"/>
+<Reference name="OpenMetaverse.StructuredData.dll"/>
 <Reference name="OpenSim.Framework"/>
 <Reference name="OpenSim.Framework.Servers.HttpServer"/>
 <Reference name="OpenSim.Services.Interfaces"/>
@@ -2438,6 +2442,7 @@
 <Reference name="Aurora.Framework"/>
 <Reference name="OpenMetaverseTypes.dll"/>
 <Reference name="OpenMetaverse.dll"/>
+<Reference name="OpenMetaverse.StructuredData.dll"/>
 <Reference name="OpenSim.Framework"/>
 <Reference name="System.Core"/>
           <Files>
@@ -2462,9 +2467,9 @@
           <Reference name="System.Xml"/>
 	    <Reference name="Nini.dll"/>
 <Reference name="OpenSim.Services.Interfaces"/>
-<Reference name="OpenSim.Framework.Servers.HttpServer"/>
-<Reference name="OpenSim.Server.Handlers"/>
+<Reference name="OpenSim.Server.Base"/>
 <Reference name="Aurora.Framework"/>
+<Reference name="OpenSim.Framework.Servers.HttpServer"/>
 <Reference name="Aurora.DataManager"/>
 <Reference name="Aurora.DataManager.MySQL"/>
 <Reference name="Aurora.DataManager.SQLite"/>
@@ -2472,8 +2477,8 @@
 <Reference name="log4net.dll"/>
 <Reference name="OpenMetaverseTypes.dll"/>
 <Reference name="OpenMetaverse.dll"/>
+<Reference name="OpenMetaverse.StructuredData.dll"/>
 <Reference name="OpenSim.Framework"/>
-<Reference name="OpenSim.Server.Base"/>
       <Reference name="System.Core"/>
       <Reference name="C5.dll" />
           <Files>

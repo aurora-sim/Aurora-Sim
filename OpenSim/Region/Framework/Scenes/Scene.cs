@@ -636,8 +636,8 @@ namespace OpenSim.Region.Framework.Scenes
             FindEstateInfo();
 
             //Create the region flags database.
-            Aurora.DataManager.Frontends.GridFrontend GF = new Aurora.DataManager.Frontends.GridFrontend();
-            if (GF.GetRegionFlags(m_regInfo.RegionID) == (Aurora.DataManager.Frontends.GridRegionFlags)(-1))
+            Aurora.Framework.IGridConnector GF = DataManager.IGridConnector;
+            if (GF.GetRegionFlags(m_regInfo.RegionID) == (Aurora.Framework.GridRegionFlags)(-1))
                 GF.CreateRegion(m_regInfo.RegionID);
 
             MainConsole.Instance.Commands.AddCommand("region", false, "reload estate",

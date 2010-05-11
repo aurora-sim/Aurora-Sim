@@ -12,7 +12,6 @@ using OpenSim.Services.Interfaces;
 using OpenMetaverse;
 using log4net;
 using Aurora.Framework;
-using Aurora.DataManager.Frontends;
 
 namespace Aurora.Modules
 {
@@ -20,7 +19,7 @@ namespace Aurora.Modules
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         Scene m_scene;
-        private ProfileFrontend ProfileFrontend;
+        private IProfileConnector ProfileFrontend;
         public void Initialise(Scene scene, Nini.Config.IConfigSource source)
         {
             if(m_scene == null)
@@ -53,7 +52,7 @@ namespace Aurora.Modules
 
         public void PostInitialise()
         {
-            ProfileFrontend = new ProfileFrontend(false, "");
+            ProfileFrontend = DataManager.DataManager.IProfileConnector;
         }
 
         public void Close(){}

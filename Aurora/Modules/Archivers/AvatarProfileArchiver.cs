@@ -59,7 +59,7 @@ namespace Aurora.Modules
                 return;
             }
             UserAccount account = m_scene.UserAccountService.GetUserAccount(UUID.Zero, cmdparams[2], cmdparams[3]);
-            Aurora.DataManager.Frontends.ProfileFrontend data = new Aurora.DataManager.Frontends.ProfileFrontend(false, "");
+            IProfileConnector data = DataManager.DataManager.IProfileConnector;
             IUserProfileInfo profile = data.GetUserProfile(account.PrincipalID);
             StreamWriter writer = new StreamWriter(cmdparams[4]);
             writer.Write("<profile>\n");

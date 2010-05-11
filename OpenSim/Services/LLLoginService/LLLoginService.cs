@@ -254,7 +254,7 @@ namespace OpenSim.Services.LLLoginService
                     }
                 }
 
-                Aurora.DataManager.Frontends.AgentFrontend data = new Aurora.DataManager.Frontends.AgentFrontend();
+                IAgentConnector data = DataManager.IAgentConnector;
                 //Already tried to find it before this, so its not there at all.
                 IAgentInfo agent = null;
                 if (data != null)

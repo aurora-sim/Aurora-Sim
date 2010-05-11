@@ -82,7 +82,79 @@ namespace Aurora.Framework
         /// Is the users language public
         /// </summary>
         public bool LanguageIsPublic = true;
-        
+
+        public IAgentInfo() { }
+
+        public IAgentInfo(Dictionary<string, object> kvp)
+        {
+            PrincipalID = UUID.Zero;
+            if (kvp.ContainsKey("PrincipalID") && kvp["PrincipalID"] != null)
+                UUID.TryParse(kvp["PrincipalID"].ToString(), out PrincipalID);
+            PermaBanned = 0;
+            if (kvp.ContainsKey("PermaBanned") && kvp["PermaBanned"] != null)
+                Int32.TryParse(kvp["PermaBanned"].ToString(), out PermaBanned);
+            TempBanned = 0;
+            if (kvp.ContainsKey("TempBanned") && kvp["TempBanned"] != null)
+                Int32.TryParse(kvp["TempBanned"].ToString(), out TempBanned);
+            MaxMaturity = 0;
+            if (kvp.ContainsKey("MaxMaturity") && kvp["MaxMaturity"] != null)
+                Int32.TryParse(kvp["MaxMaturity"].ToString(), out MaxMaturity);
+            IsMinor = false;
+            if (kvp.ContainsKey("IsMinor") && kvp["IsMinor"] != null)
+                bool.TryParse(kvp["TheirFlags"].ToString(), out IsMinor);
+            Mac = "";
+            if (kvp.ContainsKey("Mac") && kvp["Mac"] != null)
+                Mac = kvp["Mac"].ToString();
+            IP = "";
+            if (kvp.ContainsKey("IP") && kvp["IP"] != null)
+                IP = kvp["IP"].ToString();
+            RealFirst = "";
+            if (kvp.ContainsKey("RealFirst") && kvp["RealFirst"] != null)
+                RealFirst = kvp["RealFirst"].ToString();
+            RealLast = "";
+            if (kvp.ContainsKey("RealLast") && kvp["RealLast"] != null)
+                RealLast = kvp["RealLast"].ToString();
+            RealAddress = "";
+            if (kvp.ContainsKey("RealAddress") && kvp["RealAddress"] != null)
+                RealAddress = kvp["RealAddress"].ToString();
+            RealZip = "";
+            if (kvp.ContainsKey("RealZip") && kvp["RealZip"] != null)
+                RealZip = kvp["RealZip"].ToString();
+            RealCountry = "";
+            if (kvp.ContainsKey("RealCountry") && kvp["RealCountry"] != null)
+                RealCountry = kvp["RealCountry"].ToString();
+            Language = "";
+            if (kvp.ContainsKey("Language") && kvp["Language"] != null)
+                Language = kvp["Language"].ToString();
+            AcceptTOS = true;
+            if (kvp.ContainsKey("AcceptTOS") && kvp["AcceptTOS"] != null)
+                bool.TryParse(kvp["AcceptTOS"].ToString(), out AcceptTOS);
+            LanguageIsPublic = true;
+            if (kvp.ContainsKey("LanguageIsPublic") && kvp["LanguageIsPublic"] != null)
+                bool.TryParse(kvp["LanguageIsPublic"].ToString(), out LanguageIsPublic);
+        }
+
+        public Dictionary<string, object> ToKeyValuePairs()
+        {
+            Dictionary<string, object> result = new Dictionary<string, object>();
+            result["PrincipalID"] = PrincipalID.ToString();
+            result["PermaBanned"] = PermaBanned;
+            result["TempBanned"] = TempBanned;
+            result["MaxMaturity"] = MaxMaturity;
+            result["IsMinor"] = IsMinor.ToString();
+            result["Mac"] = Mac.ToString();
+            result["IP"] = IP.ToString();
+            result["RealFirst"] = RealFirst.ToString();
+            result["RealLast"] = RealLast.ToString();
+            result["RealAddress"] = RealAddress.ToString();
+            result["RealZip"] = RealZip.ToString();
+            result["RealCountry"] = RealCountry.ToString();
+            result["Language"] = Language.ToString();
+            result["AcceptTOS"] = AcceptTOS.ToString();
+            result["LanguageIsPublic"] = LanguageIsPublic.ToString();
+
+            return result;
+        }
     }
 
     public class IUserProfileInfo
@@ -177,7 +249,7 @@ namespace Aurora.Framework
         /// </summary>
         /// UUID - target agent
         /// string - notes
-        public Dictionary<UUID, string> Notes;
+        public Dictionary<string, string> Notes;
 
         /// <summary>
         /// The picks of the user
@@ -189,52 +261,78 @@ namespace Aurora.Framework
         /// </summary>
         public Classified[] Classifieds;
 
-        public OSDMap Pack()
+        public Dictionary<string, object> ToKeyValuePairs()
         {
-            OSDMap main = new OSDMap();
-            OSDString OSDS = new OSDString(AllowPublish.ToString());
-            main["AllowPublish"] = OSDS;
-            OSDS = new OSDString(MaturePublish.ToString());
-            main["MaturePublish"] = OSDS;
-
-            //Interests
-            OSDS = new OSDString(Interests.WantToMask.ToString());
-            main["WantToMask"] = OSDS;
-            OSDS = new OSDString(Interests.WantToText.ToString());
-            main["WantToText"] = OSDS;
-            OSDS = new OSDString(Interests.CanDoMask.ToString());
-            main["CanDoMask"] = OSDS;
-            OSDS = new OSDString(Interests.CanDoText.ToString());
-            main["CanDoText"] = OSDS;
-            OSDS = new OSDString(Interests.Languages.ToString());
-            main["Languages"] = OSDS;
-            //End interests
-
-            //Picks
-            //End Picks
+            Dictionary<string, object> result = new Dictionary<string, object>();
+            result["PrincipalID"] = PrincipalID.ToString();
+            result["AllowPublish"] = AllowPublish.ToString();
+            result["MaturePublish"] = MaturePublish;
+            result["WantToMask"] = Interests.WantToMask;
+            result["WantToText"] = Interests.WantToText;
+            result["CanDoMask"] = Interests.CanDoMask;
+            result["CanDoText"] = Interests.CanDoText;
+            result["Languages"] = Interests.Languages;
+            result["AboutText"] = AboutText.ToString();
+            result["FirstLifeImage"] = FirstLifeImage;
+            result["FirstLifeAboutText"] = FirstLifeAboutText;
+            result["Image"] = Image;
+            result["WebURL"] = WebURL;
+            result["Created"] = Created;
+            result["Partner"] = Partner;
 
             //Classifieds
-            //End Classifieds
+            Dictionary<string, object> ClassifiedsKVP = new Dictionary<string, object>();
+            foreach(Classified CFI in Classifieds)
+            {
+                Dictionary<string, object> Classified = new Dictionary<string, object>();
+                Classified["Category"] = CFI.Category;
+                Classified["ClassifiedFlags"] = CFI.ClassifiedFlags;
+                Classified["ClassifiedUUID"] = CFI.ClassifiedUUID;
+                Classified["CreationDate"] = CFI.CreationDate;
+                Classified["CreatorUUID"] = CFI.CreatorUUID;
+                Classified["Description"] = CFI.Description;
+                Classified["ExpirationDate"] = CFI.ExpirationDate;
+                Classified["Name"] = CFI.Name;
+                Classified["ParcelName"] = CFI.ParcelName;
+                Classified["ParcelUUID"] = CFI.ParcelUUID;
+                Classified["ParentEstate"] = CFI.ParentEstate;
+                Classified["PosGlobal"] = CFI.PosGlobal;
+                Classified["PriceForListing"] = CFI.PriceForListing;
+                Classified["SimName"] = CFI.SimName;
+                Classified["SnapshotUUID"] = CFI.SnapshotUUID;
+                ClassifiedsKVP[CFI.ClassifiedUUID.ToString()] = Classified;
+            }
+            result["Classifieds"] = ClassifiedsKVP;
 
+            //Classifieds
+            Dictionary<string, object> PicksKVP = new Dictionary<string, object>();
+            foreach (ProfilePickInfo PPI in Picks)
+            {
+                Dictionary<string, object> Pick = new Dictionary<string, object>();
+                Pick["Category"] = PPI.creatoruuid;
+                Pick["ClassifiedFlags"] = PPI.description;
+                Pick["ClassifiedUUID"] = PPI.name;
+                Pick["CreationDate"] = PPI.originalname;
+                Pick["CreatorUUID"] = PPI.parceluuid;
+                Pick["Description"] = PPI.pickuuid;
+                Pick["Name"] = PPI.posglobal;
+                Pick["ParcelName"] = PPI.simname;
+                Pick["ParcelUUID"] = PPI.snapshotuuid;
+                Pick["ParentEstate"] = PPI.sortorder;
+                Pick["PosGlobal"] = PPI.toppick;
+                Pick["PriceForListing"] = PPI.user;
+                PicksKVP[PPI.pickuuid.ToString()] = Pick;
+            }
+            result["Picks"] = PicksKVP;
 
-            OSDS = new OSDString(AboutText.ToString());
-            main["AboutText"] = OSDS;
-            OSDS = new OSDString(FirstLifeImage.ToString());
-            main["FirstImage"] = OSDS;
-            OSDS = new OSDString(FirstLifeAboutText.ToString());
-            main["FirstText"] = OSDS;
-            OSDS = new OSDString(Image.ToString());
-            main["Image"] = OSDS;
-            OSDS = new OSDString(WebURL.ToString());
-            main["WebURL"] = OSDS;
-            OSDS = new OSDString(Created.ToString());
-            main["Created"] = OSDS;
-            OSDS = new OSDString(Partner.ToString());
-            main["Partner"] = OSDS;
-            return main;
+            result["Notes"] = Notes;
+
+            return result;
         }
 
-        public void Unpack(OSDMap main)
+        public IUserProfileInfo() { }
+
+        public IUserProfileInfo(Dictionary<string, object> main)
         {
             AllowPublish = bool.Parse(main["AllowPublish"].ToString());
             MaturePublish = bool.Parse(main["MaturePublish"].ToString());
@@ -249,11 +347,54 @@ namespace Aurora.Framework
             //End interests
 
             //Picks
-            //End Picks
+            Dictionary<string, Dictionary<string, object>> AllPicksKVP = main["Picks"] as Dictionary<string, Dictionary<string, object>>;
+            List<ProfilePickInfo> AllPicks = new List<ProfilePickInfo>();
+            foreach (Dictionary<string, object> PPI in AllPicksKVP.Values)
+            {
+                ProfilePickInfo Pick = new ProfilePickInfo();
+                Pick.creatoruuid = PPI["creatoruuid"].ToString();
+                Pick.description = PPI["description"].ToString();
+                Pick.enabled = PPI["enabled"].ToString();
+                Pick.name = PPI["name"].ToString();
+                Pick.originalname = PPI["originalname"].ToString();
+                Pick.parceluuid = PPI["parceluuid"].ToString();
+                Pick.pickuuid = PPI["pickuuid"].ToString();
+                Pick.posglobal = PPI["posglobal"].ToString();
+                Pick.simname = PPI["simname"].ToString();
+                Pick.snapshotuuid = PPI["snapshotuuid"].ToString();
+                Pick.sortorder = PPI["sortorder"].ToString();
+                Pick.toppick = PPI["toppick"].ToString();
+                Pick.user = PPI["user"].ToString();
+                AllPicks.Add(Pick);
+            }
+            Picks = AllPicks.ToArray();
 
             //Classifieds
-            //End Classifieds
+            Dictionary<string, Dictionary<string, object>> AllClassifiedsKVP = main["Classifieds"] as Dictionary<string, Dictionary<string, object>>;
+            List<Classified> AllClassifieds = new List<Classified>();
+            foreach (Dictionary<string, object> PPI in AllPicksKVP.Values)
+            {
+                Classified Classified = new Classified();
+                Classified.Category = PPI["Category"].ToString();
+                Classified.ClassifiedFlags = PPI["ClassifiedFlags"].ToString();
+                Classified.ClassifiedUUID = PPI["ClassifiedUUID"].ToString();
+                Classified.CreationDate = PPI["CreationDate"].ToString();
+                Classified.CreatorUUID = PPI["CreatorUUID"].ToString();
+                Classified.Description = PPI["Description"].ToString();
+                Classified.ExpirationDate = PPI["ExpirationDate"].ToString();
+                Classified.Name = PPI["Name"].ToString();
+                Classified.ParcelName = PPI["ParcelName"].ToString();
+                Classified.ParcelUUID = PPI["ParcelUUID"].ToString();
+                Classified.ParentEstate = PPI["ParentEstate"].ToString();
+                Classified.PosGlobal = PPI["PosGlobal"].ToString();
+                Classified.PriceForListing = PPI["PriceForListing"].ToString();
+                Classified.SimName = PPI["SimName"].ToString();
+                Classified.SnapshotUUID = PPI["SnapshotUUID"].ToString();
+                AllClassifieds.Add(Classified);
+            }
+            Classifieds = AllClassifieds.ToArray();
 
+            Notes = main["Notes"] as Dictionary<string, string>;
 
             AboutText = main["AboutText"].ToString();
             FirstLifeImage = new UUID(main["FirstImage"].ToString());

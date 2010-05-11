@@ -155,7 +155,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
 
             OSD r = OSDParser.DeserializeLLSDXml((string)m_dhttpMethod["requestbody"]);
             OSDMap rm = (OSDMap)r;
-            Aurora.DataManager.Frontends.AgentFrontend AgentFrontend = new Aurora.DataManager.Frontends.AgentFrontend();
+            IAgentConnector AgentFrontend = DataManager.IAgentConnector;
             IAgentInfo IAI = AgentFrontend.GetAgent(agentID);
             IAI.Language = rm["language"].AsString();
             IAI.LanguageIsPublic = int.Parse(rm["language_is_public"].AsString()) == 1;
@@ -191,7 +191,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                 maxLevel = 1;
             if (Level == "A")
                 maxLevel = 2;
-            Aurora.DataManager.Frontends.AgentFrontend data = new Aurora.DataManager.Frontends.AgentFrontend();
+            IAgentConnector data = DataManager.IAgentConnector;
             IAgentInfo agent = data.GetAgent(agentID);
             agent.MaxMaturity = maxLevel;
             data.UpdateAgent(agent);

@@ -11,7 +11,6 @@ using Nini.Config;
 using log4net;
 using Aurora.Framework;
 using Aurora.DataManager;
-using Aurora.DataManager.Frontends;
 
 namespace Aurora.Modules
 {
@@ -21,7 +20,7 @@ namespace Aurora.Modules
 
         Scene m_scene;
         IProfileData PD;
-        GridFrontend GridFrontend;
+        IGridConnector GridFrontend;
 
         public void Initialise(IConfigSource source)
         {
@@ -29,7 +28,7 @@ namespace Aurora.Modules
 
         public void AddRegion(Scene scene)
         {
-            GridFrontend = new GridFrontend();
+            GridFrontend = DataManager.DataManager.IGridConnector;
             PD = DataManager.DataManager.GetDefaultProfilePlugin();
             scene.RegisterModuleInterface<IEstateSettingsModule>(this);
             m_scene = scene;
@@ -130,7 +129,7 @@ namespace Aurora.Modules
         {
             newPosition = Position;
             EstateSettings ES = ((Scene)scene).EstateService.LoadEstateSettings(scene.RegionInfo.RegionID, false);
-            Aurora.DataManager.Frontends.AgentFrontend data = new Aurora.DataManager.Frontends.AgentFrontend();
+            IAgentConnector data = DataManager.DataManager.IAgentConnector;
             IAgentInfo Profile = data.GetAgent(userID);
             
             if (((Scene)scene).RegionInfo.RegionSettings.Maturity > Profile.MaxMaturity)
