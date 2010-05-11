@@ -35,17 +35,6 @@ namespace Aurora.Framework
         bool AddOfflineMessage(string fromUUID, string fromName, string toUUID, string message);
     }
 
-    public interface IEstateData
-    {
-        EstateSettings LoadEstateSettings(UUID regionID, bool create);
-        EstateSettings LoadEstateSettings(int estateID);
-        bool StoreEstateSettings(EstateSettings es);
-        List<int> GetEstates(string search);
-        bool LinkRegion(UUID regionID, int estateID, string password);
-        List<UUID> GetRegions(int estateID);
-        bool DeleteEstate(int estateID);
-    }
-
     public class OfflineMessage
     {
         public string FromUUID;
@@ -144,6 +133,7 @@ namespace Aurora.Framework
         /// select wantedValue from table where keyRow = keyValue
         /// </summary>
         List<string> Query(string keyRow, object keyValue, string table, string wantedValue);
+        List<string> Query(string keyRow, object keyValue, string table, string wantedValue, string Order);
         List<string> Query(string[] keyRow, object[] keyValue, string table, string wantedValue);
         bool Insert(string table, object[] values);
         bool Delete(string table, string[] keys, object[] values);
@@ -226,11 +216,9 @@ namespace Aurora.Framework
     {
         void Initialise(Nini.Config.IConfigSource source);
         IGenericData GetGenericPlugin();
-        IEstateData GetEstatePlugin();
         IProfileData GetProfilePlugin();
         IRegionData GetRegionPlugin();
         void SetGenericDataPlugin(IGenericData Plugin);
-        void SetEstatePlugin(IEstateData Plugin);
         void SetProfilePlugin(IProfileData Plugin);
         void SetRegionPlugin(IRegionData Plugin);
     }

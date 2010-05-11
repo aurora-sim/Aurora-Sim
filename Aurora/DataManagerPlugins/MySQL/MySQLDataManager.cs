@@ -298,6 +298,57 @@ namespace Aurora.DataManager.MySQL
             }
         }
 
+        public override List<string> Query(string keyRow, object keyValue, string table, string wantedValue, string order)
+        {
+            MySqlConnection dbcon = GetLockedConnection();
+            IDbCommand result;
+            IDataReader reader;
+            List<string> RetVal = new List<string>();
+            string query = "";
+            if (keyRow == "")
+            {
+                query = String.Format("select {0} from {1}",
+                                      wantedValue, table);
+            }
+            else
+            {
+                query = String.Format("select {0} from {1} where {2} = '{3}'",
+                                      wantedValue, table, keyRow, keyValue.ToString());
+            }
+            using (result = Query(query + order, new Dictionary<string, object>(), dbcon))
+            {
+                using (reader = result.ExecuteReader())
+                {
+                    try
+                    {
+                        while (reader.Read())
+                        {
+                            for (int i = 0; i < reader.FieldCount; i++)
+                            {
+                                RetVal.Add(reader.GetString(i));
+                            }
+                        }
+                        if (RetVal.Count == 0)
+                        {
+                            RetVal.Add("");
+                            return RetVal;
+                        }
+                        else
+                        {
+                            return RetVal;
+                        }
+                    }
+                    finally
+                    {
+                        reader.Close();
+                        reader.Dispose();
+                        result.Dispose();
+                        CloseDatabase(dbcon);
+                    }
+                }
+            }
+        }
+
         public override List<string> Query(string[] keyRow, object[] keyValue, string table, string wantedValue)
         {
             MySqlConnection dbcon = GetLockedConnection();

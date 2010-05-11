@@ -141,15 +141,15 @@ namespace OpenSim.Region.Framework.Scenes
         protected StorageManager m_storageManager;
         protected AgentCircuitManager m_authenticateHandler;
 
-        protected Aurora.Framework.IEstateData m_EstateService;
+        protected Aurora.Framework.IEstateConnector m_EstateService;
 
-        public Aurora.Framework.IEstateData EstateService
+        public Aurora.Framework.IEstateConnector EstateService
         {
             get
             {
                 if (m_EstateService == null)
                 {
-                    m_EstateService = Aurora.DataManager.DataManager.GetDefaultEstatePlugin();
+                    m_EstateService = Aurora.DataManager.DataManager.IEstateConnector;
                 }
                 return m_EstateService;
             }

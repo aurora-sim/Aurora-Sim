@@ -47,12 +47,9 @@ namespace Aurora.Services.DataService
                 ProfileData.ConnectToDatabase(ConnectionString);
                 MySQLRegion RegionData = new MySQLRegion();
                 RegionData.ConnectToDatabase(ConnectionString);
-                MySQLEstate EstateData = new MySQLEstate();
-                EstateData.ConnectToDatabase(ConnectionString);
                 Aurora.DataManager.DataManager.SetDefaultGenericDataPlugin(GenericData);
                 Aurora.DataManager.DataManager.SetDefaultProfilePlugin((IProfileData)ProfileData);
                 Aurora.DataManager.DataManager.SetDefaultRegionPlugin((IRegionData)RegionData);
-                Aurora.DataManager.DataManager.SetDefaultEstatePlugin(EstateData);
             }
             else if (PluginModule == "SQLite")
             {
@@ -79,13 +76,9 @@ namespace Aurora.Services.DataService
                 ProfileData.ConnectToDatabase(ConnectionString);
                 SQLiteRegion RegionData = new SQLiteRegion();
                 RegionData.ConnectToDatabase(ConnectionString);
-                SQLiteEstate EstateData = new SQLiteEstate();
-                EstateData.ConnectToDatabase(ConnectionString);
-
                 Aurora.DataManager.DataManager.SetDefaultGenericDataPlugin(GenericData);
                 Aurora.DataManager.DataManager.SetDefaultProfilePlugin((IProfileData)ProfileData);
                 Aurora.DataManager.DataManager.SetDefaultRegionPlugin((IRegionData)RegionData);
-                Aurora.DataManager.DataManager.SetDefaultEstatePlugin(EstateData);
             }
 
             DataManager.DataManager.IScriptDataConnector = new LocalScriptDataConnector(ScriptSaveDataConnector);
@@ -95,6 +88,7 @@ namespace Aurora.Services.DataService
                 DataManager.DataManager.IAgentConnector = new LocalAgentConnector();
                 DataManager.DataManager.IGridConnector = new LocalGridConnector();
                 DataManager.DataManager.IProfileConnector = new LocalProfileConnector();
+                DataManager.DataManager.IEstateConnector = new LocalEstateConnector();
                 return;
             }
             if (Connector != "RemoteConnector")
@@ -119,14 +113,6 @@ namespace Aurora.Services.DataService
         public void SetGenericDataPlugin(IGenericData Plugin)
         {
             Aurora.DataManager.DataManager.DefaultGenericPlugin = Plugin;
-        }
-        public IEstateData GetEstatePlugin()
-        {
-            return Aurora.DataManager.DataManager.DefaultEstatePlugin;
-        }
-        public void SetEstatePlugin(IEstateData Plugin)
-        {
-            Aurora.DataManager.DataManager.DefaultEstatePlugin = Plugin;
         }
         public IProfileData GetProfilePlugin()
         {

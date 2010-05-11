@@ -29,19 +29,6 @@ namespace Aurora.DataManager
         }
         #endregion
         
-        #region IEstateData
-        
-        public static IEstateData DefaultEstatePlugin = null;
-        public static IEstateData GetDefaultEstatePlugin()
-        {
-            return DefaultEstatePlugin;
-        }
-        public static void SetDefaultEstatePlugin(IEstateData Plugin)
-        {
-            DefaultEstatePlugin = Plugin;
-        }
-        #endregion
-        
         #region IProfileData 
         
         public static IProfileData DefaultProfilePlugin = null;
@@ -88,6 +75,7 @@ namespace Aurora.DataManager
         public static IGridConnector IGridConnector;
         public static IAgentConnector IAgentConnector;
         public static IScriptDataConnector IScriptDataConnector;
+        public static IEstateConnector IEstateConnector;
 
 
         #endregion
