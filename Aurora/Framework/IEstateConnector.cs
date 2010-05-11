@@ -2,11 +2,10 @@
 using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
-using Aurora.DataManager;
 using Aurora.Framework;
 using OpenSim.Framework;
 
-namespace Aurora.Services.DataService
+namespace Aurora.Framework
 {
 	public interface IEstateConnector
 	{

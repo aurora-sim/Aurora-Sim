@@ -272,5 +272,92 @@ namespace Aurora.Services.DataService
 		{
 			UserProfilesCache.Remove(ID);
 		}
-	}
+
+        public void AddClassified(Classified classified)
+        {
+            List<string> values = new List<string>();
+            values.Add(classified.ClassifiedUUID);
+            values.Add(classified.CreatorUUID);
+            values.Add(classified.CreationDate);
+            values.Add(classified.ExpirationDate);
+            values.Add(classified.Category);
+            values.Add(classified.Name);
+            values.Add(classified.Description);
+            values.Add(classified.ParcelUUID);
+            values.Add(classified.ParentEstate);
+            values.Add(classified.SnapshotUUID);
+            values.Add(classified.SimName);
+            values.Add(classified.PosGlobal);
+            values.Add(classified.ParcelName);
+            values.Add(classified.ClassifiedFlags);
+            values.Add(classified.PriceForListing);
+            GD.Insert("classifieds", values.ToArray());
+            RemoveFromCache(new UUID(classified.CreatorUUID));
+        }
+
+        public void DeleteClassified(UUID ID, UUID agentID)
+        {
+            List<string> keys = new List<string>();
+            List<object> values = new List<object>();
+            keys.Add("classifieduuid");
+            values.Add(ID);
+            GD.Delete("classifieds", keys.ToArray(), values.ToArray());
+            RemoveFromCache(agentID);
+        }
+
+        public void AddPick(ProfilePickInfo pick)
+        {
+            List<string> values = new List<string>();
+            values.Add(pick.pickuuid);
+            values.Add(pick.creatoruuid);
+            values.Add(pick.toppick);
+            values.Add(pick.parceluuid);
+            values.Add(pick.name);
+            values.Add(pick.description);
+            values.Add(pick.snapshotuuid);
+            values.Add(pick.user);
+            values.Add(pick.originalname);
+            values.Add(pick.simname);
+            values.Add(pick.posglobal);
+            values.Add(pick.sortorder);
+            values.Add(pick.enabled);
+
+            GD.Insert("userpicks", values.ToArray());
+            RemoveFromCache(new UUID(pick.creatoruuid));
+        }
+
+        public void UpdatePick(ProfilePickInfo pick)
+        {
+            List<string> keys = new List<string>();
+            List<string> values = new List<string>();
+            keys.Add("parceluuid");
+            keys.Add("name");
+            keys.Add("snapshotuuid");
+            keys.Add("description");
+            keys.Add("simname");
+            keys.Add("posglobal");
+            keys.Add("sortorder");
+            keys.Add("enabled");
+            values.Add(pick.parceluuid);
+            values.Add(pick.name);
+            values.Add(pick.snapshotuuid);
+            values.Add(pick.description);
+            values.Add(pick.simname);
+            values.Add(pick.posglobal);
+            values.Add(pick.sortorder);
+            values.Add(pick.enabled);
+            GD.Update("userpicks", values.ToArray(), keys.ToArray(), new string[] { "pickuuid" }, new object[] { pick.pickuuid });
+            RemoveFromCache(new UUID(pick.creatoruuid));
+        }
+
+        public void DeletePick(UUID ID, UUID agentID)
+        {
+            List<string> keys = new List<string>();
+            List<object> values = new List<object>();
+            keys.Add("pickuuid");
+            values.Add(ID);
+            GD.Delete("userpicks", keys.ToArray(), values.ToArray());
+            RemoveFromCache(agentID);
+        }
+    }
 }

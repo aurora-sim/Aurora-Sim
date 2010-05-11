@@ -18,5 +18,10 @@ namespace Aurora.Framework
 		bool UpdateUserProfile(IUserProfileInfo Profile);
 		void CreateNewProfile(UUID UUID);
 		void RemoveFromCache(UUID ID);
+        void AddClassified(Classified classified);
+        void DeleteClassified(UUID ID, UUID agentID);
+        void AddPick(ProfilePickInfo pick);
+        void UpdatePick(ProfilePickInfo pick);
+        void DeletePick(UUID ID, UUID agentID);
 	}
 }

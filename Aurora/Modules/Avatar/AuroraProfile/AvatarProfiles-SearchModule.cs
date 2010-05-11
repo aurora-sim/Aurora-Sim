@@ -332,45 +332,34 @@ namespace Aurora.Modules
 
             #endregion
 
-            List<string> values = new List<string>();
-            values.Add(classifiedUUID);
-            values.Add(creatorUUID);
-            values.Add(creationdate);
-            values.Add(expirationdate);
-            values.Add(category);
-            values.Add(name);
-            values.Add(description);
-            values.Add(parceluuid);
-            values.Add(parentestate);
-            values.Add(snapshotUUID);
-            values.Add(simname);
-            values.Add(globalpos);
-            values.Add(parcelname);
-            values.Add(classifiedFlags);
-            values.Add(classifiedPrice);
-            GenericData.Insert("classifieds", values.ToArray());
-            ProfileFrontend.RemoveFromCache(remoteClient.AgentId);
+            Classified classified = new Classified();
+            classified.ClassifiedUUID = classifiedUUID;
+            classified.CreatorUUID=creatorUUID;
+            classified.CreationDate =creationdate;
+            classified.ExpirationDate =expirationdate;
+            classified.Category = category;
+            classified.Name = name;
+            classified.Description =description;
+            classified.ParcelUUID =parceluuid;
+            classified.ParentEstate =parentestate;
+            classified.SnapshotUUID=snapshotUUID;
+            classified.SimName=simname;
+            classified.PosGlobal=globalpos;
+            classified.ParcelName=parcelname;
+            classified.ClassifiedFlags =classifiedFlags;
+            classified.PriceForListing = classifiedPrice;
+            ProfileFrontend.AddClassified(classified);
         }
         public void ClassifiedDelete(UUID queryClassifiedID, IClientAPI remoteClient)
         {
-            List<string> keys = new List<string>();
-            List<string> values = new List<string>();
-            keys.Add("classifieduuid");
-            values.Add(queryClassifiedID.ToString());
-            GenericData.Delete("classifieds", keys.ToArray(), values.ToArray());
-            ProfileFrontend.RemoveFromCache(remoteClient.AgentId);
+            ProfileFrontend.DeleteClassified(queryClassifiedID, remoteClient.AgentId);
         }
         public void GodClassifiedDelete(UUID queryClassifiedID, IClientAPI remoteClient)
         {
             ScenePresence sp = m_scene.GetScenePresence(remoteClient.AgentId);
             if (sp.GodLevel != 0)
             {
-                List<string> keys = new List<string>();
-                List<string> values = new List<string>();
-                keys.Add("classifieduuid");
-                values.Add(queryClassifiedID.ToString());
-                GenericData.Delete("classifieds", keys.ToArray(), values.ToArray());
-                ProfileFrontend.RemoveFromCache(remoteClient.AgentId);
+                ProfileFrontend.DeleteClassified(queryClassifiedID, remoteClient.AgentId);
             }
         }
         public void HandleAvatarPicksRequest(Object sender, string method, List<String> args)
@@ -485,72 +474,50 @@ namespace Aurora.Modules
 
             if (pick == "")
             {
-                List<string> values = new List<string>();
-                values.Add(pickID.ToString());
-                values.Add(creatorID.ToString());
-                values.Add(topPick.ToString());
-                values.Add(parceluuid.ToString());
-                values.Add(name);
-                values.Add(desc);
-                values.Add(snapshotID.ToString());
-                values.Add(user);
-                values.Add(OrigionalName);
-                values.Add(remoteClient.Scene.RegionInfo.RegionName);
-                values.Add(pos_global);
-                values.Add(sortOrder.ToString());
-                values.Add(enabled.ToString());
-                GenericData.Insert("userpicks", values.ToArray());
+                ProfilePickInfo values = new ProfilePickInfo();
+                values.pickuuid = pickID.ToString();
+                values.creatoruuid = creatorID.ToString();
+                values.toppick = topPick.ToString();
+                values.parceluuid = parceluuid.ToString();
+                values.name = name;
+                values.description = desc;
+                values.snapshotuuid = snapshotID.ToString();
+                values.user = user;
+                values.originalname = OrigionalName;
+                values.simname = remoteClient.Scene.RegionInfo.RegionName;
+                values.posglobal = pos_global;
+                values.sortorder = sortOrder.ToString();
+                values.enabled = enabled.ToString();
+                ProfileFrontend.AddPick(values);
             }
             else
             {
-                List<string> keys = new List<string>();
-                List<string> values = new List<string>();
-                keys.Add("parceluuid");
-                keys.Add("name");
-                keys.Add("snapshotuuid");
-                keys.Add("description");
-                keys.Add("simname");
-                keys.Add("posglobal");
-                keys.Add("sortorder");
-                keys.Add("enabled");
-                values.Add(parceluuid.ToString());
-                values.Add(name);
-                values.Add(snapshotID.ToString());
-                values.Add(desc);
-                values.Add(remoteClient.Scene.RegionInfo.RegionName);
-                values.Add(pos_global);
-                values.Add(sortOrder.ToString());
-                values.Add(enabled.ToString());
-                List<string> keys2 = new List<string>();
-                keys2.Add("pickuuid");
-                List<string> values2 = new List<string>();
-                values2.Add(pickID.ToString());
-                GenericData.Update("userpicks", values.ToArray(), keys.ToArray(), keys2.ToArray(), values2.ToArray());
+                ProfilePickInfo info = new ProfilePickInfo();
+                info.creatoruuid = remoteClient.AgentId.ToString();
+                info.parceluuid = parceluuid.ToString();
+                info.name = name;
+                info.snapshotuuid = snapshotID.ToString();
+                info.description=desc;
+                info.simname = remoteClient.Scene.RegionInfo.RegionName;
+                info.posglobal = pos_global;
+                info.sortorder = sortOrder.ToString();
+                info.enabled = enabled.ToString();
+                ProfileFrontend.UpdatePick(info);
             }
-            ProfileFrontend.RemoveFromCache(remoteClient.AgentId);
         }
         public void GodPickDelete(IClientAPI remoteClient, UUID AgentID, UUID PickID, UUID queryID)
         {
             ScenePresence sp = m_scene.GetScenePresence(remoteClient.AgentId);
             if (sp.GodLevel != 0)
             {
-                List<string> keys = new List<string>();
-                List<string> values = new List<string>();
-                keys.Add("pickuuid");
-                values.Add(PickID.ToString());
-                GenericData.Delete("userpicks", keys.ToArray(), values.ToArray());
-                ProfileFrontend.RemoveFromCache(remoteClient.AgentId);
+                ProfileFrontend.DeletePick(PickID, AgentID);
             }
         }
         public void PickDelete(IClientAPI remoteClient, UUID queryPickID)
         {
-            List<string> keys = new List<string>();
-            List<string> values = new List<string>();
-            keys.Add("pickuuid");
-            values.Add(queryPickID.ToString());
-            GenericData.Delete("userpicks", keys.ToArray(), values.ToArray());
-            ProfileFrontend.RemoveFromCache(remoteClient.AgentId);
+            ProfileFrontend.DeletePick(queryPickID, remoteClient.AgentId);
         }
+
         public void HandleAvatarNotesRequest(Object sender, string method, List<String> args)
         {
             if (!(sender is IClientAPI))
@@ -587,6 +554,7 @@ namespace Aurora.Modules
             UPI.Notes.Add(queryTargetID.ToString(), notes);
             ProfileFrontend.UpdateUserNotes(remoteClient.AgentId, queryTargetID,notes, UPI);
         }
+
         public void AvatarInterestsUpdate(IClientAPI remoteClient, uint wantmask, string wanttext, uint skillsmask, string skillstext, string languages)
         {
             IUserProfileInfo UPI = ProfileFrontend.GetUserProfile(remoteClient.AgentId);

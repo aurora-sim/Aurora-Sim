@@ -366,6 +366,31 @@ namespace Aurora.Services.DataService
             }
         }
 
+        public void AddClassified(Classified classified)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void DeleteClassified(UUID ID, UUID agentID)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void AddPick(ProfilePickInfo pick)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void UpdatePick(ProfilePickInfo pick)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void DeletePick(UUID ID, UUID agentID)
+        {
+            throw new NotImplementedException();
+        }
+
         #endregion
     }
 }
