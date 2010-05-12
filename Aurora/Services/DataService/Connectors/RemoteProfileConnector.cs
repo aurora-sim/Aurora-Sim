@@ -142,12 +142,11 @@ namespace Aurora.Services.DataService
 
         public void UpdateUserNotes(UUID agentID, UUID targetAgentID, string notes, IUserProfileInfo UPI)
         {
-            Dictionary<string, object> sendData = new Dictionary<string, object>();
+            Dictionary<string, object> sendData = UPI.ToKeyValuePairs();
 
             sendData["PRINCIPALID"] = agentID.ToString();
             sendData["TARGETID"] = targetAgentID.ToString();
             sendData["NOTES"] = notes.ToString();
-            sendData["PROFILE"] = UPI.ToKeyValuePairs();
             sendData["METHOD"] = "updateusernotes";
 
             string reqString = ServerUtils.BuildQueryString(sendData);

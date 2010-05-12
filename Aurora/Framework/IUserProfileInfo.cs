@@ -89,19 +89,19 @@ namespace Aurora.Framework
         {
             PrincipalID = UUID.Zero;
             if (kvp.ContainsKey("PrincipalID") && kvp["PrincipalID"] != null)
-                UUID.TryParse(kvp["PrincipalID"].ToString(), out PrincipalID);
+                PrincipalID = new UUID(kvp["PrincipalID"].ToString());
             PermaBanned = 0;
             if (kvp.ContainsKey("PermaBanned") && kvp["PermaBanned"] != null)
-                Int32.TryParse(kvp["PermaBanned"].ToString(), out PermaBanned);
+                PermaBanned = Convert.ToInt32(kvp["PermaBanned"].ToString());
             TempBanned = 0;
             if (kvp.ContainsKey("TempBanned") && kvp["TempBanned"] != null)
-                Int32.TryParse(kvp["TempBanned"].ToString(), out TempBanned);
+                TempBanned = Convert.ToInt32(kvp["TempBanned"].ToString());
             MaxMaturity = 0;
             if (kvp.ContainsKey("MaxMaturity") && kvp["MaxMaturity"] != null)
-                Int32.TryParse(kvp["MaxMaturity"].ToString(), out MaxMaturity);
+                MaxMaturity = Convert.ToInt32(kvp["MaxMaturity"].ToString());
             IsMinor = false;
             if (kvp.ContainsKey("IsMinor") && kvp["IsMinor"] != null)
-                bool.TryParse(kvp["TheirFlags"].ToString(), out IsMinor);
+                IsMinor = Convert.ToBoolean(kvp["IsMinor"].ToString());
             Mac = "";
             if (kvp.ContainsKey("Mac") && kvp["Mac"] != null)
                 Mac = kvp["Mac"].ToString();
@@ -128,10 +128,10 @@ namespace Aurora.Framework
                 Language = kvp["Language"].ToString();
             AcceptTOS = true;
             if (kvp.ContainsKey("AcceptTOS") && kvp["AcceptTOS"] != null)
-                bool.TryParse(kvp["AcceptTOS"].ToString(), out AcceptTOS);
+                AcceptTOS = Convert.ToBoolean(kvp["AcceptTOS"].ToString());
             LanguageIsPublic = true;
             if (kvp.ContainsKey("LanguageIsPublic") && kvp["LanguageIsPublic"] != null)
-                bool.TryParse(kvp["LanguageIsPublic"].ToString(), out LanguageIsPublic);
+                LanguageIsPublic = Convert.ToBoolean(kvp["LanguageIsPublic"].ToString());
         }
 
         public Dictionary<string, object> ToKeyValuePairs()

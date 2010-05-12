@@ -88,10 +88,9 @@ namespace Aurora.Services.DataService
 
         public void UpdateAgent(IAgentInfo agent)
         {
-            Dictionary<string, object> sendData = new Dictionary<string, object>();
+            Dictionary<string, object> sendData = agent.ToKeyValuePairs();
 
             sendData["PRINCIPALID"] = agent.PrincipalID.ToString();
-            sendData["AGENT"] = agent.ToKeyValuePairs();
             sendData["METHOD"] = "updateagent";
 
             string reqString = ServerUtils.BuildQueryString(sendData);

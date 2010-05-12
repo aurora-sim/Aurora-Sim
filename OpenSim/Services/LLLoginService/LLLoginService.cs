@@ -81,6 +81,8 @@ namespace OpenSim.Services.LLLoginService
         IConfig m_AuroraLoginConfig;
         bool AllowAnonymousLogin = false;
         bool AuthenticateUsers = true;
+        bool m_UseTOS = false;
+        string TOSLocation = "";
 
         public LLLoginService(IConfigSource config, ISimulationService simService, ILibraryService libraryService)
         {
@@ -88,8 +90,10 @@ namespace OpenSim.Services.LLLoginService
             m_AuroraLoginConfig = config.Configs["AuroraLoginService"];
             if (m_AuroraLoginConfig != null)
             {
-                AllowAnonymousLogin = m_AuroraLoginConfig.GetBoolean("AllowAnonymousLogin");
-                AuthenticateUsers = m_AuroraLoginConfig.GetBoolean("AuthenticateUsers");
+                m_UseTOS = m_AuroraLoginConfig.GetBoolean("UseTermsOfServiceOnFirstLogin", false);
+                AllowAnonymousLogin = m_AuroraLoginConfig.GetBoolean("AllowAnonymousLogin", false);
+                AuthenticateUsers = m_AuroraLoginConfig.GetBoolean("AuthenticateUsers", true);
+                TOSLocation = m_AuroraLoginConfig.GetString("LocationOfTheTermsOfService", "");
             }
             m_LoginServerConfig = config.Configs["LoginService"];
             if (m_LoginServerConfig == null)
@@ -164,7 +168,8 @@ namespace OpenSim.Services.LLLoginService
 
         }
 
-        public LLLoginService(IConfigSource config) : this(config, null, null)
+        public LLLoginService(IConfigSource config)
+            : this(config, null, null)
         {
         }
 
@@ -217,7 +222,7 @@ namespace OpenSim.Services.LLLoginService
             return response;
         }
 
-        public LoginResponse Login(string firstName, string lastName, string passwd, string startLocation, UUID scopeID, string clientVersion, IPEndPoint clientIP)
+        public LoginResponse Login(string firstName, string lastName, string passwd, string startLocation, UUID scopeID, string clientVersion, IPEndPoint clientIP, Hashtable requestData)
         {
             bool success = false;
             UUID session = UUID.Random();
@@ -244,7 +249,7 @@ namespace OpenSim.Services.LLLoginService
                         account.LastName = lastName;
                         account.PrincipalID = new UUID(new Guid().ToString());
                         account.ScopeID = UUID.Zero;
-                        account.ServiceURLs = new Dictionary<string,object>();
+                        account.ServiceURLs = new Dictionary<string, object>();
                         account.UserFlags = 0;
                         account.UserLevel = 0;
                         account.UserTitle = "";
@@ -265,6 +270,19 @@ namespace OpenSim.Services.LLLoginService
                         data.CreateNewAgent(account.PrincipalID);
                         agent = data.GetAgent(account.PrincipalID);
                     }
+                    //Update the agent
+                    agent.IP = clientIP.Address.ToString();
+                    string mac = (string)requestData["mac"];
+                    agent.Mac = mac;
+                    if (agent.AcceptTOS == false && m_UseTOS)
+                    {
+                        agent.AcceptTOS = true;
+                        return new LLFailedLoginResponse("key",
+                            "By logging in, you accept the terms of service for this grid posted at " + TOSLocation + ".",
+                            "false");
+                    }
+                    agent.AcceptTOS = true;
+                    data.UpdateAgent(agent);
                     if (agent.PermaBanned == 1 || agent.TempBanned == 1)
                     {
                         m_log.Info("[LLOGIN SERVICE]: Login failed, reason: user is banned.");
@@ -340,9 +358,9 @@ namespace OpenSim.Services.LLLoginService
                 {
                     // something went wrong, make something up, so that we don't have to test this anywhere else
                     guinfo = new GridUserInfo();
-                    guinfo.LastPosition = guinfo.HomePosition = new Vector3(128, 128, 30);               
+                    guinfo.LastPosition = guinfo.HomePosition = new Vector3(128, 128, 30);
                 }
-                
+
                 //
                 // Find the destination region/grid
                 //
@@ -443,7 +461,7 @@ namespace OpenSim.Services.LLLoginService
                     m_log.WarnFormat(
                         "[LLOGIN SERVICE]: User {0} {1} tried to login to a 'home' start location but they have none set",
                         account.FirstName, account.LastName);
-                    
+
                     tryDefaults = true;
                 }
                 else
@@ -453,7 +471,7 @@ namespace OpenSim.Services.LLLoginService
                     position = pinfo.HomePosition;
                     lookAt = pinfo.HomeLookAt;
                 }
-                
+
                 if (tryDefaults)
                 {
                     List<GridRegion> defaults = m_GridService.GetDefaultRegions(scopeID);
@@ -512,7 +530,7 @@ namespace OpenSim.Services.LLLoginService
                     position = pinfo.LastPosition;
                     lookAt = pinfo.LastLookAt;
                 }
-                
+
                 return region;
             }
             else
@@ -545,7 +563,7 @@ namespace OpenSim.Services.LLLoginService
                                 regions = m_GridService.GetDefaultRegions(scopeID);
                                 if (regions != null && regions.Count > 0)
                                 {
-                                    where = "safe"; 
+                                    where = "safe";
                                     return regions[0];
                                 }
                                 else
@@ -570,10 +588,10 @@ namespace OpenSim.Services.LLLoginService
                                 return null;
                             }
                             // Valid specification of a remote grid
-                            
+
                             regionName = parts[0];
                             string domainLocator = parts[1];
-                            parts = domainLocator.Split(new char[] {':'});
+                            parts = domainLocator.Split(new char[] { ':' });
                             string domainName = parts[0];
                             uint port = 0;
                             if (parts.Length > 1)
@@ -588,7 +606,7 @@ namespace OpenSim.Services.LLLoginService
                         List<GridRegion> defaults = m_GridService.GetDefaultRegions(scopeID);
                         if (defaults != null && defaults.Count > 0)
                         {
-                            where = "safe"; 
+                            where = "safe";
                             return defaults[0];
                         }
                         else
@@ -734,7 +752,7 @@ namespace OpenSim.Services.LLLoginService
                 return null;
         }
 
-        private AgentCircuitData MakeAgent(GridRegion region, UserAccount account, 
+        private AgentCircuitData MakeAgent(GridRegion region, UserAccount account,
             AvatarData avatar, UUID session, UUID secureSession, uint circuit, Vector3 position, string viewer, IPEndPoint IP)
         {
             AgentCircuitData aCircuit = new AgentCircuitData();
@@ -844,5 +862,5 @@ namespace OpenSim.Services.LLLoginService
         }
     }
 
-    #endregion
+        #endregion
 }

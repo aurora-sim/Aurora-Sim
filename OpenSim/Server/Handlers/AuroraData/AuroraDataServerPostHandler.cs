@@ -125,12 +125,8 @@ namespace OpenSim.Server.Handlers.AuroraData
             string notes = "";
             if (request.ContainsKey("NOTES"))
                 notes = request["NOTES"].ToString();
-            
-            Dictionary<string, object> newProfile = new Dictionary<string, object>();
-            if (request.ContainsKey("PROFILE"))
-                newProfile = request["PROFILE"] as Dictionary<string, object>;
 
-            IUserProfileInfo UserProfile = new IUserProfileInfo(newProfile);
+            IUserProfileInfo UserProfile = new IUserProfileInfo(request);
             ProfileConnector.UpdateUserNotes(principalID, targetID, notes, UserProfile);
             result["result"] = "Successful";
 
@@ -294,7 +290,7 @@ namespace OpenSim.Server.Handlers.AuroraData
             result["result"] = "Successful";
 
             string xmlString = ServerUtils.BuildXmlResponse(result);
-            m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
         }
@@ -339,11 +335,7 @@ namespace OpenSim.Server.Handlers.AuroraData
                 return Failedencoding.GetBytes(FailedxmlString);
             }
 
-            Dictionary<string, object> newProfile = new Dictionary<string, object>();
-            if (request.ContainsKey("AGENT"))
-                newProfile = request["AGENT"] as Dictionary<string, object>;
-
-            IAgentInfo Agent = new IAgentInfo(newProfile);
+            IAgentInfo Agent = new IAgentInfo(request);
             AgentConnector.UpdateAgent(Agent);
             result["result"] = "Successful";
 
