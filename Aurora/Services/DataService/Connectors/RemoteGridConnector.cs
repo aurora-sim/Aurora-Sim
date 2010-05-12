@@ -61,9 +61,9 @@ namespace Aurora.Services.DataService
                         GridRegionFlags flags = (GridRegionFlags)(-1);
                         foreach (object f in replyvalues)
                         {
-                            if (f is GridRegionFlags)
+                            if (f is string)
                             {
-                                flags = (GridRegionFlags)f;
+                                flags = (GridRegionFlags)Convert.ToInt32(f);
                             }
                             else
                                 m_log.DebugFormat("[AuroraRemoteProfileConnector]: GetRegionFlags {0} received invalid response type {1}",

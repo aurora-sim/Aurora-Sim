@@ -62,6 +62,8 @@ namespace OpenSim.Server.Handlers.AuroraData
                         return GetProfile(request);
                     case "updateprofile":
                         return UpdateProfile(request);
+                    case "updateinterests":
+                        return UpdateInterests(request);
                     case "createprofile":
                         return CreateProfile(request);
                     case "removefromcache":
@@ -129,7 +131,7 @@ namespace OpenSim.Server.Handlers.AuroraData
                 newProfile = request["PROFILE"] as Dictionary<string, object>;
 
             IUserProfileInfo UserProfile = new IUserProfileInfo(newProfile);
-            ProfileConnector.UpdateUserProfile(UserProfile);
+            ProfileConnector.UpdateUserNotes(principalID, targetID, notes, UserProfile);
             result["result"] = "Successful";
 
             string xmlString = ServerUtils.BuildXmlResponse(result);
@@ -224,17 +226,39 @@ namespace OpenSim.Server.Handlers.AuroraData
                 UTF8Encoding Failedencoding = new UTF8Encoding();
                 return Failedencoding.GetBytes(FailedxmlString);
             }
-            
-            Dictionary<string, object> newProfile = new Dictionary<string, object>();
-            if (request.ContainsKey("PROFILE"))
-                newProfile = request["PROFILE"] as Dictionary<string, object>;
 
-            IUserProfileInfo UserProfile = new IUserProfileInfo(newProfile);
+            IUserProfileInfo UserProfile = new IUserProfileInfo(request);
             ProfileConnector.UpdateUserProfile(UserProfile);
             result["result"] = "Successful";
 
             string xmlString = ServerUtils.BuildXmlResponse(result);
-            m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
+        }
+
+        byte[] UpdateInterests(Dictionary<string, object> request)
+        {
+            Dictionary<string, object> result = new Dictionary<string, object>();
+
+            UUID principalID = UUID.Zero;
+            if (request.ContainsKey("PRINCIPALID"))
+                UUID.TryParse(request["PRINCIPALID"].ToString(), out principalID);
+            else
+            {
+                m_log.WarnFormat("[AuroraDataServerPostHandler]: no principalID in request to get profile");
+                result["result"] = "null";
+                string FailedxmlString = ServerUtils.BuildXmlResponse(result);
+                m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", FailedxmlString);
+                UTF8Encoding Failedencoding = new UTF8Encoding();
+                return Failedencoding.GetBytes(FailedxmlString);
+            }
+
+            IUserProfileInfo UserProfile = new IUserProfileInfo(request);
+            ProfileConnector.UpdateUserInterests(UserProfile);
+            result["result"] = "Successful";
+
+            string xmlString = ServerUtils.BuildXmlResponse(result);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
         }
@@ -252,7 +276,7 @@ namespace OpenSim.Server.Handlers.AuroraData
             result["result"] = "Successful";
 
             string xmlString = ServerUtils.BuildXmlResponse(result);
-            m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
         }

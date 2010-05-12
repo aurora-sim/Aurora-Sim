@@ -279,6 +279,13 @@ namespace Aurora.Framework
             result["WebURL"] = WebURL;
             result["Created"] = Created.ToString();
             result["Partner"] = Partner.ToString();
+            result["Visible"] = Visible.ToString();
+            result["AArchiveName"] = AArchiveName.ToString();
+            result["CustomType"] = CustomType.ToString();
+            result["AArchiveName"] = AArchiveName.ToString();
+            result["IMViaEmail"] = IMViaEmail.ToString();
+            result["IsNewUser"] = IsNewUser.ToString();
+            result["MembershipGroup"] = MembershipGroup.ToString();
 
             //Classifieds
             Dictionary<string, object> ClassifiedsKVP = new Dictionary<string, object>();
@@ -309,6 +316,7 @@ namespace Aurora.Framework
 
         public IUserProfileInfo(Dictionary<string, object> main)
         {
+            PrincipalID = new UUID(main["PrincipalID"].ToString());
             AllowPublish = Convert.ToBoolean(main["AllowPublish"].ToString());
             MaturePublish = Convert.ToBoolean(main["MaturePublish"].ToString());
 
@@ -352,6 +360,10 @@ namespace Aurora.Framework
             {
                 Notes = notes;
             }
+            else
+            {
+                Notes = new Dictionary<string, string>();
+            }
             AboutText = main["AboutText"].ToString();
             FirstLifeImage = new UUID(main["FirstLifeImage"].ToString());
             FirstLifeAboutText = main["FirstLifeAboutText"].ToString();
@@ -359,6 +371,13 @@ namespace Aurora.Framework
             WebURL = main["WebURL"].ToString();
             Created = Convert.ToInt32(main["Created"].ToString());
             Partner = new UUID(main["Partner"].ToString());
+            Visible = Convert.ToBoolean(main["Visible"].ToString());
+            AArchiveName = main["AArchiveName"].ToString();
+            CustomType = main["CustomType"].ToString();
+            AArchiveName = main["AArchiveName"].ToString();
+            IMViaEmail = Convert.ToBoolean(main["IMViaEmail"].ToString());
+            IsNewUser = Convert.ToBoolean(main["IsNewUser"].ToString());
+            MembershipGroup = main["MembershipGroup"].ToString();
         }
     }
     public class ProfileInterests

@@ -552,7 +552,7 @@ namespace Aurora.Modules
                 UPI.Notes.Remove(queryTargetID.ToString());
             
             UPI.Notes.Add(queryTargetID.ToString(), notes);
-            ProfileFrontend.UpdateUserNotes(remoteClient.AgentId, queryTargetID,notes, UPI);
+            ProfileFrontend.UpdateUserNotes(remoteClient.AgentId, queryTargetID, notes, UPI);
         }
 
         public void AvatarInterestsUpdate(IClientAPI remoteClient, uint wantmask, string wanttext, uint skillsmask, string skillstext, string languages)
@@ -563,14 +563,13 @@ namespace Aurora.Modules
             UPI.Interests.CanDoMask = skillsmask.ToString();
             UPI.Interests.CanDoText = skillstext;
             UPI.Interests.Languages = languages;
-            ProfileFrontend.UpdateUserProfile(UPI);
+            ProfileFrontend.UpdateUserInterests(UPI);
         }
 
         public void RequestAvatarProperty(IClientAPI remoteClient, UUID target)
         {
             IUserProfileInfo UPI = ProfileFrontend.GetUserProfile(target);
             OpenSim.Services.Interfaces.GridUserInfo TargetPI = m_scene.GridUserService.GetGridUserInfo(target.ToString());
-            UserAccount TargetAccount = m_scene.UserAccountService.GetUserAccount(UUID.Zero, target);
             bool isFriend = IsFriendOfUser(remoteClient.AgentId, target);
             if (isFriend)
             {
@@ -583,50 +582,30 @@ namespace Aurora.Modules
             }
             else
             {
+                UserAccount TargetAccount = m_scene.UserAccountService.GetUserAccount(UUID.Zero, target);
                 //See if all can see this person
-                if (UPI.Visible)
+                //Not a friend, so send the first page only and if they are online
+                uint agentOnline = 0;
+                if (TargetPI.Online && UPI.Visible)
                 {
-                    //Not a friend, so send the first page only and if they are online
-                    uint agentOnline = 0;
-                    if (TargetPI.Online)
-                    {
-                        agentOnline = 16;
-                    }
-                    
-                    Byte[] charterMember;
-                    if (UPI.MembershipGroup == "")
-                    {
-                        charterMember = new Byte[1];
-                        charterMember[0] = (Byte)((TargetAccount.UserFlags & 0xf00) >> 8);
-                    }
-                    else
-                    {
-                        charterMember = OpenMetaverse.Utils.StringToBytes(UPI.MembershipGroup);
-                    }
-                    remoteClient.SendAvatarProperties(UPI.PrincipalID, "",
-                                                      Util.ToDateTime(UPI.Created).ToString("M/d/yyyy", CultureInfo.InvariantCulture),
-                                                      charterMember, "", (uint)(TargetAccount.UserFlags & agentOnline),
-                                                      UUID.Zero, UUID.Zero, "", UUID.Zero);
+                    agentOnline = 16;
+                }
+
+                Byte[] charterMember;
+                if (UPI.MembershipGroup == "")
+                {
+                    charterMember = new Byte[1];
+                    charterMember[0] = (Byte)((TargetAccount.UserFlags & 0xf00) >> 8);
                 }
                 else
                 {
-                    //Not a friend, so send the first page only.
-
-                    Byte[] charterMember;
-                    if (UPI.MembershipGroup == "")
-                    {
-                        charterMember = new Byte[1];
-                        charterMember[0] = (Byte)((TargetAccount.UserFlags & 0xf00) >> 8);
-                    }
-                    else
-                    {
-                        charterMember = OpenMetaverse.Utils.StringToBytes(UPI.MembershipGroup);
-                    }
-                    remoteClient.SendAvatarProperties(UPI.PrincipalID, "",
-                                                      Util.ToDateTime(UPI.Created).ToString("M/d/yyyy", CultureInfo.InvariantCulture),
-                                                      charterMember, "", (uint)(TargetAccount.UserFlags),
-                                                      UUID.Zero, UUID.Zero, "", UUID.Zero);
+                    charterMember = OpenMetaverse.Utils.StringToBytes(UPI.MembershipGroup);
                 }
+                remoteClient.SendAvatarProperties(UPI.PrincipalID, "",
+                                                  Util.ToDateTime(UPI.Created).ToString("M/d/yyyy", CultureInfo.InvariantCulture),
+                                                  charterMember, "", (uint)(TargetAccount.UserFlags & agentOnline),
+                                                  UUID.Zero, UUID.Zero, "", UUID.Zero);
+
             }
         }
 
@@ -653,7 +632,7 @@ namespace Aurora.Modules
         {
             UserAccount account = m_scene.UserAccountService.GetUserAccount(UUID.Zero, target);
             Byte[] charterMember;
-            if (Profile.MembershipGroup == " ")
+            if (Profile.MembershipGroup == " " || Profile.MembershipGroup == "")
             {
                 charterMember = new Byte[1];
                 charterMember[0] = (Byte)((account.UserFlags & 0xf00) >> 8);
@@ -663,7 +642,7 @@ namespace Aurora.Modules
                 charterMember = OpenMetaverse.Utils.StringToBytes(Profile.MembershipGroup);
             }
             uint membershipGroupINT = 0;
-            if (Profile.MembershipGroup != "")
+            if (Profile.MembershipGroup != " " || Profile.MembershipGroup == "")
                 membershipGroupINT = 4;
 
             uint flags = Convert.ToUInt32(Profile.AllowPublish) + Convert.ToUInt32(Profile.MaturePublish) + membershipGroupINT + (uint)agentOnline + (uint)account.UserFlags;

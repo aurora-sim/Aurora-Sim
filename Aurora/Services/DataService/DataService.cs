@@ -91,6 +91,7 @@ namespace Aurora.Services.DataService
                 DataManager.DataManager.IEstateConnector = new LocalEstateConnector();
                 return;
             }
+            DataManager.DataManager.IEstateConnector = new LocalEstateConnector();
             if (Connector != "RemoteConnector")
             {
                 m_log.Error("[AuroraDataService]: No Connector found with that name!");

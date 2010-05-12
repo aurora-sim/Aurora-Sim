@@ -16,6 +16,7 @@ namespace Aurora.Framework
 		void UpdateUserNotes(UUID agentID, UUID targetAgentID, string notes, IUserProfileInfo UPI);
 		IUserProfileInfo GetUserProfile(UUID agentID);
 		bool UpdateUserProfile(IUserProfileInfo Profile);
+        void UpdateUserInterests(IUserProfileInfo Profile);
 		void CreateNewProfile(UUID UUID);
 		void RemoveFromCache(UUID ID);
         void AddClassified(Classified classified);
@@ -23,5 +24,5 @@ namespace Aurora.Framework
         void AddPick(ProfilePickInfo pick);
         void UpdatePick(ProfilePickInfo pick);
         void DeletePick(UUID ID, UUID agentID);
-	}
+    }
 }

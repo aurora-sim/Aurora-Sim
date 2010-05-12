@@ -240,13 +240,12 @@ namespace Aurora.Services.DataService
 
         public bool UpdateUserProfile(IUserProfileInfo Profile)
         {
-            Dictionary<string, object> sendData = new Dictionary<string, object>();
+            Dictionary<string, object> sendData = Profile.ToKeyValuePairs();
 
             sendData["PRINCIPALID"] = Profile.PrincipalID.ToString();
-            sendData["PROFILE"] = Profile.ToKeyValuePairs();
             sendData["METHOD"] = "updateprofile";
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+             string reqString = ServerUtils.BuildQueryString(sendData);
 
             try
             {
@@ -282,6 +281,47 @@ namespace Aurora.Services.DataService
                 m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.Message);
             }
             return false;
+        }
+
+        public void UpdateUserInterests(IUserProfileInfo Profile)
+        {
+            Dictionary<string, object> sendData = Profile.ToKeyValuePairs();
+
+            sendData["PRINCIPALID"] = Profile.PrincipalID.ToString();
+            sendData["METHOD"] = "updateinterests";
+
+            string reqString = ServerUtils.BuildQueryString(sendData);
+
+            try
+            {
+                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                        m_ServerURI + "/auroradata",
+                        reqString);
+                if (reply != string.Empty)
+                {
+                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+
+                    if (replyData != null)
+                    {
+                        if (replyData.ContainsKey("result") && (replyData["result"].ToString().ToLower() == "null"))
+                        {
+                            m_log.DebugFormat("[AuroraRemoteProfileConnector]: UpdateProfile {0} received null response",
+                                Profile.PrincipalID);
+                        }
+                    }
+
+                    else
+                    {
+                        m_log.DebugFormat("[AuroraRemoteProfileConnector]: UpdateProfile {0} received null response",
+                            Profile.PrincipalID);
+                    }
+
+                }
+            }
+            catch (Exception e)
+            {
+                m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.Message);
+            }
         }
 
         public void CreateNewProfile(UUID PrincipalID)

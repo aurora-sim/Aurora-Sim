@@ -95,7 +95,7 @@ namespace Aurora.Services.DataService
 			return pick;
 		}
 
-		private ProfileInterests ReadInterestsInfoRow(string agentID)
+        private ProfileInterests ReadInterestsInfoRow(string agentID)
 		{
 			ProfileInterests interests = new ProfileInterests();
 			List<string> results = GD.Query("PrincipalID", agentID, "profilegeneral", "WantToMask,WantToText,CanDoMask,CanDoText,Languages");
@@ -185,7 +185,12 @@ namespace Aurora.Services.DataService
 			}
 		}
 
-		public bool UpdateUserProfile(IUserProfileInfo Profile)
+        public void UpdateUserNotes(UUID uUID, UUID queryTargetID, string notes)
+        {
+
+        }
+
+        public bool UpdateUserProfile(IUserProfileInfo Profile)
 		{
 			List<object> SetValues = new List<object>();
 			List<string> SetRows = new List<string>();
@@ -236,9 +241,32 @@ namespace Aurora.Services.DataService
 			KeyRow.Add("PrincipalID");
 			KeyValue.Add(Profile.PrincipalID.ToString());
 			RemoveFromCache(Profile.PrincipalID);
-			UserProfilesCache.Add(Profile.PrincipalID, Profile);
 			return GD.Update("profilegeneral", SetValues.ToArray(), SetRows.ToArray(), KeyRow.ToArray(), KeyValue.ToArray());
 		}
+
+        public void UpdateUserInterests(IUserProfileInfo Profile)
+        {
+            List<object> SetValues = new List<object>();
+            List<string> SetRows = new List<string>();
+            //Interests
+            SetRows.Add("WantToMask");
+            SetRows.Add("WantToText");
+            SetRows.Add("CanDoMask");
+            SetRows.Add("CanDoText");
+            SetRows.Add("Languages");
+            //Interests
+            SetValues.Add(Profile.Interests.WantToMask);
+            SetValues.Add(Profile.Interests.WantToText);
+            SetValues.Add(Profile.Interests.CanDoMask);
+            SetValues.Add(Profile.Interests.CanDoText);
+            SetValues.Add(Profile.Interests.Languages);
+            List<object> KeyValue = new List<object>();
+            List<string> KeyRow = new List<string>();
+            KeyRow.Add("PrincipalID");
+            KeyValue.Add(Profile.PrincipalID.ToString());
+            RemoveFromCache(Profile.PrincipalID);
+            GD.Update("profilegeneral", SetValues.ToArray(), SetRows.ToArray(), KeyRow.ToArray(), KeyValue.ToArray());
+        }
 
 		public void CreateNewProfile(UUID UUID)
 		{

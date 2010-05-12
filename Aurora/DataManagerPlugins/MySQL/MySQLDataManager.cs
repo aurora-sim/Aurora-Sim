@@ -29,7 +29,7 @@ namespace Aurora.DataManager.MySQL
         {
             if (m_connection != null)
             {
-                if (m_connection.Ping())
+               if (m_connection.Ping())
                     return m_connection;
                 else
                 {
@@ -450,8 +450,11 @@ namespace Aurora.DataManager.MySQL
             Dictionary<string, object> parameters = new Dictionary<string, object>();
             foreach (object value in setValues)
             {
-                query += "`" + setRows[i] + "` = @" + setRows[i] + " ,";
-                parameters["@" + setRows[i]] = value.ToString();
+                query += setRows[i] + " = ?" + setRows[i] + ",";
+                string valueSTR = value.ToString();
+                if(valueSTR == "")
+                valueSTR = " ";
+                parameters["?" + setRows[i]] = valueSTR;
                 i++;
             }
             i = 0;
@@ -465,7 +468,7 @@ namespace Aurora.DataManager.MySQL
                 query += "' and ";
                 i++;
             }
-            query = query.Remove(query.Length - 4);
+            query = query.Remove(query.Length - 5);
             using (result = Query(query, parameters, dbcon))
             {
                 using (reader = result.ExecuteReader())
