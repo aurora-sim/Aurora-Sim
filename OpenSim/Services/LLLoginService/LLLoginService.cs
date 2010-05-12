@@ -243,7 +243,7 @@ namespace OpenSim.Services.LLLoginService
                     else
                     {
                         account = new UserAccount();
-                        account.Created = (int)DateTime.Now.ToFileTime();
+                        account.Created = Util.UnixTimeSinceEpoch();
                         account.Email = "";
                         account.FirstName = firstName;
                         account.LastName = lastName;
