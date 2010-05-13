@@ -569,12 +569,12 @@ namespace Aurora.Modules
         public void RequestAvatarProperty(IClientAPI remoteClient, UUID target)
         {
             IUserProfileInfo UPI = ProfileFrontend.GetUserProfile(target);
-            OpenSim.Services.Interfaces.GridUserInfo TargetPI = m_scene.GridUserService.GetGridUserInfo(target.ToString());
             bool isFriend = IsFriendOfUser(remoteClient.AgentId, target);
             if (isFriend)
             {
                 uint agentOnline = 0;
-                if (TargetPI.Online)
+                OpenSim.Services.Interfaces.GridUserInfo TargetPI = m_scene.GridUserService.GetGridUserInfo(target.ToString());
+                if (TargetPI != null && TargetPI.Online)
                 {
                     agentOnline = 16;
                 }
@@ -586,9 +586,13 @@ namespace Aurora.Modules
                 //See if all can see this person
                 //Not a friend, so send the first page only and if they are online
                 uint agentOnline = 0;
-                if (TargetPI.Online && UPI.Visible)
+                if (UPI.Visible)
                 {
-                    agentOnline = 16;
+                    OpenSim.Services.Interfaces.GridUserInfo TargetPI = m_scene.GridUserService.GetGridUserInfo(target.ToString());
+                    if (TargetPI != null && TargetPI.Online)
+                    {
+                        agentOnline = 16;
+                    }
                 }
 
                 Byte[] charterMember;
