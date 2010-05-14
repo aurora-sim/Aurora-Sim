@@ -34,8 +34,7 @@ namespace Aurora.Services.DataService
 				estateID++;
 				EstateID = estateID.ToString();
 
-
-				List<object> Values = new List<object>();
+                List<object> Values = new List<object>();
 				Values.Add(EstateID);
 				Values.Add(es.EstateName);
 				Values.Add(es.AbuseEmailToEstateOwner);

@@ -22,8 +22,6 @@ namespace Aurora.Services.DataService
         private static readonly ILog m_log =
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
-        private IGridConnector GridConnector;
-
         private string m_ServerURI = "";
 
         public RemoteGridConnector(string serverURI)
@@ -172,7 +170,42 @@ namespace Aurora.Services.DataService
 
         public void AddTelehub(Telehub telehub)
         {
-            throw new NotImplementedException();
+            Dictionary<string, object> sendData = telehub.ToKeyValuePairs();
+
+            sendData["METHOD"] = "addtelehub";
+
+            string reqString = ServerUtils.BuildQueryString(sendData);
+
+            try
+            {
+                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                        m_ServerURI + "/auroradata",
+                        reqString);
+                if (reply != string.Empty)
+                {
+                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+
+                    if (replyData != null)
+                    {
+                        if (replyData.ContainsKey("result") && (replyData["result"].ToString().ToLower() == "null"))
+                        {
+                            m_log.DebugFormat("[AuroraRemoteProfileConnector]: RemoveTelehub {0} received null response",
+                                telehub.RegionID);
+                        }
+                    }
+
+                    else
+                    {
+                        m_log.DebugFormat("[AuroraRemoteProfileConnector]: RemoveTelehub {0} received null response",
+                            telehub.RegionID);
+                    }
+
+                }
+            }
+            catch (Exception e)
+            {
+                m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.Message);
+            }
         }
 
         public void RemoveTelehub(UUID regionID)
@@ -218,7 +251,44 @@ namespace Aurora.Services.DataService
 
         public Telehub FindTelehub(UUID regionID)
         {
-            throw new NotImplementedException();
+            Dictionary<string, object> sendData = new Dictionary<string,object>();
+
+            sendData["METHOD"] = "findtelehub";
+            sendData["REGIONID"] = regionID.ToString();
+
+            string reqString = ServerUtils.BuildQueryString(sendData);
+
+            try
+            {
+                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                        m_ServerURI + "/auroradata",
+                        reqString);
+                if (reply != string.Empty)
+                {
+                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+
+                    if (replyData != null)
+                    {
+                        if (replyData.ContainsKey("result") && (replyData["result"].ToString().ToLower() == "null"))
+                        {
+                            m_log.DebugFormat("[AuroraRemoteProfileConnector]: RemoveTelehub {0} received null response",
+                                regionID.ToString());
+                        }
+                        return new Telehub(replyData);
+                    }
+                    else
+                    {
+                        m_log.DebugFormat("[AuroraRemoteProfileConnector]: RemoveTelehub {0} received null response",
+                            regionID.ToString());
+                    }
+                }
+                return null;
+            }
+            catch (Exception e)
+            {
+                m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.Message);
+            }
+            return null;
         }
 
         #endregion

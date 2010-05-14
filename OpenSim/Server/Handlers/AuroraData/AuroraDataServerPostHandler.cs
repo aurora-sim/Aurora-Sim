@@ -26,7 +26,7 @@ namespace OpenSim.Server.Handlers.AuroraData
         private IProfileConnector ProfileConnector = null;
         private IAgentConnector AgentConnector = null;
         private IGridConnector GridConnector = null;
-
+        private IEstateConnector EstateConnector = null;
 
         public AuroraDataServerPostHandler() :
             base("POST", "/auroradata")
@@ -34,6 +34,7 @@ namespace OpenSim.Server.Handlers.AuroraData
             ProfileConnector = DataManager.IProfileConnector;
             GridConnector = DataManager.IGridConnector;
             AgentConnector = DataManager.IAgentConnector;
+            EstateConnector = DataManager.IEstateConnector;
         }
 
         public override byte[] Handle(string path, Stream requestData,
@@ -96,6 +97,18 @@ namespace OpenSim.Server.Handlers.AuroraData
                         return SetRegionFlags(request);
                     case "removetelehub":
                         return RemoveTelehub(request);
+                    case "addtelehub":
+                        return AddTelehub(request);
+                    case "findtelehub":
+                        return FindTelehub(request);
+                    case "loadestatesettings":
+                        return LoadEstateSettings(request);
+                    case "storeestatesettings":
+                        return StoreEstateSettings(request);
+                    case "linkregionestate":
+                        return LinkRegionEstate(request);
+                    case "deleteestate":
+                        return DeleteEstate(request);
 
                 }
                 m_log.DebugFormat("[AuroraDataServerPostHandler]: unknown method {0} request {1}", method.Length, method);
@@ -107,6 +120,58 @@ namespace OpenSim.Server.Handlers.AuroraData
 
             return FailureResult();
 
+        }
+
+        private byte[] DeleteEstate(Dictionary<string, object> request)
+        {
+            int EstateID = int.Parse(request["ESTATEID"].ToString());
+            if (EstateConnector.DeleteEstate(EstateID))
+                return SuccessResult();
+            else
+                return FailureResult();
+        }
+
+        private byte[] LinkRegionEstate(Dictionary<string, object> request)
+        {
+            int EstateID = int.Parse(request["ESTATEID"].ToString());
+            string Password = request["PASSWORD"].ToString();
+            UUID RegionID = new UUID(request["REGIONID"].ToString());
+            if (EstateConnector.LinkRegion(RegionID,EstateID,Password))
+                return SuccessResult();
+            else
+                return FailureResult();
+        }
+
+        private byte[] StoreEstateSettings(Dictionary<string, object> request)
+        {
+            //Warning! This services two different methods
+            EstateSettings ES = new EstateSettings(request);
+            if (EstateConnector.StoreEstateSettings(ES))
+                return SuccessResult();
+            else
+                return FailureResult();
+        }
+
+        private byte[] LoadEstateSettings(Dictionary<string, object> request)
+        {
+            //Warning! This services two different methods
+            EstateSettings ES = null;
+            if (request.ContainsKey("ESTATEID"))
+            {
+                int EstateID = int.Parse(request["ESTATEID"].ToString());
+                ES = EstateConnector.LoadEstateSettings(EstateID);
+            }
+            else
+            {
+                bool create = bool.Parse(request["CREATE"].ToString());
+                string regionID = request["REGIONID"].ToString();
+                ES = EstateConnector.LoadEstateSettings(new UUID(regionID), create);
+            }
+            Dictionary<string, object> result = ES.ToKeyValuePairs();
+            string xmlString = ServerUtils.BuildXmlResponse(result);
+            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
         }
 
         #region Methods
@@ -464,6 +529,27 @@ namespace OpenSim.Server.Handlers.AuroraData
             result["result"] = "Successful";
 
             string xmlString = ServerUtils.BuildXmlResponse(result);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
+        }
+
+        byte[] AddTelehub(Dictionary<string, object> request)
+        {
+            Telehub telehub = new Telehub(request);
+            GridConnector.AddTelehub(telehub);
+
+            return SuccessResult();
+        }
+
+        byte[] FindTelehub(Dictionary<string, object> request)
+        {
+            UUID regionID = UUID.Zero;
+            UUID.TryParse(request["REGIONID"].ToString(), out regionID);
+            
+            Dictionary<string, object> result = GridConnector.FindTelehub(regionID).ToKeyValuePairs();
+
+            string xmlString = ServerUtils.BuildXmlResponse(result);
+            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
         }
