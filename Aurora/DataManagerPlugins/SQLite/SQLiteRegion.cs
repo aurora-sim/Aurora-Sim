@@ -12,21 +12,6 @@ namespace Aurora.DataManager.SQLite
 {
     public class SQLiteRegion : SQLiteLoader, IRegionData
     {
-        public string AbuseReports()
-        {
-            string query = "SELECT ReportNumber FROM reports ORDER BY ReportNumber DESC";
-            SqliteCommand cmd = new SqliteCommand();
-            cmd.CommandText = query;
-            IDataReader reader = GetReader(cmd);
-            if (reader.Read())
-            {
-                return reader.GetString(0);
-            }
-            else
-            {
-                return "";
-            }
-        }
         public ObjectMediaURLInfo getObjectMediaInfo(string objectID, int side)
         {
             ObjectMediaURLInfo info = new ObjectMediaURLInfo();
@@ -69,102 +54,6 @@ namespace Aurora.DataManager.SQLite
                     info.object_media_version = data[i];
             }
             return info;
-        }
-        public AbuseReport GetAbuseReport(int formNumber)
-        {
-            AbuseReport report = new AbuseReport();
-            List<string> Reports = Query("ReportNumber", formNumber.ToString(), "abusereports", "*");
-            int i = 0;
-            foreach (string part in Reports)
-            {
-                if (i == 0)
-                    report.Category = part;
-                if (i == 1)
-                    report.Reporter = part;
-                if (i == 2)
-                    report.ObjectName = part;
-                if (i == 3)
-                    report.ObjectUUID = part;
-                if (i == 4)
-                    report.Abuser = part;
-                if (i == 5)
-                    report.Location = part;
-                if (i == 6)
-                    report.Details = part;
-                if (i == 7)
-                    report.Position = part;
-                if (i == 8)
-                    report.Estate = part;
-                if (i == 9)
-                    report.Summary = part;
-                if (i == 10)
-                    report.ReportNumber = part;
-                if (i == 11)
-                    report.AssignedTo = part;
-                if (i == 12)
-                    report.Active = part;
-                if (i == 13)
-                    report.Checked = part;
-                if (i == 14)
-                    report.Notes = part;
-                i++;
-                if (i == 15)
-                    i = 0;
-            }
-            return report;
-        }
-
-        public OfflineMessage[] GetOfflineMessages(string agentID)
-        {
-            List<OfflineMessage> messages = new List<OfflineMessage>();
-            List<string> Messages = Query("ToUUID", agentID, "offlinemessages", "*");
-            Delete("offlinemessages", new string[] { "ToUUID" }, new string[] { agentID });
-            int i = 0;
-            OfflineMessage Message = new OfflineMessage();
-            foreach (string part in Messages)
-            {
-                if (i == 0)
-                    Message.FromUUID = part;
-                if (i == 1)
-                    Message.FromName = part;
-                if (i == 2)
-                    Message.ToUUID = part;
-                if (i == 3)
-                    Message.Message = part;
-                i++;
-                if (i == 4)
-                {
-                    i = 0;
-                    messages.Add(Message);
-                    Message = new OfflineMessage();
-                }
-            }
-            return messages.ToArray();
-        }
-
-        public bool AddOfflineMessage(string fromUUID, string fromName, string toUUID, string message)
-        {
-            return Insert("offlinemessages", new string[] { fromUUID,fromName,toUUID,message});
-        }
-
-        public void AddLandObject(OpenSim.Framework.LandData args)
-        {
-            try
-            {
-                Delete("auroraland", new string[] { "UUID" }, new string[] { args.GlobalID.ToString() });
-            }
-            catch (Exception) {}
-            List<string> Values = new List<string>();
-            Values.Add(args.GlobalID.ToString());
-            Values.Add(args.LocalID.ToString());
-            Values.Add(args.MediaDesc.ToString());
-            Values.Add(args.MediaSize[1].ToString());
-            Values.Add(args.MediaLoop.ToString());
-            Values.Add(args.MediaType.ToString());
-            Values.Add(args.MediaSize[0].ToString());
-            Values.Add(args.ObscureMedia.ToString());
-            Values.Add(args.ObscureMusic.ToString());
-            Insert("auroraland", Values.ToArray());
         }
     }
 }

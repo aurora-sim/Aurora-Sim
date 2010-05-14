@@ -22,44 +22,37 @@ namespace Aurora.Framework
     }
     public interface IRegionData
     {
-        string AbuseReports();
         ObjectMediaURLInfo getObjectMediaInfo(string objectID, int side);
         bool StoreRegionWindlightSettings(RegionLightShareData wl);
         void AddLandObject(OpenSim.Framework.LandData ILandData);
         RegionLightShareData LoadRegionWindlightSettings(UUID regionUUID);
-
-        AbuseReport GetAbuseReport(int formNumber);
-
-        OfflineMessage[] GetOfflineMessages(string agentID);
-
-        bool AddOfflineMessage(string fromUUID, string fromName, string toUUID, string message);
     }
 
     public class OfflineMessage
     {
-        public string FromUUID;
-        public string ToUUID;
+        public UUID FromUUID;
+        public UUID ToUUID;
         public string FromName;
         public string Message;
-    }
 
-    public class AbuseReport
-    {
-        public string Category;
-        public string Reporter;
-        public string ObjectName;
-        public string ObjectUUID;
-        public string Abuser;
-        public string Location;
-        public string Details;
-        public string Position;
-        public string Estate;
-        public string Summary;
-        public string ReportNumber;
-        public string AssignedTo;
-        public string Active;
-        public string Checked;
-        public string Notes;
+        public OfflineMessage(){}
+        public OfflineMessage(Dictionary<string, object> KVP)
+        {
+            FromUUID = new UUID(KVP["FromUUID"].ToString());
+            ToUUID = new UUID(KVP["ToUUID"].ToString());
+            FromName = KVP["FromName"].ToString();
+            Message = KVP["Message"].ToString();
+        }
+
+        public Dictionary<string, object> ToKeyValuePairs()
+        {
+            Dictionary<string, object> RetVal = new Dictionary<string, object>();
+            RetVal["Message"] = Message;
+            RetVal["FromName"] = FromName;
+            RetVal["ToUUID"] = ToUUID;
+            RetVal["FromUUID"] = FromUUID;
+            return RetVal;
+        }
     }
 
     public interface IGroupsServicesConnector

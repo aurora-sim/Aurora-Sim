@@ -76,6 +76,8 @@ namespace Aurora.DataManager
         public static IAgentConnector IAgentConnector;
         public static IScriptDataConnector IScriptDataConnector;
         public static IEstateConnector IEstateConnector;
+        public static IOfflineMessagesConnector IOfflineMessagesConnector;
+        public static IAbuseReportsConnector IAbuseReportsConnector;
 
 
         #endregion
