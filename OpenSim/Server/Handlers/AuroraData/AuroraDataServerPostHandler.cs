@@ -109,6 +109,10 @@ namespace OpenSim.Server.Handlers.AuroraData
                         return LinkRegionEstate(request);
                     case "deleteestate":
                         return DeleteEstate(request);
+                    case "getregioninestate":
+                        return GetRegionsInEstate(request);
+                    case "getestates":
+                        return GetEstates(request);
 
                 }
                 m_log.DebugFormat("[AuroraDataServerPostHandler]: unknown method {0} request {1}", method.Length, method);
@@ -120,6 +124,48 @@ namespace OpenSim.Server.Handlers.AuroraData
 
             return FailureResult();
 
+        }
+
+        private byte[] GetRegionsInEstate(Dictionary<string, object> request)
+        {
+            Dictionary<string, object> result = new Dictionary<string, object>();
+
+            int estateID = int.Parse(request["ESTATEID"].ToString());
+            List<UUID> regionIDs = EstateConnector.GetRegions(estateID);
+            Dictionary<string, object> estateresult = new Dictionary<string, object>();
+            int i = 0;
+            foreach (UUID regionID in regionIDs)
+            {
+                estateresult.Add(i.ToString(), regionID);
+                i++;
+            }
+            result["result"] = estateresult;
+
+            string xmlString = ServerUtils.BuildXmlResponse(result);
+            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
+        }
+
+        private byte[] GetEstates(Dictionary<string, object> request)
+        {
+            Dictionary<string, object> result = new Dictionary<string, object>();
+
+            string search = request["SEARCH"].ToString();
+            List<int> EstateIDs = EstateConnector.GetEstates(search);
+            Dictionary<string, object> estateresult = new Dictionary<string, object>();
+            int i = 0;
+            foreach (int estateID in EstateIDs)
+            {
+                estateresult.Add(i.ToString(), estateID);
+                i++;
+            }
+            result["result"] = estateresult;
+
+            string xmlString = ServerUtils.BuildXmlResponse(result);
+            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
         }
 
         private byte[] DeleteEstate(Dictionary<string, object> request)
