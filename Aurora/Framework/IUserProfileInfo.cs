@@ -355,10 +355,15 @@ namespace Aurora.Framework
             }
             Classifieds = AllClassifieds.ToArray();
 
-            Dictionary<string, string> notes = main["Notes"] as Dictionary<string, string>;
-            if (notes != null)
+            Dictionary<string, object> notesreply = main["Notes"] as Dictionary<string, object>;
+            if (notesreply != null)
             {
-                Notes = notes;
+                Notes = new Dictionary<string, string>();
+                foreach (KeyValuePair<string, object> kvp in notesreply)
+                {
+                    Notes.Add(kvp.Key, kvp.Value.ToString());
+                }
+                //Notes = notes;
             }
             else
             {

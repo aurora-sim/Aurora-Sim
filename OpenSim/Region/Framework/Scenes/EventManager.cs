@@ -129,6 +129,9 @@ namespace OpenSim.Region.Framework.Scenes
         public event NewRezScript OnRezScript;
         public delegate void NewRezScript(uint localID, UUID itemID, string script, int startParam, bool postOnRez, string engine, int stateSource);
 
+        public event NewRezScripts OnRezScripts;
+        public delegate void NewRezScripts(uint localID, TaskInventoryItem[] taskInventoryItem, int startParam, bool postOnRez, string engine, int stateSource);
+
         public delegate void RemoveScript(uint localID, UUID itemID);
         public event RemoveScript OnRemoveScript;
 
@@ -900,6 +903,27 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         m_log.ErrorFormat(
                             "[EVENT MANAGER]: Delegate for TriggerRezScript failed - continuing.  {0} {1}", 
+                            e.Message, e.StackTrace);
+                    }
+                }
+            }
+        }
+
+        public void TriggerRezScripts(uint localID, TaskInventoryItem[] taskInventoryItem, int startParam, bool postOnRez, string engine, int stateSource)
+        {
+            NewRezScripts handlerRezScripts = OnRezScripts;
+            if (handlerRezScripts != null)
+            {
+                foreach (NewRezScripts d in handlerRezScripts.GetInvocationList())
+                {
+                    try
+                    {
+                        d(localID, taskInventoryItem, startParam, postOnRez, engine, stateSource);
+                    }
+                    catch (Exception e)
+                    {
+                        m_log.ErrorFormat(
+                            "[EVENT MANAGER]: Delegate for TriggerRezScript failed - continuing.  {0} {1}",
                             e.Message, e.StackTrace);
                     }
                 }

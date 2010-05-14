@@ -297,6 +297,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
 
             scene.EventManager.OnRezScript += OnRezScript;
+            scene.EventManager.OnRezScripts += OnRezScripts;
         }
 
         #region Console Commands
@@ -506,6 +507,99 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             StartScript(localID, itemID, script,
                     startParam, postOnRez, (StateSource)stateSource);
+        }
+
+        public void OnRezScripts(uint localID, TaskInventoryItem[] items,
+                int startParam, bool postOnRez, string engine, int stateSource)
+        {
+            List<TaskInventoryItem> ItemsToStart = new List<TaskInventoryItem>();
+            foreach (TaskInventoryItem item in items)
+            {
+                AssetBase asset = m_Scene.AssetService.Get(item.AssetID.ToString());
+                if (null == asset)
+                {
+                    m_log.ErrorFormat(
+                        "[PRIM INVENTORY]: " +
+                        "Couldn't start script {0}, {1} since asset ID {4} could not be found",
+                        item.Name, item.ItemID, item.AssetID);
+                    continue;
+                }
+                string script = Utils.BytesToString(asset.Data);
+
+                if (script.StartsWith("//MRM:"))
+                    return;
+
+                List<IScriptModule> engines =
+                    new List<IScriptModule>(
+                    World.RequestModuleInterfaces<IScriptModule>());
+
+                List<string> names = new List<string>();
+                foreach (IScriptModule m in engines)
+                    names.Add(m.ScriptEngineName);
+
+                int lineEnd = script.IndexOf('\n');
+
+                if (lineEnd > 1)
+                {
+                    string firstline = script.Substring(0, lineEnd).Trim();
+
+                    int colon = firstline.IndexOf(':');
+                    if (firstline.Length > 2 &&
+                        firstline.Substring(0, 2) == "//" && colon != -1)
+                    {
+                        string engineName = firstline.Substring(2, colon - 2);
+
+                        if (names.Contains(engineName))
+                        {
+                            engine = engineName;
+                            script = "//" + script.Substring(script.IndexOf(':') + 1);
+                        }
+                        else
+                        {
+                            if (engine == ScriptEngineName)
+                            {
+                                SceneObjectPart part =
+                                        World.GetSceneObjectPart(
+                                        localID);
+
+                                ScenePresence presence =
+                                        World.GetScenePresence(
+                                        item.OwnerID);
+
+                                if (presence != null)
+                                {
+                                    presence.ControllingClient.SendAgentAlertMessage(
+                                             "Selected engine unavailable. " +
+                                             "Running script on " +
+                                             ScriptEngineName,
+                                             false);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (engine != ScriptEngineName)
+                    return;
+                ItemsToStart.Add(item);
+            }
+
+            foreach (TaskInventoryItem item in ItemsToStart)
+            {
+                AssetBase asset = m_Scene.AssetService.Get(item.AssetID.ToString());
+                if (null == asset)
+                {
+                    m_log.ErrorFormat(
+                        "[PRIM INVENTORY]: " +
+                        "Couldn't start script {0}, {1} since asset ID {4} could not be found",
+                        item.Name, item.ItemID, item.AssetID);
+                    continue;
+                }
+                string script = Utils.BytesToString(asset.Data);
+
+                StartScript(localID, item.ItemID, script,
+                        startParam, postOnRez, (StateSource)stateSource);
+            }
         }
 
 		#region Post Object Events

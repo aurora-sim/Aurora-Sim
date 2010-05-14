@@ -70,8 +70,16 @@ namespace OpenSim.Server.Handlers.AuroraData
                         return RemoveFromCache(request);
                     case "updateusernotes":
                         return UpdateUserNotes(request);
-                    case "getclassified":
-                        return RemoveFromCache(request);
+                    case "addclassified":
+                        return AddClassified(request);
+                    case "deleteclassified":
+                        return DeleteClassified(request);
+                    case "addpick":
+                        return AddPick(request);
+                    case "deletepick":
+                        return DeletePick(request);
+                    case "updatepick":
+                        return UpdatePick(request);
                     case "getpick":
                         return RemoveFromCache(request);
                     case "getagent":
@@ -144,7 +152,7 @@ namespace OpenSim.Server.Handlers.AuroraData
             else
                 m_log.WarnFormat("[AuroraDataServerPostHandler]: no pickID in request to get pick");
 
-            ProfilePickInfo Pick = ProfileConnector.ReadPickInfoRow(pickID);
+            ProfilePickInfo Pick = ProfileConnector.FindPick(pickID);
             Dictionary<string, object> result = new Dictionary<string, object>();
             if (Pick == null)
                 result["result"] = "null";
@@ -160,6 +168,31 @@ namespace OpenSim.Server.Handlers.AuroraData
 
         }
 
+        byte[] DeletePick(Dictionary<string, object> request)
+        {
+            string pickID = request["PICKID"].ToString();
+            string principalID = request["PRINCIPALID"].ToString();
+
+            ProfileConnector.DeletePick(new UUID(pickID), new UUID(principalID));
+            return SuccessResult();
+        }
+
+        byte[] UpdatePick(Dictionary<string, object> request)
+        {
+            ProfilePickInfo pick = new ProfilePickInfo(request);
+            ProfileConnector.UpdatePick(pick);
+
+            return SuccessResult();
+        }
+
+        byte[] AddPick(Dictionary<string, object> request)
+        {
+            ProfilePickInfo pick = new ProfilePickInfo(request);
+            ProfileConnector.AddPick(pick);
+
+            return SuccessResult();
+        }
+
         byte[] GetClassified(Dictionary<string, object> request)
         {
             string classifiedID = "";
@@ -168,7 +201,7 @@ namespace OpenSim.Server.Handlers.AuroraData
             else
                 m_log.WarnFormat("[AuroraDataServerPostHandler]: no classifiedID in request to get classifed");
 
-            Classified Classified = ProfileConnector.ReadClassifiedInfoRow(classifiedID);
+            Classified Classified = ProfileConnector.FindClassified(classifiedID);
             Dictionary<string, object> result = new Dictionary<string, object>();
             if (Classified == null)
                 result["result"] = "null";
@@ -181,6 +214,23 @@ namespace OpenSim.Server.Handlers.AuroraData
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
+        }
+
+        byte[] DeleteClassified(Dictionary<string, object> request)
+        {
+            string classifiedID = request["CLASSIFIEDID"].ToString();
+            string principalID = request["PRINCIPALID"].ToString();
+
+            ProfileConnector.DeleteClassified(new UUID(classifiedID), new UUID(principalID));
+            return SuccessResult();
+        }
+
+        byte[] AddClassified(Dictionary<string, object> request)
+        {
+            Classified Classified = new Classified(request);
+            ProfileConnector.AddClassified(Classified);
+
+            return SuccessResult();
         }
 
         byte[] GetProfile(Dictionary<string, object> request)
@@ -199,7 +249,7 @@ namespace OpenSim.Server.Handlers.AuroraData
             {
                 result["result"] = UserProfile.ToKeyValuePairs();
             }
-            
+             
             string xmlString = ServerUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
@@ -340,7 +390,7 @@ namespace OpenSim.Server.Handlers.AuroraData
             result["result"] = "Successful";
 
             string xmlString = ServerUtils.BuildXmlResponse(result);
-            m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
         }
@@ -358,7 +408,7 @@ namespace OpenSim.Server.Handlers.AuroraData
             result["result"] = "Successful";
 
             string xmlString = ServerUtils.BuildXmlResponse(result);
-            m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
         }
@@ -400,7 +450,6 @@ namespace OpenSim.Server.Handlers.AuroraData
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
         }
-
 
         byte[] RemoveTelehub(Dictionary<string, object> request)
         {

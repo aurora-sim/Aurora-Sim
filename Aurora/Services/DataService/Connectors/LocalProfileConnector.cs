@@ -19,7 +19,7 @@ namespace Aurora.Services.DataService
 			GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
 		}
 
-		public Classified ReadClassifiedInfoRow(string classifiedID)
+		public Classified FindClassified(string classifiedID)
 		{
 			List<string> retval = GD.Query("classifieduuid", classifiedID, "profileclassifieds", "*");
 			Classified classified = new Classified();
@@ -50,8 +50,11 @@ namespace Aurora.Services.DataService
 			List<string> query = GD.Query("creatoruuid", creatoruuid, "profileclassifieds", "classifieduuid");
 
 			try {
-				for (int i = 0; i < query.Count; i++) {
-					Classifieds.Add(ReadClassifiedInfoRow(query[i]));
+				for (int i = 0; i < query.Count; i++) 
+                {
+                    if (query[i] == "")
+                        continue;
+					Classifieds.Add(FindClassified(query[i]));
 				}
 			} catch {
 			}
@@ -64,7 +67,9 @@ namespace Aurora.Services.DataService
 			List<ProfilePickInfo> Picks = new List<ProfilePickInfo>();
 			try {
 				for (int i = 0; i < query.Count; i++) {
-					Picks.Add(ReadPickInfoRow(query[i]));
+                    if (query[i] == "")
+                        continue;
+                    Picks.Add(FindPick(query[i]));
 				}
 			} catch {
 			}
@@ -72,7 +77,7 @@ namespace Aurora.Services.DataService
 			return Picks.ToArray();
 		}
 
-		public ProfilePickInfo ReadPickInfoRow(string pickID)
+		public ProfilePickInfo FindPick(string pickID)
 		{
 			ProfilePickInfo pick = new ProfilePickInfo();
 			List<string> retval = GD.Query("pickuuid", pickID, "profilepicks", "*");
@@ -153,7 +158,10 @@ namespace Aurora.Services.DataService
 				List<string> notesReturns = GD.Query("userid", agentID.ToString(), "profilenotes", "targetuuid,notes");
 				Dictionary<string, string> Notes = new Dictionary<string, string>();
 				if (notesReturns.Count != 0) {
-					for (int i = 0; i < notesReturns.Count; i = i + 2) {
+					for (int i = 0; i < notesReturns.Count; i = i + 2) 
+                    {
+                        if (notesReturns[i] == "" || Notes.ContainsKey(notesReturns[i]))
+                            continue;
 						Notes.Add(notesReturns[i], notesReturns[i + 1]);
 					}
 				}
@@ -179,7 +187,8 @@ namespace Aurora.Services.DataService
 				UserProfile.AArchiveName = userauthReturns[12];
 				UserProfile.IsNewUser = Convert.ToBoolean(userauthReturns[13]);
 				UserProfile.Created = Convert.ToInt32(userauthReturns[14]);
-				if (!UserProfilesCache.ContainsKey(agentID))
+                if (UserProfilesCache.ContainsKey(agentID))
+                    UserProfilesCache.Remove(agentID);
 					UserProfilesCache.Add(agentID, UserProfile);
 				return UserProfile;
 			}

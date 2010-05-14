@@ -24,6 +24,7 @@ namespace Aurora.Services.DataService
 				//Couldn't find it, return null then.
 				return null;
 
+            agent.PrincipalID = agentID;
 			agent.Mac = query[0];
 			agent.IP = query[1];
 			agent.AcceptTOS = bool.Parse(query[2]);

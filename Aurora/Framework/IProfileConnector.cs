@@ -11,10 +11,10 @@ namespace Aurora.Framework
 {
 	public interface IProfileConnector
 	{
-		Classified ReadClassifiedInfoRow(string classifiedID);
-		ProfilePickInfo ReadPickInfoRow(string pickID);
-		void UpdateUserNotes(UUID agentID, UUID targetAgentID, string notes, IUserProfileInfo UPI);
-		IUserProfileInfo GetUserProfile(UUID agentID);
+		Classified FindClassified(string classifiedID);
+		ProfilePickInfo FindPick(string pickID);
+        IUserProfileInfo GetUserProfile(UUID agentID);
+        void UpdateUserNotes(UUID agentID, UUID targetAgentID, string notes, IUserProfileInfo UPI);
 		bool UpdateUserProfile(IUserProfileInfo Profile);
         void UpdateUserInterests(IUserProfileInfo Profile);
 		void CreateNewProfile(UUID UUID);

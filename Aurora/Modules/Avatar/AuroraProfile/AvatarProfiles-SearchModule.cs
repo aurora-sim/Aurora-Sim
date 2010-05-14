@@ -273,7 +273,7 @@ namespace Aurora.Modules
 
         public void ClassifiedInfoRequest(UUID queryClassifiedID, IClientAPI remoteClient)
         {
-            Classified classified = ProfileFrontend.ReadClassifiedInfoRow(queryClassifiedID.ToString());
+            Classified classified = ProfileFrontend.FindClassified(queryClassifiedID.ToString());
             Vector3 globalPos = new Vector3();
             try
             {
@@ -396,7 +396,7 @@ namespace Aurora.Modules
             }
             IClientAPI remoteClient = (IClientAPI)sender;
             
-            ProfilePickInfo pick = ProfileFrontend.ReadPickInfoRow(args[1]);
+            ProfilePickInfo pick = ProfileFrontend.FindPick(args[1]);
             Vector3 globalPos = new Vector3();
             try
             {

@@ -27,6 +27,8 @@ namespace Aurora.Services.DataService
 				StateSaveRetVals = GenericData.Query("ItemID", itemID.ToString(), "auroraDotNetStateSaves", "*");
 
 			}
+            if (StateSaveRetVals.Count == 1)
+                return null;
 			Dictionary<string, object> vars = new Dictionary<string, object>();
 			StateSave.State = StateSaveRetVals[0];
 			StateSave.Running = bool.Parse(StateSaveRetVals[4]);
