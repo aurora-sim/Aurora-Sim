@@ -324,12 +324,12 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                     OSD osd = new OSD();
 
                     SceneObjectPart part = m_scene.GetSceneObjectPart(new UUID(rm["object_id"].ToString()));
-                    ObjectMediaURLInfo info1 = RegionData.getObjectMediaInfo(rm["object_id"].ToString(), 1);
-                    ObjectMediaURLInfo info2 = RegionData.getObjectMediaInfo(rm["object_id"].ToString(), 2);
-                    ObjectMediaURLInfo info3 = RegionData.getObjectMediaInfo(rm["object_id"].ToString(), 3);
-                    ObjectMediaURLInfo info4 = RegionData.getObjectMediaInfo(rm["object_id"].ToString(), 4);
-                    ObjectMediaURLInfo info5 = RegionData.getObjectMediaInfo(rm["object_id"].ToString(), 5);
-                    ObjectMediaURLInfo info6 = RegionData.getObjectMediaInfo(rm["object_id"].ToString(), 6);
+                    ObjectMediaURL info1 = RegionData.getObjectMediaInfo(rm["object_id"].ToString(), 1);
+                    ObjectMediaURL info2 = RegionData.getObjectMediaInfo(rm["object_id"].ToString(), 2);
+                    ObjectMediaURL info3 = RegionData.getObjectMediaInfo(rm["object_id"].ToString(), 3);
+                    ObjectMediaURL info4 = RegionData.getObjectMediaInfo(rm["object_id"].ToString(), 4);
+                    ObjectMediaURL info5 = RegionData.getObjectMediaInfo(rm["object_id"].ToString(), 5);
+                    ObjectMediaURL info6 = RegionData.getObjectMediaInfo(rm["object_id"].ToString(), 6);
                     
                     #region null checks
                     /*if (info1 == null)
@@ -364,7 +364,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                     }*/
                     #endregion
 
-                    List<ObjectMediaURLInfo> infos = new List<ObjectMediaURLInfo>();
+                    List<ObjectMediaURL> infos = new List<ObjectMediaURL>();
                     infos.Add(info1);
                     infos.Add(info2);
                     infos.Add(info3);
@@ -373,7 +373,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                     infos.Add(info6);
                     
                     OSDArray array = new OSDArray(6);
-                    foreach (ObjectMediaURLInfo info in infos)
+                    foreach (ObjectMediaURL info in infos)
                     {
                         if (info == null)
                         {
@@ -453,7 +453,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                         List<string> Values = new List<string>();
                         OSDMap map = (OSDMap)osd;
 
-                        ObjectMediaURLInfo info = RegionData.getObjectMediaInfo(rm["object_id"].ToString(), side);
+                        ObjectMediaURL info = RegionData.getObjectMediaInfo(rm["object_id"].ToString(), side);
                         Values.Add(rm["object_id"].ToString());
                         Values.Add(part.OwnerID.ToString());
                         Values.Add(map["alt_image_enable"].ToString());

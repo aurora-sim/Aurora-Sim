@@ -16,43 +16,15 @@ namespace Aurora.Framework
         DirEventsReplyData[] EventQuery(string queryText, string flags, string table, string wantedValue, int StartQuery);
         EventData GetEventInfo(string p);
         DirEventsReplyData[] GetAllEventsNearXY(string table, int X, int Y);
-        EventData[] GetEvents();
-        Classified[] GetClassifieds();
+        Classified[] GetClassifieds(string regionName);
 
     }
     public interface IRegionData
     {
-        ObjectMediaURLInfo getObjectMediaInfo(string objectID, int side);
+        ObjectMediaURL getObjectMediaInfo(string objectID, int side);
         bool StoreRegionWindlightSettings(RegionLightShareData wl);
         void AddLandObject(OpenSim.Framework.LandData ILandData);
         RegionLightShareData LoadRegionWindlightSettings(UUID regionUUID);
-    }
-
-    public class OfflineMessage
-    {
-        public UUID FromUUID;
-        public UUID ToUUID;
-        public string FromName;
-        public string Message;
-
-        public OfflineMessage(){}
-        public OfflineMessage(Dictionary<string, object> KVP)
-        {
-            FromUUID = new UUID(KVP["FromUUID"].ToString());
-            ToUUID = new UUID(KVP["ToUUID"].ToString());
-            FromName = KVP["FromName"].ToString();
-            Message = KVP["Message"].ToString();
-        }
-
-        public Dictionary<string, object> ToKeyValuePairs()
-        {
-            Dictionary<string, object> RetVal = new Dictionary<string, object>();
-            RetVal["Message"] = Message;
-            RetVal["FromName"] = FromName;
-            RetVal["ToUUID"] = ToUUID;
-            RetVal["FromUUID"] = FromUUID;
-            return RetVal;
-        }
     }
 
     public interface IGroupsServicesConnector
@@ -184,35 +156,5 @@ namespace Aurora.Framework
             }
             return false;
         }
-    }
-
-    public class ObjectMediaURLInfo
-    {
-        public string alt_image_enable = "";
-        public bool auto_loop = true;
-        public bool auto_play = true;
-        public bool auto_scale = true;
-        public bool auto_zoom = false;
-        public int controls = 0;
-        public string current_url = "http://www.google.com/";
-        public bool first_click_interact = false;
-        public int height_pixels = 0;
-        public string home_url = "http://www.google.com/";
-        public int perms_control = 7;
-        public int perms_interact = 7;
-        public string whitelist = "";
-        public bool whitelist_enable = false;
-        public int width_pixels = 0;
-        public string object_media_version;
-    }
-    public interface IDataService
-    {
-        void Initialise(Nini.Config.IConfigSource source);
-        IGenericData GetGenericPlugin();
-        IProfileData GetProfilePlugin();
-        IRegionData GetRegionPlugin();
-        void SetGenericDataPlugin(IGenericData Plugin);
-        void SetProfilePlugin(IProfileData Plugin);
-        void SetRegionPlugin(IRegionData Plugin);
     }
 }

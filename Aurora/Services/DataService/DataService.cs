@@ -13,7 +13,7 @@ using OpenSim.Framework;
 
 namespace Aurora.Services.DataService
 {
-    public class LocalDataService: IDataService
+    public class LocalDataService
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         internal IConfig m_config;
@@ -101,35 +101,6 @@ namespace Aurora.Services.DataService
             DataManager.DataManager.IAgentConnector = new RemoteAgentConnector(RemoteConnectionString);
             DataManager.DataManager.IGridConnector = new RemoteGridConnector(RemoteConnectionString);
             DataManager.DataManager.IProfileConnector = new RemoteProfileConnector(RemoteConnectionString);
-        }
-
-        public string Name
-        {
-            get { return "DataService"; }
-        }
-        public IGenericData GetGenericPlugin()
-        {
-            return Aurora.DataManager.DataManager.DefaultGenericPlugin;
-        }
-        public void SetGenericDataPlugin(IGenericData Plugin)
-        {
-            Aurora.DataManager.DataManager.DefaultGenericPlugin = Plugin;
-        }
-        public IProfileData GetProfilePlugin()
-        {
-            return Aurora.DataManager.DataManager.DefaultProfilePlugin;
-        }
-        public void SetProfilePlugin(IProfileData Plugin)
-        {
-            Aurora.DataManager.DataManager.DefaultProfilePlugin = Plugin;
-        }
-        public IRegionData GetRegionPlugin()
-        {
-            return Aurora.DataManager.DataManager.DefaultRegionPlugin;
-        }
-        public void SetRegionPlugin(IRegionData Plugin)
-        {
-            Aurora.DataManager.DataManager.DefaultRegionPlugin = Plugin;
         }
     }
 }

@@ -37,9 +37,9 @@ namespace Aurora.DataManager.MySQL
                 }
             }
         }
-        public ObjectMediaURLInfo getObjectMediaInfo(string objectID, int side)
+        public ObjectMediaURL getObjectMediaInfo(string objectID, int side)
         {
-            ObjectMediaURLInfo info = new ObjectMediaURLInfo();
+            ObjectMediaURL info = new ObjectMediaURL();
             List<string> data = Query(new string[] {"objectUUID","side"}, new string[] {objectID,side.ToString()}, "assetMediaURL", "*");
             if (data.Count == 1)
                 return null;

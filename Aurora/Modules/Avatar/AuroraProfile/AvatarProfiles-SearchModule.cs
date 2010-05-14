@@ -865,14 +865,15 @@ namespace Aurora.Modules
             List<mapItemReply> mapitems = new List<mapItemReply>();
             mapItemReply mapitem = new mapItemReply();
 
+            uint xstart = 0;
+            uint ystart = 0;
+            OpenMetaverse.Utils.LongToUInts(m_scene.RegionInfo.RegionHandle, out xstart, out ystart);
+            OpenSim.Services.Interfaces.GridRegion GR = m_scene.GridService.GetRegionByPosition(UUID.Zero, (int)xstart, (int)ystart);
+            
             #region Telehub
             if (itemtype == (uint)OpenMetaverse.GridItemType.Telehub)
             {
                 IGridConnector GF = DataManager.DataManager.IGridConnector;
-                uint xstart = 0;
-                uint ystart = 0;
-                OpenMetaverse.Utils.LongToUInts(m_scene.RegionInfo.RegionHandle, out xstart, out ystart);
-                OpenSim.Services.Interfaces.GridRegion GR = m_scene.GridService.GetRegionByPosition(UUID.Zero, (int)xstart, (int)ystart);
                 int tc = Environment.TickCount;
                 Telehub telehub = GF.FindTelehub(GR.RegionID);
                 if (telehub != null)
@@ -974,7 +975,7 @@ namespace Aurora.Modules
             
             if (itemtype == (uint)OpenMetaverse.GridItemType.PgEvent)
             {
-            	DirEventsReplyData[] Eventdata = ProfileData.GetAllEventsNearXY("events",0,0);
+                DirEventsReplyData[] Eventdata = ProfileData.GetAllEventsNearXY("events", GR.RegionLocX, GR.RegionLocY);
                 foreach (DirEventsReplyData eventData in Eventdata)
                 {
                 	List<string> query = GenericData.Query("EID", eventData.eventID.ToString(), "events", "EGlobalPos, ESimName, EMature");
@@ -1003,7 +1004,7 @@ namespace Aurora.Modules
 
             if (itemtype == (uint)OpenMetaverse.GridItemType.AdultEvent)
             {
-                DirEventsReplyData[] Eventdata = ProfileData.GetAllEventsNearXY("events", 0, 0);
+                DirEventsReplyData[] Eventdata = ProfileData.GetAllEventsNearXY("events", GR.RegionLocX, GR.RegionLocY);
                 foreach (DirEventsReplyData eventData in Eventdata)
                 {
                     List<string> query = GenericData.Query("EID", eventData.eventID.ToString(), "events", "EGlobalPos, ESimName, EMature");
@@ -1030,7 +1031,7 @@ namespace Aurora.Modules
             }
             if (itemtype == (uint)OpenMetaverse.GridItemType.MatureEvent)
             {
-                DirEventsReplyData[] Eventdata = ProfileData.GetAllEventsNearXY("events", 0, 0);
+                DirEventsReplyData[] Eventdata = ProfileData.GetAllEventsNearXY("events", GR.RegionLocX, GR.RegionLocY);
                 foreach (DirEventsReplyData eventData in Eventdata)
                 {
                     List<string> query = GenericData.Query("EID", eventData.eventID.ToString(), "events", "EGlobalPos, ESimName, EMature");
@@ -1062,7 +1063,7 @@ namespace Aurora.Modules
 
             if (itemtype == (uint)OpenMetaverse.GridItemType.Classified)
             {
-                Classified[] Classifieds = ProfileData.GetClassifieds();
+                Classified[] Classifieds = ProfileData.GetClassifieds(GR.RegionName);
                 foreach (Classified classified in Classifieds)
                 {
                     Vector3 Position = new Vector3();
