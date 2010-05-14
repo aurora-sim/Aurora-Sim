@@ -266,6 +266,20 @@ namespace OpenSim.Server.Base
 
                     BuildXmlData(elem, (Dictionary<string, object>)kvp.Value);
                 }
+                else if (kvp.Value is Dictionary<string, string>)
+                {
+                    XmlAttribute type = parent.OwnerDocument.CreateAttribute("",
+                        "type", "");
+                    type.Value = "List";
+
+                    elem.Attributes.Append(type);
+                    Dictionary<string, object> value = new Dictionary<string, object>();
+                    foreach (KeyValuePair<string, string> pair in (Dictionary<string, string>)kvp.Value)
+                    {
+                        value.Add(pair.Key, pair.Value);
+                    }
+                    BuildXmlData(elem, value);
+                }
                 else
                 {
                     elem.AppendChild(parent.OwnerDocument.CreateTextNode(

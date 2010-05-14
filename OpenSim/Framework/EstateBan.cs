@@ -26,6 +26,7 @@
  */
 
 using OpenMetaverse;
+using System.Collections.Generic;
 
 namespace OpenSim.Framework
 {
@@ -109,6 +110,24 @@ namespace OpenSim.Framework
             {
                 m_bannedHostNameMask = value;
             }
+        }
+
+        public EstateBan(Dictionary<string,object> values)
+        {
+            EstateID = uint.Parse(values["EstateID"].ToString());
+            BannedUserID = new UUID(values["BannedUserID"].ToString());
+        }
+
+        public Dictionary<string, object> ToKeyValuePairs()
+        {
+            Dictionary<string, object> kvp = new Dictionary<string, object>();
+            kvp["EstateID"] = EstateID;
+            kvp["BannedUserID"] = BannedUserID;
+            return kvp;
+        }
+
+        public EstateBan()
+        {
         }
 
     }

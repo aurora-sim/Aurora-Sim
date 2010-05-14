@@ -13,5 +13,29 @@ namespace Aurora.Framework
         public float TelehubX = 0;
         public float TelehubY = 0;
         public float TelehubZ = 0;
+
+        public Telehub() { }
+
+        public Telehub(Dictionary<string, object> KVP)
+        {
+            RegionID = KVP["RegionID"].ToString();
+            RegionLocX = float.Parse(KVP["RegionLocX"].ToString());
+            RegionLocY = float.Parse(KVP["RegionLocY"].ToString());
+            TelehubX = float.Parse(KVP["TelehubX"].ToString());
+            TelehubY = float.Parse(KVP["TelehubY"].ToString());
+            TelehubZ = float.Parse(KVP["TelehubZ"].ToString());
+        }
+
+        public Dictionary<string, object> ToKeyValuePairs()
+        {
+            Dictionary<string, object> Telehub = new Dictionary<string, object>();
+            Telehub["RegionID"] = RegionID;
+            Telehub["RegionLocX"] = RegionLocX;
+            Telehub["RegionLocY"] = RegionLocY;
+            Telehub["TelehubX"] = TelehubX;
+            Telehub["TelehubY"] = TelehubY;
+            Telehub["TelehubZ"] = TelehubZ;
+            return Telehub;
+        }
     }
 }

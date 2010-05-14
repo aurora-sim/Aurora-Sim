@@ -282,6 +282,135 @@ namespace OpenSim.Framework
         {
         }
 
+        public EstateSettings(Dictionary<string,object> values)
+        {
+            EstateName = values["EstateName"].ToString();
+            AbuseEmailToEstateOwner = bool.Parse(values["AbuseEmailToEstateOwner"].ToString());
+            DenyAnonymous = bool.Parse(values["DenyAnonymous"].ToString());
+            ResetHomeOnTeleport = bool.Parse(values["ResetHomeOnTeleport"].ToString());
+            FixedSun = bool.Parse(values["FixedSun"].ToString());
+            DenyTransacted = bool.Parse(values["DenyTransacted"].ToString());
+            BlockDwell = bool.Parse(values["BlockDwell"].ToString());
+            DenyIdentified = bool.Parse(values["DenyIdentified"].ToString());
+            AllowVoice = bool.Parse(values["AllowVoice"].ToString());
+            UseGlobalTime = bool.Parse(values["UseGlobalTime"].ToString());
+            PricePerMeter = int.Parse(values["PricePerMeter"].ToString());
+            TaxFree = bool.Parse(values["TaxFree"].ToString());
+            AllowDirectTeleport = bool.Parse(values["AllowDirectTeleport"].ToString());
+            RedirectGridX = int.Parse(values["RedirectGridX"].ToString());
+            RedirectGridY = int.Parse(values["RedirectGridY"].ToString());
+            ParentEstateID = uint.Parse(values["ParentEstateID"].ToString());
+            SunPosition = double.Parse(values["SunPosition"].ToString());
+            EstateSkipScripts = bool.Parse(values["EstateSkipScripts"].ToString());
+            BillableFactor = float.Parse(values["BillableFactor"].ToString());
+            PublicAccess = bool.Parse(values["PublicAccess"].ToString());
+            AbuseEmail = values["AbuseEmail"].ToString();
+            EstateOwner = new UUID(values["EstateOwner"].ToString());
+            DenyMinors = bool.Parse(values["DenyMinors"].ToString());
+            EstatePass = values["EstatePass"].ToString();
+
+            Dictionary<string, object> Managers = values["EstateManagers"] as Dictionary<string, object>;
+            List<UUID> NewManagers = new List<UUID>();
+            foreach (object UUID in Managers.Values)
+            {
+                NewManagers.Add(new UUID(UUID.ToString()));
+            }
+            EstateManagers = NewManagers.ToArray();
+
+            Dictionary<string, object> Ban = values["EstateBans"] as Dictionary<string, object>;
+            List<EstateBan> NewBan = new List<EstateBan>();
+            foreach (object BannedUser in Ban.Values)
+            {
+                NewBan.Add(new EstateBan((Dictionary<string,object>)BannedUser));
+            }
+            EstateBans = NewBan.ToArray();
+
+            Dictionary<string, object> Access = values["EstateAccess"] as Dictionary<string, object>;
+            List<UUID> NewAccess = new List<UUID>();
+            foreach (object UUID in Access.Values)
+            {
+                NewAccess.Add(new UUID(UUID.ToString()));
+            }
+            EstateAccess = NewAccess.ToArray();
+
+            Dictionary<string, object> Groups = values["EstateGroups"] as Dictionary<string, object>;
+            List<UUID> NewGroups = new List<UUID>();
+            foreach (object UUID in Groups.Values)
+            {
+                NewGroups.Add(new UUID(UUID.ToString()));
+            }
+            EstateGroups = NewGroups.ToArray();
+        }
+
+        public Dictionary<string,object> ToKeyValuePairs()
+        {
+            Dictionary<string, object> values = new Dictionary<string, object>();
+            values["EstateName"] = EstateName;
+            values["AbuseEmailToEstateOwner"] = AbuseEmailToEstateOwner;
+            values["DenyAnonymous"] = DenyAnonymous;
+            values["ResetHomeOnTeleport"] = ResetHomeOnTeleport;
+            values["FixedSun"] = FixedSun;
+            values["DenyTransacted"] = DenyTransacted;
+            values["BlockDwell"] = BlockDwell;
+            values["DenyIdentified"] = DenyIdentified;
+            values["AllowVoice"] = AllowVoice;
+            values["UseGlobalTime"] = UseGlobalTime;
+            values["PricePerMeter"] = PricePerMeter;
+            values["TaxFree"] = TaxFree;
+            values["AllowDirectTeleport"] = AllowDirectTeleport;
+            values["RedirectGridX"] = RedirectGridX;
+            values["RedirectGridY"] = RedirectGridY;
+            values["ParentEstateID"] = ParentEstateID;
+            values["SunPosition"] = SunPosition;
+            values["EstateSkipScripts"] = EstateSkipScripts;
+            values["BillableFactor"] = BillableFactor;
+            values["PublicAccess"] = PublicAccess;
+            values["AbuseEmail"] = AbuseEmail;
+            values["EstateOwner"] = EstateOwner;
+            values["DenyMinors"] = DenyMinors;
+            values["EstatePass"] = EstatePass;
+            Dictionary<string, object> Ban = new Dictionary<string, object>();
+            int i = 0;
+            foreach (EstateBan ban in EstateBans)
+            {
+                Ban.Add(i.ToString(), ban.ToKeyValuePairs());
+                i++;
+            }
+            values["EstateBans"] = Ban;
+            i *= 0;
+
+            Dictionary<string, object> Managers = new Dictionary<string, object>();
+            i = 0;
+            foreach (UUID ID in EstateManagers)
+            {
+                Managers.Add(i.ToString(), ID);
+                i++;
+            }
+            values["EstateManagers"] = Managers;
+            i *= 0;
+
+            Dictionary<string, object> Groups = new Dictionary<string, object>();
+            i = 0;
+            foreach (UUID ID in EstateGroups)
+            {
+                Groups.Add(i.ToString(), ID);
+                i++;
+            }
+            values["EstateGroups"] = Groups;
+            i *= 0;
+
+            Dictionary<string, object> Access = new Dictionary<string, object>();
+            i = 0;
+            foreach (UUID ID in EstateAccess)
+            {
+                Access.Add(i.ToString(), ID);
+                i++;
+            }
+            values["EstateAccess"] = Access;
+            i *= 0;
+            return values;
+        }
+
         public void Save()
         {
             if (OnSave != null)

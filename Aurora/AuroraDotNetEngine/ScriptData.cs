@@ -480,22 +480,28 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //Try to find a previously compiled script in this instance
             ScriptData PreviouslyCompiledID = (ScriptData)m_ScriptEngine.ScriptProtection.TryGetPreviouslyCompiledScript(Source);
 
-            if (!reupload && Loading)
+            LastStateSave = ScriptFrontend.GetStateSave(ItemID, UserInventoryItemID);
+            if (!reupload && Loading && LastStateSave != null)
             {
                 //Retrive the needed parts for a compileless start from the state save.
-                LastStateSave = ScriptFrontend.GetStateSave(ItemID, UserInventoryItemID);
-                if(LastStateSave != null)
-                    FindRequiredForCompileless();
+                FindRequiredForCompileless();
             }
             else
             {
+                if (AssemblyName != "")
+                {
+                    //Null everything
+                    AssemblyName = "";
+                    LineMap = new Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>>();
+                    CloseAndDispose();
+                }
                 //If the previous compile is there, retrive that
-                if (PreviouslyCompiledID != null)
+                /*if (PreviouslyCompiledID != null)
                 {
                     ClassID = PreviouslyCompiledID.ClassID;
                     LineMap = PreviouslyCompiledID.LineMap;
                     AssemblyName = PreviouslyCompiledID.AssemblyName;
-                }
+                }*/
                 //Otherwise, compile the script.
                 else
                 {

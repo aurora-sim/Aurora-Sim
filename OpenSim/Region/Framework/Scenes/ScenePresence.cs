@@ -1858,11 +1858,25 @@ namespace OpenSim.Region.Framework.Scenes
                 cameraEyeOffset = part.GetCameraEyeOffset();
                 forceMouselook = part.GetForceMouselook();
             }
-            const float SitFudgeFactor = .15f;
-            AbsolutePosition = part.AbsolutePosition /*+ offset*/;
-            AbsolutePosition = new Vector3(AbsolutePosition.X + (part.Scale.X / 2), AbsolutePosition.Y /*+ (part.Scale.Y / 2)*/, AbsolutePosition.Z + (Appearance.AvatarHeight / 2) + (part.Scale.Z / 2) - SitFudgeFactor);
+            AbsolutePosition = part.AbsolutePosition;
+            const float HeightFudgeFactor = -.00f;
+
+            float X = (part.Scale.X / 2);
+            float Y = (part.Scale.Y / 2);
+            float Z = (part.Scale.Z / 2);
+
+            //Determines where the top of the object is and how far it is to the top plus the av height and box parameters to get to a good sitting position.
             Rotation = part.RotationOffset;
-            ControllingClient.SendSitResponse(targetID, offset, sitOrientation, autopilot, cameraAtOffset, cameraEyeOffset, forceMouselook);
+            float rotX = Rotation.X * Utils.RAD_TO_DEG;
+            float rotY = Rotation.Y * Utils.RAD_TO_DEG;
+            float rotZ = Rotation.Z * Utils.RAD_TO_DEG;
+            Rotation = new Quaternion(rotX, rotY, rotZ, Rotation.W);
+            sitOrientation = Quaternion.Identity;
+            AbsolutePosition = new Vector3((float)(AbsolutePosition.X + (X * Math.Cos(Rotation.X * Utils.RAD_TO_DEG))), (float)(AbsolutePosition.Y + (Y * Math.Sin(Rotation.Y * Utils.RAD_TO_DEG))), (float)(AbsolutePosition.Z + (Z/* * Math.Cos(Rotation.Z * Utils.RAD_TO_DEG)*/)));
+            //AbsolutePosition = new Vector3((float)(AbsolutePosition.X + (X * Math.Cos(Rotation.X * Utils.RAD_TO_DEG)) + (Y * Math.Sin(Rotation.Y * Utils.RAD_TO_DEG)) + (Z * Math.Sin(Rotation.Z * Utils.RAD_TO_DEG))), (float)(AbsolutePosition.Y + (X * Math.Sin(Rotation.X * Utils.RAD_TO_DEG)) + (Y * Math.Cos(Rotation.Y * Utils.RAD_TO_DEG)) + (Z * Math.Sin(Rotation.Z * Utils.RAD_TO_DEG))), (float)(AbsolutePosition.Z + (X * Math.Sin(Rotation.X * Utils.RAD_TO_DEG)) + (Y * Math.Sin(Rotation.Y * Utils.RAD_TO_DEG)) + (Z * Math.Cos(Rotation.Z * Utils.RAD_TO_DEG))));
+            AbsolutePosition = new Vector3(AbsolutePosition.X, AbsolutePosition.Y, AbsolutePosition.Z + HeightFudgeFactor + (Appearance.AvatarHeight / 2) + HeightFudgeFactor);
+            
+            ControllingClient.SendSitResponse(targetID, Vector3.Zero, sitOrientation, autopilot, cameraAtOffset, cameraEyeOffset, forceMouselook);
             m_requestedSitTargetUUID = targetID;
             // This calls HandleAgentSit twice, once from here, and the client calls
             // HandleAgentSit itself after it gets to the location
@@ -2883,14 +2897,15 @@ namespace OpenSim.Region.Framework.Scenes
                         {
                             Vector3 pos = AbsolutePosition;
                             if (AbsolutePosition.X < 0)
-                                pos.X += Velocity.X;
-                            else if (AbsolutePosition.X > Constants.RegionSize)
-                                pos.X -= Velocity.X;
+                                pos.X += Velocity.X - 2;
+                            else if (AbsolutePosition.X > Constants.RegionSize - .051f)
+                                pos.X -= Velocity.X + 2;
                             if (AbsolutePosition.Y < 0)
-                                pos.Y += Velocity.Y;
-                            else if (AbsolutePosition.Y > Constants.RegionSize)
-                                pos.Y -= Velocity.Y;
+                                pos.Y += Velocity.Y - 2;
+                            else if (AbsolutePosition.Y > Constants.RegionSize - .051f)
+                                pos.Y -= Velocity.Y + 2;
                             AbsolutePosition = pos;
+                            //PhysicsActor.Position = AbsolutePosition;
                         }
                     }
                 }

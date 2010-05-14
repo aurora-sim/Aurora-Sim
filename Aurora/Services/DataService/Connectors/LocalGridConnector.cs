@@ -24,7 +24,7 @@ namespace Aurora.Services.DataService
 		{
 			List<string> flags = GD.Query("RegionID", regionID, "regionflags", "Flags");
 			//The region doesn't exist, so make sure to not return a valid value.
-			if (flags.Count == 0 || flags[0] == " ")
+            if (flags.Count == 0 || flags[0] == " " || flags[0] == "")
 				return (GridRegionFlags)(-1);
 
 			GridRegionFlags regionFlags = (GridRegionFlags)int.Parse(flags[0]);
@@ -47,7 +47,6 @@ namespace Aurora.Services.DataService
 		/// <param name="regionID"></param>
 		public void CreateRegion(UUID regionID)
 		{
-
 			List<object> values = new List<object>();
 			values.Add(regionID);
 			values.Add(0);

@@ -32,7 +32,7 @@ namespace Aurora.Services.DataService
 
         #region IProfileConnector Members
 
-        public Classified ReadClassifiedInfoRow(string classifiedID)
+        public Classified FindClassified(string classifiedID)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
 
@@ -86,7 +86,7 @@ namespace Aurora.Services.DataService
             return null;
         }
 
-        public ProfilePickInfo ReadPickInfoRow(string pickID)
+        public ProfilePickInfo FindPick(string pickID)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
 
@@ -407,27 +407,208 @@ namespace Aurora.Services.DataService
 
         public void AddClassified(Classified classified)
         {
-            throw new NotImplementedException();
+            Dictionary<string, object> sendData = classified.ToKeyValuePairs();
+
+            sendData["METHOD"] = "addclassified";
+
+            string reqString = ServerUtils.BuildQueryString(sendData);
+
+            try
+            {
+                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                        m_ServerURI + "/auroradata",
+                        reqString);
+                if (reply != string.Empty)
+                {
+                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+
+                    if (replyData != null)
+                    {
+                        if (replyData.ContainsKey("result") && (replyData["result"].ToString().ToLower() == "null"))
+                        {
+                            m_log.DebugFormat("[AuroraRemoteProfileConnector]: AddClassified {0} received null response",
+                                classified.ClassifiedUUID);
+                        }
+                    }
+
+                    else
+                    {
+                        m_log.DebugFormat("[AuroraRemoteProfileConnector]: AddClassified {0} received null response",
+                            classified.ClassifiedUUID);
+                    }
+
+                }
+            }
+            catch (Exception e)
+            {
+                m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.Message);
+            }
         }
 
         public void DeleteClassified(UUID ID, UUID agentID)
         {
-            throw new NotImplementedException();
+            Dictionary<string, object> sendData = new Dictionary<string,object>();
+
+            sendData["PRINCIPALID"] = agentID;
+            sendData["CLASSIFIEDID"] = ID;
+
+            sendData["METHOD"] = "deleteclassified";
+
+            string reqString = ServerUtils.BuildQueryString(sendData);
+
+            try
+            {
+                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                        m_ServerURI + "/auroradata",
+                        reqString);
+                if (reply != string.Empty)
+                {
+                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+
+                    if (replyData != null)
+                    {
+                        if (replyData.ContainsKey("result") && (replyData["result"].ToString().ToLower() == "null"))
+                        {
+                            m_log.DebugFormat("[AuroraRemoteProfileConnector]: DeleteClassified {0} received null response",
+                                ID.ToString());
+                        }
+                    }
+
+                    else
+                    {
+                        m_log.DebugFormat("[AuroraRemoteProfileConnector]: DeleteClassified {0} received null response",
+                            ID.ToString());
+                    }
+
+                }
+            }
+            catch (Exception e)
+            {
+                m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.Message);
+            }
         }
 
         public void AddPick(ProfilePickInfo pick)
         {
-            throw new NotImplementedException();
+            Dictionary<string, object> sendData = pick.ToKeyValuePairs();
+
+            sendData["METHOD"] = "addpick";
+
+            string reqString = ServerUtils.BuildQueryString(sendData);
+
+            try
+            {
+                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                        m_ServerURI + "/auroradata",
+                        reqString);
+                if (reply != string.Empty)
+                {
+                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+
+                    if (replyData != null)
+                    {
+                        if (replyData.ContainsKey("result") && (replyData["result"].ToString().ToLower() == "null"))
+                        {
+                            m_log.DebugFormat("[AuroraRemoteProfileConnector]: AddPick {0} received null response",
+                                pick.pickuuid);
+                        }
+                    }
+
+                    else
+                    {
+                        m_log.DebugFormat("[AuroraRemoteProfileConnector]: AddPick {0} received null response",
+                            pick.pickuuid);
+                    }
+
+                }
+            }
+            catch (Exception e)
+            {
+                m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.Message);
+            }
         }
 
         public void UpdatePick(ProfilePickInfo pick)
         {
-            throw new NotImplementedException();
+            Dictionary<string, object> sendData = pick.ToKeyValuePairs();
+
+            sendData["METHOD"] = "updatepick";
+
+            string reqString = ServerUtils.BuildQueryString(sendData);
+
+            try
+            {
+                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                        m_ServerURI + "/auroradata",
+                        reqString);
+                if (reply != string.Empty)
+                {
+                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+
+                    if (replyData != null)
+                    {
+                        if (replyData.ContainsKey("result") && (replyData["result"].ToString().ToLower() == "null"))
+                        {
+                            m_log.DebugFormat("[AuroraRemoteProfileConnector]: UpdatePick {0} received null response",
+                                pick.pickuuid);
+                        }
+                    }
+
+                    else
+                    {
+                        m_log.DebugFormat("[AuroraRemoteProfileConnector]: UpdatePick {0} received null response",
+                            pick.pickuuid);
+                    }
+
+                }
+            }
+            catch (Exception e)
+            {
+                m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.Message);
+            }
         }
 
         public void DeletePick(UUID ID, UUID agentID)
         {
-            throw new NotImplementedException();
+            Dictionary<string, object> sendData = new Dictionary<string, object>();
+
+            sendData["PRINCIPALID"] = agentID;
+            sendData["PICKID"] = ID;
+
+            sendData["METHOD"] = "deletepick";
+
+            string reqString = ServerUtils.BuildQueryString(sendData);
+
+            try
+            {
+                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                        m_ServerURI + "/auroradata",
+                        reqString);
+                if (reply != string.Empty)
+                {
+                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+
+                    if (replyData != null)
+                    {
+                        if (replyData.ContainsKey("result") && (replyData["result"].ToString().ToLower() == "null"))
+                        {
+                            m_log.DebugFormat("[AuroraRemoteProfileConnector]: DeletePick {0} received null response",
+                                ID.ToString());
+                        }
+                    }
+
+                    else
+                    {
+                        m_log.DebugFormat("[AuroraRemoteProfileConnector]: DeletePick {0} received null response",
+                            ID.ToString());
+                    }
+
+                }
+            }
+            catch (Exception e)
+            {
+                m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.Message);
+            }
         }
 
         #endregion
