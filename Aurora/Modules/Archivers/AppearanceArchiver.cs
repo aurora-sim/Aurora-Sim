@@ -63,12 +63,11 @@ namespace Aurora.Modules
 				return;
 			}
 			StreamReader reader = new StreamReader(FileName);
-			List<string> file = new List<string>();
+
 			string line = reader.ReadToEnd();
 			string[] lines = line.Split('\n');
-			foreach (string splitLine in lines) {
-				file.Add(splitLine);
-			}
+            List<string> file = new List<string>(lines);
+
 			reader.Close();
 			reader.Dispose();
 			ScenePresence SP;

@@ -13,10 +13,11 @@ using OpenMetaverse;
 using log4net;
 using Aurora.DataManager;
 using Aurora.Framework;
+using OpenSim.Server.Base;
 
 namespace Aurora.Modules
 {
-    class AvatarDataModule : IRegionModule
+    public class AuroraAvatarProfileArchiver : IRegionModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         Scene m_scene;
@@ -24,62 +25,87 @@ namespace Aurora.Modules
         {
             if (m_scene == null)
                 m_scene = scene;
-            MainConsole.Instance.Commands.AddCommand("region", false, "save AD",
-                                          "save AD <First> <Last> <Filename>",
-                                          "Saves profile and avatar data to an archive", HandleSaveAD);
-            MainConsole.Instance.Commands.AddCommand("region", false, "load AD",
-                                          "load AD <First> <Last> <Filename>",
-                                          "Loads profile and avatar data from an archive", HandleLoadAD);
+            MainConsole.Instance.Commands.AddCommand("region", false, "save avatar profile",
+                                          "save avatar profile <First> <Last> <Filename>",
+                                          "Saves profile and avatar data to an archive", HandleSaveAvatarProfile);
+            MainConsole.Instance.Commands.AddCommand("region", false, "load avatar profile",
+                                          "load avatar profile <First> <Last> <Filename>",
+                                          "Loads profile and avatar data from an archive", HandleLoadAvatarProfile);
         }
 
         public void PostInitialise() { }
 
         public void Close() { }
 
-        public string Name { get { return "AuroraDataModule"; } }
+        public string Name { get { return "AvatarProfileArchiver"; } }
 
         public bool IsSharedModule
         {
             get { return true; }
         }
 
-        protected void HandleLoadAD(string module, string[] cmdparams)
+        protected void HandleLoadAvatarProfile(string module, string[] cmdparams)
         {
-            if (cmdparams.Length != 5)
+            if (cmdparams.Length != 6)
             {
-                m_log.Debug("[AD] Not enough parameters!");
+                m_log.Debug("[AvatarProfileArchiver] Not enough parameters!");
                 return;
             }
+            StreamReader reader = new StreamReader(cmdparams[5]);
+
+            string document = reader.ReadToEnd();
+            string[] lines = document.Split('\n');
+            List<string> file = new List<string>(lines);
+
+            List<string> newFile = new List<string>();
+            foreach (string line in file)
+            {
+                string newLine = line.TrimStart('<');
+                newFile.Add(newLine.TrimEnd('>'));
+            }
+            Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(newFile[0]);
+            UserAccount UDA = new UserAccount(replyData);
+            m_scene.UserAccountService.StoreUserAccount(UDA);
+
+            replyData = ServerUtils.ParseXmlResponse(newFile[1]);
+            IUserProfileInfo UPI = new IUserProfileInfo(replyData);
+            IProfileConnector profileData = DataManager.DataManager.IProfileConnector;
+            if(profileData.GetUserProfile(UPI.PrincipalID) == null)
+                profileData.CreateNewProfile(UPI.PrincipalID);
+
+            profileData.UpdateUserProfile(UPI);
+
+            reader.Close();
+            reader.Dispose();
+
+            m_log.Debug("[AvatarProfileArchiver] Loaded Avatar Profile from " + cmdparams[5]);
         }
-        protected void HandleSaveAD(string module, string[] cmdparams)
+        protected void HandleSaveAvatarProfile(string module, string[] cmdparams)
         {
-            if (cmdparams.Length != 5)
+            if (cmdparams.Length != 6)
             {
-                m_log.Debug("[AD] Not enough parameters!");
+                m_log.Debug("[AvatarProfileArchiver] Not enough parameters!");
                 return;
             }
-            UserAccount account = m_scene.UserAccountService.GetUserAccount(UUID.Zero, cmdparams[2], cmdparams[3]);
+            UserAccount account = m_scene.UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]);
             IProfileConnector data = DataManager.DataManager.IProfileConnector;
             IUserProfileInfo profile = data.GetUserProfile(account.PrincipalID);
-            StreamWriter writer = new StreamWriter(cmdparams[4]);
+            
+            Dictionary<string, object> result = new Dictionary<string, object>();
+            result["result"] = profile.ToKeyValuePairs();
+            string UPIxmlString = ServerUtils.BuildXmlResponse(result);
+
+            result["result"] = account.ToKeyValuePairs();
+            string UDAxmlString = ServerUtils.BuildXmlResponse(result);
+
+            StreamWriter writer = new StreamWriter(cmdparams[5]);
             writer.Write("<profile>\n");
-            writer.Write(account.Email + "\n");
-            writer.Write(account.UserFlags.ToString() + "\n");
-            writer.Write(account.UserLevel.ToString() + "\n");
-            writer.Write(account.UserTitle + "\n");
-            writer.Write(profile.AboutText + "\n");
-            writer.Write(profile.AllowPublish + "\n");
-            //writer.Write(profile.Email + "\n");
-            writer.Write(profile.FirstLifeAboutText + "\n");
-            writer.Write(profile.FirstLifeImage.ToString() + "\n");
-            writer.Write(profile.Image.ToString() + "\n");
-            writer.Write(profile.Interests.WantToMask);
-            writer.Write(profile.MembershipGroup + "\n");
-            writer.Write(profile.Notes);
-            writer.Write(profile.Partner + "\n");
-            writer.Write(profile.Picks);
-            writer.Write(profile.WebURL+"\n");
+            writer.Write("<" + UDAxmlString + ">\n");
+            writer.Write("<" + UPIxmlString + ">\n");
             writer.Write("</profile>\n");
+            m_log.Debug("[AvatarProfileArchiver] Saved Avatar Profile to " + cmdparams[5]);
+            writer.Close();
+            writer.Dispose();
         }
     }
 }
