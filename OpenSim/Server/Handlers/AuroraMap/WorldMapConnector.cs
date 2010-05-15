@@ -27,11 +27,11 @@ namespace OpenSim.Server.Handlers.AuroraMap
         public WorldMapConnector(IConfigSource config, IHttpServer server, string configName) :
             base(config, server, configName)
         {
-            m_log.Debug("[AuroraDataConnectors]: Starting...");
+            m_log.Debug("[AuroraWorldMapConnector]: Starting...");
 
             LocalDataService LDS = new Aurora.Services.DataService.LocalDataService();
             LDS.Initialise(config);
-            server.AddStreamHandler(new AuroraDataServerPostHandler());
+            server.AddStreamHandler(new WorldMapPostHandler());
         }
     }
 }

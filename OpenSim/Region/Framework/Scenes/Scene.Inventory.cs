@@ -57,15 +57,15 @@ namespace OpenSim.Region.Framework.Scenes
         public void CreateScriptInstances()
         {
             m_log.Info("[PRIM INVENTORY]: Starting scripts in scene");
-
-            foreach (EntityBase group in Entities)
-            {
-                if (group is SceneObjectGroup)
+            Action<EntityBase> ProtectedAction = new Action<EntityBase>(delegate(EntityBase group)
                 {
-                    ((SceneObjectGroup) group).CreateScriptInstances(0, false, DefaultScriptEngine, 0);
-                    ((SceneObjectGroup) group).ResumeScripts();
-                }
-            }
+                    if (group is SceneObjectGroup)
+                    {
+                        ((SceneObjectGroup)group).CreateScriptInstances(0, false, DefaultScriptEngine, 0);
+                        ((SceneObjectGroup)group).ResumeScripts();
+                    }
+                });
+            Parallel.ForEach(Entities, ProtectedAction);
         }
 
         public void AddUploadedInventoryItem(UUID agentID, InventoryItemBase item)

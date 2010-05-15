@@ -4526,15 +4526,6 @@ namespace OpenSim.Region.Framework.Scenes
                 return;
             }
 
-            //if ((GetEffectiveObjectFlags() & (uint)PrimFlags.Scripted) != 0)
-            //{
-            //    m_parentGroup.Scene.EventManager.OnScriptTimerEvent += handleTimerAccounting;
-            //}
-            //else
-            //{
-            //    m_parentGroup.Scene.EventManager.OnScriptTimerEvent -= handleTimerAccounting;
-            //}
-
             LocalFlags=(PrimFlags)objectflagupdate;
 
             if (m_parentGroup != null && m_parentGroup.RootPart == this)
@@ -4662,6 +4653,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             Inventory.ApplyNextOwnerPermissions();
         }
+
         public void UpdateLookAt()
         {
             try

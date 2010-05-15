@@ -613,7 +613,7 @@ namespace Aurora.Modules
                         if (!m_blacklistedregions.ContainsKey(regionhandle))
                             m_blacklistedregions.Add(regionhandle, Environment.TickCount);
                     }
-                    m_log.InfoFormat("[WORLD MAP]: Blacklisted region {0}", regionhandle.ToString());
+                    //m_log.InfoFormat("[WORLD MAP]: Blacklisted region {0}", regionhandle.ToString());
                 }
             }
 
@@ -670,7 +670,7 @@ namespace Aurora.Modules
                         m_blacklistedurls.Add(httpserver, Environment.TickCount);
                 }
 
-                m_log.WarnFormat("[WORLD MAP]: Blacklisted {0}", httpserver);
+                //m_log.WarnFormat("[WORLD MAP]: Blacklisted {0}", httpserver);
 
                 return responseMap;
             }
@@ -699,7 +699,7 @@ namespace Aurora.Modules
                             m_blacklistedurls.Add(httpserver, Environment.TickCount);
                     }
 
-                    m_log.WarnFormat("[WORLD MAP]: Blacklisted {0}", httpserver);
+                    //m_log.WarnFormat("[WORLD MAP]: Blacklisted {0}", httpserver);
 
                     return responseMap;
                 }
@@ -806,12 +806,16 @@ namespace Aurora.Modules
 
         public Hashtable OnHTTPGetMapImage(Hashtable keysvals)
         {
-            m_log.Debug("[WORLD MAP]: Sending map image jpeg");
             Hashtable reply = new Hashtable();
+            string regionImage = "regionImage" + m_scene.RegionInfo.RegionID.ToString();
+            regionImage = regionImage.Replace("-", "");
+            if (keysvals["method"].ToString() != regionImage)
+                return reply;
+            m_log.Debug("[WORLD MAP]: Sending map image jpeg");
             int statuscode = 200;
             byte[] jpeg = new byte[0];
 
-            if (myMapImageJPEG.Length == 0)
+            if (myMapImageJPEG == null ||myMapImageJPEG.Length == 0)
             {
                 MemoryStream imgstream = new MemoryStream();
                 Bitmap mapTexture = new Bitmap(1, 1);
@@ -825,7 +829,7 @@ namespace Aurora.Modules
                     imgstream = new MemoryStream();
 
                     // non-async because we know we have the asset immediately.
-                    AssetBase mapasset = m_scene.AssetService.Get(m_scene.RegionInfo.lastMapUUID.ToString());
+                    AssetBase mapasset = m_scene.AssetService.Get(m_scene.RegionInfo.RegionSettings.TerrainImageID.ToString());
 
                     // Decode image to System.Drawing.Image
                     if (OpenJPEG.DecodeToImage(mapasset.Data, out managedImage, out image))
@@ -939,15 +943,6 @@ namespace Aurora.Modules
                 {
                     textures.Add(texAsset);
                 }
-                //else
-                //{
-                //    // WHAT?!? This doesn't seem right. Commenting (diva)
-                //    texAsset = m_scene.AssetService.Get(mapBlock.MapImageId.ToString());
-                //    if (texAsset != null)
-                //    {
-                //        textures.Add(texAsset);
-                //    }
-                //}
             }
 
             foreach (AssetBase asset in textures)
@@ -1068,10 +1063,13 @@ namespace Aurora.Modules
             m_log.DebugFormat("[WORLDMAP]: Storing map tile {0}", asset.ID);
             m_scene.AssetService.Store(asset);
             m_scene.RegionInfo.RegionSettings.Save();
-
+            GridRegion R = m_scene.GridService.GetRegionByUUID(UUID.Zero, m_scene.RegionInfo.RegionID);
+            R.TerrainImage = new UUID(asset.ID);
+            m_scene.GridService.RegisterRegion(UUID.Zero, R);
             // Delete the old one
             m_log.DebugFormat("[WORLDMAP]: Deleting old map tile {0}", lastMapRegionUUID);
             m_scene.AssetService.Delete(lastMapRegionUUID.ToString());
+            myMapImageJPEG = null;
         }
 
         private void MakeRootAgent(ScenePresence avatar)

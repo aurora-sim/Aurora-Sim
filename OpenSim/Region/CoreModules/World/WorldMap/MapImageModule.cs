@@ -112,7 +112,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                 {
                     DrawObjectVolume(m_scene, mapbmp);
                 }
-
+                
                 try
                 {
                     imageData = OpenJPEG.EncodeFromImage(mapbmp, true);
@@ -231,8 +231,8 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                             if (part == null)
                                 continue;
 
-                            // Draw if the object is at least 1 meter wide in any direction
-                            if (part.Scale.X > 1f || part.Scale.Y > 1f || part.Scale.Z > 1f)
+                            // Draw if the object is at least .5 meter wide in any direction
+                            if (part.Scale.X > .5f || part.Scale.Y > .5f || part.Scale.Z > .5f)
                             {
                                 // Try to get the RGBA of the default texture entry..
                                 //
@@ -255,14 +255,23 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
                                     if (textureEntry == null || textureEntry.DefaultTexture == null)
                                         continue;
-
-                                    Color4 texcolor = textureEntry.DefaultTexture.RGBA;
-
+                                    Color texcolor = Color.Black;
+                                    try
+                                    {
+                                        Primitive.TextureEntryFace tx = part.Shape.Textures.CreateFace(6);
+                                        texcolor = computeAverageColor(tx.TextureID, Color.Black);
+                                    }
+                                    catch (Exception)
+                                    {
+                                        texcolor = Color.FromArgb((int)textureEntry.DefaultTexture.RGBA.A,(int)textureEntry.DefaultTexture.RGBA.R,(int)textureEntry.DefaultTexture.RGBA.G,(int)textureEntry.DefaultTexture.RGBA.B);
+                                    }
+                                    //Color4 texcolor = textureEntry.DefaultTexture.RGBA;
+                                    //Color4 texcolor = textureEntry.FaceTextures[0].RGBA;
                                     // Not sure why some of these are null, oh well.
 
-                                    int colorr = 255 - (int)(texcolor.R * 255f);
-                                    int colorg = 255 - (int)(texcolor.G * 255f);
-                                    int colorb = 255 - (int)(texcolor.B * 255f);
+                                    int colorr = /*255 - */(int)(texcolor.R);
+                                    int colorg = /*255 - */(int)(texcolor.G);
+                                    int colorb = /*255 - */(int)(texcolor.B);
 
                                     if (!(colorr == 255 && colorg == 255 && colorb == 255))
                                     {
@@ -316,9 +325,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                                     Vector3 tScale = new Vector3();
                                     Vector3 axPos = new Vector3(pos.X,pos.Y,pos.Z);
 
-                                    Quaternion llrot = part.GetWorldRotation();
-                                    Quaternion rot = new Quaternion(llrot.W, llrot.X, llrot.Y, llrot.Z);
-                                    scale = lscale * rot;
+                                    scale = lscale * part.GetWorldRotation();
 
                                     // negative scales don't work in this situation
                                     scale.X = Math.Abs(scale.X);
@@ -337,7 +344,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                                                           || mapdrawendY > ((int)Constants.RegionSize - 1))
                                         continue;
 
-#region obb face reconstruction part duex
+                                    #region obb face reconstruction part duex
                                     Vector3[] vertexes = new Vector3[8];
 
                                     // float[] distance = new float[6];
@@ -347,7 +354,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                                     Vector3[] FaceD = new Vector3[6]; // vertex D for Facei
 
                                     tScale = new Vector3(lscale.X, -lscale.Y, lscale.Z);
-                                    scale = ((tScale * rot));
+                                    scale = ((tScale * part.GetWorldRotation()));
                                     vertexes[0] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
                                     // vertexes[0].x = pos.X + vertexes[0].x;
                                     //vertexes[0].y = pos.Y + vertexes[0].y;
@@ -358,7 +365,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                                     FaceA[4] = vertexes[0];
 
                                     tScale = lscale;
-                                    scale = ((tScale * rot));
+                                    scale = ((tScale * part.GetWorldRotation()));
                                     vertexes[1] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
 
                                     // vertexes[1].x = pos.X + vertexes[1].x;
@@ -370,7 +377,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                                     FaceC[4] = vertexes[1];
 
                                     tScale = new Vector3(lscale.X, -lscale.Y, -lscale.Z);
-                                    scale = ((tScale * rot));
+                                    scale = ((tScale * part.GetWorldRotation()));
 
                                     vertexes[2] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
 
@@ -383,7 +390,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                                     FaceC[5] = vertexes[2];
 
                                     tScale = new Vector3(lscale.X, lscale.Y, -lscale.Z);
-                                    scale = ((tScale * rot));
+                                    scale = ((tScale * part.GetWorldRotation()));
                                     vertexes[3] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
 
                                     //vertexes[3].x = pos.X + vertexes[3].x;
@@ -395,7 +402,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                                     FaceA[5] = vertexes[3];
 
                                     tScale = new Vector3(-lscale.X, lscale.Y, lscale.Z);
-                                    scale = ((tScale * rot));
+                                    scale = ((tScale * part.GetWorldRotation()));
                                     vertexes[4] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
 
                                     // vertexes[4].x = pos.X + vertexes[4].x;
@@ -407,7 +414,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                                     FaceD[4] = vertexes[4];
 
                                     tScale = new Vector3(-lscale.X, lscale.Y, -lscale.Z);
-                                    scale = ((tScale * rot));
+                                    scale = ((tScale * part.GetWorldRotation()));
                                     vertexes[5] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
 
                                     // vertexes[5].x = pos.X + vertexes[5].x;
@@ -419,7 +426,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                                     FaceB[5] = vertexes[5];
 
                                     tScale = new Vector3(-lscale.X, -lscale.Y, lscale.Z);
-                                    scale = ((tScale * rot));
+                                    scale = ((tScale * part.GetWorldRotation()));
                                     vertexes[6] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
 
                                     // vertexes[6].x = pos.X + vertexes[6].x;
@@ -431,7 +438,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                                     FaceB[4] = vertexes[6];
 
                                     tScale = new Vector3(-lscale.X, -lscale.Y, -lscale.Z);
-                                    scale = ((tScale * rot));
+                                    scale = ((tScale * part.GetWorldRotation()));
                                     vertexes[7] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
 
                                     // vertexes[7].x = pos.X + vertexes[7].x;
@@ -441,7 +448,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                                     FaceD[2] = vertexes[7];
                                     FaceC[3] = vertexes[7];
                                     FaceD[5] = vertexes[7];
-#endregion
+                                    #endregion
 
                                     //int wy = 0;
 
@@ -526,6 +533,79 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
             m_log.Info("[MAPTILE]: Generating Maptile Step 2: Done in " + (Environment.TickCount - tc) + " ms");
             return mapbmp;
+        }
+
+        private Dictionary<UUID, Color> m_mapping;
+        private Color computeAverageColor(UUID textureID, Color defaultColor)
+        {
+            if (m_mapping == null)
+                m_mapping = new Dictionary<UUID, Color>();
+            if (textureID == UUID.Zero) return defaultColor; // not set
+            if (m_mapping.ContainsKey(textureID)) return m_mapping[textureID]; // one of the predefined textures
+
+            Bitmap bmp = fetchTexture(textureID);
+            Color color = bmp == null ? defaultColor : computeAverageColor(bmp);
+            // store it for future reference
+            m_mapping[textureID] = color;
+
+            return color;
+        }
+
+        private Bitmap fetchTexture(UUID id)
+        {
+            AssetBase asset = m_scene.AssetService.Get(id.ToString());
+            m_log.DebugFormat("Fetched texture {0}, found: {1}", id, asset != null);
+            if (asset == null) return null;
+
+            ManagedImage managedImage;
+            Image image;
+
+            try
+            {
+                if (OpenJPEG.DecodeToImage(asset.Data, out managedImage, out image))
+                    return new Bitmap(image);
+                else
+                    return null;
+            }
+            catch (DllNotFoundException)
+            {
+                m_log.ErrorFormat("[TexturedMapTileRenderer]: OpenJpeg is not installed correctly on this system.   Asset Data is emtpy for {0}", id);
+
+            }
+            catch (IndexOutOfRangeException)
+            {
+                m_log.ErrorFormat("[TexturedMapTileRenderer]: OpenJpeg was unable to encode this.   Asset Data is emtpy for {0}", id);
+
+            }
+            catch (Exception)
+            {
+                m_log.ErrorFormat("[TexturedMapTileRenderer]: OpenJpeg was unable to encode this.   Asset Data is emtpy for {0}", id);
+
+            }
+            return null;
+
+        }
+        int i = 0;
+        // Compute the average color of a texture.
+        private Color computeAverageColor(Bitmap bmp)
+        {
+            // we have 256 x 256 pixel, each with 256 possible color-values per
+            // color-channel, so 2^24 is the maximum value we can get, adding everything.
+            // int is be big enough for that.
+            int r = 0, g = 0, b = 0;
+            for (int y = 0; y < bmp.Height; ++y)
+            {
+                for (int x = 0; x < bmp.Width; ++x)
+                {
+                    Color c = bmp.GetPixel(x, y);
+                    r += (int)c.R & 0xff;
+                    g += (int)c.G & 0xff;
+                    b += (int)c.B & 0xff;
+                }
+            }
+
+            int pixels = bmp.Width * bmp.Height;
+            return Color.FromArgb(r / pixels, g / pixels, b / pixels);
         }
 
         private Point project(Vector3 point3d, Vector3 originpos)
