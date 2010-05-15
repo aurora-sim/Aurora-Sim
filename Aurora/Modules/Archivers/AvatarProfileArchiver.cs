@@ -85,7 +85,7 @@ namespace Aurora.Modules
                     }
                 }
             }
-            UserAccountService.StoreUserAccount(UDA);
+            m_scene.UserAccountService.StoreUserAccount(UDA);
 
 
             replyData = ServerUtils.ParseXmlResponse(file[2]);
@@ -93,7 +93,7 @@ namespace Aurora.Modules
             //Update the principle ID to the new user.
             UPI.PrincipalID = UDA.PrincipalID;
 
-            IProfileConnector profileData = DataManager.IProfileConnector;
+            IProfileConnector profileData = DataManager.DataManager.IProfileConnector;
             if (profileData.GetUserProfile(UPI.PrincipalID) == null)
                 profileData.CreateNewProfile(UPI.PrincipalID);
 
@@ -112,8 +112,8 @@ namespace Aurora.Modules
                 m_log.Debug("[AvatarProfileArchiver] Not enough parameters!");
                 return;
             }
-            UserAccount account = UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]);
-            IProfileConnector data = DataManager.IProfileConnector;
+            UserAccount account = m_scene.UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]);
+            IProfileConnector data = DataManager.DataManager.IProfileConnector;
             IUserProfileInfo profile = data.GetUserProfile(account.PrincipalID);
 
             Dictionary<string, object> result = new Dictionary<string, object>();
