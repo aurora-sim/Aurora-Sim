@@ -28,6 +28,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -79,10 +80,11 @@ namespace OpenSim.Services.LLLoginService
         IConfig m_LoginServerConfig;
         IConfigSource m_config;
         IConfig m_AuroraLoginConfig;
-        bool AllowAnonymousLogin = false;
-        bool AuthenticateUsers = true;
+        bool m_AllowAnonymousLogin = false;
+        bool m_AuthenticateUsers = true;
         bool m_UseTOS = false;
-        string TOSLocation = "";
+        string m_TOSLocation = "";
+        string m_DefaultUserAvatarArchive = "";
 
         public LLLoginService(IConfigSource config, ISimulationService simService, ILibraryService libraryService)
         {
@@ -91,9 +93,10 @@ namespace OpenSim.Services.LLLoginService
             if (m_AuroraLoginConfig != null)
             {
                 m_UseTOS = m_AuroraLoginConfig.GetBoolean("UseTermsOfServiceOnFirstLogin", false);
-                AllowAnonymousLogin = m_AuroraLoginConfig.GetBoolean("AllowAnonymousLogin", false);
-                AuthenticateUsers = m_AuroraLoginConfig.GetBoolean("AuthenticateUsers", true);
-                TOSLocation = m_AuroraLoginConfig.GetString("LocationOfTheTermsOfService", "");
+                m_DefaultUserAvatarArchive = m_AuroraLoginConfig.GetString("DefaultAvatarArchiveForNewUser", "");
+                m_AllowAnonymousLogin = m_AuroraLoginConfig.GetBoolean("AllowAnonymousLogin", false);
+                m_AuthenticateUsers = m_AuroraLoginConfig.GetBoolean("AuthenticateUsers", true);
+                m_TOSLocation = m_AuroraLoginConfig.GetString("LocationOfTheTermsOfService", "");
             }
             m_LoginServerConfig = config.Configs["LoginService"];
             if (m_LoginServerConfig == null)
@@ -235,7 +238,7 @@ namespace OpenSim.Services.LLLoginService
                 UserAccount account = m_UserAccountService.GetUserAccount(scopeID, firstName, lastName);
                 if (account == null)
                 {
-                    if (!AllowAnonymousLogin)
+                    if (!m_AllowAnonymousLogin)
                     {
                         m_log.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: user not found");
                         return LLFailedLoginResponse.UserProblem;
@@ -258,17 +261,18 @@ namespace OpenSim.Services.LLLoginService
                         m_InventoryService.CreateUserInventory(account.PrincipalID);
                     }
                 }
-
-                IAgentConnector data = DataManager.IAgentConnector;
-                //Already tried to find it before this, so its not there at all.
                 IAgentInfo agent = null;
-                if (data != null)
+                
+                IAgentConnector agentData = DataManager.IAgentConnector;
+                IProfileConnector profileData = DataManager.IProfileConnector;
+                //Already tried to find it before this, so its not there at all.
+                if (agentData != null)
                 {
-                    agent = data.GetAgent(account.PrincipalID);
+                    agent = agentData.GetAgent(account.PrincipalID);
                     if (agent == null)
                     {
-                        data.CreateNewAgent(account.PrincipalID);
-                        agent = data.GetAgent(account.PrincipalID);
+                        agentData.CreateNewAgent(account.PrincipalID);
+                        agent = agentData.GetAgent(account.PrincipalID);
                     }
                     //Update the agent
                     agent.IP = clientIP.Address.ToString();
@@ -278,11 +282,11 @@ namespace OpenSim.Services.LLLoginService
                     {
                         agent.AcceptTOS = true;
                         return new LLFailedLoginResponse("key",
-                            "By logging in, you accept the terms of service for this grid posted at " + TOSLocation + ".",
+                            "By logging in, you accept the terms of service for this grid posted at " + m_TOSLocation + ".",
                             "false");
                     }
                     agent.AcceptTOS = true;
-                    data.UpdateAgent(agent);
+                    agentData.UpdateAgent(agent);
                     if (agent.PermaBanned == 1 || agent.TempBanned == 1)
                     {
                         m_log.Info("[LLOGIN SERVICE]: Login failed, reason: user is banned.");
@@ -295,8 +299,29 @@ namespace OpenSim.Services.LLLoginService
                         return LLFailedLoginResponse.LoginBlockedProblem;
                     }
                 }
+                if (profileData != null)
+                {
+                    IUserProfileInfo UPI = profileData.GetUserProfile(account.PrincipalID);
+                    if (UPI == null)
+                    {
+                        profileData.CreateNewProfile(account.PrincipalID);
+                        UPI = profileData.GetUserProfile(account.PrincipalID);
+                        UPI.AArchiveName = m_DefaultUserAvatarArchive;
+                        profileData.UpdateUserProfile(UPI);
+                    }
+                    if (UPI.IsNewUser && UPI.AArchiveName != "" && UPI.AArchiveName != " ")
+                    {
+                        Aurora.Framework.IAvatarAppearanceArchiver archiver = new GridAvatarArchiver(m_UserAccountService, m_AvatarService, m_InventoryService);
+                        archiver.LoadAvatarArchive(UPI.AArchiveName, account.FirstName, account.LastName);
+                    }
+                    if (UPI.IsNewUser)
+                    {
+                        UPI.IsNewUser = false;
+                        profileData.UpdateUserProfile(UPI);
+                    }
+                }
                 UUID secureSession = UUID.Zero;
-                if (AuthenticateUsers)
+                if (m_AuthenticateUsers)
                 {
                     //
                     // Authenticate this user
@@ -863,4 +888,312 @@ namespace OpenSim.Services.LLLoginService
     }
 
         #endregion
+
+    public class GridAvatarArchiver : IAvatarAppearanceArchiver
+    {
+        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private IProfileConnector ProfileFrontend;
+        private IUserAccountService UserAccountService;
+        private IAvatarService AvatarService;
+        private IInventoryService InventoryService;
+        public GridAvatarArchiver(IUserAccountService ACS, IAvatarService AS, IInventoryService IS)
+        {
+            UserAccountService = ACS;
+            AvatarService = AS;
+            InventoryService = IS;
+            ProfileFrontend = DataManager.IProfileConnector;
+        }
+
+        public void LoadAvatarArchive(string FileName, string First, string Last)
+        {
+            UserAccount account = UserAccountService.GetUserAccount(UUID.Zero, First, Last);
+            m_log.Debug("[AvatarArchive] Loading archive from " + FileName);
+            if (account == null)
+            {
+                m_log.Error("[AvatarArchive] User not found!");
+                return;
+            }
+            StreamReader reader = new StreamReader(FileName);
+            List<string> file = new List<string>();
+            string line = reader.ReadToEnd();
+            string[] lines = line.Split('\n');
+            foreach (string splitLine in lines)
+            {
+                file.Add(splitLine);
+            }
+            reader.Close();
+            reader.Dispose();
+
+            List<UUID> AttachmentUUIDs = new List<UUID>();
+            AvatarAppearance appearance = ConvertXMLToAvatarAppearance(file, out AttachmentUUIDs);
+            appearance.Owner = account.PrincipalID;
+            List<InventoryItemBase> items = new List<InventoryItemBase>();
+            
+            #region Appearance setup
+            if (appearance.BodyItem != UUID.Zero)
+            {
+                InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.BodyItem));
+                items.Add(GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.BodyItem));
+            }
+
+            if (appearance.EyesItem != UUID.Zero)
+            {
+                InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.EyesItem));
+                items.Add(GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.EyesItem));
+            }
+
+            if (appearance.GlovesItem != UUID.Zero)
+            {
+                InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.GlovesItem));
+                items.Add(GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.GlovesItem));
+            }
+
+            if (appearance.HairItem != UUID.Zero)
+            {
+                InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.HairItem));
+                items.Add(GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.HairItem));
+            }
+
+            if (appearance.JacketItem != UUID.Zero)
+            {
+                InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.JacketItem));
+                items.Add(GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.JacketItem));
+            }
+
+            if (appearance.PantsItem != UUID.Zero)
+            {
+                InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.PantsItem));
+                items.Add(GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.PantsItem));
+            }
+
+            if (appearance.ShirtItem != UUID.Zero)
+            {
+                InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.ShirtItem));
+                items.Add(GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.ShirtItem));
+            }
+
+            if (appearance.ShoesItem != UUID.Zero)
+            {
+                InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.ShoesItem));
+                items.Add(GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.ShoesItem));
+            }
+
+            if (appearance.SkinItem != UUID.Zero)
+            {
+                InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.SkinItem));
+                items.Add(GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.SkinItem));
+            }
+
+            if (appearance.SkirtItem != UUID.Zero)
+            {
+                InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.SkirtItem));
+                items.Add(GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.SkirtItem));
+            }
+
+            if (appearance.SocksItem != UUID.Zero)
+            {
+                InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.SocksItem));
+                items.Add(GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.SocksItem));
+            }
+
+            if (appearance.UnderPantsItem != UUID.Zero)
+            {
+                InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.UnderPantsItem));
+                items.Add(GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.UnderPantsItem));
+            }
+
+            if (appearance.UnderShirtItem != UUID.Zero)
+            {
+                InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.UnderShirtItem));
+                items.Add(GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.UnderShirtItem));
+            }
+
+            foreach (UUID uuid in AttachmentUUIDs)
+            {
+                InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(uuid));
+                items.Add(GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, uuid));
+            }
+
+            #endregion
+            appearance.Owner = account.PrincipalID;
+            AvatarData adata = new AvatarData(appearance);
+            AvatarService.SetAvatar(account.PrincipalID, adata);
+            m_log.Debug("[AvatarArchive] Loaded archive from " + FileName);
+        }
+
+        private AvatarAppearance ConvertXMLToAvatarAppearance(List<string> file, out List<UUID> Attachment)
+        {
+            AvatarAppearance appearance = new AvatarAppearance();
+            List<string> newFile = new List<string>();
+            foreach (string line in file)
+            {
+                string newLine = line.TrimStart('<');
+                newFile.Add(newLine.TrimEnd('>'));
+            }
+            appearance.AvatarHeight = Convert.ToInt32(newFile[1]);
+            appearance.BodyAsset = new UUID(newFile[2]);
+            appearance.BodyItem = new UUID(newFile[3]);
+            appearance.EyesAsset = new UUID(newFile[4]);
+            appearance.EyesItem = new UUID(newFile[5]);
+            appearance.GlovesAsset = new UUID(newFile[6]);
+            appearance.GlovesItem = new UUID(newFile[7]);
+            appearance.HairAsset = new UUID(newFile[8]);
+            appearance.HairItem = new UUID(newFile[9]);
+            //Skip Hip Offset
+            appearance.JacketAsset = new UUID(newFile[11]);
+            appearance.JacketItem = new UUID(newFile[12]);
+            appearance.Owner = new UUID(newFile[13]);
+            appearance.PantsAsset = new UUID(newFile[14]);
+            appearance.PantsItem = new UUID(newFile[15]);
+            appearance.Serial = Convert.ToInt32(newFile[16]);
+            appearance.ShirtAsset = new UUID(newFile[17]);
+            appearance.ShirtItem = new UUID(newFile[18]);
+            appearance.ShoesAsset = new UUID(newFile[19]);
+            appearance.ShoesItem = new UUID(newFile[20]);
+            appearance.SkinAsset = new UUID(newFile[21]);
+            appearance.SkinItem = new UUID(newFile[22]);
+            appearance.SkirtAsset = new UUID(newFile[23]);
+            appearance.SkirtItem = new UUID(newFile[24]);
+            appearance.SocksAsset = new UUID(newFile[25]);
+            appearance.SocksItem = new UUID(newFile[26]);
+            //appearance.Texture = new Primitive.TextureEntry(newFile[27],);
+            appearance.UnderPantsAsset = new UUID(newFile[27]);
+            appearance.UnderPantsItem = new UUID(newFile[28]);
+            appearance.UnderShirtAsset = new UUID(newFile[29]);
+            appearance.UnderShirtItem = new UUID(newFile[30]);
+            Byte[] bytes = new byte[218];
+            int i = 0;
+            while (i <= 30)
+            {
+                newFile.RemoveAt(0);
+                i++;
+            }
+            i = 0;
+            if (newFile[0] == "VisualParams")
+            {
+                foreach (string partLine in newFile)
+                {
+                    if (partLine.StartsWith("/VP"))
+                    {
+                        string newpartLine = "";
+                        newpartLine = partLine.Replace("/VP", "");
+                        bytes[i] = Convert.ToByte(newpartLine);
+                        i++;
+                    }
+                }
+            }
+            appearance.VisualParams = bytes;
+            List<string> WearableAsset = new List<string>();
+            List<string> WearableItem = new List<string>();
+            List<string> AttachmentAsset = new List<string>();
+            List<string> AttachmentItem = new List<string>();
+            List<string> AttachmentPoint = new List<string>();
+            string texture = "";
+            Attachment = new List<UUID>();
+            foreach (string partLine in newFile)
+            {
+                if (partLine.StartsWith("WA"))
+                {
+                    string newpartLine = "";
+                    newpartLine = partLine.Replace("WA", "");
+                    WearableAsset.Add(newpartLine);
+                }
+                if (partLine.StartsWith("WI"))
+                {
+                    string newpartLine = "";
+                    newpartLine = partLine.Replace("WI", "");
+                    WearableItem.Add(newpartLine);
+                }
+                if (partLine.StartsWith("TEXTURE"))
+                {
+                    string newpartLine = "";
+                    newpartLine = partLine.Replace("TEXTURE", "");
+                    texture = newpartLine;
+                }
+                if (partLine.StartsWith("AI"))
+                {
+                    string newpartLine = "";
+                    newpartLine = partLine.Replace("AI", "");
+                    AttachmentItem.Add(newpartLine);
+                    Attachment.Add(new UUID(newpartLine));
+                }
+                if (partLine.StartsWith("AA"))
+                {
+                    string newpartLine = "";
+                    newpartLine = partLine.Replace("AA", "");
+                    AttachmentAsset.Add(newpartLine);
+                }
+                if (partLine.StartsWith("AP"))
+                {
+                    string newpartLine = "";
+                    newpartLine = partLine.Replace("AP", "");
+                    AttachmentPoint.Add(newpartLine);
+                }
+            }
+            //byte[] textureBytes = Utils.StringToBytes(texture);
+            //appearance.Texture = new Primitive.TextureEntry(textureBytes, 0, textureBytes.Length);
+            AvatarWearable[] wearables = new AvatarWearable[13];
+            i = 0;
+            foreach (string asset in WearableAsset)
+            {
+                AvatarWearable wearable = new AvatarWearable(new UUID(asset), new UUID(WearableItem[i]));
+                wearables[i] = wearable;
+                i++;
+            }
+            i = 0;
+            foreach (string asset in AttachmentAsset)
+            {
+                appearance.SetAttachment(Convert.ToInt32(AttachmentPoint[i]), new UUID(AttachmentItem[i]), new UUID(asset));
+                i++;
+            }
+            return appearance;
+        }
+
+        private InventoryItemBase GiveInventoryItem(UUID senderId, UUID recipient, UUID itemId)
+        {
+            InventoryItemBase item = new InventoryItemBase(itemId, senderId);
+            item = InventoryService.GetItem(item);
+
+
+            InventoryItemBase itemCopy = new InventoryItemBase();
+            itemCopy.Owner = recipient;
+            itemCopy.CreatorId = item.CreatorId;
+            itemCopy.ID = UUID.Random();
+            itemCopy.AssetID = item.AssetID;
+            itemCopy.Description = item.Description;
+            itemCopy.Name = item.Name;
+            itemCopy.AssetType = item.AssetType;
+            itemCopy.InvType = item.InvType;
+            itemCopy.Folder = UUID.Zero;
+
+            if (itemCopy.Folder == UUID.Zero)
+            {
+                InventoryFolderBase folder = InventoryService.GetFolderForType(recipient, (AssetType)itemCopy.AssetType);
+
+                if (folder != null)
+                {
+                    itemCopy.Folder = folder.ID;
+                }
+                else
+                {
+                    InventoryFolderBase root = InventoryService.GetRootFolder(recipient);
+
+                    if (root != null)
+                        itemCopy.Folder = root.ID;
+                    else
+                        return null; // No destination
+                }
+            }
+
+            itemCopy.GroupID = UUID.Zero;
+            itemCopy.GroupOwned = false;
+            itemCopy.Flags = item.Flags;
+            itemCopy.SalePrice = item.SalePrice;
+            itemCopy.SaleType = item.SaleType;
+
+            InventoryService.AddItem(itemCopy);
+
+            return itemCopy;
+        }
+    }
 }

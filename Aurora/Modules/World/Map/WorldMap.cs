@@ -1073,8 +1073,11 @@ namespace Aurora.Modules
             m_scene.AssetService.Store(asset);
             m_scene.RegionInfo.RegionSettings.Save();
             GridRegion R = m_scene.GridService.GetRegionByUUID(UUID.Zero, m_scene.RegionInfo.RegionID);
-            R.TerrainImage = new UUID(asset.ID);
-            m_scene.GridService.RegisterRegion(UUID.Zero, R);
+            if (R != null)
+            {
+                R.TerrainImage = new UUID(asset.ID);
+                m_scene.GridService.RegisterRegion(UUID.Zero, R);
+            }
             // Delete the old one
             m_log.DebugFormat("[WORLDMAP]: Deleting old map tile {0}", lastMapRegionUUID);
             m_scene.AssetService.Delete(lastMapRegionUUID.ToString());

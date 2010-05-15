@@ -2616,13 +2616,13 @@ namespace OpenSim.Region.Framework.Scenes
             SendInitialFullUpdateToAllClients();
             SendAppearanceToAllOtherAgents();
         }
-
+        
         /// <summary>
         /// Tell the client for this scene presence what items it should be wearing now
         /// </summary>
         public void SendWearables()
         {
-            //m_log.DebugFormat("[SCENE]: Received request for wearables of {0}", Name);
+            m_log.DebugFormat("[SCENE]: Received request for wearables of {0}", Name);
             //This fixes t-pose on login by sending an animation for the avatar so it has something to display.
             //  -- Revolution
             if (ClientIsStarting)
