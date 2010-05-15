@@ -76,7 +76,7 @@ namespace Aurora.Modules
             IConfig profileConfig = config.Configs["Profile"];
             if (profileConfig == null)
             {
-                m_log.Info("[AuroraProfileSearch] Not configured, disabling");
+                m_log.Info("[AuroraProfile] Not configured, disabling");
                 return;
             }
             IConfig friendsConfig = config.Configs["Friends"];
@@ -92,7 +92,7 @@ namespace Aurora.Modules
             }
             if (m_FriendsService == null)
             {
-                m_log.Error("[AuroraProfileSearch]: No Connector defined in section Friends, or filed to load, cannot continue");
+                m_log.Error("[AuroraProfile]: No Connector defined in section Friends, or filed to load, cannot continue");
                 m_ProfileEnabled = false;
             }
             else if (profileConfig.GetString("ProfileModule", Name) != Name)

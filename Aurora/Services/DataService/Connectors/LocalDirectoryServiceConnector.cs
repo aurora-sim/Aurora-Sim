@@ -7,7 +7,7 @@ using Aurora.DataManager;
 using Aurora.Framework;
 using OpenSim.Framework;
 
-namespace Aurora.Services.DataService.Connectors
+namespace Aurora.Services.DataService
 {
 	public class LocalDirectoryServiceConnector : IDirectoryServiceConnector
 	{

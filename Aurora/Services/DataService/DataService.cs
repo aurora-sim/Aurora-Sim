@@ -77,8 +77,17 @@ namespace Aurora.Services.DataService
                 DataManager.DataManager.IGridConnector = new LocalGridConnector();
                 DataManager.DataManager.IProfileConnector = new LocalProfileConnector();
                 DataManager.DataManager.IEstateConnector = new LocalEstateConnector();
+                DataManager.DataManager.IAbuseReportsConnector = new LocalAbuseReportsConnector();
+                DataManager.DataManager.IAssetConnector = new LocalAssetConnector();
+                DataManager.DataManager.IOfflineMessagesConnector = new LocalOfflineMessagesConnector();
+                DataManager.DataManager.IDirectoryServiceConnector = new LocalDirectoryServiceConnector();
+                DataManager.DataManager.IEstateConnector = new LocalEstateConnector();
                 return;
             }
+            DataManager.DataManager.IAbuseReportsConnector = new LocalAbuseReportsConnector();
+            DataManager.DataManager.IAssetConnector = new LocalAssetConnector();
+            DataManager.DataManager.IOfflineMessagesConnector = new LocalOfflineMessagesConnector();
+            DataManager.DataManager.IDirectoryServiceConnector = new LocalDirectoryServiceConnector();
             DataManager.DataManager.IEstateConnector = new LocalEstateConnector();
             if (Connector != "RemoteConnector")
             {

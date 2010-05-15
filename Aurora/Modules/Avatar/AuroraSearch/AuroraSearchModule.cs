@@ -124,6 +124,7 @@ namespace Aurora.Modules
 
         public void RegionLoaded(Scene scene)
         {
+            GenericData = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
             DSC = Aurora.DataManager.DataManager.IDirectoryServiceConnector;
             GroupsModule = m_scene.RequestModuleInterface<IGroupsModule>();
             DataSnapShotManager = m_scene.RequestModuleInterface<IDataSnapshot>();
@@ -146,7 +147,7 @@ namespace Aurora.Modules
 
         public string Name
         {
-            get { return "AuroraProfileSearch"; }
+            get { return "AuroraSearchModule"; }
         }
 
         public bool IsSharedModule
@@ -398,7 +399,7 @@ namespace Aurora.Modules
 
             List<mapItemReply> mapitems = new List<mapItemReply>();
             mapItemReply mapitem = new mapItemReply();
-
+            return;
             uint xstart = 0;
             uint ystart = 0;
             OpenMetaverse.Utils.LongToUInts(m_scene.RegionInfo.RegionHandle, out xstart, out ystart);

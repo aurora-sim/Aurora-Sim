@@ -15,6 +15,7 @@
 	  <RegionModule id="AuroraChatModule"           type="Aurora.Modules.AuroraChatModule" />
 	  <RegionModule id="Auth"           type="Aurora.Modules.Auth" />
       <RegionModule id="AbuseReports"           type="Aurora.Modules.AbuseReports" />
+	  <RegionModule id="AuroraSearchModule"           type="Aurora.Modules.AuroraSearchModule" />
 	  <RegionModule id="AuroraProfileModule"           type="Aurora.Modules.AuroraProfileModule" />
 	  <RegionModule id="GodModifiers"           type="Aurora.Modules.GodModifiers" />
 	  <RegionModule id="LureModule"           type="Aurora.Modules.LureModule" />

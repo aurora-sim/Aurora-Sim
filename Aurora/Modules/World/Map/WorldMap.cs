@@ -374,19 +374,21 @@ namespace Aurora.Modules
                 if (!m_rootAgents.Contains(remoteClient.AgentId))
                     return;
             }
+
             uint xstart = 0;
             uint ystart = 0;
             OpenMetaverse.Utils.LongToUInts(m_scene.RegionInfo.RegionHandle, out xstart, out ystart);
-            if (itemtype == 6) // we only sevice 6 right now (avatar green dots)
+            
+            List<mapItemReply> mapitems = new List<mapItemReply>();
+            int tc = Environment.TickCount;
+            if (itemtype == (int)OpenMetaverse.GridItemType.AgentLocations)
             {
                 if (regionhandle == 0 || regionhandle == m_scene.RegionInfo.RegionHandle)
                 {
-                    // Local Map Item Request
-                    int tc = Environment.TickCount;
-                    List<mapItemReply> mapitems = new List<mapItemReply>();
-                    mapItemReply mapitem = new mapItemReply();
+                    //Only one person here, send a zero person response
                     if (m_scene.GetRootAgentCount() <= 1)
                     {
+                        mapItemReply mapitem = new mapItemReply();
                         mapitem = new mapItemReply();
                         mapitem.x = (uint)(xstart + 1);
                         mapitem.y = (uint)(ystart + 1);
@@ -395,25 +397,25 @@ namespace Aurora.Modules
                         mapitem.Extra = 0;
                         mapitem.Extra2 = 0;
                         mapitems.Add(mapitem);
+                        remoteClient.SendMapItemReply(mapitems.ToArray(), itemtype, flags);
+                        return;
                     }
-                    else
+                    m_scene.ForEachScenePresence(delegate(ScenePresence sp)
                     {
-                        m_scene.ForEachScenePresence(delegate(ScenePresence sp)
+                        // Don't send a green dot for yourself
+                        if (!sp.IsChildAgent && sp.UUID != remoteClient.AgentId)
                         {
-                            // Don't send a green dot for yourself
-                            if (!sp.IsChildAgent && sp.UUID != remoteClient.AgentId)
-                            {
-                                mapitem = new mapItemReply();
-                                mapitem.x = (uint)(xstart + sp.AbsolutePosition.X);
-                                mapitem.y = (uint)(ystart + sp.AbsolutePosition.Y);
-                                mapitem.id = UUID.Zero;
-                                mapitem.name = Util.Md5Hash(m_scene.RegionInfo.RegionName + tc.ToString());
-                                mapitem.Extra = 1;
-                                mapitem.Extra2 = 0;
-                                mapitems.Add(mapitem);
-                            }
-                        });
-                    }
+                            mapItemReply mapitem = new mapItemReply();
+                            mapitem = new mapItemReply();
+                            mapitem.x = (uint)(xstart + sp.AbsolutePosition.X);
+                            mapitem.y = (uint)(ystart + sp.AbsolutePosition.Y);
+                            mapitem.id = UUID.Zero;
+                            mapitem.name = Util.Md5Hash(m_scene.RegionInfo.RegionName + tc.ToString());
+                            mapitem.Extra = 1;
+                            mapitem.Extra2 = 0;
+                            mapitems.Add(mapitem);
+                        }
+                    });
                     remoteClient.SendMapItemReply(mapitems.ToArray(), itemtype, flags);
                 }
                 else

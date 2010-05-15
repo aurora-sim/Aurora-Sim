@@ -1045,6 +1045,39 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
         }
+
+        public bool IsPresenceNear(int meters, Vector3 Position, out Vector3 OtherPosition)
+        {
+            Vector3 FoundPos = Vector3.Zero;
+            Action<ScenePresence> protectedAction = new Action<ScenePresence>(delegate(ScenePresence sp)
+            {
+                if (Util.DistanceLessThan(Position, sp.AbsolutePosition, meters))
+                {
+                    FoundPos = sp.AbsolutePosition;
+                    throw new Exception("FOUND");
+                }
+
+            });
+            try
+            {
+                Parallel.ForEach<ScenePresence>(GetScenePresences(), protectedAction);
+            }
+            catch (Exception e)
+            {
+                if (e.Message == "FOUND")
+                {
+                    OtherPosition = FoundPos; 
+                    return true;
+                }
+                else
+                {
+                    m_log.Info("[BUG] in " + m_parentScene.RegionInfo.RegionName + ": " + e.ToString());
+                    m_log.Info("[BUG] Stack Trace: " + e.StackTrace);
+                }
+            }
+            OtherPosition = FoundPos;
+            return false;
+        }
         
         #endregion
 

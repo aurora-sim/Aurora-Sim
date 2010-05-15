@@ -5,7 +5,7 @@ using Aurora.DataManager;
 using Aurora.Framework;
 using OpenMetaverse;
 
-namespace Aurora.Services.DataService.Connectors
+namespace Aurora.Services.DataService
 {
 	public class LocalOfflineMessagesConnector : IOfflineMessagesConnector
 	{

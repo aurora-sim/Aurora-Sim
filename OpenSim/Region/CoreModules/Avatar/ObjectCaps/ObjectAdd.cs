@@ -66,7 +66,9 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
             IDirectoryServiceConnector DSC = Aurora.DataManager.DataManager.IDirectoryServiceConnector;
             for(int i = 0; i < data.Count; i++)
             {
-                data[i] = DSC.GetLandObject(data[i]);
+                LandData LD = DSC.GetLandObject(data[i]);
+                if (LD != null)
+                    data[i] = LD;
             }
         }
 
