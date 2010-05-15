@@ -40,6 +40,7 @@ namespace Aurora.DataManager
         public static IAbuseReportsConnector IAbuseReportsConnector;
         public static IDirectoryServiceConnector IDirectoryServiceConnector;
         public static IAssetConnector IAssetConnector;
+        public static IAvatarArchiverConnector IAvatarArchiverConnector;
 
         #endregion
 

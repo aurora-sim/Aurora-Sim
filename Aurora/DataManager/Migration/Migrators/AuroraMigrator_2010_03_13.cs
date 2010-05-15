@@ -116,7 +116,10 @@ namespace Aurora.DataManager.Migration.Migrators
                 ));
 
             AddSchema("Passwords", ColDefs(ColDef("Method", ColumnTypes.String50, true),
-                ColDef("Password", ColumnTypes.String50, true)));
+                ColDef("Password", ColumnTypes.String50)));
+
+            AddSchema("AvatarArchives", ColDefs(ColDef("Name", ColumnTypes.String50, true),
+                ColDef("Archive", ColumnTypes.String50)));
 
             AddSchema("macban", ColDefs(ColDef("macAddress", ColumnTypes.String50, true)));
 

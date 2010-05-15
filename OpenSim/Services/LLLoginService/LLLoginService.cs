@@ -313,7 +313,7 @@ namespace OpenSim.Services.LLLoginService
                     }
                     if (UPI.IsNewUser && UPI.AArchiveName != "" && UPI.AArchiveName != " ")
                     {
-                        Aurora.Framework.IAvatarAppearanceArchiver archiver = new GridAvatarArchiver(m_UserAccountService, m_AvatarService, m_InventoryService);
+                        GridAvatarArchiver archiver = new GridAvatarArchiver(m_UserAccountService, m_AvatarService, m_InventoryService);
                         archiver.LoadAvatarArchive(UPI.AArchiveName, account.FirstName, account.LastName);
                     }
                     if (UPI.IsNewUser)
@@ -904,27 +904,161 @@ namespace OpenSim.Services.LLLoginService
             AvatarService = AS;
             InventoryService = IS;
             ProfileFrontend = DataManager.IProfileConnector;
+            MainConsole.Instance.Commands.AddCommand("region", false, "save avatar archive", "save avatar archive <First> <Last> <Filename>", "Saves appearance to an avatar archive archive", HandleSaveAvatarArchive);
+            MainConsole.Instance.Commands.AddCommand("region", false, "load avatar archive", "load avatar archive <First> <Last> <Filename>", "Loads appearance from an avatar archive archive", HandleLoadAvatarArchive);
+        }
+        #region Console Commands
+
+        protected void HandleLoadAvatarArchive(string module, string[] cmdparams)
+        {
+            if (cmdparams.Length != 6)
+            {
+                m_log.Debug("[AvatarArchive] Not enough parameters!");
+                return;
+            }
+            UserAccount account = UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]);
+            LoadAvatarArchive(cmdparams[5], cmdparams[3], cmdparams[4]);
         }
 
-        public void LoadAvatarArchive(string FileName, string First, string Last)
+        protected void HandleSaveAvatarArchive(string module, string[] cmdparams)
         {
-            UserAccount account = UserAccountService.GetUserAccount(UUID.Zero, First, Last);
-            m_log.Debug("[AvatarArchive] Loading archive from " + FileName);
+            if (cmdparams.Length != 6)
+            {
+                m_log.Debug("[AvatarArchive] Not enough parameters!");
+            }
+            UserAccount account = UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]);
             if (account == null)
             {
                 m_log.Error("[AvatarArchive] User not found!");
                 return;
             }
-            StreamReader reader = new StreamReader(FileName);
-            List<string> file = new List<string>();
-            string line = reader.ReadToEnd();
-            string[] lines = line.Split('\n');
-            foreach (string splitLine in lines)
+            AvatarData avatarData = AvatarService.GetAvatar(account.PrincipalID);
+            AvatarAppearance appearance = avatarData.ToAvatarAppearance(account.PrincipalID);
+            if (cmdparams[5].EndsWith(".database"))
             {
-                file.Add(splitLine);
+                string Password = MainConsole.Instance.CmdPrompt("Password: ");
+                string ArchiveName = cmdparams[5].Substring(0, cmdparams[5].Length - 9);
+                string ArchiveXML = MakeXMLFormat(appearance);
+                
+                AvatarArchive archive = new AvatarArchive();
+                archive.ArchiveXML = ArchiveXML;
+                archive.Name = ArchiveName;
+                
+                DataManager.IAvatarArchiverConnector.SaveAvatarArchive(archive, Password);
+
+                m_log.Debug("[AvatarArchive] Saved archive to database " + cmdparams[5]);
             }
-            reader.Close();
-            reader.Dispose();
+            else
+            {
+                StreamWriter writer = new StreamWriter(cmdparams[5]);
+                writer.Write(MakeXMLFormat(appearance));
+                writer.Close();
+                writer.Dispose();
+                m_log.Debug("[AvatarArchive] Saved archive to " + cmdparams[5]);
+            }
+        }
+
+        private string MakeXMLFormat(AvatarAppearance appearance)
+        {
+            string ArchiveXML = "";
+
+            ArchiveXML += "<avatar>\n";
+            ArchiveXML += "<" + appearance.AvatarHeight + ">\n";
+            ArchiveXML += "<" + appearance.BodyAsset + ">\n";
+            ArchiveXML += "<" + appearance.BodyItem + ">\n";
+            ArchiveXML += "<" + appearance.EyesAsset + ">\n";
+            ArchiveXML += "<" + appearance.EyesItem + ">\n";
+            ArchiveXML += "<" + appearance.GlovesAsset + ">\n";
+            ArchiveXML += "<" + appearance.GlovesItem + ">\n";
+            ArchiveXML += "<" + appearance.HairAsset + ">\n";
+            ArchiveXML += "<" + appearance.HairItem + ">\n";
+            ArchiveXML += "<" + appearance.HipOffset + ">\n";
+            ArchiveXML += "<" + appearance.JacketAsset + ">\n";
+            ArchiveXML += "<" + appearance.JacketItem + ">\n";
+            ArchiveXML += "<" + appearance.Owner + ">\n";
+            ArchiveXML += "<" + appearance.PantsAsset + ">\n";
+            ArchiveXML += "<" + appearance.PantsItem + ">\n";
+            ArchiveXML += "<" + appearance.Serial + ">\n";
+            ArchiveXML += "<" + appearance.ShirtAsset + ">\n";
+            ArchiveXML += "<" + appearance.ShirtItem + ">\n";
+            ArchiveXML += "<" + appearance.ShoesAsset + ">\n";
+            ArchiveXML += "<" + appearance.ShoesItem + ">\n";
+            ArchiveXML += "<" + appearance.SkinAsset + ">\n";
+            ArchiveXML += "<" + appearance.SkinItem + ">\n";
+            ArchiveXML += "<" + appearance.SkirtAsset + ">\n";
+            ArchiveXML += "<" + appearance.SkirtItem + ">\n";
+            ArchiveXML += "<" + appearance.SocksAsset + ">\n";
+            ArchiveXML += "<" + appearance.SocksItem + ">\n";
+            ArchiveXML += "<" + appearance.UnderPantsAsset + ">\n";
+            ArchiveXML += "<" + appearance.UnderPantsItem + ">\n";
+            ArchiveXML += "<" + appearance.UnderShirtAsset + ">\n";
+            ArchiveXML += "<" + appearance.UnderShirtItem + ">\n";
+            ArchiveXML += "<VisualParams>\n";
+            foreach (Byte Byte in appearance.VisualParams)
+            {
+                ArchiveXML += "</VP" + Convert.ToString(Byte) + ">\n";
+            }
+            ArchiveXML += "</VisualParams>\n";
+            ArchiveXML += "<wearables>\n";
+            foreach (AvatarWearable wear in appearance.Wearables)
+            {
+                ArchiveXML += "<WA" + wear.AssetID + ">\n";
+                ArchiveXML += "<WI" + wear.ItemID + ">\n";
+            }
+            ArchiveXML += "</wearables>\n";
+            ArchiveXML += "<TEXTURE" + appearance.Texture.ToString().Replace("\n", "") + "TEXTURE>\n";
+            ArchiveXML += "</avatar>";
+            Hashtable attachments = appearance.GetAttachments();
+            ArchiveXML += "<attachments>\n";
+            if (attachments != null)
+            {
+                foreach (DictionaryEntry element in attachments)
+                {
+                    Hashtable attachInfo = (Hashtable)element.Value;
+                    ArchiveXML += "<AI" + attachInfo["item"] + ">\n";
+                    ArchiveXML += "<AA" + attachInfo["asset"] + ">\n";
+                    ArchiveXML += "<AP" + (int)element.Key + ">\n";
+                }
+            }
+            ArchiveXML += "</attachments>";
+            return ArchiveXML;
+        }
+
+        #endregion
+
+        public void LoadAvatarArchive(string FileName, string First, string Last)
+        {
+            List<string> file = new List<string>();
+            UserAccount account = UserAccountService.GetUserAccount(UUID.Zero, First, Last);
+            if (account == null)
+            {
+                m_log.Error("[AvatarArchive] User not found!");
+                return;
+            }
+
+            if (FileName.EndsWith(".database"))
+            {
+                m_log.Debug("[AvatarArchive] Loading archive from the database " + FileName);
+                
+                string Password = MainConsole.Instance.CmdPrompt("Password: ");
+                FileName = FileName.Substring(0,FileName.Length-9);
+
+                Aurora.Framework.IAvatarArchiverConnector avarchiver = DataManager.IAvatarArchiverConnector;
+                AvatarArchive archive = avarchiver.GetAvatarArchive(FileName, Password);
+
+                string[] lines = archive.ArchiveXML.Split('\n');
+                file = new List<string>(lines);
+            }
+            else
+            {
+                m_log.Debug("[AvatarArchive] Loading archive from " + FileName);
+                StreamReader reader = new StreamReader(FileName);
+                string line = reader.ReadToEnd();
+                string[] lines = line.Split('\n');
+                file = new List<string>(lines);
+                reader.Close();
+                reader.Dispose();
+            }
 
             List<UUID> AttachmentUUIDs = new List<UUID>();
             AvatarAppearance appearance = ConvertXMLToAvatarAppearance(file, out AttachmentUUIDs);
