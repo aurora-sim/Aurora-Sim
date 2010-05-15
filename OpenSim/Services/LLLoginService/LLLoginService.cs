@@ -166,6 +166,8 @@ namespace OpenSim.Services.LLLoginService
                 Initialized = true;
                 RegisterCommands();
             }
+            //Start the grid profile archiver.
+            new GridAvatarProfileArchiver(m_UserAccountService);
 
             m_log.DebugFormat("[LLOGIN SERVICE]: Starting...");
 
@@ -1194,6 +1196,111 @@ namespace OpenSim.Services.LLLoginService
             InventoryService.AddItem(itemCopy);
 
             return itemCopy;
+        }
+    }
+
+    public class GridAvatarProfileArchiver
+    {
+        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private IUserAccountService UserAccountService;
+        public GridAvatarProfileArchiver(IUserAccountService UAS)
+        {
+            UserAccountService = UAS;
+            MainConsole.Instance.Commands.AddCommand("region", false, "save avatar profile",
+                                          "save avatar profile <First> <Last> <Filename>",
+                                          "Saves profile and avatar data to an archive", HandleSaveAvatarProfile);
+            MainConsole.Instance.Commands.AddCommand("region", false, "load avatar profile",
+                                          "load avatar profile <First> <Last> <Filename>",
+                                          "Loads profile and avatar data from an archive", HandleLoadAvatarProfile);
+        }
+
+        protected void HandleLoadAvatarProfile(string module, string[] cmdparams)
+        {
+            if (cmdparams.Length != 6)
+            {
+                m_log.Debug("[AvatarProfileArchiver] Not enough parameters!");
+                return;
+            }
+            StreamReader reader = new StreamReader(cmdparams[5]);
+
+            string document = reader.ReadToEnd();
+            string[] lines = document.Split('\n');
+            List<string> file = new List<string>(lines);
+            Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(file[1]);
+            
+            Dictionary<string, object> results = replyData["result"] as Dictionary<string, object>;
+            UserAccount UDA = new UserAccount();
+            UDA.FirstName = cmdparams[3];
+            UDA.LastName = cmdparams[4];
+            UDA.PrincipalID = UUID.Random();
+            UDA.ScopeID = UUID.Zero;
+            UDA.UserFlags = int.Parse(results["UserFlags"].ToString());
+            UDA.UserLevel = 0; //For security... Don't want everyone loading full god mode.
+            UDA.UserTitle = results["UserTitle"].ToString();
+            UDA.Email = results["Email"].ToString();
+            UDA.Created = int.Parse(results["Created"].ToString());
+            if (results.ContainsKey("ServiceURLs") && results["ServiceURLs"] != null)
+            {
+                UDA.ServiceURLs = new Dictionary<string, object>();
+                string str = results["ServiceURLs"].ToString();
+                if (str != string.Empty)
+                {
+                    string[] parts = str.Split(new char[] { ';' });
+                    Dictionary<string, object> dic = new Dictionary<string, object>();
+                    foreach (string s in parts)
+                    {
+                        string[] parts2 = s.Split(new char[] { '*' });
+                        if (parts2.Length == 2)
+                            UDA.ServiceURLs[parts2[0]] = parts2[1];
+                    }
+                }
+            }
+            UserAccountService.StoreUserAccount(UDA);
+
+            
+            replyData = ServerUtils.ParseXmlResponse(file[2]);
+            IUserProfileInfo UPI = new IUserProfileInfo(replyData["result"] as Dictionary<string, object>);
+            //Update the principle ID to the new user.
+            UPI.PrincipalID = UDA.PrincipalID;
+
+            IProfileConnector profileData = DataManager.IProfileConnector;
+            if (profileData.GetUserProfile(UPI.PrincipalID) == null)
+                profileData.CreateNewProfile(UPI.PrincipalID);
+
+            profileData.UpdateUserProfile(UPI);
+
+            
+            reader.Close();
+            reader.Dispose();
+
+            m_log.Debug("[AvatarProfileArchiver] Loaded Avatar Profile from " + cmdparams[5]);
+        }
+        protected void HandleSaveAvatarProfile(string module, string[] cmdparams)
+        {
+            if (cmdparams.Length != 6)
+            {
+                m_log.Debug("[AvatarProfileArchiver] Not enough parameters!");
+                return;
+            }
+            UserAccount account = UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]);
+            IProfileConnector data = DataManager.IProfileConnector;
+            IUserProfileInfo profile = data.GetUserProfile(account.PrincipalID);
+
+            Dictionary<string, object> result = new Dictionary<string, object>();
+            result["result"] = profile.ToKeyValuePairs();
+            string UPIxmlString = ServerUtils.BuildXmlResponse(result);
+
+            result["result"] = account.ToKeyValuePairs();
+            string UDAxmlString = ServerUtils.BuildXmlResponse(result);
+
+            StreamWriter writer = new StreamWriter(cmdparams[5]);
+            writer.Write("<profile>\n");
+            writer.Write(UDAxmlString + "\n");
+            writer.Write(UPIxmlString + "\n");
+            writer.Write("</profile>\n");
+            m_log.Debug("[AvatarProfileArchiver] Saved Avatar Profile to " + cmdparams[5]);
+            writer.Close();
+            writer.Dispose();
         }
     }
 }

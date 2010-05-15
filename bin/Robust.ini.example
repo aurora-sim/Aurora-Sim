@@ -196,3 +196,5 @@ UseTermsOfServiceOnFirstLogin = false
 LocationOfTheTermsOfService = ""
 AllowAnonymousLogin = false
 AuthenticateUsers = true
+; This allows for a default avatar to be created so the user does not login as ruth. Save an Avatar Archive then put the name of it here.
+DefaultAvatarArchiveForNewUser = ""
