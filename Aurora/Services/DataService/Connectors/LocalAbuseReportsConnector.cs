@@ -5,6 +5,8 @@ using System.Text;
 using Aurora.Framework;
 using Aurora.DataManager;
 using OpenMetaverse;
+using OpenSim.Framework;
+using OpenSim.Framework.Console;
 
 namespace Aurora.Services.DataService
 {
@@ -14,10 +16,18 @@ namespace Aurora.Services.DataService
 		public LocalAbuseReportsConnector()
 		{
 			GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
+            List<string> Results = GD.Query("Method", "AbuseReports", "Passwords", "Password");
+            if (Results == null || Results.Count == 0 || Results[0] == "" || Results[0] == " ")
+            {
+                string newPass = MainConsole.Instance.CmdPrompt("Password to access Abuse Reports");
+                GD.Insert("Passwords", new object[] { "AbuseReports", Util.Md5Hash(newPass) });
+            }
 		}
 
 		public AbuseReport GetAbuseReport(int Number, string Password)
 		{
+            if (!CheckPassword(Password))
+                return null;
 			AbuseReport report = new AbuseReport();
 			List<string> Reports = GD.Query("ReportNumber", Number, "abusereports", "*");
 			report.Category = Reports[0];
@@ -41,7 +51,9 @@ namespace Aurora.Services.DataService
 
 		public void AddAbuseReport(AbuseReport report, string Password)
 		{
-			List<object> InsertValues = new List<object>();
+            if (!CheckPassword(Password))
+                return;
+            List<object> InsertValues = new List<object>();
 			InsertValues.Add(report.Category);
 			InsertValues.Add(report.ReporterName);
 			InsertValues.Add(report.ObjectName);
@@ -73,9 +85,19 @@ namespace Aurora.Services.DataService
 
         public void UpdateAbuseReport(AbuseReport report, string Password)
         {
+            if (!CheckPassword(Password))
+                return;
             //This is update, so we trust the number as it should know the number it's updating now.
             GD.Delete("abusereports", new string[] { "Number" }, new object[] { report.Number });
             AddAbuseReport(report, Password);
+        }
+
+        private bool CheckPassword(string Password)
+        {
+            string TruePassword = GD.Query("Method", "AbuseReports", "Passwords", "Password")[0];
+            if (Util.Md5Hash(Password) == TruePassword)
+                return true;
+            return false;
         }
 	}
 }

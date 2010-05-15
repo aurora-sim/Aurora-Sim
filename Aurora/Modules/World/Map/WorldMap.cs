@@ -52,6 +52,7 @@ using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 using Aurora.DataManager;
 using Aurora.Framework;
 using OpenSim.Services.Interfaces;
+using System.Timers;
 
 namespace Aurora.Modules
 {
@@ -115,6 +116,11 @@ namespace Aurora.Modules
                 m_scene.RegisterModuleInterface<IWorldMapModule>(this);
 
                 m_scene.AddCommand(
+                    this, "update map",
+                    "update map",
+                    "Updates the image of the world map", HandleUpdateWorldMapConsoleCommand);
+
+                m_scene.AddCommand(
                     this, "export-map",
                     "export-map [<path>]",
                     "Save an image of the world map", HandleExportWorldMapConsoleCommand);
@@ -142,15 +148,9 @@ namespace Aurora.Modules
             //RegionData = Aurora.DataManager.DataManager.GetDefaultRegionPlugin();
             //RegionsHidden = RegionData.GetRegionHidden();
             aTimer = new System.Timers.Timer(oneminute * minutes);
-            aTimer.Elapsed += OnTimedEvent;
+            aTimer.Elapsed += OnTimedCreateNewMapImage;
             aTimer.Enabled = true;
         }
-
-        private void OnTimedEvent(object source, System.Timers.ElapsedEventArgs e)
-        {
-            m_scene.CreateTerrainTexture();
-        }
-
 
 		public virtual void Close()
 		{
@@ -897,6 +897,15 @@ namespace Aurora.Modules
         }
 
         /// <summary>
+        /// Update the world map
+        /// </summary>
+        /// <param name="fileName"></param>
+        public void HandleUpdateWorldMapConsoleCommand(string module, string[] cmdparams)
+        {
+            m_scene.CreateTerrainTexture();
+        }
+
+        /// <summary>
         /// Export the world map
         /// </summary>
         /// <param name="fileName"></param>
@@ -1097,7 +1106,12 @@ namespace Aurora.Modules
                 if (m_rootAgents.Count == 0)
                     StopThread();
             }
-		}
+        }
+
+        private void OnTimedCreateNewMapImage(object source, ElapsedEventArgs e)
+        {
+            m_scene.CreateTerrainTexture();
+        }
 	}
 
 	public struct MapRequestState

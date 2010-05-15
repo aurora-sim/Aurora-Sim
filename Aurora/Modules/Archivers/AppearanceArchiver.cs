@@ -24,27 +24,29 @@ namespace Aurora.Modules
         {
             if(m_scene == null)
                 m_scene = scene;
-            MainConsole.Instance.Commands.AddCommand("region", false, "save AA",
-                                          "save AA <First> <Last> <Filename>",
-                                          "Saves appearance to an AA archive", HandleSaveAA);
-            MainConsole.Instance.Commands.AddCommand("region", false, "load AA",
-                                          "load AA <First> <Last> <Filename>",
-                                          "Loads appearance from an AA archive", HandleLoadAA);
-            scene.EventManager.OnNewClient += new EventManager.OnNewClientDelegate(EventManager_OnNewClient);
+            MainConsole.Instance.Commands.AddCommand("region", false, "save avatar archive",
+                                          "save avatar archive <First> <Last> <Filename>",
+                                          "Saves appearance to an avatar archive archive", HandleSaveAvatarArchive);
+            MainConsole.Instance.Commands.AddCommand("region", false, "load avatar archive",
+                                          "load avatar archive <First> <Last> <Filename>",
+                                          "Loads appearance from an avatar archive archive", HandleLoadAvatarArchive);
+            scene.EventManager.OnMakeRootAgent += EventManager_OnNewPresence;
         }
 
-        void EventManager_OnNewClient(IClientAPI client)
+        void EventManager_OnNewPresence(ScenePresence presence)
         {
+            if (presence.IsChildAgent)
+                return;
             var GenericData = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
-            IUserProfileInfo UPI = ProfileFrontend.GetUserProfile(client.AgentId);
-            UserAccount account = m_scene.UserAccountService.GetUserAccount(UUID.Zero, client.AgentId);
+            IUserProfileInfo UPI = ProfileFrontend.GetUserProfile(presence.UUID);
+            UserAccount account = m_scene.UserAccountService.GetUserAccount(UUID.Zero, presence.UUID);
             if (UPI == null)
             {
                 ProfileFrontend.CreateNewProfile(account.PrincipalID);
             }
-            if (UPI.IsNewUser && UPI.AArchiveName != " ")
+            if (UPI.IsNewUser && UPI.AArchiveName != "")
             {
-                LoadAA(account, UPI.AArchiveName);
+                LoadAvatarArchive(account, UPI.AArchiveName);
             }
             UPI.IsNewUser = false;
             ProfileFrontend.UpdateUserProfile(UPI);
@@ -64,23 +66,23 @@ namespace Aurora.Modules
             get { return true; }
         }
         
-        protected void HandleLoadAA(string module, string[] cmdparams)
+        protected void HandleLoadAvatarArchive(string module, string[] cmdparams)
         {
-            if (cmdparams.Length != 5)
+            if (cmdparams.Length != 6)
             {
-                m_log.Debug("[AA] Not enough parameters!");
+                m_log.Debug("[AvatarArchive] Not enough parameters!");
                 return;
             }
-            UserAccount account = m_scene.UserAccountService.GetUserAccount(UUID.Zero, cmdparams[2], cmdparams[3]);
-            LoadAA(account, cmdparams[4]);
+            UserAccount account = m_scene.UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]);
+            LoadAvatarArchive(account, cmdparams[5]);
         }
 
-        protected void LoadAA(UserAccount account, string FileName)
+        protected void LoadAvatarArchive(UserAccount account, string FileName)
         {
-            m_log.Debug("[AA] Loading AA from " + FileName);
+            m_log.Debug("[AvatarArchive] Loading archive from " + FileName);
             if (account == null)
             {
-                m_log.Error("[AA] User not found!");
+                m_log.Error("[AvatarArchive] User not found!");
                 return;
             }
             StreamReader reader = new StreamReader(FileName);
@@ -172,10 +174,12 @@ namespace Aurora.Modules
             appearance.Owner = account.PrincipalID;
             AvatarData adata = new AvatarData(appearance);
             m_scene.AvatarService.SetAvatar(account.PrincipalID, adata);
-            SP.Appearance = appearance;
             if (SP != null)
             {
+                SP.Appearance = appearance;
                 SP.SendAppearanceToOtherAgent(SP);
+                SP.SendWearables();
+                SP.SendAppearanceToAllOtherAgents();
             }
         }
 
@@ -219,7 +223,7 @@ namespace Aurora.Modules
             appearance.UnderPantsItem = new UUID(newFile[28]);
             appearance.UnderShirtAsset = new UUID(newFile[29]);
             appearance.UnderShirtItem = new UUID(newFile[30]);
-            Byte[] bytes = new byte[500];
+            Byte[] bytes = new byte[218];
             int i = 0;
             while (i <= 30)
             {
@@ -306,22 +310,22 @@ namespace Aurora.Modules
             }
             return appearance;
         }
-        protected void HandleSaveAA(string module, string[] cmdparams)
+        protected void HandleSaveAvatarArchive(string module, string[] cmdparams)
         {
-            if (cmdparams.Length != 5)
+            if (cmdparams.Length != 6)
             {
-                m_log.Debug("[AA] Not enough parameters!");
+                m_log.Debug("[AvatarArchive] Not enough parameters!");
             }
-            m_log.Debug("[AA] Saving AA to " + cmdparams[4]);
-            UserAccount account = m_scene.UserAccountService.GetUserAccount(UUID.Zero, cmdparams[2], cmdparams[3]);
+            m_log.Debug("[AvatarArchive] Saving archive to " + cmdparams[5]);
+            UserAccount account = m_scene.UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]);
             if (account == null)
             {
-                m_log.Error("[AA] User not found!");
+                m_log.Error("[AvatarArchive] User not found!");
                 return;
             }
             AvatarData avatarData = m_scene.AvatarService.GetAvatar(account.PrincipalID);
             AvatarAppearance appearance = avatarData.ToAvatarAppearance(account.PrincipalID);
-            StreamWriter writer = new StreamWriter(cmdparams[4]);
+            StreamWriter writer = new StreamWriter(cmdparams[5]);
             writer.Write("<avatar>\n");
             writer.Write("<" + appearance.AvatarHeight + ">\n");
             writer.Write("<" + appearance.BodyAsset + ">\n");

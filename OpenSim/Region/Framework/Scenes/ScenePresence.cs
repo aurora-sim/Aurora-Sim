@@ -2627,10 +2627,17 @@ namespace OpenSim.Region.Framework.Scenes
             //  -- Revolution
             if (ClientIsStarting)
             {
-                if (m_physicsActor.Flying)
-                    Animator.TrySetMovementAnimation("HOVER");
+                if (m_physicsActor != null)
+                {
+                    if (m_physicsActor.Flying)
+                        Animator.TrySetMovementAnimation("HOVER");
+                    else
+                        Animator.TrySetMovementAnimation("STAND");
+                }
                 else
+                {
                     Animator.TrySetMovementAnimation("STAND");
+                }
                 ClientIsStarting = false;
             }
             ControllingClient.SendWearables(m_appearance.Wearables, m_appearance.Serial++);

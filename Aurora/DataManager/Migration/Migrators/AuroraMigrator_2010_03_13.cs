@@ -115,6 +115,9 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("TelehubZ", ColumnTypes.String50)
                 ));
 
+            AddSchema("Passwords", ColDefs(ColDef("Method", ColumnTypes.String50, true),
+                ColDef("Password", ColumnTypes.String50, true)));
+
             AddSchema("macban", ColDefs(ColDef("macAddress", ColumnTypes.String50, true)));
 
             AddSchema("LSLGenericData", ColDefs(ColDef("Token", ColumnTypes.String50, true),
