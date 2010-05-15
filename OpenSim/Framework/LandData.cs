@@ -434,6 +434,19 @@ namespace OpenSim.Framework
             }
         }
 
+        private int _Maturity = 2;
+        public int Maturity
+        {
+            get
+            {
+                return _Maturity;
+            }
+            set
+            {
+                _Maturity = value;
+            }
+        }
+
         private string _mediaType = "none/none";
         public string MediaType
         {

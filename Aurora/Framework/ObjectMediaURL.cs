@@ -2,12 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using OpenMetaverse;
 
 namespace Aurora.Framework
 {
     public class ObjectMediaURL
     {
-        public string alt_image_enable = "";
+        public int Side;
+        public UUID ObjectID;
+        public UUID OwnerID;
+        public bool alt_image_enable = true;
         public bool auto_loop = true;
         public bool auto_play = true;
         public bool auto_scale = true;

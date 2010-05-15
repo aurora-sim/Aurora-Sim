@@ -43,13 +43,7 @@ namespace Aurora.Services.DataService
                 migrationManager.DetermineOperation();
                 migrationManager.ExecuteOperation();
 
-                MySQLProfile ProfileData = new MySQLProfile();
-                ProfileData.ConnectToDatabase(ConnectionString);
-                MySQLRegion RegionData = new MySQLRegion();
-                RegionData.ConnectToDatabase(ConnectionString);
                 Aurora.DataManager.DataManager.SetDefaultGenericDataPlugin(GenericData);
-                Aurora.DataManager.DataManager.SetDefaultProfilePlugin((IProfileData)ProfileData);
-                Aurora.DataManager.DataManager.SetDefaultRegionPlugin((IRegionData)RegionData);
             }
             else if (PluginModule == "SQLite")
             {
@@ -63,7 +57,7 @@ namespace Aurora.Services.DataService
                 SQLiteStateSaver ScriptSaverData = new SQLiteStateSaver();
                 ScriptSaverData.ConnectToDatabase(ScriptConnectionString);
                 ScriptSaveDataConnector = ScriptSaverData;
-                
+
                 var migrationManager = new MigrationManager(DataManager.DataManager.DataSessionProvider, GenericData);
                 migrationManager.DetermineOperation();
                 migrationManager.ExecuteOperation();
@@ -72,13 +66,7 @@ namespace Aurora.Services.DataService
                 statesavemigrationManager.DetermineOperation();
                 statesavemigrationManager.ExecuteOperation();
 
-                SQLiteProfile ProfileData = new SQLiteProfile();
-                ProfileData.ConnectToDatabase(ConnectionString);
-                SQLiteRegion RegionData = new SQLiteRegion();
-                RegionData.ConnectToDatabase(ConnectionString);
                 Aurora.DataManager.DataManager.SetDefaultGenericDataPlugin(GenericData);
-                Aurora.DataManager.DataManager.SetDefaultProfilePlugin((IProfileData)ProfileData);
-                Aurora.DataManager.DataManager.SetDefaultRegionPlugin((IRegionData)RegionData);
             }
 
             DataManager.DataManager.IScriptDataConnector = new LocalScriptDataConnector(ScriptSaveDataConnector);

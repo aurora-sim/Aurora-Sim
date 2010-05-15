@@ -16,6 +16,7 @@ namespace Aurora.DataManager
         public abstract string Identifier { get; }
         public abstract void ConnectToDatabase(string connectionString);
         public abstract List<string> Query(string keyRow, object keyValue, string table, string wantedValue, string Order);
+        public abstract List<string> Query(string whereClause, string table, string wantedValue);
         public abstract List<string> Query(string keyRow, object keyValue, string table, string wantedValue);
         public abstract List<string> Query(string[] keyRow, object[] keyValue, string table, string wantedValue);
         public abstract bool Insert(string table, object[] values);
@@ -25,8 +26,8 @@ namespace Aurora.DataManager
         public abstract void CloseDatabase();
         public abstract bool TableExists(string table);
         public abstract void CreateTable(string table, ColumnDefinition[] columns);
-        public abstract bool StoreRegionWindlightSettings(RegionLightShareData wl);
         public abstract RegionLightShareData LoadRegionWindlightSettings(UUID regionUUID);
+        public abstract bool StoreRegionWindlightSettings(RegionLightShareData wl);
 
         public Version GetAuroraVersion()
         {

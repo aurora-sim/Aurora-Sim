@@ -29,46 +29,6 @@ namespace Aurora.DataManager
         }
         #endregion
         
-        #region IProfileData 
-        
-        public static IProfileData DefaultProfilePlugin = null;
-        public static IProfileData GetDefaultProfilePlugin()
-        {
-            return DefaultProfilePlugin;
-        }
-        public static void SetDefaultProfilePlugin(IProfileData Plugin)
-        {
-            DefaultProfilePlugin = Plugin;
-        }
-        
-        #endregion
-        
-        #region IRegionData
-        
-        public static IRegionData DefaultRegionPlugin = null;
-        public static IRegionData GetDefaultRegionPlugin()
-        {
-            return DefaultRegionPlugin;
-        }
-        public static void SetDefaultRegionPlugin(IRegionData Plugin)
-        {
-            DefaultRegionPlugin = Plugin;
-        }
-        #endregion
-
-        #region IGroupData
-
-        public static IGroupsServicesConnector DefaultGroupPlugin = null;
-        public static IGroupsServicesConnector GetDefaultGroupPlugin()
-        {
-            return DefaultGroupPlugin;
-        }
-        public static void SetDefaultGroupDataPlugin(IGroupsServicesConnector Plugin)
-        {
-            DefaultGroupPlugin = Plugin;
-        }
-        #endregion
-
         #region FrontendConnectors
 
         public static IProfileConnector IProfileConnector;
@@ -78,7 +38,8 @@ namespace Aurora.DataManager
         public static IEstateConnector IEstateConnector;
         public static IOfflineMessagesConnector IOfflineMessagesConnector;
         public static IAbuseReportsConnector IAbuseReportsConnector;
-
+        public static IDirectoryServiceConnector IDirectoryServiceConnector;
+        public static IAssetConnector IAssetConnector;
 
         #endregion
 

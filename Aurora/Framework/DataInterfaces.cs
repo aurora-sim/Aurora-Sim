@@ -8,25 +8,6 @@ using Nini.Config;
 
 namespace Aurora.Framework
 {
-    public interface IProfileData
-    {
-        DirPlacesReplyData[] PlacesQuery(string queryText, string category, string table, string wantedValue, int StartQuery);
-        DirLandReplyData[] LandForSaleQuery(string searchType, string price, string area, string table, string wantedValue, int StartQuery);
-        DirClassifiedReplyData[] ClassifiedsQuery(string queryText, string category, string queryFlags, int StartQuery);
-        DirEventsReplyData[] EventQuery(string queryText, string flags, string table, string wantedValue, int StartQuery);
-        EventData GetEventInfo(string p);
-        DirEventsReplyData[] GetAllEventsNearXY(string table, int X, int Y);
-        Classified[] GetClassifieds(string regionName);
-
-    }
-    public interface IRegionData
-    {
-        ObjectMediaURL getObjectMediaInfo(string objectID, int side);
-        bool StoreRegionWindlightSettings(RegionLightShareData wl);
-        void AddLandObject(OpenSim.Framework.LandData ILandData);
-        RegionLightShareData LoadRegionWindlightSettings(UUID regionUUID);
-    }
-
     public interface IGroupsServicesConnector
     {
         UUID CreateGroup(UUID RequestingAgentID, string name, string charter, bool showInList, UUID insigniaID, int membershipFee, bool openEnrollment, bool allowPublish, bool maturePublish, UUID founderID);
@@ -98,12 +79,16 @@ namespace Aurora.Framework
         /// select wantedValue from table where keyRow = keyValue
         /// </summary>
         List<string> Query(string keyRow, object keyValue, string table, string wantedValue);
+        List<string> Query(string whereClause, string table, string wantedValue);
         List<string> Query(string keyRow, object keyValue, string table, string wantedValue, string Order);
         List<string> Query(string[] keyRow, object[] keyValue, string table, string wantedValue);
         bool Insert(string table, object[] values);
         bool Delete(string table, string[] keys, object[] values);
         bool Insert(string table, object[] values, string updateKey, object updateValue);
         string Identifier { get; }
+        //REFACTORING ISSUE
+        RegionLightShareData LoadRegionWindlightSettings(UUID regionUUID);
+        bool StoreRegionWindlightSettings(RegionLightShareData wl);
     }
 
     public interface IDataConnector : IGenericData

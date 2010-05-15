@@ -49,5 +49,6 @@ namespace OpenSim.Framework
         public string simName;
         public Vector3 globalPos;
         public uint eventFlags;
+        public int maturity;
     }
 }

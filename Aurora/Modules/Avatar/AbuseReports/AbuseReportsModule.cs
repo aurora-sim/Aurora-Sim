@@ -52,10 +52,7 @@ namespace Aurora.Modules
         private bool enabled = false;
         private List<Scene> m_SceneList = new List<Scene>();
         private static char[] charSeparators = new char[] {  };
-        private IGenericData GenericData = null;
-        private IProfileData ProfileData = null;
-        private IRegionData RegionData = null;
-
+        
         public void Initialise(IConfigSource source)
         {
             IConfig cnf = source.Configs["AbuseReports"];
@@ -119,9 +116,6 @@ namespace Aurora.Modules
 
         public void PostInitialise()
         {
-            GenericData = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
-            ProfileData = Aurora.DataManager.DataManager.GetDefaultProfilePlugin();
-            RegionData = Aurora.DataManager.DataManager.GetDefaultRegionPlugin();
         }
 
         public string Name

@@ -90,19 +90,14 @@ namespace OpenSim.Region.CoreModules.World.Land
             LandData.IsGroupOwned = is_group_owned;
             if (LandData.LocalID == 0)
                 return;
-            Aurora.Framework.IGenericData GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
-            List<string> Query = GD.Query("UUID", LandData.GlobalID.ToString(), "auroraland", "*");
-            if (Query.Count == 0)
+            Aurora.Framework.IDirectoryServiceConnector GD = Aurora.DataManager.DataManager.IDirectoryServiceConnector;
+            LandData LD = GD.GetLandObject(LandData);
+            if (LD == null)
             {
-                Aurora.DataManager.DataManager.GetDefaultRegionPlugin().AddLandObject(LandData);
-                return;
+                GD.AddLandObject(LandData, scene.RegionInfo.RegionID, (LandData.SalePrice == 0), scene.RegionInfo.EstateSettings.EstateID, ((LandData.Flags & (uint)ParcelFlags.ShowDirectory) == 1));
             }
-            LandData.MediaDesc = Query[2];
-            LandData.MediaLoop = Convert.ToByte(Query[4]);
-            LandData.MediaType = Query[5];
-            LandData.MediaSize = new int[] {Convert.ToInt32(Query[3]),Convert.ToInt32(Query[6])};
-            LandData.ObscureMedia = Convert.ToByte(Query[7]);
-            LandData.ObscureMusic = Convert.ToByte(Query[8]);
+            else
+                LandData = LD;
         }
 
         #endregion
