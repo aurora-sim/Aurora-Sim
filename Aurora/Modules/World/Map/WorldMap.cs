@@ -84,7 +84,9 @@ namespace Aurora.Modules
         private double minutes = 30;
         private double oneminute = 60000;
         private System.Timers.Timer aTimer;
-        private Dictionary<string, string> RegionsHidden = new Dictionary<string, string>();
+        private IGridConnector GridConnector;
+        private RemoteSimMapConnector SimMapConnector;
+        private string SimMapServerURI;
         
 		#region INonSharedRegionModule Members
         public virtual void Initialise(IConfigSource source)
@@ -98,6 +100,8 @@ namespace Aurora.Modules
                     m_Enabled = false;
                     return;
                 }
+                SimMapServerURI = source.Configs["MapModule"].GetString(
+                    "SimMapServerURI");
             }
             m_log.Info("[AuroraWorldMap] Initializing");
             m_config = source;
@@ -144,12 +148,14 @@ namespace Aurora.Modules
 
 		public virtual void RegionLoaded (Scene scene)
 		{
-            //This needs the new grid frontend first.
-            //RegionData = Aurora.DataManager.DataManager.GetDefaultRegionPlugin();
-            //RegionsHidden = RegionData.GetRegionHidden();
+            GridConnector = Aurora.DataManager.DataManager.IGridConnector;
+            SimMapConnector = new RemoteSimMapConnector(SimMapServerURI);
             aTimer = new System.Timers.Timer(oneminute * minutes);
             aTimer.Elapsed += OnTimedCreateNewMapImage;
             aTimer.Enabled = true;
+            System.Timers.Timer Timer = new System.Timers.Timer(oneminute * 5);
+            Timer.Elapsed += OnUpdateRegion;
+            Timer.Enabled = true;
         }
 
 		public virtual void Close()
@@ -236,44 +242,66 @@ namespace Aurora.Modules
             UserAccount account = m_scene.UserAccountService.GetUserAccount(UUID.Zero, agentID);
             if (avatarPresence != null)
             {
-                bool lookup = false;
+                //bool lookup = false;
 
-                lock (cachedMapBlocks)
-                {
-                    if (cachedMapBlocks.Count > 0 && ((cachedTime + 1800) > Util.UnixTimeSinceEpoch()))
-                    {
-                        List<MapBlockData> mapBlocks;
+                //lock (cachedMapBlocks)
+                //{
+                //    if (cachedMapBlocks.Count > 0 && ((cachedTime + 1800) > Util.UnixTimeSinceEpoch()))
+                //    {
+                //        List<MapBlockData> mapBlocks;
 
-                        mapBlocks = cachedMapBlocks;
-                        avatarPresence.ControllingClient.SendMapBlock(mapBlocks, 0);
-                    }
-                    else
-                    {
-                        lookup = true;
-                    }
-                }
-                if (lookup)
-                {
+                //        mapBlocks = cachedMapBlocks;
+                //        avatarPresence.ControllingClient.SendMapBlock(mapBlocks, 0);
+                //    }
+                //    else
+                //    {
+                //        lookup = true;
+                //    }
+                //}
+                //if (lookup)
+                //{
                     List<MapBlockData> mapBlocks = new List<MapBlockData>(); ;
 
-                    List<GridRegion> regions = m_scene.GridService.GetRegionRange(m_scene.RegionInfo.ScopeID,
-                        (int)(m_scene.RegionInfo.RegionLocX - 8) * (int)Constants.RegionSize,
-                        (int)(m_scene.RegionInfo.RegionLocX + 8) * (int)Constants.RegionSize,
-                        (int)(m_scene.RegionInfo.RegionLocY - 8) * (int)Constants.RegionSize,
-                        (int)(m_scene.RegionInfo.RegionLocY + 8) * (int)Constants.RegionSize);
-                    foreach (GridRegion r in regions)
+                    //List<GridRegion> regions = m_scene.GridService.GetRegionRange(m_scene.RegionInfo.ScopeID,
+                    //    (int)(m_scene.RegionInfo.RegionLocX - 8) * (int)Constants.RegionSize,
+                    //    (int)(m_scene.RegionInfo.RegionLocX + 8) * (int)Constants.RegionSize,
+                    //    (int)(m_scene.RegionInfo.RegionLocY - 8) * (int)Constants.RegionSize,
+                    //    (int)(m_scene.RegionInfo.RegionLocY + 8) * (int)Constants.RegionSize);
+                    //foreach (GridRegion r in regions)
+                    //{
+                    //    if (((int)GridConnector.GetRegionFlags(r.RegionID) & (int)GridRegionFlags.Hidden) == 1)
+                    //    {
+                    //        if (m_scene.Permissions.CanIssueEstateCommand(agentID, false))
+                    //        {
+                    //            MapBlockData block = new MapBlockData();
+                    //            MapBlockFromGridRegion(block, r);
+                    //            mapBlocks.Add(block);
+                    //        }
+                    //    }
+                    //    else
+                    //    {
+                    //        MapBlockData block = new MapBlockData();
+                    //        MapBlockFromGridRegion(block, r);
+                    //        mapBlocks.Add(block);
+                    //    }
+                    //}
+                    List<SimMap> Sims = SimMapConnector.GetSimMapRange(
+                        (uint)(m_scene.RegionInfo.RegionLocX - 8) * Constants.RegionSize,
+                        (uint)(m_scene.RegionInfo.RegionLocY - 8) * Constants.RegionSize,
+                        (uint)(m_scene.RegionInfo.RegionLocX + 8) * Constants.RegionSize,
+                        (uint)(m_scene.RegionInfo.RegionLocY + 8) * Constants.RegionSize,
+                        agentID);
+                    foreach (SimMap map in Sims)
                     {
-                        MapBlockData block = new MapBlockData();
-                        MapBlockFromGridRegion(block, r);
-                        mapBlocks.Add(block);
+                        mapBlocks.Add(map.ToMapBlockData());
                     }
                     avatarPresence.ControllingClient.SendMapBlock(mapBlocks, 0);
 
-                    lock (cachedMapBlocks)
-                        cachedMapBlocks = mapBlocks;
+                //    lock (cachedMapBlocks)
+                //        cachedMapBlocks = mapBlocks;
 
-                    cachedTime = Util.UnixTimeSinceEpoch();
-                }
+                //    cachedTime = Util.UnixTimeSinceEpoch();
+                //}
             }
             LLSDMapLayerResponse mapResponse = new LLSDMapLayerResponse();
             mapResponse.LayerData.Array.Add(GetOSDMapLayerResponse());
@@ -346,7 +374,7 @@ namespace Aurora.Modules
             if (threadrunning) return;
             threadrunning = true;
 
-            m_log.Debug("[WORLD MAP]: Starting remote MapItem request thread");
+            //m_log.Debug("[WORLD MAP]: Starting remote MapItem request thread");
 
             Watchdog.StartThread(process, "MapItemRequestThread", ThreadPriority.BelowNormal, true);
         }
@@ -420,6 +448,14 @@ namespace Aurora.Modules
                 }
                 else
                 {
+                    GridRegion R = m_scene.GridService.GetRegionByPosition(UUID.Zero, (int)xstart, (int)ystart);
+                    if (((int)GridConnector.GetRegionFlags(R.RegionID) & (int)GridRegionFlags.Hidden) == 1)
+                    {
+                        if (!m_scene.Permissions.CanIssueEstateCommand(remoteClient.AgentId, false))
+                        {
+                            return;
+                        }
+                    }
                     // Remote Map Item Request
 
                     // ensures that the blockingqueue doesn't get borked if the GetAgents() timing changes.
@@ -427,7 +463,7 @@ namespace Aurora.Modules
                     // be making requests
                     if (!threadrunning)
                     {
-                        m_log.Warn("[WORLD MAP]: Starting new remote request thread manually.  This means that AvatarEnteringParcel never fired!  This needs to be fixed!  Don't Mantis this, as the developers can see it in this message");
+                        //m_log.Warn("[WORLD MAP]: Starting new remote request thread manually.  This means that AvatarEnteringParcel never fired!  This needs to be fixed!  Don't Mantis this, as the developers can see it in this message");
                         StartThread(new object());
                     }
 
@@ -736,39 +772,50 @@ namespace Aurora.Modules
                 List<MapBlockData> response = new List<MapBlockData>();
 
                 // this should return one mapblock at most. 
-                // (diva note: why?? in that case we should GetRegionByPosition)
-                // But make sure: Look whether the one we requested is in there
-                List<GridRegion> regions = m_scene.GridService.GetRegionRange(m_scene.RegionInfo.ScopeID,
-                    minX * (int)Constants.RegionSize,
-                    maxX * (int)Constants.RegionSize,
-                    minY * (int)Constants.RegionSize,
-                    maxY * (int)Constants.RegionSize);
+                List<SimMap> Sims = SimMapConnector.GetSimMapRange(
+                    (uint)(minX - 8) * (int)Constants.RegionSize,
+                    (uint)(minY - 8) * (int)Constants.RegionSize,
+                    (uint)(maxX + 8) * (int)Constants.RegionSize,
+                    (uint)(maxY + 8) * (int)Constants.RegionSize,
+                    remoteClient.AgentId);
 
-                if (regions != null)
+                foreach (SimMap map in Sims)
                 {
-                    foreach (GridRegion r in regions)
-                    {
-                        if ((r.RegionLocX == minX * (int)Constants.RegionSize) &&
-                            (r.RegionLocY == minY * (int)Constants.RegionSize))
-                        {
-                            // found it => add it to response
-                            MapBlockData block = new MapBlockData();
-                            MapBlockFromGridRegion(block, r);
-                            response.Add(block);
-                            break;
-                        }
-                    }
+                    response.Add(map.ToMapBlockData());
                 }
 
-                if (response.Count == 0)
-                {
-                    // response still empty => couldn't find the map-tile the user clicked on => tell the client
-                    MapBlockData block = new MapBlockData();
-                    block.X = (ushort)minX;
-                    block.Y = (ushort)minY;
-                    block.Access = 254; // == not there
-                    response.Add(block);
-                }
+                //if (regions != null)
+                //{
+                //    foreach (GridRegion r in regions)
+                //    {
+                //        if (((int)GridConnector.GetRegionFlags(r.RegionID) & (int)GridRegionFlags.Hidden) == 1)
+                //        {
+                //            if (!m_scene.Permissions.CanIssueEstateCommand(remoteClient.AgentId, false))
+                //            {
+                //                return;
+                //            }
+                //        }
+                //        if ((r.RegionLocX == minX * (int)Constants.RegionSize) &&
+                //            (r.RegionLocY == minY * (int)Constants.RegionSize))
+                //        {
+                //            // found it => add it to response
+                //            MapBlockData block = new MapBlockData();
+                //            MapBlockFromGridRegion(block, r);
+                //            response.Add(block);
+                //            break;
+                //        }
+                //    }
+                //}
+
+                //if (response.Count == 0)
+                //{
+                //    // response still empty => couldn't find the map-tile the user clicked on => tell the client
+                //    MapBlockData block = new MapBlockData();
+                //    block.X = (ushort)minX;
+                //    block.Y = (ushort)minY;
+                //    block.Access = 254; // == not there
+                //    response.Add(block);
+                //}
                 remoteClient.SendMapBlock(response, 0);
             }
             else
@@ -781,17 +828,35 @@ namespace Aurora.Modules
 		protected virtual void GetAndSendBlocks(IClientAPI remoteClient, int minX, int minY, int maxX, int maxY, uint flag)
 		{
             List<MapBlockData> mapBlocks = new List<MapBlockData>();
-            List<GridRegion> regions = m_scene.GridService.GetRegionRange(m_scene.RegionInfo.ScopeID,
-                (minX - 4) * (int)Constants.RegionSize,
-                (maxX + 4) * (int)Constants.RegionSize,
-                (minY - 4) * (int)Constants.RegionSize,
-                (maxY + 4) * (int)Constants.RegionSize);
-            foreach (GridRegion r in regions)
+            List<SimMap> Sims = SimMapConnector.GetSimMapRange(
+                (uint)(minX - 4) * (int)Constants.RegionSize,
+                (uint)(minY - 4) * (int)Constants.RegionSize,
+                (uint)(maxX + 4) * (int)Constants.RegionSize,
+                (uint)(maxY + 4) * (int)Constants.RegionSize,
+                remoteClient.AgentId);
+
+            foreach (SimMap map in Sims)
             {
-                MapBlockData block = new MapBlockData();
-                MapBlockFromGridRegion(block, r);
-                mapBlocks.Add(block);
+                mapBlocks.Add(map.ToMapBlockData());
             }
+            //List<GridRegion> regions = m_scene.GridService.GetRegionRange(m_scene.RegionInfo.ScopeID,
+            //    (minX - 4) * (int)Constants.RegionSize,
+            //    (maxX + 4) * (int)Constants.RegionSize,
+            //    (minY - 4) * (int)Constants.RegionSize,
+            //    (maxY + 4) * (int)Constants.RegionSize);
+            //foreach (GridRegion r in regions)
+            //{
+            //    if (((int)GridConnector.GetRegionFlags(r.RegionID) & (int)GridRegionFlags.Hidden) == 1)
+            //    {
+            //        if (!m_scene.Permissions.CanIssueEstateCommand(remoteClient.AgentId, false))
+            //        {
+            //            return;
+            //        }
+            //    }
+            //    MapBlockData block = new MapBlockData();
+            //    MapBlockFromGridRegion(block, r);
+            //    mapBlocks.Add(block);
+            //}
             remoteClient.SendMapBlock(mapBlocks, flag);
 		}
 
@@ -1075,13 +1140,16 @@ namespace Aurora.Modules
             GridRegion R = m_scene.GridService.GetRegionByUUID(UUID.Zero, m_scene.RegionInfo.RegionID);
             if (R != null)
             {
-                R.TerrainImage = new UUID(asset.ID);
-                m_scene.GridService.RegisterRegion(UUID.Zero, R);
+                if (R.TerrainImage != new UUID(asset.ID))
+                {
+                    R.TerrainImage = new UUID(asset.ID);
+                    m_scene.GridService.RegisterRegion(UUID.Zero, R);
+                }
             }
             // Delete the old one
             m_log.DebugFormat("[WORLDMAP]: Deleting old map tile {0}", lastMapRegionUUID);
-            m_scene.AssetService.Delete(lastMapRegionUUID.ToString());
             myMapImageJPEG = null;
+            m_scene.AssetService.Delete(lastMapRegionUUID.ToString());
         }
 
         private void MakeRootAgent(ScenePresence avatar)
@@ -1109,6 +1177,11 @@ namespace Aurora.Modules
                 if (m_rootAgents.Count == 0)
                     StopThread();
             }
+        }
+
+        private void OnUpdateRegion(object source, ElapsedEventArgs e)
+        {
+            SimMapConnector.UpdateSimMap(m_scene.RegionInfo.RegionID);
         }
 
         private void OnTimedCreateNewMapImage(object source, ElapsedEventArgs e)

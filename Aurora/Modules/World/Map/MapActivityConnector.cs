@@ -35,19 +35,18 @@ using OpenSim.Services.Interfaces;
 using OpenMetaverse;
 using log4net;
 
-namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.GridUser
+namespace Aurora.Modules
 {
-    public class ActivityDetector 
+    public class MapActivityDetector
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private IGridUserService m_GridUserService;
         private Scene m_aScene;
 
-        public ActivityDetector(IGridUserService guservice)
+        public MapActivityDetector()
         {
-            m_GridUserService = guservice;
-            m_log.DebugFormat("[ACTIVITY DETECTOR]: starting ");
+            m_log.DebugFormat("[MAP ACTIVITY DETECTOR]: starting ");
         }
 
         public void AddRegion(Scene scene)

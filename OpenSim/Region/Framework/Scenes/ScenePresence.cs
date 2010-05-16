@@ -488,7 +488,12 @@ namespace OpenSim.Region.Framework.Scenes
                     try
                     {
                         lock (m_scene.SyncRoot)
-                            m_physicsActor.Position = value;
+                        {
+                            if (m_physicsActor != null)
+                            {
+                                m_physicsActor.Position = value;
+                            }
+                        }
                     }
                     catch (Exception e)
                     {
@@ -833,9 +838,9 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void MakeRootAgent(Vector3 pos, bool isFlying)
         {
-            m_log.DebugFormat(
-                "[SCENE]: Upgrading child to root agent for {0} in {1}",
-                Name, m_scene.RegionInfo.RegionName);
+            //m_log.DebugFormat(
+            //    "[SCENE]: Upgrading child to root agent for {0} in {1}",
+            //    Name, m_scene.RegionInfo.RegionName);
 
             //m_log.DebugFormat("[SCENE]: known regions in {0}: {1}", Scene.RegionInfo.RegionName, KnownChildRegionHandles.Count);
 
@@ -1146,7 +1151,7 @@ namespace OpenSim.Region.Framework.Scenes
             
             if ((m_callbackURI != null) && !m_callbackURI.Equals(""))
             {
-                m_log.DebugFormat("[SCENE PRESENCE]: Releasing agent in URI {0}", m_callbackURI);
+                //m_log.DebugFormat("[SCENE PRESENCE]: Releasing agent in URI {0}", m_callbackURI);
                 Scene.SimulationService.ReleaseAgent(m_originRegionID, UUID, m_callbackURI);
                 m_callbackURI = null;
             }
@@ -2622,7 +2627,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void SendWearables()
         {
-            m_log.DebugFormat("[SCENE]: Received request for wearables of {0}", Name);
+            //m_log.DebugFormat("[SCENE]: Received request for wearables of {0}", Name);
             //This fixes t-pose on login by sending an animation for the avatar so it has something to display.
             //  -- Revolution
             if (ClientIsStarting)
@@ -3021,9 +3026,9 @@ namespace OpenSim.Region.Framework.Scenes
         public void CloseChildAgents(uint newRegionX, uint newRegionY)
         {
             List<ulong> byebyeRegions = new List<ulong>();
-            m_log.DebugFormat(
-                "[SCENE PRESENCE]: Closing child agents. Checking {0} regions in {1}", 
-                m_knownChildRegions.Keys.Count, Scene.RegionInfo.RegionName);
+            //m_log.DebugFormat(
+            //    "[SCENE PRESENCE]: Closing child agents. Checking {0} regions in {1}", 
+            //    m_knownChildRegions.Keys.Count, Scene.RegionInfo.RegionName);
             //DumpKnownRegions();
 
             lock (m_knownChildRegions)

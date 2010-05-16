@@ -301,7 +301,7 @@ namespace OpenSim.Region.CoreModules
 
             TimeZone local = TimeZone.CurrentTimeZone;
             TicksUTCOffset = local.GetUtcOffset(local.ToLocalTime(DateTime.Now)).Ticks;
-            m_log.Debug("[SUN]: localtime offset is " + TicksUTCOffset);
+            //m_log.Debug("[SUN]: localtime offset is " + TicksUTCOffset);
 
             // Align ticks with Second Life
 
@@ -381,11 +381,11 @@ namespace OpenSim.Region.CoreModules
 
                     ready = true;
 
-                    m_log.Debug("[SUN]: Mode is " + m_RegionMode);
-                    m_log.Debug("[SUN]: Initialization completed. Day is " + SecondsPerSunCycle + " seconds, and year is " + m_YearLengthDays + " days");
-                    m_log.Debug("[SUN]: Axis offset is " + m_HorizonShift);
-                    m_log.Debug("[SUN]: Percentage of time for daylight " + m_DayTimeSunHourScale);
-                    m_log.Debug("[SUN]: Positional data updated every " + m_UpdateInterval + " frames");
+                    //m_log.Debug("[SUN]: Mode is " + m_RegionMode);
+                    //m_log.Debug("[SUN]: Initialization completed. Day is " + SecondsPerSunCycle + " seconds, and year is " + m_YearLengthDays + " days");
+                    //m_log.Debug("[SUN]: Axis offset is " + m_HorizonShift);
+                    //m_log.Debug("[SUN]: Percentage of time for daylight " + m_DayTimeSunHourScale);
+                    //m_log.Debug("[SUN]: Positional data updated every " + m_UpdateInterval + " frames");
 
                     break;
             }
@@ -488,8 +488,8 @@ namespace OpenSim.Region.CoreModules
                 m_SunFixedHour = FixedSunHour;
                 m_SunFixed = FixedSun;
 
-                m_log.DebugFormat("[SUN]: Sun Settings Update: Fixed Sun? : {0}", m_SunFixed.ToString());
-                m_log.DebugFormat("[SUN]: Sun Settings Update: Sun Hour   : {0}", m_SunFixedHour.ToString());
+                //m_log.DebugFormat("[SUN]: Sun Settings Update: Fixed Sun? : {0}", m_SunFixed.ToString());
+                //m_log.DebugFormat("[SUN]: Sun Settings Update: Sun Hour   : {0}", m_SunFixedHour.ToString());
 
                 receivedEstateToolsSunUpdate = true;
 
@@ -500,7 +500,7 @@ namespace OpenSim.Region.CoreModules
                 SunUpdateToAllClients();
 
 
-                m_log.DebugFormat("[SUN]: PosTime : {0}", PosTime.ToString());
+                //m_log.DebugFormat("[SUN]: PosTime : {0}", PosTime.ToString());
             }
         }
 

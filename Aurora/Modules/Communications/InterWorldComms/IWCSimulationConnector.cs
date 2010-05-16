@@ -285,7 +285,7 @@ namespace Aurora.Modules
             {
                 if (s.RegionInfo.RegionID == origin)
                 {
-                    m_log.Debug("[LOCAL COMMS]: Found region to SendReleaseAgent");
+                   // m_log.Debug("[LOCAL COMMS]: Found region to SendReleaseAgent");
                     AgentTransferModule.AgentArrivedAtDestination(id);
                     return true;
                     //                    return s.IncomingReleaseAgent(id);

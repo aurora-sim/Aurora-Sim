@@ -155,7 +155,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
         /// <param name="e"></param>
         public void AvatarIsWearing(Object sender, AvatarWearingArgs e)
         {
-            m_log.DebugFormat("[APPEARANCE]: AvatarIsWearing");
+            //m_log.DebugFormat("[APPEARANCE]: AvatarIsWearing");
 
             IClientAPI clientView = (IClientAPI)sender;
             ScenePresence sp = m_scene.GetScenePresence(clientView.AgentId);

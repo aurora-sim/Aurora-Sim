@@ -86,7 +86,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Inventory
             {
                 if (m_InventoryCache.ContainsKey(presence.UUID))
                 {
-                    m_log.DebugFormat("[INVENTORY CACHE]: OnMakeRootAgent, system folders for {0} {1} already in cache", presence.Firstname, presence.Lastname);
+                    //m_log.DebugFormat("[INVENTORY CACHE]: OnMakeRootAgent, system folders for {0} {1} already in cache", presence.Firstname, presence.Lastname);
                     return;
                 }
             }

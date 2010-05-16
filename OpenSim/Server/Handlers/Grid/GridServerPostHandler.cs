@@ -51,6 +51,11 @@ namespace OpenSim.Server.Handlers.Grid
 
         private IGridService m_GridService;
 
+        public delegate void RegisterRegion(GridRegion region);
+        public delegate void DeregisterRegion(UUID regionID);
+        public event RegisterRegion OnRegisterRegion;
+        public event DeregisterRegion OnDeregisterRegion;
+
         public GridServerPostHandler(IGridService service) :
                 base("POST", "/grid")
         {
@@ -164,6 +169,9 @@ namespace OpenSim.Server.Handlers.Grid
                 m_log.DebugFormat("[GRID HANDLER]: exception unpacking region data: {0}", e);
             }
 
+            if (OnRegisterRegion != null)
+                OnRegisterRegion(rinfo);
+
             string result = "Error communicating with grid service";
             if (rinfo != null)
                 result = m_GridService.RegisterRegion(scopeID, rinfo);
@@ -183,6 +191,9 @@ namespace OpenSim.Server.Handlers.Grid
                 m_log.WarnFormat("[GRID HANDLER]: no regionID in request to deregister region");
 
             bool result = m_GridService.DeregisterRegion(regionID);
+
+            if (OnDeregisterRegion != null)
+                OnDeregisterRegion(regionID);
 
             if (result)
                 return SuccessResult();

@@ -17,18 +17,27 @@ using OpenMetaverse;
 using Aurora.DataManager;
 using Aurora.Framework;
 using Aurora.Services.DataService;
+using OpenSim.Server.Handlers.Grid;
 
 namespace OpenSim.Server.Handlers.AuroraMap
 {
     public class WorldMapPostHandler : BaseStreamHandler
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private IGridConnector GridConnector = null;
+        private SimMapConnector SimMapConnector = null;
+        private GridServerPostHandler GSHandler;
+        private IGridService GridService;
 
-        public WorldMapPostHandler() :
-            base("POST", "/MAP/GRIDMAPITEMS")
+        public WorldMapPostHandler(GridServerPostHandler handler, IGridService GS) :
+            base("POST", "/SIMMAP")
         {
-            GridConnector = DataManager.IGridConnector;
+            m_log.Debug("[AuroraSimMapConnector]: Starting...");
+            GSHandler = handler;
+            GridService = GS;
+            SimMapConnector = new SimMapConnector(GridService);
+
+            handler.OnDeregisterRegion += new GridServerPostHandler.DeregisterRegion(handler_OnDeregisterRegion);
+            handler.OnRegisterRegion += new GridServerPostHandler.RegisterRegion(handler_OnRegisterRegion);
         }
 
         public override byte[] Handle(string path, Stream requestData,
@@ -53,8 +62,12 @@ namespace OpenSim.Server.Handlers.AuroraMap
 
                 switch (method)
                 {
-                    case "getmapitems":
-                        return GetMapItems(request);
+                    case "getsimmap":
+                        return GetSimMap(request);
+                    case "getsimmaprange":
+                        return GetSimMapRange(request);
+                    case "updatesimmap":
+                        return UpdateSimMap(request);
                 }
                 m_log.DebugFormat("[AuroraDataServerPostHandler]: unknown method {0} request {1}", method.Length, method);
             }
@@ -66,15 +79,121 @@ namespace OpenSim.Server.Handlers.AuroraMap
             return FailureResult();
         }
 
-        private byte[] GetMapItems(Dictionary<string, object> request)
+        private byte[] GetSimMapRange(Dictionary<string, object> request)
         {
             Dictionary<string, object> result = new Dictionary<string, object>();
+            List<SimMap> Sims = new List<SimMap>();
 
-            //UUID regionID = UUID.Parse(request["REGIONID"].ToString());
-            //UUID flags = UUID.Parse(request["REGIONID"].ToString());
-            //UUID regionID = UUID.Parse(request["REGIONID"].ToString());
-            //List<UUID> regionIDs = EstateConnector.GetRegions(estateID);
-            return null;
+            UUID agentID = UUID.Parse(request["AGENTID"].ToString());
+            int regionXMin = int.Parse(request["REGIONLOCXMIN"].ToString());
+            int regionYMin = int.Parse(request["REGIONLOCYMIN"].ToString());
+            int regionXMax = int.Parse(request["REGIONLOCXMAX"].ToString());
+            int regionYMax = int.Parse(request["REGIONLOCYMAX"].ToString());
+
+            //List<Services.Interfaces.GridRegion> Regions = GridService.GetRegionRange(UUID.Zero,
+            //        regionXMin,
+            //        regionYMin,
+            //        regionXMax,
+            //        regionYMax);
+
+            //foreach (Services.Interfaces.GridRegion region in Regions)
+            //{
+            //    SimMap map = SimMapConnector.GetSimMap(region.RegionID, agentID);
+            //    if (map != null)
+            //        Sims.Add(map);
+            //}
+
+            //if (Sims.Count == 0)
+            //    Sims.Add(SimMapConnector.NotFound(regionXMin, regionYMin));
+            int X = regionXMin;
+            int Y = regionYMin;
+            while(X < regionXMax)
+            {
+                while (Y < regionYMax)
+                {
+                    Services.Interfaces.GridRegion R = GridService.GetRegionByPosition(UUID.Zero, X, Y);
+                    if (R == null)
+                        Sims.Add(SimMapConnector.NotFound(X, Y));
+                    else
+                    {
+                        SimMap map = SimMapConnector.GetSimMap(R.RegionID, agentID);
+                        Sims.Add(map);
+                    }
+                    Y += 256;
+                }
+                Y = regionYMin;
+                X += 256;
+            }
+
+            int i = 0;
+            foreach (SimMap map in Sims)
+            {
+                result["SimMap" + i.ToString()] = (Dictionary<string, object>)map.ToKeyValuePairs();
+                i++;
+            }
+
+            string xmlString = ServerUtils.BuildXmlResponse(result);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
+        }
+
+        private byte[] UpdateSimMap(Dictionary<string, object> request)
+        {
+            Dictionary<string, object> result = new Dictionary<string, object>();
+            List<SimMap> Sims = new List<SimMap>();
+
+            UUID regionID = UUID.Parse(request["REGIONID"].ToString());
+
+            SimMapConnector.UpdateRegion(regionID);
+
+            return SuccessResult();
+        }
+
+        private byte[] GetSimMap(Dictionary<string, object> request)
+        {
+            Dictionary<string, object> result = new Dictionary<string, object>();
+            List<SimMap> Sims = new List<SimMap>();
+
+            UUID agentID = UUID.Parse(request["AGENTID"].ToString());
+
+            if (request.ContainsKey("REGIONID"))
+            {
+                UUID regionID = UUID.Parse(request["REGIONID"].ToString());
+                SimMap map = SimMapConnector.GetSimMap(regionID, agentID);
+                Sims.Add(map);
+            }
+            else if (request.ContainsKey("REGIONNAME"))
+            {
+                string RegionName = request["REGIONNAME"].ToString();
+                List<Services.Interfaces.GridRegion> Regions = GridService.GetRegionsByName(UUID.Zero, RegionName, 20);
+
+                foreach (Services.Interfaces.GridRegion region in Regions)
+                {
+                    SimMap map = SimMapConnector.GetSimMap(region.RegionID, agentID);
+                    if (map != null)
+                        Sims.Add(map);
+                }
+            }
+            int i = 0;
+            foreach (SimMap map in Sims)
+            {
+                result["SimMap" + i.ToString()] = (Dictionary<string, object>)map.ToKeyValuePairs();
+                i++;
+            }
+
+            string xmlString = ServerUtils.BuildXmlResponse(result);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
+        }
+
+        void handler_OnRegisterRegion(OpenSim.Services.Interfaces.GridRegion region)
+        {
+            SimMapConnector.AddRegion(region);
+        }
+
+        void handler_OnDeregisterRegion(UUID regionID)
+        {
+            SimMapConnector.RemoveRegion(regionID);
         }
 
         #region Misc

@@ -53,8 +53,8 @@ namespace Aurora.Modules
 		Scene m_scene = null; // only need one for communication with GridService
 		List<Scene> m_scenes = new List<Scene>();
         private IConfigSource m_config;
-		private Dictionary<string, string> RegionsHidden = new Dictionary<string, string>();
-		bool m_Enabled = true;
+        private IGridConnector GridConnector;
+        bool m_Enabled = true;
 
 		#region IRegionModule Members
 		public void Initialise(Scene scene, IConfigSource source)
@@ -83,9 +83,7 @@ namespace Aurora.Modules
 		{
             if (!m_Enabled)
                 return;
-            //Needs the new grid frontend
-            //RegionData = Aurora.DataManager.DataManager.GetDefaultRegionPlugin();
-            //RegionsHidden = RegionData.GetRegionHidden();
+            GridConnector = Aurora.DataManager.DataManager.IGridConnector;
 		}
 
 		public void Close()
@@ -118,39 +116,16 @@ namespace Aurora.Modules
                 remoteClient.SendAlertMessage("Use a search string with at least 1 characters");
                 return;
             }
-            // try to fetch from GridServer
-            List<GridRegion> regionInfos = m_scene.GridService.GetRegionsByName(UUID.Zero, mapName, 20);
-            if (regionInfos == null)
-            {
-                m_log.Warn("[MAPSEARCHMODULE]: RequestNamedRegions returned null. Old gridserver?");
-                // service wasn't available; maybe still an old GridServer. Try the old API, though it will return only one region
-                regionInfos = new List<GridRegion>();
-                GridRegion info = m_scene.GridService.GetRegionByName(UUID.Zero, mapName);
-                if (info != null) regionInfos.Add(info);
-            }
-
             List<MapBlockData> blocks = new List<MapBlockData>();
 
-            MapBlockData data;
-            if (regionInfos.Count > 0)
+            RemoteSimMapConnector SimMapConnector = new RemoteSimMapConnector("http://auroraserver.ath.cx:8003");
+            List<SimMap> Sims = SimMapConnector.GetSimMap(mapName, remoteClient.AgentId);
+            foreach (SimMap map in Sims)
             {
-                foreach (GridRegion info in regionInfos)
-                {
-                    data = new MapBlockData();
-                    data.Agents = 0;
-                    data.Access = info.Access;
-                    data.MapImageId = info.TerrainImage;
-                    data.Name = info.RegionName;
-                    data.RegionFlags = 0; // TODO not used?
-                    data.WaterHeight = 0; // not used
-                    data.X = (ushort)(info.RegionLocX / Constants.RegionSize);
-                    data.Y = (ushort)(info.RegionLocY / Constants.RegionSize);
-                    blocks.Add(data);
-                }
+                blocks.Add(map.ToMapBlockData());
             }
-
             // final block, closing the search result
-            data = new MapBlockData();
+            MapBlockData data = new MapBlockData();
             data.Agents = 0;
             data.Access = 255;
             data.MapImageId = UUID.Zero;
