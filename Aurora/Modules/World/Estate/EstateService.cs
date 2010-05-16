@@ -150,20 +150,23 @@ namespace Aurora.Modules
             else
             {
                 ILandObject ILO = ((Scene)scene).LandChannel.GetLandObject(Position.X, Position.Y);
-                if (ILO.LandData.LandingType == 2)
+                if (ILO != null)
                 {
-                    List<ILandObject> Parcels = ParcelsNearPoint(((Scene)scene), Position, ILO);
-                    if (Parcels.Count == 0)
+                    if (ILO.LandData.LandingType == 2)
                     {
-                        ScenePresence SP;
-                        ((Scene)scene).TryGetScenePresence(userID, out SP);
-                        newPosition = GetNearestRegionEdgePosition(SP);
+                        List<ILandObject> Parcels = ParcelsNearPoint(((Scene)scene), Position, ILO);
+                        if (Parcels.Count == 0)
+                        {
+                            ScenePresence SP;
+                            ((Scene)scene).TryGetScenePresence(userID, out SP);
+                            newPosition = GetNearestRegionEdgePosition(SP);
+                        }
+                        else
+                            newPosition = Parcels[0].LandData.UserLocation;
                     }
-                    else
-                        newPosition = Parcels[0].LandData.UserLocation;
+                    if (ILO.LandData.LandingType == 1)
+                        newPosition = ILO.LandData.UserLocation;
                 }
-                if (ILO.LandData.LandingType == 1)
-                    newPosition = ILO.LandData.UserLocation;
             }
 
 

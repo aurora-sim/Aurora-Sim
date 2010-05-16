@@ -68,6 +68,8 @@ namespace OpenSim.Server.Handlers.AuroraMap
                         return GetSimMapRange(request);
                     case "updatesimmap":
                         return UpdateSimMap(request);
+                    case "fullupdatesimmap":
+                        return FullUpdateSimMap(request);
                 }
                 m_log.DebugFormat("[AuroraDataServerPostHandler]: unknown method {0} request {1}", method.Length, method);
             }
@@ -92,8 +94,8 @@ namespace OpenSim.Server.Handlers.AuroraMap
 
             List<Services.Interfaces.GridRegion> Regions = GridService.GetRegionRange(UUID.Zero,
                     regionXMin,
-                    regionYMin,
                     regionXMax,
+                    regionYMin,
                     regionYMax);
 
             foreach (Services.Interfaces.GridRegion region in Regions)
@@ -104,7 +106,11 @@ namespace OpenSim.Server.Handlers.AuroraMap
             }
 
             if (Sims.Count == 0)
-                Sims.Add(SimMapConnector.NotFound(regionXMin, regionYMin));
+            {
+                int X = (regionXMax + regionXMin) / 2;
+                int Y = (regionYMax + regionYMin) / 2;
+                Sims.Add(SimMapConnector.NotFound(X, Y));
+            }
             //int X = regionXMin;
             //int Y = regionYMin;
             //while(X < regionXMax)
@@ -140,11 +146,21 @@ namespace OpenSim.Server.Handlers.AuroraMap
         private byte[] UpdateSimMap(Dictionary<string, object> request)
         {
             Dictionary<string, object> result = new Dictionary<string, object>();
-            List<SimMap> Sims = new List<SimMap>();
-
+            
             UUID regionID = UUID.Parse(request["REGIONID"].ToString());
 
             SimMapConnector.UpdateRegion(regionID);
+
+            return SuccessResult();
+        }
+
+        private byte[] FullUpdateSimMap(Dictionary<string, object> request)
+        {
+            Dictionary<string, object> result = new Dictionary<string, object>();
+
+            SimMap simMap = new SimMap(request);
+
+            SimMapConnector.UpdateRegion(simMap);
 
             return SuccessResult();
         }

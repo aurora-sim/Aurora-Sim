@@ -1601,7 +1601,7 @@ namespace OpenSim.Region.Framework.Scenes
                     return;
                 //Lets kill this thing
                 FireThreadClosing(this);
-                throw new Exception();
+                throw new Exception("Closing");
             }
 
             private void Update()
@@ -1652,7 +1652,8 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                     catch (AccessViolationException e)
                     {
-                        m_log.Error("[REGION]: Failed with exception " + e.ToString() + " On Region: " + m_scene.RegionInfo.RegionName);
+                        if (e.Message != "Closing")
+                            m_log.Error("[REGION]: Failed with exception " + e.ToString() + " On Region: " + m_scene.RegionInfo.RegionName);
                     }
                     //catch (NullReferenceException e)
                     //{
@@ -1660,11 +1661,13 @@ namespace OpenSim.Region.Framework.Scenes
                     //}
                     catch (InvalidOperationException e)
                     {
-                        m_log.Error("[REGION]: Failed with exception " + e.ToString() + " On Region: " + m_scene.RegionInfo.RegionName);
+                        if (e.Message != "Closing")
+                            m_log.Error("[REGION]: Failed with exception " + e.ToString() + " On Region: " + m_scene.RegionInfo.RegionName);
                     }
                     catch (Exception e)
                     {
-                        m_log.Error("[REGION]: Failed with exception " + e.ToString() + " On Region: " + m_scene.RegionInfo.RegionName);
+                        if (e.Message != "Closing")
+                            m_log.Error("[REGION]: Failed with exception " + e.ToString() + " On Region: " + m_scene.RegionInfo.RegionName);
                     }
                     finally
                     {

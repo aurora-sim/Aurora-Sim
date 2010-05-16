@@ -201,10 +201,30 @@ namespace Aurora.Modules
             sendData["METHOD"] = "updatesimmap";
 
             string reqString = ServerUtils.BuildQueryString(sendData);
-
+            string reply = "";
             try
             {
-                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                        m_ServerURI + "/SIMMAP",
+                        reqString);
+            }
+            catch (Exception e)
+            {
+                m_log.DebugFormat("[RemoteSimMapConnector]: Exception when contacting server: {0}", e.Message);
+            }
+        }
+
+        public void UpdateSimMap(SimMap sim)
+        {
+            Dictionary<string, object> sendData = sim.ToKeyValuePairs();
+
+            sendData["METHOD"] = "fullupdatesimmap";
+
+            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reply = "";
+            try
+            {
+                reply = SynchronousRestFormsRequester.MakeRequest("POST",
                         m_ServerURI + "/SIMMAP",
                         reqString);
             }

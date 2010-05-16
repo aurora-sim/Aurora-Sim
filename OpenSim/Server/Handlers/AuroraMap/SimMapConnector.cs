@@ -34,7 +34,7 @@ namespace OpenSim.Server.Handlers.AuroraMap
                 if (map.LastUpdated > Util.UnixTimeSinceEpoch() + (1000 * 6)) // Greater than 6 minutes since the last update
                 {
                     //Its hasn't updated in the last 6 minutes, and it is supposed to update every 5, so it's down.
-                    map.Access = map.Access & (uint)SimAccess.Down;
+                    map.Access = map.Access | (uint)SimAccess.Down;
                     Sims.Remove(regionID);
                     Sims.Add(regionID, map);
                 }
@@ -105,11 +105,11 @@ namespace OpenSim.Server.Handlers.AuroraMap
 
         private uint FindAccessFromFlags(GridRegionFlags flags)
         {
-            if (((int)flags & (int)GridRegionFlags.Adult) == 1)
+            if (((int)flags & (int)GridRegionFlags.Adult) == (int)GridRegionFlags.Adult)
                 return (int)SimAccess.Mature;
-            else if (((int)flags & (int)GridRegionFlags.Mature) == 1)
+            else if (((int)flags & (int)GridRegionFlags.Mature) == (int)GridRegionFlags.Mature)
                 return (int)SimAccess.PG;
-            else if (((int)flags & (int)GridRegionFlags.PG) == 1)
+            else if (((int)flags & (int)GridRegionFlags.PG) == (int)GridRegionFlags.PG)
                 return (int)SimAccess.Min;
             else
                 return (int)SimAccess.Min;
@@ -148,7 +148,7 @@ namespace OpenSim.Server.Handlers.AuroraMap
                 if (map.LastUpdated > Util.UnixTimeSinceEpoch() + (1000 * 6)) // Greater than 6 minutes since the last update
                 {
                     //Its hasn't updated in the last 6 minutes, and it is supposed to update every 5, so it's down.
-                    map.Access = (int)SimAccess.Down;
+                    map.Access = (uint)(map.Access & (uint)SimAccess.Down);
                     Sims.Remove(regionID);
                     Sims.Add(regionID, map);
                 }
@@ -173,12 +173,21 @@ namespace OpenSim.Server.Handlers.AuroraMap
             SimMap map = GetSimMap(regionID);
 
             map.LastUpdated = Util.UnixTimeSinceEpoch();
-            map.Access = map.Access | (uint)SimAccess.Down;
+            map.Access = map.Access & ~(uint)SimAccess.Down;
+
+            if (Sims.ContainsKey(regionID))
+                Sims.Remove(regionID);
+            Sims.Add(regionID, map);
+        }
+
+        public void UpdateRegion(SimMap map)
+        {
+            map.LastUpdated = Util.UnixTimeSinceEpoch();
+            map.Access = map.Access & ~(uint)SimAccess.Down;
 
             if (Sims.ContainsKey(map.RegionID))
                 Sims.Remove(map.RegionID);
-            Sims.Add(regionID, map);
-            
+            Sims.Add(map.RegionID, map);
         }
     }
 }

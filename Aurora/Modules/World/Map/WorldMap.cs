@@ -153,7 +153,7 @@ namespace Aurora.Modules
             aTimer = new System.Timers.Timer(oneminute * minutes);
             aTimer.Elapsed += OnTimedCreateNewMapImage;
             aTimer.Enabled = true;
-            System.Timers.Timer Timer = new System.Timers.Timer(oneminute * 5);
+            System.Timers.Timer Timer = new System.Timers.Timer(20000);
             Timer.Elapsed += OnUpdateRegion;
             Timer.Enabled = true;
         }
@@ -394,6 +394,7 @@ namespace Aurora.Modules
 
 			requests.Enqueue(st);
 		}
+
         public virtual void HandleMapItemRequest(IClientAPI remoteClient, uint flags,
             uint EstateID, bool godlike, uint itemtype, ulong regionhandle)
         {
@@ -413,10 +414,18 @@ namespace Aurora.Modules
             {
                 if (regionhandle == 0 || regionhandle == m_scene.RegionInfo.RegionHandle)
                 {
+                    mapItemReply mapitem = new mapItemReply();
+                    mapitem = new mapItemReply();
+                    mapitem.x = (uint)(xstart - 128);
+                    mapitem.y = (uint)(ystart - 128);
+                    mapitem.id = UUID.Zero;
+                    mapitem.name = Util.Md5Hash(m_scene.RegionInfo.RegionName + tc.ToString());
+                    mapitem.Extra = 10;
+                    mapitem.Extra2 = 0;
+                    mapitems.Add(mapitem);
                     //Only one person here, send a zero person response
                     if (m_scene.GetRootAgentCount() <= 1)
                     {
-                        mapItemReply mapitem = new mapItemReply();
                         mapitem = new mapItemReply();
                         mapitem.x = (uint)(xstart + 1);
                         mapitem.y = (uint)(ystart + 1);
@@ -433,7 +442,6 @@ namespace Aurora.Modules
                         // Don't send a green dot for yourself
                         if (!sp.IsChildAgent && sp.UUID != remoteClient.AgentId)
                         {
-                            mapItemReply mapitem = new mapItemReply();
                             mapitem = new mapItemReply();
                             mapitem.x = (uint)(xstart + sp.AbsolutePosition.X);
                             mapitem.y = (uint)(ystart + sp.AbsolutePosition.Y);
@@ -449,7 +457,7 @@ namespace Aurora.Modules
                 else
                 {
                     GridRegion R = m_scene.GridService.GetRegionByPosition(UUID.Zero, (int)xstart, (int)ystart);
-                    if (((int)GridConnector.GetRegionFlags(R.RegionID) & (int)GridRegionFlags.Hidden) == 1)
+                    if (((int)GridConnector.GetRegionFlags(R.RegionID) & (int)GridRegionFlags.Hidden) == (int)GridRegionFlags.Hidden)
                     {
                         if (!m_scene.Permissions.CanIssueEstateCommand(remoteClient.AgentId, false))
                         {
@@ -769,54 +777,7 @@ namespace Aurora.Modules
 		{
             if ((flag & 0x10000) != 0)  // user clicked on the map a tile that isn't visible
             {
-                List<MapBlockData> response = new List<MapBlockData>();
-
-                // this should return one mapblock at most. 
-                List<SimMap> Sims = SimMapConnector.GetSimMapRange(
-                    (uint)(minX - 8) * (int)Constants.RegionSize,
-                    (uint)(minY - 8) * (int)Constants.RegionSize,
-                    (uint)(maxX + 8) * (int)Constants.RegionSize,
-                    (uint)(maxY + 8) * (int)Constants.RegionSize,
-                    remoteClient.AgentId);
-
-                foreach (SimMap map in Sims)
-                {
-                    response.Add(map.ToMapBlockData());
-                }
-
-                //if (regions != null)
-                //{
-                //    foreach (GridRegion r in regions)
-                //    {
-                //        if (((int)GridConnector.GetRegionFlags(r.RegionID) & (int)GridRegionFlags.Hidden) == 1)
-                //        {
-                //            if (!m_scene.Permissions.CanIssueEstateCommand(remoteClient.AgentId, false))
-                //            {
-                //                return;
-                //            }
-                //        }
-                //        if ((r.RegionLocX == minX * (int)Constants.RegionSize) &&
-                //            (r.RegionLocY == minY * (int)Constants.RegionSize))
-                //        {
-                //            // found it => add it to response
-                //            MapBlockData block = new MapBlockData();
-                //            MapBlockFromGridRegion(block, r);
-                //            response.Add(block);
-                //            break;
-                //        }
-                //    }
-                //}
-
-                //if (response.Count == 0)
-                //{
-                //    // response still empty => couldn't find the map-tile the user clicked on => tell the client
-                //    MapBlockData block = new MapBlockData();
-                //    block.X = (ushort)minX;
-                //    block.Y = (ushort)minY;
-                //    block.Access = 254; // == not there
-                //    response.Add(block);
-                //}
-                remoteClient.SendMapBlock(response, 0);
+                ClickedOnTile(remoteClient, minX, minY, maxX, maxY, flag);
             }
             else
             {
@@ -824,6 +785,58 @@ namespace Aurora.Modules
                 GetAndSendBlocks(remoteClient, minX, minY, maxX, maxY, flag);
             }
 		}
+
+        protected virtual void ClickedOnTile(IClientAPI remoteClient, int minX, int minY, int maxX, int maxY, uint flag)
+        {
+            List<MapBlockData> response = new List<MapBlockData>();
+
+            // this should return one mapblock at most. 
+            List<SimMap> Sims = SimMapConnector.GetSimMapRange(
+                (uint)(minX) * (int)Constants.RegionSize,
+                (uint)(minY) * (int)Constants.RegionSize,
+                (uint)(maxX) * (int)Constants.RegionSize,
+                (uint)(maxY) * (int)Constants.RegionSize,
+                remoteClient.AgentId);
+
+            foreach (SimMap map in Sims)
+            {
+                response.Add(map.ToMapBlockData());
+            }
+
+            //if (regions != null)
+            //{
+            //    foreach (GridRegion r in regions)
+            //    {
+            //        if (((int)GridConnector.GetRegionFlags(r.RegionID) & (int)GridRegionFlags.Hidden) == 1)
+            //        {
+            //            if (!m_scene.Permissions.CanIssueEstateCommand(remoteClient.AgentId, false))
+            //            {
+            //                return;
+            //            }
+            //        }
+            //        if ((r.RegionLocX == minX * (int)Constants.RegionSize) &&
+            //            (r.RegionLocY == minY * (int)Constants.RegionSize))
+            //        {
+            //            // found it => add it to response
+            //            MapBlockData block = new MapBlockData();
+            //            MapBlockFromGridRegion(block, r);
+            //            response.Add(block);
+            //            break;
+            //        }
+            //    }
+            //}
+
+            //if (response.Count == 0)
+            //{
+            //    // response still empty => couldn't find the map-tile the user clicked on => tell the client
+            //    MapBlockData block = new MapBlockData();
+            //    block.X = (ushort)minX;
+            //    block.Y = (ushort)minY;
+            //    block.Access = 254; // == not there
+            //    response.Add(block);
+            //}
+            remoteClient.SendMapBlock(response, 0);
+        }
 
 		protected virtual void GetAndSendBlocks(IClientAPI remoteClient, int minX, int minY, int maxX, int maxY, uint flag)
 		{
@@ -1137,14 +1150,12 @@ namespace Aurora.Modules
             m_log.DebugFormat("[WORLDMAP]: Storing map tile {0}", asset.ID);
             m_scene.AssetService.Store(asset);
             m_scene.RegionInfo.RegionSettings.Save();
-            GridRegion R = m_scene.GridService.GetRegionByUUID(UUID.Zero, m_scene.RegionInfo.RegionID);
-            if (R != null)
+            List<SimMap> map = SimMapConnector.GetSimMap(m_scene.RegionInfo.RegionID,m_scene.RegionInfo.EstateSettings.EstateOwner);
+            if(map != null && map[0] != null)
             {
-                if (R.TerrainImage != new UUID(asset.ID))
-                {
-                    R.TerrainImage = new UUID(asset.ID);
-                    m_scene.GridService.RegisterRegion(UUID.Zero, R);
-                }
+                SimMap sim = map[0];
+                sim.SimMapTextureID = new UUID(asset.ID);
+                SimMapConnector.UpdateSimMap(sim);
             }
             // Delete the old one
             m_log.DebugFormat("[WORLDMAP]: Deleting old map tile {0}", lastMapRegionUUID);
