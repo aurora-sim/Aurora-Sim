@@ -124,7 +124,7 @@ namespace OpenSim.Server.Handlers.AuroraMap
             if (Sims.ContainsKey(map.RegionID))
                 Sims.Remove(map.RegionID);
 
-            Sims.Add(R.RegionID, map);
+            UpdateSimMap(map);
             return map;
         }
 

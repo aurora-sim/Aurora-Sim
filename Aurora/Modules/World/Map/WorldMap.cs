@@ -153,7 +153,7 @@ namespace Aurora.Modules
             aTimer = new System.Timers.Timer(oneminute * minutes);
             aTimer.Elapsed += OnTimedCreateNewMapImage;
             aTimer.Enabled = true;
-            System.Timers.Timer Timer = new System.Timers.Timer(20000);
+            System.Timers.Timer Timer = new System.Timers.Timer(oneminute * 5);
             Timer.Elapsed += OnUpdateRegion;
             Timer.Enabled = true;
         }

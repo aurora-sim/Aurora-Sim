@@ -73,6 +73,7 @@ namespace Aurora.Services.DataService
             string Connector = m_config.GetString("Connector", "LocalConnector");
             if (Connector == "LocalConnector")
             {
+                DataManager.DataManager.ISimMapConnector = new LocalGridConnector();
                 DataManager.DataManager.IAgentConnector = new LocalAgentConnector();
                 DataManager.DataManager.IRegionConnector = new LocalGridConnector();
                 DataManager.DataManager.IProfileConnector = new LocalProfileConnector();

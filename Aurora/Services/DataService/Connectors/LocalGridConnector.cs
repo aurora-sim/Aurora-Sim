@@ -24,6 +24,9 @@ namespace Aurora.Services.DataService
 		{
 			List<string> retval = GD.Query("RegionID", regionID, "simmap", "*");
             
+            if (retval.Count == 1)
+                return null;
+            
             SimMap map = new SimMap();
             map.RegionID = UUID.Parse(retval[0]);
             map.EstateID = uint.Parse(retval[1]);
@@ -47,6 +50,9 @@ namespace Aurora.Services.DataService
         {
             List<string> retval = GD.Query(new string[]{"RegionLocX","RegionLocY"}, new object[]{regionX,regionY}, "simmap", "*");
 
+            if (retval.Count == 1)
+                return null;
+
             SimMap map = new SimMap();
             map.RegionID = UUID.Parse(retval[0]);
             map.EstateID = uint.Parse(retval[1]);
@@ -68,13 +74,23 @@ namespace Aurora.Services.DataService
 		/// <param name="flags"></param>
 		public void SetSimMap(SimMap map)
 		{
-            GD.Update("simmap", new object[] { map.EstateID,
+            if (GetSimMap(map.RegionID) == null)
+            {
+                GD.Insert("simmap", new object[]{map.RegionID,map.EstateID,
+                    map.RegionLocX, map.RegionLocY, map.SimMapTextureID,
+                    map.RegionName, map.RegionFlags, map.Access,
+                    map.SimFlags});
+            }
+            else
+            {
+                GD.Update("simmap", new object[] { map.EstateID,
                 map.RegionLocX, map.RegionLocY, map.SimMapTextureID,
                 map.RegionName, map.RegionFlags, map.Access,
                 map.SimFlags }, new string[] { "EstateID", "RegionLocX",
                 "RegionLocY", "SimMapTextureID", "RegionName",
                 "RegionFlags", "Access", "GridRegionFlags" },
-                new string[] { "RegionID" }, new object[] { map.RegionID });
+                    new string[] { "RegionID" }, new object[] { map.RegionID });
+            }
 		}
 
 		/// <summary>
