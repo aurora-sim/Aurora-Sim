@@ -168,7 +168,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (neighbour != null)
             {
-                m_log.DebugFormat("[INTERGRID]: Successfully informed neighbour {0}-{1} that I'm here", x / Constants.RegionSize, y / Constants.RegionSize);
+                //m_log.DebugFormat("[INTERGRID]: Successfully informed neighbour {0}-{1} that I'm here", x / Constants.RegionSize, y / Constants.RegionSize);
                 m_scene.EventManager.TriggerOnRegionUp(neighbour);
             }
             else

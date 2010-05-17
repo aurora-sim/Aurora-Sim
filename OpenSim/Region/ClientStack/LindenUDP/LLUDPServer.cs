@@ -241,7 +241,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             if (m_scene == null)
                 throw new InvalidOperationException("[LLUDPSERVER]: Cannot LLUDPServer.Start() without an IScene reference");
 
-            m_log.Info("[LLUDPSERVER]: Starting the LLUDP server in " + (m_asyncPacketHandling ? "asynchronous" : "synchronous") + " mode");
+            //m_log.Info("[LLUDPSERVER]: Starting the LLUDP server in " + (m_asyncPacketHandling ? "asynchronous" : "synchronous") + " mode");
 
             base.Start(m_recvBufferSize, m_asyncPacketHandling);
 

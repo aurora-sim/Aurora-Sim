@@ -71,8 +71,6 @@ namespace Aurora.Modules
         
         private IPresenceService presenceServer;
 
-        private IGenericData GD = null;
-        private IProfileData ProfileDataManager = null;
         private bool m_Enabled = true;
         private ConnectionIdentifier CurrentlyAsking = null;
 
@@ -123,8 +121,6 @@ namespace Aurora.Modules
             {
                 OurRegions.Add(scene.RegionInfo.RegionID);
             }
-            GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
-            ProfileDataManager = Aurora.DataManager.DataManager.GetDefaultProfilePlugin();
             System.Threading.Thread thread = new System.Threading.Thread(InformOtherWorldsAboutUs);
             thread.Start();
         }

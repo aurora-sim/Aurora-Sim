@@ -9,6 +9,12 @@ using Aurora.Framework;
 
 namespace Aurora.DataManager
 {
+    public static class DataSessionProviderConnector
+    {
+        public static DataSessionProvider DataSessionProvider;
+        public static DataSessionProvider StateSaveDataSessionProvider;
+    }
+
     public class DataSessionProvider
     {
         private ISessionFactory factory;

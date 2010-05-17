@@ -1,0 +1,54 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using Aurora.DataManager;
+using Aurora.Framework;
+using OpenMetaverse;
+
+namespace Aurora.Services.DataService
+{
+	public class LocalOfflineMessagesConnector : IOfflineMessagesConnector
+	{
+		private IGenericData GD = null;
+		public LocalOfflineMessagesConnector()
+		{
+			GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
+		}
+
+		public OfflineMessage[] GetOfflineMessages(string agentID)
+		{
+			List<OfflineMessage> messages = new List<OfflineMessage>();
+			List<string> Messages = GD.Query("ToUUID", agentID, "offlinemessages", "*");
+			GD.Delete("offlinemessages", new string[] { "ToUUID" }, new string[] { agentID });
+			int i = 0;
+			OfflineMessage Message = new OfflineMessage();
+			foreach (string part in Messages) {
+				if (i == 0)
+					Message.FromUUID = new UUID(part);
+				if (i == 1)
+					Message.FromName = part;
+				if (i == 2)
+					Message.ToUUID = new UUID(part);
+				if (i == 3)
+					Message.Message = part;
+				i++;
+				if (i == 4) {
+					i = 0;
+					messages.Add(Message);
+					Message = new OfflineMessage();
+				}
+			}
+			return messages.ToArray();
+		}
+
+		public bool AddOfflineMessage(OfflineMessage message)
+		{
+			return GD.Insert("offlinemessages", new object[] {
+				message.FromUUID,
+				message.FromName,
+				message.ToUUID,
+				message.Message
+			});
+		}
+	}
+}

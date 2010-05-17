@@ -6,37 +6,41 @@ using System.Text;
 using System.Windows.Forms;
 using Aurora.DataManager;
 using Aurora.Framework;
+using Microsoft.VisualBasic;
 
 namespace Aurora.Modules.AbuseReportsGUI
 {
     public partial class Abuse : Form
     {
         private int formNumber = 1;
-        private IGenericData GenericData;
-        private IRegionData RegionData;
+        private IAbuseReportsConnector AbuseReportsConnector;
+        private string Password;
+        private AbuseReport CurrentReport = null;
+
         public Abuse()
         {
             InitializeComponent();
-            GenericData = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
-            RegionData = Aurora.DataManager.DataManager.GetDefaultRegionPlugin();
+            AbuseReportsConnector = Aurora.DataManager.DataManager.IAbuseReportsConnector;
+            Password = Microsoft.VisualBasic.Interaction.InputBox("Password for abuse reports database.","Password Input Required","",0,0);
         }
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            AbuseReport AR = RegionData.GetAbuseReport(formNumber);
-            if (AR.ReportNumber != null)
+            AbuseReport AR = AbuseReportsConnector.GetAbuseReport(formNumber, Password);
+            CurrentReport = AR;
+            if (AR.Number != null)
             {
-                Category.Text = AR.Category;
-                ReporterName.Text = AR.Reporter;
+                Category.Text = AR.Category.ToString();
+                ReporterName.Text = AR.ReporterName;
                 ObjectName.Text = AR.ObjectName;
-                ObjectPos.Text = AR.Position;
-                Abusername.Text = AR.Abuser;
-                Location.Text = AR.Location;
-                Summary.Text = AR.Summary;
-                Details.Text = AR.Details;
+                ObjectPos.Text = AR.ObjectPosition.ToString();
+                Abusername.Text = AR.AbuserName;
+                Location.Text = AR.AbuseLocation;
+                Summary.Text = AR.AbuseSummary;
+                Details.Text = AR.AbuseDetails;
                 AssignedTo.Text = AR.AssignedTo;
-                Active.Text = AR.Active;
-                Checked.Text = AR.Checked;
+                Active.Text = AR.Active.ToString();
+                Checked.Text = AR.Checked.ToString();
                 Notes.Text = AR.Notes;
                 CardNumber.Text = formNumber.ToString();
             }
@@ -66,20 +70,21 @@ namespace Aurora.Modules.AbuseReportsGUI
                 formNumber = 1;
             }
 
-            AbuseReport AR = RegionData.GetAbuseReport(formNumber);
-            if (AR.ReportNumber != null)
+            AbuseReport AR = AbuseReportsConnector.GetAbuseReport(formNumber, Password);
+            CurrentReport = AR;
+            if (AR.Number != null)
             {
-                Category.Text = AR.Category;
-                ReporterName.Text = AR.Reporter;
+                Category.Text = AR.Category.ToString();
+                ReporterName.Text = AR.ReporterName;
                 ObjectName.Text = AR.ObjectName;
-                Abusername.Text = AR.Abuser;
-                Location.Text = AR.Position;
-                Details.Text = AR.Details;
-                Summary.Text = AR.Summary;
-                ObjectPos.Text = AR.Position;
+                ObjectPos.Text = AR.ObjectPosition.ToString();
+                Abusername.Text = AR.AbuserName;
+                Location.Text = AR.AbuseLocation;
+                Summary.Text = AR.AbuseSummary;
+                Details.Text = AR.AbuseDetails;
                 AssignedTo.Text = AR.AssignedTo;
-                Active.Text = AR.Active;
-                Checked.Text = AR.Checked;
+                Active.Text = AR.Active.ToString();
+                Checked.Text = AR.Checked.ToString();
                 Notes.Text = AR.Notes;
                 CardNumber.Text = formNumber.ToString();
             }
@@ -104,20 +109,21 @@ namespace Aurora.Modules.AbuseReportsGUI
         private void button2_Click(object sender, EventArgs e)
         {
             formNumber += 1;
-            AbuseReport AR = RegionData.GetAbuseReport(formNumber);
-            if (AR.ReportNumber != null)
+            AbuseReport AR = AbuseReportsConnector.GetAbuseReport(formNumber, Password);
+            CurrentReport = AR;
+            if (AR.Number != null)
             {
-                Category.Text = AR.Category;
-                ReporterName.Text = AR.Reporter;
+                Category.Text = AR.Category.ToString();
+                ReporterName.Text = AR.ReporterName;
                 ObjectName.Text = AR.ObjectName;
-                Abusername.Text = AR.Abuser;
-                Location.Text = AR.Position;
-                Details.Text = AR.Details;
-                Summary.Text = AR.Summary;
-                ObjectPos.Text = AR.Position;
+                ObjectPos.Text = AR.ObjectPosition.ToString();
+                Abusername.Text = AR.AbuserName;
+                Location.Text = AR.AbuseLocation;
+                Summary.Text = AR.AbuseSummary;
+                Details.Text = AR.AbuseDetails;
                 AssignedTo.Text = AR.AssignedTo;
-                Active.Text = AR.Active;
-                Checked.Text = AR.Checked;
+                Active.Text = AR.Active.ToString();
+                Checked.Text = AR.Checked.ToString();
                 Notes.Text = AR.Notes;
                 CardNumber.Text = formNumber.ToString();
             }
@@ -141,22 +147,26 @@ namespace Aurora.Modules.AbuseReportsGUI
 
         private void textBox7_TextChanged(object sender, EventArgs e)
         {
-            GenericData.Update("abusereports", new string[] { AssignedTo.Text }, new string[] { "AssignedTo" }, new string[] { "ReportNumber" }, new string[] { formNumber.ToString() });
+            CurrentReport.AssignedTo = AssignedTo.Text;
+            AbuseReportsConnector.UpdateAbuseReport(CurrentReport, Password);
         }
 
         private void textBox8_TextChanged(object sender, EventArgs e)
         {
-            GenericData.Update("abusereports", new string[] { Active.Text }, new string[] { "Active" }, new string[] { "ReportNumber" }, new string[] { formNumber.ToString() });
+            bool.TryParse(Active.Text, out CurrentReport.Active);
+            AbuseReportsConnector.UpdateAbuseReport(CurrentReport, Password);
         }
 
         private void textBox10_TextChanged(object sender, EventArgs e)
         {
-            GenericData.Update("abusereports", new string[] { Checked.Text }, new string[] { "Checked" }, new string[] { "ReportNumber" }, new string[] { formNumber.ToString() });
+            bool.TryParse(Checked.Text, out CurrentReport.Checked);
+            AbuseReportsConnector.UpdateAbuseReport(CurrentReport, Password);
         }
 
         private void textBox12_TextChanged(object sender, EventArgs e)
         {
-            GenericData.Update("abusereports", new string[] { Notes.Text }, new string[] { "Notes" }, new string[] { "ReportNumber" }, new string[] { formNumber.ToString() });
+            CurrentReport.Notes = Notes.Text;
+            AbuseReportsConnector.UpdateAbuseReport(CurrentReport, Password);
         }
 
         private void GotoAR_Click(object sender, EventArgs e)
@@ -167,20 +177,21 @@ namespace Aurora.Modules.AbuseReportsGUI
             if (formNumber <= 0)
                 formNumber = 1;
             GotoARNumber.Text = "";
-            AbuseReport AR = RegionData.GetAbuseReport(formNumber);
-            if (AR.ReportNumber != null)
+            AbuseReport AR = AbuseReportsConnector.GetAbuseReport(formNumber, Password);
+            CurrentReport = AR;
+            if (AR.Number != null)
             {
-                Category.Text = AR.Category;
-                ReporterName.Text = AR.Reporter;
+                Category.Text = AR.Category.ToString();
+                ReporterName.Text = AR.ReporterName;
                 ObjectName.Text = AR.ObjectName;
-                ObjectPos.Text = AR.Position;
-                Abusername.Text = AR.Abuser;
-                Location.Text = AR.Location;
-                Summary.Text = AR.Summary;
-                Details.Text = AR.Details;
+                ObjectPos.Text = AR.ObjectPosition.ToString();
+                Abusername.Text = AR.AbuserName;
+                Location.Text = AR.AbuseLocation;
+                Summary.Text = AR.AbuseSummary;
+                Details.Text = AR.AbuseDetails;
                 AssignedTo.Text = AR.AssignedTo;
-                Active.Text = AR.Active;
-                Checked.Text = AR.Checked;
+                Active.Text = AR.Active.ToString();
+                Checked.Text = AR.Checked.ToString();
                 Notes.Text = AR.Notes;
                 CardNumber.Text = formNumber.ToString();
             }

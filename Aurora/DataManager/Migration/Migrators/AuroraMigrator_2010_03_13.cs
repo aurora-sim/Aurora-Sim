@@ -101,9 +101,17 @@ namespace Aurora.DataManager.Migration.Migrators
 
             #endregion
             
-            AddSchema("regionflags", ColDefs(
+            AddSchema("simmap", ColDefs(
                 ColDef("RegionID", ColumnTypes.String50, true),
-                ColDef("Flags", ColumnTypes.String50)
+                ColDef("RegionHandle", ColumnTypes.String50),
+                ColDef("EstateID", ColumnTypes.String50),
+                ColDef("RegionLocX", ColumnTypes.String50),
+                ColDef("RegionLocY", ColumnTypes.String50),
+                ColDef("SimMapTextureID", ColumnTypes.String50),
+                ColDef("RegionName", ColumnTypes.String50),
+                ColDef("RegionFlags", ColumnTypes.String50),
+                ColDef("Access", ColumnTypes.String50),
+                ColDef("GridRegionFlags", ColumnTypes.String50)
                 ));
 
             AddSchema("telehubs", ColDefs(
@@ -114,6 +122,12 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("TelehubY", ColumnTypes.String50),
                 ColDef("TelehubZ", ColumnTypes.String50)
                 ));
+
+            AddSchema("Passwords", ColDefs(ColDef("Method", ColumnTypes.String50, true),
+                ColDef("Password", ColumnTypes.String50)));
+
+            AddSchema("AvatarArchives", ColDefs(ColDef("Name", ColumnTypes.String50, true),
+                ColDef("Archive", ColumnTypes.String50)));
 
             AddSchema("macban", ColDefs(ColDef("macAddress", ColumnTypes.String50, true)));
 
@@ -141,16 +155,17 @@ namespace Aurora.DataManager.Migration.Migrators
             
             AddSchema("abusereports", ColDefs(
                 ColDef("Category", ColumnTypes.String100),
-                ColDef("AReporter", ColumnTypes.String100),
-                ColDef("OName", ColumnTypes.String100),
-                ColDef("OUUID", ColumnTypes.String100),
-                ColDef("AName", ColumnTypes.String100),
-                ColDef("Location", ColumnTypes.String100),
-                ColDef("ADetails", ColumnTypes.String512),
-                ColDef("OPos", ColumnTypes.String100),
-                ColDef("Estate", ColumnTypes.String100),
-                ColDef("Summary", ColumnTypes.String100),
-                ColDef("ReportNumber", ColumnTypes.String100,true),
+                ColDef("ReporterName", ColumnTypes.String100),
+                ColDef("ObjectName", ColumnTypes.String100),
+                ColDef("ObjectUUID", ColumnTypes.String100),
+                ColDef("AbuserName", ColumnTypes.String100),
+                ColDef("AbuseLocation", ColumnTypes.String100),
+                ColDef("AbuseDetails", ColumnTypes.String512),
+                ColDef("ObjectPosition", ColumnTypes.String100),
+                ColDef("EstateID", ColumnTypes.String100),
+                ColDef("ScreenshotID", ColumnTypes.String100),
+                ColDef("AbuseSummary", ColumnTypes.String100),
+                ColDef("Number", ColumnTypes.String100, true),
                 ColDef("AssignedTo", ColumnTypes.String100),
                 ColDef("Active", ColumnTypes.String100),
                 ColDef("Checked", ColumnTypes.String100),

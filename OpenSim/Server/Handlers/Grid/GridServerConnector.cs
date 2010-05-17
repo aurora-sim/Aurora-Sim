@@ -31,6 +31,10 @@ using OpenSim.Server.Base;
 using OpenSim.Services.Interfaces;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Server.Handlers.Base;
+using Aurora.DataManager;
+using Aurora.Framework;
+using Aurora.Services.DataService;
+using OpenSim.Server.Handlers.AuroraMap;
 
 namespace OpenSim.Server.Handlers.Grid
 {
@@ -54,8 +58,13 @@ namespace OpenSim.Server.Handlers.Grid
 
             Object[] args = new Object[] { config };
             m_GridService = ServerUtils.LoadPlugin<IGridService>(gridService, args);
+            GridServerPostHandler handler = new GridServerPostHandler(m_GridService);
+            server.AddStreamHandler(handler);
 
-            server.AddStreamHandler(new GridServerPostHandler(m_GridService));
+            //For the map connector
+            LocalDataService LDS = new Aurora.Services.DataService.LocalDataService();
+            LDS.Initialise(config);
+            server.AddStreamHandler(new WorldMapPostHandler(handler, m_GridService));
         }
     }
 }

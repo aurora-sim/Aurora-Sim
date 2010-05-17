@@ -56,7 +56,7 @@ namespace OpenSim.Region.DataSnapshot
             //Register HTTP handler
             if (MainServer.Instance.AddHTTPHandler("collector", OnGetSnapshot))
             {
-                m_log.Info("[DATASNAPSHOT]: Set up snapshot service");
+                //m_log.Info("[DATASNAPSHOT]: Set up snapshot service");
             }
 
             //Register CAPS handler event

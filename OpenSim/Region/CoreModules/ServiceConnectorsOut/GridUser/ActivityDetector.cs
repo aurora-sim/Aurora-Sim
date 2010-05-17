@@ -70,7 +70,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.GridUser
 
         public void OnMakeRootAgent(ScenePresence sp)
         {
-            m_log.DebugFormat("[ACTIVITY DETECTOR]: Detected root presence {0} in {1}", sp.UUID, sp.Scene.RegionInfo.RegionName);
+            //m_log.DebugFormat("[ACTIVITY DETECTOR]: Detected root presence {0} in {1}", sp.UUID, sp.Scene.RegionInfo.RegionName);
 
             m_GridUserService.SetLastPosition(sp.UUID.ToString(), sp.Scene.RegionInfo.RegionID, sp.AbsolutePosition, sp.Lookat);
         }
@@ -99,7 +99,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.GridUser
                         lookat = ((ScenePresence)sp).Lookat;
                     }
                 }
-                m_log.DebugFormat("[ACTIVITY DETECTOR]: Detected client logout {0} in {1}", client.AgentId, client.Scene.RegionInfo.RegionName);
+                //m_log.DebugFormat("[ACTIVITY DETECTOR]: Detected client logout {0} in {1}", client.AgentId, client.Scene.RegionInfo.RegionName);
                 m_GridUserService.LoggedOut(client.AgentId.ToString(), client.Scene.RegionInfo.RegionID, position, lookat);
             }
 

@@ -181,7 +181,7 @@ namespace OpenSim.ApplicationPlugins.RemoteController
         {
             if (!createDefaultAvatars())
             {
-                m_log.Info("[RADMIN]: Default avatars not loaded");
+                //m_log.Info("[RADMIN]: Default avatars not loaded");
             }
         }
 
@@ -1524,7 +1524,7 @@ namespace OpenSim.ApplicationPlugins.RemoteController
                 return false;
             }
 
-            m_log.DebugFormat("[RADMIN] Creating default avatar entries");
+            //m_log.DebugFormat("[RADMIN] Creating default avatar entries");
 
             daload = true;
 
@@ -1798,7 +1798,7 @@ namespace OpenSim.ApplicationPlugins.RemoteController
                 }
                 else
                 {
-                    m_log.DebugFormat("[RADMIN] No default avatar information available");
+                    //m_log.DebugFormat("[RADMIN] No default avatar information available");
                     return false;
                 }
             }

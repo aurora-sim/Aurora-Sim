@@ -57,15 +57,15 @@ namespace OpenSim.Region.Framework.Scenes
         public void CreateScriptInstances()
         {
             m_log.Info("[PRIM INVENTORY]: Starting scripts in scene");
-
-            foreach (EntityBase group in Entities)
-            {
-                if (group is SceneObjectGroup)
+            Action<EntityBase> ProtectedAction = new Action<EntityBase>(delegate(EntityBase group)
                 {
-                    ((SceneObjectGroup) group).CreateScriptInstances(0, false, DefaultScriptEngine, 0);
-                    ((SceneObjectGroup) group).ResumeScripts();
-                }
-            }
+                    if (group is SceneObjectGroup)
+                    {
+                        ((SceneObjectGroup)group).CreateScriptInstances(0, false, DefaultScriptEngine, 0);
+                        ((SceneObjectGroup)group).ResumeScripts();
+                    }
+                });
+            Parallel.ForEach(Entities, ProtectedAction);
         }
 
         public void AddUploadedInventoryItem(UUID agentID, InventoryItemBase item)
@@ -611,8 +611,8 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="newName"></param>
         public void MoveInventoryItem(IClientAPI remoteClient, List<InventoryItemBase> items)
         {
-            m_log.DebugFormat(
-                "[AGENT INVENTORY]: Moving {0} items for user {1}", items.Count, remoteClient.AgentId);
+            //m_log.DebugFormat(
+            //    "[AGENT INVENTORY]: Moving {0} items for user {1}", items.Count, remoteClient.AgentId);
 
             if (!InventoryService.MoveItems(remoteClient.AgentId, items))
                 m_log.Warn("[AGENT INVENTORY]: Failed to move items for user " + remoteClient.AgentId);
@@ -697,7 +697,7 @@ namespace OpenSim.Region.Framework.Scenes
                                            sbyte assetType,
                                            byte wearableType, uint nextOwnerMask, int creationDate)
         {
-            m_log.DebugFormat("[AGENT INVENTORY]: Received request to create inventory item {0} in folder {1}", name, folderID);
+            //m_log.DebugFormat("[AGENT INVENTORY]: Received request to create inventory item {0} in folder {1}", name, folderID);
 
             if (!Permissions.CanCreateUserInventory(invType, remoteClient.AgentId))
                 return;
@@ -748,7 +748,7 @@ namespace OpenSim.Region.Framework.Scenes
                                              uint callbackID, string description, string name,
                                              sbyte invType, sbyte type, UUID olditemID)
         {
-            m_log.DebugFormat("[AGENT INVENTORY]: Received request to create inventory item link {0} in folder {1} pointing to {2}", name, folderID, olditemID);
+            //m_log.DebugFormat("[AGENT INVENTORY]: Received request to create inventory item link {0} in folder {1} pointing to {2}", name, folderID, olditemID);
 
             if (!Permissions.CanCreateUserInventory(invType, remoteClient.AgentId))
                 return;

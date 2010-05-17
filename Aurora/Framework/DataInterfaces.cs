@@ -8,60 +8,6 @@ using Nini.Config;
 
 namespace Aurora.Framework
 {
-    public interface IProfileData
-    {
-        DirPlacesReplyData[] PlacesQuery(string queryText, string category, string table, string wantedValue, int StartQuery);
-        DirLandReplyData[] LandForSaleQuery(string searchType, string price, string area, string table, string wantedValue, int StartQuery);
-        DirClassifiedReplyData[] ClassifiedsQuery(string queryText, string category, string queryFlags, int StartQuery);
-        DirEventsReplyData[] EventQuery(string queryText, string flags, string table, string wantedValue, int StartQuery);
-        EventData GetEventInfo(string p);
-        DirEventsReplyData[] GetAllEventsNearXY(string table, int X, int Y);
-        EventData[] GetEvents();
-        Classified[] GetClassifieds();
-
-    }
-    public interface IRegionData
-    {
-        string AbuseReports();
-        ObjectMediaURLInfo getObjectMediaInfo(string objectID, int side);
-        bool StoreRegionWindlightSettings(RegionLightShareData wl);
-        void AddLandObject(OpenSim.Framework.LandData ILandData);
-        RegionLightShareData LoadRegionWindlightSettings(UUID regionUUID);
-
-        AbuseReport GetAbuseReport(int formNumber);
-
-        OfflineMessage[] GetOfflineMessages(string agentID);
-
-        bool AddOfflineMessage(string fromUUID, string fromName, string toUUID, string message);
-    }
-
-    public class OfflineMessage
-    {
-        public string FromUUID;
-        public string ToUUID;
-        public string FromName;
-        public string Message;
-    }
-
-    public class AbuseReport
-    {
-        public string Category;
-        public string Reporter;
-        public string ObjectName;
-        public string ObjectUUID;
-        public string Abuser;
-        public string Location;
-        public string Details;
-        public string Position;
-        public string Estate;
-        public string Summary;
-        public string ReportNumber;
-        public string AssignedTo;
-        public string Active;
-        public string Checked;
-        public string Notes;
-    }
-
     public interface IGroupsServicesConnector
     {
         UUID CreateGroup(UUID RequestingAgentID, string name, string charter, bool showInList, UUID insigniaID, int membershipFee, bool openEnrollment, bool allowPublish, bool maturePublish, UUID founderID);
@@ -133,12 +79,16 @@ namespace Aurora.Framework
         /// select wantedValue from table where keyRow = keyValue
         /// </summary>
         List<string> Query(string keyRow, object keyValue, string table, string wantedValue);
+        List<string> Query(string whereClause, string table, string wantedValue);
         List<string> Query(string keyRow, object keyValue, string table, string wantedValue, string Order);
         List<string> Query(string[] keyRow, object[] keyValue, string table, string wantedValue);
         bool Insert(string table, object[] values);
         bool Delete(string table, string[] keys, object[] values);
         bool Insert(string table, object[] values, string updateKey, object updateValue);
         string Identifier { get; }
+        //REFACTORING ISSUE
+        RegionLightShareData LoadRegionWindlightSettings(UUID regionUUID);
+        bool StoreRegionWindlightSettings(RegionLightShareData wl);
     }
 
     public interface IDataConnector : IGenericData
@@ -191,35 +141,5 @@ namespace Aurora.Framework
             }
             return false;
         }
-    }
-
-    public class ObjectMediaURLInfo
-    {
-        public string alt_image_enable = "";
-        public bool auto_loop = true;
-        public bool auto_play = true;
-        public bool auto_scale = true;
-        public bool auto_zoom = false;
-        public int controls = 0;
-        public string current_url = "http://www.google.com/";
-        public bool first_click_interact = false;
-        public int height_pixels = 0;
-        public string home_url = "http://www.google.com/";
-        public int perms_control = 7;
-        public int perms_interact = 7;
-        public string whitelist = "";
-        public bool whitelist_enable = false;
-        public int width_pixels = 0;
-        public string object_media_version;
-    }
-    public interface IDataService
-    {
-        void Initialise(Nini.Config.IConfigSource source);
-        IGenericData GetGenericPlugin();
-        IProfileData GetProfilePlugin();
-        IRegionData GetRegionPlugin();
-        void SetGenericDataPlugin(IGenericData Plugin);
-        void SetProfilePlugin(IProfileData Plugin);
-        void SetRegionPlugin(IRegionData Plugin);
     }
 }

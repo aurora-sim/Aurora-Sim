@@ -49,7 +49,7 @@ namespace Aurora.Modules
         private string m_RestURL = String.Empty;
         IMessageTransferModule m_TransferModule = null;
         private bool m_ForwardOfflineGroupMessages = true;
-        private IRegionData RegionData;
+        private IOfflineMessagesConnector OfflineMessagesConnector;
 
         public void Initialise(IConfigSource config)
         {
@@ -87,7 +87,7 @@ namespace Aurora.Modules
             if (!enabled)
                 return;
 
-            RegionData = Aurora.DataManager.DataManager.GetDefaultRegionPlugin();
+            OfflineMessagesConnector = Aurora.DataManager.DataManager.IOfflineMessagesConnector;
             if (m_TransferModule == null)
             {
                 m_TransferModule = scene.RequestModuleInterface<IMessageTransferModule>();
@@ -168,7 +168,7 @@ namespace Aurora.Modules
         {
             m_log.DebugFormat("[OFFLINE MESSAGING] Retrieving stored messages for {0}", client.AgentId);
 
-            OfflineMessage[] msglist = RegionData.GetOfflineMessages(client.AgentId.ToString());
+            OfflineMessage[] msglist = OfflineMessagesConnector.GetOfflineMessages(client.AgentId.ToString());
 
             foreach (OfflineMessage IMtext in msglist)
             {
@@ -198,7 +198,12 @@ namespace Aurora.Modules
             if ((im.offline != 0)
                 && (!im.fromGroup || (im.fromGroup && m_ForwardOfflineGroupMessages)))
             {
-                RegionData.AddOfflineMessage(im.fromAgentID.ToString(), im.fromAgentName, im.toAgentID.ToString(), im.message);
+                OfflineMessage message = new OfflineMessage();
+                message.FromName = im.fromAgentName;
+                message.FromUUID = new UUID(im.fromAgentID);
+                message.Message = im.message;
+                message.ToUUID = new UUID(im.toAgentID);
+                OfflineMessagesConnector.AddOfflineMessage(message);
 
                 if (im.dialog == (byte)InstantMessageDialog.MessageFromAgent)
                 {

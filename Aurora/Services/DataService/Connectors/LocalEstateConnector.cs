@@ -25,11 +25,11 @@ namespace Aurora.Services.DataService
 				EstateSettings es = new EstateSettings();
 				List<string> QueryResults = GenericData.Query("", "", "estate_map", "EstateID", " ORDER BY EstateID DESC");
 				if (QueryResults == null && QueryResults.Count == 0 || QueryResults[0] == "") {
-					EstateID = "100";
+					EstateID = "99";
 				} else
 					EstateID = QueryResults[0];
 				if (EstateID == "0")
-					EstateID = "100";
+					EstateID = "99";
 				int estateID = Convert.ToInt32(EstateID);
 				estateID++;
 				EstateID = estateID.ToString();
@@ -37,30 +37,30 @@ namespace Aurora.Services.DataService
                 List<object> Values = new List<object>();
 				Values.Add(EstateID);
 				Values.Add(es.EstateName);
-				Values.Add(es.AbuseEmailToEstateOwner);
-				Values.Add(es.DenyAnonymous);
-				Values.Add(es.ResetHomeOnTeleport);
-				Values.Add(es.FixedSun);
-				Values.Add(es.DenyTransacted);
-				Values.Add(es.BlockDwell);
-				Values.Add(es.DenyIdentified);
-				Values.Add(es.AllowVoice);
-				Values.Add(es.UseGlobalTime);
+				Values.Add(Convert.ToInt32(es.AbuseEmailToEstateOwner));
+				Values.Add(Convert.ToInt32(es.DenyAnonymous));
+				Values.Add(Convert.ToInt32(es.ResetHomeOnTeleport));
+				Values.Add(Convert.ToInt32(es.FixedSun));
+				Values.Add(Convert.ToInt32(es.DenyTransacted));
+				Values.Add(Convert.ToInt32(es.BlockDwell));
+				Values.Add(Convert.ToInt32(es.DenyIdentified));
+				Values.Add(Convert.ToInt32(es.AllowVoice));
+				Values.Add(Convert.ToInt32(es.UseGlobalTime));
 				Values.Add(es.PricePerMeter);
-				Values.Add(es.TaxFree);
-				Values.Add(es.AllowDirectTeleport);
+				Values.Add(Convert.ToInt32(es.TaxFree));
+				Values.Add(Convert.ToInt32(es.AllowDirectTeleport));
 				Values.Add(es.RedirectGridX);
 				Values.Add(es.RedirectGridY);
 				Values.Add(es.ParentEstateID);
 				Values.Add(es.SunPosition);
-				Values.Add(es.EstateSkipScripts);
+				Values.Add(Convert.ToInt32(es.EstateSkipScripts));
 				Values.Add(es.BillableFactor);
-				Values.Add(es.PublicAccess);
+				Values.Add(Convert.ToInt32(es.PublicAccess));
 				Values.Add(es.AbuseEmail);
 				Values.Add(es.EstateOwner);
-				Values.Add(es.DenyMinors);
+				Values.Add(Convert.ToInt32(es.DenyMinors));
 				Values.Add(es.EstatePass);
-				GenericData.Insert("estate_settings", Values.ToArray());
+                GenericData.Insert("estate_settings", Values.ToArray());
 
 				GenericData.Insert("estate_map", new string[] {
 					regionID.ToString(),
@@ -170,29 +170,30 @@ namespace Aurora.Services.DataService
 		public bool StoreEstateSettings(OpenSim.Framework.EstateSettings es)
 		{
 			List<object> SetValues = new List<object>();
-			SetValues.Add(es.EstateName);
-			SetValues.Add(es.AbuseEmailToEstateOwner);
-			SetValues.Add(es.DenyAnonymous);
-			SetValues.Add(es.ResetHomeOnTeleport);
-			SetValues.Add(es.FixedSun);
-			SetValues.Add(es.DenyTransacted);
-			SetValues.Add(es.BlockDwell);
-			SetValues.Add(es.DenyIdentified);
-			SetValues.Add(es.AllowVoice);
-			SetValues.Add(es.UseGlobalTime);
+            SetValues.Add(es.EstateID); 
+            SetValues.Add(es.EstateName);
+			SetValues.Add(Convert.ToInt32(es.AbuseEmailToEstateOwner));
+			SetValues.Add(Convert.ToInt32(es.DenyAnonymous));
+			SetValues.Add(Convert.ToInt32(es.ResetHomeOnTeleport));
+			SetValues.Add(Convert.ToInt32(es.FixedSun));
+			SetValues.Add(Convert.ToInt32(es.DenyTransacted));
+			SetValues.Add(Convert.ToInt32(es.BlockDwell));
+			SetValues.Add(Convert.ToInt32(es.DenyIdentified));
+			SetValues.Add(Convert.ToInt32(es.AllowVoice));
+			SetValues.Add(Convert.ToInt32(es.UseGlobalTime));
 			SetValues.Add(es.PricePerMeter);
-			SetValues.Add(es.TaxFree);
-			SetValues.Add(es.AllowDirectTeleport);
+			SetValues.Add(Convert.ToInt32(es.TaxFree));
+			SetValues.Add(Convert.ToInt32(es.AllowDirectTeleport));
 			SetValues.Add(es.RedirectGridX);
 			SetValues.Add(es.RedirectGridY);
 			SetValues.Add(es.ParentEstateID);
 			SetValues.Add(es.SunPosition);
-			SetValues.Add(es.EstateSkipScripts);
+			SetValues.Add(Convert.ToInt32(es.EstateSkipScripts));
 			SetValues.Add(es.BillableFactor);
-			SetValues.Add(es.PublicAccess);
+			SetValues.Add(Convert.ToInt32(es.PublicAccess));
 			SetValues.Add(es.AbuseEmail);
 			SetValues.Add(es.EstateOwner);
-			SetValues.Add(es.DenyMinors);
+			SetValues.Add(Convert.ToInt32(es.DenyMinors));
 			SetValues.Add(es.EstatePass);
 
 			List<string> SetKeys = new List<string>();
@@ -234,30 +235,31 @@ namespace Aurora.Services.DataService
 		public void SaveEstateSettings(OpenSim.Framework.EstateSettings es)
 		{
 			List<object> SetValues = new List<object>();
-			SetValues.Add(es.EstateName);
-			SetValues.Add(es.AbuseEmailToEstateOwner);
-			SetValues.Add(es.DenyAnonymous);
-			SetValues.Add(es.ResetHomeOnTeleport);
-			SetValues.Add(es.FixedSun);
-			SetValues.Add(es.DenyTransacted);
-			SetValues.Add(es.BlockDwell);
-			SetValues.Add(es.DenyIdentified);
-			SetValues.Add(es.AllowVoice);
-			SetValues.Add(es.UseGlobalTime);
-			SetValues.Add(es.PricePerMeter);
-			SetValues.Add(es.TaxFree);
-			SetValues.Add(es.AllowDirectTeleport);
-			SetValues.Add(es.RedirectGridX);
-			SetValues.Add(es.RedirectGridY);
-			SetValues.Add(es.ParentEstateID);
-			SetValues.Add(es.SunPosition);
-			SetValues.Add(es.EstateSkipScripts);
-			SetValues.Add(es.BillableFactor);
-			SetValues.Add(es.PublicAccess);
-			SetValues.Add(es.AbuseEmail);
-			SetValues.Add(es.EstateOwner);
-			SetValues.Add(es.DenyMinors);
-			SetValues.Add(es.EstatePass);
+            SetValues.Add(es.EstateID);
+            SetValues.Add(es.EstateName);
+            SetValues.Add(Convert.ToInt32(es.AbuseEmailToEstateOwner));
+            SetValues.Add(Convert.ToInt32(es.DenyAnonymous));
+            SetValues.Add(Convert.ToInt32(es.ResetHomeOnTeleport));
+            SetValues.Add(Convert.ToInt32(es.FixedSun));
+            SetValues.Add(Convert.ToInt32(es.DenyTransacted));
+            SetValues.Add(Convert.ToInt32(es.BlockDwell));
+            SetValues.Add(Convert.ToInt32(es.DenyIdentified));
+            SetValues.Add(Convert.ToInt32(es.AllowVoice));
+            SetValues.Add(Convert.ToInt32(es.UseGlobalTime));
+            SetValues.Add(es.PricePerMeter);
+            SetValues.Add(Convert.ToInt32(es.TaxFree));
+            SetValues.Add(Convert.ToInt32(es.AllowDirectTeleport));
+            SetValues.Add(es.RedirectGridX);
+            SetValues.Add(es.RedirectGridY);
+            SetValues.Add(es.ParentEstateID);
+            SetValues.Add(es.SunPosition);
+            SetValues.Add(Convert.ToInt32(es.EstateSkipScripts));
+            SetValues.Add(es.BillableFactor);
+            SetValues.Add(Convert.ToInt32(es.PublicAccess));
+            SetValues.Add(es.AbuseEmail);
+            SetValues.Add(es.EstateOwner);
+            SetValues.Add(Convert.ToInt32(es.DenyMinors));
+            SetValues.Add(es.EstatePass);
 
 			List<string> SetKeys = new List<string>();
 			SetKeys.Add("EstateID");
@@ -298,7 +300,10 @@ namespace Aurora.Services.DataService
 		{
 			List<int> result = new List<int>();
 			List<string> RetVal = GenericData.Query("EstateName", search, "estate_settings", "EstateID");
-			foreach (string val in RetVal) {
+			foreach (string val in RetVal)
+            {
+                if (val == "")
+                    continue;
 				result.Add(Convert.ToInt32(val));
 			}
 			return result;

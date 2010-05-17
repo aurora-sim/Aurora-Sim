@@ -635,11 +635,6 @@ namespace OpenSim.Region.Framework.Scenes
             m_regInfo.RegionSettings = m_storageManager.DataStore.LoadRegionSettings(m_regInfo.RegionID);
             FindEstateInfo();
 
-            //Create the region flags database.
-            Aurora.Framework.IGridConnector GF = DataManager.IGridConnector;
-            if (GF.GetRegionFlags(m_regInfo.RegionID) == (Aurora.Framework.GridRegionFlags)(-1))
-                GF.CreateRegion(m_regInfo.RegionID);
-
             MainConsole.Instance.Commands.AddCommand("region", false, "reload estate",
                                           "reload estate",
                                           "Reload the estate data", HandleReloadEstate);
@@ -970,8 +965,8 @@ namespace OpenSim.Region.Framework.Scenes
         {
             uint xcell = (uint)((int)otherRegion.RegionLocX / (int)Constants.RegionSize);
             uint ycell = (uint)((int)otherRegion.RegionLocY / (int)Constants.RegionSize);
-            m_log.InfoFormat("[SCENE]: (on region {0}): Region {1} up in coords {2}-{3}", 
-                RegionInfo.RegionName, otherRegion.RegionName, xcell, ycell);
+            //m_log.InfoFormat("[SCENE]: (on region {0}): Region {1} up in coords {2}-{3}", 
+            //    RegionInfo.RegionName, otherRegion.RegionName, xcell, ycell);
 
             if (RegionInfo.RegionHandle != otherRegion.RegionHandle)
             {
@@ -1601,7 +1596,7 @@ namespace OpenSim.Region.Framework.Scenes
                     return;
                 //Lets kill this thing
                 FireThreadClosing(this);
-                throw new Exception();
+                throw new Exception("Closing");
             }
 
             private void Update()
@@ -1652,7 +1647,8 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                     catch (AccessViolationException e)
                     {
-                        m_log.Error("[REGION]: Failed with exception " + e.ToString() + " On Region: " + m_scene.RegionInfo.RegionName);
+                        if (e.Message != "Closing")
+                            m_log.Error("[REGION]: Failed with exception " + e.ToString() + " On Region: " + m_scene.RegionInfo.RegionName);
                     }
                     //catch (NullReferenceException e)
                     //{
@@ -1660,11 +1656,13 @@ namespace OpenSim.Region.Framework.Scenes
                     //}
                     catch (InvalidOperationException e)
                     {
-                        m_log.Error("[REGION]: Failed with exception " + e.ToString() + " On Region: " + m_scene.RegionInfo.RegionName);
+                        if (e.Message != "Closing")
+                            m_log.Error("[REGION]: Failed with exception " + e.ToString() + " On Region: " + m_scene.RegionInfo.RegionName);
                     }
                     catch (Exception e)
                     {
-                        m_log.Error("[REGION]: Failed with exception " + e.ToString() + " On Region: " + m_scene.RegionInfo.RegionName);
+                        if (e.Message != "Closing")
+                            m_log.Error("[REGION]: Failed with exception " + e.ToString() + " On Region: " + m_scene.RegionInfo.RegionName);
                     }
                     finally
                     {
@@ -2155,14 +2153,14 @@ namespace OpenSim.Region.Framework.Scenes
         public void StoreWindlightProfile(RegionLightShareData wl)
         {
             m_regInfo.WindlightSettings = wl;
-            var GD = Aurora.DataManager.DataManager.GetDefaultRegionPlugin();
+            var GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
             GD.StoreRegionWindlightSettings(wl);
             m_eventManager.TriggerOnSaveNewWindlightProfile();
         }
 
         public void LoadWindlightProfile()
         {
-            var GD = Aurora.DataManager.DataManager.GetDefaultRegionPlugin();
+            var GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
         	m_regInfo.WindlightSettings = GD.LoadRegionWindlightSettings(RegionInfo.RegionID);
             m_eventManager.TriggerOnSaveNewWindlightProfile();
         }
@@ -2332,7 +2330,7 @@ namespace OpenSim.Region.Framework.Scenes
                 //rootPart.DoPhysicsPropertyUpdate(UsePhysics, true);
             }
 
-            m_log.Info("[SCENE]: Loaded " + PrimsFromDB.Count.ToString() + " SceneObject(s)");
+            //m_log.Info("[SCENE]: Loaded " + PrimsFromDB.Count.ToString() + " SceneObject(s)");
         }
 
 
@@ -3095,38 +3093,27 @@ namespace OpenSim.Region.Framework.Scenes
                 AgentCircuitData aCircuit = m_authenticateHandler.GetAgentCircuitData(client.CircuitCode);
 
                 // Do the verification here
-                System.Net.EndPoint ep = client.GetClientEP();
+                System.Net.IPEndPoint ep = (System.Net.IPEndPoint)client.GetClientEP();
                 if (aCircuit != null)
                 {
-                    if ((aCircuit.teleportFlags & (uint)Constants.TeleportFlags.ViaLogin) != 0)
+                    if (!VerifyClient(aCircuit, ep, out vialogin))
                     {
-                        m_log.DebugFormat("[Scene]: Incoming client {0} {1} in region {2} via Login", aCircuit.firstname, aCircuit.lastname, RegionInfo.RegionName);
-                        vialogin = true;
-                        IUserAgentVerificationModule userVerification = RequestModuleInterface<IUserAgentVerificationModule>();
-                        if (userVerification != null && ep != null)
+                        // uh-oh, this is fishy
+                        m_log.WarnFormat("[Scene]: Agent {0} with session {1} connecting with unidentified end point {2}. Refusing service.",
+                            client.AgentId, client.SessionId, ep.ToString());
+                        try
                         {
-                            if (!userVerification.VerifyClient(aCircuit, ep.ToString()))
-                            {
-                                // uh-oh, this is fishy
-                                m_log.WarnFormat("[Scene]: Agent {0} with session {1} connecting with unidentified end point {2}. Refusing service.",
-                                    client.AgentId, client.SessionId, ep.ToString());
-                                try
-                                {
-                                    client.Close();
-                                }
-                                catch (Exception e)
-                                {
-                                    m_log.DebugFormat("[Scene]: Exception while closing aborted client: {0}", e.StackTrace);
-                                }
-                                return;
-                            }
-                            else
-                                m_log.DebugFormat("[Scene]: User Client Verification for {0} {1} returned true", aCircuit.firstname, aCircuit.lastname);
+                            client.Close();
                         }
+                        catch (Exception e)
+                        {
+                            m_log.DebugFormat("[Scene]: Exception while closing aborted client: {0}", e.StackTrace);
+                        }
+                        return;
                     }
                 }
 
-                m_log.Debug("[Scene] Adding new agent " + client.Name + " to scene " + RegionInfo.RegionName);
+                //m_log.Debug("[Scene] Adding new agent " + client.Name + " to scene " + RegionInfo.RegionName);
 
                 ScenePresence sp = CreateAndAddScenePresence(client);
                 if (aCircuit != null)
@@ -3148,7 +3135,65 @@ namespace OpenSim.Region.Framework.Scenes
                 EventManager.TriggerOnClientLogin(client);
         }
 
-        
+        private bool VerifyClient(AgentCircuitData aCircuit, System.Net.IPEndPoint ep, out bool vialogin)
+        {
+            vialogin = false;
+            
+            // Do the verification here
+            if ((aCircuit.teleportFlags & (uint)Constants.TeleportFlags.ViaLogin) != 0)
+            {
+                m_log.DebugFormat("[Scene]: Incoming client {0} {1} in region {2} via Login", aCircuit.firstname, aCircuit.lastname, RegionInfo.RegionName);
+                vialogin = true;
+                IUserAgentVerificationModule userVerification = RequestModuleInterface<IUserAgentVerificationModule>();
+                if (userVerification != null && ep != null)
+                {
+                    if (!userVerification.VerifyClient(aCircuit, ep.Address.ToString()))
+                    {
+                        // uh-oh, this is fishy
+                        m_log.DebugFormat("[Scene]: User Client Verification for {0} {1} in {2} returned false", aCircuit.firstname, aCircuit.lastname, RegionInfo.RegionName);
+                        return false;
+                    }
+                    else
+                        m_log.DebugFormat("[Scene]: User Client Verification for {0} {1} in {2} returned true", aCircuit.firstname, aCircuit.lastname, RegionInfo.RegionName);
+                }
+            }
+
+            return true;
+        }
+
+        // Called by Caps, on the first HTTP contact from the client
+        public override bool CheckClient(UUID agentID, System.Net.IPEndPoint ep)
+        {
+            AgentCircuitData aCircuit = m_authenticateHandler.GetAgentCircuitData(agentID);
+            if (aCircuit != null)
+            {
+                bool vialogin = false;
+                if (!VerifyClient(aCircuit, ep, out vialogin))
+                {
+                    // if it doesn't pass, we remove the agentcircuitdata altogether
+                    // and the scene presence and the client, if they exist
+                    try
+                    {
+                        ScenePresence sp = GetScenePresence(agentID);
+                        if (sp != null)
+                            sp.ControllingClient.Close();
+
+                        // BANG! SLASH!
+                        m_authenticateHandler.RemoveCircuit(agentID);
+
+                        return false;
+                    }
+                    catch (Exception e)
+                    {
+                        m_log.DebugFormat("[Scene]: Exception while closing aborted client: {0}", e.StackTrace);
+                    }
+                }
+                else
+                    return true;
+            }
+
+            return false;
+        }
 
         /// <summary>
         /// Register for events from the client
@@ -3646,9 +3691,10 @@ namespace OpenSim.Region.Framework.Scenes
 
                 try
                 {
-                    m_log.DebugFormat(
-                        "[SCENE]: Removing {0} agent {1} from region {2}",
-                        (childagentYN ? "child" : "root"), agentID, RegionInfo.RegionName);
+                    if(!childagentYN)
+                        m_log.DebugFormat(
+                            "[SCENE]: Removing {0} agent {1} from region {2}",
+                            (childagentYN ? "child" : "root"), agentID, RegionInfo.RegionName);
 
                     m_sceneGraph.removeUserCount(!childagentYN);
                     CapsModule.RemoveCapsHandler(agentID);
@@ -3776,7 +3822,6 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void RegisterCommsEvents()
         {
-            m_sceneGridService.OnExpectUser += HandleNewUserConnection;
             m_sceneGridService.OnAvatarCrossingIntoRegion += AgentCrossing;
             m_sceneGridService.OnCloseAgentConnection += IncomingCloseAgent;
             //m_eventManager.OnRegionUp += OtherRegionUp;
@@ -3797,7 +3842,6 @@ namespace OpenSim.Region.Framework.Scenes
             //m_sceneGridService.OnRemoveKnownRegionFromAvatar -= HandleRemoveKnownRegionsFromAvatar;
             //m_sceneGridService.OnChildAgentUpdate -= IncomingChildAgentDataUpdate;
             //m_eventManager.OnRegionUp -= OtherRegionUp;
-            m_sceneGridService.OnExpectUser -= HandleNewUserConnection;
             m_sceneGridService.OnAvatarCrossingIntoRegion -= AgentCrossing;
             m_sceneGridService.OnCloseAgentConnection -= IncomingCloseAgent;
             m_sceneGridService.OnGetLandData -= GetLandData;
@@ -3809,22 +3853,6 @@ namespace OpenSim.Region.Framework.Scenes
                 m_log.WarnFormat("[SCENE]: Deregister from grid failed for region {0}", m_regInfo.RegionName);
         }
 
-        /// <summary>
-        /// A handler for the SceneCommunicationService event, to match that events return type of void.
-        /// Use NewUserConnection() directly if possible so the return type can refuse connections.
-        /// At the moment nothing actually seems to use this event,
-        /// as everything is switching to calling the NewUserConnection method directly.
-        /// 
-        /// Now obsoleting this because it doesn't handle teleportFlags propertly
-        /// 
-        /// </summary>
-        /// <param name="agent"></param>
-        [Obsolete("Please call NewUserConnection directly.")]
-        public void HandleNewUserConnection(AgentCircuitData agent)
-        {
-            string reason;
-            NewUserConnection(agent, 0, out reason);
-        }
 
         /// <summary>
         /// Do the work necessary to initiate a new user connection for a particular scene.
@@ -3853,10 +3881,11 @@ namespace OpenSim.Region.Framework.Scenes
                 return false;
             }
             // Don't disable this log message - it's too helpful
-            m_log.InfoFormat(
-                "[CONNECTION BEGIN]: Region {0} told of incoming {1} agent {2} {3} {4} (circuit code {5}, teleportflags {6})",
-                RegionInfo.RegionName, (agent.child ? "child" : "root"), agent.firstname, agent.lastname,
-                agent.AgentID, agent.circuitcode, teleportFlags);
+            if(!agent.child)
+                m_log.InfoFormat(
+                    "[CONNECTION BEGIN]: Region {0} told of incoming {1} agent {2} {3} {4} (circuit code {5}, teleportflags {6})",
+                    RegionInfo.RegionName, (agent.child ? "child" : "root"), agent.firstname, agent.lastname,
+                    agent.AgentID, agent.circuitcode, teleportFlags);
 
             reason = String.Empty;
             if (!VerifyUserPresence(agent, out reason))
@@ -3865,7 +3894,8 @@ namespace OpenSim.Region.Framework.Scenes
             if (!AuthorizeUser(agent, out reason))
                 return false;
 
-            m_log.InfoFormat(
+            if (!agent.child) 
+                m_log.InfoFormat(
                 "[CONNECTION BEGIN]: Region {0} authenticated and authorized incoming {1} agent {2} {3} {4} (circuit code {5})",
                 RegionInfo.RegionName, (agent.child ? "child" : "root"), agent.firstname, agent.lastname,
                 agent.AgentID, agent.circuitcode);
@@ -3886,13 +3916,22 @@ namespace OpenSim.Region.Framework.Scenes
             ScenePresence sp = GetScenePresence(agent.AgentID);
             if (sp != null)
             {
-                m_log.DebugFormat(
-                    "[SCENE]: Adjusting known seeds for existing agent {0} in {1}",
-                    agent.AgentID, RegionInfo.RegionName);
+                if (sp.IsChildAgent)
+                {
+                    //m_log.DebugFormat(
+                    //    "[SCENE]: Adjusting known seeds for existing agent {0} in {1}",
+                    //    agent.AgentID, RegionInfo.RegionName);
 
-                sp.AdjustKnownSeeds();
+                    sp.AdjustKnownSeeds();
 
-                return true;
+                    return true;
+                }
+                else
+                {
+                    // We have a zombie from a crashed session. Kill it.
+                    m_log.DebugFormat("[SCENE]: Zombie scene presence detected for {0} in {1}", agent.AgentID, RegionInfo.RegionName);
+                    sp.ControllingClient.Close();
+                }
             }
 
             CapsModule.AddCapsHandler(agent.AgentID);
@@ -4240,8 +4279,8 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns>true if we handled it.</returns>
         public virtual bool IncomingChildAgentDataUpdate(AgentData cAgentData)
         {
-            m_log.DebugFormat(
-                "[SCENE]: Incoming child agent update for {0} in {1}", cAgentData.AgentID, RegionInfo.RegionName);
+            //m_log.DebugFormat(
+            //    "[SCENE]: Incoming child agent update for {0} in {1}", cAgentData.AgentID, RegionInfo.RegionName);
 
             // We have to wait until the viewer contacts this region after receiving EAC.
             // That calls AddNewClient, which finally creates the ScenePresence

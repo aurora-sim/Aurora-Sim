@@ -96,7 +96,7 @@ namespace OpenSim.Region.DataSnapshot.Providers
 
         public XmlNode RequestSnapshotData(XmlDocument nodeFactory)
         {
-            m_log.Debug("[DATASNAPSHOT]: Generating object data for scene " + m_scene.RegionInfo.RegionName);
+            //m_log.Debug("[DATASNAPSHOT]: Generating object data for scene " + m_scene.RegionInfo.RegionName);
 
             XmlNode parent = nodeFactory.CreateNode(XmlNodeType.Element, "objectdata", "");
             XmlNode node;

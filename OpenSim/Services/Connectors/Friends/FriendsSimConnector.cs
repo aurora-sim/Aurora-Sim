@@ -134,6 +134,8 @@ namespace OpenSim.Services.Connectors.Friends
             // m_log.DebugFormat("[FRIENDS CONNECTOR]: queryString = {0}", reqString);
             try
             {
+                if (region == null)
+                    return false;
                 string url = "http://" + region.ExternalHostName + ":" + region.HttpPort;
                 string reply = SynchronousRestFormsRequester.MakeRequest("POST",
                         url + "/friends",

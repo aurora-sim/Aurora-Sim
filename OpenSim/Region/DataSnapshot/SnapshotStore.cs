@@ -60,12 +60,12 @@ namespace OpenSim.Region.DataSnapshot
 
             if (Directory.Exists(m_directory))
             {
-                m_log.Info("[DATASNAPSHOT]: Response and fragment cache directory already exists.");
+                //m_log.Info("[DATASNAPSHOT]: Response and fragment cache directory already exists.");
             }
             else
             {
                 // Try to create the directory.
-                m_log.Info("[DATASNAPSHOT]: Creating directory " + m_directory);
+                //m_log.Info("[DATASNAPSHOT]: Creating directory " + m_directory);
                 try
                 {
                     Directory.CreateDirectory(m_directory);
@@ -111,7 +111,7 @@ namespace OpenSim.Region.DataSnapshot
                 provider.Stale = false;
                 m_scenes[provider.GetParentScene] = true;
 
-                m_log.Info("[DATASNAPSHOT]: Generated fragment response for provider type " + provider.Name);
+                //m_log.Info("[DATASNAPSHOT]: Generated fragment response for provider type " + provider.Name);
             }
             else
             {
@@ -125,7 +125,7 @@ namespace OpenSim.Region.DataSnapshot
                     data = factory.ImportNode(node, true);
                 }
 
-                m_log.Info("[DATASNAPSHOT]: Retrieved fragment response for provider type " + provider.Name);
+                //m_log.Info("[DATASNAPSHOT]: Retrieved fragment response for provider type " + provider.Name);
             }
 
             return data;
@@ -135,7 +135,7 @@ namespace OpenSim.Region.DataSnapshot
         #region Response storage
         public XmlNode GetScene(Scene scene, XmlDocument factory)
         {
-            m_log.Debug("[DATASNAPSHOT]: Data requested for scene " + scene.RegionInfo.RegionName);
+            //m_log.Debug("[DATASNAPSHOT]: Data requested for scene " + scene.RegionInfo.RegionName);
 
             if (!m_scenes.ContainsKey(scene)) {
                 m_scenes.Add(scene, true); //stale by default
@@ -145,7 +145,7 @@ namespace OpenSim.Region.DataSnapshot
 
             if (!m_scenes[scene])
             {
-                m_log.Info("[DATASNAPSHOT]: Attempting to retrieve snapshot from cache.");
+                //m_log.Info("[DATASNAPSHOT]: Attempting to retrieve snapshot from cache.");
                 //get snapshot from cache
                 String path = DataFileNameScene(scene);
 
@@ -159,11 +159,11 @@ namespace OpenSim.Region.DataSnapshot
                     regionElement = factory.ImportNode(node, true);
                 }
 
-                m_log.Info("[DATASNAPSHOT]: Obtained snapshot from cache for " + scene.RegionInfo.RegionName);
+                //m_log.Info("[DATASNAPSHOT]: Obtained snapshot from cache for " + scene.RegionInfo.RegionName);
             }
             else
             {
-                m_log.Info("[DATASNAPSHOT]: Attempting to generate snapshot.");
+                //m_log.Info("[DATASNAPSHOT]: Attempting to generate snapshot.");
                 //make snapshot
                 regionElement = MakeRegionNode(scene, factory);
 
@@ -195,7 +195,7 @@ namespace OpenSim.Region.DataSnapshot
 
                 m_scenes[scene] = false;
 
-                m_log.Info("[DATASNAPSHOT]: Generated new snapshot for " + scene.RegionInfo.RegionName);
+                //m_log.Info("[DATASNAPSHOT]: Generated new snapshot for " + scene.RegionInfo.RegionName);
             }
 
             return regionElement;
@@ -252,7 +252,7 @@ namespace OpenSim.Region.DataSnapshot
 
             docElement.AppendChild(infoblock);
 
-            m_log.Debug("[DATASNAPSHOT]: Generated region node");
+            //m_log.Debug("[DATASNAPSHOT]: Generated region node");
             return docElement;
         }
 
@@ -287,7 +287,7 @@ namespace OpenSim.Region.DataSnapshot
                 griddata.AppendChild(childnode);
             }
 
-            m_log.Debug("[DATASNAPSHOT]: Got grid snapshot data");
+            //m_log.Debug("[DATASNAPSHOT]: Got grid snapshot data");
 
             return griddata;
         }

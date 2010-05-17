@@ -92,7 +92,7 @@ namespace OpenSim.Server.Handlers.Login
                     Aurora.Framework.IGenericData GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
                     if (GD == null)
                     {
-                        Aurora.Framework.IDataService IDS = new Aurora.Services.DataService.LocalDataService();
+                        Aurora.Services.DataService.LocalDataService IDS = new Aurora.Services.DataService.LocalDataService();
                         IDS.Initialise(m_Config);
                         GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
                     }

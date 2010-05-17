@@ -402,10 +402,8 @@ namespace OpenSim.Services.Connectors
                 //// Success
                 //return;
                 string uri = m_ServerURI + "/inventory/" + userID;
-                if (SynchronousRestObjectRequester.
+                if (!SynchronousRestObjectRequester.
                         MakeRequest<List<InventoryItemBase>, bool>("PUT", uri, items))
-                    m_log.DebugFormat("[INVENTORY CONNECTOR]: move {0} items poster succeeded {1}", items.Count, uri);
-                else
                     m_log.DebugFormat("[INVENTORY CONNECTOR]: move {0} items poster failed {1}", items.Count, uri); ;
 
                 return;

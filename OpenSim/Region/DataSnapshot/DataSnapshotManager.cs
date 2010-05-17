@@ -146,7 +146,7 @@ namespace OpenSim.Region.DataSnapshot
 
             if (m_enabled)
             {
-                m_log.Info("[DATASNAPSHOT]: Scene added to module.");
+                //m_log.Info("[DATASNAPSHOT]: Scene added to module.");
 
                 m_snapStore.AddScene(scene);
                 m_scenes.Add(scene);
@@ -168,7 +168,7 @@ namespace OpenSim.Region.DataSnapshot
                                 m_dataproviders.Add(module);
                                 m_snapStore.AddProvider(module);
 
-                                m_log.Info("[DATASNAPSHOT]: Added new data provider type: " + pluginType.Name);
+                                //m_log.Info("[DATASNAPSHOT]: Added new data provider type: " + pluginType.Name);
                             }
                         }
                     }
@@ -342,7 +342,7 @@ namespace OpenSim.Region.DataSnapshot
                 }
                 // This is not quite working, so...
                 // string responseStr = Util.UTF8.GetString(response);
-                m_log.Info("[DATASNAPSHOT]: data service notified: " + url);
+                //m_log.Info("[DATASNAPSHOT]: data service notified: " + url);
             }
 
         }
@@ -387,7 +387,7 @@ namespace OpenSim.Region.DataSnapshot
 
         public void MakeEverythingStale()
         {
-            m_log.Debug("[DATASNAPSHOT]: Marking all scenes as stale.");
+            //m_log.Debug("[DATASNAPSHOT]: Marking all scenes as stale.");
             foreach (Scene scene in m_scenes)
             {
                 m_snapStore.ForceSceneStale(scene);
@@ -398,7 +398,7 @@ namespace OpenSim.Region.DataSnapshot
 
         public void OnSimRestart(RegionInfo thisRegion)
         {
-            m_log.Info("[DATASNAPSHOT]: Region " + thisRegion.RegionName + " is restarting, removing from indexing");
+            //m_log.Info("[DATASNAPSHOT]: Region " + thisRegion.RegionName + " is restarting, removing from indexing");
             Scene restartedScene = SceneForUUID(thisRegion.RegionID);
 
             m_scenes.Remove(restartedScene);
