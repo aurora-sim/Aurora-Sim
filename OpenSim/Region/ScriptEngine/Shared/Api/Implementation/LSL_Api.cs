@@ -5843,7 +5843,10 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         public LSL_String llGetLandOwnerAt(LSL_Vector pos)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            return World.LandChannel.GetLandObject((float)pos.x, (float)pos.y).LandData.OwnerID.ToString();
+            ILandObject land = World.LandChannel.GetLandObject((float)pos.x, (float)pos.y);
+            if (land == null)
+                return UUID.Zero.ToString();
+            return land.LandData.OwnerID.ToString();
         }
 
         /// <summary>

@@ -74,7 +74,7 @@ namespace Aurora.Services.DataService
             if (Connector == "LocalConnector")
             {
                 DataManager.DataManager.IAgentConnector = new LocalAgentConnector();
-                DataManager.DataManager.IGridConnector = new LocalGridConnector();
+                DataManager.DataManager.IRegionConnector = new LocalGridConnector();
                 DataManager.DataManager.IProfileConnector = new LocalProfileConnector();
                 DataManager.DataManager.IEstateConnector = new LocalEstateConnector();
                 DataManager.DataManager.IAbuseReportsConnector = new LocalAbuseReportsConnector();
@@ -85,6 +85,7 @@ namespace Aurora.Services.DataService
                 DataManager.DataManager.IAvatarArchiverConnector = new LocalAvatarArchiverConnector();
                 return;
             }
+            DataManager.DataManager.ISimMapConnector = new LocalGridConnector();
             DataManager.DataManager.IAbuseReportsConnector = new LocalAbuseReportsConnector();
             DataManager.DataManager.IAssetConnector = new LocalAssetConnector();
             DataManager.DataManager.IOfflineMessagesConnector = new LocalOfflineMessagesConnector();
@@ -98,7 +99,7 @@ namespace Aurora.Services.DataService
             }
             string RemoteConnectionString = m_config.GetString("RemoteServerURI", "");
             DataManager.DataManager.IAgentConnector = new RemoteAgentConnector(RemoteConnectionString);
-            DataManager.DataManager.IGridConnector = new RemoteGridConnector(RemoteConnectionString);
+            DataManager.DataManager.IRegionConnector = new RemoteGridConnector(RemoteConnectionString);
             DataManager.DataManager.IProfileConnector = new RemoteProfileConnector(RemoteConnectionString);
         }
     }

@@ -84,8 +84,8 @@ namespace Aurora.Modules
         private double minutes = 30;
         private double oneminute = 60000;
         private System.Timers.Timer aTimer;
-        private IGridConnector GridConnector;
-        private RemoteSimMapConnector SimMapConnector;
+        private IRegionConnector GridConnector;
+        private ISimMapConnector SimMapConnector;
         private string SimMapServerURI;
         
 		#region INonSharedRegionModule Members
@@ -148,7 +148,7 @@ namespace Aurora.Modules
 
 		public virtual void RegionLoaded (Scene scene)
 		{
-            GridConnector = Aurora.DataManager.DataManager.IGridConnector;
+            GridConnector = Aurora.DataManager.DataManager.IRegionConnector;
             SimMapConnector = new RemoteSimMapConnector(SimMapServerURI);
             aTimer = new System.Timers.Timer(oneminute * minutes);
             aTimer.Elapsed += OnTimedCreateNewMapImage;

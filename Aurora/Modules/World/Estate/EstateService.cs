@@ -19,7 +19,8 @@ namespace Aurora.Modules
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         Scene m_scene;
-        IGridConnector GridFrontend;
+        ISimMapDataConnector SimMapConnector;
+        IRegionConnector RegionConnector;
 
         public void Initialise(IConfigSource source)
         {
@@ -27,7 +28,8 @@ namespace Aurora.Modules
 
         public void AddRegion(Scene scene)
         {
-            GridFrontend = DataManager.DataManager.IGridConnector;
+            SimMapConnector = DataManager.DataManager.ISimMapConnector;
+            RegionConnector = DataManager.DataManager.IRegionConnector;
             scene.RegisterModuleInterface<IEstateSettingsModule>(this);
             m_scene = scene;
             scene.AddCommand(this, "set regionsetting", "set regionsetting", "Sets a region setting for the given region. Valid params: Maturity - 0(PG),1(Mature),2(Adult); AddEstateBan,RemoveEstateBan,AddEstateManager,RemoveEstateManager - First name, Last name", SetRegionInfoOption);
@@ -59,20 +61,20 @@ namespace Aurora.Modules
             EstateSettings ES = m_scene.EstateService.LoadEstateSettings(m_scene.RegionInfo.RegionID, false);
             if (cmdparams[2] == "Maturity")
             {
-                SimMapFlags flags = GridFrontend.GetRegionFlags(m_scene.RegionInfo.RegionID);
+                SimMap map = SimMapConnector.GetSimMap(m_scene.RegionInfo.RegionID);
                 if (cmdparams[3] == "PG")
                 {
-                    flags = flags & SimMapFlags.PG;
+                    map.SimFlags = map.SimFlags & SimMapFlags.PG;
                     m_scene.RegionInfo.RegionSettings.Maturity = 0;
                 }
                 else if (cmdparams[3] == "Mature")
                 {
-                    flags = flags & SimMapFlags.Mature;
+                    map.SimFlags = map.SimFlags & SimMapFlags.Mature;
                     m_scene.RegionInfo.RegionSettings.Maturity = 1;
                 }
                 else if (cmdparams[3] == "Adult")
                 {
-                    flags = flags & SimMapFlags.Adult;
+                    map.SimFlags = map.SimFlags & SimMapFlags.Adult;
                     m_scene.RegionInfo.RegionSettings.Maturity = 2;
                 }
                 else
@@ -80,7 +82,7 @@ namespace Aurora.Modules
                     m_log.Warn("Your parameter did not match any existing parameters. Try PG, Mature, or Adult");
                     return;
                 }
-                GridFrontend.SetRegionFlags(m_scene.RegionInfo.RegionID, flags);
+                SimMapConnector.SetSimMap(map);
                 m_scene.RegionInfo.RegionSettings.Save();
             }
             #endregion
@@ -143,7 +145,7 @@ namespace Aurora.Modules
             }
             if (!ES.AllowDirectTeleport)
             {
-                Telehub telehub = GridFrontend.FindTelehub(m_scene.RegionInfo.RegionID);
+                Telehub telehub = RegionConnector.FindTelehub(m_scene.RegionInfo.RegionID);
                 if (telehub != null)
                     newPosition = new Vector3(telehub.TelehubX, telehub.TelehubY, telehub.TelehubZ);
             }

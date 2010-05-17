@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) Contributors, http://opensimulator.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
@@ -25,24 +25,62 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.Collections.Generic;
+using System;
+using NUnit.Framework;
+using OpenMetaverse;
+using OpenSim.Framework;
+using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
-namespace OpenSim.Framework.Servers
+namespace OpenSim.Region.Framework.Scenes.Tests
 {
-    public class MessageServerInfo
+    /// <summary>
+    /// Scene presence tests
+    /// </summary>
+    [TestFixture]
+    public class SceneBaseTests
     {
-        public string URI;
-        public string sendkey;
-        public string recvkey;
-        public List<ulong> responsibleForRegions;
-
-        public MessageServerInfo()
+        private class SceneBaseImpl : SceneBase
         {
+            public override void Update()
+            {
+                throw new NotImplementedException();
+            }
+
+            public override void LoadWorldMap()
+            {
+                throw new NotImplementedException();
+            }
+
+            public override void AddNewClient(IClientAPI client)
+            {
+                throw new NotImplementedException();
+            }
+
+            public override void RemoveClient(UUID agentID)
+            {
+                throw new NotImplementedException();
+            }
+
+            public override void OtherRegionUp(GridRegion otherRegion)
+            {
+                throw new NotImplementedException();
+            }
+
+            public override bool TryGetScenePresence(UUID agentID, out ScenePresence scenePresence)
+            {
+                throw new NotImplementedException();
+            }
+
+            public override bool CheckClient(UUID agentID, System.Net.IPEndPoint ep)
+            {
+                throw new NotImplementedException();
+            }
         }
 
-        public override string ToString()
+        [Test]
+        public void TestConstructor()
         {
-            return URI;
+            new SceneBaseImpl();
         }
     }
 }

@@ -32,7 +32,7 @@ namespace Aurora.DataManager
         #region FrontendConnectors
 
         public static IProfileConnector IProfileConnector;
-        public static IGridConnector IGridConnector;
+        public static IRegionConnector IRegionConnector;
         public static IAgentConnector IAgentConnector;
         public static IScriptDataConnector IScriptDataConnector;
         public static IEstateConnector IEstateConnector;
@@ -41,6 +41,7 @@ namespace Aurora.DataManager
         public static IDirectoryServiceConnector IDirectoryServiceConnector;
         public static IAssetConnector IAssetConnector;
         public static IAvatarArchiverConnector IAvatarArchiverConnector;
+        public static ISimMapDataConnector ISimMapConnector;
 
         #endregion
 

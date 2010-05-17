@@ -37,6 +37,7 @@ namespace OpenSim.Framework
     public class AgentCircuitManager
     {
         public Dictionary<uint, AgentCircuitData> AgentCircuits = new Dictionary<uint, AgentCircuitData>();
+        public Dictionary<UUID, AgentCircuitData> AgentCircuitsByUUID = new Dictionary<UUID, AgentCircuitData>();
 
         public virtual AuthenticateResponse AuthenticateSession(UUID sessionID, UUID agentID, uint circuitcode, IPEndPoint IP)
         {
@@ -70,27 +71,7 @@ namespace OpenSim.Framework
             }
             else
             {
-                if (agentID == validcircuit.AgentID && validcircuit.IP != null && validcircuit.IP != "")
-                {
-                    if (validcircuit.IP == IP.Address.ToString())
-                    {
-                        user.Authorised = true;
-                        user.LoginInfo = new Login();
-                        user.LoginInfo.Agent = agentID;
-                        user.LoginInfo.Session = sessionID;
-                        user.LoginInfo.SecureSession = validcircuit.SecureSessionID;
-                        user.LoginInfo.First = validcircuit.firstname;
-                        user.LoginInfo.Last = validcircuit.lastname;
-                        user.LoginInfo.InventoryFolder = validcircuit.InventoryFolder;
-                        user.LoginInfo.BaseFolder = validcircuit.BaseFolder;
-                        user.LoginInfo.StartPos = validcircuit.startpos;
-                    }
-                }
-                else
-                {
-                    // Invalid
                     user.Authorised = false;
-                }
             }
 
             return (user);
@@ -108,10 +89,12 @@ namespace OpenSim.Framework
                 if (AgentCircuits.ContainsKey(circuitCode))
                 {
                     AgentCircuits[circuitCode] = agentData;
+                    AgentCircuitsByUUID[agentData.AgentID] = agentData;
                 }
                 else
                 {
                     AgentCircuits.Add(circuitCode, agentData);
+                    AgentCircuitsByUUID[agentData.AgentID] = agentData;
                 }
             }
         }
@@ -121,14 +104,37 @@ namespace OpenSim.Framework
             lock (AgentCircuits)
             {
                 if (AgentCircuits.ContainsKey(circuitCode))
+                {
+                    UUID agentID = AgentCircuits[circuitCode].AgentID;
                     AgentCircuits.Remove(circuitCode);
+                    AgentCircuitsByUUID.Remove(agentID);
+                }
             }
         }
 
+        public virtual void RemoveCircuit(UUID agentID)
+        {
+            lock (AgentCircuits)
+            {
+                if (AgentCircuitsByUUID.ContainsKey(agentID))
+                {
+                    uint circuitCode = AgentCircuitsByUUID[agentID].circuitcode;
+                    AgentCircuits.Remove(circuitCode);
+                    AgentCircuitsByUUID.Remove(agentID);
+                }
+            }
+        }
         public AgentCircuitData GetAgentCircuitData(uint circuitCode)
         {
             AgentCircuitData agentCircuit = null;
             AgentCircuits.TryGetValue(circuitCode, out agentCircuit);
+            return agentCircuit;
+        }
+
+        public AgentCircuitData GetAgentCircuitData(UUID agentID)
+        {
+            AgentCircuitData agentCircuit = null;
+            AgentCircuitsByUUID.TryGetValue(agentID, out agentCircuit);
             return agentCircuit;
         }
 

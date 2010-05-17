@@ -408,7 +408,7 @@ namespace Aurora.Modules
             #region Telehub
             if (itemtype == (uint)OpenMetaverse.GridItemType.Telehub)
             {
-                IGridConnector GF = DataManager.DataManager.IGridConnector;
+                IRegionConnector GF = DataManager.DataManager.IRegionConnector;
                 int tc = Environment.TickCount;
                 Telehub telehub = GF.FindTelehub(GR.RegionID);
                 if (telehub != null)
@@ -930,12 +930,12 @@ namespace Aurora.Modules
                                     GenericData.Insert("searchallparcels", new string[] { info.UUID, PInfo.Name, PInfo.OwnerUUID, PInfo.GroupUUID, PInfo.Landing, PInfo.UUID, PInfo.InfoUUID, PInfo.Area });
                                     if (Convert.ToBoolean(PInfo.Directory))
                                         GenericData.Insert("searchparcels", new string[] { info.UUID, PInfo.Name, PInfo.UUID, PInfo.Landing, PInfo.Desc, PInfo.Category, PInfo.Build, PInfo.Script, PInfo.Public, PInfo.Dwell, PInfo.InfoUUID, false.ToString(), false.ToString() });
-                                    SimMapFlags flags = DataManager.DataManager.IGridConnector.GetRegionFlags(currentScene.RegionInfo.RegionID);
+                                    SimMap map = DataManager.DataManager.ISimMapConnector.GetSimMap(currentScene.RegionInfo.RegionID);
                                     if (Convert.ToBoolean(PInfo.ForSale))
                                     {
                                         LandData LD = m_scene.LandChannel.GetLandObject(int.Parse(PInfo.Landing.Split(',')[0]),int.Parse(PInfo.Landing.Split(',')[1])).LandData;
                                         
-                                        GenericData.Insert("searchparcelsales", new string[] { info.UUID, PInfo.Name, PInfo.UUID, PInfo.Area, PInfo.SalePrice, PInfo.Landing, PInfo.InfoUUID, PInfo.Dwell, currentScene.RegionInfo.EstateSettings.EstateID.ToString(), ((flags & SimMapFlags.Hidden) == SimMapFlags.Hidden).ToString() });
+                                        GenericData.Insert("searchparcelsales", new string[] { info.UUID, PInfo.Name, PInfo.UUID, PInfo.Area, PInfo.SalePrice, PInfo.Landing, PInfo.InfoUUID, PInfo.Dwell, currentScene.RegionInfo.EstateSettings.EstateID.ToString(), ((map.SimFlags & SimMapFlags.Hidden) == SimMapFlags.Hidden).ToString() });
                                     }
                                 }
                             }

@@ -3,19 +3,24 @@ using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
 using Aurora.Framework;
+using OpenSim.Framework;
 
 namespace Aurora.Framework
 {
-	public interface IGridConnector
+	public interface IRegionConnector
 	{
-        SimMap GetSimMap(UUID regionID);
-        SimMap GetSimMap(int regionX, int regionY);
-        void SetSimMap(SimMap map);
-		void CreateRegion(UUID regionID);
-		void AddTelehub(Telehub telehub);
+        void AddTelehub(Telehub telehub);
 		void RemoveTelehub(UUID regionID);
         Telehub FindTelehub(UUID regionID);
     }
+
+    public interface ISimMapDataConnector
+    {
+        SimMap GetSimMap(UUID regionID);
+        SimMap GetSimMap(int regionX, int regionY);
+        void SetSimMap(SimMap map);
+    }
+
     [Flags()]
     public enum SimMapFlags : int
     {

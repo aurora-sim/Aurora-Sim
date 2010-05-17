@@ -25,14 +25,14 @@ namespace OpenSim.Server.Handlers.AuroraData
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private IProfileConnector ProfileConnector = null;
         private IAgentConnector AgentConnector = null;
-        private IGridConnector GridConnector = null;
+        private IRegionConnector GridConnector = null;
         private IEstateConnector EstateConnector = null;
 
         public AuroraDataServerPostHandler() :
             base("POST", "/auroradata")
         {
             ProfileConnector = DataManager.IProfileConnector;
-            GridConnector = DataManager.IGridConnector;
+            GridConnector = DataManager.IRegionConnector;
             AgentConnector = DataManager.IAgentConnector;
             EstateConnector = DataManager.IEstateConnector;
         }
@@ -89,12 +89,6 @@ namespace OpenSim.Server.Handlers.AuroraData
                         return UpdateAgent(request);
                     case "createagent":
                         return CreateAgent(request);
-                    case "createregion":
-                        return CreateRegion(request);
-                    case "getregionflags":
-                        return GetRegionFlags(request);
-                    case "setregionflags":
-                        return SetRegionFlags(request);
                     case "removetelehub":
                         return RemoveTelehub(request);
                     case "addtelehub":
@@ -524,44 +518,6 @@ namespace OpenSim.Server.Handlers.AuroraData
             return encoding.GetBytes(xmlString);
         }
 
-        byte[] CreateRegion(Dictionary<string, object> request)
-        {
-            Dictionary<string, object> result = new Dictionary<string, object>();
-            UUID regionID = UUID.Zero;
-            if (request.ContainsKey("REGIONID"))
-                UUID.TryParse(request["REGIONID"].ToString(), out regionID);
-            else
-                m_log.WarnFormat("[AuroraDataServerPostHandler]: no regionID in request to create region");
-
-            GridConnector.CreateRegion(regionID);
-            result["result"] = "Successful";
-
-            string xmlString = ServerUtils.BuildXmlResponse(result);
-            UTF8Encoding encoding = new UTF8Encoding();
-            return encoding.GetBytes(xmlString);
-        }
-
-        byte[] SetRegionFlags(Dictionary<string, object> request)
-        {
-            Dictionary<string, object> result = new Dictionary<string, object>();
-            UUID regionID = UUID.Zero;
-            if (request.ContainsKey("REGIONID"))
-                UUID.TryParse(request["REGIONID"].ToString(), out regionID);
-            else
-                m_log.WarnFormat("[AuroraDataServerPostHandler]: no regionID in request to set region flags");
-
-            SimMapFlags flags = (SimMapFlags)0;
-            if (request.ContainsKey("FLAGS"))
-                flags = (SimMapFlags)Convert.ToInt32(request["REGIONID"].ToString());
-
-            GridConnector.SetRegionFlags(regionID, flags);
-            result["result"] = "Successful";
-
-            string xmlString = ServerUtils.BuildXmlResponse(result);
-            UTF8Encoding encoding = new UTF8Encoding();
-            return encoding.GetBytes(xmlString);
-        }
-
         byte[] RemoveTelehub(Dictionary<string, object> request)
         {
             Dictionary<string, object> result = new Dictionary<string, object>();
@@ -593,29 +549,6 @@ namespace OpenSim.Server.Handlers.AuroraData
             UUID.TryParse(request["REGIONID"].ToString(), out regionID);
             
             Dictionary<string, object> result = GridConnector.FindTelehub(regionID).ToKeyValuePairs();
-
-            string xmlString = ServerUtils.BuildXmlResponse(result);
-            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
-            UTF8Encoding encoding = new UTF8Encoding();
-            return encoding.GetBytes(xmlString);
-        }
-
-        byte[] GetRegionFlags(Dictionary<string, object> request)
-        {
-            UUID regionID = UUID.Zero;
-            if (request.ContainsKey("REGIONID"))
-                UUID.TryParse(request["REGIONID"].ToString(), out regionID);
-            else
-                m_log.WarnFormat("[AuroraDataServerPostHandler]: no regionID in request to get region flags");
-
-            SimMapFlags flags = GridConnector.GetRegionFlags(regionID);
-            Dictionary<string, object> result = new Dictionary<string, object>();
-            if (flags == null || flags == (SimMapFlags)(-1))
-                result["result"] = "null";
-            else
-            {
-                result["result"] = flags;
-            }
 
             string xmlString = ServerUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);

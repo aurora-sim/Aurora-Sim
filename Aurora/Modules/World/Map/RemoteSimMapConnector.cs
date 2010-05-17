@@ -17,7 +17,16 @@ using OpenSim.Server.Base;
 
 namespace Aurora.Modules
 {
-    public class RemoteSimMapConnector
+    public interface ISimMapConnector
+    {
+        List<SimMap> GetSimMap(UUID regionID, UUID AgentID);
+        List<SimMap> GetSimMap(string mapName, UUID AgentID);
+        List<SimMap> GetSimMapRange(uint XMin, uint YMin, uint XMax, uint YMax, UUID agentID);
+        void UpdateSimMap(UUID regionID);
+        void UpdateSimMap(SimMap map);
+    }
+
+    public class RemoteSimMapConnector : ISimMapConnector
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(

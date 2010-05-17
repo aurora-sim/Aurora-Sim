@@ -53,8 +53,8 @@ namespace Aurora.Modules
 		Scene m_scene = null; // only need one for communication with GridService
 		List<Scene> m_scenes = new List<Scene>();
         private IConfigSource m_config;
-        private IGridConnector GridConnector;
-        bool m_Enabled = true;
+        private bool m_Enabled = true;
+        private ISimMapConnector SimMapConnector;
 
 		#region IRegionModule Members
 		public void Initialise(Scene scene, IConfigSource source)
@@ -83,7 +83,6 @@ namespace Aurora.Modules
 		{
             if (!m_Enabled)
                 return;
-            GridConnector = Aurora.DataManager.DataManager.IGridConnector;
 		}
 
 		public void Close()
@@ -118,7 +117,7 @@ namespace Aurora.Modules
             }
             List<MapBlockData> blocks = new List<MapBlockData>();
 
-            RemoteSimMapConnector SimMapConnector = new RemoteSimMapConnector("http://auroraserver.ath.cx:8003");
+            SimMapConnector = new RemoteSimMapConnector("http://auroraserver.ath.cx:8003");
             List<SimMap> Sims = SimMapConnector.GetSimMap(mapName, remoteClient.AgentId);
             foreach (SimMap map in Sims)
             {

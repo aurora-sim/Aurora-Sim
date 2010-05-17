@@ -12,7 +12,7 @@ namespace OpenSim.Server.Handlers.AuroraMap
     public class SimMapConnector
     {
         private IGridService GridService;
-        private IGridConnector GridConnector;
+        private ISimMapDataConnector SimMapDataConnector;
         private IEstateConnector EstateConnector;
 
         Dictionary<UUID, SimMap> Sims = new Dictionary<UUID, SimMap>();
@@ -21,7 +21,7 @@ namespace OpenSim.Server.Handlers.AuroraMap
         {
             GridService = GS;
             EstateConnector = Aurora.DataManager.DataManager.IEstateConnector;
-            GridConnector = Aurora.DataManager.DataManager.IGridConnector;
+            SimMapDataConnector = Aurora.DataManager.DataManager.ISimMapConnector;
         }
 
         public SimMap GetSimMap(UUID regionID, UUID AgentID)
@@ -52,7 +52,7 @@ namespace OpenSim.Server.Handlers.AuroraMap
             }
             else
             {
-                map = GridConnector.GetSimMap(regionID);
+                map = SimMapDataConnector.GetSimMap(regionID);
                 //Add null regions so we don't query the database again.
                 Sims.Add(regionID, map);
 
@@ -70,11 +70,11 @@ namespace OpenSim.Server.Handlers.AuroraMap
 
         public SimMap TryAddSimMap(Services.Interfaces.GridRegion R, out string result)
         {
-            SimMap map = GridConnector.GetSimMap(R.RegionID);
+            SimMap map = SimMapDataConnector.GetSimMap(R.RegionID);
             if (map == null)
             {
                 //This region hasn't been seen before, we need to check it.
-                map = GridConnector.GetSimMap(R.RegionLocX, R.RegionLocY);
+                map = SimMapDataConnector.GetSimMap(R.RegionLocX, R.RegionLocY);
                 if (map == null)
                 {
                     //This location has never been used before and the region was not found elsewhere
@@ -155,7 +155,7 @@ namespace OpenSim.Server.Handlers.AuroraMap
                 Sims.Remove(map.RegionID);
             Sims.Add(map.RegionID, map);
 
-            GridConnector.SetSimMap(map);
+            SimMapDataConnector.SetSimMap(map);
         }
 
         #region Helpers
@@ -221,26 +221,27 @@ namespace OpenSim.Server.Handlers.AuroraMap
             {
                 Sims.TryGetValue(regionID, out map);
 
+                //We know theres no region there.
+                if (map == null)
+                    return NotFound(0, 0);
+
                 if (map.LastUpdated > Util.UnixTimeSinceEpoch() + (1000 * 6)) // Greater than 6 minutes since the last update
                 {
                     //Its hasn't updated in the last 6 minutes, and it is supposed to update every 5, so it's down.
-                    map.Access = (uint)(map.Access & (uint)SimAccess.Down);
+                    map.Access = map.Access | (uint)SimAccess.Down;
                     Sims.Remove(regionID);
                     Sims.Add(regionID, map);
                 }
             }
             else
             {
-                Services.Interfaces.GridRegion R = GridService.GetRegionByUUID(UUID.Zero, regionID);
-                if (R == null)
-                    return NotFound(0,0);
-                else
-                {
-                    string result = "";
-                    map = TryAddSimMap(R, out result);
-                    if (result != "")
-                        return NotFound(R.RegionLocX, R.RegionLocY);
-                }
+                map = SimMapDataConnector.GetSimMap(regionID);
+                //Add null regions so we don't query the database again.
+                Sims.Add(regionID, map);
+
+                //No region there.
+                if (map == null)
+                    return NotFound(0, 0);
             }
             return map;
         }

@@ -7,7 +7,7 @@ using Aurora.DataManager;
 
 namespace Aurora.Services.DataService
 {
-	public class LocalGridConnector : IGridConnector
+    public class LocalGridConnector : IRegionConnector, ISimMapDataConnector
 	{
 		private IGenericData GD = null;
 		public LocalGridConnector()
@@ -38,6 +38,11 @@ namespace Aurora.Services.DataService
             return map;
 		}
 
+        /// <summary>
+        /// Gets the region's SimMap
+        /// </summary>
+        /// <param name="regionID"></param>
+        /// <returns></returns>
         public SimMap GetSimMap(int regionX, int regionY)
         {
             List<string> retval = GD.Query(new string[]{"RegionLocX","RegionLocY"}, new object[]{regionX,regionY}, "simmap", "*");
@@ -57,7 +62,7 @@ namespace Aurora.Services.DataService
         }
 
 		/// <summary>
-		/// Updates the region's flags
+		/// Updates the region's SimMap
 		/// </summary>
 		/// <param name="regionID"></param>
 		/// <param name="flags"></param>
@@ -70,18 +75,6 @@ namespace Aurora.Services.DataService
                 "RegionLocY", "SimMapTextureID", "RegionName",
                 "RegionFlags", "Access", "GridRegionFlags" },
                 new string[] { "RegionID" }, new object[] { map.RegionID });
-		}
-
-		/// <summary>
-		/// Creates the regionflags entry in the database
-		/// </summary>
-		/// <param name="regionID"></param>
-		public void CreateRegion(UUID regionID)
-		{
-			List<object> values = new List<object>();
-			values.Add(regionID);
-			values.Add(0);
-			GD.Insert("regionflags", values.ToArray());
 		}
 
 		/// <summary>
