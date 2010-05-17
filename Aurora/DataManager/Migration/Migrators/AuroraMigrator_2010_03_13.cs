@@ -101,9 +101,16 @@ namespace Aurora.DataManager.Migration.Migrators
 
             #endregion
             
-            AddSchema("regionflags", ColDefs(
+            AddSchema("simmap", ColDefs(
                 ColDef("RegionID", ColumnTypes.String50, true),
-                ColDef("Flags", ColumnTypes.String50)
+                ColDef("EstateID", ColumnTypes.String50),
+                ColDef("RegionLocX", ColumnTypes.String50),
+                ColDef("RegionLocY", ColumnTypes.String50),
+                ColDef("SimMapTextureID", ColumnTypes.String50),
+                ColDef("RegionName", ColumnTypes.String50),
+                ColDef("RegionFlags", ColumnTypes.String50),
+                ColDef("Access", ColumnTypes.String50),
+                ColDef("GridRegionFlags", ColumnTypes.String50)
                 ));
 
             AddSchema("telehubs", ColDefs(

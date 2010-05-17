@@ -36,8 +36,8 @@ namespace OpenSim.Server.Handlers.AuroraMap
             GridService = GS;
             SimMapConnector = new SimMapConnector(GridService);
 
-            handler.OnDeregisterRegion += new GridServerPostHandler.DeregisterRegion(handler_OnDeregisterRegion);
-            handler.OnRegisterRegion += new GridServerPostHandler.RegisterRegion(handler_OnRegisterRegion);
+            handler.OnDeregisterRegion += SimMapConnector.RemoveSimMap;
+            handler.OnRegisterRegion += handler_OnRegisterRegion;
         }
 
         public override byte[] Handle(string path, Stream requestData,
@@ -111,26 +111,6 @@ namespace OpenSim.Server.Handlers.AuroraMap
                 int Y = (regionYMax + regionYMin) / 2;
                 Sims.Add(SimMapConnector.NotFound(X, Y));
             }
-            //int X = regionXMin;
-            //int Y = regionYMin;
-            //while(X < regionXMax)
-            //{
-            //    while (Y < regionYMax)
-            //    {
-            //        Services.Interfaces.GridRegion R = GridService.GetRegionByPosition(UUID.Zero, X, Y);
-            //        if (R == null)
-            //            Sims.Add(SimMapConnector.NotFound(X, Y));
-            //        else
-            //        {
-            //            SimMap map = SimMapConnector.GetSimMap(R.RegionID, agentID);
-            //            Sims.Add(map);
-            //        }
-            //        Y += 256;
-            //    }
-            //    Y = regionYMin;
-            //    X += 256;
-            //}
-
             int i = 0;
             foreach (SimMap map in Sims)
             {
@@ -149,7 +129,7 @@ namespace OpenSim.Server.Handlers.AuroraMap
             
             UUID regionID = UUID.Parse(request["REGIONID"].ToString());
 
-            SimMapConnector.UpdateRegion(regionID);
+            SimMapConnector.UpdateSimMap(regionID);
 
             return SuccessResult();
         }
@@ -160,7 +140,7 @@ namespace OpenSim.Server.Handlers.AuroraMap
 
             SimMap simMap = new SimMap(request);
 
-            SimMapConnector.UpdateRegion(simMap);
+            SimMapConnector.UpdateSimMap(simMap);
 
             return SuccessResult();
         }
@@ -202,14 +182,9 @@ namespace OpenSim.Server.Handlers.AuroraMap
             return encoding.GetBytes(xmlString);
         }
 
-        void handler_OnRegisterRegion(OpenSim.Services.Interfaces.GridRegion region)
+        void handler_OnRegisterRegion(OpenSim.Services.Interfaces.GridRegion region, out string result)
         {
-            SimMapConnector.AddRegion(region);
-        }
-
-        void handler_OnDeregisterRegion(UUID regionID)
-        {
-            SimMapConnector.RemoveRegion(regionID);
+            SimMap map = SimMapConnector.TryAddSimMap(region, out result);
         }
 
         #region Misc

@@ -414,16 +414,8 @@ namespace Aurora.Modules
             {
                 if (regionhandle == 0 || regionhandle == m_scene.RegionInfo.RegionHandle)
                 {
-                    mapItemReply mapitem = new mapItemReply();
-                    mapitem = new mapItemReply();
-                    mapitem.x = (uint)(xstart - 128);
-                    mapitem.y = (uint)(ystart - 128);
-                    mapitem.id = UUID.Zero;
-                    mapitem.name = Util.Md5Hash(m_scene.RegionInfo.RegionName + tc.ToString());
-                    mapitem.Extra = 10;
-                    mapitem.Extra2 = 0;
-                    mapitems.Add(mapitem);
                     //Only one person here, send a zero person response
+                    mapItemReply mapitem = new mapItemReply();
                     if (m_scene.GetRootAgentCount() <= 1)
                     {
                         mapitem = new mapItemReply();
@@ -457,13 +449,13 @@ namespace Aurora.Modules
                 else
                 {
                     GridRegion R = m_scene.GridService.GetRegionByPosition(UUID.Zero, (int)xstart, (int)ystart);
-                    if (((int)GridConnector.GetRegionFlags(R.RegionID) & (int)GridRegionFlags.Hidden) == (int)GridRegionFlags.Hidden)
-                    {
-                        if (!m_scene.Permissions.CanIssueEstateCommand(remoteClient.AgentId, false))
-                        {
-                            return;
-                        }
-                    }
+                    // if (((int)GridConnector.GetRegionFlags(R.RegionID) & (int)SimMapFlags.Hidden) == (int)SimMapFlags.Hidden)
+                    // {
+                    //     if (!m_scene.Permissions.CanIssueEstateCommand(remoteClient.AgentId, false))
+                    //     {
+                    //         return;
+                    //     }
+                    // }
                     // Remote Map Item Request
 
                     // ensures that the blockingqueue doesn't get borked if the GetAgents() timing changes.

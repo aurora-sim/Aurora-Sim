@@ -59,20 +59,20 @@ namespace Aurora.Modules
             EstateSettings ES = m_scene.EstateService.LoadEstateSettings(m_scene.RegionInfo.RegionID, false);
             if (cmdparams[2] == "Maturity")
             {
-                GridRegionFlags flags = GridFrontend.GetRegionFlags(m_scene.RegionInfo.RegionID);
+                SimMapFlags flags = GridFrontend.GetRegionFlags(m_scene.RegionInfo.RegionID);
                 if (cmdparams[3] == "PG")
                 {
-                    flags = flags & GridRegionFlags.PG;
+                    flags = flags & SimMapFlags.PG;
                     m_scene.RegionInfo.RegionSettings.Maturity = 0;
                 }
                 else if (cmdparams[3] == "Mature")
                 {
-                    flags = flags & GridRegionFlags.Mature;
+                    flags = flags & SimMapFlags.Mature;
                     m_scene.RegionInfo.RegionSettings.Maturity = 1;
                 }
                 else if (cmdparams[3] == "Adult")
                 {
-                    flags = flags & GridRegionFlags.Adult;
+                    flags = flags & SimMapFlags.Adult;
                     m_scene.RegionInfo.RegionSettings.Maturity = 2;
                 }
                 else

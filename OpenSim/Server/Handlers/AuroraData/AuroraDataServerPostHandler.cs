@@ -550,9 +550,9 @@ namespace OpenSim.Server.Handlers.AuroraData
             else
                 m_log.WarnFormat("[AuroraDataServerPostHandler]: no regionID in request to set region flags");
 
-            GridRegionFlags flags = (GridRegionFlags)0;
+            SimMapFlags flags = (SimMapFlags)0;
             if (request.ContainsKey("FLAGS"))
-                flags = (GridRegionFlags)Convert.ToInt32(request["REGIONID"].ToString());
+                flags = (SimMapFlags)Convert.ToInt32(request["REGIONID"].ToString());
 
             GridConnector.SetRegionFlags(regionID, flags);
             result["result"] = "Successful";
@@ -608,9 +608,9 @@ namespace OpenSim.Server.Handlers.AuroraData
             else
                 m_log.WarnFormat("[AuroraDataServerPostHandler]: no regionID in request to get region flags");
 
-            GridRegionFlags flags = GridConnector.GetRegionFlags(regionID);
+            SimMapFlags flags = GridConnector.GetRegionFlags(regionID);
             Dictionary<string, object> result = new Dictionary<string, object>();
-            if (flags == null || flags == (GridRegionFlags)(-1))
+            if (flags == null || flags == (SimMapFlags)(-1))
                 result["result"] = "null";
             else
             {

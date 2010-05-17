@@ -16,29 +16,60 @@ namespace Aurora.Services.DataService
 		}
 
 		/// <summary>
-		/// Gets the region's flags
+		/// Gets the region's SimMap
 		/// </summary>
 		/// <param name="regionID"></param>
 		/// <returns></returns>
-		public GridRegionFlags GetRegionFlags(UUID regionID)
+		public SimMap GetSimMap(UUID regionID)
 		{
-			List<string> flags = GD.Query("RegionID", regionID, "regionflags", "Flags");
-			//The region doesn't exist, so make sure to not return a valid value.
-            if (flags.Count == 0 || flags[0] == " " || flags[0] == "")
-				return (GridRegionFlags)(-1);
+			List<string> retval = GD.Query("RegionID", regionID, "simmap", "*");
+            
+            SimMap map = new SimMap();
+            map.RegionID = UUID.Parse(retval[0]);
+            map.EstateID = uint.Parse(retval[1]);
+            map.RegionLocX = int.Parse(retval[2]);
+            map.RegionLocY = int.Parse(retval[3]);
+            map.SimMapTextureID = UUID.Parse(retval[4]);
+            map.RegionName = retval[5];
+            map.RegionFlags = uint.Parse(retval[6]);
+            map.Access = uint.Parse(retval[7]);
+            map.SimFlags = (SimMapFlags)int.Parse(retval[8]); 
 
-			GridRegionFlags regionFlags = (GridRegionFlags)int.Parse(flags[0]);
-			return regionFlags;
+            return map;
 		}
+
+        public SimMap GetSimMap(int regionX, int regionY)
+        {
+            List<string> retval = GD.Query(new string[]{"RegionLocX","RegionLocY"}, new object[]{regionX,regionY}, "simmap", "*");
+
+            SimMap map = new SimMap();
+            map.RegionID = UUID.Parse(retval[0]);
+            map.EstateID = uint.Parse(retval[1]);
+            map.RegionLocX = int.Parse(retval[2]);
+            map.RegionLocY = int.Parse(retval[3]);
+            map.SimMapTextureID = UUID.Parse(retval[4]);
+            map.RegionName = retval[5];
+            map.RegionFlags = uint.Parse(retval[6]);
+            map.Access = uint.Parse(retval[7]);
+            map.SimFlags = (SimMapFlags)int.Parse(retval[8]);
+
+            return map;
+        }
 
 		/// <summary>
 		/// Updates the region's flags
 		/// </summary>
 		/// <param name="regionID"></param>
 		/// <param name="flags"></param>
-		public void SetRegionFlags(UUID regionID, GridRegionFlags flags)
+		public void SetSimMap(SimMap map)
 		{
-			GD.Update("regionflags", new object[] { flags }, new string[] { "Flags" }, new string[] { "RegionID" }, new object[] { regionID });
+            GD.Update("simmap", new object[] { map.EstateID,
+                map.RegionLocX, map.RegionLocY, map.SimMapTextureID,
+                map.RegionName, map.RegionFlags, map.Access,
+                map.SimFlags }, new string[] { "EstateID", "RegionLocX",
+                "RegionLocY", "SimMapTextureID", "RegionName",
+                "RegionFlags", "Access", "GridRegionFlags" },
+                new string[] { "RegionID" }, new object[] { map.RegionID });
 		}
 
 		/// <summary>

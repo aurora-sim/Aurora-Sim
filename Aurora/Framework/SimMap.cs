@@ -18,10 +18,11 @@ namespace Aurora.Framework
         public uint RegionFlags;
         public uint WaterHeight;
         public uint Access;
-        public GridRegionFlags GridRegionFlags;
+        public SimMapFlags SimFlags;
 
         //These things should not be sent to the region
         public int LastUpdated;
+
 
         public SimMap() { }
         public SimMap(Dictionary<string, object> KVP)
@@ -36,7 +37,7 @@ namespace Aurora.Framework
             RegionFlags = uint.Parse(KVP["RegionFlags"].ToString());
             WaterHeight = uint.Parse(KVP["WaterHeight"].ToString());
             Access = uint.Parse(KVP["Access"].ToString());
-            GridRegionFlags = (GridRegionFlags)int.Parse(KVP["GridRegionFlags"].ToString());
+            SimFlags = (SimMapFlags)int.Parse(KVP["GridRegionFlags"].ToString());
         }
 
         public Dictionary<string, object> ToKeyValuePairs()
@@ -52,7 +53,7 @@ namespace Aurora.Framework
             KVP["RegionFlags"] = RegionFlags;
             KVP["WaterHeight"] = WaterHeight;
             KVP["Access"] = Access;
-            KVP["GridRegionFlags"] = GridRegionFlags;
+            KVP["GridRegionFlags"] = SimFlags;
             return KVP;
         }
 

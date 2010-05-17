@@ -1077,17 +1077,22 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             try
             {
-                for (int y = 0; y < 16; y++)
+                if (!ChildAgentStatus())
                 {
-                    for (int x = 0; x < 4; x++)
+                    for (int y = 0; y < 16; y++)
                     {
-                        int xx = x * 4;
-                        SendLayerPacket(map, xx, y);
+                        for (int x = 0; x < 4; x++)
+                        {
+                            int xx = x * 4;
+                            SendLayerPacket(map, xx, y);
+                        }
                     }
                 }
-
-                // Send LayerData in a spiral pattern. Fun!
-                //SendLayerTopRight(map, 0, 0, 15, 15);
+                else
+                {
+                    // Send LayerData in a spiral pattern. Fun!
+                    SendLayerTopRight(map, 0, 0, 15, 15);
+                }
             }
             catch (Exception e)
             {

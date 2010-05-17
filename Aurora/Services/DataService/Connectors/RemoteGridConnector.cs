@@ -31,7 +31,7 @@ namespace Aurora.Services.DataService
 
         #region IGridConnector Members
 
-        public GridRegionFlags GetRegionFlags(UUID regionID)
+        public SimMapFlags GetRegionFlags(UUID regionID)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
 
@@ -52,16 +52,16 @@ namespace Aurora.Services.DataService
                     if (replyData != null)
                     {
                         if (!replyData.ContainsKey("result"))
-                            return (GridRegionFlags)(-1);
+                            return (SimMapFlags)(-1);
 
 
                         Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
-                        GridRegionFlags flags = (GridRegionFlags)(-1);
+                        SimMapFlags flags = (SimMapFlags)(-1);
                         foreach (object f in replyvalues)
                         {
                             if (f is string)
                             {
-                                flags = (GridRegionFlags)Convert.ToInt32(f);
+                                flags = (SimMapFlags)Convert.ToInt32(f);
                             }
                             else
                                 m_log.DebugFormat("[AuroraRemoteProfileConnector]: GetRegionFlags {0} received invalid response type {1}",
@@ -82,10 +82,10 @@ namespace Aurora.Services.DataService
                 m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.Message);
             }
 
-            return (GridRegionFlags)(-1);
+            return (SimMapFlags)(-1);
         }
 
-        public void SetRegionFlags(UUID regionID, GridRegionFlags flags)
+        public void SetRegionFlags(UUID regionID, SimMapFlags flags)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
 

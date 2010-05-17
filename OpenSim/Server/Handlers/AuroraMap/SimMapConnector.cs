@@ -31,6 +31,10 @@ namespace OpenSim.Server.Handlers.AuroraMap
             {
                 Sims.TryGetValue(regionID, out map);
 
+                //We know theres no region there.
+                if (map == null)
+                    return NotFound(0, 0);
+
                 if (map.LastUpdated > Util.UnixTimeSinceEpoch() + (1000 * 6)) // Greater than 6 minutes since the last update
                 {
                     //Its hasn't updated in the last 6 minutes, and it is supposed to update every 5, so it's down.
@@ -38,7 +42,8 @@ namespace OpenSim.Server.Handlers.AuroraMap
                     Sims.Remove(regionID);
                     Sims.Add(regionID, map);
                 }
-                if (((int)map.GridRegionFlags & (int)GridRegionFlags.Hidden) == 1)
+
+                if (((int)map.SimFlags & (int)SimMapFlags.Hidden) == 1)
                 {
                     EstateSettings ES = EstateConnector.LoadEstateSettings((int)map.EstateID);
                     if (!ES.IsEstateManager(AgentID))
@@ -47,44 +52,72 @@ namespace OpenSim.Server.Handlers.AuroraMap
             }
             else
             {
-                Services.Interfaces.GridRegion R = GridService.GetRegionByUUID(UUID.Zero, regionID);
-                if (R == null)
-                    return NotFound(0,0);
-                else
-                {
-                    map = AddRegion(R);
+                map = GridConnector.GetSimMap(regionID);
+                //Add null regions so we don't query the database again.
+                Sims.Add(regionID, map);
 
-                    if (((int)map.GridRegionFlags & (int)GridRegionFlags.Hidden) == 1)
-                    {
-                        EstateSettings ES = EstateConnector.LoadEstateSettings((int)map.EstateID);
-                        if (!ES.IsEstateManager(AgentID))
-                            return NotFound(map.RegionLocX, map.RegionLocY);
-                    }
-                }
+                //No region there.
+                if (map == null)
+                    return NotFound(0,0);
             }
             return map;
         }
 
         public void AddAgent(UUID regionID, Vector3 Position)
         {
+
         }
 
-        public SimMap AddRegion(Services.Interfaces.GridRegion R)
+        public SimMap TryAddSimMap(Services.Interfaces.GridRegion R, out string result)
         {
-            SimMap map = new SimMap();
-            map.GridRegionFlags = GridConnector.GetRegionFlags(R.RegionID);
-            //If the cache doesn't have it, theres nothing there.
-            map.Access = FindAccessFromFlags(map.GridRegionFlags);
-            map.NumberOfAgents = 0;
-            map.RegionID = R.RegionID;
-            map.RegionLocX = R.RegionLocX;
-            map.RegionLocY = R.RegionLocY;
-            map.RegionName = R.RegionName;
-            //Since this is the first time we've seen it, we have to use this... even though it may be wrong.
-            map.SimMapTextureID = R.TerrainImage;
-            map.WaterHeight = 0;
-            map.EstateID = FindEstateID(R.RegionID);
-            map.RegionFlags = 0; //Unknown
+            SimMap map = GridConnector.GetSimMap(R.RegionID);
+            if (map == null)
+            {
+                //This region hasn't been seen before, we need to check it.
+                map = GridConnector.GetSimMap(R.RegionLocX, R.RegionLocY);
+                if (map == null)
+                {
+                    //This location has never been used before and the region was not found elsewhere
+                    map = CreateDefaultSimMap(R);
+                }
+                else
+                {
+                    if ((map.SimFlags & SimMapFlags.Reservation) == SimMapFlags.Reservation)
+                    {
+                        result = "Region coordinates are reserved.";
+                    }
+                    else
+                    {
+                        //Some other region already has this location.
+                        result = "Region coordinates are already in use.";
+                    }
+                    return null;
+                }
+            }
+            else
+            {
+                if (map.RegionLocX != R.RegionLocX && map.RegionLocY != R.RegionLocY)
+                {
+                    if ((map.SimFlags & SimMapFlags.NoMove) == SimMapFlags.NoMove)
+                    {
+                        result = "You cannot move this region's coordinates.";
+                        return null;
+                    }
+                    //This region is moving. We need to update it.
+                    UpdateSimMap(map);
+                }
+                //This region is already here.
+                map.Access = map.Access & ~(uint)SimAccess.Down;
+            }
+
+            if ((map.SimFlags & SimMapFlags.LockedOut) == SimMapFlags.LockedOut)
+            {
+                result = "This region has been blocked from connecting.";
+                return null;
+            }
+
+            //Successful
+            result = "";
             map.LastUpdated = Util.UnixTimeSinceEpoch();
 
             //Add to the cache.
@@ -95,21 +128,45 @@ namespace OpenSim.Server.Handlers.AuroraMap
             return map;
         }
 
-        public void RemoveRegion(UUID regionID)
+        public void RemoveSimMap(UUID regionID)
         {
             if (Sims.ContainsKey(regionID))
                 Sims.Remove(regionID);
         }
 
+        public void UpdateSimMap(UUID regionID)
+        {
+            SimMap map = GetSimMap(regionID);
+
+            map.LastUpdated = Util.UnixTimeSinceEpoch();
+            map.Access = map.Access & ~(uint)SimAccess.Down;
+
+            if (Sims.ContainsKey(regionID))
+                Sims.Remove(regionID);
+            Sims.Add(regionID, map);
+        }
+
+        public void UpdateSimMap(SimMap map)
+        {
+            map.LastUpdated = Util.UnixTimeSinceEpoch();
+            map.Access = map.Access & ~(uint)SimAccess.Down;
+
+            if (Sims.ContainsKey(map.RegionID))
+                Sims.Remove(map.RegionID);
+            Sims.Add(map.RegionID, map);
+
+            GridConnector.SetSimMap(map);
+        }
+
         #region Helpers
 
-        private uint FindAccessFromFlags(GridRegionFlags flags)
+        private uint FindAccessFromFlags(SimMapFlags flags)
         {
-            if (((int)flags & (int)GridRegionFlags.Adult) == (int)GridRegionFlags.Adult)
+            if (((int)flags & (int)SimMapFlags.Adult) == (int)SimMapFlags.Adult)
                 return (int)SimAccess.Mature;
-            else if (((int)flags & (int)GridRegionFlags.Mature) == (int)GridRegionFlags.Mature)
+            else if (((int)flags & (int)SimMapFlags.Mature) == (int)SimMapFlags.Mature)
                 return (int)SimAccess.PG;
-            else if (((int)flags & (int)GridRegionFlags.PG) == (int)GridRegionFlags.PG)
+            else if (((int)flags & (int)SimMapFlags.PG) == (int)SimMapFlags.PG)
                 return (int)SimAccess.Min;
             else
                 return (int)SimAccess.Min;
@@ -121,12 +178,31 @@ namespace OpenSim.Server.Handlers.AuroraMap
             return ES.EstateID;
         }
 
+        private SimMap CreateDefaultSimMap(OpenSim.Services.Interfaces.GridRegion R)
+        {
+            SimMap map = new SimMap();
+            //If the cache doesn't have it, theres nothing there.
+            map.Access = 2; // Defaults to Adult
+            map.NumberOfAgents = 0;
+            map.RegionID = R.RegionID;
+            map.RegionLocX = R.RegionLocX;
+            map.RegionLocY = R.RegionLocY;
+            map.RegionName = R.RegionName;
+            //Since this is the first time we've seen it, we have to use this... even though it may be wrong.
+            map.SimMapTextureID = R.TerrainImage;
+            map.WaterHeight = 0;
+            map.EstateID = FindEstateID(R.RegionID);
+            map.RegionFlags = 0; //Unknown
+            map.SimFlags = 0;
+            return map;
+        }
+
         public SimMap NotFound(int regionX, int regionY)
         {
             SimMap map = new SimMap();
             map.RegionFlags = 0;
             map.NumberOfAgents = 0;
-            map.GridRegionFlags = 0;
+            map.SimFlags = 0;
             map.EstateID = 0;
             map.Access = (int)SimAccess.Down;
             map.RegionID = UUID.Zero;
@@ -160,34 +236,15 @@ namespace OpenSim.Server.Handlers.AuroraMap
                     return NotFound(0,0);
                 else
                 {
-                    map = AddRegion(R);
+                    string result = "";
+                    map = TryAddSimMap(R, out result);
+                    if (result != "")
+                        return NotFound(R.RegionLocX, R.RegionLocY);
                 }
             }
             return map;
         }
 
         #endregion
-
-        public void UpdateRegion(UUID regionID)
-        {
-            SimMap map = GetSimMap(regionID);
-
-            map.LastUpdated = Util.UnixTimeSinceEpoch();
-            map.Access = map.Access & ~(uint)SimAccess.Down;
-
-            if (Sims.ContainsKey(regionID))
-                Sims.Remove(regionID);
-            Sims.Add(regionID, map);
-        }
-
-        public void UpdateRegion(SimMap map)
-        {
-            map.LastUpdated = Util.UnixTimeSinceEpoch();
-            map.Access = map.Access & ~(uint)SimAccess.Down;
-
-            if (Sims.ContainsKey(map.RegionID))
-                Sims.Remove(map.RegionID);
-            Sims.Add(map.RegionID, map);
-        }
     }
 }

@@ -637,7 +637,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             //Create the region flags database.
             Aurora.Framework.IGridConnector GF = DataManager.IGridConnector;
-            if (GF.GetRegionFlags(m_regInfo.RegionID) == (Aurora.Framework.GridRegionFlags)(-1))
+            if (GF.GetRegionFlags(m_regInfo.RegionID) == (Aurora.Framework.SimMapFlags)(-1))
                 GF.CreateRegion(m_regInfo.RegionID);
 
             MainConsole.Instance.Commands.AddCommand("region", false, "reload estate",
