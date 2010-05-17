@@ -45,7 +45,7 @@ namespace Aurora.Services.InventoryService
             }
             #endregion
 
-            repository = new InventoryRepository(DataManager.DataManager.DataSessionProvider);
+            repository = new InventoryRepository(DataManager.DataSessionProviderConnector.DataSessionProvider);
         }
 
         #region IInventoryService Members

@@ -1,25 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using OpenSim.Services.Base;
 using OpenSim.Services.Interfaces;
 using Aurora.Framework;
 using OpenMetaverse;
 using OpenSim.Framework;
 
-namespace OpenSim.Server.Handlers.AuroraMap
+namespace Aurora.Framework
 {
     public class SimMapConnector
     {
-        private IGridService GridService;
         private ISimMapDataConnector SimMapDataConnector;
         private IEstateConnector EstateConnector;
+        private uint LastNull = 0;
 
-        Dictionary<UUID, SimMap> Sims = new Dictionary<UUID, SimMap>();
+        DoubleDictionary<UUID, ulong, SimMap> Sims = new DoubleDictionary<UUID, ulong, SimMap>();
 
         public SimMapConnector(IGridService GS)
         {
-            GridService = GS;
             EstateConnector = Aurora.DataManager.DataManager.IEstateConnector;
             SimMapDataConnector = Aurora.DataManager.DataManager.ISimMapConnector;
         }
@@ -40,7 +38,7 @@ namespace OpenSim.Server.Handlers.AuroraMap
                     //Its hasn't updated in the last 6 minutes, and it is supposed to update every 5, so it's down.
                     map.Access = map.Access | (uint)SimAccess.Down;
                     Sims.Remove(regionID);
-                    Sims.Add(regionID, map);
+                    Sims.Add(regionID,map. RegionHandle, map);
                 }
 
                 if (((int)map.SimFlags & (int)SimMapFlags.Hidden) == 1)
@@ -48,27 +46,134 @@ namespace OpenSim.Server.Handlers.AuroraMap
                     EstateSettings ES = EstateConnector.LoadEstateSettings((int)map.EstateID);
                     if (!ES.IsEstateManager(AgentID))
                         return NotFound(map.RegionLocX, map.RegionLocY);
-                }   
+                }
             }
             else
             {
                 map = SimMapDataConnector.GetSimMap(regionID);
                 //Add null regions so we don't query the database again.
-                Sims.Add(regionID, map);
+                if (map == null)
+                {
+                    LastNull++;
+                    Sims.Add(regionID, LastNull, map);
+                }
+                else
+                    Sims.Add(regionID, map.RegionHandle, map);
 
                 //No region there.
                 if (map == null)
-                    return NotFound(0,0);
+                    return NotFound(0, 0);
             }
             return map;
         }
 
-        public void AddAgent(UUID regionID, Vector3 Position)
+        public void AddAgent(UUID regionID, UUID agentID, Vector3 Position)
         {
+            SimMap map = GetSimMap(regionID, agentID);
+            map.NumberOfAgents += 1;
 
+            Position.X = NormalizePosition(Position.X);
+            Position.Y = NormalizePosition(Position.Y);
+            Position.Z = NormalizePosition(Position.Z);
+
+            if (map.PositionsOfAgents.ContainsKey(Position))
+            {
+                uint NumberOfAgents;
+                map.PositionsOfAgents.TryGetValue(Position, out NumberOfAgents);
+                NumberOfAgents++;
+                map.PositionsOfAgents.Remove(Position);
+                map.PositionsOfAgents.Add(Position, NumberOfAgents);
+            }
+            else
+                map.PositionsOfAgents.Add(Position, 1);
+
+
+            if (map.AgentPosition.ContainsKey(agentID))
+                map.AgentPosition.Remove(agentID);
+            map.AgentPosition.Add(agentID, Position);
+
+            //No need to call UpdateSimMap, that would update the database for no reason
+            Sims.Remove(regionID);
+            Sims.Add(map.RegionID, map.RegionHandle, map);
         }
 
-        public SimMap TryAddSimMap(Services.Interfaces.GridRegion R, out string result)
+        private float NormalizePosition(float number)
+        {
+            string Number = number.ToString();
+            string endNumber = Number.Remove(0, Number.Length - 2);
+            string firstNumber = Number.Remove(Number.Length - 2);
+            float EndNumber = float.Parse(endNumber);
+            if (EndNumber < 2.5f || EndNumber > 7.5)
+                EndNumber = 0;
+            else
+                EndNumber = 5;
+            return float.Parse(firstNumber + EndNumber.ToString());
+        }
+
+        public void RemoveAgent(UUID regionID, UUID agentID)
+        {
+            SimMap map = GetSimMap(regionID, agentID);
+
+            map.NumberOfAgents -= 1;
+
+            //Remove the agent's location from memory
+            Vector3 Position;
+            map.AgentPosition.TryGetValue(agentID, out Position);
+            map.AgentPosition.Remove(agentID);
+
+            //Remove an agent from the number of agents count at the agents location.
+            uint NumberOfAgents = 0;
+            map.PositionsOfAgents.TryGetValue(Position, out NumberOfAgents);
+            NumberOfAgents--;
+            map.PositionsOfAgents.Remove(Position);
+            map.PositionsOfAgents.Add(Position, NumberOfAgents);
+
+            //No need to call UpdateSimMap, that would update the database for no reason
+            Sims.Remove(regionID);
+            Sims.Add(map.RegionID, map.RegionHandle, map);
+        }
+
+        public List<mapItemReply> GetMapItems(ulong regionHandle, GridItemType gridItemType)
+        {
+            if (gridItemType == GridItemType.AgentLocations)
+            {
+                SimMap map = GetSimMap(regionHandle);
+
+                List<mapItemReply> mapItems = new List<mapItemReply>();
+                foreach (KeyValuePair<Vector3,uint> position in map.PositionsOfAgents)
+                {
+                    mapItemReply mapitem = new mapItemReply();
+                    mapitem.x = (uint)(map.RegionLocX + position.Key.X);
+                    mapitem.y = (uint)(map.RegionLocX + position.Key.Y);
+                    mapitem.id = UUID.Zero;
+                    mapitem.name = Util.Md5Hash(map.RegionName + Environment.TickCount.ToString());
+                    mapitem.Extra = (int)position.Value;
+                    mapitem.Extra2 = 0;
+                    mapItems.Add(mapitem);
+                }
+
+                //This is a remote request, so we don't use one, 
+                // as that is to not add the agents
+                // own dot, and that will not happen here.
+                if (mapItems.Count == 0)
+                {
+                    mapItemReply mapitem = new mapItemReply();
+                    mapitem.x = (uint)(map.RegionLocX + 1);
+                    mapitem.y = (uint)(map.RegionLocY + 1);
+                    mapitem.id = UUID.Zero;
+                    mapitem.name = Util.Md5Hash(map.RegionName + Environment.TickCount.ToString());
+                    mapitem.Extra = 0;
+                    mapitem.Extra2 = 0;
+                    mapItems.Add(mapitem);
+                }
+                return mapItems;
+            }
+
+            //m_log.Error("[SimMapConnector]: Unknown GridItemType " + gridItemType.ToString());
+            return new List<mapItemReply>();
+        }
+
+        public SimMap TryAddSimMap(OpenSim.Services.Interfaces.GridRegion R, out string result)
         {
             SimMap map = SimMapDataConnector.GetSimMap(R.RegionID);
             if (map == null)
@@ -143,7 +248,7 @@ namespace OpenSim.Server.Handlers.AuroraMap
 
             if (Sims.ContainsKey(regionID))
                 Sims.Remove(regionID);
-            Sims.Add(regionID, map);
+            Sims.Add(regionID, map.RegionHandle, map);
         }
 
         public void UpdateSimMap(SimMap map)
@@ -153,7 +258,7 @@ namespace OpenSim.Server.Handlers.AuroraMap
 
             if (Sims.ContainsKey(map.RegionID))
                 Sims.Remove(map.RegionID);
-            Sims.Add(map.RegionID, map);
+            Sims.Add(map.RegionID, map.RegionHandle, map);
 
             SimMapDataConnector.SetSimMap(map);
         }
@@ -230,18 +335,56 @@ namespace OpenSim.Server.Handlers.AuroraMap
                     //Its hasn't updated in the last 6 minutes, and it is supposed to update every 5, so it's down.
                     map.Access = map.Access | (uint)SimAccess.Down;
                     Sims.Remove(regionID);
-                    Sims.Add(regionID, map);
+                    Sims.Add(regionID, map.RegionHandle, map);
                 }
             }
             else
             {
                 map = SimMapDataConnector.GetSimMap(regionID);
                 //Add null regions so we don't query the database again.
-                Sims.Add(regionID, map);
+                if (map == null)
+                {
+                    LastNull++;
+                    Sims.Add(regionID, LastNull, map);
+                    return NotFound(0, 0);
+                }
+                else
+                    Sims.Add(regionID, map.RegionHandle, map);
+            }
+            return map;
+        }
 
-                //No region there.
+        private SimMap GetSimMap(ulong regionHandle)
+        {
+            SimMap map = new SimMap();
+            if (Sims.ContainsKey(regionHandle))
+            {
+                Sims.TryGetValue(regionHandle, out map);
+
+                //We know theres no region there.
                 if (map == null)
                     return NotFound(0, 0);
+
+                if (map.LastUpdated > Util.UnixTimeSinceEpoch() + (1000 * 6)) // Greater than 6 minutes since the last update
+                {
+                    //Its hasn't updated in the last 6 minutes, and it is supposed to update every 5, so it's down.
+                    map.Access = map.Access | (uint)SimAccess.Down;
+                    Sims.Remove(regionHandle);
+                    Sims.Add(map.RegionID, regionHandle, map);
+                }
+            }
+            else
+            {
+                map = SimMapDataConnector.GetSimMap(regionHandle);
+                //Add null regions so we don't query the database again.
+                if (map == null)
+                {
+                    LastNull++;
+                    Sims.Add(map.RegionID, LastNull, map);
+                    return NotFound(0, 0);
+                }
+                else
+                    Sims.Add(map.RegionID, regionHandle, map);
             }
             return map;
         }

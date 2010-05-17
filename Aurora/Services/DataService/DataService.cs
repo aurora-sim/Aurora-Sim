@@ -34,12 +34,12 @@ namespace Aurora.Services.DataService
             IGenericData ScriptSaveDataConnector = null;
             if (PluginModule == "MySQL")
             {
-                DataManager.DataManager.DataSessionProvider = new DataSessionProvider(DataManagerTechnology.MySql, ConnectionString);
+                DataManager.DataSessionProviderConnector.DataSessionProvider = new DataSessionProvider(DataManagerTechnology.MySql, ConnectionString);
                 MySQLDataLoader GenericData = new MySQLDataLoader();
                 GenericData.ConnectToDatabase(ConnectionString);
                 ScriptSaveDataConnector = GenericData;
 
-                var migrationManager = new MigrationManager(DataManager.DataManager.DataSessionProvider, GenericData);
+                var migrationManager = new MigrationManager(DataManager.DataSessionProviderConnector.DataSessionProvider, GenericData);
                 migrationManager.DetermineOperation();
                 migrationManager.ExecuteOperation();
 
@@ -47,22 +47,22 @@ namespace Aurora.Services.DataService
             }
             else if (PluginModule == "SQLite")
             {
-                DataManager.DataManager.DataSessionProvider = new DataSessionProvider(DataManagerTechnology.SQLite, ConnectionString);
+                DataManager.DataSessionProviderConnector.DataSessionProvider = new DataSessionProvider(DataManagerTechnology.SQLite, ConnectionString);
                 SQLiteLoader GenericData = new SQLiteLoader();
                 GenericData.ConnectToDatabase(ConnectionString);
 
                 //SQLite needs a second database for ScriptSaves, otherwise it locks it up...
                 string ScriptConnectionString = m_config.GetString("ScriptConnectionString", "");
-                DataManager.DataManager.StateSaveDataSessionProvider = new DataSessionProvider(DataManagerTechnology.SQLite, ScriptConnectionString);
+                DataManager.DataSessionProviderConnector.StateSaveDataSessionProvider = new DataSessionProvider(DataManagerTechnology.SQLite, ScriptConnectionString);
                 SQLiteStateSaver ScriptSaverData = new SQLiteStateSaver();
                 ScriptSaverData.ConnectToDatabase(ScriptConnectionString);
                 ScriptSaveDataConnector = ScriptSaverData;
 
-                var migrationManager = new MigrationManager(DataManager.DataManager.DataSessionProvider, GenericData);
+                var migrationManager = new MigrationManager(DataManager.DataSessionProviderConnector.DataSessionProvider, GenericData);
                 migrationManager.DetermineOperation();
                 migrationManager.ExecuteOperation();
 
-                var statesavemigrationManager = new MigrationManager(DataManager.DataManager.StateSaveDataSessionProvider, ScriptSaverData);
+                var statesavemigrationManager = new MigrationManager(DataManager.DataSessionProviderConnector.StateSaveDataSessionProvider, ScriptSaverData);
                 statesavemigrationManager.DetermineOperation();
                 statesavemigrationManager.ExecuteOperation();
 

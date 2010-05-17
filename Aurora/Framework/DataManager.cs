@@ -44,8 +44,5 @@ namespace Aurora.DataManager
         public static ISimMapDataConnector ISimMapConnector;
 
         #endregion
-
-        public static DataSessionProvider DataSessionProvider;
-        public static DataSessionProvider StateSaveDataSessionProvider;
     }
 }

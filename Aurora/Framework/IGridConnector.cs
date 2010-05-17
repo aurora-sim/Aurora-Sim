@@ -19,6 +19,7 @@ namespace Aurora.Framework
         SimMap GetSimMap(UUID regionID);
         SimMap GetSimMap(int regionX, int regionY);
         void SetSimMap(SimMap map);
+        SimMap GetSimMap(ulong regionHandle);
     }
 
     [Flags()]

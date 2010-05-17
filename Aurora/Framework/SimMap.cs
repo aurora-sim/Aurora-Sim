@@ -9,6 +9,7 @@ namespace Aurora.Framework
     public class SimMap
     {
         public UUID RegionID;
+        public ulong RegionHandle;
         public uint EstateID;
         public uint NumberOfAgents;
         public int RegionLocX;
@@ -22,12 +23,14 @@ namespace Aurora.Framework
 
         //These things should not be sent to the region
         public int LastUpdated;
-
+        public Dictionary<Vector3, uint> PositionsOfAgents = new Dictionary<Vector3, uint>();
+        public Dictionary<UUID, Vector3> AgentPosition = new Dictionary<UUID, Vector3>();
 
         public SimMap() { }
         public SimMap(Dictionary<string, object> KVP)
         {
             RegionID = UUID.Parse(KVP["RegionID"].ToString());
+            RegionHandle = ulong.Parse(KVP["RegionHandle"].ToString());
             EstateID = uint.Parse(KVP["EstateID"].ToString());
             NumberOfAgents = uint.Parse(KVP["NumberOfAgents"].ToString());
             RegionLocX = int.Parse(KVP["RegionLocX"].ToString());
@@ -44,6 +47,7 @@ namespace Aurora.Framework
         {
             Dictionary<string, object> KVP = new Dictionary<string, object>();
             KVP["RegionID"] = RegionID;
+            KVP["RegionHandle"] = RegionHandle;
             KVP["EstateID"] = EstateID;
             KVP["NumberOfAgents"] = NumberOfAgents;
             KVP["RegionLocX"] = RegionLocX;

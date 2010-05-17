@@ -41,11 +41,11 @@ namespace Aurora.Modules
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private IGridUserService m_GridUserService;
         private Scene m_aScene;
-
-        public MapActivityDetector()
+        private ISimMapConnector SimMapConnector;
+        public MapActivityDetector(ISimMapConnector connector)
         {
+            SimMapConnector = connector;
             m_log.DebugFormat("[MAP ACTIVITY DETECTOR]: starting ");
         }
 
@@ -65,13 +65,7 @@ namespace Aurora.Modules
         {
             scene.EventManager.OnMakeRootAgent -= OnMakeRootAgent;
             scene.EventManager.OnNewClient -= OnNewClient;
-        }
-
-        public void OnMakeRootAgent(ScenePresence sp)
-        {
-            //m_log.DebugFormat("[ACTIVITY DETECTOR]: Detected root presence {0} in {1}", sp.UUID, sp.Scene.RegionInfo.RegionName);
-
-            m_GridUserService.SetLastPosition(sp.UUID.ToString(), sp.Scene.RegionInfo.RegionID, sp.AbsolutePosition, sp.Lookat);
+            scene.EventManager.OnAvatarEnteringNewParcel -= OnEnteringNewParcel;
         }
 
         public void OnNewClient(IClientAPI client)
@@ -79,37 +73,24 @@ namespace Aurora.Modules
             client.OnConnectionClosed += OnConnectionClose;
         }
 
+        public void OnMakeRootAgent(ScenePresence sp)
+        {
+            SimMapConnector.AddAgent(sp.Scene.RegionInfo.RegionID,
+                sp.UUID, sp.AbsolutePosition);
+        }
+
         public void OnConnectionClose(IClientAPI client)
         {
             if (client.IsLoggingOut)
             {
-                object sp = null;
-                Vector3 position = new Vector3(128, 128, 0);
-                Vector3 lookat = new Vector3(0, 1, 0);
-
-                if (client.Scene.TryGetScenePresence(client.AgentId, out sp))
-                {
-                    if (sp is ScenePresence)
-                    {
-                        if (((ScenePresence)sp).IsChildAgent)
-                            return;
-
-                        position = ((ScenePresence)sp).AbsolutePosition;
-                        lookat = ((ScenePresence)sp).Lookat;
-                    }
-                }
-                //m_log.DebugFormat("[ACTIVITY DETECTOR]: Detected client logout {0} in {1}", client.AgentId, client.Scene.RegionInfo.RegionName);
-                m_GridUserService.LoggedOut(client.AgentId.ToString(), client.Scene.RegionInfo.RegionID, position, lookat);
+                SimMapConnector.RemoveAgent(client.Scene.RegionInfo.RegionID,
+                    client.AgentId);
             }
-
         }
 
-        void OnEnteringNewParcel(ScenePresence sp, int localLandID, UUID regionID)
+        public void OnEnteringNewParcel(ScenePresence sp, int localLandID, UUID regionID)
         {
-            // TODO: grab the parcel ID from ILandModule
-            // and send that along
-            m_GridUserService.SetLastPosition(sp.UUID.ToString(), sp.Scene.RegionInfo.RegionID, sp.AbsolutePosition, sp.Lookat);
+            SimMapConnector.AddAgent(regionID, sp.UUID, sp.AbsolutePosition);
         }
-
     }
 }

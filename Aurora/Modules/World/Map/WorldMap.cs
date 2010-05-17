@@ -83,7 +83,8 @@ namespace Aurora.Modules
         //private int CacheRegionsDistance = 256;
         private double minutes = 30;
         private double oneminute = 60000;
-        private System.Timers.Timer aTimer;
+        private System.Timers.Timer UpdateMapImage;
+        private System.Timers.Timer UpdateOnlineStatus;
         private IRegionConnector GridConnector;
         private ISimMapConnector SimMapConnector;
         private string SimMapServerURI;
@@ -150,12 +151,18 @@ namespace Aurora.Modules
 		{
             GridConnector = Aurora.DataManager.DataManager.IRegionConnector;
             SimMapConnector = new RemoteSimMapConnector(SimMapServerURI);
-            aTimer = new System.Timers.Timer(oneminute * minutes);
-            aTimer.Elapsed += OnTimedCreateNewMapImage;
-            aTimer.Enabled = true;
-            System.Timers.Timer Timer = new System.Timers.Timer(oneminute * 5);
-            Timer.Elapsed += OnUpdateRegion;
-            Timer.Enabled = true;
+            MapActivityDetector MAD = new MapActivityDetector(SimMapConnector);
+            SetUpTimers();
+        }
+
+        public void SetUpTimers()
+        {
+            UpdateMapImage = new System.Timers.Timer(oneminute * minutes);
+            UpdateMapImage.Elapsed += OnTimedCreateNewMapImage;
+            UpdateMapImage.Enabled = true;
+            UpdateOnlineStatus = new System.Timers.Timer(oneminute * 5);
+            UpdateOnlineStatus.Elapsed += OnUpdateRegion;
+            UpdateOnlineStatus.Enabled = true;
         }
 
 		public virtual void Close()
@@ -412,6 +419,7 @@ namespace Aurora.Modules
             int tc = Environment.TickCount;
             if (itemtype == (int)OpenMetaverse.GridItemType.AgentLocations)
             {
+                //If its local, just let it do it on its own.
                 if (regionhandle == 0 || regionhandle == m_scene.RegionInfo.RegionHandle)
                 {
                     //Only one person here, send a zero person response
@@ -448,7 +456,9 @@ namespace Aurora.Modules
                 }
                 else
                 {
-                    GridRegion R = m_scene.GridService.GetRegionByPosition(UUID.Zero, (int)xstart, (int)ystart);
+                    mapitems = SimMapConnector.GetMapItems(regionhandle, (OpenMetaverse.GridItemType)itemtype);
+                    remoteClient.SendMapItemReply(mapitems.ToArray(), itemtype, flags);
+                    // GridRegion R = m_scene.GridService.GetRegionByPosition(UUID.Zero, (int)xstart, (int)ystart);
                     // if (((int)GridConnector.GetRegionFlags(R.RegionID) & (int)SimMapFlags.Hidden) == (int)SimMapFlags.Hidden)
                     // {
                     //     if (!m_scene.Permissions.CanIssueEstateCommand(remoteClient.AgentId, false))
@@ -461,13 +471,13 @@ namespace Aurora.Modules
                     // ensures that the blockingqueue doesn't get borked if the GetAgents() timing changes.
                     // Note that we only start up a remote mapItem Request thread if there's users who could
                     // be making requests
-                    if (!threadrunning)
-                    {
-                        //m_log.Warn("[WORLD MAP]: Starting new remote request thread manually.  This means that AvatarEnteringParcel never fired!  This needs to be fixed!  Don't Mantis this, as the developers can see it in this message");
-                        StartThread(new object());
-                    }
+                    // if (!threadrunning)
+                    // {
+                    //     //m_log.Warn("[WORLD MAP]: Starting new remote request thread manually.  This means that AvatarEnteringParcel never fired!  This needs to be fixed!  Don't Mantis this, as the developers can see it in this message");
+                    //     StartThread(new object());
+                    // }
 
-                    RequestMapItems("", remoteClient.AgentId, flags, EstateID, godlike, itemtype, regionhandle);
+                    // RequestMapItems("", remoteClient.AgentId, flags, EstateID, godlike, itemtype, regionhandle);
                 }
             }
         }
@@ -1142,13 +1152,16 @@ namespace Aurora.Modules
             m_log.DebugFormat("[WORLDMAP]: Storing map tile {0}", asset.ID);
             m_scene.AssetService.Store(asset);
             m_scene.RegionInfo.RegionSettings.Save();
+            
             List<SimMap> map = SimMapConnector.GetSimMap(m_scene.RegionInfo.RegionID,m_scene.RegionInfo.EstateSettings.EstateOwner);
+            //This will be null if the region has never joined the grid before.
             if(map != null && map[0] != null)
             {
                 SimMap sim = map[0];
                 sim.SimMapTextureID = new UUID(asset.ID);
                 SimMapConnector.UpdateSimMap(sim);
             }
+            
             // Delete the old one
             m_log.DebugFormat("[WORLDMAP]: Deleting old map tile {0}", lastMapRegionUUID);
             myMapImageJPEG = null;
@@ -1184,7 +1197,7 @@ namespace Aurora.Modules
 
         private void OnUpdateRegion(object source, ElapsedEventArgs e)
         {
-            SimMapConnector.UpdateSimMap(m_scene.RegionInfo.RegionID);
+            SimMapConnector.UpdateSimMapOnlineStatus(m_scene.RegionInfo.RegionID);
         }
 
         private void OnTimedCreateNewMapImage(object source, ElapsedEventArgs e)

@@ -103,6 +103,7 @@ namespace Aurora.DataManager.Migration.Migrators
             
             AddSchema("simmap", ColDefs(
                 ColDef("RegionID", ColumnTypes.String50, true),
+                ColDef("RegionHandle", ColumnTypes.String50),
                 ColDef("EstateID", ColumnTypes.String50),
                 ColDef("RegionLocX", ColumnTypes.String50),
                 ColDef("RegionLocY", ColumnTypes.String50),

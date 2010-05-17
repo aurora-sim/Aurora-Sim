@@ -26,11 +26,36 @@
  */
 
 using OpenMetaverse;
+using System.Collections.Generic;
 
 namespace OpenSim.Framework
 {
-    public struct mapItemReply
+    public class mapItemReply
     {
+        public mapItemReply() { }
+
+        public mapItemReply(Dictionary<string, object> KVP)
+        {
+            x = uint.Parse(KVP["X"].ToString());
+            y = uint.Parse(KVP["Y"].ToString());
+            id = UUID.Parse(KVP["ID"].ToString());
+            Extra = int.Parse(KVP["Extra"].ToString());
+            Extra2 = int.Parse(KVP["Extra2"].ToString());
+            name = KVP["Name"].ToString();
+        }
+
+        public Dictionary<string, object> ToKeyValuePairs()
+        {
+            Dictionary<string, object> KVP = new Dictionary<string, object>();
+            KVP["X"] = x;
+            KVP["Y"] = y;
+            KVP["ID"] = id;
+            KVP["Extra"] = Extra;
+            KVP["Extra2"] = Extra2;
+            KVP["Name"] = name;
+            return KVP;
+        }
+
         public uint x;
         public uint y;
         public UUID id;

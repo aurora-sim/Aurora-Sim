@@ -48,7 +48,6 @@ namespace OpenSim.Server.Handlers.AuroraMap
             sr.Close();
             body = body.Trim();
 
-            //m_log.DebugFormat("[AuroraDataServerPostHandler]: query String: {0}", body);
             string method = "";
             try
             {
@@ -70,6 +69,10 @@ namespace OpenSim.Server.Handlers.AuroraMap
                         return UpdateSimMap(request);
                     case "fullupdatesimmap":
                         return FullUpdateSimMap(request);
+                    case "addagent":
+                        return AddAgent(request);
+                    case "removeagent":
+                        return RemoveAgent(request);
                 }
                 m_log.DebugFormat("[AuroraDataServerPostHandler]: unknown method {0} request {1}", method.Length, method);
             }
@@ -79,6 +82,56 @@ namespace OpenSim.Server.Handlers.AuroraMap
             }
 
             return FailureResult();
+        }
+
+        private byte[] AddAgent(Dictionary<string, object> request)
+        {
+            Dictionary<string, object> result = new Dictionary<string, object>();
+
+            UUID regionID = UUID.Parse(request["REGIONID"].ToString());
+            UUID agentID = UUID.Parse(request["AGENTID"].ToString());
+            int X = int.Parse(request["X"].ToString());
+            int Y = int.Parse(request["Y"].ToString());
+            int Z = int.Parse(request["Z"].ToString());
+            Vector3 Position = new Vector3(X, Y, Z);
+
+            SimMapConnector.AddAgent(regionID,agentID,Position);
+
+            return SuccessResult();
+        }
+
+        private byte[] RemoveAgent(Dictionary<string, object> request)
+        {
+            Dictionary<string, object> result = new Dictionary<string, object>();
+
+            UUID regionID = UUID.Parse(request["REGIONID"].ToString());
+            UUID agentID = UUID.Parse(request["AGENTID"].ToString());
+            
+            SimMapConnector.RemoveAgent(regionID, agentID);
+
+            return SuccessResult();
+        }
+
+        private byte[] GetMapItems(Dictionary<string, object> request)
+        {
+            Dictionary<string, object> result = new Dictionary<string, object>();
+            List<SimMap> Sims = new List<SimMap>();
+
+            ulong regionHandle = ulong.Parse(request["REGIONHANDLE"].ToString());
+            GridItemType gridItemType = (GridItemType)int.Parse(request["GRIDITEMTYPE"].ToString());
+            
+            List<mapItemReply> items = SimMapConnector.GetMapItems(regionHandle, gridItemType);
+            
+            int i = 0;
+            foreach (mapItemReply item in items)
+            {
+                result["MapItem" + i.ToString()] = (Dictionary<string, object>)item.ToKeyValuePairs();
+                i++;
+            }
+
+            string xmlString = ServerUtils.BuildXmlResponse(result);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
         }
 
         private byte[] GetSimMapRange(Dictionary<string, object> request)

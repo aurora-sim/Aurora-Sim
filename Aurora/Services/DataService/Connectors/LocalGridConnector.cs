@@ -29,6 +29,7 @@ namespace Aurora.Services.DataService
             
             SimMap map = new SimMap();
             map.RegionID = UUID.Parse(retval[0]);
+            map.RegionHandle = uint.Parse(retval[1]);
             map.EstateID = uint.Parse(retval[1]);
             map.RegionLocX = int.Parse(retval[2]);
             map.RegionLocY = int.Parse(retval[3]);
@@ -40,6 +41,33 @@ namespace Aurora.Services.DataService
 
             return map;
 		}
+
+        /// <summary>
+        /// Gets the region's SimMap
+        /// </summary>
+        /// <param name="regionID"></param>
+        /// <returns></returns>
+        public SimMap GetSimMap(ulong regionHandle)
+        {
+            List<string> retval = GD.Query("RegionHandle", regionHandle, "simmap", "*");
+
+            if (retval.Count == 1)
+                return null;
+
+            SimMap map = new SimMap();
+            map.RegionID = UUID.Parse(retval[0]);
+            map.RegionHandle = uint.Parse(retval[1]);
+            map.EstateID = uint.Parse(retval[1]);
+            map.RegionLocX = int.Parse(retval[2]);
+            map.RegionLocY = int.Parse(retval[3]);
+            map.SimMapTextureID = UUID.Parse(retval[4]);
+            map.RegionName = retval[5];
+            map.RegionFlags = uint.Parse(retval[6]);
+            map.Access = uint.Parse(retval[7]);
+            map.SimFlags = (SimMapFlags)int.Parse(retval[8]);
+
+            return map;
+        }
 
         /// <summary>
         /// Gets the region's SimMap

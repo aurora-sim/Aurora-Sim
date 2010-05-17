@@ -17,15 +17,6 @@ using OpenSim.Server.Base;
 
 namespace Aurora.Modules
 {
-    public interface ISimMapConnector
-    {
-        List<SimMap> GetSimMap(UUID regionID, UUID AgentID);
-        List<SimMap> GetSimMap(string mapName, UUID AgentID);
-        List<SimMap> GetSimMapRange(uint XMin, uint YMin, uint XMax, uint YMax, UUID agentID);
-        void UpdateSimMap(UUID regionID);
-        void UpdateSimMap(SimMap map);
-    }
-
     public class RemoteSimMapConnector : ISimMapConnector
     {
         private static readonly ILog m_log =
@@ -60,10 +51,6 @@ namespace Aurora.Modules
 
                     if (replyData != null)
                     {
-                        if (!replyData.ContainsKey("result"))
-                            return null;
-
-
                         Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
                         List<SimMap> Sims = new List<SimMap>();
                         foreach (object f in replyvalues)
@@ -202,7 +189,7 @@ namespace Aurora.Modules
             return null;
         }
 
-        public void UpdateSimMap(UUID regionID)
+        public void UpdateSimMapOnlineStatus(UUID regionID)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
 
@@ -241,6 +228,105 @@ namespace Aurora.Modules
             {
                 m_log.DebugFormat("[RemoteSimMapConnector]: Exception when contacting server: {0}", e.Message);
             }
+        }
+
+        public void AddAgent(UUID regionID, UUID agentID, Vector3 Position)
+        {
+            Dictionary<string, object> sendData = new Dictionary<string,object>();
+
+            sendData["REGIONID"] = regionID;
+            sendData["AGENTID"] = agentID;
+            sendData["X"] = Position.X;
+            sendData["Y"] = Position.Y;
+            sendData["Z"] = Position.Z;
+            sendData["METHOD"] = "addagent";
+
+            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reply = "";
+            try
+            {
+                reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                        m_ServerURI + "/SIMMAP",
+                        reqString);
+            }
+            catch (Exception e)
+            {
+                m_log.DebugFormat("[RemoteSimMapConnector]: Exception when contacting server: {0}", e.Message);
+            }
+        }
+
+        public void RemoveAgent(UUID regionID, UUID agentID)
+        {
+            Dictionary<string, object> sendData = new Dictionary<string, object>();
+
+            sendData["REGIONID"] = regionID;
+            sendData["AGENTID"] = agentID;
+            sendData["METHOD"] = "removeagent";
+
+            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reply = "";
+            try
+            {
+                reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                        m_ServerURI + "/SIMMAP",
+                        reqString);
+            }
+            catch (Exception e)
+            {
+                m_log.DebugFormat("[RemoteSimMapConnector]: Exception when contacting server: {0}", e.Message);
+            }
+        }
+
+        public List<mapItemReply> GetMapItems(ulong regionHandle, GridItemType gridItemType)
+        {
+            Dictionary<string, object> sendData = new Dictionary<string, object>();
+
+            sendData["REGIONHANDLE"] = regionHandle;
+            sendData["GRIDITEMTYPE"] = gridItemType;
+            sendData["METHOD"] = "getmapitems";
+
+            string reqString = ServerUtils.BuildQueryString(sendData);
+
+            try
+            {
+                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                        m_ServerURI + "/SIMMAP",
+                        reqString);
+                if (reply != string.Empty)
+                {
+                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+
+                    if (replyData != null)
+                    {
+                        List<mapItemReply> items = new List<mapItemReply>();
+                        foreach (object f in replyData)
+                        {
+                            if (f is KeyValuePair<string, object>)
+                            {
+                                Dictionary<string, object> value = ((KeyValuePair<string, object>)f).Value as Dictionary<string, object>;
+                                mapItemReply map = new mapItemReply(value);
+                                items.Add(map);
+                            }
+                            else
+                                m_log.DebugFormat("[RemoteSimMapConnector]: GetMapItems {0} received invalid response type {1}",
+                                    regionHandle, f.GetType());
+                        }
+                        // Success
+                        return items;
+                    }
+
+                    else
+                        m_log.DebugFormat("[RemoteSimMapConnector]: GetMapItems {0} received null response",
+                            regionHandle);
+
+                }
+            }
+            catch (Exception e)
+            {
+                m_log.DebugFormat("[RemoteSimMapConnector]: Exception when contacting server: {0}", e.Message);
+            }
+
+            return null;
         }
     }
 }
