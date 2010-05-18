@@ -288,7 +288,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColumnTypes.String50), ColDef("Maturity", ColumnTypes.String50),
                 ColDef("OwnerID", ColumnTypes.String50), ColDef("GroupID",
                 ColumnTypes.String50), ColDef("MediaDescription",
-                ColumnTypes.String50), ColDef("MediaHeight”", ColumnTypes.String50),
+                ColumnTypes.String50), ColDef("MediaHeight", ColumnTypes.String50),
                 ColDef("MediaWidth", ColumnTypes.String50), ColDef("MediaLoop",
                 ColumnTypes.String50), ColDef("MediaType", ColumnTypes.String50),
                 ColDef("ObscureMedia", ColumnTypes.String50), ColDef("ObscureMusic", 
