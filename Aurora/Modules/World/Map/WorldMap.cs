@@ -1155,7 +1155,7 @@ namespace Aurora.Modules
             
             List<SimMap> map = SimMapConnector.GetSimMap(m_scene.RegionInfo.RegionID,m_scene.RegionInfo.EstateSettings.EstateOwner);
             //This will be null if the region has never joined the grid before.
-            if(map != null && map[0] != null)
+            if(map != null && map.Count != 0 && map[0] != null)
             {
                 SimMap sim = map[0];
                 sim.SimMapTextureID = new UUID(asset.ID);

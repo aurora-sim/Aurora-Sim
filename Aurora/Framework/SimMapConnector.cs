@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using OpenSim.Services.Interfaces;
@@ -14,8 +15,9 @@ namespace Aurora.Framework
         private IEstateConnector EstateConnector;
         private uint LastNull = 0;
 
-        DoubleDictionary<UUID, ulong, SimMap> Sims = new DoubleDictionary<UUID, ulong, SimMap>();
-
+        //DoubleDictionary<UUID, ulong, SimMap> Sims = new DoubleDictionary<UUID, ulong, SimMap>();
+        Dictionary<UUID, SimMap> SimIDs = new Dictionary<UUID, SimMap>();
+        Dictionary<ulong, SimMap> SimHandles = new Dictionary<ulong, SimMap>();
         public SimMapConnector(IGridService GS)
         {
             EstateConnector = Aurora.DataManager.DataManager.IEstateConnector;
@@ -25,9 +27,9 @@ namespace Aurora.Framework
         public SimMap GetSimMap(UUID regionID, UUID AgentID)
         {
             SimMap map = new SimMap();
-            if (Sims.ContainsKey(regionID))
+            if (SimIDs.ContainsKey(regionID))
             {
-                Sims.TryGetValue(regionID, out map);
+                SimIDs.TryGetValue(regionID, out map);
 
                 //We know theres no region there.
                 if (map == null)
@@ -37,8 +39,9 @@ namespace Aurora.Framework
                 {
                     //Its hasn't updated in the last 6 minutes, and it is supposed to update every 5, so it's down.
                     map.Access = map.Access | (uint)SimAccess.Down;
-                    Sims.Remove(regionID);
-                    Sims.Add(regionID,map. RegionHandle, map);
+                    SimIDs.Remove(regionID);
+                    SimIDs.Add(regionID, map);
+                    SimHandles.Add(map.RegionHandle, map);
                 }
 
                 if (((int)map.SimFlags & (int)SimMapFlags.Hidden) == 1)
@@ -55,10 +58,13 @@ namespace Aurora.Framework
                 if (map == null)
                 {
                     LastNull++;
-                    Sims.Add(regionID, LastNull, map);
+                    SimIDs.Add(regionID, map);
                 }
                 else
-                    Sims.Add(regionID, map.RegionHandle, map);
+                {
+                    SimIDs.Add(regionID, map);
+                    SimHandles.Add(map.RegionHandle, map);
+                }
 
                 //No region there.
                 if (map == null)
@@ -93,8 +99,10 @@ namespace Aurora.Framework
             map.AgentPosition.Add(agentID, Position);
 
             //No need to call UpdateSimMap, that would update the database for no reason
-            Sims.Remove(regionID);
-            Sims.Add(map.RegionID, map.RegionHandle, map);
+            SimIDs.Remove(regionID);
+            SimIDs.Add(map.RegionID, map);
+            SimHandles.Remove(map.RegionHandle);
+            SimHandles.Add(map.RegionHandle, map);
         }
 
         private float NormalizePosition(float number)
@@ -129,8 +137,10 @@ namespace Aurora.Framework
             map.PositionsOfAgents.Add(Position, NumberOfAgents);
 
             //No need to call UpdateSimMap, that would update the database for no reason
-            Sims.Remove(regionID);
-            Sims.Add(map.RegionID, map.RegionHandle, map);
+            SimIDs.Remove(regionID);
+            SimIDs.Add(map.RegionID, map);
+            SimHandles.Remove(map.RegionHandle);
+            SimHandles.Add(map.RegionHandle, map);
         }
 
         public List<mapItemReply> GetMapItems(ulong regionHandle, GridItemType gridItemType)
@@ -226,8 +236,10 @@ namespace Aurora.Framework
             map.LastUpdated = Util.UnixTimeSinceEpoch();
 
             //Add to the cache.
-            if (Sims.ContainsKey(map.RegionID))
-                Sims.Remove(map.RegionID);
+            if (SimIDs.ContainsKey(map.RegionID))
+                SimIDs.Remove(map.RegionID);
+            if (SimHandles.ContainsKey(map.RegionHandle))
+                SimHandles.Remove(map.RegionHandle);
 
             UpdateSimMap(map);
             return map;
@@ -235,8 +247,11 @@ namespace Aurora.Framework
 
         public void RemoveSimMap(UUID regionID)
         {
-            if (Sims.ContainsKey(regionID))
-                Sims.Remove(regionID);
+            SimMap map = GetSimMap(regionID);
+            if (SimIDs.ContainsKey(regionID))
+                SimIDs.Remove(regionID);
+            if (SimHandles.ContainsKey(map.RegionHandle))
+                SimHandles.Remove(map.RegionHandle);
         }
 
         public void UpdateSimMap(UUID regionID)
@@ -246,9 +261,12 @@ namespace Aurora.Framework
             map.LastUpdated = Util.UnixTimeSinceEpoch();
             map.Access = map.Access & ~(uint)SimAccess.Down;
 
-            if (Sims.ContainsKey(regionID))
-                Sims.Remove(regionID);
-            Sims.Add(regionID, map.RegionHandle, map);
+            if (SimIDs.ContainsKey(map.RegionID))
+                SimIDs.Remove(map.RegionID);
+            if (SimHandles.ContainsKey(map.RegionHandle))
+                SimHandles.Remove(map.RegionHandle);
+            SimIDs.Add(map.RegionID, map);
+            SimHandles.Add(map.RegionHandle, map);
         }
 
         public void UpdateSimMap(SimMap map)
@@ -256,9 +274,12 @@ namespace Aurora.Framework
             map.LastUpdated = Util.UnixTimeSinceEpoch();
             map.Access = map.Access & ~(uint)SimAccess.Down;
 
-            if (Sims.ContainsKey(map.RegionID))
-                Sims.Remove(map.RegionID);
-            Sims.Add(map.RegionID, map.RegionHandle, map);
+            if (SimIDs.ContainsKey(map.RegionID))
+                SimIDs.Remove(map.RegionID);
+            if (SimHandles.ContainsKey(map.RegionHandle))
+                SimHandles.Remove(map.RegionHandle);
+            SimIDs.Add(map.RegionID, map);
+            SimHandles.Add(map.RegionHandle, map);
 
             SimMapDataConnector.SetSimMap(map);
         }
@@ -322,9 +343,9 @@ namespace Aurora.Framework
         private SimMap GetSimMap(UUID regionID)
         {
             SimMap map = new SimMap();
-            if (Sims.ContainsKey(regionID))
+            if (SimIDs.ContainsKey(regionID))
             {
-                Sims.TryGetValue(regionID, out map);
+                SimIDs.TryGetValue(regionID, out map);
 
                 //We know theres no region there.
                 if (map == null)
@@ -334,8 +355,9 @@ namespace Aurora.Framework
                 {
                     //Its hasn't updated in the last 6 minutes, and it is supposed to update every 5, so it's down.
                     map.Access = map.Access | (uint)SimAccess.Down;
-                    Sims.Remove(regionID);
-                    Sims.Add(regionID, map.RegionHandle, map);
+                    SimIDs.Remove(regionID);
+                    SimIDs.Add(regionID, map);
+                    SimHandles.Add(map.RegionHandle, map);
                 }
             }
             else
@@ -345,11 +367,17 @@ namespace Aurora.Framework
                 if (map == null)
                 {
                     LastNull++;
-                    Sims.Add(regionID, LastNull, map);
-                    return NotFound(0, 0);
+                    SimIDs.Add(regionID, map);
                 }
                 else
-                    Sims.Add(regionID, map.RegionHandle, map);
+                {
+                    SimIDs.Add(regionID, map);
+                    SimHandles.Add(map.RegionHandle, map);
+                }
+
+                //No region there.
+                if (map == null)
+                    return NotFound(0, 0);
             }
             return map;
         }
@@ -357,9 +385,9 @@ namespace Aurora.Framework
         private SimMap GetSimMap(ulong regionHandle)
         {
             SimMap map = new SimMap();
-            if (Sims.ContainsKey(regionHandle))
+            if (SimHandles.ContainsKey(regionHandle))
             {
-                Sims.TryGetValue(regionHandle, out map);
+                SimHandles.TryGetValue(regionHandle, out map);
 
                 //We know theres no region there.
                 if (map == null)
@@ -369,8 +397,8 @@ namespace Aurora.Framework
                 {
                     //Its hasn't updated in the last 6 minutes, and it is supposed to update every 5, so it's down.
                     map.Access = map.Access | (uint)SimAccess.Down;
-                    Sims.Remove(regionHandle);
-                    Sims.Add(map.RegionID, regionHandle, map);
+                    SimHandles.Remove(regionHandle);
+                    SimHandles.Add(regionHandle, map);
                 }
             }
             else
@@ -380,11 +408,10 @@ namespace Aurora.Framework
                 if (map == null)
                 {
                     LastNull++;
-                    Sims.Add(map.RegionID, LastNull, map);
                     return NotFound(0, 0);
                 }
                 else
-                    Sims.Add(map.RegionID, regionHandle, map);
+                    SimHandles.Add(regionHandle, map);
             }
             return map;
         }

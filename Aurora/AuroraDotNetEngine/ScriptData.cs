@@ -488,7 +488,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             else
             {
-                if (AssemblyName != "")
+                if (reupload)
                 {
                     //Null everything
                     AssemblyName = "";

@@ -797,6 +797,27 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             OutPacket(reply, ThrottleOutPacketType.Resend);
         }
 
+        public void SendTelehubInfo(Vector3 pos, Quaternion rot)
+        {
+            TelehubInfoPacket packet = (TelehubInfoPacket)PacketPool.Instance.GetPacket(PacketType.TelehubInfo);
+            if (pos == Vector3.Zero)
+            {
+                packet.SpawnPointBlock = new TelehubInfoPacket.SpawnPointBlockBlock[0];
+            }
+            else
+            {
+                packet.SpawnPointBlock = new TelehubInfoPacket.SpawnPointBlockBlock[1];
+                packet.SpawnPointBlock[0] = new TelehubInfoPacket.SpawnPointBlockBlock();
+                packet.SpawnPointBlock[0].SpawnPointPos = pos;
+ 
+            }
+            packet.TelehubBlock.ObjectID = UUID.Zero;
+            packet.TelehubBlock.ObjectName = new byte[]{};
+            packet.TelehubBlock.TelehubPos = pos;
+            packet.TelehubBlock.TelehubRot = rot;
+            OutPacket(packet, ThrottleOutPacketType.Unknown);
+        }
+
         /// <summary>
         /// Send an instant message to this client
         /// </summary>
@@ -9019,12 +9040,17 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 (GodlikeMessagePacket)Packet;
 
             GodlikeMessage handlerGodlikeMessage = onGodlikeMessage;
+            List<string> Parameters = new List<string>();
+            foreach (GodlikeMessagePacket.ParamListBlock block in GodlikeMessage.ParamList)
+            {
+                Parameters.Add(OpenMetaverse.Utils.BytesToString(block.Parameter));
+            }
             if (handlerGodlikeMessage != null)
             {
                 handlerGodlikeMessage(this,
                                       GodlikeMessage.MethodData.Invoice,
-                                      GodlikeMessage.MethodData.Method,
-                                      GodlikeMessage.ParamList[0].Parameter);
+                                      OpenMetaverse.Utils.BytesToString(GodlikeMessage.MethodData.Method),
+                                      Parameters);
                 return true;
             }
             return false;

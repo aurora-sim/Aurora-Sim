@@ -547,9 +547,11 @@ namespace OpenSim.Server.Handlers.AuroraData
         {
             UUID regionID = UUID.Zero;
             UUID.TryParse(request["REGIONID"].ToString(), out regionID);
-            
-            Dictionary<string, object> result = GridConnector.FindTelehub(regionID).ToKeyValuePairs();
 
+            Dictionary<string, object> result = new Dictionary<string, object>();
+            Telehub telehub = GridConnector.FindTelehub(regionID);
+            if(telehub != null)
+                result = telehub.ToKeyValuePairs();
             string xmlString = ServerUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();

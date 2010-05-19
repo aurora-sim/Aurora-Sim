@@ -75,7 +75,7 @@ namespace Aurora.Services.DataService
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
 
-            sendData["PRINCIPALID"] = regionID.ToString();
+            sendData["REGIONID"] = regionID.ToString();
             sendData["METHOD"] = "removetelehub";
 
             string reqString = ServerUtils.BuildQueryString(sendData);

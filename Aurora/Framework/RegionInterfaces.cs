@@ -10,9 +10,13 @@ namespace Aurora.Framework
         public string RegionID = UUID.Zero.ToString();
         public float RegionLocX = 0;
         public float RegionLocY = 0;
-        public float TelehubX = 0;
-        public float TelehubY = 0;
-        public float TelehubZ = 0;
+        public float TelehubLocX = 0;
+        public float TelehubLocY = 0;
+        public float TelehubLocZ = 0;
+
+        public float TelehubRotX = 0;
+        public float TelehubRotY = 0;
+        public float TelehubRotZ = 0;
 
         public Telehub() { }
 
@@ -21,9 +25,12 @@ namespace Aurora.Framework
             RegionID = KVP["RegionID"].ToString();
             RegionLocX = float.Parse(KVP["RegionLocX"].ToString());
             RegionLocY = float.Parse(KVP["RegionLocY"].ToString());
-            TelehubX = float.Parse(KVP["TelehubX"].ToString());
-            TelehubY = float.Parse(KVP["TelehubY"].ToString());
-            TelehubZ = float.Parse(KVP["TelehubZ"].ToString());
+            TelehubRotX = float.Parse(KVP["TelehubRotX"].ToString());
+            TelehubRotY = float.Parse(KVP["TelehubRotY"].ToString());
+            TelehubRotZ = float.Parse(KVP["TelehubRotZ"].ToString());
+            TelehubLocX = float.Parse(KVP["TelehubLocX"].ToString());
+            TelehubLocY = float.Parse(KVP["TelehubLocY"].ToString());
+            TelehubLocZ = float.Parse(KVP["TelehubLocZ"].ToString());
         }
 
         public Dictionary<string, object> ToKeyValuePairs()
@@ -32,9 +39,12 @@ namespace Aurora.Framework
             Telehub["RegionID"] = RegionID;
             Telehub["RegionLocX"] = RegionLocX;
             Telehub["RegionLocY"] = RegionLocY;
-            Telehub["TelehubX"] = TelehubX;
-            Telehub["TelehubY"] = TelehubY;
-            Telehub["TelehubZ"] = TelehubZ;
+            Telehub["TelehubRotX"] = TelehubRotX;
+            Telehub["TelehubRotY"] = TelehubRotY;
+            Telehub["TelehubRotZ"] = TelehubRotZ;
+            Telehub["TelehubLocX"] = TelehubLocX;
+            Telehub["TelehubLocY"] = TelehubLocY;
+            Telehub["TelehubLocZ"] = TelehubLocZ;
             return Telehub;
         }
     }

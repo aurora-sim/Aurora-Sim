@@ -116,11 +116,14 @@ namespace Aurora.DataManager.Migration.Migrators
 
             AddSchema("telehubs", ColDefs(
                 ColDef("RegionID", ColumnTypes.String50, true),
-                ColDef("RegionX", ColumnTypes.String50),
-                ColDef("RegionY", ColumnTypes.String50),
-                ColDef("TelehubX", ColumnTypes.String50),
-                ColDef("TelehubY", ColumnTypes.String50),
-                ColDef("TelehubZ", ColumnTypes.String50)
+                ColDef("RegionLocX", ColumnTypes.String50),
+                ColDef("RegionLocY", ColumnTypes.String50),
+                ColDef("TelehubLocX", ColumnTypes.String50),
+                ColDef("TelehubLocY", ColumnTypes.String50),
+                ColDef("TelehubLocZ", ColumnTypes.String50),
+                ColDef("TelehubRotX", ColumnTypes.String50),
+                ColDef("TelehubRotY", ColumnTypes.String50),
+                ColDef("TelehubRotZ", ColumnTypes.String50)
                 ));
 
             AddSchema("Passwords", ColDefs(ColDef("Method", ColumnTypes.String50, true),

@@ -1692,5 +1692,15 @@ namespace OpenSim.Region.OptionalModules.Agent.InternetRelayClientView.Server
         public void FireUpdateParcel(LandUpdateArgs args, int LocalID)
         { 
         }
+
+        #region IClientAPI Members
+
+
+        public void SendTelehubInfo(Vector3 pos, Quaternion rot)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
     }
 }

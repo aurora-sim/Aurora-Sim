@@ -1172,5 +1172,15 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         public void FireUpdateParcel(LandUpdateArgs args, int LocalID)
         {
         }
+
+        #region IClientAPI Members
+
+
+        public void SendTelehubInfo(Vector3 pos, Quaternion rot)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
     }
 }

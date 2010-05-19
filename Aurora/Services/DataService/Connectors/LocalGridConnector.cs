@@ -135,13 +135,19 @@ namespace Aurora.Services.DataService
             {
 				//Found one, time to update it.
 				GD.Update("telehubs", new object[] {
-					telehub.TelehubX,
-					telehub.TelehubY,
-					telehub.TelehubZ
+					telehub.TelehubLocX,
+					telehub.TelehubLocY,
+					telehub.TelehubLocZ,
+                    telehub.TelehubRotX,
+					telehub.TelehubRotY,
+					telehub.TelehubRotZ
 				}, new string[] {
-					"TelehubX",
-					"TelehubY",
-					"TelehubZ"
+					"TelehubLocX",
+					"TelehubLocY",
+					"TelehubLocZ",
+                    "TelehubRotX",
+					"TelehubRotY",
+					"TelehubRotZ"
 				}, new string[] { "RegionID" }, new object[] { telehub.RegionID });
 			} else {
 				//Make a new one
@@ -149,9 +155,12 @@ namespace Aurora.Services.DataService
                 values.Add(telehub.RegionID);
                 values.Add(telehub.RegionLocX);
                 values.Add(telehub.RegionLocY);
-                values.Add(telehub.TelehubX);
-                values.Add(telehub.TelehubY);
-                values.Add(telehub.TelehubZ);
+                values.Add(telehub.TelehubLocX);
+                values.Add(telehub.TelehubLocY);
+                values.Add(telehub.TelehubLocZ);
+                values.Add(telehub.TelehubRotX);
+                values.Add(telehub.TelehubRotY);
+                values.Add(telehub.TelehubRotZ);
 				GD.Insert("telehubs", values.ToArray());
 			}
 		}
@@ -165,7 +174,7 @@ namespace Aurora.Services.DataService
 			//Look for a telehub first.
 			Vector3 oldPos = Vector3.Zero;
 			if (FindTelehub(regionID) != null) {
-				GD.Delete("telehubs", new string[] { "RegionID" }, new object[] { regionID });
+                GD.Delete("telehubs", new string[] { "RegionID" }, new object[] { regionID });
 			}
 		}
 
@@ -178,16 +187,20 @@ namespace Aurora.Services.DataService
         public Telehub FindTelehub(UUID regionID)
 		{
             Telehub telehub = new Telehub();
-			List<string> telehubposition = GD.Query("RegionID", regionID, "telehubs", "RegionLocX,RegionLocY,TelehubX,TelehubY,TelehubZ");
+            List<string> telehubposition = GD.Query("RegionID", regionID, "telehubs", "RegionLocX,RegionLocY,TelehubLocX,TelehubLocY,TelehubLocZ,TelehubRotX,TelehubRotY,TelehubRotZ");
 			//Not the right number of values, so its not there.
-			if (telehubposition.Count != 5)
+			if (telehubposition.Count != 8)
                 return null;
 
-            telehub.RegionLocX = Convert.ToInt32(telehubposition[4]);
-            telehub.RegionLocY = Convert.ToInt32(telehubposition[4]);
-            telehub.TelehubX = Convert.ToInt32(telehubposition[4]);
-            telehub.TelehubY = Convert.ToInt32(telehubposition[4]);
-            telehub.TelehubZ = Convert.ToInt32(telehubposition[4]);
+            telehub.RegionID = regionID.ToString();
+            telehub.RegionLocX = float.Parse(telehubposition[0]);
+            telehub.RegionLocY = float.Parse(telehubposition[1]);
+            telehub.TelehubLocX = float.Parse(telehubposition[2]);
+            telehub.TelehubLocY = float.Parse(telehubposition[3]);
+            telehub.TelehubLocZ = float.Parse(telehubposition[4]);
+            telehub.TelehubRotX = float.Parse(telehubposition[5]);
+            telehub.TelehubRotY = float.Parse(telehubposition[6]);
+            telehub.TelehubRotZ = float.Parse(telehubposition[7]);
 
             return telehub;
 		}

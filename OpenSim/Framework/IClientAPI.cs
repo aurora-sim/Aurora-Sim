@@ -478,8 +478,8 @@ namespace OpenSim.Framework
     public delegate void NewUserReport(IClientAPI client, string regionName,UUID abuserID, byte catagory, byte checkflags, string details, UUID objectID, Vector3 postion, byte reportType ,UUID screenshotID, string Summary, UUID reporter);
     
     public delegate void GodUpdateRegionInfoUpdate(IClientAPI client, float BillableFactor, ulong EstateID, ulong RegionFlags, byte[] SimName,int RedirectX, int RedirectY);
-    
-    public delegate void GodlikeMessage(IClientAPI client, UUID requester, byte[] Method, byte[] Parameter);
+
+    public delegate void GodlikeMessage(IClientAPI client, UUID requester, string Method, List<string> Parameter);
     
     public delegate void SaveStateHandler(IClientAPI client,UUID agentID);
     
@@ -1487,5 +1487,7 @@ namespace OpenSim.Framework
         void SendTextBoxRequest(string message, int chatChannel, string objectname, string ownerFirstName, string ownerLastName, UUID objectId);
         void SendPlacesQuery(List<string> simNames, List<object> Places, UUID queryID, UUID agentID, UUID transactionID, List<string> Xs, List<string> Ys, OpenSim.Framework.RegionInfo[] info);
         void FireUpdateParcel(LandUpdateArgs args, int LocalID);
+
+        void SendTelehubInfo(Vector3 pos, Quaternion rot);
     }
 }

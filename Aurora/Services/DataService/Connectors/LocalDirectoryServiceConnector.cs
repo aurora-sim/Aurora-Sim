@@ -63,7 +63,8 @@ namespace Aurora.Services.DataService
 		{
 			List<string> Query = GD.Query("ParcelID", LD.GlobalID.ToString(), "landinfo", "MediaDescription,MediaHeight,MediaWidth,MediaLoop,MediaType,ObscureMedia,ObscureMusic");
 
-			if (Query.Count == 0) {
+            if (Query.Count == 0 || Query.Count == 1)
+            {
 				return null;
 			}
 			LD.MediaDesc = Query[0];

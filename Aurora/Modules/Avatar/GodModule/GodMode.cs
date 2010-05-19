@@ -71,7 +71,6 @@ namespace Aurora.Modules
 
         void EventManager_OnNewClient(IClientAPI client)
         {
-            client.onGodlikeMessage += GodlikeMessage;
             client.OnGodUpdateRegionInfoUpdate += GodUpdateRegionInfoUpdate;
             client.OnSaveState += GodSaveState;
         }
@@ -95,14 +94,6 @@ namespace Aurora.Modules
                 MainConsole.Instance.RunCommand("change region " + ((Scene)client.Scene).RegionInfo.RegionName);
                 MainConsole.Instance.RunCommand("save oar " + ((Scene)client.Scene).RegionInfo.RegionName + Util.UnixTimeSinceEpoch().ToString() + ".ss");
                 MainConsole.Instance.RunCommand("change region root");
-            }
-        }
-
-        public void GodlikeMessage(IClientAPI client, UUID requester, byte[] Method, byte[] Parameter)
-        {
-            if (Method.ToString() == "telehub")
-            {
-                client.SendAgentAlertMessage("Please contact an administrator to help you with this function.", false);
             }
         }
 

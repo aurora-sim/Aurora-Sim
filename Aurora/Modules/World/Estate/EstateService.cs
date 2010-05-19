@@ -32,6 +32,7 @@ namespace Aurora.Modules
             RegionConnector = DataManager.DataManager.IRegionConnector;
             scene.RegisterModuleInterface<IEstateSettingsModule>(this);
             m_scene = scene;
+            scene.EventManager.OnNewClient += EventManager_OnNewClient;
             scene.AddCommand(this, "set regionsetting", "set regionsetting", "Sets a region setting for the given region. Valid params: Maturity - 0(PG),1(Mature),2(Adult); AddEstateBan,RemoveEstateBan,AddEstateManager,RemoveEstateManager - First name, Last name", SetRegionInfoOption);
         }
 
@@ -125,6 +126,73 @@ namespace Aurora.Modules
 
         public bool IsSharedModule { get { return true; } }
 
+        void EventManager_OnNewClient(IClientAPI client)
+        {
+            client.onGodlikeMessage += GodlikeMessage;
+        }
+
+        public void GodlikeMessage(IClientAPI client, UUID requester, string Method, List<string> Parameters)
+        {
+            string parameter1 = Parameters[0];
+            if (Method == "telehub")
+            {
+                bool Update = false;
+                Telehub telehub = RegionConnector.FindTelehub(client.Scene.RegionInfo.RegionID);
+                if (parameter1 == "spawnpoint remove")
+                {
+                    RegionConnector.RemoveTelehub(client.Scene.RegionInfo.RegionID);
+                    telehub = RegionConnector.FindTelehub(client.Scene.RegionInfo.RegionID);
+                    Update = true;
+                }
+                if (parameter1 == "spawnpoint add")
+                {
+                    Telehub tb = new Telehub();
+                    tb.RegionLocX = client.Scene.RegionInfo.RegionLocX;
+                    tb.RegionLocY = client.Scene.RegionInfo.RegionLocY;
+                    tb.RegionID = client.Scene.RegionInfo.RegionID.ToString();
+                    ScenePresence SP = ((Scene)client.Scene).GetScenePresence(client.AgentId);
+                    tb.TelehubLocX = SP.AbsolutePosition.X;
+                    tb.TelehubLocY = SP.AbsolutePosition.Y;
+                    tb.TelehubLocZ = SP.AbsolutePosition.Z;
+                    tb.TelehubRotX = SP.Rotation.X;
+                    tb.TelehubRotY = SP.Rotation.Y;
+                    tb.TelehubRotZ = SP.Rotation.Z;
+                    RegionConnector.AddTelehub(tb);
+                    telehub = RegionConnector.FindTelehub(client.Scene.RegionInfo.RegionID);
+                    Update = true;
+                }
+                if (parameter1 == "connect")
+                {
+                    SceneObjectPart part = m_scene.GetSceneObjectPart(uint.Parse(Parameters[1]));
+                    Telehub tb = new Telehub();
+                    tb.RegionLocX = client.Scene.RegionInfo.RegionLocX;
+                    tb.RegionLocY = client.Scene.RegionInfo.RegionLocY;
+                    tb.RegionID = client.Scene.RegionInfo.RegionID.ToString();
+                    ScenePresence SP = ((Scene)client.Scene).GetScenePresence(client.AgentId);
+                    tb.TelehubLocX = SP.AbsolutePosition.X;
+                    tb.TelehubLocY = SP.AbsolutePosition.Y;
+                    tb.TelehubLocZ = SP.AbsolutePosition.Z;
+                    tb.TelehubRotX = SP.Rotation.X;
+                    tb.TelehubRotY = SP.Rotation.Y;
+                    tb.TelehubRotZ = SP.Rotation.Z;
+                    RegionConnector.AddTelehub(tb);
+                }
+                if (parameter1 == "info ui" || Update)
+                {
+                    if (telehub == null)
+                    {
+                        client.SendTelehubInfo(Vector3.Zero, Quaternion.Identity);
+                    }
+                    else
+                    {
+                        Vector3 pos = new Vector3(telehub.TelehubLocX, telehub.TelehubLocY, telehub.TelehubLocZ);
+                        Quaternion rot = new Quaternion(telehub.TelehubRotX, telehub.TelehubRotY, telehub.TelehubRotZ);
+                        client.SendTelehubInfo(pos, rot);
+                    }
+                }
+            }
+        }
+
         public bool AllowTeleport(IScene scene, UUID userID, Vector3 Position, out Vector3 newPosition)
         {
             newPosition = Position;
@@ -147,7 +215,7 @@ namespace Aurora.Modules
             {
                 Telehub telehub = RegionConnector.FindTelehub(m_scene.RegionInfo.RegionID);
                 if (telehub != null)
-                    newPosition = new Vector3(telehub.TelehubX, telehub.TelehubY, telehub.TelehubZ);
+                    newPosition = new Vector3(telehub.TelehubLocX, telehub.TelehubLocY, telehub.TelehubLocZ);
             }
             else
             {

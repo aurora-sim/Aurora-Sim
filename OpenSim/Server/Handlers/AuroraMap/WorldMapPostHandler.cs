@@ -73,6 +73,8 @@ namespace OpenSim.Server.Handlers.AuroraMap
                         return AddAgent(request);
                     case "removeagent":
                         return RemoveAgent(request);
+                    case "getmapitems":
+                        return GetMapItems(request);
                 }
                 m_log.DebugFormat("[AuroraDataServerPostHandler]: unknown method {0} request {1}", method.Length, method);
             }

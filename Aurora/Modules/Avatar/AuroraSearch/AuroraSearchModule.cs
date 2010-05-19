@@ -414,8 +414,8 @@ namespace Aurora.Modules
                 if (telehub != null)
                 {
                     mapitem = new mapItemReply();
-                    mapitem.x = (uint)(GR.RegionLocX + telehub.TelehubX);
-                    mapitem.y = (uint)(GR.RegionLocY + telehub.TelehubY);
+                    mapitem.x = (uint)(GR.RegionLocX + telehub.TelehubLocX);
+                    mapitem.y = (uint)(GR.RegionLocY + telehub.TelehubLocY);
                     mapitem.id = GR.RegionID;
                     mapitem.name = Util.Md5Hash(GR.RegionName + tc.ToString());
                     mapitem.Extra = 1;
