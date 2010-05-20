@@ -71,6 +71,7 @@ namespace Aurora.Services.DataService
 
             DataManager.DataManager.IScriptDataConnector = new LocalScriptDataConnector(ScriptSaveDataConnector);
             string Connector = m_config.GetString("Connector", "LocalConnector");
+            DataManager.DataManager.IRegionInfoConnector = new LocalRegionInfoConnector();
             if (Connector == "LocalConnector")
             {
                 DataManager.DataManager.ISimMapConnector = new LocalGridConnector();
@@ -83,7 +84,6 @@ namespace Aurora.Services.DataService
                 DataManager.DataManager.IOfflineMessagesConnector = new LocalOfflineMessagesConnector();
                 DataManager.DataManager.IDirectoryServiceConnector = new LocalDirectoryServiceConnector();
                 DataManager.DataManager.IEstateConnector = new LocalEstateConnector();
-                DataManager.DataManager.IAvatarArchiverConnector = new LocalAvatarArchiverConnector();
                 return;
             }
             DataManager.DataManager.ISimMapConnector = new LocalGridConnector();

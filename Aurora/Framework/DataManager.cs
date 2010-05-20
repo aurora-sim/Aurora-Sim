@@ -42,6 +42,7 @@ namespace Aurora.DataManager
         public static IAssetConnector IAssetConnector;
         public static IAvatarArchiverConnector IAvatarArchiverConnector;
         public static ISimMapDataConnector ISimMapConnector;
+        public static IRegionInfoConnector IRegionInfoConnector;
 
         #endregion
     }

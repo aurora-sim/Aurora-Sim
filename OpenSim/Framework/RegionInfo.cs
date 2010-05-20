@@ -164,7 +164,6 @@ namespace OpenSim.Framework
                 {
                     IniConfigSource newFile = new IniConfigSource();
                     ReadNiniConfig(newFile, String.Empty);
-
                     newFile.Save(filename);
 
                     RegionFile = filename;
@@ -282,31 +281,37 @@ namespace OpenSim.Framework
         public int NonphysPrimMax
         {
             get { return m_nonphysPrimMax; }
+            set { m_nonphysPrimMax = value; }
         }
 
         public int PhysPrimMax
         {
             get { return m_physPrimMax; }
+            set { m_physPrimMax = value; }
         }
 
         public bool ClampPrimSize
         {
             get { return m_clampPrimSize; }
+            set { m_clampPrimSize = value; }
         }
 
         public int ObjectCapacity
         {
             get { return m_objectCapacity; }
+            set { m_objectCapacity = value; }
         }
 
         public byte AccessLevel
         {
             get { return (byte)Util.ConvertMaturityToAccessLevel((uint)RegionSettings.Maturity); }
+            set { RegionSettings.Maturity = (int)Util.ConvertAccessLevelToMaturity(value); }
         }
 
         public string RegionType
         {
             get { return m_regionType; }
+            set { m_regionType = value; }
         }
 
         /// <summary>
@@ -425,6 +430,7 @@ namespace OpenSim.Framework
         private bool ReadNiniConfig(IConfigSource source, string name)
         {
 //            bool creatingNew = false;
+
             if (name == String.Empty || source.Configs.Count == 0)
             {
                 MainConsole.Instance.Output("=====================================\n");

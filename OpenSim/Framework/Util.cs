@@ -1171,6 +1171,26 @@ namespace OpenSim.Framework
 
         }
 
+        public static uint ConvertAccessLevelToMaturity(byte maturity)
+        {
+            uint retVal = 0;
+            switch (maturity)
+            {
+                case 13: //PG
+                    retVal = 0;
+                    break;
+                case 21: //Mature
+                    retVal = 1;
+                    break;
+                case 42: // Adult
+                    retVal = 2;
+                    break;
+            }
+
+            return retVal;
+
+        }
+
         /// <summary>
         /// Produces an OSDMap from its string representation on a stream
         /// </summary>

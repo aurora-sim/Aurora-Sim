@@ -114,6 +114,26 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("GridRegionFlags", ColumnTypes.String50)
                 ));
 
+            AddSchema("simulator", ColDefs(
+                ColDef("RegionID", ColumnTypes.String50, true),
+                ColDef("RegionName", ColumnTypes.String50),
+                ColDef("RegionLocX", ColumnTypes.String50),
+                ColDef("RegionLocY", ColumnTypes.String50),
+                ColDef("InternalIP", ColumnTypes.String50),
+                ColDef("Port", ColumnTypes.String50),
+                ColDef("ExternalIP", ColumnTypes.String50),
+                ColDef("RegionType", ColumnTypes.String50),
+                ColDef("NonphysicalPrimMax", ColumnTypes.String50),
+                ColDef("PhysicalPrimMax", ColumnTypes.String50),
+                ColDef("ClampPrimSize", ColumnTypes.String50),
+                ColDef("MaxPrims", ColumnTypes.String50),
+                ColDef("LastUpdated", ColumnTypes.String50),
+                ColDef("Online", ColumnTypes.String50),
+                ColDef("AcceptingAgents", ColumnTypes.String50),
+                ColDef("AccessLevel", ColumnTypes.String50),
+                ColDef("Disabled", ColumnTypes.String50)
+                ));
+
             AddSchema("telehubs", ColDefs(
                 ColDef("RegionID", ColumnTypes.String50, true),
                 ColDef("RegionLocX", ColumnTypes.String50),

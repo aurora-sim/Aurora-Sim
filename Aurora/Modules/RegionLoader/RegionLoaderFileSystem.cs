@@ -25,14 +25,46 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
+using System.Collections.Generic;
+using System.IO;
 using Nini.Config;
+using OpenSim.Framework.Console;
 
-namespace OpenSim.Framework
+namespace OpenSim.Framework.RegionLoader.Filesystem
 {
-    public interface IRegionLoader
+    public class RegionLoaderFileSystem : IRegionLoader
     {
-        string Name { get; }
-        void SetIniConfigSource(IConfigSource configSource);
-        RegionInfo[] LoadRegions();
+        public string Name
+        {
+            get
+            {
+                return "RegionLoaderDataBaseSystem";
+            }
+        }
+
+        private IConfigSource m_configSource;
+
+        public void SetIniConfigSource(IConfigSource configSource)
+        {
+            m_configSource = configSource;
+        }
+
+        public RegionInfo[] LoadRegions()
+        {
+            RegionInfo[] infos = Aurora.DataManager.DataManager.IRegionInfoConnector.GetRegionInfos();
+            if (infos.Length == 0)
+            {
+                CreateNewRegion();
+                return LoadRegions();
+            }
+            else
+                return infos;
+        }
+
+        public void CreateNewRegion()
+        {
+
+        }
     }
 }
