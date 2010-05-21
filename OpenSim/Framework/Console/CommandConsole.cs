@@ -559,17 +559,15 @@ namespace OpenSim.Framework.Console
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        public Commands Commands = new Commands();
-
         public void Initialise(string defaultPrompt)
         {
-            Commands.AddCommand("console", false, "help", "help [<command>]", 
+            m_Commands.AddCommand("console", false, "help", "help [<command>]", 
                     "Get general command list or more detailed help on a specific command", Help);
         }
 
         private void Help(string module, string[] cmd)
         {
-            List<string> help = Commands.GetHelp(cmd);
+            List<string> help = m_Commands.GetHelp(cmd);
 
             foreach (string s in help)
                 Output(s);
@@ -591,7 +589,7 @@ namespace OpenSim.Framework.Console
         public void RunCommand(string cmd)
         {
             string[] parts = Parser.Parse(cmd);
-            Commands.Resolve(parts);
+            m_Commands.Resolve(parts);
         }
 
         public virtual string ReadLine(string p, bool isCommand, bool e)
@@ -601,7 +599,7 @@ namespace OpenSim.Framework.Console
 
             if (isCommand)
             {
-                string[] cmd = Commands.Resolve(Parser.Parse(cmdinput));
+                string[] cmd = m_Commands.Resolve(Parser.Parse(cmdinput));
 
                 if (cmd.Length != 0)
                 {
@@ -681,8 +679,6 @@ namespace OpenSim.Framework.Console
         {
         }
 
-        public object ConsoleScene = null;
-
         /// <summary>
         /// The default prompt text.
         /// </summary>
@@ -696,5 +692,40 @@ namespace OpenSim.Framework.Console
         {
             get { return "CommandConsole"; }
         }
+
+        #region ICommandConsole Members
+
+        public Commands m_Commands = new Commands();
+
+        public Commands Commands
+        {
+            get
+            {
+                return m_Commands;
+            }
+            set
+            {
+                m_Commands = value;
+            }
+        }
+
+        #endregion
+
+        #region ICommandConsole Members
+
+        public object m_ConsoleScene = null;
+        public object ConsoleScene
+        {
+            get
+            {
+                return m_ConsoleScene;
+            }
+            set
+            {
+                m_ConsoleScene = value;
+            }
+        }
+
+        #endregion
     }
 }

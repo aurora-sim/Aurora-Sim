@@ -26,9 +26,13 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using log4net;
+using log4net.Appender;
+using log4net.Core;
+using log4net.Repository;
 using log4net.Config;
 using Nini.Config;
 using OpenSim.Framework;
@@ -82,9 +86,9 @@ namespace OpenSim
             if (logConfigFile != String.Empty)
             {
                 XmlConfigurator.Configure(new System.IO.FileInfo(logConfigFile));
-                m_log.InfoFormat("[OPENSIM MAIN]: configured log4net using \"{0}\" as configuration file", 
+                m_log.InfoFormat("[OPENSIM MAIN]: configured log4net using \"{0}\" as configuration file",
                                  logConfigFile);
-            } 
+            }
             else
             {
                 XmlConfigurator.Configure();
@@ -251,31 +255,62 @@ namespace OpenSim
 
             // load Crash directory config
             m_crashDir = configSource.Configs["Startup"].GetString("crash_dir", m_crashDir);
-            //REFACTOR ISSUE: Needs to be changed so this works again
-            //if (background)
-            //{
-            //    m_sim = new OpenSimBackground(configSource);
-            //    m_sim.Startup();
-            //}
-            //else
-            //{
-                m_sim = new OpenSimBase(configSource);
+            string m_consoleType = "LocalConsole";
+            if (configSource.Configs["Startup"].GetString("console", String.Empty) != String.Empty)
+                m_consoleType = configSource.Configs["Startup"].GetString("console", String.Empty);
 
-                m_sim.Startup();
-
-                while (true)
+            ICommandConsole m_console = null;
+            List<ICommandConsole> ConsoleModules = Aurora.Framework.AuroraModuleLoader.PickupModules<ICommandConsole>(Environment.CurrentDirectory, "ICommandConsole");
+            foreach (ICommandConsole consolemod in ConsoleModules)
+            {
+                if (consolemod.Name == m_consoleType)
                 {
-                    try
-                    {
-                        // Block thread here for input
-                        MainConsole.Instance.Prompt();
-                    }
-                    catch (Exception e)
-                    {
-                        m_log.ErrorFormat("Command error: {0}", e);
-                    }
+                    consolemod.Initialise("Region");
+                    m_console = consolemod;
                 }
-            //}
+            }
+
+            ILoggerRepository repository = LogManager.GetRepository();
+            IAppender[] appenders = repository.GetAppenders();
+            OpenSimAppender m_consoleAppender = null;
+            foreach (IAppender appender in appenders)
+            {
+                if (appender.Name == "Console")
+                {
+                    m_consoleAppender = (OpenSimAppender)appender;
+                    break;
+                }
+            }
+
+            if (null != m_consoleAppender)
+            {
+                m_consoleAppender.Console = m_console;
+
+                // If there is no threshold set then the threshold is effectively everything.
+                if (null == m_consoleAppender.Threshold)
+                    m_consoleAppender.Threshold = Level.All;
+
+                m_log.Info(String.Format("Console log level is {0}", m_consoleAppender.Threshold));
+            }
+
+            MainConsole.Instance = m_console;
+
+            m_sim = new OpenSimBase(configSource);
+
+            m_sim.Startup();
+
+            while (true)
+            {
+                try
+                {
+                    // Block thread here for input
+                    MainConsole.Instance.Prompt();
+                }
+                catch (Exception e)
+                {
+                    m_log.ErrorFormat("Command error: {0}", e);
+                }
+            }
         }
 
         private static bool _IsHandlingException = false; // Make sure we don't go recursive on ourself

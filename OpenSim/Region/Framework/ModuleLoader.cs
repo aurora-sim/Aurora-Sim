@@ -71,12 +71,12 @@ namespace OpenSim.Region.Framework
                 {
                     if (!module.IsSharedModule)
                     {
-                        m_log.InfoFormat("[MODULES]:    [{0}]: Initializing.", module.Name);
+                        //m_log.InfoFormat("[MODULES]:    [{0}]: Initializing.", module.Name);
                         InitializeModule(module, scene);
                     }
                     else
                     {
-                        m_log.InfoFormat("[MODULES]:    [{0}]: Loading Shared Module.", module.Name);
+                        //m_log.InfoFormat("[MODULES]:    [{0}]: Loading Shared Module.", module.Name);
                         LoadSharedModule(module);
                     }
                 }

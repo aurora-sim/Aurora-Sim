@@ -67,7 +67,7 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
         {
             m_openSim = openSim;
             m_openSim.ApplicationRegistry.RegisterInterface<IRegionModulesController>(this);
-            m_log.DebugFormat("[REGIONMODULES]: Initializing...");
+            //m_log.DebugFormat("[REGIONMODULES]: Initializing...");
 
             // Who we are
             string id = AddinManager.CurrentAddin.Id;
@@ -116,7 +116,7 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
                             continue;
                     }
 
-                    m_log.DebugFormat("[REGIONMODULES]: Found shared region module {0}, class {1}", node.Id, node.Type);
+                    //m_log.DebugFormat("[REGIONMODULES]: Found shared region module {0}, class {1}", node.Id, node.Type);
                     m_sharedModules.Add(node);
                 }
                 else if (node.Type.GetInterface(typeof(INonSharedRegionModule).ToString()) != null)
@@ -146,7 +146,7 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
                             continue;
                     }
 
-                    m_log.DebugFormat("[REGIONMODULES]: Found non-shared region module {0}, class {1}", node.Id, node.Type);
+                    //m_log.DebugFormat("[REGIONMODULES]: Found non-shared region module {0}, class {1}", node.Id, node.Type);
                     m_nonSharedModules.Add(node);
                 }
                 else
@@ -311,8 +311,8 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
                     continue;
                 }
 
-                m_log.DebugFormat("[REGIONMODULE]: Adding scene {0} to shared module {1}",
-                                  scene.RegionInfo.RegionName, module.Name);
+               // m_log.DebugFormat("[REGIONMODULE]: Adding scene {0} to shared module {1}",
+               //                   scene.RegionInfo.RegionName, module.Name);
 
                 module.AddRegion(scene);
                 scene.AddRegionModule(module.Name, module);
@@ -372,8 +372,8 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
                     continue;
                 }
 
-                m_log.DebugFormat("[REGIONMODULE]: Adding scene {0} to non-shared module {1}",
-                                  scene.RegionInfo.RegionName, module.Name);
+                //m_log.DebugFormat("[REGIONMODULE]: Adding scene {0} to non-shared module {1}",
+                //                  scene.RegionInfo.RegionName, module.Name);
 
                 // Initialise the module
                 module.Initialise(m_openSim.ConfigSource.Source);

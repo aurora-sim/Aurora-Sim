@@ -29,9 +29,9 @@ namespace OpenSim.Framework.Console
 {
     public class MainConsole
     {
-        private static CommandConsole instance;
+        private static ICommandConsole instance;
 
-        public static CommandConsole Instance
+        public static ICommandConsole Instance
         {
             get { return instance; }
             set { instance = value; }

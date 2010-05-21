@@ -142,6 +142,8 @@ namespace OpenSim
         /// <param name="configSource"></param>
         public OpenSimBase(IConfigSource configSource) : base()
         {
+            m_console = MainConsole.Instance;
+
             m_configLoader = new ConfigurationLoader();
             m_config = m_configLoader.LoadConfigSettings(configSource, out m_configSettings, out m_networkServersInfo);
             IConfig networkConfig = m_config.Source.Configs["Network"];
@@ -221,7 +223,7 @@ namespace OpenSim
         protected override void StartupSpecific()
         {
             m_log.Info("====================================================================");
-            m_log.Info("========================= STARTING OPENSIM =========================");
+            m_log.Info("========================= STARTING AURORA =========================");
             m_log.Info("====================================================================");
             m_log.InfoFormat("[OPENSIM MAIN]: Running ");
             //m_log.InfoFormat("[OPENSIM MAIN]: GC Is Server GC: {0}", GCSettings.IsServerGC.ToString());
@@ -229,19 +231,10 @@ namespace OpenSim
             //GCSettings.LatencyMode = GCLatencyMode.Batch;
             //m_log.InfoFormat("[OPENSIM MAIN]: GC Latency Mode: {0}", GCSettings.LatencyMode.ToString());
 
-            List<ICommandConsole> ConsoleModules = Aurora.Framework.AuroraModuleLoader.PickupModules<ICommandConsole>(Environment.CurrentDirectory, "ICommandConsole");
-            foreach(ICommandConsole consolemod in ConsoleModules)
-            {
-                if(consolemod.Name == m_consoleType)
-                {
-                    consolemod.Initialise("Region");
-                    //REFACTOR ISSUE: this shouldn't occur... but the interface needs extended before this can be fixed.
-                    m_console = (CommandConsole)consolemod;
-                }
-            }
-
-            MainConsole.Instance = m_console;
-
+            m_log.Info("[AURORADATA]: Setting up the data service");
+            Aurora.Services.DataService.LocalDataService service = new Aurora.Services.DataService.LocalDataService();
+            service.Initialise(m_config.Source);
+            
             RegisterConsoleCommands();
             IConfig startupConfig = m_config.Source.Configs["Startup"];
             if (startupConfig != null)

@@ -37,6 +37,7 @@ namespace OpenSim.Framework.Console
 {
     public interface ICommandConsole
     {
+        Commands Commands { get; set; }
         void Initialise(string defaultPrompt);
         string Name { get; }
         string DefaultPrompt { get; set; }
@@ -49,5 +50,8 @@ namespace OpenSim.Framework.Console
         string CmdPrompt(string prompt, string defaultresponse, List<string> options);
         string PasswdPrompt(string p);
         string ReadLine(string p, bool isCommand, bool e);
+        void RunCommand(string cmd);
+        object ConsoleScene { get; set; }
+        void Prompt();
     }
 }

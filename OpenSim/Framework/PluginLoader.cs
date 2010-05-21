@@ -157,7 +157,7 @@ namespace OpenSim.Framework
         {
             foreach (string ext in extpoints)
             {
-                log.Info("[PLUGINS]: Loading extension point " + ext);
+                //log.Info("[PLUGINS]: Loading extension point " + ext);
 
                 if (constraints.ContainsKey(ext))
                 {
@@ -174,7 +174,7 @@ namespace OpenSim.Framework
                 List<T> loadedPlugins = new List<T>();
                 foreach (PluginExtensionNode node in AddinManager.GetExtensionNodes(ext))
                 {
-                    log.Info("[PLUGINS]: Trying plugin " + node.Path);
+                    //log.Info("[PLUGINS]: Trying plugin " + node.Path);
 
                     if ((filter != null) && (filter.Apply(node) == false))
                         continue;
@@ -210,7 +210,7 @@ namespace OpenSim.Framework
             if (AddinManager.IsInitialized == true)
                 return;
 
-            log.Info("[PLUGINS]: Initializing addin manager");
+            //log.Info("[PLUGINS]: Initializing addin manager");
 
             AddinManager.AddinLoadError += on_addinloaderror_;
             AddinManager.AddinLoaded += on_addinloaded_;
@@ -225,7 +225,7 @@ namespace OpenSim.Framework
 
         private void on_addinloaded_(object sender, AddinEventArgs args)
         {
-            log.Info ("[PLUGINS]: Plugin Loaded: " + args.AddinId);
+            //log.Info ("[PLUGINS]: Plugin Loaded: " + args.AddinId);
         }
 
         private void on_addinloaderror_(object sender, AddinErrorEventArgs args)

@@ -397,7 +397,7 @@ namespace OpenSim.Region.Framework.Scenes
         private string m_defaultScriptEngine;
         private int m_LastLogin;
         private Thread HeartbeatThread;
-        private volatile bool shuttingdown;
+        private static volatile bool shuttingdown;
 
         private int m_lastUpdate;
         private bool m_firstHeartbeat = true;
@@ -617,9 +617,6 @@ namespace OpenSim.Region.Framework.Scenes
             m_datastore = m_regInfo.DataStore;
             m_lastUpdate = Util.EnvironmentTickCount();
 
-            Aurora.Services.DataService.LocalDataService service = new Aurora.Services.DataService.LocalDataService();
-            service.Initialise(Config);
-            
             m_physicalPrim = physicalPrim;
             m_seeIntoRegionFromNeighbor = SeeIntoRegionFromNeighbor;
 
@@ -668,14 +665,6 @@ namespace OpenSim.Region.Framework.Scenes
             StatsReporter.OnStatsIncorrect += m_sceneGraph.RecalculateStats;
 
             StatsReporter.SetObjectCapacity(objectCapacity);
-
-            // Old
-            /*
-            m_simulatorVersion = simulatorVersion
-                + " (OS " + Util.GetOperatingSystemInformation() + ")"
-                + " ChilTasks:" + m_seeIntoRegionFromNeighbor.ToString()
-                + " PhysPrim:" + m_physicalPrim.ToString();
-            */
 
             m_simulatorVersion = simulatorVersion + " (" + Util.GetRuntimeInformation() + ")";
 
@@ -1269,29 +1258,25 @@ namespace OpenSim.Region.Framework.Scenes
             base.Close();
         }
 
+        AuroraThreadTracker tracker = null;
+
         /// <summary>
         /// Start the timer which triggers regular scene updates
         /// </summary>
         public void StartTimer()
         {
-            if (HeartbeatThread != null)
-            {
-                HeartbeatThread.Abort();
-                HeartbeatThread = null;
-            }
             m_lastUpdate = Util.EnvironmentTickCount();
-
+            tracker = new AuroraThreadTracker();
             ScenePhysicsHeartbeat shb = new ScenePhysicsHeartbeat(this);
             SceneBackupHeartbeat sbhb = new SceneBackupHeartbeat(this);
             SceneUpdateHeartbeat suhb = new SceneUpdateHeartbeat(this);
-            sceneTracker.AddSceneHeartbeat(suhb, out HeartbeatThread);
-            sceneTracker.AddSceneHeartbeat(shb, out HeartbeatThread);
-            sceneTracker.AddSceneHeartbeat(sbhb, out HeartbeatThread);
+            tracker.AddSceneHeartbeat(this, suhb, out HeartbeatThread);
+            tracker.AddSceneHeartbeat(this, shb, out HeartbeatThread);
+            tracker.AddSceneHeartbeat(this, sbhb, out HeartbeatThread);
             //Start this after the threads are started.
-            sceneTracker.Init();
+            tracker.Init(this);
             //HeartbeatThread = Watchdog.StartThread(shb.Heartbeat, "Heartbeat for region " + RegionInfo.RegionName, ThreadPriority.Normal, false);
         }
-        AuroraThreadTracker sceneTracker = new AuroraThreadTracker();
 
         /// <summary>
         /// Sets up references to modules required by the scene
@@ -1394,6 +1379,7 @@ namespace OpenSim.Region.Framework.Scenes
         #region Scene Heartbeat parts
 
         public bool firstRun = true;
+
         public class SceneBackupHeartbeat : IThread
         {
             public SceneBackupHeartbeat(Scene scene)
@@ -1425,11 +1411,11 @@ namespace OpenSim.Region.Framework.Scenes
 
             private void CheckExit()
             {
-                if (!ShouldExit)
+                if (!ShouldExit && !shuttingdown)
                     return;
                 //Lets kill this thing
-                FireThreadClosing(this);
-                throw new Exception();
+                FireThreadClosing(m_scene, this);
+                throw new Exception("Closing");
             }
 
             private void Update()
@@ -1437,7 +1423,7 @@ namespace OpenSim.Region.Framework.Scenes
                 float physicsFPS;
                 int maintc;
 
-                while (!m_scene.shuttingdown && !ShouldExit)
+                while (!ShouldExit)
                 {
                     TimeSpan SinceLastFrame = DateTime.UtcNow - m_scene.m_lastupdate;
                     physicsFPS = 0f;
@@ -1539,7 +1525,9 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                     catch (Exception e)
                     {
-                        m_log.Error("[REGION]: Failed with exception " + e.ToString() + " On Region: " + m_scene.RegionInfo.RegionName);
+                        if (e.Message != "Closing")
+                            m_log.Error("[REGION]: Failed with exception " + e.ToString() + " On Region: " + m_scene.RegionInfo.RegionName);
+                        break;
                     }
                     finally
                     {
@@ -1556,7 +1544,10 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         CheckExit();
                     }
-                    catch { }
+                    catch
+                    {
+                        break;
+                    }
                 }
             }
         }
@@ -1592,10 +1583,10 @@ namespace OpenSim.Region.Framework.Scenes
 
             private void CheckExit()
             {
-                if (!ShouldExit)
+                if (!ShouldExit && !shuttingdown)
                     return;
                 //Lets kill this thing
-                FireThreadClosing(this);
+                FireThreadClosing(m_scene, this);
                 throw new Exception("Closing");
             }
 
@@ -1604,7 +1595,7 @@ namespace OpenSim.Region.Framework.Scenes
                 float physicsFPS;
                 int maintc;
 
-                while (!m_scene.shuttingdown && !ShouldExit)
+                while (!ShouldExit)
                 {
                     TimeSpan SinceLastFrame = DateTime.UtcNow - m_scene.m_lastupdate;
                     physicsFPS = 0f;
@@ -1663,6 +1654,7 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         if (e.Message != "Closing")
                             m_log.Error("[REGION]: Failed with exception " + e.ToString() + " On Region: " + m_scene.RegionInfo.RegionName);
+                        break;
                     }
                     finally
                     {
@@ -1679,7 +1671,10 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         CheckExit();
                     }
-                    catch { }
+                    catch 
+                    {
+                        break;
+                    }
                 }
             }
         }
@@ -1711,22 +1706,21 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     m_log.Error("[Scene]: Failed with " + ex);
                 }
+                FireThreadClosing(m_scene, this);
             }
 
             private void CheckExit()
             {
-                if (!ShouldExit)
+                if (!ShouldExit && !shuttingdown)
                     return;
-                //Lets kill this thing
-                FireThreadClosing(this);
-                throw new Exception();
+                throw new Exception("Closing");
             }
 
             private void Update()
             {
                 int maintc;
 
-                while (!m_scene.shuttingdown && !ShouldExit)
+                while (!ShouldExit)
                 {
                     TimeSpan SinceLastFrame = DateTime.UtcNow - m_scene.m_lastupdate;
                     
@@ -1781,7 +1775,9 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                     catch (Exception e)
                     {
-                        m_log.Error("[REGION]: Failed with exception " + e.ToString() + " On Region: " + m_scene.RegionInfo.RegionName);
+                        if (e.Message != "Closing")
+                            m_log.Error("[REGION]: Failed with exception " + e.ToString() + " On Region: " + m_scene.RegionInfo.RegionName);
+                        break;
                     }
                     finally
                     {
@@ -1798,7 +1794,10 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         CheckExit();
                     }
-                    catch(Exception) { }
+                    catch(Exception) 
+                    {
+                        break;
+                    }
                 }
             }
         }

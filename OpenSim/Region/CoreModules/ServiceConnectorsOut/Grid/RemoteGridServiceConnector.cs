@@ -295,7 +295,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Grid
         {
             for (int i = 0; i < cache.Count; i++)
             {
-                if (cache[i].region.RegionID == regionID)
+                if (cache[i].region != null && cache[i].region.RegionID == regionID)
                 {
                     cache.Remove(cache[i]);
                     return;

@@ -10,16 +10,17 @@ namespace OpenSim.Region.Framework.Scenes
 {
     public class IThread
     {
-        public delegate void ThreadClosing(IThread heartbeat);
+        public delegate void ThreadClosing(Scene scene, IThread heartbeat);
         public Scene m_scene;
         public bool ShouldExit = false;
         public DateTime LastUpdate;
         public virtual void Start() { }
         public string type;
         public event ThreadClosing ThreadIsClosing;
-        public void FireThreadClosing(IThread sh)
+        public void FireThreadClosing(Scene scene, IThread sh)
         {
-            ThreadIsClosing(sh);
+            if(ThreadIsClosing != null)
+                ThreadIsClosing(scene, sh);
         }
     }
 
@@ -28,10 +29,29 @@ namespace OpenSim.Region.Framework.Scenes
         private static readonly ILog m_log
             = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        Timer checkTimer = new Timer();
-        List<IThread> AllHeartbeats = new List<IThread>();
-        public void Init()
+        Timer checkTimer = null;
+        Dictionary<Scene, List<IThread>> AllHeartbeats = new Dictionary<Scene, List<IThread>>();
+
+        public void Init(Scene scene)
         {
+            if (AllHeartbeats.ContainsKey(scene))
+            {
+                List<IThread> threads = null;
+                AllHeartbeats.TryGetValue(scene, out threads);
+                foreach (IThread thread in threads)
+                {
+                    thread.ShouldExit = true;
+                }
+                AllHeartbeats.Remove(scene);
+            }
+            AllHeartbeats.Add(scene, new List<IThread>());
+            if (checkTimer != null)
+            {
+                checkTimer.Stop();
+                checkTimer.Close();
+                checkTimer.Dispose();
+            }
+            checkTimer = new Timer();
             checkTimer.Enabled = true;
             checkTimer.Interval = 1000;
             checkTimer.Elapsed += Check;
@@ -40,99 +60,152 @@ namespace OpenSim.Region.Framework.Scenes
         private void Check(object sender, ElapsedEventArgs e)
         {
             FixThreadCount();
-            for(int i = 0; i < AllHeartbeats.Count; i++)
+            foreach (KeyValuePair<Scene, List<IThread>> kvp in AllHeartbeats)
             {
-                try
+                for (int i = 0; i < kvp.Value.Count; i++)
                 {
-                    CheckThread(AllHeartbeats[i]);
+                    try
+                    {
+                        CheckThread(kvp.Key, kvp.Value[i]);
+                    }
+                    catch { }
                 }
-                catch { }
             }
         }
 
         private void FixThreadCount()
         {
-            if (AllHeartbeats.Count > 3)
+            foreach (KeyValuePair<Scene,List<IThread>> kvp in AllHeartbeats)
             {
-                //Make sure to kill off the right ones...
-                //m_log.Warn("[SceneHeartbeatTracker]: Fixing thread count... " + AllHeartbeats.Count + " found. ");
-                bool foundPhysics = false;
-                bool foundBackup = false;
-                bool foundUpdate = false;
-                for (int i = 0; i < AllHeartbeats.Count; i++)
+
+                if (AllHeartbeats.Count < 3)
                 {
-                    IThread hb = AllHeartbeats[i];
-                    if (hb == null)
-                        continue;
-                    if (hb.type == "SceneUpdateHeartbeat" && foundUpdate)
+                    //Make sure to kill off the right ones...
+                    m_log.Warn("[SceneHeartbeatTracker]: Fixing thread count... " + AllHeartbeats.Count + " found. ");
+                    bool foundPhysics = false;
+                    bool foundBackup = false;
+                    bool foundUpdate = false;
+                    for (int i = 0; i < AllHeartbeats.Count; i++)
                     {
-                        //m_log.Warn("[SceneHeartbeatTracker]: Killing " + hb.type);
-                        hb.ShouldExit = true;
+                        IThread hb = kvp.Value[i];
+                        if (hb == null)
+                            continue;
+                        if (hb.type == "SceneBackupHeartbeat" && !foundBackup && !hb.ShouldExit)
+                            foundBackup = true;
+                        if (hb.type == "ScenePhysicsHeartbeat" && !foundPhysics && !hb.ShouldExit)
+                            foundPhysics = true;
+                        if (hb.type == "SceneUpdateHeartbeat" && !foundUpdate && !hb.ShouldExit)
+                            foundUpdate = true;
                     }
-                    if (hb.type == "SceneBackupHeartbeat" && foundBackup)
+                    m_log.Warn("[SceneHeartbeatTracker]: " + kvp.Key.RegionInfo.RegionName + " " + foundBackup + " " + foundPhysics + " " + foundUpdate + " ");
+                    System.Threading.Thread thread;
+                    if (!foundBackup)
+                        AddSceneHeartbeat(kvp.Key, new Scene.SceneBackupHeartbeat(kvp.Key), out thread);
+                    if (!foundPhysics)
+                        AddSceneHeartbeat(kvp.Key, new Scene.ScenePhysicsHeartbeat(kvp.Key), out thread);
+                    if (!foundUpdate)
+                        AddSceneHeartbeat(kvp.Key, new Scene.SceneUpdateHeartbeat(kvp.Key), out thread);
+                }
+                if (AllHeartbeats.Count > 3)
+                {
+                    //Make sure to kill off the right ones...
+                    //m_log.Warn("[SceneHeartbeatTracker]: Fixing thread count... " + AllHeartbeats.Count + " found. ");
+                    bool foundPhysics = false;
+                    bool foundBackup = false;
+                    bool foundUpdate = false;
+                    for (int i = 0; i < AllHeartbeats.Count; i++)
                     {
-                        //m_log.Warn("[SceneHeartbeatTracker]: Killing " + hb.type);
-                        hb.ShouldExit = true;
+                        IThread hb = kvp.Value[i];
+                        if (hb == null)
+                            continue;
+                        if (hb.type == "SceneUpdateHeartbeat" && foundUpdate)
+                        {
+                            m_log.Warn("[SceneHeartbeatTracker]: Killing " + hb.type);
+                            hb.ShouldExit = true;
+                        }
+                        if (hb.type == "SceneBackupHeartbeat" && foundBackup)
+                        {
+                            m_log.Warn("[SceneHeartbeatTracker]: Killing " + hb.type);
+                            hb.ShouldExit = true;
+                        }
+                        if (hb.type == "ScenePhysicsHeartbeat" && foundPhysics)
+                        {
+                            m_log.Warn("[SceneHeartbeatTracker]: Killing " + hb.type);
+                            hb.ShouldExit = true;
+                        }
+                        if (hb.type == "SceneBackupHeartbeat" && !foundBackup && !hb.ShouldExit)
+                            foundBackup = true;
+                        if (hb.type == "ScenePhysicsHeartbeat" && !foundPhysics && !hb.ShouldExit)
+                            foundPhysics = true;
+                        if (hb.type == "SceneUpdateHeartbeat" && !foundUpdate && !hb.ShouldExit)
+                            foundUpdate = true;
                     }
-                    if (hb.type == "ScenePhysicsHeartbeat" && foundPhysics)
-                    {
-                        //m_log.Warn("[SceneHeartbeatTracker]: Killing " + hb.type);
-                        hb.ShouldExit = true;
-                    }
-                    if (hb.type == "SceneBackupHeartbeat" && !foundBackup)
-                        foundBackup = true;
-                    if (hb.type == "ScenePhysicsHeartbeat" && !foundPhysics)
-                        foundPhysics = true;
-                    if (hb.type == "SceneUpdateHeartbeat" && !foundUpdate)
-                        foundUpdate = true;
                 }
             }
         }
 
-        private void CheckThread(IThread hb)
+        private void CheckThread(Scene scene, IThread hb)
         {
             if (hb.LastUpdate == new DateTime())
                 return;
             TimeSpan ts = DateTime.UtcNow - hb.LastUpdate;
             if (ts.Seconds > 10)
             {
-                AllHeartbeats.Remove(hb);
+                List<IThread> threads = null;
+                AllHeartbeats.TryGetValue(scene, out threads);
+                threads.Remove(hb);
                 System.Threading.Thread thread;
                 hb.ShouldExit = true;
-                //m_log.Warn("[SceneHeartbeatTracker]: " + hb.type + " has been found dead, attempting to revive...");
+                m_log.Warn("[SceneHeartbeatTracker]: " + hb.type + " has been found dead, attempting to revive...");
                 //Time to start a new one
                 if (hb.type == "SceneBackupHeartbeat")
                 {
                     Scene.SceneBackupHeartbeat sbhb = new Scene.SceneBackupHeartbeat(hb.m_scene);
-                    AddSceneHeartbeat(sbhb, out thread);
+                    AddSceneHeartbeat(scene, sbhb, out thread);
                 }
                 if (hb.type == "ScenePhysicsHeartbeat")
                 {
                     Scene.ScenePhysicsHeartbeat shb = new Scene.ScenePhysicsHeartbeat(hb.m_scene);
-                    AddSceneHeartbeat(shb, out thread);
+                    AddSceneHeartbeat(scene, shb, out thread);
                 }
                 if (hb.type == "SceneUpdateHeartbeat")
                 {
                     Scene.SceneUpdateHeartbeat suhb = new Scene.SceneUpdateHeartbeat(hb.m_scene);
-                    AddSceneHeartbeat(suhb, out thread);
+                    AddSceneHeartbeat(scene, suhb, out thread);
                 }
             }
         }
 
-        public void AddSceneHeartbeat(IThread heartbeat, out System.Threading.Thread thread)
+        public void AddSceneHeartbeat(Scene scene, IThread heartbeat, out System.Threading.Thread thread)
         {
             //m_log.Warn("[SceneHeartbeatTracker]: " + heartbeat.type + " has been started");
             thread = new System.Threading.Thread(heartbeat.Start);
             thread.Name = "SceneHeartbeat";
             thread.Start();
             heartbeat.ThreadIsClosing += ThreadDieing;
-            AllHeartbeats.Add(heartbeat);
+            List<IThread> threads = null;
+            if (AllHeartbeats.ContainsKey(scene))
+            {
+                AllHeartbeats.TryGetValue(scene, out threads);
+                AllHeartbeats.Remove(scene);
+            }
+            if (!threads.Contains(heartbeat))
+                threads.Add(heartbeat);
+            AllHeartbeats.Add(scene, threads);
         }
 
-        public void ThreadDieing(IThread heartbeat)
+        public void ThreadDieing(Scene scene, IThread heartbeat)
         {
-            AllHeartbeats.Remove(heartbeat);
-            //m_log.Warn("[SceneHeartbeatTracker]: " + heartbeat.type + " has been found dead, attempting to revive...");
+            m_log.Warn("[SceneHeartbeatTracker]: " + heartbeat.type + " has been found dead.");
+            List<IThread> threads = null;
+            if (AllHeartbeats.ContainsKey(scene))
+            {
+                AllHeartbeats.TryGetValue(scene, out threads);
+                AllHeartbeats.Remove(scene);
+            }
+            if(threads.Contains(heartbeat))
+                threads.Remove(heartbeat);
+            AllHeartbeats.Add(scene, threads);
         }
     }
 }

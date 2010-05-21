@@ -62,7 +62,7 @@ namespace OpenSim.Framework.Servers
         /// </summary>
         private Timer m_periodicDiagnosticsTimer = new Timer(60 * 60 * 1000);
 
-        protected CommandConsole m_console;
+        protected ICommandConsole m_console;
         protected OpenSimAppender m_consoleAppender;
         protected IAppender m_logFileAppender = null; 
 
@@ -101,6 +101,7 @@ namespace OpenSim.Framework.Servers
 
         public BaseOpenSimServer()
         {
+            m_console = MainConsole.Instance;
             m_startuptime = DateTime.Now;
             m_version = VersionInfo.Version;
             

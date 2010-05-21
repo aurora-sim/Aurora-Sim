@@ -106,15 +106,13 @@ namespace OpenSim.ApplicationPlugins.LoadRegions
                 if (!CheckRegionsForSanity(regionsToLoad))
                 {
                     m_log.Error("[LOADREGIONS]: Halting startup due to conflicts in region configurations");
-                    Environment.Exit(1);
+                    throw new Exception();
                 }
 
                 for (int i = 0; i < regionsToLoad.Length; i++)
                 {
                     IScene scene;
-                    m_log.Debug("[LOADREGIONS]: Creating Region: " + regionsToLoad[i].RegionName + " (ThreadID: " +
-                                Thread.CurrentThread.ManagedThreadId.ToString() +
-                                ")");
+                    m_log.Debug("[LOADREGIONS]: Creating Region: " + regionsToLoad[i].RegionName + ")");
                     m_openSim.CreateRegion(regionsToLoad[i], true, out scene);
                     if (scene != null)
                     {

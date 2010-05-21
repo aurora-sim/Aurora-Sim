@@ -119,7 +119,7 @@ namespace Aurora.Modules
 
         public void RemoveRegion(Scene scene)
         {
-
+            m_Scenes.Remove(scene);
         }
 
         public void RegionLoaded(Scene scene)

@@ -282,7 +282,7 @@ namespace Aurora.Modules
             Dictionary<string, object> sendData = new Dictionary<string, object>();
 
             sendData["REGIONHANDLE"] = regionHandle;
-            sendData["GRIDITEMTYPE"] = gridItemType;
+            sendData["GRIDITEMTYPE"] = (int)gridItemType;
             sendData["METHOD"] = "getmapitems";
 
             string reqString = ServerUtils.BuildQueryString(sendData);
