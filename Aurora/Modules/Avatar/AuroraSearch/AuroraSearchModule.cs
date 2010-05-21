@@ -781,14 +781,11 @@ namespace Aurora.Modules
                         List<string> query = GenericData.Query("RID", info.UUID.ToString(), "searchregions", "*");
                         if (query.Count != 0)
                         {
-                            if (query[0] != "")
-                            {
-                                GenericData.Delete("searchregions", new string[] { "RID" }, new string[] { info.UUID.ToString() });
-                                GenericData.Delete("searchparcels", new string[] { "RID" }, new string[] { info.UUID.ToString() });
-                                GenericData.Delete("searchobjects", new string[] { "RID" }, new string[] { info.UUID.ToString() });
-                                GenericData.Delete("searchallparcels", new string[] { "RID" }, new string[] { info.UUID.ToString() });
-                                GenericData.Delete("searchparcelsales", new string[] { "RID" }, new string[] { info.UUID.ToString() });
-                            }
+                            GenericData.Delete("searchregions", new string[] { "RID" }, new string[] { info.UUID.ToString() });
+                            GenericData.Delete("searchparcels", new string[] { "RID" }, new string[] { info.UUID.ToString() });
+                            GenericData.Delete("searchobjects", new string[] { "RID" }, new string[] { info.UUID.ToString() });
+                            GenericData.Delete("searchallparcels", new string[] { "RID" }, new string[] { info.UUID.ToString() });
+                            GenericData.Delete("searchparcelsales", new string[] { "RID" }, new string[] { info.UUID.ToString() });
                         }
                     }
                 }

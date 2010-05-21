@@ -396,6 +396,13 @@ namespace OpenSim.Framework
             set { m_externalHostName = value; }
         }
 
+        private bool m_FindExternalIP = true;
+        public bool FindExternalAutomatically
+        {
+            get { return m_FindExternalIP; }
+            set { m_FindExternalIP = value; }
+        }
+
         public IPEndPoint InternalEndPoint
         {
             get { return m_internalEndPoint; }

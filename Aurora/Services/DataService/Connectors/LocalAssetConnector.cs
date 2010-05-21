@@ -25,7 +25,7 @@ namespace Aurora.Services.DataService
 				objectID,
 				side.ToString()
 			}, "assetMediaURL", "*");
-			if (data.Count == 1)
+			if (data.Count == 0)
 				return null;
 			info.alt_image_enable = bool.Parse(data[2]);
 			info.auto_loop = Convert.ToInt32(data[3]) == 1;

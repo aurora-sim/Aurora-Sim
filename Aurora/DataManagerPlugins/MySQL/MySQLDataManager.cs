@@ -162,15 +162,7 @@ namespace Aurora.DataManager.MySQL
                                 RetVal.Add(reader.GetString(i));
                             }
                         }
-                        if (RetVal.Count == 0)
-                        {
-                            RetVal.Add("");
-                            return RetVal;
-                        }
-                        else
-                        {
-                            return RetVal;
-                        }
+                        return RetVal;
                     }
                     finally
                     {
@@ -204,15 +196,7 @@ namespace Aurora.DataManager.MySQL
                                 RetVal.Add(reader.GetString(i));
                             }
                         }
-                        if (RetVal.Count == 0)
-                        {
-                            RetVal.Add("");
-                            return RetVal;
-                        }
-                        else
-                        {
-                            return RetVal;
-                        }
+                        return RetVal;
                     }
                     finally
                     {
@@ -255,15 +239,7 @@ namespace Aurora.DataManager.MySQL
                                 RetVal.Add(reader.GetString(i));
                             }
                         }
-                        if (RetVal.Count == 0)
-                        {
-                            RetVal.Add("");
-                            return RetVal;
-                        }
-                        else
-                        {
-                            return RetVal;
-                        }
+                        return RetVal;
                     }
                     finally
                     {
@@ -306,15 +282,7 @@ namespace Aurora.DataManager.MySQL
                                 RetVal.Add(reader.GetString(i));
                             }
                         }
-                        if (RetVal.Count == 0)
-                        {
-                            RetVal.Add("");
-                            return RetVal;
-                        }
-                        else
-                        {
-                            return RetVal;
-                        }
+                        return RetVal;
                     }
                     finally
                     {

@@ -18,22 +18,28 @@ namespace Aurora.Services.DataService
 
 		public EstateSettings LoadEstateSettings(UUID regionID, bool create)
 		{
-			string EstateID = GenericData.Query("RegionID", regionID, "estate_map", "EstateID")[0];
-			if (EstateID == "" && !create) {
+			List<string> estateID = GenericData.Query("RegionID", regionID, "estate_map", "EstateID");
+            if (estateID.Count == 0 && !create)
+            {
 				return new EstateSettings();
-			} else if (EstateID == "" && create) {
-				EstateSettings es = new EstateSettings();
+			}
+            else if (estateID.Count == 0 && create) 
+            {
+                int EstateID = 0;
+                EstateSettings es = new EstateSettings();
 				List<string> QueryResults = GenericData.Query("", "", "estate_map", "EstateID", " ORDER BY EstateID DESC");
-				if (QueryResults == null && QueryResults.Count == 0 || QueryResults[0] == "") {
-					EstateID = "99";
-				} else
-					EstateID = QueryResults[0];
-				if (EstateID == "0")
-					EstateID = "99";
-				int estateID = Convert.ToInt32(EstateID);
-				estateID++;
-				EstateID = estateID.ToString();
+				if (QueryResults.Count == 0)
+                {
+                    EstateID = 99;
+				} 
+                else
+                    EstateID = int.Parse(QueryResults[0]);
 
+                if (EstateID == 0)
+                    EstateID = 99;
+
+				EstateID++;
+                
                 List<object> Values = new List<object>();
 				Values.Add(EstateID);
 				Values.Add(es.EstateName);
@@ -62,20 +68,29 @@ namespace Aurora.Services.DataService
 				Values.Add(es.EstatePass);
                 GenericData.Insert("estate_settings", Values.ToArray());
 
-				GenericData.Insert("estate_map", new string[] {
-					regionID.ToString(),
-					EstateID.ToString()
+				GenericData.Insert("estate_map", new object[] {
+					regionID,
+					EstateID
 				});
-
+                return LoadEstateSettings(EstateID);
 			}
-			return LoadEstateSettings(Convert.ToInt32(EstateID));
+            else if (estateID.Count == 0)
+            {
+                return new EstateSettings();
+            }
+            else
+            {
+                return LoadEstateSettings(Convert.ToInt32(estateID[0]));
+            }
 		}
 
 		public OpenSim.Framework.EstateSettings LoadEstateSettings(int estateID)
 		{
-			List<string> results = GenericData.Query("EstateID", estateID, "estate_settings", "*");
-			EstateSettings settings = new EstateSettings();
-			settings.AbuseEmail = results[21];
+            EstateSettings settings = new EstateSettings();
+            List<string> results = GenericData.Query("EstateID", estateID, "estate_settings", "*");
+            if (results.Count == 0)
+                return settings;
+            settings.AbuseEmail = results[21];
 			settings.AbuseEmailToEstateOwner = results[2] == "1";
 			settings.AllowDirectTeleport = results[13] == "1";
 			settings.AllowVoice = results[9] == "1";
@@ -113,7 +128,10 @@ namespace Aurora.Services.DataService
 			es.ClearBans();
 
 			List<string> RetVal = GenericData.Query("EstateID", es.EstateID, "estateban", "bannedUUID");
-			foreach (string userID in RetVal) {
+            if (RetVal.Count == 0)
+                return;
+            foreach (string userID in RetVal)
+            {
 				EstateBan eb = new EstateBan();
 
 				UUID uuid = new UUID();
@@ -131,7 +149,10 @@ namespace Aurora.Services.DataService
 			List<UUID> uuids = new List<UUID>();
 
 			List<string> RetVal = GenericData.Query("EstateID", EstateID, table, "uuid");
-			foreach (string userID in RetVal) {
+            if (RetVal.Count == 0)
+                return uuids.ToArray();
+            foreach (string userID in RetVal)
+            {
 				UUID uuid = new UUID();
 				UUID.TryParse(userID, out uuid);
 
@@ -300,7 +321,9 @@ namespace Aurora.Services.DataService
 		{
 			List<int> result = new List<int>();
 			List<string> RetVal = GenericData.Query("EstateName", search, "estate_settings", "EstateID");
-			foreach (string val in RetVal)
+            if (RetVal.Count == 0)
+                return result;
+            foreach (string val in RetVal)
             {
                 if (val == "")
                     continue;

@@ -17,10 +17,71 @@ namespace Aurora.Services.DataService
 			GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
 		}
 
+        public void UpdateRegionInfo(RegionInfo region, bool Disable)
+        {
+            List<object> Values = new List<object>();
+            if (GetRegionInfo(region.RegionID) != null)
+            {
+                Values.Add(region.RegionName);
+                Values.Add(region.RegionLocX);
+                Values.Add(region.RegionLocY);
+                Values.Add(region.InternalEndPoint.Address);
+                Values.Add(region.InternalEndPoint.Port);
+                if (region.FindExternalAutomatically)
+                {
+                    Values.Add("DEFAULT");
+                }
+                else
+                {
+                    Values.Add(region.ExternalHostName);
+                }
+                Values.Add(region.RegionType);
+                Values.Add(region.NonphysPrimMax);
+                Values.Add(region.PhysPrimMax);
+                Values.Add(region.ObjectCapacity);
+                Values.Add(region.AccessLevel);
+                Values.Add(Disable);
+                GD.Update("simulator", Values.ToArray(), new string[]{"RegionName","RegionLocX",
+                "RegionLocY","InternalIP","Port","ExternalIP","RegionType","NonphysicalPrimMax",
+                "PhysicalPrimMax","ClampPrimSize","MaxPrims","AccessLevel","Disabled"},
+                    new string[] { "RegionID" }, new object[] { region.RegionID });
+            }
+            else
+            {
+                Values.Add(region.RegionID);
+                Values.Add(region.RegionName);
+                Values.Add(region.RegionLocX);
+                Values.Add(region.RegionLocY);
+                Values.Add(region.InternalEndPoint.Address);
+                Values.Add(region.InternalEndPoint.Port);
+                if (region.FindExternalAutomatically)
+                {
+                    Values.Add("DEFAULT");
+                }
+                else
+                {
+                    Values.Add(region.ExternalHostName);
+                }
+                Values.Add(region.RegionType);
+                Values.Add(region.NonphysPrimMax);
+                Values.Add(region.PhysPrimMax);
+                Values.Add(region.ClampPrimSize);
+                Values.Add(region.ObjectCapacity);
+                Values.Add(0);
+                Values.Add(false);
+                Values.Add(false);
+                Values.Add(region.AccessLevel);
+                Values.Add(Disable);
+                GD.Insert("simulator", Values.ToArray());
+            }
+        }
+
 		public RegionInfo[] GetRegionInfos()
 		{
             List<RegionInfo> Infos = new List<RegionInfo>();
-            List<string> RetVal = GD.Query("Disabled", false, "Simulator", "*");
+            List<string> RetVal = GD.Query("Disabled", false, "simulator", "*");
+            if (RetVal.Count == 0)
+                return Infos.ToArray();
             int DataCount = 0;
             RegionInfo replyData = new RegionInfo();
             for (int i = 0; i < RetVal.Count; i++)
@@ -48,15 +109,61 @@ namespace Aurora.Services.DataService
                 if (DataCount == 15)
                     replyData.AccessLevel = Convert.ToByte(RetVal[i]);
                 DataCount++;
-                if (DataCount == 16)
+                if (DataCount == 17)
                 {
-                    replyData.SetEndPoint(RetVal[(i - DataCount) + 4], int.Parse(RetVal[(i - DataCount) + 5]));
+                    replyData.SetEndPoint(RetVal[(i - (DataCount - 1)) + 4], int.Parse(RetVal[(i - (DataCount - 1)) + 5]));
                     DataCount = 0;
+                    if (replyData.ExternalHostName == "DEFAULT")
+                    {
+                        replyData.ExternalHostName = Aurora.Framework.Utils.GetExternalIp();
+                    }
                     Infos.Add(replyData);
                     replyData = new RegionInfo();
                 }
             }
             return Infos.ToArray();
 		}
+
+        public RegionInfo GetRegionInfo(UUID regionID)
+        {
+            List<string> RetVal = GD.Query("RegionID", regionID, "simulator", "*");
+            RegionInfo replyData = new RegionInfo();
+            if(RetVal.Count == 0)
+                return null;
+            for (int i = 0; i < RetVal.Count; i++)
+            {
+                if (i == 0)
+                    replyData.RegionID = new UUID(RetVal[i]);
+                if (i == 1)
+                    replyData.RegionName = RetVal[i];
+                if (i == 2)
+                    replyData.RegionLocX = uint.Parse(RetVal[i]);
+                if (i == 3)
+                    replyData.RegionLocY = uint.Parse(RetVal[i]);
+                if (i == 6)
+                    replyData.ExternalHostName = RetVal[i];
+                if (i == 7)
+                    replyData.RegionType = RetVal[i];
+                if (i == 8)
+                    replyData.NonphysPrimMax = Convert.ToInt32(RetVal[i]);
+                if (i == 9)
+                    replyData.PhysPrimMax = Convert.ToInt32(RetVal[i]);
+                if (i == 10)
+                    replyData.ClampPrimSize = Convert.ToBoolean(RetVal[i]);
+                if (i == 11)
+                    replyData.ObjectCapacity = Convert.ToInt32(RetVal[i]);
+                if (i == 15)
+                    replyData.AccessLevel = Convert.ToByte(RetVal[i]);
+                if (i == 17)
+                {
+                    replyData.SetEndPoint(RetVal[4], int.Parse(RetVal[5]));
+                    if (replyData.ExternalHostName == "DEFAULT")
+                    {
+                        replyData.ExternalHostName = Aurora.Framework.Utils.GetExternalIp();
+                    }
+                }
+            }
+            return replyData;
+        }
 	}
 }

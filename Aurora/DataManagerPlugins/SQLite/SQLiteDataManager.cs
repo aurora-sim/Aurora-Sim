@@ -125,8 +125,6 @@ namespace Aurora.DataManager.SQLite
                     RetVal.Add(reader.GetString(i));
                 }
             }
-            if (RetVal.Count == 0)
-                RetVal.Add("");
             reader.Close();
             reader.Dispose();
             CloseReaderCommand(cmd);
@@ -150,8 +148,6 @@ namespace Aurora.DataManager.SQLite
                     RetVal.Add(reader.GetString(i));
                 }
             }
-            if (RetVal.Count == 0)
-                RetVal.Add("");
             reader.Close();
             reader.Dispose();
             CloseReaderCommand(cmd);
@@ -183,8 +179,6 @@ namespace Aurora.DataManager.SQLite
                     RetVal.Add(reader.GetString(i));
                 }
             }
-            if (RetVal.Count == 0)
-                RetVal.Add("");
             reader.Close();
             reader.Dispose();
             CloseReaderCommand(cmd);
@@ -214,8 +208,6 @@ namespace Aurora.DataManager.SQLite
                     RetVal.Add(reader.GetString(i));
                 }
             }
-            if (RetVal.Count == 0)
-                RetVal.Add("");
             reader.Close();
             reader.Dispose();
             CloseReaderCommand(cmd);

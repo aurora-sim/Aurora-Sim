@@ -21,13 +21,15 @@ namespace Aurora.Services.DataService
 		{
 			StateSave StateSave = new StateSave();
 			List<string> StateSaveRetVals = new List<string>();
-			if (UserInventoryItemID != UUID.Zero) {
+			if (UserInventoryItemID != UUID.Zero) 
+            {
 				StateSaveRetVals = GenericData.Query("UserInventoryItemID", UserInventoryItemID.ToString(), "auroraDotNetStateSaves", "*");
-			} else {
-				StateSaveRetVals = GenericData.Query("ItemID", itemID.ToString(), "auroraDotNetStateSaves", "*");
-
 			}
-            if (StateSaveRetVals.Count == 1)
+            else 
+            {
+				StateSaveRetVals = GenericData.Query("ItemID", itemID.ToString(), "auroraDotNetStateSaves", "*");
+			}
+            if (StateSaveRetVals.Count == 0)
                 return null;
 			Dictionary<string, object> vars = new Dictionary<string, object>();
 			StateSave.State = StateSaveRetVals[0];

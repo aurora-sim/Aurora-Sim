@@ -1270,9 +1270,9 @@ namespace OpenSim.Region.Framework.Scenes
             ScenePhysicsHeartbeat shb = new ScenePhysicsHeartbeat(this);
             SceneBackupHeartbeat sbhb = new SceneBackupHeartbeat(this);
             SceneUpdateHeartbeat suhb = new SceneUpdateHeartbeat(this);
-            tracker.AddSceneHeartbeat(this, suhb, out HeartbeatThread);
-            tracker.AddSceneHeartbeat(this, shb, out HeartbeatThread);
-            tracker.AddSceneHeartbeat(this, sbhb, out HeartbeatThread);
+            tracker.AddSceneHeartbeat(suhb, out HeartbeatThread);
+            tracker.AddSceneHeartbeat(shb, out HeartbeatThread);
+            tracker.AddSceneHeartbeat(sbhb, out HeartbeatThread);
             //Start this after the threads are started.
             tracker.Init(this);
             //HeartbeatThread = Watchdog.StartThread(shb.Heartbeat, "Heartbeat for region " + RegionInfo.RegionName, ThreadPriority.Normal, false);
@@ -1407,6 +1407,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     m_log.Error("[Scene]: Failed with " + ex);
                 }
+                FireThreadClosing(this);
             }
 
             private void CheckExit()
@@ -1414,7 +1415,6 @@ namespace OpenSim.Region.Framework.Scenes
                 if (!ShouldExit && !shuttingdown)
                     return;
                 //Lets kill this thing
-                FireThreadClosing(m_scene, this);
                 throw new Exception("Closing");
             }
 
@@ -1579,6 +1579,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     m_log.Error("[Scene]: Failed with " + ex);
                 }
+                FireThreadClosing(this);
             }
 
             private void CheckExit()
@@ -1586,7 +1587,6 @@ namespace OpenSim.Region.Framework.Scenes
                 if (!ShouldExit && !shuttingdown)
                     return;
                 //Lets kill this thing
-                FireThreadClosing(m_scene, this);
                 throw new Exception("Closing");
             }
 
@@ -1706,7 +1706,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     m_log.Error("[Scene]: Failed with " + ex);
                 }
-                FireThreadClosing(m_scene, this);
+                FireThreadClosing(this);
             }
 
             private void CheckExit()

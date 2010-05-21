@@ -282,19 +282,27 @@ namespace Aurora.Framework
             // Return decrypted string.   
             return plainText;
         }
+
+        public static string CachedExternalIP = "";
         public static string GetExternalIp()
         {
-            // External IP Address (get your external IP locally)
-            String externalIp = "";
-            UTF8Encoding utf8 = new UTF8Encoding();
-
-            WebClient webClient = new WebClient();
-            try
+            if (CachedExternalIP == "")
             {
-                externalIp = utf8.GetString(webClient.DownloadData("http://whatismyip.com/automation/n09230945.asp"));
+                // External IP Address (get your external IP locally)
+                String externalIp = "";
+                UTF8Encoding utf8 = new UTF8Encoding();
+
+                WebClient webClient = new WebClient();
+                try
+                {
+                    externalIp = utf8.GetString(webClient.DownloadData("http://whatismyip.com/automation/n09230945.asp"));
+                }
+                catch (Exception) { }
+                CachedExternalIP = externalIp;
+                return externalIp;
             }
-            catch (Exception) { }
-            return externalIp;
+            else
+                return CachedExternalIP;
         }
 
         public static Hashtable GenericXMLRPCRequest(Hashtable ReqParams, string method, string IPpoint)

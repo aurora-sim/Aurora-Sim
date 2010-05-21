@@ -20,7 +20,7 @@ namespace Aurora.Services.DataService
 			IAgentInfo agent = new IAgentInfo();
 			List<string> query = GD.Query("PrincipalID", agentID, "agentgeneral", "Mac,IP,AcceptTOS,RealFirst,RealLast,Address,Zip,Country,TempBanned,PermaBanned,IsMinor,MaxMaturity,Language,LanguageIsPublic");
 
-			if (query.Count == 0 || query.Count == 1)
+			if (query.Count == 0)
 				//Couldn't find it, return null then.
 				return null;
 

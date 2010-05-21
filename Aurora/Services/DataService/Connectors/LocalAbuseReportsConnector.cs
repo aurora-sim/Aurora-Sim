@@ -17,7 +17,7 @@ namespace Aurora.Services.DataService
 		{
 			GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
             List<string> Results = GD.Query("Method", "AbuseReports", "Passwords", "Password");
-            if (Results == null || Results.Count == 0 || Results[0] == "" || Results[0] == " ")
+            if (Results.Count == 0)
             {
                 string newPass = MainConsole.Instance.CmdPrompt("Password to access Abuse Reports");
                 GD.Insert("Passwords", new object[] { "AbuseReports", Util.Md5Hash(newPass) });
@@ -30,7 +30,9 @@ namespace Aurora.Services.DataService
                 return null;
 			AbuseReport report = new AbuseReport();
 			List<string> Reports = GD.Query("ReportNumber", Number, "abusereports", "*");
-			report.Category = Reports[0];
+            if (Reports.Count == 0)
+                return null;
+            report.Category = Reports[0];
 			report.ReporterName = Reports[1];
 			report.ObjectName = Reports[2];
 			report.ObjectUUID = new UUID(Reports[3]);
@@ -68,10 +70,12 @@ namespace Aurora.Services.DataService
 
 			//We do not trust the number sent by the region. Always find it ourselves
 			List<string> values = GD.Query("", "", "abusereports", "Number", " ORDER BY Number DESC");
-			if (values == null || values.Count == 0 || values[0] == "")
+			if (values.Count == 0)
 				report.Number = 0;
 			else
 				report.Number = int.Parse(values[0]);
+
+            report.Number++;
 
 			InsertValues.Add(report.Number);
 
@@ -94,8 +98,10 @@ namespace Aurora.Services.DataService
 
         private bool CheckPassword(string Password)
         {
-            string TruePassword = GD.Query("Method", "AbuseReports", "Passwords", "Password")[0];
-            if (Util.Md5Hash(Password) == TruePassword)
+            List<string> TruePassword = GD.Query("Method", "AbuseReports", "Passwords", "Password");
+            if (TruePassword.Count == 0)
+                return false;
+            if (Util.Md5Hash(Password) == TruePassword[0])
                 return true;
             return false;
         }

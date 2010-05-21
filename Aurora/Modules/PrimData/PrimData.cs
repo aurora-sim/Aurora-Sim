@@ -46,7 +46,7 @@ namespace Aurora.Modules
             List<string> objectData = GenericData.Query("primUUID", groupclone.RootPart.UUID.ToString(), "auroraprims", "*");
             if (objectData.Count == 1)
             {
-                if (OriginalData.Count != 1)
+                if (OriginalData.Count != 0)
                 {
                     OriginalData[0] = groupclone.RootPart.UUID.ToString();
                     GenericData.Insert("auroraprims", OriginalData.ToArray());
@@ -111,11 +111,6 @@ namespace Aurora.Modules
 
             SceneObjectGroup group = obj as SceneObjectGroup;
             List<string> objectData = GenericData.Query("primUUID", group.RootPart.UUID.ToString(), "auroraprims", "*");
-            if (objectData.Count == 1)
-            {
-                CreateNewObjectData(group.RootPart.UUID.ToString());
-                return;
-            }
             if (objectData.Count == 0)
             {
                 CreateNewObjectData(group.RootPart.UUID.ToString());

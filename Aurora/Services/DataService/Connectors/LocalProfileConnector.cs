@@ -22,7 +22,9 @@ namespace Aurora.Services.DataService
 		public Classified FindClassified(string classifiedID)
 		{
 			List<string> retval = GD.Query("classifieduuid", classifiedID, "profileclassifieds", "*");
-			Classified classified = new Classified();
+            if (retval.Count == 0)
+                return null;
+            Classified classified = new Classified();
 			try {
 				classified.ClassifiedUUID = retval[0];
 				classified.CreatorUUID = retval[1];
@@ -48,7 +50,8 @@ namespace Aurora.Services.DataService
 		{
 			List<Classified> Classifieds = new List<Classified>();
 			List<string> query = GD.Query("creatoruuid", creatoruuid, "profileclassifieds", "classifieduuid");
-
+            if (query.Count == 0)
+                return Classifieds.ToArray();
 			try {
 				for (int i = 0; i < query.Count; i++) 
                 {
@@ -63,15 +66,21 @@ namespace Aurora.Services.DataService
 
 		private ProfilePickInfo[] ReadPickRequestsRow(string creator)
 		{
-			List<string> query = GD.Query("creatoruuid", creator, "profilepicks", "pickuuid");
-			List<ProfilePickInfo> Picks = new List<ProfilePickInfo>();
-			try {
-				for (int i = 0; i < query.Count; i++) {
+            List<ProfilePickInfo> Picks = new List<ProfilePickInfo>();
+            List<string> query = GD.Query("creatoruuid", creator, "profilepicks", "pickuuid");
+            if (query.Count == 0)
+                return Picks.ToArray();
+            try 
+            {
+				for (int i = 0; i < query.Count; i++)
+                {
                     if (query[i] == "")
                         continue;
                     Picks.Add(FindPick(query[i]));
 				}
-			} catch {
+			} 
+            catch
+            {
 			}
 
 			return Picks.ToArray();
@@ -81,7 +90,10 @@ namespace Aurora.Services.DataService
 		{
 			ProfilePickInfo pick = new ProfilePickInfo();
 			List<string> retval = GD.Query("pickuuid", pickID, "profilepicks", "*");
-			try {
+            if (retval.Count == 0)
+                return null;
+            try 
+            {
 				pick.pickuuid = retval[0];
 				pick.creatoruuid = retval[1];
 				pick.toppick = retval[2];
@@ -104,7 +116,8 @@ namespace Aurora.Services.DataService
 		{
 			ProfileInterests interests = new ProfileInterests();
 			List<string> results = GD.Query("PrincipalID", agentID, "profilegeneral", "WantToMask,WantToText,CanDoMask,CanDoText,Languages");
-
+            if (results.Count == 0)
+                return null;
 			try {
 				interests.WantToMask = results[0];
 				interests.WantToText = results[1];
@@ -168,7 +181,7 @@ namespace Aurora.Services.DataService
 				UserProfile.Notes = Notes;
 				#endregion
 
-				if (userauthReturns.Count == 1 || userauthReturns.Count == 0)
+				if (userauthReturns.Count == 0)
 					return null;
 
 				UserProfile.PrincipalID = agentID;

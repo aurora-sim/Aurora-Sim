@@ -24,7 +24,7 @@ namespace Aurora.Services.DataService
 		{
 			List<string> retval = GD.Query("RegionID", regionID, "simmap", "*");
             
-            if (retval.Count == 1)
+            if (retval.Count == 0)
                 return null;
             
             SimMap map = new SimMap();
@@ -51,7 +51,7 @@ namespace Aurora.Services.DataService
         {
             List<string> retval = GD.Query("RegionHandle", regionHandle, "simmap", "*");
 
-            if (retval.Count == 1)
+            if (retval.Count == 0)
                 return null;
 
             SimMap map = new SimMap();
@@ -78,7 +78,7 @@ namespace Aurora.Services.DataService
         {
             List<string> retval = GD.Query(new string[]{"RegionLocX","RegionLocY"}, new object[]{regionX,regionY}, "simmap", "*");
 
-            if (retval.Count == 1)
+            if (retval.Count == 0)
                 return null;
 
             SimMap map = new SimMap();

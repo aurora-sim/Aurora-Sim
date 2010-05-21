@@ -16,7 +16,8 @@ namespace Aurora.Services.DataService
 		{
 			GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
 			List<string> Results = GD.Query("Method", "AvatarArchive", "Passwords", "Password");
-			if (Results == null || Results.Count == 0 || Results[0] == "" || Results[0] == " ") {
+			if (Results.Count == 0) 
+            {
 				string newPass = MainConsole.Instance.CmdPrompt("Password to access Avatar Archive");
 				GD.Insert("Passwords", new object[] {
 					"AvatarArchive",
@@ -30,7 +31,8 @@ namespace Aurora.Services.DataService
 			if (!CheckPassword(Password))
 				return null;
 			List<string> RetVal = GD.Query("Name", Name, "AvatarArchives", "*");
-			if (RetVal == null || RetVal.Count == 0 || RetVal[0] == "") {
+			if (RetVal.Count == 0)
+            {
 				return null;
 			}
 			AvatarArchive Archive = new AvatarArchive();
@@ -44,20 +46,25 @@ namespace Aurora.Services.DataService
 			if (!CheckPassword(Password))
 				return;
 			List<string> Check = GD.Query("Name", archive.Name, "AvatarArchives", "Name");
-			if (Check == null || Check.Count == 0 || Check[0] == "") {
+			if (Check.Count == 0)
+            {
 				GD.Insert("AvatarArchives", new object[] {
 					archive.Name,
 					archive.ArchiveXML
 				});
-			} else {
+			}
+            else
+            {
 				GD.Update("AvatarArchives", new object[] { archive.ArchiveXML }, new string[] { "Archive" }, new string[] { "Name" }, new object[] { archive.Name });
 			}
 		}
 
 		private bool CheckPassword(string Password)
 		{
-			string TruePassword = GD.Query("Method", "AvatarArchive", "Passwords", "Password")[0];
-			if (Util.Md5Hash(Password) == TruePassword)
+			List<string> TruePassword = GD.Query("Method", "AvatarArchive", "Passwords", "Password");
+            if (TruePassword.Count == 0)
+                return false;
+            if (Util.Md5Hash(Password) == TruePassword[0])
 				return true;
 			return false;
 		}

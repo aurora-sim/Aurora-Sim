@@ -20,9 +20,11 @@ namespace Aurora.Services.DataService
 			List<OfflineMessage> messages = new List<OfflineMessage>();
 			List<string> Messages = GD.Query("ToUUID", agentID, "offlinemessages", "*");
 			GD.Delete("offlinemessages", new string[] { "ToUUID" }, new string[] { agentID });
-			int i = 0;
+            if (Messages.Count == 0)
+                return messages.ToArray();
+            int i = 0;
 			OfflineMessage Message = new OfflineMessage();
-			foreach (string part in Messages) {
+            foreach (string part in Messages) {
 				if (i == 0)
 					Message.FromUUID = new UUID(part);
 				if (i == 1)

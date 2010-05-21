@@ -100,7 +100,7 @@ namespace OpenSim.Server.Handlers.Login
                     if (GD != null)
                     {
                         List<string> found = GD.Query("macAddress", mac, "macban", "*");
-                        if (found.Count != 1 || found[0] != "")
+                        if (found.Count != 0)
                         {
                             m_log.InfoFormat("Mac is in the list");
                             return new XmlRpcResponse();
@@ -109,7 +109,7 @@ namespace OpenSim.Server.Handlers.Login
 
                         //Viewer Ban Start
                         List<string> clientfound = GD.Query("Client", clientVersion, "BannedViewers", "*");
-                        if (clientfound.Count != 1 || clientfound[0] != "")
+                        if (clientfound.Count != 0)
                         {
                             return new XmlRpcResponse();
                         }

@@ -63,7 +63,7 @@ namespace Aurora.Services.DataService
 		{
 			List<string> Query = GD.Query("ParcelID", LD.GlobalID.ToString(), "landinfo", "MediaDescription,MediaHeight,MediaWidth,MediaLoop,MediaType,ObscureMedia,ObscureMusic");
 
-            if (Query.Count == 0 || Query.Count == 1)
+            if (Query.Count == 0)
             {
 				return null;
 			}
@@ -84,7 +84,9 @@ namespace Aurora.Services.DataService
 			List<DirPlacesReplyData> Data = new List<DirPlacesReplyData>();
 			string whereClause = " PCategory = '" + category + "' and Pdesc LIKE '%" + queryText + "%' OR PName LIKE '%" + queryText + "%' LIMIT " + StartQuery.ToString() + ",50 ";
 			List<string> retVal = GD.Query(whereClause, "landinfo", "PID,PName,PForSale,PAuction,PDwell");
-
+            if (retVal.Count == 0)
+                return Data.ToArray();
+			
 			int DataCount = 0;
 			DirPlacesReplyData replyData = new DirPlacesReplyData();
 			for (int i = 0; i < retVal.Count; i++) {
@@ -113,7 +115,8 @@ namespace Aurora.Services.DataService
 			List<DirLandReplyData> Data = new List<DirLandReplyData>();
 			string whereClause = " PSalePrice <= '" + price + "' and PArea >= '" + area + "' LIMIT " + StartQuery.ToString() + ",50 ";
 			List<string> retVal = GD.Query(whereClause, "landinfo", "PID,PName,PAuction,PSalePrice,PArea");
-
+            if (retVal.Count == 0)
+                return Data.ToArray();
 			int DataCount = 0;
 			DirLandReplyData replyData = new DirLandReplyData();
 			replyData.forSale = true;
@@ -145,7 +148,9 @@ namespace Aurora.Services.DataService
 
 			string whereClause = " EName LIKE '%" + queryText + "%' and EFlags <= '" + flags + "' LIMIT " + StartQuery.ToString() + ",50 ";
 			List<string> retVal = GD.Query(whereClause, "events", "EOwnerID,EName,EID,EDate,EFlags");
-
+            if (retVal.Count == 0)
+                return Data.ToArray();
+			
 			int DataCount = 0;
 			DirEventsReplyData replyData = new DirEventsReplyData();
 			for (int i = 0; i < retVal.Count; i++) {
@@ -176,7 +181,8 @@ namespace Aurora.Services.DataService
 		{
 			List<DirEventsReplyData> Data = new List<DirEventsReplyData>();
 			List<string> retVal = GD.Query("ESimName", regionName, "events", "EOwnerID,EName,EID,EDate,EFlags");
-
+            if (retVal.Count == 0)
+                return Data.ToArray();
 			int DataCount = 0;
 			DirEventsReplyData replyData = new DirEventsReplyData();
 			for (int i = 0; i < retVal.Count; i++) {
@@ -209,7 +215,9 @@ namespace Aurora.Services.DataService
 
 			string whereClause = " name LIKE '%" + queryText + "%' and category = '" + category + "' LIMIT " + StartQuery.ToString() + ",50 ";
 			List<string> retVal = GD.Query(whereClause, "profileclassifieds", "classifieduuid, name, creationdate, expirationdate, priceforlisting");
-
+            if (retVal.Count == 0)
+                return Data.ToArray();
+			
 			int DataCount = 0;
 			DirClassifiedReplyData replyData = new DirClassifiedReplyData();
 			for (int i = 0; i < retVal.Count; i++) {
@@ -237,7 +245,8 @@ namespace Aurora.Services.DataService
 		{
 			EventData data = new EventData();
             List<string> RetVal = GD.Query("EID", EventID, "events", "EID, ECreator, EName, ECategory, EDesc, EDate, EDateUTC, EDuration, ECover, EAmount, ESimName, EGlobalPos, EEventFlags, EMature");
-
+            if (RetVal.Count == 0)
+                return null;
 			for (int i = 0; i < RetVal.Count; i++) {
 				if (i == 0)
 					data.eventID = Convert.ToUInt32(RetVal[i]);
@@ -275,7 +284,8 @@ namespace Aurora.Services.DataService
 		{
 			List<Classified> Classifieds = new List<Classified>();
 			List<string> retVal = GD.Query("simname", regionName, "profileclassifieds", "*");
-
+            if (retVal.Count == 0)
+                return Classifieds.ToArray();
 			int a = 0;
 			Classified classified = new Classified();
 			for (int i = 0; i < retVal.Count; i++) {
