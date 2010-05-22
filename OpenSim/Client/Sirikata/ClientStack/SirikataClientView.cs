@@ -504,6 +504,10 @@ namespace OpenSim.Client.Sirikata.ClientStack
             throw new System.NotImplementedException();
         }
 
+        public void SendGenericMessage(string method, List<string> message)
+        {
+        }
+
         public void SendGenericMessage(string method, List<byte[]> message)
         {
             throw new System.NotImplementedException();
@@ -584,16 +588,6 @@ namespace OpenSim.Client.Sirikata.ClientStack
             throw new System.NotImplementedException();
         }
 
-        public void SendAvatarData(SendAvatarData data)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public void SendAvatarTerseUpdate(SendAvatarTerseData data)
-        {
-            throw new System.NotImplementedException();
-        }
-
         public void SendCoarseLocationUpdate(List<UUID> users, List<Vector3> CoarseLocations)
         {
             throw new System.NotImplementedException();
@@ -609,27 +603,27 @@ namespace OpenSim.Client.Sirikata.ClientStack
             throw new System.NotImplementedException();
         }
 
-        public void SendPrimitiveToClient(SendPrimitiveData data)
+        public void SendAvatarDataImmediate(ISceneEntity avatar)
         {
             throw new System.NotImplementedException();
         }
 
-        public void SendPrimTerseUpdate(SendPrimitiveTerseData data)
+        public void SendPrimUpdate(ISceneEntity entity, PrimUpdateFlags updateFlags)
         {
             throw new System.NotImplementedException();
         }
 
-        public void ReprioritizeUpdates(StateUpdateTypes type, UpdatePriorityHandler handler)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public void SendInventoryFolderDetails(UUID ownerID, UUID folderID, List<InventoryItemBase> items, List<InventoryFolderBase> folders, int version, bool fetchFolders, bool fetchItems)
+        public void ReprioritizeUpdates()
         {
             throw new System.NotImplementedException();
         }
 
         public void FlushPrimUpdates()
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public void SendInventoryFolderDetails(UUID ownerID, UUID folderID, List<InventoryItemBase> items, List<InventoryFolderBase> folders, int version, bool fetchFolders, bool fetchItems)
         {
             throw new System.NotImplementedException();
         }

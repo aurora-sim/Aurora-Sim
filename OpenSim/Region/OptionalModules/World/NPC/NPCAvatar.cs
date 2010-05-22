@@ -551,6 +551,11 @@ namespace OpenSim.Region.OptionalModules.World.NPC
             
         }
 
+        public void SendGenericMessage(string method, List<string> message)
+        {
+
+        }
+
         public void SendGenericMessage(string method, List<byte[]> message)
         {
 
@@ -618,14 +623,6 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         {
         }
 
-        public virtual void SendAvatarData(SendAvatarData data)
-        {
-        }
-
-        public virtual void SendAvatarTerseUpdate(SendAvatarTerseData data)
-        {
-        }
-
         public virtual void SendCoarseLocationUpdate(List<UUID> users, List<Vector3> CoarseLocations)
         {
         }
@@ -638,15 +635,15 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         {
         }
 
-        public virtual void SendPrimitiveToClient(SendPrimitiveData data)
+        public void SendAvatarDataImmediate(ISceneEntity avatar)
         {
         }
 
-        public virtual void SendPrimTerseUpdate(SendPrimitiveTerseData data)
+        public void SendPrimUpdate(ISceneEntity entity, PrimUpdateFlags updateFlags)
         {
         }
 
-        public virtual void ReprioritizeUpdates(StateUpdateTypes type, UpdatePriorityHandler handler)
+        public void ReprioritizeUpdates()
         {
         }
 

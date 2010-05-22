@@ -1554,6 +1554,7 @@
       <Reference name="System.Xml"/>
       <Reference name="Mono.Addins.dll" />
       <Reference name="Aurora.Framework"/>
+      <Reference name="Aurora.Services.DataService"/>
       <Reference name="OpenMetaverseTypes.dll"/>
       <Reference name="OpenMetaverse.StructuredData.dll"/>
       <Reference name="OpenMetaverse.dll"/>
@@ -1915,6 +1916,7 @@
           <Exclude name="Tests" pattern="Tests" />
         </Match>
         <Match path="Resources" pattern="*.sql" buildAction="EmbeddedResource"/>
+        <Match path="Resources" pattern="*.migrations" buildAction="EmbeddedResource"/>
         <Match pattern="*.addin.xml" path="Resources" buildAction="EmbeddedResource" recurse="true"/>
       </Files>
     </Project>
@@ -1948,6 +1950,7 @@
       <Files>
         <Match pattern="*.cs" recurse="true"/>
         <Match path="Resources" pattern="*.sql" buildAction="EmbeddedResource"/>
+        <Match path="Resources" pattern="*.migrations" buildAction="EmbeddedResource"/>
         <Match pattern="*.addin.xml" path="Resources" buildAction="EmbeddedResource" recurse="true"/>
       </Files>
     </Project>
@@ -1985,6 +1988,7 @@
           <Exclude name="Tests" pattern="Tests" />
         </Match>
         <Match path="Resources" pattern="*.sql" buildAction="EmbeddedResource"/>
+        <Match path="Resources" pattern="*.migrations" buildAction="EmbeddedResource"/>
         <Match pattern="*.addin.xml" path="Resources" buildAction="EmbeddedResource" recurse="true"/>
       </Files>
     </Project>
@@ -2022,6 +2026,7 @@
           <Exclude name="Tests" pattern="Tests" />
         </Match>
         <Match path="Resources" pattern="*.sql" buildAction="EmbeddedResource"/>
+        <Match path="Resources" pattern="*.migrations" buildAction="EmbeddedResource"/>
         <Match pattern="*.addin.xml" path="Resources" buildAction="EmbeddedResource" recurse="true"/>
       </Files>
     </Project>
@@ -2347,6 +2352,8 @@
           <Reference name="System.Xml"/>
 <Reference name="System.Drawing"/>
 <Reference name="System.Windows.Forms"/>
+<Reference name="System.Data"/>
+<Reference name="Microsoft.VisualBasic"/>
 
 	    <Reference name="Nini.dll"/>
  <Reference name="Mono.Addins.dll"/>
@@ -2479,6 +2486,8 @@
 <Reference name="OpenMetaverse.dll"/>
 <Reference name="OpenMetaverse.StructuredData.dll"/>
 <Reference name="OpenSim.Framework"/>
+<Reference name="OpenSim.Framework.Console"/>
+
       <Reference name="System.Core"/>
       <Reference name="C5.dll" />
           <Files>
@@ -2651,6 +2660,7 @@
       <Reference name="OpenSim.Framework.Console"/>
       <Reference name="OpenSim.Region.CoreModules" />
       <Reference name="OpenSim.Region.Framework" />
+      <Reference name="OpenSim.Services.Interfaces"/>
       <Reference name="OpenSim.Region.ScriptEngine.Shared"/>
       <Reference name="OpenSim.Region.ScriptEngine.Shared.Api"/>
       <Reference name="OpenSim.Region.ScriptEngine.Shared.Api.Runtime"/>
