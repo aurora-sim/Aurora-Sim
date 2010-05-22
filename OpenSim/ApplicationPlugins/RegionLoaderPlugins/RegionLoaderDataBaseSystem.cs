@@ -37,13 +37,24 @@ using log4net;
 using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Framework.Console;
+using OpenSim.Framework;
 
-namespace OpenSim.Framework.RegionLoader.Filesystem
+namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 {
-    public class RegionLoaderFileSystem : IRegionLoader
+    public class RegionLoaderDataBaseSystem : IRegionLoader
     {
         private static readonly ILog m_log
             = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private IOpenSimBase m_openSim;
+        private IRegionCreator m_creator;
+        private OpenSimConfigSource m_configSource;
+
+        public void Initialise(OpenSimConfigSource configSource, IRegionCreator creator, IOpenSimBase openSim)
+        {
+            m_configSource = configSource; ;
+            m_creator = creator;
+            m_openSim = openSim;
+        }
 
         public string Name
         {
@@ -51,13 +62,6 @@ namespace OpenSim.Framework.RegionLoader.Filesystem
             {
                 return "RegionLoaderDataBaseSystem";
             }
-        }
-
-        private IConfigSource m_configSource;
-
-        public void SetIniConfigSource(IConfigSource configSource)
-        {
-            m_configSource = configSource;
         }
 
         public RegionInfo[] LoadRegions()
@@ -68,13 +72,26 @@ namespace OpenSim.Framework.RegionLoader.Filesystem
             RegionInfo[] infos = Aurora.DataManager.DataManager.IRegionInfoConnector.GetRegionInfos();
             if (infos.Length == 0)
             {
-                //CreateNewRegion();
                 RegionManager manager = new RegionManager(true);
-                Application.Run(manager);
+                System.Windows.Forms.Application.Run(manager);
                 return LoadRegions();
             }
             else
                 return infos;
+        }
+
+        public void AddRegion()
+        {
+            RegionManager manager = new RegionManager(true);
+            manager.OnNewRegion += new RegionManager.NewRegion(manager_OnNewRegion);
+            System.Windows.Forms.Application.Run(manager);
+        }
+
+        private void manager_OnNewRegion(RegionInfo info)
+        {
+            IScene scene;
+            m_log.Debug("[LOADREGIONS]: Creating Region: " + info.RegionName + ")");
+            m_openSim.CreateRegion(info, true, out scene);
         }
 
         private void FindOldRegionFiles()
@@ -86,7 +103,7 @@ namespace OpenSim.Framework.RegionLoader.Filesystem
 
                 try
                 {
-                    IConfig startupConfig = (IConfig)m_configSource.Configs["Startup"];
+                    IConfig startupConfig = (IConfig)m_configSource.Source.Configs["Startup"];
                     regionConfigPath = startupConfig.GetString("regionload_regionsdir", regionConfigPath).Trim();
                 }
                 catch (Exception)
@@ -108,7 +125,7 @@ namespace OpenSim.Framework.RegionLoader.Filesystem
 
                         foreach (IConfig config in source.Configs)
                         {
-                            RegionInfo regionInfo = new RegionInfo("REGION CONFIG #" + (i + 1), file, false, m_configSource, config.Name);
+                            RegionInfo regionInfo = new RegionInfo("REGION CONFIG #" + (i + 1), file, false, m_configSource.Source, config.Name);
                             RegionsToConvert.Add(regionInfo);
                             i++;
                         }
@@ -118,7 +135,7 @@ namespace OpenSim.Framework.RegionLoader.Filesystem
                 {
                     foreach (string file in configFiles)
                     {
-                        RegionInfo regionInfo = new RegionInfo("REGION CONFIG #" + (i + 1), file, false, m_configSource);
+                        RegionInfo regionInfo = new RegionInfo("REGION CONFIG #" + (i + 1), file, false, m_configSource.Source);
                         RegionsToConvert.Add(regionInfo);
                         i++;
                     }
@@ -145,50 +162,5 @@ namespace OpenSim.Framework.RegionLoader.Filesystem
             {
             }
         }
-
-        //Old console way
-        /*public void CreateNewRegion()
-        {
-            RegionInfo region = new RegionInfo();
-            MainConsole.Instance.Output("=====================================\n");
-            MainConsole.Instance.Output("We are now going to ask a couple of questions about your region.\n");
-            MainConsole.Instance.Output("You can press 'enter' without typing anything to use the default\n");
-            MainConsole.Instance.Output("the default is displayed between [ ] brackets.\n");
-            MainConsole.Instance.Output("=====================================\n");
-            region.RegionName = MainConsole.Instance.CmdPrompt("New region name", region.RegionName);
-            region.RegionID = UUID.Random();
-            while (true)
-            {
-                try
-                {
-                    region.RegionLocX = uint.Parse(MainConsole.Instance.CmdPrompt("Region Location X", "1000"));
-                    region.RegionLocY = uint.Parse(MainConsole.Instance.CmdPrompt("Region Location Y", "1000"));
-                    break;
-                }
-                catch
-                {
-                    m_log.Warn("Cannot parse region Location! Please try again.");
-                }
-            }
-            IPAddress address = IPAddress.Parse("0.0.0.0");
-            int port = port = Convert.ToInt32(MainConsole.Instance.CmdPrompt("Region Port", "9000"));
-            region.InternalEndPoint = new IPEndPoint(address, port);
-            string externalName = MainConsole.Instance.CmdPrompt("External host name (Use DEFAULT if you are not sure, as this will find your IP automatically)", "DEFAULT");
-            if (externalName == "DEFAULT")
-            {
-                externalName = Aurora.Framework.Utils.GetExternalIp();
-                region.FindExternalAutomatically = true;
-            }
-            else
-                region.FindExternalAutomatically = false;
-            region.ExternalHostName = externalName;
-            region.RegionType = MainConsole.Instance.CmdPrompt("Region Type", "Mainland");
-            region.NonphysPrimMax = int.Parse(MainConsole.Instance.CmdPrompt("Maximum Non-physical Prim size", "256"));
-            region.PhysPrimMax = int.Parse(MainConsole.Instance.CmdPrompt("Maximum Physical Prim size", "50"));
-            region.ClampPrimSize = true;
-            region.ObjectCapacity = int.Parse(MainConsole.Instance.CmdPrompt("Maximum objects in this region", "65536"));
-            region.AccessLevel = Util.ConvertMaturityToAccessLevel(uint.Parse(MainConsole.Instance.CmdPrompt("Region Maturity (0 - PG, 1 - Mature, 2 - Adult)", "0")));
-            Aurora.DataManager.DataManager.IRegionInfoConnector.UpdateRegionInfo(region, false);
-        }*/
     }
 }

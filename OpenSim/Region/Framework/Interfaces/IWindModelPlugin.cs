@@ -79,5 +79,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// </summary>
         float WindParamGet(string param);
 
+        void Initialise();
+
     }
 }

@@ -33,8 +33,9 @@ using System.Reflection;
 using System.Xml;
 using log4net;
 using Nini.Config;
+using OpenSim.Framework;
 
-namespace OpenSim.Framework.RegionLoader.Web
+namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 {
     public class RegionLoaderWebServer : IRegionLoader
     {
@@ -48,9 +49,9 @@ namespace OpenSim.Framework.RegionLoader.Web
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private IConfigSource m_configSource;
+        private OpenSimConfigSource m_configSource;
 
-        public void SetIniConfigSource(IConfigSource configSource)
+        public void Initialise(OpenSimConfigSource configSource, IRegionCreator creator, IOpenSimBase openSim)
         {
             m_configSource = configSource;
         }
@@ -66,7 +67,7 @@ namespace OpenSim.Framework.RegionLoader.Web
             {
                 try
                 {
-                    IConfig startupConfig = (IConfig)m_configSource.Configs["Startup"];
+                    IConfig startupConfig = (IConfig)m_configSource.Source.Configs["Startup"];
                     string url = startupConfig.GetString("regionload_webserver_url", String.Empty).Trim();
                     if (url == String.Empty)
                     {
@@ -93,7 +94,7 @@ namespace OpenSim.Framework.RegionLoader.Web
                         int i = 0;
                         foreach (IConfig config in source.Configs)
                         {
-                            RegionInfo regionInfo = new RegionInfo("REGION CONFIG #" + (i + 1), "", false, m_configSource, config.Name);
+                            RegionInfo regionInfo = new RegionInfo("REGION CONFIG #" + (i + 1), "", false, m_configSource.Source, config.Name);
                             regionInfos.Add(regionInfo);
                             i++;
                         }
@@ -105,6 +106,10 @@ namespace OpenSim.Framework.RegionLoader.Web
                     return null;
                 }
             }
+        }
+
+        public void AddRegion()
+        {
         }
     }
 }

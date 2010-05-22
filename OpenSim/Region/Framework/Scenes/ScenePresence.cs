@@ -262,7 +262,7 @@ namespace OpenSim.Region.Framework.Scenes
         ulong m_rootRegionHandle;
 
         private bool m_IsSelecting = false;
-        private uint m_SelectedLocalID = 0;
+        private UUID m_SelectedUUID = UUID.Zero;
         private byte[] m_EffectColor = new Color4(1, 0.01568628f, 0, 1).GetBytes();
 
         /// <value>
@@ -272,10 +272,10 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Properties
 
-        public uint SelectedLocalID
+        public UUID SelectedUUID
         {
-            set { m_SelectedLocalID = value; }
-            get { return m_SelectedLocalID; }
+            set { m_SelectedUUID = value; }
+            get { return m_SelectedUUID; }
         }
         public byte[] EffectColor
         {
@@ -1836,7 +1836,6 @@ namespace OpenSim.Region.Framework.Scenes
                     sitOrientation = avSitOrientation;
                     autopilot = false;
                 }
-
                 pos = part.AbsolutePosition/* + offset*/;
                 //if (Math.Abs(part.AbsolutePosition.Z - AbsolutePosition.Z) > 1)
                 //{
@@ -1856,12 +1855,13 @@ namespace OpenSim.Region.Framework.Scenes
                             autopilot = false;
 
                             RemoveFromPhysicalScene();
-                            AbsolutePosition = pos + new Vector3(0.0f, 0.0f, m_sitAvatarHeight);
+                            m_CameraCenter = AbsolutePosition = pos + new Vector3(0.0f, 0.0f, m_sitAvatarHeight);
                         }
                     }
                     else
                     {
                         RemoveFromPhysicalScene();
+                        m_CameraCenter = AbsolutePosition = pos + new Vector3(0.0f, 0.0f, m_sitAvatarHeight);
                     }
                 }
 
@@ -1887,7 +1887,8 @@ namespace OpenSim.Region.Framework.Scenes
             //AbsolutePosition = new Vector3((float)(AbsolutePosition.X + (X * Math.Cos(Rotation.X * Utils.RAD_TO_DEG)) + (Y * Math.Sin(Rotation.Y * Utils.RAD_TO_DEG)) + (Z * Math.Sin(Rotation.Z * Utils.RAD_TO_DEG))), (float)(AbsolutePosition.Y + (X * Math.Sin(Rotation.X * Utils.RAD_TO_DEG)) + (Y * Math.Cos(Rotation.Y * Utils.RAD_TO_DEG)) + (Z * Math.Sin(Rotation.Z * Utils.RAD_TO_DEG))), (float)(AbsolutePosition.Z + (X * Math.Sin(Rotation.X * Utils.RAD_TO_DEG)) + (Y * Math.Sin(Rotation.Y * Utils.RAD_TO_DEG)) + (Z * Math.Cos(Rotation.Z * Utils.RAD_TO_DEG))));
             AbsolutePosition = new Vector3(AbsolutePosition.X, AbsolutePosition.Y, AbsolutePosition.Z + HeightFudgeFactor + (Appearance.AvatarHeight / 2) + HeightFudgeFactor);
             
-            ControllingClient.SendSitResponse(targetID, Vector3.Zero, sitOrientation, autopilot, cameraAtOffset, cameraEyeOffset, forceMouselook);
+            ControllingClient.SendAgentDataUpdate(UUID, UUID.Zero, Firstname, Lastname, 0, "", "");
+            ControllingClient.SendSitResponse(part.UUID, part.OffsetPosition, sitOrientation, autopilot, Vector3.Zero, m_CameraCenter, forceMouselook);
             m_requestedSitTargetUUID = targetID;
             // This calls HandleAgentSit twice, once from here, and the client calls
             // HandleAgentSit itself after it gets to the location
@@ -2407,7 +2408,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (!IsSelecting)
                 return;
 
-            SceneObjectPart SOP = Scene.GetSceneObjectPart(SelectedLocalID);
+            SceneObjectPart SOP = Scene.GetSceneObjectPart(SelectedUUID);
             if (SOP == null)
                 return;
             

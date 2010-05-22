@@ -25,48 +25,24 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.IO;
-using System.Text;
-using System.Xml;
+using System.Net;
+using System.Net.Sockets;
+using Nini.Config;
+using OpenSim.Framework;
 
-namespace OpenSim.ApplicationPlugins.Rest
+namespace OpenSim.Framework
 {
-    public class RestXmlWriter: XmlTextWriter
+    public interface IClientNetworkServer
     {
-        private StringWriter m_sw = null;
+        void Initialise(
+            IPAddress _listenIP, ref uint port, int proxyPortOffsetParm, bool allow_alternate_port, IConfigSource configSource, 
+            AgentCircuitManager authenticateClass);
 
-        public RestXmlWriter(StringWriter sw) : base(sw)
-        {
-            m_sw = sw;
-            Formatting = Formatting.Indented;
-        }
+        void NetworkStop();
+        bool HandlesRegion(Location x);
+        void AddScene(IScene x);
 
-        public RestXmlWriter(TextWriter textWriter) : base(textWriter)
-        {
-        }
-
-        public RestXmlWriter(Stream stream)
-            : this(stream, Encoding.UTF8)
-        {
-        }
-
-        public RestXmlWriter(Stream stream, Encoding enc) : base(stream, enc)
-        {
-        }
-
-        public override void WriteStartDocument()
-        {
-        }
-
-        public override void WriteStartDocument(bool standalone)
-        {
-        }
-
-        public override string ToString()
-        {
-            Flush();
-            Close();
-            return m_sw.ToString();
-        }
+        void Start();
+        void Stop();
     }
 }

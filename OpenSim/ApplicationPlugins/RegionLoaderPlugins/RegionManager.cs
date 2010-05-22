@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.Net;
 using System.Text;
@@ -14,6 +13,8 @@ namespace Aurora.Modules.RegionLoader
 {
     public partial class RegionManager : Form
     {
+        public delegate void NewRegion(RegionInfo info);
+        public event NewRegion OnNewRegion;
         bool ShouldCreateNewRegion = false;
         public RegionManager(bool create)
         {
@@ -55,6 +56,8 @@ namespace Aurora.Modules.RegionLoader
             region.AccessLevel = Util.ConvertMaturityToAccessLevel(uint.Parse(Maturity.Text));
 
             Aurora.DataManager.DataManager.IRegionInfoConnector.UpdateRegionInfo(region, bool.Parse(Disabled.Text));
+            if (OnNewRegion != null)
+                OnNewRegion(region);
             Application.Exit();
         }
 

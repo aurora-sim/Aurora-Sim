@@ -2202,7 +2202,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// Register this region with a grid service
         /// </summary>
         /// <exception cref="System.Exception">Thrown if registration of the region itself fails.</exception>
-        public void RegisterRegionWithGrid()
+        public string RegisterRegionWithGrid()
         {
             RegisterCommsEvents();
 
@@ -2212,28 +2212,11 @@ namespace OpenSim.Region.Framework.Scenes
             GridRegion region = new GridRegion(RegionInfo);
             string error = GridService.RegisterRegion(RegionInfo.ScopeID, region);
             if (error != String.Empty)
-            {
-                throw new Exception(error);
-            }
+                return error;
 
             m_sceneGridService.SetScene(this);
             m_sceneGridService.InformNeighborsThatRegionisUp(RequestModuleInterface<INeighbourService>(), RegionInfo);
-
-            //Dictionary<string, string> dGridSettings = m_sceneGridService.GetGridSettings();
-
-            //if (dGridSettings.ContainsKey("allow_forceful_banlines"))
-            //{
-            //    if (dGridSettings["allow_forceful_banlines"] != "TRUE")
-            //    {
-            //        m_log.Info("[GRID]: Grid is disabling forceful parcel banlists");
-            //        EventManager.TriggerSetAllowForcefulBan(false);
-            //    }
-            //    else
-            //    {
-            //        m_log.Info("[GRID]: Grid is allowing forceful parcel banlists");
-            //        EventManager.TriggerSetAllowForcefulBan(true);
-            //    }
-            //}
+            return "";
         }
 
         /// <summary>

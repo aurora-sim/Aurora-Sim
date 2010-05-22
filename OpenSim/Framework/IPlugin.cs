@@ -55,11 +55,6 @@ namespace OpenSim.Framework
         /// </summary>
         /// <returns>Plugin name, eg MySQL User Provider</returns>
         string Name { get; }
-
-        /// <summary>
-        /// Default-initialises the plugin
-        /// </summary>
-        void Initialise();
     }
 
     /// <summary>
@@ -73,7 +68,6 @@ namespace OpenSim.Framework
         // default initialisation
         public virtual void Initialise (IPlugin plugin)
         {
-            plugin.Initialise();
         }
     }
 

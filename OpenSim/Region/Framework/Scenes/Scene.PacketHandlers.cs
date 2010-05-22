@@ -139,7 +139,7 @@ namespace OpenSim.Region.Framework.Scenes
         public void SelectPrim(uint primLocalID, IClientAPI remoteClient)
         {
             List<EntityBase> EntityList = GetEntities();
-
+            UUID prim = new UUID();
             foreach (EntityBase ent in EntityList)
             {
                 if (ent is SceneObjectGroup)
@@ -155,6 +155,7 @@ namespace OpenSim.Region.Framework.Scenes
                         {
                             EventManager.TriggerParcelPrimCountTainted();
                         }
+                        prim = ((SceneObjectGroup)ent).UUID;
                         break;
                     }
                    else 
@@ -168,6 +169,7 @@ namespace OpenSim.Region.Framework.Scenes
                            {
                                child.Value.GetProperties(remoteClient);
                                foundPrim = true;
+                               prim = child.Value.UUID;
                                break;
                            }
                        }
@@ -175,11 +177,10 @@ namespace OpenSim.Region.Framework.Scenes
                    }
                 }
             }
-            
-            ScenePresence SP;
-            TryGetScenePresence(remoteClient.AgentId, out SP);
-            SP.SelectedLocalID = primLocalID;
-            SP.IsSelecting = true;
+                ScenePresence SP;
+                TryGetScenePresence(remoteClient.AgentId, out SP);
+                SP.SelectedUUID = prim;
+                SP.IsSelecting = true;
         }
 
         /// <summary>
@@ -189,16 +190,13 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="remoteClient"></param>
         public void DeselectPrim(uint primLocalID, IClientAPI remoteClient)
         {
+            SceneObjectPart part = GetSceneObjectPart(primLocalID);
             //Do this first... As if its null, this wont be fired.
             ScenePresence SP;
             TryGetScenePresence(remoteClient.AgentId, out SP);
-            if (SP.SelectedLocalID == primLocalID)
-            {
-                SP.SelectedLocalID = 0;
-                SP.IsSelecting = false;
-            }
+            SP.SelectedUUID = UUID.Zero;
+            SP.IsSelecting = false;
 
-            SceneObjectPart part = GetSceneObjectPart(primLocalID);
             if (part == null)
                 return;
             
