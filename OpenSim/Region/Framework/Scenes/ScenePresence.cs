@@ -2473,7 +2473,7 @@ namespace OpenSim.Region.Framework.Scenes
             SendCourseLocationsMethod d = m_sendCourseLocationsMethod;
             if (d != null)
             {
-                d.Invoke(m_scene.RegionInfo.originRegionID, this);
+                d.Invoke(m_scene.RegionInfo.RegionID, this);
             }
         }
 

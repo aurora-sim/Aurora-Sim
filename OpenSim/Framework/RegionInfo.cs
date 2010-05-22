@@ -110,7 +110,6 @@ namespace OpenSim.Framework
         private RegionSettings m_regionSettings;
         // private IConfigSource m_configSource = null;
 
-        public UUID originRegionID = UUID.Zero;
         public string proxyUrl = "";
         public int ProxyOffset = 0;
         public string regionSecret = UUID.Random().ToString();
@@ -484,8 +483,7 @@ namespace OpenSim.Framework
             }
 
             RegionID = new UUID(regionUUID);
-            originRegionID = RegionID; // What IS this?!
-          
+            
             RegionName = name;
             string location = config.GetString("Location", String.Empty);
 
@@ -769,7 +767,6 @@ namespace OpenSim.Framework
             {
                 case "sim_UUID":
                     RegionID = (UUID) configuration_result;
-                    originRegionID = (UUID) configuration_result;
                     break;
                 case "sim_name":
                     RegionName = (string) configuration_result;

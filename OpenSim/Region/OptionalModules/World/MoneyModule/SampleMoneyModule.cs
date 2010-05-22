@@ -670,7 +670,7 @@ namespace OpenSim.Region.OptionalModules.World.MoneyModule
             {
                 foreach (Scene rs in m_scenel.Values)
                 {
-                    if (rs.RegionInfo.originRegionID == RegionID)
+                    if (rs.RegionInfo.RegionID == RegionID)
                     {
                         return rs;
                     }

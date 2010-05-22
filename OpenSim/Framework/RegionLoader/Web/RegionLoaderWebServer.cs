@@ -26,6 +26,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Reflection;
@@ -63,45 +64,44 @@ namespace OpenSim.Framework.RegionLoader.Web
             }
             else
             {
-                IConfig startupConfig = (IConfig) m_configSource.Configs["Startup"];
-                string url = startupConfig.GetString("regionload_webserver_url", String.Empty).Trim();
-                if (url == String.Empty)
+                try
                 {
-                    m_log.Error("[WEBLOADER]: Unable to load webserver URL - URL was empty.");
-                    return null;
-                }
-                else
-                {
-                    HttpWebRequest webRequest = (HttpWebRequest) WebRequest.Create(url);
-                    webRequest.Timeout = 30000; //30 Second Timeout
-                    m_log.Debug("[WEBLOADER]: Sending Download Request...");
-                    HttpWebResponse webResponse = (HttpWebResponse) webRequest.GetResponse();
-                    m_log.Debug("[WEBLOADER]: Downloading Region Information From Remote Server...");
-                    StreamReader reader = new StreamReader(webResponse.GetResponseStream());
-                    string xmlSource = String.Empty;
-                    string tempStr = reader.ReadLine();
-                    while (tempStr != null)
+                    IConfig startupConfig = (IConfig)m_configSource.Configs["Startup"];
+                    string url = startupConfig.GetString("regionload_webserver_url", String.Empty).Trim();
+                    if (url == String.Empty)
                     {
-                        xmlSource = xmlSource + tempStr;
-                        tempStr = reader.ReadLine();
+                        m_log.Error("[WEBLOADER]: Unable to load webserver URL - URL was empty.");
+                        return null;
                     }
-                    m_log.Debug("[WEBLOADER]: Done downloading region information from server. Total Bytes: " +
-                                xmlSource.Length);
-                    XmlDocument xmlDoc = new XmlDocument();
-                    xmlDoc.LoadXml(xmlSource);
-                    if (xmlDoc.FirstChild.Name == "Regions")
+                    else
                     {
-                        RegionInfo[] regionInfos = new RegionInfo[xmlDoc.FirstChild.ChildNodes.Count];
-                        int i;
-                        for (i = 0; i < xmlDoc.FirstChild.ChildNodes.Count; i++)
-                        {
-                            m_log.Debug(xmlDoc.FirstChild.ChildNodes[i].OuterXml);
-                            regionInfos[i] =
-                                new RegionInfo("REGION CONFIG #" + (i + 1), xmlDoc.FirstChild.ChildNodes[i],false,m_configSource);
-                        }
+                        HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(url);
+                        webRequest.Timeout = 30000; //30 Second Timeout
 
-                        return regionInfos;
+                        m_log.Debug("[WEBLOADER]: Sending Download Request...");
+                        HttpWebResponse webResponse = (HttpWebResponse)webRequest.GetResponse();
+
+                        m_log.Debug("[WEBLOADER]: Downloading Region Information From Remote Server...");
+                        StreamReader reader = new StreamReader(webResponse.GetResponseStream());
+
+                        m_log.Debug("[WEBLOADER]: Done downloading region information from server.");
+
+                        List<RegionInfo> regionInfos = new List<RegionInfo>();
+
+                        IConfigSource source = new IniConfigSource(new Nini.Ini.IniDocument(reader.BaseStream, Nini.Ini.IniFileType.Standard));
+
+                        int i = 0;
+                        foreach (IConfig config in source.Configs)
+                        {
+                            RegionInfo regionInfo = new RegionInfo("REGION CONFIG #" + (i + 1), "", false, m_configSource, config.Name);
+                            regionInfos.Add(regionInfo);
+                            i++;
+                        }
+                        return regionInfos.ToArray();
                     }
+                }
+                catch
+                {
                     return null;
                 }
             }

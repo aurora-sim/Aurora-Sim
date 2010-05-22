@@ -99,82 +99,21 @@ namespace Aurora.Modules
 
         public void GodUpdateRegionInfoUpdate(IClientAPI client, float BillableFactor, ulong EstateID, ulong RegionFlags, byte[] SimName, int RedirectX, int RedirectY)
         {
-            string regionConfigPath = Path.Combine(Util.configDir(), "Regions");
-            string[] iniFiles = Directory.GetFiles(regionConfigPath, "*.ini");
-            int i = 0;
-            UserAccount UA = m_scenes[0].UserAccountService.GetUserAccount(UUID.Zero, client.AgentId);
-            ScenePresence SP;
-            m_scenes[0].TryGetScenePresence(client.AgentId, out SP);
-            //if (UA.UserLevel == 0)
-            //    return;
-            if (SP.GodLevel == 0)
+            UserAccount UA = ((Scene)client.Scene).UserAccountService.GetUserAccount(UUID.Zero, client.AgentId);
+            if (UA.UserLevel == 0)
                 return;
-            foreach (string file in iniFiles)
-            {
-                IConfigSource source = new IniConfigSource(file);
-                IConfig cnf = source.Configs[((Scene)client.Scene).RegionInfo.RegionName];
-                if (cnf != null)
-                {
-                    OpenSim.Services.Interfaces.GridRegion region = ((Scene)client.Scene).GridService.GetRegionByName(UUID.Zero, ((Scene)client.Scene).RegionInfo.RegionName);
-                    ((Scene)client.Scene).GridService.DeregisterRegion(region.RegionID);
-                    IConfig check = source.Configs[OpenMetaverse.Utils.BytesToString(SimName)];
-                    if (check == null)
-                    {
-                        source.AddConfig(OpenMetaverse.Utils.BytesToString(SimName));
-                        IConfig cfgNew = source.Configs[OpenMetaverse.Utils.BytesToString(SimName)];
-                        IConfig cfgOld = source.Configs[((Scene)client.Scene).RegionInfo.RegionName];
-                        string[] oldRegionValues = cfgOld.GetValues();
-                        string[] oldRegionKeys = cfgOld.GetKeys();
-                        int next = 0;
-                        foreach (string oldkey in oldRegionKeys)
-                        {
-                            cfgNew.Set(oldRegionKeys[next], oldRegionValues[next]);
-                            next++;
-                        }
-                        source.Configs.Remove(cfgOld);
-                        if (RedirectX != 0 || RedirectY != 0)
-                        {
-                            if (RedirectX == 0)
-                                RedirectX = (int)client.Scene.RegionInfo.RegionLocX;
-                            if (RedirectY == 0)
-                                RedirectY = (int)client.Scene.RegionInfo.RegionLocY;
+            ((Scene)client.Scene).RegionInfo.RegionName = OpenMetaverse.Utils.BytesToString(SimName);
+            ((Scene)client.Scene).RegionInfo.RegionLocX = (uint)RedirectX;
+            ((Scene)client.Scene).RegionInfo.RegionLocY = (uint)RedirectY;
+            Aurora.DataManager.DataManager.IRegionInfoConnector.UpdateRegionInfo(((Scene)client.Scene).RegionInfo, false);
 
-                            check.Set("Location", RedirectX.ToString() + "," + RedirectY.ToString());
-                            client.Scene.RegionInfo.RegionLocX = Convert.ToUInt32(RedirectX);
-                            client.Scene.RegionInfo.RegionLocY = Convert.ToUInt32(RedirectY);
-                            region.RegionLocX = RedirectX;
-                            region.RegionLocY = RedirectY;
-                        }
-                        ((Scene)client.Scene).RegionInfo.RegionName = OpenMetaverse.Utils.BytesToString(SimName);
-                        source.Save();
-                        region.RegionName = OpenMetaverse.Utils.BytesToString(SimName);
-                    }
-                    else
-                    {
-                        if (RedirectX != 0 || RedirectY != 0)
-                        {
-                            if (RedirectX == 0)
-                                RedirectX = (int)client.Scene.RegionInfo.RegionLocX;
-                            if (RedirectY == 0)
-                                RedirectY = (int)client.Scene.RegionInfo.RegionLocY;
-
-                            check.Set("Location", RedirectX.ToString() + "," + RedirectY.ToString());
-                            client.Scene.RegionInfo.RegionLocX = Convert.ToUInt32(RedirectX);
-                            client.Scene.RegionInfo.RegionLocY = Convert.ToUInt32(RedirectY);
-                            region.RegionLocX = RedirectX;
-                            region.RegionLocY = RedirectY;
-                        }
-                    }
-                    ((Scene)client.Scene).GridService.RegisterRegion(UUID.Zero, region);
-                }
-                i++;
-            }
             if (((Scene)client.Scene).RegionInfo.EstateSettings.EstateID != EstateID)
             {
-                bool changed = ((Scene)client.Scene).EstateService.LinkRegion(((Scene)client.Scene).RegionInfo.RegionID, (int)EstateID, ((Scene)client.Scene).RegionInfo.EstateSettings.EstatePass);
+                //Not the best thing... this should have way more security... but it works for now.
+                EstateSettings OtherEstate = ((Scene)client.Scene).EstateService.LoadEstateSettings((int)EstateID);
+                bool changed = ((Scene)client.Scene).EstateService.LinkRegion(((Scene)client.Scene).RegionInfo.RegionID, (int)EstateID, OtherEstate.EstatePass);
                 if (!changed)
-                    SP.ControllingClient.SendAgentAlertMessage("Unable to connecto to the given estate.", false);
-
+                    client.SendAgentAlertMessage("Unable to connect to the given estate.", false);
             }
         }
     }

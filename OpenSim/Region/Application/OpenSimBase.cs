@@ -302,8 +302,6 @@ namespace OpenSim
 
             PrintFileToConsole("startuplogo.txt");
 
-            m_log.InfoFormat("[NETWORK]: Using {0} as SYSTEMIP", Util.GetLocalHost().ToString());
-
             // For now, start at the 'root' level by default
             if (m_sceneManager.Scenes.Count == 1) // If there is only one region, select it
                 ChangeSelectedRegion("region",
@@ -1462,7 +1460,7 @@ namespace OpenSim
             scene.SetModuleInterfaces();
 
             // Prims have to be loaded after module configuration since some modules may be invoked during the load
-            scene.LoadPrimsFromStorage(regionInfo.originRegionID);
+            scene.LoadPrimsFromStorage(regionInfo.RegionID);
             
             // moved these here as the terrain texture has to be created after the modules are initialized
             // and has to happen before the region is registered with the grid.
@@ -1488,7 +1486,7 @@ namespace OpenSim
             // scripting engines.
             scene.CreateScriptInstances();
 
-            scene.loadAllLandObjectsFromStorage(regionInfo.originRegionID);
+            scene.loadAllLandObjectsFromStorage(regionInfo.RegionID);
             scene.EventManager.TriggerParcelPrimCountUpdate();
 
             m_sceneManager.Add(scene);

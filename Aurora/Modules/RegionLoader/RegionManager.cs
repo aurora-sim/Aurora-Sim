@@ -22,6 +22,11 @@ namespace Aurora.Modules.RegionLoader
 
         private void CreateNewRegion(object sender, EventArgs e)
         {
+            if (RName.Text == "")
+            {
+                MessageBox.Show("You must enter a region name!");
+                return;
+            }
             RegionInfo region = new RegionInfo();
             region.RegionName = RName.Text;
             region.RegionID = UUID.Random();

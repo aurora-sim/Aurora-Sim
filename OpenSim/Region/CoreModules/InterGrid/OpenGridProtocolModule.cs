@@ -457,7 +457,7 @@ namespace OpenSim.Region.CoreModules.InterGrid
             responseMap["sim_port"] = OSD.FromInteger(reg.InternalEndPoint.Port);
             responseMap["region_x"] = OSD.FromInteger(reg.RegionLocX * (uint)Constants.RegionSize); // LLX
             responseMap["region_y"] = OSD.FromInteger(reg.RegionLocY * (uint)Constants.RegionSize); // LLY
-            responseMap["region_id"] = OSD.FromUUID(reg.originRegionID);
+            responseMap["region_id"] = OSD.FromUUID(reg.RegionID);
 
             if (reg.RegionSettings.Maturity == 1)
             {
@@ -491,11 +491,11 @@ namespace OpenSim.Region.CoreModules.InterGrid
             useragent.AgentOnline = true;
             useragent.AgentPort = (uint)0;
             useragent.Handle = regionhandle;
-            useragent.InitialRegion = reg.originRegionID;
+            useragent.InitialRegion = reg.RegionID;
             useragent.LoginTime = Util.UnixTimeSinceEpoch();
             useragent.LogoutTime = 0;
             useragent.Position = agentData.startpos;
-            useragent.Region = reg.originRegionID;
+            useragent.Region = reg.RegionID;
             useragent.SecureSessionID = agentData.SecureSessionID;
             useragent.SessionID = agentData.SessionID;
 
@@ -518,7 +518,7 @@ namespace OpenSim.Region.CoreModules.InterGrid
             userProfile.HomeLookAtY = userProfile.HomeLookAt.Y;
             userProfile.HomeLookAtZ = userProfile.HomeLookAt.Z;
             userProfile.HomeRegion = reg.RegionHandle;
-            userProfile.HomeRegionID = reg.originRegionID;
+            userProfile.HomeRegionID = reg.RegionID;
             userProfile.HomeRegionX = reg.RegionLocX;
             userProfile.HomeRegionY = reg.RegionLocY;
             userProfile.ID = agentData.AgentID;
@@ -713,7 +713,7 @@ namespace OpenSim.Region.CoreModules.InterGrid
                     userState.first_name = requestMap["first_name"].AsString();
                     userState.secure_session_id = requestMap["secure_session_id"].AsUUID();
                     userState.age_verified = requestMap["age_verified"].AsBoolean();
-                    userState.region_id = homeScene.RegionInfo.originRegionID; // replace 0000000 with our regionid
+                    userState.region_id = homeScene.RegionInfo.RegionID; // replace 0000000 with our regionid
                     userState.transacted = requestMap["transacted"].AsBoolean();
                     userState.agent_access = requestMap["agent_access"].AsBoolean();
                     userState.inventory_host = requestMap["inventory_host"].AsString();
@@ -759,7 +759,7 @@ namespace OpenSim.Region.CoreModules.InterGrid
 
                     // Give em a new seed capability
                     responseMap["seed_capability"] = OSD.FromString("http://" + reg.ExternalHostName + ":" + reg.HttpPort + "/CAPS/" + userCap.CapsObjectPath + "0000/");
-                    responseMap["region"] = OSD.FromUUID(reg.originRegionID);
+                    responseMap["region"] = OSD.FromUUID(reg.RegionID);
                     responseMap["look_at"] = LookAtArray;
 
                     responseMap["sim_port"] = OSD.FromInteger(reg.InternalEndPoint.Port);
@@ -774,7 +774,7 @@ namespace OpenSim.Region.CoreModules.InterGrid
 
                     responseMap["position"] = PositionArray;
 
-                    responseMap["region_id"] = OSD.FromUUID(reg.originRegionID);
+                    responseMap["region_id"] = OSD.FromUUID(reg.RegionID);
 
                     responseMap["sim_access"] = OSD.FromString("Mature");
 
@@ -942,7 +942,7 @@ namespace OpenSim.Region.CoreModules.InterGrid
             OSDMap SrcData = new OSDMap();
             SrcData["estate_id"] = OSD.FromInteger(reg.RegionInfo.EstateSettings.EstateID);
             SrcData["parent_estate_id"] = OSD.FromInteger((reg.RegionInfo.EstateSettings.ParentEstateID == 100 ? 1 : reg.RegionInfo.EstateSettings.ParentEstateID));
-            SrcData["region_id"] = OSD.FromUUID(reg.RegionInfo.originRegionID);
+            SrcData["region_id"] = OSD.FromUUID(reg.RegionInfo.RegionID);
             SrcData["visible_to_parent"] = OSD.FromBoolean(userState.visible_to_parent);
             Parameter.Add(SrcData);
 

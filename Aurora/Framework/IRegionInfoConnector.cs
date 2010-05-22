@@ -10,6 +10,7 @@ namespace Aurora.Framework
     public interface IRegionInfoConnector
 	{
         RegionInfo[] GetRegionInfos();
+        RegionInfo GetRegionInfo(UUID regionID);
         void UpdateRegionInfo(RegionInfo region, bool Disabled);
 	}
 }

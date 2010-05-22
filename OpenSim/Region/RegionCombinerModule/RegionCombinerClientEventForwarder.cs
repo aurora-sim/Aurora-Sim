@@ -48,25 +48,25 @@ public class RegionCombinerClientEventForwarder
         {
             lock (m_virtScene)
             {
-                if (m_virtScene.ContainsKey(virtualScene.RegionInfo.originRegionID))
+                if (m_virtScene.ContainsKey(virtualScene.RegionInfo.RegionID))
                 {
-                    m_virtScene[virtualScene.RegionInfo.originRegionID] = virtualScene;
+                    m_virtScene[virtualScene.RegionInfo.RegionID] = virtualScene;
                 }
                 else
                 {
-                    m_virtScene.Add(virtualScene.RegionInfo.originRegionID, virtualScene);
+                    m_virtScene.Add(virtualScene.RegionInfo.RegionID, virtualScene);
                 }
             }
             
             lock (m_forwarders)
             {
                 // TODO: Fix this to unregister if this happens
-                if (m_forwarders.ContainsKey(virtualScene.RegionInfo.originRegionID))
-                    m_forwarders.Remove(virtualScene.RegionInfo.originRegionID);
+                if (m_forwarders.ContainsKey(virtualScene.RegionInfo.RegionID))
+                    m_forwarders.Remove(virtualScene.RegionInfo.RegionID);
 
                 RegionCombinerIndividualEventForwarder forwarder =
                     new RegionCombinerIndividualEventForwarder(m_rootScene, virtualScene);
-                m_forwarders.Add(virtualScene.RegionInfo.originRegionID, forwarder);
+                m_forwarders.Add(virtualScene.RegionInfo.RegionID, forwarder);
 
                 virtualScene.EventManager.OnNewClient += forwarder.ClientConnect;
                 virtualScene.EventManager.OnClientClosed += forwarder.ClientClosed;
@@ -77,16 +77,16 @@ public class RegionCombinerClientEventForwarder
         {
             lock (m_forwarders)
             {
-                RegionCombinerIndividualEventForwarder forwarder = m_forwarders[virtualScene.RegionInfo.originRegionID];
+                RegionCombinerIndividualEventForwarder forwarder = m_forwarders[virtualScene.RegionInfo.RegionID];
                 virtualScene.EventManager.OnNewClient -= forwarder.ClientConnect;
                 virtualScene.EventManager.OnClientClosed -= forwarder.ClientClosed;
-                m_forwarders.Remove(virtualScene.RegionInfo.originRegionID);
+                m_forwarders.Remove(virtualScene.RegionInfo.RegionID);
             }
             lock (m_virtScene)
             {
-                if (m_virtScene.ContainsKey(virtualScene.RegionInfo.originRegionID))
+                if (m_virtScene.ContainsKey(virtualScene.RegionInfo.RegionID))
                 {
-                    m_virtScene.Remove(virtualScene.RegionInfo.originRegionID);
+                    m_virtScene.Remove(virtualScene.RegionInfo.RegionID);
                 }
             }
         }

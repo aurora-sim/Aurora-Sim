@@ -182,7 +182,7 @@ namespace OpenSim.Region.RegionCombinerModule
             // 
 */
             lock (m_startingScenes)
-                m_startingScenes.Add(scene.RegionInfo.originRegionID, scene);
+                m_startingScenes.Add(scene.RegionInfo.RegionID, scene);
 
             // Give each region a standard set of non-infinite borders
             Border northBorder = new Border();
@@ -211,7 +211,7 @@ namespace OpenSim.Region.RegionCombinerModule
             regionConnections.ConnectedRegions = new List<RegionData>();
             regionConnections.RegionScene = scene;
             regionConnections.RegionLandChannel = scene.LandChannel;
-            regionConnections.RegionId = scene.RegionInfo.originRegionID;
+            regionConnections.RegionId = scene.RegionInfo.RegionID;
             regionConnections.X = scene.RegionInfo.RegionLocX;
             regionConnections.Y = scene.RegionInfo.RegionLocY;
             regionConnections.XEnd = (int)Constants.RegionSize;
@@ -459,7 +459,7 @@ namespace OpenSim.Region.RegionCombinerModule
 
             RegionData ConnectedRegion = new RegionData();
             ConnectedRegion.Offset = offset;
-            ConnectedRegion.RegionId = scene.RegionInfo.originRegionID;
+            ConnectedRegion.RegionId = scene.RegionInfo.RegionID;
             ConnectedRegion.RegionScene = scene;
             conn.ConnectedRegions.Add(ConnectedRegion);
 
@@ -524,7 +524,7 @@ namespace OpenSim.Region.RegionCombinerModule
 
             RegionData ConnectedRegion = new RegionData();
             ConnectedRegion.Offset = offset;
-            ConnectedRegion.RegionId = scene.RegionInfo.originRegionID;
+            ConnectedRegion.RegionId = scene.RegionInfo.RegionID;
             ConnectedRegion.RegionScene = scene;
             conn.ConnectedRegions.Add(ConnectedRegion);
 
@@ -578,7 +578,7 @@ namespace OpenSim.Region.RegionCombinerModule
 
             RegionData ConnectedRegion = new RegionData();
             ConnectedRegion.Offset = offset;
-            ConnectedRegion.RegionId = scene.RegionInfo.originRegionID;
+            ConnectedRegion.RegionId = scene.RegionInfo.RegionID;
             ConnectedRegion.RegionScene = scene;
 
             conn.ConnectedRegions.Add(ConnectedRegion);
@@ -664,7 +664,7 @@ namespace OpenSim.Region.RegionCombinerModule
         {
             RegionData rdata = new RegionData();
             rdata.Offset = Vector3.Zero;
-            rdata.RegionId = scene.RegionInfo.originRegionID;
+            rdata.RegionId = scene.RegionInfo.RegionID;
             rdata.RegionScene = scene;
             // save it's land channel
             regionConnections.RegionLandChannel = scene.LandChannel;
@@ -688,7 +688,7 @@ namespace OpenSim.Region.RegionCombinerModule
             scene.EventManager.OnNewPresence += SetCourseLocationDelegate;
 
             // Adds this root region to a dictionary of regions that are connectable
-            m_regions.Add(scene.RegionInfo.originRegionID, regionConnections);
+            m_regions.Add(scene.RegionInfo.RegionID, regionConnections);
         }
 
         private void SetCourseLocationDelegate(ScenePresence presence)
