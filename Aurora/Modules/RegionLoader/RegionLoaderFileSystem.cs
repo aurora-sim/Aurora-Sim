@@ -28,12 +28,15 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Nini.Config;
-using OpenSim.Framework.Console;
-using log4net;
-using OpenMetaverse;
-using System.Reflection;
 using System.Net;
+using System.Reflection;
+using System.Threading;
+using System.Windows.Forms;
+using Aurora.Modules.RegionLoader;
+using log4net;
+using Nini.Config;
+using OpenMetaverse;
+using OpenSim.Framework.Console;
 
 namespace OpenSim.Framework.RegionLoader.Filesystem
 {
@@ -62,14 +65,17 @@ namespace OpenSim.Framework.RegionLoader.Filesystem
             RegionInfo[] infos = Aurora.DataManager.DataManager.IRegionInfoConnector.GetRegionInfos();
             if (infos.Length == 0)
             {
-                CreateNewRegion();
+                //CreateNewRegion();
+                RegionManager manager = new RegionManager(true);
+                Application.Run(manager);
                 return LoadRegions();
             }
             else
                 return infos;
         }
 
-        public void CreateNewRegion()
+        //Old console way
+        /*public void CreateNewRegion()
         {
             RegionInfo region = new RegionInfo();
             MainConsole.Instance.Output("=====================================\n");
@@ -111,6 +117,6 @@ namespace OpenSim.Framework.RegionLoader.Filesystem
             region.ObjectCapacity = int.Parse(MainConsole.Instance.CmdPrompt("Maximum objects in this region", "65536"));
             region.AccessLevel = Util.ConvertMaturityToAccessLevel(uint.Parse(MainConsole.Instance.CmdPrompt("Region Maturity (0 - PG, 1 - Mature, 2 - Adult)", "0")));
             Aurora.DataManager.DataManager.IRegionInfoConnector.UpdateRegionInfo(region, false);
-        }
+        }*/
     }
 }
