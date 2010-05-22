@@ -64,6 +64,7 @@ namespace OpenSim.Region.Framework.Scenes
                 bool foundPhysics = false;
                 bool foundBackup = false;
                 bool foundUpdate = false;
+                bool foundMain = false;
                 for (int i = 0; i < AllHeartbeats.Count; i++)
                 {
                     IThread hb = AllHeartbeats[i];
@@ -75,6 +76,8 @@ namespace OpenSim.Region.Framework.Scenes
                         foundPhysics = true;
                     if (hb.type == "SceneUpdateHeartbeat" && !foundUpdate && !hb.ShouldExit)
                         foundUpdate = true;
+                    if (hb.type == "SceneHeartbeat" && !foundMain && !hb.ShouldExit)
+                        foundMain = true;
                 }
                 m_log.Warn("[SceneHeartbeatTracker]: " + m_scene.RegionInfo.RegionName + " " + foundBackup + " " + foundPhysics + " " + foundUpdate + " ");
                 System.Threading.Thread thread;
@@ -84,20 +87,28 @@ namespace OpenSim.Region.Framework.Scenes
                     AddSceneHeartbeat(new Scene.ScenePhysicsHeartbeat(m_scene), out thread);
                 if (!foundUpdate)
                     AddSceneHeartbeat(new Scene.SceneUpdateHeartbeat(m_scene), out thread);
+                if (!foundMain)
+                    AddSceneHeartbeat(new Scene.SceneHeartbeat(m_scene), out thread);
             }
             if (AllHeartbeats.Count > 3)
             {
                 //Make sure to kill off the right ones...
-                //m_log.Warn("[SceneHeartbeatTracker]: Fixing thread count... " + AllHeartbeats.Count + " found. ");
+                m_log.Warn("[SceneHeartbeatTracker]: Fixing thread count... " + AllHeartbeats.Count + " found. ");
                 bool foundPhysics = false;
                 bool foundBackup = false;
                 bool foundUpdate = false;
+                bool foundMain = false;
                 for (int i = 0; i < AllHeartbeats.Count; i++)
                 {
                     IThread hb = AllHeartbeats[i];
                     if (hb == null)
                         continue;
                     if (hb.type == "SceneUpdateHeartbeat" && foundUpdate)
+                    {
+                        m_log.Warn("[SceneHeartbeatTracker]: Killing " + hb.type);
+                        hb.ShouldExit = true;
+                    }
+                    if (hb.type == "SceneHeartbeat" && foundMain)
                     {
                         m_log.Warn("[SceneHeartbeatTracker]: Killing " + hb.type);
                         hb.ShouldExit = true;
@@ -114,6 +125,8 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                     if (hb.type == "SceneBackupHeartbeat" && !foundBackup && !hb.ShouldExit)
                         foundBackup = true;
+                    if (hb.type == "SceneHeartbeat" && !foundMain && !hb.ShouldExit)
+                        foundMain = true;
                     if (hb.type == "ScenePhysicsHeartbeat" && !foundPhysics && !hb.ShouldExit)
                         foundPhysics = true;
                     if (hb.type == "SceneUpdateHeartbeat" && !foundUpdate && !hb.ShouldExit)
@@ -148,6 +161,10 @@ namespace OpenSim.Region.Framework.Scenes
                     Scene.SceneUpdateHeartbeat suhb = new Scene.SceneUpdateHeartbeat(hb.m_scene);
                     AddSceneHeartbeat(suhb, out thread);
                 }
+                if (hb.type == "SceneHeartbeat")
+                {
+                    AddSceneHeartbeat(new Scene.SceneHeartbeat(m_scene), out thread);
+                }
             }
         }
 
@@ -156,6 +173,8 @@ namespace OpenSim.Region.Framework.Scenes
             //m_log.Warn("[SceneHeartbeatTracker]: " + heartbeat.type + " has been started");
             thread = new System.Threading.Thread(heartbeat.Start);
             thread.Name = "SceneHeartbeat";
+            thread.Priority = System.Threading.ThreadPriority.Normal;
+            thread.IsBackground = false;
             thread.Start();
             heartbeat.ThreadIsClosing += ThreadDieing;
             AllHeartbeats.Add(heartbeat);
