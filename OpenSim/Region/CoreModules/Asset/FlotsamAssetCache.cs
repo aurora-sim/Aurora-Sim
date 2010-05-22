@@ -136,18 +136,18 @@ namespace Flotsam.RegionModules.AssetCache
                     m_MemoryCache = new ExpiringCache<string, AssetBase>();
                     m_Enabled = true;
 
-                    m_log.InfoFormat("[FLOTSAM ASSET CACHE]: {0} enabled", this.Name);
+                    //m_log.InfoFormat("[FLOTSAM ASSET CACHE]: {0} enabled", this.Name);
 
                     IConfig assetConfig = source.Configs["AssetCache"];
                     if (assetConfig == null)
                     {
-                        m_log.Warn("[FLOTSAM ASSET CACHE]: AssetCache missing from OpenSim.ini, using defaults.");
-                        m_log.InfoFormat("[FLOTSAM ASSET CACHE]: Cache Directory", m_DefaultCacheDirectory);
+                        //m_log.Warn("[FLOTSAM ASSET CACHE]: AssetCache missing from OpenSim.ini, using defaults.");
+                        //m_log.InfoFormat("[FLOTSAM ASSET CACHE]: Cache Directory", m_DefaultCacheDirectory);
                         return;
                     }
 
                     m_CacheDirectory = assetConfig.GetString("CacheDirectory", m_DefaultCacheDirectory);
-                    m_log.InfoFormat("[FLOTSAM ASSET CACHE]: Cache Directory", m_DefaultCacheDirectory);
+                    //m_log.InfoFormat("[FLOTSAM ASSET CACHE]: Cache Directory", m_DefaultCacheDirectory);
 
                     m_MemoryCacheEnabled = assetConfig.GetBoolean("MemoryCacheEnabled", false);
                     m_MemoryExpiration = TimeSpan.FromHours(assetConfig.GetDouble("MemoryCacheTimeout", m_DefaultMemoryExpiration));

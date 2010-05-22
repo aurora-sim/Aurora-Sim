@@ -76,7 +76,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Presence
 
                     m_PresenceDetector = new PresenceDetector(this);
 
-                    m_log.Info("[REMOTE PRESENCE CONNECTOR]: Remote presence enabled");
+                    //m_log.Info("[REMOTE PRESENCE CONNECTOR]: Remote presence enabled");
                 }
             }
 
@@ -98,7 +98,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Presence
             scene.RegisterModuleInterface<IPresenceService>(this);
             m_PresenceDetector.AddRegion(scene);
 
-            m_log.InfoFormat("[REMOTE PRESENCE CONNECTOR]: Enabled remote presence for region {0}", scene.RegionInfo.RegionName);
+            //m_log.InfoFormat("[REMOTE PRESENCE CONNECTOR]: Enabled remote presence for region {0}", scene.RegionInfo.RegionName);
 
         }
 

@@ -74,7 +74,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Avatar
 
                     base.Initialise(source);
 
-                    m_log.Info("[AVATAR CONNECTOR]: Remote avatars enabled");
+                    //m_log.Info("[AVATAR CONNECTOR]: Remote avatars enabled");
                 }
             }
         }

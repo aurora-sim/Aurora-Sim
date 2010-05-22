@@ -32,13 +32,13 @@ namespace OpenSim
     /// <summary>
     /// OpenSimulator Application Plugin framework interface
     /// </summary>
-    public interface IApplicationPlugin : IPlugin
+    public interface IApplicationPlugin: IPlugin
     {
         /// <summary>
         /// Initialize the Plugin
         /// </summary>
         /// <param name="openSim">The Application instance</param>
-        void Initialise(OpenSimBase openSim);
+        void Initialise(IOpenSimBase openSim);
 
         /// <summary>
         /// Called when the application loading is completed 
@@ -49,9 +49,9 @@ namespace OpenSim
 
     public class ApplicationPluginInitialiser : PluginInitialiserBase
     {
-        private OpenSimBase server;
+        private IOpenSimBase server;
 
-        public ApplicationPluginInitialiser(OpenSimBase s)
+        public ApplicationPluginInitialiser(IOpenSimBase s)
         {
             server = s;
         }

@@ -104,7 +104,7 @@ namespace Aurora.Modules
                 SimMapServerURI = source.Configs["MapModule"].GetString(
                     "SimMapServerURI");
             }
-            m_log.Info("[AuroraWorldMap] Initializing");
+            //m_log.Info("[AuroraWorldMap] Initializing");
             m_config = source;
 			m_Enabled = true;
 		}
@@ -187,7 +187,7 @@ namespace Aurora.Modules
 
             string regionimage = "regionImage" + m_scene.RegionInfo.RegionID.ToString();
             regionimage = regionimage.Replace("-", "");
-            m_log.Info("[WORLD MAP]: JPEG Map location: http://" + m_scene.RegionInfo.ExternalEndPoint.Address.ToString() + ":" + m_scene.RegionInfo.HttpPort.ToString() + "/index.php?method=" + regionimage);
+            //m_log.Info("[WORLD MAP]: JPEG Map location: http://" + m_scene.RegionInfo.ExternalEndPoint.Address.ToString() + ":" + m_scene.RegionInfo.HttpPort.ToString() + "/index.php?method=" + regionimage);
 
             MainServer.Instance.AddHTTPHandler(regionimage, OnHTTPGetMapImage);
             MainServer.Instance.AddLLSDHandler(
@@ -1134,7 +1134,7 @@ namespace Aurora.Modules
             {
             }
 
-            m_log.Debug("[MAPTILE]: STORING MAPTILE IMAGE");
+            //m_log.Debug("[MAPTILE]: STORING MAPTILE IMAGE");
 
             m_scene.RegionInfo.RegionSettings.TerrainImageID = UUID.Random();
 
@@ -1149,7 +1149,7 @@ namespace Aurora.Modules
             asset.Flags = AssetFlags.Maptile;
 
             // Store the new one
-            m_log.DebugFormat("[WORLDMAP]: Storing map tile {0}", asset.ID);
+            //m_log.DebugFormat("[WORLDMAP]: Storing map tile {0}", asset.ID);
             m_scene.AssetService.Store(asset);
             m_scene.RegionInfo.RegionSettings.Save();
             
@@ -1163,7 +1163,7 @@ namespace Aurora.Modules
             }
             
             // Delete the old one
-            m_log.DebugFormat("[WORLDMAP]: Deleting old map tile {0}", lastMapRegionUUID);
+            //m_log.DebugFormat("[WORLDMAP]: Deleting old map tile {0}", lastMapRegionUUID);
             myMapImageJPEG = null;
             m_scene.AssetService.Delete(lastMapRegionUUID.ToString());
         }

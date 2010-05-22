@@ -170,7 +170,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     now = Environment.TickCount;
                 TickCountResolution += (float)(now - start) * 0.2f;
             }
-            m_log.Info("[LLUDPSERVER]: Average Environment.TickCount resolution: " + TickCountResolution + "ms");
+            //m_log.Info("[LLUDPSERVER]: Average Environment.TickCount resolution: " + TickCountResolution + "ms");
             TickCountResolution = (float)Math.Ceiling(TickCountResolution);
 
             #endregion Environment.TickCount Measurement
@@ -691,10 +691,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             // Check the archive of received reliable packet IDs to see whether we already received this packet
             if (packet.Header.Reliable && !udpClient.PacketArchive.TryEnqueue(packet.Header.Sequence))
             {
-                if (packet.Header.Resent)
-                    m_log.Debug("[LLUDPSERVER]: Received a resend of already processed packet #" + packet.Header.Sequence + ", type: " + packet.Type);
-                else
-                    m_log.Warn("[LLUDPSERVER]: Received a duplicate (not marked as resend) of packet #" + packet.Header.Sequence + ", type: " + packet.Type);
+                //if (packet.Header.Resent)
+                //    m_log.Debug("[LLUDPSERVER]: Received a resend of already processed packet #" + packet.Header.Sequence + ", type: " + packet.Type);
+                //else
+                //    m_log.Warn("[LLUDPSERVER]: Received a duplicate (not marked as resend) of packet #" + packet.Header.Sequence + ", type: " + packet.Type);
 
                 // Avoid firing a callback twice for the same packet
                 return;

@@ -34,6 +34,7 @@ using Nini.Config;
 using OpenSim;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using OpenSim.Framework;
 
 namespace OpenSim.ApplicationPlugins.RegionModulesController
 {
@@ -63,9 +64,9 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
 
 #region IApplicationPlugin implementation
 
-        public void Initialise (OpenSimBase openSim)
+        public void Initialise (IOpenSimBase openSim)
         {
-            m_openSim = openSim;
+            m_openSim = (OpenSimBase)openSim;
             m_openSim.ApplicationRegistry.RegisterInterface<IRegionModulesController>(this);
             //m_log.DebugFormat("[REGIONMODULES]: Initializing...");
 
@@ -203,7 +204,7 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
 
         public void PostInitialise ()
         {
-            m_log.DebugFormat("[REGIONMODULES]: PostInitializing...");
+            //m_log.DebugFormat("[REGIONMODULES]: PostInitializing...");
 
             // Immediately run PostInitialise on shared modules
             foreach (ISharedRegionModule module in m_sharedInstances)
@@ -307,7 +308,7 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
                     }
 
                     deferredSharedModules[replaceableInterface] = module;
-                    m_log.DebugFormat("[REGIONMODULE]: Deferred load of {0}", module.Name);
+                    //m_log.DebugFormat("[REGIONMODULE]: Deferred load of {0}", module.Name);
                     continue;
                 }
 
@@ -406,8 +407,8 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
                     continue;
                 }
 
-                m_log.DebugFormat("[REGIONMODULE]: Adding scene {0} to shared module {1} (deferred)",
-                                  scene.RegionInfo.RegionName, module.Name);
+                //m_log.DebugFormat("[REGIONMODULE]: Adding scene {0} to shared module {1} (deferred)",
+                //                  scene.RegionInfo.RegionName, module.Name);
 
                 // Not replaced, load the module
                 module.AddRegion(scene);

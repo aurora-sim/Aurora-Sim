@@ -78,7 +78,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.UserAccounts
                     base.Initialise(source);
                     m_Cache = new UserAccountCache();
 
-                    m_log.Info("[USER CONNECTOR]: Remote users enabled");
+                    // m_log.Info("[USER CONNECTOR]: Remote users enabled");
                 }
             }
         }

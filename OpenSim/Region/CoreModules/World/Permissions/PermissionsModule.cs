@@ -195,10 +195,10 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             m_allowedScriptEditors
                 = ParseUserSetConfigSetting(myConfig, "allowed_script_editors", m_allowedScriptEditors);
 
-            if (m_bypassPermissions)
-                m_log.Info("[PERMISSIONS]: serviceside_object_permissions = false in ini file so disabling all region service permission checks");
-            else
-                m_log.Debug("[PERMISSIONS]: Enabling all region service permission checks");
+            //if (m_bypassPermissions)
+                //m_log.Info("[PERMISSIONS]: serviceside_object_permissions = false in ini file so disabling all region service permission checks");
+            //else
+                //m_log.Debug("[PERMISSIONS]: Enabling all region service permission checks");
 
             //Register functions with Scene External Checks!
             m_scene.Permissions.OnBypassPermissions += BypassPermissions;
@@ -472,7 +472,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                     rawSetting, settingName, userSet);
             }
             
-            m_log.DebugFormat("[PERMISSIONS]: {0} {1}", settingName, userSet);
+            //m_log.DebugFormat("[PERMISSIONS]: {0} {1}", settingName, userSet);
             
             return userSet;
         }

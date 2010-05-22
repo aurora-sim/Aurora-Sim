@@ -45,12 +45,6 @@ namespace OpenSim.Framework
     public interface IPlugin : IDisposable
     {
         /// <summary>
-        /// Returns the plugin version
-        /// </summary>
-        /// <returns>Plugin version in MAJOR.MINOR.REVISION.BUILD format</returns>
-        string Version { get; }
-
-        /// <summary>
         /// Returns the plugin name
         /// </summary>
         /// <returns>Plugin name, eg MySQL User Provider</returns>

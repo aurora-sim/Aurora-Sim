@@ -61,7 +61,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Grid
 
         public LocalGridServicesConnector(IConfigSource source)
         {
-            m_log.Debug("[LOCAL GRID CONNECTOR]: LocalGridServicesConnector instantiated");
+            //m_log.Debug("[LOCAL GRID CONNECTOR]: LocalGridServicesConnector instantiated");
             m_MainInstance = this;
             InitialiseService(source);
         }

@@ -162,7 +162,7 @@ namespace OpenSim
 							appender.File = fileName;
 							appender.ActivateOptions();
 						}
-						m_log.InfoFormat("[LOGGING]: Logging started to file {0}", appender.File);
+						//m_log.InfoFormat("[LOGGING]: Logging started to file {0}", appender.File);
 					}
 				}
 
@@ -177,7 +177,7 @@ namespace OpenSim
 			if (Util.FireAndForgetMethod == FireAndForgetMethod.SmartThreadPool)
 				Util.InitThreadPool(stpMaxThreads);
 
-			m_log.Info("[OPENSIM MAIN]: Using async_call_method " + Util.FireAndForgetMethod);
+			//m_log.Info("[OPENSIM MAIN]: Using async_call_method " + Util.FireAndForgetMethod);
 		}
 
 		protected virtual void LoadPlugins()
@@ -207,7 +207,7 @@ namespace OpenSim
 			m_log.Info("====================================================================");
 			m_log.Info("========================= STARTING AURORA =========================");
 			m_log.Info("====================================================================");
-			m_log.InfoFormat("[OPENSIM MAIN]: Running ");
+			//m_log.InfoFormat("[OPENSIM MAIN]: Running ");
 			//m_log.InfoFormat("[OPENSIM MAIN]: GC Is Server GC: {0}", GCSettings.IsServerGC.ToString());
 			// http://msdn.microsoft.com/en-us/library/bb384202.aspx
 			//GCSettings.LatencyMode = GCLatencyMode.Batch;
@@ -296,7 +296,7 @@ namespace OpenSim
 		/// </summary>
 		private void RegisterConsoleCommands()
 		{
-			m_console.Commands.AddCommand("region", false, "clear assets", "clear assets", "Clear the asset cache", HandleClearAssets);
+			//m_console.Commands.AddCommand("region", false, "clear assets", "clear assets", "Clear the asset cache", HandleClearAssets);
 
 			m_console.Commands.AddCommand("region", false, "force update", "force update", "Force the update of all objects on clients", HandleForceUpdate);
 
@@ -306,32 +306,13 @@ namespace OpenSim
 
 			m_console.Commands.AddCommand("region", false, "change region", "change region <region name>", "Change current console region", ChangeSelectedRegion);
 
-			m_console.Commands.AddCommand("region", false, "save xml2", "save xml2", "Save a region's data in XML2 format", SaveXml2);
-
 			m_console.Commands.AddCommand("region", false, "load xml2", "load xml2", "Load a region's data from XML2 format", LoadXml2);
-
-			m_console.Commands.AddCommand("region", false, "save prims xml2", "save prims xml2 [<prim name> <file name>]", "Save named prim to XML2", SavePrimsXml2);
 
 			m_console.Commands.AddCommand("region", false, "load oar", "load oar [--merge] [--skip-assets] <oar name>", "Load a region's data from OAR archive.  --merge will merge the oar with the existing scene.  --skip-assets will load the oar but ignore the assets it contains", LoadOar);
 
 			m_console.Commands.AddCommand("region", false, "save oar", "save oar <oar name>", "Save a region's data to an OAR archive", "More information on forthcoming options here soon", SaveOar);
 
 			m_console.Commands.AddCommand("region", false, "kick user", "kick user <first> <last> [message]", "Kick a user off the simulator", KickUserCommand);
-
-			m_console.Commands.AddCommand("region", false, "show assets", "show assets", "Show asset data", HandleShow);
-
-			m_console.Commands.AddCommand("region", false, "show users", "show users [full]", "Show user data", HandleShow);
-
-			m_console.Commands.AddCommand("region", false, "show connections", "show connections", "Show connection data", HandleShow);
-
-			m_console.Commands.AddCommand("region", false, "show users full", "show users full", String.Empty, HandleShow);
-
-			m_console.Commands.AddCommand("region", false, "show modules", "show modules", "Show module data", HandleShow);
-
-			m_console.Commands.AddCommand("region", false, "show regions", "show regions", "Show region data", HandleShow);
-
-			m_console.Commands.AddCommand("region", false, "show queues", "show queues", "Show queue data", HandleShow);
-			m_console.Commands.AddCommand("region", false, "show ratings", "show ratings", "Show rating data", HandleShow);
 
 			m_console.Commands.AddCommand("region", false, "backup", "backup", "Persist objects to the database now", RunCommand);
 
@@ -345,13 +326,9 @@ namespace OpenSim
 
 			m_console.Commands.AddCommand("region", false, "delete-region", "delete-region <name>", "Delete a region from disk", RunCommand);
 
-			m_console.Commands.AddCommand("region", false, "modules list", "modules list", "List modules", HandleModules);
+            m_console.Commands.AddCommand("region", false, "modules", "modules help", "Info about simulator modules", HandleModules);
 
-			m_console.Commands.AddCommand("region", false, "modules load", "modules load <name>", "Load a module", HandleModules);
-
-			m_console.Commands.AddCommand("region", false, "modules unload", "modules unload <name>", "Unload a module", HandleModules);
-
-			m_console.Commands.AddCommand("region", false, "kill uuid", "kill uuid <UUID>", "Kill an object by UUID", KillUUID);
+            m_console.Commands.AddCommand("region", false, "kill uuid", "kill uuid <UUID>", "Kill an object by UUID", KillUUID);
 
 		}
 
@@ -483,12 +460,18 @@ namespace OpenSim
 		/// <param name="cmd"></param>
 		private void HandleModules(string module, string[] cmd)
 		{
-			List<string> args = new List<string>(cmd);
+            List<string> args = new List<string>(cmd);
 			args.RemoveAt(0);
 			string[] cmdparams = args.ToArray();
 
 			if (cmdparams.Length > 0) {
-				switch (cmdparams[0].ToLower()) {
+				switch (cmdparams[0].ToLower()) 
+                {
+                    case "help":
+                        MainConsole.Instance.Output("modules list - List modules");
+                        MainConsole.Instance.Output("modules load - Load a module");
+                        MainConsole.Instance.Output("modules unload - Unload a module");
+                        break;
 					case "list":
 						foreach (IRegionModule irm in m_moduleLoader.GetLoadedSharedModules) {
 							MainConsole.Instance.Output(String.Format("Shared region module: {0}", irm.Name));
@@ -587,7 +570,7 @@ namespace OpenSim
 			}
 
 			string regionName = (m_sceneManager.CurrentScene == null ? "root" : m_sceneManager.CurrentScene.RegionInfo.RegionName);
-			MainConsole.Instance.Output(String.Format("Currently selected region is {0}", regionName));
+			//MainConsole.Instance.Output(String.Format("Currently selected region is {0}", regionName));
 			m_console.DefaultPrompt = String.Format("Region ({0}) ", regionName);
 			m_console.ConsoleScene = m_sceneManager.CurrentScene;
 		}
@@ -652,8 +635,23 @@ namespace OpenSim
 			List<string> args = new List<string>(cmd);
 			args.RemoveAt(0);
 			string[] showParams = args.ToArray();
-
-			switch (showParams[0]) {
+            switch (showParams[0]) 
+            {
+                case "help":
+                    MainConsole.Instance.Output("show info - Shows general information about the simulator");
+                    MainConsole.Instance.Output("show stats - Show statistics");
+                    MainConsole.Instance.Output("show threads - Show thread status");
+                    MainConsole.Instance.Output("show uptime - Show server uptime");
+                    MainConsole.Instance.Output("show version - Show server version");
+                    MainConsole.Instance.Output("show assets - Show asset information");
+                    MainConsole.Instance.Output("show connections - Show connection data");
+                    MainConsole.Instance.Output("show users - Show all users connected");
+                    MainConsole.Instance.Output("show users full - Show all users connected, including child agents");
+                    MainConsole.Instance.Output("show modules - Show module information");
+                    MainConsole.Instance.Output("show regions - Show all regions");
+                    MainConsole.Instance.Output("show queues - Show queue info");
+                    MainConsole.Instance.Output("show maturity - Show region maturity levels");
+                    break;
 				case "assets":
 					MainConsole.Instance.Output("Not implemented.");
 					break;
@@ -712,7 +710,7 @@ namespace OpenSim
 					Notice(GetQueuesReport());
 					break;
 
-				case "ratings":
+				case "maturity":
 					m_sceneManager.ForEachScene(delegate(Scene scene) {
 						string rating = "";
 						if (scene.RegionInfo.RegionSettings.Maturity == 1) {
@@ -735,40 +733,9 @@ namespace OpenSim
 		private string GetQueuesReport()
 		{
 			string report = String.Empty;
-
-
-
 			m_sceneManager.ForEachScene(delegate(Scene scene) { scene.ForEachClient(delegate(IClientAPI client) {if (client is IStatsCollector) {report = report + client.FirstName + " " + client.LastName;IStatsCollector stats = (IStatsCollector)client;report = report + string.Format("{0,7} {1,7} {2,7} {3,7} {4,7} {5,7} {6,7} {7,7} {8,7} {9,7}\n", "Send", "In", "Out", "Resend", "Land", "Wind", "Cloud", "Task", "Texture","Asset");report = report + stats.Report() + "\n";}}); });
 
 			return report;
-		}
-
-		/// <summary>
-		/// Use XML2 format to serialize data to a file
-		/// </summary>
-		/// <param name="module"></param>
-		/// <param name="cmdparams"></param>
-		protected void SavePrimsXml2(string module, string[] cmdparams)
-		{
-			if (cmdparams.Length > 5) {
-				m_sceneManager.SaveNamedPrimsToXml2(cmdparams[3], cmdparams[4]);
-			} else {
-				m_log.Warn("Not enough parameters!");
-			}
-		}
-
-		/// <summary>
-		/// Serialize region data to XML2Format
-		/// </summary>
-		/// <param name="module"></param>
-		/// <param name="cmdparams"></param>
-		protected void SaveXml2(string module, string[] cmdparams)
-		{
-			if (cmdparams.Length > 2) {
-				m_sceneManager.SaveCurrentSceneToXml2(cmdparams[2]);
-			} else {
-				m_log.Warn("Not enough parameters!");
-			}
 		}
 
 		/// <summary>
@@ -964,16 +931,15 @@ namespace OpenSim
 			IClientNetworkServer clientServer = null;
 			Scene scene = SetupScene(regionInfo, proxyOffset, m_config.Source, out clientServer);
 
-			m_log.Info("[MODULES]: Loading Region's modules (old style)");
+			//m_log.Info("[MODULES]: Loading Region's modules (old style)");
 
 			List<IRegionModule> modules = m_moduleLoader.PickupModules(scene, ".");
-
 			// This needs to be ahead of the script engine load, so the
 			// script module can pick up events exposed by a module
 			m_moduleLoader.InitialiseSharedModules(scene);
 
 			// Use this in the future, the line above will be deprecated soon
-			m_log.Info("[MODULES]: Loading Region's modules (new style)");
+			//m_log.Info("[MODULES]: Loading Region's modules (new style)");
 			IRegionModulesController controller;
 			if (ApplicationRegistry.TryGet(out controller)) {
 				controller.AddRegionToModules(scene);
@@ -991,8 +957,8 @@ namespace OpenSim
 
 			// TODO : Try setting resource for region xstats here on scene
 			MainServer.Instance.AddStreamHandler(new Region.Framework.Scenes.RegionStatsHandler(regionInfo));
-
-			RegisterRegionWithGrid(scene);
+            
+            RegisterRegionWithGrid(scene);
 
 			// We need to do this after we've initialized the
 			// scripting engines.
@@ -1025,52 +991,63 @@ namespace OpenSim
 		private void RegisterRegionWithGrid(Scene scene)
 		{
 			string error = scene.RegisterRegionWithGrid();
-			if (error != "") {
-				m_log.ErrorFormat("[STARTUP]: Registration of region with grid failed, - {0}", error);
-
-				if (error == "Region location is reserved") {
-					m_log.Warn("The region location you specified is reserved. You must move your region.");
+			if (error != "") 
+            {
+				if (error == "Region location is reserved")
+                {
+                    m_log.Error("[STARTUP]: Registration of region with grid failed - The region location you specified is reserved. You must move your region.");
 					scene.RegionInfo.RegionLocY = uint.Parse(MainConsole.Instance.CmdPrompt("New Region Location X", "1000"));
 					scene.RegionInfo.RegionLocX = uint.Parse(MainConsole.Instance.CmdPrompt("New Region Location Y", "1000"));
 
 					Aurora.DataManager.DataManager.IRegionInfoConnector.UpdateRegionInfo(scene.RegionInfo, false);
 				}
-				if (error == "Region overlaps another region") {
-					m_log.Warn("The region location you specified is already in use. You must move your region.");
+				if (error == "Region overlaps another region") 
+                {
+                    m_log.Error("[STARTUP]: Registration of region with grid failed - The region location you specified is already in use. You must move your region.");
 					scene.RegionInfo.RegionLocY = uint.Parse(MainConsole.Instance.CmdPrompt("New Region Location X", "1000"));
 					scene.RegionInfo.RegionLocX = uint.Parse(MainConsole.Instance.CmdPrompt("New Region Location Y", "1000"));
 
 					Aurora.DataManager.DataManager.IRegionInfoConnector.UpdateRegionInfo(scene.RegionInfo, false);
 				}
-				if (error.Contains("Can't move this region")) {
-					m_log.Warn("You can not move this region. Moving it back to its original position.");
+				if (error.Contains("Can't move this region")) 
+                {
+                    m_log.Error("[STARTUP]: Registration of region with grid failed - You can not move this region. Moving it back to its original position.");
 					//Opensim Grid Servers don't have this functionality.
-					try {
+					try 
+                    {
 						string[] position = error.Split(',');
 
 						scene.RegionInfo.RegionLocY = uint.Parse(position[1]);
 						scene.RegionInfo.RegionLocX = uint.Parse(position[2]);
 
 						Aurora.DataManager.DataManager.IRegionInfoConnector.UpdateRegionInfo(scene.RegionInfo, false);
-					} catch (Exception e) {
-						m_log.Warn("Unable to move the region back to its original position, is this an opensim server? Please manually move the region back.");
+					} 
+                    catch (Exception e)
+                    {
+                        m_log.Error("Unable to move the region back to its original position, is this an opensim server? Please manually move the region back.");
 						throw e;
 					}
 				}
-				if (error == "Duplicate region name") {
-					m_log.Warn("The region name you specified is already in use. Please change the name.");
+				if (error == "Duplicate region name") 
+                {
+                    m_log.Error("[STARTUP]: Registration of region with grid failed - The region name you specified is already in use. Please change the name.");
 					scene.RegionInfo.RegionName = MainConsole.Instance.CmdPrompt("New Region Name", "");
 
 					Aurora.DataManager.DataManager.IRegionInfoConnector.UpdateRegionInfo(scene.RegionInfo, false);
 				}
-				if (error == "Region locked out") {
-					m_log.Warn("The region you are attempting to join has been blocked from connecting. Please connect another region.");
+				if (error == "Region locked out") 
+                {
+                    m_log.Error("[STARTUP]: Registration of region with grid failed - The region you are attempting to join has been blocked from connecting. Please connect another region.");
 					throw new Exception(error);
 				}
                 if (error == "Error communicating with grid service")
                 {
-                    m_log.Warn("The grid service can not be found! Please make sure that you can connect to the grid server and that the grid server is on.");
-                    throw new Exception(error);
+                    m_log.Error("[STARTUP]: Registration of region with grid failed - The grid service can not be found! Please make sure that you can connect to the grid server and that the grid server is on.");
+                    string input = MainConsole.Instance.CmdPrompt("Press enter when you are ready to proceed, or type cancel to exit");
+                    if (input == "cancel")
+                    {
+                        Environment.Exit(0);
+                    }
                 }
 				RegisterRegionWithGrid(scene);
 			}
@@ -1306,7 +1283,7 @@ namespace OpenSim
 			{
 				m_opensim = sim;
 				osXStatsURI = Util.SHA1Hash(sim.osSecret);
-			}
+			 }
 
 			public byte[] Handle(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
 			{

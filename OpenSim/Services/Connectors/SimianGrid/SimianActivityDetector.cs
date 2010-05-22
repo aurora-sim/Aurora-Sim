@@ -46,7 +46,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
         public SimianActivityDetector(SimianPresenceServiceConnector guservice)
         {
             m_GridUserService = guservice;
-            m_log.DebugFormat("[SIMIAN ACTIVITY DETECTOR]: Started");
+            //m_log.DebugFormat("[SIMIAN ACTIVITY DETECTOR]: Started");
         }
 
         public void AddRegion(Scene scene)

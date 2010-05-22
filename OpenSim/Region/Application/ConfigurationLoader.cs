@@ -155,7 +155,7 @@ namespace OpenSim
             m_config.Source = new IniConfigSource();
             m_config.Source.Merge(DefaultConfig());
 
-            m_log.Info("[CONFIG]: Reading configuration settings");
+            //m_log.Info("[CONFIG]: Reading configuration settings");
 
             if (sources.Count == 0)
             {
@@ -247,14 +247,14 @@ namespace OpenSim
 
             if (!IsUri(iniPath))
             {
-                m_log.InfoFormat("[CONFIG]: Reading configuration file {0}", Path.GetFullPath(iniPath));
+                //m_log.InfoFormat("[CONFIG]: Reading configuration file {0}", Path.GetFullPath(iniPath));
 
                 m_config.Source.Merge(new IniConfigSource(iniPath));
                 success = true;
             }
             else
             {
-                m_log.InfoFormat("[CONFIG]: {0} is a http:// URI, fetching ...", iniPath);
+                //m_log.InfoFormat("[CONFIG]: {0} is a http:// URI, fetching ...", iniPath);
 
                 // The ini file path is a http URI
                 // Try to read it

@@ -74,7 +74,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Authentication
 
                     base.Initialise(source);
 
-                    m_log.Info("[AUTH CONNECTOR]: Remote Authentication enabled");
+                    //m_log.Info("[AUTH CONNECTOR]: Remote Authentication enabled");
                 }
             }
         }

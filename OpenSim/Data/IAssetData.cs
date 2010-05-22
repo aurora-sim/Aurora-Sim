@@ -31,7 +31,7 @@ using OpenSim.Framework;
 
 namespace OpenSim.Data
 {
-    public interface IAssetDataPlugin : IPlugin
+    public interface IAssetDataPlugin
     {
         AssetBase GetAsset(UUID uuid);
         void StoreAsset(AssetBase asset);
@@ -44,11 +44,14 @@ namespace OpenSim.Data
     public class AssetDataInitialiser : PluginInitialiserBase
     {
         private string connect;
-        public AssetDataInitialiser (string s) { connect = s; }
-        public override void Initialise (IPlugin plugin)
+        public AssetDataInitialiser (string s) 
+        { 
+            connect = s;
+        }
+        public override void Initialise(IPlugin plugin)
         {
             IAssetDataPlugin p = plugin as IAssetDataPlugin;
-            p.Initialise (connect);
+            p.Initialise(connect);
         }
     }
 }

@@ -62,7 +62,7 @@ namespace OpenSim.Services.GridService
             : base(config)
         {
             m_GridCache = new GridCache();
-            m_log.DebugFormat("[GRID SERVICE]: Starting...");
+            //m_log.DebugFormat("[GRID SERVICE]: Starting...");
 
             m_config = config;
             IConfig gridConfig = config.Configs["GridService"];
@@ -234,8 +234,8 @@ namespace OpenSim.Services.GridService
             }
 
             m_GridCache.AddRegion(regionInfos);
-            m_log.DebugFormat("[GRID SERVICE]: Region {0} ({1}) registered successfully at {2}-{3}",
-                regionInfos.RegionName, regionInfos.RegionID, regionInfos.RegionLocX, regionInfos.RegionLocY);
+            //m_log.DebugFormat("[GRID SERVICE]: Region {0} ({1}) registered successfully at {2}-{3}",
+            //    regionInfos.RegionName, regionInfos.RegionID, regionInfos.RegionLocX, regionInfos.RegionLocY);
 
             return String.Empty;
         }
@@ -490,17 +490,17 @@ namespace OpenSim.Services.GridService
                 return;
             }
 
-            MainConsole.Instance.Output("Region Name          Region UUID");
-            MainConsole.Instance.Output("Location             URI");
-            MainConsole.Instance.Output("Owner ID                                Flags");
-            MainConsole.Instance.Output("-------------------------------------------------------------------------------");
             foreach (RegionData r in regions)
             {
+                MainConsole.Instance.Output("-------------------------------------------------------------------------------");
                 OpenSim.Data.RegionFlags flags = (OpenSim.Data.RegionFlags)Convert.ToInt32(r.Data["flags"]);
-                MainConsole.Instance.Output(String.Format("{0,-20} {1}\n{2,-20} {3}\n{4,-39} {5}\n\n",
-                        r.RegionName, r.RegionID,
-                        String.Format("{0},{1}", r.posX, r.posY), "http://" + r.Data["serverIP"].ToString() + ":" + r.Data["serverPort"].ToString(),
-                        r.Data["owner_uuid"].ToString(), flags.ToString()));
+                MainConsole.Instance.Output("Region Name: " + r.RegionName);
+                MainConsole.Instance.Output("Region UUID: " + r.RegionID);
+                MainConsole.Instance.Output("Region Location: " + String.Format("{0},{1}", r.posX, r.posY));
+                MainConsole.Instance.Output("Region URI: " + "http://" + r.Data["serverIP"].ToString() + ":" + r.Data["serverPort"].ToString());
+                MainConsole.Instance.Output("Region Owner: " + r.Data["owner_uuid"].ToString());
+                MainConsole.Instance.Output("Region Flags: " + flags);
+                MainConsole.Instance.Output("-------------------------------------------------------------------------------");
             }
             return;
         }

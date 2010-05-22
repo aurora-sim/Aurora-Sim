@@ -627,7 +627,7 @@ namespace OpenSim.Data.MySQL
                                         }
                                     }
 
-                                    m_log.InfoFormat("[REGION DB]: Loaded terrain revision r{0}", rev);
+                                    //m_log.InfoFormat("[REGION DB]: Loaded terrain revision r{0}", rev);
                                 }
                             }
                         }

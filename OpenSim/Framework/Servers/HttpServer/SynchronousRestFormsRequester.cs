@@ -81,7 +81,7 @@ namespace OpenSim.Framework.Servers.HttpServer
                 }
                 catch (Exception e)
                 {
-                    m_log.DebugFormat("[FORMS]: exception occured on sending request to {0}: {1}", requestUrl, e.Message);
+                    //m_log.DebugFormat("[FORMS]: exception occured on sending request to {0}: {1}", requestUrl, e.Message);
                 }
                 finally
                 {
@@ -125,7 +125,7 @@ namespace OpenSim.Framework.Servers.HttpServer
             catch (System.InvalidOperationException)
             {
                 // This is what happens when there is invalid XML
-                m_log.DebugFormat("[FORMS]: InvalidOperationException on receiving request");
+                //m_log.DebugFormat("[FORMS]: InvalidOperationException on receiving request");
             }
             return respstring;
         }

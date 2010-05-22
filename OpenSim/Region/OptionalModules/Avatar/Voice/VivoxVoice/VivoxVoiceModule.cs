@@ -122,13 +122,13 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.VivoxVoice
 
             if (null == m_config)
             {
-                m_log.Info("[VivoxVoice] no config found, plugin disabled");
+                //m_log.Info("[VivoxVoice] no config found, plugin disabled");
                 return;
             }
 
             if (!m_config.GetBoolean("enabled", false))
             {
-                m_log.Info("[VivoxVoice] plugin disabled by configuration");
+                //m_log.Info("[VivoxVoice] plugin disabled by configuration");
                 return;
             }
 

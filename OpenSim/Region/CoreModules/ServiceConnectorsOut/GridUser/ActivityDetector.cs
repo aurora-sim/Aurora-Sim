@@ -47,7 +47,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.GridUser
         public ActivityDetector(IGridUserService guservice)
         {
             m_GridUserService = guservice;
-            m_log.DebugFormat("[ACTIVITY DETECTOR]: starting ");
+            //m_log.DebugFormat("[ACTIVITY DETECTOR]: starting ");
         }
 
         public void AddRegion(Scene scene)

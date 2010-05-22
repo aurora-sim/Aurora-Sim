@@ -276,7 +276,8 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         public void TerrainToBitmap(Bitmap mapbmp)
         {
             int tc = Environment.TickCount;
-            m_log.Info("[MAPTILE]: Generating Maptile Step 1: Terrain");
+            m_log.Info("[MAPTILE]: Generating Maptile");
+            //m_log.Info("[MAPTILE]: Generating Maptile Step 1: Terrain");
 
             // These textures should be in the AssetCache anyway, as every client conneting to this
             // region needs them. Except on start, when the map is recreated (before anyone connected),
@@ -411,7 +412,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                     }
                 }
             }
-            m_log.Info("[MAPTILE]: Generating Maptile Step 1: Done in " + (Environment.TickCount - tc) + " ms");
+            //m_log.Info("[MAPTILE]: Generating Maptile Step 1: Done in " + (Environment.TickCount - tc) + " ms");
         }
     }
 }

@@ -46,7 +46,7 @@ namespace Aurora.Modules
         public MapActivityDetector(ISimMapConnector connector)
         {
             SimMapConnector = connector;
-            m_log.DebugFormat("[MAP ACTIVITY DETECTOR]: starting ");
+            //m_log.DebugFormat("[MAP ACTIVITY DETECTOR]: starting ");
         }
 
         public void AddRegion(Scene scene)

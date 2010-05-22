@@ -269,7 +269,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             
             ScriptConfigSource = ConfigSource.Configs[ScriptEngineName];
 
-        	m_log.Info("[" + ScriptEngineName + "]: ScriptEngine initializing");
+        	//m_log.Info("[" + ScriptEngineName + "]: ScriptEngine initializing");
             m_Scene = scene;
 
             // Create all objects we'll be using
@@ -284,8 +284,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             
             m_MaintenanceThread = new MaintenanceThread(this);
 
-            m_log.Info("[" + ScriptEngineName + "]: Reading configuration "+
-                    "from config section \"" + ScriptEngineName + "\"");
+            //m_log.Info("[" + ScriptEngineName + "]: Reading configuration "+
+            //        "from config section \"" + ScriptEngineName + "\"");
 
             m_Scene.StackModuleInterface<IScriptModule>(this);
 

@@ -79,7 +79,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Land
                 if (name == Name)
                 {
                     m_Enabled = true;
-                    m_log.Info("[LAND CONNECTOR]: Local land connector enabled");
+                    //m_log.Info("[LAND CONNECTOR]: Local land connector enabled");
                 }
             }
         }

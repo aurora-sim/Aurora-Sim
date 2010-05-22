@@ -198,7 +198,7 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
 
             InstallCommands();
 
-            m_log.Debug("[TREES]: Initialised tree module");
+            //m_log.Debug("[TREES]: Initialised tree module");
         }
 
         public void PostInitialise()

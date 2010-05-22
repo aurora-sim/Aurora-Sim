@@ -80,7 +80,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
                 {
                     // m_Enabled rules whether this module registers as INeighbourService or not
                     m_Enabled = true;
-                    m_log.Info("[NEIGHBOUR CONNECTOR]: Local neighbour connector enabled");
+                    //m_log.Info("[NEIGHBOUR CONNECTOR]: Local neighbour connector enabled");
                 }
             }
         }
@@ -101,7 +101,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
 
         public void RegionLoaded(Scene scene)
         {
-            m_log.Info("[NEIGHBOUR CONNECTOR]: Local neighbour connector enabled for region " + scene.RegionInfo.RegionName);
+            //m_log.Info("[NEIGHBOUR CONNECTOR]: Local neighbour connector enabled for region " + scene.RegionInfo.RegionName);
         }
 
         public void PostInitialise()

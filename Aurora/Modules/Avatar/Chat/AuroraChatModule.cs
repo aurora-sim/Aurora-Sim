@@ -103,8 +103,8 @@ namespace Aurora.Modules
                 }
             }
 
-            m_log.InfoFormat("[CHAT]: Initialized for {0} w:{1} s:{2} S:{3}", scene.RegionInfo.RegionName,
-                             m_whisperdistance, m_saydistance, m_shoutdistance);
+            //m_log.InfoFormat("[CHAT]: Initialized for {0} w:{1} s:{2} S:{3}", scene.RegionInfo.RegionName,
+            //                 m_whisperdistance, m_saydistance, m_shoutdistance);
         }
 
         public virtual void RegionLoaded(Scene scene)

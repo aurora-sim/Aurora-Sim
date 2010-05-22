@@ -786,7 +786,7 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
 
-            m_log.Info("[SCENE]: Using the " + m_priorityScheme + " prioritization scheme");
+            //m_log.Info("[SCENE]: Using the " + m_priorityScheme + " prioritization scheme");
 
             #endregion Interest Management
         }
@@ -2256,7 +2256,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="regionID">Unique Identifier of the Region to load parcel data for</param>
         public void loadAllLandObjectsFromStorage(UUID regionID)
         {
-            m_log.Info("[SCENE]: Loading land objects from storage");
+            //m_log.Info("[SCENE]: Loading land objects from storage");
             List<LandData> landData = m_storageManager.DataStore.LoadLandObjects(regionID);
 
             if (LandChannel != null)
@@ -2285,11 +2285,11 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public virtual void LoadPrimsFromStorage(UUID regionID)
         {
-            m_log.Info("[SCENE]: Loading objects from datastore");
+            //m_log.Info("[SCENE]: Loading objects from datastore");
 
             List<SceneObjectGroup> PrimsFromDB = m_storageManager.DataStore.LoadObjects(regionID);
 
-            m_log.Info("[SCENE]: Loaded " + PrimsFromDB.Count + " objects from the datastore");
+            //m_log.Info("[SCENE]: Loaded " + PrimsFromDB.Count + " objects from the datastore");
 
             foreach (SceneObjectGroup group in PrimsFromDB)
             {
@@ -3119,7 +3119,7 @@ namespace OpenSim.Region.Framework.Scenes
             // Do the verification here
             if ((aCircuit.teleportFlags & (uint)Constants.TeleportFlags.ViaLogin) != 0)
             {
-                m_log.DebugFormat("[Scene]: Incoming client {0} {1} in region {2} via Login", aCircuit.firstname, aCircuit.lastname, RegionInfo.RegionName);
+                //m_log.DebugFormat("[Scene]: Incoming client {0} {1} in region {2} via Login", aCircuit.firstname, aCircuit.lastname, RegionInfo.RegionName);
                 vialogin = true;
                 IUserAgentVerificationModule userVerification = RequestModuleInterface<IUserAgentVerificationModule>();
                 if (userVerification != null && ep != null)

@@ -63,13 +63,13 @@ namespace OpenSim.Region.CoreModules.Avatar.Groups
 
             if (groupsConfig == null)
             {
-                m_log.Info("[GROUPS]: No configuration found. Using defaults");
+                //m_log.Info("[GROUPS]: No configuration found. Using defaults");
             }
             else
             {
                 if (!groupsConfig.GetBoolean("Enabled", false))
                 {
-                    m_log.Info("[GROUPS]: Groups disabled in configuration");
+                    //m_log.Info("[GROUPS]: Groups disabled in configuration");
                     return;
                 }
 

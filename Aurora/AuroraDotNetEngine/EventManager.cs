@@ -76,8 +76,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         
         public void HookUpEvents()
         {
-            m_log.Info("[" + myScriptEngine.ScriptEngineName +
-                       "]: Hooking up to server events");
+            //m_log.Info("[" + myScriptEngine.ScriptEngineName +
+            //           "]: Hooking up to server events");
 
             myScriptEngine.World.EventManager.OnObjectGrab +=
                     touch_start;

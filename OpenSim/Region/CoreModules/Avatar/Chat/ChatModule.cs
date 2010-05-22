@@ -61,14 +61,14 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
 
             if (null == m_config)
             {
-                m_log.Info("[CHAT]: no config found, plugin disabled");
+                //m_log.Info("[CHAT]: no config found, plugin disabled");
                 m_enabled = false;
                 return;
             }
 
             if (!m_config.GetBoolean("enabled", true))
             {
-                m_log.Info("[CHAT]: plugin disabled by configuration");
+                //m_log.Info("[CHAT]: plugin disabled by configuration");
                 m_enabled = false;
                 return;
             }
@@ -93,8 +93,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
                 }
             }
 
-            m_log.InfoFormat("[CHAT]: Initialized for {0} w:{1} s:{2} S:{3}", scene.RegionInfo.RegionName,
-                             m_whisperdistance, m_saydistance, m_shoutdistance);
+            //m_log.InfoFormat("[CHAT]: Initialized for {0} w:{1} s:{2} S:{3}", scene.RegionInfo.RegionName,
+            //                 m_whisperdistance, m_saydistance, m_shoutdistance);
         }
 
         public virtual void RegionLoaded(Scene scene)

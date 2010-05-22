@@ -86,7 +86,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
 
                     m_Enabled = true;
 
-                    m_log.Info("[NEIGHBOUR CONNECTOR]: Remote Neighbour connector enabled");
+                    //m_log.Info("[NEIGHBOUR CONNECTOR]: Remote Neighbour connector enabled");
                 }
             }
         }
@@ -135,7 +135,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
 
             m_GridService = scene.GridService;
 
-            m_log.InfoFormat("[NEIGHBOUR CONNECTOR]: Enabled remote neighbours for region {0}", scene.RegionInfo.RegionName);
+            //m_log.InfoFormat("[NEIGHBOUR CONNECTOR]: Enabled remote neighbours for region {0}", scene.RegionInfo.RegionName);
 
         }
 

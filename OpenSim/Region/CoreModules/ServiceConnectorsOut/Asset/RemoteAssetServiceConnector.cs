@@ -77,7 +77,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Asset
 
                     base.Initialise(source);
 
-                    m_log.Info("[ASSET CONNECTOR]: Remote assets enabled");
+                    //m_log.Info("[ASSET CONNECTOR]: Remote assets enabled");
                 }
             }
         }
@@ -121,12 +121,12 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Asset
 
             }
 
-            m_log.InfoFormat("[ASSET CONNECTOR]: Enabled remote assets for region {0}", scene.RegionInfo.RegionName);
+            //m_log.InfoFormat("[ASSET CONNECTOR]: Enabled remote assets for region {0}", scene.RegionInfo.RegionName);
 
-            if (m_Cache != null)
-            {
-                m_log.InfoFormat("[ASSET CONNECTOR]: Enabled asset caching for region {0}", scene.RegionInfo.RegionName);
-            }
+            //if (m_Cache != null)
+            //{
+                //m_log.InfoFormat("[ASSET CONNECTOR]: Enabled asset caching for region {0}", scene.RegionInfo.RegionName);
+            //}
         }
     }
 }

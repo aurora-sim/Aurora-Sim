@@ -315,7 +315,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
                 List<UUID> online = GetOnlineFriends(agentID);
                 if (online.Count > 0)
                 {
-                    m_log.DebugFormat("[FRIENDS MODULE]: User {0} in region {1} has {2} friends online", client.AgentId, client.Scene.RegionInfo.RegionName, online.Count);
+                    //m_log.DebugFormat("[FRIENDS MODULE]: User {0} in region {1} has {2} friends online", client.AgentId, client.Scene.RegionInfo.RegionName, online.Count);
                     client.SendAgentOnline(online.ToArray());
                 }
 

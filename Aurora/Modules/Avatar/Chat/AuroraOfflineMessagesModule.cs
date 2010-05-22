@@ -98,7 +98,7 @@ namespace Aurora.Modules
                     enabled = false;
                     m_SceneList.Clear();
 
-                    m_log.Error("[OFFLINE MESSAGING] No message transfer module is enabled. Diabling offline messages");
+                    //m_log.Error("[OFFLINE MESSAGING] No message transfer module is enabled. Diabling offline messages");
                 }
                 m_TransferModule.OnUndeliveredMessage += UndeliveredMessage;
             }
@@ -120,7 +120,7 @@ namespace Aurora.Modules
             if (!enabled)
                 return;
 
-            m_log.Debug("[OFFLINE MESSAGING] Offline messages enabled");
+            //m_log.Debug("[OFFLINE MESSAGING] Offline messages enabled");
         }
 
         public string Name

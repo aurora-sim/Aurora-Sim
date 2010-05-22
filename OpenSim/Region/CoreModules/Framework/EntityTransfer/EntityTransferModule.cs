@@ -76,7 +76,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 {
                     m_agentsInTransit = new List<UUID>();
                     m_Enabled = true;
-                    m_log.InfoFormat("[ENTITY TRANSFER MODULE]: {0} enabled.", Name);
+                    //m_log.InfoFormat("[ENTITY TRANSFER MODULE]: {0} enabled.", Name);
                 }
             }
         }

@@ -75,7 +75,7 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
 
                 if (source.Configs["MRM"].GetBoolean("Enabled", false))
                 {
-                    m_log.Info("[MRM] Enabling MRM Module");
+                    //m_log.Info("[MRM] Enabling MRM Module");
                     m_scene = scene;
                 
                     // when hidden, we don't listen for client initiated script events
@@ -92,12 +92,12 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
                 }
                 else
                 {
-                    m_log.Info("[MRM] Disabled MRM Module (Disabled in ini)");
+                    //m_log.Info("[MRM] Disabled MRM Module (Disabled in ini)");
                 }
             }
             else
             {
-                m_log.Info("[MRM] Disabled MRM Module (Default disabled)");
+                //m_log.Info("[MRM] Disabled MRM Module (Default disabled)");
             }
         }
 

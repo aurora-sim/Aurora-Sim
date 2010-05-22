@@ -56,7 +56,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void CreateScriptInstances()
         {
-            m_log.Info("[PRIM INVENTORY]: Starting scripts in scene");
+            //m_log.Info("[PRIM INVENTORY]: Starting scripts in scene");
             Action<EntityBase> ProtectedAction = new Action<EntityBase>(delegate(EntityBase group)
                 {
                     if (group is SceneObjectGroup)

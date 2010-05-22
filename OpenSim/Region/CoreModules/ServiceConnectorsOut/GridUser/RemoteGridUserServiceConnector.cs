@@ -75,7 +75,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.GridUser
 
                     m_ActivityDetector = new ActivityDetector(this);
 
-                    m_log.Info("[REMOTE GRID USER CONNECTOR]: Remote grid user enabled");
+                    //m_log.Info("[REMOTE GRID USER CONNECTOR]: Remote grid user enabled");
                 }
             }
 
@@ -97,7 +97,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.GridUser
             scene.RegisterModuleInterface<IGridUserService>(this);
             m_ActivityDetector.AddRegion(scene);
 
-            m_log.InfoFormat("[REMOTE GRID USER CONNECTOR]: Enabled remote grid user for region {0}", scene.RegionInfo.RegionName);
+            //m_log.InfoFormat("[REMOTE GRID USER CONNECTOR]: Enabled remote grid user for region {0}", scene.RegionInfo.RegionName);
 
         }
 

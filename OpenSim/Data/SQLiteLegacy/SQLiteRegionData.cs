@@ -611,7 +611,7 @@ namespace OpenSim.Data.SQLiteLegacy
                             return null;
                         }
 
-                        m_log.Info("[REGION DB]: Loaded terrain revision r" + rev.ToString());
+                        //m_log.Info("[REGION DB]: Loaded terrain revision r" + rev.ToString());
                     }
                 }
                 return terret;

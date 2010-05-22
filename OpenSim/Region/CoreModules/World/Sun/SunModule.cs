@@ -310,27 +310,42 @@ namespace OpenSim.Region.CoreModules
             // Just in case they don't have the stanzas
             try
             {
-                // Mode: determines how the sun is handled
-                m_RegionMode = config.Configs["Sun"].GetString("mode", d_mode);
-                // Mode: determines how the sun is handled
-                // m_latitude = config.Configs["Sun"].GetDouble("latitude", d_latitude);
-                // Mode: determines how the sun is handled
-                // m_longitude = config.Configs["Sun"].GetDouble("longitude", d_longitude);
-                // Year length in days
-                m_YearLengthDays = config.Configs["Sun"].GetInt("year_length", d_year_length);
-                // Day length in decimal hours
-                m_DayLengthHours  = config.Configs["Sun"].GetDouble("day_length", d_day_length);
+                if (config.Configs["Sun"] != null)
+                {
+                    // Mode: determines how the sun is handled
+                    m_RegionMode = config.Configs["Sun"].GetString("mode", d_mode);
+                    // Mode: determines how the sun is handled
+                    // m_latitude = config.Configs["Sun"].GetDouble("latitude", d_latitude);
+                    // Mode: determines how the sun is handled
+                    // m_longitude = config.Configs["Sun"].GetDouble("longitude", d_longitude);
+                    // Year length in days
+                    m_YearLengthDays = config.Configs["Sun"].GetInt("year_length", d_year_length);
+                    // Day length in decimal hours
+                    m_DayLengthHours = config.Configs["Sun"].GetDouble("day_length", d_day_length);
 
-                // Horizon shift, this is used to shift the sun's orbit, this affects the day / night ratio
-                // must hard code to ~.5 to match sun position in LL based viewers
-                m_HorizonShift   = config.Configs["Sun"].GetDouble("day_night_offset", d_day_night);
+                    // Horizon shift, this is used to shift the sun's orbit, this affects the day / night ratio
+                    // must hard code to ~.5 to match sun position in LL based viewers
+                    m_HorizonShift = config.Configs["Sun"].GetDouble("day_night_offset", d_day_night);
 
-                
-                // Scales the sun hours 0...12 vs 12...24, essentially makes daylight hours longer/shorter vs nighttime hours
-                m_DayTimeSunHourScale = config.Configs["Sun"].GetDouble("day_time_sun_hour_scale", d_DayTimeSunHourScale);
 
-                // Update frequency in frames
-                m_UpdateInterval   = config.Configs["Sun"].GetInt("update_interval", d_frame_mod);
+                    // Scales the sun hours 0...12 vs 12...24, essentially makes daylight hours longer/shorter vs nighttime hours
+                    m_DayTimeSunHourScale = config.Configs["Sun"].GetDouble("day_time_sun_hour_scale", d_DayTimeSunHourScale);
+
+                    // Update frequency in frames
+                    m_UpdateInterval = config.Configs["Sun"].GetInt("update_interval", d_frame_mod);
+                }
+                else
+                {
+                    m_RegionMode = d_mode;
+                    m_YearLengthDays = d_year_length;
+                    m_DayLengthHours = d_day_length;
+                    m_HorizonShift = d_day_night;
+                    m_UpdateInterval = d_frame_mod;
+                    m_DayTimeSunHourScale = d_DayTimeSunHourScale;
+
+                    // m_latitude    = d_latitude;
+                    // m_longitude   = d_longitude;
+                }
 
             }
             catch (Exception e)

@@ -66,7 +66,7 @@ namespace Aurora.Modules
             {
                 return;
             }
-            m_log.Info("[ABUSE REPORTS MODULE] Enabled");
+            //m_log.Info("[ABUSE REPORTS MODULE] Enabled");
         }
 
         public void AddRegion(Scene scene)

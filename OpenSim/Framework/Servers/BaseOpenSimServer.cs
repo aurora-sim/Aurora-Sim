@@ -158,7 +158,7 @@ namespace OpenSim.Framework.Servers
                     if (null == m_consoleAppender.Threshold)
                         m_consoleAppender.Threshold = Level.All;
                     
-                    Notice(String.Format("Console log level is {0}", m_consoleAppender.Threshold));
+                    //Notice(String.Format("Console log level is {0}", m_consoleAppender.Threshold));
                 }
                 
                 m_console.Commands.AddCommand("base", false, "quit",
@@ -173,25 +173,9 @@ namespace OpenSim.Framework.Servers
                         "set log level <level>",
                         "Set the console logging level", HandleLogLevel);
 
-                m_console.Commands.AddCommand("base", false, "show info",
-                        "show info",
-                        "Show general information", HandleShow);
-
-                m_console.Commands.AddCommand("base", false, "show stats",
-                        "show stats",
-                        "Show statistics", HandleShow);
-
-                m_console.Commands.AddCommand("base", false, "show threads",
-                        "show threads",
-                        "Show thread status", HandleShow);
-
-                m_console.Commands.AddCommand("base", false, "show uptime",
-                        "show uptime",
-                        "Show server uptime", HandleShow);
-
-                m_console.Commands.AddCommand("base", false, "show version",
-                        "show version",
-                        "Show server version", HandleShow);
+                m_console.Commands.AddCommand("base", false, "show",
+                        "show",
+                        "Shows information about this simulator", HandleShow);
             }
         }
         
@@ -283,7 +267,7 @@ namespace OpenSim.Framework.Servers
         /// </summary>
         public virtual void Startup()
         {
-            m_log.Info("[STARTUP]: Beginning startup processing");
+            //m_log.Info("[STARTUP]: Beginning startup processing");
 
             EnhanceVersionInformation();
             
@@ -293,7 +277,7 @@ namespace OpenSim.Framework.Servers
             
             TimeSpan timeTaken = DateTime.Now - m_startuptime;
             
-            m_log.InfoFormat("[STARTUP]: Startup took {0}m {1}s", timeTaken.Minutes, timeTaken.Seconds);
+            m_log.InfoFormat("[STARTUP]: Startup is complete and took {0}m {1}s", timeTaken.Minutes, timeTaken.Seconds);
         }
 
         /// <summary>
@@ -335,7 +319,7 @@ namespace OpenSim.Framework.Servers
                         "{0} is not a valid logging level.  Valid logging levels are ALL, DEBUG, INFO, WARN, ERROR, FATAL, OFF",
                         rawLevel));
 
-            Notice(String.Format("Console log level is {0}", m_consoleAppender.Threshold));
+            //Notice(String.Format("Console log level is {0}", m_consoleAppender.Threshold));
         }
 
         /// <summary>

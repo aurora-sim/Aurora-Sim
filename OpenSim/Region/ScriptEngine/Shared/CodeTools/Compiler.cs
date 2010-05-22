@@ -138,7 +138,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             string allowComp = m_scriptEngine.Config.GetString("AllowedCompilers", "lsl");
             AllowedCompilers.Clear();
 
-            m_log.Debug("[Compiler]: Allowed languages: " + allowComp);
+            //m_log.Debug("[Compiler]: Allowed languages: " + allowComp);
 
             foreach (string strl in allowComp.Split(','))
             {

@@ -82,7 +82,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Simulation
 
                     m_enabled = true;
 
-                    m_log.Info("[SIMULATION CONNECTOR]: Remote simulation enabled");
+                    //m_log.Info("[SIMULATION CONNECTOR]: Remote simulation enabled");
                 }
             }
         }

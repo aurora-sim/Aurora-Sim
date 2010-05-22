@@ -62,7 +62,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Authorization
 
         public void Initialise(IConfigSource source)
         {
-            m_log.Info("[AUTHORIZATION CONNECTOR]: Initialise");
+            //m_log.Info("[AUTHORIZATION CONNECTOR]: Initialise");
             
             IConfig moduleConfig = source.Configs["Modules"];
             if (moduleConfig != null)

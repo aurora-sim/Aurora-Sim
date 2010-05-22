@@ -111,14 +111,14 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
             {
                 if ((SMTPConfig = m_Config.Configs["SMTP"]) == null)
                 {
-                    m_log.InfoFormat("[SMTP] SMTP server not configured");
+                    //m_log.InfoFormat("[SMTP] SMTP server not configured");
                     m_Enabled = false;
                     return;
                 }
 
                 if (!SMTPConfig.GetBoolean("enabled", false))
                 {
-                    m_log.InfoFormat("[SMTP] module disabled in configuration");
+                    //m_log.InfoFormat("[SMTP] module disabled in configuration");
                     m_Enabled = false;
                     return;
                 }
@@ -156,7 +156,7 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
                     }
                 }
 
-                m_log.Info("[EMAIL] Activated DefaultEmailModule");
+                //m_log.Info("[EMAIL] Activated DefaultEmailModule");
             }
         }
 

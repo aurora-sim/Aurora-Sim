@@ -57,7 +57,7 @@ namespace OpenSim.Region.Framework
 
         public StorageManager(string dllName, string connectionstring, string estateconnectionstring)
         {
-            m_log.Info("[DATASTORE]: Attempting to load " + dllName);
+            //m_log.Info("[DATASTORE]: Attempting to load " + dllName);
             Assembly pluginAssembly = Assembly.LoadFrom(dllName);
 
             foreach (Type pluginType in pluginAssembly.GetTypes())
@@ -74,7 +74,7 @@ namespace OpenSim.Region.Framework
 
                         m_dataStore = plug;
 
-                        m_log.Info("[DATASTORE]: Added IRegionDataStore Interface");
+                        //m_log.Info("[DATASTORE]: Added IRegionDataStore Interface");
                     }
 
                     typeInterface = pluginType.GetInterface("IEstateDataStore", true);

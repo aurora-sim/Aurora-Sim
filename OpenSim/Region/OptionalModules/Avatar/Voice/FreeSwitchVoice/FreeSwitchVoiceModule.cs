@@ -114,13 +114,13 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
 
             if (null == m_config)
             {
-                m_log.Info("[FreeSwitchVoice] no config found, plugin disabled");
+                //m_log.Info("[FreeSwitchVoice] no config found, plugin disabled");
                 return;
             }
 
             if (!m_config.GetBoolean("enabled", false))
             {
-                m_log.Info("[FreeSwitchVoice] plugin disabled by configuration");
+                //m_log.Info("[FreeSwitchVoice] plugin disabled by configuration");
                 return;
             }
 
@@ -210,7 +210,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
                     m_pluginEnabled = true;
                     m_WOF = false;
 
-                    m_log.Info("[FreeSwitchVoice] plugin enabled");
+                    //m_log.Info("[FreeSwitchVoice] plugin enabled");
                 }
                 catch (Exception e)
                 {

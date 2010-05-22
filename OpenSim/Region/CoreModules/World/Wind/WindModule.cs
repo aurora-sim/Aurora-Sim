@@ -82,7 +82,7 @@ namespace OpenSim.Region.CoreModules
 
             if (m_enabled)
             {
-                m_log.InfoFormat("[WIND] Enabled with an update rate of {0} frames.", m_frameUpdateRate);
+                //m_log.InfoFormat("[WIND] Enabled with an update rate of {0} frames.", m_frameUpdateRate);
 
                 m_scene = scene;
                 m_frame = 0;
@@ -90,7 +90,7 @@ namespace OpenSim.Region.CoreModules
                 // Register all the Wind Model Plug-ins
                 foreach (IWindModelPlugin windPlugin in AddinManager.GetExtensionObjects("/OpenSim/WindModule", false))
                 {
-                    m_log.InfoFormat("[WIND] Found Plugin: {0}", windPlugin.Name);
+                    //m_log.InfoFormat("[WIND] Found Plugin: {0}", windPlugin.Name);
                     m_availableWindPlugins.Add(windPlugin.Name, windPlugin);
                 }
 
@@ -99,7 +99,7 @@ namespace OpenSim.Region.CoreModules
                 {
                     m_activeWindPlugin = m_availableWindPlugins[desiredWindPlugin];
 
-                    m_log.InfoFormat("[WIND] {0} plugin found, initializing.", desiredWindPlugin);
+                    //m_log.InfoFormat("[WIND] {0} plugin found, initializing.", desiredWindPlugin);
 
                     if (windConfig != null)
                     {

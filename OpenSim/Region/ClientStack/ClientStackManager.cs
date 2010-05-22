@@ -43,7 +43,7 @@ namespace OpenSim.Region.ClientStack
 
         public ClientStackManager(string dllName) 
         {
-            m_log.Info("[CLIENTSTACK]: Attempting to load " + dllName);
+            //m_log.Info("[CLIENTSTACK]: Attempting to load " + dllName);
 
             try
             {
@@ -58,7 +58,7 @@ namespace OpenSim.Region.ClientStack
 
                         if (typeInterface != null)
                         {
-                            m_log.Info("[CLIENTSTACK]: Added IClientNetworkServer Interface");
+                            //m_log.Info("[CLIENTSTACK]: Added IClientNetworkServer Interface");
                             plugin = pluginType;
                             return;
                         }

@@ -52,7 +52,8 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         public void TerrainToBitmap(Bitmap mapbmp)
         {
             int tc = Environment.TickCount;
-            m_log.Info("[MAPTILE]: Generating Maptile Step 1: Terrain");
+            m_log.Info("[MAPTILE]: Generating Maptile");
+            //m_log.Info("[MAPTILE]: Generating Maptile Step 1: Terrain");
 
             double[,] hm = m_scene.Heightmap.GetDoubles();
             bool ShadowDebugContinue = true;
@@ -237,7 +238,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                     }
                 }
             }
-            m_log.Info("[MAPTILE]: Generating Maptile Step 1: Done in " + (Environment.TickCount - tc) + " ms");
+           // m_log.Info("[MAPTILE]: Generating Maptile Step 1: Done in " + (Environment.TickCount - tc) + " ms");
         }
     }
 }

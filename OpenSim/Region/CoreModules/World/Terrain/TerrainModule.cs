@@ -385,7 +385,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             string[] files = Directory.GetFiles("Terrain");
             foreach (string file in files)
             {
-                m_log.Info("Loading effects in " + file);
+                //m_log.Info("Loading effects in " + file);
                 try
                 {
                     Assembly library = Assembly.LoadFrom(file);
@@ -408,7 +408,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                             {
                                 ITerrainLoader terLoader = (ITerrainLoader) Activator.CreateInstance(library.GetType(pluginType.ToString()));
                                 m_loaders[terLoader.FileExtension] = terLoader;
-                                m_log.Info("L ... " + typeName);
+                                //m_log.Info("L ... " + typeName);
                             }
                         }
                         catch (AmbiguousMatchException)
@@ -429,12 +429,12 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 if (!m_plugineffects.ContainsKey(pluginName))
                 {
                     m_plugineffects.Add(pluginName, effect);
-                    m_log.Info("E ... " + pluginName);
+                    //m_log.Info("E ... " + pluginName);
                 }
                 else
                 {
                     m_plugineffects[pluginName] = effect;
-                    m_log.Warn("E ... " + pluginName + " (Replaced)");
+                    //m_log.Warn("E ... " + pluginName + " (Replaced)");
                 }
             }
         }

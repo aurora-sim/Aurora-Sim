@@ -75,7 +75,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                 if (name == Name)
                 {
                     m_Enabled = true;
-                    m_log.InfoFormat("[INVENTORY ACCESS MODULE]: {0} enabled.", Name);
+                    //m_log.InfoFormat("[INVENTORY ACCESS MODULE]: {0} enabled.", Name);
                 }
             }
         }

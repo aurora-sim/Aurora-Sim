@@ -280,7 +280,7 @@ namespace OpenSim.Framework.Capabilities
         public string CapsRequest(string request, string path, string param,
                                   OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
-            m_log.Debug("[CAPS]: Seed Caps Request in region: " + m_regionName);
+            //m_log.Debug("[CAPS]: Seed Caps Request in region: " + m_regionName);
 
             if (!m_Scene.CheckClient(m_agentID, httpRequest.RemoteIPEndPoint))
             {

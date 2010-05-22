@@ -81,13 +81,13 @@ namespace OpenSim.Region.OptionalModules.Avatar.Concierge
 
             if (null == m_config)
             {
-                m_log.Info("[Concierge]: no config found, plugin disabled");
+                //m_log.Info("[Concierge]: no config found, plugin disabled");
                 return;
             }
 
             if (!m_config.GetBoolean("enabled", false))
             {
-                m_log.Info("[Concierge]: plugin disabled by configuration");
+                //m_log.Info("[Concierge]: plugin disabled by configuration");
                 return;
             }
             m_enabled = true;

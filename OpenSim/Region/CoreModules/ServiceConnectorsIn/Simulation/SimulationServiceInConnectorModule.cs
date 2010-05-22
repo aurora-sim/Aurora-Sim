@@ -61,7 +61,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsIn.Simulation
                 m_Enabled = moduleConfig.GetBoolean("SimulationServiceInConnector", false);
                 if (m_Enabled)
                 {
-                    m_log.Info("[SIM SERVICE]: SimulationService IN connector enabled");
+                    //m_log.Info("[SIM SERVICE]: SimulationService IN connector enabled");
 
                 }
             }
@@ -106,7 +106,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsIn.Simulation
             {
                 m_Registered = true;
 
-                m_log.Info("[SIM SERVICE]: Starting...");
+                //m_log.Info("[SIM SERVICE]: Starting...");
 
                 Object[] args = new Object[] { m_Config, MainServer.Instance, scene };
 

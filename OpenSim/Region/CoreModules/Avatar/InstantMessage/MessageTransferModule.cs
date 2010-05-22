@@ -84,7 +84,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
 
             lock (m_Scenes)
             {
-                m_log.Debug("[MESSAGE TRANSFER]: Message transfer module active");
+                //m_log.Debug("[MESSAGE TRANSFER]: Message transfer module active");
                 scene.RegisterModuleInterface<IMessageTransferModule>(this);
                 m_Scenes.Add(scene);
             }

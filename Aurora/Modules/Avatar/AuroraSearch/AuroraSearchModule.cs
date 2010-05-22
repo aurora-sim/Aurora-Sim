@@ -68,6 +68,7 @@ namespace Aurora.Modules
         private System.Timers.Timer aTimer = null;
         protected double parserTime = 3600000;
         private IDataSnapshot DataSnapShotManager;
+        public bool TimerStarted = false;
 
         #endregion
 
@@ -129,7 +130,7 @@ namespace Aurora.Modules
             GroupsModule = m_scene.RequestModuleInterface<IGroupsModule>();
             DataSnapShotManager = m_scene.RequestModuleInterface<IDataSnapshot>();
             if (m_SearchEnabled && DataSnapShotManager != null)
-                StartSearch();
+                StartSearch(scene);
         }
 
         public Type ReplaceableInterface
@@ -676,16 +677,18 @@ namespace Aurora.Modules
             }
         }
 
-        private void StartSearch()
+
+        private void StartSearch(Scene scene)
         {
-            aTimer = new System.Timers.Timer(parserTime);
-            aTimer.Elapsed += new System.Timers.ElapsedEventHandler(ParseRegions);
-            aTimer.Enabled = true;
-            aTimer.Start();
-            foreach (Scene scene in m_Scenes)
+            if (!TimerStarted)
             {
-                FireParser(scene, scene.RegionInfo.RegionName);
+                aTimer = new System.Timers.Timer(parserTime);
+                aTimer.Elapsed += new System.Timers.ElapsedEventHandler(ParseRegions);
+                aTimer.Enabled = true;
+                aTimer.Start();
+                TimerStarted = true;
             }
+            FireParser(scene, scene.RegionInfo.RegionName);
         }
 
         private void ParseRegions(object source, System.Timers.ElapsedEventArgs e)
@@ -744,7 +747,7 @@ namespace Aurora.Modules
 
         private void FireParser(Scene currentScene, string regionName)
         {
-            m_log.Info("[SearchModule]: Starting Search for region " + regionName + ".");
+            //m_log.Info("[SearchModule]: Starting Search for region " + regionName + ".");
             XmlDocument doc = DataSnapShotManager.GetSnapshot(regionName);
             if (doc == null)
             {

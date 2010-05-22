@@ -87,7 +87,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Grid
                 {
                     InitialiseServices(source);
                     m_Enabled = true;
-                    m_log.Info("[REMOTE GRID CONNECTOR]: Remote grid enabled");
+                    //m_log.Info("[REMOTE GRID CONNECTOR]: Remote grid enabled");
                 }
             }
         }

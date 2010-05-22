@@ -64,8 +64,8 @@ namespace OpenSim.Region.OptionalModules.Scripting.ScriptModuleComms
         {
             m_scriptModule = scene.RequestModuleInterface<IScriptModule>();
             
-            if (m_scriptModule != null)
-                m_log.Info("[MODULE COMMANDS]: Script engine found, module active");
+            //if (m_scriptModule != null)
+                //m_log.Info("[MODULE COMMANDS]: Script engine found, module active");
         }
 
         public string Name

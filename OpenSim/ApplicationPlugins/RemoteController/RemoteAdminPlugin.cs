@@ -98,7 +98,7 @@ namespace OpenSim.ApplicationPlugins.RemoteController
             throw new PluginNotInitialisedException(Name);
         }
 
-        public void Initialise(OpenSimBase openSim)
+        public void Initialise(IOpenSimBase openSim)
         {
             m_configSource = openSim.ConfigSource.Source;
             try
@@ -115,7 +115,7 @@ namespace OpenSim.ApplicationPlugins.RemoteController
                     m_requiredPassword = m_config.GetString("access_password", String.Empty);
                     int port = m_config.GetInt("port", 0);
 
-                    m_app = openSim;
+                    m_app = (OpenSimBase)openSim;
                     m_httpd = MainServer.GetHttpServer((uint)port);
 
                     Dictionary<string, XmlRpcMethod> availableMethods = new Dictionary<string, XmlRpcMethod>();

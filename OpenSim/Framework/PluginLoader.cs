@@ -99,12 +99,6 @@ namespace OpenSim.Framework
             get { return (loaded.Count == 1)? loaded [0] : default (T); }
         }
 
-        public PluginLoader()
-        {
-            Initialiser = new PluginInitialiserBase();
-            initialise_plugin_dir_(".");
-        }
-
         public PluginLoader(PluginInitialiserBase init)
         {
             Initialiser = init;

@@ -55,7 +55,7 @@ namespace OpenSim.Region.Physics.Manager
             plugHard = new ZeroMesherPlugin();
             _MeshPlugins.Add(plugHard.GetName(), plugHard);
             
-            m_log.Info("[PHYSICS]: Added meshing engine: " + plugHard.GetName());
+           // m_log.Info("[PHYSICS]: Added meshing engine: " + plugHard.GetName());
         }
 
         /// <summary>
@@ -179,7 +179,7 @@ namespace OpenSim.Region.Physics.Manager
                                     if (!_PhysPlugins.ContainsKey(plug.GetName()))
                                     {
                                         _PhysPlugins.Add(plug.GetName(), plug);
-                                        m_log.Info("[PHYSICS]: Added physics engine: " + plug.GetName());
+                                        //m_log.Info("[PHYSICS]: Added physics engine: " + plug.GetName());
                                     }
                                 }
 
@@ -192,7 +192,7 @@ namespace OpenSim.Region.Physics.Manager
                                     if (!_MeshPlugins.ContainsKey(plug.GetName()))
                                     {
                                         _MeshPlugins.Add(plug.GetName(), plug);
-                                        m_log.Info("[PHYSICS]: Added meshing engine: " + plug.GetName());
+                                        //m_log.Info("[PHYSICS]: Added meshing engine: " + plug.GetName());
                                     }
                                 }
 

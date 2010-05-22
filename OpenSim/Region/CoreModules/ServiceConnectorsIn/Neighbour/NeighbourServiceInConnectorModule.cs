@@ -62,7 +62,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsIn.Neighbour
                 m_Enabled = moduleConfig.GetBoolean("NeighbourServiceInConnector", false);
                 if (m_Enabled)
                 {
-                    m_log.Info("[NEIGHBOUR IN CONNECTOR]: NeighbourServiceInConnector enabled");
+                    //m_log.Info("[NEIGHBOUR IN CONNECTOR]: NeighbourServiceInConnector enabled");
                 }
 
             }
@@ -74,7 +74,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsIn.Neighbour
             if (!m_Enabled)
                 return;
 
-            m_log.Info("[NEIGHBOUR IN CONNECTOR]: Starting...");
+            //m_log.Info("[NEIGHBOUR IN CONNECTOR]: Starting...");
         }
 
         public void Close()

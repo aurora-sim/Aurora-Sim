@@ -66,7 +66,7 @@ namespace OpenSim.Region.CoreModules.World.Serialiser
                 m_savedir = config.GetString("save_dir", m_savedir);
             }
 
-            m_log.InfoFormat("[Serialiser] Enabled, using save dir \"{0}\"", m_savedir);
+            //m_log.InfoFormat("[Serialiser] Enabled, using save dir \"{0}\"", m_savedir);
         }
 
         public void PostInitialise()

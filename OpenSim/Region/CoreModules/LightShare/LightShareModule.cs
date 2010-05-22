@@ -95,7 +95,7 @@ namespace OpenSim.Region.CoreModules.World.LightShare
 
             InstallCommands();
 
-            m_log.Debug("[WINDLIGHT]: Initialised windlight module");
+            //m_log.Debug("[WINDLIGHT]: Initialised windlight module");
         }
 
         private List<byte[]> compileWindlightSettings(RegionLightShareData wl)

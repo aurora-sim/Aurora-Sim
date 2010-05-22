@@ -67,7 +67,7 @@ namespace OpenSim.Region.CoreModules.Framework.Library
                 if (libConfig != null)
                 {
                     string dllName = libConfig.GetString("LocalServiceModule", string.Empty);
-                    m_log.Debug("[LIBRARY MODULE]: Library service dll is " + dllName);
+                    //m_log.Debug("[LIBRARY MODULE]: Library service dll is " + dllName);
                     if (dllName != string.Empty)
                     {
                         Object[] args = new Object[] { config };
@@ -77,7 +77,7 @@ namespace OpenSim.Region.CoreModules.Framework.Library
             }
             if (m_Library == null)
             {
-                m_log.Warn("[LIBRARY MODULE]: No local library service. Module will be disabled.");
+                //m_log.Warn("[LIBRARY MODULE]: No local library service. Module will be disabled.");
                 m_Enabled = false;
             }
         }

@@ -536,7 +536,7 @@ ELSE
                         _Log.Info("[REGION DB]: No terrain found for region");
                         return null;
                     }
-                    _Log.Info("[REGION DB]: Loaded terrain revision r" + rev);
+                    //_Log.Info("[REGION DB]: Loaded terrain revision r" + rev);
                 }
             }
 

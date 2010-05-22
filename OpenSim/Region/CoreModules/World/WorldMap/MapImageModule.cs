@@ -209,7 +209,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             int tc = 0;
             double[,] hm = whichScene.Heightmap.GetDoubles();
             tc = Environment.TickCount;
-            m_log.Info("[MAPTILE]: Generating Maptile Step 2: Object Volume Profile");
+            //m_log.Info("[MAPTILE]: Generating Maptile Step 2: Object Volume Profile");
             List<EntityBase> objs = whichScene.GetEntities();
             Dictionary<uint, DrawStruct> z_sort = new Dictionary<uint, DrawStruct>();
             //SortedList<float, RectangleDrawStruct> z_sort = new SortedList<float, RectangleDrawStruct>();
@@ -531,7 +531,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                 g.Dispose();
             } // lock entities objs
 
-            m_log.Info("[MAPTILE]: Generating Maptile Step 2: Done in " + (Environment.TickCount - tc) + " ms");
+            //m_log.Info("[MAPTILE]: Generating Maptile Step 2: Done in " + (Environment.TickCount - tc) + " ms");
             return mapbmp;
         }
 

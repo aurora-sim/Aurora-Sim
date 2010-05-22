@@ -62,7 +62,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsIn.Land
                 m_Enabled = moduleConfig.GetBoolean("LandServiceInConnector", false);
                 if (m_Enabled)
                 {
-                    m_log.Info("[LAND IN CONNECTOR]: LandServiceInConnector enabled");
+                    //m_log.Info("[LAND IN CONNECTOR]: LandServiceInConnector enabled");
                 }
 
             }
@@ -74,7 +74,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsIn.Land
             if (!m_Enabled)
                 return;
 
-            m_log.Info("[LAND IN CONNECTOR]: Starting...");
+            //m_log.Info("[LAND IN CONNECTOR]: Starting...");
         }
 
         public void Close()
