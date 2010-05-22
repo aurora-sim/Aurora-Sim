@@ -139,11 +139,11 @@ namespace OpenSim.Framework.RegionLoader.Filesystem
                 //Something went really wrong here... so lets not destroy anything
                 if(!foundAll)
                     Directory.Delete(regionConfigPath, true);
+                MessageBox.Show("All region .ini and .xml files have been successfully converted to the new region loader style. The regions folder has been cleared.");
             }
             catch
             {
             }
-            MessageBox.Show("All region .ini and .xml files have been successfully converted to the new region loader style. The regions folder has been cleared.");
         }
 
         //Old console way
