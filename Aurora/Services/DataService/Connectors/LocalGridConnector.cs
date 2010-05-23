@@ -29,15 +29,15 @@ namespace Aurora.Services.DataService
             
             SimMap map = new SimMap();
             map.RegionID = UUID.Parse(retval[0]);
-            map.RegionHandle = uint.Parse(retval[1]);
-            map.EstateID = uint.Parse(retval[1]);
-            map.RegionLocX = int.Parse(retval[2]);
-            map.RegionLocY = int.Parse(retval[3]);
-            map.SimMapTextureID = UUID.Parse(retval[4]);
-            map.RegionName = retval[5];
-            map.RegionFlags = uint.Parse(retval[6]);
-            map.Access = uint.Parse(retval[7]);
-            map.SimFlags = (SimMapFlags)int.Parse(retval[8]); 
+            map.RegionHandle = ulong.Parse(retval[1]);
+            map.EstateID = uint.Parse(retval[2]);
+            map.RegionLocX = int.Parse(retval[3]);
+            map.RegionLocY = int.Parse(retval[4]);
+            map.SimMapTextureID = UUID.Parse(retval[5]);
+            map.RegionName = retval[6];
+            map.RegionFlags = uint.Parse(retval[7]);
+            map.Access = uint.Parse(retval[8]);
+            map.SimFlags = (SimMapFlags)int.Parse(retval[9]); 
 
             return map;
 		}
@@ -56,15 +56,15 @@ namespace Aurora.Services.DataService
 
             SimMap map = new SimMap();
             map.RegionID = UUID.Parse(retval[0]);
-            map.RegionHandle = uint.Parse(retval[1]);
-            map.EstateID = uint.Parse(retval[1]);
-            map.RegionLocX = int.Parse(retval[2]);
-            map.RegionLocY = int.Parse(retval[3]);
-            map.SimMapTextureID = UUID.Parse(retval[4]);
-            map.RegionName = retval[5];
-            map.RegionFlags = uint.Parse(retval[6]);
-            map.Access = uint.Parse(retval[7]);
-            map.SimFlags = (SimMapFlags)int.Parse(retval[8]);
+            map.RegionHandle = ulong.Parse(retval[1]);
+            map.EstateID = uint.Parse(retval[2]);
+            map.RegionLocX = int.Parse(retval[3]);
+            map.RegionLocY = int.Parse(retval[4]);
+            map.SimMapTextureID = UUID.Parse(retval[5]);
+            map.RegionName = retval[6];
+            map.RegionFlags = uint.Parse(retval[7]);
+            map.Access = uint.Parse(retval[8]);
+            map.SimFlags = (SimMapFlags)int.Parse(retval[9]);
 
             return map;
         }
@@ -83,14 +83,15 @@ namespace Aurora.Services.DataService
 
             SimMap map = new SimMap();
             map.RegionID = UUID.Parse(retval[0]);
-            map.EstateID = uint.Parse(retval[1]);
-            map.RegionLocX = int.Parse(retval[2]);
-            map.RegionLocY = int.Parse(retval[3]);
-            map.SimMapTextureID = UUID.Parse(retval[4]);
-            map.RegionName = retval[5];
-            map.RegionFlags = uint.Parse(retval[6]);
-            map.Access = uint.Parse(retval[7]);
-            map.SimFlags = (SimMapFlags)int.Parse(retval[8]);
+            map.RegionHandle = ulong.Parse(retval[1]);
+            map.EstateID = uint.Parse(retval[2]);
+            map.RegionLocX = int.Parse(retval[3]);
+            map.RegionLocY = int.Parse(retval[4]);
+            map.SimMapTextureID = UUID.Parse(retval[5]);
+            map.RegionName = retval[6];
+            map.RegionFlags = uint.Parse(retval[7]);
+            map.Access = uint.Parse(retval[8]);
+            map.SimFlags = (SimMapFlags)int.Parse(retval[9]);
 
             return map;
         }
@@ -104,17 +105,17 @@ namespace Aurora.Services.DataService
 		{
             if (GetSimMap(map.RegionID) == null)
             {
-                GD.Insert("simmap", new object[]{map.RegionID,map.EstateID,
+                GD.Insert("simmap", new object[]{map.RegionID, map.RegionHandle, map.EstateID,
                     map.RegionLocX, map.RegionLocY, map.SimMapTextureID,
                     map.RegionName, map.RegionFlags, map.Access,
                     map.SimFlags});
             }
             else
             {
-                GD.Update("simmap", new object[] { map.EstateID,
+                GD.Update("simmap", new object[] { map.RegionHandle, map.EstateID,
                 map.RegionLocX, map.RegionLocY, map.SimMapTextureID,
                 map.RegionName, map.RegionFlags, map.Access,
-                map.SimFlags }, new string[] { "EstateID", "RegionLocX",
+                map.SimFlags }, new string[] { "RegionHandle", "EstateID", "RegionLocX",
                 "RegionLocY", "SimMapTextureID", "RegionName",
                 "RegionFlags", "Access", "GridRegionFlags" },
                     new string[] { "RegionID" }, new object[] { map.RegionID });

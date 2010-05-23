@@ -211,7 +211,8 @@ namespace OpenSim.Server.Handlers.AuroraMap
             {
                 UUID regionID = UUID.Parse(request["REGIONID"].ToString());
                 SimMap map = SimMapConnector.GetSimMap(regionID, agentID);
-                Sims.Add(map);
+                if(map != null)
+                    Sims.Add(map);
             }
             else if (request.ContainsKey("REGIONNAME"))
             {

@@ -33,7 +33,7 @@ namespace Aurora.Framework
 
                 //We know theres no region there.
                 if (map == null)
-                    return NotFound(0, 0);
+                    return null;
 
                 if (map.LastUpdated > Util.UnixTimeSinceEpoch() + (1000 * 6)) // Greater than 6 minutes since the last update
                 {
@@ -68,7 +68,7 @@ namespace Aurora.Framework
 
                 //No region there.
                 if (map == null)
-                    return NotFound(0, 0);
+                    return null;
             }
             return map;
         }
@@ -194,6 +194,7 @@ namespace Aurora.Framework
                 {
                     //This location has never been used before and the region was not found elsewhere
                     map = CreateDefaultSimMap(R);
+                    SimMapDataConnector.SetSimMap(map);
                 }
                 else
                 {
@@ -314,6 +315,7 @@ namespace Aurora.Framework
             map.RegionLocX = R.RegionLocX;
             map.RegionLocY = R.RegionLocY;
             map.RegionName = R.RegionName;
+            map.RegionHandle = R.RegionHandle;
             //Since this is the first time we've seen it, we have to use this... even though it may be wrong.
             map.SimMapTextureID = R.TerrainImage;
             map.WaterHeight = 0;
