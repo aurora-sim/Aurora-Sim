@@ -38,6 +38,7 @@ namespace Aurora.Services.DataService
                 Values.Add(region.RegionType);
                 Values.Add(region.NonphysPrimMax);
                 Values.Add(region.PhysPrimMax);
+                Values.Add(region.ClampPrimSize);
                 Values.Add(region.ObjectCapacity);
                 Values.Add(region.AccessLevel);
                 Values.Add(Disable);
@@ -108,15 +109,19 @@ namespace Aurora.Services.DataService
                     replyData.ObjectCapacity = Convert.ToInt32(RetVal[i]);
                 if (DataCount == 15)
                     replyData.AccessLevel = Convert.ToByte(RetVal[i]);
+                if (DataCount == 16)
+                    replyData.Disabled = Convert.ToBoolean(RetVal[i]);
                 DataCount++;
+                
                 if (DataCount == 17)
                 {
                     replyData.SetEndPoint(RetVal[(i - (DataCount - 1)) + 4], int.Parse(RetVal[(i - (DataCount - 1)) + 5]));
-                    DataCount = 0;
                     if (replyData.ExternalHostName == "DEFAULT")
                     {
                         replyData.ExternalHostName = Aurora.Framework.Utils.GetExternalIp();
                     }
+                    replyData.HttpPort = uint.Parse(RetVal[(i - (DataCount - 1)) + 5]);
+                    DataCount = 0;
                     Infos.Add(replyData);
                     replyData = new RegionInfo();
                 }
@@ -128,7 +133,7 @@ namespace Aurora.Services.DataService
         {
             List<string> RetVal = GD.Query("RegionID", regionID, "simulator", "*");
             RegionInfo replyData = new RegionInfo();
-            if(RetVal.Count == 0)
+            if (RetVal.Count == 0)
                 return null;
             for (int i = 0; i < RetVal.Count; i++)
             {
@@ -154,6 +159,8 @@ namespace Aurora.Services.DataService
                     replyData.ObjectCapacity = Convert.ToInt32(RetVal[i]);
                 if (i == 15)
                     replyData.AccessLevel = Convert.ToByte(RetVal[i]);
+                if (i == 16)
+                    replyData.Disabled = Convert.ToBoolean(RetVal[i]);
                 if (i == 17)
                 {
                     replyData.SetEndPoint(RetVal[4], int.Parse(RetVal[5]));
@@ -161,6 +168,52 @@ namespace Aurora.Services.DataService
                     {
                         replyData.ExternalHostName = Aurora.Framework.Utils.GetExternalIp();
                     }
+                    replyData.HttpPort = uint.Parse(RetVal[5]);
+                }
+            }
+            return replyData;
+        }
+
+        public RegionInfo GetRegionInfo(string regionName)
+        {
+            List<string> RetVal = GD.Query("RegionName", regionName, "simulator", "*");
+            RegionInfo replyData = new RegionInfo();
+            if (RetVal.Count == 0)
+                return null;
+            for (int i = 0; i < RetVal.Count; i++)
+            {
+                if (i == 0)
+                    replyData.RegionID = new UUID(RetVal[i]);
+                if (i == 1)
+                    replyData.RegionName = RetVal[i];
+                if (i == 2)
+                    replyData.RegionLocX = uint.Parse(RetVal[i]);
+                if (i == 3)
+                    replyData.RegionLocY = uint.Parse(RetVal[i]);
+                if (i == 6)
+                    replyData.ExternalHostName = RetVal[i];
+                if (i == 7)
+                    replyData.RegionType = RetVal[i];
+                if (i == 8)
+                    replyData.NonphysPrimMax = Convert.ToInt32(RetVal[i]);
+                if (i == 9)
+                    replyData.PhysPrimMax = Convert.ToInt32(RetVal[i]);
+                if (i == 10)
+                    replyData.ClampPrimSize = Convert.ToBoolean(RetVal[i]);
+                if (i == 11)
+                    replyData.ObjectCapacity = Convert.ToInt32(RetVal[i]);
+                if (i == 15)
+                    replyData.AccessLevel = Convert.ToByte(RetVal[i]);
+                if (i == 16)
+                    replyData.Disabled = Convert.ToBoolean(RetVal[i]);
+                if (i == 17)
+                {
+                    replyData.SetEndPoint(RetVal[4], int.Parse(RetVal[5]));
+                    if (replyData.ExternalHostName == "DEFAULT")
+                    {
+                        replyData.ExternalHostName = Aurora.Framework.Utils.GetExternalIp();
+                    }
+                    replyData.HttpPort = uint.Parse(RetVal[5]);
                 }
             }
             return replyData;

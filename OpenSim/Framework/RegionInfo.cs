@@ -105,6 +105,7 @@ namespace OpenSim.Framework
         public string RegionFile = String.Empty;
         public bool isSandbox = false;
         public bool Persistent = true;
+        public bool Disabled = false;
 
         private EstateSettings m_estateSettings;
         private RegionSettings m_regionSettings;
@@ -382,7 +383,6 @@ namespace OpenSim.Framework
                         "Unable to resolve local hostname " + m_externalHostName + " innerException of type '" +
                         e + "' attached to this exception", e);
                 }
-
                 return new IPEndPoint(ia, m_internalEndPoint.Port);
             }
 

@@ -11,6 +11,7 @@ namespace Aurora.Framework
 	{
         RegionInfo[] GetRegionInfos();
         RegionInfo GetRegionInfo(UUID regionID);
+        RegionInfo GetRegionInfo(string regionName);
         void UpdateRegionInfo(RegionInfo region, bool Disabled);
 	}
 }

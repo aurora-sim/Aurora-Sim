@@ -245,6 +245,12 @@ namespace OpenSim.Services.Interfaces
                 if (IPAddress.TryParse(m_externalHostName, out ia))
                     return new IPEndPoint(ia, m_internalEndPoint.Port);
 
+                try
+                {
+                    if (IPAddress.TryParse(m_externalHostName.Split(':')[0], out ia))
+                        return new IPEndPoint(ia, m_internalEndPoint.Port);
+                }
+                catch { }
                 // Reset for next check
                 ia = null;
                 try

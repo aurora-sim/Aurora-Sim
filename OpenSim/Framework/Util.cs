@@ -544,7 +544,12 @@ namespace OpenSim.Framework
             IPAddress ipa;
             if (IPAddress.TryParse(dnsAddress, out ipa))
                 return ipa;
-
+            try
+            {
+                if (IPAddress.TryParse(dnsAddress.Split(':')[0], out ipa))
+                    return ipa;
+            }
+            catch { }
             IPAddress[] hosts = null;
 
             // Not an IP, lookup required

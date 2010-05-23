@@ -37,6 +37,8 @@ using OpenSim.Region.CoreModules.Scripting.DynamicTexture;
 using OpenSim.Region.CoreModules.Scripting.LoadImageURL;
 using OpenSim.Region.CoreModules.Scripting.XMLRPC;
 using OpenSim;
+using OpenSim.Framework.Console;
+using Aurora.Modules.RegionLoader;
 
 namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 {
@@ -51,13 +53,6 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 
         // TODO: required by IPlugin, but likely not at all right
         private string m_name = "LoadRegionsPlugin";
-        private string m_version = "0.0";
-
-        public string Version
-        {
-            get { return m_version; }
-        }
-
         public string Name
         {
             get { return m_name; }
@@ -68,7 +63,20 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
         public void Initialise(IOpenSimBase openSim)
         {
             m_openSim = (OpenSimBase)openSim;
+            MainConsole.Instance.Commands.AddCommand("base", false, "open region manager", "open region manager", "Opens the region manager", OpenRegionManager);
             m_openSim.ApplicationRegistry.RegisterInterface<IRegionCreator>(this);
+        }
+
+        protected void OpenRegionManager(string module, string[] cmdparams)
+        {
+            System.Threading.Thread thread = new Thread(StartRegionManagerThread);
+            thread.Start();
+        }
+
+        protected void StartRegionManagerThread()
+        {
+            RegionManager manager = new RegionManager(false);
+            System.Windows.Forms.Application.Run(manager);
         }
 
         public void PostInitialise()
