@@ -30,6 +30,7 @@ using System.IO;
 using System.Xml;
 using System.Threading;
 using System.Reflection;
+using OpenSim.Framework;
 using OpenSim.Framework.Console;
 using log4net;
 using log4net.Config;
@@ -166,7 +167,7 @@ namespace OpenSim.Server.Base
                 MainConsole.Instance = new LocalConsole();
             }
             MainConsole.Instance.DefaultPrompt = prompt;
-            MainConsole.Instance.Initialise(prompt);
+            MainConsole.Instance.Initialise(prompt, Config, null);
 
             // Configure the appenders for log4net
             //

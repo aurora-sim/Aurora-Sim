@@ -33,8 +33,9 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using log4net;
+using Nini.Config;
 
-namespace OpenSim.Framework.Console
+namespace OpenSim.Framework
 {
     public delegate void CommandDelegate(string module, string[] cmd);
 
@@ -559,13 +560,23 @@ namespace OpenSim.Framework.Console
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        public void Initialise(string defaultPrompt)
+        public virtual void Initialise(string defaultPrompt, IConfigSource source, IOpenSimBase baseOpenSim)
         {
+            string m_consoleType = "LocalConsole";
+            if (source.Configs["Startup"].GetString("console", String.Empty) != String.Empty)
+                m_consoleType = source.Configs["Startup"].GetString("console", String.Empty);
+            
+            if (m_consoleType != Name)
+                return;
+
+            if (baseOpenSim != null)
+                baseOpenSim.ApplicationRegistry.RegisterInterface<ICommandConsole>(this);
+            
             m_Commands.AddCommand("console", false, "help", "help [<command>]", 
                     "Get general command list or more detailed help on a specific command", Help);
         }
 
-        private void Help(string module, string[] cmd)
+        public void Help(string module, string[] cmd)
         {
             List<string> help = m_Commands.GetHelp(cmd);
 
@@ -724,6 +735,14 @@ namespace OpenSim.Framework.Console
             {
                 m_ConsoleScene = value;
             }
+        }
+
+        #endregion
+
+        #region IDisposable Members
+
+        public void Dispose()
+        {
         }
 
         #endregion

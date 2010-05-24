@@ -25,18 +25,62 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using Nini.Config;
+using System;
+using log4net.Appender;
+using log4net.Core;
 
 namespace OpenSim.Framework
 {
-    public interface IRegionLoader
+    /// <summary>
+    /// Writes log information out onto the console
+    /// </summary>
+    public class OpenSimAppender : AnsiColorTerminalAppender
     {
-        string Name { get; }
+        private ICommandConsole m_console = null;
 
-        RegionInfo[] LoadRegions();
+        public ICommandConsole Console
+        {
+            get { return m_console; }
+            set { m_console = value; }
+        }
 
-        void AddRegion();
+        override protected void Append(LoggingEvent le)
+        {
+            if (m_console != null)
+                m_console.LockOutput();
 
-        void Initialise(IConfigSource configSource, IRegionCreator creator, IOpenSimBase openSim);
+            string loggingMessage = RenderLoggingEvent(le);
+
+            try
+            {
+                if (m_console != null)
+                {
+                    string level = "normal";
+
+                    if (le.Level == Level.Error)
+                        level = "error";
+                    else if (le.Level == Level.Warn)
+                        level = "warn";
+
+                    m_console.Output(loggingMessage, level);
+                }
+                else
+                {
+                    if (!loggingMessage.EndsWith("\n"))
+                        System.Console.WriteLine(loggingMessage);
+                    else
+                        System.Console.Write(loggingMessage);
+                }
+            }
+            catch (Exception e)
+            {
+                System.Console.WriteLine("Couldn't write out log message: {0}", e.ToString());
+            }
+            finally
+            {
+                if (m_console != null)
+                    m_console.UnlockOutput();
+            }
+        }
     }
 }

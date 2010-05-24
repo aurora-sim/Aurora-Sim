@@ -1,7 +1,8 @@
 <Addin id="OpenSim.ApplicationPlugins.RegionModulesController" version="0.1">
     <Runtime>
         <Import assembly="OpenSim.ApplicationPlugins.RegionModulesController.dll"/>
-    </Runtime>
+		<Import assembly="OpenSim.Framework.dll"/>
+	</Runtime>
 
     <Dependencies>
         <Addin id="OpenSim" version="0.5" />
@@ -9,5 +10,8 @@
 
     <Extension path = "/OpenSim/Startup">
         <Plugin id="RegionModulesController" type="OpenSim.ApplicationPlugins.RegionModulesController.RegionModulesControllerPlugin" />
-    </Extension>
+	    <Plugin id="CommandConsole" type="OpenSim.Framework.CommandConsole" />
+		<Plugin id="LocalConsole" type="OpenSim.Framework.LocalConsole" />
+		<Plugin id="RemoteConsole" type="OpenSim.Framework.RemoteConsole" />
+	</Extension>
 </Addin>

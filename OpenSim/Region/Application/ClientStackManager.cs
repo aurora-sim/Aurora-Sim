@@ -32,7 +32,7 @@ using log4net;
 using Nini.Config;
 using OpenSim.Framework;
 
-namespace OpenSim.Region.ClientStack
+namespace OpenSim
 {
     public class ClientStackManager
     {

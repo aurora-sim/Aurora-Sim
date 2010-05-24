@@ -33,8 +33,10 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using log4net;
+using Nini.Config;
+using Mono.Addins;
 
-namespace OpenSim.Framework.Console
+namespace OpenSim.Framework
 {
     /// <summary>
     /// A console that uses cursor control and color
@@ -67,6 +69,21 @@ namespace OpenSim.Framework.Console
             ConsoleColor.Magenta,
             ConsoleColor.Yellow
         };
+
+        public override void Initialise(string defaultPrompt, IConfigSource source, IOpenSimBase baseOpenSim)
+        {
+            string m_consoleType = "LocalConsole";
+            if (source.Configs["Startup"].GetString("console", String.Empty) != String.Empty)
+                m_consoleType = source.Configs["Startup"].GetString("console", String.Empty);
+
+            if (m_consoleType != Name)
+                return;
+            if(baseOpenSim != null)
+                baseOpenSim.ApplicationRegistry.RegisterInterface<ICommandConsole>(this);
+
+            m_Commands.AddCommand("console", false, "help", "help [<command>]",
+                    "Get general command list or more detailed help on a specific command", base.Help);
+        }
 
         private static ConsoleColor DeriveColor(string input)
         {

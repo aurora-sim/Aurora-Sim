@@ -32,14 +32,14 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using log4net;
+using Nini.Config;
 
-namespace OpenSim.Framework.Console
+namespace OpenSim.Framework
 {
-    public interface ICommandConsole
+    public interface ICommandConsole: IPlugin
     {
         Commands Commands { get; set; }
-        void Initialise(string defaultPrompt);
-        string Name { get; }
+        void Initialise(string defaultPrompt, IConfigSource source, IOpenSimBase baseOpenSim);
         string DefaultPrompt { get; set; }
         void LockOutput();
         void UnlockOutput();
@@ -53,5 +53,27 @@ namespace OpenSim.Framework.Console
         void RunCommand(string cmd);
         object ConsoleScene { get; set; }
         void Prompt();
+    }
+
+
+    public class ConsolePluginInitialiser : PluginInitialiserBase
+    {
+        private IConfigSource m_source;
+        private string m_defaultPrompt;
+        private IOpenSimBase m_baseOpenSim;
+        public ConsolePluginInitialiser(string defaultPrompt, IConfigSource source, IOpenSimBase baseOpenSim)
+        {
+            m_baseOpenSim = baseOpenSim;
+            m_source = source;
+            m_defaultPrompt = defaultPrompt;
+        }
+
+        public override void Initialise(IPlugin plugin)
+        {
+            ICommandConsole console = plugin as ICommandConsole;
+            if (console == null)
+                return;
+            console.Initialise(m_defaultPrompt, m_source, m_baseOpenSim);
+        }
     }
 }

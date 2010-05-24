@@ -122,7 +122,7 @@ namespace OpenSim
 
             // Configure nIni aliases and localles
             Culture.SetCurrentCulture();
-
+            #region Disabled
 
             // Validate that the user has the most basic configuration done
             // If not, offer to do the most basic configuration for them warning them along the way of the importance of 
@@ -231,6 +231,8 @@ namespace OpenSim
                 MainConsole.Instance = null;
             }      
             */
+
+            #endregion
             configSource.Alias.AddAlias("On", true);
             configSource.Alias.AddAlias("Off", false);
             configSource.Alias.AddAlias("True", true);
@@ -255,45 +257,6 @@ namespace OpenSim
 
             // load Crash directory config
             m_crashDir = configSource.Configs["Startup"].GetString("crash_dir", m_crashDir);
-            string m_consoleType = "LocalConsole";
-            if (configSource.Configs["Startup"].GetString("console", String.Empty) != String.Empty)
-                m_consoleType = configSource.Configs["Startup"].GetString("console", String.Empty);
-
-            ICommandConsole m_console = null;
-            List<ICommandConsole> ConsoleModules = Aurora.Framework.AuroraModuleLoader.PickupModules<ICommandConsole>(Environment.CurrentDirectory, "ICommandConsole");
-            foreach (ICommandConsole consolemod in ConsoleModules)
-            {
-                if (consolemod.Name == m_consoleType)
-                {
-                    consolemod.Initialise("Region");
-                    m_console = consolemod;
-                }
-            }
-
-            ILoggerRepository repository = LogManager.GetRepository();
-            IAppender[] appenders = repository.GetAppenders();
-            OpenSimAppender m_consoleAppender = null;
-            foreach (IAppender appender in appenders)
-            {
-                if (appender.Name == "Console")
-                {
-                    m_consoleAppender = (OpenSimAppender)appender;
-                    break;
-                }
-            }
-
-            if (null != m_consoleAppender)
-            {
-                m_consoleAppender.Console = m_console;
-
-                // If there is no threshold set then the threshold is effectively everything.
-                if (null == m_consoleAppender.Threshold)
-                    m_consoleAppender.Threshold = Level.All;
-
-                m_log.Info(String.Format("Console log level is {0}", m_consoleAppender.Threshold));
-            }
-
-            MainConsole.Instance = m_console;
 
             m_sim = new OpenSimBase(configSource);
 

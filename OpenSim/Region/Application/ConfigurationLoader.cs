@@ -55,7 +55,7 @@ namespace OpenSim
         /// <summary>
         /// A source of Configuration data
         /// </summary>
-        protected OpenSimConfigSource m_config;
+        protected IConfigSource m_config;
 
         /// <summary>
         /// Grid Service Information.  This refers to classes and addresses of the grid service
@@ -69,7 +69,7 @@ namespace OpenSim
         /// <param name="configSettings"></param>
         /// <param name="networkInfo"></param>
         /// <returns>A configuration that gets passed to modules</returns>
-        public OpenSimConfigSource LoadConfigSettings(
+        public IConfigSource LoadConfigSettings(
                 IConfigSource argvSource, out ConfigSettings configSettings,
                 out NetworkServersInfo networkInfo)
         {
@@ -151,9 +151,8 @@ namespace OpenSim
                 }
             }
 
-            m_config = new OpenSimConfigSource();
-            m_config.Source = new IniConfigSource();
-            m_config.Source.Merge(DefaultConfig());
+            m_config = new IniConfigSource();
+            m_config.Merge(DefaultConfig());
 
             //m_log.Info("[CONFIG]: Reading configuration settings");
 
@@ -179,7 +178,7 @@ namespace OpenSim
             }
 
             // Make sure command line options take precedence
-            m_config.Source.Merge(argvSource);
+            m_config.Merge(argvSource);
 
             ReadConfigSettings();
 
@@ -193,7 +192,7 @@ namespace OpenSim
         private void AddIncludes(List<string> sources)
         {
             //loop over config sources
-            foreach (IConfig config in m_config.Source.Configs)
+            foreach (IConfig config in m_config.Configs)
             {
                 // Look for Include-* in the key name
                 string[] keys = config.GetKeys();
@@ -249,7 +248,7 @@ namespace OpenSim
             {
                 //m_log.InfoFormat("[CONFIG]: Reading configuration file {0}", Path.GetFullPath(iniPath));
 
-                m_config.Source.Merge(new IniConfigSource(iniPath));
+                m_config.Merge(new IniConfigSource(iniPath));
                 success = true;
             }
             else
@@ -262,7 +261,7 @@ namespace OpenSim
                 {
                     XmlReader r = XmlReader.Create(iniPath);
                     XmlConfigSource cs = new XmlConfigSource(r);
-                    m_config.Source.Merge(cs);
+                    m_config.Merge(cs);
 
                     success = true;
                 }
@@ -339,7 +338,7 @@ namespace OpenSim
         /// </summary>
         protected virtual void ReadConfigSettings()
         {
-            IConfig startupConfig = m_config.Source.Configs["Startup"];
+            IConfig startupConfig = m_config.Configs["Startup"];
             if (startupConfig != null)
             {
                 m_configSettings.PhysicsEngine = startupConfig.GetString("physics");
@@ -358,7 +357,7 @@ namespace OpenSim
                     = startupConfig.GetString("clientstack_plugin", "OpenSim.Region.ClientStack.LindenUDP.dll");
             }
 
-            IConfig standaloneConfig = m_config.Source.Configs["StandAlone"];
+            IConfig standaloneConfig = m_config.Configs["StandAlone"];
             if (standaloneConfig != null)
             {
                 m_configSettings.StandaloneAuthenticate = standaloneConfig.GetBoolean("accounts_authenticate", true);
@@ -372,7 +371,7 @@ namespace OpenSim
                 m_configSettings.LibrariesXMLFile = standaloneConfig.GetString("LibrariesXMLFile");
             }
 
-            m_networkServersInfo.loadFromConfiguration(m_config.Source);
+            m_networkServersInfo.loadFromConfiguration(m_config);
         }
     }
 }

@@ -81,8 +81,6 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 
         public void PostInitialise()
         {
-            //m_log.Info("[LOADREGIONS]: Load Regions addin being initialised");
-
             List<IRegionLoader> regionLoaders = Aurora.Framework.AuroraModuleLoader.PickupModules<IRegionLoader>(Environment.CurrentDirectory, "IRegionLoader");
             foreach (IRegionLoader loader in regionLoaders)
             {
@@ -103,7 +101,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                 {
                     IScene scene = null;
                     m_log.Debug("[LOADREGIONS]: Creating Region: " + regionsToLoad[i].RegionName);
-                    m_openSim.CreateRegion(regionsToLoad[i], true, out scene);
+                    m_openSim.SceneManager.CreateRegion(regionsToLoad[i], true, out scene);
                     if (scene != null)
                     {
                         m_newRegionCreatedHandler = OnNewRegionCreated;
@@ -113,9 +111,6 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                         }
                     }
                 }
-
-                m_openSim.ModuleLoader.PostInitialise();
-                m_openSim.ModuleLoader.ClearCache();
             }
         }
 

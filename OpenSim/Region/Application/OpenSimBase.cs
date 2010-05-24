@@ -28,14 +28,20 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Timers;
 using log4net;
+using log4net.Appender;
+using log4net.Core;
+using log4net.Repository;
+using log4net.Config;
 using Nini.Config;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 using OpenSim.Framework.Communications;
 
@@ -43,7 +49,6 @@ using OpenSim.Framework.Console;
 using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Framework.Statistics;
-using OpenSim.Region.ClientStack;
 using OpenSim.Region.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
@@ -54,32 +59,18 @@ namespace OpenSim
 	/// <summary>
 	/// Common OpenSimulator simulator code
 	/// </summary>
-	public class OpenSimBase : RegionApplicationBase, IOpenSimBase
+    public class OpenSimBase : IOpenSimBase
 	{
 		private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-		// These are the names of the plugin-points extended by this
-		// class during system startup.
-
-		private const string PLUGIN_ASSET_CACHE = "/OpenSim/AssetCache";
-		private const string PLUGIN_ASSET_SERVER_CLIENT = "/OpenSim/AssetClient";
-
-		protected string proxyUrl;
-		protected int proxyOffset = 0;
-
 		protected string m_startupCommandsFile;
 		protected string m_shutdownCommandsFile;
-		protected string m_consoleType = "LocalConsole";
-		protected uint m_consolePort = 0;
-
+		
 		private string m_timedScript = "disabled";
 		private Timer m_scriptTimer;
 
-		public string userStatsURI = String.Empty;
-
-		protected bool m_autoCreateClientStack = true;
-
-		public ConfigSettings ConfigurationSettings {
+		public ConfigSettings ConfigurationSettings 
+        {
 			get { return m_configSettings; }
 			set { m_configSettings = value; }
 		}
@@ -88,42 +79,104 @@ namespace OpenSim
 
 		protected ConfigurationLoader m_configLoader;
 
-		public ConsoleCommand CreateAccount = null;
-
 		protected List<IApplicationPlugin> m_plugins = new List<IApplicationPlugin>();
 
 		/// <value>
 		/// The config information passed into the OpenSimulator region server.
 		/// </value>
-		public OpenSimConfigSource ConfigSource {
+        public IConfigSource ConfigSource
+        {
 			get { return m_config; }
 			set { m_config = value; }
 		}
 
-		protected OpenSimConfigSource m_config;
+        protected IConfigSource m_config;
 
-		public List<IClientNetworkServer> ClientServers {
+		public List<IClientNetworkServer> ClientServers
+        {
 			get { return m_clientServers; }
 		}
 
-		protected List<IClientNetworkServer> m_clientServers = new List<IClientNetworkServer>();
+        protected List<IClientNetworkServer> m_clientServers = new List<IClientNetworkServer>();
 
-		public uint HttpServerPort {
-			get { return m_httpServerPort; }
-		}
+        public string Version
+        {
+            get { return m_version; }
+        }
 
-		public ModuleLoader ModuleLoader {
-			get { return m_moduleLoader; }
-			set { m_moduleLoader = value; }
-		}
+        public ClientStackManager ClientStackManager
+        {
+            get { return m_clientStackManager; }
+        }
 
-		protected ModuleLoader m_moduleLoader;
+        protected ClientStackManager m_clientStackManager;
 
-		protected IRegistryCore m_applicationRegistry = new RegistryCore();
+        protected Dictionary<EndPoint, uint> m_clientCircuits = new Dictionary<EndPoint, uint>();
+        
+        protected NetworkServersInfo m_networkServersInfo;
 
-		public IRegistryCore ApplicationRegistry {
+        public NetworkServersInfo NetServersInfo
+        {
+            get { return m_networkServersInfo; }
+        }
+
+        protected StorageManager m_storageManager;
+
+        public IRegistryCore ApplicationRegistry 
+        {
 			get { return m_applicationRegistry; }
-		}
+        }
+
+        protected IRegistryCore m_applicationRegistry = new RegistryCore();
+
+        public SceneManager SceneManager
+        {
+            get { return m_sceneManager; }
+        }
+        protected SceneManager m_sceneManager = null;
+
+        /// <summary>
+        /// This will control a periodic log printout of the current 'show stats' (if they are active) for this
+        /// server.
+        /// </summary>
+        private Timer m_periodicDiagnosticsTimer = new Timer(60 * 60 * 1000);
+
+        protected ICommandConsole m_console;
+        protected OpenSimAppender m_consoleAppender;
+        protected IAppender m_logFileAppender = null;
+
+        /// <summary>
+        /// Time at which this server was started
+        /// </summary>
+        protected DateTime m_startuptime;
+
+        /// <summary>
+        /// Record the initial startup directory for info purposes
+        /// </summary>
+        protected string m_startupDirectory = Environment.CurrentDirectory;
+
+        /// <summary>
+        /// Server version information.  Usually VersionInfo + information about git commit, operating system, etc.
+        /// </summary>
+        protected string m_version;
+
+        protected string m_pidFile = String.Empty;
+
+        /// <summary>
+        /// Random uuid for private data 
+        /// </summary>
+        protected string m_osSecret = String.Empty;
+
+        protected BaseHttpServer m_httpServer;
+        public BaseHttpServer HttpServer
+        {
+            get { return m_httpServer; }
+        }
+
+        /// <summary>
+        /// Holds the non-viewer statistics collection object for this service/server
+        /// </summary>
+        protected IStatsCollector m_stats;
 
 		/// <summary>
 		/// Constructor.
@@ -131,28 +184,68 @@ namespace OpenSim
 		/// <param name="configSource"></param>
 		public OpenSimBase(IConfigSource configSource) : base()
 		{
-			m_console = MainConsole.Instance;
+            m_startuptime = DateTime.Now;
+            m_version = VersionInfo.Version;
 
-			m_configLoader = new ConfigurationLoader();
+            // Random uuid for private data
+            m_osSecret = UUID.Random().ToString();
+
+            m_periodicDiagnosticsTimer.Elapsed += new ElapsedEventHandler(LogDiagnostics);
+            m_periodicDiagnosticsTimer.Enabled = true;
+
+            // This thread will go on to become the console listening thread
+            System.Threading.Thread.CurrentThread.Name = "ConsoleThread";
+
+            #region Console setup
+
+            List<ICommandConsole> Consoles = Aurora.Framework.AuroraModuleLoader.LoadPlugins<ICommandConsole>("/OpenSim/Startup", new ConsolePluginInitialiser("Region", configSource, this));
+            m_console = m_applicationRegistry.Get<ICommandConsole>();
+            ILoggerRepository repository = LogManager.GetRepository();
+            IAppender[] appenders = repository.GetAppenders();
+            OpenSimAppender m_consoleAppender = null;
+            foreach (IAppender appender in appenders)
+            {
+                if (appender.Name == "Console")
+                {
+                    m_consoleAppender = (OpenSimAppender)appender;
+                    break;
+                }
+            }
+
+            foreach (IAppender appender in appenders)
+            {
+                if (appender.Name == "LogFileAppender")
+                {
+                    m_logFileAppender = appender;
+                }
+            }
+
+            if (null != m_consoleAppender)
+            {
+                m_consoleAppender.Console = m_console;
+
+                // If there is no threshold set then the threshold is effectively everything.
+                if (null == m_consoleAppender.Threshold)
+                    m_consoleAppender.Threshold = Level.All;
+            }
+            if (m_console == null)
+                m_console = new LocalConsole();
+            MainConsole.Instance = m_console;
+
+            #endregion
+
+            m_configLoader = new ConfigurationLoader();
 			m_config = m_configLoader.LoadConfigSettings(configSource, out m_configSettings, out m_networkServersInfo);
-			IConfig networkConfig = m_config.Source.Configs["Network"];
-			if (networkConfig != null) {
-				proxyUrl = networkConfig.GetString("proxy_url", "");
-				proxyOffset = Int32.Parse(networkConfig.GetString("proxy_offset", "0"));
-			}
-			IConfig startupConfig = m_config.Source.Configs["Startup"];
+			
+			IConfig startupConfig = m_config.Configs["Startup"];
 
 			int stpMaxThreads = 15;
 
-			if (startupConfig != null) {
+			if (startupConfig != null) 
+            {
 				m_startupCommandsFile = startupConfig.GetString("startup_console_commands_file", "startup_commands.txt");
 				m_shutdownCommandsFile = startupConfig.GetString("shutdown_console_commands_file", "shutdown_commands.txt");
 
-				if (startupConfig.GetString("console", String.Empty) != String.Empty)
-					m_consoleType = startupConfig.GetString("console", String.Empty);
-
-				if (networkConfig != null)
-					m_consolePort = (uint)networkConfig.GetInt("console_port", 0);
 				m_timedScript = startupConfig.GetString("timer_Script", "disabled");
 				if (m_logFileAppender != null) {
 					if (m_logFileAppender is log4net.Appender.FileAppender) {
@@ -180,17 +273,27 @@ namespace OpenSim
 			//m_log.Info("[OPENSIM MAIN]: Using async_call_method " + Util.FireAndForgetMethod);
 		}
 
-		protected virtual void LoadPlugins()
-		{
-			using (PluginLoader<IApplicationPlugin> loader = new PluginLoader<IApplicationPlugin>(new ApplicationPluginInitialiser(this))) {
-				loader.Load("/OpenSim/Startup");
-				m_plugins = loader.Plugins;
-			}
-		}
+        /// <summary>
+        /// Performs initialisation of the scene, such as loading configuration from disk.
+        /// </summary>
+        public virtual void Startup()
+        {
+            //m_log.Info("[STARTUP]: Beginning startup processing");
 
-		protected override List<string> GetHelpTopics()
+            EnhanceVersionInformation();
+
+            m_log.Info("[STARTUP]: Version: " + m_version + "\n");
+
+            StartupSpecific();
+
+            TimeSpan timeTaken = DateTime.Now - m_startuptime;
+
+            m_log.InfoFormat("[STARTUP]: Startup is complete and took {0}m {1}s", timeTaken.Minutes, timeTaken.Seconds);
+        }
+
+		protected virtual List<string> GetHelpTopics()
 		{
-			List<string> topics = base.GetHelpTopics();
+            List<string> topics = new List<string>();
 			Scene s = SceneManager.CurrentOrFirstScene;
 			if (s != null && s.GetCommanders() != null)
 				topics.AddRange(s.GetCommanders().Keys);
@@ -202,9 +305,9 @@ namespace OpenSim
 		/// Performs startup specific to the region server, including initialization of the scene 
 		/// such as loading configuration from disk.
 		/// </summary>
-		protected override void StartupSpecific()
+		protected virtual void StartupSpecific()
 		{
-			m_log.Info("====================================================================");
+            m_log.Info("====================================================================");
 			m_log.Info("========================= STARTING AURORA =========================");
 			m_log.Info("====================================================================");
 			//m_log.InfoFormat("[OPENSIM MAIN]: Running ");
@@ -215,45 +318,49 @@ namespace OpenSim
 
 			m_log.Info("[AURORADATA]: Setting up the data service");
 			Aurora.Services.DataService.LocalDataService service = new Aurora.Services.DataService.LocalDataService();
-			service.Initialise(m_config.Source);
+			service.Initialise(m_config);
 
 			RegisterConsoleCommands();
-			IConfig startupConfig = m_config.Source.Configs["Startup"];
-			if (startupConfig != null) {
+			IConfig startupConfig = m_config.Configs["Startup"];
+			if (startupConfig != null) 
+            {
 				string pidFile = startupConfig.GetString("PIDFile", String.Empty);
 				if (pidFile != String.Empty)
 					CreatePIDFile(pidFile);
-
-				userStatsURI = startupConfig.GetString("Stats_URI", String.Empty);
 			}
 
-			base.StartupSpecific();
+            m_storageManager = CreateStorageManager();
+
+            m_clientStackManager = CreateClientStackManager();
+
+            m_httpServer
+                = new BaseHttpServer(
+                    m_networkServersInfo.HttpListenerPort, m_networkServersInfo.HttpUsesSSL, m_networkServersInfo.httpSSLPort,
+                    m_networkServersInfo.HttpSSLCN);
+
+            if (m_networkServersInfo.HttpUsesSSL && (m_networkServersInfo.HttpListenerPort == m_networkServersInfo.httpSSLPort))
+            {
+                m_log.Error("[REGION SERVER]: HTTP Server config failed.   HTTP Server and HTTPS server must be on different ports");
+            }
+
+            m_log.InfoFormat("[REGION SERVER]: Starting HTTP server on port {0}", m_networkServersInfo.HttpListenerPort);
+            m_httpServer.Start();
+
+            MainServer.Instance = m_httpServer;
 
 			m_stats = StatsManager.StartCollectingSimExtraStats();
 
-			// Create a ModuleLoader instance
-			m_moduleLoader = new ModuleLoader(m_config.Source);
-
-			LoadPlugins();
+            //Lets start this after the http server and storage manager, but before application plugins.
+            //Note: this should be moved out.
+            m_sceneManager = new SceneManager(this, m_storageManager);
+            
+            m_plugins = Aurora.Framework.AuroraModuleLoader.LoadPlugins<IApplicationPlugin>("/OpenSim/Startup", new ApplicationPluginInitialiser(this));
 			foreach (IApplicationPlugin plugin in m_plugins) 
             {
 				plugin.PostInitialise();
 			}
 
 			AddPluginCommands();
-
-			MainServer.Instance.AddStreamHandler(new SimStatusHandler());
-			MainServer.Instance.AddStreamHandler(new XSimStatusHandler(this));
-			if (userStatsURI != String.Empty)
-				MainServer.Instance.AddStreamHandler(new UXSimStatusHandler(this));
-
-			if (m_console is RemoteConsole) {
-				if (m_consolePort == 0) {
-					((RemoteConsole)m_console).SetServer(m_httpServer);
-				} else {
-					((RemoteConsole)m_console).SetServer(MainServer.GetHttpServer(m_consolePort));
-				}
-			}
 
 			//Run Startup Commands
 			if (String.IsNullOrEmpty(m_startupCommandsFile)) {
@@ -292,47 +399,6 @@ namespace OpenSim
 		}
 
 		/// <summary>
-		/// Register standard set of region console commands
-		/// </summary>
-		private void RegisterConsoleCommands()
-		{
-			//m_console.Commands.AddCommand("region", false, "clear assets", "clear assets", "Clear the asset cache", HandleClearAssets);
-
-			m_console.Commands.AddCommand("region", false, "force update", "force update", "Force the update of all objects on clients", HandleForceUpdate);
-
-			m_console.Commands.AddCommand("region", false, "debug packet", "debug packet <level>", "Turn on packet debugging", Debug);
-
-			m_console.Commands.AddCommand("region", false, "debug scene", "debug scene <cripting> <collisions> <physics>", "Turn on scene debugging", Debug);
-
-			m_console.Commands.AddCommand("region", false, "change region", "change region <region name>", "Change current console region", ChangeSelectedRegion);
-
-			m_console.Commands.AddCommand("region", false, "load xml2", "load xml2", "Load a region's data from XML2 format", LoadXml2);
-
-			m_console.Commands.AddCommand("region", false, "load oar", "load oar [--merge] [--skip-assets] <oar name>", "Load a region's data from OAR archive.  --merge will merge the oar with the existing scene.  --skip-assets will load the oar but ignore the assets it contains", LoadOar);
-
-			m_console.Commands.AddCommand("region", false, "save oar", "save oar <oar name>", "Save a region's data to an OAR archive", "More information on forthcoming options here soon", SaveOar);
-
-			m_console.Commands.AddCommand("region", false, "kick user", "kick user <first> <last> [message]", "Kick a user off the simulator", KickUserCommand);
-
-			m_console.Commands.AddCommand("region", false, "backup", "backup", "Persist objects to the database now", RunCommand);
-
-			m_console.Commands.AddCommand("region", false, "create region", "create region", "Create a new region.", HandleCreateRegion);
-
-			m_console.Commands.AddCommand("region", false, "restart", "restart", "Restart all sims in this instance", RunCommand);
-
-			m_console.Commands.AddCommand("region", false, "command-script", "command-script <script>", "Run a command script from file", RunCommand);
-
-			m_console.Commands.AddCommand("region", false, "remove-region", "remove-region <name>", "Remove a region from this simulator", RunCommand);
-
-			m_console.Commands.AddCommand("region", false, "delete-region", "delete-region <name>", "Delete a region from disk", RunCommand);
-
-            m_console.Commands.AddCommand("region", false, "modules", "modules help", "Info about simulator modules", HandleModules);
-
-            m_console.Commands.AddCommand("region", false, "kill uuid", "kill uuid <UUID>", "Kill an object by UUID", KillUUID);
-
-		}
-
-		/// <summary>
 		/// Timer to run a specific text file as console commands.  Configured in in the main ini file
 		/// </summary>
 		/// <param name="sender"></param>
@@ -352,6 +418,96 @@ namespace OpenSim
 		}
 
 		#region Console Commands
+
+        /// <summary>
+        /// Register standard set of region console commands
+        /// </summary>
+        private void RegisterConsoleCommands()
+        {
+            //m_console.Commands.AddCommand("region", false, "clear assets", "clear assets", "Clear the asset cache", HandleClearAssets);
+
+            m_console.Commands.AddCommand("region", false, "force update", "force update", "Force the update of all objects on clients", HandleForceUpdate);
+
+            m_console.Commands.AddCommand("region", false, "debug packet", "debug packet <level>", "Turn on packet debugging", Debug);
+
+            m_console.Commands.AddCommand("region", false, "debug scene", "debug scene <cripting> <collisions> <physics>", "Turn on scene debugging", Debug);
+
+            m_console.Commands.AddCommand("region", false, "change region", "change region <region name>", "Change current console region", ChangeSelectedRegion);
+
+            m_console.Commands.AddCommand("region", false, "load xml2", "load xml2", "Load a region's data from XML2 format", LoadXml2);
+
+            m_console.Commands.AddCommand("region", false, "load oar", "load oar [--merge] [--skip-assets] <oar name>", "Load a region's data from OAR archive.  --merge will merge the oar with the existing scene.  --skip-assets will load the oar but ignore the assets it contains", LoadOar);
+
+            m_console.Commands.AddCommand("region", false, "save oar", "save oar <oar name>", "Save a region's data to an OAR archive", "More information on forthcoming options here soon", SaveOar);
+
+            m_console.Commands.AddCommand("region", false, "kick user", "kick user <first> <last> [message]", "Kick a user off the simulator", KickUserCommand);
+
+            m_console.Commands.AddCommand("region", false, "backup", "backup", "Persist objects to the database now", RunCommand);
+
+            m_console.Commands.AddCommand("region", false, "create region", "create region", "Create a new region.", HandleCreateRegion);
+
+            m_console.Commands.AddCommand("region", false, "restart", "restart", "Restart all sims in this instance", RunCommand);
+
+            m_console.Commands.AddCommand("region", false, "command-script", "command-script <script>", "Run a command script from file", RunCommand);
+
+            m_console.Commands.AddCommand("region", false, "remove-region", "remove-region <name>", "Remove a region from this simulator", RunCommand);
+
+            m_console.Commands.AddCommand("region", false, "delete-region", "delete-region <name>", "Delete a region from disk", RunCommand);
+
+            m_console.Commands.AddCommand("region", false, "modules", "modules help", "Info about simulator modules", HandleModules);
+
+            m_console.Commands.AddCommand("region", false, "kill uuid", "kill uuid <UUID>", "Kill an object by UUID", KillUUID);
+
+            m_console.Commands.AddCommand("region", false, "quit", "quit", "Quit the application", HandleQuit);
+
+            m_console.Commands.AddCommand("region", false, "shutdown", "shutdown", "Quit the application", HandleQuit);
+
+            m_console.Commands.AddCommand("region", false, "set log level", "set log level <level>", "Set the console logging level", HandleLogLevel);
+
+            m_console.Commands.AddCommand("region", false, "show", "show", "Shows information about this simulator", HandleShow);
+        }
+
+        private void HandleQuit(string module, string[] args)
+        {
+            Shutdown();
+        }
+
+        /// <summary>
+        /// Should be overriden and referenced by descendents if they need to perform extra shutdown processing
+        /// </summary>
+        public virtual void Shutdown()
+        {
+            ShutdownSpecific();
+
+            m_log.Info("[SHUTDOWN]: Shutdown processing on main thread complete.  Exiting...");
+            RemovePIDFile();
+
+            Environment.Exit(0);
+        }
+
+        private void HandleLogLevel(string module, string[] cmd)
+        {
+            if (null == m_consoleAppender)
+            {
+                m_console.Output("No appender named Console found (see the log4net config file for this executable)!");
+                return;
+            }
+
+            string rawLevel = cmd[3];
+
+            ILoggerRepository repository = LogManager.GetRepository();
+            Level consoleLevel = repository.LevelMap[rawLevel];
+
+            if (consoleLevel != null)
+                m_consoleAppender.Threshold = consoleLevel;
+            else
+                m_console.Output((
+                    String.Format(
+                        "{0} is not a valid logging level.  Valid logging levels are ALL, DEBUG, INFO, WARN, ERROR, FATAL, OFF",
+                        rawLevel)));
+
+            //Notice(String.Format("Console log level is {0}", m_consoleAppender.Threshold));
+        }
 
 		/// <summary>
 		/// Kicks users off the region
@@ -472,7 +628,7 @@ namespace OpenSim
                         MainConsole.Instance.Output("modules load - Load a module");
                         MainConsole.Instance.Output("modules unload - Unload a module");
                         break;
-					case "list":
+					/*case "list":
 						foreach (IRegionModule irm in m_moduleLoader.GetLoadedSharedModules) {
 							MainConsole.Instance.Output(String.Format("Shared region module: {0}", irm.Name));
 						}
@@ -495,7 +651,7 @@ namespace OpenSim
 								m_moduleLoader.LoadRegionModules(cmdparams[1], s);
 							}
 						}
-						break;
+						break;*/
 				}
 			}
 		}
@@ -532,7 +688,7 @@ namespace OpenSim
 
 					Scene removeScene;
 					if (m_sceneManager.TryGetScene(regRemoveName, out removeScene))
-						RemoveRegion(removeScene, false);
+                        m_sceneManager.RemoveRegion(removeScene, false);
 					else
 						MainConsole.Instance.Output("no region with that name");
 					break;
@@ -542,7 +698,7 @@ namespace OpenSim
 
 					Scene killScene;
 					if (m_sceneManager.TryGetScene(regDeleteName, out killScene))
-						RemoveRegion(killScene, true);
+                        m_sceneManager.RemoveRegion(killScene, true);
 					else
 						MainConsole.Instance.Output("no region with that name");
 					break;
@@ -622,15 +778,13 @@ namespace OpenSim
 			}
 		}
 
-		// see BaseOpenSimServer
 		/// <summary>
 		/// Many commands list objects for debugging.  Some of the types are listed  here
 		/// </summary>
 		/// <param name="mod"></param>
 		/// <param name="cmd"></param>
-		public override void HandleShow(string mod, string[] cmd)
+        public virtual void HandleShow(string mod, string[] cmd)
 		{
-			base.HandleShow(mod, cmd);
 
 			List<string> args = new List<string>(cmd);
 			args.RemoveAt(0);
@@ -647,11 +801,42 @@ namespace OpenSim
                     MainConsole.Instance.Output("show connections - Show connection data");
                     MainConsole.Instance.Output("show users - Show all users connected");
                     MainConsole.Instance.Output("show users full - Show all users connected, including child agents");
-                    MainConsole.Instance.Output("show modules - Show module information");
                     MainConsole.Instance.Output("show regions - Show all regions");
                     MainConsole.Instance.Output("show queues - Show queue info");
                     MainConsole.Instance.Output("show maturity - Show region maturity levels");
+                    MainConsole.Instance.Output("set log level [level] - Change the console logging level only.  For example, off or debug.");
+                    MainConsole.Instance.Output("show info - Show server information (e.g. startup path).");
+                    if (m_stats != null)
+                        MainConsole.Instance.Output("show stats - Show statistical information for this server");
+                    MainConsole.Instance.Output("show threads - List tracked threads");
+                    MainConsole.Instance.Output("show uptime - Show server startup time and uptime.");
+                    MainConsole.Instance.Output("show version - Show server version.");
                     break;
+
+                case "info":
+                    m_console.Output(("Version: " + m_version));
+                    m_console.Output(("Startup directory: " + m_startupDirectory));
+                    break;
+
+                case "stats":
+                    if (m_stats != null)
+                        m_console.Output((m_stats.Report()));
+                    break;
+
+                case "threads":
+                    m_console.Output((GetThreadsReport()));
+                    break;
+
+                case "uptime":
+                    m_console.Output((GetUptimeReport()));
+                    break;
+
+                case "version":
+                    m_console.Output((
+                        String.Format(
+                            "Version: {0} (interface version {1})", m_version, VersionInfo.MajorInterfaceVersion)));
+                    break;
+
 				case "assets":
 					MainConsole.Instance.Output("Not implemented.");
 					break;
@@ -692,22 +877,12 @@ namespace OpenSim
 					MainConsole.Instance.Output(connections.ToString());
 					break;
 
-				case "modules":
-					MainConsole.Instance.Output("The currently loaded shared modules are:");
-					foreach (IRegionModule module in m_moduleLoader.GetLoadedSharedModules) {
-						MainConsole.Instance.Output("Shared Module: " + module.Name);
-					}
-
-
-					MainConsole.Instance.Output("");
-					break;
-
 				case "regions":
 					m_sceneManager.ForEachScene(delegate(Scene scene) { MainConsole.Instance.Output(String.Format("Region Name: {0}, Region XLoc: {1}, Region YLoc: {2}, Region Port: {3}", scene.RegionInfo.RegionName, scene.RegionInfo.RegionLocX, scene.RegionInfo.RegionLocY, scene.RegionInfo.InternalEndPoint.Port)); });
 					break;
 
 				case "queues":
-					Notice(GetQueuesReport());
+					m_console.Output((GetQueuesReport()));
 					break;
 
 				case "maturity":
@@ -828,366 +1003,59 @@ namespace OpenSim
 			}
 		}
 
-		#endregion
-
-		protected virtual void AddPluginCommands()
-		{
-			// If console exists add plugin commands.
-			if (m_console != null) {
-				List<string> topics = GetHelpTopics();
-
-				foreach (string topic in topics) {
-					m_console.Commands.AddCommand("plugin", false, "help " + topic, "help " + topic, "Get help on plugin command '" + topic + "'", HandleCommanderHelp);
-
-					m_console.Commands.AddCommand("plugin", false, topic, topic, "Execute subcommand for plugin '" + topic + "'", null);
-
-					ICommander commander = null;
-
-					Scene s = SceneManager.CurrentOrFirstScene;
-
-					if (s != null && s.GetCommanders() != null) {
-						if (s.GetCommanders().ContainsKey(topic))
-							commander = s.GetCommanders()[topic];
-					}
-
-					if (commander == null)
-						continue;
-
-					foreach (string command in commander.Commands.Keys) {
-						m_console.Commands.AddCommand(topic, false, topic + " " + command, topic + " " + commander.Commands[command].ShortHelp(), String.Empty, HandleCommanderCommand);
-					}
-				}
-			}
-		}
-
-		private void HandleCommanderCommand(string module, string[] cmd)
-		{
-			m_sceneManager.SendCommandToPluginModules(cmd);
-		}
-
-		private void HandleCommanderHelp(string module, string[] cmd)
-		{
-			// Only safe for the interactive console, since it won't
-			// let us come here unless both scene and commander exist
-			//
-			ICommander moduleCommander = SceneManager.CurrentOrFirstScene.GetCommander(cmd[1]);
-			if (moduleCommander != null)
-				m_console.Output(moduleCommander.Help);
-		}
-
-		protected override void Initialize()
-		{
-			// Called from base.StartUp()
-
-			m_httpServerPort = m_networkServersInfo.HttpListenerPort;
-			m_sceneManager.OnRestartSim += handleRestartRegion;
-		}
-
-		/// <summary>
-		/// Execute the region creation process.  This includes setting up scene infrastructure.
-		/// </summary>
-		/// <param name="regionInfo"></param>
-		/// <param name="portadd_flag"></param>
-		/// <returns></returns>
-		public IClientNetworkServer CreateRegion(RegionInfo regionInfo, bool portadd_flag, out IScene scene)
-		{
-			return CreateRegion(regionInfo, portadd_flag, false, out scene);
-		}
-
-		/// <summary>
-		/// Execute the region creation process.  This includes setting up scene infrastructure.
-		/// </summary>
-		/// <param name="regionInfo"></param>
-		/// <returns></returns>
-		public IClientNetworkServer CreateRegion(RegionInfo regionInfo, out IScene scene)
-		{
-			return CreateRegion(regionInfo, false, true, out scene);
-		}
-
-		/// <summary>
-		/// Execute the region creation process.  This includes setting up scene infrastructure.
-		/// </summary>
-		/// <param name="regionInfo"></param>
-		/// <param name="portadd_flag"></param>
-		/// <param name="do_post_init"></param>
-		/// <returns></returns>
-		public IClientNetworkServer CreateRegion(RegionInfo regionInfo, bool portadd_flag, bool do_post_init, out IScene mscene)
-		{
-			int port = regionInfo.InternalEndPoint.Port;
-
-			// set initial ServerURI
-			regionInfo.ServerURI = "http://" + regionInfo.ExternalHostName + ":" + regionInfo.InternalEndPoint.Port;
-			regionInfo.HttpPort = m_httpServerPort;
-
-			regionInfo.osSecret = m_osSecret;
-
-			if ((proxyUrl.Length > 0) && (portadd_flag)) {
-				// set proxy url to RegionInfo
-				regionInfo.proxyUrl = proxyUrl;
-				regionInfo.ProxyOffset = proxyOffset;
-				Util.XmlRpcCommand(proxyUrl, "AddPort", port, port + proxyOffset, regionInfo.ExternalHostName);
-			}
-
-			IClientNetworkServer clientServer = null;
-			Scene scene = SetupScene(regionInfo, proxyOffset, m_config.Source, out clientServer);
-
-			//m_log.Info("[MODULES]: Loading Region's modules (old style)");
-
-			List<IRegionModule> modules = m_moduleLoader.PickupModules(scene, ".");
-			// This needs to be ahead of the script engine load, so the
-			// script module can pick up events exposed by a module
-			m_moduleLoader.InitialiseSharedModules(scene);
-
-			// Use this in the future, the line above will be deprecated soon
-			//m_log.Info("[MODULES]: Loading Region's modules (new style)");
-			IRegionModulesController controller;
-			if (ApplicationRegistry.TryGet(out controller)) {
-				controller.AddRegionToModules(scene);
-			} else
-				m_log.Error("[MODULES]: The new RegionModulesController is missing...");
-
-			scene.SetModuleInterfaces();
-
-			// Prims have to be loaded after module configuration since some modules may be invoked during the load
-			scene.LoadPrimsFromStorage(regionInfo.RegionID);
-
-			// moved these here as the terrain texture has to be created after the modules are initialized
-			// and has to happen before the region is registered with the grid.
-			scene.CreateTerrainTexture();
-
-			// TODO : Try setting resource for region xstats here on scene
-			MainServer.Instance.AddStreamHandler(new Region.Framework.Scenes.RegionStatsHandler(regionInfo));
-            
-            RegisterRegionWithGrid(scene);
-
-			// We need to do this after we've initialized the
-			// scripting engines.
-			scene.CreateScriptInstances();
-
-			scene.loadAllLandObjectsFromStorage(regionInfo.RegionID);
-			scene.EventManager.TriggerParcelPrimCountUpdate();
-
-			m_sceneManager.Add(scene);
-
-			if (m_autoCreateClientStack) {
-				m_clientServers.Add(clientServer);
-				clientServer.Start();
-			}
-
-			if (do_post_init) {
-				foreach (IRegionModule module in modules) {
-					module.PostInitialise();
-				}
-			}
-			scene.EventManager.OnShutdown += delegate() { ShutdownRegion(scene); };
-
-			mscene = scene;
-
-			scene.StartTimer();
-
-			return clientServer;
-		}
-
-		private void RegisterRegionWithGrid(Scene scene)
-		{
-			string error = scene.RegisterRegionWithGrid();
-			if (error != "") 
+        protected virtual void AddPluginCommands()
+        {
+            // If console exists add plugin commands.
+            if (m_console != null)
             {
-				if (error == "Region location is reserved")
-                {
-                    m_log.Error("[STARTUP]: Registration of region with grid failed - The region location you specified is reserved. You must move your region.");
-					scene.RegionInfo.RegionLocY = uint.Parse(MainConsole.Instance.CmdPrompt("New Region Location X", "1000"));
-					scene.RegionInfo.RegionLocX = uint.Parse(MainConsole.Instance.CmdPrompt("New Region Location Y", "1000"));
+                List<string> topics = GetHelpTopics();
 
-					Aurora.DataManager.DataManager.IRegionInfoConnector.UpdateRegionInfo(scene.RegionInfo, false);
-				}
-				if (error == "Region overlaps another region") 
+                foreach (string topic in topics)
                 {
-                    m_log.Error("[STARTUP]: Registration of region with grid failed - The region location you specified is already in use. You must move your region.");
-					scene.RegionInfo.RegionLocY = uint.Parse(MainConsole.Instance.CmdPrompt("New Region Location X", "1000"));
-					scene.RegionInfo.RegionLocX = uint.Parse(MainConsole.Instance.CmdPrompt("New Region Location Y", "1000"));
+                    m_console.Commands.AddCommand("plugin", false, "help " + topic, "help " + topic, "Get help on plugin command '" + topic + "'", HandleCommanderHelp);
 
-					Aurora.DataManager.DataManager.IRegionInfoConnector.UpdateRegionInfo(scene.RegionInfo, false);
-				}
-				if (error.Contains("Can't move this region")) 
-                {
-                    m_log.Error("[STARTUP]: Registration of region with grid failed - You can not move this region. Moving it back to its original position.");
-					//Opensim Grid Servers don't have this functionality.
-					try 
+                    m_console.Commands.AddCommand("plugin", false, topic, topic, "Execute subcommand for plugin '" + topic + "'", null);
+
+                    ICommander commander = null;
+
+                    Scene s = SceneManager.CurrentOrFirstScene;
+
+                    if (s != null && s.GetCommanders() != null)
                     {
-						string[] position = error.Split(',');
+                        if (s.GetCommanders().ContainsKey(topic))
+                            commander = s.GetCommanders()[topic];
+                    }
 
-						scene.RegionInfo.RegionLocY = uint.Parse(position[1]);
-						scene.RegionInfo.RegionLocX = uint.Parse(position[2]);
+                    if (commander == null)
+                        continue;
 
-						Aurora.DataManager.DataManager.IRegionInfoConnector.UpdateRegionInfo(scene.RegionInfo, false);
-					} 
-                    catch (Exception e)
+                    foreach (string command in commander.Commands.Keys)
                     {
-                        m_log.Error("Unable to move the region back to its original position, is this an opensim server? Please manually move the region back.");
-						throw e;
-					}
-				}
-				if (error == "Duplicate region name") 
-                {
-                    m_log.Error("[STARTUP]: Registration of region with grid failed - The region name you specified is already in use. Please change the name.");
-					scene.RegionInfo.RegionName = MainConsole.Instance.CmdPrompt("New Region Name", "");
-
-					Aurora.DataManager.DataManager.IRegionInfoConnector.UpdateRegionInfo(scene.RegionInfo, false);
-				}
-				if (error == "Region locked out") 
-                {
-                    m_log.Error("[STARTUP]: Registration of region with grid failed - The region you are attempting to join has been blocked from connecting. Please connect another region.");
-					throw new Exception(error);
-				}
-                if (error == "Error communicating with grid service")
-                {
-                    m_log.Error("[STARTUP]: Registration of region with grid failed - The grid service can not be found! Please make sure that you can connect to the grid server and that the grid server is on.");
-                    string input = MainConsole.Instance.CmdPrompt("Press enter when you are ready to proceed, or type cancel to exit");
-                    if (input == "cancel")
-                    {
-                        Environment.Exit(0);
+                        m_console.Commands.AddCommand(topic, false, topic + " " + command, topic + " " + commander.Commands[command].ShortHelp(), String.Empty, HandleCommanderCommand);
                     }
                 }
-				RegisterRegionWithGrid(scene);
-			}
-		}
+            }
+        }
 
-		private void ShutdownRegion(Scene scene)
-		{
-			m_log.DebugFormat("[SHUTDOWN]: Shutting down region {0}", scene.RegionInfo.RegionName);
-			IRegionModulesController controller;
-			if (ApplicationRegistry.TryGet<IRegionModulesController>(out controller)) {
-				controller.RemoveRegionFromModules(scene);
-			}
-		}
+        private void HandleCommanderCommand(string module, string[] cmd)
+        {
+            m_sceneManager.SendCommandToPluginModules(cmd);
+        }
 
-		public void RemoveRegion(IScene scene, bool cleanup)
-		{
-			// only need to check this if we are not at the
-			// root level
-			if ((m_sceneManager.CurrentScene != null) && (m_sceneManager.CurrentScene.RegionInfo.RegionID == scene.RegionInfo.RegionID)) {
-				m_sceneManager.TrySetCurrentScene("..");
-			}
+        private void HandleCommanderHelp(string module, string[] cmd)
+        {
+            // Only safe for the interactive console, since it won't
+            // let us come here unless both scene and commander exist
+            //
+            ICommander moduleCommander = SceneManager.CurrentOrFirstScene.GetCommander(cmd[1]);
+            if (moduleCommander != null)
+                m_console.Output(moduleCommander.Help);
+        }
 
-            ((Scene)scene).DeleteAllSceneObjects();
-            m_sceneManager.CloseScene((Scene)scene);
-			ShutdownClientServer(scene.RegionInfo);
 
-			if (!cleanup)
-				return;
+		#endregion
 
-			if (!String.IsNullOrEmpty(scene.RegionInfo.RegionFile)) {
-				if (scene.RegionInfo.RegionFile.ToLower().EndsWith(".xml")) {
-					File.Delete(scene.RegionInfo.RegionFile);
-					m_log.InfoFormat("[OPENSIM]: deleting region file \"{0}\"", scene.RegionInfo.RegionFile);
-				}
-				if (scene.RegionInfo.RegionFile.ToLower().EndsWith(".ini")) {
-					try {
-						IniConfigSource source = new IniConfigSource(scene.RegionInfo.RegionFile);
-						if (source.Configs[scene.RegionInfo.RegionName] != null) {
-							source.Configs.Remove(scene.RegionInfo.RegionName);
-
-							if (source.Configs.Count == 0) {
-								File.Delete(scene.RegionInfo.RegionFile);
-							} else {
-								source.Save(scene.RegionInfo.RegionFile);
-							}
-						}
-					} catch (Exception) {
-					}
-				}
-			}
-		}
-
-		public void RemoveRegion(string name, bool cleanUp)
-		{
-			Scene target;
-			if (m_sceneManager.TryGetScene(name, out target))
-				RemoveRegion(target, cleanUp);
-		}
-
-		/// <summary>
-		/// Remove a region from the simulator without deleting it permanently.
-		/// </summary>
-		/// <param name="scene"></param>
-		/// <returns></returns>
-		public void CloseRegion(IScene scene)
-		{
-			// only need to check this if we are not at the
-			// root level
-			if ((m_sceneManager.CurrentScene != null) && (m_sceneManager.CurrentScene.RegionInfo.RegionID == scene.RegionInfo.RegionID)) {
-				m_sceneManager.TrySetCurrentScene("..");
-			}
-
-			m_sceneManager.CloseScene((Scene)scene);
-			ShutdownClientServer(scene.RegionInfo);
-		}
-
-		/// <summary>
-		/// Remove a region from the simulator without deleting it permanently.
-		/// </summary>
-		/// <param name="name"></param>
-		/// <returns></returns>
-		public void CloseRegion(string name)
-		{
-			Scene target;
-			if (m_sceneManager.TryGetScene(name, out target))
-				CloseRegion(target);
-		}
-
-		/// <summary>
-		/// Create a scene and its initial base structures.
-		/// </summary>
-		/// <param name="regionInfo"></param>
-		/// <param name="clientServer"> </param>
-		/// <returns></returns>
-		protected Scene SetupScene(RegionInfo regionInfo, out IClientNetworkServer clientServer)
-		{
-			return SetupScene(regionInfo, 0, null, out clientServer);
-		}
-
-		/// <summary>
-		/// Create a scene and its initial base structures.
-		/// </summary>
-		/// <param name="regionInfo"></param>
-		/// <param name="proxyOffset"></param>
-		/// <param name="configSource"></param>
-		/// <param name="clientServer"> </param>
-		/// <returns></returns>
-		protected Scene SetupScene(RegionInfo regionInfo, int proxyOffset, IConfigSource configSource, out IClientNetworkServer clientServer)
-		{
-			AgentCircuitManager circuitManager = new AgentCircuitManager();
-			IPAddress listenIP = regionInfo.InternalEndPoint.Address;
-			//if (!IPAddress.TryParse(regionInfo.InternalEndPoint, out listenIP))
-			//    listenIP = IPAddress.Parse("0.0.0.0");
-
-			uint port = (uint)regionInfo.InternalEndPoint.Port;
-
-			if (m_autoCreateClientStack) {
-				clientServer = m_clientStackManager.CreateServer(listenIP, ref port, proxyOffset, regionInfo.m_allow_alternate_ports, configSource, circuitManager);
-			} else {
-				clientServer = null;
-			}
-
-			regionInfo.InternalEndPoint.Port = (int)port;
-
-			Scene scene = CreateScene(regionInfo, m_storageManager, circuitManager);
-
-			if (m_autoCreateClientStack) {
-				clientServer.AddScene(scene);
-			}
-
-			scene.LoadWorldMap();
-
-			scene.PhysicsScene = GetPhysicsScene(scene.RegionInfo.RegionName);
-			scene.PhysicsScene.SetTerrain(scene.Heightmap.GetFloatsSerialised());
-			scene.PhysicsScene.SetWaterLevel((float)regionInfo.RegionSettings.WaterHeight);
-
-			return scene;
-		}
-
-		protected override StorageManager CreateStorageManager()
+		protected virtual StorageManager CreateStorageManager()
 		{
 			return CreateStorageManager(m_configSettings.StorageConnectionString, m_configSettings.EstateConnectionString);
 		}
@@ -1197,19 +1065,18 @@ namespace OpenSim
 			return new StorageManager(m_configSettings.StorageDll, connectionstring, estateconnectionstring);
 		}
 
-		protected override ClientStackManager CreateClientStackManager()
-		{
-			return new ClientStackManager(m_configSettings.ClientstackDll);
-		}
+        protected virtual ClientStackManager CreateClientStackManager()
+        {
+            return new ClientStackManager(m_configSettings.ClientstackDll);
+        }
 
-		protected override Scene CreateScene(RegionInfo regionInfo, StorageManager storageManager, AgentCircuitManager circuitManager)
-		{
-			SceneCommunicationService sceneGridService = new SceneCommunicationService();
+        public IClientNetworkServer CreateNetworkServer(IPAddress _listenIP, ref uint port, int proxyPortOffset, bool allow_alternate_port,
+            AgentCircuitManager authenticateClass)
+        {
+            return m_clientStackManager.CreateServer(_listenIP, ref port, proxyPortOffset, allow_alternate_port, ConfigSource, authenticateClass);
+        }
 
-			return new Scene(regionInfo, circuitManager, sceneGridService, storageManager, m_moduleLoader, false, m_configSettings.PhysicalPrim, m_configSettings.See_into_region_from_neighbor, m_config.Source, m_version);
-		}
-
-		protected void ShutdownClientServer(RegionInfo whichRegion)
+		public void ShutdownClientServer(RegionInfo whichRegion)
 		{
 			// Close and remove the clientserver for a region
 			bool foundClientServer = false;
@@ -1236,134 +1103,27 @@ namespace OpenSim
 
 			ShutdownClientServer(whichRegion);
 			IScene scene;
-			CreateRegion(whichRegion, true, out scene);
+            m_sceneManager.CreateRegion(whichRegion, true, out scene);
 		}
-
-		#region Setup methods
-
-		protected override PhysicsScene GetPhysicsScene(string osSceneIdentifier)
-		{
-			return GetPhysicsScene(m_configSettings.PhysicsEngine, m_configSettings.MeshEngineName, m_config.Source, osSceneIdentifier);
-		}
-
-		/// <summary>
-		/// Handler to supply the current status of this sim
-		/// </summary>
-		/// Currently this is always OK if the simulator is still listening for connections on its HTTP service
-		public class SimStatusHandler : IStreamedRequestHandler
-		{
-			public byte[] Handle(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-			{
-				return Util.UTF8.GetBytes("OK");
-			}
-
-			public string ContentType {
-				get { return "text/plain"; }
-			}
-
-			public string HttpMethod {
-				get { return "GET"; }
-			}
-
-			public string Path {
-				get { return "/simstatus/"; }
-			}
-		}
-
-		/// <summary>
-		/// Handler to supply the current extended status of this sim
-		/// Sends the statistical data in a json serialization 
-		/// </summary>
-		public class XSimStatusHandler : IStreamedRequestHandler
-		{
-			OpenSimBase m_opensim;
-			string osXStatsURI = String.Empty;
-
-			public XSimStatusHandler(OpenSimBase sim)
-			{
-				m_opensim = sim;
-				osXStatsURI = Util.SHA1Hash(sim.osSecret);
-			 }
-
-			public byte[] Handle(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-			{
-				return Util.UTF8.GetBytes(m_opensim.StatReport(httpRequest));
-			}
-
-			public string ContentType {
-				get { return "text/plain"; }
-			}
-
-			public string HttpMethod {
-				get { return "GET"; }
-			}
-
-			public string Path {
-				// This is for the OpenSimulator instance and is the osSecret hashed
-				get { return "/" + osXStatsURI + "/"; }
-			}
-		}
-
-		/// <summary>
-		/// Handler to supply the current extended status of this sim to a user configured URI
-		/// Sends the statistical data in a json serialization 
-		/// If the request contains a key, "callback" the response will be wrappend in the 
-		/// associated value for jsonp used with ajax/javascript
-		/// </summary>
-		public class UXSimStatusHandler : IStreamedRequestHandler
-		{
-			OpenSimBase m_opensim;
-			string osUXStatsURI = String.Empty;
-
-			public UXSimStatusHandler(OpenSimBase sim)
-			{
-				m_opensim = sim;
-				osUXStatsURI = sim.userStatsURI;
-
-			}
-
-			public byte[] Handle(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-			{
-				return Util.UTF8.GetBytes(m_opensim.StatReport(httpRequest));
-			}
-
-			public string ContentType {
-				get { return "text/plain"; }
-			}
-
-			public string HttpMethod {
-				get { return "GET"; }
-			}
-
-			public string Path {
-				// This is for the OpenSimulator instance and is the user provided URI 
-				get { return "/" + osUXStatsURI + "/"; }
-			}
-		}
-
-		#endregion
 
 		/// <summary>
 		/// Performs any last-minute sanity checking and shuts down the region server
 		/// </summary>
-		public override void ShutdownSpecific()
+		public virtual void ShutdownSpecific()
 		{
-			if (m_shutdownCommandsFile != String.Empty) {
+			if (m_shutdownCommandsFile != String.Empty) 
+            {
 				RunCommandScript(m_shutdownCommandsFile);
 			}
-			if (proxyUrl.Length > 0) {
-				Util.XmlRpcCommand(proxyUrl, "Stop");
-			}
 
-			m_log.Info("[SHUTDOWN]: Closing all threads");
-			m_log.Info("[SHUTDOWN]: Killing listener thread");
-			m_log.Info("[SHUTDOWN]: Killing clients");
-			// TODO: implement this
-			m_log.Info("[SHUTDOWN]: Closing console and terminating");
+			m_log.Info("[SHUTDOWN]: Terminating");
 
-			try {
+			try
+            {
 				m_sceneManager.Close();
-			} catch (Exception e) {
+			} 
+            catch (Exception e)
+            {
 				m_log.ErrorFormat("[SHUTDOWN]: Ignoring failure during shutdown - {0}", e);
 			}
 		}
@@ -1396,5 +1156,198 @@ namespace OpenSim
 		{
 			regionnum = m_sceneManager.Scenes.Count;
 		}
-	}
+
+        /// <summary>
+        /// Print statistics to the logfile, if they are active
+        /// </summary>
+        protected void LogDiagnostics(object source, ElapsedEventArgs e)
+        {
+            StringBuilder sb = new StringBuilder("DIAGNOSTICS\n\n");
+            sb.Append(GetUptimeReport());
+
+            if (m_stats != null)
+            {
+                sb.Append(m_stats.Report());
+            }
+
+            sb.Append(Environment.NewLine);
+            sb.Append(GetThreadsReport());
+
+            m_log.Debug(sb);
+        }
+
+        /// <summary>
+        /// Get a report about the registered threads in this server.
+        /// </summary>
+        protected string GetThreadsReport()
+        {
+            StringBuilder sb = new StringBuilder();
+
+            ProcessThreadCollection threads = ThreadTracker.GetThreads();
+            if (threads == null)
+            {
+                sb.Append("OpenSim thread tracking is only enabled in DEBUG mode.");
+            }
+            else
+            {
+                sb.Append(threads.Count + " threads are being tracked:" + Environment.NewLine);
+                foreach (ProcessThread t in threads)
+                {
+                    sb.Append("ID: " + t.Id + ", TotalProcessorTime: " + t.TotalProcessorTime + ", TimeRunning: " +
+                        (DateTime.Now - t.StartTime) + ", Pri: " + t.CurrentPriority + ", State: " + t.ThreadState);
+                    if (t.ThreadState == System.Diagnostics.ThreadState.Wait)
+                        sb.Append(", Reason: " + t.WaitReason + Environment.NewLine);
+                    else
+                        sb.Append(Environment.NewLine);
+
+                }
+            }
+            int workers = 0, ports = 0, maxWorkers = 0, maxPorts = 0;
+            System.Threading.ThreadPool.GetAvailableThreads(out workers, out ports);
+            System.Threading.ThreadPool.GetMaxThreads(out maxWorkers, out maxPorts);
+
+            sb.Append(Environment.NewLine + "*** ThreadPool threads ***" + Environment.NewLine);
+            sb.Append("workers: " + (maxWorkers - workers) + " (" + maxWorkers + "); ports: " + (maxPorts - ports) + " (" + maxPorts + ")" + Environment.NewLine);
+
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Return a report about the uptime of this server
+        /// </summary>
+        /// <returns></returns>
+        protected string GetUptimeReport()
+        {
+            StringBuilder sb = new StringBuilder(String.Format("Time now is {0}\n", DateTime.Now));
+            sb.Append(String.Format("Server has been running since {0}, {1}\n", m_startuptime.DayOfWeek, m_startuptime));
+            sb.Append(String.Format("That is an elapsed time of {0}\n", DateTime.Now - m_startuptime));
+
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Enhance the version string with extra information if it's available.
+        /// </summary>
+        protected void EnhanceVersionInformation()
+        {
+            string buildVersion = string.Empty;
+
+            // Add commit hash and date information if available
+            // The commit hash and date are stored in a file bin/.version
+            // This file can automatically created by a post
+            // commit script in the opensim git master repository or
+            // by issuing the follwoing command from the top level
+            // directory of the opensim repository
+            // git log -n 1 --pretty="format:%h: %ci" >bin/.version
+            // For the full git commit hash use %H instead of %h
+            //
+            // The subversion information is deprecated and will be removed at a later date
+            // Add subversion revision information if available
+            // Try file "svn_revision" in the current directory first, then the .svn info.
+            // This allows to make the revision available in simulators not running from the source tree.
+            // FIXME: Making an assumption about the directory we're currently in - we do this all over the place
+            // elsewhere as well
+            string svnRevisionFileName = "svn_revision";
+            string svnFileName = ".svn/entries";
+            string gitCommitFileName = ".version";
+            string inputLine;
+            int strcmp;
+
+            if (File.Exists(gitCommitFileName))
+            {
+                StreamReader CommitFile = File.OpenText(gitCommitFileName);
+                buildVersion = CommitFile.ReadLine();
+                CommitFile.Close();
+                m_version += buildVersion ?? "";
+            }
+
+            // Remove the else logic when subversion mirror is no longer used
+            else
+            {
+                if (File.Exists(svnRevisionFileName))
+                {
+                    StreamReader RevisionFile = File.OpenText(svnRevisionFileName);
+                    buildVersion = RevisionFile.ReadLine();
+                    buildVersion.Trim();
+                    RevisionFile.Close();
+
+                }
+
+                if (string.IsNullOrEmpty(buildVersion) && File.Exists(svnFileName))
+                {
+                    StreamReader EntriesFile = File.OpenText(svnFileName);
+                    inputLine = EntriesFile.ReadLine();
+                    while (inputLine != null)
+                    {
+                        // using the dir svn revision at the top of entries file
+                        strcmp = String.Compare(inputLine, "dir");
+                        if (strcmp == 0)
+                        {
+                            buildVersion = EntriesFile.ReadLine();
+                            break;
+                        }
+                        else
+                        {
+                            inputLine = EntriesFile.ReadLine();
+                        }
+                    }
+                    EntriesFile.Close();
+                }
+
+                m_version += string.IsNullOrEmpty(buildVersion) ? "      " : ("." + buildVersion + "     ").Substring(0, 6);
+            }
+        }
+
+        protected void CreatePIDFile(string path)
+        {
+            try
+            {
+                string pidstring = System.Diagnostics.Process.GetCurrentProcess().Id.ToString();
+                FileStream fs = File.Create(path);
+                System.Text.ASCIIEncoding enc = new System.Text.ASCIIEncoding();
+                Byte[] buf = enc.GetBytes(pidstring);
+                fs.Write(buf, 0, buf.Length);
+                fs.Close();
+                m_pidFile = path;
+            }
+            catch (Exception)
+            {
+            }
+        }
+
+        public string osSecret
+        {
+            // Secret uuid for the simulator
+            get { return m_osSecret; }
+
+        }
+
+        public string StatReport(OSHttpRequest httpRequest)
+        {
+            // If we catch a request for "callback", wrap the response in the value for jsonp
+            if (httpRequest.Query.ContainsKey("callback"))
+            {
+                return httpRequest.Query["callback"].ToString() + "(" + m_stats.XReport((DateTime.Now - m_startuptime).ToString(), m_version) + ");";
+            }
+            else
+            {
+                return m_stats.XReport((DateTime.Now - m_startuptime).ToString(), m_version);
+            }
+        }
+
+        protected void RemovePIDFile()
+        {
+            if (m_pidFile != String.Empty)
+            {
+                try
+                {
+                    File.Delete(m_pidFile);
+                    m_pidFile = String.Empty;
+                }
+                catch (Exception)
+                {
+                }
+            }
+        }
+    }
 }

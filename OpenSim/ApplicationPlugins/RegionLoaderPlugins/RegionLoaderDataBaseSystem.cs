@@ -47,9 +47,9 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private IOpenSimBase m_openSim;
         private IRegionCreator m_creator;
-        private OpenSimConfigSource m_configSource;
+        private IConfigSource m_configSource;
 
-        public void Initialise(OpenSimConfigSource configSource, IRegionCreator creator, IOpenSimBase openSim)
+        public void Initialise(IConfigSource configSource, IRegionCreator creator, IOpenSimBase openSim)
         {
             m_configSource = configSource; ;
             m_creator = creator;
@@ -91,7 +91,8 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
         {
             IScene scene;
             m_log.Debug("[LOADREGIONS]: Creating Region: " + info.RegionName + ")");
-            m_openSim.CreateRegion(info, true, out scene);
+            m_log.Warn("ERROR: CANNOT LOAD REGION, REPORT THIS");
+            //m_openSim.SceneManager.CreateRegion(info, true, out scene);
         }
 
         private void FindOldRegionFiles()
@@ -103,7 +104,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 
                 try
                 {
-                    IConfig startupConfig = (IConfig)m_configSource.Source.Configs["Startup"];
+                    IConfig startupConfig = (IConfig)m_configSource.Configs["Startup"];
                     regionConfigPath = startupConfig.GetString("regionload_regionsdir", regionConfigPath).Trim();
                 }
                 catch (Exception)
@@ -125,7 +126,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 
                         foreach (IConfig config in source.Configs)
                         {
-                            RegionInfo regionInfo = new RegionInfo("REGION CONFIG #" + (i + 1), file, false, m_configSource.Source, config.Name);
+                            RegionInfo regionInfo = new RegionInfo("REGION CONFIG #" + (i + 1), file, false, m_configSource, config.Name);
                             RegionsToConvert.Add(regionInfo);
                             i++;
                         }
@@ -135,7 +136,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                 {
                     foreach (string file in configFiles)
                     {
-                        RegionInfo regionInfo = new RegionInfo("REGION CONFIG #" + (i + 1), file, false, m_configSource.Source);
+                        RegionInfo regionInfo = new RegionInfo("REGION CONFIG #" + (i + 1), file, false, m_configSource);
                         RegionsToConvert.Add(regionInfo);
                         i++;
                     }

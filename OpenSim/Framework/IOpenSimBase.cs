@@ -48,22 +48,20 @@ namespace OpenSim.Framework
 	{
 		void RunCommand(string module, string[] cmdparams);
 		void HandleShow(string mod, string[] cmd);
-		IClientNetworkServer CreateRegion(RegionInfo regionInfo, bool portadd_flag, out IScene scene);
-		IClientNetworkServer CreateRegion(RegionInfo regionInfo, out IScene scene);
-		IClientNetworkServer CreateRegion(RegionInfo regionInfo, bool portadd_flag, bool do_post_init, out IScene mscene);
-		void RemoveRegion(IScene scene, bool cleanup);
-		void RemoveRegion(string name, bool cleanUp);
-		void CloseRegion(IScene scene);
-		void CloseRegion(string name);
 		void handleRestartRegion(RegionInfo whichRegion);
 		void ShutdownSpecific();
+        void ShutdownClientServer(RegionInfo whichRegion);
 		void GetRunTime(out string starttime, out string uptime);
 		void GetAvatarNumber(out int usernum);
 		void GetRegionNumber(out int regionnum);
+        IClientNetworkServer CreateNetworkServer(IPAddress _listenIP, ref uint port, int proxyPortOffset, bool allow_alternate_port,
+            AgentCircuitManager authenticateClass);
 		ConfigSettings ConfigurationSettings { get; set; }
-        OpenSimConfigSource ConfigSource { get; set; }
+        IConfigSource ConfigSource { get; set; }
 		List<IClientNetworkServer> ClientServers { get; }
-		uint HttpServerPort { get; }
 		IRegistryCore ApplicationRegistry { get; }
+        string StatReport(OSHttpRequest httpRequest);
+        string osSecret { get; }
+        string Version { get; }
 	}
 }

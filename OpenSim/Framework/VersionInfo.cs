@@ -25,62 +25,50 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using log4net.Appender;
-using log4net.Core;
-
-namespace OpenSim.Framework.Console
+namespace OpenSim.Framework
 {
-    /// <summary>
-    /// Writes log information out onto the console
-    /// </summary>
-    public class OpenSimAppender : AnsiColorTerminalAppender
+    public class VersionInfo
     {
-        private ICommandConsole m_console = null;
+        private const string VERSION_NUMBER = "0.1";
+        private const Flavour VERSION_FLAVOUR = Flavour.Dev;
 
-        public ICommandConsole Console
+        public enum Flavour
         {
-            get { return m_console; }
-            set { m_console = value; }
+            Unknown,
+            Dev,
+            RC1,
+            RC2,
+            Release,
+            Post_Fixes
         }
 
-        override protected void Append(LoggingEvent le)
+        public static string Version
         {
-            if (m_console != null)
-                m_console.LockOutput();
-
-            string loggingMessage = RenderLoggingEvent(le);
-
-            try
-            {
-                if (m_console != null)
-                {
-                    string level = "normal";
-
-                    if (le.Level == Level.Error)
-                        level = "error";
-                    else if (le.Level == Level.Warn)
-                        level = "warn";
-
-                    m_console.Output(loggingMessage, level);
-                }
-                else
-                {
-                    if (!loggingMessage.EndsWith("\n"))
-                        System.Console.WriteLine(loggingMessage);
-                    else
-                        System.Console.Write(loggingMessage);
-                }
-            }
-            catch (Exception e)
-            {
-                System.Console.WriteLine("Couldn't write out log message: {0}", e.ToString());
-            }
-            finally
-            {
-                if (m_console != null)
-                    m_console.UnlockOutput();
-            }
+            get { return GetVersionString(VERSION_NUMBER, VERSION_FLAVOUR); }
         }
+
+        public static string GetVersionString(string versionNumber, Flavour flavour)
+        {
+            string versionString = "Aurora " + versionNumber + " (" + flavour + ")";
+            return versionString.PadRight(VERSIONINFO_VERSION_LENGTH);
+        }
+
+        public const int VERSIONINFO_VERSION_LENGTH = 27;
+        
+        /// <value>
+        /// This is the external interface version.  It is separate from the OpenSimulator project version.
+        /// 
+        /// This version number should be 
+        /// increased by 1 every time a code change makes the previous OpenSimulator revision incompatible
+        /// with the new revision.  This will usually be due to interregion or grid facing interface changes.
+        /// 
+        /// Changes which are compatible with an older revision (e.g. older revisions experience degraded functionality
+        /// but not outright failure) do not need a version number increment.
+        /// 
+        /// Having this version number allows the grid service to reject connections from regions running a version
+        /// of the code that is too old. 
+        ///
+        /// </value>
+        public readonly static int MajorInterfaceVersion = 6;
     }
 }

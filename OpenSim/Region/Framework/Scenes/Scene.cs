@@ -131,7 +131,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         protected string m_simulatorVersion = "OpenSimulator Server";
 
-        protected ModuleLoader m_moduleLoader;
         protected StorageManager m_storageManager;
         protected AgentCircuitManager m_authenticateHandler;
 
@@ -567,8 +566,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public Scene(RegionInfo regInfo, AgentCircuitManager authen,
                      SceneCommunicationService sceneGridService,
-                     StorageManager storeManager,
-                     ModuleLoader moduleLoader, bool dumpAssetsToFile, bool physicalPrim,
+                     StorageManager storeManager, bool dumpAssetsToFile, bool physicalPrim,
                      bool SeeIntoRegionFromNeighbor, IConfigSource config, string simulatorVersion)
         {
             m_config = config;
@@ -600,7 +598,6 @@ namespace OpenSim.Region.Framework.Scenes
             BordersLocked = false;
 
             m_lastAllocatedLocalId = (uint)(random.NextDouble() * (double)(uint.MaxValue/2))+(uint)(uint.MaxValue/4);
-            m_moduleLoader = moduleLoader;
             m_authenticateHandler = authen;
             m_sceneGridService = sceneGridService;
             m_storageManager = storeManager;

@@ -27,7 +27,7 @@
 
 using System;
 
-namespace OpenSim.Framework.Console
+namespace OpenSim.Framework
 {
     public delegate void ConsoleCommand(string[] comParams);
 

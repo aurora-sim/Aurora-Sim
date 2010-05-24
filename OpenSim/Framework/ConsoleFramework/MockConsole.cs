@@ -3,7 +3,7 @@ using System.Threading;
 using System.Collections.Generic;
 using System.Text;
 
-namespace OpenSim.Framework.Console
+namespace OpenSim.Framework
 {
     /// <summary>
     /// This is a Fake console that's used when setting up the Scene in Unit Tests

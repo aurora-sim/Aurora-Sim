@@ -100,7 +100,7 @@ namespace OpenSim.ApplicationPlugins.RemoteController
 
         public void Initialise(IOpenSimBase openSim)
         {
-            m_configSource = openSim.ConfigSource.Source;
+            m_configSource = openSim.ConfigSource;
             try
             {
                 if (m_configSource.Configs["RemoteAdmin"] == null ||
@@ -625,7 +625,7 @@ namespace OpenSim.ApplicationPlugins.RemoteController
                     // Create the region and perform any initial initialization
 
                     IScene newscene;
-                    m_app.CreateRegion(region, out newscene);
+                    m_app.SceneManager.CreateRegion(region, out newscene);
 
                     // If an access specification was provided, use it.
                     // Otherwise accept the default.
@@ -715,7 +715,7 @@ namespace OpenSim.ApplicationPlugins.RemoteController
                     if (!m_app.SceneManager.TryGetScene(regionName, out scene))
                         throw new Exception(String.Format("region \"{0}\" does not exist", regionName));
 
-                    m_app.RemoveRegion(scene, true);
+                    m_app.SceneManager.RemoveRegion(scene, true);
 
                     responseData["success"] = true;
                     responseData["region_name"] = regionName;
@@ -788,7 +788,7 @@ namespace OpenSim.ApplicationPlugins.RemoteController
                         if (!m_app.SceneManager.TryGetScene(regionID, out scene))
                             throw new Exception(String.Format("region \"{0}\" does not exist", regionID));
 
-                        m_app.CloseRegion(scene);
+                        m_app.SceneManager.CloseRegion(scene);
 
                         responseData["success"] = true;
                         responseData["region_id"] = regionID;
@@ -804,7 +804,7 @@ namespace OpenSim.ApplicationPlugins.RemoteController
                         if (!m_app.SceneManager.TryGetScene(regionName, out scene))
                             throw new Exception(String.Format("region \"{0}\" does not exist", regionName));
 
-                        m_app.CloseRegion(scene);
+                        m_app.SceneManager.CloseRegion(scene);
 
                         responseData["success"] = true;
                         responseData["region_name"] = regionName;
@@ -2079,10 +2079,6 @@ namespace OpenSim.ApplicationPlugins.RemoteController
 
                     switch (xml_version)
                     {
-                        case "1":
-                            m_app.SceneManager.LoadCurrentSceneFromXml(filename, true, new Vector3(0, 0, 0));
-                            break;
-
                         case "2":
                             m_app.SceneManager.LoadCurrentSceneFromXml2(filename);
                             break;
@@ -2164,14 +2160,6 @@ namespace OpenSim.ApplicationPlugins.RemoteController
 
                 switch (xml_version)
                 {
-                    case "1":
-                        m_app.SceneManager.SaveCurrentSceneToXml(filename);
-                        break;
-
-                    case "2":
-                        m_app.SceneManager.SaveCurrentSceneToXml2(filename);
-                        break;
-
                     default:
                         throw new Exception(String.Format("unknown Xml{0} format", xml_version));
                 }

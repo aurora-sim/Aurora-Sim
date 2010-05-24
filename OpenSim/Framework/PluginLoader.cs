@@ -172,9 +172,12 @@ namespace OpenSim.Framework
 
                     if ((filter != null) && (filter.Apply(node) == false))
                         continue;
-
-                    T plugin = (T)node.CreateInstance();
-                    loadedPlugins.Add(plugin);
+                    try
+                    {
+                        T plugin = (T)node.CreateInstance();
+                        loadedPlugins.Add(plugin);
+                    }
+                    catch { }
                 }
 
                 // We do Initialise() in a second loop after CreateInstance

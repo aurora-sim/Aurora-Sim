@@ -3,11 +3,27 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text;
+using OpenSim.Framework;
 
 namespace Aurora.Framework
 {
     public static class AuroraModuleLoader
     {
+        #region New Style Loaders
+
+        public static List<T> LoadPlugins<T>(string loaderString, PluginInitialiserBase baseInit) where T : IPlugin
+        {
+            using (PluginLoader<T> loader = new PluginLoader<T>(baseInit))
+            {
+                loader.Load(loaderString);
+                return loader.Plugins;
+            }
+        }
+
+        #endregion
+
+        #region Old Style Region Loaders
+
         static List<string> dllBlackList;
         static bool firstLoad = true;
         /// <summary>
@@ -248,5 +264,7 @@ namespace Aurora.Framework
 
             return modules.ToArray();
         }
+
+        #endregion
     }
 }
