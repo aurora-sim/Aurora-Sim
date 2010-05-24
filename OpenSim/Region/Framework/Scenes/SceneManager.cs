@@ -466,6 +466,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         private string proxyUrl = "";
         private int proxyOffset = 0;
+        private string SecretID = UUID.Random().ToString();
 
         /// <summary>
         /// Execute the region creation process.  This includes setting up scene infrastructure.
@@ -503,7 +504,7 @@ namespace OpenSim.Region.Framework.Scenes
             regionInfo.ServerURI = "http://" + regionInfo.ExternalHostName + ":" + regionInfo.InternalEndPoint.Port;
             regionInfo.HttpPort = MainServer.Instance.Port;
 
-            regionInfo.osSecret = m_OpenSimBase.osSecret;
+            regionInfo.osSecret = SecretID;
 
             IConfig networkConfig = m_OpenSimBase.ConfigSource.Configs["Network"];
             if (networkConfig != null)

@@ -53,6 +53,10 @@ namespace OpenSim.Framework
         void RunCommand(string cmd);
         object ConsoleScene { get; set; }
         void Prompt();
+        /// <summary>
+        /// Starts the prompt for the console. This will never stop until the region is closed.
+        /// </summary>
+        void ReadConsole();
     }
 
 

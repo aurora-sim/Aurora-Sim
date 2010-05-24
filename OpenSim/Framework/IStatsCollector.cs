@@ -25,17 +25,25 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-namespace OpenSim.Framework.Statistics.Interfaces
+namespace OpenSim.Framework
 {
     /// <summary>
-    /// Implemented by objects which allow statistical information to be pulled from them.
+    /// Implemented by classes which collect up non-viewer statistical information
     /// </summary>
-    public interface IPullStatsProvider
+    public interface IStatsCollector
     {
         /// <summary>
-        /// Provide statistical information.  Only temporary one long string.
+        /// Report back collected statistical information.
         /// </summary>
         /// <returns></returns>
-        string GetStats();
+        string Report();
+         
+        /// <summary>
+        /// Report back collected statistical information in json
+        /// </summary>
+        /// <returns>
+        /// A <see cref="System.String"/>
+        /// </returns>
+        string XReport(string uptime, string version);
     }
 }

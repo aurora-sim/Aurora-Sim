@@ -25,6 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System.Collections.Generic;
 using OpenSim.Framework;
 
 namespace OpenSim
@@ -49,17 +50,27 @@ namespace OpenSim
 
     public class ApplicationPluginInitialiser : PluginInitialiserBase
     {
-        private IOpenSimBase server;
+        private IOpenSimBase m_server;
+        protected List<IApplicationPlugin> m_plugins = new List<IApplicationPlugin>();
 
         public ApplicationPluginInitialiser(IOpenSimBase s)
         {
-            server = s;
+            m_server = s;
         }
 
         public override void Initialise(IPlugin plugin)
         {
             IApplicationPlugin p = plugin as IApplicationPlugin;
-            p.Initialise(server);
+            p.Initialise(m_server);
+            m_plugins.Add(p);
+        }
+
+        public void PostInitialise()
+        {
+            foreach (IApplicationPlugin plugin in m_plugins)
+            {
+                plugin.PostInitialise();
+            }
         }
     }
 }

@@ -699,12 +699,11 @@ namespace OpenSim.Framework
             get { return m_defaultPrompt; }
         }
         protected string m_defaultPrompt;
+
         public virtual string Name
         {
             get { return "CommandConsole"; }
         }
-
-        #region ICommandConsole Members
 
         public Commands m_Commands = new Commands();
 
@@ -720,10 +719,6 @@ namespace OpenSim.Framework
             }
         }
 
-        #endregion
-
-        #region ICommandConsole Members
-
         public object m_ConsoleScene = null;
         public object ConsoleScene
         {
@@ -737,14 +732,27 @@ namespace OpenSim.Framework
             }
         }
 
-        #endregion
-
-        #region IDisposable Members
-
         public void Dispose()
         {
         }
 
-        #endregion
+        /// <summary>
+        /// Starts the prompt for the console. This will never stop until the region is closed.
+        /// </summary>
+        public void ReadConsole()
+        {
+            while (true)
+            {
+                try
+                {
+                    // Block thread here for input
+                    Prompt();
+                }
+                catch (Exception e)
+                {
+                    m_log.ErrorFormat("Command error: {0}", e);
+                }
+            }
+        }
     }
 }

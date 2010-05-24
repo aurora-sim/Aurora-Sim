@@ -46,22 +46,16 @@ namespace OpenSim.Framework
 {
 	public interface IOpenSimBase
 	{
-		void RunCommand(string module, string[] cmdparams);
-		void HandleShow(string mod, string[] cmd);
 		void handleRestartRegion(RegionInfo whichRegion);
-		void ShutdownSpecific();
-        void ShutdownClientServer(RegionInfo whichRegion);
-		void GetRunTime(out string starttime, out string uptime);
-		void GetAvatarNumber(out int usernum);
-		void GetRegionNumber(out int regionnum);
-        IClientNetworkServer CreateNetworkServer(IPAddress _listenIP, ref uint port, int proxyPortOffset, bool allow_alternate_port,
+		void ShutdownClientServer(RegionInfo whichRegion);
+		IClientNetworkServer CreateNetworkServer(IPAddress _listenIP, ref uint port, int proxyPortOffset, bool allow_alternate_port,
             AgentCircuitManager authenticateClass);
 		ConfigSettings ConfigurationSettings { get; set; }
         IConfigSource ConfigSource { get; set; }
 		List<IClientNetworkServer> ClientServers { get; }
 		IRegistryCore ApplicationRegistry { get; }
-        string StatReport(OSHttpRequest httpRequest);
-        string osSecret { get; }
+        IStatsCollector Stats { get; }
+        DateTime StartupTime { get; }
         string Version { get; }
 	}
 }

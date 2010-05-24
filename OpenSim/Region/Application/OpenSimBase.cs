@@ -65,131 +65,106 @@ namespace OpenSim
 
 		protected string m_startupCommandsFile;
 		protected string m_shutdownCommandsFile;
-		
-		private string m_timedScript = "disabled";
-		private Timer m_scriptTimer;
+        private string m_TimerScriptFileName = "disabled";
+        protected ConfigurationLoader m_configLoader;
+        protected Dictionary<EndPoint, uint> m_clientCircuits = new Dictionary<EndPoint, uint>();
+        protected NetworkServersInfo m_networkServersInfo;
+        protected ICommandConsole m_console;
+        protected OpenSimAppender m_consoleAppender;
+        protected IAppender m_logFileAppender = null;
 
+        
+        protected ConfigSettings m_configSettings;
 		public ConfigSettings ConfigurationSettings 
         {
 			get { return m_configSettings; }
 			set { m_configSettings = value; }
 		}
 
-		protected ConfigSettings m_configSettings;
-
-		protected ConfigurationLoader m_configLoader;
-
-		protected List<IApplicationPlugin> m_plugins = new List<IApplicationPlugin>();
-
 		/// <value>
 		/// The config information passed into the OpenSimulator region server.
 		/// </value>
+        protected IConfigSource m_config;
         public IConfigSource ConfigSource
         {
 			get { return m_config; }
 			set { m_config = value; }
 		}
 
-        protected IConfigSource m_config;
-
-		public List<IClientNetworkServer> ClientServers
+        protected List<IClientNetworkServer> m_clientServers = new List<IClientNetworkServer>();
+        public List<IClientNetworkServer> ClientServers
         {
 			get { return m_clientServers; }
 		}
-
-        protected List<IClientNetworkServer> m_clientServers = new List<IClientNetworkServer>();
-
-        public string Version
-        {
-            get { return m_version; }
-        }
-
-        public ClientStackManager ClientStackManager
-        {
-            get { return m_clientStackManager; }
-        }
-
-        protected ClientStackManager m_clientStackManager;
-
-        protected Dictionary<EndPoint, uint> m_clientCircuits = new Dictionary<EndPoint, uint>();
-        
-        protected NetworkServersInfo m_networkServersInfo;
-
-        public NetworkServersInfo NetServersInfo
-        {
-            get { return m_networkServersInfo; }
-        }
-
-        protected StorageManager m_storageManager;
-
-        public IRegistryCore ApplicationRegistry 
-        {
-			get { return m_applicationRegistry; }
-        }
-
-        protected IRegistryCore m_applicationRegistry = new RegistryCore();
-
-        public SceneManager SceneManager
-        {
-            get { return m_sceneManager; }
-        }
-        protected SceneManager m_sceneManager = null;
-
-        /// <summary>
-        /// This will control a periodic log printout of the current 'show stats' (if they are active) for this
-        /// server.
-        /// </summary>
-        private Timer m_periodicDiagnosticsTimer = new Timer(60 * 60 * 1000);
-
-        protected ICommandConsole m_console;
-        protected OpenSimAppender m_consoleAppender;
-        protected IAppender m_logFileAppender = null;
-
-        /// <summary>
-        /// Time at which this server was started
-        /// </summary>
-        protected DateTime m_startuptime;
-
-        /// <summary>
-        /// Record the initial startup directory for info purposes
-        /// </summary>
-        protected string m_startupDirectory = Environment.CurrentDirectory;
 
         /// <summary>
         /// Server version information.  Usually VersionInfo + information about git commit, operating system, etc.
         /// </summary>
         protected string m_version;
+        public string Version
+        {
+            get { return m_version; }
+        }
 
-        protected string m_pidFile = String.Empty;
+        protected ClientStackManager m_clientStackManager;
+        public ClientStackManager ClientStackManager
+        {
+            get { return m_clientStackManager; }
+        }
+
+        protected StorageManager m_storageManager;
+        public NetworkServersInfo NetServersInfo
+        {
+            get { return m_networkServersInfo; }
+        }
+
+        protected IRegistryCore m_applicationRegistry = new RegistryCore();
+        public IRegistryCore ApplicationRegistry 
+        {
+			get { return m_applicationRegistry; }
+        }
+
+        protected SceneManager m_sceneManager = null;
+        public SceneManager SceneManager
+        {
+            get { return m_sceneManager; }
+        }
 
         /// <summary>
-        /// Random uuid for private data 
+        /// Time at which this server was started
         /// </summary>
-        protected string m_osSecret = String.Empty;
+        protected DateTime m_startuptime;
+        public DateTime StartupTime
+        {
+            get { return m_startuptime; }
+        }
 
-        protected BaseHttpServer m_httpServer;
+        protected BaseHttpServer m_BaseHTTPServer;
         public BaseHttpServer HttpServer
         {
-            get { return m_httpServer; }
+            get { return m_BaseHTTPServer; }
         }
 
         /// <summary>
         /// Holds the non-viewer statistics collection object for this service/server
         /// </summary>
         protected IStatsCollector m_stats;
+        public IStatsCollector Stats
+        {
+            get { return m_stats; }
+        }
 
 		/// <summary>
 		/// Constructor.
 		/// </summary>
 		/// <param name="configSource"></param>
-		public OpenSimBase(IConfigSource configSource) : base()
+		public OpenSimBase(IConfigSource configSource)
 		{
             m_startuptime = DateTime.Now;
-            m_version = VersionInfo.Version;
+            SetUpVersionInformation();
 
-            // Random uuid for private data
-            m_osSecret = UUID.Random().ToString();
-
+            //This will control a periodic log printout of the current 'show stats' (if they are active) for this server.
+            Timer m_periodicDiagnosticsTimer = new Timer(60 * 60 * 1000); // One hour
             m_periodicDiagnosticsTimer.Elapsed += new ElapsedEventHandler(LogDiagnostics);
             m_periodicDiagnosticsTimer.Enabled = true;
 
@@ -231,110 +206,134 @@ namespace OpenSim
             if (m_console == null)
                 m_console = new LocalConsole();
             MainConsole.Instance = m_console;
-
+            RegisterConsoleCommands();
+			
             #endregion
 
-            m_configLoader = new ConfigurationLoader();
-			m_config = m_configLoader.LoadConfigSettings(configSource, out m_configSettings, out m_networkServersInfo);
-			
-			IConfig startupConfig = m_config.Configs["Startup"];
-
-			int stpMaxThreads = 15;
-
-			if (startupConfig != null) 
-            {
-				m_startupCommandsFile = startupConfig.GetString("startup_console_commands_file", "startup_commands.txt");
-				m_shutdownCommandsFile = startupConfig.GetString("shutdown_console_commands_file", "shutdown_commands.txt");
-
-				m_timedScript = startupConfig.GetString("timer_Script", "disabled");
-				if (m_logFileAppender != null) {
-					if (m_logFileAppender is log4net.Appender.FileAppender) {
-						log4net.Appender.FileAppender appender = (log4net.Appender.FileAppender)m_logFileAppender;
-						string fileName = startupConfig.GetString("LogFile", String.Empty);
-						if (fileName != String.Empty) {
-							appender.File = fileName;
-							appender.ActivateOptions();
-						}
-						//m_log.InfoFormat("[LOGGING]: Logging started to file {0}", appender.File);
-					}
-				}
-
-				string asyncCallMethodStr = startupConfig.GetString("async_call_method", String.Empty);
-				FireAndForgetMethod asyncCallMethod;
-				if (!String.IsNullOrEmpty(asyncCallMethodStr) && Utils.EnumTryParse<FireAndForgetMethod>(asyncCallMethodStr, out asyncCallMethod))
-					Util.FireAndForgetMethod = asyncCallMethod;
-
-				stpMaxThreads = startupConfig.GetInt("MaxPoolThreads", 15);
-			}
-
-			if (Util.FireAndForgetMethod == FireAndForgetMethod.SmartThreadPool)
-				Util.InitThreadPool(stpMaxThreads);
-
-			//m_log.Info("[OPENSIM MAIN]: Using async_call_method " + Util.FireAndForgetMethod);
+            Configuration(configSource);
 		}
+
+        private void Configuration(IConfigSource configSource)
+        {
+            m_configLoader = new ConfigurationLoader();
+            m_config = m_configLoader.LoadConfigSettings(configSource, out m_configSettings, out m_networkServersInfo);
+
+            IConfig startupConfig = m_config.Configs["Startup"];
+
+            int stpMaxThreads = 15;
+
+            if (startupConfig != null)
+            {
+                m_startupCommandsFile = startupConfig.GetString("startup_console_commands_file", "startup_commands.txt");
+                m_shutdownCommandsFile = startupConfig.GetString("shutdown_console_commands_file", "shutdown_commands.txt");
+
+                m_TimerScriptFileName = startupConfig.GetString("timer_Script", "disabled");
+                if (m_logFileAppender != null)
+                {
+                    if (m_logFileAppender is log4net.Appender.FileAppender)
+                    {
+                        log4net.Appender.FileAppender appender = (log4net.Appender.FileAppender)m_logFileAppender;
+                        string fileName = startupConfig.GetString("LogFile", String.Empty);
+                        if (fileName != String.Empty)
+                        {
+                            appender.File = fileName;
+                            appender.ActivateOptions();
+                        }
+                    }
+                }
+
+                string asyncCallMethodStr = startupConfig.GetString("async_call_method", String.Empty);
+                FireAndForgetMethod asyncCallMethod;
+                if (!String.IsNullOrEmpty(asyncCallMethodStr) && Utils.EnumTryParse<FireAndForgetMethod>(asyncCallMethodStr, out asyncCallMethod))
+                    Util.FireAndForgetMethod = asyncCallMethod;
+
+                stpMaxThreads = startupConfig.GetInt("MaxPoolThreads", 15);
+            }
+
+            if (Util.FireAndForgetMethod == FireAndForgetMethod.SmartThreadPool)
+                Util.InitThreadPool(stpMaxThreads);
+        }
 
         /// <summary>
         /// Performs initialisation of the scene, such as loading configuration from disk.
         /// </summary>
         public virtual void Startup()
         {
-            //m_log.Info("[STARTUP]: Beginning startup processing");
+            m_log.Info("====================================================================");
+			m_log.Info("========================= STARTING AURORA =========================");
+			m_log.Info("====================================================================");
+            m_log.Info("[STARTUP]: Version: " + Version + "\n");
+            m_log.Info("[AURORADATA]: Setting up the data service");
 
-            EnhanceVersionInformation();
+			Aurora.Services.DataService.LocalDataService service = new Aurora.Services.DataService.LocalDataService();
+			service.Initialise(m_config);
 
-            m_log.Info("[STARTUP]: Version: " + m_version + "\n");
+            m_storageManager = new StorageManager(m_configSettings.StorageDll, m_configSettings.StorageConnectionString, m_configSettings.EstateConnectionString);
 
-            StartupSpecific();
+            m_clientStackManager = new ClientStackManager(m_configSettings.ClientstackDll);
+
+            SetUpHTTPServer();
+
+			m_stats = StatsManager.StartCollectingSimExtraStats();
+
+            //Lets start this after the http server and storage manager, but before application plugins.
+            //Note: this should be moved out.
+            m_sceneManager = new SceneManager(this, m_storageManager);
+            
+            ApplicationPluginInitialiser ApplicationPluginManager = new ApplicationPluginInitialiser(this);
+            Aurora.Framework.AuroraModuleLoader.LoadPlugins<IApplicationPlugin>("/OpenSim/Startup", ApplicationPluginManager);
+            ApplicationPluginManager.PostInitialise();
+            
+            //Has to be after Scene Manager startup
+			AddPluginCommands();
+
+            RunStartupCommands();
+
+            FinishStartUp();
+
+            //Start the prompt
+            MainConsole.Instance.ReadConsole();
+		}
+
+        private void RunStartupCommands()
+        {
+            //Run Startup Commands
+            if (!String.IsNullOrEmpty(m_startupCommandsFile))
+                RunCommandScript(m_startupCommandsFile);
+
+            // Start timer script (run a script every xx seconds)
+            if (m_TimerScriptFileName != "disabled")
+            {
+                Timer m_TimerScriptTimer = new Timer();
+                m_TimerScriptTimer.Enabled = true;
+                m_TimerScriptTimer.Interval = 1200 * 1000;
+                m_TimerScriptTimer.Elapsed += RunAutoTimerScript;
+            }
+        }
+
+        private void FinishStartUp()
+        {
+            PrintFileToConsole("startuplogo.txt");
+
+            // For now, start at the 'root' level by default
+            if (m_sceneManager.Scenes.Count == 1)
+            {
+                // If there is only one region, select it
+                ChangeSelectedRegion(m_sceneManager.Scenes[0].RegionInfo.RegionName);
+            }
+            else
+            {
+                ChangeSelectedRegion("root");
+            }
 
             TimeSpan timeTaken = DateTime.Now - m_startuptime;
 
             m_log.InfoFormat("[STARTUP]: Startup is complete and took {0}m {1}s", timeTaken.Minutes, timeTaken.Seconds);
         }
 
-		protected virtual List<string> GetHelpTopics()
-		{
-            List<string> topics = new List<string>();
-			Scene s = SceneManager.CurrentOrFirstScene;
-			if (s != null && s.GetCommanders() != null)
-				topics.AddRange(s.GetCommanders().Keys);
-
-			return topics;
-		}
-
-		/// <summary>
-		/// Performs startup specific to the region server, including initialization of the scene 
-		/// such as loading configuration from disk.
-		/// </summary>
-		protected virtual void StartupSpecific()
-		{
-            m_log.Info("====================================================================");
-			m_log.Info("========================= STARTING AURORA =========================");
-			m_log.Info("====================================================================");
-			//m_log.InfoFormat("[OPENSIM MAIN]: Running ");
-			//m_log.InfoFormat("[OPENSIM MAIN]: GC Is Server GC: {0}", GCSettings.IsServerGC.ToString());
-			// http://msdn.microsoft.com/en-us/library/bb384202.aspx
-			//GCSettings.LatencyMode = GCLatencyMode.Batch;
-			//m_log.InfoFormat("[OPENSIM MAIN]: GC Latency Mode: {0}", GCSettings.LatencyMode.ToString());
-
-			m_log.Info("[AURORADATA]: Setting up the data service");
-			Aurora.Services.DataService.LocalDataService service = new Aurora.Services.DataService.LocalDataService();
-			service.Initialise(m_config);
-
-			RegisterConsoleCommands();
-			IConfig startupConfig = m_config.Configs["Startup"];
-			if (startupConfig != null) 
-            {
-				string pidFile = startupConfig.GetString("PIDFile", String.Empty);
-				if (pidFile != String.Empty)
-					CreatePIDFile(pidFile);
-			}
-
-            m_storageManager = CreateStorageManager();
-
-            m_clientStackManager = CreateClientStackManager();
-
-            m_httpServer
-                = new BaseHttpServer(
+        private void SetUpHTTPServer()
+        {
+            m_BaseHTTPServer = new BaseHttpServer(
                     m_networkServersInfo.HttpListenerPort, m_networkServersInfo.HttpUsesSSL, m_networkServersInfo.httpSSLPort,
                     m_networkServersInfo.HttpSSLCN);
 
@@ -344,77 +343,20 @@ namespace OpenSim
             }
 
             m_log.InfoFormat("[REGION SERVER]: Starting HTTP server on port {0}", m_networkServersInfo.HttpListenerPort);
-            m_httpServer.Start();
+            m_BaseHTTPServer.Start();
 
-            MainServer.Instance = m_httpServer;
-
-			m_stats = StatsManager.StartCollectingSimExtraStats();
-
-            //Lets start this after the http server and storage manager, but before application plugins.
-            //Note: this should be moved out.
-            m_sceneManager = new SceneManager(this, m_storageManager);
-            
-            m_plugins = Aurora.Framework.AuroraModuleLoader.LoadPlugins<IApplicationPlugin>("/OpenSim/Startup", new ApplicationPluginInitialiser(this));
-			foreach (IApplicationPlugin plugin in m_plugins) 
-            {
-				plugin.PostInitialise();
-			}
-
-			AddPluginCommands();
-
-			//Run Startup Commands
-			if (String.IsNullOrEmpty(m_startupCommandsFile)) {
-				m_log.Info("[STARTUP]: No startup command script specified. Moving on...");
-			} else {
-				RunCommandScript(m_startupCommandsFile);
-			}
-
-			// Start timer script (run a script every xx seconds)
-			if (m_timedScript != "disabled") {
-				m_scriptTimer = new Timer();
-				m_scriptTimer.Enabled = true;
-				m_scriptTimer.Interval = 1200 * 1000;
-				m_scriptTimer.Elapsed += RunAutoTimerScript;
-			}
-
-			// Hook up to the watchdog timer
-			Watchdog.OnWatchdogTimeout += WatchdogTimeoutHandler;
-
-			PrintFileToConsole("startuplogo.txt");
-
-			// For now, start at the 'root' level by default
-			if (m_sceneManager.Scenes.Count == 1)
-				// If there is only one region, select it
-				ChangeSelectedRegion("region", new string[] {
-					"change",
-					"region",
-					m_sceneManager.Scenes[0].RegionInfo.RegionName
-				});
-			else
-				ChangeSelectedRegion("region", new string[] {
-					"change",
-					"region",
-					"root"
-				});
-		}
+            MainServer.Instance = m_BaseHTTPServer;
+        }
 
 		/// <summary>
-		/// Timer to run a specific text file as console commands.  Configured in in the main ini file
+		/// Timer to run a specific text file as console commands.
+        /// Configured in in the main .ini file
 		/// </summary>
 		/// <param name="sender"></param>
 		/// <param name="e"></param>
 		private void RunAutoTimerScript(object sender, EventArgs e)
 		{
-			if (m_timedScript != "disabled") {
-				RunCommandScript(m_timedScript);
-			}
-		}
-
-		private void WatchdogTimeoutHandler(System.Threading.Thread thread, int lastTick)
-		{
-			int now = Environment.TickCount & Int32.MaxValue;
-
-			m_log.ErrorFormat("[WATCHDOG]: Timeout detected for thread \"{0}\". ThreadState={1}. Last tick was {2}ms ago", thread.Name, thread.ThreadState, now - lastTick);
+			RunCommandScript(m_TimerScriptFileName);
 		}
 
 		#region Console Commands
@@ -467,22 +409,19 @@ namespace OpenSim
             m_console.Commands.AddCommand("region", false, "show", "show", "Shows information about this simulator", HandleShow);
         }
 
+        protected virtual List<string> GetHelpTopics()
+        {
+            List<string> topics = new List<string>();
+            Scene s = SceneManager.CurrentOrFirstScene;
+            if (s != null && s.GetCommanders() != null)
+                topics.AddRange(s.GetCommanders().Keys);
+
+            return topics;
+        }
+
         private void HandleQuit(string module, string[] args)
         {
             Shutdown();
-        }
-
-        /// <summary>
-        /// Should be overriden and referenced by descendents if they need to perform extra shutdown processing
-        /// </summary>
-        public virtual void Shutdown()
-        {
-            ShutdownSpecific();
-
-            m_log.Info("[SHUTDOWN]: Shutdown processing on main thread complete.  Exiting...");
-            RemovePIDFile();
-
-            Environment.Exit(0);
         }
 
         private void HandleLogLevel(string module, string[] cmd)
@@ -571,10 +510,12 @@ namespace OpenSim
 		/// <param name="fileName">name of file to use as input to the console</param>
 		private static void PrintFileToConsole(string fileName)
 		{
-			if (File.Exists(fileName)) {
+			if (File.Exists(fileName))
+            {
 				StreamReader readFile = File.OpenText(fileName);
 				string currentLine;
-				while ((currentLine = readFile.ReadLine()) != null) {
+				while ((currentLine = readFile.ReadLine()) != null)
+                {
 					m_log.Info("[!]" + currentLine);
 				}
 			}
@@ -716,20 +657,29 @@ namespace OpenSim
 		/// <param name="cmdParams"></param>
 		protected void ChangeSelectedRegion(string module, string[] cmdparams)
 		{
-			if (cmdparams.Length > 2) {
-				string newRegionName = CombineParams(cmdparams, 2);
-
-				if (!m_sceneManager.TrySetCurrentScene(newRegionName))
-					MainConsole.Instance.Output(String.Format("Couldn't select region {0}", newRegionName));
-			} else {
+			if (cmdparams.Length > 2)
+            {
+                string newRegionName = CombineParams(cmdparams, 2);
+                ChangeSelectedRegion(newRegionName);
+			} 
+            else 
+            {
 				MainConsole.Instance.Output("Usage: change region <region name>");
 			}
+		}
 
-			string regionName = (m_sceneManager.CurrentScene == null ? "root" : m_sceneManager.CurrentScene.RegionInfo.RegionName);
+        protected void ChangeSelectedRegion(string newRegionName)
+        {
+            if (!m_sceneManager.TrySetCurrentScene(newRegionName))
+            {
+                MainConsole.Instance.Output(String.Format("Couldn't select region {0}", newRegionName));
+                return;
+            }
+            string regionName = (m_sceneManager.CurrentScene == null ? "root" : m_sceneManager.CurrentScene.RegionInfo.RegionName);
 			//MainConsole.Instance.Output(String.Format("Currently selected region is {0}", regionName));
 			m_console.DefaultPrompt = String.Format("Region ({0}) ", regionName);
 			m_console.ConsoleScene = m_sceneManager.CurrentScene;
-		}
+        }
 
 		/// <summary>
 		/// Turn on some debugging values for OpenSim.
@@ -815,7 +765,7 @@ namespace OpenSim
 
                 case "info":
                     m_console.Output(("Version: " + m_version));
-                    m_console.Output(("Startup directory: " + m_startupDirectory));
+                    m_console.Output(("Startup directory: " + Environment.CurrentDirectory));
                     break;
 
                 case "stats":
@@ -1053,24 +1003,21 @@ namespace OpenSim
         }
 
 
-		#endregion
+        #endregion
 
-		protected virtual StorageManager CreateStorageManager()
-		{
-			return CreateStorageManager(m_configSettings.StorageConnectionString, m_configSettings.EstateConnectionString);
-		}
-
-		protected StorageManager CreateStorageManager(string connectionstring, string estateconnectionstring)
-		{
-			return new StorageManager(m_configSettings.StorageDll, connectionstring, estateconnectionstring);
-		}
-
-        protected virtual ClientStackManager CreateClientStackManager()
+        /// <summary>
+        /// Should be overriden and referenced by descendents if they need to perform extra shutdown processing
+        /// </summary>
+        public virtual void Shutdown()
         {
-            return new ClientStackManager(m_configSettings.ClientstackDll);
+            ShutdownSpecific();
+
+            m_log.Info("[SHUTDOWN]: Shutdown processing on main thread complete.  Exiting...");
+
+            Environment.Exit(0);
         }
 
-        public IClientNetworkServer CreateNetworkServer(IPAddress _listenIP, ref uint port, int proxyPortOffset, bool allow_alternate_port,
+		public IClientNetworkServer CreateNetworkServer(IPAddress _listenIP, ref uint port, int proxyPortOffset, bool allow_alternate_port,
             AgentCircuitManager authenticateClass)
         {
             return m_clientStackManager.CreateServer(_listenIP, ref port, proxyPortOffset, allow_alternate_port, ConfigSource, authenticateClass);
@@ -1160,15 +1107,18 @@ namespace OpenSim
         /// <summary>
         /// Print statistics to the logfile, if they are active
         /// </summary>
-        protected void LogDiagnostics(object source, ElapsedEventArgs e)
+        private void LogDiagnostics(object source, ElapsedEventArgs e)
+        {
+            LogDiagnostics();
+        }
+
+        protected void LogDiagnostics()
         {
             StringBuilder sb = new StringBuilder("DIAGNOSTICS\n\n");
             sb.Append(GetUptimeReport());
 
             if (m_stats != null)
-            {
                 sb.Append(m_stats.Report());
-            }
 
             sb.Append(Environment.NewLine);
             sb.Append(GetThreadsReport());
@@ -1179,7 +1129,7 @@ namespace OpenSim
         /// <summary>
         /// Get a report about the registered threads in this server.
         /// </summary>
-        protected string GetThreadsReport()
+        private string GetThreadsReport()
         {
             StringBuilder sb = new StringBuilder();
 
@@ -1216,7 +1166,7 @@ namespace OpenSim
         /// Return a report about the uptime of this server
         /// </summary>
         /// <returns></returns>
-        protected string GetUptimeReport()
+        private string GetUptimeReport()
         {
             StringBuilder sb = new StringBuilder(String.Format("Time now is {0}\n", DateTime.Now));
             sb.Append(String.Format("Server has been running since {0}, {1}\n", m_startuptime.DayOfWeek, m_startuptime));
@@ -1228,8 +1178,9 @@ namespace OpenSim
         /// <summary>
         /// Enhance the version string with extra information if it's available.
         /// </summary>
-        protected void EnhanceVersionInformation()
+        private void SetUpVersionInformation()
         {
+            m_version = VersionInfo.Version;
             string buildVersion = string.Empty;
 
             // Add commit hash and date information if available
@@ -1295,58 +1246,6 @@ namespace OpenSim
                 }
 
                 m_version += string.IsNullOrEmpty(buildVersion) ? "      " : ("." + buildVersion + "     ").Substring(0, 6);
-            }
-        }
-
-        protected void CreatePIDFile(string path)
-        {
-            try
-            {
-                string pidstring = System.Diagnostics.Process.GetCurrentProcess().Id.ToString();
-                FileStream fs = File.Create(path);
-                System.Text.ASCIIEncoding enc = new System.Text.ASCIIEncoding();
-                Byte[] buf = enc.GetBytes(pidstring);
-                fs.Write(buf, 0, buf.Length);
-                fs.Close();
-                m_pidFile = path;
-            }
-            catch (Exception)
-            {
-            }
-        }
-
-        public string osSecret
-        {
-            // Secret uuid for the simulator
-            get { return m_osSecret; }
-
-        }
-
-        public string StatReport(OSHttpRequest httpRequest)
-        {
-            // If we catch a request for "callback", wrap the response in the value for jsonp
-            if (httpRequest.Query.ContainsKey("callback"))
-            {
-                return httpRequest.Query["callback"].ToString() + "(" + m_stats.XReport((DateTime.Now - m_startuptime).ToString(), m_version) + ");";
-            }
-            else
-            {
-                return m_stats.XReport((DateTime.Now - m_startuptime).ToString(), m_version);
-            }
-        }
-
-        protected void RemovePIDFile()
-        {
-            if (m_pidFile != String.Empty)
-            {
-                try
-                {
-                    File.Delete(m_pidFile);
-                    m_pidFile = String.Empty;
-                }
-                catch (Exception)
-                {
-                }
             }
         }
     }

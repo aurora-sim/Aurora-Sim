@@ -261,19 +261,6 @@ namespace OpenSim
             m_sim = new OpenSimBase(configSource);
 
             m_sim.Startup();
-
-            while (true)
-            {
-                try
-                {
-                    // Block thread here for input
-                    MainConsole.Instance.Prompt();
-                }
-                catch (Exception e)
-                {
-                    m_log.ErrorFormat("Command error: {0}", e);
-                }
-            }
         }
 
         private static bool _IsHandlingException = false; // Make sure we don't go recursive on ourself

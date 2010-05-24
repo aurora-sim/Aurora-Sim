@@ -30,7 +30,6 @@ using System.Collections.Generic;
 using System.Text;
 
 using OpenMetaverse;
-using OpenSim.Framework.Statistics.Interfaces;
 using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Framework.Statistics
