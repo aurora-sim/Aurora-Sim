@@ -188,9 +188,7 @@ namespace Aurora.Modules
             //m_log.Info("[WORLD MAP]: JPEG Map location: http://" + m_scene.RegionInfo.ExternalEndPoint.Address.ToString() + ":" + m_scene.RegionInfo.HttpPort.ToString() + "/index.php?method=" + regionimage);
 
             MainServer.Instance.AddHTTPHandler(regionimage, OnHTTPGetMapImage);
-            MainServer.Instance.AddLLSDHandler(
-                "/MAP/MapItems/" + m_scene.RegionInfo.RegionHandle.ToString(), HandleRemoteMapItemRequest);
-
+            
             m_scene.EventManager.OnRegisterCaps += OnRegisterCaps;
             m_scene.EventManager.OnNewClient += OnNewClient;
             m_scene.EventManager.OnClientClosed += ClientLoggedOut;
@@ -209,8 +207,6 @@ namespace Aurora.Modules
 
             string regionimage = "regionImage" + m_scene.RegionInfo.RegionID.ToString();
             regionimage = regionimage.Replace("-", "");
-            MainServer.Instance.RemoveLLSDHandler("/MAP/MapItems/" + m_scene.RegionInfo.RegionHandle.ToString(),
-                                                              HandleRemoteMapItemRequest);
             MainServer.Instance.RemoveHTTPHandler("", regionimage);
 		}
 
@@ -247,83 +243,23 @@ namespace Aurora.Modules
             UserAccount account = m_scene.UserAccountService.GetUserAccount(UUID.Zero, agentID);
             if (avatarPresence != null)
             {
-                //bool lookup = false;
+                List<MapBlockData> mapBlocks = new List<MapBlockData>(); ;
 
-                //lock (cachedMapBlocks)
-                //{
-                //    if (cachedMapBlocks.Count > 0 && ((cachedTime + 1800) > Util.UnixTimeSinceEpoch()))
-                //    {
-                //        List<MapBlockData> mapBlocks;
-
-                //        mapBlocks = cachedMapBlocks;
-                //        avatarPresence.ControllingClient.SendMapBlock(mapBlocks, 0);
-                //    }
-                //    else
-                //    {
-                //        lookup = true;
-                //    }
-                //}
-                //if (lookup)
-                //{
-                    List<MapBlockData> mapBlocks = new List<MapBlockData>(); ;
-
-                    //List<GridRegion> regions = m_scene.GridService.GetRegionRange(m_scene.RegionInfo.ScopeID,
-                    //    (int)(m_scene.RegionInfo.RegionLocX - 8) * (int)Constants.RegionSize,
-                    //    (int)(m_scene.RegionInfo.RegionLocX + 8) * (int)Constants.RegionSize,
-                    //    (int)(m_scene.RegionInfo.RegionLocY - 8) * (int)Constants.RegionSize,
-                    //    (int)(m_scene.RegionInfo.RegionLocY + 8) * (int)Constants.RegionSize);
-                    //foreach (GridRegion r in regions)
-                    //{
-                    //    if (((int)GridConnector.GetRegionFlags(r.RegionID) & (int)GridRegionFlags.Hidden) == 1)
-                    //    {
-                    //        if (m_scene.Permissions.CanIssueEstateCommand(agentID, false))
-                    //        {
-                    //            MapBlockData block = new MapBlockData();
-                    //            MapBlockFromGridRegion(block, r);
-                    //            mapBlocks.Add(block);
-                    //        }
-                    //    }
-                    //    else
-                    //    {
-                    //        MapBlockData block = new MapBlockData();
-                    //        MapBlockFromGridRegion(block, r);
-                    //        mapBlocks.Add(block);
-                    //    }
-                    //}
-                    List<SimMap> Sims = SimMapConnector.GetSimMapRange(
-                        (uint)(m_scene.RegionInfo.RegionLocX - 8) * Constants.RegionSize,
-                        (uint)(m_scene.RegionInfo.RegionLocY - 8) * Constants.RegionSize,
-                        (uint)(m_scene.RegionInfo.RegionLocX + 8) * Constants.RegionSize,
-                        (uint)(m_scene.RegionInfo.RegionLocY + 8) * Constants.RegionSize,
-                        agentID);
-                    foreach (SimMap map in Sims)
-                    {
-                        mapBlocks.Add(map.ToMapBlockData());
-                    }
-                    avatarPresence.ControllingClient.SendMapBlock(mapBlocks, 0);
-
-                //    lock (cachedMapBlocks)
-                //        cachedMapBlocks = mapBlocks;
-
-                //    cachedTime = Util.UnixTimeSinceEpoch();
-                //}
+                List<SimMap> Sims = SimMapConnector.GetSimMapRange(
+                    (uint)(m_scene.RegionInfo.RegionLocX - 8) * Constants.RegionSize,
+                    (uint)(m_scene.RegionInfo.RegionLocY - 8) * Constants.RegionSize,
+                    (uint)(m_scene.RegionInfo.RegionLocX + 8) * Constants.RegionSize,
+                    (uint)(m_scene.RegionInfo.RegionLocY + 8) * Constants.RegionSize,
+                    agentID);
+                foreach (SimMap map in Sims)
+                {
+                    mapBlocks.Add(map.ToMapBlockData());
+                }
+                avatarPresence.ControllingClient.SendMapBlock(mapBlocks, 0);
             }
             LLSDMapLayerResponse mapResponse = new LLSDMapLayerResponse();
             mapResponse.LayerData.Array.Add(GetOSDMapLayerResponse());
             return mapResponse.ToString();
-		}
-
-		/// <summary>
-		///
-		/// </summary>
-		/// <param name="mapReq"></param>
-		/// <returns></returns>
-		public LLSDMapLayerResponse GetMapLayer(LLSDMapRequest mapReq)
-		{
-            m_log.Debug("[WORLD MAP]: MapLayer Request in region: " + m_scene.RegionInfo.RegionName);
-            LLSDMapLayerResponse mapResponse = new LLSDMapLayerResponse();
-            mapResponse.LayerData.Array.Add(GetOSDMapLayerResponse());
-            return mapResponse;
 		}
 
 		/// <summary>
@@ -362,43 +298,9 @@ namespace Aurora.Modules
 			lock (m_rootAgents)
             {
                 m_rootAgents.Remove(AgentId);
-                if(m_rootAgents.Count == 0)
-                    StopThread();
             }
 		}
 		#endregion
-
-        /// <summary>
-        /// Starts the MapItemRequest Thread
-        /// Note that this only gets started when there are actually agents in the region
-        /// Additionally, it gets stopped when there are none.
-        /// </summary>
-        /// <param name="o"></param>
-        private void StartThread(object o)
-        {
-            if (threadrunning) return;
-            threadrunning = true;
-
-            //m_log.Debug("[WORLD MAP]: Starting remote MapItem request thread");
-
-            Watchdog.StartThread(process, "MapItemRequestThread", ThreadPriority.BelowNormal, true);
-        }
-
-        /// <summary>
-		/// Enqueues a 'stop thread' MapRequestState.  Causes the MapItemRequest thread to end
-		/// </summary>
-		private void StopThread()
-		{
-			MapRequestState st = new MapRequestState();
-			st.agentID=STOP_UUID;
-			st.EstateID=0;
-			st.flags=0;
-			st.godlike=false;
-			st.itemtype=0;
-			st.regionhandle=0;
-
-			requests.Enqueue(st);
-		}
 
         public virtual void HandleMapItemRequest(IClientAPI remoteClient, uint flags,
             uint EstateID, bool godlike, uint itemtype, ulong regionhandle)
@@ -479,292 +381,6 @@ namespace Aurora.Modules
                 }
             }
         }
-		
-		public void process()
-		{
-            try
-            {
-                while (true)
-                {
-                    MapRequestState st = requests.Dequeue(1000);
-
-                    // end gracefully
-                    if (st.agentID == STOP_UUID)
-                        break;
-
-                    if (st.agentID != UUID.Zero)
-                    {
-                        bool dorequest = true;
-                        lock (m_rootAgents)
-                        {
-                            if (!m_rootAgents.Contains(st.agentID))
-                                dorequest = false;
-                        }
-
-                        if (dorequest)
-                        {
-                            OSDMap response = RequestMapItemsAsync("", st.agentID, st.flags, st.EstateID, st.godlike, st.itemtype, st.regionhandle);
-                            RequestMapItemsCompleted(response);
-                        }
-                    }
-
-                    Watchdog.UpdateThread();
-                }
-            }
-            catch (Exception e)
-            {
-                m_log.ErrorFormat("[WORLD MAP]: Map item request thread terminated abnormally with exception {0}", e);
-            }
-
-            threadrunning = false;
-            Watchdog.RemoveThread();
-		}
-
-		/// <summary>
-		/// Enqueues the map item request into the processing thread
-		/// </summary>
-		/// <param name="state"></param>
-		public void EnqueueMapItemRequest(MapRequestState state)
-		{
-			requests.Enqueue(state);
-		}
-
-		/// <summary>
-		/// Sends the mapitem response to the IClientAPI
-		/// </summary>
-		/// <param name="response">The OSDMap Response for the mapitem</param>
-		private void RequestMapItemsCompleted(OSDMap response)
-		{
-            UUID requestID = response["requestID"].AsUUID();
-
-            if (requestID != UUID.Zero)
-            {
-                MapRequestState mrs = new MapRequestState();
-                mrs.agentID = UUID.Zero;
-                lock (m_openRequests)
-                {
-                    if (m_openRequests.ContainsKey(requestID))
-                    {
-                        mrs = m_openRequests[requestID];
-                        m_openRequests.Remove(requestID);
-                    }
-                }
-
-                if (mrs.agentID != UUID.Zero)
-                {
-                    ScenePresence av = null;
-                    m_scene.TryGetScenePresence(mrs.agentID, out av);
-                    if (av != null)
-                    {
-                        if (response.ContainsKey(mrs.itemtype.ToString()))
-                        {
-                            List<mapItemReply> returnitems = new List<mapItemReply>();
-                            OSDArray itemarray = (OSDArray)response[mrs.itemtype.ToString()];
-                            for (int i = 0; i < itemarray.Count; i++)
-                            {
-                                OSDMap mapitem = (OSDMap)itemarray[i];
-                                mapItemReply mi = new mapItemReply();
-                                mi.x = (uint)mapitem["X"].AsInteger();
-                                mi.y = (uint)mapitem["Y"].AsInteger();
-                                mi.id = mapitem["ID"].AsUUID();
-                                mi.Extra = mapitem["Extra"].AsInteger();
-                                mi.Extra2 = mapitem["Extra2"].AsInteger();
-                                mi.name = mapitem["Name"].AsString();
-                                returnitems.Add(mi);
-                            }
-                            av.ControllingClient.SendMapItemReply(returnitems.ToArray(), mrs.itemtype, mrs.flags);
-                        }
-                    }
-                }
-            }
-		}
-
-		/// <summary>
-		/// Enqueue the MapItem request for remote processing
-		/// </summary>
-		/// <param name="httpserver">blank string, we discover this in the process</param>
-		/// <param name="id">Agent ID that we are making this request on behalf</param>
-		/// <param name="flags">passed in from packet</param>
-		/// <param name="EstateID">passed in from packet</param>
-		/// <param name="godlike">passed in from packet</param>
-		/// <param name="itemtype">passed in from packet</param>
-		/// <param name="regionhandle">Region we're looking up</param>
-		public void RequestMapItems(string httpserver, UUID id, uint flags,
-		                            uint EstateID, bool godlike, uint itemtype, ulong regionhandle)
-		{
-			MapRequestState st = new MapRequestState();
-			st.agentID = id;
-			st.flags = flags;
-			st.EstateID = EstateID;
-			st.godlike = godlike;
-			st.itemtype = itemtype;
-			st.regionhandle = regionhandle;
-			EnqueueMapItemRequest(st);
-		}
-
-        /// <summary>
-        /// Does the actual remote mapitem request
-        /// This should be called from an asynchronous thread
-        /// Request failures get blacklisted until region restart so we don't
-        /// continue to spend resources trying to contact regions that are down.
-        /// </summary>
-        /// <param name="httpserver">blank string, we discover this in the process</param>
-        /// <param name="id">Agent ID that we are making this request on behalf</param>
-        /// <param name="flags">passed in from packet</param>
-        /// <param name="EstateID">passed in from packet</param>
-        /// <param name="godlike">passed in from packet</param>
-        /// <param name="itemtype">passed in from packet</param>
-        /// <param name="regionhandle">Region we're looking up</param>
-        /// <returns></returns>
-        private OSDMap RequestMapItemsAsync(string httpserver, UUID id, uint flags,
-            uint EstateID, bool godlike, uint itemtype, ulong regionhandle)
-        {
-            bool blacklisted = false;
-            lock (m_blacklistedregions)
-            {
-                if (m_blacklistedregions.ContainsKey(regionhandle))
-                    blacklisted = true;
-            }
-
-            if (blacklisted)
-                return new OSDMap();
-
-            UUID requestID = UUID.Random();
-            lock (m_cachedRegionMapItemsAddress)
-            {
-                if (m_cachedRegionMapItemsAddress.ContainsKey(regionhandle))
-                    httpserver = m_cachedRegionMapItemsAddress[regionhandle];
-            }
-            if (httpserver.Length == 0)
-            {
-                uint x = 0, y = 0;
-                OpenMetaverse.Utils.LongToUInts(regionhandle, out x, out y);
-                GridRegion mreg = m_scene.GridService.GetRegionByPosition(m_scene.RegionInfo.ScopeID, (int)x, (int)y);
-
-                if (mreg != null)
-                {
-                    httpserver = "http://" + mreg.ExternalEndPoint.Address.ToString() + ":" + mreg.HttpPort + "/MAP/MapItems/" + regionhandle.ToString();
-                    lock (m_cachedRegionMapItemsAddress)
-                    {
-                        if (!m_cachedRegionMapItemsAddress.ContainsKey(regionhandle))
-                            m_cachedRegionMapItemsAddress.Add(regionhandle, httpserver);
-                    }
-                }
-                else
-                {
-                    lock (m_blacklistedregions)
-                    {
-                        if (!m_blacklistedregions.ContainsKey(regionhandle))
-                            m_blacklistedregions.Add(regionhandle, Environment.TickCount);
-                    }
-                    //m_log.InfoFormat("[WORLD MAP]: Blacklisted region {0}", regionhandle.ToString());
-                }
-            }
-
-            blacklisted = false;
-            lock (m_blacklistedurls)
-            {
-                if (m_blacklistedurls.ContainsKey(httpserver))
-                    blacklisted = true;
-            }
-
-            // Can't find the http server
-            if (httpserver.Length == 0 || blacklisted)
-                return new OSDMap();
-
-            MapRequestState mrs = new MapRequestState();
-            mrs.agentID = id;
-            mrs.EstateID = EstateID;
-            mrs.flags = flags;
-            mrs.godlike = godlike;
-            mrs.itemtype = itemtype;
-            mrs.regionhandle = regionhandle;
-
-            lock (m_openRequests)
-                m_openRequests.Add(requestID, mrs);
-
-            WebRequest mapitemsrequest = WebRequest.Create(httpserver);
-            mapitemsrequest.Method = "POST";
-            mapitemsrequest.ContentType = "application/xml+llsd";
-            OSDMap RAMap = new OSDMap();
-
-            // string RAMapString = RAMap.ToString();
-            OSD LLSDofRAMap = RAMap; // RENAME if this works
-
-            byte[] buffer = OSDParser.SerializeLLSDXmlBytes(LLSDofRAMap);
-            OSDMap responseMap = new OSDMap();
-            responseMap["requestID"] = OSD.FromUUID(requestID);
-
-            Stream os = null;
-            try
-            { // send the Post
-                mapitemsrequest.ContentLength = buffer.Length;   //Count bytes to send
-                os = mapitemsrequest.GetRequestStream();
-                os.Write(buffer, 0, buffer.Length);         //Send it
-                os.Close();
-                //m_log.DebugFormat("[WORLD MAP]: Getting MapItems from Sim {0}", httpserver);
-            }
-            catch (WebException ex)
-            {
-                m_log.WarnFormat("[WORLD MAP]: Bad send on GetMapItems {0}", ex.Message);
-                responseMap["connect"] = OSD.FromBoolean(false);
-                lock (m_blacklistedurls)
-                {
-                    if (!m_blacklistedurls.ContainsKey(httpserver))
-                        m_blacklistedurls.Add(httpserver, Environment.TickCount);
-                }
-
-                //m_log.WarnFormat("[WORLD MAP]: Blacklisted {0}", httpserver);
-
-                return responseMap;
-            }
-
-            string response_mapItems_reply = null;
-            { // get the response
-                try
-                {
-                    WebResponse webResponse = mapitemsrequest.GetResponse();
-                    if (webResponse != null)
-                    {
-                        StreamReader sr = new StreamReader(webResponse.GetResponseStream());
-                        response_mapItems_reply = sr.ReadToEnd().Trim();
-                    }
-                    else
-                    {
-                        return new OSDMap();
-                    }
-                }
-                catch (WebException)
-                {
-                    responseMap["connect"] = OSD.FromBoolean(false);
-                    lock (m_blacklistedurls)
-                    {
-                        if (!m_blacklistedurls.ContainsKey(httpserver))
-                            m_blacklistedurls.Add(httpserver, Environment.TickCount);
-                    }
-
-                    //m_log.WarnFormat("[WORLD MAP]: Blacklisted {0}", httpserver);
-
-                    return responseMap;
-                }
-                OSD rezResponse = null;
-                try
-                {
-                    rezResponse = OSDParser.DeserializeLLSDXml(response_mapItems_reply);
-
-                    responseMap = (OSDMap)rezResponse;
-                    responseMap["requestID"] = OSD.FromUUID(requestID);
-                }
-                catch (Exception)
-                {
-                    //m_log.InfoFormat("[OGP]: exception on parse of rez reply {0}", ex.Message);
-                    responseMap["connect"] = OSD.FromBoolean(false);
-
-                    return responseMap;
-                }
-            }
-            return responseMap;
-        }
 
 		/// <summary>
 		/// Requests map blocks in area of minX, maxX, minY, MaxY in world cordinates
@@ -802,39 +418,6 @@ namespace Aurora.Modules
             {
                 response.Add(map.ToMapBlockData());
             }
-
-            //if (regions != null)
-            //{
-            //    foreach (GridRegion r in regions)
-            //    {
-            //        if (((int)GridConnector.GetRegionFlags(r.RegionID) & (int)GridRegionFlags.Hidden) == 1)
-            //        {
-            //            if (!m_scene.Permissions.CanIssueEstateCommand(remoteClient.AgentId, false))
-            //            {
-            //                return;
-            //            }
-            //        }
-            //        if ((r.RegionLocX == minX * (int)Constants.RegionSize) &&
-            //            (r.RegionLocY == minY * (int)Constants.RegionSize))
-            //        {
-            //            // found it => add it to response
-            //            MapBlockData block = new MapBlockData();
-            //            MapBlockFromGridRegion(block, r);
-            //            response.Add(block);
-            //            break;
-            //        }
-            //    }
-            //}
-
-            //if (response.Count == 0)
-            //{
-            //    // response still empty => couldn't find the map-tile the user clicked on => tell the client
-            //    MapBlockData block = new MapBlockData();
-            //    block.X = (ushort)minX;
-            //    block.Y = (ushort)minY;
-            //    block.Access = 254; // == not there
-            //    response.Add(block);
-            //}
             remoteClient.SendMapBlock(response, 0);
         }
 
@@ -852,24 +435,6 @@ namespace Aurora.Modules
             {
                 mapBlocks.Add(map.ToMapBlockData());
             }
-            //List<GridRegion> regions = m_scene.GridService.GetRegionRange(m_scene.RegionInfo.ScopeID,
-            //    (minX - 4) * (int)Constants.RegionSize,
-            //    (maxX + 4) * (int)Constants.RegionSize,
-            //    (minY - 4) * (int)Constants.RegionSize,
-            //    (maxY + 4) * (int)Constants.RegionSize);
-            //foreach (GridRegion r in regions)
-            //{
-            //    if (((int)GridConnector.GetRegionFlags(r.RegionID) & (int)GridRegionFlags.Hidden) == 1)
-            //    {
-            //        if (!m_scene.Permissions.CanIssueEstateCommand(remoteClient.AgentId, false))
-            //        {
-            //            return;
-            //        }
-            //    }
-            //    MapBlockData block = new MapBlockData();
-            //    MapBlockFromGridRegion(block, r);
-            //    mapBlocks.Add(block);
-            //}
             remoteClient.SendMapBlock(mapBlocks, flag);
 		}
 
@@ -1060,48 +625,6 @@ namespace Aurora.Modules
                 m_scene.RegionInfo.RegionName, exportPath);
         }
 
-        public OSD HandleRemoteMapItemRequest(string path, OSD request, string endpoint)
-        {
-            uint xstart = 0;
-            uint ystart = 0;
-
-            OpenMetaverse.Utils.LongToUInts(m_scene.RegionInfo.RegionHandle, out xstart, out ystart);
-
-            OSDMap responsemap = new OSDMap();
-            int tc = Environment.TickCount;
-            if (m_scene.GetRootAgentCount() == 0)
-            {
-                OSDMap responsemapdata = new OSDMap();
-                responsemapdata["X"] = OSD.FromInteger((int)(xstart + 1));
-                responsemapdata["Y"] = OSD.FromInteger((int)(ystart + 1));
-                responsemapdata["ID"] = OSD.FromUUID(UUID.Zero);
-                responsemapdata["Name"] = OSD.FromString(Util.Md5Hash(m_scene.RegionInfo.RegionName + tc.ToString()));
-                responsemapdata["Extra"] = OSD.FromInteger(0);
-                responsemapdata["Extra2"] = OSD.FromInteger(0);
-                OSDArray responsearr = new OSDArray();
-                responsearr.Add(responsemapdata);
-
-                responsemap["6"] = responsearr;
-            }
-            else
-            {
-                OSDArray responsearr = new OSDArray(m_scene.GetRootAgentCount());
-                m_scene.ForEachScenePresence(delegate(ScenePresence sp)
-                {
-                    OSDMap responsemapdata = new OSDMap();
-                    responsemapdata["X"] = OSD.FromInteger((int)(xstart + sp.AbsolutePosition.X));
-                    responsemapdata["Y"] = OSD.FromInteger((int)(ystart + sp.AbsolutePosition.Y));
-                    responsemapdata["ID"] = OSD.FromUUID(UUID.Zero);
-                    responsemapdata["Name"] = OSD.FromString(Util.Md5Hash(m_scene.RegionInfo.RegionName + tc.ToString()));
-                    responsemapdata["Extra"] = OSD.FromInteger(1);
-                    responsemapdata["Extra2"] = OSD.FromInteger(0);
-                    responsearr.Add(responsemapdata);
-                });
-                responsemap["6"] = responsearr;
-            }
-            return responsemap;
-        }
-
         public void RegenerateMaptile(string ID, byte[] data)
         {
             myMapImageJPEG = data;
@@ -1117,11 +640,6 @@ namespace Aurora.Modules
 
         private void MakeRootAgent(ScenePresence avatar)
 		{
-			// You may ask, why this is in a threadpool to start with..
-			// The reason is so we don't cause the thread to freeze waiting
-			// for the 1 second it costs to start a thread manually.
-			if (!threadrunning)
-				Util.FireAndForget(this.StartThread);
 
 			lock (m_rootAgents)
 			{
@@ -1137,8 +655,6 @@ namespace Aurora.Modules
 			lock (m_rootAgents)
             {
                 m_rootAgents.Remove(avatar.UUID);
-                if (m_rootAgents.Count == 0)
-                    StopThread();
             }
         }
 

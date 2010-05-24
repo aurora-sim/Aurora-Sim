@@ -32,6 +32,7 @@ using log4net;
 using Nini.Config;
 using System.Reflection;
 using OpenSim.Services.Base;
+using OpenSim.Server.Base;
 using OpenSim.Services.Interfaces;
 using OpenSim.Data;
 using OpenSim.Framework;
@@ -45,6 +46,7 @@ namespace OpenSim.Services.InventoryService
                 MethodBase.GetCurrentMethod().DeclaringType);
 
         protected IXInventoryData m_Database;
+        protected IUserAccountService m_UserAccountService;
 
         public XInventoryService(IConfigSource config) : base(config)
         {
@@ -85,6 +87,13 @@ namespace OpenSim.Services.InventoryService
                     new Object[] {connString, String.Empty});
             if (m_Database == null)
                 throw new Exception("Could not find a storage interface in the given module");
+
+            IConfig m_LoginServerConfig = config.Configs["LoginService"];
+            if (m_LoginServerConfig == null)
+                throw new Exception(String.Format("No section LoginService in config file"));
+            Object[] args = new Object[] { config };
+            string accountService = m_LoginServerConfig.GetString("UserAccountService", String.Empty);
+            m_UserAccountService = ServerUtils.LoadPlugin<IUserAccountService>(accountService, args);
         }
 
         public virtual bool CreateUserInventory(UUID principalID)
@@ -363,6 +372,19 @@ namespace OpenSim.Services.InventoryService
                     new string[] { "inventoryID" },
                     new string[] { item.ID.ToString() });
 
+            foreach (XInventoryItem xitem in items)
+            {
+                UUID nn;
+                if (!UUID.TryParse(xitem.creatorID, out nn))
+                {
+                    string FullName = xitem.creatorID.Remove(0,7);
+                    string[] FirstLast = FullName.Split(' ');
+                    UserAccount account = m_UserAccountService.GetUserAccount(UUID.Zero, FirstLast[0], FirstLast[1]);
+                    xitem.creatorID = account.PrincipalID.ToString();
+                    m_Database.StoreItem(xitem);
+                }
+            }
+
             if (items.Length == 0)
                 return null;
 
@@ -491,7 +513,7 @@ namespace OpenSim.Services.InventoryService
             newItem.inventoryID = item.ID;
             newItem.invType = item.InvType;
             newItem.parentFolderID = item.Folder;
-            newItem.creatorID = item.CreatorIdAsUuid;
+            newItem.creatorID = item.CreatorIdAsUuid.ToString();
             newItem.inventoryDescription = item.Description;
             newItem.inventoryNextPermissions = (int)item.NextPermissions;
             newItem.inventoryCurrentPermissions = (int)item.CurrentPermissions;

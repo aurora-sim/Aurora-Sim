@@ -259,10 +259,10 @@ namespace OpenSim
         /// </summary>
         public virtual void Startup()
         {
-            m_log.Info("====================================================================");
-			m_log.Info("========================= STARTING AURORA =========================");
-			m_log.Info("====================================================================");
-            m_log.Info("[STARTUP]: Version: " + Version + "\n");
+            m_log.Error("====================================================================");
+            m_log.Error("========================= STARTING AURORA =========================");
+            m_log.Error("====================================================================");
+            m_log.Error("[STARTUP]: Version: " + Version + "\n");
             m_log.Info("[AURORADATA]: Setting up the data service");
 
 			Aurora.Services.DataService.LocalDataService service = new Aurora.Services.DataService.LocalDataService();
@@ -339,10 +339,10 @@ namespace OpenSim
 
             if (m_networkServersInfo.HttpUsesSSL && (m_networkServersInfo.HttpListenerPort == m_networkServersInfo.httpSSLPort))
             {
-                m_log.Error("[REGION SERVER]: HTTP Server config failed.   HTTP Server and HTTPS server must be on different ports");
+                m_log.Error("[HTTPSERVER]: HTTP Server config failed.   HTTP Server and HTTPS server must be on different ports");
             }
 
-            m_log.InfoFormat("[REGION SERVER]: Starting HTTP server on port {0}", m_networkServersInfo.HttpListenerPort);
+            m_log.InfoFormat("[HTTPSERVER]: Starting HTTP server on port {0}", m_networkServersInfo.HttpListenerPort);
             m_BaseHTTPServer.Start();
 
             MainServer.Instance = m_BaseHTTPServer;
