@@ -18,7 +18,7 @@ namespace Aurora.Services.DataService
 		public IAgentInfo GetAgent(UUID agentID)
 		{
 			IAgentInfo agent = new IAgentInfo();
-			List<string> query = GD.Query("PrincipalID", agentID, "agentgeneral", "Mac,IP,AcceptTOS,RealFirst,RealLast,Address,Zip,Country,TempBanned,PermaBanned,IsMinor,MaxMaturity,Language,LanguageIsPublic");
+			List<string> query = GD.Query("PrincipalID", agentID, "agentgeneral", "Mac,IP,AcceptTOS,RealFirst,RealLast,Address,Zip,Country,Flags,MaxMaturity,Language,LanguageIsPublic");
 
 			if (query.Count == 0)
 				//Couldn't find it, return null then.
@@ -33,12 +33,10 @@ namespace Aurora.Services.DataService
 			agent.RealAddress = query[5];
 			agent.RealZip = query[6];
 			agent.RealCountry = query[7];
-			agent.TempBanned = int.Parse(query[8]);
-			agent.PermaBanned = int.Parse(query[9]);
-			agent.IsMinor = bool.Parse(query[10]);
-			agent.MaxMaturity = int.Parse(query[11]);
-			agent.Language = query[12];
-			agent.LanguageIsPublic = bool.Parse(query[13]);
+            agent.Flags = (IAgentFlags)uint.Parse(query[8]);
+			agent.MaxMaturity = int.Parse(query[9]);
+			agent.Language = query[10];
+			agent.LanguageIsPublic = bool.Parse(query[11]);
 			return agent;
 		}
 
@@ -54,9 +52,7 @@ namespace Aurora.Services.DataService
 			SetRows.Add("Address");
 			SetRows.Add("Zip");
 			SetRows.Add("Country");
-			SetRows.Add("TempBanned");
-			SetRows.Add("PermaBanned");
-			SetRows.Add("IsMinor");
+            SetRows.Add("Flags");
 			SetRows.Add("MaxMaturity");
 			SetRows.Add("Language");
 			SetRows.Add("LanguageIsPublic");
@@ -68,9 +64,7 @@ namespace Aurora.Services.DataService
 			SetValues.Add(agent.RealAddress);
 			SetValues.Add(agent.RealZip);
 			SetValues.Add(agent.RealCountry);
-			SetValues.Add(agent.TempBanned);
-			SetValues.Add(agent.PermaBanned);
-			SetValues.Add(agent.IsMinor);
+            SetValues.Add(agent.Flags);
 			SetValues.Add(agent.MaxMaturity);
 			SetValues.Add(agent.Language);
 			SetValues.Add(agent.LanguageIsPublic);
@@ -94,8 +88,6 @@ namespace Aurora.Services.DataService
 			values.Add(" ");
 			values.Add(" ");
 			values.Add(0);
-			values.Add(0);
-			values.Add(true);
 			values.Add(2);
 			values.Add("en-us");
 			values.Add(true);

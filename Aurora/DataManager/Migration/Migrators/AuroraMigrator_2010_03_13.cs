@@ -91,9 +91,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("Address", ColumnTypes.String512),
                 ColDef("Zip", ColumnTypes.String512),
                 ColDef("Country", ColumnTypes.String512),
-                ColDef("TempBanned", ColumnTypes.String512),
-                ColDef("PermaBanned", ColumnTypes.String512),
-                ColDef("IsMinor", ColumnTypes.String512),
+                ColDef("Flags", ColumnTypes.String512),
                 ColDef("MaxMaturity", ColumnTypes.String512),
                 ColDef("Language", ColumnTypes.String512),
                 ColDef("LanguageIsPublic", ColumnTypes.String512)

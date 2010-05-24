@@ -50,9 +50,9 @@ using Aurora.Framework;
 
 namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 {
-    public class IWCEntityTransferModule : EntityTransferModule, ISharedRegionModule, IEntityTransferModule, IUserAgentVerificationModule
+    public class IWCEntityTransferModule// : EntityTransferModule, ISharedRegionModule, IEntityTransferModule, IUserAgentVerificationModule
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        /*private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private bool m_Initialized = false;
 
@@ -130,20 +130,20 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
         protected override GridRegion GetFinalDestination(GridRegion region)
         {
-            bool IsIWC = IWC.IsRegionForeign(region.RegionHandle);
+            //bool IsIWC = IWC.IsRegionForeign(region.RegionHandle);
             m_log.DebugFormat("[IWC MODULE]: region {0} flags: {1}", region.RegionID, IsIWC);
-            if (IsIWC)
-            {
+            //if (IsIWC)
+            //{
                 m_log.DebugFormat("[IWC MODULE]: RegionFound {0}", region.RegionID);
                 return region;
-            }
-            return region;
+            //}
+            //return region;
         }
 
         protected bool CreateAgent(ScenePresence sp, GridRegion reg, GridRegion finalDestination, AgentCircuitData agentCircuit, uint teleportFlags, out string reason, out bool IsIWC)
         {
             reason = string.Empty;
-            IsIWC = IWC.IsRegionForeign(reg.RegionHandle);
+            /*IsIWC = IWC.IsRegionForeign(reg.RegionHandle);
             if (IsIWC)
             {
                 //Always needs to be root when teleporting to a region!
@@ -151,8 +151,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 bool success = IWC.FireNewIWCRootAgent(agentCircuit, reg, finalDestination, true, out reason);
                 IsIWC = success;
                 return success;
-            }
-            return m_aScene.SimulationService.CreateAgent(reg, agentCircuit, teleportFlags, out reason);
+            }*/
+            /*return m_aScene.SimulationService.CreateAgent(reg, agentCircuit, teleportFlags, out reason);
         }
 
         public override void TeleportHome(UUID id, IClientAPI client)
@@ -263,7 +263,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                             DoIWCTeleport(sp, reg, finalDestination, position, lookAt, teleportFlags, eq);
                             return;
                         }*/
-                        if (finalDestination == null)
+                        /*if (finalDestination == null)
                         {
                             m_log.DebugFormat("[ENTITY TRANSFER MODULE]: Final destination is having problems. Unable to teleport agent.");
                             sp.ControllingClient.SendTeleportFailed("Problem at destination");
@@ -974,7 +974,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 // TODO Should construct this behind a method
                 string capsPath =
                     "http://" + neighbourRegion.ExternalHostName + ":" + neighbourRegion.HttpPort
-                     + "/CAPS/" + agentcaps /*circuitdata.CapsPath*/ + "0000/";
+                     + "/CAPS/" + agentcaps /*circuitdata.CapsPath*//* + "0000/";
 
                 m_log.DebugFormat("[ENTITY TRANSFER MODULE]: Sending new CAPS seed url {0} to client {1}", capsPath, agent.UUID);
 
@@ -1043,7 +1043,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 return security.VerifyClient(aCircuit.SessionID, token);
             }*/
 
-            return true;
+            /*return true;
         }
 
         void OnConnectionClosed(IClientAPI obj)
@@ -1066,6 +1066,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             }
         }
 
-        #endregion
+        #endregion*/
     }
 }

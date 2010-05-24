@@ -6,6 +6,19 @@ using OpenMetaverse.StructuredData;
 
 namespace Aurora.Framework
 {
+    public enum IAgentFlags : uint
+    {
+        Foreign = 1,
+        Temperary = 2,
+        Minor = 3,
+        Locked = 4,
+        PermBan = 5,
+        TempBan = 6,
+        Blocked = 7,
+        Local = 8,
+        LocalOnly = 9
+    }
+
     public class IAgentInfo
     {
         /// <summary>
@@ -14,24 +27,14 @@ namespace Aurora.Framework
         public UUID PrincipalID = UUID.Zero;
 
         /// <summary>
-        /// Banned forever
+        /// AgentFlags
         /// </summary>
-        public int PermaBanned = 0;
-
-        /// <summary>
-        /// Temperarily banned
-        /// </summary>
-        public int TempBanned = 0;
+        public IAgentFlags Flags = 0;
 
         /// <summary>
         /// Max maturity rating the user wishes to see
         /// </summary>
         public int MaxMaturity = 2;
-
-        /// <summary>
-        /// Is this user a minor?
-        /// </summary>
-        public bool IsMinor = false;
 
         /// <summary>
         /// Current Mac Address
@@ -90,18 +93,12 @@ namespace Aurora.Framework
             PrincipalID = UUID.Zero;
             if (kvp.ContainsKey("PrincipalID") && kvp["PrincipalID"] != null)
                 PrincipalID = new UUID(kvp["PrincipalID"].ToString());
-            PermaBanned = 0;
-            if (kvp.ContainsKey("PermaBanned") && kvp["PermaBanned"] != null)
-                PermaBanned = Convert.ToInt32(kvp["PermaBanned"].ToString());
-            TempBanned = 0;
-            if (kvp.ContainsKey("TempBanned") && kvp["TempBanned"] != null)
-                TempBanned = Convert.ToInt32(kvp["TempBanned"].ToString());
+            Flags = 0;
+            if (kvp.ContainsKey("Flags") && kvp["Flags"] != null)
+                Flags = (IAgentFlags)Convert.ToUInt32(kvp["Flags"].ToString());
             MaxMaturity = 0;
             if (kvp.ContainsKey("MaxMaturity") && kvp["MaxMaturity"] != null)
                 MaxMaturity = Convert.ToInt32(kvp["MaxMaturity"].ToString());
-            IsMinor = false;
-            if (kvp.ContainsKey("IsMinor") && kvp["IsMinor"] != null)
-                IsMinor = Convert.ToBoolean(kvp["IsMinor"].ToString());
             Mac = "";
             if (kvp.ContainsKey("Mac") && kvp["Mac"] != null)
                 Mac = kvp["Mac"].ToString();
@@ -138,10 +135,8 @@ namespace Aurora.Framework
         {
             Dictionary<string, object> result = new Dictionary<string, object>();
             result["PrincipalID"] = PrincipalID.ToString();
-            result["PermaBanned"] = PermaBanned;
-            result["TempBanned"] = TempBanned;
+            result["Flags"] = Flags;
             result["MaxMaturity"] = MaxMaturity;
-            result["IsMinor"] = IsMinor.ToString();
             result["Mac"] = Mac.ToString();
             result["IP"] = IP.ToString();
             result["RealFirst"] = RealFirst.ToString();
