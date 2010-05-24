@@ -183,8 +183,6 @@ namespace Aurora.Modules
 		// this has to be called with a lock on m_scene
 		protected virtual void AddHandlers()
 		{
-            myMapImageJPEG = new byte[0];
-
             string regionimage = "regionImage" + m_scene.RegionInfo.RegionID.ToString();
             regionimage = regionimage.Replace("-", "");
             //m_log.Info("[WORLD MAP]: JPEG Map location: http://" + m_scene.RegionInfo.ExternalEndPoint.Address.ToString() + ":" + m_scene.RegionInfo.HttpPort.ToString() + "/index.php?method=" + regionimage);
@@ -1104,68 +1102,17 @@ namespace Aurora.Modules
             return responsemap;
         }
 
-        public void RegenerateMaptile(byte[] data)
+        public void RegenerateMaptile(string ID, byte[] data)
         {
-            // Overwrites the local Asset cache with new maptile data
-            // Assets are single write, this causes the asset server to ignore this update,
-            // but the local asset cache does not
-
-            // this is on purpose!  The net result of this is the region always has the most up to date
-            // map tile while protecting the (grid) asset database from bloat caused by a new asset each
-            // time a mapimage is generated!
-
-            UUID lastMapRegionUUID = m_scene.RegionInfo.RegionSettings.TerrainImageID;
-
-            int lastMapRefresh = 0;
-            int twoDays = 172800;
-            int RefreshSeconds = twoDays;
-
-            try
-            {
-                lastMapRefresh = Convert.ToInt32(m_scene.RegionInfo.lastMapRefresh);
-            }
-            catch (ArgumentException)
-            {
-            }
-            catch (FormatException)
-            {
-            }
-            catch (OverflowException)
-            {
-            }
-
-            //m_log.Debug("[MAPTILE]: STORING MAPTILE IMAGE");
-
-            m_scene.RegionInfo.RegionSettings.TerrainImageID = UUID.Random();
-
-            AssetBase asset = new AssetBase(
-                m_scene.RegionInfo.RegionSettings.TerrainImageID,
-                "terrainImage_" + m_scene.RegionInfo.RegionID.ToString() + "_" + lastMapRefresh.ToString(),
-                (sbyte)AssetType.Texture,
-                m_scene.RegionInfo.RegionID.ToString());
-            asset.Data = data;
-            asset.Description = m_scene.RegionInfo.RegionName;
-            asset.Temporary = false;
-            asset.Flags = AssetFlags.Maptile;
-
-            // Store the new one
-            //m_log.DebugFormat("[WORLDMAP]: Storing map tile {0}", asset.ID);
-            m_scene.AssetService.Store(asset);
-            m_scene.RegionInfo.RegionSettings.Save();
-            
+            myMapImageJPEG = data;
             List<SimMap> map = SimMapConnector.GetSimMap(m_scene.RegionInfo.RegionID,m_scene.RegionInfo.EstateSettings.EstateOwner);
             //This will be null if the region has never joined the grid before.
             if(map != null && map.Count != 0 && map[0] != null)
             {
                 SimMap sim = map[0];
-                sim.SimMapTextureID = new UUID(asset.ID);
+                sim.SimMapTextureID = new UUID(ID);
                 SimMapConnector.UpdateSimMap(sim);
             }
-            
-            // Delete the old one
-            //m_log.DebugFormat("[WORLDMAP]: Deleting old map tile {0}", lastMapRegionUUID);
-            myMapImageJPEG = null;
-            m_scene.AssetService.Delete(lastMapRegionUUID.ToString());
         }
 
         private void MakeRootAgent(ScenePresence avatar)

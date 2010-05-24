@@ -735,7 +735,10 @@ namespace OpenSim
 		/// <param name="cmd"></param>
         public virtual void HandleShow(string mod, string[] cmd)
 		{
-
+            if (cmd.Length == 1)
+            {
+                m_log.Warn("Incorrect number of parameters!");
+            }
 			List<string> args = new List<string>(cmd);
 			args.RemoveAt(0);
 			string[] showParams = args.ToArray();

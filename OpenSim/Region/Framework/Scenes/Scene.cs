@@ -2427,11 +2427,71 @@ namespace OpenSim.Region.Framework.Scenes
         public void CreateTerrainTexture()
         {
             //create a texture asset of the terrain
-            IMapImageGenerator terrain = RequestModuleInterface<IMapImageGenerator>();
-
             // Cannot create a map for a nonexistant heightmap yet.
             if (Heightmap == null)
                 return;
+
+            // Overwrites the local Asset cache with new maptile data
+            // Assets are single write, this causes the asset server to ignore this update,
+            // but the local asset cache does not
+
+            // this is on purpose!  The net result of this is the region always has the most up to date
+            // map tile while protecting the (grid) asset database from bloat caused by a new asset each
+            // time a mapimage is generated!
+
+            UUID lastMapRegionUUID = RegionInfo.RegionSettings.TerrainImageID;
+
+            int lastMapRefresh = 0;
+            int twoDays = 172800;
+            int RefreshSeconds = twoDays;
+
+            try
+            {
+                lastMapRefresh = Convert.ToInt32(RegionInfo.lastMapRefresh);
+            }
+            catch (ArgumentException)
+            {
+            }
+            catch (FormatException)
+            {
+            }
+            catch (OverflowException)
+            {
+            }
+
+            //m_log.Debug("[MAPTILE]: STORING MAPTILE IMAGE");
+
+            RegionInfo.RegionSettings.TerrainImageID = UUID.Random();
+
+            AssetBase asset = new AssetBase(
+                RegionInfo.RegionSettings.TerrainImageID,
+                "terrainImage_" + RegionInfo.RegionID.ToString() + "_" + lastMapRefresh.ToString(),
+                (sbyte)AssetType.Simstate,
+                RegionInfo.RegionID.ToString());
+            asset.Description = RegionInfo.RegionName;
+            asset.Temporary = false;
+            asset.Flags = AssetFlags.Maptile;
+            asset.ID = UUID.Random().ToString();
+
+            // Store the new one
+            //m_log.DebugFormat("[WORLDMAP]: Storing map tile {0}", asset.ID);
+            RegionInfo.RegionSettings.Save();
+            AssetService.Delete(lastMapRegionUUID.ToString());
+
+            CreateMapTile d = CreateMapTileAsync;
+            d.BeginInvoke(asset, CreateMapTileAsyncCompleted, d);
+        }
+        protected void CreateMapTileAsyncCompleted(IAsyncResult iar)
+        {
+            CreateMapTile icon = (CreateMapTile)iar.AsyncState;
+            icon.EndInvoke(iar);
+        }
+
+        public delegate void CreateMapTile(AssetBase asset);
+
+        public void CreateMapTileAsync(AssetBase asset)
+        {
+            IMapImageGenerator terrain = RequestModuleInterface<IMapImageGenerator>();
 
             if (terrain == null)
                 return;
@@ -2439,12 +2499,12 @@ namespace OpenSim.Region.Framework.Scenes
             byte[] data = terrain.WriteJpeg2000Image("defaultstripe.png");
             if (data != null)
             {
-                IWorldMapModule mapModule = RequestModuleInterface<IWorldMapModule>();
+                asset.Data = data;
+                AssetService.Store(asset);
 
-                if (mapModule != null)
-                    mapModule.RegenerateMaptile(data);
-                else
-                    m_log.DebugFormat("[SCENE]: MapModule is null, can't save maptile");
+                IWorldMapModule worldMap = RequestModuleInterface<IWorldMapModule>();
+                if (worldMap != null)
+                    worldMap.RegenerateMaptile(asset.ID, asset.Data);
             }
         }
 

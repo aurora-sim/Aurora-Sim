@@ -29,6 +29,6 @@ namespace OpenSim.Region.Framework.Interfaces
 {
     public interface IWorldMapModule
     {
-        void RegenerateMaptile(byte[] data);
+        void RegenerateMaptile(string ID, byte[] data);
     }
 }
