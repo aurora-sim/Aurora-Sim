@@ -26,6 +26,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.Framework.Interfaces
@@ -34,5 +35,6 @@ namespace OpenSim.Region.Framework.Interfaces
     {
         void AddRegionToModules(Scene scene);
         void RemoveRegionFromModules (Scene scene);
+        List<IRegionModuleBase> AllModules { get; }
     }
 }

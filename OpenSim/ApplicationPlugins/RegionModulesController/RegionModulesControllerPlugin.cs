@@ -62,6 +62,15 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
         private List<ISharedRegionModule> m_sharedInstances =
                 new List<ISharedRegionModule>();
 
+        protected List<IRegionModuleBase> IRegionModuleBaseModules = new List<IRegionModuleBase>();
+        public List<IRegionModuleBase> AllModules
+        {
+            get 
+            {
+                return IRegionModuleBaseModules;
+            }
+        }
+
 #region IApplicationPlugin implementation
 
         public void Initialise (IOpenSimBase openSim)
@@ -246,14 +255,6 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
 #endregion
 
 
-        public string Version
-        {
-            get
-            {
-                return AddinManager.CurrentAddin.Version;
-            }
-        }
-
         public string Name
         {
             get
@@ -318,6 +319,7 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
                 module.AddRegion(scene);
                 scene.AddRegionModule(module.Name, module);
 
+                IRegionModuleBaseModules.Add(module);
                 sharedlist.Add(module);
             }
 
@@ -379,6 +381,7 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
                 // Initialise the module
                 module.Initialise(m_openSim.ConfigSource);
 
+                IRegionModuleBaseModules.Add(module);
                 list.Add(module);
             }
 
@@ -414,6 +417,7 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
                 module.AddRegion(scene);
                 scene.AddRegionModule(module.Name, module);
 
+                IRegionModuleBaseModules.Add(module);
                 sharedlist.Add(module);
             }
 
@@ -441,6 +445,7 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
 
                 module.Initialise(m_openSim.ConfigSource);
 
+                IRegionModuleBaseModules.Add(module);
                 list.Add(module);
                 deferredlist.Add(module);
             }
@@ -490,6 +495,5 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
         }
 
 #endregion
-
     }
 }

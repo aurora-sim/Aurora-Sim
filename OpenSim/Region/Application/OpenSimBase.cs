@@ -68,7 +68,6 @@ namespace OpenSim
         private string m_TimerScriptFileName = "disabled";
         protected ConfigurationLoader m_configLoader;
         protected Dictionary<EndPoint, uint> m_clientCircuits = new Dictionary<EndPoint, uint>();
-        protected NetworkServersInfo m_networkServersInfo;
         protected ICommandConsole m_console;
         protected OpenSimAppender m_consoleAppender;
         protected IAppender m_logFileAppender = null;
@@ -91,12 +90,6 @@ namespace OpenSim
 			set { m_config = value; }
 		}
 
-        protected List<IClientNetworkServer> m_clientServers = new List<IClientNetworkServer>();
-        public List<IClientNetworkServer> ClientServers
-        {
-			get { return m_clientServers; }
-		}
-
         /// <summary>
         /// Server version information.  Usually VersionInfo + information about git commit, operating system, etc.
         /// </summary>
@@ -106,13 +99,7 @@ namespace OpenSim
             get { return m_version; }
         }
 
-        protected ClientStackManager m_clientStackManager;
-        public ClientStackManager ClientStackManager
-        {
-            get { return m_clientStackManager; }
-        }
-
-        protected StorageManager m_storageManager;
+        protected NetworkServersInfo m_networkServersInfo;
         public NetworkServersInfo NetServersInfo
         {
             get { return m_networkServersInfo; }
@@ -130,13 +117,19 @@ namespace OpenSim
             get { return m_sceneManager; }
         }
 
+        protected DiagnosticsManager m_DiagnosticsManager = null;
+        public DiagnosticsManager DiagnosticsManager
+        {
+            get { return m_DiagnosticsManager; }
+        }
+
         /// <summary>
         /// Time at which this server was started
         /// </summary>
-        protected DateTime m_startuptime;
+        protected DateTime m_StartupTime;
         public DateTime StartupTime
         {
-            get { return m_startuptime; }
+            get { return m_StartupTime; }
         }
 
         protected BaseHttpServer m_BaseHTTPServer;
@@ -160,21 +153,24 @@ namespace OpenSim
 		/// <param name="configSource"></param>
 		public OpenSimBase(IConfigSource configSource)
 		{
-            m_startuptime = DateTime.Now;
-            SetUpVersionInformation();
-
-            //This will control a periodic log printout of the current 'show stats' (if they are active) for this server.
-            Timer m_periodicDiagnosticsTimer = new Timer(60 * 60 * 1000); // One hour
-            m_periodicDiagnosticsTimer.Elapsed += new ElapsedEventHandler(LogDiagnostics);
-            m_periodicDiagnosticsTimer.Enabled = true;
+            m_StartupTime = DateTime.Now;
+            m_version = VersionInfo.Version;
 
             // This thread will go on to become the console listening thread
             System.Threading.Thread.CurrentThread.Name = "ConsoleThread";
 
-            #region Console setup
+            Configuration(configSource);
 
-            List<ICommandConsole> Consoles = Aurora.Framework.AuroraModuleLoader.LoadPlugins<ICommandConsole>("/OpenSim/Startup", new ConsolePluginInitialiser("Region", configSource, this));
+            SetUpConsole();
+            
+            RegisterConsoleCommands();
+		}
+
+        private void SetUpConsole()
+        {
+            List<ICommandConsole> Consoles = Aurora.Framework.AuroraModuleLoader.LoadPlugins<ICommandConsole>("/OpenSim/Startup", new ConsolePluginInitialiser("Region", ConfigSource, this));
             m_console = m_applicationRegistry.Get<ICommandConsole>();
+
             ILoggerRepository repository = LogManager.GetRepository();
             IAppender[] appenders = repository.GetAppenders();
             OpenSimAppender m_consoleAppender = null;
@@ -206,12 +202,7 @@ namespace OpenSim
             if (m_console == null)
                 m_console = new LocalConsole();
             MainConsole.Instance = m_console;
-            RegisterConsoleCommands();
-			
-            #endregion
-
-            Configuration(configSource);
-		}
+        }
 
         private void Configuration(IConfigSource configSource)
         {
@@ -259,26 +250,21 @@ namespace OpenSim
         /// </summary>
         public virtual void Startup()
         {
-            m_log.Error("====================================================================");
-            m_log.Error("========================= STARTING AURORA =========================");
-            m_log.Error("====================================================================");
-            m_log.Error("[STARTUP]: Version: " + Version + "\n");
+            m_log.Warn("====================================================================");
+            m_log.Warn("========================= STARTING AURORA =========================");
+            m_log.Warn("====================================================================");
+            m_log.Warn("[AURORASTARTUP]: Version: " + Version + "\n");
             m_log.Info("[AURORADATA]: Setting up the data service");
-
-			Aurora.Services.DataService.LocalDataService service = new Aurora.Services.DataService.LocalDataService();
-			service.Initialise(m_config);
-
-            m_storageManager = new StorageManager(m_configSettings.StorageDll, m_configSettings.StorageConnectionString, m_configSettings.EstateConnectionString);
-
-            m_clientStackManager = new ClientStackManager(m_configSettings.ClientstackDll);
 
             SetUpHTTPServer();
 
-			m_stats = StatsManager.StartCollectingSimExtraStats();
+            //Move out!
+            m_stats = StatsManager.StartCollectingSimExtraStats();
+            m_DiagnosticsManager = new DiagnosticsManager(m_stats, this);
 
-            //Lets start this after the http server and storage manager, but before application plugins.
+            //Lets start this after the http server, but before application plugins.
             //Note: this should be moved out.
-            m_sceneManager = new SceneManager(this, m_storageManager);
+            m_sceneManager = new SceneManager(this, m_configSettings.StorageDll, m_configSettings.StorageConnectionString, m_configSettings.EstateConnectionString);
             
             ApplicationPluginInitialiser ApplicationPluginManager = new ApplicationPluginInitialiser(this);
             Aurora.Framework.AuroraModuleLoader.LoadPlugins<IApplicationPlugin>("/OpenSim/Startup", ApplicationPluginManager);
@@ -326,7 +312,7 @@ namespace OpenSim
                 ChangeSelectedRegion("root");
             }
 
-            TimeSpan timeTaken = DateTime.Now - m_startuptime;
+            TimeSpan timeTaken = DateTime.Now - m_StartupTime;
 
             m_log.InfoFormat("[STARTUP]: Startup is complete and took {0}m {1}s", timeTaken.Minutes, timeTaken.Seconds);
         }
@@ -563,38 +549,42 @@ namespace OpenSim
 			args.RemoveAt(0);
 			string[] cmdparams = args.ToArray();
 
-			if (cmdparams.Length > 0) {
+            IRegionModulesController controller = m_applicationRegistry.Get<IRegionModulesController>();
+            if (cmdparams.Length > 0)
+            {
 				switch (cmdparams[0].ToLower()) 
                 {
                     case "help":
                         MainConsole.Instance.Output("modules list - List modules");
-                        MainConsole.Instance.Output("modules load - Load a module");
                         MainConsole.Instance.Output("modules unload - Unload a module");
                         break;
-					/*case "list":
-						foreach (IRegionModule irm in m_moduleLoader.GetLoadedSharedModules) {
-							MainConsole.Instance.Output(String.Format("Shared region module: {0}", irm.Name));
+					case "list":
+                        foreach (IRegionModuleBase irm in controller.AllModules)
+                        {
+                            if(irm is ISharedRegionModule)
+							    MainConsole.Instance.Output(String.Format("Shared region module: {0}", irm.Name));
+                            else if (irm is INonSharedRegionModule)
+                                MainConsole.Instance.Output(String.Format("Nonshared region module: {0}", irm.Name));
+                            else
+                                MainConsole.Instance.Output(String.Format("Unknown type " + irm.GetType().ToString() + " region module: {0}", irm.Name));
 						}
 
 						break;
 					case "unload":
-						if (cmdparams.Length > 1) {
-							foreach (IRegionModule rm in new ArrayList(m_moduleLoader.GetLoadedSharedModules)) {
-								if (rm.Name.ToLower() == cmdparams[1].ToLower()) {
-									MainConsole.Instance.Output(String.Format("Unloading module: {0}", rm.Name));
-									m_moduleLoader.UnloadModule(rm);
+						if (cmdparams.Length > 1)
+                        {
+                            foreach (IRegionModuleBase irm in controller.AllModules)
+                            {
+                                if (irm.Name.ToLower() == cmdparams[1].ToLower())
+                                {
+									MainConsole.Instance.Output(String.Format("Unloading module: {0}", irm.Name));
+                                    foreach (Scene scene in m_sceneManager.Scenes)
+                                        irm.RemoveRegion(scene);
+                                    irm.Close();
 								}
 							}
 						}
 						break;
-					case "load":
-						if (cmdparams.Length > 1) {
-							foreach (Scene s in new ArrayList(m_sceneManager.Scenes)) {
-								MainConsole.Instance.Output(String.Format("Loading module: {0}", cmdparams[1]));
-								m_moduleLoader.LoadRegionModules(cmdparams[1], s);
-							}
-						}
-						break;*/
 				}
 			}
 		}
@@ -779,11 +769,11 @@ namespace OpenSim
                     break;
 
                 case "threads":
-                    m_console.Output((GetThreadsReport()));
+                    m_console.Output(m_DiagnosticsManager.GetThreadsReport());
                     break;
 
                 case "uptime":
-                    m_console.Output((GetUptimeReport()));
+                    m_console.Output(m_DiagnosticsManager.GetUptimeReport());
                     break;
 
                 case "version":
@@ -1012,112 +1002,57 @@ namespace OpenSim
 
         /// <summary>
         /// Should be overriden and referenced by descendents if they need to perform extra shutdown processing
+        /// Performs any last-minute sanity checking and shuts down the region server
         /// </summary>
         public virtual void Shutdown()
         {
-            ShutdownSpecific();
+            if (m_shutdownCommandsFile != String.Empty)
+            {
+                RunCommandScript(m_shutdownCommandsFile);
+            }
+
+            m_log.Info("[SHUTDOWN]: Terminating");
+
+            try
+            {
+                m_sceneManager.Close();
+            }
+            catch (Exception e)
+            {
+                m_log.ErrorFormat("[SHUTDOWN]: Ignoring failure during shutdown - {0}", e);
+            }
 
             m_log.Info("[SHUTDOWN]: Shutdown processing on main thread complete.  Exiting...");
 
             Environment.Exit(0);
         }
+    }
 
-		public IClientNetworkServer CreateNetworkServer(IPAddress _listenIP, ref uint port, int proxyPortOffset, bool allow_alternate_port,
-            AgentCircuitManager authenticateClass)
+    public class DiagnosticsManager
+    {
+        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        IStatsCollector m_stats;
+        OpenSimBase m_OpenSimBase;
+        
+        public DiagnosticsManager(IStatsCollector stats, OpenSimBase baseOpenSim)
         {
-            return m_clientStackManager.CreateServer(_listenIP, ref port, proxyPortOffset, allow_alternate_port, ConfigSource, authenticateClass);
+            m_OpenSimBase = baseOpenSim;
+            m_stats = stats;
+            Timer PeriodicDiagnosticsTimer = new Timer(60 * 60 * 1000); // One hour
+            PeriodicDiagnosticsTimer.Elapsed += LogDiagnostics;
+            PeriodicDiagnosticsTimer.Enabled = true;
+            PeriodicDiagnosticsTimer.Start();
         }
-
-		public void ShutdownClientServer(RegionInfo whichRegion)
-		{
-			// Close and remove the clientserver for a region
-			bool foundClientServer = false;
-			int clientServerElement = 0;
-			Location location = new Location(whichRegion.RegionHandle);
-
-			for (int i = 0; i < m_clientServers.Count; i++) {
-				if (m_clientServers[i].HandlesRegion(location)) {
-					clientServerElement = i;
-					foundClientServer = true;
-					break;
-				}
-			}
-
-			if (foundClientServer) {
-				m_clientServers[clientServerElement].NetworkStop();
-				m_clientServers.RemoveAt(clientServerElement);
-			}
-		}
-
-		public void handleRestartRegion(RegionInfo whichRegion)
-		{
-			m_log.Info("[OPENSIM]: Got restart signal from SceneManager");
-
-			ShutdownClientServer(whichRegion);
-			IScene scene;
-            m_sceneManager.CreateRegion(whichRegion, true, out scene);
-		}
-
-		/// <summary>
-		/// Performs any last-minute sanity checking and shuts down the region server
-		/// </summary>
-		public virtual void ShutdownSpecific()
-		{
-			if (m_shutdownCommandsFile != String.Empty) 
-            {
-				RunCommandScript(m_shutdownCommandsFile);
-			}
-
-			m_log.Info("[SHUTDOWN]: Terminating");
-
-			try
-            {
-				m_sceneManager.Close();
-			} 
-            catch (Exception e)
-            {
-				m_log.ErrorFormat("[SHUTDOWN]: Ignoring failure during shutdown - {0}", e);
-			}
-		}
-
-		/// <summary>
-		/// Get the start time and up time of Region server
-		/// </summary>
-		/// <param name="starttime">The first out parameter describing when the Region server started</param>
-		/// <param name="uptime">The second out parameter describing how long the Region server has run</param>
-		public void GetRunTime(out string starttime, out string uptime)
-		{
-			starttime = m_startuptime.ToString();
-			uptime = (DateTime.Now - m_startuptime).ToString();
-		}
-
-		/// <summary>
-		/// Get the number of the avatars in the Region server
-		/// </summary>
-		/// <param name="usernum">The first out parameter describing the number of all the avatars in the Region server</param>
-		public void GetAvatarNumber(out int usernum)
-		{
-			usernum = m_sceneManager.GetCurrentSceneAvatars().Count;
-		}
-
-		/// <summary>
-		/// Get the number of regions
-		/// </summary>
-		/// <param name="regionnum">The first out parameter describing the number of regions</param>
-		public void GetRegionNumber(out int regionnum)
-		{
-			regionnum = m_sceneManager.Scenes.Count;
-		}
 
         /// <summary>
         /// Print statistics to the logfile, if they are active
         /// </summary>
         private void LogDiagnostics(object source, ElapsedEventArgs e)
         {
-            LogDiagnostics();
+            m_log.Debug(LogDiagnostics());
         }
 
-        protected void LogDiagnostics()
+        public string LogDiagnostics()
         {
             StringBuilder sb = new StringBuilder("DIAGNOSTICS\n\n");
             sb.Append(GetUptimeReport());
@@ -1128,13 +1063,13 @@ namespace OpenSim
             sb.Append(Environment.NewLine);
             sb.Append(GetThreadsReport());
 
-            m_log.Debug(sb);
+            return sb.ToString();
         }
 
         /// <summary>
         /// Get a report about the registered threads in this server.
         /// </summary>
-        private string GetThreadsReport()
+        public string GetThreadsReport()
         {
             StringBuilder sb = new StringBuilder();
 
@@ -1171,87 +1106,13 @@ namespace OpenSim
         /// Return a report about the uptime of this server
         /// </summary>
         /// <returns></returns>
-        private string GetUptimeReport()
+        public string GetUptimeReport()
         {
             StringBuilder sb = new StringBuilder(String.Format("Time now is {0}\n", DateTime.Now));
-            sb.Append(String.Format("Server has been running since {0}, {1}\n", m_startuptime.DayOfWeek, m_startuptime));
-            sb.Append(String.Format("That is an elapsed time of {0}\n", DateTime.Now - m_startuptime));
+            sb.Append(String.Format("Server has been running since {0}, {1}\n", m_OpenSimBase.StartupTime.DayOfWeek, m_OpenSimBase.StartupTime));
+            sb.Append(String.Format("That is an elapsed time of {0}\n", DateTime.Now - m_OpenSimBase.StartupTime));
 
             return sb.ToString();
-        }
-
-        /// <summary>
-        /// Enhance the version string with extra information if it's available.
-        /// </summary>
-        private void SetUpVersionInformation()
-        {
-            m_version = VersionInfo.Version;
-            string buildVersion = string.Empty;
-
-            // Add commit hash and date information if available
-            // The commit hash and date are stored in a file bin/.version
-            // This file can automatically created by a post
-            // commit script in the opensim git master repository or
-            // by issuing the follwoing command from the top level
-            // directory of the opensim repository
-            // git log -n 1 --pretty="format:%h: %ci" >bin/.version
-            // For the full git commit hash use %H instead of %h
-            //
-            // The subversion information is deprecated and will be removed at a later date
-            // Add subversion revision information if available
-            // Try file "svn_revision" in the current directory first, then the .svn info.
-            // This allows to make the revision available in simulators not running from the source tree.
-            // FIXME: Making an assumption about the directory we're currently in - we do this all over the place
-            // elsewhere as well
-            string svnRevisionFileName = "svn_revision";
-            string svnFileName = ".svn/entries";
-            string gitCommitFileName = ".version";
-            string inputLine;
-            int strcmp;
-
-            if (File.Exists(gitCommitFileName))
-            {
-                StreamReader CommitFile = File.OpenText(gitCommitFileName);
-                buildVersion = CommitFile.ReadLine();
-                CommitFile.Close();
-                m_version += buildVersion ?? "";
-            }
-
-            // Remove the else logic when subversion mirror is no longer used
-            else
-            {
-                if (File.Exists(svnRevisionFileName))
-                {
-                    StreamReader RevisionFile = File.OpenText(svnRevisionFileName);
-                    buildVersion = RevisionFile.ReadLine();
-                    buildVersion.Trim();
-                    RevisionFile.Close();
-
-                }
-
-                if (string.IsNullOrEmpty(buildVersion) && File.Exists(svnFileName))
-                {
-                    StreamReader EntriesFile = File.OpenText(svnFileName);
-                    inputLine = EntriesFile.ReadLine();
-                    while (inputLine != null)
-                    {
-                        // using the dir svn revision at the top of entries file
-                        strcmp = String.Compare(inputLine, "dir");
-                        if (strcmp == 0)
-                        {
-                            buildVersion = EntriesFile.ReadLine();
-                            break;
-                        }
-                        else
-                        {
-                            inputLine = EntriesFile.ReadLine();
-                        }
-                    }
-                    EntriesFile.Close();
-                }
-
-                m_version += string.IsNullOrEmpty(buildVersion) ? "      " : ("." + buildVersion + "     ").Substring(0, 6);
-            }
         }
     }
 }

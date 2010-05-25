@@ -65,11 +65,6 @@ namespace OpenSim
         /// </summary>
         public static string m_crashDir = "crashes";
 
-        /// <summary>
-        /// Instance of the OpenSim class.  This could be OpenSim or OpenSimBackground depending on the configuration
-        /// </summary>
-        protected static OpenSimBase m_sim = null;
-
         //could move our main function into OpenSimMain and kill this class
         public static void Main(string[] args)
         {
@@ -258,7 +253,7 @@ namespace OpenSim
             // load Crash directory config
             m_crashDir = configSource.Configs["Startup"].GetString("crash_dir", m_crashDir);
 
-            m_sim = new OpenSimBase(configSource);
+            OpenSimBase m_sim = new OpenSimBase(configSource);
 
             m_sim.Startup();
         }

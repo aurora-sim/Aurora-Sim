@@ -56,7 +56,6 @@ namespace OpenSim.Client.Linden
         protected Scene m_scene;
         protected bool m_createClientStack = false;
         protected IClientNetworkServer m_clientServer;
-        protected ClientStackManager m_clientStackManager;
         protected IConfigSource m_source;
 
         protected string m_clientStackDll = "OpenSim.Region.ClientStack.LindenUDP.dll";
@@ -98,13 +97,11 @@ namespace OpenSim.Client.Linden
                 IPEndPoint endPoint = m_scene.RegionInfo.InternalEndPoint;
 
                 uint port = (uint)endPoint.Port;
-                m_clientStackManager = new ClientStackManager(m_clientStackDll);
-
-                m_clientServer
-                   = m_clientStackManager.CreateServer(endPoint.Address,
-                     ref port, m_scene.RegionInfo.ProxyOffset, m_scene.RegionInfo.m_allow_alternate_ports, m_source,
-                       m_scene.AuthenticateHandler);
-
+                m_clientServer = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IClientNetworkServer>(m_clientStackDll);
+                m_clientServer.Initialise(
+                        endPoint.Address, ref port, m_scene.RegionInfo.ProxyOffset, m_scene.RegionInfo.m_allow_alternate_ports,
+                        m_source, m_scene.AuthenticateHandler);
+                
                 m_clientServer.AddScene(m_scene);
 
                 m_clientServer.Start();

@@ -131,7 +131,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         protected string m_simulatorVersion = "OpenSimulator Server";
 
-        protected StorageManager m_storageManager;
         protected AgentCircuitManager m_authenticateHandler;
 
         protected Aurora.Framework.IEstateConnector m_EstateService;
@@ -428,6 +427,20 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_sceneGraph; }
         }
 
+        protected IRegionDataStore m_dataStore;
+
+        public IRegionDataStore DataStore
+        {
+            get { return m_dataStore; }
+        }
+
+        private IEstateDataStore m_estateDataStore;
+
+        public IEstateDataStore EstateDataStore
+        {
+            get { return m_estateDataStore; }
+        }
+
         // an instance to the physics plugin's Scene object.
         public PhysicsScene PhysicsScene
         {
@@ -565,9 +578,8 @@ namespace OpenSim.Region.Framework.Scenes
         #region Constructors
 
         public Scene(RegionInfo regInfo, AgentCircuitManager authen,
-                     SceneCommunicationService sceneGridService,
-                     StorageManager storeManager, bool dumpAssetsToFile, bool physicalPrim,
-                     bool SeeIntoRegionFromNeighbor, IConfigSource config, string simulatorVersion)
+                     SceneCommunicationService sceneGridService, bool dumpAssetsToFile, bool physicalPrim,
+                     bool SeeIntoRegionFromNeighbor, IConfigSource config, string simulatorVersion, IRegionDataStore regionDataStore, IEstateDataStore estateDataStore)
         {
             m_config = config;
 
@@ -600,7 +612,6 @@ namespace OpenSim.Region.Framework.Scenes
             m_lastAllocatedLocalId = (uint)(random.NextDouble() * (double)(uint.MaxValue/2))+(uint)(uint.MaxValue/4);
             m_authenticateHandler = authen;
             m_sceneGridService = sceneGridService;
-            m_storageManager = storeManager;
             m_regInfo = regInfo;
             m_regionHandle = m_regInfo.RegionHandle;
             m_regionName = m_regInfo.RegionName;
@@ -617,9 +628,11 @@ namespace OpenSim.Region.Framework.Scenes
             m_asyncSceneObjectDeleter = new AsyncSceneObjectGroupDeleter(this);
             m_asyncSceneObjectDeleter.Enabled = true;
 
-            
+            m_dataStore = regionDataStore;
+            m_estateDataStore = estateDataStore;
+
             // Load region settings
-            m_regInfo.RegionSettings = m_storageManager.DataStore.LoadRegionSettings(m_regInfo.RegionID);
+            m_regInfo.RegionSettings = DataStore.LoadRegionSettings(m_regInfo.RegionID);
             FindEstateInfo();
 
             #endregion Region Settings
@@ -630,9 +643,9 @@ namespace OpenSim.Region.Framework.Scenes
 
             //Bind Storage Manager functions to some land manager functions for this scene
             EventManager.OnLandObjectAdded +=
-                new EventManager.LandObjectAdded(m_storageManager.DataStore.StoreLandObject);
+                new EventManager.LandObjectAdded(DataStore.StoreLandObject);
             EventManager.OnLandObjectRemoved +=
-                new EventManager.LandObjectRemoved(m_storageManager.DataStore.RemoveLandObject);
+                new EventManager.LandObjectRemoved(DataStore.RemoveLandObject);
 
             m_sceneGraph = new SceneGraph(this, m_regInfo);
 
@@ -786,6 +799,8 @@ namespace OpenSim.Region.Framework.Scenes
             //m_log.Info("[SCENE]: Using the " + m_priorityScheme + " prioritization scheme");
 
             #endregion Interest Management
+
+            LoadWorldMap();
         }
 
         private void FindEstateInfo()
@@ -1237,7 +1252,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (!entity.IsDeleted && entity is SceneObjectGroup && ((SceneObjectGroup)entity).HasGroupChanged)
                 {
-                    ((SceneObjectGroup)entity).ProcessBackup(m_storageManager.DataStore, false);
+                    ((SceneObjectGroup)entity).ProcessBackup(DataStore, false);
                 }
             }
 
@@ -2260,7 +2275,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             lock (m_returns)
             {
-                EventManager.TriggerOnBackup(m_storageManager.DataStore);
+                EventManager.TriggerOnBackup(DataStore);
                 m_backingup = false;
 
                 foreach (KeyValuePair<UUID, ReturnInfo> ret in m_returns)
@@ -2301,7 +2316,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (group != null)
             {
-                group.ProcessBackup(m_storageManager.DataStore, true);
+                group.ProcessBackup(DataStore, true);
             }
         }
 
@@ -2343,7 +2358,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void SaveTerrain()
         {
-            m_storageManager.DataStore.StoreTerrain(Heightmap.GetDoubles(), RegionInfo.RegionID);
+            DataStore.StoreTerrain(Heightmap.GetDoubles(), RegionInfo.RegionID);
         }
 
         public void StoreWindlightProfile(RegionLightShareData wl)
@@ -2368,13 +2383,13 @@ namespace OpenSim.Region.Framework.Scenes
         {
             try
             {
-                double[,] map = m_storageManager.DataStore.LoadTerrain(RegionInfo.RegionID);
+                double[,] map = DataStore.LoadTerrain(RegionInfo.RegionID);
                 if (map == null)
                 {
                     m_log.Info("[TERRAIN]: No default terrain. Generating a new terrain.");
                     Heightmap = new TerrainChannel();
 
-                    m_storageManager.DataStore.StoreTerrain(Heightmap.GetDoubles(), RegionInfo.RegionID);
+                    DataStore.StoreTerrain(Heightmap.GetDoubles(), RegionInfo.RegionID);
                 }
                 else
                 {
@@ -2391,7 +2406,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     Heightmap = new TerrainChannel();
 
-                    m_storageManager.DataStore.StoreTerrain(Heightmap.GetDoubles(), RegionInfo.RegionID);
+                    DataStore.StoreTerrain(Heightmap.GetDoubles(), RegionInfo.RegionID);
                 }
             }
             catch (Exception e)
@@ -2519,7 +2534,7 @@ namespace OpenSim.Region.Framework.Scenes
         public void loadAllLandObjectsFromStorage(UUID regionID)
         {
             //m_log.Info("[SCENE]: Loading land objects from storage");
-            List<LandData> landData = m_storageManager.DataStore.LoadLandObjects(regionID);
+            List<LandData> landData = DataStore.LoadLandObjects(regionID);
 
             if (LandChannel != null)
             {
@@ -2549,7 +2564,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             //m_log.Info("[SCENE]: Loading objects from datastore");
 
-            List<SceneObjectGroup> PrimsFromDB = m_storageManager.DataStore.LoadObjects(regionID);
+            List<SceneObjectGroup> PrimsFromDB = DataStore.LoadObjects(regionID);
 
             //m_log.Info("[SCENE]: Loaded " + PrimsFromDB.Count + " objects from the datastore");
 
@@ -2900,7 +2915,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (!softDelete)
                 {
-                    m_storageManager.DataStore.RemoveObject(uuid,
+                    DataStore.RemoveObject(uuid,
                                                             m_regInfo.RegionID);
                 }
 
@@ -5425,7 +5440,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void DeleteFromStorage(UUID uuid)
         {
-            m_storageManager.DataStore.RemoveObject(uuid, m_regInfo.RegionID);
+            DataStore.RemoveObject(uuid, m_regInfo.RegionID);
         }
 
         public int GetHealth()
@@ -5833,15 +5848,15 @@ namespace OpenSim.Region.Framework.Scenes
         }
         public List<UUID> GetEstateRegions(int estateID)
         {
-            if (m_storageManager.EstateDataStore == null)
+            if (EstateDataStore == null)
                 return new List<UUID>();
 
-            return m_storageManager.EstateDataStore.GetRegions(estateID);
+            return EstateDataStore.GetRegions(estateID);
         }
 
         public void ReloadEstateData()
         {
-            m_regInfo.EstateSettings = m_storageManager.EstateDataStore.LoadEstateSettings(m_regInfo.RegionID, false);
+            m_regInfo.EstateSettings = EstateDataStore.LoadEstateSettings(m_regInfo.RegionID, false);
 
             TriggerEstateSunUpdate();
         }

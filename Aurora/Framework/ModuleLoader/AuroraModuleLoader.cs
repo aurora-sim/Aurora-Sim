@@ -4,11 +4,14 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using OpenSim.Framework;
+using log4net;
 
 namespace Aurora.Framework
 {
     public static class AuroraModuleLoader
     {
+        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
         #region New Style Loaders
 
         public static List<T> LoadPlugins<T>(string loaderString, PluginInitialiserBase baseInit) where T : IPlugin
@@ -22,6 +25,8 @@ namespace Aurora.Framework
 
         #endregion
 
+
+        #region Decapriated 24-5-10 - Revolution Smythe Commit d1018f6 Removes IRegionModule and converts all existing modules to the new style region format.
         // Decapriated 24-5-10 - Revolution Smythe
         // Commit d1018f6 Removes IRegionModule and converts all existing modules to the new style region format.
         /*#region Old Style Region Loaders
@@ -268,5 +273,38 @@ namespace Aurora.Framework
         }
 
         #endregion*/
+
+        #endregion
+
+        public static T LoadPlugin<T>(string dllName) 
+        {
+            try
+            {
+                Assembly pluginAssembly = Assembly.LoadFrom(dllName);
+
+                foreach (Type pluginType in pluginAssembly.GetTypes())
+                {
+                    if (pluginType.IsPublic)
+                    {
+                        Type typeInterface = pluginType.GetInterface("IClientNetworkServer", true);
+
+                        if (typeInterface != null)
+                        {
+                            //m_log.Info("[CLIENTSTACK]: Added IClientNetworkServer Interface");
+                            return (T)Activator.CreateInstance(pluginType);
+                        }
+                    }
+                }
+            } 
+            catch (ReflectionTypeLoadException e)
+            {
+                foreach (Exception e2 in e.LoaderExceptions)
+                {
+                    m_log.Error(e2.ToString());
+                }
+                throw e;
+            }
+            return default(T);
+        }
     }
 }

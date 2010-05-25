@@ -51,8 +51,7 @@ namespace OpenSim.Region.Framework.Scenes
         private readonly List<Scene> m_localScenes;
         private Scene m_currentScene = null;
         private IOpenSimBase m_OpenSimBase;
-        private StorageManager m_StorageManager;
-
+        
         public List<Scene> Scenes
         {
             get { return m_localScenes; }
@@ -85,12 +84,48 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public SceneManager(IOpenSimBase OSB, StorageManager StorageManager)
+        public SceneManager(IOpenSimBase OSB, string dllName, string connectionstring, string estateconnectionstring)
         {
-            m_StorageManager = StorageManager;
             m_OpenSimBase = OSB;
             m_localScenes = new List<Scene>();
+
+            //m_log.Info("[DATASTORE]: Attempting to load " + dllName);
+            Assembly pluginAssembly = Assembly.LoadFrom(dllName);
+
+            foreach (Type pluginType in pluginAssembly.GetTypes())
+            {
+                if (pluginType.IsPublic)
+                {
+                    Type typeInterface = pluginType.GetInterface("IRegionDataStore", true);
+
+                    if (typeInterface != null)
+                    {
+                        IRegionDataStore plug =
+                            (IRegionDataStore) Activator.CreateInstance(pluginAssembly.GetType(pluginType.ToString()));
+                        plug.Initialise(connectionstring);
+
+                        m_dataStore = plug;
+
+                        //m_log.Info("[DATASTORE]: Added IRegionDataStore Interface");
+                    }
+
+                    typeInterface = pluginType.GetInterface("IEstateDataStore", true);
+
+                    if (typeInterface != null)
+                    {
+                        IEstateDataStore estPlug =
+                            (IEstateDataStore) Activator.CreateInstance(pluginAssembly.GetType(pluginType.ToString()));
+                        estPlug.Initialise(estateconnectionstring);
+
+                        m_estateDataStore = estPlug;
+                    }
+                }
+            }
         }
+
+        protected IRegionDataStore m_dataStore;
+
+        private IEstateDataStore m_estateDataStore;
 
         public void Close()
         {
@@ -103,20 +138,6 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 // close scene/region
                 m_localScenes[i].Close();
-            }
-        }
-
-        public void Close(Scene cscene)
-        {
-            if (m_localScenes.Contains(cscene))
-            {
-                for (int i = 0; i < m_localScenes.Count; i++)
-                {
-                    if (m_localScenes[i].Equals(cscene))
-                    {
-                        m_localScenes[i].Close();
-                    }
-                }
             }
         }
 
@@ -149,7 +170,7 @@ namespace OpenSim.Region.Framework.Scenes
             // Restarting this sim.
             m_log.Info("[SCENEMANAGER]: Got restart signal");
 
-            m_OpenSimBase.ShutdownClientServer(m_localScenes[RegionSceneElement].RegionInfo);
+            ShutdownClientServer(m_localScenes[RegionSceneElement].RegionInfo);
             IScene scene;
             CreateRegion(m_localScenes[RegionSceneElement].RegionInfo, true, out scene);
         }
@@ -389,11 +410,6 @@ namespace OpenSim.Region.Framework.Scenes
             ForEachCurrentScene(delegate(Scene scene) { scene.ForceClientUpdate(); });
         }
 
-        public void HandleEditCommandOnCurrentScene(string[] cmdparams)
-        {
-            ForEachCurrentScene(delegate(Scene scene) { scene.HandleEditCommand(cmdparams); });
-        }
-
         public bool TryGetScenePresence(UUID avatarId, out ScenePresence avatar)
         {
             foreach (Scene scene in m_localScenes)
@@ -458,30 +474,9 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="regionInfo"></param>
         /// <param name="portadd_flag"></param>
-        /// <returns></returns>
-        public IClientNetworkServer CreateRegion(RegionInfo regionInfo, bool portadd_flag, out IScene scene)
-        {
-            return CreateRegion(regionInfo, portadd_flag, false, out scene);
-        }
-
-        /// <summary>
-        /// Execute the region creation process.  This includes setting up scene infrastructure.
-        /// </summary>
-        /// <param name="regionInfo"></param>
-        /// <returns></returns>
-        public IClientNetworkServer CreateRegion(RegionInfo regionInfo, out IScene scene)
-        {
-            return CreateRegion(regionInfo, false, true, out scene);
-        }
-
-        /// <summary>
-        /// Execute the region creation process.  This includes setting up scene infrastructure.
-        /// </summary>
-        /// <param name="regionInfo"></param>
-        /// <param name="portadd_flag"></param>
         /// <param name="do_post_init"></param>
         /// <returns></returns>
-        public IClientNetworkServer CreateRegion(RegionInfo regionInfo, bool portadd_flag, bool do_post_init, out IScene mscene)
+        public IClientNetworkServer CreateRegion(RegionInfo regionInfo, bool portadd_flag, out IScene mscene)
         {
             int port = regionInfo.InternalEndPoint.Port;
 
@@ -541,7 +536,6 @@ namespace OpenSim.Region.Framework.Scenes
 
             Add(scene);
 
-            m_OpenSimBase.ClientServers.Add(clientServer);
             clientServer.Start();
             scene.EventManager.OnShutdown += delegate() { ShutdownRegion(scene); };
 
@@ -627,6 +621,36 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        protected List<IClientNetworkServer> m_clientServers = new List<IClientNetworkServer>();
+        public List<IClientNetworkServer> ClientServers
+        {
+            get { return m_clientServers; }
+        }
+
+        public void ShutdownClientServer(RegionInfo whichRegion)
+        {
+            // Close and remove the clientserver for a region
+            bool foundClientServer = false;
+            int clientServerElement = 0;
+            Location location = new Location(whichRegion.RegionHandle);
+
+            for (int i = 0; i < m_clientServers.Count; i++)
+            {
+                if (m_clientServers[i].HandlesRegion(location))
+                {
+                    clientServerElement = i;
+                    foundClientServer = true;
+                    break;
+                }
+            }
+
+            if (foundClientServer)
+            {
+                m_clientServers[clientServerElement].NetworkStop();
+                m_clientServers.RemoveAt(clientServerElement);
+            }
+        }
+
         public void RemoveRegion(IScene scene, bool cleanup)
         {
             // only need to check this if we are not at the
@@ -638,7 +662,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             ((Scene)scene).DeleteAllSceneObjects();
             CloseScene((Scene)scene);
-            m_OpenSimBase.ShutdownClientServer(scene.RegionInfo);
+            ShutdownClientServer(scene.RegionInfo);
 
             if (!cleanup)
                 return;
@@ -698,30 +722,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             CloseScene((Scene)scene);
-            m_OpenSimBase.ShutdownClientServer(scene.RegionInfo);
-        }
-
-        /// <summary>
-        /// Remove a region from the simulator without deleting it permanently.
-        /// </summary>
-        /// <param name="name"></param>
-        /// <returns></returns>
-        public void CloseRegion(string name)
-        {
-            Scene target;
-            if (TryGetScene(name, out target))
-                CloseRegion(target);
-        }
-
-        /// <summary>
-        /// Create a scene and its initial base structures.
-        /// </summary>
-        /// <param name="regionInfo"></param>
-        /// <param name="clientServer"> </param>
-        /// <returns></returns>
-        protected Scene SetupScene(RegionInfo regionInfo, out IClientNetworkServer clientServer)
-        {
-            return SetupScene(regionInfo, 0, null, out clientServer);
+            ShutdownClientServer(scene.RegionInfo);
         }
 
         /// <summary>
@@ -741,29 +742,23 @@ namespace OpenSim.Region.Framework.Scenes
 
             uint port = (uint)regionInfo.InternalEndPoint.Port;
 
-            clientServer = m_OpenSimBase.CreateNetworkServer(listenIP, ref port, proxyOffset, regionInfo.m_allow_alternate_ports, circuitManager);
-
+            clientServer = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IClientNetworkServer>(m_OpenSimBase.ConfigurationSettings.ClientstackDll);
+            clientServer.Initialise(
+                    listenIP, ref port, proxyOffset, regionInfo.m_allow_alternate_ports,
+                    m_OpenSimBase.ConfigSource, circuitManager);
+            
             regionInfo.InternalEndPoint.Port = (int)port;
 
-            Scene scene = CreateScene(regionInfo, m_StorageManager, circuitManager);
-
+            SceneCommunicationService sceneGridService = new SceneCommunicationService();
+            Scene scene = new Scene(regionInfo, circuitManager, sceneGridService, false, m_OpenSimBase.ConfigurationSettings.PhysicalPrim, m_OpenSimBase.ConfigurationSettings.See_into_region_from_neighbor, m_OpenSimBase.ConfigSource, m_OpenSimBase.Version, m_dataStore, m_estateDataStore);
             
             clientServer.AddScene(scene);
-
-            scene.LoadWorldMap();
 
             scene.PhysicsScene = GetPhysicsScene(m_OpenSimBase.ConfigurationSettings.PhysicsEngine, m_OpenSimBase.ConfigurationSettings.MeshEngineName, m_OpenSimBase.ConfigSource, scene.RegionInfo.RegionName);
             scene.PhysicsScene.SetTerrain(scene.Heightmap.GetFloatsSerialised());
             scene.PhysicsScene.SetWaterLevel((float)regionInfo.RegionSettings.WaterHeight);
 
             return scene;
-        }
-
-        protected Scene CreateScene(RegionInfo regionInfo, StorageManager storageManager, AgentCircuitManager circuitManager)
-        {
-            SceneCommunicationService sceneGridService = new SceneCommunicationService();
-
-            return new Scene(regionInfo, circuitManager, sceneGridService, storageManager, false, m_OpenSimBase.ConfigurationSettings.PhysicalPrim, m_OpenSimBase.ConfigurationSettings.See_into_region_from_neighbor, m_OpenSimBase.ConfigSource, m_OpenSimBase.Version);
         }
 
         /// <summary>

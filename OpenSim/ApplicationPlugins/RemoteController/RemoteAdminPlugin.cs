@@ -625,7 +625,7 @@ namespace OpenSim.ApplicationPlugins.RemoteController
                     // Create the region and perform any initial initialization
 
                     IScene newscene;
-                    m_app.SceneManager.CreateRegion(region, out newscene);
+                    m_app.SceneManager.CreateRegion(region, false, out newscene);
 
                     // If an access specification was provided, use it.
                     // Otherwise accept the default.

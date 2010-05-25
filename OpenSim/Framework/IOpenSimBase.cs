@@ -46,13 +46,8 @@ namespace OpenSim.Framework
 {
 	public interface IOpenSimBase
 	{
-		void handleRestartRegion(RegionInfo whichRegion);
-		void ShutdownClientServer(RegionInfo whichRegion);
-		IClientNetworkServer CreateNetworkServer(IPAddress _listenIP, ref uint port, int proxyPortOffset, bool allow_alternate_port,
-            AgentCircuitManager authenticateClass);
 		ConfigSettings ConfigurationSettings { get; set; }
         IConfigSource ConfigSource { get; set; }
-		List<IClientNetworkServer> ClientServers { get; }
 		IRegistryCore ApplicationRegistry { get; }
         IStatsCollector Stats { get; }
         DateTime StartupTime { get; }
