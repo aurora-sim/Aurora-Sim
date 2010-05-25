@@ -9,5 +9,7 @@
 
     <Extension path = "/OpenSim/Startup">
 		<Plugin id="LoadRegionsPlugin" type="OpenSim.ApplicationPlugins.RegionLoaderPlugin.LoadRegionsPlugin" />
+		<Plugin id="RegionLoaderDataBaseSystem" type="OpenSim.ApplicationPlugins.RegionLoaderPlugin.RegionLoaderDataBaseSystem" />
+		<Plugin id="RegionLoaderWebServer" type="OpenSim.ApplicationPlugins.RegionLoaderPlugin.RegionLoaderWebServer" />
     </Extension>
 </Addin>

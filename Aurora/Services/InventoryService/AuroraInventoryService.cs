@@ -38,11 +38,11 @@ namespace Aurora.Services.InventoryService
         public AuroraInventoryService()
         {
             #region Get Plugins
-            Plugins = Aurora.Framework.AuroraModuleLoader.PickupModules<IInventoryPlugin>(Environment.CurrentDirectory, "IInventoryPlugin");
-            foreach (IInventoryPlugin plugin in Plugins)
-            {
-                plugin.Startup(this);
-            }
+            //Plugins = Aurora.Framework.AuroraModuleLoader.PickupModules<IInventoryPlugin>(Environment.CurrentDirectory, "IInventoryPlugin");
+            //foreach (IInventoryPlugin plugin in Plugins)
+            //{
+            //    plugin.Startup(this);
+            //}
             #endregion
 
             repository = new InventoryRepository(DataManager.DataSessionProviderConnector.DataSessionProvider);

@@ -22,8 +22,8 @@ namespace Aurora.Framework
 
         #endregion
 
-        //Decapriated 24-5-10 - Revolution Smythe
-        // Commit 
+        // Decapriated 24-5-10 - Revolution Smythe
+        // Commit d1018f6 Removes IRegionModule and converts all existing modules to the new style region format.
         /*#region Old Style Region Loaders
 
         static List<string> dllBlackList;

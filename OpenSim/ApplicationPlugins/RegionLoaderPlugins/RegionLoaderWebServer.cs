@@ -34,6 +34,7 @@ using System.Xml;
 using log4net;
 using Nini.Config;
 using OpenSim.Framework;
+using Mono.Addins;
 
 namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 {
@@ -109,6 +110,10 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
         }
 
         public void AddRegion()
+        {
+        }
+
+        public void Dispose()
         {
         }
     }

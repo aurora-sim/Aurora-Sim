@@ -38,6 +38,7 @@ using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Framework.Console;
 using OpenSim.Framework;
+using Mono.Addins;
 
 namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 {
@@ -162,6 +163,10 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             catch
             {
             }
+        }
+
+        public void Dispose()
+        {
         }
     }
 }
