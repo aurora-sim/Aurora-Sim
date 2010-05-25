@@ -37,11 +37,13 @@ using OpenSim.Framework;
 using OpenSim.Region.CoreModules.Framework.InterfaceCommander;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using Mono.Addins;
 
 
 namespace OpenSim.Region.CoreModules.World.LightShare
 {
-    public class LightShareModule : IRegionModule, ICommandableModule
+    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
+    public class LightShareModule : INonSharedRegionModule, ICommandableModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly Commander m_commander = new Commander("windlight");
@@ -70,13 +72,8 @@ namespace OpenSim.Region.CoreModules.World.LightShare
             }
         }
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialise(IConfigSource config)
         {
-            m_scene = scene;
-            m_scene.RegisterModuleInterface<IRegionModule>(this);
-            m_scene.EventManager.OnPluginConsole += EventManager_OnPluginConsole;
-            
-            // ini file settings
             try
             {
                 m_enableWindlight = config.Configs["LightShare"].GetBoolean("enable_windlight", false);
@@ -85,17 +82,38 @@ namespace OpenSim.Region.CoreModules.World.LightShare
             {
                 m_log.Debug("[WINDLIGHT]: ini failure for enable_windlight - using default");
             }
+        }
 
-            if (m_enableWindlight)
-            {
-                m_scene.EventManager.OnMakeRootAgent += EventManager_OnMakeRootAgent;
-                m_scene.EventManager.OnSaveNewWindlightProfile += EventManager_OnSaveNewWindlightProfile;
-                m_scene.EventManager.OnSendNewWindlightProfileTargeted += EventManager_OnSendNewWindlightProfileTargeted;
-            }
+        public void AddRegion(Scene scene)
+        {
+            if (!m_enableWindlight)
+                return;
+
+            m_scene = scene;
+            m_scene.EventManager.OnPluginConsole += EventManager_OnPluginConsole;
+
+            m_scene.EventManager.OnMakeRootAgent += EventManager_OnMakeRootAgent;
+            m_scene.EventManager.OnSaveNewWindlightProfile += EventManager_OnSaveNewWindlightProfile;
+            m_scene.EventManager.OnSendNewWindlightProfileTargeted += EventManager_OnSendNewWindlightProfileTargeted;
 
             InstallCommands();
 
             //m_log.Debug("[WINDLIGHT]: Initialised windlight module");
+        }
+
+        public void RemoveRegion(Scene scene)
+        {
+
+        }
+
+        public void RegionLoaded(Scene scene)
+        {
+
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
         }
 
         private List<byte[]> compileWindlightSettings(RegionLightShareData wl)

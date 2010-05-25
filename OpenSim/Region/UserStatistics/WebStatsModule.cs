@@ -49,10 +49,12 @@ using Caps = OpenSim.Framework.Capabilities.Caps;
 
 using OSD = OpenMetaverse.StructuredData.OSD;
 using OSDMap = OpenMetaverse.StructuredData.OSDMap;
+using Mono.Addins;
 
 namespace OpenSim.Region.UserStatistics
 {
-    public class WebStatsModule : IRegionModule
+    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
+    public class WebStatsModule : ISharedRegionModule
     {
         private static readonly ILog m_log =
             LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -70,7 +72,7 @@ namespace OpenSim.Region.UserStatistics
         private string m_loglines = String.Empty;
         private volatile int lastHit = 12000;
 
-        public virtual void Initialise(Scene scene, IConfigSource config)
+        public virtual void Initialise(IConfigSource config)
         {
             IConfig cnfg;
             try
@@ -82,12 +84,13 @@ namespace OpenSim.Region.UserStatistics
             {
                 enabled = false;
             }
-            
-            if (!enabled)
-            {
-                return;
-            }
+        }
 
+        public void AddRegion(Scene scene)
+        {
+            if (!enabled)
+                return;
+            
             lock (m_scene)
             {
                 if (m_scene.Count == 0)
@@ -130,7 +133,7 @@ namespace OpenSim.Region.UserStatistics
                     MainServer.Instance.AddHTTPHandler("/SStats/", HandleStatsRequest);
                     MainServer.Instance.AddHTTPHandler("/CAPS/VS/", HandleUnknownCAPSRequest);
                 }
-                
+
                 m_scene.Add(scene);
                 if (m_simstatsCounters.ContainsKey(scene.RegionInfo.RegionID))
                     m_simstatsCounters.Remove(scene.RegionInfo.RegionID);
@@ -138,6 +141,32 @@ namespace OpenSim.Region.UserStatistics
                 m_simstatsCounters.Add(scene.RegionInfo.RegionID, new USimStatsData(scene.RegionInfo.RegionID));
                 scene.StatsReporter.OnSendStatsResult += ReceiveClassicSimStatsPacket;
             }
+        }
+
+        public void RemoveRegion(Scene scene)
+        {
+            if (!enabled)
+                return;
+
+            dbConn.Close();
+            dbConn.Dispose();
+            m_sessions.Clear();
+            m_scene.Clear();
+            reports.Clear();
+            m_simstatsCounters.Clear(); 
+        }
+
+        public void RegionLoaded(Scene scene)
+        {
+            if (!enabled)
+                return;
+
+            AddHandlers();
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
         }
 
         public void ReceiveClassicSimStatsPacket(SimStats stats)
@@ -282,25 +311,10 @@ namespace OpenSim.Region.UserStatistics
 
         public virtual void PostInitialise()
         {
-            if (!enabled)
-            {
-                return;
-            }
-            AddHandlers();
         }
 
         public virtual void Close()
         {
-            if (!enabled)
-            {
-                return;
-            }
-            dbConn.Close();
-            dbConn.Dispose();
-            m_sessions.Clear();
-            m_scene.Clear();
-            reports.Clear();
-            m_simstatsCounters.Clear(); 
         }
 
         public virtual string Name

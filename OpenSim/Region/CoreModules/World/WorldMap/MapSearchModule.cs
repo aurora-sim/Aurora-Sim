@@ -24,6 +24,8 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using log4net;
@@ -34,19 +36,22 @@ using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using Mono.Addins;
 
 namespace OpenSim.Region.CoreModules.World.WorldMap
 {
-    public class MapSearchModule : IRegionModule
+    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
+    public class MapSearchModule : ISharedRegionModule
     {
         private static readonly ILog m_log =
             LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         Scene m_scene = null; // only need one for communication with GridService
         List<Scene> m_scenes = new List<Scene>();
+        bool Enabled = true;
         
         #region IRegionModule Members
-        public void Initialise(Scene scene, IConfigSource source)
+        public void Initialise(IConfigSource source)
         {
             if (source.Configs["MapModule"] != null)
             {
@@ -54,9 +59,20 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                         "MapModule", "MapModule") !=
                         "MapModule")
                 {
-                    return;
+                    Enabled = false;
                 }
             }
+            else
+            {
+                Enabled = false;
+            }
+        }
+
+        public void AddRegion(Scene scene)
+        {
+            if (!Enabled)
+                return;
+
             if (m_scene == null)
             {
                 m_scene = scene;
@@ -64,6 +80,21 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
             m_scenes.Add(scene);
             scene.EventManager.OnNewClient += OnNewClient;
+        }
+
+        public void RemoveRegion(Scene scene)
+        {
+
+        }
+
+        public void RegionLoaded(Scene scene)
+        {
+
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
         }
 
         public void PostInitialise()

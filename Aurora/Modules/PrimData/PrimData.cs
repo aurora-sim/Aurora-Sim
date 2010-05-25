@@ -12,6 +12,7 @@ using OpenSim.Framework;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Region.CoreModules.Avatar.NPC;
+using Mono.Addins;
 
 namespace Aurora.Modules
 {
@@ -22,17 +23,37 @@ namespace Aurora.Modules
         Oar = 2,
         Document = 3
     }
-    public class PrimData: IRegionModule
+    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
+    public class PrimData : ISharedRegionModule
     {
         IGenericData GenericData;
         Scene m_scene;
         INPCModule BotModule;
-        public void Initialise(Scene scene, IConfigSource source)
+        public void Initialise(IConfigSource source)
+        {
+        }
+
+        public void AddRegion(Scene scene)
         {
             m_scene = scene;
             //scene.SceneContents.OnObjectDuplicate += new ObjectDuplicateDelegate(SceneContents_OnObjectDuplicate);
             //scene.SceneContents.OnObjectCreate += new ObjectCreateDelegate(SceneContents_OnObjectCreate);
             //scene.SceneContents.OnObjectRemove += new ObjectDeleteDelegate(SceneContents_OnObjectRemove);
+        }
+
+        public void RemoveRegion(Scene scene)
+        {
+
+        }
+
+        public void RegionLoaded(Scene scene)
+        {
+            BotModule = m_scene.RequestModuleInterface<INPCModule>();
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
         }
 
         void SceneContents_OnObjectDuplicate(EntityBase original, EntityBase clone)
@@ -196,7 +217,6 @@ namespace Aurora.Modules
 
         public void PostInitialise()
         {
-            BotModule = m_scene.RequestModuleInterface<INPCModule>();
         }
 
         public void Close(){}

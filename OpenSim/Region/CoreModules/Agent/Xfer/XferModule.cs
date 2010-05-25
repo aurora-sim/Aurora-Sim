@@ -32,10 +32,12 @@ using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using Mono.Addins;
 
 namespace OpenSim.Region.CoreModules.Agent.Xfer
 {
-    public class XferModule : IRegionModule, IXfer
+    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
+    public class XferModule : INonSharedRegionModule, IXfer
     {
         private Scene m_scene;
         private Dictionary<string, XferRequest> Requests = new Dictionary<string, XferRequest>();
@@ -54,12 +56,32 @@ namespace OpenSim.Region.CoreModules.Agent.Xfer
        
         #region IRegionModule Members
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialise(IConfigSource config)
+        {
+            
+        }
+
+        public void AddRegion(Scene scene)
         {
             m_scene = scene;
             m_scene.EventManager.OnNewClient += NewClient;
 
             m_scene.RegisterModuleInterface<IXfer>(this);
+        }
+
+        public void RemoveRegion(Scene scene)
+        {
+
+        }
+
+        public void RegionLoaded(Scene scene)
+        {
+
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
         }
 
         public void PostInitialise()

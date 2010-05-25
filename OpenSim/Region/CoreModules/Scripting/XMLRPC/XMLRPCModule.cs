@@ -40,6 +40,7 @@ using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using Mono.Addins;
 
 /*****************************************************
  *
@@ -76,7 +77,8 @@ using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.CoreModules.Scripting.XMLRPC
 {
-    public class XMLRPCModule : IRegionModule, IXMLRPC
+    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
+    public class XMLRPCModule : ISharedRegionModule, IXMLRPC
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -96,7 +98,7 @@ namespace OpenSim.Region.CoreModules.Scripting.XMLRPC
 
         #region IRegionModule Members
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialise(IConfigSource config)
         {
             // We need to create these early because the scripts might be calling
             // But since this gets called for every region, we need to make sure they
@@ -116,7 +118,10 @@ namespace OpenSim.Region.CoreModules.Scripting.XMLRPC
                 {
                 }
             }
+        }
 
+        public void AddRegion(Scene scene)
+        {
             if (!m_scenes.Contains(scene))
             {
                 m_scenes.Add(scene);
@@ -125,7 +130,11 @@ namespace OpenSim.Region.CoreModules.Scripting.XMLRPC
             }
         }
 
-        public void PostInitialise()
+        public void RemoveRegion(Scene scene)
+        {
+        }
+
+        public void RegionLoaded(Scene scene)
         {
             if (IsEnabled())
             {
@@ -133,10 +142,19 @@ namespace OpenSim.Region.CoreModules.Scripting.XMLRPC
                 // Attach xmlrpc handlers
                 m_log.Info("[XML RPC MODULE]: " +
                            "Starting up XMLRPC Server on port " + m_remoteDataPort + " for llRemoteData commands.");
-                BaseHttpServer httpServer = new BaseHttpServer((uint) m_remoteDataPort);
+                BaseHttpServer httpServer = new BaseHttpServer((uint)m_remoteDataPort);
                 httpServer.AddXmlRPCHandler("llRemoteData", XmlRpcRemoteData);
                 httpServer.Start();
             }
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
+        }
+
+        public void PostInitialise()
+        {
         }
 
         public void Close()

@@ -41,10 +41,12 @@ using OpenSim.Region.Framework.Scenes;
 using Caps=OpenSim.Framework.Capabilities.Caps;
 using Aurora.DataManager;
 using Aurora.Framework;
+using Mono.Addins;
 
 namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
 {
-    public class ObjectAdd : IRegionModule
+    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
+    public class ObjectAdd : INonSharedRegionModule
     {
         private static readonly ILog m_log =
             LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -53,12 +55,32 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
         
         #region IRegionModule Members
 
-        public void Initialise(Scene pScene, IConfigSource pSource)
+        public void Initialise(IConfigSource pSource)
         {
-            m_scene = pScene;
+            
+        }
+
+        public void AddRegion(Scene scene)
+        {
+            m_scene = scene;
             m_scene.EventManager.OnRegisterCaps += RegisterCaps;
             m_scene.EventManager.OnLandObjectAdded += AddLandObject;
             m_scene.EventManager.OnIncomingLandDataFromStorage += new EventManager.IncomingLandDataFromStorage(EventManager_OnIncomingLandDataFromStorage);
+        }
+
+        public void RemoveRegion(Scene scene)
+        {
+
+        }
+
+        public void RegionLoaded(Scene scene)
+        {
+            AC = Aurora.DataManager.DataManager.IAssetConnector;
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
         }
 
         void EventManager_OnIncomingLandDataFromStorage(List<LandData> data)
@@ -80,7 +102,6 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
 
         public void PostInitialise()
         {
-            AC = Aurora.DataManager.DataManager.IAssetConnector;
         }
 
         public void RegisterCaps(UUID agentID, Caps caps)

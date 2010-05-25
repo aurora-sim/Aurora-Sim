@@ -38,13 +38,15 @@ using OpenSim.Framework.Communications;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
+using Mono.Addins;
 
 namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
 {
     /// <summary>
     /// This module loads and saves OpenSimulator inventory archives
     /// </summary>
-    public class InventoryArchiverModule : IRegionModule, IInventoryArchiverModule
+    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
+    public class InventoryArchiverModule : INonSharedRegionModule, IInventoryArchiverModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         
@@ -82,7 +84,12 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
             DisablePresenceChecks = disablePresenceChecks;
         }
 
-        public void Initialise(Scene scene, IConfigSource source)
+        public void Initialise(IConfigSource source)
+        {
+            
+        }
+
+        public void AddRegion(Scene scene)
         {
             if (m_scenes.Count == 0)
             {
@@ -103,6 +110,21 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
             }
                         
             m_scenes[scene.RegionInfo.RegionID] = scene;
+        }
+
+        public void RemoveRegion(Scene scene)
+        {
+
+        }
+
+        public void RegionLoaded(Scene scene)
+        {
+
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
         }
 
         public void PostInitialise() {}

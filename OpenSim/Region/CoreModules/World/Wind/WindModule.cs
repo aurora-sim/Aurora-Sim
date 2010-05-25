@@ -40,6 +40,7 @@ using OpenSim.Region.CoreModules.World.Wind;
 
 namespace OpenSim.Region.CoreModules
 {
+    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class WindModule : IWindModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -59,13 +60,15 @@ namespace OpenSim.Region.CoreModules
 
         // Simplified windSpeeds based on the fact that the client protocal tracks at a resolution of 16m
         private Vector2[] windSpeeds = new Vector2[16 * 16];
+        private IConfig windConfig = null;
+        private string desiredWindPlugin = "";
 
         #region IRegion Methods
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialise(IConfigSource config)
         {
-            IConfig windConfig = config.Configs["Wind"];
-            string desiredWindPlugin = m_dWindPluginName;
+            windConfig = config.Configs["Wind"];
+            desiredWindPlugin = m_dWindPluginName;
 
             if (windConfig != null)
             {
@@ -79,7 +82,11 @@ namespace OpenSim.Region.CoreModules
                     desiredWindPlugin = windConfig.GetString("wind_plugin");
                 }
             }
+        }
 
+        public void AddRegion(Scene scene)
+        {
+            m_scene = scene;
             if (m_enabled)
             {
                 //m_log.InfoFormat("[WIND] Enabled with an update rate of {0} frames.", m_frameUpdateRate);
@@ -106,7 +113,7 @@ namespace OpenSim.Region.CoreModules
                         m_activeWindPlugin.Initialise();
                         m_activeWindPlugin.WindConfig(m_scene, windConfig);
                     }
-                } 
+                }
 
 
                 // if the plug-in wasn't found, default to no wind.
@@ -118,7 +125,7 @@ namespace OpenSim.Region.CoreModules
 
                 // This one puts an entry in the main help screen
                 m_scene.AddCommand(this, String.Empty, "wind", "Usage: wind <plugin> <param> [value] - Get or Update Wind paramaters", null);
-                
+
                 // This one enables the ability to type just the base command without any parameters
                 m_scene.AddCommand(this, "wind", "", "", HandleConsoleCommand);
 
@@ -127,7 +134,7 @@ namespace OpenSim.Region.CoreModules
                 {
                     m_scene.AddCommand(this, String.Format("wind base wind_plugin {0}", windPlugin.Name), String.Format("{0} - {1}", windPlugin.Name, windPlugin.Description), "", HandleConsoleBaseCommand);
                     m_scene.AddCommand(this, String.Format("wind base wind_update_rate"), "Change the wind update rate.", "", HandleConsoleBaseCommand);
-                    
+
                     foreach (KeyValuePair<string, string> kvp in windPlugin.WindParams())
                     {
                         m_scene.AddCommand(this, String.Format("wind {0} {1}", windPlugin.Name, kvp.Key), String.Format("{0} : {1} - {2}", windPlugin.Name, kvp.Key, kvp.Value), "", HandleConsoleParamCommand);
@@ -149,20 +156,14 @@ namespace OpenSim.Region.CoreModules
                 m_ready = true;
 
             }
-
         }
 
-        public void PostInitialise()
-        {
-        }
-
-        public void Close()
+        public void RemoveRegion(Scene scene)
         {
             if (m_enabled)
             {
                 m_ready = false;
 
-                // REVIEW: If a region module is closed, is there a possibility that it'll re-open/initialize ??
                 m_activeWindPlugin = null;
                 foreach (IWindModelPlugin windPlugin in m_availableWindPlugins.Values)
                 {
@@ -175,6 +176,24 @@ namespace OpenSim.Region.CoreModules
                 m_scene.EventManager.OnFrame -= WindUpdate;
                 m_scene.EventManager.OnMakeRootAgent -= OnAgentEnteredRegion;
             }
+        }
+
+        public void RegionLoaded(Scene scene)
+        {
+
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
+        }
+
+        public void PostInitialise()
+        {
+        }
+
+        public void Close()
+        {
         }
 
         public string Name

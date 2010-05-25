@@ -44,7 +44,8 @@ using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using Caps=OpenSim.Framework.Capabilities.Caps;
 using OSDArray=OpenMetaverse.StructuredData.OSDArray;
-using OSDMap=OpenMetaverse.StructuredData.OSDMap;
+using OSDMap = OpenMetaverse.StructuredData.OSDMap;
+using Mono.Addins;
 
 namespace OpenSim.Region.CoreModules.InterGrid
 {
@@ -75,8 +76,9 @@ namespace OpenSim.Region.CoreModules.InterGrid
         public bool visible_to_parent;
         public string teleported_into_region;
     }
-    
-    public class OpenGridProtocolModule : IRegionModule
+
+    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
+    public class OpenGridProtocolModule : ISharedRegionModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private List<Scene> m_scene = new List<Scene>();
@@ -92,15 +94,16 @@ namespace OpenSim.Region.CoreModules.InterGrid
         private bool httpSSL = false;
         private uint httpsslport = 0;
         private bool GridMode = false;
-
+        private IConfig cfg = null;
+        private  IConfig httpcfg = null;
+        private IConfig startupcfg = null;
+        private bool enabled = false;
+             
         #region IRegionModule Members
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialise(IConfigSource config)
         {
-            bool enabled = false;
-            IConfig cfg = null;
-            IConfig httpcfg = null;
-            IConfig startupcfg = null;
+            
             try
             {
                 cfg = config.Configs["OpenGridProtocol"];
@@ -130,7 +133,12 @@ namespace OpenSim.Region.CoreModules.InterGrid
             {
                 GridMode = enabled = startupcfg.GetBoolean("gridmode", false);
             }
+        }
 
+        public void AddRegion(Scene scene)
+        {
+            if (!enabled)
+                return;
             if (cfg != null)
             {
                 enabled = cfg.GetBoolean("ogp_enabled", false);
@@ -189,10 +197,25 @@ namespace OpenSim.Region.CoreModules.InterGrid
                         httpsCN = httpcfg.GetString("http_listener_cn", scene.RegionInfo.ExternalHostName);
                         if (httpsCN.Length == 0)
                             httpsCN = scene.RegionInfo.ExternalHostName;
-                        httpsslport = (uint)httpcfg.GetInt("http_listener_sslport",((int)scene.RegionInfo.HttpPort + 1));
+                        httpsslport = (uint)httpcfg.GetInt("http_listener_sslport", ((int)scene.RegionInfo.HttpPort + 1));
                     }
                 }
             }
+        }
+
+        public void RemoveRegion(Scene scene)
+        {
+
+        }
+
+        public void RegionLoaded(Scene scene)
+        {
+
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
         }
         
         public void PostInitialise()

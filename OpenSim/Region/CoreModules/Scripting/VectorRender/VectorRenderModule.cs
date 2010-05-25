@@ -38,12 +38,14 @@ using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using log4net;
 using System.Reflection;
+using Mono.Addins;
 
 //using Cairo;
 
 namespace OpenSim.Region.CoreModules.Scripting.VectorRender
 {
-    public class VectorRenderModule : IRegionModule, IDynamicTextureRender
+    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
+    public class VectorRenderModule : ISharedRegionModule, IDynamicTextureRender
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -112,7 +114,16 @@ namespace OpenSim.Region.CoreModules.Scripting.VectorRender
 
         #region IRegionModule Members
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialise(IConfigSource config)
+        {
+            IConfig cfg = config.Configs["VectorRender"];
+            if (null != cfg)
+            {
+                m_fontName = cfg.GetString("font_name", m_fontName);
+            }
+        }
+
+        public void AddRegion(Scene scene)
         {
             if (m_scene == null)
             {
@@ -124,22 +135,29 @@ namespace OpenSim.Region.CoreModules.Scripting.VectorRender
                 Bitmap bitmap = new Bitmap(1024, 1024, PixelFormat.Format32bppArgb);
                 m_graph = Graphics.FromImage(bitmap);
             }
-
-            IConfig cfg = config.Configs["VectorRender"];
-            if (null != cfg)
-            {
-                m_fontName = cfg.GetString("font_name", m_fontName);
-            }
-            //m_log.DebugFormat("[VECTORRENDERMODULE]: using font \"{0}\" for text rendering.", m_fontName);
         }
 
-        public void PostInitialise()
+        public void RemoveRegion(Scene scene)
+        {
+
+        }
+
+        public void RegionLoaded(Scene scene)
         {
             m_textureManager = m_scene.RequestModuleInterface<IDynamicTextureManager>();
             if (m_textureManager != null)
             {
                 m_textureManager.RegisterRender(GetContentType(), this);
             }
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
+        }
+
+        public void PostInitialise()
+        {
         }
 
         public void Close()

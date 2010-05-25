@@ -14,10 +14,12 @@ using OpenMetaverse;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using HttpListener = HttpServer.HttpListener;
+using Mono.Addins;
 
 namespace Aurora.Modules.WebUI
 {
-    public class WebUIModule : IRegionModule
+    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
+    public class WebUIModule : ISharedRegionModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly Dictionary<Scene,SceneCommandExecutor> executors = new Dictionary<Scene, SceneCommandExecutor>();
@@ -26,7 +28,7 @@ namespace Aurora.Modules.WebUI
         private int HttpPort = 5050;
         private bool m_Enabled = true;
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialise(IConfigSource config)
         {
             if (config.Configs["WebUI"] != null)
             {
@@ -38,14 +40,20 @@ namespace Aurora.Modules.WebUI
                     return;
                 }
             }
+            m_config = config;
+            HttpPort = config.Configs["WebUI"].GetInt("Port", 5050);
+        }
+
+        public void AddRegion(Scene scene)
+        {
+            if (!m_Enabled)
+                return;
             if (!executors.ContainsKey(scene))
             {
                 var executor = new SceneCommandExecutor(scene);
-                executors.Add(scene,  executor);
+                executors.Add(scene, executor);
                 scene.EventManager.OnFrame += executor.ExecuteCommands;
             }
-            m_config = config;
-            HttpPort = config.Configs["WebUI"].GetInt("Port", 5050);
             if (server == null)
             {
                 server = new HttpServer.HttpServer();
@@ -57,14 +65,26 @@ namespace Aurora.Modules.WebUI
             }
         }
 
-        
+        public void RemoveRegion(Scene scene)
+        {
 
-        public void PostInitialise()
+        }
+
+        public void RegionLoaded(Scene scene)
         {
             if (!m_Enabled)
                 return;
             Thread t = new Thread(new ThreadStart(RunServer));
             t.Start();
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
+        }
+
+        public void PostInitialise()
+        {
         }
 
         private void RunServer()

@@ -42,7 +42,8 @@ using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using BlockingLLSDQueue = OpenSim.Framework.BlockingQueue<OpenMetaverse.StructuredData.OSD>;
-using Caps=OpenSim.Framework.Capabilities.Caps;
+using Caps = OpenSim.Framework.Capabilities.Caps;
+using Mono.Addins;
 
 namespace OpenSim.Region.CoreModules.Framework.EventQueue
 {
@@ -52,7 +53,8 @@ namespace OpenSim.Region.CoreModules.Framework.EventQueue
         public OSDMap body;
     }
 
-    public class EventQueueGetModule : IEventQueue, IRegionModule
+    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
+    public class EventQueueGetModule : IEventQueue, INonSharedRegionModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         protected Scene m_scene = null;
@@ -64,24 +66,28 @@ namespace OpenSim.Region.CoreModules.Framework.EventQueue
         private Dictionary<UUID, Queue<OSD>> queues = new Dictionary<UUID, Queue<OSD>>();
         private Dictionary<UUID, UUID> m_QueueUUIDAvatarMapping = new Dictionary<UUID, UUID>();
         private Dictionary<UUID, UUID> m_AvatarQueueUUIDMapping = new Dictionary<UUID, UUID>();
-            
+        IConfig startupConfig = null;
+
         #region IRegionModule methods
-        public virtual void Initialise(Scene scene, IConfigSource config)
+        public virtual void Initialise(IConfigSource config)
         {
             m_gConfig = config;
 
-            IConfig startupConfig = m_gConfig.Configs["Startup"];
+            startupConfig = m_gConfig.Configs["Startup"];
+        }
 
+        public void AddRegion(Scene scene)
+        {
             ReadConfigAndPopulate(scene, startupConfig, "Startup");
 
             if (enabledYN)
             {
                 m_scene = scene;
                 scene.RegisterModuleInterface<IEventQueue>(this);
-                
+
                 // Register fallback handler
                 // Why does EQG Fail on region crossings!
-                
+
                 //scene.CommsManager.HttpServer.AddLLSDHandler("/CAPS/EQG/", EventQueueFallBack);
 
                 scene.EventManager.OnNewClient += OnNewClient;
@@ -99,7 +105,21 @@ namespace OpenSim.Region.CoreModules.Framework.EventQueue
             {
                 m_gConfig = null;
             }
-        
+        }
+
+        public void RemoveRegion(Scene scene)
+        {
+
+        }
+
+        public void RegionLoaded(Scene scene)
+        {
+
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
         }
 
         private void ReadConfigAndPopulate(Scene scene, IConfig startupConfig, string p)

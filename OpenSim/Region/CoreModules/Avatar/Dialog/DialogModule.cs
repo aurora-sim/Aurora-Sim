@@ -36,25 +36,47 @@ using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
+using Mono.Addins;
 
 namespace OpenSim.Region.CoreModules.Avatar.Dialog
 {
-    public class DialogModule : IRegionModule, IDialogModule
+    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
+    public class DialogModule : INonSharedRegionModule, IDialogModule
     { 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         
         protected Scene m_scene;
         
-        public void Initialise(Scene scene, IConfigSource source)
+        public void Initialise(IConfigSource source)
+        {
+            
+        }
+
+        public void AddRegion(Scene scene)
         {
             m_scene = scene;
             m_scene.RegisterModuleInterface<IDialogModule>(this);
-            
+
             m_scene.AddCommand(
                 this, "alert", "alert <first> <last> <message>", "Send an alert to a user", HandleAlertConsoleCommand);
 
             m_scene.AddCommand(
                 this, "alert general", "alert general <message>", "Send an alert to everyone", HandleAlertConsoleCommand);
+        }
+
+        public void RemoveRegion(Scene scene)
+        {
+
+        }
+
+        public void RegionLoaded(Scene scene)
+        {
+
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
         }
         
         public void PostInitialise() {}

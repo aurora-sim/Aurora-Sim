@@ -39,10 +39,12 @@ using OpenSim.Region.Framework.Scenes;
 using PumaCode.SvnDotNet.AprSharp;
 using PumaCode.SvnDotNet.SubversionSharp;
 using Slash = System.IO.Path;
+using Mono.Addins;
 
 namespace OpenSim.Region.Modules.SvnSerialiser
 {
-    public class SvnBackupModule : IRegionModule
+    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
+    public class SvnBackupModule : ISharedRegionModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -202,7 +204,7 @@ namespace OpenSim.Region.Modules.SvnSerialiser
 
         #region IRegionModule Members
 
-        public void Initialise(Scene scene, IConfigSource source)
+        public void Initialise(IConfigSource source)
         {
             m_scenes = new List<Scene>();
             m_timer = new Timer();
@@ -225,7 +227,10 @@ namespace OpenSim.Region.Modules.SvnSerialiser
             catch (Exception)
             {
             }
+        }
 
+        public void AddRegion(Scene scene)
+        {
             lock (m_scenes)
             {
                 m_scenes.Add(scene);
@@ -237,9 +242,14 @@ namespace OpenSim.Region.Modules.SvnSerialiser
             }
         }
 
-        public void PostInitialise()
+        public void RemoveRegion(Scene scene)
         {
-            if (m_enabled == false)
+
+        }
+
+        public void RegionLoaded(Scene scene)
+        {
+            if (!m_enabled)
                 return;
 
             if (m_svnAutoSave)
@@ -261,11 +271,17 @@ namespace OpenSim.Region.Modules.SvnSerialiser
             if (m_installBackupOnLoad)
             {
                 m_log.Info("[SVNBACKUP]: Importing latest SVN revision to scenes...");
-                foreach (Scene scene in m_scenes)
-                {
-                    LoadRegion(scene);
-                }
+                LoadRegion(scene);
             }
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
+        }
+
+        public void PostInitialise()
+        {
         }
 
         public void Close()

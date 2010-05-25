@@ -1,0 +1,9 @@
+<Addin id="OpenSim.Region.UserStatistics" version="0.2">
+    <Runtime>
+        <Import assembly="OpenSim.Region.UserStatistics.dll"/>
+    </Runtime>
+
+    <Dependencies>
+        <Addin id="OpenSim" version="0.5" />
+    </Dependencies>
+</Addin>

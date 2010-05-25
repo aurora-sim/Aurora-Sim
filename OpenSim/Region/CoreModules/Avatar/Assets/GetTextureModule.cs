@@ -42,6 +42,7 @@ using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
 using Caps = OpenSim.Framework.Capabilities.Caps;
+using Mono.Addins;
 
 namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
 {
@@ -67,7 +68,8 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
 
     #endregion Stream Handler
 
-    public class GetTextureModule : IRegionModule
+    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
+    public class GetTextureModule : INonSharedRegionModule
     {
         private static readonly ILog m_log =
             LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -76,15 +78,33 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
 
         #region IRegionModule Members
 
-        public void Initialise(Scene pScene, IConfigSource pSource)
+        public void Initialise(IConfigSource pSource)
         {
-            m_scene = pScene;
+        }
+
+        public void AddRegion(Scene scene)
+        {
+            m_scene = scene;
+        }
+
+        public void RemoveRegion(Scene scene)
+        {
+
+        }
+
+        public void RegionLoaded(Scene scene)
+        {
+            m_assetService = m_scene.RequestModuleInterface<IAssetService>();
+            m_scene.EventManager.OnRegisterCaps += RegisterCaps;
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
         }
 
         public void PostInitialise()
         {
-            m_assetService = m_scene.RequestModuleInterface<IAssetService>();
-            m_scene.EventManager.OnRegisterCaps += RegisterCaps;
         }
 
         public void Close() { }

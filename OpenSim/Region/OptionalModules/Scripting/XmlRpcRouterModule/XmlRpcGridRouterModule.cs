@@ -40,6 +40,7 @@ using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Framework.Client;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using Mono.Addins;
 
 namespace OpenSim.Region.OptionalModules.Scripting.XmlRpcGridRouterModule
 {
@@ -49,7 +50,8 @@ namespace OpenSim.Region.OptionalModules.Scripting.XmlRpcGridRouterModule
         public string uri;
     }
 
-    public class XmlRpcGridRouter : IRegionModule, IXmlRpcRouter
+    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
+    public class XmlRpcGridRouter : INonSharedRegionModule, IXmlRpcRouter
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         
@@ -59,7 +61,7 @@ namespace OpenSim.Region.OptionalModules.Scripting.XmlRpcGridRouterModule
         private bool m_Enabled = false;
         private string m_ServerURI = String.Empty;
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialise(IConfigSource config)
         {
             IConfig startupConfig = config.Configs["Startup"];
             if (startupConfig == null)
@@ -75,9 +77,29 @@ namespace OpenSim.Region.OptionalModules.Scripting.XmlRpcGridRouterModule
                     return;
                 }
 
-                scene.RegisterModuleInterface<IXmlRpcRouter>(this);
                 m_Enabled = true;
             }
+        }
+
+        public void AddRegion(Scene scene)
+        {
+            if(m_Enabled)
+                scene.RegisterModuleInterface<IXmlRpcRouter>(this);
+        }
+
+        public void RemoveRegion(Scene scene)
+        {
+
+        }
+
+        public void RegionLoaded(Scene scene)
+        {
+
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
         }
 
         public void PostInitialise()

@@ -8,9 +8,8 @@
     </Dependencies>
 
     <Extension path = "/OpenSim/RegionModules">
-      <RegionModule id="IWCEntityTransferModule"           type="OpenSim.Region.CoreModules.Framework.EntityTransfer.IWCEntityTransferModule" />
+      <RegionModule id="InterWorldComms"           type="Aurora.Modules.InterWorldComms" />
       <RegionModule id="AuroraWorldMapModule"           type="Aurora.Modules.AuroraWorldMapModule" />
-      <RegionModule id="IWCSimulationConnectorModule"           type="Aurora.Modules.IWCSimulationConnectorModule" />
       <RegionModule id="AuroraOfflineMessageModule" type="Aurora.Modules.AuroraOfflineMessageModule" />
 	  <RegionModule id="AuroraChatModule"           type="Aurora.Modules.AuroraChatModule" />
 	  <RegionModule id="Auth"           type="Aurora.Modules.Auth" />

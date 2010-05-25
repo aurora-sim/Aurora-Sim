@@ -35,15 +35,18 @@ using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using Mono.Addins;
 
 
 namespace OpenSim.Region.OptionalModules.Scripting.XmlRpcRouterModule
 {
-    public class XmlRpcRouter : IRegionModule, IXmlRpcRouter
+    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
+    public class XmlRpcRouter : INonSharedRegionModule, IXmlRpcRouter
     {
         //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        
-        public void Initialise(Scene scene, IConfigSource config)
+        private bool m_Enabled = false;
+
+        public void Initialise(IConfigSource config)
         {
             IConfig startupConfig = config.Configs["Startup"];
             if (startupConfig == null)
@@ -52,8 +55,29 @@ namespace OpenSim.Region.OptionalModules.Scripting.XmlRpcRouterModule
             if (startupConfig.GetString("XmlRpcRouterModule",
                     "XmlRpcRouterModule") == "XmlRpcRouterModule")
             {
-                scene.RegisterModuleInterface<IXmlRpcRouter>(this);
+                m_Enabled = true;
             }
+        }
+
+        public void AddRegion(Scene scene)
+        {
+            if(m_Enabled)
+                scene.RegisterModuleInterface<IXmlRpcRouter>(this);
+        }
+
+        public void RemoveRegion(Scene scene)
+        {
+
+        }
+
+        public void RegionLoaded(Scene scene)
+        {
+
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
         }
 
         public void PostInitialise()

@@ -43,10 +43,12 @@ using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using Mono.Addins;
 
 namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
 {
-    public class MRMModule : IRegionModule, IMRMModule
+    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
+    public class MRMModule : INonSharedRegionModule, IMRMModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private Scene m_scene;
@@ -59,6 +61,7 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
 
         private readonly MicroScheduler m_microthreads = new MicroScheduler();
 
+        private bool m_enabled = true;
 
         private IConfig m_config;
 
@@ -67,7 +70,7 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
             m_extensions[typeof (T)] = instance;
         }
 
-        public void Initialise(Scene scene, IConfigSource source)
+        public void Initialise(IConfigSource source)
         {
             if (source.Configs["MRM"] != null)
             {
@@ -75,20 +78,7 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
 
                 if (source.Configs["MRM"].GetBoolean("Enabled", false))
                 {
-                    //m_log.Info("[MRM] Enabling MRM Module");
-                    m_scene = scene;
-                
-                    // when hidden, we don't listen for client initiated script events
-                    // only making the MRM engine available for region modules
-                    if (!source.Configs["MRM"].GetBoolean("Hidden", false))
-                    {
-                        scene.EventManager.OnRezScript += EventManager_OnRezScript;
-                        scene.EventManager.OnStopScript += EventManager_OnStopScript;
-                    }
-                    
-                    scene.EventManager.OnFrame += EventManager_OnFrame;
-
-                    scene.RegisterModuleInterface<IMRMModule>(this);
+                    m_enabled = false;
                 }
                 else
                 {
@@ -99,6 +89,45 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
             {
                 //m_log.Info("[MRM] Disabled MRM Module (Default disabled)");
             }
+        }
+
+        public void AddRegion(Scene scene)
+        {
+            if (!m_enabled)
+                return;
+
+            //m_log.Info("[MRM] Enabling MRM Module");
+            m_scene = scene;
+
+            // when hidden, we don't listen for client initiated script events
+            // only making the MRM engine available for region modules
+            if (!m_config.GetBoolean("Hidden", false))
+            {
+                scene.EventManager.OnRezScript += EventManager_OnRezScript;
+                scene.EventManager.OnStopScript += EventManager_OnStopScript;
+            }
+
+            scene.EventManager.OnFrame += EventManager_OnFrame;
+
+            scene.RegisterModuleInterface<IMRMModule>(this);
+        }
+
+        public void RemoveRegion(Scene scene)
+        {
+            foreach (KeyValuePair<UUID, MRMBase> pair in m_scripts)
+            {
+                pair.Value.Stop();
+            }
+        }
+
+        public void RegionLoaded(Scene scene)
+        {
+
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
         }
 
         void EventManager_OnStopScript(uint localID, UUID itemID)
@@ -309,10 +338,6 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
 
         public void Close()
         {
-            foreach (KeyValuePair<UUID, MRMBase> pair in m_scripts)
-            {
-                pair.Value.Stop();
-            }
         }
 
         public string Name

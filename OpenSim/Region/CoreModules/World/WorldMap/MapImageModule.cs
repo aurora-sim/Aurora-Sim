@@ -36,6 +36,7 @@ using OpenMetaverse.Imaging;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using Mono.Addins;
 
 namespace OpenSim.Region.CoreModules.World.WorldMap
 {
@@ -59,7 +60,8 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         public face[] trns;
     }
 
-    public class MapImageModule : IMapImageGenerator, IRegionModule
+    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
+    public class MapImageModule : IMapImageGenerator, INonSharedRegionModule
     {
         private static readonly ILog m_log =
             LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -130,10 +132,14 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
         #region IRegionModule Members
 
-        public void Initialise(Scene scene, IConfigSource source)
+        public void Initialise(IConfigSource source)
+        {
+            m_config = source;
+        }
+
+        public void AddRegion(Scene scene)
         {
             m_scene = scene;
-            m_config = source;
 
             IConfig startupConfig = m_config.Configs["Startup"];
             if (startupConfig.GetString("MapImageModule", "MapImageModule") !=
@@ -141,6 +147,21 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                 return;
 
             m_scene.RegisterModuleInterface<IMapImageGenerator>(this);
+        }
+
+        public void RemoveRegion(Scene scene)
+        {
+
+        }
+
+        public void RegionLoaded(Scene scene)
+        {
+
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
         }
 
         public void PostInitialise()

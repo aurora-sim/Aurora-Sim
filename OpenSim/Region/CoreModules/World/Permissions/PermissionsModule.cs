@@ -37,6 +37,7 @@ using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
 using Aurora.Framework;
+using Mono.Addins;
 
 // Temporary fix of wrong GroupPowers constants in OpenMetaverse library
 enum GroupPowers : long
@@ -90,11 +91,13 @@ enum GroupPowers : long
 
 namespace OpenSim.Region.CoreModules.World.Permissions
 {
-    public class PermissionsModule : IRegionModule
+    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
+    public class PermissionsModule : INonSharedRegionModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
                 
         protected Scene m_scene;
+        private IConfig myConfig = null;
 
         private InventoryFolderImpl m_libraryRootFolder;
         protected InventoryFolderImpl LibraryRootFolder
@@ -170,11 +173,9 @@ namespace OpenSim.Region.CoreModules.World.Permissions
 
         #region IRegionModule Members
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialise(IConfigSource config)
         {
-            m_scene = scene;
-
-            IConfig myConfig = config.Configs["Startup"];
+            myConfig = config.Configs["Startup"];
 
             string permissionModules = myConfig.GetString("permissionmodules", "DefaultPermissionsModule");
 
@@ -195,10 +196,16 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             m_allowedScriptEditors
                 = ParseUserSetConfigSetting(myConfig, "allowed_script_editors", m_allowedScriptEditors);
 
+        }
+
+        public void AddRegion(Scene scene)
+        {
+            m_scene = scene;
+
             //if (m_bypassPermissions)
-                //m_log.Info("[PERMISSIONS]: serviceside_object_permissions = false in ini file so disabling all region service permission checks");
+            //m_log.Info("[PERMISSIONS]: serviceside_object_permissions = false in ini file so disabling all region service permission checks");
             //else
-                //m_log.Debug("[PERMISSIONS]: Enabling all region service permission checks");
+            //m_log.Debug("[PERMISSIONS]: Enabling all region service permission checks");
 
             //Register functions with Scene External Checks!
             m_scene.Permissions.OnBypassPermissions += BypassPermissions;
@@ -231,23 +238,23 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             m_scene.Permissions.OnLinkObject += CanLinkObject; //NOT YET IMPLEMENTED
             m_scene.Permissions.OnDelinkObject += CanDelinkObject; //NOT YET IMPLEMENTED
             m_scene.Permissions.OnBuyLand += CanBuyLand; //NOT YET IMPLEMENTED
-            
+
             m_scene.Permissions.OnViewNotecard += CanViewNotecard; //NOT YET IMPLEMENTED
             m_scene.Permissions.OnViewScript += CanViewScript; //NOT YET IMPLEMENTED
             m_scene.Permissions.OnEditNotecard += CanEditNotecard; //NOT YET IMPLEMENTED
             m_scene.Permissions.OnEditScript += CanEditScript; //NOT YET IMPLEMENTED
-            
+
             m_scene.Permissions.OnCreateObjectInventory += CanCreateObjectInventory; //NOT IMPLEMENTED HERE 
             m_scene.Permissions.OnEditObjectInventory += CanEditObjectInventory;//MAYBE FULLY IMPLEMENTED
             m_scene.Permissions.OnCopyObjectInventory += CanCopyObjectInventory; //NOT YET IMPLEMENTED
             m_scene.Permissions.OnDeleteObjectInventory += CanDeleteObjectInventory; //NOT YET IMPLEMENTED
             m_scene.Permissions.OnResetScript += CanResetScript;
-            
+
             m_scene.Permissions.OnCreateUserInventory += CanCreateUserInventory; //NOT YET IMPLEMENTED
             m_scene.Permissions.OnCopyUserInventory += CanCopyUserInventory; //NOT YET IMPLEMENTED
             m_scene.Permissions.OnEditUserInventory += CanEditUserInventory; //NOT YET IMPLEMENTED
             m_scene.Permissions.OnDeleteUserInventory += CanDeleteUserInventory; //NOT YET IMPLEMENTED
-            
+
             m_scene.Permissions.OnTeleport += CanTeleport;
 
             m_scene.AddCommand(this, "bypass permissions",
@@ -264,27 +271,33 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                     "debug permissions <true / false>",
                     "Enable permissions debugging",
                     HandleDebugPermissions);
-                    
-                    
-            string grant = myConfig.GetString("GrantLSL","");
-            if (grant.Length > 0) {
-                foreach (string uuidl in grant.Split(',')) {
+
+
+            string grant = myConfig.GetString("GrantLSL", "");
+            if (grant.Length > 0)
+            {
+                foreach (string uuidl in grant.Split(','))
+                {
                     string uuid = uuidl.Trim(" \t".ToCharArray());
                     GrantLSL.Add(uuid, true);
                 }
             }
 
-            grant = myConfig.GetString("GrantCS","");
-            if (grant.Length > 0) {
-                foreach (string uuidl in grant.Split(',')) {
+            grant = myConfig.GetString("GrantCS", "");
+            if (grant.Length > 0)
+            {
+                foreach (string uuidl in grant.Split(','))
+                {
                     string uuid = uuidl.Trim(" \t".ToCharArray());
                     GrantCS.Add(uuid, true);
                 }
             }
 
-            grant = myConfig.GetString("GrantVB","");
-            if (grant.Length > 0) {
-                foreach (string uuidl in grant.Split(',')) {
+            grant = myConfig.GetString("GrantVB", "");
+            if (grant.Length > 0)
+            {
+                foreach (string uuidl in grant.Split(','))
+                {
                     string uuid = uuidl.Trim(" \t".ToCharArray());
                     GrantVB.Add(uuid, true);
                 }
@@ -309,7 +322,29 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                     GrantYP.Add(uuid, true);
                 }
             }
+        }
 
+        public void RemoveRegion(Scene scene)
+        {
+
+        }
+
+        public void RegionLoaded(Scene scene)
+        {
+            m_friendsModule = m_scene.RequestModuleInterface<IFriendsModule>();
+
+            //if (m_friendsModule == null)
+            //    m_log.Warn("[PERMISSIONS]: Friends module not found, friend permissions will not work");
+
+            m_groupsModule = m_scene.RequestModuleInterface<IGroupsModule>();
+
+            //if (m_groupsModule == null)
+            //    m_log.Warn("[PERMISSIONS]: Groups module not found, group permissions will not work");        
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
         }
 
         public void HandleBypassPermissions(string module, string[] args)
@@ -385,15 +420,6 @@ namespace OpenSim.Region.CoreModules.World.Permissions
 
         public void PostInitialise()
         {
-            m_friendsModule = m_scene.RequestModuleInterface<IFriendsModule>();
-
-            //if (m_friendsModule == null)
-            //    m_log.Warn("[PERMISSIONS]: Friends module not found, friend permissions will not work");
-
-            m_groupsModule = m_scene.RequestModuleInterface<IGroupsModule>();
-
-            //if (m_groupsModule == null)
-            //    m_log.Warn("[PERMISSIONS]: Groups module not found, group permissions will not work");        
         }
 
         public void Close()

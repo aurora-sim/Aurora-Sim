@@ -42,10 +42,12 @@ using OpenSim.Services.Interfaces;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 using Aurora.DataManager;
 using Aurora.Framework;
+using Mono.Addins;
 
 namespace Aurora.Modules
 {
-    public class AuroraMapSearchModule : IRegionModule
+    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
+    public class AuroraMapSearchModule : ISharedRegionModule
 	{
 		private static readonly ILog m_log =
 			LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -57,7 +59,7 @@ namespace Aurora.Modules
         private ISimMapConnector SimMapConnector;
 
 		#region IRegionModule Members
-		public void Initialise(Scene scene, IConfigSource source)
+		public void Initialise(IConfigSource source)
 		{
             if (source.Configs["MapModule"] != null)
             {
@@ -70,19 +72,38 @@ namespace Aurora.Modules
                 }
             }
 			m_config = source;
-			if (m_scene == null)
-			{
-				m_scene = scene;
-			}
-			m_scenes.Add(scene);
-
-			scene.EventManager.OnNewClient += OnNewClient;
 		}
+
+        public void AddRegion(Scene scene)
+        {
+            if (!m_Enabled)
+                return;
+            if (m_scene == null)
+            {
+                m_scene = scene;
+            }
+            m_scenes.Add(scene);
+
+            scene.EventManager.OnNewClient += OnNewClient;
+        }
+
+        public void RemoveRegion(Scene scene)
+        {
+
+        }
+
+        public void RegionLoaded(Scene scene)
+        {
+
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
+        }
 
 		public void PostInitialise()
 		{
-            if (!m_Enabled)
-                return;
 		}
 
 		public void Close()

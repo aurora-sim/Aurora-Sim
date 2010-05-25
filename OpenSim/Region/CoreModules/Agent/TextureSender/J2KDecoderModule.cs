@@ -40,12 +40,14 @@ using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
+using Mono.Addins;
 
 namespace OpenSim.Region.CoreModules.Agent.TextureSender
 {
     public delegate void J2KDecodeDelegate(UUID assetID);
 
-    public class J2KDecoderModule : IRegionModule, IJ2KDecoder
+    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
+    public class J2KDecoderModule : ISharedRegionModule, IJ2KDecoder
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -69,13 +71,8 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
         {
         }
 
-        public void Initialise(Scene scene, IConfigSource source)
+        public void Initialise(IConfigSource source)
         {
-            if (m_scene == null)
-                m_scene = scene;
-
-            scene.RegisterModuleInterface<IJ2KDecoder>(this);
-
             IConfig startupConfig = source.Configs["Startup"];
             if (startupConfig != null)
             {
@@ -83,9 +80,31 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
             }
         }
 
-        public void PostInitialise()
+        public void AddRegion(Scene scene)
+        {
+            if (m_scene == null)
+                m_scene = scene;
+
+            scene.RegisterModuleInterface<IJ2KDecoder>(this);
+        }
+
+        public void RemoveRegion(Scene scene)
+        {
+
+        }
+
+        public void RegionLoaded(Scene scene)
         {
             m_cache = m_scene.RequestModuleInterface<IImprovedAssetCache>();
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
+        }
+
+        public void PostInitialise()
+        {
         }
 
         public void Close()

@@ -34,10 +34,12 @@ using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using Mono.Addins;
 
 namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
 {
-    public class AssetTransactionModule : IRegionModule, IAgentAssetTransactions
+    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
+    public class AssetTransactionModule : ISharedRegionModule, IAgentAssetTransactions
     {
 //        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         
@@ -65,7 +67,11 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
 
         #region IRegionModule Members
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialise(IConfigSource config)
+        {
+        }
+
+        public void AddRegion(Scene scene)
         {
             if (!RegisteredScenes.ContainsKey(scene.RegionInfo.RegionID))
             {
@@ -81,6 +87,21 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
             //
             if (m_scene == null)
                 m_scene = scene;
+        }
+
+        public void RemoveRegion(Scene scene)
+        {
+
+        }
+
+        public void RegionLoaded(Scene scene)
+        {
+
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
         }
 
         public void PostInitialise()

@@ -99,25 +99,10 @@ namespace OpenSim.Region.Framework.Scenes
                 Util.XmlRpcCommand(proxyUrl, "Stop");
             }
             // collect known shared modules in sharedModules
-            Dictionary<string, IRegionModule> sharedModules = new Dictionary<string, IRegionModule>();
             for (int i = 0; i < m_localScenes.Count; i++)
             {
-                // extract known shared modules from scene
-                foreach (string k in m_localScenes[i].Modules.Keys)
-                {
-                    if (m_localScenes[i].Modules[k].IsSharedModule &&
-                        !sharedModules.ContainsKey(k))
-                        sharedModules[k] = m_localScenes[i].Modules[k];
-                }
                 // close scene/region
                 m_localScenes[i].Close();
-            }
-
-            // all regions/scenes are now closed, we can now safely
-            // close all shared modules
-            foreach (IRegionModule mod in sharedModules.Values)
-            {
-                mod.Close();
             }
         }
 
@@ -524,20 +509,7 @@ namespace OpenSim.Region.Framework.Scenes
             IClientNetworkServer clientServer = null;
             Scene scene = SetupScene(regionInfo, proxyOffset, m_OpenSimBase.ConfigSource, out clientServer);
 
-            //m_log.Info("[MODULES]: Loading Region's modules (old style)");
-
-            List<IRegionModule> Modules = Aurora.Framework.AuroraModuleLoader.PickupModules<IRegionModule>(Environment.CurrentDirectory, "IRegionModule");
-
-            // This needs to be ahead of the script engine load, so the
-            // script module can pick up events exposed by a module
-            foreach (IRegionModule module in Modules)
-            {
-                module.Initialise(scene, m_OpenSimBase.ConfigSource);
-                scene.AddModule(module.Name, module); //should be doing this?
-            }
-
-            // Use this in the future, the line above will be deprecated soon
-            //m_log.Info("[MODULES]: Loading Region's modules (new style)");
+            m_log.Info("[MODULES]: Loading New Style Region's modules");
             IRegionModulesController controller;
             if (m_OpenSimBase.ApplicationRegistry.TryGet(out controller))
             {
@@ -571,14 +543,6 @@ namespace OpenSim.Region.Framework.Scenes
 
             m_OpenSimBase.ClientServers.Add(clientServer);
             clientServer.Start();
-
-            if (do_post_init)
-            {
-                foreach (IRegionModule module in Modules)
-                {
-                    module.PostInitialise();
-                }
-            }
             scene.EventManager.OnShutdown += delegate() { ShutdownRegion(scene); };
 
             mscene = scene;

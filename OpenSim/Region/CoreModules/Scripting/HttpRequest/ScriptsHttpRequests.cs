@@ -38,6 +38,7 @@ using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using Mono.Addins;
 
 /*****************************************************
  *
@@ -84,7 +85,8 @@ using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
 {
-    public class HttpRequestModule : IRegionModule, IHttpRequestModule
+    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
+    public class HttpRequestModule : INonSharedRegionModule, IHttpRequestModule
     {
         private object HttpListLock = new object();
         private int httpTimeout = 30000;
@@ -231,16 +233,34 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
 
         #region IRegionModule Members
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialise(IConfigSource config)
+        {
+            m_proxyurl = config.Configs["Startup"].GetString("HttpProxy");
+            m_proxyexcepts = config.Configs["Startup"].GetString("HttpProxyExceptions");
+
+            m_pendingRequests = new Dictionary<UUID, HttpRequestClass>();
+        }
+
+        public void AddRegion(Scene scene)
         {
             m_scene = scene;
 
             m_scene.RegisterModuleInterface<IHttpRequestModule>(this);
+        }
 
-        m_proxyurl = config.Configs["Startup"].GetString("HttpProxy");
-        m_proxyexcepts = config.Configs["Startup"].GetString("HttpProxyExceptions");
+        public void RemoveRegion(Scene scene)
+        {
 
-            m_pendingRequests = new Dictionary<UUID, HttpRequestClass>();
+        }
+
+        public void RegionLoaded(Scene scene)
+        {
+
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
         }
 
         public void PostInitialise()

@@ -25,6 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using log4net;
@@ -33,10 +34,12 @@ using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using Mono.Addins;
 
 namespace OpenSim.Region.CoreModules.Avatar.Groups
 {
-    public class GroupsModule : IRegionModule
+    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
+    public class GroupsModule : ISharedRegionModule
     {
         private static readonly ILog m_log =
             LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -55,28 +58,41 @@ namespace OpenSim.Region.CoreModules.Avatar.Groups
         private static GroupMembershipData osGroup =
                 new GroupMembershipData();
 
+        private bool m_Enabled = false;
+
         #region IRegionModule Members
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialise(IConfigSource config)
         {
             IConfig groupsConfig = config.Configs["Groups"];
 
             if (groupsConfig == null)
             {
+                m_Enabled = false;
                 //m_log.Info("[GROUPS]: No configuration found. Using defaults");
             }
             else
             {
                 if (!groupsConfig.GetBoolean("Enabled", false))
                 {
+                    m_Enabled = false;
                     //m_log.Info("[GROUPS]: Groups disabled in configuration");
                     return;
                 }
 
                 if (groupsConfig.GetString("Module", "Default") != "Default")
+                {
+                    m_Enabled = false;
                     return;
+                }
             }
+            m_Enabled = true;
+        }
 
+        public void AddRegion(Scene scene)
+        {
+            if (!m_Enabled)
+                return;
             lock (m_SceneList)
             {
                 if (!m_SceneList.Contains(scene))
@@ -97,6 +113,21 @@ namespace OpenSim.Region.CoreModules.Avatar.Groups
             scene.EventManager.OnNewClient += OnNewClient;
             scene.EventManager.OnClientClosed += OnClientClosed;
             scene.EventManager.OnIncomingInstantMessage += OnGridInstantMessage;
+        }
+
+        public void RemoveRegion(Scene scene)
+        {
+
+        }
+
+        public void RegionLoaded(Scene scene)
+        {
+
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
         }
 
         public void PostInitialise()

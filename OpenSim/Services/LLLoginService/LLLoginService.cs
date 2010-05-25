@@ -289,7 +289,7 @@ namespace OpenSim.Services.LLLoginService
                     }
                     agent.AcceptTOS = true;
                     agentData.UpdateAgent(agent);
-                    if (agent.PermaBanned == 1 || agent.TempBanned == 1)
+                    if ((agent.Flags & IAgentFlags.PermBan) != 0 || (agent.Flags & IAgentFlags.TempBan) != 0)
                     {
                         m_log.Info("[LLOGIN SERVICE]: Login failed, reason: user is banned.");
                         return LLFailedLoginResponse.UserProblem;

@@ -38,10 +38,12 @@ using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using BlockingQueue = OpenSim.Framework.BlockingQueue<OpenSim.Region.Framework.Interfaces.ITextureSender>;
 using OpenSim.Services.Interfaces;
+using Mono.Addins;
 
 namespace OpenSim.Region.CoreModules.Agent.TextureDownload
 {
-    public class TextureDownloadModule : IRegionModule
+    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
+    public class TextureDownloadModule : ISharedRegionModule
     {
         private static readonly ILog m_log
             = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -67,9 +69,12 @@ namespace OpenSim.Region.CoreModules.Agent.TextureDownload
 
         #region IRegionModule Members
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialise(IConfigSource config)
         {
-            
+        }
+
+        public void AddRegion(Scene scene)
+        {
             if (m_scene == null)
             {
                 //m_log.Debug("Creating Texture download module");
@@ -88,6 +93,21 @@ namespace OpenSim.Region.CoreModules.Agent.TextureDownload
                 m_scene.EventManager.OnNewClient += NewClient;
                 m_scene.EventManager.OnRemovePresence += EventManager_OnRemovePresence;
             }
+        }
+
+        public void RemoveRegion(Scene scene)
+        {
+
+        }
+
+        public void RegionLoaded(Scene scene)
+        {
+
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
         }
 
         public void PostInitialise()

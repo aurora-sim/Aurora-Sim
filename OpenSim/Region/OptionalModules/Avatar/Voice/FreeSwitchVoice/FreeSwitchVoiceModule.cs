@@ -49,10 +49,12 @@ using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using Caps = OpenSim.Framework.Capabilities.Caps;
 using System.Text.RegularExpressions;
+using Mono.Addins;
 
 namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
 {
-    public class FreeSwitchVoiceModule : IRegionModule, IVoiceModule
+    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
+    public class FreeSwitchVoiceModule : INonSharedRegionModule, IVoiceModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -107,9 +109,8 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
 
         private IConfig m_config;
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialise(IConfigSource config)
         {
-            m_scene = scene;
             m_config = config.Configs["FreeSwitchVoice"];
 
             if (null == m_config)
@@ -219,15 +220,20 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
                     return;
                 }
             }
+        }
+
+        public void AddRegion(Scene scene)
+        {
+            m_scene = scene;
 
             if (m_pluginEnabled)
             {
                 // we need to capture scene in an anonymous method
                 // here as we need it later in the callbacks
                 scene.EventManager.OnRegisterCaps += delegate(UUID agentID, Caps caps)
-                    {
-                        OnRegisterCaps(scene, agentID, caps);
-                    };
+                {
+                    OnRegisterCaps(scene, agentID, caps);
+                };
 
                 try
                 {
@@ -248,10 +254,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
                     }
                 }
             }
-        }
 
-        public void PostInitialise()
-        {
             if (m_pluginEnabled)
             {
                 m_log.Info("[FreeSwitchVoice] registering IVoiceModule with the scene");
@@ -259,6 +262,24 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
                 // register the voice interface for this module, so the script engine can call us
                 m_scene.RegisterModuleInterface<IVoiceModule>(this);
             }
+        }
+
+        public void RemoveRegion(Scene scene)
+        {
+
+        }
+
+        public void RegionLoaded(Scene scene)
+        {
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
+        }
+
+        public void PostInitialise()
+        {
         }
 
         public void Close()

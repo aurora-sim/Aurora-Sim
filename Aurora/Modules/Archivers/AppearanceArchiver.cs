@@ -12,21 +12,42 @@ using OpenSim.Services.Interfaces;
 using OpenMetaverse;
 using log4net;
 using Aurora.Framework;
+using Mono.Addins;
 
 namespace Aurora.Modules
 {
-	public class AuroraAvatarAppearanceArchiver : IRegionModule, IAvatarAppearanceArchiver
+    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
+    public class AuroraAvatarAppearanceArchiver : ISharedRegionModule, IAvatarAppearanceArchiver
 	{
 		private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 		private Scene m_scene;
 		
-        public void Initialise(Scene scene, Nini.Config.IConfigSource source)
+        public void Initialise(Nini.Config.IConfigSource source)
 		{
-			if (m_scene == null)
-				m_scene = scene;
 			MainConsole.Instance.Commands.AddCommand("region", false, "save avatar archive", "save avatar archive <First> <Last> <Filename>", "Saves appearance to an avatar archive archive", HandleSaveAvatarArchive);
 			MainConsole.Instance.Commands.AddCommand("region", false, "load avatar archive", "load avatar archive <First> <Last> <Filename>", "Loads appearance from an avatar archive archive", HandleLoadAvatarArchive);
 		}
+
+        public void AddRegion(Scene scene)
+        {
+            if (m_scene == null)
+                m_scene = scene;
+        }
+
+        public void RemoveRegion(Scene scene)
+        {
+
+        }
+
+        public void RegionLoaded(Scene scene)
+        {
+
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
+        }
 
         public void PostInitialise() { }
 

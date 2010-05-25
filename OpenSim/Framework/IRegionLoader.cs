@@ -29,14 +29,22 @@ using Nini.Config;
 
 namespace OpenSim.Framework
 {
-    public interface IRegionLoader
+    public interface IRegionLoader : IPlugin
     {
-        string Name { get; }
-
         RegionInfo[] LoadRegions();
 
         void AddRegion();
 
         void Initialise(IConfigSource configSource, IRegionCreator creator, IOpenSimBase openSim);
+    }
+    public class RegionLoaderPluginInitialiser : PluginInitialiserBase
+    {
+        public RegionLoaderPluginInitialiser()
+        {
+        }
+
+        public override void Initialise(IPlugin plugin)
+        {
+        }
     }
 }

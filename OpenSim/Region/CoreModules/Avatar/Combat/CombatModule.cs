@@ -31,10 +31,12 @@ using Nini.Config;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenMetaverse;
+using Mono.Addins;
 
 namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
 {
-    public class CombatModule : IRegionModule
+    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
+    public class CombatModule : INonSharedRegionModule
     {
         //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -53,7 +55,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
         /// </summary>
         /// <param name="scene"></param>
         /// <param name="config"></param>
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialise(IConfigSource config)
+        {
+        }
+
+        public void AddRegion(Scene scene)
         {
             lock (m_scenel)
             {
@@ -69,6 +75,21 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
 
             scene.EventManager.OnAvatarKilled += KillAvatar;
             scene.EventManager.OnAvatarEnteringNewParcel += AvatarEnteringParcel;
+        }
+
+        public void RemoveRegion(Scene scene)
+        {
+
+        }
+
+        public void RegionLoaded(Scene scene)
+        {
+
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
         }
 
         public void PostInitialise()

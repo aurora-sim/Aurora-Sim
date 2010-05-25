@@ -33,16 +33,22 @@ using Nini.Config;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using Mono.Addins;
 
 namespace OpenSim.Region.CoreModules.Agent.IPBan
 {
-    public class IPBanModule : IRegionModule 
+    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
+    public class IPBanModule : ISharedRegionModule 
     {
         #region Implementation of IRegionModule
 
         private List<string> m_bans = new List<string>();
 
-        public void Initialise(Scene scene, IConfigSource source)
+        public void Initialise(IConfigSource source)
+        {
+        }
+
+        public void AddRegion(Scene scene)
         {
             new SceneBanner(scene, m_bans);
 
@@ -50,7 +56,7 @@ namespace OpenSim.Region.CoreModules.Agent.IPBan
             {
                 foreach (EstateBan ban in scene.RegionInfo.EstateSettings.EstateBans)
                 {
-                    if (!String.IsNullOrEmpty(ban.BannedHostIPMask)) 
+                    if (!String.IsNullOrEmpty(ban.BannedHostIPMask))
                         m_bans.Add(ban.BannedHostIPMask);
                     if (!String.IsNullOrEmpty(ban.BannedHostNameMask))
                         m_bans.Add(ban.BannedHostNameMask);
@@ -58,7 +64,12 @@ namespace OpenSim.Region.CoreModules.Agent.IPBan
             }
         }
 
-        public void PostInitialise()
+        public void RemoveRegion(Scene scene)
+        {
+
+        }
+
+        public void RegionLoaded(Scene scene)
         {
             if (File.Exists("bans.txt"))
             {
@@ -68,6 +79,15 @@ namespace OpenSim.Region.CoreModules.Agent.IPBan
                     m_bans.Add(ban);
                 }
             }
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
+        }
+
+        public void PostInitialise()
+        {
         }
 
         public void Close()

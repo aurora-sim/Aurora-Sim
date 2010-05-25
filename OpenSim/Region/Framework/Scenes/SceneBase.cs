@@ -62,15 +62,6 @@ namespace OpenSim.Region.Framework.Scenes
             return null;
         }
 
-        /// <value>
-        /// All the region modules attached to this scene.
-        /// </value>
-        public Dictionary<string, IRegionModule> Modules
-        {
-            get { return m_modules; }
-        }
-        protected Dictionary<string, IRegionModule> m_modules = new Dictionary<string, IRegionModule>();
-
         public Dictionary<string, IRegionModuleBase> RegionModules
         {
             get { return m_regionModules; }
@@ -251,16 +242,6 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public virtual void Close()
         {
-            // Shut down all non shared modules.
-            foreach (IRegionModule module in Modules.Values)
-            {
-                if (!module.IsSharedModule)
-                {
-                    module.Close();
-                }
-            }
-            Modules.Clear();
-
             try
             {
                 EventManager.TriggerShutdown();
@@ -289,19 +270,6 @@ namespace OpenSim.Region.Framework.Scenes
         }
         
         #region Module Methods
-
-        /// <summary>
-        /// Add a module to this scene.
-        /// </summary>
-        /// <param name="name"></param>
-        /// <param name="module"></param>
-        public void AddModule(string name, IRegionModule module)
-        {
-            if (!Modules.ContainsKey(name))
-            {
-                Modules.Add(name, module);
-            }
-        }
 
         /// <summary>
         /// Add a region-module to this scene. TODO: This will replace AddModule in the future.
@@ -483,7 +451,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="showParams">What to show</param>
         public virtual void Show(string[] showParams)
         {
-            switch (showParams[0])
+            /*switch (showParams[0])
             {
                 case "modules":
                     m_log.Error("The currently loaded modules in " + RegionInfo.RegionName + " are:");
@@ -495,7 +463,7 @@ namespace OpenSim.Region.Framework.Scenes
                         }
                     }
                     break;
-            }
+            }*/
         }
 
         public void AddCommand(object mod, string command, string shorthelp, string longhelp, CommandDelegate callback)
@@ -508,13 +476,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (mod != null)
             {
-                if (mod is IRegionModule)
-                {
-                    IRegionModule module = (IRegionModule)mod;
-                    modulename = module.Name;
-                    shared = module.IsSharedModule;
-                }
-                else if (mod is IRegionModuleBase)
+                if (mod is IRegionModuleBase)
                 {
                     IRegionModuleBase module = (IRegionModuleBase)mod;
                     modulename = module.Name;

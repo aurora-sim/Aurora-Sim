@@ -33,6 +33,7 @@ using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using Mono.Addins;
 
 // using log4net;
 // using System.Reflection;
@@ -85,7 +86,8 @@ using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.CoreModules.Scripting.WorldComm
 {
-    public class WorldCommModule : IRegionModule, IWorldComm
+    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
+    public class WorldCommModule : INonSharedRegionModule, IWorldComm
     {
         // private static readonly ILog m_log =
         //     LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -100,7 +102,7 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
 
         #region IRegionModule Members
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialise(IConfigSource config)
         {
             // wrap this in a try block so that defaults will work if
             // the config file doesn't specify otherwise.
@@ -119,14 +121,32 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
             }
             if (maxlisteners < 1) maxlisteners = int.MaxValue;
             if (maxhandles < 1) maxhandles = int.MaxValue;
-
-            m_scene = scene;
-            m_scene.RegisterModuleInterface<IWorldComm>(this);
             m_listenerManager = new ListenerManager(maxlisteners, maxhandles);
-            m_scene.EventManager.OnChatFromClient += DeliverClientMessage;
-            m_scene.EventManager.OnChatBroadcast += DeliverClientMessage;
             m_pendingQ = new Queue();
             m_pending = Queue.Synchronized(m_pendingQ);
+        }
+
+        public void AddRegion(Scene scene)
+        {
+            m_scene = scene;
+            m_scene.RegisterModuleInterface<IWorldComm>(this);
+            m_scene.EventManager.OnChatFromClient += DeliverClientMessage;
+            m_scene.EventManager.OnChatBroadcast += DeliverClientMessage;
+        }
+
+        public void RemoveRegion(Scene scene)
+        {
+
+        }
+
+        public void RegionLoaded(Scene scene)
+        {
+
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
         }
 
         public void PostInitialise()

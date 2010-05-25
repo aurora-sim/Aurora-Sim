@@ -40,10 +40,12 @@ using OpenSim.Framework.Communications;
 using OpenSim.Region.DataSnapshot.Interfaces;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using Mono.Addins;
 
 namespace OpenSim.Region.DataSnapshot
 {
-    public class DataSnapshotManager : IRegionModule, IDataSnapshot
+    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
+    public class DataSnapshotManager : ISharedRegionModule, IDataSnapshot
     {
         #region Class members
         //Information from config
@@ -89,7 +91,7 @@ namespace OpenSim.Region.DataSnapshot
 
         #region IRegionModule
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialise(IConfigSource config)
         {
             if (!m_configLoaded) 
             {
@@ -128,20 +130,23 @@ namespace OpenSim.Region.DataSnapshot
                         return;
                     }
                 }
+            }
+        }
 
-                if (m_enabled)
-                {
-                    //Hand it the first scene, assuming that all scenes have the same BaseHTTPServer
-                    new DataRequestHandler(scene, this);
+        public void AddRegion(Scene scene)
+        {
+            if (m_enabled)
+            {
+                //Hand it the first scene, assuming that all scenes have the same BaseHTTPServer
+                new DataRequestHandler(scene, this);
 
-                    m_hostname = scene.RegionInfo.ExternalHostName;
-                    m_snapStore = new SnapshotStore(m_snapsDir, m_gridinfo, m_listener_port, m_hostname);
+                m_hostname = scene.RegionInfo.ExternalHostName;
+                m_snapStore = new SnapshotStore(m_snapsDir, m_gridinfo, m_listener_port, m_hostname);
 
-                    MakeEverythingStale();
+                MakeEverythingStale();
 
-                    if (m_dataServices != "" &&  m_dataServices != "noservices")
-                        NotifyDataServices(m_dataServices, "online");
-                }
+                if (m_dataServices != "" && m_dataServices != "noservices")
+                    NotifyDataServices(m_dataServices, "online");
             }
 
             if (m_enabled)
@@ -184,10 +189,24 @@ namespace OpenSim.Region.DataSnapshot
             }
         }
 
-        public void Close() 
+        public void RemoveRegion(Scene scene)
         {
             if (m_enabled && m_dataServices != "" && m_dataServices != "noservices")
                 NotifyDataServices(m_dataServices, "offline");
+        }
+
+        public void RegionLoaded(Scene scene)
+        {
+
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
+        }
+
+        public void Close() 
+        {
         }
 
 

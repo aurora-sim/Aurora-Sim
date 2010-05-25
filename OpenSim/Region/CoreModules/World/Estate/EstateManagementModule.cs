@@ -35,9 +35,11 @@ using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using Mono.Addins;
 
 namespace OpenSim.Region.CoreModules.World.Estate
 {
+    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class EstateManagementModule : IEstateModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -893,26 +895,8 @@ namespace OpenSim.Region.CoreModules.World.Estate
 
         #region IRegionModule Members
 
-        public void Initialise(Scene scene, IConfigSource source)
+        public void Initialise(IConfigSource source)
         {
-            m_scene = scene;
-            m_scene.RegisterModuleInterface<IEstateModule>(this);
-            m_scene.EventManager.OnNewClient += EventManager_OnNewClient;
-            m_scene.EventManager.OnRequestChangeWaterHeight += changeWaterHeight;
-
-            m_scene.AddCommand(this, "set terrain texture",
-                               "set terrain texture <number> <uuid> [<x>] [<y>]",
-                               "Sets the terrain <number> to <uuid>, if <x> or <y> are specified, it will only " +
-                               "set it on regions with a matching coordinate. Specify -1 in <x> or <y> to wildcard" +
-                               " that coordinate.",
-                               consoleSetTerrainTexture);
-
-            m_scene.AddCommand(this, "set terrain heights",
-                               "set terrain heights <corner> <min> <max> [<x>] [<y>]",
-                               "Sets the terrain texture heights on corner #<corner> to <min>/<max>, if <x> or <y> are specified, it will only " +
-                               "set it on regions with a matching coordinate. Specify -1 in <x> or <y> to wildcard" +
-                               " that coordinate. Corner # SW = 0, NW = 1, SE = 2, NE = 3.",
-                               consoleSetTerrainHeights);
         }
 
         #region Console Commands
@@ -1004,11 +988,49 @@ namespace OpenSim.Region.CoreModules.World.Estate
 
         #endregion
 
-        public void PostInitialise()
+
+
+        public void AddRegion(Scene scene)
+        {
+            m_scene = scene;
+            m_scene.RegisterModuleInterface<IEstateModule>(this);
+            m_scene.EventManager.OnNewClient += EventManager_OnNewClient;
+            m_scene.EventManager.OnRequestChangeWaterHeight += changeWaterHeight;
+
+            m_scene.AddCommand(this, "set terrain texture",
+                               "set terrain texture <number> <uuid> [<x>] [<y>]",
+                               "Sets the terrain <number> to <uuid>, if <x> or <y> are specified, it will only " +
+                               "set it on regions with a matching coordinate. Specify -1 in <x> or <y> to wildcard" +
+                               " that coordinate.",
+                               consoleSetTerrainTexture);
+
+            m_scene.AddCommand(this, "set terrain heights",
+                               "set terrain heights <corner> <min> <max> [<x>] [<y>]",
+                               "Sets the terrain texture heights on corner #<corner> to <min>/<max>, if <x> or <y> are specified, it will only " +
+                               "set it on regions with a matching coordinate. Specify -1 in <x> or <y> to wildcard" +
+                               " that coordinate. Corner # SW = 0, NW = 1, SE = 2, NE = 3.",
+                               consoleSetTerrainHeights);
+        }
+
+        public void RemoveRegion(Scene scene)
+        {
+
+        }
+
+        public void RegionLoaded(Scene scene)
         {
             // Sets up the sun module based no the saved Estate and Region Settings
             // DO NOT REMOVE or the sun will stop working
             m_scene.TriggerEstateSunUpdate();
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
+        }
+        
+        public void PostInitialise()
+        {
         }
 
         public void Close()

@@ -34,10 +34,12 @@ using OpenSim.Region.Framework.Scenes;
 using OpenSim.Region.Physics.Manager;
 using log4net;
 using OpenMetaverse;
+using Mono.Addins;
 
 namespace Aurora.Modules
 {
-    public class CombatModule : IRegionModule
+    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
+    public class CombatModule : ISharedRegionModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -56,9 +58,13 @@ namespace Aurora.Modules
         /// </summary>
         /// <param name="scene"></param>
         /// <param name="config"></param>
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialise(IConfigSource config)
         {
             m_config = config.Configs["CombatModule"];
+        }
+
+        public void AddRegion(Scene scene)
+        {
             lock (m_scenel)
             {
                 if (m_scenel.ContainsKey(scene.RegionInfo.RegionHandle))
@@ -74,6 +80,21 @@ namespace Aurora.Modules
             scene.EventManager.OnAvatarKilled += KillAvatar;
             scene.EventManager.OnAvatarEnteringNewParcel += AvatarEnteringParcel;
             scene.AuroraEventManager.OnGenericEvent += new Aurora.Framework.OnGenericEventHandler(AuroraEventManager_OnGenericEvent);
+        }
+
+        public void RemoveRegion(Scene scene)
+        {
+
+        }
+
+        public void RegionLoaded(Scene scene)
+        {
+
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
         }
 
         void AuroraEventManager_OnGenericEvent(string FunctionName, object parameters)

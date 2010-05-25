@@ -198,12 +198,12 @@ namespace Aurora.Modules
             newPosition = Position;
             EstateSettings ES = ((Scene)scene).EstateService.LoadEstateSettings(scene.RegionInfo.RegionID, false);
             IAgentConnector data = DataManager.DataManager.IAgentConnector;
-            IAgentInfo Profile = data.GetAgent(userID);
+            IAgentInfo agent = data.GetAgent(userID);
             
-            if (((Scene)scene).RegionInfo.RegionSettings.Maturity > Profile.MaxMaturity)
+            if (((Scene)scene).RegionInfo.RegionSettings.Maturity > agent.MaxMaturity)
                 return false;
 
-            if (ES.DenyMinors && Profile.IsMinor)
+            if (ES.DenyMinors && (agent.Flags & IAgentFlags.Minor) != 0)
                 return false;
 
             if (!ES.PublicAccess)

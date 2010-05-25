@@ -37,10 +37,12 @@ using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using log4net;
 using System.Reflection;
+using Mono.Addins;
 
 namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
 {
-    public class DynamicTextureModule : IRegionModule, IDynamicTextureManager
+    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
+    public class DynamicTextureModule : ISharedRegionModule, IDynamicTextureManager
     {
         //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -212,13 +214,33 @@ namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
 
         #region IRegionModule Members
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialise(IConfigSource config)
         {
+        }
+
+        public void AddRegion(Scene scene)
+        {
+
             if (!RegisteredScenes.ContainsKey(scene.RegionInfo.RegionID))
             {
                 RegisteredScenes.Add(scene.RegionInfo.RegionID, scene);
                 scene.RegisterModuleInterface<IDynamicTextureManager>(this);
             }
+        }
+
+        public void RemoveRegion(Scene scene)
+        {
+
+        }
+
+        public void RegionLoaded(Scene scene)
+        {
+
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
         }
 
         public void PostInitialise()

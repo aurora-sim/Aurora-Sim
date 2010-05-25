@@ -39,10 +39,12 @@ using OpenSim.Framework;
 using OpenSim.Framework.Communications;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using Mono.Addins;
 
 namespace OpenSim.Region.CoreModules.InterGrid
 {
-    public class OGSRadmin : IRegionModule 
+    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
+    public class OGSRadmin : ISharedRegionModule 
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly List<Scene> m_scenes = new List<Scene>();
@@ -59,6 +61,19 @@ namespace OpenSim.Region.CoreModules.InterGrid
         public void Initialise(IConfigSource source)
         {
             m_settings = source;
+        }
+
+        public void RegionLoaded(Scene scene)
+        {
+            if (m_settings.Configs["Startup"].GetBoolean("gridmode", false))
+            {
+                MainServer.Instance.AddXmlRPCHandler("grid_message", GridWideMessage);
+            }
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
         }
 
         public void Close()
@@ -78,17 +93,8 @@ namespace OpenSim.Region.CoreModules.InterGrid
                 m_scenes.Remove(scene);
         }
 
-        public void RegionLoaded(Scene scene)
-        {
-            
-        }
-
         public void PostInitialise()
         {
-            if (m_settings.Configs["Startup"].GetBoolean("gridmode", false))
-            {
-                MainServer.Instance.AddXmlRPCHandler("grid_message", GridWideMessage);
-            }
         }
 
         #endregion

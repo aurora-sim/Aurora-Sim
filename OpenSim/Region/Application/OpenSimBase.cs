@@ -544,8 +544,10 @@ namespace OpenSim
 		/// <param name="cmd">0,1,region name, region XML file</param>
 		private void HandleCreateRegion(string module, string[] cmd)
 		{
-			List<IRegionLoader> regionLoaders = Aurora.Framework.AuroraModuleLoader.PickupModules<IRegionLoader>(Environment.CurrentDirectory, "IRegionLoader");
-			foreach (IRegionLoader loader in regionLoaders) {
+			RegionLoaderPluginInitialiser RegionLoaderPluginInitialiser = new RegionLoaderPluginInitialiser();
+            List<IRegionLoader> regionLoaders = Aurora.Framework.AuroraModuleLoader.LoadPlugins<IRegionLoader>("/OpenSim/Startup", RegionLoaderPluginInitialiser);
+            foreach (IRegionLoader loader in regionLoaders)
+            {
 				loader.AddRegion();
 			}
 		}

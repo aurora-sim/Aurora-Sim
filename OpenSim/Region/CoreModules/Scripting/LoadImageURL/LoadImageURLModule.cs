@@ -36,10 +36,12 @@ using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using log4net;
 using System.Reflection;
+using Mono.Addins;
 
 namespace OpenSim.Region.CoreModules.Scripting.LoadImageURL
 {
-    public class LoadImageURLModule : IRegionModule, IDynamicTextureRender
+    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
+    public class LoadImageURLModule : ISharedRegionModule, IDynamicTextureRender
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -99,24 +101,41 @@ namespace OpenSim.Region.CoreModules.Scripting.LoadImageURL
 
         #region IRegionModule Members
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialise(IConfigSource config)
+        {
+            m_proxyurl = config.Configs["Startup"].GetString("HttpProxy");
+            m_proxyexcepts = config.Configs["Startup"].GetString("HttpProxyExceptions");
+        }
+
+        public void AddRegion(Scene scene)
         {
             if (m_scene == null)
             {
                 m_scene = scene;
             }
-            
-            m_proxyurl = config.Configs["Startup"].GetString("HttpProxy");
-            m_proxyexcepts = config.Configs["Startup"].GetString("HttpProxyExceptions");
         }
 
-        public void PostInitialise()
+        public void RemoveRegion(Scene scene)
+        {
+
+        }
+
+        public void RegionLoaded(Scene scene)
         {
             m_textureManager = m_scene.RequestModuleInterface<IDynamicTextureManager>();
             if (m_textureManager != null)
             {
                 m_textureManager.RegisterRender(GetContentType(), this);
             }
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
+        }
+
+        public void PostInitialise()
+        {
         }
 
         public void Close()

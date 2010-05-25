@@ -22,7 +22,9 @@ namespace Aurora.Framework
 
         #endregion
 
-        #region Old Style Region Loaders
+        //Decapriated 24-5-10 - Revolution Smythe
+        // Commit 
+        /*#region Old Style Region Loaders
 
         static List<string> dllBlackList;
         static bool firstLoad = true;
@@ -265,6 +267,6 @@ namespace Aurora.Framework
             return modules.ToArray();
         }
 
-        #endregion
+        #endregion*/
     }
 }

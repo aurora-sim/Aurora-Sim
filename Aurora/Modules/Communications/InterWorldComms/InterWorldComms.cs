@@ -19,6 +19,7 @@ using log4net;
 using OpenSim.Services.Interfaces;
 using OpenMetaverse;
 using Aurora.DataManager;
+using Mono.Addins;
 
 namespace Aurora.Modules
 {
@@ -72,7 +73,8 @@ namespace Aurora.Modules
         Low = 1 // Only showing on the map.
     }
 
-    public class InterWorldComms : IRegionModule
+    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
+    public class InterWorldComms : ISharedRegionModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         public string OurPassword = "";
@@ -83,7 +85,7 @@ namespace Aurora.Modules
         public IWCOutgoingConnections OutgoingComms;
         private SimMapConnector SimMapConnector;
 
-        public void Initialise(Scene scene, IConfigSource source)
+        public void Initialise(IConfigSource source)
         {
             if (source.Configs["AuroraInterWorldConnectors"] != null)
             {
@@ -95,14 +97,8 @@ namespace Aurora.Modules
                     return;
                 }
             }
-            m_scenes.Add(scene);
-            SimMapConnector = new SimMapConnector(scene.GridService);
-            
             m_config = source.Configs["AuroraInterWorldConnectors"];
             OurPassword = m_config.GetString("OurPassword", "");
-
-            MainServer.Instance.AddStreamHandler(new IWCIncomingConnections(this));
-
         }
 
         public bool IsSharedModule{ get { return true; } }
@@ -113,14 +109,37 @@ namespace Aurora.Modules
 
         public void PostInitialise()
         {
+        }
+
+        public void AddRegion(Scene scene)
+        {
+            m_scenes.Add(scene);
+        }
+
+        public void RemoveRegion(Scene scene)
+        {
+
+        }
+
+        public void RegionLoaded(Scene scene)
+        {
             if (!m_Enabled)
                 return;
+
+            SimMapConnector = new SimMapConnector(scene.GridService);
+            MainServer.Instance.AddStreamHandler(new IWCIncomingConnections(this));
+            MainServer.Instance.AddStreamHandler(new IWCForeignAgentsConnector(this));
 
             OutgoingComms = new IWCOutgoingConnections(m_scenes, this);
             //Make our connection strings.
             Connections = BuildConnections();
 
             ContactOtherServers();
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
         }
 
         private void ContactOtherServers()
@@ -330,6 +349,157 @@ namespace Aurora.Modules
 
             Dictionary<string, object> result = new Dictionary<string, object>();
             
+            if (connector.Password != IWC.OurPassword)
+            {
+                result["result"] = "WrongPassword";
+            }
+
+            IWC.RetriveOtherServersRegions(request);
+
+            result["result"] = "Successful";
+            result = IWC.BuildOurLocalRegions();
+
+            return Return(result);
+        }
+
+        #region Misc
+
+        private byte[] Return(Dictionary<string, object> result)
+        {
+            string xmlString = ServerUtils.BuildXmlResponse(result);
+            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
+        }
+
+        private byte[] SuccessResult()
+        {
+            XmlDocument doc = new XmlDocument();
+
+            XmlNode xmlnode = doc.CreateNode(XmlNodeType.XmlDeclaration,
+                    "", "");
+
+            doc.AppendChild(xmlnode);
+
+            XmlElement rootElement = doc.CreateElement("", "ServerResponse",
+                    "");
+
+            doc.AppendChild(rootElement);
+
+            XmlElement result = doc.CreateElement("", "Result", "");
+            result.AppendChild(doc.CreateTextNode("Success"));
+
+            rootElement.AppendChild(result);
+
+            return DocToBytes(doc);
+        }
+
+        private byte[] FailureResult()
+        {
+            return FailureResult(String.Empty);
+        }
+
+        private byte[] FailureResult(string msg)
+        {
+            XmlDocument doc = new XmlDocument();
+
+            XmlNode xmlnode = doc.CreateNode(XmlNodeType.XmlDeclaration,
+                    "", "");
+
+            doc.AppendChild(xmlnode);
+
+            XmlElement rootElement = doc.CreateElement("", "ServerResponse",
+                    "");
+
+            doc.AppendChild(rootElement);
+
+            XmlElement result = doc.CreateElement("", "Result", "");
+            result.AppendChild(doc.CreateTextNode("Failure"));
+
+            rootElement.AppendChild(result);
+
+            XmlElement message = doc.CreateElement("", "Message", "");
+            message.AppendChild(doc.CreateTextNode(msg));
+
+            rootElement.AppendChild(message);
+
+            return DocToBytes(doc);
+        }
+
+        private byte[] DocToBytes(XmlDocument doc)
+        {
+            MemoryStream ms = new MemoryStream();
+            XmlTextWriter xw = new XmlTextWriter(ms, null);
+            xw.Formatting = Formatting.Indented;
+            doc.WriteTo(xw);
+            xw.Flush();
+
+            return ms.ToArray();
+        }
+
+        #endregion
+    }
+
+    public class IWCForeignAgentsConnector : BaseStreamHandler
+    {
+        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private InterWorldComms IWC;
+
+        public IWCForeignAgentsConnector(InterWorldComms iwc) :
+            base("POST", "/IWCAgents")
+        {
+            IWC = iwc;
+        }
+
+        public override byte[] Handle(string path, Stream requestData,
+                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+        {
+            StreamReader sr = new StreamReader(requestData);
+            string body = sr.ReadToEnd();
+            sr.Close();
+            body = body.Trim();
+
+            string method = "";
+            try
+            {
+                Dictionary<string, object> request =
+                        ServerUtils.ParseQueryString(body);
+
+                if (!request.ContainsKey("METHOD"))
+                    return FailureResult();
+
+                method = request["METHOD"].ToString();
+
+                switch (method)
+                {
+                    case "newconnection":
+                        return NewConnection(request);
+
+                }
+                m_log.DebugFormat("[IWCConnector]: unknown method {0} request {1}", method.Length, method);
+            }
+            catch (Exception e)
+            {
+                m_log.DebugFormat("[IWCConnector]: Exception {0} in " + method, e);
+            }
+
+            return FailureResult();
+
+        }
+
+        /// <summary>
+        /// This deals with incoming requests to add this server to their map.
+        /// This refuses or successfully allows the foreign server to interact with
+        /// this region.
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        private byte[] NewConnection(Dictionary<string, object> request)
+        {
+            Connector connector = new Connector(request);
+
+            Dictionary<string, object> result = new Dictionary<string, object>();
+
             if (connector.Password != IWC.OurPassword)
             {
                 result["result"] = "WrongPassword";

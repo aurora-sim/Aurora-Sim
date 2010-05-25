@@ -94,7 +94,7 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
             }
         }
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialise(IConfigSource config)
         {
             m_Config = config;
             IConfig SMTPConfig;
@@ -136,7 +136,10 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
                 m_Enabled = false;
                 return;
             }
+        }
 
+        public void AddRegion(Scene scene)
+        {
             // It's a go!
             if (m_Enabled)
             {
@@ -158,6 +161,21 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
 
                 //m_log.Info("[EMAIL] Activated DefaultEmailModule");
             }
+        }
+
+        public void RemoveRegion(Scene scene)
+        {
+
+        }
+
+        public void RegionLoaded(Scene scene)
+        {
+
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
         }
 
         public void PostInitialise()
