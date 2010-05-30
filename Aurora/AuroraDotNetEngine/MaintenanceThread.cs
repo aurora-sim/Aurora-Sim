@@ -52,16 +52,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(CurrentDomain_AssemblyResolve);
             m_ScriptEngine = Engine;
             ScriptFrontend = Aurora.DataManager.DataManager.IScriptDataConnector;
-            for (int i = 0; i <= Engine.NumberOfEventQueueThreads; i++)
+            for (int i = 0; i < Engine.NumberOfEventQueueThreads; i++)
             {
                 EventQueue eqtc = new EventQueue(m_ScriptEngine, Engine.SleepTime);
                 Watchdog.StartThread(eqtc.DoProcessQueue, "EventQueueThread", ThreadPriority.Normal, true);
             }
-            for (int i = 0; i <= Engine.NumberOfStateSavingThreads; i++)
+            for (int i = 0; i < Engine.NumberOfStateSavingThreads; i++)
             {
                 Watchdog.StartThread(StateSavingMaintenance, "StateSavingMaintenance", ThreadPriority.Normal, true);
             }
-            for (int i = 0; i <= Engine.NumberOfStartStopThreads; i++)
+            for (int i = 0; i < Engine.NumberOfStartStopThreads; i++)
             {
                 Watchdog.StartThread(StartEndScriptMaintenance, "StartEndScriptMaintenance", ThreadPriority.Normal, true);
             }
@@ -76,7 +76,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 try
                 {
                     Thread.Sleep(m_ScriptEngine.SleepTime); // Sleep before next pass
-
                     // LOAD / UNLOAD SCRIPTS
                     DoScriptsLoadUnload();
                     lock (Resumeable)
@@ -116,10 +115,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public void DoStateQueue()
         {
-            if (m_ScriptEngine.StateQueue.Count != 0)
+            if (ScriptEngine.StateQueue.Count != 0)
             {
                 StateQueueItem item = null;
-                m_ScriptEngine.StateQueue.Dequeue(out item);
+                ScriptEngine.StateQueue.Dequeue(out item);
                 if (item == null)
                     return;
                 if (item.Create)
@@ -164,11 +163,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// </summary>
         public void DoScriptsLoadUnload()
         {
-            if (m_ScriptEngine.LUQueue.Count == 0)
+            if (ScriptEngine.LUQueue.Count == 0)
                 return;
 
             LUStruct item;
-            m_ScriptEngine.LUQueue.Dequeue(out item);
+            ScriptEngine.LUQueue.Dequeue(out item);
             if (item == null)
                 return;
 

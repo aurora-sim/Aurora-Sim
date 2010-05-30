@@ -276,7 +276,7 @@ namespace Aurora.Framework
 
         #endregion
 
-        public static T LoadPlugin<T>(string dllName) 
+        public static T LoadPlugin<T>(string dllName, string type) 
         {
             try
             {
@@ -286,11 +286,10 @@ namespace Aurora.Framework
                 {
                     if (pluginType.IsPublic)
                     {
-                        Type typeInterface = pluginType.GetInterface("IClientNetworkServer", true);
+                        Type typeInterface = pluginType.GetInterface(type, true);
 
                         if (typeInterface != null)
                         {
-                            //m_log.Info("[CLIENTSTACK]: Added IClientNetworkServer Interface");
                             return (T)Activator.CreateInstance(pluginType);
                         }
                     }

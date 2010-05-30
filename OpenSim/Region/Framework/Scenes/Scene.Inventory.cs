@@ -1349,7 +1349,9 @@ namespace OpenSim.Region.Framework.Scenes
                     // Group permissions
                     if ((part.GroupID == UUID.Zero) || (remoteClient.GetGroupPowers(part.GroupID) == 0) || ((part.GroupMask & (uint)PermissionMask.Modify) == 0))
                         return;
-                } else {
+                } 
+                else 
+                {
                     if ((part.OwnerMask & (uint)PermissionMask.Modify) == 0)
                         return;
                 }

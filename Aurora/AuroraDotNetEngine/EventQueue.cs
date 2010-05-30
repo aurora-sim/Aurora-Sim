@@ -91,11 +91,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     }
 
                     //Clear scripts that shouldn't be in the queue anymore
-                    if (m_ScriptEngine.NeedsRemoved.ContainsKey(QIS.ID.ItemID))
+                    if (ScriptEngine.NeedsRemoved.ContainsKey(QIS.ID.ItemID))
                     {
                         //Check the localID too...
                         uint localID = 0;
-                        m_ScriptEngine.NeedsRemoved.TryGetValue(QIS.ID.ItemID, out localID);
+                        ScriptEngine.NeedsRemoved.TryGetValue(QIS.ID.ItemID, out localID);
                         if (localID == QIS.ID.localID)
                         {
                             continue;
@@ -117,11 +117,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         //Did not finish and returned where it should start now
                         if (Running != 0)
                         {
-                            if (m_ScriptEngine.NeedsRemoved.ContainsKey(QIS.ID.ItemID))
+                            if (ScriptEngine.NeedsRemoved.ContainsKey(QIS.ID.ItemID))
                             {
                                 //Check the localID too...
                                 uint localID = 0;
-                                m_ScriptEngine.NeedsRemoved.TryGetValue(QIS.ID.ItemID, out localID);
+                                ScriptEngine.NeedsRemoved.TryGetValue(QIS.ID.ItemID, out localID);
                                 if (localID == QIS.ID.localID)
                                 {
                                     continue;
@@ -129,7 +129,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                                 else
                                 {
                                     //Remove it then.
-                                    m_ScriptEngine.NeedsRemoved.Remove(QIS.ID.ItemID);
+                                    ScriptEngine.NeedsRemoved.Remove(QIS.ID.ItemID);
                                 }
                             }
                             QIS.CurrentlyAt = Running;

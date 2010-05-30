@@ -67,10 +67,12 @@ namespace OpenSim
 		protected string m_shutdownCommandsFile;
         private string m_TimerScriptFileName = "disabled";
         protected ConfigurationLoader m_configLoader;
-        protected Dictionary<EndPoint, uint> m_clientCircuits = new Dictionary<EndPoint, uint>();
         protected ICommandConsole m_console;
         protected OpenSimAppender m_consoleAppender;
         protected IAppender m_logFileAppender = null;
+        protected NetworkServersInfo m_networkServersInfo;
+        protected DiagnosticsManager m_DiagnosticsManager = null;
+        protected BaseHttpServer m_BaseHTTPServer;
 
         
         protected ConfigSettings m_configSettings;
@@ -99,12 +101,6 @@ namespace OpenSim
             get { return m_version; }
         }
 
-        protected NetworkServersInfo m_networkServersInfo;
-        public NetworkServersInfo NetServersInfo
-        {
-            get { return m_networkServersInfo; }
-        }
-
         protected IRegistryCore m_applicationRegistry = new RegistryCore();
         public IRegistryCore ApplicationRegistry 
         {
@@ -117,12 +113,6 @@ namespace OpenSim
             get { return m_sceneManager; }
         }
 
-        protected DiagnosticsManager m_DiagnosticsManager = null;
-        public DiagnosticsManager DiagnosticsManager
-        {
-            get { return m_DiagnosticsManager; }
-        }
-
         /// <summary>
         /// Time at which this server was started
         /// </summary>
@@ -130,12 +120,6 @@ namespace OpenSim
         public DateTime StartupTime
         {
             get { return m_StartupTime; }
-        }
-
-        protected BaseHttpServer m_BaseHTTPServer;
-        public BaseHttpServer HttpServer
-        {
-            get { return m_BaseHTTPServer; }
         }
 
         /// <summary>

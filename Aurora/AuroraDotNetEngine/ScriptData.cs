@@ -61,7 +61,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public ScriptData(ScriptEngine engine)
         {
             m_ScriptEngine = engine;
-            World = m_ScriptEngine.World;
             ScriptFrontend = Aurora.DataManager.DataManager.IScriptDataConnector;
         }
 
@@ -181,7 +180,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     try
                     {
                         // Tell AppDomain that we have stopped script
-                        m_ScriptEngine.m_AppDomainManager.UnloadScriptAppDomain(AppDomain);
+                        ScriptEngine.AppDomainManager.UnloadScriptAppDomain(AppDomain);
                     }
                     //Legit: If the script had an error, this can happen... really shouldn't, but it does.
                     catch (Exception) { }
@@ -232,7 +231,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //Release controls over people.
             ReleaseControls();
             //Must be posted immediately, otherwise the next line will delete it.
-            m_ScriptEngine.m_EventManager.state_exit(localID);
+            ScriptEngine.EventManager.state_exit(localID);
             //Remove items from the queue.
             m_ScriptEngine.RemoveFromEventQueue(ItemID, localID);
             //Reset the state to default
@@ -243,8 +242,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //Reset all variables back to their original values.
             Script.ResetVars();
             //Fire state_entry
-            if (m_ScriptEngine.NeedsRemoved.ContainsKey(ItemID))
-                m_ScriptEngine.NeedsRemoved.Remove(ItemID);
+            if (ScriptEngine.NeedsRemoved.ContainsKey(ItemID))
+                ScriptEngine.NeedsRemoved.Remove(ItemID);
             m_ScriptEngine.AddToScriptQueue(this, "state_entry", new DetectParams[0], new object[] { });
             m_log.InfoFormat("[{0}]: Reset Script {1}", m_ScriptEngine.ScriptEngineName, ItemID);
         }
@@ -345,8 +344,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public void Start(bool reupload)
         {
             //Clear out the removing of events for this script.
-            if (m_ScriptEngine.NeedsRemoved.ContainsKey(ItemID))
-                m_ScriptEngine.NeedsRemoved.Remove(ItemID);
+            if (ScriptEngine.NeedsRemoved.ContainsKey(ItemID))
+                ScriptEngine.NeedsRemoved.Remove(ItemID);
 
             Compiling = true;
 
@@ -497,6 +496,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     CloseAndDispose();
                     Running = true;
                     Disabled = false;
+                    //Clear out the removing of events for this script.
+                    if (ScriptEngine.NeedsRemoved.ContainsKey(ItemID))
+                        ScriptEngine.NeedsRemoved.Remove(ItemID);
                 }
                 //If the previous compile is there, retrive that
                 /*if (PreviouslyCompiledID != null)
@@ -510,11 +512,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 //{
                     try
                     {
-                        m_ScriptEngine.LSLCompiler.PerformScriptCompile(Source, AssetID, InventoryItem.OwnerID, ItemID, Inherited, ClassName, m_ScriptEngine.ScriptProtection, localID, this, out AssemblyName,
+                        ScriptEngine.LSLCompiler.PerformScriptCompile(Source, AssetID, InventoryItem.OwnerID, ItemID, Inherited, ClassName, m_ScriptEngine.ScriptProtection, localID, this, out AssemblyName,
                                                                              out LineMap, out ClassID);
                         #region Warnings
 
-                        string[] compilewarnings = m_ScriptEngine.LSLCompiler.GetWarnings();
+                        string[] compilewarnings = ScriptEngine.LSLCompiler.GetWarnings();
 
                         if (compilewarnings != null && compilewarnings.Length != 0)
                         {
@@ -554,9 +556,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 try
                 {
                     if (ClassName != "")
-                        Script = m_ScriptEngine.m_AppDomainManager.LoadScript(AssemblyName, "Script." + ClassName, out AppDomain);
+                        Script = ScriptEngine.AppDomainManager.LoadScript(AssemblyName, "Script." + ClassName, out AppDomain);
                     else
-                        Script = m_ScriptEngine.m_AppDomainManager.LoadScript(AssemblyName, "Script." + ClassID, out AppDomain);
+                        Script = ScriptEngine.AppDomainManager.LoadScript(AssemblyName, "Script." + ClassID, out AppDomain);
                     m_ScriptEngine.ScriptProtection.AddPreviouslyCompiled(Source, this);
                 }
                 catch (System.IO.FileNotFoundException)

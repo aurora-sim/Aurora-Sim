@@ -89,43 +89,13 @@ namespace OpenSim.Region.Framework.Scenes
             m_OpenSimBase = OSB;
             m_localScenes = new List<Scene>();
 
-            //m_log.Info("[DATASTORE]: Attempting to load " + dllName);
-            Assembly pluginAssembly = Assembly.LoadFrom(dllName);
+            IRegionDataStore plug = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IRegionDataStore>(dllName, "IRegionDataStore");
+            plug.Initialise(connectionstring);
 
-            foreach (Type pluginType in pluginAssembly.GetTypes())
-            {
-                if (pluginType.IsPublic)
-                {
-                    Type typeInterface = pluginType.GetInterface("IRegionDataStore", true);
-
-                    if (typeInterface != null)
-                    {
-                        IRegionDataStore plug =
-                            (IRegionDataStore) Activator.CreateInstance(pluginAssembly.GetType(pluginType.ToString()));
-                        plug.Initialise(connectionstring);
-
-                        m_dataStore = plug;
-
-                        //m_log.Info("[DATASTORE]: Added IRegionDataStore Interface");
-                    }
-
-                    typeInterface = pluginType.GetInterface("IEstateDataStore", true);
-
-                    if (typeInterface != null)
-                    {
-                        IEstateDataStore estPlug =
-                            (IEstateDataStore) Activator.CreateInstance(pluginAssembly.GetType(pluginType.ToString()));
-                        estPlug.Initialise(estateconnectionstring);
-
-                        m_estateDataStore = estPlug;
-                    }
-                }
-            }
+            m_dataStore = plug;
         }
 
         protected IRegionDataStore m_dataStore;
-
-        private IEstateDataStore m_estateDataStore;
 
         public void Close()
         {
@@ -742,7 +712,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             uint port = (uint)regionInfo.InternalEndPoint.Port;
 
-            clientServer = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IClientNetworkServer>(m_OpenSimBase.ConfigurationSettings.ClientstackDll);
+            clientServer = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IClientNetworkServer>(m_OpenSimBase.ConfigurationSettings.ClientstackDll, "IClientNetworkServer");
             clientServer.Initialise(
                     listenIP, ref port, proxyOffset, regionInfo.m_allow_alternate_ports,
                     m_OpenSimBase.ConfigSource, circuitManager);
@@ -750,7 +720,7 @@ namespace OpenSim.Region.Framework.Scenes
             regionInfo.InternalEndPoint.Port = (int)port;
 
             SceneCommunicationService sceneGridService = new SceneCommunicationService();
-            Scene scene = new Scene(regionInfo, circuitManager, sceneGridService, false, m_OpenSimBase.ConfigurationSettings.PhysicalPrim, m_OpenSimBase.ConfigurationSettings.See_into_region_from_neighbor, m_OpenSimBase.ConfigSource, m_OpenSimBase.Version, m_dataStore, m_estateDataStore);
+            Scene scene = new Scene(regionInfo, circuitManager, sceneGridService, false, m_OpenSimBase.ConfigurationSettings.PhysicalPrim, m_OpenSimBase.ConfigurationSettings.See_into_region_from_neighbor, m_OpenSimBase.ConfigSource, m_OpenSimBase.Version, m_dataStore);
             
             clientServer.AddScene(scene);
 

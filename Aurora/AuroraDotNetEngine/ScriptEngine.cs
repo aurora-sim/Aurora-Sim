@@ -64,16 +64,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         }
 
         // Handles and queues incoming events from OpenSim
-        public EventManager m_EventManager;
+        public static EventManager EventManager;
 
         // Handles loading/unloading of scripts into AppDomains
-        public AppDomainManager m_AppDomainManager;
+        public static AppDomainManager AppDomainManager;
 
         //The compiler for all scripts
-        public Compiler LSLCompiler;
+        public static Compiler LSLCompiler;
 
         //Queue that handles the loading and unloading of scripts
-        public OpenSim.Framework.LocklessQueue<LUStruct> LUQueue = new OpenSim.Framework.LocklessQueue<LUStruct>();
+        public static OpenSim.Framework.LocklessQueue<LUStruct> LUQueue = new OpenSim.Framework.LocklessQueue<LUStruct>();
 
         public static MaintenanceThread m_MaintenanceThread;
 
@@ -110,7 +110,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <summary>
         /// Removes the script from the event queue so it does not fire anymore events.
         /// </summary>
-        public Dictionary<UUID, uint> NeedsRemoved = new Dictionary<UUID, uint>();
+        public static Dictionary<UUID, uint> NeedsRemoved = new Dictionary<UUID, uint>();
 
         /// <summary>
         /// Queue containing events waiting to be executed.
@@ -120,7 +120,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <summary>
         /// Queue containing scripts that need to have states saved or deleted.
         /// </summary>
-        public OpenSim.Framework.LocklessQueue<StateQueueItem> StateQueue = new OpenSim.Framework.LocklessQueue<StateQueueItem>();
+        public static OpenSim.Framework.LocklessQueue<StateQueueItem> StateQueue = new OpenSim.Framework.LocklessQueue<StateQueueItem>();
         
         /// <summary>
         /// Maximum events in the event queue at any one time
@@ -242,6 +242,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             StackSize = ScriptConfigSource.GetInt("StackSize", 2);
         }
 
+        public void PostInitialise() { }
         public void AddRegion(Scene scene)
         {
             // Make sure we have config
@@ -273,21 +274,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             m_Scene = scene;
 
             // Create all objects we'll be using
-            ScriptProtection = (IScriptProtectionModule)new ScriptProtectionModule(m_ConfigSource, this);
+            if(ScriptProtection == null)
+                ScriptProtection = (IScriptProtectionModule)new ScriptProtectionModule(m_ConfigSource, this);
             
-            m_EventManager = new EventManager(this, true);
+            EventManager = new EventManager(this, true);
             
             // We need to start it
-            LSLCompiler = new Compiler(this);
+            if (LSLCompiler == null)
+                LSLCompiler = new Compiler(this);
+
+            if(AppDomainManager == null)
+                AppDomainManager = new AppDomainManager(this);
             
-            m_AppDomainManager = new AppDomainManager(this);
-            
-            m_MaintenanceThread = new MaintenanceThread(this);
+            if(m_MaintenanceThread == null)
+                m_MaintenanceThread = new MaintenanceThread(this);
 
             //m_log.Info("[" + ScriptEngineName + "]: Reading configuration "+
             //        "from config section \"" + ScriptEngineName + "\"");
 
-            m_Scene.StackModuleInterface<IScriptModule>(this);
+            scene.StackModuleInterface<IScriptModule>(this);
 
             m_XmlRpcRouter = m_Scene.RequestModuleInterface<IXmlRpcRouter>();
             if (m_XmlRpcRouter != null)
@@ -397,10 +402,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public void RemoveRegion(Scene scene)
         {
-            m_Scene.EventManager.OnScriptReset -= OnScriptReset;
-            m_Scene.EventManager.OnGetScriptRunning -= OnGetScriptRunning;
-            m_Scene.EventManager.OnStartScript -= OnStartScript;
-            m_Scene.EventManager.OnStopScript -= OnStopScript;
+            scene.EventManager.OnScriptReset -= OnScriptReset;
+            scene.EventManager.OnGetScriptRunning -= OnGetScriptRunning;
+            scene.EventManager.OnStartScript -= OnStartScript;
+            scene.EventManager.OnStopScript -= OnStopScript;
             
             if (m_XmlRpcRouter != null)
             {
@@ -408,7 +413,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 OnObjectRemoved -= m_XmlRpcRouter.ObjectRemoved;
             }
 
-            m_Scene.UnregisterModuleInterface<IScriptModule>(this);
+            scene.UnregisterModuleInterface<IScriptModule>(this);
 
             Shutdown();
         }
@@ -419,12 +424,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return;
 
             m_ThreadPool.Start();
-            m_EventManager.HookUpEvents();
+            EventManager.HookUpEvents();
 
-            m_Scene.EventManager.OnScriptReset += OnScriptReset;
-            m_Scene.EventManager.OnGetScriptRunning += OnGetScriptRunning;
-            m_Scene.EventManager.OnStartScript += OnStartScript;
-            m_Scene.EventManager.OnStopScript += OnStopScript;
+            scene.EventManager.OnScriptReset += OnScriptReset;
+            scene.EventManager.OnGetScriptRunning += OnGetScriptRunning;
+            scene.EventManager.OnStartScript += OnStartScript;
+            scene.EventManager.OnStopScript += OnStopScript;
         }
 
         public void Close()
@@ -718,13 +723,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             if (id.State != state)
             {
-            	m_EventManager.state_exit(id.localID);
+            	EventManager.state_exit(id.localID);
             	id.State = state;
             	int eventFlags = id.Script.GetStateEventFlags(id.State);
 
             	id.part.SetScriptEvents(itemID, eventFlags);
 
-            	m_EventManager.state_entry(id.localID);
+            	EventManager.state_entry(id.localID);
             }
         }
 
@@ -1038,54 +1043,34 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             ScriptData id = null;
             id = GetScript(localID, itemID);
-            //Its a change of the script source, needs to be recompiled and such.
-            if (id != null)
+            lock (LUQueue)
             {
-                lock (LUQueue)
+                if ((LUQueue.Count >= LoadUnloadMaxQueueSize))
                 {
-                    if ((LUQueue.Count >= LoadUnloadMaxQueueSize))
-                    {
-                        m_log.Error("[" + ScriptEngineName + "]: ERROR: Load/unload queue item count is at " + LUQueue.Count + ". Config variable \"LoadUnloadMaxQueueSize\" " + "is set to " + LoadUnloadMaxQueueSize + ", so ignoring new script.");
-                        return;
-                    }
-                    id.PostOnRez = postOnRez;
-                    id.StartParam = startParam;
-                    id.stateSource = statesource;
-                    id.State = "default";
-                    id.Running = true;
-                    id.Disabled = false;
-                    ScriptProtection.RemovePreviouslyCompiled(id.Source);
-                    id.Source = Script;
-                    LUStruct ls = new LUStruct();
+                    m_log.Error("[" + ScriptEngineName + "]: ERROR: Load/unload queue item count is at " + LUQueue.Count + ". Config variable \"LoadUnloadMaxQueueSize\" " + "is set to " + LoadUnloadMaxQueueSize + ", so ignoring new script.");
+                    return;
+                }
+                LUStruct ls = new LUStruct();
+                //Its a change of the script source, needs to be recompiled and such.
+                if (id != null)
                     ls.Action = LUType.Reupload;
-                    ls.ID = id;
-                    LUQueue.Enqueue(ls);
-                }
-            }
-            else
-            {
-                lock (LUQueue)
-                {
-                    if ((LUQueue.Count >= LoadUnloadMaxQueueSize))
-                    {
-                        m_log.Error("[" + ScriptEngineName + "]: ERROR: Load/unload queue item count is at " + LUQueue.Count + ". Config variable \"LoadUnloadMaxQueueSize\" " + "is set to " + LoadUnloadMaxQueueSize + ", so ignoring new script.");
-                        return;
-                    }
-                    id = new ScriptData(this);
-                    id.ItemID = itemID;
-                    id.localID = localID;
-                    id.StartParam = startParam;
-                    id.stateSource = statesource;
-                    id.State = "default";
-                    id.Running = true;
-                    id.Disabled = false;
-                    id.Source = Script;
-                    id.PostOnRez = postOnRez;
-                    LUStruct ls = new LUStruct();
+                else
                     ls.Action = LUType.Load;
-                    ls.ID = id;
-                    LUQueue.Enqueue(ls);
-                }
+                if (id == null)
+                    id = new ScriptData(this);
+                id.World = m_Scene;
+                id.localID = localID;
+                id.ItemID = itemID;
+                id.PostOnRez = postOnRez;
+                id.StartParam = startParam;
+                id.stateSource = statesource;
+                id.State = "default";
+                id.Running = true;
+                id.Disabled = false;
+                id.Source = Script;
+                ScriptProtection.RemovePreviouslyCompiled(id.Source);
+                ls.ID = id;
+                LUQueue.Enqueue(ls);
             }
         }
 
@@ -1104,8 +1089,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     id.State = "default";
                     id.Running = true;
                     id.Disabled = false;
-                    ScriptProtection.RemovePreviouslyCompiled(id.Source);
                     id.Source = script;
+                    id.World = m_Scene;
+                    ScriptProtection.RemovePreviouslyCompiled(id.Source);
                     try
                     {
                         id.Start(true);

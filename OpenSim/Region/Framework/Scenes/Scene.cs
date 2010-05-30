@@ -435,13 +435,6 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_dataStore; }
         }
 
-        private IEstateDataStore m_estateDataStore;
-
-        public IEstateDataStore EstateDataStore
-        {
-            get { return m_estateDataStore; }
-        }
-
         // an instance to the physics plugin's Scene object.
         public PhysicsScene PhysicsScene
         {
@@ -580,7 +573,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public Scene(RegionInfo regInfo, AgentCircuitManager authen,
                      SceneCommunicationService sceneGridService, bool dumpAssetsToFile, bool physicalPrim,
-                     bool SeeIntoRegionFromNeighbor, IConfigSource config, string simulatorVersion, IRegionDataStore regionDataStore, IEstateDataStore estateDataStore)
+                     bool SeeIntoRegionFromNeighbor, IConfigSource config, string simulatorVersion, IRegionDataStore regionDataStore)
         {
             m_config = config;
 
@@ -630,7 +623,6 @@ namespace OpenSim.Region.Framework.Scenes
             m_asyncSceneObjectDeleter.Enabled = true;
 
             m_dataStore = regionDataStore;
-            m_estateDataStore = estateDataStore;
 
             // Load region settings
             m_regInfo.RegionSettings = DataStore.LoadRegionSettings(m_regInfo.RegionID);
@@ -5915,15 +5907,15 @@ namespace OpenSim.Region.Framework.Scenes
         }
         public List<UUID> GetEstateRegions(int estateID)
         {
-            if (EstateDataStore == null)
+            if (EstateService == null)
                 return new List<UUID>();
 
-            return EstateDataStore.GetRegions(estateID);
+            return EstateService.GetRegions(estateID);
         }
 
         public void ReloadEstateData()
         {
-            m_regInfo.EstateSettings = EstateDataStore.LoadEstateSettings(m_regInfo.RegionID, false);
+            m_regInfo.EstateSettings = EstateService.LoadEstateSettings(m_regInfo.RegionID, false);
 
             TriggerEstateSunUpdate();
         }

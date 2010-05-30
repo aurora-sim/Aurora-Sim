@@ -55,7 +55,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         // the corresponding event in a user script being executed.
         //
         // For example when an user touches an object then the
-        // "myScriptEngine.World.EventManager.OnObjectGrab" event is fired
+        // "scene.EventManager.OnObjectGrab" event is fired
         // inside OpenSim.
         // We hook up to this event and queue a touch_start in
         // EventQueueManager with the proper LSL parameters.
@@ -68,10 +68,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private ScriptEngine myScriptEngine;
+        private Scene scene;
 
         public EventManager(ScriptEngine _ScriptEngine, bool performHookUp)
         {
             myScriptEngine = _ScriptEngine;
+            scene = myScriptEngine.World;
         }
         
         public void HookUpEvents()
@@ -79,43 +81,43 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //m_log.Info("[" + myScriptEngine.ScriptEngineName +
             //           "]: Hooking up to server events");
 
-            myScriptEngine.World.EventManager.OnObjectGrab +=
+            scene.EventManager.OnObjectGrab +=
                     touch_start;
-            myScriptEngine.World.EventManager.OnObjectGrabbing += 
+            scene.EventManager.OnObjectGrabbing += 
                     touch;
-            myScriptEngine.World.EventManager.OnObjectDeGrab +=
+            scene.EventManager.OnObjectDeGrab +=
                     touch_end;
-            myScriptEngine.World.EventManager.OnRemoveScript +=
+            scene.EventManager.OnRemoveScript +=
                     OnRemoveScript;
-            myScriptEngine.World.EventManager.OnScriptChangedEvent +=
+            scene.EventManager.OnScriptChangedEvent +=
                     changed;
-            myScriptEngine.World.EventManager.OnScriptAtTargetEvent +=
+            scene.EventManager.OnScriptAtTargetEvent +=
                     at_target;
-            myScriptEngine.World.EventManager.OnScriptNotAtTargetEvent +=
+            scene.EventManager.OnScriptNotAtTargetEvent +=
                     not_at_target;
-            myScriptEngine.World.EventManager.OnScriptAtRotTargetEvent +=
+            scene.EventManager.OnScriptAtRotTargetEvent +=
                     at_rot_target;
-            myScriptEngine.World.EventManager.OnScriptNotAtRotTargetEvent +=
+            scene.EventManager.OnScriptNotAtRotTargetEvent +=
                     not_at_rot_target;
-            myScriptEngine.World.EventManager.OnScriptControlEvent +=
+            scene.EventManager.OnScriptControlEvent +=
                     control;
-            myScriptEngine.World.EventManager.OnScriptColliderStart +=
+            scene.EventManager.OnScriptColliderStart +=
                     collision_start;
-            myScriptEngine.World.EventManager.OnScriptColliding +=
+            scene.EventManager.OnScriptColliding +=
                     collision;
-            myScriptEngine.World.EventManager.OnScriptCollidingEnd +=
+            scene.EventManager.OnScriptCollidingEnd +=
                     collision_end;
-            myScriptEngine.World.EventManager.OnScriptLandColliderStart += 
+            scene.EventManager.OnScriptLandColliderStart += 
                     land_collision_start;
-            myScriptEngine.World.EventManager.OnScriptLandColliding += 
+            scene.EventManager.OnScriptLandColliding += 
                     land_collision;
-            myScriptEngine.World.EventManager.OnScriptLandColliderEnd += 
+            scene.EventManager.OnScriptLandColliderEnd += 
                     land_collision_end;
-            myScriptEngine.World.EventManager.OnAttach += attach;
+            scene.EventManager.OnAttach += attach;
 
 
             IMoneyModule money =
-                    myScriptEngine.World.RequestModuleInterface<IMoneyModule>();
+                    scene.RequestModuleInterface<IMoneyModule>();
             if (money != null)
                 money.OnObjectPaid+=HandleObjectPaid;
         }
@@ -123,7 +125,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         private void HandleObjectPaid(UUID objectID, UUID agentID, int amount)
         {
             SceneObjectPart part =
-                    myScriptEngine.World.GetSceneObjectPart(objectID);
+                    scene.GetSceneObjectPart(objectID);
 
             if (part == null)
                 return;
@@ -170,11 +172,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             DetectParams[] det = new DetectParams[1];
             det[0] = new DetectParams();
             det[0].Key = remoteClient.AgentId;
-            det[0].Populate(myScriptEngine.World);
+            det[0].Populate(scene);
 
             if (originalID == 0)
             {
-                SceneObjectPart part = myScriptEngine.World.GetSceneObjectPart(localID);
+                SceneObjectPart part = scene.GetSceneObjectPart(localID);
                 if (part == null)
                     return;
 
@@ -182,7 +184,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             else
             {
-                SceneObjectPart originalPart = myScriptEngine.World.GetSceneObjectPart(originalID);
+                SceneObjectPart originalPart = scene.GetSceneObjectPart(originalID);
                 det[0].LinkNum = originalPart.LinkNum;
             }
 
@@ -203,14 +205,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             DetectParams[] det = new DetectParams[1];
             det[0] = new DetectParams();
             det[0].Key = remoteClient.AgentId;
-            det[0].Populate(myScriptEngine.World);
+            det[0].Populate(scene);
             det[0].OffsetPos = new LSL_Types.Vector3(offsetPos.X,
                                                      offsetPos.Y,
                                                      offsetPos.Z);
 
             if (originalID == 0)
             {
-                SceneObjectPart part = myScriptEngine.World.GetSceneObjectPart(localID);
+                SceneObjectPart part = scene.GetSceneObjectPart(localID);
                 if (part == null)
                     return;
 
@@ -218,7 +220,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             else
             {
-                SceneObjectPart originalPart = myScriptEngine.World.GetSceneObjectPart(originalID);
+                SceneObjectPart originalPart = scene.GetSceneObjectPart(originalID);
                 det[0].LinkNum = originalPart.LinkNum;
             }
             if (surfaceArgs != null)
@@ -238,11 +240,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             DetectParams[] det = new DetectParams[1];
             det[0] = new DetectParams();
             det[0].Key = remoteClient.AgentId;
-            det[0].Populate(myScriptEngine.World);
+            det[0].Populate(scene);
 
             if (originalID == 0)
             {
-                SceneObjectPart part = myScriptEngine.World.GetSceneObjectPart(localID);
+                SceneObjectPart part = scene.GetSceneObjectPart(localID);
                 if (part == null)
                     return;
 
@@ -250,7 +252,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             else
             {
-                SceneObjectPart originalPart = myScriptEngine.World.GetSceneObjectPart(originalID);
+                SceneObjectPart originalPart = scene.GetSceneObjectPart(originalID);
                 det[0].LinkNum = originalPart.LinkNum;
             }
 
@@ -296,7 +298,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 DetectParams d = new DetectParams();
                 d.Key = detobj.keyUUID;
-                d.Populate(myScriptEngine.World);
+                d.Populate(scene);
                 det.Add(d);
             }
 
@@ -316,7 +318,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 DetectParams d = new DetectParams();
                 d.Key = detobj.keyUUID;
-                d.Populate(myScriptEngine.World);
+                d.Populate(scene);
                 det.Add(d);
             }
 
@@ -335,7 +337,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 DetectParams d = new DetectParams();
                 d.Key = detobj.keyUUID;
-                d.Populate(myScriptEngine.World);
+                d.Populate(scene);
                 det.Add(d);
             }
 
@@ -356,7 +358,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 d.Position = new LSL_Types.Vector3(detobj.posVector.X,
                     detobj.posVector.Y,
                     detobj.posVector.Z);
-                d.Populate(myScriptEngine.World);
+                d.Populate(scene);
                 det.Add(d);
                 myScriptEngine.PostObjectEvent(localID, new EventParams(
                         "land_collision_start",
@@ -376,7 +378,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 d.Position = new LSL_Types.Vector3(detobj.posVector.X,
                     detobj.posVector.Y,
                     detobj.posVector.Z);
-                d.Populate(myScriptEngine.World);
+                d.Populate(scene);
                 det.Add(d);
                 myScriptEngine.PostObjectEvent(localID, new EventParams(
                         "land_collision",
@@ -395,7 +397,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 d.Position = new LSL_Types.Vector3(detobj.posVector.X,
                     detobj.posVector.Y,
                     detobj.posVector.Z);
-                d.Populate(myScriptEngine.World);
+                d.Populate(scene);
                 det.Add(d);
                 myScriptEngine.PostObjectEvent(localID, new EventParams(
                         "land_collision_end",
