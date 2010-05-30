@@ -290,6 +290,25 @@ namespace OpenSim.Data.MySQL
             }
         }
 
+        public void RemoveRegion(UUID regionUUID)
+        {
+            lock (m_dbLock)
+            {
+                using (MySqlConnection dbcon = new MySqlConnection(m_connectionString))
+                {
+                    dbcon.Open();
+
+                    using (MySqlCommand cmd = dbcon.CreateCommand())
+                    {
+                        cmd.Parameters.AddWithValue("UUID", regionUUID.ToString());
+
+                        cmd.CommandText = "delete from prims where RegionUUID = ?UUID";
+                        ExecuteNonQuery(cmd);
+                    }
+                }
+            }
+        }
+
         /// <summary>
         /// Remove all persisted items of the given prim.
         /// The caller must acquire the necessrary synchronization locks

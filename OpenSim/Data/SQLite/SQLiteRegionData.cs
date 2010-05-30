@@ -400,6 +400,30 @@ namespace OpenSim.Data.SQLite
         }
 
         /// <summary>
+        /// Removes an object from region storage
+        /// </summary>
+        /// <param name="obj">the object</param>
+        /// <param name="regionUUID">the region UUID</param>
+        public void RemoveRegion(UUID regionUUID)
+        {
+            // m_log.InfoFormat("[REGION DB]: Removing obj: {0} from region: {1}", obj.Guid, regionUUID);
+
+            DataTable prims = ds.Tables["prims"];
+            
+            string selectExp = "RegionUUID = '" + regionUUID + "'";
+            lock (ds)
+            {
+                DataRow[] primRows = prims.Select(selectExp);
+                foreach (DataRow row in primRows)
+                {
+                    row.Delete();
+                }
+            }
+
+            Commit();
+        }
+
+        /// <summary>
         /// Remove all persisted items of the given prim.
         /// The caller must acquire the necessrary synchronization locks and commit or rollback changes.
         /// </summary>

@@ -355,7 +355,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 m_ScriptEngine.Errors.Remove(ItemID);
 
 
-            DateTime Start = DateTime.Now.ToUniversalTime();
+            DateTime StartTime = DateTime.Now.ToUniversalTime();
 
             part = World.GetSceneObjectPart(localID);
 
@@ -369,6 +369,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //Find the asset ID
             if (part.TaskInventory.TryGetValue(ItemID, out InventoryItem))
                 AssetID = InventoryItem.AssetID;
+            m_log.Warn(InventoryItem.Name);
             //Try to see if this was rezzed from someone's inventory
             UserInventoryItemID = part.FromUserInventoryItemID;
             //Try to find the avatar who started this.
@@ -543,7 +544,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             bool useDebug = false;
             if (useDebug)
             {
-                TimeSpan t = (DateTime.Now.ToUniversalTime() - Start);
+                TimeSpan t = (DateTime.Now.ToUniversalTime() - StartTime);
                 m_log.Debug("Stage 1: " + t.TotalSeconds);
             }
 
@@ -558,6 +559,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         Script = m_ScriptEngine.m_AppDomainManager.LoadScript(AssemblyName, "Script." + ClassID, out AppDomain);
                     m_ScriptEngine.ScriptProtection.AddPreviouslyCompiled(Source, this);
                 }
+                catch (System.IO.FileNotFoundException)
+                {
+                    ScriptFrontend.DeleteStateSave(AssemblyName);
+                    Start(reupload);
+                }
                 catch (Exception ex)
                 {
                     ShowError(ex, 2, reupload);
@@ -570,7 +576,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             if (useDebug)
             {
-                TimeSpan t = (DateTime.Now.ToUniversalTime() - Start);
+                TimeSpan t = (DateTime.Now.ToUniversalTime() - StartTime);
                 m_log.Debug("Stage 2: " + t.TotalSeconds);
             }
 
@@ -612,7 +618,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             Compiling = false;
             Loading = false;
 
-            TimeSpan time = (DateTime.Now.ToUniversalTime() - Start);
+            TimeSpan time = (DateTime.Now.ToUniversalTime() - StartTime);
             if (presence != null)
                 m_log.DebugFormat("[{0}]: Started Script {1} in object {2} by avatar {3} in {4} seconds.", m_ScriptEngine.ScriptEngineName, InventoryItem.Name, part.Name, presence.Name, time.TotalSeconds);
             else
@@ -668,10 +674,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 InventoryItem.PermsMask = int.Parse(LastStateSave.Permissions.Split(',')[0], NumberStyles.Integer, Culture.NumberFormatInfo);
                 InventoryItem.PermsGranter = new UUID(LastStateSave.Permissions.Split(',')[1]);
-                m_ScriptEngine.PostScriptEvent(ItemID, new EventParams(
-                            "run_time_permissions", new Object[] {
-                            new LSL_Types.LSLInteger(InventoryItem.PermsMask) },
-                            new DetectParams[0]));
+                //m_ScriptEngine.PostScriptEvent(ItemID, new EventParams(
+                //            "run_time_permissions", new Object[] {
+                //            new LSL_Types.LSLInteger(InventoryItem.PermsMask) },
+                //            new DetectParams[0]));
             }
             EventDelayTicks = (long)LastStateSave.MinEventDelay;
             AssemblyName = LastStateSave.AssemblyName;

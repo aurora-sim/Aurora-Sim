@@ -162,10 +162,11 @@ namespace Aurora.Modules
             List<OpenSim.Services.Interfaces.GridRegion> Sims = new List<OpenSim.Services.Interfaces.GridRegion>();
             foreach (object f in replyData)
             {
-                if (f is KeyValuePair<string, object>)
+                KeyValuePair<string, object> value = (KeyValuePair<string, object>)f;
+                if (value.Value is Dictionary<string, object>)
                 {
-                    Dictionary<string, object> value = ((KeyValuePair<string, object>)f).Value as Dictionary<string, object>;
-                    OpenSim.Services.Interfaces.GridRegion map = new OpenSim.Services.Interfaces.GridRegion(value);
+                    Dictionary<string, object> valuevalue = value.Value as Dictionary<string, object>;
+                    OpenSim.Services.Interfaces.GridRegion map = new OpenSim.Services.Interfaces.GridRegion(valuevalue);
                     Sims.Add(map);
                 }
             }
@@ -180,10 +181,15 @@ namespace Aurora.Modules
         public Dictionary<string, object> BuildOurLocalRegions()
         {
             Dictionary<string, object> Regions = new Dictionary<string, object>();
+            
             foreach (Scene scene in m_scenes)
             {
                 OpenSim.Services.Interfaces.GridRegion region = scene.GridService.GetRegionByUUID(UUID.Zero, scene.RegionInfo.RegionID);
-                Regions.Add(scene.RegionInfo.RegionID.ToString(), region.ToKeyValuePairs());
+                if (region != null)
+                {
+                    string RegionName = region.RegionName.Replace(" ", ""); // Remove spaces
+                    Regions.Add(RegionName, region.ToKeyValuePairs());
+                }
             }
             return Regions;
         }
@@ -243,12 +249,12 @@ namespace Aurora.Modules
             
             sendData["METHOD"] = "newconnection";
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = ServerUtils.BuildXmlResponse(sendData);
 
             try
             {
                 string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        connection.Connection + "/IWCConnection",
+                        connection.Connection + "/iwcconnection",
                         reqString);
 
                 if (reply != string.Empty)
@@ -259,7 +265,8 @@ namespace Aurora.Modules
                     {
                         if (!replyData.ContainsKey("result"))
                         {
-                            m_log.Warn("[IWC]: Unable to connect successfully to " + connection.Connection);
+                            IWC.RetriveOtherServersRegions(replyData);
+
                             return;
                         }
 
@@ -273,13 +280,13 @@ namespace Aurora.Modules
                         {
                             m_log.Warn("[IWC]: Unable to connect successfully to " + connection.Connection + ", the foreign password was incorrect.");
                             return;
-                        }
-
-                        IWC.RetriveOtherServersRegions(replyData);
-
-                        // Success
+                        }// Success
                     }
 
+                }
+                else
+                {
+                    m_log.Warn("[IWC]: Unable to connect successfully to " + connection.Connection);
                 }
             }
             catch (Exception e)
@@ -295,7 +302,7 @@ namespace Aurora.Modules
         private InterWorldComms IWC;
 
         public IWCIncomingConnections(InterWorldComms iwc) :
-            base("POST", "/IWCConnection")
+            base("POST", "/iwcconnection")
         {
             IWC = iwc;
         }
@@ -312,7 +319,7 @@ namespace Aurora.Modules
             try
             {
                 Dictionary<string, object> request =
-                        ServerUtils.ParseQueryString(body);
+                        ServerUtils.ParseXmlResponse(body);
 
                 if (!request.ContainsKey("METHOD"))
                     return FailureResult();
@@ -446,7 +453,7 @@ namespace Aurora.Modules
         private InterWorldComms IWC;
 
         public IWCForeignAgentsConnector(InterWorldComms iwc) :
-            base("POST", "/IWCAgents")
+            base("POST", "/iwcagents")
         {
             IWC = iwc;
         }

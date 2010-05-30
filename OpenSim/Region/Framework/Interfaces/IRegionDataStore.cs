@@ -62,6 +62,14 @@ namespace OpenSim.Region.Framework.Interfaces
         void RemoveObject(UUID uuid, UUID regionUUID);
 
         /// <summary>
+        /// Entirely removes the object, including inventory
+        /// </summary>
+        /// <param name="uuid"></param>
+        /// <param name="regionUUID"></param>
+        /// <returns></returns>
+        void RemoveRegion(UUID regionUUID);
+
+        /// <summary>
         /// Store a prim's inventory
         /// </summary>
         /// <returns></returns>

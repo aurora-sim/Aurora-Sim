@@ -450,6 +450,35 @@ ELSE
         }
 
         /// <summary>
+        /// Removes a object from the database.
+        /// Meaning removing it from tables Prims, PrimShapes and PrimItems
+        /// </summary>
+        /// <param name="objectID">id of scenegroup</param>
+        /// <param name="regionUUID">regionUUID (is this used anyway</param>
+        public void RemoveRegion(UUID regionUUID)
+        {
+            _Log.InfoFormat("[MSSQL]: Removing region: {0}", regionUUID);
+
+            //Remove from prims and primsitem table
+            string sqlPrims = "DELETE FROM PRIMS WHERE RegionUUID = @regionID";
+            
+            lock (_Database)
+            {
+                //Using the non transaction mode.
+                using (SqlConnection conn = new SqlConnection(m_connectionString))
+                using (SqlCommand cmd = new SqlCommand())
+                {
+                    cmd.Connection = conn;
+                    cmd.CommandText = sqlPrims;
+                    cmd.ExecuteNonQuery();
+                    conn.Open();
+                    cmd.Parameters.Add(_Database.CreateParameter("regionID", regionUUID));
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
+        /// <summary>
         /// Store the inventory of a prim. Warning deletes everything first and then adds all again.
         /// </summary>
         /// <param name="primID"></param>

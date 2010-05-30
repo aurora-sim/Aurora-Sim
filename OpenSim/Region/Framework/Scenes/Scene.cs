@@ -1266,7 +1266,7 @@ namespace OpenSim.Region.Framework.Scenes
             base.Close();
         }
 
-        AuroraThreadTracker tracker = null;
+        public AuroraThreadTracker tracker = null;
 
         /// <summary>
         /// Start the timer which triggers regular scene updates
@@ -1274,7 +1274,8 @@ namespace OpenSim.Region.Framework.Scenes
         public void StartTimer()
         {
             m_lastUpdate = Util.EnvironmentTickCount();
-            tracker = new AuroraThreadTracker();
+            if (tracker == null)
+                tracker = new AuroraThreadTracker();
             ScenePhysicsHeartbeat shb = new ScenePhysicsHeartbeat(this);
             SceneBackupHeartbeat sbhb = new SceneBackupHeartbeat(this);
             SceneUpdateHeartbeat suhb = new SceneUpdateHeartbeat(this);
@@ -1284,7 +1285,19 @@ namespace OpenSim.Region.Framework.Scenes
             //tracker.AddSceneHeartbeat(new SceneHeartbeat(this), out HeartbeatThread);
             //Start this after the threads are started.
             tracker.Init(this);
+            tracker.OnNeedToAddThread += NeedsNewThread;
             //HeartbeatThread = Watchdog.StartThread(Update, "Heartbeat for region " + RegionInfo.RegionName, ThreadPriority.Normal, false);
+        }
+
+        public void NeedsNewThread(string type)
+        {
+            System.Threading.Thread thread;
+            if(type == "SceneUpdateHeartbeat")
+                tracker.AddSceneHeartbeat(new Scene.SceneUpdateHeartbeat(this), out thread);
+            if (type == "ScenePhysicsHeartbeat")
+                tracker.AddSceneHeartbeat(new Scene.ScenePhysicsHeartbeat(this), out thread);
+            if (type == "SceneBackupHeartbeat")
+                tracker.AddSceneHeartbeat(new Scene.SceneBackupHeartbeat(this), out thread);
         }
 
         /// <summary>
@@ -1395,6 +1408,13 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 type = "SceneBackupHeartbeat";
                 m_scene = scene;
+            }
+
+            public override void Restart()
+            {
+                ShouldExit = true;
+                SceneBackupHeartbeat heartbeat = new SceneBackupHeartbeat(m_scene);
+                m_scene.tracker.AddSceneHeartbeat(heartbeat, out m_scene.HeartbeatThread);
             }
 
             /// <summary>
@@ -1569,6 +1589,13 @@ namespace OpenSim.Region.Framework.Scenes
                 m_scene = scene;
             }
 
+            public override void Restart()
+            {
+                ShouldExit = true;
+                ScenePhysicsHeartbeat heartbeat = new ScenePhysicsHeartbeat(m_scene);
+                m_scene.tracker.AddSceneHeartbeat(heartbeat, out m_scene.HeartbeatThread);
+            }
+
             /// <summary>
             /// Performs per-frame updates regularly
             /// </summary>
@@ -1696,6 +1723,13 @@ namespace OpenSim.Region.Framework.Scenes
                 m_scene = scene;
             }
 
+            public override void Restart()
+            {
+                ShouldExit = true;
+                SceneUpdateHeartbeat heartbeat = new SceneUpdateHeartbeat(m_scene);
+                m_scene.tracker.AddSceneHeartbeat(heartbeat, out m_scene.HeartbeatThread);
+            }
+
             /// <summary>
             /// Performs per-frame updates regularly
             /// </summary>
@@ -1817,6 +1851,13 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 type = "SceneHeartbeat";
                 m_scene = scene;
+            }
+
+            public override void Restart()
+            {
+                ShouldExit = true;
+                SceneHeartbeat heartbeat = new SceneHeartbeat(m_scene);
+                m_scene.tracker.AddSceneHeartbeat(heartbeat, out m_scene.HeartbeatThread);
             }
 
             /// <summary>
@@ -2810,8 +2851,34 @@ namespace OpenSim.Region.Framework.Scenes
                 foreach (EntityBase e in entities)
                 {
                     if (e is SceneObjectGroup)
-                        DeleteSceneObject((SceneObjectGroup)e, false);
+                    {
+                        SceneObjectGroup group = (SceneObjectGroup)e;
+                        lock (m_deleting_scene_object)
+                        {
+                            group.RemoveScriptInstances(true);
+                        }
+
+                        foreach (SceneObjectPart part in group.Children.Values)
+                        {
+                            if (part.IsJoint() && ((part.ObjectFlags & (uint)PrimFlags.Physics) != 0))
+                            {
+                                PhysicsScene.RequestJointDeletion(part.Name); // FIXME: what if the name changed?
+                            }
+                            else if (part.PhysActor != null)
+                            {
+                                PhysicsScene.RemovePrim(part.PhysActor);
+                                part.PhysActor = null;
+                            }
+                        }
+                        
+                        m_sceneGraph.DeleteSceneObject(group.UUID, false);
+                        EventManager.TriggerObjectBeingRemovedFromScene(group);
+
+                        group.DeleteGroup(false);
+                    }
                 }
+                DataStore.RemoveRegion(m_regInfo.RegionID);
+                EventManager.TriggerParcelPrimCountTainted();
             }
         }
 

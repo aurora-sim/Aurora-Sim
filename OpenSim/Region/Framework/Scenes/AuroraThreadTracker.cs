@@ -16,6 +16,9 @@ namespace OpenSim.Region.Framework.Scenes
         public DateTime LastUpdate;
         public virtual void Start() { }
         public string type;
+        public virtual void Restart()
+        {
+        }
         public event ThreadClosing ThreadIsClosing;
         public void FireThreadClosing(IThread sh)
         {
@@ -32,6 +35,8 @@ namespace OpenSim.Region.Framework.Scenes
         Timer checkTimer = null;
         List<IThread> AllHeartbeats = new List<IThread>();
         Scene m_scene = null;
+        public delegate void NeedToAddThread(string type);
+        public event NeedToAddThread OnNeedToAddThread;
 
         public void Init(Scene scene)
         {
@@ -57,13 +62,15 @@ namespace OpenSim.Region.Framework.Scenes
 
         private void FixThreadCount()
         {
-            if (AllHeartbeats.Count < 3)
+            if (AllHeartbeats.Count < 5)
             {
                 //Make sure to kill off the right ones...
                 m_log.Warn("[SceneHeartbeatTracker]: Fixing thread count... " + AllHeartbeats.Count + " found. ");
                 bool foundPhysics = false;
                 bool foundBackup = false;
                 bool foundUpdate = false;
+                bool foundOutgoing = false;
+                bool foundIncoming = false;
                 //bool foundMain = false;
                 for (int i = 0; i < AllHeartbeats.Count; i++)
                 {
@@ -76,21 +83,76 @@ namespace OpenSim.Region.Framework.Scenes
                         foundPhysics = true;
                     if (hb.type == "SceneUpdateHeartbeat" && !foundUpdate && !hb.ShouldExit)
                         foundUpdate = true;
+                    if (hb.type == "OutgoingPacketHandler" && !foundOutgoing && !hb.ShouldExit)
+                        foundOutgoing = true;
+                    if (hb.type == "IncomingPacketHandler" && !foundIncoming && !hb.ShouldExit)
+                        foundIncoming = true;
                     //if (hb.type == "SceneHeartbeat" && !foundMain && !hb.ShouldExit)
                     //    foundMain = true;
                 }
                 m_log.Warn("[SceneHeartbeatTracker]: " + m_scene.RegionInfo.RegionName + " " + foundBackup + " " + foundPhysics + " " + foundUpdate + " ");
-                System.Threading.Thread thread;
                 if (!foundBackup)
-                    AddSceneHeartbeat(new Scene.SceneBackupHeartbeat(m_scene), out thread);
+                {
+                    if (OnNeedToAddThread != null)
+                    {
+                        foreach (NeedToAddThread dg in OnNeedToAddThread.GetInvocationList())
+                        {
+                            dg("SceneBackupHeartbeat");
+                        }
+                    }
+                }
                 if (!foundPhysics)
-                    AddSceneHeartbeat(new Scene.ScenePhysicsHeartbeat(m_scene), out thread);
+                {
+                    if (OnNeedToAddThread != null)
+                    {
+                        foreach (NeedToAddThread dg in OnNeedToAddThread.GetInvocationList())
+                        {
+                            dg("ScenePhysicsHeartbeat");
+                        }
+                    }
+                }
                 if (!foundUpdate)
-                    AddSceneHeartbeat(new Scene.SceneUpdateHeartbeat(m_scene), out thread);
-                //if (!foundMain)
-                //    AddSceneHeartbeat(new Scene.SceneHeartbeat(m_scene), out thread);
+                {
+                    if (OnNeedToAddThread != null)
+                    {
+                        foreach (NeedToAddThread dg in OnNeedToAddThread.GetInvocationList())
+                        {
+                            dg("SceneUpdateHeartbeat");
+                        }
+                    }
+                }
+                if (!foundIncoming)
+                {
+                    if (OnNeedToAddThread != null)
+                    {
+                        foreach (NeedToAddThread dg in OnNeedToAddThread.GetInvocationList())
+                        {
+                            dg("IncomingPacketHandler");
+                        }
+                    }
+                }
+                if (!foundOutgoing)
+                {
+                    if (OnNeedToAddThread != null)
+                    {
+                        foreach (NeedToAddThread dg in OnNeedToAddThread.GetInvocationList())
+                        {
+                            dg("OutgoingPacketHandler");
+                        }
+                    }
+                }
+                /*if (!foundMain)
+                {
+                    if (OnNeedToAddThread != null)
+                    {
+                        foreach (NeedToAddThread dg in OnNeedToAddThread.GetInvocationList())
+                        {
+                            dg("SceneHeartbeat");
+                        }
+                    }
+                }*/
             }
-            if (AllHeartbeats.Count > 3)
+            if (AllHeartbeats.Count > 5)
             {
                 //Make sure to kill off the right ones...
                 m_log.Warn("[SceneHeartbeatTracker]: Fixing thread count... " + AllHeartbeats.Count + " found. ");
@@ -98,6 +160,8 @@ namespace OpenSim.Region.Framework.Scenes
                 bool foundBackup = false;
                 bool foundUpdate = false;
                 bool foundMain = false;
+                bool foundOutgoing = false;
+                bool foundIncoming = false;
                 for (int i = 0; i < AllHeartbeats.Count; i++)
                 {
                     IThread hb = AllHeartbeats[i];
@@ -107,21 +171,38 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         m_log.Warn("[SceneHeartbeatTracker]: Killing " + hb.type);
                         hb.ShouldExit = true;
+                        AllHeartbeats.Remove(hb);
                     }
                     if (hb.type == "SceneHeartbeat" && foundMain)
                     {
                         m_log.Warn("[SceneHeartbeatTracker]: Killing " + hb.type);
                         hb.ShouldExit = true;
+                        AllHeartbeats.Remove(hb);
                     }
                     if (hb.type == "SceneBackupHeartbeat" && foundBackup)
                     {
                         m_log.Warn("[SceneHeartbeatTracker]: Killing " + hb.type);
                         hb.ShouldExit = true;
+                        AllHeartbeats.Remove(hb);
                     }
                     if (hb.type == "ScenePhysicsHeartbeat" && foundPhysics)
                     {
                         m_log.Warn("[SceneHeartbeatTracker]: Killing " + hb.type);
                         hb.ShouldExit = true;
+                        AllHeartbeats.Remove(hb);
+                    }
+
+                    if (hb.type == "OutgoingPacketHandler" && foundOutgoing)
+                    {
+                        m_log.Warn("[SceneHeartbeatTracker]: Killing " + hb.type);
+                        hb.ShouldExit = true;
+                        AllHeartbeats.Remove(hb);
+                    }
+                    if (hb.type == "IncomingPacketHandler" && foundIncoming)
+                    {
+                        m_log.Warn("[SceneHeartbeatTracker]: Killing " + hb.type);
+                        hb.ShouldExit = true;
+                        AllHeartbeats.Remove(hb);
                     }
                     if (hb.type == "SceneBackupHeartbeat" && !foundBackup && !hb.ShouldExit)
                         foundBackup = true;
@@ -131,6 +212,10 @@ namespace OpenSim.Region.Framework.Scenes
                         foundPhysics = true;
                     if (hb.type == "SceneUpdateHeartbeat" && !foundUpdate && !hb.ShouldExit)
                         foundUpdate = true;
+                    if (hb.type == "OutgoingPacketHandler" && !foundOutgoing && !hb.ShouldExit)
+                        foundOutgoing = true;
+                    if (hb.type == "IncomingPacketHandler" && !foundIncoming && !hb.ShouldExit)
+                        foundIncoming = true;
                 }
             }
         }
@@ -140,31 +225,11 @@ namespace OpenSim.Region.Framework.Scenes
             if (hb.LastUpdate == new DateTime())
                 return;
             TimeSpan ts = DateTime.UtcNow - hb.LastUpdate;
-            if (ts.Seconds > 10)
+            if (ts.Seconds > 5)
             {
-                System.Threading.Thread thread;
-                hb.ShouldExit = true;
                 m_log.Warn("[SceneHeartbeatTracker]: " + hb.type + " has been found dead, attempting to revive...");
                 //Time to start a new one
-                if (hb.type == "SceneBackupHeartbeat")
-                {
-                    Scene.SceneBackupHeartbeat sbhb = new Scene.SceneBackupHeartbeat(hb.m_scene);
-                    AddSceneHeartbeat(sbhb, out thread);
-                }
-                if (hb.type == "ScenePhysicsHeartbeat")
-                {
-                    Scene.ScenePhysicsHeartbeat shb = new Scene.ScenePhysicsHeartbeat(hb.m_scene);
-                    AddSceneHeartbeat(shb, out thread);
-                }
-                if (hb.type == "SceneUpdateHeartbeat")
-                {
-                    Scene.SceneUpdateHeartbeat suhb = new Scene.SceneUpdateHeartbeat(hb.m_scene);
-                    AddSceneHeartbeat(suhb, out thread);
-                }
-                if (hb.type == "SceneHeartbeat")
-                {
-                    AddSceneHeartbeat(new Scene.SceneHeartbeat(m_scene), out thread);
-                }
+                hb.Restart();
             }
         }
 

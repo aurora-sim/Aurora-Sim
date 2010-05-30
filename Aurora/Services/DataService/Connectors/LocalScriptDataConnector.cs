@@ -33,6 +33,7 @@ namespace Aurora.Services.DataService
                 return null;
 			Dictionary<string, object> vars = new Dictionary<string, object>();
 			StateSave.State = StateSaveRetVals[0];
+            StateSave.ItemID = new UUID(StateSaveRetVals[1]);
 			StateSave.Running = bool.Parse(StateSaveRetVals[4]);
 
 			string varsmap = StateSaveRetVals[5];

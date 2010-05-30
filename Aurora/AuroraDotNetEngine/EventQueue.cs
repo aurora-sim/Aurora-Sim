@@ -74,12 +74,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     if (QIS == null)
                         continue;
 
-                    if (QIS.ID == null)
-                    {
-                        //Readd it... Maybe the script hasn't been started yet?
-                        ScriptEngine.EventQueue.Enqueue(QIS);
-                        continue;
-                    }
                     //Suspended scripts get readded
                     if (QIS.ID.Suspended)
                     {

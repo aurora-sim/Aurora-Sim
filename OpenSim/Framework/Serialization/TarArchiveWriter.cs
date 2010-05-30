@@ -115,10 +115,14 @@ namespace OpenSim.Framework.Serialization
 
             lock (m_bw)
             {
-                m_bw.Write(finalZeroPadding);
-    
-                m_bw.Flush();
-                m_bw.Close();
+                try
+                {
+                    m_bw.Write(finalZeroPadding);
+
+                    m_bw.Flush();
+                    m_bw.Close();
+                }
+                catch { }
             }
         }
 

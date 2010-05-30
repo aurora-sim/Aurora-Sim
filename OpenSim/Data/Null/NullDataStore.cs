@@ -73,6 +73,10 @@ namespace OpenSim.Data.Null
         {
         }
 
+        public void RemoveRegion(UUID regionUUID)
+        {
+        }
+
         // see IRegionDatastore
         public void StorePrimInventory(UUID primID, ICollection<TaskInventoryItem> items)
         {

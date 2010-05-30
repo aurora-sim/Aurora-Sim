@@ -357,7 +357,7 @@ namespace OpenSim.Data.SQLiteLegacy
                 foreach (DataRow row in primRows)
                 {
                     // Remove shape rows
-                    UUID uuid = new UUID((string) row["UUID"]);
+                    UUID uuid = new UUID((string)row["UUID"]);
                     DataRow shapeRow = shapes.Rows.Find(uuid.ToString());
                     if (shapeRow != null)
                     {
@@ -367,6 +367,28 @@ namespace OpenSim.Data.SQLiteLegacy
                     RemoveItems(uuid);
 
                     // Remove prim row
+                    row.Delete();
+                }
+            }
+
+            Commit();
+        }
+
+        /// <summary>
+        /// Removes an object from region storage
+        /// </summary>
+        /// <param name="obj">the object</param>
+        /// <param name="regionUUID">the region UUID</param>
+        public void RemoveRegion(UUID regionUUID)
+        {
+            DataTable prims = ds.Tables["prims"];
+            
+            string selectExp = "RegionUUID = '" + regionUUID + "'";
+            lock (ds)
+            {
+                DataRow[] primRows = prims.Select(selectExp);
+                foreach (DataRow row in primRows)
+                {
                     row.Delete();
                 }
             }

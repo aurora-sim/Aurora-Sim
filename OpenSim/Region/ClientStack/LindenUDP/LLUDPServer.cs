@@ -236,9 +236,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             base.Start(m_recvBufferSize, m_asyncPacketHandling);
 
             // Start the packet processing threads
-            Watchdog.StartThread(IncomingPacketHandler, "Incoming Packets (" + m_scene.RegionInfo.RegionName + ")", ThreadPriority.Normal, false);
-            Watchdog.StartThread(OutgoingPacketHandler, "Outgoing Packets (" + m_scene.RegionInfo.RegionName + ")", ThreadPriority.Normal, false);
+            Thread thread = null;
+            m_scene.tracker = new AuroraThreadTracker();
+            m_scene.tracker.AddSceneHeartbeat(new IncomingPacketHandler(this), out thread);
+            m_scene.tracker.AddSceneHeartbeat(new OutgoingPacketHandler(this), out thread);
             m_elapsedMSSinceLastStatReport = Environment.TickCount;
+            m_scene.tracker.OnNeedToAddThread += NeedsNewThread;
         }
 
         public new void Stop()
@@ -919,203 +922,300 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
         }
 
-        private void IncomingPacketHandler()
-        {
-            // Set this culture for the thread that incoming packets are received
-            // on to en-US to avoid number parsing issues
-            Culture.SetCurrentCulture();
-
-            while (base.IsRunning)
-            {
-                try
-                {
-                    IncomingPacket incomingPacket = null;
-
-                    // HACK: This is a test to try and rate limit packet handling on Mono.
-                    // If it works, a more elegant solution can be devised
-                    if (Util.FireAndForgetCount() < 2)
-                    {
-                        //m_log.Debug("[LLUDPSERVER]: Incoming packet handler is sleeping");
-                        Thread.Sleep(30);
-                    }
-
-                    if (packetInbox.Dequeue(100, ref incomingPacket))
-                    {
-                        if (m_asyncPacketHandling)
-                            Util.FireAndForget(ProcessInPacket, incomingPacket);
-                        else
-                            ProcessInPacket(incomingPacket);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    m_log.Error("[LLUDPSERVER]: Error in the incoming packet handler loop: " + ex.Message, ex);
-                }
-
-                Watchdog.UpdateThread();
-            }
-
-            if (packetInbox.Count > 0)
-                m_log.Warn("[LLUDPSERVER]: IncomingPacketHandler is shutting down, dropping " + packetInbox.Count + " packets");
-            packetInbox.Clear();
-
-            Watchdog.RemoveThread();
-        }
-
-        private void OutgoingPacketHandler()
-        {
-            // Set this culture for the thread that outgoing packets are sent
-            // on to en-US to avoid number parsing issues
-            Culture.SetCurrentCulture();
-
-            // Typecast the function to an Action<IClientAPI> once here to avoid allocating a new
-            // Action generic every round
-            Action<IClientAPI> clientPacketHandler = ClientOutgoingPacketHandler;
-
-            while (base.IsRunning)
-            {
-                try
-                {
-                    m_packetSent = false;
-
-                    #region Update Timers
-
-                    m_resendUnacked = false;
-                    m_sendAcks = false;
-                    m_sendPing = false;
-
-                    // Update elapsed time
-                    int thisTick = Environment.TickCount & Int32.MaxValue;
-                    if (m_tickLastOutgoingPacketHandler > thisTick)
-                        m_elapsedMSOutgoingPacketHandler += ((Int32.MaxValue - m_tickLastOutgoingPacketHandler) + thisTick);
-                    else
-                        m_elapsedMSOutgoingPacketHandler += (thisTick - m_tickLastOutgoingPacketHandler);
-
-                    m_tickLastOutgoingPacketHandler = thisTick;
-
-                    // Check for pending outgoing resends every 100ms
-                    if (m_elapsedMSOutgoingPacketHandler >= 100)
-                    {
-                        m_resendUnacked = true;
-                        m_elapsedMSOutgoingPacketHandler = 0;
-                        m_elapsed100MSOutgoingPacketHandler += 1;
-                    }
-
-                    // Check for pending outgoing ACKs every 500ms
-                    if (m_elapsed100MSOutgoingPacketHandler >= 5)
-                    {
-                        m_sendAcks = true;
-                        m_elapsed100MSOutgoingPacketHandler = 0;
-                        m_elapsed500MSOutgoingPacketHandler += 1;
-                    }
-
-                    // Send pings to clients every 5000ms
-                    if (m_elapsed500MSOutgoingPacketHandler >= 10)
-                    {
-                        m_sendPing = true;
-                        m_elapsed500MSOutgoingPacketHandler = 0;
-                    }
-
-                    #endregion Update Timers
-
-                    // Handle outgoing packets, resends, acknowledgements, and pings for each
-                    // client. m_packetSent will be set to true if a packet is sent
-                    m_scene.ForEachClient(clientPacketHandler);
-
-                    // If nothing was sent, sleep for the minimum amount of time before a
-                    // token bucket could get more tokens
-                    if (!m_packetSent)
-                        Thread.Sleep((int)TickCountResolution);
-
-                    Watchdog.UpdateThread();
-                }
-                catch (Exception ex)
-                {
-                    m_log.Error("[LLUDPSERVER]: OutgoingPacketHandler loop threw an exception: " + ex.Message, ex);
-                }
-            }
-
-            Watchdog.RemoveThread();
-        }
-
-        private void ClientOutgoingPacketHandler(IClientAPI client)
-        {
-            try
-            {
-                if (client is LLClientView)
-                {
-                    LLUDPClient udpClient = ((LLClientView)client).UDPClient;
-
-                    if (udpClient.IsConnected)
-                    {
-                        if (m_resendUnacked)
-                            ResendUnacked(udpClient);
-
-                        if (m_sendAcks)
-                            SendAcks(udpClient);
-
-                        if (m_sendPing)
-                            SendPing(udpClient);
-
-                        // Dequeue any outgoing packets that are within the throttle limits
-                        if (udpClient.DequeueOutgoing())
-                            m_packetSent = true;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                m_log.Error("[LLUDPSERVER]: OutgoingPacketHandler iteration for " + client.Name +
-                    " threw an exception: " + ex.Message, ex);
-            }
-        }
-
-        private void ProcessInPacket(object state)
-        {
-            IncomingPacket incomingPacket = (IncomingPacket)state;
-            Packet packet = incomingPacket.Packet;
-            LLUDPClient udpClient = incomingPacket.Client;
-            IClientAPI client;
-
-            // Sanity check
-            if (packet == null || udpClient == null)
-            {
-                m_log.WarnFormat("[LLUDPSERVER]: Processing a packet with incomplete state. Packet=\"{0}\", UDPClient=\"{1}\"",
-                    packet, udpClient);
-            }
-
-            // Make sure this client is still alive
-            if (m_scene.TryGetClient(udpClient.AgentID, out client))
-            {
-                try
-                {
-                    // Process this packet
-                    client.ProcessInPacket(packet);
-                }
-                catch (ThreadAbortException)
-                {
-                    // If something is trying to abort the packet processing thread, take that as a hint that it's time to shut down
-                    m_log.Info("[LLUDPSERVER]: Caught a thread abort, shutting down the LLUDP server");
-                    Stop();
-                }
-                catch (Exception e)
-                {
-                    // Don't let a failure in an individual client thread crash the whole sim.
-                    m_log.ErrorFormat("[LLUDPSERVER]: Client packet handler for {0} for packet {1} threw an exception", udpClient.AgentID, packet.Type);
-                    m_log.Error(e.Message, e);
-                }
-            }
-            else
-            {
-                m_log.DebugFormat("[LLUDPSERVER]: Dropping incoming {0} packet for dead client {1}", packet.Type, udpClient.AgentID);
-            }
-        }
-
         protected void LogoutHandler(IClientAPI client)
         {
             client.SendLogoutPacket();
             if (client.IsActive)
                 RemoveClient(((LLClientView)client).UDPClient);
+        }
+
+        public class OutgoingPacketHandler : IThread
+        {
+            LLUDPServer m_server;
+            public OutgoingPacketHandler(LLUDPServer server)
+            {
+                type = "OutgoingPacketHandler";
+                m_server = server;
+            }
+
+            public override void Restart()
+            {
+                System.Threading.Thread thread;
+                ShouldExit = true;
+                m_server.m_scene.tracker.AddSceneHeartbeat(new OutgoingPacketHandler(m_server), out thread);
+            }
+
+            /// <summary>
+            /// Performs per-frame updates regularly
+            /// </summary>
+            public override void Start()
+            {
+                try
+                {
+                    OutgoingPacketHandlerLoop();
+                }
+                catch (ThreadAbortException)
+                {
+                }
+                catch (Exception ex)
+                {
+                    m_log.Error("[Scene]: Failed with " + ex);
+                }
+                FireThreadClosing(this);
+            }
+
+            private void CheckExit()
+            {
+                if (!ShouldExit)
+                    return;
+                //Lets kill this thing
+                throw new Exception("Closing");
+            }
+
+            private void OutgoingPacketHandlerLoop()
+            {
+                // Set this culture for the thread that outgoing packets are sent
+                // on to en-US to avoid number parsing issues
+                Culture.SetCurrentCulture();
+
+                // Typecast the function to an Action<IClientAPI> once here to avoid allocating a new
+                // Action generic every round
+                Action<IClientAPI> clientPacketHandler = ClientOutgoingPacketHandler;
+
+                while (m_server.IsRunning)
+                {
+                    try
+                    {
+                        m_server.m_packetSent = false;
+
+                        #region Update Timers
+
+                        m_server.m_resendUnacked = false;
+                        m_server.m_sendAcks = false;
+                        m_server.m_sendPing = false;
+
+                        // Update elapsed time
+                        int thisTick = Environment.TickCount & Int32.MaxValue;
+                        if (m_server.m_tickLastOutgoingPacketHandler > thisTick)
+                            m_server.m_elapsedMSOutgoingPacketHandler += ((Int32.MaxValue - m_server.m_tickLastOutgoingPacketHandler) + thisTick);
+                        else
+                            m_server.m_elapsedMSOutgoingPacketHandler += (thisTick - m_server.m_tickLastOutgoingPacketHandler);
+
+                        m_server.m_tickLastOutgoingPacketHandler = thisTick;
+
+                        // Check for pending outgoing resends every 100ms
+                        if (m_server.m_elapsedMSOutgoingPacketHandler >= 100)
+                        {
+                            m_server.m_resendUnacked = true;
+                            m_server.m_elapsedMSOutgoingPacketHandler = 0;
+                            m_server.m_elapsed100MSOutgoingPacketHandler += 1;
+                        }
+
+                        // Check for pending outgoing ACKs every 500ms
+                        if (m_server.m_elapsed100MSOutgoingPacketHandler >= 5)
+                        {
+                            m_server.m_sendAcks = true;
+                            m_server.m_elapsed100MSOutgoingPacketHandler = 0;
+                            m_server.m_elapsed500MSOutgoingPacketHandler += 1;
+                        }
+
+                        // Send pings to clients every 5000ms
+                        if (m_server.m_elapsed500MSOutgoingPacketHandler >= 10)
+                        {
+                            m_server.m_sendPing = true;
+                            m_server.m_elapsed500MSOutgoingPacketHandler = 0;
+                        }
+
+                        #endregion Update Timers
+
+                        CheckExit();
+                        // Handle outgoing packets, resends, acknowledgements, and pings for each
+                        // client. m_packetSent will be set to true if a packet is sent
+                        m_server.m_scene.ForEachClient(clientPacketHandler);
+                        CheckExit();
+
+                        // If nothing was sent, sleep for the minimum amount of time before a
+                        // token bucket could get more tokens
+                        if (!m_server.m_packetSent)
+                            Thread.Sleep((int)m_server.TickCountResolution);
+                    }
+                    catch (Exception ex)
+                    {
+                        m_log.Error("[LLUDPSERVER]: OutgoingPacketHandler loop threw an exception: " + ex.Message, ex);
+                        break;
+                    }
+                }
+            }
+
+            private void ClientOutgoingPacketHandler(IClientAPI client)
+            {
+                try
+                {
+                    if (client is LLClientView)
+                    {
+                        LLUDPClient udpClient = ((LLClientView)client).UDPClient;
+
+                        if (udpClient.IsConnected)
+                        {
+                            if (m_server.m_resendUnacked)
+                                m_server.ResendUnacked(udpClient);
+                            CheckExit();
+
+                            if (m_server.m_sendAcks)
+                                m_server.SendAcks(udpClient);
+                            CheckExit();
+
+                            if (m_server.m_sendPing)
+                                m_server.SendPing(udpClient);
+                            CheckExit();
+
+                            // Dequeue any outgoing packets that are within the throttle limits
+                            if (udpClient.DequeueOutgoing())
+                                m_server.m_packetSent = true;
+                            CheckExit();
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    if (ex.Message != "Closing")
+                        m_log.Error("[LLUDPSERVER]: OutgoingPacketHandler iteration for " + client.Name +
+                            " threw an exception: " + ex.Message, ex);
+                    throw ex;
+                }
+            }
+        }
+
+        public class IncomingPacketHandler : IThread
+        {
+            LLUDPServer m_server;
+            public IncomingPacketHandler(LLUDPServer server)
+            {
+                type = "IncomingPacketHandler";
+                m_server = server;
+            }
+
+            public override void Restart()
+            {
+                System.Threading.Thread thread;
+                ShouldExit = true;
+                m_server.m_scene.tracker.AddSceneHeartbeat(new IncomingPacketHandler(m_server), out thread);
+            }
+
+            /// <summary>
+            /// Performs per-frame updates regularly
+            /// </summary>
+            public override void Start()
+            {
+                try
+                {
+                    IncomingPacketHandlerLoop();
+                }
+                catch (ThreadAbortException)
+                {
+                }
+                catch (Exception ex)
+                {
+                    m_log.Error("[Scene]: Failed with " + ex);
+                }
+                FireThreadClosing(this);
+            }
+
+            private void CheckExit()
+            {
+                if (!ShouldExit)
+                    return;
+                //Lets kill this thing
+                throw new Exception("Closing");
+            }
+
+            private void IncomingPacketHandlerLoop()
+            {
+                // Set this culture for the thread that incoming packets are received
+                // on to en-US to avoid number parsing issues
+                Culture.SetCurrentCulture();
+
+                while (m_server.IsRunning)
+                {
+                    try
+                    {
+                        IncomingPacket incomingPacket = null;
+
+                        // HACK: This is a test to try and rate limit packet handling on Mono.
+                        // If it works, a more elegant solution can be devised
+                        if (Util.FireAndForgetCount() < 2)
+                        {
+                            //m_log.Debug("[LLUDPSERVER]: Incoming packet handler is sleeping");
+                            Thread.Sleep(30);
+                        }
+
+                        if (m_server.packetInbox.Dequeue(100, ref incomingPacket))
+                        {
+                            if (m_server.m_asyncPacketHandling)
+                                Util.FireAndForget(ProcessInPacket, incomingPacket);
+                            else
+                                ProcessInPacket(incomingPacket);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        if (ex.Message == "Closing")
+                            m_log.Error("[LLUDPSERVER]: Error in the incoming packet handler loop: " + ex.Message, ex);
+                        break;
+                    }
+                }
+
+                if (m_server.packetInbox.Count > 0)
+                    m_log.Warn("[LLUDPSERVER]: IncomingPacketHandler is shutting down, dropping " + m_server.packetInbox.Count + " packets");
+                m_server.packetInbox.Clear();
+            }
+
+            private void ProcessInPacket(object state)
+            {
+                IncomingPacket incomingPacket = (IncomingPacket)state;
+                Packet packet = incomingPacket.Packet;
+                LLUDPClient udpClient = incomingPacket.Client;
+                IClientAPI client;
+
+                // Sanity check
+                if (packet == null || udpClient == null)
+                {
+                    m_log.WarnFormat("[LLUDPSERVER]: Processing a packet with incomplete state. Packet=\"{0}\", UDPClient=\"{1}\"",
+                        packet, udpClient);
+                }
+
+                // Make sure this client is still alive
+                if (m_server.m_scene.TryGetClient(udpClient.AgentID, out client))
+                {
+                    try
+                    {
+                        // Process this packet
+                        client.ProcessInPacket(packet);
+                    }
+                    catch (Exception e)
+                    {
+                        if (e.Message == "Closing")
+                        {
+                            // Don't let a failure in an individual client thread crash the whole sim.
+                            m_log.ErrorFormat("[LLUDPSERVER]: Client packet handler for {0} for packet {1} threw an exception", udpClient.AgentID, packet.Type);
+                            m_log.Error(e.Message, e);
+                        }
+                    }
+                }
+                else
+                {
+                    m_log.DebugFormat("[LLUDPSERVER]: Dropping incoming {0} packet for dead client {1}", packet.Type, udpClient.AgentID);
+                }
+            }
+        }
+
+        public void NeedsNewThread(string type)
+        {
+            System.Threading.Thread thread;
+            if (type == "IncomingPacketHandler")
+                m_scene.tracker.AddSceneHeartbeat(new IncomingPacketHandler(this), out thread);
+            if (type == "OutgoingPacketHandler")
+                m_scene.tracker.AddSceneHeartbeat(new OutgoingPacketHandler(this), out thread);
         }
     }
 }
