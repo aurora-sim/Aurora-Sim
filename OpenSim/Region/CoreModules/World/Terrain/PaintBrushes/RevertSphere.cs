@@ -61,13 +61,12 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
                         continue;
 
                     // Calculate a sphere and add it to the heighmap
-                    double z = strength;
-                    z *= z;
-                    z -= ((x - rx) * (x - rx)) + ((y - ry) * (y - ry));
+                    double z = 0;
+                    if (duration < 4.0)
+                        z = TerrainUtil.SphericalFactor(x, y, rx, ry, strength) * duration * 0.25;
 
                     if (z > 0.0)
                     {
-                        z *= duration;
                         map[x, y] = (map[x, y] * (1.0 - z)) + (m_revertmap[x, y] * z);
                     }
                 }

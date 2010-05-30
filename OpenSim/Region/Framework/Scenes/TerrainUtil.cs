@@ -40,7 +40,8 @@ namespace OpenSim.Region.Framework.Scenes
 
         public static double SphericalFactor(double x, double y, double rx, double ry, double size)
         {
-            return size * size - ((x - rx) * (x - rx) + (y - ry) * (y - ry));
+            size = Math.Round(size,0);
+            return size * size * size * size - ((x - rx) * (x - rx) + (y - ry) * (y - ry));
         }
 
         public static double GetBilinearInterpolate(double x, double y, ITerrainChannel map)
@@ -121,7 +122,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             for (int i = 0; i < octaves; i++)
             {
-                double frequency = Math.Pow(2, i);
+                double frequency = Math.Pow(4, i);
                 double amplitude = Math.Pow(persistence, i);
 
                 total += InterpolatedNoise(x * frequency, y * frequency) * amplitude;

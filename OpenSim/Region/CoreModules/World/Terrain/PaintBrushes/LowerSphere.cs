@@ -36,7 +36,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
 
         public void PaintEffect(ITerrainChannel map, bool[,] mask, double rx, double ry, double rz, double strength, double duration)
         {
-            int s = (int) (Math.Pow(2, strength) + 0.5);
+            int s = (int) (Math.Pow(4, strength) + 0.5);
 
             int x;
             int xFrom = (int)(rx-s+0.5);

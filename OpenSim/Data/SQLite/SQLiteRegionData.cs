@@ -1968,9 +1968,9 @@ namespace OpenSim.Data.SQLite
                     DataRow newItemRow = dbItems.NewRow();
                     fillItemRow(newItemRow, newItem);
                     dbItems.Rows.Add(newItemRow);
-                    m_log.InfoFormat(
-                        "[DATASTORE]: Adding item {0}, {1} to prim ID {2}",
-                        newItem.Name, newItem.ItemID, newItem.ParentPartID);
+                    //m_log.InfoFormat(
+                    //    "[DATASTORE]: Adding item {0}, {1} to prim ID {2}",
+                    //    newItem.Name, newItem.ItemID, newItem.ParentPartID);
                 }
             }
 

@@ -712,8 +712,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                     bool[,] allowMask = new bool[m_channel.Width,m_channel.Height];
                     allowMask.Initialize();
                     int n = size + 1;
-                    if (n > 2)
-                        n = 4;
+                     if (n > 2)
+                        n = 12;
 
                     int zx = (int) (west + 0.5);
                     int zy = (int) (north + 0.5);
