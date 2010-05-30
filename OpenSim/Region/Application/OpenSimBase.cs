@@ -441,16 +441,38 @@ namespace OpenSim
 		/// <param name="cmdparams">name of avatar to kick</param>
 		private void KickUserCommand(string module, string[] cmdparams)
 		{
-			if (cmdparams.Length < 4)
-				return;
+            string alert = null;
+            IList agents = m_sceneManager.GetCurrentSceneAvatars();
 
-			string alert = null;
-			if (cmdparams.Length > 4)
-				alert = String.Format("\n{0}\n", String.Join(" ", cmdparams, 4, cmdparams.Length - 4));
+            if (cmdparams.Length < 4)
+            {
+                if (cmdparams.Length < 3)
+                    return;
+                if (cmdparams[2] == "all")
+                {
+                    foreach (ScenePresence presence in agents)
+                    {
+                        RegionInfo regionInfo = presence.Scene.RegionInfo;
 
-			IList agents = m_sceneManager.GetCurrentSceneAvatars();
+                        MainConsole.Instance.Output(String.Format("Kicking user: {0,-16}{1,-16}{2,-37} in region: {3,-16}", presence.Firstname, presence.Lastname, presence.UUID, regionInfo.RegionName));
 
-			foreach (ScenePresence presence in agents) {
+                            // kick client...
+                            if (alert != null)
+                                presence.ControllingClient.Kick(alert);
+                            else
+                                presence.ControllingClient.Kick("\nThe OpenSim manager kicked you out.\n");
+
+                            // ...and close on our side
+                            presence.Scene.IncomingCloseAgent(presence.UUID);
+                    }
+                }
+            }
+
+            if (cmdparams.Length > 4)
+                alert = String.Format("\n{0}\n", String.Join(" ", cmdparams, 4, cmdparams.Length - 4));
+
+            foreach (ScenePresence presence in agents)
+            {
 				RegionInfo regionInfo = presence.Scene.RegionInfo;
 
 				if (presence.Firstname.ToLower().Contains(cmdparams[2].ToLower()) && presence.Lastname.ToLower().Contains(cmdparams[3].ToLower())) {

@@ -494,6 +494,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     AssemblyName = "";
                     LineMap = new Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>>();
                     CloseAndDispose();
+                    Running = true;
+                    Disabled = false;
                 }
                 //If the previous compile is there, retrive that
                 /*if (PreviouslyCompiledID != null)
@@ -503,8 +505,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     AssemblyName = PreviouslyCompiledID.AssemblyName;
                 }*/
                 //Otherwise, compile the script.
-                else
-                {
+                //else
+                //{
                     try
                     {
                         m_ScriptEngine.LSLCompiler.PerformScriptCompile(Source, AssetID, InventoryItem.OwnerID, ItemID, Inherited, ClassName, m_ScriptEngine.ScriptProtection, localID, this, out AssemblyName,
@@ -535,7 +537,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     {
                         ShowError(ex, 1, reupload);
                     }
-                }
+                //}
             }
 
             bool useDebug = false;

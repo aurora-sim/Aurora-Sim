@@ -504,6 +504,10 @@ namespace OpenSim.Region.OptionalModules.World.NPC
 
         public virtual void Kick(string message)
         {
+            // Remove ourselves from the scene
+            m_scene.RemoveClient(AgentId);
+            if (OnConnectionClosed != null)
+                OnConnectionClosed(this);
         }
 
         public virtual void SendStartPingCheck(byte seq)
@@ -586,7 +590,24 @@ namespace OpenSim.Region.OptionalModules.World.NPC
 
         public virtual AgentCircuitData RequestClientInfo()
         {
-            return new AgentCircuitData();
+            AgentCircuitData agentData = new AgentCircuitData();
+            agentData.AgentID = AgentId;
+            agentData.SessionID = UUID.Zero;
+            agentData.SecureSessionID = SecureSessionId;
+            agentData.circuitcode = m_circuitCode;
+            agentData.child = false;
+            agentData.firstname = FirstName;
+            agentData.lastname = LastName;
+
+            //ICapabilitiesModule capsModule = m_scene.RequestModuleInterface<ICapabilitiesModule>();
+
+            //if (capsModule == null) // can happen when shutting down.
+                return agentData;
+
+            //agentData.CapsPath = capsModule.GetCapsPath(m_agentId);
+            //agentData.ChildrenCapSeeds = new Dictionary<ulong, string>(capsModule.GetChildrenSeeds(m_agentId));
+
+            //return agentData;
         }
 
         public virtual void CrossRegion(ulong newRegionHandle, Vector3 pos, Vector3 lookAt,

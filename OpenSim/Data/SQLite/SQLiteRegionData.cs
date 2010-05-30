@@ -204,6 +204,8 @@ namespace OpenSim.Data.SQLite
                         m_log.Info("[REGION DB]: Caught fill error on regionsettings table");
                     }
 
+                    itemsDa.Fill(ds.Tables["primitems"]);
+
                     // We have to create a data set mapping for every table, otherwise the IDataAdaptor.Update() will not populate rows with values!
                     // Not sure exactly why this is - this kind of thing was not necessary before - justincc 20100409
                     // Possibly because we manually set up our own DataTables before connecting to the database
@@ -1939,14 +1941,12 @@ namespace OpenSim.Data.SQLite
                 // repalce with current inventory details
                 foreach (TaskInventoryItem newItem in items)
                 {
-//                    m_log.InfoFormat(
-//                        "[DATASTORE]: ",
-//                        "Adding item {0}, {1} to prim ID {2}",
-//                        newItem.Name, newItem.ItemID, newItem.ParentPartID);
-
                     DataRow newItemRow = dbItems.NewRow();
                     fillItemRow(newItemRow, newItem);
                     dbItems.Rows.Add(newItemRow);
+                    m_log.InfoFormat(
+                        "[DATASTORE]: Adding item {0}, {1} to prim ID {2}",
+                        newItem.Name, newItem.ItemID, newItem.ParentPartID);
                 }
             }
 

@@ -718,8 +718,7 @@ namespace OpenSim.Framework
                 m_Commands = value;
             }
         }
-
-        public object m_ConsoleScene = null;
+        
         public object ConsoleScene
         {
             get
@@ -731,7 +730,8 @@ namespace OpenSim.Framework
                 m_ConsoleScene = value;
             }
         }
-
+        public object m_ConsoleScene = null;
+        
         public void Dispose()
         {
         }

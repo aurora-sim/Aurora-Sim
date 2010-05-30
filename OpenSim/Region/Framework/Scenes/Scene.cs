@@ -125,6 +125,7 @@ namespace OpenSim.Region.Framework.Scenes
         private readonly Timer m_restartTimer = new Timer(15000); // Wait before firing
         private int m_incrementsof15seconds;
         private volatile bool m_backingup;
+        public bool NewCoarseLocations = false;
 
         private Dictionary<UUID, ReturnInfo> m_returns = new Dictionary<UUID, ReturnInfo>();
         private Dictionary<UUID, SceneObjectGroup> m_groupsWithTargets = new Dictionary<UUID, SceneObjectGroup>();
@@ -3987,8 +3988,7 @@ namespace OpenSim.Region.Framework.Scenes
                         catch (NullReferenceException) { }
                     });
 
-                ForEachScenePresence(
-                    delegate(ScenePresence presence) { presence.CoarseLocationChange(); });
+                NewCoarseLocations = true;
 
                 IAgentAssetTransactions agentTransactions = this.RequestModuleInterface<IAgentAssetTransactions>();
                 if (agentTransactions != null)
@@ -4046,7 +4046,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void NotifyMyCoarseLocationChange()
         {
-            ForEachScenePresence(delegate(ScenePresence presence) { presence.CoarseLocationChange(); });
+            NewCoarseLocations = true;
         }
 
         #endregion

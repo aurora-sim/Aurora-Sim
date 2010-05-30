@@ -64,7 +64,7 @@ namespace OpenSim.Region.Framework.Scenes
                 bool foundPhysics = false;
                 bool foundBackup = false;
                 bool foundUpdate = false;
-                bool foundMain = false;
+                //bool foundMain = false;
                 for (int i = 0; i < AllHeartbeats.Count; i++)
                 {
                     IThread hb = AllHeartbeats[i];
@@ -76,8 +76,8 @@ namespace OpenSim.Region.Framework.Scenes
                         foundPhysics = true;
                     if (hb.type == "SceneUpdateHeartbeat" && !foundUpdate && !hb.ShouldExit)
                         foundUpdate = true;
-                    if (hb.type == "SceneHeartbeat" && !foundMain && !hb.ShouldExit)
-                        foundMain = true;
+                    //if (hb.type == "SceneHeartbeat" && !foundMain && !hb.ShouldExit)
+                    //    foundMain = true;
                 }
                 m_log.Warn("[SceneHeartbeatTracker]: " + m_scene.RegionInfo.RegionName + " " + foundBackup + " " + foundPhysics + " " + foundUpdate + " ");
                 System.Threading.Thread thread;
@@ -87,8 +87,8 @@ namespace OpenSim.Region.Framework.Scenes
                     AddSceneHeartbeat(new Scene.ScenePhysicsHeartbeat(m_scene), out thread);
                 if (!foundUpdate)
                     AddSceneHeartbeat(new Scene.SceneUpdateHeartbeat(m_scene), out thread);
-                if (!foundMain)
-                    AddSceneHeartbeat(new Scene.SceneHeartbeat(m_scene), out thread);
+                //if (!foundMain)
+                //    AddSceneHeartbeat(new Scene.SceneHeartbeat(m_scene), out thread);
             }
             if (AllHeartbeats.Count > 3)
             {

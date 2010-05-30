@@ -373,7 +373,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         protected void StopAllScripts(string module, string[] cmdparams)
         {
             string go = MainConsole.Instance.CmdPrompt("Are you sure you want to stop all scripts?", "no");
-            if (go == "yes" || go == "Yes")
+            if (go.Contains("yes") || go.Contains("Yes"))
             {
                 foreach (ScriptData ID in ScriptProtection.GetAllScripts())
                 {

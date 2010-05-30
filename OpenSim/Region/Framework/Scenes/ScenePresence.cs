@@ -174,7 +174,6 @@ namespace OpenSim.Region.Framework.Scenes
         public string JID = String.Empty;
 
         // Agent moves with a PID controller causing a force to be exerted.
-        private bool m_newCoarseLocations = true;
         private float m_health = 100f;
 
         // Default AV Height
@@ -2352,10 +2351,10 @@ namespace OpenSim.Region.Framework.Scenes
 
             SendPrimUpdates();
 
-            if (m_newCoarseLocations)
+            if (Scene.NewCoarseLocations)
             {
                 SendCoarseLocations();
-                m_newCoarseLocations = false;
+                Scene.NewCoarseLocations = false;
             }
 
             if (m_isChildAgent == false)
@@ -2379,12 +2378,13 @@ namespace OpenSim.Region.Framework.Scenes
                     m_lastRotation = m_bodyRot;
                     m_lastVelocity = Velocity;
                     //m_lastTerseSent = Environment.TickCount;
+                    //Moving these into the terse update check, as they don't need to be checked/sent unless the client has moved.
+                    // followed suggestion from mic bowman. reversed the two lines below.
+                    if (m_parentID == 0 && m_physicsActor != null || m_parentID != 0) // Check that we have a physics actor or we're sitting on something
+                        CheckForBorderCrossing();
+                    CheckForSignificantMovement(); // sends update to the modules.
                 }
 
-                // followed suggestion from mic bowman. reversed the two lines below.
-                if (m_parentID == 0 && m_physicsActor != null || m_parentID != 0) // Check that we have a physics actor or we're sitting on something
-                    CheckForBorderCrossing();
-                CheckForSignificantMovement(); // sends update to the modules.
                 if (SendEffectPackets > 7)
                 {
                     SendViewerEffects();
@@ -2451,7 +2451,8 @@ namespace OpenSim.Region.Framework.Scenes
                 Vector3 velocity = (actor != null) ? actor.Velocity : Vector3.Zero;
 
                 Vector3 pos = m_pos;
-                pos.Z += m_appearance.HipOffset;
+                if(m_appearance != null)
+                    pos.Z += m_appearance.HipOffset;
 
                 //m_log.DebugFormat("[SCENEPRESENCE]: TerseUpdate: Pos={0} Rot={1} Vel={2}", m_pos, m_bodyRot, m_velocity);
 
@@ -2526,11 +2527,6 @@ namespace OpenSim.Region.Framework.Scenes
             m_controllingClient.SendCoarseLocationUpdate(AvatarUUIDs, CoarseLocations);
 
             m_scene.StatsReporter.AddAgentTime(Util.EnvironmentTickCountSubtract(m_perfMonMS));
-        }
-
-        public void CoarseLocationChange()
-        {
-            m_newCoarseLocations = true;
         }
 
         /// <summary>

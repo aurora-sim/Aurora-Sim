@@ -106,11 +106,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         {
                             continue;
                         }
-                        else
-                        {
-                            //Remove it then.
-                            m_ScriptEngine.NeedsRemoved.Remove(QIS.ID.ItemID);
-                        }
                     }
                     try
                     {
