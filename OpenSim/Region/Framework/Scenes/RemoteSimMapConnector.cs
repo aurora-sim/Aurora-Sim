@@ -15,7 +15,7 @@ using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
 using OpenSim.Server.Base;
 
-namespace Aurora.Modules
+namespace OpenSim.Region.Framework.Scenes
 {
     public class RemoteSimMapConnector : ISimMapConnector
     {

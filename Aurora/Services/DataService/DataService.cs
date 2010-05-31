@@ -84,6 +84,7 @@ namespace Aurora.Services.DataService
                 DataManager.DataManager.IOfflineMessagesConnector = new LocalOfflineMessagesConnector();
                 DataManager.DataManager.IDirectoryServiceConnector = new LocalDirectoryServiceConnector();
                 DataManager.DataManager.IEstateConnector = new LocalEstateConnector();
+                DataManager.DataManager.ICurrencyConnector = new LocalCurrencyConnector();
                 return;
             }
             DataManager.DataManager.ISimMapConnector = new LocalGridConnector();
@@ -93,6 +94,7 @@ namespace Aurora.Services.DataService
             DataManager.DataManager.IDirectoryServiceConnector = new LocalDirectoryServiceConnector();
             DataManager.DataManager.IEstateConnector = new LocalEstateConnector();
             DataManager.DataManager.IAvatarArchiverConnector = new LocalAvatarArchiverConnector();
+            DataManager.DataManager.ICurrencyConnector = new LocalCurrencyConnector();
             if (Connector != "RemoteConnector")
             {
                 m_log.Error("[AuroraDataService]: No Connector found with that name!");

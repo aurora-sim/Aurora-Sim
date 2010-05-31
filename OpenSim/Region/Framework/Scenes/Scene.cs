@@ -167,7 +167,27 @@ namespace OpenSim.Region.Framework.Scenes
         protected IAuthorizationService m_AuthorizationService;
 
         private Object m_heartbeatLock = new Object();
-
+        private Aurora.Framework.ISimMapConnector m_SimMapConnector;
+        public Aurora.Framework.ISimMapConnector SimMapConnector
+        {
+            get
+            {
+                if (m_SimMapConnector == null)
+                {
+                    string Connector = m_config.Configs["SimMap"].GetString("Connector");
+                    if (Connector == "RemoteSimMapConnector")
+                    {
+                        string SimMapServerURI = m_config.Configs["SimMap"].GetString("SimMapServerURI");
+                        m_SimMapConnector = new RemoteSimMapConnector(SimMapServerURI);
+                    }
+                    if (Connector == "LocalSimMapConnector")
+                    {
+                        m_SimMapConnector = new LocalSimMapConnector(m_GridService);
+                    }
+                }
+                return m_SimMapConnector;
+            }
+        }
         public IAssetService AssetService
         {
             get
@@ -1171,13 +1191,15 @@ namespace OpenSim.Region.Framework.Scenes
                 if (ScriptEngine)
                 {
                     m_log.Info("Stopping all Scripts in Scene");
-                    foreach (EntityBase ent in Entities)
+                    /*foreach (EntityBase ent in Entities)
                     {
                         if (ent is SceneObjectGroup)
                         {
                             ((SceneObjectGroup) ent).RemoveScriptInstances(false);
                         }
-                    }
+                    }*/
+                    IScriptModule mod = RequestModuleInterface<IScriptModule>();
+                    mod.StopAllScripts();
                 }
                 else
                 {
@@ -1195,7 +1217,6 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
                 m_scripts_enabled = !ScriptEngine;
-                m_log.Info("[TOTEDD]: Here is the method to trigger disabling of the scripting engine");
             }
 
             if (m_physics_enabled != !PhysicsEngine)

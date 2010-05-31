@@ -42,8 +42,8 @@ namespace Aurora.Modules
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private Scene m_aScene;
-        private ISimMapConnector SimMapConnector;
-        public MapActivityDetector(ISimMapConnector connector)
+        private Aurora.Framework.ISimMapConnector SimMapConnector;
+        public MapActivityDetector(Aurora.Framework.ISimMapConnector connector)
         {
             SimMapConnector = connector;
             //m_log.DebugFormat("[MAP ACTIVITY DETECTOR]: starting ");

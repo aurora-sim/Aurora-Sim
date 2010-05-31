@@ -13,9 +13,8 @@ using System.Reflection;
 using Nini.Config;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
-using OpenSim.Server.Base;
 
-namespace Aurora.Modules
+namespace Aurora.Framework
 {
     public interface ISimMapConnector
     {

@@ -7413,6 +7413,15 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
             #endregion
 
+            Util.FireAndForget(CreateInventoryFolder, Pack);
+
+            return true;
+        }
+
+        private void CreateInventoryFolder(object Pack)
+        {
+            CreateInventoryFolderPacket invFolder = (CreateInventoryFolderPacket)Pack;
+
             CreateInventoryFolder handlerCreateInventoryFolder = OnCreateNewInventoryFolder;
             if (handlerCreateInventoryFolder != null)
             {
@@ -7421,7 +7430,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                                              Util.FieldToString(invFolder.FolderData.Name),
                                              invFolder.FolderData.ParentID);
             }
-            return true;
         }
 
         private bool HandleUpdateInventoryFolder(IClientAPI sender, Packet Pack)
@@ -7439,51 +7447,66 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 }
                 #endregion
 
-                UpdateInventoryFolder handlerUpdateInventoryFolder = null;
-
-                for (int i = 0; i < invFolderx.FolderData.Length; i++)
-                {
-                    handlerUpdateInventoryFolder = OnUpdateInventoryFolder;
-                    if (handlerUpdateInventoryFolder != null)
-                    {
-                        OnUpdateInventoryFolder(this, invFolderx.FolderData[i].FolderID,
-                                                (ushort)invFolderx.FolderData[i].Type,
-                                                Util.FieldToString(invFolderx.FolderData[i].Name),
-                                                invFolderx.FolderData[i].ParentID);
-                    }
-                }
+                Util.FireAndForget(UpdateInventoryFolder, Pack);
+                
             }
             return true;
+        }
+
+        private void UpdateInventoryFolder(object Pack)
+        {
+            UpdateInventoryFolderPacket invFolderx = (UpdateInventoryFolderPacket)Pack;
+
+            UpdateInventoryFolder handlerUpdateInventoryFolder = null;
+
+            for (int i = 0; i < invFolderx.FolderData.Length; i++)
+            {
+                handlerUpdateInventoryFolder = OnUpdateInventoryFolder;
+                if (handlerUpdateInventoryFolder != null)
+                {
+                    OnUpdateInventoryFolder(this, invFolderx.FolderData[i].FolderID,
+                                            (ushort)invFolderx.FolderData[i].Type,
+                                            Util.FieldToString(invFolderx.FolderData[i].Name),
+                                            invFolderx.FolderData[i].ParentID);
+                }
+            }
         }
 
         private bool HandleMoveInventoryFolder(IClientAPI sender, Packet Pack)
         {
             if (OnMoveInventoryFolder != null)
             {
-                MoveInventoryFolderPacket invFoldery = (MoveInventoryFolderPacket)Pack;
-
                 #region Packet Session and User Check
                 if (m_checkPackets)
                 {
+                    MoveInventoryFolderPacket invFoldery = (MoveInventoryFolderPacket)Pack;
+
                     if (invFoldery.AgentData.SessionID != SessionId ||
                         invFoldery.AgentData.AgentID != AgentId)
                         return true;
                 }
                 #endregion
 
-                MoveInventoryFolder handlerMoveInventoryFolder = null;
-
-                for (int i = 0; i < invFoldery.InventoryData.Length; i++)
-                {
-                    handlerMoveInventoryFolder = OnMoveInventoryFolder;
-                    if (handlerMoveInventoryFolder != null)
-                    {
-                        OnMoveInventoryFolder(this, invFoldery.InventoryData[i].FolderID,
-                                              invFoldery.InventoryData[i].ParentID);
-                    }
-                }
+                Util.FireAndForget(MoveInventoryFolder, Pack);
             }
             return true;
+        }
+
+        private void MoveInventoryFolder(object Pack)
+        {
+            MoveInventoryFolderPacket invFoldery = (MoveInventoryFolderPacket)Pack;
+
+            MoveInventoryFolder handlerMoveInventoryFolder = null;
+
+            for (int i = 0; i < invFoldery.InventoryData.Length; i++)
+            {
+                handlerMoveInventoryFolder = OnMoveInventoryFolder;
+                if (handlerMoveInventoryFolder != null)
+                {
+                    OnMoveInventoryFolder(this, invFoldery.InventoryData[i].FolderID,
+                                          invFoldery.InventoryData[i].ParentID);
+                }
+            }
         }
 
         private bool HandleCreateInventoryItem(IClientAPI sender, Packet Pack)
@@ -7499,6 +7522,15 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
             #endregion
 
+            Util.FireAndForget(CreateInventoryItem, Pack);
+            
+            return true;
+        }
+
+        private void CreateInventoryItem(object Pack)
+        {
+            CreateInventoryItemPacket createItem = (CreateInventoryItemPacket)Pack;
+
             CreateNewInventoryItem handlerCreateNewInventoryItem = OnCreateNewInventoryItem;
             if (handlerCreateNewInventoryItem != null)
             {
@@ -7513,7 +7545,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                                               createItem.InventoryBlock.NextOwnerMask,
                                               Util.UnixTimeSinceEpoch());
             }
-            return true;
         }
 
         private bool HandleLinkInventoryItem(IClientAPI sender, Packet Pack)
@@ -7528,6 +7559,15 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     return true;
             }
             #endregion
+
+            Util.FireAndForget(LinkInventoryItem, Pack);
+
+            return true;
+        }
+
+        private void LinkInventoryItem(object Pack)
+        {
+            LinkInventoryItemPacket createLink = (LinkInventoryItemPacket)Pack;
 
             LinkInventoryItem linkInventoryItem = OnLinkInventoryItem;
 
@@ -7544,8 +7584,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     createLink.InventoryBlock.Type,
                     createLink.InventoryBlock.OldItemID);
             }
-
-            return true;
         }
 
         private bool HandleFetchInventory(IClientAPI sender, Packet Pack)
@@ -7563,20 +7601,26 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 }
                 #endregion
 
-                FetchInventory handlerFetchInventory = null;
-
-                for (int i = 0; i < FetchInventoryx.InventoryData.Length; i++)
-                {
-                    handlerFetchInventory = OnFetchInventory;
-
-                    if (handlerFetchInventory != null)
-                    {
-                        OnFetchInventory(this, FetchInventoryx.InventoryData[i].ItemID,
-                                         FetchInventoryx.InventoryData[i].OwnerID);
-                    }
-                }
+                Util.FireAndForget(FetchInventory, Pack);
             }
             return true;
+        }
+
+        private void FetchInventory(object Pack)
+        {
+            FetchInventoryPacket FetchInventoryx = (FetchInventoryPacket)Pack;
+
+            FetchInventory handlerFetchInventory = null;
+            for (int i = 0; i < FetchInventoryx.InventoryData.Length; i++)
+            {
+                handlerFetchInventory = OnFetchInventory;
+
+                if (handlerFetchInventory != null)
+                {
+                    OnFetchInventory(this, FetchInventoryx.InventoryData[i].ItemID,
+                                     FetchInventoryx.InventoryData[i].OwnerID);
+                }
+            }
         }
 
         private bool HandleFetchInventoryDescendents(IClientAPI sender, Packet Pack)
@@ -7592,6 +7636,15 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
             #endregion
 
+            Util.FireAndForget(FetchInventoryDescendents, Pack);
+
+            return true;
+        }
+
+        private void FetchInventoryDescendents(object Pack)
+        {
+            FetchInventoryDescendentsPacket Fetch = (FetchInventoryDescendentsPacket)Pack;
+
             FetchInventoryDescendents handlerFetchInventoryDescendents = OnFetchInventoryDescendents;
             if (handlerFetchInventoryDescendents != null)
             {
@@ -7599,7 +7652,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                                                  Fetch.InventoryData.FetchFolders, Fetch.InventoryData.FetchItems,
                                                  Fetch.InventoryData.SortOrder);
             }
-            return true;
         }
 
         private bool HandlePurgeInventoryDescendents(IClientAPI sender, Packet Pack)
@@ -7615,12 +7667,20 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
             #endregion
 
+            Util.FireAndForget(PurgeInventoryDescendents, Pack);
+            
+            return true;
+        }
+
+        private void PurgeInventoryDescendents(object Pack)
+        {
+            PurgeInventoryDescendentsPacket Purge = (PurgeInventoryDescendentsPacket)Pack;
+
             PurgeInventoryDescendents handlerPurgeInventoryDescendents = OnPurgeInventoryDescendents;
             if (handlerPurgeInventoryDescendents != null)
             {
                 handlerPurgeInventoryDescendents(this, Purge.InventoryData.FolderID);
             }
-            return true;
         }
 
         private bool HandleUpdateInventoryItem(IClientAPI sender, Packet Pack)
@@ -7635,6 +7695,15 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     return true;
             }
             #endregion
+
+            Util.FireAndForget(UpdateInventoryItem, Pack);
+
+            return true;
+        }
+
+        private void UpdateInventoryItem(object Pack)
+        {
+            UpdateInventoryItemPacket inventoryItemUpdate = (UpdateInventoryItemPacket)Pack;
 
             if (OnUpdateInventoryItem != null)
             {
@@ -7667,7 +7736,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     }
                 }
             }
-            return true;
         }
 
         private bool HandleCopyInventoryItem(IClientAPI sender, Packet Pack)
@@ -7683,6 +7751,15 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
             #endregion
 
+            Util.FireAndForget(CopyInventoryItem, Pack);
+            
+            return true;
+        }
+
+        private void CopyInventoryItem(object Pack)
+        {
+            CopyInventoryItemPacket copyitem = (CopyInventoryItemPacket)Pack;
+
             CopyInventoryItem handlerCopyInventoryItem = null;
             if (OnCopyInventoryItem != null)
             {
@@ -7697,7 +7774,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     }
                 }
             }
-            return true;
         }
 
         private bool HandleMoveInventoryItem(IClientAPI sender, Packet Pack)
@@ -7712,6 +7788,15 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     return true;
             }
             #endregion
+
+            Util.FireAndForget(MoveInventoryItem, Pack);
+            
+            return true;
+        }
+
+        private void MoveInventoryItem(object Pack)
+        {
+            MoveInventoryItemPacket moveitem = (MoveInventoryItemPacket)Pack;
 
             if (OnMoveInventoryItem != null)
             {
@@ -7733,7 +7818,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     handlerMoveInventoryItem(this, items);
                 }
             }
-            return true;
         }
 
         private bool HandleRemoveInventoryItem(IClientAPI sender, Packet Pack)
@@ -7748,6 +7832,15 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     return true;
             }
             #endregion
+
+            Util.FireAndForget(RemoveInventoryItem, Pack);
+
+            return true;
+        }
+
+        private void RemoveInventoryItem(object Pack)
+        {
+            RemoveInventoryItemPacket removeItem = (RemoveInventoryItemPacket)Pack;
 
             if (OnRemoveInventoryItem != null)
             {
@@ -7764,7 +7857,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 }
 
             }
-            return true;
         }
 
         private bool HandleRemoveInventoryFolder(IClientAPI sender, Packet Pack)
@@ -7780,6 +7872,15 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
             #endregion
 
+            Util.FireAndForget(RemoveInventoryFolder, Pack);
+            
+            return true;
+        }
+
+        private void RemoveInventoryFolder(object Pack)
+        {
+            RemoveInventoryFolderPacket removeFolder = (RemoveInventoryFolderPacket)Pack;
+
             if (OnRemoveInventoryFolder != null)
             {
                 RemoveInventoryFolder handlerRemoveInventoryFolder = null;
@@ -7794,7 +7895,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     handlerRemoveInventoryFolder(this, uuids);
                 }
             }
-            return true;
         }
 
         private bool HandleRemoveInventoryObjects(IClientAPI sender, Packet Pack)
@@ -7808,6 +7908,16 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     return true;
             }
             #endregion
+
+            Util.FireAndForget(RemoveInventoryObjects, Pack);
+            
+            return true;
+        }
+
+        private void RemoveInventoryObjects(object Pack)
+        {
+            RemoveInventoryObjectsPacket removeObject = (RemoveInventoryObjectsPacket)Pack;
+            
             if (OnRemoveInventoryFolder != null)
             {
                 RemoveInventoryFolder handlerRemoveInventoryFolder = null;
@@ -7837,7 +7947,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     handlerRemoveInventoryItem(this, uuids);
                 }
             }
-            return true;
         }
 
         private bool HandleRequestTaskInventory(IClientAPI sender, Packet Pack)

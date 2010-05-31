@@ -268,6 +268,7 @@ namespace OpenSim.Services.LLLoginService
                 IAgentConnector agentData = DataManager.IAgentConnector;
                 IProfileConnector profileData = DataManager.IProfileConnector;
                 //Already tried to find it before this, so its not there at all.
+                string mac = (string)requestData["mac"];
                 if (agentData != null)
                 {
                     agent = agentData.GetAgent(account.PrincipalID);
@@ -278,7 +279,6 @@ namespace OpenSim.Services.LLLoginService
                     }
                     //Update the agent
                     agent.IP = clientIP.Address.ToString();
-                    string mac = (string)requestData["mac"];
                     agent.Mac = mac;
                     if (agent.AcceptTOS == false && m_UseTOS)
                     {
@@ -429,6 +429,13 @@ namespace OpenSim.Services.LLLoginService
                     return LLFailedLoginResponse.AuthorizationProblem;
 
                 }
+
+                aCircuit.Mac = mac;
+                string id0 = (string)requestData["id0"];
+                aCircuit.IO = id0;
+                string platform = (string)requestData["platform"];
+                aCircuit.Platform = platform;
+
                 // Get Friends list 
                 FriendInfo[] friendsList = new FriendInfo[0];
                 if (m_FriendsService != null)

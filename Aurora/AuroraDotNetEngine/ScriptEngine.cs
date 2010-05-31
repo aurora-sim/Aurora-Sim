@@ -380,21 +380,26 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             string go = MainConsole.Instance.CmdPrompt("Are you sure you want to stop all scripts?", "no");
             if (go.Contains("yes") || go.Contains("Yes"))
             {
-                foreach (ScriptData ID in ScriptProtection.GetAllScripts())
-                {
-                    try
-                    {
-                        ScriptProtection.RemovePreviouslyCompiled(ID.Source);
-                        ID.CloseAndDispose();
-                    }
-                    catch (Exception)
-                    {
-                    }
-                }
+                StopAllScripts();
             }
             else
             {
                 m_log.Info("Not restarting all scripts");
+            }
+        }
+
+        public void StopAllScripts()
+        {
+            foreach (ScriptData ID in ScriptProtection.GetAllScripts())
+            {
+                try
+                {
+                    ScriptProtection.RemovePreviouslyCompiled(ID.Source);
+                    ID.CloseAndDispose();
+                }
+                catch (Exception)
+                {
+                }
             }
         }
 

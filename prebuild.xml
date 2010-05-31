@@ -511,6 +511,7 @@
       <Reference name="OpenMetaverseTypes.dll"/>
       <Reference name="OpenMetaverse.StructuredData.dll"/>
       <Reference name="OpenMetaverse.dll"/>
+      <Reference name="OpenSim.Server.Base"/>
       <Reference name="OpenSim.Services.Interfaces"/>
       <Reference name="OpenSim.Framework"/>
       <Reference name="OpenSim.Framework.Capabilities"/>
@@ -2024,6 +2025,60 @@
 
       </Files>
     </Project>
+
+<Project frameworkVersion="v3_5" name="Aurora.OptionalModules" path="Aurora/OptionalModules" type="Library">
+      <Configuration name="Debug">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+
+      <ReferencePath>../../bin/</ReferencePath>
+      <Reference name="System"/>
+      <Reference name="System.Xml"/>
+      <Reference name="System.Drawing"/>
+      <Reference name="System.Windows.Forms"/>
+      <Reference name="System.Data"/>
+      <Reference name="Microsoft.VisualBasic"/>
+
+      <Reference name="Nini.dll"/>
+      <Reference name="Mono.Addins.dll"/>
+      <Reference name="OpenMetaverseTypes.dll"/>
+      <Reference name="OpenMetaverse.dll"/>
+      <Reference name="Aurora.DataManager"/>
+      <Reference name="OpenSim.Framework.Servers.HttpServer"/>
+      <Reference name="OpenSim.Framework"/>
+      <Reference name="OpenSim.Region.Framework"/>
+      <Reference name="log4net.dll"/>
+      <Reference name="XMLRPC.dll"/>
+      <Reference name="HttpServer.dll"/>
+      <Reference name="Aurora.Framework"/>
+      <Reference name="Aurora.DataManager.MySQL"/>
+      <Reference name="Aurora.DataManager.SQLite"/>
+      <Reference name="OpenSim.Services.Interfaces"/>
+      <Reference name="OpenSim.Region.CoreModules"/>
+      <Reference name="OpenSim.Server.Base"/>
+      <Reference name="OpenMetaverse.StructuredData"/>
+      <Reference name="OpenSim.Framework.Capabilities"/>
+      <Reference name="OpenSim.Region.Physics.Manager"/>
+      <Reference name="OpenSim.Server.Handlers"/>
+      <Reference name="OpenSim.Services.PresenceService"/>
+      <Reference name="OpenSim.Services.Base"/>
+      <Reference name="C5.dll"/>
+      <Reference name="OpenSim.Region.DataSnapshot"/>
+
+      <Files>
+        <Match pattern="*.cs" recurse="true"/>
+        <Match pattern="*.addin.xml" path="Resources" buildAction="EmbeddedResource" recurse="true"/>
+
+      </Files>
+    </Project>
+
 
 
     <Project frameworkVersion="v3_5" name="Aurora.Services.InventoryService" path="Aurora/Services/InventoryService" type="Library">

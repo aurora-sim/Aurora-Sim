@@ -148,7 +148,6 @@ namespace Aurora.Modules
 
         #endregion
 
-
         public virtual void OnNewClient(IClientAPI client)
         {
             client.OnChatFromClient += OnChatFromClient;
@@ -415,6 +414,7 @@ namespace Aurora.Modules
             presence.ControllingClient.SendChatMessage(message, (byte)type, fromPos, fromName,
                                                        fromAgentID, (byte)src, (byte)ChatAudibleLevel.Fully);
         }
+
         private void OnMuteListRequest(IClientAPI client, uint crc)
         {
             //Sends the name of the file being sent by the xfer module DO NOT EDIT!!!
@@ -445,7 +445,7 @@ namespace Aurora.Modules
                 client.SendMuteListUpdate(filename);
             }
         }
-        //TIED TO MYSQL!!!
+        
         private void OnMuteListUpdate(IClientAPI client, UUID MuteID, string Name, int Flags, UUID AgentID)
         {
             MuteCache.Remove(client.AgentId.ToString());
@@ -459,6 +459,7 @@ namespace Aurora.Modules
             GenericData.Insert("mutelists", values.ToArray(),"muteType",Flags.ToString());
             OnMuteListRequest(client, 0);
         }
+
         private void OnMuteListRemove(IClientAPI client, UUID MuteID, string Name, UUID AgentID)
         {
             List<string> keys = new List<string>();

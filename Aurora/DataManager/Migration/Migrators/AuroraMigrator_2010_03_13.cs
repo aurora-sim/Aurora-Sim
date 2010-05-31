@@ -112,6 +112,11 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("GridRegionFlags", ColumnTypes.String50)
                 ));
 
+            AddSchema("usercurrency", ColDefs(ColDef("PrincipalID", ColumnTypes.String50, true),
+                ColDef("Amount", ColumnTypes.String50, true),
+                ColDef("LandInUse", ColumnTypes.String50),
+                ColDef("Tier", ColumnTypes.String50)));
+
             AddSchema("simulator", ColDefs(
                 ColDef("RegionID", ColumnTypes.String50, true),
                 ColDef("RegionName", ColumnTypes.String50),

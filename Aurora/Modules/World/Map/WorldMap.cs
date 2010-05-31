@@ -86,7 +86,6 @@ namespace Aurora.Modules
         private System.Timers.Timer UpdateMapImage;
         private System.Timers.Timer UpdateOnlineStatus;
         private IRegionConnector GridConnector;
-        private ISimMapConnector SimMapConnector;
         private string SimMapServerURI;
         
 		#region INonSharedRegionModule Members
@@ -101,8 +100,6 @@ namespace Aurora.Modules
                     m_Enabled = false;
                     return;
                 }
-                SimMapServerURI = source.Configs["MapModule"].GetString(
-                    "SimMapServerURI");
             }
             //m_log.Info("[AuroraWorldMap] Initializing");
             m_config = source;
@@ -150,8 +147,7 @@ namespace Aurora.Modules
 		public virtual void RegionLoaded (Scene scene)
 		{
             GridConnector = Aurora.DataManager.DataManager.IRegionConnector;
-            SimMapConnector = new RemoteSimMapConnector(SimMapServerURI);
-            MapActivityDetector MAD = new MapActivityDetector(SimMapConnector);
+            new MapActivityDetector(scene.SimMapConnector);
             SetUpTimers();
         }
 
@@ -245,7 +241,7 @@ namespace Aurora.Modules
             {
                 List<MapBlockData> mapBlocks = new List<MapBlockData>(); ;
 
-                List<SimMap> Sims = SimMapConnector.GetSimMapRange(
+                List<SimMap> Sims = m_scene.SimMapConnector.GetSimMapRange(
                     (uint)(m_scene.RegionInfo.RegionLocX - 8) * Constants.RegionSize,
                     (uint)(m_scene.RegionInfo.RegionLocY - 8) * Constants.RegionSize,
                     (uint)(m_scene.RegionInfo.RegionLocX + 8) * Constants.RegionSize,
@@ -356,7 +352,7 @@ namespace Aurora.Modules
                 }
                 else
                 {
-                    mapitems = SimMapConnector.GetMapItems(regionhandle, (OpenMetaverse.GridItemType)itemtype);
+                    mapitems = m_scene.SimMapConnector.GetMapItems(regionhandle, (OpenMetaverse.GridItemType)itemtype);
                     remoteClient.SendMapItemReply(mapitems.ToArray(), itemtype, flags);
                     // GridRegion R = m_scene.GridService.GetRegionByPosition(UUID.Zero, (int)xstart, (int)ystart);
                     // if (((int)GridConnector.GetRegionFlags(R.RegionID) & (int)SimMapFlags.Hidden) == (int)SimMapFlags.Hidden)
@@ -407,7 +403,7 @@ namespace Aurora.Modules
             List<MapBlockData> response = new List<MapBlockData>();
 
             // this should return one mapblock at most. 
-            List<SimMap> Sims = SimMapConnector.GetSimMapRange(
+            List<SimMap> Sims = m_scene.SimMapConnector.GetSimMapRange(
                 (uint)(minX) * (int)Constants.RegionSize,
                 (uint)(minY) * (int)Constants.RegionSize,
                 (uint)(maxX) * (int)Constants.RegionSize,
@@ -424,7 +420,7 @@ namespace Aurora.Modules
 		protected virtual void GetAndSendBlocks(IClientAPI remoteClient, int minX, int minY, int maxX, int maxY, uint flag)
 		{
             List<MapBlockData> mapBlocks = new List<MapBlockData>();
-            List<SimMap> Sims = SimMapConnector.GetSimMapRange(
+            List<SimMap> Sims = m_scene.SimMapConnector.GetSimMapRange(
                 (uint)(minX - 4) * (int)Constants.RegionSize,
                 (uint)(minY - 4) * (int)Constants.RegionSize,
                 (uint)(maxX + 4) * (int)Constants.RegionSize,
@@ -628,13 +624,13 @@ namespace Aurora.Modules
         public void RegenerateMaptile(string ID, byte[] data)
         {
             myMapImageJPEG = data;
-            List<SimMap> map = SimMapConnector.GetSimMap(m_scene.RegionInfo.RegionID,m_scene.RegionInfo.EstateSettings.EstateOwner);
+            List<SimMap> map = m_scene.SimMapConnector.GetSimMap(m_scene.RegionInfo.RegionID, m_scene.RegionInfo.EstateSettings.EstateOwner);
             //This will be null if the region has never joined the grid before.
             if(map != null && map.Count != 0 && map[0] != null)
             {
                 SimMap sim = map[0];
                 sim.SimMapTextureID = new UUID(ID);
-                SimMapConnector.UpdateSimMap(sim);
+                m_scene.SimMapConnector.UpdateSimMap(sim);
             }
         }
 
@@ -660,7 +656,7 @@ namespace Aurora.Modules
 
         private void OnUpdateRegion(object source, ElapsedEventArgs e)
         {
-            SimMapConnector.UpdateSimMapOnlineStatus(m_scene.RegionInfo.RegionID);
+            m_scene.SimMapConnector.UpdateSimMapOnlineStatus(m_scene.RegionInfo.RegionID);
         }
 
         private void OnTimedCreateNewMapImage(object source, ElapsedEventArgs e)

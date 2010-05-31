@@ -122,6 +122,12 @@ namespace OpenSim.Framework
 
         public string IP;
 
+        public string Mac;
+
+        public string IO;
+
+        public string Platform;
+
         public AgentCircuitData()
         {
         }
@@ -146,6 +152,9 @@ namespace OpenSim.Framework
             ChildrenCapSeeds = cAgent.ChildrenCapSeeds;
             Viewer = cAgent.Viewer;
             IP = cAgent.IP;
+            Mac = cAgent.Mac;
+            IO = cAgent.IO;
+            Platform = cAgent.Platform;
         }
 
         /// <summary>
@@ -185,6 +194,9 @@ namespace OpenSim.Framework
             args["appearance_serial"] = OSD.FromInteger(Appearance.Serial);
             args["viewer"] = OSD.FromString(Viewer);
             args["ip"] = OSD.FromString(IP);
+            args["mac"] = OSD.FromString(Mac);
+            args["io"] = OSD.FromString(IO);
+            args["platform"] = OSD.FromString(Platform);
 
             if (Appearance != null)
             {
@@ -288,6 +300,12 @@ namespace OpenSim.Framework
                 Viewer = args["viewer"].AsString();
             if (args["ip"] != null)
                 IP = args["ip"].AsString();
+            if (args["mac"] != null)
+                Mac = args["mac"].AsString();
+            if (args["io"] != null)
+                IO = args["io"].AsString();
+            if (args["platform"] != null)
+                Platform = args["platform"].AsString();
 
             if (args["start_pos"] != null)
                 Vector3.TryParse(args["start_pos"].AsString(), out startpos);
@@ -357,6 +375,9 @@ namespace OpenSim.Framework
         public float startposz;
         public string Viewer;
         public string IP;
+        public string Mac;
+        public string IO;
+        public string Platform;
 
         public sAgentCircuitData()
         {
@@ -380,6 +401,9 @@ namespace OpenSim.Framework
             ChildrenCapSeeds = cAgent.ChildrenCapSeeds;
             Viewer = cAgent.Viewer;
             IP = cAgent.IP;
+            Mac = cAgent.Mac;
+            IO = cAgent.IO;
+            Platform = cAgent.Platform;
         }
     }
 }
