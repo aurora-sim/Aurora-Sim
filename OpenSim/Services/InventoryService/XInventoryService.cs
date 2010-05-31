@@ -382,12 +382,12 @@ namespace OpenSim.Services.InventoryService
                     UserAccount account = m_UserAccountService.GetUserAccount(UUID.Zero, FirstLast[0], FirstLast[1]);
                     if (account == null)
                     {
-                        xitem.creatorID = account.PrincipalID.ToString();
+                        xitem.creatorID = UUID.Zero.ToString();
                         m_Database.StoreItem(xitem);
                     }
                     else
                     {
-                        xitem.creatorID = UUID.Zero.ToString();
+                        xitem.creatorID = account.PrincipalID.ToString();
                         m_Database.StoreItem(xitem);
                     }
                 }

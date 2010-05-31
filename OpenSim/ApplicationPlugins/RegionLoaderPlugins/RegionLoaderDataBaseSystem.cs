@@ -46,7 +46,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
     {
         private static readonly ILog m_log
             = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private IOpenSimBase m_openSim;
+        private OpenSimBase m_openSim;
         private IRegionCreator m_creator;
         private IConfigSource m_configSource;
 
@@ -54,7 +54,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
         {
             m_configSource = configSource; ;
             m_creator = creator;
-            m_openSim = openSim;
+            m_openSim = (OpenSimBase)openSim;
         }
 
         public string Name
@@ -92,8 +92,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
         {
             IScene scene;
             m_log.Debug("[LOADREGIONS]: Creating Region: " + info.RegionName + ")");
-            m_log.Warn("ERROR: CANNOT LOAD REGION, REPORT THIS");
-            //m_openSim.SceneManager.CreateRegion(info, true, out scene);
+            m_openSim.SceneManager.CreateRegion(info, true, out scene);
         }
 
         private void FindOldRegionFiles()
