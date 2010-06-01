@@ -4228,6 +4228,9 @@ namespace OpenSim.Region.Framework.Scenes
             if (!AuthorizeUser(agent, out reason))
                 return false;
 
+            if (!CheckUserAgentCount(out reason))
+                return false;
+
             if (!agent.child) 
                 m_log.InfoFormat(
                 "[CONNECTION BEGIN]: Region {0} authenticated and authorized incoming {1} agent {2} {3} {4} (circuit code {5})",
@@ -4340,6 +4343,17 @@ namespace OpenSim.Region.Framework.Scenes
             agent.teleportFlags = teleportFlags;
             m_authenticateHandler.AddNewCircuit(agent.circuitcode, agent);
 
+            return true;
+        }
+
+        private bool CheckUserAgentCount(out string reason)
+        {
+            reason = "";
+            if (RegionInfo.RegionSettings.AgentLimit > GetRootAgentCount() + 1)
+            {
+                reason = "Too many agents.";
+                return false;
+            }
             return true;
         }
 

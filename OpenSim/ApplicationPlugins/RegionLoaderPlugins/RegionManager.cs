@@ -81,7 +81,7 @@ namespace Aurora.Modules.RegionLoader
             textBox10.Text = region.NonphysPrimMax.ToString();
             textBox8.Text = region.PhysPrimMax.ToString();
             textBox6.Text = region.ObjectCapacity.ToString();
-            textBox4.Text = region.AccessLevel.ToString();
+            textBox4.Text = Util.ConvertAccessLevelToMaturity(Convert.ToByte(region.AccessLevel.ToString())).ToString();
             textBox2.Text = region.Disabled.ToString();
             textBox9.Text = region.ExternalHostName;
             textBox7.Text = region.HttpPort.ToString();

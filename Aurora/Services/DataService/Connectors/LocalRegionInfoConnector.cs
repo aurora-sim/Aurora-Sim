@@ -160,9 +160,8 @@ namespace Aurora.Services.DataService
                 if (i == 15)
                     replyData.AccessLevel = Convert.ToByte(RetVal[i]);
                 if (i == 16)
-                    replyData.Disabled = Convert.ToBoolean(RetVal[i]);
-                if (i == 17)
                 {
+                    replyData.Disabled = Convert.ToBoolean(RetVal[i]);
                     replyData.SetEndPoint(RetVal[4], int.Parse(RetVal[5]));
                     if (replyData.ExternalHostName == "DEFAULT")
                     {
@@ -180,7 +179,8 @@ namespace Aurora.Services.DataService
             RegionInfo replyData = new RegionInfo();
             if (RetVal.Count == 0)
                 return null;
-            for (int i = 0; i < RetVal.Count; i++)
+            int i = 0;
+            for (i = 0; i < RetVal.Count; i++)
             {
                 if (i == 0)
                     replyData.RegionID = new UUID(RetVal[i]);
@@ -205,9 +205,8 @@ namespace Aurora.Services.DataService
                 if (i == 15)
                     replyData.AccessLevel = Convert.ToByte(RetVal[i]);
                 if (i == 16)
-                    replyData.Disabled = Convert.ToBoolean(RetVal[i]);
-                if (i == 17)
                 {
+                    replyData.Disabled = Convert.ToBoolean(RetVal[i]);
                     replyData.SetEndPoint(RetVal[4], int.Parse(RetVal[5]));
                     if (replyData.ExternalHostName == "DEFAULT")
                     {

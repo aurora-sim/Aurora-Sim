@@ -385,8 +385,10 @@ namespace OpenSim.Services.LLLoginService
                 {
                     home = m_GridService.GetRegionByUUID(scopeID, guinfo.HomeRegionID);
                 }
+                bool GridUserInfoFound = true;
                 if (guinfo == null)
                 {
+                    GridUserInfoFound = false;
                     // something went wrong, make something up, so that we don't have to test this anywhere else
                     guinfo = new GridUserInfo();
                     guinfo.LastPosition = guinfo.HomePosition = new Vector3(128, 128, 30);
@@ -405,6 +407,11 @@ namespace OpenSim.Services.LLLoginService
                     m_PresenceService.LogoutAgent(session);
                     m_log.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: destination not found");
                     return LLFailedLoginResponse.GridProblem;
+                }
+                if (!GridUserInfoFound)
+                {
+                    guinfo.HomeRegionID = destination.RegionID;
+                    guinfo.HomeLookAt = new Vector3(0, 0, 0);
                 }
 
                 //
