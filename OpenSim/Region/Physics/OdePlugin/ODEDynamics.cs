@@ -741,7 +741,7 @@ namespace OpenSim.Region.Physics.OdePlugin
                 {
                     if ((pos.Z - m_VhoverTargetHeight) > .2 || (pos.Z - m_VhoverTargetHeight) < -.2)
                     {
-                        if (m_VhoverTargetHeight >= _pParentScene.GetTerrainHeightAtXY(pos.X, pos.Z))
+                        if ((pos.Z - (pos.Z - m_VhoverTargetHeight)) >= _pParentScene.GetTerrainHeightAtXY(pos.X, pos.Y))
                             d.BodySetPosition(Body, pos.X, pos.Y, m_VhoverTargetHeight);
                     }
                 }
