@@ -19,52 +19,66 @@ namespace Aurora.Services.DataService
 
 		public StateSave GetStateSave(UUID itemID, UUID UserInventoryItemID)
 		{
-			StateSave StateSave = new StateSave();
-			List<string> StateSaveRetVals = new List<string>();
-			if (UserInventoryItemID != UUID.Zero) 
+            try
             {
-				StateSaveRetVals = GenericData.Query("UserInventoryItemID", UserInventoryItemID.ToString(), "auroraDotNetStateSaves", "*");
-			}
-            else 
+                StateSave StateSave = new StateSave();
+                List<string> StateSaveRetVals = new List<string>();
+                if (UserInventoryItemID != UUID.Zero)
+                {
+                    StateSaveRetVals = GenericData.Query("UserInventoryItemID", UserInventoryItemID.ToString(), "auroradotnetstatesaves", "*");
+                }
+                else
+                {
+                    StateSaveRetVals = GenericData.Query("ItemID", itemID.ToString(), "auroradotnetstatesaves", "*");
+                }
+                if (StateSaveRetVals.Count == 0)
+                    return null;
+                Dictionary<string, object> vars = new Dictionary<string, object>();
+                StateSave.State = StateSaveRetVals[0];
+                StateSave.ItemID = new UUID(StateSaveRetVals[1]);
+                StateSave.Source = StateSaveRetVals[2];
+                StateSave.Running = bool.Parse(StateSaveRetVals[4]);
+
+                string varsmap = StateSaveRetVals[5];
+
+                foreach (string var in varsmap.Split(';'))
+                {
+                    if (var == "")
+                        continue;
+                    string value = var.Split(',')[1].Replace("\n", "");
+                    vars.Add(var.Split(',')[0], (object)value);
+                }
+                StateSave.Variables = vars;
+
+                List<object> plugins = new List<object>();
+                object[] pluginsSaved = StateSaveRetVals[6].Split(',');
+                if (pluginsSaved.Length != 1)
+                {
+                    foreach (object plugin in pluginsSaved)
+                    {
+                        if (plugin == null)
+                            continue;
+                        plugins.Add(plugin);
+                    }
+                }
+                StateSave.Plugins = plugins.ToArray();
+                StateSave.Permissions = StateSaveRetVals[9];
+                double minEventDelay = 0.0;
+                double.TryParse(StateSaveRetVals[10], NumberStyles.Float, Culture.NumberFormatInfo, out minEventDelay);
+                StateSave.MinEventDelay = (long)minEventDelay;
+                StateSave.AssemblyName = StateSaveRetVals[11];
+                StateSave.Disabled = Convert.ToBoolean(StateSaveRetVals[12]);
+                StateSave.UserInventoryID = UUID.Parse(StateSaveRetVals[13]);
+                StateSave.Queue = StateSaveRetVals[8];
+                StateSave.ClassName = StateSaveRetVals[7];
+                StateSave.LineMap = StateSaveRetVals[3];
+
+                return StateSave;
+            }
+            catch
             {
-				StateSaveRetVals = GenericData.Query("ItemID", itemID.ToString(), "auroraDotNetStateSaves", "*");
-			}
-            if (StateSaveRetVals.Count == 0)
                 return null;
-			Dictionary<string, object> vars = new Dictionary<string, object>();
-			StateSave.State = StateSaveRetVals[0];
-            StateSave.ItemID = new UUID(StateSaveRetVals[1]);
-			StateSave.Running = bool.Parse(StateSaveRetVals[4]);
-
-			string varsmap = StateSaveRetVals[5];
-
-			foreach (string var in varsmap.Split(';')) {
-				if (var == "")
-					continue;
-				string value = var.Split(',')[1].Replace("\n", "");
-				vars.Add(var.Split(',')[0], (object)value);
-			}
-			StateSave.Variables = vars;
-
-			List<object> plugins = new List<object>();
-			object[] pluginsSaved = StateSaveRetVals[6].Split(',');
-			if (pluginsSaved.Length != 1) {
-				foreach (object plugin in pluginsSaved) {
-					if (plugin == null)
-						continue;
-					plugins.Add(plugin);
-				}
-			}
-			StateSave.Plugins = plugins.ToArray();
-			StateSave.Permissions = StateSaveRetVals[9];
-			double minEventDelay = 0.0;
-			double.TryParse(StateSaveRetVals[10], NumberStyles.Float, Culture.NumberFormatInfo, out minEventDelay);
-			StateSave.MinEventDelay = (long)minEventDelay;
-			StateSave.AssemblyName = StateSaveRetVals[11];
-			StateSave.Disabled = Convert.ToBoolean(StateSaveRetVals[12]);
-			StateSave.UserInventoryID = UUID.Parse(StateSaveRetVals[13]);
-			StateSave.Queue = StateSaveRetVals[8];
-			return StateSave;
+            }
 		}
 
 		public void SaveStateSave(StateSave state)

@@ -40,6 +40,14 @@ namespace Aurora.DataManager
             {
                 persistanceConfigurer = MySQLConfiguration.Standard.ConnectionString(connectionInfo);
             }
+            else if (technology == DataManagerTechnology.MSSQL2008)
+            {
+                persistanceConfigurer = MsSqlConfiguration.MsSql2008.ConnectionString(connectionInfo);
+            }
+            else if (technology == DataManagerTechnology.MSSQL7)
+            {
+                persistanceConfigurer = MsSqlConfiguration.MsSql2008.ConnectionString(connectionInfo);
+            }
         }
 
         private ISessionFactory CreateSessionFactory()

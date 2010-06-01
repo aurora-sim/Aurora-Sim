@@ -1,53 +1,53 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using C5;
-using MySql.Data.MySqlClient;
 using Aurora.DataManager;
 using Aurora.Framework;
 using OpenSim.Framework;
 using OpenMetaverse;
 
-namespace Aurora.DataManager.MySQL
+namespace Aurora.DataManager.MSSQL
 {
-    public class MySQLDataLoader : DataManagerBase
+    public class MSSQLDataLoader : DataManagerBase
     {
         readonly Mutex m_lock = new Mutex(false);
         string connectionString = "";
-        private MySqlConnection m_connection = null;
+        private SqlConnection m_connection = null;
         private volatile bool m_InUse = false;
 
         public override string Identifier
         {
-            get { return "MySQLData"; }
+            get { return "MSSQLData"; }
         }
 
-        public MySqlConnection GetLockedConnection()
+        public SqlConnection GetLockedConnection()
         {
             if (m_connection == null)
             {
-                m_connection = new MySqlConnection(connectionString);
+                m_connection = new SqlConnection(connectionString);
                 m_connection.Open();
                 return m_connection;
             }
             else
             {
-                MySqlConnection clone = m_connection.Clone();
+                SqlConnection clone = (SqlConnection)((ICloneable)m_connection).Clone();
                 clone.Open();
                 return clone;
             }
         }
 
-        public IDbCommand Query(string sql, Dictionary<string, object> parameters, MySqlConnection dbcon)
+        public IDbCommand Query(string sql, Dictionary<string, object> parameters, SqlConnection dbcon)
         {
-            MySqlCommand dbcommand;
+            SqlCommand dbcommand;
             try
             {
-                dbcommand = (MySqlCommand)dbcon.CreateCommand();
+                dbcommand = dbcon.CreateCommand();
                 dbcommand.CommandText = sql;
                 foreach (System.Collections.Generic.KeyValuePair<string, object> param in parameters)
                 {
@@ -65,14 +65,14 @@ namespace Aurora.DataManager.MySQL
         public override void ConnectToDatabase(string connectionstring)
         {
             connectionString = connectionstring;
-            MySqlConnection dbcon = GetLockedConnection();
+            SqlConnection dbcon = GetLockedConnection();
             dbcon.Close();
             dbcon.Dispose();
         }
 
         public bool ExecuteCommand(string query)
         {
-            MySqlConnection dbcon = GetLockedConnection();
+            SqlConnection dbcon = GetLockedConnection();
             IDbCommand result;
             IDataReader reader;
 
@@ -92,7 +92,7 @@ namespace Aurora.DataManager.MySQL
 
         public override List<string> Query(string keyRow, object keyValue, string table, string wantedValue)
         {
-            MySqlConnection dbcon = GetLockedConnection();
+            SqlConnection dbcon = GetLockedConnection();
             IDbCommand result = null;
             IDataReader reader = null;
             List<string> RetVal = new List<string>();
@@ -135,7 +135,7 @@ namespace Aurora.DataManager.MySQL
 
         public override List<string> Query(string whereClause, string table, string wantedValue)
         {
-            MySqlConnection dbcon = GetLockedConnection();
+            SqlConnection dbcon = GetLockedConnection();
             IDbCommand result;
             IDataReader reader;
             List<string> RetVal = new List<string>();
@@ -170,7 +170,7 @@ namespace Aurora.DataManager.MySQL
 
         public override List<string> Query(string keyRow, object keyValue, string table, string wantedValue, string order)
         {
-            MySqlConnection dbcon = GetLockedConnection();
+            SqlConnection dbcon = GetLockedConnection();
             IDbCommand result;
             IDataReader reader;
             List<string> RetVal = new List<string>();
@@ -214,7 +214,7 @@ namespace Aurora.DataManager.MySQL
 
         public override List<string> Query(string[] keyRow, object[] keyValue, string table, string wantedValue)
         {
-            MySqlConnection dbcon = GetLockedConnection();
+            SqlConnection dbcon = GetLockedConnection();
             IDbCommand result;
             IDataReader reader;
             List<string> RetVal = new List<string>();
@@ -258,7 +258,7 @@ namespace Aurora.DataManager.MySQL
 
         public override bool Update(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues)
         {
-            MySqlConnection dbcon = GetLockedConnection();
+            SqlConnection dbcon = GetLockedConnection();
             IDbCommand result;
             IDataReader reader;
             string query = String.Format("update {0} set ", table);
@@ -298,7 +298,7 @@ namespace Aurora.DataManager.MySQL
 
         public override bool Insert(string table, object[] values)
         {
-            MySqlConnection dbcon = GetLockedConnection();
+            SqlConnection dbcon = GetLockedConnection();
             IDbCommand result;
             IDataReader reader;
 
@@ -329,7 +329,7 @@ namespace Aurora.DataManager.MySQL
 
         public override bool Insert(string table, object[] values, string updateKey, object updateValue)
         {
-            MySqlConnection dbcon = GetLockedConnection();
+            SqlConnection dbcon = GetLockedConnection();
             IDbCommand result;
             IDataReader reader;
             string query = String.Format("insert into {0} VALUES('", table);
@@ -354,7 +354,7 @@ namespace Aurora.DataManager.MySQL
 
         public override bool Delete(string table, string[] keys, object[] values)
         {
-            MySqlConnection dbcon = GetLockedConnection();
+            SqlConnection dbcon = GetLockedConnection();
             IDbCommand result;
             IDataReader reader;
             string query = "delete from " + table + " WHERE ";
@@ -379,7 +379,7 @@ namespace Aurora.DataManager.MySQL
             return true;
         }
 
-        public void CloseDatabase(MySqlConnection connection)
+        public void CloseDatabase(SqlConnection connection)
         {
             connection.Close();
             connection.Dispose();
@@ -428,8 +428,8 @@ namespace Aurora.DataManager.MySQL
 
             string query = string.Format("create table " + table + " ( {0} {1}) ", columnDefinition, multiplePrimaryString);
 
-            MySqlConnection dbcon = GetLockedConnection();
-            MySqlCommand dbcommand = dbcon.CreateCommand();
+            SqlConnection dbcon = GetLockedConnection();
+            SqlCommand dbcommand = dbcon.CreateCommand();
             dbcommand.CommandText = query;
             dbcommand.ExecuteNonQuery();
             CloseDatabase(dbcon);
@@ -468,8 +468,8 @@ namespace Aurora.DataManager.MySQL
 
         public override void DropTable(string tableName)
         {
-            MySqlConnection dbcon = GetLockedConnection();
-            MySqlCommand dbcommand = dbcon.CreateCommand();
+            SqlConnection dbcon = GetLockedConnection();
+            SqlCommand dbcommand = dbcon.CreateCommand();
             dbcommand.CommandText = string.Format("drop table {0}", tableName); ;
             dbcommand.ExecuteNonQuery();
             CloseDatabase(dbcon);
@@ -477,8 +477,8 @@ namespace Aurora.DataManager.MySQL
 
         protected override void CopyAllDataBetweenMatchingTables(string sourceTableName, string destinationTableName, ColumnDefinition[] columnDefinitions)
         {
-            MySqlConnection dbcon = GetLockedConnection();
-            MySqlCommand dbcommand = dbcon.CreateCommand();
+            SqlConnection dbcon = GetLockedConnection();
+            SqlCommand dbcommand = dbcon.CreateCommand();
             dbcommand.CommandText = string.Format("insert into {0} select * from {1}", destinationTableName, sourceTableName);
             dbcommand.ExecuteNonQuery();
             CloseDatabase(dbcon);
@@ -486,8 +486,8 @@ namespace Aurora.DataManager.MySQL
 
         public override bool TableExists(string table)
         {
-            MySqlConnection dbcon = GetLockedConnection();
-            MySqlCommand dbcommand = dbcon.CreateCommand();
+            SqlConnection dbcon = GetLockedConnection();
+            SqlCommand dbcommand = dbcon.CreateCommand();
             dbcommand.CommandText = string.Format("select table_name from information_schema.tables where table_schema=database() and table_name='{0}'", table.ToLower());
             var rdr = dbcommand.ExecuteReader();
 
@@ -509,8 +509,8 @@ namespace Aurora.DataManager.MySQL
             var defs = new List<ColumnDefinition>();
 
 
-            MySqlConnection dbcon = GetLockedConnection();
-            MySqlCommand dbcommand = dbcon.CreateCommand();
+            SqlConnection dbcon = GetLockedConnection();
+            SqlCommand dbcommand = dbcon.CreateCommand();
             dbcommand.CommandText = string.Format("desc {0}", tableName);
             var rdr = dbcommand.ExecuteReader();
             while (rdr.Read())
@@ -569,7 +569,7 @@ namespace Aurora.DataManager.MySQL
             nWP.OnSave += UpdateRegionWindlightSettings;
 
         	string command = "select * from `regionwindlight` where region_id = " + regionUUID.ToString();
-            MySqlConnection dbcon = GetLockedConnection();
+            SqlConnection dbcon = GetLockedConnection();
             using (reader = Query(command, new Dictionary<string, object>(), dbcon))
         	{
                 try
@@ -666,8 +666,8 @@ namespace Aurora.DataManager.MySQL
 
         public override bool StoreRegionWindlightSettings(RegionLightShareData wl)
         {
-            MySqlConnection dbcon = GetLockedConnection();
-            using (MySqlCommand cmd = dbcon.CreateCommand())
+            SqlConnection dbcon = GetLockedConnection();
+            using (SqlCommand cmd = dbcon.CreateCommand())
             {
                 cmd.CommandText = "REPLACE INTO `regionwindlight` (`region_id`, `water_color_r`, `water_color_g`, ";
                 cmd.CommandText += "`water_color_b`, `water_fog_density_exponent`, `underwater_fog_modifier`, ";
@@ -768,8 +768,8 @@ namespace Aurora.DataManager.MySQL
         }
         public void UpdateRegionWindlightSettings(RegionLightShareData wl)
         {
-            MySqlConnection dbcon = GetLockedConnection();
-            using (MySqlCommand cmd = dbcon.CreateCommand())
+            SqlConnection dbcon = GetLockedConnection();
+            using (SqlCommand cmd = dbcon.CreateCommand())
             {
                 cmd.CommandText = "REPLACE INTO `regionwindlight` (`region_id`, `water_color_r`, `water_color_g`, ";
                 cmd.CommandText += "`water_color_b`, `water_fog_density_exponent`, `underwater_fog_modifier`, ";

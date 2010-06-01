@@ -109,7 +109,9 @@ namespace Aurora.Framework
     public enum DataManagerTechnology
     {
         SQLite,
-        MySql
+        MySql,
+        MSSQL2008,
+        MSSQL7
     }
 
     public enum ColumnTypes

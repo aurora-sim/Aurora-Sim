@@ -8,6 +8,7 @@ using Nini.Config;
 using Aurora.Framework;
 using Aurora.DataManager;
 using Aurora.DataManager.MySQL;
+using Aurora.DataManager.MSSQL;
 using Aurora.DataManager.SQLite;
 using OpenSim.Framework;
 
@@ -36,6 +37,32 @@ namespace Aurora.Services.DataService
             {
                 DataManager.DataSessionProviderConnector.DataSessionProvider = new DataSessionProvider(DataManagerTechnology.MySql, ConnectionString);
                 MySQLDataLoader GenericData = new MySQLDataLoader();
+                GenericData.ConnectToDatabase(ConnectionString);
+                ScriptSaveDataConnector = GenericData;
+
+                var migrationManager = new MigrationManager(DataManager.DataSessionProviderConnector.DataSessionProvider, GenericData);
+                migrationManager.DetermineOperation();
+                migrationManager.ExecuteOperation();
+
+                Aurora.DataManager.DataManager.SetDefaultGenericDataPlugin(GenericData);
+            }
+            else if (PluginModule == "MSSQL2008")
+            {
+                DataManager.DataSessionProviderConnector.DataSessionProvider = new DataSessionProvider(DataManagerTechnology.MSSQL2008, ConnectionString);
+                MSSQLDataLoader GenericData = new MSSQLDataLoader();
+                GenericData.ConnectToDatabase(ConnectionString);
+                ScriptSaveDataConnector = GenericData;
+
+                var migrationManager = new MigrationManager(DataManager.DataSessionProviderConnector.DataSessionProvider, GenericData);
+                migrationManager.DetermineOperation();
+                migrationManager.ExecuteOperation();
+
+                Aurora.DataManager.DataManager.SetDefaultGenericDataPlugin(GenericData);
+            }
+            else if (PluginModule == "MSSQL7")
+            {
+                DataManager.DataSessionProviderConnector.DataSessionProvider = new DataSessionProvider(DataManagerTechnology.MSSQL7, ConnectionString);
+                MSSQLDataLoader GenericData = new MSSQLDataLoader();
                 GenericData.ConnectToDatabase(ConnectionString);
                 ScriptSaveDataConnector = GenericData;
 
