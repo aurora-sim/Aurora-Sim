@@ -85,6 +85,7 @@ namespace OpenSim.Services.LLLoginService
         bool m_UseTOS = false;
         string m_TOSLocation = "";
         string m_DefaultUserAvatarArchive = "";
+        string m_DefaultHomeRegion = "";
 
         public LLLoginService(IConfigSource config, ISimulationService simService, ILibraryService libraryService)
         {
@@ -93,6 +94,7 @@ namespace OpenSim.Services.LLLoginService
             if (m_AuroraLoginConfig != null)
             {
                 m_UseTOS = m_AuroraLoginConfig.GetBoolean("UseTermsOfServiceOnFirstLogin", false);
+                m_DefaultHomeRegion = m_AuroraLoginConfig.GetString("DefaultHomeRegion", "");
                 m_DefaultUserAvatarArchive = m_AuroraLoginConfig.GetString("DefaultAvatarArchiveForNewUser", "");
                 m_AllowAnonymousLogin = m_AuroraLoginConfig.GetBoolean("AllowAnonymousLogin", false);
                 m_AuthenticateUsers = m_AuroraLoginConfig.GetBoolean("AuthenticateUsers", true);
@@ -410,7 +412,24 @@ namespace OpenSim.Services.LLLoginService
                 }
                 if (!GridUserInfoFound)
                 {
-                    guinfo.HomeRegionID = destination.RegionID;
+                    List<GridRegion> DefaultRegions = m_GridService.GetDefaultRegions(UUID.Zero);
+                    GridRegion DefaultRegion = null;
+                    if (DefaultRegions.Count == 0)
+                        DefaultRegion = destination;
+                    else
+                        DefaultRegion = DefaultRegions[0];
+
+                    if (m_DefaultHomeRegion != "")
+                    {
+                        GridRegion newHomeRegion = m_GridService.GetRegionByName(UUID.Zero, m_DefaultHomeRegion);
+                        if (newHomeRegion == null)
+                            guinfo.HomeRegionID = DefaultRegion.RegionID;
+                        else
+                            guinfo.HomeRegionID = newHomeRegion.RegionID;
+                    }
+                    else
+                        guinfo.HomeRegionID = DefaultRegion.RegionID;
+
                     guinfo.HomeLookAt = new Vector3(0, 0, 0);
                 }
 
