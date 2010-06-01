@@ -16,10 +16,8 @@ namespace Aurora.DataManager.MySQL
 {
     public class MySQLDataLoader : DataManagerBase
     {
-        readonly Mutex m_lock = new Mutex(false);
-        string connectionString = "";
+        private string connectionString = "";
         private MySqlConnection m_connection = null;
-        private volatile bool m_InUse = false;
 
         public override string Identifier
         {
@@ -66,28 +64,7 @@ namespace Aurora.DataManager.MySQL
         {
             connectionString = connectionstring;
             MySqlConnection dbcon = GetLockedConnection();
-            dbcon.Close();
-            dbcon.Dispose();
-        }
-
-        public bool ExecuteCommand(string query)
-        {
-            MySqlConnection dbcon = GetLockedConnection();
-            IDbCommand result;
-            IDataReader reader;
-
-            using (result = Query(query, new Dictionary<string, object>(), dbcon))
-            {
-                using (reader = result.ExecuteReader())
-                {
-                    reader.Close();
-                    reader.Dispose();
-                    result.Cancel();
-                    result.Dispose();
-                }
-            }
             CloseDatabase(dbcon);
-            return true;
         }
 
         public override List<string> Query(string keyRow, object keyValue, string table, string wantedValue)
@@ -130,6 +107,11 @@ namespace Aurora.DataManager.MySQL
             }
             finally
             {
+                reader.Close();
+                reader.Dispose();
+                result.Cancel();
+                result.Dispose();
+                CloseDatabase(dbcon);
             }
         }
 

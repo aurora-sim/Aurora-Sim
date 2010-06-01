@@ -107,11 +107,11 @@ namespace Aurora.DataManager.MSSQL
                 query = String.Format("select {0} from {1} where {2} = '{3}'",
                                       wantedValue, table, keyRow, keyValue.ToString());
             }
-            try
+            using (result = Query(query, new Dictionary<string, object>(), dbcon))
             {
-                using (result = Query(query, new Dictionary<string, object>(), dbcon))
+                using (reader = result.ExecuteReader())
                 {
-                    using (reader = result.ExecuteReader())
+                    try
                     {
                         while (reader.Read())
                         {
@@ -122,14 +122,15 @@ namespace Aurora.DataManager.MSSQL
                         }
                         return RetVal;
                     }
+                    finally
+                    {
+                        reader.Close();
+                        reader.Dispose();
+                        result.Cancel();
+                        result.Dispose();
+                        CloseDatabase(dbcon);
+                    }
                 }
-            }
-            catch
-            {
-                return RetVal;
-            }
-            finally
-            {
             }
         }
 

@@ -474,6 +474,7 @@ namespace Aurora.DataManager.SQLite
             var cmd = new SqliteCommand();
             cmd.CommandText = string.Format("drop table {0}", tableName);
             ExecuteNonQuery(cmd);
+            CloseReaderCommand(cmd);
         }
 
         protected override void CopyAllDataBetweenMatchingTables(string sourceTableName, string destinationTableName, ColumnDefinition[] columnDefinitions)
@@ -481,6 +482,7 @@ namespace Aurora.DataManager.SQLite
             var cmd = new SqliteCommand();
             cmd.CommandText = string.Format("insert into {0} select * from {1}", destinationTableName, sourceTableName);
             ExecuteNonQuery(cmd);
+            CloseReaderCommand(cmd);
         }
         
         public override RegionLightShareData LoadRegionWindlightSettings(UUID regionUUID)
@@ -568,6 +570,7 @@ namespace Aurora.DataManager.SQLite
         		nWP.cloudScrollYLock = Convert.ToBoolean(result["cloud_scroll_y_lock"]);
         		nWP.drawClassicClouds = Convert.ToBoolean(result["draw_classic_clouds"]);
         	}
+            CloseReaderCommand(cmd);
         	return nWP;
         }
 
