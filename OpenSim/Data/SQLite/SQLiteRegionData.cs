@@ -527,7 +527,13 @@ namespace OpenSim.Data.SQLite
                                     "[REGION DB]: No shape found for prim in storage, so setting default box shape");
                                 prim.Shape = PrimitiveBaseShape.Default;
                             }
-                            
+
+                            if (!createdObjects.ContainsKey(new UUID(objID)))
+                            {
+                                m_log.Error("Found an SceneObjectPart without a SceneObjectGroup! ObjectID: " + objID);
+                                continue;
+                            }
+
                             createdObjects[new UUID(objID)].AddPart(prim);
                             LoadItems(prim);
                         }

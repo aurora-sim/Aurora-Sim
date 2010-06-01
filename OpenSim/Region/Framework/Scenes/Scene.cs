@@ -4349,7 +4349,7 @@ namespace OpenSim.Region.Framework.Scenes
         private bool CheckUserAgentCount(out string reason)
         {
             reason = "";
-            if (RegionInfo.RegionSettings.AgentLimit > GetRootAgentCount() + 1)
+            if (RegionInfo.RegionSettings.AgentLimit < GetRootAgentCount() + 1)
             {
                 reason = "Too many agents.";
                 return false;
