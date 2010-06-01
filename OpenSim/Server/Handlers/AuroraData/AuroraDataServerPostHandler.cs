@@ -27,6 +27,7 @@ namespace OpenSim.Server.Handlers.AuroraData
         private IAgentConnector AgentConnector = null;
         private IRegionConnector GridConnector = null;
         private IEstateConnector EstateConnector = null;
+        private IMuteListConnector MuteListConnector = null;
 
         public AuroraDataServerPostHandler() :
             base("POST", "/auroradata")
@@ -35,6 +36,7 @@ namespace OpenSim.Server.Handlers.AuroraData
             GridConnector = DataManager.IRegionConnector;
             AgentConnector = DataManager.IAgentConnector;
             EstateConnector = DataManager.IEstateConnector;
+            MuteListConnector = DataManager.IMuteListConnector;
         }
 
         public override byte[] Handle(string path, Stream requestData,
@@ -107,7 +109,14 @@ namespace OpenSim.Server.Handlers.AuroraData
                         return GetRegionsInEstate(request);
                     case "getestates":
                         return GetEstates(request);
-
+                    case "getmutelist":
+                        return GetMuteList(request);
+                    case "updatemute":
+                        return UpdateMute(request);
+                    case "deletemute":
+                        return DeleteMute(request);
+                    case "ismuted":
+                        return IsMuted(request);
                 }
                 m_log.DebugFormat("[AuroraDataServerPostHandler]: unknown method {0} request {1}", method.Length, method);
             }
@@ -118,6 +127,63 @@ namespace OpenSim.Server.Handlers.AuroraData
 
             return FailureResult();
 
+        }
+
+        private byte[] GetMuteList(Dictionary<string, object> request)
+        {
+            Dictionary<string, object> result = new Dictionary<string, object>();
+
+            UUID PRINCIPALID = UUID.Parse(request["PRINCIPALID"].ToString());
+            MuteList[] Mutes = MuteListConnector.GetMuteList(PRINCIPALID);
+
+            int i = 0;
+            foreach (MuteList Mute in Mutes)
+            {
+                result.Add(i.ToString(), Mute.ToKeyValuePairs());
+                i++;
+            }
+
+            string xmlString = ServerUtils.BuildXmlResponse(result);
+            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
+        }
+
+        private byte[] UpdateMute(Dictionary<string, object> request)
+        {
+            Dictionary<string, object> result = new Dictionary<string, object>();
+
+            MuteList Mute = new MuteList(request);
+            UUID PRINCIPALID = UUID.Parse(request["PRINCIPALID"].ToString());
+            MuteListConnector.UpdateMute(Mute, PRINCIPALID);
+
+            return SuccessResult();
+        }
+
+        private byte[] DeleteMute(Dictionary<string, object> request)
+        {
+            Dictionary<string, object> result = new Dictionary<string, object>();
+
+            UUID MUTEID = UUID.Parse(request["MUTEID"].ToString());
+            UUID PRINCIPALID = UUID.Parse(request["PRINCIPALID"].ToString());
+            MuteListConnector.DeleteMute(MUTEID, PRINCIPALID);
+
+            return SuccessResult();
+        }
+
+        private byte[] IsMuted(Dictionary<string, object> request)
+        {
+            Dictionary<string, object> result = new Dictionary<string, object>();
+
+            UUID MUTEID = UUID.Parse(request["MUTEID"].ToString());
+            UUID PRINCIPALID = UUID.Parse(request["PRINCIPALID"].ToString());
+            bool IsMuted = MuteListConnector.IsMuted(PRINCIPALID, MUTEID);
+            result["Muted"] = IsMuted;
+
+            string xmlString = ServerUtils.BuildXmlResponse(result);
+            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
         }
 
         private byte[] GetRegionsInEstate(Dictionary<string, object> request)

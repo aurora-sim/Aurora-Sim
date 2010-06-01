@@ -319,6 +319,7 @@ namespace Aurora.DataManager.MySQL
             {
                 query += value.ToString() + "','";
             }
+            query = query.Remove(query.Length - 2);
             query += String.Format(") ON DUPLICATE KEY UPDATE {0} = '{1}'", updateKey, updateValue);
             using (result = Query(query, new Dictionary<string, object>(), dbcon))
             {

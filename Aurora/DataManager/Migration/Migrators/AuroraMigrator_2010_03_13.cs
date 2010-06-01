@@ -164,11 +164,10 @@ namespace Aurora.DataManager.Migration.Migrators
             AddSchema("BannedViewers", ColDefs(ColDef("Client", ColumnTypes.String50, true)));
 
             AddSchema("mutelists", ColDefs(
-                ColDef("userID", ColumnTypes.String50),
-                ColDef("muteID", ColumnTypes.String50),
-                ColDef("muteName", ColumnTypes.String50),
-                ColDef("muteType", ColumnTypes.String50),
-                ColDef("muteUUID", ColumnTypes.String50, true)
+                ColDef("PrincipalID", ColumnTypes.String50, true),
+                ColDef("MutedID", ColumnTypes.String50, true),
+                ColDef("MutedName", ColumnTypes.String50),
+                ColDef("MuteType", ColumnTypes.String50)
                 ));
 
             AddSchema("aurorainventoryfolders", ColDefs(

@@ -56,9 +56,8 @@ namespace Aurora.Modules
         private List<Scene> m_scenes = new List<Scene>();
 
         private IGenericData GenericData = null;
-        private Dictionary<UUID, byte[]> m_MuteCache = new Dictionary<UUID, byte[]>(); private Dictionary<string, List<string>> MuteCache = new Dictionary<string, List<string>>();
-        private List<string> FreezeCache = new List<string>();
         internal object m_syncy = new object();
+        private IMuteListConnector MuteListConnector;
 
         internal IConfig m_config;
 
@@ -110,6 +109,7 @@ namespace Aurora.Modules
         public virtual void RegionLoaded(Scene scene)
         {
             GenericData = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
+            MuteListConnector = Aurora.DataManager.DataManager.IMuteListConnector;
         }
 
         public virtual void RemoveRegion(Scene scene)
@@ -151,6 +151,9 @@ namespace Aurora.Modules
         public virtual void OnNewClient(IClientAPI client)
         {
             client.OnChatFromClient += OnChatFromClient;
+            client.OnMuteListRequest += OnMuteListRequest;
+            client.OnUpdateMuteListEntry += OnMuteListUpdate;
+            client.OnRemoveMuteListEntry += OnMuteListRemove;
             if(!m_blockChat)
                 m_authorizedSpeakers.Add(client.AgentId);
         }
@@ -314,21 +317,32 @@ namespace Aurora.Modules
                 s.ForEachScenePresence(
                     delegate(ScenePresence presence)
                     {
-                        List<string> muteListID = null;
-                        if (MuteCache.ContainsKey(presence.ControllingClient.AgentId.ToString()))
+                        bool IsMuted = false;
+                        if (IsMutedCache.ContainsKey(presence.UUID))
                         {
-                            MuteCache.TryGetValue(presence.ControllingClient.AgentId.ToString(), out muteListID);
+                            Dictionary<UUID, bool> cache;
+                            IsMutedCache.TryGetValue(presence.UUID, out cache);
+                            if (cache.ContainsKey(fromID))
+                            {
+                                cache.TryGetValue(fromID, out IsMuted);
+                            }
+                            else
+                            {
+                                IsMuted = MuteListConnector.IsMuted(presence.UUID, fromID);
+                                cache.Add(fromID, IsMuted);
+                                IsMutedCache.Remove(presence.UUID);
+                                IsMutedCache.Add(presence.UUID, cache);
+                            }
                         }
                         else
                         {
-                            muteListID = GenericData.Query("userID",presence.ControllingClient.AgentId.ToString(),"mutelists","muteID");
-                            MuteCache.Add(presence.ControllingClient.AgentId.ToString(), muteListID);
+                            Dictionary<UUID, bool> cache = new Dictionary<UUID, bool>();
+                            IsMuted = MuteListConnector.IsMuted(presence.UUID, fromID);
+                            cache.Add(fromID, IsMuted);
+                            IsMutedCache.Add(presence.UUID, cache);
                         }
-                        if (!muteListID.Contains(c.SenderUUID.ToString()))
-                        {
+                        if(!IsMuted)
                             TrySendChatMessage(presence, fromPos, regionPos, fromID, fromName, c.Type, message, sourceType);
-                                    return;
-                        }
                     }
                 );
             }
@@ -415,29 +429,31 @@ namespace Aurora.Modules
                                                        fromAgentID, (byte)src, (byte)ChatAudibleLevel.Fully);
         }
 
+        private Dictionary<UUID, Dictionary<UUID, bool>> IsMutedCache = new Dictionary<UUID, Dictionary<UUID, bool>>();
+        private Dictionary<UUID, MuteList[]> MuteListCache = new Dictionary<UUID, MuteList[]>();
         private void OnMuteListRequest(IClientAPI client, uint crc)
         {
             //Sends the name of the file being sent by the xfer module DO NOT EDIT!!!
             string filename = "mutes" + client.AgentId.ToString();
             byte[] fileData = new byte[0];
-            if (m_MuteCache.ContainsKey(client.AgentId))
-            {
-                m_MuteCache.TryGetValue(client.AgentId, out fileData);
-            }
+            string invString = "";
+            int i = 0;
+            MuteList[] List;
+
+            if (!MuteListCache.ContainsKey(client.AgentId))
+                List = MuteListConnector.GetMuteList(client.AgentId);
             else
             {
-                List<string> muteListName = GenericData.Query("userID", client.AgentId.ToString(), "mutelists", "muteName");
-                List<string> muteListType = GenericData.Query("userID", client.AgentId.ToString(), "mutelists", "muteType");
-                List<string> muteListID = GenericData.Query("userID", client.AgentId.ToString(), "mutelists", "muteID");
-                string invString = "";
-                int i = 0;
-                while (muteListName.Count - 1 >= i)
-                {
-                    invString += (muteListType[i] + " " + muteListID[i] + " " + muteListName[i] + " |\n");
-                    i++;
-                }
-                fileData = OpenMetaverse.Utils.StringToBytes(invString);
+                client.SendUseCachedMuteList();
+                return;
             }
+
+            foreach (MuteList mute in List)
+            {
+                invString += (mute.MuteType + " " + mute.MuteID + " " + mute.MuteName + " |\n");
+                i++;
+            }
+            fileData = OpenMetaverse.Utils.StringToBytes(invString);
             IXfer xfer = client.Scene.RequestModuleInterface<IXfer>();
             if (xfer != null)
             {
@@ -448,27 +464,25 @@ namespace Aurora.Modules
         
         private void OnMuteListUpdate(IClientAPI client, UUID MuteID, string Name, int Flags, UUID AgentID)
         {
-            MuteCache.Remove(client.AgentId.ToString());
-            m_MuteCache.Remove(client.AgentId);
-            List<string> values = new List<string>();
-            values.Add(AgentID.ToString());
-            values.Add(MuteID.ToString());
-            values.Add(Name);
-            values.Add(Flags.ToString());
-            values.Add(new Guid().ToString());
-            GenericData.Insert("mutelists", values.ToArray(),"muteType",Flags.ToString());
+            MuteList Mute = new MuteList()
+            {
+                MuteID = MuteID,
+                MuteName = Name,
+                MuteType = Flags.ToString()
+            };
+            MuteListConnector.UpdateMute(Mute, AgentID);
+            MuteListCache.Remove(AgentID);
             OnMuteListRequest(client, 0);
         }
 
         private void OnMuteListRemove(IClientAPI client, UUID MuteID, string Name, UUID AgentID)
         {
-            List<string> keys = new List<string>();
-            List<string> values = new List<string>();
-            keys.Add("userID");
-            keys.Add("muteID");
-            values.Add(AgentID.ToString());
-            values.Add(MuteID.ToString());
-            GenericData.Delete("mutelists", keys.ToArray(), values.ToArray());
+            //Gets sent if a mute is not selected.
+            if (MuteID != UUID.Zero)
+            {
+                MuteListConnector.DeleteMute(MuteID, AgentID);
+                MuteListCache.Remove(AgentID);
+            }
             OnMuteListRequest(client, 0);
         }
     }
