@@ -41,7 +41,7 @@ namespace Aurora.DataManager
         public static IDirectoryServiceConnector IDirectoryServiceConnector;
         public static IAssetConnector IAssetConnector;
         public static IAvatarArchiverConnector IAvatarArchiverConnector;
-        public static ISimMapDataConnector ISimMapConnector;
+        public static ISimMapDataConnector ISimMapDataConnector;
         public static IRegionInfoConnector IRegionInfoConnector;
         public static ICurrencyConnector ICurrencyConnector;
         public static IMuteListConnector IMuteListConnector;

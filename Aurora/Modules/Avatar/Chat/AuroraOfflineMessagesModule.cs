@@ -168,7 +168,7 @@ namespace Aurora.Modules
         {
             m_log.DebugFormat("[OFFLINE MESSAGING] Retrieving stored messages for {0}", client.AgentId);
 
-            OfflineMessage[] msglist = OfflineMessagesConnector.GetOfflineMessages(client.AgentId.ToString());
+            OfflineMessage[] msglist = OfflineMessagesConnector.GetOfflineMessages(client.AgentId);
 
             foreach (OfflineMessage IMtext in msglist)
             {

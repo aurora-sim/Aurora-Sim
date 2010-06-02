@@ -15,11 +15,11 @@ namespace Aurora.Services.DataService
 			GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
 		}
 
-		public OfflineMessage[] GetOfflineMessages(string agentID)
+		public OfflineMessage[] GetOfflineMessages(UUID agentID)
 		{
 			List<OfflineMessage> messages = new List<OfflineMessage>();
 			List<string> Messages = GD.Query("ToUUID", agentID, "offlinemessages", "*");
-			GD.Delete("offlinemessages", new string[] { "ToUUID" }, new string[] { agentID });
+			GD.Delete("offlinemessages", new string[] { "ToUUID" }, new object[] { agentID });
             if (Messages.Count == 0)
                 return messages.ToArray();
             int i = 0;
@@ -43,9 +43,9 @@ namespace Aurora.Services.DataService
 			return messages.ToArray();
 		}
 
-		public bool AddOfflineMessage(OfflineMessage message)
+		public void AddOfflineMessage(OfflineMessage message)
 		{
-			return GD.Insert("offlinemessages", new object[] {
+			GD.Insert("offlinemessages", new object[] {
 				message.FromUUID,
 				message.FromName,
 				message.ToUUID,

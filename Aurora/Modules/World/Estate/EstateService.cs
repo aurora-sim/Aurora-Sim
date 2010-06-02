@@ -19,7 +19,6 @@ namespace Aurora.Modules
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         Scene m_scene;
-        ISimMapDataConnector SimMapConnector;
         IRegionConnector RegionConnector;
 
         public void Initialise(IConfigSource source)
@@ -28,7 +27,6 @@ namespace Aurora.Modules
 
         public void AddRegion(Scene scene)
         {
-            SimMapConnector = DataManager.DataManager.ISimMapConnector;
             RegionConnector = DataManager.DataManager.IRegionConnector;
             scene.RegisterModuleInterface<IEstateSettingsModule>(this);
             m_scene = scene;
@@ -62,7 +60,7 @@ namespace Aurora.Modules
             EstateSettings ES = m_scene.EstateService.LoadEstateSettings(m_scene.RegionInfo.RegionID, false);
             if (cmdparams[2] == "Maturity")
             {
-                SimMap map = SimMapConnector.GetSimMap(m_scene.RegionInfo.RegionID);
+                SimMap map = m_scene.SimMapConnector.GetSimMap(m_scene.RegionInfo.RegionID, m_scene.RegionInfo.EstateSettings.EstateOwner)[0];
                 if (cmdparams[3] == "PG")
                 {
                     map.SimFlags = map.SimFlags & SimMapFlags.PG;
@@ -83,7 +81,7 @@ namespace Aurora.Modules
                     m_log.Warn("Your parameter did not match any existing parameters. Try PG, Mature, or Adult");
                     return;
                 }
-                SimMapConnector.SetSimMap(map);
+                m_scene.SimMapConnector.UpdateSimMap(map);
                 m_scene.RegionInfo.RegionSettings.Save();
             }
             #endregion

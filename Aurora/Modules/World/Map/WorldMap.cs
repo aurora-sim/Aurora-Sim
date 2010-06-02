@@ -85,7 +85,6 @@ namespace Aurora.Modules
         private double oneminute = 60000;
         private System.Timers.Timer UpdateMapImage;
         private System.Timers.Timer UpdateOnlineStatus;
-        private IRegionConnector GridConnector;
         private string SimMapServerURI;
         
 		#region INonSharedRegionModule Members
@@ -146,7 +145,6 @@ namespace Aurora.Modules
 
 		public virtual void RegionLoaded (Scene scene)
 		{
-            GridConnector = Aurora.DataManager.DataManager.IRegionConnector;
             new MapActivityDetector(scene.SimMapConnector);
             SetUpTimers();
         }

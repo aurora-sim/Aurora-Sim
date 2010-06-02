@@ -17,14 +17,14 @@ using OpenSim.Server.Base;
 
 namespace Aurora.Services.DataService
 {
-    public class RemoteGridConnector : IRegionConnector
+    public class RemoteRegionConnector : IRegionConnector
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
         private string m_ServerURI = "";
 
-        public RemoteGridConnector(string serverURI)
+        public RemoteRegionConnector(string serverURI)
         {
             m_ServerURI = serverURI;
         }

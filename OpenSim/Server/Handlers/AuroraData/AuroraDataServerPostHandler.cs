@@ -28,6 +28,7 @@ namespace OpenSim.Server.Handlers.AuroraData
         private IRegionConnector GridConnector = null;
         private IEstateConnector EstateConnector = null;
         private IMuteListConnector MuteListConnector = null;
+        private IOfflineMessagesConnector OfflineMessagesConnector = null;
 
         public AuroraDataServerPostHandler() :
             base("POST", "/auroradata")
@@ -37,6 +38,7 @@ namespace OpenSim.Server.Handlers.AuroraData
             AgentConnector = DataManager.IAgentConnector;
             EstateConnector = DataManager.IEstateConnector;
             MuteListConnector = DataManager.IMuteListConnector;
+            OfflineMessagesConnector = DataManager.IOfflineMessagesConnector;
         }
 
         public override byte[] Handle(string path, Stream requestData,
@@ -117,6 +119,10 @@ namespace OpenSim.Server.Handlers.AuroraData
                         return DeleteMute(request);
                     case "ismuted":
                         return IsMuted(request);
+                    case "addofflinemessage":
+                        return AddOfflineMessage(request);
+                    case "getofflinemessages":
+                        return GetOfflineMessages(request);
                 }
                 m_log.DebugFormat("[AuroraDataServerPostHandler]: unknown method {0} request {1}", method.Length, method);
             }
@@ -129,6 +135,37 @@ namespace OpenSim.Server.Handlers.AuroraData
 
         }
 
+        private byte[] GetOfflineMessages(Dictionary<string, object> request)
+        {
+            Dictionary<string, object> result = new Dictionary<string, object>();
+
+            UUID PRINCIPALID = UUID.Parse(request["PRINCIPALID"].ToString());
+            OfflineMessage[] Messages = OfflineMessagesConnector.GetOfflineMessages(PRINCIPALID);
+
+            int i = 0;
+            foreach (OfflineMessage Message in Messages)
+            {
+                result.Add(ConvertDecString(i), Message.ToKeyValuePairs());
+                i++;
+            }
+
+            string xmlString = ServerUtils.BuildXmlResponse(result);
+            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
+        }
+
+        private byte[] AddOfflineMessage(Dictionary<string, object> request)
+        {
+            Dictionary<string, object> result = new Dictionary<string, object>();
+
+            UUID MUTEID = UUID.Parse(request["MUTEID"].ToString());
+            UUID PRINCIPALID = UUID.Parse(request["PRINCIPALID"].ToString());
+            MuteListConnector.DeleteMute(MUTEID, PRINCIPALID);
+
+            return SuccessResult();
+        }
+
         private byte[] GetMuteList(Dictionary<string, object> request)
         {
             Dictionary<string, object> result = new Dictionary<string, object>();
@@ -139,7 +176,7 @@ namespace OpenSim.Server.Handlers.AuroraData
             int i = 0;
             foreach (MuteList Mute in Mutes)
             {
-                result.Add(i.ToString(), Mute.ToKeyValuePairs());
+                result.Add(ConvertDecString(i), Mute.ToKeyValuePairs());
                 i++;
             }
 
@@ -691,6 +728,35 @@ namespace OpenSim.Server.Handlers.AuroraData
             xw.Flush();
 
             return ms.ToArray();
+        }
+
+        // http://social.msdn.microsoft.com/forums/en-US/csharpgeneral/thread/68f7ca38-5cd1-411f-b8d4-e4f7a688bc03
+        // By: A Million Lemmings
+        public string ConvertDecString(int dvalue)
+        {
+
+            string CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+            string retVal = string.Empty;
+
+            double value = Convert.ToDouble(dvalue);
+
+            do
+            {
+
+                double remainder = value - (26 * Math.Truncate(value / 26));
+
+                retVal = retVal + CHARS.Substring((int)remainder, 1);
+
+                value = Math.Truncate(value / 26);
+
+            } 
+            while (value > 0);
+
+
+
+            return retVal;
+
         }
 
         #endregion

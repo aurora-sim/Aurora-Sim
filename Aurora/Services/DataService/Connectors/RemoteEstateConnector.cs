@@ -15,7 +15,7 @@ using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
 using OpenSim.Server.Base;
 
-namespace Aurora.Services.DataService.Connectors
+namespace Aurora.Services.DataService
 {
     public class RemoteEstateConnector : IEstateConnector
     {

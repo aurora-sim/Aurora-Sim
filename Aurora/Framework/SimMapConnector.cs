@@ -21,7 +21,7 @@ namespace Aurora.Framework
         public SimMapConnector(IGridService GS)
         {
             EstateConnector = Aurora.DataManager.DataManager.IEstateConnector;
-            SimMapDataConnector = Aurora.DataManager.DataManager.ISimMapConnector;
+            SimMapDataConnector = Aurora.DataManager.DataManager.ISimMapDataConnector;
         }
 
         public SimMap GetSimMap(UUID regionID, UUID AgentID)

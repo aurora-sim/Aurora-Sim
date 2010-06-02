@@ -930,7 +930,7 @@ namespace Aurora.Modules
                                     GenericData.Insert("searchallparcels", new string[] { info.UUID, PInfo.Name, PInfo.OwnerUUID, PInfo.GroupUUID, PInfo.Landing, PInfo.UUID, PInfo.InfoUUID, PInfo.Area });
                                     if (Convert.ToBoolean(PInfo.Directory))
                                         GenericData.Insert("searchparcels", new string[] { info.UUID, PInfo.Name, PInfo.UUID, PInfo.Landing, PInfo.Desc, PInfo.Category, PInfo.Build, PInfo.Script, PInfo.Public, PInfo.Dwell, PInfo.InfoUUID, false.ToString(), false.ToString() });
-                                    SimMap map = DataManager.DataManager.ISimMapConnector.GetSimMap(currentScene.RegionInfo.RegionID);
+                                    SimMap map = m_scene.SimMapConnector.GetSimMap(currentScene.RegionInfo.RegionID, currentScene.RegionInfo.EstateSettings.EstateOwner)[0];
                                     if (Convert.ToBoolean(PInfo.ForSale))
                                     {
                                         LandData LD = m_scene.LandChannel.GetLandObject(int.Parse(PInfo.Landing.Split(',')[0]),int.Parse(PInfo.Landing.Split(',')[1])).LandData;

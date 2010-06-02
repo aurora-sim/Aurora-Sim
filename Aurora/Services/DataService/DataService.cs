@@ -96,43 +96,47 @@ namespace Aurora.Services.DataService
                 Aurora.DataManager.DataManager.SetDefaultGenericDataPlugin(GenericData);
             }
 
-            DataManager.DataManager.IScriptDataConnector = new LocalScriptDataConnector(ScriptSaveDataConnector);
             string Connector = m_config.GetString("Connector", "LocalConnector");
+
+            //Connectors that do not need a remote connector and will always be local
+            DataManager.DataManager.IAbuseReportsConnector = new LocalAbuseReportsConnector();
+            DataManager.DataManager.IAssetConnector = new LocalAssetConnector();
+            DataManager.DataManager.IAvatarArchiverConnector = new LocalAvatarArchiverConnector();
+            DataManager.DataManager.ICurrencyConnector = new LocalCurrencyConnector();
+            DataManager.DataManager.ISimMapDataConnector = new LocalSimMapConnector();
+            DataManager.DataManager.IScriptDataConnector = new LocalScriptDataConnector(ScriptSaveDataConnector);
             DataManager.DataManager.IRegionInfoConnector = new LocalRegionInfoConnector();
+            //End connectors that do not need a remote connector and will always be local
+
             if (Connector == "LocalConnector")
             {
-                DataManager.DataManager.ISimMapConnector = new LocalGridConnector();
                 DataManager.DataManager.IAgentConnector = new LocalAgentConnector();
-                DataManager.DataManager.IRegionConnector = new LocalGridConnector();
+                DataManager.DataManager.IRegionConnector = new LocalRegionConnector();
                 DataManager.DataManager.IProfileConnector = new LocalProfileConnector();
                 DataManager.DataManager.IEstateConnector = new LocalEstateConnector();
-                DataManager.DataManager.IAbuseReportsConnector = new LocalAbuseReportsConnector();
-                DataManager.DataManager.IAssetConnector = new LocalAssetConnector();
                 DataManager.DataManager.IOfflineMessagesConnector = new LocalOfflineMessagesConnector();
                 DataManager.DataManager.IDirectoryServiceConnector = new LocalDirectoryServiceConnector();
-                DataManager.DataManager.IEstateConnector = new LocalEstateConnector();
-                DataManager.DataManager.ICurrencyConnector = new LocalCurrencyConnector();
                 DataManager.DataManager.IMuteListConnector = new LocalMuteListConnector();
                 return;
             }
-            DataManager.DataManager.ISimMapConnector = new LocalGridConnector();
-            DataManager.DataManager.IAbuseReportsConnector = new LocalAbuseReportsConnector();
-            DataManager.DataManager.IAssetConnector = new LocalAssetConnector();
-            DataManager.DataManager.IOfflineMessagesConnector = new LocalOfflineMessagesConnector();
-            DataManager.DataManager.IDirectoryServiceConnector = new LocalDirectoryServiceConnector();
-            DataManager.DataManager.IAvatarArchiverConnector = new LocalAvatarArchiverConnector();
-            DataManager.DataManager.ICurrencyConnector = new LocalCurrencyConnector();
-            if (Connector != "RemoteConnector")
+            else if (Connector == "RemoteConnector")
+            {
+                //Connectors that still need a remote connector
+                DataManager.DataManager.IDirectoryServiceConnector = new LocalDirectoryServiceConnector();
+                //End connectors that still need a remote connector
+
+                string RemoteConnectionString = m_config.GetString("RemoteServerURI", "");
+                DataManager.DataManager.IEstateConnector = new RemoteEstateConnector(RemoteConnectionString);
+                DataManager.DataManager.IMuteListConnector = new RemoteMuteListConnector(RemoteConnectionString);
+                DataManager.DataManager.IAgentConnector = new RemoteAgentConnector(RemoteConnectionString);
+                DataManager.DataManager.IRegionConnector = new RemoteRegionConnector(RemoteConnectionString);
+                DataManager.DataManager.IProfileConnector = new RemoteProfileConnector(RemoteConnectionString);
+                DataManager.DataManager.IOfflineMessagesConnector = new RemoteOfflineMessagesConnector(RemoteConnectionString);
+            }
+            else
             {
                 m_log.Error("[AuroraDataService]: No Connector found with that name!");
-                return;
             }
-            string RemoteConnectionString = m_config.GetString("RemoteServerURI", "");
-            DataManager.DataManager.IEstateConnector = new RemoteEstateConnector(RemoteConnectionString);
-            DataManager.DataManager.IMuteListConnector = new RemoteMuteListConnector(RemoteConnectionString);
-            DataManager.DataManager.IAgentConnector = new RemoteAgentConnector(RemoteConnectionString);
-            DataManager.DataManager.IRegionConnector = new RemoteGridConnector(RemoteConnectionString);
-            DataManager.DataManager.IProfileConnector = new RemoteProfileConnector(RemoteConnectionString);
         }
     }
 }

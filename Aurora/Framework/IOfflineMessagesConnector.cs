@@ -8,7 +8,7 @@ namespace Aurora.Framework
 {
 	public interface IOfflineMessagesConnector
 	{
-		OfflineMessage[] GetOfflineMessages(string agentID);
-		bool AddOfflineMessage(OfflineMessage message);
+		OfflineMessage[] GetOfflineMessages(UUID agentID);
+		void AddOfflineMessage(OfflineMessage message);
 	}
 }
