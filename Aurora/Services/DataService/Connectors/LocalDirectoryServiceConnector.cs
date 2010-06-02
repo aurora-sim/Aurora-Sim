@@ -179,7 +179,7 @@ namespace Aurora.Services.DataService
 				if (DataCount == 1)
 					replyData.name = retVal[i];
 				if (DataCount == 2)
-					replyData.auction = Convert.ToBoolean(retVal[i]);
+					replyData.auction = (retVal[i] != "0");
 				if (DataCount == 3)
 					replyData.salePrice = Convert.ToInt32(retVal[i]);
 				if (DataCount == 4)
@@ -200,9 +200,28 @@ namespace Aurora.Services.DataService
 		public DirEventsReplyData[] FindEvents(string queryText, string flags, int StartQuery)
 		{
 			List<DirEventsReplyData> Data = new List<DirEventsReplyData>();
-
-			string whereClause = " EName LIKE '%" + queryText + "%' and EFlags <= '" + flags + "' LIMIT " + StartQuery.ToString() + ",50 ";
-			List<string> retVal = GD.Query(whereClause, "events", "EOwnerID,EName,EID,EDate,EFlags");
+            string whereClause = "";
+            if (queryText.Contains("|0|"))
+            {
+                string StringDay = queryText.Split('|')[0];
+                if (StringDay == "u")
+                {
+                    whereClause = " EDate >= '" + Util.ToUnixTime(DateTime.Today) + "' and EFlags <= '" + flags + "' LIMIT " + StartQuery.ToString() + ",50 ";
+                }
+                else
+                {
+                    int Day = int.Parse(StringDay);
+                    DateTime SearchedDay = DateTime.Today.AddDays(Day);
+                    DateTime NextDay = SearchedDay.AddDays(1);
+                    whereClause = " EDate >= '" + Util.ToUnixTime(SearchedDay) + "' and EDate <= '" + Util.ToUnixTime(NextDay) + "' and EFlags <= '" + flags + "' LIMIT " + StartQuery.ToString() + ",50 ";
+                }
+            }
+            else
+            {
+                whereClause = " EName LIKE '%" + queryText + "%' and EFlags <= '" + flags + "' LIMIT " + StartQuery.ToString() + ",50 ";
+            }
+            
+            List<string> retVal = GD.Query(whereClause, "events", "EOwnerID,EName,EID,EDate,EFlags");
             if (retVal.Count == 0)
                 return Data.ToArray();
 			
@@ -215,9 +234,11 @@ namespace Aurora.Services.DataService
 					replyData.name = retVal[i];
 				if (DataCount == 2)
 					replyData.eventID = Convert.ToUInt32(retVal[i]);
-				if (DataCount == 3) {
-					replyData.date = new DateTime(Convert.ToUInt32(retVal[i])).ToString(new System.Globalization.DateTimeFormatInfo());
-					replyData.unixTime = Convert.ToUInt32(retVal[i]);
+				if (DataCount == 3) 
+                {
+                    DateTime date = Util.ToDateTime(ulong.Parse(retVal[i]));
+                    replyData.date = date.ToString(new System.Globalization.DateTimeFormatInfo());
+                    replyData.unixTime = (uint)Util.ToUnixTime(date);
 				}
 				if (DataCount == 4)
 					replyData.eventFlags = Convert.ToUInt32(retVal[i]);
@@ -232,7 +253,7 @@ namespace Aurora.Services.DataService
 			return Data.ToArray();
 		}
 
-		public DirEventsReplyData[] FindAllEventsInRegion(string regionName)
+        public DirEventsReplyData[] FindAllEventsInRegion(string regionName)
 		{
 			List<DirEventsReplyData> Data = new List<DirEventsReplyData>();
 			List<string> retVal = GD.Query("ESimName", regionName, "events", "EOwnerID,EName,EID,EDate,EFlags");
@@ -247,9 +268,11 @@ namespace Aurora.Services.DataService
 					replyData.name = retVal[i];
 				if (DataCount == 2)
 					replyData.eventID = Convert.ToUInt32(retVal[i]);
-				if (DataCount == 3) {
-					replyData.date = new DateTime(Convert.ToUInt32(retVal[i])).ToString(new System.Globalization.DateTimeFormatInfo());
-					replyData.unixTime = Convert.ToUInt32(retVal[i]);
+				if (DataCount == 3)
+                {
+                    DateTime date = Util.ToDateTime(ulong.Parse(retVal[i]));
+                    replyData.date = date.ToString(new System.Globalization.DateTimeFormatInfo());
+                    replyData.unixTime = (uint)Util.ToUnixTime(date);
 				}
 				if (DataCount == 4)
 					replyData.eventFlags = Convert.ToUInt32(retVal[i]);
@@ -299,7 +322,7 @@ namespace Aurora.Services.DataService
 		public EventData GetEventInfo(string EventID)
 		{
 			EventData data = new EventData();
-            List<string> RetVal = GD.Query("EID", EventID, "events", "EID, ECreator, EName, ECategory, EDesc, EDate, EDateUTC, EDuration, ECover, EAmount, ESimName, EGlobalPos, EEventFlags, EMature");
+            List<string> RetVal = GD.Query("EID", EventID, "events", "EID, ECreatorID, EName, ECategory, EDesc, EDate, EDuration, ECoverCharge, ECoverAmount, ESimName, EGlobalPos, EFlags, EMature");
             if (RetVal.Count == 0)
                 return null;
 			for (int i = 0; i < RetVal.Count; i++) {
@@ -313,23 +336,25 @@ namespace Aurora.Services.DataService
 					data.category = RetVal[i];
 				if (i == 4)
 					data.description = RetVal[i];
-				if (i == 5)
-					data.date = RetVal[i];
+                if (i == 5)
+                {
+                    DateTime date = Util.ToDateTime(ulong.Parse(RetVal[i]));
+                    data.date = date.ToString(new System.Globalization.DateTimeFormatInfo());
+                    data.dateUTC = (uint)Util.ToUnixTime(date);
+                }
 				if (i == 6)
-					data.dateUTC = Convert.ToUInt32(RetVal[i]);
-				if (i == 7)
 					data.duration = Convert.ToUInt32(RetVal[i]);
-				if (i == 8)
+				if (i == 7)
 					data.cover = Convert.ToUInt32(RetVal[i]);
-				if (i == 9)
+				if (i == 8)
 					data.amount = Convert.ToUInt32(RetVal[i]);
-				if (i == 10)
+				if (i == 9)
 					data.simName = RetVal[i];
-				if (i == 11)
+				if (i == 10)
 					Vector3.TryParse(RetVal[i], out data.globalPos);
-				if (i == 12)
+				if (i == 11)
 					data.eventFlags = Convert.ToUInt32(RetVal[i]);
-                if (i == 13)
+                if (i == 12)
                     data.maturity = Convert.ToInt32(RetVal[i]);
 			}
 			return data;

@@ -29,7 +29,7 @@ namespace Aurora.Services.DataService
                 m_log.Error("[AuroraData]: no data plugin found!");
                 return;
             }
-            
+
             PluginModule = m_config.GetString("PluginModule", "");
             ConnectionString = m_config.GetString("ConnectionString", "");
             IGenericData ScriptSaveDataConnector = null;
@@ -95,48 +95,73 @@ namespace Aurora.Services.DataService
 
                 Aurora.DataManager.DataManager.SetDefaultGenericDataPlugin(GenericData);
             }
+            IConfig m_ConnectorConfig = source.Configs["AuroraConnectors"];
 
-            string Connector = m_config.GetString("Connector", "LocalConnector");
+            string AbuseReportsConnector = m_ConnectorConfig.GetString("AbuseReportsConnector", "LocalConnector");
+            string AssetConnector = m_ConnectorConfig.GetString("AssetConnector", "LocalConnector");
+            string AvatarArchiverConnector = m_ConnectorConfig.GetString("AvatarArchiverConnector", "LocalConnector");
+            string CurrencyConnector = m_ConnectorConfig.GetString("CurrencyConnector", "LocalConnector");
+            string SimMapDataConnector = m_ConnectorConfig.GetString("SimMapDataConnector", "LocalConnector");
+            string ScriptDataConnector = m_ConnectorConfig.GetString("ScriptDataConnector", "LocalConnector");
+            string RegionInfoConnector = m_config.GetString("RegionInfoConnector", "LocalConnector");
+            string AgentConnector = m_ConnectorConfig.GetString("AgentConnector", "LocalConnector");
+            string RegionConnector = m_ConnectorConfig.GetString("RegionConnector", "LocalConnector");
+            string ProfileConnector = m_ConnectorConfig.GetString("ProfileConnector", "LocalConnector");
+            string EstateConnector = m_ConnectorConfig.GetString("EstateConnector", "LocalConnector");
+            string OfflineMessagesConnector = m_ConnectorConfig.GetString("OfflineMessagesConnector", "LocalConnector");
+            string DirectoryServiceConnector = m_ConnectorConfig.GetString("DirectoryServiceConnector", "LocalConnector");
+            string MuteListConnector = m_ConnectorConfig.GetString("MuteListConnector", "LocalConnector");
+            string RemoteConnectionString = m_config.GetString("RemoteServerURI", "");
 
-            //Connectors that do not need a remote connector and will always be local
-            DataManager.DataManager.IAbuseReportsConnector = new LocalAbuseReportsConnector();
-            DataManager.DataManager.IAssetConnector = new LocalAssetConnector();
-            DataManager.DataManager.IAvatarArchiverConnector = new LocalAvatarArchiverConnector();
-            DataManager.DataManager.ICurrencyConnector = new LocalCurrencyConnector();
-            DataManager.DataManager.ISimMapDataConnector = new LocalSimMapConnector();
-            DataManager.DataManager.IScriptDataConnector = new LocalScriptDataConnector(ScriptSaveDataConnector);
-            DataManager.DataManager.IRegionInfoConnector = new LocalRegionInfoConnector();
-            //End connectors that do not need a remote connector and will always be local
+            //Always local connectors.
+            if (AbuseReportsConnector == "LocalConnector")
+                DataManager.DataManager.IAbuseReportsConnector = new LocalAbuseReportsConnector();
+            if (AssetConnector == "LocalConnector")
+                DataManager.DataManager.IAssetConnector = new LocalAssetConnector();
+            if (AvatarArchiverConnector == "LocalConnector")
+                DataManager.DataManager.IAvatarArchiverConnector = new LocalAvatarArchiverConnector();
+            if (CurrencyConnector == "LocalConnector")
+                DataManager.DataManager.ICurrencyConnector = new LocalCurrencyConnector();
+            if (SimMapDataConnector == "LocalConnector")
+                DataManager.DataManager.ISimMapDataConnector = new LocalSimMapConnector();
+            if (ScriptDataConnector == "LocalConnector")
+                DataManager.DataManager.IScriptDataConnector = new LocalScriptDataConnector(ScriptSaveDataConnector);
+            if (RegionInfoConnector == "LocalConnector")
+                DataManager.DataManager.IRegionInfoConnector = new LocalRegionInfoConnector();
+            //End always local connectors.
 
-            if (Connector == "LocalConnector")
-            {
+            if (AgentConnector == "LocalConnector")
                 DataManager.DataManager.IAgentConnector = new LocalAgentConnector();
+            if (RegionConnector == "LocalConnector")
                 DataManager.DataManager.IRegionConnector = new LocalRegionConnector();
+            if (ProfileConnector == "LocalConnector")
                 DataManager.DataManager.IProfileConnector = new LocalProfileConnector();
+            if (EstateConnector == "LocalConnector")
                 DataManager.DataManager.IEstateConnector = new LocalEstateConnector();
+            if (OfflineMessagesConnector == "LocalConnector")
                 DataManager.DataManager.IOfflineMessagesConnector = new LocalOfflineMessagesConnector();
-                DataManager.DataManager.IDirectoryServiceConnector = new LocalDirectoryServiceConnector();
+            if (MuteListConnector == "LocalConnector")
                 DataManager.DataManager.IMuteListConnector = new LocalMuteListConnector();
-                return;
-            }
-            else if (Connector == "RemoteConnector")
-            {
-                //Connectors that still need a remote connector
-                DataManager.DataManager.IDirectoryServiceConnector = new LocalDirectoryServiceConnector();
-                //End connectors that still need a remote connector
 
-                string RemoteConnectionString = m_config.GetString("RemoteServerURI", "");
+            //Start remote connectors.
+
+            //Connectors that still need a remote connector
+            if (DirectoryServiceConnector == "RemoteConnector")
+                DataManager.DataManager.IDirectoryServiceConnector = new LocalDirectoryServiceConnector();
+            //End connectors that still need a remote connector
+
+            if (EstateConnector == "RemoteConnector")
                 DataManager.DataManager.IEstateConnector = new RemoteEstateConnector(RemoteConnectionString);
+            if (MuteListConnector == "RemoteConnector")
                 DataManager.DataManager.IMuteListConnector = new RemoteMuteListConnector(RemoteConnectionString);
+            if (AgentConnector == "RemoteConnector")
                 DataManager.DataManager.IAgentConnector = new RemoteAgentConnector(RemoteConnectionString);
+            if (RegionConnector == "RemoteConnector")
                 DataManager.DataManager.IRegionConnector = new RemoteRegionConnector(RemoteConnectionString);
+            if (ProfileConnector == "RemoteConnector")
                 DataManager.DataManager.IProfileConnector = new RemoteProfileConnector(RemoteConnectionString);
+            if (OfflineMessagesConnector == "RemoteConnector")
                 DataManager.DataManager.IOfflineMessagesConnector = new RemoteOfflineMessagesConnector(RemoteConnectionString);
-            }
-            else
-            {
-                m_log.Error("[AuroraDataService]: No Connector found with that name!");
-            }
         }
     }
 }
