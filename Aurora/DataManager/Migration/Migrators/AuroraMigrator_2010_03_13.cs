@@ -300,36 +300,33 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("draw_classic_clouds", ColumnTypes.String50)
                ));
 
-            AddSchema("landinfo", ColDefs(ColDef("RegionID", ColumnTypes.String50),
-                ColDef("ParcelID", ColumnTypes.String50, true), ColDef("LocalID",
-                ColumnTypes.String50), ColDef("LandingX", ColumnTypes.String50),
-                ColDef("LandingY", ColumnTypes.String50), ColDef("LandingZ",
-                ColumnTypes.String50), ColDef("Name", ColumnTypes.String50),
-                ColDef("Description", ColumnTypes.String50), ColDef("Flags",
-                ColumnTypes.String50), ColDef("Dwell", ColumnTypes.String50),
-                ColDef("InfoUUID", ColumnTypes.String50), ColDef("ForSale",
-                ColumnTypes.String50), ColDef("Auction", ColumnTypes.String50),
-                ColDef("Area", ColumnTypes.String50), ColDef("EstateID",
-                ColumnTypes.String50), ColDef("Maturity", ColumnTypes.String50),
-                ColDef("OwnerID", ColumnTypes.String50), ColDef("GroupID",
-                ColumnTypes.String50), ColDef("MediaDescription",
-                ColumnTypes.String50), ColDef("MediaHeight", ColumnTypes.String50),
-                ColDef("MediaWidth", ColumnTypes.String50), ColDef("MediaLoop",
-                ColumnTypes.String50), ColDef("MediaType", ColumnTypes.String50),
-                ColDef("ObscureMedia", ColumnTypes.String50), ColDef("ObscureMusic", 
-                ColumnTypes.String50), ColDef("ShowInSearch", ColumnTypes.String50)));
-
-            AddSchema("auroraland", ColDefs(
-                ColDef("UUID", ColumnTypes.String50, true),
-                ColDef("LocalLandID", ColumnTypes.String50),
-                ColDef("media_desc", ColumnTypes.String50),
-                ColDef("media_height", ColumnTypes.String50),
-                ColDef("media_loop", ColumnTypes.String50),
-                ColDef("media_type", ColumnTypes.String50),
-                ColDef("media_width", ColumnTypes.String50),
-                ColDef("obscure_media", ColumnTypes.String50),
-                ColDef("obscure_music", ColumnTypes.String50)
-                ));
+            AddSchema("landinfo", ColDefs(ColDef("RegionID",ColumnTypes.String50),
+                ColDef("ParcelID",ColumnTypes.String50,true),
+                ColDef("LocalID", ColumnTypes.String50),
+                ColDef("LandingX", ColumnTypes.String50),
+                ColDef("LandingY", ColumnTypes.String50),
+                ColDef("LandingZ", ColumnTypes.String50),
+                ColDef("Name", ColumnTypes.String50),
+                ColDef("Description", ColumnTypes.String50),
+                ColDef("Flags", ColumnTypes.String50),
+                ColDef("Dwell", ColumnTypes.String50),
+                ColDef("InfoUUID", ColumnTypes.String50),
+                ColDef("ForSale", ColumnTypes.String50),
+                ColDef("SalePrice", ColumnTypes.String50),
+                ColDef("Auction", ColumnTypes.String50),
+                ColDef("Area", ColumnTypes.String50),
+                ColDef("EstateID",ColumnTypes.String50),
+                ColDef("Maturity", ColumnTypes.String50),
+                ColDef("OwnerID", ColumnTypes.String50),
+                ColDef("GroupID", ColumnTypes.String50),
+                ColDef("MediaDescription", ColumnTypes.String50),
+                ColDef("MediaHeight", ColumnTypes.String50),
+                ColDef("MediaWidth", ColumnTypes.String50),
+                ColDef("MediaLoop", ColumnTypes.String50),
+                ColDef("MediaType", ColumnTypes.String50),
+                ColDef("ObscureMedia", ColumnTypes.String50),
+                ColDef("ObscureMusic", ColumnTypes.String50),
+                ColDef("ShowInSearch", ColumnTypes.String50)));
 
             AddSchema("osagent", ColDefs(ColDef("AgentID", ColumnTypes.String50, true),
                 ColDef("ActiveGroupID", ColumnTypes.String50)));
@@ -390,64 +387,6 @@ namespace Aurora.DataManager.Migration.Migrators
 
             
             #region Search Tables
-            
-            AddSchema("searchparcels", ColDefs(
-                ColDef("RID", ColumnTypes.String50),
-                ColDef("PName", ColumnTypes.String50),
-                ColDef("PID", ColumnTypes.String50, true),
-                ColDef("PLanding", ColumnTypes.String50),
-                ColDef("PDesc", ColumnTypes.String50),
-                ColDef("PCategory", ColumnTypes.String50),
-                ColDef("PBuild", ColumnTypes.String50),
-                ColDef("PScript", ColumnTypes.String50),
-                ColDef("PPublic", ColumnTypes.String50),
-                ColDef("PDwell", ColumnTypes.String50),
-                ColDef("PInfoUUID", ColumnTypes.String50),
-                ColDef("PForSale", ColumnTypes.String50),
-                ColDef("PAuction", ColumnTypes.String50)
-                ));
-            
-            AddSchema("searchparcelsales", ColDefs(
-                ColDef("RID", ColumnTypes.String50),
-                ColDef("PName", ColumnTypes.String50),
-                ColDef("PID", ColumnTypes.String50, true),
-                ColDef("PArea", ColumnTypes.String50),
-                ColDef("PSalePrice", ColumnTypes.String50),
-                ColDef("PLanding", ColumnTypes.String50),
-                ColDef("PInfoUUID", ColumnTypes.String50),
-                ColDef("PDwell", ColumnTypes.String50),
-                ColDef("PEstateID", ColumnTypes.String50),
-                ColDef("PIsMature", ColumnTypes.String50),
-                ColDef("PAuction", ColumnTypes.String50)
-                ));
-            
-            AddSchema("searchallparcels", ColDefs(
-                ColDef("RID", ColumnTypes.String50),
-                ColDef("PName", ColumnTypes.String50),
-                ColDef("PUserID", ColumnTypes.String50),
-                ColDef("PGroupID", ColumnTypes.String50),
-                ColDef("PLanding", ColumnTypes.String50),
-                ColDef("PID", ColumnTypes.String50, true),
-                ColDef("PInfoUUID", ColumnTypes.String50),
-                ColDef("PArea", ColumnTypes.String50)
-                ));
-            
-            AddSchema("searchregions", ColDefs(
-                ColDef("RName", ColumnTypes.String50),
-                ColDef("RID", ColumnTypes.String50, true),
-                ColDef("RHandle", ColumnTypes.String50),
-                ColDef("RURL", ColumnTypes.String50),
-                ColDef("ROwnerID", ColumnTypes.String50),
-                ColDef("RUserName", ColumnTypes.String50)
-                ));
-            
-            AddSchema("searchobjects", ColDefs(
-                ColDef("OID", ColumnTypes.String50, true),
-                ColDef("PID", ColumnTypes.String50),
-                ColDef("OTitle", ColumnTypes.String50),
-                ColDef("ODesc", ColumnTypes.String50),
-                ColDef("RID", ColumnTypes.String50)
-                ));
             
             AddSchema("events", ColDefs(
                 ColDef("EOwnerID", ColumnTypes.String50),

@@ -665,7 +665,6 @@ namespace OpenSim.Framework
 
         public LandData()
         {
-            _globalID = UUID.Random();
         }
 
         /// <summary>

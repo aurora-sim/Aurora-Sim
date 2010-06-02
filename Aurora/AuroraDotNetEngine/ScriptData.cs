@@ -368,7 +368,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //Find the asset ID
             if (part.TaskInventory.TryGetValue(ItemID, out InventoryItem))
                 AssetID = InventoryItem.AssetID;
-            m_log.Warn(InventoryItem.Name);
+            //m_log.Warn(InventoryItem.Name);
             //Try to see if this was rezzed from someone's inventory
             UserInventoryItemID = part.FromUserInventoryItemID;
             //Try to find the avatar who started this.
@@ -565,6 +565,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 {
                     ScriptFrontend.DeleteStateSave(AssemblyName);
                     Start(reupload);
+                    return;
                 }
                 catch (Exception ex)
                 {

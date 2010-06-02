@@ -386,13 +386,13 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
 
         private string CheckAssembly(string assembly, int i)
         {
-            if (File.Exists(assembly) || File.Exists(assembly + ".text") || File.Exists(assembly + ".map") || File.Exists(assembly.Remove(assembly.Length - 4) + ".pdb"))
+            /*if (File.Exists(assembly) || File.Exists(assembly + ".text") || File.Exists(assembly + ".map") || File.Exists(assembly.Remove(assembly.Length - 4) + ".pdb"))
             {
                 assembly = assembly.Remove(assembly.Length - 4);
                 assembly += i + ".dll";
                 i++;
                 return CheckAssembly(assembly, i);
-            }
+            }*/
             return assembly;
         }
 

@@ -77,6 +77,11 @@ namespace OpenSim.Region.CoreModules.World.Land
             get { return m_scene.RegionInfo.RegionID; }
         }
 
+        public ulong RegionHandle
+        {
+            get { return m_scene.RegionInfo.RegionHandle; }
+        }
+
         #region Constructors
 
         public LandObject(UUID owner_id, bool is_group_owned, Scene scene)
@@ -88,16 +93,6 @@ namespace OpenSim.Region.CoreModules.World.Land
             else
                 LandData.GroupID = UUID.Zero;
             LandData.IsGroupOwned = is_group_owned;
-            if (LandData.LocalID == 0)
-                return;
-            Aurora.Framework.IDirectoryServiceConnector GD = Aurora.DataManager.DataManager.IDirectoryServiceConnector;
-            LandData LD = GD.GetLandObject(LandData);
-            if (LD == null)
-            {
-                GD.AddLandObject(LandData, scene.RegionInfo.RegionID, (LandData.SalePrice == 0), scene.RegionInfo.EstateSettings.EstateID, ((LandData.Flags & (uint)ParcelFlags.ShowDirectory) == 1));
-            }
-            else
-                LandData = LD;
         }
 
         #endregion

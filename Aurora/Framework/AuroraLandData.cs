@@ -9,7 +9,7 @@ namespace Aurora.Framework
     public class AuroraLandData
     {
         public UUID RegionID;
-        public UUID GlobalID;
+        public UUID ParcelID;
         public int LocalID;
         public float LandingX;
         public float LandingY;
@@ -20,6 +20,7 @@ namespace Aurora.Framework
         public int Dwell;
         public UUID InfoUUID;
         public bool ForSale;
+        public float SalePrice;
         public uint AuctionID;
         public int Area;
         public uint EstateID;

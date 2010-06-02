@@ -575,7 +575,6 @@ namespace OpenSim.Region.CoreModules.World.Land
 
                 m_landList.Add(newLandLocalID, new_land);
             }
-
             new_land.ForceUpdateLandInfo();
             m_scene.EventManager.TriggerLandObjectAdded(new_land);
             return new_land;

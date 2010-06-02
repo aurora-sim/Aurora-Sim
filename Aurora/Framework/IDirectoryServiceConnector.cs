@@ -9,7 +9,7 @@ namespace Aurora.Framework
 {
 	public interface IDirectoryServiceConnector
 	{
-		void AddLandObject(LandData args, UUID regionID, bool forSale, uint EstateID, bool showInSearch);
+		void AddLandObject(LandData args, UUID regionID, bool forSale, uint EstateID, bool showInSearch, UUID InfoUUID);
 		AuroraLandData GetLandData(UUID ParcelID);
 		LandData GetLandObject(LandData LD);
 		DirPlacesReplyData[] FindLand(string queryText, string category, int StartQuery);

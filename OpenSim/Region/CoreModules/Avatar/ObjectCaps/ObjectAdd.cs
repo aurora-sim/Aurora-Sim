@@ -97,7 +97,45 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
         public void AddLandObject(ILandObject parcel)
         {
             IDirectoryServiceConnector DSC = Aurora.DataManager.DataManager.IDirectoryServiceConnector;
-            DSC.AddLandObject(parcel.LandData, m_scene.RegionInfo.RegionID, false, m_scene.RegionInfo.EstateSettings.EstateID, false);
+            uint x = (uint)parcel.LandData.UserLocation.X, y = (uint)parcel.LandData.UserLocation.Y;
+            findPointInParcel(parcel, ref x, ref y); // find a suitable spot
+            UUID InfoUUID = Util.BuildFakeParcelID(parcel.RegionHandle, x, y);
+            DSC.AddLandObject(parcel.LandData, m_scene.RegionInfo.RegionID, (((ParcelFlags)parcel.LandData.Flags & ParcelFlags.ForSale) != 0), m_scene.RegionInfo.EstateSettings.EstateID, (((ParcelFlags)parcel.LandData.Flags & ParcelFlags.ShowDirectory) != 0), InfoUUID);
+        }
+
+        // this is needed for non-convex parcels (example: rectangular parcel, and in the exact center
+        // another, smaller rectangular parcel). Both will have the same initial coordinates.
+        private void findPointInParcel(ILandObject land, ref uint refX, ref uint refY)
+        {
+            // the point we started with already is in the parcel
+            if (land.ContainsPoint((int)refX, (int)refY)) return;
+
+            // ... otherwise, we have to search for a point within the parcel
+            uint startX = (uint)land.LandData.AABBMin.X;
+            uint startY = (uint)land.LandData.AABBMin.Y;
+            uint endX = (uint)land.LandData.AABBMax.X;
+            uint endY = (uint)land.LandData.AABBMax.Y;
+
+            // default: center of the parcel
+            refX = (startX + endX) / 2;
+            refY = (startY + endY) / 2;
+            // If the center point is within the parcel, take that one
+            if (land.ContainsPoint((int)refX, (int)refY)) return;
+
+            // otherwise, go the long way.
+            for (uint y = startY; y <= endY; ++y)
+            {
+                for (uint x = startX; x <= endX; ++x)
+                {
+                    if (land.ContainsPoint((int)x, (int)y))
+                    {
+                        // found a point
+                        refX = x;
+                        refY = y;
+                        return;
+                    }
+                }
+            }
         }
 
         public void PostInitialise()

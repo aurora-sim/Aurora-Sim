@@ -65,10 +65,6 @@ namespace Aurora.Modules
         protected IFriendsService m_FriendsService = null;
         protected IGroupsModule GroupsModule = null;
         protected IDirectoryServiceConnector DSC = null;
-        private System.Timers.Timer aTimer = null;
-        protected double parserTime = 3600000;
-        private IDataSnapshot DataSnapShotManager;
-        public bool TimerStarted = false;
 
         #endregion
 
@@ -96,7 +92,6 @@ namespace Aurora.Modules
                 m_FriendsService = ServerUtils.LoadPlugin<IFriendsService>(connector, args);
 
             }
-            parserTime = searchConfig.GetDouble("ParserTime", 3600000);
             if (m_FriendsService == null)
             {
                 m_log.Error("[AuroraSearch]: No Connector defined in section Friends, or filed to load, cannot continue");
@@ -128,9 +123,6 @@ namespace Aurora.Modules
             GenericData = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
             DSC = Aurora.DataManager.DataManager.IDirectoryServiceConnector;
             GroupsModule = m_scene.RequestModuleInterface<IGroupsModule>();
-            DataSnapShotManager = m_scene.RequestModuleInterface<IDataSnapshot>();
-            if (m_SearchEnabled && DataSnapShotManager != null)
-                StartSearch(scene);
         }
 
         public Type ReplaceableInterface
@@ -208,6 +200,16 @@ namespace Aurora.Modules
 
         #region Search Module
 
+        /// <summary>
+        /// Parcel request
+        /// </summary>
+        /// <param name="remoteClient"></param>
+        /// <param name="queryID"></param>
+        /// <param name="queryText"></param>
+        /// <param name="queryFlags"></param>
+        /// <param name="category"></param>
+        /// <param name="simName"></param>
+        /// <param name="queryStart"></param>
         protected void DirPlacesQuery(IClientAPI remoteClient, UUID queryID,
                                       string queryText, int queryFlags, int category, string simName,
                                       int queryStart)
@@ -238,6 +240,16 @@ namespace Aurora.Modules
             /// </summary>
         }
 
+        /// <summary>
+        /// Land for sale request
+        /// </summary>
+        /// <param name="remoteClient"></param>
+        /// <param name="queryID"></param>
+        /// <param name="queryFlags"></param>
+        /// <param name="searchType"></param>
+        /// <param name="price"></param>
+        /// <param name="area"></param>
+        /// <param name="queryStart"></param>
         public void DirLandQuery(IClientAPI remoteClient, UUID queryID,
                                  uint queryFlags, uint searchType, int price, int area,
                                  int queryStart)
@@ -400,7 +412,6 @@ namespace Aurora.Modules
 
             List<mapItemReply> mapitems = new List<mapItemReply>();
             mapItemReply mapitem = new mapItemReply();
-            return;
             uint xstart = 0;
             uint ystart = 0;
             OpenMetaverse.Utils.LongToUInts(m_scene.RegionInfo.RegionHandle, out xstart, out ystart);
@@ -676,275 +687,6 @@ namespace Aurora.Modules
                 client.SendPlacesQuery(SimNames, Parcels, QueryID, client.AgentId, TransactionID, SimXs, SimYs, RegionInfos.ToArray());
             }
         }
-
-
-        private void StartSearch(Scene scene)
-        {
-            if (!TimerStarted)
-            {
-                aTimer = new System.Timers.Timer(parserTime);
-                aTimer.Elapsed += new System.Timers.ElapsedEventHandler(ParseRegions);
-                aTimer.Enabled = true;
-                aTimer.Start();
-                TimerStarted = true;
-            }
-            FireParser(scene, scene.RegionInfo.RegionName);
-        }
-
-        private void ParseRegions(object source, System.Timers.ElapsedEventArgs e)
-        {
-            foreach (Scene scene in m_Scenes)
-            {
-                FireParser(scene, scene.RegionInfo.RegionName);
-            }
-        }
-
-        #region XML Info Classes
-
-        private class RegionXMLInfo
-        {
-            public string UUID;
-            public string Name;
-            public string Handle;
-            public string URL;
-            public string UserName;
-            public string UserUUID;
-        }
-
-        private class ObjectXMLInfo
-        {
-            public string UUID;
-            public string RegionUUID;
-            public string ParcelUUID;
-            public string Title;
-            public string Desc;
-            public string Flags;
-        }
-
-        private class ParcelXMLInfo
-        {
-            public string Name;
-            public string UUID;
-            public string InfoUUID;
-            public string Landing;
-            public string Desc;
-            public string Area;
-            public string Category;
-            public string SalePrice;
-            public string Dwell;
-            public string OwnerUUID;
-            public string GroupUUID;
-            public string ForSale;
-            public string Directory;
-            public string Build;
-            public string Script;
-            public string Public;
-        }
-
-        #endregion
-
-        #region Parser
-
-        private void FireParser(Scene currentScene, string regionName)
-        {
-            //m_log.Info("[SearchModule]: Starting Search for region " + regionName + ".");
-            XmlDocument doc = DataSnapShotManager.GetSnapshot(regionName);
-            if (doc == null)
-            {
-                m_log.Error("[SearchModule]: Null ref in the XMLDOC.");
-                return;
-            }
-            XmlNodeList rootL = doc.GetElementsByTagName("region");
-            RegionXMLInfo info = new RegionXMLInfo();
-            foreach (XmlNode rootNode in rootL)
-            {
-                foreach (XmlNode subRootNode in rootNode.ChildNodes)
-                {
-                    if (subRootNode.Name == "info")
-                    {
-                        foreach (XmlNode part in subRootNode.ChildNodes)
-                        {
-                            switch (part.Name)
-                            {
-                                case "uuid":
-                                    info.UUID = part.InnerText;
-                                    break;
-                                case "name":
-                                    info.Name = part.InnerText;
-                                    break;
-                                case "handle":
-                                    info.Handle = part.InnerText;
-                                    break;
-                                case "url":
-                                    info.URL = part.InnerText;
-                                    break;
-                            }
-                        }
-
-                        List<string> query = GenericData.Query("RID", info.UUID.ToString(), "searchregions", "*");
-                        if (query.Count != 0)
-                        {
-                            GenericData.Delete("searchregions", new string[] { "RID" }, new string[] { info.UUID.ToString() });
-                            GenericData.Delete("searchparcels", new string[] { "RID" }, new string[] { info.UUID.ToString() });
-                            GenericData.Delete("searchobjects", new string[] { "RID" }, new string[] { info.UUID.ToString() });
-                            GenericData.Delete("searchallparcels", new string[] { "RID" }, new string[] { info.UUID.ToString() });
-                            GenericData.Delete("searchparcelsales", new string[] { "RID" }, new string[] { info.UUID.ToString() });
-                        }
-                    }
-                }
-            }
-
-
-            foreach (XmlNode rootNode in rootL)
-            {
-                foreach (XmlNode subRootNode in rootNode.ChildNodes)
-                {
-                    if (subRootNode.Name == "data")
-                    {
-                        foreach (XmlNode part in subRootNode.ChildNodes)
-                        {
-                            if (part.Name == "estate")
-                            {
-                                foreach (XmlNode subpart in part.ChildNodes)
-                                {
-                                    foreach (XmlNode subsubpart in subpart.ChildNodes)
-                                    {
-                                        switch (subsubpart.Name)
-                                        {
-                                            case "uuid":
-                                                info.UserUUID = subsubpart.InnerText;
-                                                break;
-                                            case "name":
-                                                info.UserName = subsubpart.InnerText;
-                                                break;
-                                        }
-                                    }
-                                }
-                                GenericData.Insert("searchregions", new string[] { info.Name, info.UUID, info.Handle, info.URL, info.UserName, info.UserName });
-                            }
-                            if (part.Name == "objectdata")
-                            {
-                                foreach (XmlNode subsubpart in part.ChildNodes)
-                                {
-                                    ObjectXMLInfo OInfo = new ObjectXMLInfo();
-                                    foreach (XmlNode subpart in subsubpart.ChildNodes)
-                                    {
-                                        switch (subpart.Name)
-                                        {
-                                            case "uuid":
-                                                OInfo.UUID = subpart.InnerText;
-                                                break;
-                                            case "regionuuid":
-                                                OInfo.RegionUUID = subpart.InnerText;
-                                                break;
-                                            case "parceluuid":
-                                                OInfo.ParcelUUID = subpart.InnerText;
-                                                break;
-                                            case "title":
-                                                OInfo.Title = subpart.InnerText;
-                                                break;
-                                            case "description":
-                                                OInfo.Desc = subpart.InnerText;
-                                                break;
-                                            case "flags":
-                                                OInfo.Flags = subpart.InnerText;
-                                                break;
-                                        }
-                                    }
-                                    if (OInfo.UUID != null)
-                                        GenericData.Insert("searchobjects", new string[] { OInfo.UUID, OInfo.ParcelUUID, OInfo.Title, OInfo.Desc, OInfo.RegionUUID });
-                                }
-                            }
-                            if (part.Name == "parceldata")
-                            {
-                                foreach (XmlNode pppart in part.ChildNodes)
-                                {
-                                    ParcelXMLInfo PInfo = new ParcelXMLInfo();
-                                    if (pppart.Attributes != null)
-                                    {
-                                        foreach (XmlNode att in pppart.Attributes)
-                                        {
-                                            switch (att.Name)
-                                            {
-                                                case "build":
-                                                    PInfo.Build = att.InnerText;
-                                                    break;
-                                                case "category":
-                                                    PInfo.Category = att.InnerText;
-                                                    break;
-                                                case "showinsearch":
-                                                    PInfo.Directory = att.InnerText;
-                                                    break;
-                                                case "forsale":
-                                                    PInfo.ForSale = att.InnerText;
-                                                    break;
-                                                case "public":
-                                                    PInfo.Public = att.InnerText;
-                                                    break;
-                                                case "salesprice":
-                                                    PInfo.SalePrice = att.InnerText;
-                                                    break;
-                                                case "scripts":
-                                                    PInfo.Script = att.InnerText;
-                                                    break;
-                                            }
-                                        }
-                                    }
-                                    foreach (XmlNode ppart in pppart.ChildNodes)
-                                    {
-                                        switch (ppart.Name)
-                                        {
-                                            case "area":
-                                                PInfo.Area = ppart.InnerText;
-                                                break;
-                                            case "description":
-                                                PInfo.Desc = ppart.InnerText;
-                                                break;
-                                            case "dwell":
-                                                PInfo.Dwell = ppart.InnerText;
-                                                break;
-                                            case "groupuuid":
-                                                PInfo.GroupUUID = ppart.ChildNodes[0].InnerText;
-                                                break;
-                                            case "infouuid":
-                                                PInfo.InfoUUID = ppart.InnerText;
-                                                break;
-                                            case "location":
-                                                PInfo.Landing = ppart.InnerText;
-                                                break;
-                                            case "name":
-                                                PInfo.Name = ppart.InnerText;
-                                                break;
-                                            case "owner":
-                                                PInfo.OwnerUUID = ppart.ChildNodes.Item(0).InnerText;
-                                                break;
-                                            case "uuid":
-                                                PInfo.UUID = ppart.InnerText;
-                                                break;
-                                        }
-                                    }
-                                    if (PInfo.UUID == null)
-                                        continue;
-                                    if (PInfo.GroupUUID == null)
-                                        PInfo.GroupUUID = UUID.Zero.ToString();
-                                    GenericData.Insert("searchallparcels", new string[] { info.UUID, PInfo.Name, PInfo.OwnerUUID, PInfo.GroupUUID, PInfo.Landing, PInfo.UUID, PInfo.InfoUUID, PInfo.Area });
-                                    if (Convert.ToBoolean(PInfo.Directory))
-                                        GenericData.Insert("searchparcels", new string[] { info.UUID, PInfo.Name, PInfo.UUID, PInfo.Landing, PInfo.Desc, PInfo.Category, PInfo.Build, PInfo.Script, PInfo.Public, PInfo.Dwell, PInfo.InfoUUID, false.ToString(), false.ToString() });
-                                    SimMap map = m_scene.SimMapConnector.GetSimMap(currentScene.RegionInfo.RegionID, currentScene.RegionInfo.EstateSettings.EstateOwner)[0];
-                                    if (Convert.ToBoolean(PInfo.ForSale))
-                                    {
-                                        LandData LD = m_scene.LandChannel.GetLandObject(int.Parse(PInfo.Landing.Split(',')[0]),int.Parse(PInfo.Landing.Split(',')[1])).LandData;
-                                        
-                                        GenericData.Insert("searchparcelsales", new string[] { info.UUID, PInfo.Name, PInfo.UUID, PInfo.Area, PInfo.SalePrice, PInfo.Landing, PInfo.InfoUUID, PInfo.Dwell, currentScene.RegionInfo.EstateSettings.EstateID.ToString(), ((map.SimFlags & SimMapFlags.Hidden) == SimMapFlags.Hidden).ToString() });
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        #endregion
 
         #endregion
     }
