@@ -105,6 +105,18 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
     //            modification of user data, or allows the compromise of
     //            sensitive data by design.
 
+    class FunctionPerms
+    {
+        public List<UUID> AllowedCreators;
+        public List<UUID> AllowedOwners;
+
+        public FunctionPerms()
+        {
+            AllowedCreators = new List<UUID>();
+            AllowedOwners = new List<UUID>();
+        }
+    }
+
     [Serializable]
     public class OSSL_Api : MarshalByRefObject, IOSSL_Api, IScriptApi
     {
@@ -118,7 +130,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         internal float m_ScriptDelayFactor = 1.0f;
         internal float m_ScriptDistanceFactor = 1.0f;
         internal IScriptProtectionModule ScriptProtection;
-        
+        internal Dictionary<string, FunctionPerms > m_FunctionPerms = new Dictionary<string, FunctionPerms >();
+
         public void Initialize(IScriptEngine ScriptEngine, SceneObjectPart host, uint localID, UUID itemID, IScriptProtectionModule module)
         {
             m_ScriptEngine = ScriptEngine;
@@ -182,6 +195,120 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
             IWorldComm wComm = m_ScriptEngine.World.RequestModuleInterface<IWorldComm>();
             wComm.DeliverMessage(ChatTypeEnum.Shout, ScriptBaseClass.DEBUG_CHANNEL, m_host.Name, m_host.UUID, message);
+        }
+
+        public void CheckThreatLevel(ThreatLevel level, string function)
+        {
+            if (!m_OSFunctionsEnabled)
+                OSSLError(String.Format("{0} permission denied.  All OS functions are disabled.", function)); // throws
+
+            if (!m_FunctionPerms.ContainsKey(function))
+            {
+                FunctionPerms perms = new FunctionPerms();
+                m_FunctionPerms[function] = perms;
+
+                string ownerPerm = m_ScriptEngine.Config.GetString("Allow_" + function, "");
+                string creatorPerm = m_ScriptEngine.Config.GetString("Creators_" + function, "");
+                if (ownerPerm == "" && creatorPerm == "")
+                {
+                    // Default behavior
+                    perms.AllowedOwners = null;
+                    perms.AllowedCreators = null;
+                }
+                else
+                {
+                    bool allowed;
+
+                    if (bool.TryParse(ownerPerm, out allowed))
+                    {
+                        // Boolean given
+                        if (allowed)
+                        {
+                            // Allow globally
+                            perms.AllowedOwners.Add(UUID.Zero);
+                        }
+                    }
+                    else
+                    {
+                        string[] ids = ownerPerm.Split(new char[] {','});
+                        foreach (string id in ids)
+                        {
+                            string current = id.Trim();
+                            UUID uuid;
+
+                            if (UUID.TryParse(current, out uuid))
+                            {
+                                if (uuid != UUID.Zero)
+                                    perms.AllowedOwners.Add(uuid);
+                            }
+                        }
+
+                        ids = creatorPerm.Split(new char[] {','});
+                        foreach (string id in ids)
+                        {
+                            string current = id.Trim();
+                            UUID uuid;
+
+                            if (UUID.TryParse(current, out uuid))
+                            {
+                                if (uuid != UUID.Zero)
+                                    perms.AllowedCreators.Add(uuid);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // If the list is null, then the value was true / undefined
+            // Threat level governs permissions in this case
+            //
+            // If the list is non-null, then it is a list of UUIDs allowed
+            // to use that particular function. False causes an empty
+            // list and therefore means "no one"
+            //
+            // To allow use by anyone, the list contains UUID.Zero
+            //
+            if (m_FunctionPerms[function].AllowedOwners == null)
+            {
+                // Allow / disallow by threat level
+                if (level > m_MaxThreatLevel)
+                    OSSLError(
+                        String.Format(
+                            "{0} permission denied.  Allowed threat level is {1} but function threat level is {2}.",
+                            function, m_MaxThreatLevel, level));
+            }
+            else
+            {
+                if (!m_FunctionPerms[function].AllowedOwners.Contains(UUID.Zero))
+                {
+                    // Not anyone. Do detailed checks
+                    if (m_FunctionPerms[function].AllowedOwners.Contains(m_host.OwnerID))
+                    {
+                        // prim owner is in the list of allowed owners
+                        return;
+                    }
+
+                    TaskInventoryItem ti = m_host.Inventory.GetInventoryItem(m_itemID);
+                    if (ti == null)
+                    {
+                        OSSLError(
+                            String.Format("{0} permission error. Can't find script in prim inventory.",
+                            function));
+                    }
+                    if (!m_FunctionPerms[function].AllowedCreators.Contains(ti.CreatorID))
+                        OSSLError(
+                            String.Format("{0} permission denied. Script creator is not in the list of users allowed to execute this function and prim owner also has no permission.",
+                            function));
+                    if (ti.CreatorID != ti.OwnerID)
+                    {
+                        if ((ti.CurrentPermissions & (uint)PermissionMask.Modify) != 0)
+                            OSSLError(
+                                String.Format("{0} permission denied. Script permissions error.",
+                                function));
+
+                    }
+                }
+            }
         }
 
         protected void ScriptSleep(int delay)
@@ -2033,6 +2160,22 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                     presence.setHealthWithUpdate(health);
                 }
             }
+        }
+
+        public LSL_List osGetPrimitiveParams(LSL_Key prim, LSL_List rules)
+        {
+            CheckThreatLevel(ThreatLevel.High, "osGetPrimitiveParams");
+            m_host.AddScriptLPS(1);
+            
+            return m_LSL_Api.GetLinkPrimitiveParamsEx(prim, rules);
+        }
+
+        public void osSetPrimitiveParams(LSL_Key prim, LSL_List rules)
+        {
+            CheckThreatLevel(ThreatLevel.High, "osGetPrimitiveParams");
+            m_host.AddScriptLPS(1);
+            
+            m_LSL_Api.SetPrimitiveParamsEx(prim, rules);
         }
     }
 }

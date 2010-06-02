@@ -806,15 +806,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         #endregion
 
-        /// <summary>
-        /// Add the part to the queue of parts for which we need to send an update to the client
-        /// </summary>
-        /// <param name="part"></param>
-        public void QueuePartForUpdate(SceneObjectPart part)
-        {
-            m_sceneViewer.QueuePartForUpdate(part);
-        }
-
         public uint GenerateClientFlags(UUID ObjectID)
         {
             return m_scene.Permissions.GenerateClientFlags(m_uuid, ObjectID);
@@ -1701,8 +1692,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void StandUp()
         {
-            if (SitGround)
-                SitGround = false;
+            SitGround = false;
 
             if (m_parentID != 0)
             {

@@ -189,6 +189,20 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
         /// <param name="objectGroup"></param>
         /// <param name="remoteClient"> </param>
         public virtual UUID DeleteToInventory(DeRezAction action, UUID folderID,
+                List<SceneObjectGroup> objectGroups, IClientAPI remoteClient)
+        {
+            // HACK: This is only working for lists containing a single item!
+            // It's just a hack to make this WIP compile and run. Nothing
+            // currently calls this with multiple items.
+            UUID ret = UUID.Zero; 
+
+            foreach (SceneObjectGroup g in objectGroups)
+                ret = DeleteToInventory(action, folderID, g, remoteClient);
+
+            return ret;
+        }
+
+        public virtual UUID DeleteToInventory(DeRezAction action, UUID folderID,
                 SceneObjectGroup objectGroup, IClientAPI remoteClient)
         {
             UUID assetID = UUID.Zero;
@@ -503,8 +517,9 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                     }
                     if(RezSelected)
                         group.RootPart.AddFlag(PrimFlags.CreateSelected);
-                    // For attachments, we must make sure that only a single object update occurs after we've finished
-                    // all the necessary operations.
+                    // If we're rezzing an attachment then don't ask AddNewSceneObject() to update the client since
+                    // we'll be doing that later on.  Scheduling more than one full update during the attachment
+                    // process causes some clients to fail to display the attachment properly.
                     m_Scene.AddNewSceneObject(group, true, false);
 
                     //  m_log.InfoFormat("ray end point for inventory rezz is {0} {1} {2} ", RayEnd.X, RayEnd.Y, RayEnd.Z);

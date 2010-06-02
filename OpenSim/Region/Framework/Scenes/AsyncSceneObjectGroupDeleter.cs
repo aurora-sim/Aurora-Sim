@@ -40,7 +40,7 @@ namespace OpenSim.Region.Framework.Scenes
     {
         public DeRezAction action;
         public IClientAPI remoteClient;
-        public SceneObjectGroup objectGroup;
+        public List<SceneObjectGroup> objectGroup;
         public UUID folderID;
         public bool permissionToDelete;
     }
@@ -76,7 +76,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// Delete the given object from the scene
         /// </summary>
         public void DeleteToInventory(DeRezAction action, UUID folderID,
-                SceneObjectGroup objectGroup, IClientAPI remoteClient, 
+                List<SceneObjectGroup> objectGroup, IClientAPI remoteClient, 
                 bool permissionToDelete)
         {
             if (Enabled)
@@ -103,8 +103,11 @@ namespace OpenSim.Region.Framework.Scenes
             // has gone to inventory, it will reappear in the region again on restart instead of being lost.
             // This is not ideal since the object will still be available for manipulation when it should be, but it's
             // better than losing the object for now.
-            if (permissionToDelete)
-                objectGroup.DeleteGroup(false);
+            foreach (SceneObjectGroup group in objectGroup)
+            {
+                if (permissionToDelete)
+                    group.DeleteGroup(false);
+            }
         }
         
         private void InventoryRunDeleteTimer(object sender, ElapsedEventArgs e)
@@ -136,8 +139,11 @@ namespace OpenSim.Region.Framework.Scenes
                         try
                         {
                             IInventoryAccessModule invAccess = m_scene.RequestModuleInterface<IInventoryAccessModule>();
-                            if (x.permissionToDelete)
-                                m_scene.DeleteSceneObject(x.objectGroup, false);
+                            foreach (SceneObjectGroup group in x.objectGroup)
+                            {
+                                if (x.permissionToDelete)
+                                    m_scene.DeleteSceneObject(group, false);
+                            }
                             m_toinventoryDeletes.Enqueue(x);
                         }
                         catch (Exception e)

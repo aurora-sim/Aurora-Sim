@@ -389,7 +389,7 @@ namespace OpenSim.Region.Framework.Scenes
             // the prim into an agent inventory (Linden client reports that the "Object not found for drop" in its log
 
             _flags = 0;
-            _flags |= PrimFlags.CreateSelected;
+            CreateSelected = true;
 
             TrimPermissions();
             //m_undo = new UndoStack<UndoState>(ParentGroup.GetSceneMaxUndo());
@@ -419,6 +419,7 @@ namespace OpenSim.Region.Framework.Scenes
         private PrimFlags _flags = 0;
         private DateTime m_expires;
         private DateTime m_rezzed;
+        private bool m_createSelected = false;
 
         public UUID CreatorID 
         {
@@ -969,6 +970,13 @@ namespace OpenSim.Region.Framework.Scenes
             set { m_updateFlag = value; }
         }
 
+        [XmlIgnore]
+        public bool CreateSelected
+        {
+            get { return m_createSelected; }
+            set { m_createSelected = value; }
+        }
+
         #endregion
 
 //---------------
@@ -1280,10 +1288,13 @@ namespace OpenSim.Region.Framework.Scenes
         {
             m_parentGroup.Scene.ForEachScenePresence(delegate(ScenePresence avatar)
             {
-                avatar.SceneViewer.QueuePartForUpdate(this);
+                AddFullUpdateToAvatar(avatar);
             });
         }
 
+        /// <summary>
+        /// Tell the scene presence that it should send updates for this part to its client
+        /// </summary>        
         public void AddFullUpdateToAvatar(ScenePresence presence)
         {
             presence.SceneViewer.QueuePartForUpdate(this);
@@ -1304,7 +1315,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             m_parentGroup.Scene.ForEachScenePresence(delegate(ScenePresence avatar)
             {
-                avatar.SceneViewer.QueuePartForUpdate(this);
+                AddTerseUpdateToAvatar(avatar);
             });
         }
 
@@ -3481,7 +3492,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="alpha"></param>
         public void SetText(string text, Vector3 color, double alpha)
         {
-            Color = Color.FromArgb(0xff - (int) (alpha*0xff),
+            Color = Color.FromArgb((int) (alpha*0xff),
                                    (int) (color.X*0xff),
                                    (int) (color.Y*0xff),
                                    (int) (color.Z*0xff));

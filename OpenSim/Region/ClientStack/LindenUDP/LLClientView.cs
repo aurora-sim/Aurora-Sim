@@ -4652,11 +4652,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             if (recipientID == data.OwnerID)
             {
-                if ((data.Flags & PrimFlags.CreateSelected) != 0)
+                if (data.CreateSelected)
                 {
                     // Only send this flag once, then unset it
                     flags |= PrimFlags.CreateSelected;
-                    data.Flags &= ~PrimFlags.CreateSelected;
+                    data.CreateSelected = false;
                 }
             }
 
@@ -5013,14 +5013,15 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     arg.SessionID = x.SessionID;
                     arg.State = x.State;
                     UpdateAgent handlerAgentUpdate = OnAgentUpdate;
+                    UpdateAgent handlerPreAgentUpdate = OnPreAgentUpdate;
                     lastarg = arg; // save this set of arguments for nexttime
-                    if (handlerAgentUpdate != null)
-                    {
+                    if (handlerPreAgentUpdate != null)
                         OnPreAgentUpdate(this, arg);
+                    if (handlerAgentUpdate != null)
                         OnAgentUpdate(this, arg);
-                    }
 
                     handlerAgentUpdate = null;
+                    handlerPreAgentUpdate = null;
                 }
             }
 

@@ -3686,7 +3686,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             }
 
             parentPrim.TriggerScriptChangedEvent(Changed.LINK);
-            parentPrim.RootPart.AddFlag(PrimFlags.CreateSelected);
+            parentPrim.RootPart.CreateSelected = true;
             parentPrim.HasGroupChanged = true;
             parentPrim.ScheduleGroupForFullUpdate();
 
@@ -10037,6 +10037,30 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
             ScriptSleep(100);
             return tid.ToString();
+        }
+
+        public void SetPrimitiveParamsEx(LSL_Key prim, LSL_List rules)
+        {
+            SceneObjectPart obj = World.GetSceneObjectPart(new UUID(prim));
+            if (obj == null)
+                return;
+
+            if (obj.OwnerID != m_host.OwnerID)
+                return;
+
+            SetPrimParams(obj, rules);
+        }
+
+        public LSL_List GetLinkPrimitiveParamsEx(LSL_Key prim, LSL_List rules)
+        {
+            SceneObjectPart obj = World.GetSceneObjectPart(new UUID(prim));
+            if (obj == null)
+                return new LSL_List();
+
+            if (obj.OwnerID != m_host.OwnerID)
+                return new LSL_List();
+
+            return GetLinkPrimitiveParams(obj, rules);
         }
     }
 
