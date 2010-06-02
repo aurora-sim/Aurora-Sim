@@ -284,6 +284,7 @@ namespace OpenSim.Framework
 
         public EstateSettings(Dictionary<string,object> values)
         {
+            EstateID = uint.Parse(values["EstateID"].ToString());
             EstateName = values["EstateName"].ToString();
             AbuseEmailToEstateOwner = bool.Parse(values["AbuseEmailToEstateOwner"].ToString());
             DenyAnonymous = bool.Parse(values["DenyAnonymous"].ToString());
@@ -345,6 +346,7 @@ namespace OpenSim.Framework
         public Dictionary<string,object> ToKeyValuePairs()
         {
             Dictionary<string, object> values = new Dictionary<string, object>();
+            values["EstateID"] = EstateID;
             values["EstateName"] = EstateName;
             values["AbuseEmailToEstateOwner"] = AbuseEmailToEstateOwner;
             values["DenyAnonymous"] = DenyAnonymous;

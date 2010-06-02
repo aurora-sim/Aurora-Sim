@@ -51,9 +51,6 @@ namespace Aurora.Services.DataService
 
                     if (replyData != null)
                     {
-                        if (!replyData.ContainsKey("result"))
-                            return new EstateSettings();
-
                         EstateSettings ES = new EstateSettings(replyData);
                         return ES;
                     }

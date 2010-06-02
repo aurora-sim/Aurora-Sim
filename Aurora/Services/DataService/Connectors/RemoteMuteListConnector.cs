@@ -36,7 +36,7 @@ namespace Aurora.Services.DataService
         {
             Dictionary<string, object> sendData = new Dictionary<string,object>();
 
-            sendData["PrincipalID"] = PrincipalID.ToString();
+            sendData["PRINCIPALID"] = PrincipalID.ToString();
             sendData["METHOD"] = "getmutelist";
 
             string reqString = ServerUtils.BuildQueryString(sendData);
@@ -74,7 +74,7 @@ namespace Aurora.Services.DataService
         {
             Dictionary<string, object> sendData = mute.ToKeyValuePairs();
 
-            sendData["PrincipalID"] = PrincipalID.ToString();
+            sendData["PRINCIPALID"] = PrincipalID.ToString();
             sendData["METHOD"] = "updatemute";
 
             string reqString = ServerUtils.BuildQueryString(sendData);

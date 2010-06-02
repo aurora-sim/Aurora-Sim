@@ -36,7 +36,7 @@ namespace Aurora.Services.DataService
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
 
-            sendData["PrincipalID"] = PrincipalID;
+            sendData["PRINCIPALID"] = PrincipalID;
             sendData["METHOD"] = "getofflinemessages";
 
             string reqString = ServerUtils.BuildQueryString(sendData);
