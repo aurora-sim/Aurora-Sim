@@ -73,5 +73,23 @@ namespace Aurora.Framework
         public bool ObscureMusic;
         public bool ShowInSearch;
         public UUID SnapshotID;
+        public UUID MediaTextureID;
+        public byte MediaAutoScale;
+        public string MediaURL;
+        public string MusicURL;
+        public byte[] Bitmap;
+        public ParcelCategory Category;
+        public int ClaimDate;
+        public int ClaimPrice;
+        public ParcelStatus Status;
+        public byte LandingType;
+        public Single PassHours;
+        public int PassPrice;
+        public float LookAtX;
+        public float LookAtY;
+        public float LookAtZ;
+        public int OtherCleanTime;
+        public UUID AuthBuyerID;
+        public List<ParcelManager.ParcelAccessEntry> AccessEntry;
     }
 }

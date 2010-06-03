@@ -461,6 +461,8 @@ namespace Aurora.DataManager.MSSQL
                     return "VARCHAR(1024)";
                 case ColumnTypes.String8196:
                     return "VARCHAR(8196)";
+                case ColumnTypes.Blob:
+                    return "image";
                 case ColumnTypes.Date:
                     return "DATE";
                 default:
@@ -559,6 +561,8 @@ namespace Aurora.DataManager.MSSQL
                     return ColumnTypes.Date;
                 case "varchar(8196)":
                     return ColumnTypes.String8196;
+                case "image":
+                    return ColumnTypes.Blob;
                 default:
                     throw new Exception("You've discovered some type in MySQL that's not reconized by Aurora, please place the correct conversion in ConvertTypeToColumnType.");
             }

@@ -154,8 +154,11 @@ namespace Aurora.Modules
             client.OnMuteListRequest += OnMuteListRequest;
             client.OnUpdateMuteListEntry += OnMuteListUpdate;
             client.OnRemoveMuteListEntry += OnMuteListRemove;
-            if(!m_blockChat)
-                m_authorizedSpeakers.Add(client.AgentId);
+            if (!m_blockChat)
+            {
+                if (!m_authorizedSpeakers.Contains(client.AgentId))
+                    m_authorizedSpeakers.Add(client.AgentId);
+            }
         }
 
         protected OSChatMessage FixPositionOfChatMessage(OSChatMessage c)

@@ -450,7 +450,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         protected IRegionDataStore m_dataStore;
 
-        public IRegionDataStore DataStore
+        protected IRegionDataStore DataStore
         {
             get { return m_dataStore; }
         }
@@ -648,17 +648,15 @@ namespace OpenSim.Region.Framework.Scenes
             m_regInfo.RegionSettings = DataStore.LoadRegionSettings(m_regInfo.RegionID);
             FindEstateInfo();
 
-            #endregion Region Settings
-
             MainConsole.Instance.Commands.AddCommand("region", false, "reload estate",
                                           "reload estate",
                                           "Reload the estate data", HandleReloadEstate);
 
             //Bind Storage Manager functions to some land manager functions for this scene
             EventManager.OnLandObjectAdded +=
-                new EventManager.LandObjectAdded(DataStore.StoreLandObject);
+                new EventManager.LandObjectAdded(Aurora.DataManager.DataManager.IParcelServiceConnector.StoreLandObject);
             EventManager.OnLandObjectRemoved +=
-                new EventManager.LandObjectRemoved(DataStore.RemoveLandObject);
+                new EventManager.LandObjectRemoved(Aurora.DataManager.DataManager.IParcelServiceConnector.RemoveLandObject);
 
             m_sceneGraph = new SceneGraph(this, m_regInfo);
 
@@ -900,6 +898,8 @@ namespace OpenSim.Region.Framework.Scenes
 
             m_lastUpdate = Util.EnvironmentTickCount();
         }
+
+        #endregion Constructors
 
         #region Startup / Close Methods
 
@@ -2589,7 +2589,7 @@ namespace OpenSim.Region.Framework.Scenes
         public void loadAllLandObjectsFromStorage(UUID regionID)
         {
             //m_log.Info("[SCENE]: Loading land objects from storage");
-            List<LandData> landData = DataStore.LoadLandObjects(regionID);
+            List<LandData> landData = Aurora.DataManager.DataManager.IParcelServiceConnector.LoadLandObjects(regionID);
 
             if (LandChannel != null)
             {

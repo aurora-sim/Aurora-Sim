@@ -96,19 +96,6 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <returns>Heightfield data</returns>
         double[,] LoadTerrain(UUID regionID);
 
-        void StoreLandObject(ILandObject Parcel);
-        
-        /// <summary>
-        /// <list type="bullet">
-        /// <item>delete from land where UUID=globalID</item>
-        /// <item>delete from landaccesslist where LandUUID=globalID</item>
-        /// </list>
-        /// </summary>
-        /// <param name="globalID"></param>
-        void RemoveLandObject(UUID globalID);
-        
-        List<LandData> LoadLandObjects(UUID regionUUID);
-
         void StoreRegionSettings(RegionSettings rs);
         RegionSettings LoadRegionSettings(UUID regionUUID);
         RegionLightShareData LoadRegionWindlightSettings(UUID regionUUID);

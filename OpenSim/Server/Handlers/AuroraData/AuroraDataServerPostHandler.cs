@@ -57,6 +57,12 @@ namespace OpenSim.Server.Handlers.AuroraData
                 request = ServerUtils.ParseQueryString(body);
                 if (request.Count == 1)
                     request = ServerUtils.ParseXmlResponse(body);
+                object value = null;
+                request.TryGetValue("<?xml version", out value);
+                if (value != null)
+                    request = ServerUtils.ParseXmlResponse(body);
+
+
 
                 if (!request.ContainsKey("METHOD"))
                     return FailureResult();

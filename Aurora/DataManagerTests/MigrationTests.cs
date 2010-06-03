@@ -35,6 +35,7 @@ namespace Aurora.DataManager.Tests
                     ColDef("test_string512", ColumnTypes.String512),
                     ColDef("test_string1024", ColumnTypes.String1024),
                     ColDef("test_string8196", ColumnTypes.String8196),
+                    ColDef("test_blob", ColumnTypes.Blob),
                     ColDef("test_date", ColumnTypes.Date)
                     ));
             }

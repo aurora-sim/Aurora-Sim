@@ -9,9 +9,10 @@ namespace Aurora.Framework
 {
     public interface IParcelServiceConnector
     {
-        void AddLandObject(LandData args, UUID regionID, bool forSale, uint EstateID, bool showInSearch, UUID InfoUUID);
-        AuroraLandData GetLandData(UUID ParcelID);
-        LandData GetLandObject(LandData LD);
+        void StoreLandObject(LandData args);
+        LandData GetLandData(UUID ParcelID);
+        List<LandData> LoadLandObjects(UUID regionUUID);
+        void RemoveLandObject(UUID ParcelID);
     }
 
 	public interface IDirectoryServiceConnector

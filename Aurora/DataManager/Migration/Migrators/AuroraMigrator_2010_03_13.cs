@@ -300,7 +300,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("draw_classic_clouds", ColumnTypes.String50)
                ));
 
-            AddSchema("landinfo", ColDefs(ColDef("RegionID", ColumnTypes.String50),
+            AddSchema("landinfo", ColDefs(
                 ColDef("ParcelID", ColumnTypes.String50, true),
                 ColDef("LocalID", ColumnTypes.String50),
                 ColDef("LandingX", ColumnTypes.String50),
@@ -311,11 +311,9 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("Flags", ColumnTypes.String50),
                 ColDef("Dwell", ColumnTypes.String50),
                 ColDef("InfoUUID", ColumnTypes.String50),
-                ColDef("ForSale", ColumnTypes.String50),
                 ColDef("SalePrice", ColumnTypes.String50),
                 ColDef("Auction", ColumnTypes.String50),
                 ColDef("Area", ColumnTypes.String50),
-                ColDef("EstateID", ColumnTypes.String50),
                 ColDef("Maturity", ColumnTypes.String50),
                 ColDef("OwnerID", ColumnTypes.String50),
                 ColDef("GroupID", ColumnTypes.String50),
@@ -326,8 +324,29 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("MediaType", ColumnTypes.String50),
                 ColDef("ObscureMedia", ColumnTypes.String50),
                 ColDef("ObscureMusic", ColumnTypes.String50),
-                ColDef("ShowInSearch", ColumnTypes.String50),
-                ColDef("SnapshotID", ColumnTypes.String50)));
+                ColDef("SnapshotID", ColumnTypes.String50),
+                ColDef("MediaAutoScale", ColumnTypes.String50),
+                ColDef("MediaURL", ColumnTypes.String50),
+                ColDef("MusicURL", ColumnTypes.String50),
+                ColDef("Bitmap", ColumnTypes.Blob),
+                ColDef("Category", ColumnTypes.String50),
+                ColDef("ClaimDate", ColumnTypes.String50),
+                ColDef("ClaimPrice", ColumnTypes.String50),
+                ColDef("Status", ColumnTypes.String50),
+                ColDef("LandingType", ColumnTypes.String50),
+                ColDef("PassHours", ColumnTypes.String50),
+                ColDef("PassPrice", ColumnTypes.String50),
+                ColDef("UserLookAtX", ColumnTypes.String50),
+                ColDef("UserLookAtY", ColumnTypes.String50),
+                ColDef("UserLookAtZ", ColumnTypes.String50),
+                ColDef("AuthBuyerID", ColumnTypes.String50),
+                ColDef("OtherCleanTime", ColumnTypes.String50)));
+
+            AddSchema("parcelAccess", ColDefs(
+                ColDef("ParcelID", ColumnTypes.String50, true),
+                ColDef("AccessID", ColumnTypes.String50),
+                ColDef("Flags", ColumnTypes.String50),
+                ColDef("Time", ColumnTypes.String50)));
 
             AddSchema("searchparcel", ColDefs(ColDef("RegionID", ColumnTypes.String50),
                 ColDef("ParcelID", ColumnTypes.String50, true),

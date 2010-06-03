@@ -124,6 +124,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             m_scene.EventManager.OnRequestParcelPrimCountUpdate += EventManagerOnRequestParcelPrimCountUpdate;
             m_scene.EventManager.OnParcelPrimCountTainted += EventManagerOnParcelPrimCountTainted;
             m_scene.EventManager.OnRegisterCaps += EventManagerOnRegisterCaps;
+            m_scene.EventManager.OnLandObjectAdded += AddLandObject;
 
             lock (m_scene)
             {
@@ -137,6 +138,52 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         public void RemoveRegion(Scene scene)
         {
+        }
+
+        public void AddLandObject(LandData parcel)
+        {
+            IDirectoryServiceConnector DSC = Aurora.DataManager.DataManager.IDirectoryServiceConnector;
+            ILandObject land = GetLandObject(parcel.LocalID);
+            uint x = (uint)parcel.UserLocation.X, y = (uint)parcel.UserLocation.Y;
+            findPointInParcel(land, ref x, ref y); // find a suitable spot
+            UUID InfoUUID = Util.BuildFakeParcelID(land.RegionHandle, x, y);
+            //Update search database
+            DSC.AddLandObject(parcel, m_scene.RegionInfo.RegionID, (((ParcelFlags)parcel.Flags & ParcelFlags.ForSale) != 0), m_scene.RegionInfo.EstateSettings.EstateID, (((ParcelFlags)parcel.Flags & ParcelFlags.ShowDirectory) != 0), InfoUUID);
+        }
+
+        // this is needed for non-convex parcels (example: rectangular parcel, and in the exact center
+        // another, smaller rectangular parcel). Both will have the same initial coordinates.
+        private void findPointInParcel(ILandObject land, ref uint refX, ref uint refY)
+        {
+            // the point we started with already is in the parcel
+            if (land.ContainsPoint((int)refX, (int)refY)) return;
+
+            // ... otherwise, we have to search for a point within the parcel
+            uint startX = (uint)land.LandData.AABBMin.X;
+            uint startY = (uint)land.LandData.AABBMin.Y;
+            uint endX = (uint)land.LandData.AABBMax.X;
+            uint endY = (uint)land.LandData.AABBMax.Y;
+
+            // default: center of the parcel
+            refX = (startX + endX) / 2;
+            refY = (startY + endY) / 2;
+            // If the center point is within the parcel, take that one
+            if (land.ContainsPoint((int)refX, (int)refY)) return;
+
+            // otherwise, go the long way.
+            for (uint y = startY; y <= endY; ++y)
+            {
+                for (uint x = startX; x <= endX; ++x)
+                {
+                    if (land.ContainsPoint((int)x, (int)y))
+                    {
+                        // found a point
+                        refX = x;
+                        refY = y;
+                        return;
+                    }
+                }
+            }
         }
 
         private bool OnVerifyUserConnection(ScenePresence scenePresence, out string reason)
@@ -245,7 +292,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                 if (m_landList.ContainsKey(local_id))
                 {
                     m_landList[local_id].LandData = newData;
-                    m_scene.EventManager.TriggerLandObjectUpdated((uint)local_id, m_landList[local_id]);
+                    m_scene.EventManager.TriggerLandObjectAdded(m_landList[local_id].LandData);
                 }
             }
         }
@@ -577,7 +624,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                 m_landList.Add(newLandLocalID, new_land);
             }
             new_land.ForceUpdateLandInfo();
-            m_scene.EventManager.TriggerLandObjectAdded(new_land);
+            m_scene.EventManager.TriggerLandObjectAdded(new_land.LandData);
             return new_land;
         }
 

@@ -448,6 +448,8 @@ namespace Aurora.DataManager.SQLite
                     return "VARCHAR(1024)";
                 case ColumnTypes.String8196:
                     return "VARCHAR(8196)";
+                case ColumnTypes.Blob:
+                    return "blob";
                 case ColumnTypes.Date:
                     return "DATE";
                 default:
@@ -505,6 +507,8 @@ namespace Aurora.DataManager.SQLite
                     return ColumnTypes.Date;
                 case "varchar(8196)":
                     return ColumnTypes.String8196;
+                case "blob":
+                    return ColumnTypes.Blob;
                 default:
                     throw new Exception("You've discovered some type in SQLite that's not reconized by Aurora, please place the correct conversion in ConvertTypeToColumnType.");
             }

@@ -200,6 +200,22 @@ namespace OpenSim.Framework
             }
         }
 
+        protected UUID _infoUUID;
+        /// <summary>
+        /// Grid Wide ID for the parcel.
+        /// </summary>
+        public UUID InfoUUID
+        {
+            get
+            {
+                return _infoUUID;
+            }
+            set
+            {
+                _infoUUID = value;
+            }
+        }
+
         /// <summary>
         /// Unique ID of the Group that owns
         /// </summary>
@@ -386,7 +402,7 @@ namespace OpenSim.Framework
         /// <summary>
         /// Parcel Media Description
         /// </summary>
-        public string MediaDesc
+        public string MediaDescription
         {
             get
             {

@@ -153,7 +153,7 @@ namespace OpenSim.Region.Framework.Scenes
         public delegate bool SceneGroupSpun(UUID groupID, Quaternion rotation);
         public event SceneGroupSpun OnSceneGroupSpin;
 
-        public delegate void LandObjectAdded(ILandObject newParcel);
+        public delegate void LandObjectAdded(LandData newParcel);
         public event LandObjectAdded OnLandObjectAdded;
 
         public delegate void LandObjectRemoved(UUID globalID);
@@ -1092,7 +1092,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void TriggerLandObjectAdded(ILandObject newParcel)
+        public void TriggerLandObjectAdded(LandData newParcel)
         {
             LandObjectAdded handlerLandObjectAdded = OnLandObjectAdded;
             if (handlerLandObjectAdded != null)
@@ -1132,11 +1132,6 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
             }
-        }
-
-        public void TriggerLandObjectUpdated(uint localParcelID, ILandObject newParcel)
-        {
-            TriggerLandObjectAdded(newParcel);
         }
 
         public void TriggerAvatarEnteringNewParcel(ScenePresence avatar, int localLandID, UUID regionID)

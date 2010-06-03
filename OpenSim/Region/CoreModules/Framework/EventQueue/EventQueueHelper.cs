@@ -403,7 +403,7 @@ namespace OpenSim.Region.CoreModules.Framework.EventQueue
 
             OSDArray mediaData = new OSDArray();
             OSDMap mediaDataMap = new OSDMap();
-            mediaDataMap.Add("MediaDesc", OSD.FromString(data.MediaDesc));
+            mediaDataMap.Add("MediaDesc", OSD.FromString(data.MediaDescription));
             mediaDataMap.Add("MediaHeight", OSD.FromInteger(data.MediaSize[1]));
             mediaDataMap.Add("MediaLoop", OSD.FromInteger(data.MediaLoop));
             mediaDataMap.Add("MediaType", OSD.FromString(data.MediaType));
