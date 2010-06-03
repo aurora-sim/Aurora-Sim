@@ -12,6 +12,36 @@ namespace Aurora.Framework
         public float GlobalPosY;
         public string RegionType;
         public string RegionName;
+        public void ConvertFrom(AuroraLandData landData)
+        {
+            Area = landData.Area;
+            AuctionID = landData.AuctionID;
+            Description = landData.Description;
+            Dwell = landData.Dwell;
+            EstateID = landData.EstateID;
+            Flags = landData.Flags;
+            ForSale = landData.ForSale;
+            GroupID = landData.GroupID;
+            InfoUUID = landData.InfoUUID;
+            LandingX = landData.LandingX;
+            LandingY = landData.LandingY;
+            LandingZ = landData.LandingZ;
+            LocalID = landData.LocalID;
+            Maturity = landData.Maturity;
+            MediaDescription = landData.MediaDescription;
+            MediaLoop = landData.MediaLoop;
+            MediaSize = landData.MediaSize;
+            MediaType = landData.MediaType;
+            Name = landData.Name;
+            ObscureMedia = landData.ObscureMedia;
+            ObscureMusic = landData.ObscureMusic;
+            OwnerID = landData.OwnerID;
+            ParcelID = landData.ParcelID;
+            RegionID = landData.RegionID;
+            SalePrice = landData.SalePrice;
+            ShowInSearch = landData.ShowInSearch;
+            SnapshotID = landData.SnapshotID;
+        }
     }
 
     public class AuroraLandData

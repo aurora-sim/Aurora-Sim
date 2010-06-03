@@ -86,4 +86,11 @@ ALTER TABLE `regions` ADD COLUMN `Token` varchar(255) NOT NULL;
 
 COMMIT;
 
+:VERSION 8
+
+BEGIN;
+
+ALTER TABLE `regions` ADD COLUMN `regionType` varchar(100) NOT NULL DEFAULT ' ';
+
+COMMIT;
 

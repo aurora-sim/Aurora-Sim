@@ -728,7 +728,7 @@ namespace OpenSim.Region.CoreModules.Framework.EventQueue
             OSD item = EventQueueHelper.GroupMembership(groupUpdate);
             Enqueue(item, avatarID);
         }
-        public void QueryReply(PlacesReplyPacket groupUpdate, UUID avatarID, OpenSim.Framework.RegionInfo[] info)
+        public void QueryReply(PlacesReplyPacket groupUpdate, UUID avatarID, string[] info)
         {
             OSD item = EventQueueHelper.PlacesQuery(groupUpdate, info);
             Enqueue(item, avatarID);

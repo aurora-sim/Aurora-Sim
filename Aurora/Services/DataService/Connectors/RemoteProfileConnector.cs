@@ -64,9 +64,6 @@ namespace Aurora.Services.DataService
                             {
                                 classified = new Classified((Dictionary<string, object>)f);
                             }
-                            else
-                                m_log.DebugFormat("[AuroraRemoteProfileConnector]: GetClassified {0} received invalid response type {1}",
-                                    classifiedID, f.GetType());
                         }
                         // Success
                         return classified;
@@ -408,7 +405,7 @@ namespace Aurora.Services.DataService
 
             sendData["METHOD"] = "addclassified";
 
-            string reqString = ServerUtils.BuildXmlResponse(sendData);
+            string reqString = ServerUtils.BuildQueryString(sendData);
 
             try
             {
@@ -451,7 +448,7 @@ namespace Aurora.Services.DataService
 
             sendData["METHOD"] = "deleteclassified";
 
-            string reqString = ServerUtils.BuildXmlResponse(sendData);
+            string reqString = ServerUtils.BuildQueryString(sendData);
 
             try
             {
@@ -491,7 +488,7 @@ namespace Aurora.Services.DataService
 
             sendData["METHOD"] = "addpick";
 
-            string reqString = ServerUtils.BuildXmlResponse(sendData);
+            string reqString = ServerUtils.BuildQueryString(sendData);
 
             try
             {
@@ -531,7 +528,7 @@ namespace Aurora.Services.DataService
 
             sendData["METHOD"] = "updatepick";
 
-            string reqString = ServerUtils.BuildXmlResponse(sendData);
+            string reqString = ServerUtils.BuildQueryString(sendData);
 
             try
             {
@@ -574,7 +571,7 @@ namespace Aurora.Services.DataService
 
             sendData["METHOD"] = "deletepick";
 
-            string reqString = ServerUtils.BuildXmlResponse(sendData);
+            string reqString = ServerUtils.BuildQueryString(sendData);
 
             try
             {

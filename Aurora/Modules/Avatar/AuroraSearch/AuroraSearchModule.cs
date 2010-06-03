@@ -217,7 +217,15 @@ namespace Aurora.Modules
             DirPlacesReplyData[] ReturnValues = DSC.FindLand(queryText, category.ToString(), queryStart);
             if (ReturnValues.Length > 10)
             {
-                DirPlacesReplyData[] data = new DirPlacesReplyData[10];
+                DirPlacesReplyData[] data;
+                if (ReturnValues.Length < 10)
+                {
+                    data = new DirPlacesReplyData[ReturnValues.Length];
+                }
+                else
+                {
+                    data = new DirPlacesReplyData[10];
+                }
 
                 int i = 0;
                 foreach (DirPlacesReplyData d in ReturnValues)
@@ -270,8 +278,16 @@ namespace Aurora.Modules
             DirLandReplyData[] ReturnValues = DSC.FindLandForSale(searchType.ToString(), price.ToString(), area.ToString(), queryStart);
             if (ReturnValues.Length > 10)
             {
-                DirLandReplyData[] data = new DirLandReplyData[10];
-
+                DirLandReplyData[] data;
+                if (ReturnValues.Length < 10)
+                {
+                    data = new DirLandReplyData[ReturnValues.Length];
+                }
+                else
+                {
+                    data = new DirLandReplyData[10];
+                }
+                
                 int i = 0;
                 foreach (DirLandReplyData d in ReturnValues)
                 {
@@ -376,8 +392,16 @@ namespace Aurora.Modules
             }
             if (data.Length > 10)
             {
-                DirPeopleReplyData[] retvals = new DirPeopleReplyData[10];
-
+                DirPeopleReplyData[] retvals;
+                if (data.Length < 10)
+                {
+                    retvals = new DirPeopleReplyData[data.Length];
+                }
+                else
+                {
+                    retvals = new DirPeopleReplyData[10];
+                }
+                
                 i = 0;
                 foreach (DirPeopleReplyData d in data)
                 {
@@ -409,58 +433,87 @@ namespace Aurora.Modules
         {
             DirEventsReplyData[] ReturnValues = DSC.FindEvents(queryText, queryFlags.ToString(), queryStart);
 
-            DirEventsReplyData[] data = new DirEventsReplyData[10];
-            int i = 0;
-
-            foreach (DirEventsReplyData d in ReturnValues)
+            if (ReturnValues.Length != 0)
             {
-                data[i] = d;
-                i++;
-                if (i == 10)
+                DirEventsReplyData[] data;
+                if (ReturnValues.Length < 10)
                 {
-                    remoteClient.SendDirEventsReply(queryID, data);
-                    i = 0;
-                    if (data.Length - i < 10)
+                    data = new DirEventsReplyData[ReturnValues.Length];
+                }
+                else
+                {
+                    data = new DirEventsReplyData[10];
+                }
+                int i = 0;
+
+                foreach (DirEventsReplyData d in ReturnValues)
+                {
+                    data[i] = d;
+                    i++;
+                    if (i == 10)
                     {
-                        data = new DirEventsReplyData[data.Length - i];
-                    }
-                    else
-                    {
-                        data = new DirEventsReplyData[10];
+                        remoteClient.SendDirEventsReply(queryID, data);
+                        i = 0;
+                        if (data.Length - i < 10)
+                        {
+                            data = new DirEventsReplyData[data.Length - i];
+                        }
+                        else
+                        {
+                            data = new DirEventsReplyData[10];
+                        }
                     }
                 }
+                remoteClient.SendDirEventsReply(queryID, data);
             }
-            remoteClient.SendDirEventsReply(queryID, data);
+            else
+            {
+                remoteClient.SendDirEventsReply(queryID, ReturnValues);
+            }
         }
 
         public void DirClassifiedQuery(IClientAPI remoteClient, UUID queryID,
                                        string queryText, uint queryFlags, uint category,
                                        int queryStart)
         {
-            DirClassifiedReplyData[] ReplyData = DSC.FindClassifieds(queryText, category.ToString(), queryFlags.ToString(), queryStart);
-
-            DirClassifiedReplyData[] data = new DirClassifiedReplyData[10];
-            int i = 0;
-
-            foreach (DirClassifiedReplyData d in ReplyData)
+            DirClassifiedReplyData[] ReturnValues = DSC.FindClassifieds(queryText, category.ToString(), queryFlags.ToString(), queryStart);
+            if (ReturnValues.Length != 0)
             {
-                data[i] = d;
-                i++;
-                if (i == 10)
+                DirClassifiedReplyData[] data;
+                if (ReturnValues.Length < 10)
                 {
-                    remoteClient.SendDirClassifiedReply(queryID, data);
-                    i = 0;
-                    if (data.Length - i < 10)
+                    data = new DirClassifiedReplyData[ReturnValues.Length];
+                }
+                else
+                {
+                    data = new DirClassifiedReplyData[10];
+                }
+                int i = 0;
+
+                foreach (DirClassifiedReplyData d in ReturnValues)
+                {
+                    data[i] = d;
+                    i++;
+                    if (i == 10)
                     {
-                        data = new DirClassifiedReplyData[data.Length - i];
-                    }
-                    else
-                    {
-                        data = new DirClassifiedReplyData[10];
+                        remoteClient.SendDirClassifiedReply(queryID, data);
+                        i = 0;
+                        if (data.Length - i < 10)
+                        {
+                            data = new DirClassifiedReplyData[data.Length - i];
+                        }
+                        else
+                        {
+                            data = new DirClassifiedReplyData[10];
+                        }
                     }
                 }
+                remoteClient.SendDirClassifiedReply(queryID, data);
             }
-            remoteClient.SendDirClassifiedReply(queryID, data);
+            else
+            {
+                remoteClient.SendDirClassifiedReply(queryID, ReturnValues);
+            }
         }
 
         public void EventInfoRequest(IClientAPI remoteClient, uint queryEventID)
@@ -713,12 +766,14 @@ namespace Aurora.Modules
                 List<ExtendedAuroraLandData> parcels = new List<ExtendedAuroraLandData>();
                 foreach (AuroraLandData land in LandData)
                 {
-                    SimMap map = m_scene.SimMapConnector.GetSimMap(land.RegionID, client.AgentId)[0]; 
-                    ExtendedAuroraLandData parcel = (ExtendedAuroraLandData)land;
+                    SimMap map = m_scene.SimMapConnector.GetSimMap(land.RegionID, client.AgentId)[0];
+                    ExtendedAuroraLandData parcel = new ExtendedAuroraLandData();
+                    parcel.ConvertFrom(land);
                     parcel.RegionType = map.RegionType;
                     parcel.RegionName = map.RegionName;
                     parcel.GlobalPosX = map.RegionLocX + land.LandingX;
                     parcel.GlobalPosY = map.RegionLocY + land.LandingY;
+                    parcels.Add(parcel);
                 }
                 
                 client.SendPlacesQuery(parcels.ToArray(), QueryID, TransactionID);

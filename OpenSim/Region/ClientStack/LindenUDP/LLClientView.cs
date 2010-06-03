@@ -1550,8 +1550,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             PlacesReply.AgentData.AgentID = AgentId;
             PlacesReply.AgentData.QueryID = queryID;
             PlacesReply.TransactionData.TransactionID = transactionID;
-            
-            try
+            //Disabled for now... somethings wrong with the event queue sending
+            /*try
             {
                 IEventQueue eq = Scene.RequestModuleInterface<IEventQueue>();
                 if (eq != null)
@@ -1563,8 +1563,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             {
                 m_log.Error("Unable to send group membership data via eventqueue - exception: " + ex.ToString());
                 m_log.Warn("sending places query data via UDP");
-                OutPacket(PlacesReply, ThrottleOutPacketType.Task);
-            }
+                */OutPacket(PlacesReply, ThrottleOutPacketType.Task);/*
+            }*/
         }
 
         public void SendStartPingCheck(byte seq)

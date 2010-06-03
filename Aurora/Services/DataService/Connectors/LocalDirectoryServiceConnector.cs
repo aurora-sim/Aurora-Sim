@@ -280,7 +280,7 @@ namespace Aurora.Services.DataService
 		{
             List<DirPlacesReplyData> Data = new List<DirPlacesReplyData>();
             //Don't support category yet. //string whereClause = " PCategory = '" + category + "' and Description LIKE '%" + queryText + "%' OR Name LIKE '%" + queryText + "%' LIMIT " + StartQuery.ToString() + ",50 ";
-            string whereClause = " Description LIKE '%" + queryText + "%' OR Name LIKE '%" + queryText + "%' LIMIT " + StartQuery.ToString() + ",50 ";
+            string whereClause = " Description LIKE '%" + queryText + "%' OR Name LIKE '%" + queryText + "%' and ShowInSearch = 'True' LIMIT " + StartQuery.ToString() + ",50 ";
             List<string> retVal = GD.Query(whereClause, "searchparcel", "InfoUUID,Name,ForSale,Auction,Dwell");
             if (retVal.Count == 0)
                 return Data.ToArray();
@@ -314,9 +314,14 @@ namespace Aurora.Services.DataService
 
         public DirLandReplyData[] FindLandForSale(string searchType, string price, string area, int StartQuery)
 		{
+            //searchType
+            // 2 - Auction only
+            // 8 - For Sale - Mainland
+            // 16 - For Sale - Estate
+            // 4294967295 - All
 			List<DirLandReplyData> Data = new List<DirLandReplyData>();
             string whereClause = " SalePrice <= '" + price + "' and Area >= '" + area + "' LIMIT " + StartQuery.ToString() + ",50 ";
-            List<string> retVal = GD.Query(whereClause, "searchparcel", "InfoUUID,Name,Auction,SalePrice,Area");
+            List<string> retVal = GD.Query(whereClause, "searchparcel", "InfoUUID,Name,Auction,SalePrice,Area,Flags");
             
             if (retVal.Count == 0)
                 return Data.ToArray();
@@ -324,6 +329,7 @@ namespace Aurora.Services.DataService
 			int DataCount = 0;
 			DirLandReplyData replyData = new DirLandReplyData();
 			replyData.forSale = true;
+            bool AddToList = true;
 			for (int i = 0; i < retVal.Count; i++) 
             {
 				if (DataCount == 0)
@@ -335,12 +341,19 @@ namespace Aurora.Services.DataService
 				if (DataCount == 3)
 					replyData.salePrice = Convert.ToInt32(retVal[i]);
 				if (DataCount == 4)
-					replyData.actualArea = Convert.ToInt32(retVal[i]);
+                    replyData.actualArea = Convert.ToInt32(retVal[i]);
+                if (DataCount == 5)
+                {
+                    if ((Convert.ToInt32(retVal[i]) & (int)OpenMetaverse.ParcelFlags.ForSale) == 0)
+                        AddToList = false;
+                }
 				DataCount++;
-				if (DataCount == 5)
+				if (DataCount == 6)
                 {
 					DataCount = 0;
-					Data.Add(replyData);
+                    if(AddToList)
+					    Data.Add(replyData);
+                    AddToList = true;
 					replyData = new DirLandReplyData();
 					replyData.forSale = true;
 				}
