@@ -130,6 +130,13 @@ namespace OpenSim.Services.Interfaces
         }
         protected string m_regionName = String.Empty;
 
+        public string RegionType
+        {
+            get { return m_regionType; }
+            set { m_regionType = value; }
+        }
+        protected string m_regionType = String.Empty;
+
         protected string m_externalHostName;
 
         protected IPEndPoint m_internalEndPoint;
@@ -197,6 +204,7 @@ namespace OpenSim.Services.Interfaces
         public GridRegion(RegionInfo ConvertFrom)
         {
             m_regionName = ConvertFrom.RegionName;
+            m_regionType = ConvertFrom.RegionType;
             m_regionLocX = (int)(ConvertFrom.RegionLocX * Constants.RegionSize);
             m_regionLocY = (int)(ConvertFrom.RegionLocY * Constants.RegionSize);
             m_internalEndPoint = ConvertFrom.InternalEndPoint;
@@ -214,6 +222,7 @@ namespace OpenSim.Services.Interfaces
         public GridRegion(GridRegion ConvertFrom)
         {
             m_regionName = ConvertFrom.RegionName;
+            m_regionType = ConvertFrom.RegionType;
             m_regionLocX = ConvertFrom.RegionLocX;
             m_regionLocY = ConvertFrom.RegionLocY;
             m_internalEndPoint = ConvertFrom.InternalEndPoint;
@@ -302,6 +311,7 @@ namespace OpenSim.Services.Interfaces
             kvp["locX"] = RegionLocX.ToString();
             kvp["locY"] = RegionLocY.ToString();
             kvp["regionName"] = RegionName;
+            kvp["regionType"] = RegionType;
             kvp["serverIP"] = ExternalHostName; //ExternalEndPoint.Address.ToString();
             kvp["serverHttpPort"] = HttpPort.ToString();
             kvp["serverURI"] = ServerURI;
@@ -328,6 +338,9 @@ namespace OpenSim.Services.Interfaces
 
             if (kvp.ContainsKey("regionName"))
                 RegionName = (string)kvp["regionName"];
+
+            if (kvp.ContainsKey("regionType"))
+                RegionType = (string)kvp["regionType"];
 
             if (kvp.ContainsKey("serverIP"))
             {

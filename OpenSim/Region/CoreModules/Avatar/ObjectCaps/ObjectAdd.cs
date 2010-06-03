@@ -85,10 +85,10 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
 
         void EventManager_OnIncomingLandDataFromStorage(List<LandData> data)
         {
-            IDirectoryServiceConnector DSC = Aurora.DataManager.DataManager.IDirectoryServiceConnector;
+            IParcelServiceConnector PSC = Aurora.DataManager.DataManager.IParcelServiceConnector;
             for(int i = 0; i < data.Count; i++)
             {
-                LandData LD = DSC.GetLandObject(data[i]);
+                LandData LD = PSC.GetLandObject(data[i]);
                 if (LD != null)
                     data[i] = LD;
             }
@@ -97,10 +97,13 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
         public void AddLandObject(ILandObject parcel)
         {
             IDirectoryServiceConnector DSC = Aurora.DataManager.DataManager.IDirectoryServiceConnector;
+            IParcelServiceConnector PSC = Aurora.DataManager.DataManager.IParcelServiceConnector;
             uint x = (uint)parcel.LandData.UserLocation.X, y = (uint)parcel.LandData.UserLocation.Y;
             findPointInParcel(parcel, ref x, ref y); // find a suitable spot
             UUID InfoUUID = Util.BuildFakeParcelID(parcel.RegionHandle, x, y);
+            //Update search and parcel databases.
             DSC.AddLandObject(parcel.LandData, m_scene.RegionInfo.RegionID, (((ParcelFlags)parcel.LandData.Flags & ParcelFlags.ForSale) != 0), m_scene.RegionInfo.EstateSettings.EstateID, (((ParcelFlags)parcel.LandData.Flags & ParcelFlags.ShowDirectory) != 0), InfoUUID);
+            PSC.AddLandObject(parcel.LandData, m_scene.RegionInfo.RegionID, (((ParcelFlags)parcel.LandData.Flags & ParcelFlags.ForSale) != 0), m_scene.RegionInfo.EstateSettings.EstateID, (((ParcelFlags)parcel.LandData.Flags & ParcelFlags.ShowDirectory) != 0), InfoUUID);
         }
 
         // this is needed for non-convex parcels (example: rectangular parcel, and in the exact center

@@ -315,6 +315,7 @@ namespace Aurora.Framework
             map.RegionLocX = R.RegionLocX;
             map.RegionLocY = R.RegionLocY;
             map.RegionName = R.RegionName;
+            map.RegionType = "";
             map.RegionHandle = R.RegionHandle;
             //Since this is the first time we've seen it, we have to use this... even though it may be wrong.
             map.SimMapTextureID = R.TerrainImage;
@@ -337,6 +338,7 @@ namespace Aurora.Framework
             map.RegionLocX = regionX;
             map.RegionLocY = regionY;
             map.RegionName = "";
+            map.RegionType = "";
             map.SimMapTextureID = UUID.Zero;
             map.WaterHeight = 0;
             return map;

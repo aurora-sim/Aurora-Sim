@@ -215,22 +215,35 @@ namespace Aurora.Modules
                                       int queryStart)
         {
             DirPlacesReplyData[] ReturnValues = DSC.FindLand(queryText, category.ToString(), queryStart);
-
-            DirPlacesReplyData[] data = new DirPlacesReplyData[10];
-
-            int i = 0;
-            foreach (DirPlacesReplyData d in ReturnValues)
+            if (ReturnValues.Length > 10)
             {
-                data[i] = d;
-                i++;
-                if (i == 10)
+                DirPlacesReplyData[] data = new DirPlacesReplyData[10];
+
+                int i = 0;
+                foreach (DirPlacesReplyData d in ReturnValues)
                 {
-                    remoteClient.SendDirPlacesReply(queryID, data);
-                    i = 0;
-                    data = new DirPlacesReplyData[10];
+                    data[i] = d;
+                    i++;
+                    if (i == 10)
+                    {
+                        remoteClient.SendDirPlacesReply(queryID, data);
+                        i = 0;
+                        if (ReturnValues.Length - i < 10)
+                        {
+                            data = new DirPlacesReplyData[ReturnValues.Length - i];
+                        }
+                        else
+                        {
+                            data = new DirPlacesReplyData[10];
+                        }
+                    }
                 }
+                remoteClient.SendDirPlacesReply(queryID, data);
             }
-            remoteClient.SendDirPlacesReply(queryID, data);
+            else
+            {
+                remoteClient.SendDirPlacesReply(queryID, ReturnValues);
+            }
         }
 
         public void DirPopularQuery(IClientAPI remoteClient, UUID queryID, uint queryFlags)
@@ -255,22 +268,33 @@ namespace Aurora.Modules
                                  int queryStart)
         {
             DirLandReplyData[] ReturnValues = DSC.FindLandForSale(searchType.ToString(), price.ToString(), area.ToString(), queryStart);
-
-            DirLandReplyData[] data = new DirLandReplyData[10];
-
-            int i = 0;
-            foreach (DirLandReplyData d in ReturnValues)
+            if (ReturnValues.Length > 10)
             {
-                data[i] = d;
-                i++;
-                if (i == 10)
+                DirLandReplyData[] data = new DirLandReplyData[10];
+
+                int i = 0;
+                foreach (DirLandReplyData d in ReturnValues)
                 {
-                    remoteClient.SendDirLandReply(queryID, data);
-                    i = 0;
-                    data = new DirLandReplyData[10];
+                    data[i] = d;
+                    i++;
+                    if (i == 10)
+                    {
+                        remoteClient.SendDirLandReply(queryID, data);
+                        i = 0;
+                        if (ReturnValues.Length - i < 10)
+                        {
+                            data = new DirLandReplyData[ReturnValues.Length - i];
+                        }
+                        else
+                        {
+                            data = new DirLandReplyData[10];
+                        }
+                    }
                 }
+                remoteClient.SendDirLandReply(queryID, data);
             }
-            remoteClient.SendDirLandReply(queryID, data);
+            else
+                remoteClient.SendDirLandReply(queryID, ReturnValues);
         }
 
         public void DirFindQuery(IClientAPI remoteClient, UUID queryID,
@@ -350,8 +374,34 @@ namespace Aurora.Modules
                     i++;
                 }
             }
+            if (data.Length > 10)
+            {
+                DirPeopleReplyData[] retvals = new DirPeopleReplyData[10];
 
-            remoteClient.SendDirPeopleReply(queryID, data);
+                i = 0;
+                foreach (DirPeopleReplyData d in data)
+                {
+                    retvals[i] = d;
+                    i++;
+                    if (i == 10)
+                    {
+                        remoteClient.SendDirPeopleReply(queryID, retvals);
+                        i = 0;
+                        if (data.Length - i < 10)
+                        {
+                            retvals = new DirPeopleReplyData[data.Length - i];
+                        }
+                        else
+                        {
+                            retvals = new DirPeopleReplyData[10];
+                        }
+                    }
+                }
+                remoteClient.SendDirPeopleReply(queryID, retvals);
+            }
+            else
+                remoteClient.SendDirPeopleReply(queryID, data);
+            
         }
 
         public void DirEventsQuery(IClientAPI remoteClient, UUID queryID,
@@ -370,7 +420,14 @@ namespace Aurora.Modules
                 {
                     remoteClient.SendDirEventsReply(queryID, data);
                     i = 0;
-                    data = new DirEventsReplyData[10];
+                    if (data.Length - i < 10)
+                    {
+                        data = new DirEventsReplyData[data.Length - i];
+                    }
+                    else
+                    {
+                        data = new DirEventsReplyData[10];
+                    }
                 }
             }
             remoteClient.SendDirEventsReply(queryID, data);
@@ -393,7 +450,14 @@ namespace Aurora.Modules
                 {
                     remoteClient.SendDirClassifiedReply(queryID, data);
                     i = 0;
-                    data = new DirClassifiedReplyData[10];
+                    if (data.Length - i < 10)
+                    {
+                        data = new DirClassifiedReplyData[data.Length - i];
+                    }
+                    else
+                    {
+                        data = new DirClassifiedReplyData[10];
+                    }
                 }
             }
             remoteClient.SendDirClassifiedReply(queryID, data);
@@ -450,7 +514,7 @@ namespace Aurora.Modules
                 uint locY = 0;
                 foreach (DirLandReplyData landDir in Landdata)
                 {
-                    AuroraLandData landdata = DSC.GetLandData(landDir.parcelID);
+                    AuroraLandData landdata = DSC.GetParcelInfo(landDir.parcelID);
                     if (landdata.Maturity != 0)
                     {
                         continue;
@@ -489,7 +553,7 @@ namespace Aurora.Modules
                 uint locY = 0;
                 foreach (DirLandReplyData landDir in Landdata)
                 {
-                    AuroraLandData landdata = DSC.GetLandData(landDir.parcelID);
+                    AuroraLandData landdata = DSC.GetParcelInfo(landDir.parcelID);
                     if (landdata.Maturity == 0)
                     {
                         continue;
@@ -538,11 +602,12 @@ namespace Aurora.Modules
                         continue;
                     OpenSim.Services.Interfaces.GridRegion region = m_scene.GridService.GetRegionByName(UUID.Zero, RegionName);
                     mapitem = new mapItemReply();
-                    mapitem.x = (uint)(region.RegionLocX + globalPos.X);
-                    mapitem.y = (uint)(region.RegionLocY + globalPos.Y);
-                    mapitem.id = eventData.ownerID;
+                    mapitem.x = (uint)globalPos.X;
+                    mapitem.y = (uint)globalPos.Y;
+                    mapitem.id = UUID.Random();
                     mapitem.name = eventData.name;
-                    mapitem.Extra2 = (int)DirectoryManager.EventFlags.PG;
+                    mapitem.Extra = (int)eventdata.dateUTC;
+                    mapitem.Extra2 = (int)eventdata.eventID;//(int)DirectoryManager.EventFlags.PG;
                     mapitems.Add(mapitem);
                 }
                 if (mapitems.Count != 0)
@@ -566,11 +631,12 @@ namespace Aurora.Modules
                         continue;
                     OpenSim.Services.Interfaces.GridRegion region = m_scene.GridService.GetRegionByName(UUID.Zero, RegionName);
                     mapitem = new mapItemReply();
-                    mapitem.x = (uint)(region.RegionLocX + globalPos.X);
-                    mapitem.y = (uint)(region.RegionLocY + globalPos.Y);
-                    mapitem.id = eventData.ownerID;
+                    mapitem.x = (uint)globalPos.X;
+                    mapitem.y = (uint)globalPos.Y;
+                    mapitem.id = UUID.Random();
                     mapitem.name = eventData.name;
-                    mapitem.Extra2 = (int)DirectoryManager.EventFlags.Adult;
+                    mapitem.Extra = (int)eventdata.dateUTC;
+                    mapitem.Extra2 = (int)eventdata.eventID;//(int)DirectoryManager.EventFlags.PG;
                     mapitems.Add(mapitem);
                 }
                 if (mapitems.Count != 0)
@@ -593,11 +659,12 @@ namespace Aurora.Modules
                         continue;
                     OpenSim.Services.Interfaces.GridRegion region = m_scene.GridService.GetRegionByName(UUID.Zero, RegionName);
                     mapitem = new mapItemReply();
-                    mapitem.x = (uint)(region.RegionLocX + globalPos.X);
-                    mapitem.y = (uint)(region.RegionLocY + globalPos.Y);
-                    mapitem.id = eventData.ownerID;
+                    mapitem.x = (uint)globalPos.X;
+                    mapitem.y = (uint)globalPos.Y;
+                    mapitem.id = UUID.Random();
                     mapitem.name = eventData.name;
-                    mapitem.Extra2 = (int)DirectoryManager.EventFlags.Mature;
+                    mapitem.Extra = (int)eventdata.dateUTC;
+                    mapitem.Extra2 = (int)eventdata.eventID;//(int)DirectoryManager.EventFlags.PG;
                     mapitems.Add(mapitem);
                 }
                 if (mapitems.Count != 0)
@@ -642,49 +709,19 @@ namespace Aurora.Modules
         {
             if (QueryFlags == 64) //Agent Owned
             {
-                List<ILandObject> LandQueried = new List<ILandObject>();
-                List<string> SimNames = new List<string>();
-                List<string> SimXs = new List<string>();
-                List<string> SimYs = new List<string>();
-                List<OpenSim.Framework.RegionInfo> RegionInfos = new List<OpenSim.Framework.RegionInfo>();
-                List<object> Parcels = null;
-                foreach (Scene scene in m_Scenes)
+                AuroraLandData[] LandData = DSC.GetParcelByOwner(client.AgentId);
+                List<ExtendedAuroraLandData> parcels = new List<ExtendedAuroraLandData>();
+                foreach (AuroraLandData land in LandData)
                 {
-                    List<ILandObject> AllParcels = scene.LandChannel.AllParcels();
-                    foreach (ILandObject LandObject in AllParcels)
-                    {
-                        if (LandObject.LandData.OwnerID == client.AgentId)
-                        {
-                            SimNames.Add(scene.RegionInfo.RegionName);
-                            if (LandObject.LandData.UserLocation == Vector3.Zero)
-                            {
-                                for (int x = 0; x < 64; x++)
-                                {
-                                    for (int y = 0; y < 64; y++)
-                                    {
-                                        if (LandObject.LandBitmap[x, y])
-                                        {
-                                            SimXs.Add(((x * 4) + (scene.RegionInfo.RegionLocX * 256)).ToString());
-                                            SimYs.Add(((y * 4) + (scene.RegionInfo.RegionLocY * 256)).ToString());
-                                            RegionInfos.Add(scene.RegionInfo);
-                                            x = (int)Constants.RegionSize;
-                                            y = (int)Constants.RegionSize;
-                                            continue;
-                                        }
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                SimXs.Add(((LandObject.LandData.UserLocation.X) + (scene.RegionInfo.RegionLocX * 256)).ToString());
-                                SimYs.Add(((LandObject.LandData.UserLocation.Y) + (scene.RegionInfo.RegionLocY * 256)).ToString());
-                            }
-                            LandQueried.Add(LandObject);
-                        }
-                    }
+                    SimMap map = m_scene.SimMapConnector.GetSimMap(land.RegionID, client.AgentId)[0]; 
+                    ExtendedAuroraLandData parcel = (ExtendedAuroraLandData)land;
+                    parcel.RegionType = map.RegionType;
+                    parcel.RegionName = map.RegionName;
+                    parcel.GlobalPosX = map.RegionLocX + land.LandingX;
+                    parcel.GlobalPosY = map.RegionLocY + land.LandingY;
                 }
-                Parcels = new List<object>(LandQueried.ToArray());
-                client.SendPlacesQuery(SimNames, Parcels, QueryID, client.AgentId, TransactionID, SimXs, SimYs, RegionInfos.ToArray());
+                
+                client.SendPlacesQuery(parcels.ToArray(), QueryID, TransactionID);
             }
         }
 

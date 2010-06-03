@@ -455,7 +455,7 @@ namespace OpenSim.Region.CoreModules.Framework.EventQueue
             return groupUpdate;
         }
 
-        public static OSD PlacesQuery(PlacesReplyPacket PlacesReply, OpenSim.Framework.RegionInfo[] info)
+        public static OSD PlacesQuery(PlacesReplyPacket PlacesReply, string[] regionType)
         {
             OSDMap placesReply = new OSDMap();
             placesReply.Add("message", OSD.FromString("PlacesReplyMessage"));
@@ -486,7 +486,7 @@ namespace OpenSim.Region.CoreModules.Framework.EventQueue
                 QueryDataMap.Add("OwnerID", OSD.FromUUID(groupDataBlock.OwnerID));
                 QueryDataMap.Add("SimName", OSD.FromBinary(groupDataBlock.SimName));
                 QueryDataMap.Add("SnapShotID", OSD.FromUUID(groupDataBlock.SnapshotID));
-                QueryDataMap.Add("ProductSku", OSD.FromString(info[i].RegionType));
+                QueryDataMap.Add("ProductSku", OSD.FromString(regionType[i]));
                 QueryDataMap.Add("Price", OSD.FromInteger(groupDataBlock.Price));
                 
                 QueryData.Add(QueryDataMap);

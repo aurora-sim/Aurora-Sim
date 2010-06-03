@@ -375,42 +375,68 @@ namespace OpenSim.Framework
             int i = 0;
             foreach (EstateBan ban in EstateBans)
             {
-                Ban.Add(i.ToString(), ban.ToKeyValuePairs());
+                Ban[ConvertDecString(i)] = ban.ToKeyValuePairs();
                 i++;
             }
             values["EstateBans"] = Ban;
             i *= 0;
 
             Dictionary<string, object> Managers = new Dictionary<string, object>();
-            i = 0;
             foreach (UUID ID in EstateManagers)
             {
-                Managers.Add(i.ToString(), ID);
+                Managers[ConvertDecString(i)] = ID;
                 i++;
             }
             values["EstateManagers"] = Managers;
             i *= 0;
 
             Dictionary<string, object> Groups = new Dictionary<string, object>();
-            i = 0;
             foreach (UUID ID in EstateGroups)
             {
-                Groups.Add(i.ToString(), ID);
+                Groups[ConvertDecString(i)] = ID;
                 i++;
             }
             values["EstateGroups"] = Groups;
             i *= 0;
 
             Dictionary<string, object> Access = new Dictionary<string, object>();
-            i = 0;
             foreach (UUID ID in EstateAccess)
             {
-                Access.Add(i.ToString(), ID);
+                Access[ConvertDecString(i)] = ID;
                 i++;
             }
             values["EstateAccess"] = Access;
             i *= 0;
             return values;
+        }
+
+        // http://social.msdn.microsoft.com/forums/en-US/csharpgeneral/thread/68f7ca38-5cd1-411f-b8d4-e4f7a688bc03
+        // By: A Million Lemmings
+        public string ConvertDecString(int dvalue)
+        {
+
+            string CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+            string retVal = string.Empty;
+
+            double value = Convert.ToDouble(dvalue);
+
+            do
+            {
+
+                double remainder = value - (26 * Math.Truncate(value / 26));
+
+                retVal = retVal + CHARS.Substring((int)remainder, 1);
+
+                value = Math.Truncate(value / 26);
+
+            }
+            while (value > 0);
+
+
+
+            return retVal;
+
         }
 
         public void Save()

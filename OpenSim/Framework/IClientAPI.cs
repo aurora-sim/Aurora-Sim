@@ -501,7 +501,7 @@ namespace OpenSim.Framework
 
     #endregion
 
-    public struct DirPlacesReplyData
+    public class DirPlacesReplyData
     {
         public UUID parcelID;
         public string name;
@@ -509,6 +509,31 @@ namespace OpenSim.Framework
         public bool auction;
         public float dwell;
         public uint Status;
+        public Dictionary<string, object> ToKeyValuePairs()
+        {
+            Dictionary<string, object> KVP = new Dictionary<string, object>();
+            KVP["parcelID"] = parcelID;
+            KVP["name"] = name;
+            KVP["forSale"] = forSale;
+            KVP["auction"] = auction;
+            KVP["dwell"] = dwell;
+            KVP["Status"] = Status;
+            return KVP;
+        }
+
+        public DirPlacesReplyData()
+        {
+        }
+
+        public DirPlacesReplyData(Dictionary<string, object> KVP)
+        {
+            Status = uint.Parse(KVP["Status"].ToString());
+            dwell = float.Parse(KVP["dwell"].ToString());
+            auction = bool.Parse(KVP["auction"].ToString());
+            forSale = bool.Parse(KVP["forSale"].ToString());
+            name = KVP["name"].ToString();
+            parcelID = UUID.Parse(KVP["parcelID"].ToString());
+        }
     }
 
     public struct DirPeopleReplyData
@@ -521,7 +546,7 @@ namespace OpenSim.Framework
         public int reputation;
     }
 
-    public struct DirEventsReplyData
+    public class DirEventsReplyData
     {
         public UUID ownerID;
         public string name;
@@ -530,6 +555,33 @@ namespace OpenSim.Framework
         public uint unixTime;
         public uint eventFlags;
         public uint Status;
+        public Dictionary<string, object> ToKeyValuePairs()
+        {
+            Dictionary<string, object> KVP = new Dictionary<string, object>();
+            KVP["ownerID"] = ownerID;
+            KVP["name"] = name;
+            KVP["eventID"] = eventID;
+            KVP["date"] = date;
+            KVP["unixTime"] = unixTime;
+            KVP["eventFlags"] = eventFlags;
+            KVP["Status"] = Status;
+            return KVP;
+        }
+
+        public DirEventsReplyData()
+        {
+        }
+
+        public DirEventsReplyData(Dictionary<string, object> KVP)
+        {
+            Status = uint.Parse(KVP["Status"].ToString());
+            eventFlags = uint.Parse(KVP["eventFlags"].ToString());
+            unixTime = uint.Parse(KVP["unixTime"].ToString());
+            date = KVP["date"].ToString();
+            eventID = uint.Parse(KVP["eventID"].ToString());
+            name = KVP["name"].ToString();
+            ownerID = UUID.Parse(KVP["ownerID"].ToString());
+        }
     }
 
     public struct DirGroupsReplyData
@@ -540,7 +592,7 @@ namespace OpenSim.Framework
         public float searchOrder;
     }
 
-    public struct DirClassifiedReplyData
+    public class DirClassifiedReplyData
     {
         public UUID classifiedID;
         public string name;
@@ -549,9 +601,36 @@ namespace OpenSim.Framework
         public uint expirationDate;
         public int price;
         public uint Status;
+        public Dictionary<string, object> ToKeyValuePairs()
+        {
+            Dictionary<string, object> KVP = new Dictionary<string, object>();
+            KVP["classifiedID"] = classifiedID;
+            KVP["name"] = name;
+            KVP["classifiedFlags"] = classifiedFlags;
+            KVP["creationDate"] = creationDate;
+            KVP["expirationDate"] = expirationDate;
+            KVP["price"] = price;
+            KVP["Status"] = Status;
+            return KVP;
+        }
+
+        public DirClassifiedReplyData()
+        {
+        }
+
+        public DirClassifiedReplyData(Dictionary<string, object> KVP)
+        {
+            Status = uint.Parse(KVP["Status"].ToString());
+            price = int.Parse(KVP["price"].ToString());
+            expirationDate = uint.Parse(KVP["expirationDate"].ToString());
+            creationDate = uint.Parse(KVP["creationDate"].ToString());
+            classifiedFlags = byte.Parse(KVP["classifiedFlags"].ToString());
+            name = KVP["name"].ToString();
+            classifiedID = UUID.Parse(KVP["classifiedID"].ToString());
+        }
     }
 
-    public struct DirLandReplyData
+    public class DirLandReplyData
     {
         public UUID parcelID;
         public string name;
@@ -559,6 +638,31 @@ namespace OpenSim.Framework
         public bool forSale;
         public int salePrice;
         public int actualArea;
+        public Dictionary<string, object> ToKeyValuePairs()
+        {
+            Dictionary<string, object> KVP = new Dictionary<string, object>();
+            KVP["parcelID"] = parcelID;
+            KVP["name"] = name;
+            KVP["forSale"] = forSale;
+            KVP["auction"] = auction;
+            KVP["salePrice"] = salePrice;
+            KVP["actualArea"] = actualArea;
+            return KVP;
+        }
+
+        public DirLandReplyData()
+        {
+        }
+
+        public DirLandReplyData(Dictionary<string, object> KVP)
+        {
+            actualArea = int.Parse(KVP["actualArea"].ToString());
+            salePrice = int.Parse(KVP["salePrice"].ToString());
+            auction = bool.Parse(KVP["auction"].ToString());
+            forSale = bool.Parse(KVP["forSale"].ToString());
+            name = KVP["name"].ToString();
+            parcelID = UUID.Parse(KVP["parcelID"].ToString());
+        }
     }
 
     public struct DirPopularReplyData
@@ -1307,7 +1411,7 @@ namespace OpenSim.Framework
         
         void SendChangeUserRights(UUID agentID, UUID friendID, int rights);
         void SendTextBoxRequest(string message, int chatChannel, string objectname, string ownerFirstName, string ownerLastName, UUID objectId);
-        void SendPlacesQuery(List<string> simNames, List<object> Places, UUID queryID, UUID agentID, UUID transactionID, List<string> Xs, List<string> Ys, OpenSim.Framework.RegionInfo[] info);
+        void SendPlacesQuery(Aurora.Framework.ExtendedAuroraLandData[] LandData, UUID queryID, UUID transactionID);
         void FireUpdateParcel(LandUpdateArgs args, int LocalID);
 
         void SendTelehubInfo(Vector3 pos, Quaternion rot);

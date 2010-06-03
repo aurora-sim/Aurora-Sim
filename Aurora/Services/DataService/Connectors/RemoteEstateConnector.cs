@@ -34,6 +34,9 @@ namespace Aurora.Services.DataService
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
 
+            EstateSettings ES = new EstateSettings();
+            ES.OnSave += SaveEstateSettings;
+
             sendData["REGIONID"] = regionID.ToString();
             sendData["CREATE"] = create;
             sendData["METHOD"] = "loadestatesettings";
@@ -51,7 +54,8 @@ namespace Aurora.Services.DataService
 
                     if (replyData != null)
                     {
-                        EstateSettings ES = new EstateSettings(replyData);
+                        ES = new EstateSettings(replyData);
+                        ES.OnSave += SaveEstateSettings;
                         return ES;
                     }
 
@@ -66,13 +70,15 @@ namespace Aurora.Services.DataService
                 m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.Message);
             }
 
-            return new EstateSettings();
+            return ES;
         }
 
         public EstateSettings LoadEstateSettings(int estateID)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
-
+            EstateSettings ES = new EstateSettings();
+            ES.OnSave += SaveEstateSettings;
+            
             sendData["ESTATEID"] = estateID;
             sendData["METHOD"] = "loadestatesettings";
 
@@ -90,9 +96,10 @@ namespace Aurora.Services.DataService
                     if (replyData != null)
                     {
                         if (!replyData.ContainsKey("result"))
-                            return new EstateSettings();
+                            return ES;
 
-                        EstateSettings ES = new EstateSettings(replyData);
+                        ES = new EstateSettings(replyData);
+                        ES.OnSave += SaveEstateSettings;
                         return ES;
                     }
 
@@ -107,7 +114,7 @@ namespace Aurora.Services.DataService
                 m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.Message);
             }
 
-            return new EstateSettings();
+            return ES;
         }
 
         public bool StoreEstateSettings(EstateSettings es)
@@ -116,7 +123,7 @@ namespace Aurora.Services.DataService
 
             sendData["METHOD"] = "storeestatesettings";
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = ServerUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -155,7 +162,7 @@ namespace Aurora.Services.DataService
 
             sendData["METHOD"] = "storeestatesettings";
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = ServerUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -198,7 +205,8 @@ namespace Aurora.Services.DataService
                                 Dictionary<string, object> dictionary = obj as Dictionary<string, object>;
                                 foreach (object value in dictionary)
                                 {
-                                    Estates.Add(int.Parse(value.ToString()));
+                                    KeyValuePair<string, object> valuevalue = (KeyValuePair<string, object>)value;
+                                    Estates.Add(int.Parse(valuevalue.Value.ToString()));
                                 }
                             }
                         }
@@ -239,7 +247,7 @@ namespace Aurora.Services.DataService
 
                     if (replyData != null)
                     {
-                        if (!replyData.ContainsKey("result") || (replyData["result"].ToString().ToLower() == "null"))
+                        if (!replyData.ContainsKey("Result") || (replyData["Result"].ToString().ToLower() == "null"))
                             return false;
 
                         return true;

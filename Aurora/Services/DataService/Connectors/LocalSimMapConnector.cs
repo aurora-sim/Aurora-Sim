@@ -37,7 +37,8 @@ namespace Aurora.Services.DataService
             map.RegionName = retval[6];
             map.RegionFlags = uint.Parse(retval[7]);
             map.Access = uint.Parse(retval[8]);
-            map.SimFlags = (SimMapFlags)int.Parse(retval[9]); 
+            map.SimFlags = (SimMapFlags)int.Parse(retval[9]);
+            map.RegionType = retval[10];
 
             return map;
 		}
@@ -65,6 +66,7 @@ namespace Aurora.Services.DataService
             map.RegionFlags = uint.Parse(retval[7]);
             map.Access = uint.Parse(retval[8]);
             map.SimFlags = (SimMapFlags)int.Parse(retval[9]);
+            map.RegionType = retval[10];
 
             return map;
         }
@@ -92,6 +94,7 @@ namespace Aurora.Services.DataService
             map.RegionFlags = uint.Parse(retval[7]);
             map.Access = uint.Parse(retval[8]);
             map.SimFlags = (SimMapFlags)int.Parse(retval[9]);
+            map.RegionType = retval[10];
 
             return map;
         }
@@ -108,16 +111,16 @@ namespace Aurora.Services.DataService
                 GD.Insert("simmap", new object[]{map.RegionID, map.RegionHandle, map.EstateID,
                     map.RegionLocX, map.RegionLocY, map.SimMapTextureID,
                     map.RegionName, map.RegionFlags, map.Access,
-                    map.SimFlags});
+                    map.SimFlags, map.RegionType});
             }
             else
             {
                 GD.Update("simmap", new object[] { map.RegionHandle, map.EstateID,
                 map.RegionLocX, map.RegionLocY, map.SimMapTextureID,
                 map.RegionName, map.RegionFlags, map.Access,
-                map.SimFlags }, new string[] { "RegionHandle", "EstateID", "RegionLocX",
+                map.SimFlags, map.RegionType }, new string[] { "RegionHandle", "EstateID", "RegionLocX",
                 "RegionLocY", "SimMapTextureID", "RegionName",
-                "RegionFlags", "Access", "GridRegionFlags" },
+                "RegionFlags", "Access", "GridRegionFlags", "RegionType" },
                     new string[] { "RegionID" }, new object[] { map.RegionID });
             }
 		}

@@ -111,6 +111,7 @@ namespace Aurora.Services.DataService
             string OfflineMessagesConnector = m_ConnectorConfig.GetString("OfflineMessagesConnector", "LocalConnector");
             string DirectoryServiceConnector = m_ConnectorConfig.GetString("DirectoryServiceConnector", "LocalConnector");
             string MuteListConnector = m_ConnectorConfig.GetString("MuteListConnector", "LocalConnector");
+            string ParcelConnector = m_ConnectorConfig.GetString("ParcelConnector", "LocalConnector");
             string RemoteConnectionString = m_config.GetString("RemoteServerURI", "");
 
             //Always local connectors.
@@ -128,6 +129,8 @@ namespace Aurora.Services.DataService
                 DataManager.DataManager.IScriptDataConnector = new LocalScriptDataConnector(ScriptSaveDataConnector);
             if (RegionInfoConnector == "LocalConnector")
                 DataManager.DataManager.IRegionInfoConnector = new LocalRegionInfoConnector();
+            if (ParcelConnector == "LocalConnector")
+                DataManager.DataManager.IParcelServiceConnector = new LocalParcelServiceConnector();
             //End always local connectors.
 
             if (AgentConnector == "LocalConnector")

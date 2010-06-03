@@ -17,10 +17,9 @@ namespace Aurora.DataManager.Migration.Migrators
             #region Profile
 
             AddSchema("profilenotes", ColDefs(
-                ColDef("userid", ColumnTypes.String50),
-                ColDef("targetuuid", ColumnTypes.String50),
-                ColDef("notes", ColumnTypes.String512),
-                ColDef("noteUUID", ColumnTypes.String50, true)
+                ColDef("userid", ColumnTypes.String50, true),
+                ColDef("targetuuid", ColumnTypes.String50, true),
+                ColDef("notes", ColumnTypes.String512)
                 ));
 
             AddSchema("profilepicks", ColDefs(
@@ -109,7 +108,8 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("RegionName", ColumnTypes.String50),
                 ColDef("RegionFlags", ColumnTypes.String50),
                 ColDef("Access", ColumnTypes.String50),
-                ColDef("GridRegionFlags", ColumnTypes.String50)
+                ColDef("GridRegionFlags", ColumnTypes.String50),
+                ColDef("RegionType", ColumnTypes.String50) 
                 ));
 
             AddSchema("usercurrency", ColDefs(ColDef("PrincipalID", ColumnTypes.String50, true),
@@ -300,8 +300,8 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("draw_classic_clouds", ColumnTypes.String50)
                ));
 
-            AddSchema("landinfo", ColDefs(ColDef("RegionID",ColumnTypes.String50),
-                ColDef("ParcelID",ColumnTypes.String50,true),
+            AddSchema("landinfo", ColDefs(ColDef("RegionID", ColumnTypes.String50),
+                ColDef("ParcelID", ColumnTypes.String50, true),
                 ColDef("LocalID", ColumnTypes.String50),
                 ColDef("LandingX", ColumnTypes.String50),
                 ColDef("LandingY", ColumnTypes.String50),
@@ -315,7 +315,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("SalePrice", ColumnTypes.String50),
                 ColDef("Auction", ColumnTypes.String50),
                 ColDef("Area", ColumnTypes.String50),
-                ColDef("EstateID",ColumnTypes.String50),
+                ColDef("EstateID", ColumnTypes.String50),
                 ColDef("Maturity", ColumnTypes.String50),
                 ColDef("OwnerID", ColumnTypes.String50),
                 ColDef("GroupID", ColumnTypes.String50),
@@ -326,7 +326,30 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("MediaType", ColumnTypes.String50),
                 ColDef("ObscureMedia", ColumnTypes.String50),
                 ColDef("ObscureMusic", ColumnTypes.String50),
-                ColDef("ShowInSearch", ColumnTypes.String50)));
+                ColDef("ShowInSearch", ColumnTypes.String50),
+                ColDef("SnapshotID", ColumnTypes.String50)));
+
+            AddSchema("searchparcel", ColDefs(ColDef("RegionID", ColumnTypes.String50),
+                ColDef("ParcelID", ColumnTypes.String50, true),
+                ColDef("LocalID", ColumnTypes.String50),
+                ColDef("LandingX", ColumnTypes.String50),
+                ColDef("LandingY", ColumnTypes.String50),
+                ColDef("LandingZ", ColumnTypes.String50),
+                ColDef("Name", ColumnTypes.String50),
+                ColDef("Description", ColumnTypes.String50),
+                ColDef("Flags", ColumnTypes.String50),
+                ColDef("Dwell", ColumnTypes.String50),
+                ColDef("InfoUUID", ColumnTypes.String50),
+                ColDef("ForSale", ColumnTypes.String50),
+                ColDef("SalePrice", ColumnTypes.String50),
+                ColDef("Auction", ColumnTypes.String50),
+                ColDef("Area", ColumnTypes.String50),
+                ColDef("EstateID", ColumnTypes.String50),
+                ColDef("Maturity", ColumnTypes.String50),
+                ColDef("OwnerID", ColumnTypes.String50),
+                ColDef("GroupID", ColumnTypes.String50),
+                ColDef("ShowInSearch", ColumnTypes.String50),
+                ColDef("SnapshotID", ColumnTypes.String50)));
 
             AddSchema("osagent", ColDefs(ColDef("AgentID", ColumnTypes.String50, true),
                 ColDef("ActiveGroupID", ColumnTypes.String50)));
@@ -409,7 +432,7 @@ namespace Aurora.DataManager.Migration.Migrators
             #region Estates
 
             AddSchema("estate_settings", ColDefs(
-                ColDef("EstateID", ColumnTypes.String50),
+                ColDef("EstateID", ColumnTypes.String50, true),
                 ColDef("EstateName", ColumnTypes.String50),
                 ColDef("AbuseEmailToEstateOwner", ColumnTypes.String1),
                 ColDef("DenyAnonymous", ColumnTypes.String50),

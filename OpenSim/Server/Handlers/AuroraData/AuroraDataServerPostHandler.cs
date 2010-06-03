@@ -51,10 +51,12 @@ namespace OpenSim.Server.Handlers.AuroraData
 
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: query String: {0}", body);
             string method = "";
+            Dictionary<string, object> request = new Dictionary<string, object>();
             try
             {
-                Dictionary<string, object> request =
-                        ServerUtils.ParseQueryString(body);
+                request = ServerUtils.ParseQueryString(body);
+                if (request.Count == 1)
+                    request = ServerUtils.ParseXmlResponse(body);
 
                 if (!request.ContainsKey("METHOD"))
                     return FailureResult();
@@ -75,6 +77,8 @@ namespace OpenSim.Server.Handlers.AuroraData
                         return RemoveFromCache(request);
                     case "updateusernotes":
                         return UpdateUserNotes(request);
+                    case "getclassified":
+                        return GetClassified(request);
                     case "addclassified":
                         return AddClassified(request);
                     case "deleteclassified":
@@ -86,7 +90,7 @@ namespace OpenSim.Server.Handlers.AuroraData
                     case "updatepick":
                         return UpdatePick(request);
                     case "getpick":
-                        return RemoveFromCache(request);
+                        return GetPick(request);
                     case "getagent":
                         return GetAgent(request);
                     case "updateagent":
@@ -233,7 +237,7 @@ namespace OpenSim.Server.Handlers.AuroraData
             int i = 0;
             foreach (UUID regionID in regionIDs)
             {
-                estateresult.Add(i.ToString(), regionID);
+                estateresult.Add(ConvertDecString(i), regionID);
                 i++;
             }
             result["result"] = estateresult;
@@ -254,7 +258,7 @@ namespace OpenSim.Server.Handlers.AuroraData
             int i = 0;
             foreach (int estateID in EstateIDs)
             {
-                estateresult.Add(i.ToString(), estateID);
+                estateresult.Add(ConvertDecString(i), estateID);
                 i++;
             }
             result["result"] = estateresult;

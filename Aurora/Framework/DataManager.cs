@@ -45,6 +45,7 @@ namespace Aurora.DataManager
         public static IRegionInfoConnector IRegionInfoConnector;
         public static ICurrencyConnector ICurrencyConnector;
         public static IMuteListConnector IMuteListConnector;
+        public static IParcelServiceConnector IParcelServiceConnector;
 
         #endregion
     }

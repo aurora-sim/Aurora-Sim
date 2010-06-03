@@ -9,6 +9,125 @@ using OpenSim.Framework;
 
 namespace Aurora.Services.DataService
 {
+    public class LocalParcelServiceConnector : IParcelServiceConnector
+    {
+        private IGenericData GD = null;
+        public LocalParcelServiceConnector()
+		{
+			GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
+		}
+
+		/// <summary>
+        /// This also updates the parcel, not for just adding a new one
+        /// </summary>
+        /// <param name="args"></param>
+        /// <param name="regionID"></param>
+        /// <param name="forSale"></param>
+        /// <param name="EstateID"></param>
+        /// <param name="showInSearch"></param>
+        public void AddLandObject(LandData args, UUID regionID, bool forSale, uint EstateID, bool showInSearch, UUID InfoUUID)
+        {
+            try
+            {
+                GD.Delete("landinfo", new string[] { "ParcelID" }, new string[] { args.GlobalID.ToString() });
+            }
+            catch (Exception)
+            {
+            }
+            List<object> Values = new List<object>();
+            Values.Add(regionID);
+            Values.Add(args.GlobalID);
+            Values.Add(args.LocalID);
+            Values.Add(args.UserLocation.X);
+            Values.Add(args.UserLocation.Y);
+            Values.Add(args.UserLocation.Z);
+            Values.Add(args.Name);
+            Values.Add(args.Description);
+            Values.Add(args.Flags);
+            Values.Add(args.Dwell);
+            //InfoUUID is the missing 'real' Gridwide ParcelID
+            Values.Add(InfoUUID);
+            Values.Add(forSale);
+            Values.Add(args.SalePrice);
+            Values.Add(args.AuctionID);
+            Values.Add(args.Area);
+            Values.Add(EstateID);
+            Values.Add(args.Maturity);
+            Values.Add(args.OwnerID);
+            Values.Add(args.GroupID);
+            Values.Add(args.MediaDesc);
+            Values.Add(args.MediaSize[0]);
+            Values.Add(args.MediaSize[1]);
+            Values.Add(args.MediaLoop);
+            Values.Add(args.MediaType);
+            Values.Add(args.ObscureMedia.ToString());
+            Values.Add(args.ObscureMusic.ToString());
+            Values.Add(showInSearch);
+            Values.Add(args.SnapshotID);
+            GD.Insert("landinfo", Values.ToArray());
+        }
+
+        public AuroraLandData GetLandData(UUID ParcelID)
+        {
+            List<string> Query = GD.Query("ParcelID", ParcelID, "landinfo", "*");
+            AuroraLandData LandData = new AuroraLandData();
+            if (Query.Count == 0)
+                return null;
+            LandData.RegionID = UUID.Parse(Query[0]);
+            LandData.ParcelID = UUID.Parse(Query[1]);
+            LandData.LocalID = int.Parse(Query[2]);
+            LandData.LandingX = float.Parse(Query[3]);
+            LandData.LandingY = float.Parse(Query[4]);
+            LandData.LandingZ = float.Parse(Query[5]);
+            LandData.Name = Query[6];
+            LandData.Description = Query[7];
+            LandData.Flags = uint.Parse(Query[8]);
+            LandData.Dwell = int.Parse(Query[9]);
+            LandData.InfoUUID = UUID.Parse(Query[10]);
+            LandData.ForSale = bool.Parse(Query[11]);
+            LandData.SalePrice = float.Parse(Query[12]);
+            LandData.AuctionID = uint.Parse(Query[13]);
+            LandData.Area = int.Parse(Query[14]);
+            LandData.EstateID = uint.Parse(Query[15]);
+            LandData.Maturity = int.Parse(Query[16]);
+            LandData.OwnerID = UUID.Parse(Query[17]);
+            LandData.GroupID = UUID.Parse(Query[18]);
+            LandData.MediaDescription = Query[19];
+            LandData.MediaSize = new int[]
+            {
+                int.Parse(Query[20]), int.Parse(Query[21])
+            };
+            LandData.MediaLoop = byte.Parse(Query[22]);
+            LandData.MediaType = Query[23];
+            LandData.ObscureMedia = bool.Parse(Query[24]);
+            LandData.ObscureMusic = bool.Parse(Query[25]);
+            LandData.ShowInSearch = bool.Parse(Query[26]);
+            LandData.SnapshotID = UUID.Parse(Query[27]);
+            return LandData;
+        }
+
+        public LandData GetLandObject(LandData LD)
+        {
+            List<string> Query = GD.Query("ParcelID", LD.GlobalID.ToString(), "landinfo", "MediaDescription,MediaHeight,MediaWidth,MediaLoop,MediaType,ObscureMedia,ObscureMusic");
+
+            if (Query.Count == 0)
+            {
+                return null;
+            }
+            LD.MediaDesc = Query[0];
+            LD.MediaLoop = Convert.ToByte(Query[3]);
+            LD.MediaType = Query[4];
+            LD.MediaSize = new int[]
+            {
+				Convert.ToInt32(Query[1]),
+				Convert.ToInt32(Query[2])
+			};
+            LD.ObscureMedia = Convert.ToByte(Query[5]);
+            LD.ObscureMusic = Convert.ToByte(Query[6]);
+            return LD;
+        }
+    }
+
 	public class LocalDirectoryServiceConnector : IDirectoryServiceConnector
 	{
 		private IGenericData GD = null;
@@ -26,110 +145,143 @@ namespace Aurora.Services.DataService
         /// <param name="EstateID"></param>
         /// <param name="showInSearch"></param>
         public void AddLandObject(LandData args, UUID regionID, bool forSale, uint EstateID, bool showInSearch, UUID InfoUUID)
-		{
-			try
+        {
+            try
             {
-				GD.Delete("landinfo", new string[] { "ParcelID" }, new string[] { args.GlobalID.ToString() });
-			}
+                GD.Delete("searchparcel", new string[] { "ParcelID" }, new string[] { args.GlobalID.ToString() });
+            }
             catch (Exception)
             {
-			}
-			List<object> Values = new List<object>();
-			Values.Add(regionID);
-			Values.Add(args.GlobalID);
-			Values.Add(args.LocalID);
-			Values.Add(args.UserLocation.X);
-			Values.Add(args.UserLocation.Y);
-			Values.Add(args.UserLocation.Z);
-			Values.Add(args.Name);
-			Values.Add(args.Description);
-			Values.Add(args.Flags);
-			Values.Add(args.Dwell);
-			//InfoUUID is the missing 'real' Gridwide ParcelID
-			Values.Add(InfoUUID);
+            }
+            List<object> Values = new List<object>();
+            Values.Add(regionID);
+            Values.Add(args.GlobalID);
+            Values.Add(args.LocalID);
+            Values.Add(args.UserLocation.X);
+            Values.Add(args.UserLocation.Y);
+            Values.Add(args.UserLocation.Z);
+            Values.Add(args.Name);
+            Values.Add(args.Description);
+            Values.Add(args.Flags);
+            Values.Add(args.Dwell);
+            //InfoUUID is the missing 'real' Gridwide ParcelID
+            Values.Add(InfoUUID);
             Values.Add(forSale);
             Values.Add(args.SalePrice);
-			Values.Add(args.AuctionID);
-			Values.Add(args.Area);
-			Values.Add(EstateID);
-			Values.Add(args.Maturity);
-			Values.Add(args.OwnerID);
-			Values.Add(args.GroupID);
-			Values.Add(args.MediaDesc);
-			Values.Add(args.MediaSize[0]);
-			Values.Add(args.MediaSize[1]);
-			Values.Add(args.MediaLoop);
-			Values.Add(args.MediaType);
-			Values.Add(args.ObscureMedia.ToString());
-			Values.Add(args.ObscureMusic.ToString());
-			Values.Add(showInSearch);
-			GD.Insert("landinfo", Values.ToArray());
-		}
+            Values.Add(args.AuctionID);
+            Values.Add(args.Area);
+            Values.Add(EstateID);
+            Values.Add(args.Maturity);
+            Values.Add(args.OwnerID);
+            Values.Add(args.GroupID);
+            Values.Add(showInSearch);
+            Values.Add(args.SnapshotID);
+            GD.Insert("searchparcel", Values.ToArray());
+        }
 
-		public AuroraLandData GetLandData(UUID ParcelID)
-		{
-            List<string> Query = GD.Query("ParcelID", ParcelID, "landinfo", "*");
+        public AuroraLandData GetParcelInfo(UUID InfoUUID)
+        {
+            List<string> Query = GD.Query("InfoUUID", InfoUUID, "searchparcel", "*");
             AuroraLandData LandData = new AuroraLandData();
             if (Query.Count == 0)
                 return null;
-            LandData.ParcelID = UUID.Parse(Query[0]);
-            LandData.LocalID = int.Parse(Query[1]);
-            LandData.LandingX = float.Parse(Query[2]);
-            LandData.LandingY = float.Parse(Query[3]);
-            LandData.LandingZ = float.Parse(Query[4]);
-            LandData.Name = Query[5];
-            LandData.Description = Query[6];
-            LandData.Flags = uint.Parse(Query[7]);
-            LandData.Dwell = int.Parse(Query[8]);
-            LandData.InfoUUID = UUID.Parse(Query[9]);
-            LandData.ForSale = bool.Parse(Query[10]);
-            LandData.SalePrice = float.Parse(Query[11]);
-            LandData.AuctionID = uint.Parse(Query[12]);
-            LandData.Area = int.Parse(Query[13]);
-            LandData.EstateID = uint.Parse(Query[14]);
-            LandData.Maturity = int.Parse(Query[15]);
-            LandData.OwnerID = UUID.Parse(Query[16]);
-            LandData.GroupID = UUID.Parse(Query[17]);
-            LandData.MediaDescription = Query[18];
-            LandData.MediaSize = new int[]
-            {
-                int.Parse(Query[19]), int.Parse(Query[20])
-            };
-            LandData.MediaLoop = byte.Parse(Query[21]);
-            LandData.MediaType = Query[22];
-            LandData.ObscureMedia = bool.Parse(Query[23]);
-            LandData.ObscureMusic = bool.Parse(Query[24]);
-            LandData.ShowInSearch = bool.Parse(Query[25]);
+            LandData.RegionID = UUID.Parse(Query[0]);
+            LandData.ParcelID = UUID.Parse(Query[1]);
+            LandData.LocalID = int.Parse(Query[2]);
+            LandData.LandingX = float.Parse(Query[3]);
+            LandData.LandingY = float.Parse(Query[4]);
+            LandData.LandingZ = float.Parse(Query[5]);
+            LandData.Name = Query[6];
+            LandData.Description = Query[7];
+            LandData.Flags = uint.Parse(Query[8]);
+            LandData.Dwell = int.Parse(Query[9]);
+            LandData.InfoUUID = UUID.Parse(Query[10]);
+            LandData.ForSale = bool.Parse(Query[11]);
+            LandData.SalePrice = float.Parse(Query[12]);
+            LandData.AuctionID = uint.Parse(Query[13]);
+            LandData.Area = int.Parse(Query[14]);
+            LandData.EstateID = uint.Parse(Query[15]);
+            LandData.Maturity = int.Parse(Query[16]);
+            LandData.OwnerID = UUID.Parse(Query[17]);
+            LandData.GroupID = UUID.Parse(Query[18]);
+            LandData.ShowInSearch = bool.Parse(Query[19]);
+            LandData.SnapshotID = UUID.Parse(Query[20]);
             return LandData;
-		}
+        }
 
-		public LandData GetLandObject(LandData LD)
-		{
-			List<string> Query = GD.Query("ParcelID", LD.GlobalID.ToString(), "landinfo", "MediaDescription,MediaHeight,MediaWidth,MediaLoop,MediaType,ObscureMedia,ObscureMusic");
-
+        public AuroraLandData[] GetParcelByOwner(UUID OwnerID)
+        {
+            List<AuroraLandData> Lands = new List<AuroraLandData>();
+            List<string> Query = GD.Query("OwnerID", OwnerID, "searchparcel", "*");
             if (Query.Count == 0)
+                return Lands.ToArray();
+            int i = 0;
+            int DataCount = 0;
+            AuroraLandData LandData = new AuroraLandData();
+            foreach (string RetVal in Query)
             {
-				return null;
-			}
-			LD.MediaDesc = Query[0];
-			LD.MediaLoop = Convert.ToByte(Query[3]);
-			LD.MediaType = Query[4];
-			LD.MediaSize = new int[]
-            {
-				Convert.ToInt32(Query[1]),
-				Convert.ToInt32(Query[2])
-			};
-			LD.ObscureMedia = Convert.ToByte(Query[5]);
-			LD.ObscureMusic = Convert.ToByte(Query[6]);
-			return LD;
-		}
+                if(DataCount == 0)
+                    LandData.RegionID = UUID.Parse(Query[i]);
+                if (DataCount == 1)
+                    LandData.ParcelID = UUID.Parse(Query[i]);
+                if (DataCount == 2)
+                    LandData.LocalID = int.Parse(Query[i]);
+                if (DataCount == 3)
+                    LandData.LandingX = float.Parse(Query[i]);
+                if (DataCount == 4)
+                    LandData.LandingY = float.Parse(Query[i]);
+                if (DataCount == 5)
+                    LandData.LandingZ = float.Parse(Query[i]);
+                if (DataCount == 6)
+                    LandData.Name = Query[i];
+                if (DataCount == 7)
+                    LandData.Description = Query[i];
+                if (DataCount == 8)
+                    LandData.Flags = uint.Parse(Query[i]);
+                if (DataCount == 9)
+                    LandData.Dwell = int.Parse(Query[i]);
+                if (DataCount == 10)
+                    LandData.InfoUUID = UUID.Parse(Query[i]);
+                if (DataCount == 11)
+                    LandData.ForSale = bool.Parse(Query[i]);
+                if (DataCount == 12)
+                    LandData.SalePrice = float.Parse(Query[i]);
+                if (DataCount == 13)
+                    LandData.AuctionID = uint.Parse(Query[i]);
+                if (DataCount == 14)
+                    LandData.Area = int.Parse(Query[i]);
+                if (DataCount == 15)
+                    LandData.EstateID = uint.Parse(Query[i]);
+                if (DataCount == 16)
+                    LandData.Maturity = int.Parse(Query[i]);
+                if (DataCount == 17)
+                    LandData.OwnerID = UUID.Parse(Query[i]);
+                if (DataCount == 18)
+                    LandData.GroupID = UUID.Parse(Query[i]);
+                if (DataCount == 19)
+                    LandData.ShowInSearch = bool.Parse(Query[i]);
+                if (DataCount == 20)
+                    LandData.SnapshotID = UUID.Parse(Query[i]);
+
+                DataCount++;
+                i++;
+                if (DataCount == 21)
+                {
+                    Lands.Add(LandData);
+                    LandData = new AuroraLandData();
+                    DataCount = 0;
+                }
+            }
+            return Lands.ToArray();
+        }
+
 
 		public DirPlacesReplyData[] FindLand(string queryText, string category, int StartQuery)
 		{
             List<DirPlacesReplyData> Data = new List<DirPlacesReplyData>();
             //Don't support category yet. //string whereClause = " PCategory = '" + category + "' and Description LIKE '%" + queryText + "%' OR Name LIKE '%" + queryText + "%' LIMIT " + StartQuery.ToString() + ",50 ";
             string whereClause = " Description LIKE '%" + queryText + "%' OR Name LIKE '%" + queryText + "%' LIMIT " + StartQuery.ToString() + ",50 ";
-            List<string> retVal = GD.Query(whereClause, "landinfo", "InfoUUID,Name,ForSale,Auction,Dwell");
+            List<string> retVal = GD.Query(whereClause, "searchparcel", "InfoUUID,Name,ForSale,Auction,Dwell");
             if (retVal.Count == 0)
                 return Data.ToArray();
 			
@@ -164,7 +316,7 @@ namespace Aurora.Services.DataService
 		{
 			List<DirLandReplyData> Data = new List<DirLandReplyData>();
             string whereClause = " SalePrice <= '" + price + "' and Area >= '" + area + "' LIMIT " + StartQuery.ToString() + ",50 ";
-            List<string> retVal = GD.Query(whereClause, "landinfo", "InfoUUID,Name,Auction,SalePrice,Area");
+            List<string> retVal = GD.Query(whereClause, "searchparcel", "InfoUUID,Name,Auction,SalePrice,Area");
             
             if (retVal.Count == 0)
                 return Data.ToArray();
@@ -291,8 +443,16 @@ namespace Aurora.Services.DataService
 		{
 			List<DirClassifiedReplyData> Data = new List<DirClassifiedReplyData>();
 
-			string whereClause = " name LIKE '%" + queryText + "%' and category = '" + category + "' LIMIT " + StartQuery.ToString() + ",50 ";
-			List<string> retVal = GD.Query(whereClause, "profileclassifieds", "classifieduuid, name, creationdate, expirationdate, priceforlisting");
+            string whereClause = "";
+            if (category == "0")
+            {
+                whereClause = " name LIKE '%" + queryText + "%' LIMIT " + StartQuery.ToString() + ",50 ";
+            }
+            else
+            {
+                whereClause = " name LIKE '%" + queryText + "%' and category = '" + category + "' LIMIT " + StartQuery.ToString() + ",50 ";
+            }
+            List<string> retVal = GD.Query(whereClause, "profileclassifieds", "classifiedflags, classifieduuid, creationdate, expirationdate, priceforlisting, name");
             if (retVal.Count == 0)
                 return Data.ToArray();
 			
@@ -307,10 +467,12 @@ namespace Aurora.Services.DataService
 					replyData.creationDate = Convert.ToUInt32(retVal[i]);
 				if (DataCount == 3)
 					replyData.expirationDate = Convert.ToUInt32(retVal[i]);
-				if (DataCount == 4)
-					replyData.price = Convert.ToInt32(retVal[i]);
+                if (DataCount == 4)
+                    replyData.price = Convert.ToInt32(retVal[i]);
+                if (DataCount == 5)
+                    replyData.name = retVal[i];
 				DataCount++;
-				if (DataCount == 5) {
+				if (DataCount == 6) {
 					DataCount = 0;
 					Data.Add(replyData);
 					replyData = new DirClassifiedReplyData();

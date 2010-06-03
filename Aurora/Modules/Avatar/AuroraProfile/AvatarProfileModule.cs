@@ -239,17 +239,23 @@ namespace Aurora.Modules
         public void ClassifiedInfoRequest(UUID queryClassifiedID, IClientAPI remoteClient)
         {
             Classified classified = ProfileFrontend.FindClassified(queryClassifiedID.ToString());
-            Vector3 globalPos = new Vector3();
-            try
+            if (classified != null)
             {
-                Vector3.TryParse(classified.PosGlobal, out globalPos);
-            }
-            catch
-            {
-                globalPos = new Vector3(128, 128, 128);
-            }
+                Vector3 globalPos = new Vector3();
+                try
+                {
+                    Vector3.TryParse(classified.PosGlobal, out globalPos);
+                }
+                catch
+                {
+                    globalPos = new Vector3(128, 128, 128);
+                }
 
-            remoteClient.SendClassifiedInfoReply(queryClassifiedID, new UUID(classified.CreatorUUID), Convert.ToUInt32(classified.CreationDate), Convert.ToUInt32(classified.ExpirationDate), Convert.ToUInt32(classified.Category), classified.Name, classified.Description, new UUID(classified.ParcelUUID), Convert.ToUInt32(classified.ParentEstate), new UUID(classified.SnapshotUUID), classified.SimName, globalPos, classified.ParcelName, Convert.ToByte(classified.ClassifiedFlags), Convert.ToInt32(classified.PriceForListing));
+                remoteClient.SendClassifiedInfoReply(queryClassifiedID, new UUID(classified.CreatorUUID), Convert.ToUInt32(classified.CreationDate), Convert.ToUInt32(classified.ExpirationDate), Convert.ToUInt32(classified.Category), classified.Name, classified.Description, new UUID(classified.ParcelUUID), Convert.ToUInt32(classified.ParentEstate), new UUID(classified.SnapshotUUID), classified.SimName, globalPos, classified.ParcelName, Convert.ToByte(classified.ClassifiedFlags), Convert.ToInt32(classified.PriceForListing));
+            }
+            else
+            {
+            }
 
         }
         
@@ -314,6 +320,11 @@ namespace Aurora.Modules
             classified.ParcelName=parcelname;
             classified.ClassifiedFlags =classifiedFlags;
             classified.PriceForListing = classifiedPrice;
+            Classified OldClassified = ProfileFrontend.FindClassified(classifiedUUID.ToString());
+            if (OldClassified != null)
+            {
+                ProfileFrontend.DeleteClassified(new UUID(classifiedUUID), remoteClient.AgentId);
+            }
             ProfileFrontend.AddClassified(classified);
         }
         
@@ -367,34 +378,37 @@ namespace Aurora.Modules
             IClientAPI remoteClient = (IClientAPI)sender;
             
             ProfilePickInfo pick = ProfileFrontend.FindPick(args[1]);
-            Vector3 globalPos = new Vector3();
-            try
+            if (pick != null)
             {
-                Vector3.TryParse(pick.posglobal, out globalPos);
-            }
-            catch (Exception ex)
-            {
-                ex = new Exception();
-                globalPos = new Vector3(128, 128, 128);
-            }
-            bool two = false;
-            int ten = 0;
-            bool twelve = false;
+                Vector3 globalPos = new Vector3();
+                try
+                {
+                    Vector3.TryParse(pick.posglobal, out globalPos);
+                }
+                catch (Exception ex)
+                {
+                    ex = new Exception();
+                    globalPos = new Vector3(128, 128, 128);
+                }
+                bool two = false;
+                int ten = 0;
+                bool twelve = false;
 
-            try
-            {
-                two = Convert.ToBoolean(pick.toppick);
-                ten = Convert.ToInt32(pick.sortorder);
-                twelve = Convert.ToBoolean(pick.enabled);
+                try
+                {
+                    two = Convert.ToBoolean(pick.toppick);
+                    ten = Convert.ToInt32(pick.sortorder);
+                    twelve = Convert.ToBoolean(pick.enabled);
+                }
+                catch (Exception ex)
+                {
+                    ex = new Exception();
+                    two = false;
+                    ten = 0;
+                    twelve = true;
+                }
+                remoteClient.SendPickInfoReply(new UUID(pick.pickuuid), new UUID(pick.creatoruuid), two, new UUID(pick.parceluuid), pick.name, pick.description, new UUID(pick.snapshotuuid), pick.user, pick.originalname, pick.simname, globalPos, ten, twelve);
             }
-            catch (Exception ex)
-            {
-                ex = new Exception();
-                two = false;
-                ten = 0;
-                twelve = true;
-            }
-            remoteClient.SendPickInfoReply(new UUID(pick.pickuuid), new UUID(pick.creatoruuid), two, new UUID(pick.parceluuid), pick.name, pick.description, new UUID(pick.snapshotuuid), pick.user, pick.originalname, pick.simname, globalPos, ten, twelve);
         }
         
         public void PickInfoUpdate(IClientAPI remoteClient, UUID pickID, UUID creatorID, bool topPick, string name, string desc, UUID snapshotID, int sortOrder, bool enabled)
@@ -405,6 +419,9 @@ namespace Aurora.Modules
 
             string parceluuid = p.currentParcelUUID.ToString();
             Vector3 posGlobal = new Vector3(avaPos.X, avaPos.Y, avaPos.Z);
+            posGlobal.X += p.Scene.RegionInfo.RegionLocX * 256;
+            posGlobal.Y += p.Scene.RegionInfo.RegionLocY * 256;
+
 
             string pos_global = posGlobal.ToString();
 
@@ -443,7 +460,7 @@ namespace Aurora.Modules
 
             #endregion
 
-            if (oldpick.pickuuid == "")
+            if (oldpick == null)
             {
                 ProfilePickInfo values = new ProfilePickInfo();
                 values.pickuuid = pickID.ToString();
@@ -463,17 +480,15 @@ namespace Aurora.Modules
             }
             else
             {
-                ProfilePickInfo info = new ProfilePickInfo();
-                info.creatoruuid = remoteClient.AgentId.ToString();
-                info.parceluuid = parceluuid.ToString();
-                info.name = name;
-                info.snapshotuuid = snapshotID.ToString();
-                info.description=desc;
-                info.simname = remoteClient.Scene.RegionInfo.RegionName;
-                info.posglobal = pos_global;
-                info.sortorder = sortOrder.ToString();
-                info.enabled = enabled.ToString();
-                ProfileFrontend.UpdatePick(info);
+                oldpick.parceluuid = parceluuid.ToString();
+                oldpick.name = name;
+                oldpick.snapshotuuid = snapshotID.ToString();
+                oldpick.description = desc;
+                oldpick.simname = remoteClient.Scene.RegionInfo.RegionName;
+                oldpick.posglobal = pos_global;
+                oldpick.sortorder = sortOrder.ToString();
+                oldpick.enabled = enabled.ToString();
+                ProfileFrontend.UpdatePick(oldpick);
             }
         }
         

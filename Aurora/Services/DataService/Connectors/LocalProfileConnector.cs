@@ -135,21 +135,11 @@ namespace Aurora.Services.DataService
 
 		public void UpdateUserNotes(UUID agentID, UUID targetAgentID, string notes, IUserProfileInfo UPI)
 		{
-			if (UPI.Notes.Count == 0)
-				GD.Insert("profilenotes", new object[] {
+			GD.Insert("profilenotes", new object[] {
 					agentID,
 					targetAgentID,
-					notes,
-					UUID.Random().ToString()
-				});
-			else
-				GD.Update("profilenotes", new object[] { notes }, new string[] { "notes" }, new string[] {
-					"userid",
-					"targetuuid"
-				}, new object[] {
-					agentID,
-					targetAgentID
-				});
+					notes
+				},"notes",notes);
 			RemoveFromCache(agentID);
 			UserProfilesCache.Add(agentID, UPI);
 
@@ -341,7 +331,7 @@ namespace Aurora.Services.DataService
             values.Add(classified.ParcelName);
             values.Add(classified.ClassifiedFlags);
             values.Add(classified.PriceForListing);
-            GD.Insert("classifieds", values.ToArray());
+            GD.Insert("profileclassifieds", values.ToArray());
             RemoveFromCache(new UUID(classified.CreatorUUID));
         }
 
@@ -351,7 +341,7 @@ namespace Aurora.Services.DataService
             List<object> values = new List<object>();
             keys.Add("classifieduuid");
             values.Add(ID);
-            GD.Delete("classifieds", keys.ToArray(), values.ToArray());
+            GD.Delete("profileclassifieds", keys.ToArray(), values.ToArray());
             RemoveFromCache(agentID);
         }
 
@@ -372,7 +362,7 @@ namespace Aurora.Services.DataService
             values.Add(pick.sortorder);
             values.Add(pick.enabled);
 
-            GD.Insert("userpicks", values.ToArray());
+            GD.Insert("profilepicks", values.ToArray());
             RemoveFromCache(new UUID(pick.creatoruuid));
         }
 
@@ -396,7 +386,7 @@ namespace Aurora.Services.DataService
             values.Add(pick.posglobal);
             values.Add(pick.sortorder);
             values.Add(pick.enabled);
-            GD.Update("userpicks", values.ToArray(), keys.ToArray(), new string[] { "pickuuid" }, new object[] { pick.pickuuid });
+            GD.Update("profilepicks", values.ToArray(), keys.ToArray(), new string[] { "pickuuid" }, new object[] { pick.pickuuid });
             RemoveFromCache(new UUID(pick.creatoruuid));
         }
 
@@ -406,7 +396,7 @@ namespace Aurora.Services.DataService
             List<object> values = new List<object>();
             keys.Add("pickuuid");
             values.Add(ID);
-            GD.Delete("userpicks", keys.ToArray(), values.ToArray());
+            GD.Delete("profilepicks", keys.ToArray(), values.ToArray());
             RemoveFromCache(agentID);
         }
     }

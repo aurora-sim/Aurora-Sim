@@ -283,28 +283,61 @@ namespace Aurora.Framework
             result["MembershipGroup"] = MembershipGroup.ToString();
 
             //Classifieds
+            int i = 0;
             Dictionary<string, object> ClassifiedsKVP = new Dictionary<string, object>();
             foreach(Classified CFI in Classifieds)
             {
                 if (CFI.ClassifiedUUID == "")
                     continue;
-                ClassifiedsKVP[CFI.ClassifiedUUID.ToString()] = CFI.ToKeyValuePairs();
+                ClassifiedsKVP[ConvertDecString(i)] = CFI.ToKeyValuePairs();
+                i++;
             }
             result["Classifieds"] = ClassifiedsKVP;
 
+            i = 0;
             //Classifieds
             Dictionary<string, object> PicksKVP = new Dictionary<string, object>();
             foreach (ProfilePickInfo PPI in Picks)
             {
                 if (PPI.pickuuid == "")
                     continue;
-                PicksKVP[PPI.pickuuid.ToString()] = PPI.ToKeyValuePairs();
+                PicksKVP[ConvertDecString(i)] = PPI.ToKeyValuePairs();
+                i++;
             }
             result["Picks"] = PicksKVP;
 
             result["Notes"] = Notes;
 
             return result;
+        }
+
+        // http://social.msdn.microsoft.com/forums/en-US/csharpgeneral/thread/68f7ca38-5cd1-411f-b8d4-e4f7a688bc03
+        // By: A Million Lemmings
+        public string ConvertDecString(int dvalue)
+        {
+
+            string CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+            string retVal = string.Empty;
+
+            double value = Convert.ToDouble(dvalue);
+
+            do
+            {
+
+                double remainder = value - (26 * Math.Truncate(value / 26));
+
+                retVal = retVal + CHARS.Substring((int)remainder, 1);
+
+                value = Math.Truncate(value / 26);
+
+            }
+            while (value > 0);
+
+
+
+            return retVal;
+
         }
 
         public IUserProfileInfo() { }
@@ -325,7 +358,7 @@ namespace Aurora.Framework
             //End interests
 
             //Picks
-            Dictionary<string, Dictionary<string, object>> AllPicksKVP = main["Picks"] as Dictionary<string, Dictionary<string, object>>;
+            Dictionary<string, object> AllPicksKVP = main["Picks"] as Dictionary<string, object>;
             List<ProfilePickInfo> AllPicks = new List<ProfilePickInfo>();
             if (AllPicksKVP != null)
             {
@@ -338,11 +371,11 @@ namespace Aurora.Framework
             Picks = AllPicks.ToArray();
 
             //Classifieds
-            Dictionary<string, Dictionary<string, object>> AllClassifiedsKVP = main["Classifieds"] as Dictionary<string, Dictionary<string, object>>;
+            Dictionary<string, object> AllClassifiedsKVP = main["Classifieds"] as Dictionary<string, object>;
             List<Classified> AllClassifieds = new List<Classified>();
-            if (AllPicksKVP != null)
+            if (AllClassifiedsKVP != null)
             {
-                foreach (Dictionary<string, object> PPI in AllPicksKVP.Values)
+                foreach (Dictionary<string, object> PPI in AllClassifiedsKVP.Values)
                 {
                     Classified Classified = new Classified(PPI);
                     AllClassifieds.Add(Classified);
@@ -455,7 +488,7 @@ namespace Aurora.Framework
         {
             creatoruuid = KVP["creatoruuid"].ToString();
             description = KVP["description"].ToString();
-            enabled = KVP["enabled"].ToString();
+            enabled = true.ToString();
             name = KVP["name"].ToString();
             originalname = KVP["originalname"].ToString();
             parceluuid = KVP["parceluuid"].ToString();
@@ -484,18 +517,18 @@ namespace Aurora.Framework
         public Dictionary<string, object> ToKeyValuePairs()
         {
             Dictionary<string, object> Pick = new Dictionary<string, object>();
-            Pick["Category"] = creatoruuid;
-            Pick["ClassifiedFlags"] = description;
-            Pick["ClassifiedUUID"] = name;
-            Pick["CreationDate"] = originalname;
-            Pick["CreatorUUID"] = parceluuid;
-            Pick["Description"] = pickuuid;
-            Pick["Name"] = posglobal;
-            Pick["ParcelName"] = simname;
-            Pick["ParcelUUID"] = snapshotuuid;
-            Pick["ParentEstate"] = sortorder;
-            Pick["PosGlobal"] = toppick;
-            Pick["PriceForListing"] = user;
+            Pick["creatoruuid"] = creatoruuid;
+            Pick["description"] = description;
+            Pick["name"] = name;
+            Pick["originalname"] = originalname;
+            Pick["parceluuid"] = parceluuid;
+            Pick["pickuuid"] = pickuuid;
+            Pick["posglobal"] = posglobal;
+            Pick["simname"] = simname;
+            Pick["snapshotuuid"] = snapshotuuid;
+            Pick["sortorder"] = sortorder;
+            Pick["toppick"] = toppick;
+            Pick["user"] = user;
             return Pick;
         }
     }

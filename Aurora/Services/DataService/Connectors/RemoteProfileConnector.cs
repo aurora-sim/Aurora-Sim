@@ -39,7 +39,7 @@ namespace Aurora.Services.DataService
             sendData["CLASSIFIEDID"] = classifiedID.ToString();
             sendData["METHOD"] = "getclassified";
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = ServerUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -93,7 +93,7 @@ namespace Aurora.Services.DataService
             sendData["PICKID"] = pickID.ToString();
             sendData["METHOD"] = "getpick";
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = ServerUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -118,9 +118,6 @@ namespace Aurora.Services.DataService
                             {
                                 pick = new ProfilePickInfo((Dictionary<string, object>)f);
                             }
-                            else
-                                m_log.DebugFormat("[AuroraRemoteProfileConnector]: GetPick {0} received invalid response type {1}",
-                                    pickID, f.GetType());
                         }
                         // Success
                         return pick;
@@ -149,7 +146,7 @@ namespace Aurora.Services.DataService
             sendData["NOTES"] = notes.ToString();
             sendData["METHOD"] = "updateusernotes";
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = ServerUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -190,7 +187,7 @@ namespace Aurora.Services.DataService
             sendData["PRINCIPALID"] = PrincipalID.ToString();
             sendData["METHOD"] = "getprofile";
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = ServerUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -244,7 +241,7 @@ namespace Aurora.Services.DataService
             sendData["PRINCIPALID"] = Profile.PrincipalID.ToString();
             sendData["METHOD"] = "updateprofile";
 
-             string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = ServerUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -289,7 +286,7 @@ namespace Aurora.Services.DataService
             sendData["PRINCIPALID"] = Profile.PrincipalID.ToString();
             sendData["METHOD"] = "updateinterests";
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = ServerUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -330,7 +327,7 @@ namespace Aurora.Services.DataService
             sendData["PRINCIPALID"] = PrincipalID.ToString();
             sendData["METHOD"] = "createprofile";
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = ServerUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -371,7 +368,7 @@ namespace Aurora.Services.DataService
             sendData["PRINCIPALID"] = PrincipalID.ToString();
             sendData["METHOD"] = "removefromcache";
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = ServerUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -411,7 +408,7 @@ namespace Aurora.Services.DataService
 
             sendData["METHOD"] = "addclassified";
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = ServerUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -454,7 +451,7 @@ namespace Aurora.Services.DataService
 
             sendData["METHOD"] = "deleteclassified";
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = ServerUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -494,7 +491,7 @@ namespace Aurora.Services.DataService
 
             sendData["METHOD"] = "addpick";
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = ServerUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -534,7 +531,7 @@ namespace Aurora.Services.DataService
 
             sendData["METHOD"] = "updatepick";
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = ServerUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -577,7 +574,7 @@ namespace Aurora.Services.DataService
 
             sendData["METHOD"] = "deletepick";
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = ServerUtils.BuildXmlResponse(sendData);
 
             try
             {

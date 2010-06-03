@@ -98,7 +98,7 @@ namespace OpenSim.Services.LLLoginService
                 m_DefaultUserAvatarArchive = m_AuroraLoginConfig.GetString("DefaultAvatarArchiveForNewUser", "");
                 m_AllowAnonymousLogin = m_AuroraLoginConfig.GetBoolean("AllowAnonymousLogin", false);
                 m_AuthenticateUsers = m_AuroraLoginConfig.GetBoolean("AuthenticateUsers", true);
-                m_TOSLocation = m_AuroraLoginConfig.GetString("LocationOfTheTermsOfService", "");
+                m_TOSLocation = m_AuroraLoginConfig.GetString("FileNameOfTOS", "");
             }
             m_LoginServerConfig = config.Configs["LoginService"];
             if (m_LoginServerConfig == null)
@@ -282,12 +282,16 @@ namespace OpenSim.Services.LLLoginService
                     //Update the agent
                     agent.IP = clientIP.Address.ToString();
                     agent.Mac = mac;
-                    if (agent.AcceptTOS == false && m_UseTOS)
+                    bool AcceptedNewTOS = false;
+                    //This gets if the viewer has accepted the new TOS
+                    if(requestData.ContainsKey("agree_to_tos"))
                     {
-                        agent.AcceptTOS = true;
-                        return new LLFailedLoginResponse("key",
-                            "By logging in, you accept the terms of service for this grid posted at " + m_TOSLocation + ".",
-                            "false");
+                        AcceptedNewTOS = bool.Parse(requestData["agree_to_tos"].ToString());
+                    }
+                    if (!AcceptedNewTOS && agent.AcceptTOS == false && m_UseTOS)
+                    {
+                        string TOS = new StreamReader(Path.Combine(Environment.CurrentDirectory, m_TOSLocation)).ReadToEnd();
+                        return new LLFailedLoginResponse("tos", TOS, "false");
                     }
                     agent.AcceptTOS = true;
                     agentData.UpdateAgent(agent);

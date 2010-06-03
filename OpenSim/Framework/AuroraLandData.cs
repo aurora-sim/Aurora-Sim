@@ -6,6 +6,14 @@ using OpenMetaverse;
 
 namespace Aurora.Framework
 {
+    public class ExtendedAuroraLandData : AuroraLandData
+    {
+        public float GlobalPosX;
+        public float GlobalPosY;
+        public string RegionType;
+        public string RegionName;
+    }
+
     public class AuroraLandData
     {
         public UUID RegionID;
@@ -34,5 +42,6 @@ namespace Aurora.Framework
         public bool ObscureMedia;
         public bool ObscureMusic;
         public bool ShowInSearch;
+        public UUID SnapshotID;
     }
 }

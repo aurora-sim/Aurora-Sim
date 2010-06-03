@@ -16,6 +16,7 @@ namespace Aurora.Framework
         public int RegionLocY;
         public UUID SimMapTextureID;
         public string RegionName;
+        public string RegionType;
         public uint RegionFlags;
         public uint WaterHeight;
         public uint Access;
@@ -37,6 +38,7 @@ namespace Aurora.Framework
             RegionLocY = int.Parse(KVP["RegionLocY"].ToString());
             SimMapTextureID = UUID.Parse(KVP["SimMapTextureID"].ToString());
             RegionName = KVP["RegionName"].ToString();
+            RegionType = KVP["RegionType"].ToString();
             RegionFlags = uint.Parse(KVP["RegionFlags"].ToString());
             WaterHeight = uint.Parse(KVP["WaterHeight"].ToString());
             Access = uint.Parse(KVP["Access"].ToString());
@@ -54,6 +56,7 @@ namespace Aurora.Framework
             KVP["RegionLocY"] = RegionLocY;
             KVP["SimMapTextureID"] = SimMapTextureID;
             KVP["RegionName"] = RegionName;
+            KVP["RegionType"] = RegionType;
             KVP["RegionFlags"] = RegionFlags;
             KVP["WaterHeight"] = WaterHeight;
             KVP["Access"] = Access;
