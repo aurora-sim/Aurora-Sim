@@ -146,7 +146,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             ILandObject land = GetLandObject(parcel.LocalID);
             uint x = (uint)parcel.UserLocation.X, y = (uint)parcel.UserLocation.Y;
             findPointInParcel(land, ref x, ref y); // find a suitable spot
-            UUID InfoUUID = Util.BuildFakeParcelID(land.RegionHandle, x, y);
+            UUID InfoUUID = Util.BuildFakeParcelID(land.LandData.RegionHandle, x, y);
             //Update search database
             DSC.AddLandObject(parcel, m_scene.RegionInfo.RegionID, (((ParcelFlags)parcel.Flags & ParcelFlags.ForSale) != 0), m_scene.RegionInfo.EstateSettings.EstateID, (((ParcelFlags)parcel.Flags & ParcelFlags.ShowDirectory) != 0), InfoUUID);
         }
