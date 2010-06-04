@@ -321,6 +321,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             fullSimParcel.SetLandBitmap(fullSimParcel.GetSquareLandBitmap(0, 0, (int)Constants.RegionSize, (int)Constants.RegionSize));
             fullSimParcel.LandData.OwnerID = m_scene.RegionInfo.EstateSettings.EstateOwner;
             fullSimParcel.LandData.ClaimDate = Util.UnixTimeSinceEpoch();
+            fullSimParcel.SetInfoID();
             AddLandObject(fullSimParcel);
         }
 
@@ -1353,6 +1354,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             ILandObject new_land = new LandObject(data.OwnerID, data.IsGroupOwned, m_scene);
             new_land.LandData = data.Copy();
             new_land.SetLandBitmapFromByteArray();
+            new_land.SetInfoID();
             AddLandObject(new_land);
         }
 

@@ -29,7 +29,7 @@ namespace Aurora.Services.DataService
             if (!CheckPassword(Password))
                 return null;
 			AbuseReport report = new AbuseReport();
-			List<string> Reports = GD.Query("ReportNumber", Number, "abusereports", "*");
+            List<string> Reports = GD.Query("Number", Number, "abusereports", "*");
             if (Reports.Count == 0)
                 return null;
             report.Category = Reports[0];
@@ -98,7 +98,7 @@ namespace Aurora.Services.DataService
 
         private bool CheckPassword(string Password)
         {
-            List<string> TruePassword = GD.Query("Method", "AbuseReports", "Passwords", "Password");
+            List<string> TruePassword = GD.Query("Method", "AbuseReports", "passwords", "Password");
             if (TruePassword.Count == 0)
                 return false;
             if (Util.Md5Hash(Password) == TruePassword[0])

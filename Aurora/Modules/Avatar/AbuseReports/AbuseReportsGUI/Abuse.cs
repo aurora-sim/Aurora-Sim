@@ -27,9 +27,9 @@ namespace Aurora.Modules.AbuseReportsGUI
         private void Form1_Load(object sender, EventArgs e)
         {
             AbuseReport AR = AbuseReportsConnector.GetAbuseReport(formNumber, Password);
-            CurrentReport = AR;
-            if (AR.Number != null)
+            if (AR != null)
             {
+                CurrentReport = AR;
                 Category.Text = AR.Category.ToString();
                 ReporterName.Text = AR.ReporterName;
                 ObjectName.Text = AR.ObjectName;
@@ -71,9 +71,9 @@ namespace Aurora.Modules.AbuseReportsGUI
             }
 
             AbuseReport AR = AbuseReportsConnector.GetAbuseReport(formNumber, Password);
-            CurrentReport = AR;
-            if (AR.Number != null)
+            if (AR != null)
             {
+                CurrentReport = AR;
                 Category.Text = AR.Category.ToString();
                 ReporterName.Text = AR.ReporterName;
                 ObjectName.Text = AR.ObjectName;
@@ -110,9 +110,9 @@ namespace Aurora.Modules.AbuseReportsGUI
         {
             formNumber += 1;
             AbuseReport AR = AbuseReportsConnector.GetAbuseReport(formNumber, Password);
-            CurrentReport = AR;
-            if (AR.Number != null)
+            if (AR != null)
             {
+                CurrentReport = AR;
                 Category.Text = AR.Category.ToString();
                 ReporterName.Text = AR.ReporterName;
                 ObjectName.Text = AR.ObjectName;
@@ -178,9 +178,9 @@ namespace Aurora.Modules.AbuseReportsGUI
                 formNumber = 1;
             GotoARNumber.Text = "";
             AbuseReport AR = AbuseReportsConnector.GetAbuseReport(formNumber, Password);
-            CurrentReport = AR;
-            if (AR.Number != null)
+            if (AR != null)
             {
+                CurrentReport = AR;
                 Category.Text = AR.Category.ToString();
                 ReporterName.Text = AR.ReporterName;
                 ObjectName.Text = AR.ObjectName;

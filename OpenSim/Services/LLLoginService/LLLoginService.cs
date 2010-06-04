@@ -290,8 +290,11 @@ namespace OpenSim.Services.LLLoginService
                     }
                     if (!AcceptedNewTOS && agent.AcceptTOS == false && m_UseTOS)
                     {
-                        string TOS = new StreamReader(Path.Combine(Environment.CurrentDirectory, m_TOSLocation)).ReadToEnd();
-                        return new LLFailedLoginResponse("tos", TOS, "false");
+                        StreamReader reader = new StreamReader(Path.Combine(Environment.CurrentDirectory, m_TOSLocation));
+                        string TOS = reader.ReadToEnd();
+                        reader.Close();
+                        reader.Dispose();
+                        return new LLFailedLoginResponse("removeme"+"tos", TOS, "false");
                     }
                     agent.AcceptTOS = true;
                     agentData.UpdateAgent(agent);

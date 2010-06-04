@@ -92,6 +92,11 @@ namespace OpenSim.Region.CoreModules.World.Land
             LandData.RegionID = scene.RegionInfo.RegionID;
             LandData.RegionHandle = scene.RegionInfo.RegionHandle;
 
+            //We don't set up the InfoID here... it will just be overwriten
+        }
+
+        public void SetInfoID()
+        {
             //Make the InfoUUID for this parcel
             uint x = (uint)LandData.UserLocation.X, y = (uint)LandData.UserLocation.Y;
             findPointInParcel(this, ref x, ref y); // find a suitable spot

@@ -975,6 +975,47 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     m_log.WarnFormat("[{0}]: Event Queue is above the MaxQueueSize.", ScriptEngineName);
                     return false;
                 }
+
+                if (FunctionName == "timer")
+                {
+                    if (ID.TimerQueued)
+                        return true;
+                    ID.TimerQueued = true;
+                }
+
+                if (FunctionName == "control")
+                {
+                    int held = ((LSL_Types.LSLInteger)param[1]).value;
+                    // int changed = ((LSL_Types.LSLInteger)data.Params[2]).value;
+
+                    // If the last message was a 0 (nothing held)
+                    // and this one is also nothing held, drop it
+                    //
+                    if (ID.LastControlLevel == held && held == 0)
+                        return true;
+
+                    // If there is one or more queued, then queue
+                    // only changed ones, else queue unconditionally
+                    //
+                    if (ID.ControlEventsInQueue > 0)
+                    {
+                        if (ID.LastControlLevel == held)
+                            return true;
+                    }
+
+                    ID.LastControlLevel = held;
+                    ID.ControlEventsInQueue++;
+                }
+
+                if (FunctionName == "collision")
+                {
+                    if (ID.CollisionInQueue)
+                        return true;
+                    if (qParams == null)
+                        return true;
+
+                    ID.CollisionInQueue = true;
+                }
                 // Create a structure and add data
                 QueueItemStruct QIS = new QueueItemStruct();
                 QIS.ID = ID;

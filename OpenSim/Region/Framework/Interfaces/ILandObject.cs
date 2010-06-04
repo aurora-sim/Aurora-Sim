@@ -78,6 +78,7 @@ namespace OpenSim.Region.Framework.Interfaces
         void UpdateLandSold(UUID avatarID, UUID groupID, bool groupOwned, uint AuctionID, int claimprice, int area);
 
         void DeedToGroup(UUID groupID);
+        void SetInfoID();
 
         void SetParcelObjectMaxOverride(overrideParcelMaxPrimCountDelegate overrideDel);
         void SetSimulatorObjectMaxOverride(overrideSimulatorMaxPrimCountDelegate overrideDel);

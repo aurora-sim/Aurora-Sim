@@ -112,6 +112,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         //Finished with nothing left.
                         if (Running == 0)
                         {
+                            if (QIS.functionName == "timer")
+                                QIS.ID.TimerQueued = false;
+                            if (QIS.functionName == "control")
+                            {
+                                if (QIS.ID.ControlEventsInQueue > 0)
+                                    QIS.ID.ControlEventsInQueue--;
+                            }
+                            if (QIS.functionName == "collision")
+                                QIS.ID.CollisionInQueue = false;
                             continue;
                         }
                         //Did not finish and returned where it should start now

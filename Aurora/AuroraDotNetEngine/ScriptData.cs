@@ -87,6 +87,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public Dictionary<string, IScriptApi> Apis = new Dictionary<string, IScriptApi>();
         public Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> LineMap;
         public ISponsor ScriptSponsor;
+        public bool TimerQueued = false;
+        public bool CollisionInQueue = false;
+        public int LastControlLevel = 0;
+        public int ControlEventsInQueue = 0;
 
         public SceneObjectPart part;
 
