@@ -132,6 +132,25 @@ namespace Aurora.DataManager.SQLite
             return RetVal;
         }
 
+        public override IDataReader QueryReader(string keyRow, object keyValue, string table, string wantedValue)
+        {
+            var cmd = new SqliteCommand();
+            string query = "";
+            if (keyRow == "")
+            {
+                query = String.Format("select {0} from {1}",
+                                      wantedValue, table);
+            }
+            else
+            {
+                query = String.Format("select {0} from {1} where {2} = '{3}'",
+                                      wantedValue, table, keyRow, keyValue.ToString());
+            }
+            cmd.CommandText = query;
+            IDataReader reader = GetReader(cmd);
+            return reader;
+        }
+
         public override List<string> Query(string whereClause, string table, string wantedValue)
         {
             var cmd = new SqliteCommand();
@@ -216,6 +235,24 @@ namespace Aurora.DataManager.SQLite
         }
 
         public override bool Insert(string table, object[] values)
+        {
+            var cmd = new SqliteCommand();
+
+            string query = "";
+            query = String.Format("insert into {0} values (", table);
+            foreach (object value in values)
+            {
+                query += String.Format("'{0}',", value);
+            }
+            query = query.Remove(query.Length - 1);
+            query += ")";
+            cmd.CommandText = query;
+            ExecuteNonQuery(cmd);
+            CloseReaderCommand(cmd);
+            return true;
+        }
+
+        public override bool Insert(string table, string[] keys, object[] values)
         {
             var cmd = new SqliteCommand();
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using OpenMetaverse;
@@ -82,7 +83,9 @@ namespace Aurora.Framework
         List<string> Query(string whereClause, string table, string wantedValue);
         List<string> Query(string keyRow, object keyValue, string table, string wantedValue, string Order);
         List<string> Query(string[] keyRow, object[] keyValue, string table, string wantedValue);
+        IDataReader QueryReader(string keyRow, object keyValue, string table, string wantedValue);
         bool Insert(string table, object[] values);
+        bool Insert(string table, string[] keys, object[] values);
         bool Delete(string table, string[] keys, object[] values);
         bool Insert(string table, object[] values, string updateKey, object updateValue);
         string Identifier { get; }

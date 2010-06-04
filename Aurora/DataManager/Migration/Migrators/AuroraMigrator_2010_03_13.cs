@@ -340,7 +340,9 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("UserLookAtY", ColumnTypes.String50),
                 ColDef("UserLookAtZ", ColumnTypes.String50),
                 ColDef("AuthBuyerID", ColumnTypes.String50),
-                ColDef("OtherCleanTime", ColumnTypes.String50)));
+                ColDef("OtherCleanTime", ColumnTypes.String50),
+                ColDef("RegionID", ColumnTypes.String50),
+                ColDef("RegionHandle", ColumnTypes.String50)));
 
             AddSchema("parcelAccess", ColDefs(
                 ColDef("ParcelID", ColumnTypes.String50, true),

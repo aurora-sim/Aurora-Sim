@@ -90,6 +90,8 @@ namespace OpenSim.Framework
         private Vector3 _userLookAt = new Vector3();
         private int _dwell = 0;
         private int _otherCleanTime = 0;
+        private ulong _regionHandle;
+        private UUID _regionID;
 
         /// <summary>
         /// Upper corner of the AABB for the parcel
@@ -335,6 +337,30 @@ namespace OpenSim.Framework
             }
             set {
                 _localID = value;
+            }
+        }
+
+        public ulong RegionHandle
+        {
+            get
+            {
+                return _regionHandle;
+            }
+            set
+            {
+                _regionHandle = value;
+            }
+        }
+
+        public UUID RegionID
+        {
+            get
+            {
+                return _regionID;
+            }
+            set
+            {
+                _regionID = value;
             }
         }
 
@@ -733,6 +759,9 @@ namespace OpenSim.Framework
             landData._mediaType = _mediaType;
             landData._ObscureMedia = _ObscureMedia;
             landData._ObscureMusic = _ObscureMusic;
+            landData._regionID = _regionID;
+            landData._regionHandle = _regionHandle;
+            landData._infoUUID = _infoUUID;
 
             landData._parcelAccessList.Clear();
             foreach (ParcelManager.ParcelAccessEntry entry in _parcelAccessList)

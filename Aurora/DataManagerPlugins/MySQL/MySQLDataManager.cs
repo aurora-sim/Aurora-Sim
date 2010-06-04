@@ -94,7 +94,10 @@ namespace Aurora.DataManager.MySQL
                         {
                             for (int i = 0; i < reader.FieldCount; i++)
                             {
-                                RetVal.Add(reader.GetString(i));
+                                if (reader[i] is byte[])
+                                    RetVal.Add(OpenMetaverse.Utils.BytesToString((byte[])reader[i]));
+                                else
+                                    RetVal.Add(reader.GetString(i));
                             }
                         }
                         return RetVal;
@@ -112,6 +115,38 @@ namespace Aurora.DataManager.MySQL
                 result.Cancel();
                 result.Dispose();
                 CloseDatabase(dbcon);
+            }
+        }
+
+        public override IDataReader QueryReader(string keyRow, object keyValue, string table, string wantedValue)
+        {
+            MySqlConnection dbcon = GetLockedConnection();
+            IDbCommand result = null;
+            IDataReader reader = null;
+            List<string> RetVal = new List<string>();
+            string query = "";
+            if (keyRow == "")
+            {
+                query = String.Format("select {0} from {1}",
+                                      wantedValue, table);
+            }
+            else
+            {
+                query = String.Format("select {0} from {1} where {2} = '{3}'",
+                                      wantedValue, table, keyRow, keyValue.ToString());
+            }
+            try
+            {
+                result = Query(query, new Dictionary<string, object>(), dbcon);
+                    reader = result.ExecuteReader();
+                    return reader;
+            }
+            catch
+            {
+                return null;
+            }
+            finally
+            {
             }
         }
 
@@ -291,7 +326,51 @@ namespace Aurora.DataManager.MySQL
             }
             query = query.Remove(query.Length - 1);
             query += ")";
+
             using (result = Query(query, new Dictionary<string, object>(), dbcon))
+            {
+                try
+                {
+                    using (reader = result.ExecuteReader())
+                    {
+                        reader.Close();
+                        reader.Dispose();
+                        result.Cancel();
+                        result.Dispose();
+                        CloseDatabase(dbcon);
+                    }
+                }
+                catch { }
+            }
+            return true;
+        }
+
+        public override bool Insert(string table, string[] keys, object[] values)
+        {
+            MySqlConnection dbcon = GetLockedConnection();
+            IDbCommand result;
+            IDataReader reader;
+
+            string query = String.Format("insert into {0} ", table);
+            Dictionary<string, object> param = new Dictionary<string, object>();
+
+            int i = 0;
+            foreach (object value in keys)
+            {
+                param.Add("?"+value, values[i]);
+                i++;
+            }
+            query = query.Remove(query.Length - 1);
+            query += " values (";
+
+            foreach (object value in keys)
+            {
+                query += String.Format("?{0},", value);
+            }
+            query = query.Remove(query.Length - 1);
+            query += ")";
+
+            using (result = Query(query, param, dbcon))
             {
                 try
                 {
@@ -317,7 +396,7 @@ namespace Aurora.DataManager.MySQL
             string query = String.Format("insert into {0} VALUES('", table);
             foreach (object value in values)
             {
-                query += value.ToString() + "','";
+                query += value + "','";
             }
             query = query.Remove(query.Length - 2);
             query += String.Format(") ON DUPLICATE KEY UPDATE {0} = '{1}'", updateKey, updateValue);

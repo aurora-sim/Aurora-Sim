@@ -93,6 +93,8 @@ namespace OpenSim.Region.CoreModules.World.Land
             else
                 LandData.GroupID = UUID.Zero;
             LandData.IsGroupOwned = is_group_owned;
+            LandData.RegionID = scene.RegionInfo.RegionID;
+            LandData.RegionHandle = scene.RegionInfo.RegionHandle;
         }
 
         #endregion

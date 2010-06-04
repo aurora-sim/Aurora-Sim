@@ -1,4 +1,5 @@
 using System;
+using System.Data;
 using System.Collections.Generic;
 using Aurora.Framework;
 using OpenSim.Framework;
@@ -20,6 +21,8 @@ namespace Aurora.DataManager
         public abstract List<string> Query(string keyRow, object keyValue, string table, string wantedValue);
         public abstract List<string> Query(string[] keyRow, object[] keyValue, string table, string wantedValue);
         public abstract bool Insert(string table, object[] values);
+        public abstract bool Insert(string table, string[] keys, object[] values);
+        public abstract IDataReader QueryReader(string keyRow, object keyValue, string table, string wantedValue);
         public abstract bool Delete(string table, string[] keys, object[] values);
         public abstract bool Insert(string table, object[] values, string updateKey, object updateValue);
         public abstract bool Update(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues);
