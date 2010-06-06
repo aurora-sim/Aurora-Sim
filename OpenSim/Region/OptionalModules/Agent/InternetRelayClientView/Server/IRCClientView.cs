@@ -1697,5 +1697,15 @@ namespace OpenSim.Region.OptionalModules.Agent.InternetRelayClientView.Server
         }
 
         #endregion
+
+        #region IClientAPI Members
+
+
+        public void SendLayerPacket(float[] map, int x, int y)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
     }
 }

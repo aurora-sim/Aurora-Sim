@@ -133,7 +133,15 @@ namespace OpenSim.Region.Framework.Scenes
         private byte m_movementflag;
         private Vector3? m_forceToApply;
         private uint m_requestedSitTargetID;
+        public uint SittingOnID
+        {
+            get { return m_requestedSitTargetID; }
+        }
         private UUID m_requestedSitTargetUUID;
+        public UUID SittingOnUUID
+        {
+            get { return m_requestedSitTargetUUID; }
+        }
         public bool SitGround = false;
 
         private SendCourseLocationsMethod m_sendCourseLocationsMethod;
@@ -2896,15 +2904,15 @@ namespace OpenSim.Region.Framework.Scenes
                         {
                             Vector3 pos = AbsolutePosition;
                             if (AbsolutePosition.X < 0)
-                                pos.X += Velocity.X - 2;
-                            else if (AbsolutePosition.X > Constants.RegionSize - .051f)
-                                pos.X -= Velocity.X + 2;
+                                pos.X += Math.Abs(Velocity.X) - 2.5f;
+                            else if (AbsolutePosition.X > Constants.RegionSize - .861f)
+                                pos.X -= Math.Abs(Velocity.X) + 2.5f;
                             if (AbsolutePosition.Y < 0)
-                                pos.Y += Velocity.Y - 2;
-                            else if (AbsolutePosition.Y > Constants.RegionSize - .051f)
-                                pos.Y -= Velocity.Y + 2;
-                            AbsolutePosition = pos;
-                            //PhysicsActor.Position = AbsolutePosition;
+                                pos.Y += Math.Abs(Velocity.Y) - 2.5f;
+                            else if (AbsolutePosition.Y > Constants.RegionSize - .851f)
+                                pos.Y -= Math.Abs(Velocity.Y) + 2.5f;
+                            //AbsolutePosition = pos;
+                            ///PhysicsActor.Position = AbsolutePosition;
                         }
                     }
                 }

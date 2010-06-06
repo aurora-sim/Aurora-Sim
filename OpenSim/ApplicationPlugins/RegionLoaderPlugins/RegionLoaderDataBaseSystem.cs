@@ -52,9 +52,10 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 
         public void Initialise(IConfigSource configSource, IRegionCreator creator, IOpenSimBase openSim)
         {
-            m_configSource = configSource; ;
+            m_configSource = configSource;
             m_creator = creator;
             m_openSim = (OpenSimBase)openSim;
+            MainConsole.Instance.Commands.AddCommand("base", false, "export database regions", "export database regions", "Exports regions in the database to an .ini file", Export);
         }
 
         public string Name
@@ -68,31 +69,24 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
         public RegionInfo[] LoadRegions()
         {
             //Grab old region files
-            FindOldRegionFiles();
+            //FindOldRegionFiles(); //Not enabled
 
             RegionInfo[] infos = Aurora.DataManager.DataManager.IRegionInfoConnector.GetRegionInfos();
             if (infos.Length == 0)
             {
-                RegionManager manager = new RegionManager(true);
-                System.Windows.Forms.Application.Run(manager);
-                return LoadRegions();
+                //RegionManager manager = new RegionManager(true, m_openSim);
+                //System.Windows.Forms.Application.Run(manager);
+                //return LoadRegions();
+                return null;
             }
             else
                 return infos;
         }
 
-        public void AddRegion()
+        public void AddRegion(IOpenSimBase baseOS)
         {
-            RegionManager manager = new RegionManager(true);
-            manager.OnNewRegion += new RegionManager.NewRegion(manager_OnNewRegion);
+            RegionManager manager = new RegionManager(true, (OpenSimBase)baseOS);
             System.Windows.Forms.Application.Run(manager);
-        }
-
-        private void manager_OnNewRegion(RegionInfo info)
-        {
-            IScene scene;
-            m_log.Debug("[LOADREGIONS]: Creating Region: " + info.RegionName + ")");
-            m_openSim.SceneManager.CreateRegion(info, true, out scene);
         }
 
         private void FindOldRegionFiles()
@@ -166,6 +160,30 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 
         public void Dispose()
         {
+        }
+
+        protected void Export(string module, string[] cmdparams)
+        {
+            RegionInfo[] infos = Aurora.DataManager.DataManager.IRegionInfoConnector.GetRegionInfos();
+            if (infos.Length != 0)
+            {
+                StreamWriter writer = new StreamWriter("Regions/"+cmdparams[3]);
+                foreach (RegionInfo info in infos)
+                {
+                    writer.WriteLine("[" + info.RegionName + "]");
+
+                    writer.WriteLine("RegionUUID = " + info.RegionID);
+                    writer.WriteLine("Location = " + info.RegionLocX + "," + info.RegionLocY);
+                    writer.WriteLine("InternalAddress = 0.0.0.0");
+                    writer.WriteLine("InternalPort = " + info.InternalEndPoint.Port);
+                    writer.WriteLine("AllowAlternatePorts = " + info.m_allow_alternate_ports);
+                    writer.WriteLine("ExternalHostName = " + info.ExternalHostName);
+                    writer.WriteLine("RegionType = " + info.RegionType);
+                    writer.WriteLine("");
+                }
+                writer.Close();
+                writer.Dispose();
+            }
         }
     }
 }

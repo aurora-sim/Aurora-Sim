@@ -3,23 +3,30 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Net;
+using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
 using Aurora.Framework;
 using OpenSim.Framework;
 using OpenMetaverse;
+using OpenSim;
+using log4net;
 
 namespace Aurora.Modules.RegionLoader
 {
     public partial class RegionManager : Form
     {
+        private static readonly ILog m_log
+           = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         public delegate void NewRegion(RegionInfo info);
         public event NewRegion OnNewRegion;
         private bool OpenedForCreateRegion = false;
         private UUID CurrentRegionID = UUID.Zero;
+        private OpenSimBase m_OpenSimBase;
 
-        public RegionManager(bool create)
+        public RegionManager(bool create, OpenSimBase baseOpenSim)
         {
+            m_OpenSimBase = baseOpenSim;
             OpenedForCreateRegion = create;
             InitializeComponent();
             if (create)
@@ -61,11 +68,12 @@ namespace Aurora.Modules.RegionLoader
             region.AccessLevel = Util.ConvertMaturityToAccessLevel(uint.Parse(Maturity.Text));
 
             Aurora.DataManager.DataManager.IRegionInfoConnector.UpdateRegionInfo(region, bool.Parse(Disabled.Text));
-            if (OnNewRegion != null)
-                OnNewRegion(region);
+            IScene scene;
+            m_log.Debug("[LOADREGIONS]: Creating Region: " + region.RegionName + ")");
+            m_OpenSimBase.SceneManager.CreateRegion(region, true, out scene);
 
             if(OpenedForCreateRegion)
-                Application.Exit();
+                System.Windows.Forms.Application.Exit();
         }
 
         private void SearchForRegionByName_Click(object sender, EventArgs e)

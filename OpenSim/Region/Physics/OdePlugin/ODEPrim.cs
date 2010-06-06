@@ -346,6 +346,7 @@ namespace OpenSim.Region.Physics.OdePlugin
         {
             m_disabled = true;
 
+            m_vehicle.Disable();
             if (m_isphysical && Body != IntPtr.Zero)
             {
                 d.BodyDisable(Body);
@@ -780,6 +781,7 @@ namespace OpenSim.Region.Physics.OdePlugin
                             }
                         }
                         Body = IntPtr.Zero;
+                        m_vehicle.Disable();
                     }
                 }
                 else

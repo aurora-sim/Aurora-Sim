@@ -57,10 +57,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 EventQueue eqtc = new EventQueue(m_ScriptEngine, Engine.SleepTime);
                 Watchdog.StartThread(eqtc.DoProcessQueue, "EventQueueThread", ThreadPriority.Normal, true);
             }
-            for (int i = 0; i < Engine.NumberOfStateSavingThreads; i++)
-            {
-                Watchdog.StartThread(StateSavingMaintenance, "StateSavingMaintenance", ThreadPriority.Normal, true);
-            }
             for (int i = 0; i < Engine.NumberOfStartStopThreads; i++)
             {
                 Watchdog.StartThread(StartEndScriptMaintenance, "StartEndScriptMaintenance", ThreadPriority.Normal, true);
@@ -91,46 +87,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     m_log.ErrorFormat("Exception in StartEndScriptMaintenance. Exception: {0}", ex.ToString());
                 }
             }
-        }
-
-        public void StateSavingMaintenance()
-        {
-            while (true)
-            {
-                try
-                {
-                    Thread.Sleep(m_ScriptEngine.SleepTime); // Sleep before next pass
-                    DoStateQueue();
-                }
-                catch (Exception ex)
-                {
-                    m_log.ErrorFormat("Exception in StateSavingMaintenance. Exception: {0}", ex.ToString());
-                }
-            }
-        }
-
-        #endregion
-
-        #region State Queue
-
-        public void DoStateQueue()
-        {
-            if (ScriptEngine.StateQueue.Count != 0)
-            {
-                StateQueueItem item = null;
-                ScriptEngine.StateQueue.Dequeue(out item);
-                if (item == null)
-                    return;
-                if (item.Create)
-                    item.ID.SerializeDatabase();
-                else
-                    RemoveState(item.ID);
-            }
-        }
-
-        public void RemoveState(ScriptData ID)
-        {
-            ScriptFrontend.DeleteStateSave(ID.ItemID);
         }
 
         #endregion
@@ -175,7 +131,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 try
                 {
-                    item.ID.CloseAndDispose();
+                    item.ID.CloseAndDispose(false);
                 }
                 catch (Exception ex) { m_log.Warn(ex); }
             }

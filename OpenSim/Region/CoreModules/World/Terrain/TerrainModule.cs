@@ -343,7 +343,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             float duration = 0.25f;
             if (action == 0)
                 duration = 4.0f;
-            client_OnModifyTerrain(user, (float)pos.Z, duration, size, action, pos.Y, pos.X, pos.Y, pos.X, agentId);
+            client_OnModifyTerrain(user, (float)pos.Z, duration, size, action, pos.Y, pos.X, pos.Y, pos.X, agentId, size);
         }
 
         /// <summary>
@@ -543,9 +543,6 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 m_tainted = false;
                 m_scene.PhysicsScene.SetTerrain(m_channel.GetFloatsSerialised());
                 m_scene.SaveTerrain();
-
-                // Clients who look at the map will never see changes after they looked at the map, so i've commented this out.
-                //m_scene.CreateTerrainTexture(true);
             }
         }
 
@@ -694,14 +691,14 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         {
             m_scene.ForEachClient(
                 delegate(IClientAPI controller)
-                    { controller.SendLayerData(
-                        x / Constants.TerrainPatchSize, y / Constants.TerrainPatchSize, serialised);
-                    }
+                {
+                    controller.SendLayerData(x / Constants.TerrainPatchSize, y / Constants.TerrainPatchSize, serialised);
+                }
             );
         }
 
         private void client_OnModifyTerrain(UUID user, float height, float seconds, byte size, byte action,
-                                            float north, float west, float south, float east, UUID agentId)
+                                            float north, float west, float south, float east, UUID agentId, float BrushSize)
         {
             bool god = m_scene.Permissions.IsGod(user);
             bool allowed = false;
@@ -711,9 +708,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 {
                     bool[,] allowMask = new bool[m_channel.Width,m_channel.Height];
                     allowMask.Initialize();
-                    int n = size + 1;
-                     if (n > 2)
-                        n = 12;
+                    int n = (int)BrushSize;
 
                     int zx = (int) (west + 0.5);
                     int zy = (int) (north + 0.5);
@@ -740,7 +735,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                     {
                         StoreUndoState();
                         m_painteffects[(StandardTerrainEffects) action].PaintEffect(
-                            m_channel, allowMask, west, south, height, size, seconds);
+                            m_channel, allowMask, west, south, height, size, seconds, BrushSize);
 
                         CheckForTerrainUpdates(!god); //revert changes outside estate limits
                     }

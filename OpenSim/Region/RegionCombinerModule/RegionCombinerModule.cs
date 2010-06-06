@@ -687,8 +687,186 @@ namespace OpenSim.Region.RegionCombinerModule
             // Sets up the CoarseLocationUpdate forwarder for this root region
             scene.EventManager.OnNewPresence += SetCourseLocationDelegate;
 
+            scene.EventManager.OnNewClient += new EventManager.OnNewClientDelegate(EventManager_OnNewClient);
+
             // Adds this root region to a dictionary of regions that are connectable
             m_regions.Add(scene.RegionInfo.RegionID, regionConnections);
+        }
+
+        void EventManager_OnNewClient(IClientAPI client)
+        {
+            client.OnSetEstateTerrainDetailTexture += setEstateTerrainBaseTexture;
+            client.OnSetEstateTerrainTextureHeights += setEstateTerrainTextureHeights;
+            client.OnSetRegionTerrainSettings += setRegionTerrainSettings;
+        }
+
+        public void setRegionTerrainSettings(float WaterHeight,
+                float TerrainRaiseLimit, float TerrainLowerLimit,
+                bool UseEstateSun, bool UseFixedSun, float SunHour,
+                bool UseGlobal, bool EstateFixedSun, float EstateSunHour)
+        {
+            lock (m_regions)
+            {
+                foreach (Scene r in m_startingScenes.Values)
+                {
+                    // Water Height
+                    r.RegionInfo.RegionSettings.WaterHeight = WaterHeight;
+
+                    // Terraforming limits
+                    r.RegionInfo.RegionSettings.TerrainRaiseLimit = TerrainRaiseLimit;
+                    r.RegionInfo.RegionSettings.TerrainLowerLimit = TerrainLowerLimit;
+
+                    // Time of day / fixed sun
+                    r.RegionInfo.RegionSettings.UseEstateSun = UseEstateSun;
+                    r.RegionInfo.RegionSettings.FixedSun = UseFixedSun;
+                    r.RegionInfo.RegionSettings.SunPosition = SunHour;
+
+                    r.TriggerEstateSunUpdate();
+
+                    //m_log.Debug("[ESTATE]: UFS: " + UseFixedSun.ToString());
+                    //m_log.Debug("[ESTATE]: SunHour: " + SunHour.ToString());
+
+                    sendRegionInfoPacketToAll(r);
+                    r.RegionInfo.RegionSettings.Save();
+                    r.RequestModuleInterface<IEstateModule>().sendRegionHandshakeToAll();
+                }
+            }
+        }
+
+        public void setEstateTerrainBaseTexture(IClientAPI remoteClient, int corner, UUID texture)
+        {
+            foreach (Scene r in m_startingScenes.Values)
+            {
+                if (texture == UUID.Zero)
+                    return;
+
+                switch (corner)
+                {
+                    case 0:
+                        r.RegionInfo.RegionSettings.TerrainTexture1 = texture;
+                        break;
+                    case 1:
+                        r.RegionInfo.RegionSettings.TerrainTexture2 = texture;
+                        break;
+                    case 2:
+                        r.RegionInfo.RegionSettings.TerrainTexture3 = texture;
+                        break;
+                    case 3:
+                        r.RegionInfo.RegionSettings.TerrainTexture4 = texture;
+                        break;
+                }
+                r.RegionInfo.RegionSettings.Save();
+                r.RequestModuleInterface<IEstateModule>().sendRegionHandshakeToAll();
+                sendRegionInfoPacketToAll(r);
+            }
+        }
+
+        public void setEstateTerrainTextureHeights(IClientAPI remoteClient, int corner, float lowValue, float highValue)
+        {
+            foreach (Scene r in m_startingScenes.Values)
+            {
+                switch (corner)
+                {
+                    case 0:
+                        r.RegionInfo.RegionSettings.Elevation1SW = lowValue;
+                        r.RegionInfo.RegionSettings.Elevation2SW = highValue;
+                        break;
+                    case 1:
+                        r.RegionInfo.RegionSettings.Elevation1NW = lowValue;
+                        r.RegionInfo.RegionSettings.Elevation2NW = highValue;
+                        break;
+                    case 2:
+                        r.RegionInfo.RegionSettings.Elevation1SE = lowValue;
+                        r.RegionInfo.RegionSettings.Elevation2SE = highValue;
+                        break;
+                    case 3:
+                        r.RegionInfo.RegionSettings.Elevation1NE = lowValue;
+                        r.RegionInfo.RegionSettings.Elevation2NE = highValue;
+                        break;
+                }
+                r.RegionInfo.RegionSettings.Save();
+                r.RequestModuleInterface<IEstateModule>().sendRegionHandshakeToAll();
+                sendRegionInfoPacketToAll(r);
+            }
+        }
+
+        private void sendRegionInfoPacketToAll(Scene scene)
+        {
+            scene.ForEachScenePresence(delegate(ScenePresence sp)
+            {
+                if (!sp.IsChildAgent)
+                    HandleRegionInfoRequest(sp.ControllingClient, scene);
+            });
+        }
+
+        private void HandleRegionInfoRequest(IClientAPI remote_client, Scene m_scene)
+        {
+            RegionInfoForEstateMenuArgs args = new RegionInfoForEstateMenuArgs();
+            args.billableFactor = m_scene.RegionInfo.EstateSettings.BillableFactor;
+            args.estateID = m_scene.RegionInfo.EstateSettings.EstateID;
+            args.maxAgents = (byte)m_scene.RegionInfo.RegionSettings.AgentLimit;
+            args.objectBonusFactor = (float)m_scene.RegionInfo.RegionSettings.ObjectBonus;
+            args.parentEstateID = m_scene.RegionInfo.EstateSettings.ParentEstateID;
+            args.pricePerMeter = m_scene.RegionInfo.EstateSettings.PricePerMeter;
+            args.redirectGridX = m_scene.RegionInfo.EstateSettings.RedirectGridX;
+            args.redirectGridY = m_scene.RegionInfo.EstateSettings.RedirectGridY;
+            args.regionFlags = GetRegionFlags(m_scene);
+            args.simAccess = m_scene.RegionInfo.AccessLevel;
+            args.sunHour = (float)m_scene.RegionInfo.RegionSettings.SunPosition;
+            args.terrainLowerLimit = (float)m_scene.RegionInfo.RegionSettings.TerrainLowerLimit;
+            args.terrainRaiseLimit = (float)m_scene.RegionInfo.RegionSettings.TerrainRaiseLimit;
+            args.useEstateSun = m_scene.RegionInfo.RegionSettings.UseEstateSun;
+            args.waterHeight = (float)m_scene.RegionInfo.RegionSettings.WaterHeight;
+            args.simName = m_scene.RegionInfo.RegionName;
+
+            remote_client.SendRegionInfoToEstateMenu(args);
+        }
+
+        public uint GetRegionFlags(Scene m_scene)
+        {
+            RegionFlags flags = RegionFlags.None;
+
+            // Fully implemented
+            //
+            if (m_scene.RegionInfo.RegionSettings.AllowDamage)
+                flags |= RegionFlags.AllowDamage;
+            if (m_scene.RegionInfo.RegionSettings.BlockTerraform)
+                flags |= RegionFlags.BlockTerraform;
+            if (!m_scene.RegionInfo.RegionSettings.AllowLandResell)
+                flags |= RegionFlags.BlockLandResell;
+            if (m_scene.RegionInfo.RegionSettings.DisableCollisions)
+                flags |= RegionFlags.SkipCollisions;
+            if (m_scene.RegionInfo.RegionSettings.DisableScripts)
+                flags |= RegionFlags.SkipScripts;
+            if (m_scene.RegionInfo.RegionSettings.DisablePhysics)
+                flags |= RegionFlags.SkipPhysics;
+            if (m_scene.RegionInfo.RegionSettings.BlockFly)
+                flags |= RegionFlags.NoFly;
+            if (m_scene.RegionInfo.RegionSettings.RestrictPushing)
+                flags |= RegionFlags.RestrictPushObject;
+            if (m_scene.RegionInfo.RegionSettings.AllowLandJoinDivide)
+                flags |= RegionFlags.AllowParcelChanges;
+            if (m_scene.RegionInfo.RegionSettings.BlockShowInSearch)
+                flags |= (RegionFlags)(1 << 29);
+
+            if (m_scene.RegionInfo.RegionSettings.FixedSun)
+                flags |= RegionFlags.SunFixed;
+            if (m_scene.RegionInfo.RegionSettings.Sandbox)
+                flags |= RegionFlags.Sandbox;
+
+            // Fudge these to always on, so the menu options activate
+            //
+            flags |= RegionFlags.AllowLandmark;
+            flags |= RegionFlags.AllowSetHome;
+
+            // TODO: SkipUpdateInterestList
+
+            // Omitted
+            //
+            // Omitted: NullLayer (what is that?)
+            // Omitted: SkipAgentAction (what does it do?)
+
+            return (uint)flags;
         }
 
         private void SetCourseLocationDelegate(ScenePresence presence)

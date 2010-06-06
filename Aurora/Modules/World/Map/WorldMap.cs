@@ -141,6 +141,15 @@ namespace Aurora.Modules
 				RemoveHandlers();
 				m_scene = null;
 			}
+            UpdateMapImage.Stop();
+            UpdateMapImage.Elapsed -= OnTimedCreateNewMapImage;
+            UpdateMapImage.Enabled = false;
+            UpdateMapImage.Close();
+
+            UpdateOnlineStatus.Stop();
+            UpdateOnlineStatus.Elapsed -= OnUpdateRegion;
+            UpdateOnlineStatus.Enabled = false;
+            UpdateOnlineStatus.Close();
 		}
 
 		public virtual void RegionLoaded (Scene scene)

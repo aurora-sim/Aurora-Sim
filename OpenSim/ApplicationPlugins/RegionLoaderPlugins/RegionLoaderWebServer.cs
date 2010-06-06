@@ -109,7 +109,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             }
         }
 
-        public void AddRegion()
+        public void AddRegion(IOpenSimBase baseOS)
         {
         }
 

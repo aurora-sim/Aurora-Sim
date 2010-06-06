@@ -12,5 +12,6 @@
 		<Plugin id="AuroraDataStartupPlugin" type="OpenSim.ApplicationPlugins.RegionLoaderPlugin.AuroraDataStartupPlugin" />
 		<Plugin id="RegionLoaderDataBaseSystem" type="OpenSim.ApplicationPlugins.RegionLoaderPlugin.RegionLoaderDataBaseSystem" />
 		<Plugin id="RegionLoaderWebServer" type="OpenSim.ApplicationPlugins.RegionLoaderPlugin.RegionLoaderWebServer" />
+		<Plugin id="RegionLoaderFileSystem" type="OpenSim.ApplicationPlugins.RegionLoaderPlugin.RegionLoaderFileSystem" />
     </Extension>
 </Addin>

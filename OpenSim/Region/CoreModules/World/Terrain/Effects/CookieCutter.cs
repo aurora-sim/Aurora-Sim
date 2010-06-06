@@ -84,7 +84,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.Effects
                 for (y = 0; y < map.Height; y++)
                 {
                     if (cliffMask[x, y])
-                        eroder.PaintEffect(map, allowMask, x, y, -1, 4, 0.1);
+                        eroder.PaintEffect(map, allowMask, x, y, -1, 4, 0.1, 4);
                 }
             }
 

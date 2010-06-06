@@ -131,6 +131,7 @@ namespace OpenSim.Region.Physics.OdePlugin
         //Attractor properties
         private float m_verticalAttractionEfficiency = 1.0f;        // damped
         private float m_verticalAttractionTimescale = 500f;         // Timescale > 300  means no vert attractor.
+        public float Mass;
 
         internal void ProcessFloatVehicleParam(Vehicle pParam, float pValue)
         {
@@ -605,6 +606,16 @@ namespace OpenSim.Region.Physics.OdePlugin
                 return;
 
             m_body = pBody;
+            d.Mass objMass;
+            d.BodyGetMass(m_body, out objMass);
+            objMass.mass *= 3;
+            d.BodySetMass(m_body, ref objMass);
+
+            Mass = objMass.mass;
+        }
+
+        internal void Disable()
+        {
         }
 
         internal void Step(float pTimestep,  OdeScene pParentScene)
@@ -615,17 +626,19 @@ namespace OpenSim.Region.Physics.OdePlugin
             if (frcount > 100)
                 frcount = 0;
 
+            if (!d.BodyIsEnabled(Body))
+                //d.BodyEnable(Body);
+                return;
+
             MoveLinear(pTimestep, pParentScene);
             MoveAngular(pTimestep);
             LimitRotation(pTimestep);
-        }// end Step
+        }   // end Step
 
         private void MoveLinear(float pTimestep, OdeScene _pParentScene)
         {
             if (!m_linearMotorDirection.ApproxEquals(Vector3.Zero, 0.01f))  // requested m_linearMotorDirection is significant
             {
-                 if (!d.BodyIsEnabled(Body))
-                     d.BodyEnable(Body);
 
                 // add drive to body
                 Vector3 addAmount = m_linearMotorDirection/(m_linearMotorTimescale/pTimestep);
@@ -640,11 +653,10 @@ namespace OpenSim.Region.Physics.OdePlugin
                 if (Math.Abs(m_lastLinearVelocityVector.Z) > Math.Abs(m_linearMotorDirectionLASTSET.Z))
                     m_lastLinearVelocityVector.Z = m_linearMotorDirectionLASTSET.Z;
 
+
                 // decay applied velocity
                 Vector3 decayfraction = ((Vector3.One/(m_linearMotorDecayTimescale/pTimestep)));
-                //Console.WriteLine("decay: " + decayfraction);
                 m_linearMotorDirection -= m_linearMotorDirection * decayfraction * 0.5f;
-                //Console.WriteLine("actual: " + m_linearMotorDirection);
             }
             else
             {        // requested is not significant
@@ -657,7 +669,7 @@ namespace OpenSim.Region.Physics.OdePlugin
             m_dir = m_lastLinearVelocityVector;
             d.Quaternion rot = d.BodyGetQuaternion(Body);
             Quaternion rotq = new Quaternion(rot.X, rot.Y, rot.Z, rot.W);    // rotq = rotation of object
-            m_dir *= rotq;                            // apply obj rotation to velocity vector
+            m_dir *= rotq;   // apply obj rotation to velocity vector
 
             // add Gravity andBuoyancy
             // KF: So far I have found no good method to combine a script-requested
@@ -666,54 +678,51 @@ namespace OpenSim.Region.Physics.OdePlugin
             Vector3 grav = Vector3.Zero;
             // There is some gravity, make a gravity force vector
             // that is applied after object velocity.
-            d.Mass objMass;
-            d.BodyGetMass(Body, out objMass);
+            //d.Mass objMass;
+            //d.BodyGetMass(Body, out objMass);
             // m_VehicleBuoyancy: -1=2g; 0=1g; 1=0g;
-            grav.Z = _pParentScene.gravityz * objMass.mass * (1f - m_VehicleBuoyancy);
+            grav.Z = _pParentScene.gravityz * Mass * (1f - m_VehicleBuoyancy);
             // Preserve the current Z velocity
             d.Vector3 vel_now = d.BodyGetLinearVel(Body);
             m_dir.Z = vel_now.Z;        // Preserve the accumulated falling velocity
 
             d.Vector3 pos = d.BodyGetPosition(Body);
             Vector3 accel = new Vector3(-(m_dir.X - m_lastLinearVelocityVector.X / 0.1f), -(m_dir.Y - m_lastLinearVelocityVector.Y / 0.1f), m_dir.Z - m_lastLinearVelocityVector.Z / 0.1f);
+            
             Vector3 posChange = new Vector3();
             posChange.X = pos.X - m_lastPositionVector.X;
             posChange.Y = pos.Y - m_lastPositionVector.Y;
             posChange.Z = pos.Z - m_lastPositionVector.Z;
+
             double Zchange = Math.Abs(posChange.Z);
+
             if (m_BlockingEndPoint != Vector3.Zero)
             {
                 if (pos.X >= (m_BlockingEndPoint.X - (float)1))
                 {
                     pos.X -= posChange.X + 1;
-                    d.BodySetPosition(Body, pos.X, pos.Y, pos.Z);
                 }
                 if (pos.Y >= (m_BlockingEndPoint.Y - (float)1))
                 {
                     pos.Y -= posChange.Y + 1;
-                    d.BodySetPosition(Body, pos.X, pos.Y, pos.Z);
                 }
                 if (pos.Z >= (m_BlockingEndPoint.Z - (float)1))
                 {
                     pos.Z -= posChange.Z + 1;
-                    d.BodySetPosition(Body, pos.X, pos.Y, pos.Z);
                 }
                 if (pos.X <= 0)
                 {
                     pos.X += posChange.X + 1;
-                    d.BodySetPosition(Body, pos.X, pos.Y, pos.Z);
                 }
                 if (pos.Y <= 0)
                 {
                     pos.Y += posChange.Y + 1;
-                    d.BodySetPosition(Body, pos.X, pos.Y, pos.Z);
                 }
             }
-            if (pos.Z < _pParentScene.GetTerrainHeightAtXY(pos.X, pos.Y))
+            /*if (pos.Z < _pParentScene.GetTerrainHeightAtXY(pos.X, pos.Y))
             {
                 pos.Z = _pParentScene.GetTerrainHeightAtXY(pos.X, pos.Y) + 2;
-                d.BodySetPosition(Body, pos.X, pos.Y, pos.Z);
-            }
+            }*/
 
             // Check if hovering
             if ((m_Hoverflags & (VehicleFlag.HOVER_WATER_ONLY | VehicleFlag.HOVER_TERRAIN_ONLY | VehicleFlag.HOVER_GLOBAL_HEIGHT)) != 0)
@@ -734,7 +743,7 @@ namespace OpenSim.Region.Physics.OdePlugin
 
                 if ((m_Hoverflags & VehicleFlag.HOVER_UP_ONLY) != 0)
                 {
-                    // If body is aready heigher, use its height as target height
+                    // If body is already heigher, use its height as target height
                     if (pos.Z > m_VhoverTargetHeight) m_VhoverTargetHeight = pos.Z;
                 }
                 if ((m_Hoverflags & VehicleFlag.LOCK_HOVER_HEIGHT) != 0)
@@ -742,7 +751,7 @@ namespace OpenSim.Region.Physics.OdePlugin
                     if ((pos.Z - m_VhoverTargetHeight) > .2 || (pos.Z - m_VhoverTargetHeight) < -.2)
                     {
                         if ((pos.Z - (pos.Z - m_VhoverTargetHeight)) >= _pParentScene.GetTerrainHeightAtXY(pos.X, pos.Y))
-                            d.BodySetPosition(Body, pos.X, pos.Y, m_VhoverTargetHeight);
+                            pos.Z = m_VhoverTargetHeight;
                     }
                 }
                 else
@@ -765,7 +774,7 @@ namespace OpenSim.Region.Physics.OdePlugin
 //                pTimestep  is time since last frame,in secs
             }
 
-            if ((m_flags & (VehicleFlag.LIMIT_MOTOR_UP)) != 0)
+            /*if ((m_flags & (VehicleFlag.LIMIT_MOTOR_UP)) != 0)
             {
                 //Start Experimental Values
                 if (Zchange > .3)
@@ -795,7 +804,8 @@ namespace OpenSim.Region.Physics.OdePlugin
                     grav.Z = (float)(grav.Z * 1.037125);
                 }
                 //End Experimental Values
-            }
+            }*/
+
             if ((m_flags & (VehicleFlag.NO_X)) != 0)
             {
                 m_dir.X = 0;
@@ -810,6 +820,12 @@ namespace OpenSim.Region.Physics.OdePlugin
             }
 
             m_lastPositionVector = d.BodyGetPosition(Body);
+
+            d.Vector3 OldPos = d.BodyGetPosition(Body);
+
+            //Check for changes and only set it once
+            if (pos.X != OldPos.X || pos.Y != OldPos.Y || pos.Z != OldPos.Z)
+                d.BodySetPosition(Body, pos.X, pos.Y, pos.Z);
 
             // Apply velocity
             d.BodySetLinearVel(Body, m_dir.X, m_dir.Y, m_dir.Z);

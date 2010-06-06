@@ -151,6 +151,42 @@ namespace OpenSim.Region.Framework.Scenes
                 else
                     entityPos = entity.AbsolutePosition;
 
+                // Objects avatars are sitting on should be prioritized more
+                if (entity is SceneObjectPart)
+                {
+                    if (presence.SittingOnUUID == entity.UUID)
+                    {
+                        //Objects that are physical get more priority.
+                        PhysicsActor physActor = ((SceneObjectPart)entity).ParentGroup.RootPart.PhysActor;
+                        if (physActor != null && physActor.IsPhysical)
+                            return 0.0;
+                    }
+                    else if (presence.SittingOnID == entity.LocalId)
+                    {
+                        //Objects that are physical get more priority.
+                        PhysicsActor physActor = ((SceneObjectPart)entity).ParentGroup.RootPart.PhysActor;
+                        if (physActor != null && physActor.IsPhysical)
+                            return 0.0;
+                    }
+                }
+                if (entity is SceneObjectGroup)
+                {
+                    if (presence.SittingOnUUID == entity.UUID)
+                    {
+                        //Objects that are physical get more priority.
+                        PhysicsActor physActor = ((SceneObjectGroup)entity).RootPart.PhysActor;
+                        if (physActor != null && physActor.IsPhysical)
+                            return 0.0;
+                    }
+                    else if (presence.SittingOnID == entity.LocalId)
+                    {
+                        //Objects that are physical get more priority.
+                        PhysicsActor physActor = ((SceneObjectGroup)entity).RootPart.PhysActor;
+                        if (physActor != null && physActor.IsPhysical)
+                            return 0.0;
+                    }
+                }
+
                 if (!presence.IsChildAgent)
                 {
                     if (entity is ScenePresence)

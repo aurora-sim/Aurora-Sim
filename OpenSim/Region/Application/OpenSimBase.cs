@@ -540,7 +540,7 @@ namespace OpenSim
             List<IRegionLoader> regionLoaders = Aurora.Framework.AuroraModuleLoader.LoadPlugins<IRegionLoader>("/OpenSim/Startup", RegionLoaderPluginInitialiser);
             foreach (IRegionLoader loader in regionLoaders)
             {
-				loader.AddRegion();
+				loader.AddRegion(this);
 			}
 		}
 

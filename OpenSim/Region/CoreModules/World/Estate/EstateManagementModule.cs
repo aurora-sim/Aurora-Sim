@@ -170,6 +170,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
             }
             m_scene.RegionInfo.RegionSettings.Save();
             TriggerRegionInfoChange();
+            sendRegionHandshakeToAll();
             sendRegionInfoPacketToAll();
         }
 
@@ -196,12 +197,13 @@ namespace OpenSim.Region.CoreModules.World.Estate
             }
             m_scene.RegionInfo.RegionSettings.Save();
             TriggerRegionInfoChange();
+            sendRegionHandshakeToAll();
             sendRegionInfoPacketToAll();
         }
 
         private void handleCommitEstateTerrainTextureRequest(IClientAPI remoteClient)
         {
-            sendRegionHandshakeToAll();
+            //sendRegionHandshakeToAll();
         }
 
         public void setRegionTerrainSettings(float WaterHeight,

@@ -386,13 +386,21 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
 
         private string CheckAssembly(string assembly, int i)
         {
-            /*if (File.Exists(assembly) || File.Exists(assembly + ".text") || File.Exists(assembly + ".map") || File.Exists(assembly.Remove(assembly.Length - 4) + ".pdb"))
+            if (File.Exists(assembly) || File.Exists(assembly.Remove(assembly.Length - 4) + ".pdb"))
             {
-                assembly = assembly.Remove(assembly.Length - 4);
-                assembly += i + ".dll";
-                i++;
-                return CheckAssembly(assembly, i);
-            }*/
+                try
+                {
+                    File.Delete(assembly);
+                    File.Delete(assembly.Remove(assembly.Length - 4) + ".pdb");
+                }
+                catch (Exception e) // NOTLEGIT - Should be just FileIOException
+                {
+                    assembly = assembly.Remove(assembly.Length - 4);
+                    assembly += i + ".dll";
+                    i++;
+                    return CheckAssembly(assembly, i);
+                }
+            }
             return assembly;
         }
 
@@ -710,7 +718,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             //
             // Read the binary file into a buffer
             //
-            FileInfo fi = new FileInfo(assembly);
+            /*FileInfo fi = new FileInfo(assembly);
 
             if (fi == null)
             {
@@ -734,7 +742,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                 throw new Exception(errtext);
             }
 
-            /*// Convert to base64
+            // Convert to base64
             //
             AssemblyText = System.Convert.ToBase64String(data);
 

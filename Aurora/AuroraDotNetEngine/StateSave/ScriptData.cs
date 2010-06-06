@@ -121,24 +121,30 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// This closes the scrpit, removes it from any known spots, and disposes of itself.
         /// </summary>
         /// <returns></returns>
-        public void CloseAndDispose()
+        public void CloseAndDispose(bool Silent)
         {
-            if (Script != null)
+            if (!Silent)
             {
-                //Save the state
-                //Must be called directly or it wont be processed in time
-                SerializeDatabase();
-                //Fire this directly so its not closed before its fired
-                SetEventParams(new DetectParams[0]);
-                Script.ExecuteEvent(State,
-                                    "state_exit",
-                                    new object[0], 0);
+                if (Script != null)
+                {
+                    //Save the state
+                    //Must be called directly or it wont be processed in time
+                    SerializeDatabase();
+                    //Fire this directly so its not closed before its fired
+                    SetEventParams(new DetectParams[0]);
+                    Script.ExecuteEvent(State,
+                                        "state_exit",
+                                        new object[0], 0);
+                }
             }
             ReleaseControls();
             // Tell script not to accept new requests
             //These are fine to set as the state wont be saved again
             Running = false;
             Disabled = true;
+
+            // Remove from internal structure
+            m_ScriptEngine.RemoveScript(this);
 
             m_ScriptEngine.RemoveFromEventQueue(ItemID, localID);
             if (m_ScriptEngine.Errors.ContainsKey(ItemID))
@@ -166,6 +172,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             part.ParentGroup.ScheduleGroupForFullUpdate();
             */
             #endregion
+
             if (Script != null)
             {
                 // Stop long command on script
@@ -173,26 +180,24 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 Script.Close();
                 Script.Dispose();
                 Script = null;
+            }
+            try
+            {
+                if (AppDomain == null)
+                    return;
+
                 try
                 {
-                    // Remove from internal structure
-                    m_ScriptEngine.RemoveScript(this);
-
-                    if (AppDomain == null)
-                        return;
-
-                    try
-                    {
-                        // Tell AppDomain that we have stopped script
-                        ScriptEngine.AppDomainManager.UnloadScriptAppDomain(AppDomain);
-                    }
-                    //Legit: If the script had an error, this can happen... really shouldn't, but it does.
-                    catch (Exception) { }
+                    // Tell AppDomain that we have stopped script
+                    ScriptEngine.AppDomainManager.UnloadScriptAppDomain(AppDomain);
+                    AppDomain = null;
                 }
-                catch (Exception e)
-                {
-                    m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: Exception stopping script localID: " + localID + " LLUID: " + ItemID.ToString() + ": " + e.ToString());
-                }
+                //Legit: If the script had an error, this can happen... really shouldn't, but it does.
+                catch (Exception) { }
+            }
+            catch (Exception e)
+            {
+                m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: Exception stopping script localID: " + localID + " LLUID: " + ItemID.ToString() + ": " + e.ToString());
             }
             m_log.DebugFormat("[{0}]: Closed Script {1} in " + part.Name, m_ScriptEngine.ScriptEngineName, InventoryItem.Name);
         }
@@ -494,10 +499,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 if (reupload)
                 {
-                    //Null everything
+                    //Null everything and don't fire any events
+                    CloseAndDispose(true);
                     AssemblyName = "";
                     LineMap = new Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>>();
-                    CloseAndDispose();
                     Running = true;
                     Disabled = false;
                     //Clear out the removing of events for this script.
@@ -505,15 +510,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         ScriptEngine.NeedsRemoved.Remove(ItemID);
                 }
                 //If the previous compile is there, retrive that
-                /*if (PreviouslyCompiledID != null)
+                if (PreviouslyCompiledID != null)
                 {
                     ClassID = PreviouslyCompiledID.ClassID;
                     LineMap = PreviouslyCompiledID.LineMap;
                     AssemblyName = PreviouslyCompiledID.AssemblyName;
-                }*/
+                }
                 //Otherwise, compile the script.
-                //else
-                //{
+                else
+                {
                     try
                     {
                         ScriptEngine.LSLCompiler.PerformScriptCompile(Source, AssetID, InventoryItem.OwnerID, ItemID, Inherited, ClassName, m_ScriptEngine.ScriptProtection, localID, this, out AssemblyName,
@@ -544,7 +549,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     {
                         ShowError(ex, 1, reupload);
                     }
-                //}
+                }
             }
 
             bool useDebug = false;
@@ -862,6 +867,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             OpenSim.Framework.LocklessQueue<QueueItemStruct> tempQueue = new OpenSim.Framework.LocklessQueue<QueueItemStruct>();
             tempQueue = ScriptEngine.EventQueue;
+            
             int count = tempQueue.Count;
             int i = 0;
             while (i < count)

@@ -72,6 +72,8 @@ namespace OpenSim.Region.Framework.Scenes
         private const long DEFAULT_MIN_TIME_FOR_PERSISTENCE = 60L;
         private const long DEFAULT_MAX_TIME_FOR_PERSISTENCE = 600L;
 
+        private bool EnableFakeRaycasting = false;
+
         #region Fields
 
         protected Timer m_restartWaitTimer = new Timer();
@@ -689,8 +691,11 @@ namespace OpenSim.Region.Framework.Scenes
             try
             {
                 IConfig aurorastartupConfig = m_config.Configs["AuroraStartup"];
-                if(aurorastartupConfig != null)
+                if (aurorastartupConfig != null)
+                {
                     RunScriptsInAttachments = aurorastartupConfig.GetBoolean("AllowRunningOfScriptsInAttachments", false);
+                    EnableFakeRaycasting = aurorastartupConfig.GetBoolean("EnableFakeRaycasting", false);
+                }
                 // Region config overrides global config
                 //
                 IConfig startupConfig = m_config.Configs["Startup"];
@@ -2676,7 +2681,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (target != null)
                 {
                     pos = target.AbsolutePosition;
-                    //m_log.Info("[OBJECT_REZ]: TargetPos: " + pos.ToString() + ", RayStart: " + RayStart.ToString() + ", RayEnd: " + RayEnd.ToString() + ", Volume: " + Util.GetDistanceTo(RayStart,RayEnd).ToString() + ", mag1: " + Util.GetMagnitude(RayStart).ToString() + ", mag2: " + Util.GetMagnitude(RayEnd).ToString());
+                    m_log.Info("[OBJECT_REZ]: TargetPos: " + pos.ToString() + ", RayStart: " + RayStart.ToString() + ", RayEnd: " + RayEnd.ToString() + ", Volume: " + Util.GetDistanceTo(RayStart,RayEnd).ToString() + ", mag1: " + Util.GetMagnitude(RayStart).ToString() + ", mag2: " + Util.GetMagnitude(RayEnd).ToString());
 
                     // TODO: Raytrace better here
 
@@ -2687,7 +2692,7 @@ namespace OpenSim.Region.Framework.Scenes
                     EntityIntersection ei = target.TestIntersectionOBB(NewRay, Quaternion.Identity, frontFacesOnly, FaceCenter);
 
                     // Un-comment out the following line to Get Raytrace results printed to the console.
-                   // m_log.Info("[RAYTRACERESULTS]: Hit:" + ei.HitTF.ToString() + " Point: " + ei.ipoint.ToString() + " Normal: " + ei.normal.ToString());
+                    m_log.Info("[RAYTRACERESULTS]: Hit:" + ei.HitTF.ToString() + " Point: " + ei.ipoint.ToString() + " Normal: " + ei.normal.ToString());
                     float ScaleOffset = 0.5f;
 
                     // If we hit something
@@ -2720,7 +2725,7 @@ namespace OpenSim.Region.Framework.Scenes
                     EntityIntersection ei = m_sceneGraph.GetClosestIntersectingPrim(new Ray(AXOrigin, AXdirection), true, false);
 
                     // Un-comment the following line to print the raytrace results to the console.
-                    //m_log.Info("[RAYTRACERESULTS]: Hit:" + ei.HitTF.ToString() + " Point: " + ei.ipoint.ToString() + " Normal: " + ei.normal.ToString());
+                    m_log.Info("[RAYTRACERESULTS]: Hit:" + ei.HitTF.ToString() + " Point: " + ei.ipoint.ToString() + " Normal: " + ei.normal.ToString());
 
                     if (ei.HitTF)
                     {
@@ -3886,9 +3891,14 @@ namespace OpenSim.Region.Framework.Scenes
             //m_log.Info("HITTARGET: " + RayTargetObj.ToString() + ", COPYTARGET: " + localID.ToString());
             SceneObjectPart target = GetSceneObjectPart(localID);
             SceneObjectPart target2 = GetSceneObjectPart(RayTargetObj);
-
+            ScenePresence Sp = GetScenePresence(AgentID);
             if (target != null && target2 != null)
             {
+                if (EnableFakeRaycasting)
+                {
+                    RayStart = Sp.CameraPosition;
+                    RayEnd = pos = target2.AbsolutePosition;
+                }
                 Vector3 direction = Vector3.Normalize(RayEnd - RayStart);
                 Vector3 AXOrigin = new Vector3(RayStart.X, RayStart.Y, RayStart.Z);
                 Vector3 AXdirection = new Vector3(direction.X, direction.Y, direction.Z);
@@ -3896,11 +3906,11 @@ namespace OpenSim.Region.Framework.Scenes
                 if (target2.ParentGroup != null)
                 {
                     pos = target2.AbsolutePosition;
-                    //m_log.Info("[OBJECT_REZ]: TargetPos: " + pos.ToString() + ", RayStart: " + RayStart.ToString() + ", RayEnd: " + RayEnd.ToString() + ", Volume: " + Util.GetDistanceTo(RayStart,RayEnd).ToString() + ", mag1: " + Util.GetMagnitude(RayStart).ToString() + ", mag2: " + Util.GetMagnitude(RayEnd).ToString());
-
+                    //m_log.Info("[OBJECTREZ]: TargetPos: " + pos.ToString() + ", RayStart: " + RayStart.ToString() + ", RayEnd: " + RayEnd.ToString() + ", Volume: " + Util.GetDistanceTo(RayStart,RayEnd).ToString() + ", mag1: " + Util.GetMagnitude(RayStart).ToString() + ", mag2: " + Util.GetMagnitude(RayEnd).ToString());
+                    //m_log.Info("[OBJECTREZ]: AXOrigin: " + AXOrigin.ToString() + "AXdirection: " + AXdirection.ToString());
                     // TODO: Raytrace better here
-
-                    //EntityIntersection ei = m_sceneGraph.GetClosestIntersectingPrim(new Ray(AXOrigin, AXdirection));
+                    
+                    //EntityIntersection ei = m_sceneGraph.GetClosestIntersectingPrim(new Ray(AXOrigin, AXdirection), false, false);
                     Ray NewRay = new Ray(AXOrigin, AXdirection);
 
                     // Ray Trace against target here
@@ -6040,6 +6050,54 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             return offsets.ToArray();
+        }
+
+        internal bool CheckNeedsBorderCross(Vector3 val, out Vector3 val_2)
+        {
+            val_2 = val;
+            if (val.X >= Constants.RegionSize)
+            {
+                GridRegion region = GridService.GetRegionByPosition(UUID.Zero, (int)(RegionInfo.RegionLocX + 1), (int)RegionInfo.RegionLocY);
+                if (region == null)
+                {
+                    val_2 = new Vector3(val_2.X - 2, val_2.Y, val_2.Z);
+                    return false;
+                }
+
+                return true;
+            }
+            if (val.X <= 0)
+            {
+                GridRegion region = GridService.GetRegionByPosition(UUID.Zero, (int)(RegionInfo.RegionLocX - 1), (int)RegionInfo.RegionLocY);
+                if (region == null)
+                {
+                    val_2 = new Vector3(val_2.X + 2, val_2.Y, val_2.Z);
+                    return false;
+                }
+                return true;
+            }
+
+            if (val.Y >= Constants.RegionSize)
+            {
+                GridRegion region = GridService.GetRegionByPosition(UUID.Zero, (int)RegionInfo.RegionLocX, (int)(RegionInfo.RegionLocY + 1));
+                if (region == null)
+                {
+                    val_2 = new Vector3(val_2.X, val_2.Y - 2, val_2.Z);
+                    return false;
+                }
+                return true;
+            }
+            if (val.Y <= 0)
+            {
+                GridRegion region = GridService.GetRegionByPosition(UUID.Zero, (int)RegionInfo.RegionLocX, (int)(RegionInfo.RegionLocY - 1));
+                if (region == null)
+                {
+                    val_2 = new Vector3(val_2.X, val_2.Y + 2, val_2.Z);
+                    return false;
+                }
+                return true;
+            }
+            return false;
         }
     }
 }

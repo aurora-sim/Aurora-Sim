@@ -1917,6 +1917,11 @@ namespace OpenSim.Region.ScriptEngine.Shared
                 return (uint) Math.Abs(f.value);
             }
 
+            static public explicit operator string(LSLFloat f)
+            {
+                return f.value.ToString();
+            }
+
             static public implicit operator Boolean(LSLFloat f)
             {
                 if (f.value == 0.0)

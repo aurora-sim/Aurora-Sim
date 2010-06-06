@@ -229,7 +229,9 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 m_log.Warn("[SceneHeartbeatTracker]: " + hb.type + " has been found dead, attempting to revive...");
                 //Time to start a new one
+                AllHeartbeats.Remove(hb);
                 hb.Restart();
+                
             }
         }
 

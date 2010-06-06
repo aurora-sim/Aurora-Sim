@@ -296,7 +296,8 @@ namespace OpenSim.Region.Framework.Scenes
                     || m_scene.TestBorderCross(val - Vector3.UnitY, Cardinals.N) || m_scene.TestBorderCross(val + Vector3.UnitY, Cardinals.S)) 
                     && !IsAttachmentCheckFull())
                 {
-                    m_scene.CrossPrimGroupIntoNewRegion(val, this, true);
+                    if (m_scene.CheckNeedsBorderCross(val, out val))
+                        m_scene.CrossPrimGroupIntoNewRegion(val, this, true);
                 }
                 if (RootPart.GetStatusSandbox())
                 {
@@ -451,13 +452,6 @@ namespace OpenSim.Region.Framework.Scenes
         #endregion
 
         #region Constructors
-
-        /// <summary>
-        /// Constructor
-        /// </summary>
-        public SceneObjectGroup()
-        {
-        }
 
         /// <summary>
         /// This constructor creates a SceneObjectGroup using a pre-existing SceneObjectPart.

@@ -40,34 +40,33 @@ namespace OpenSim.Region.Framework.Scenes
     {
         public DeRezAction action;
         public IClientAPI remoteClient;
-        public List<SceneObjectGroup> objectGroup;
+        public List<SceneObjectGroup> objectGroups;
         public UUID folderID;
         public bool permissionToDelete;
     }
-    
+
     /// <summary>
-    /// Asynchronously derez objects.  This is used to derez large number of objects to inventory without holding 
+    /// Asynchronously derez objects.  This is used to derez large number of objects to inventory without holding
     /// up the main client thread.
     /// </summary>
     public class AsyncSceneObjectGroupDeleter
     {
         private static readonly ILog m_log
             = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        
+
         /// <value>
         /// Is the deleter currently enabled?
         /// </value>
         public bool Enabled;
-        
+
         private Timer m_inventoryTicker = new Timer(2000);
         private readonly Queue<DeleteToInventoryHolder> m_inventoryDeletes = new Queue<DeleteToInventoryHolder>();
-        private readonly Queue<DeleteToInventoryHolder> m_toinventoryDeletes = new Queue<DeleteToInventoryHolder>();
         private Scene m_scene;
-        
+
         public AsyncSceneObjectGroupDeleter(Scene scene)
         {
             m_scene = scene;
-            
+
             m_inventoryTicker.AutoReset = false;
             m_inventoryTicker.Elapsed += InventoryRunDeleteTimer;
         }
@@ -76,7 +75,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// Delete the given object from the scene
         /// </summary>
         public void DeleteToInventory(DeRezAction action, UUID folderID,
-                List<SceneObjectGroup> objectGroup, IClientAPI remoteClient, 
+                List<SceneObjectGroup> objectGroups, IClientAPI remoteClient,
                 bool permissionToDelete)
         {
             if (Enabled)
@@ -88,7 +87,7 @@ namespace OpenSim.Region.Framework.Scenes
                 DeleteToInventoryHolder dtis = new DeleteToInventoryHolder();
                 dtis.action = action;
                 dtis.folderID = folderID;
-                dtis.objectGroup = objectGroup;
+                dtis.objectGroups = objectGroups;
                 dtis.remoteClient = remoteClient;
                 dtis.permissionToDelete = permissionToDelete;
 
@@ -98,23 +97,26 @@ namespace OpenSim.Region.Framework.Scenes
             if (Enabled)
                 lock (m_inventoryTicker)
                     m_inventoryTicker.Start();
-        
+
             // Visually remove it, even if it isnt really gone yet.  This means that if we crash before the object
             // has gone to inventory, it will reappear in the region again on restart instead of being lost.
             // This is not ideal since the object will still be available for manipulation when it should be, but it's
             // better than losing the object for now.
-            foreach (SceneObjectGroup group in objectGroup)
+            if (permissionToDelete)
             {
-                if (permissionToDelete)
-                    group.DeleteGroup(false);
+                foreach (SceneObjectGroup g in objectGroups)
+                    g.DeleteGroup(false);
             }
         }
-        
+
         private void InventoryRunDeleteTimer(object sender, ElapsedEventArgs e)
         {
             m_log.Debug("[SCENE]: Starting send to inventory loop");
 
-            InventoryDeQueueAndDelete();
+            while (InventoryDeQueueAndDelete())
+            {
+                //m_log.Debug("[SCENE]: Sent item successfully to inventory, continuing...");
+            }
         }
 
         /// <summary>
@@ -124,53 +126,36 @@ namespace OpenSim.Region.Framework.Scenes
         public bool InventoryDeQueueAndDelete()
         {
             DeleteToInventoryHolder x = null;
- 
+
             try
             {
                 lock (m_inventoryDeletes)
                 {
-                    while (m_inventoryDeletes.Count > 0)
+                    int left = m_inventoryDeletes.Count;
+                    if (left > 0)
                     {
                         x = m_inventoryDeletes.Dequeue();
 
                         m_log.DebugFormat(
-                            "[SCENE]: Deleting objects, {0} item(s) remaining.", m_inventoryDeletes.Count);
-                        
-                        try
-                        {
-                            IInventoryAccessModule invAccess = m_scene.RequestModuleInterface<IInventoryAccessModule>();
-                            foreach (SceneObjectGroup group in x.objectGroup)
-                            {
-                                if (x.permissionToDelete)
-                                    m_scene.DeleteSceneObject(group, false);
-                            }
-                            m_toinventoryDeletes.Enqueue(x);
-                        }
-                        catch (Exception e)
-                        {
-                            m_log.DebugFormat("Exception background sending object: " + e);
-                        }
-                    }
-                }
-                lock (m_toinventoryDeletes)
-                {
-                    while (m_toinventoryDeletes.Count > 0)
-                    {
-                        x = m_toinventoryDeletes.Dequeue();
-
-                        m_log.DebugFormat(
-                            "[SCENE]: Sending object to user's inventory, {0} item(s) remaining.", m_toinventoryDeletes.Count);
+                            "[SCENE]: Sending object to user's inventory, {0} item(s) remaining.", left);
 
                         try
                         {
                             IInventoryAccessModule invAccess = m_scene.RequestModuleInterface<IInventoryAccessModule>();
                             if (invAccess != null)
-                                invAccess.DeleteToInventory(x.action, x.folderID, x.objectGroup, x.remoteClient);
+                                invAccess.DeleteToInventory(x.action, x.folderID, x.objectGroups, x.remoteClient);
+                            if (x.permissionToDelete)
+                            {
+                                foreach (SceneObjectGroup g in x.objectGroups)
+                                    m_scene.DeleteSceneObject(g, false);
+                            }
                         }
                         catch (Exception e)
                         {
                             m_log.DebugFormat("Exception background sending object: " + e);
                         }
+
+                        return true;
                     }
                 }
             }

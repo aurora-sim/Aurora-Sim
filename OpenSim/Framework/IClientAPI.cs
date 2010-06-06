@@ -61,7 +61,7 @@ namespace OpenSim.Framework
 
     public delegate void ModifyTerrain(UUID user, 
         float height, float seconds, byte size, byte action, float north, float west, float south, float east,
-        UUID agentId);
+        UUID agentId, float BrushSize);
 
     public delegate void NetworkStats(int inPackets, int outPackets, int unAckedBytes);
 
@@ -1091,6 +1091,7 @@ namespace OpenSim.Framework
 
         void SendLayerData(float[] map);
         void SendLayerData(int px, int py, float[] map);
+        void SendLayerPacket(float[] map, int x, int y);
 
         void SendWindData(Vector2[] windSpeeds);
         void SendCloudData(float[] cloudCover);

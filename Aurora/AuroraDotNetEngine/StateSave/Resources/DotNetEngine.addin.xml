@@ -1,6 +1,6 @@
 <Addin id="Aurora.ScriptEngine.AuroraDotNetEngine" version="0.2">
     <Runtime>
-        <Import assembly="Aurora.ScriptEngine.AuroraDotNetEngine.dll"/>
+        <Import assembly="Aurora.ScriptEngine.AuroraDotNetEngine.StateSave.dll"/>
     </Runtime>
 
     <Dependencies>
@@ -8,6 +8,6 @@
     </Dependencies>
 
     <Extension path = "/OpenSim/RegionModules">
-        <RegionModule id="AuroraDotNetEngine" type="Aurora.ScriptEngine.AuroraDotNetEngine.ScriptEngine" />
+        <RegionModule id="AuroraDotNetEngineStateSave" type="Aurora.ScriptEngine.AuroraDotNetEngineStateSave.ScriptEngine" />
     </Extension>
 </Addin>

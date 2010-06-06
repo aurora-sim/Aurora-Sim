@@ -147,7 +147,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                     if (AttachmentPt == 0)
                     {
                         // Stick it on left hand with Zero Offset from the attachment point.
-                        AttachmentPt = (uint)AttachmentPoint.LeftHand;
+                        AttachmentPt = (uint)AttachmentPoint.RightHand;
                         attachPos = Vector3.Zero;
                     }
 

@@ -1073,8 +1073,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             try
             {
-                if (!ChildAgentStatus())
-                {
+                //if (!ChildAgentStatus())
+                //{
                     for (int y = 0; y < 16; y++)
                     {
                         for (int x = 0; x < 4; x++)
@@ -1083,12 +1083,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                             SendLayerPacket(map, xx, y);
                         }
                     }
-                }
-                else
-                {
-                    // Send LayerData in a spiral pattern. Fun!
-                    SendLayerTopRight(map, 0, 0, 15, 15);
-                }
+                //}
+                ///else
+                //{
+                //    // Send LayerData in a spiral pattern. Fun!
+                //    SendLayerTopRight(map, 0, 0, 15, 15);
+                //}
             }
             catch (Exception e)
             {
@@ -1130,7 +1130,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <param name="map">heightmap</param>
         /// <param name="px">X coordinate for patches 0..12</param>
         /// <param name="py">Y coordinate for patches 0..15</param>
-        private void SendLayerPacket(float[] map, int x, int y)
+        public void SendLayerPacket(float[] map, int x, int y)
         {
             float[] heightmap = (map.Length == 65536) ?
                  map :
@@ -1145,7 +1145,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 patches[3] = x + 3 + y * 16;
 
                 LayerDataPacket layerpack = TerrainCompressor.CreateLandPacket(heightmap, patches);
-                OutPacket(layerpack, ThrottleOutPacketType.Resend);
+                layerpack.Header.Reliable = false;
+                OutPacket(layerpack, ThrottleOutPacketType.Texture);
             }
             catch (Exception e)
             {
@@ -1181,7 +1182,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 LayerDataPacket layerpack = TerrainCompressor.CreateLandPacket(heightmap, patches);
                 layerpack.Header.Reliable = false;
 
-                OutPacket(layerpack, ThrottleOutPacketType.Task);
+                OutPacket(layerpack, ThrottleOutPacketType.Texture);
             }
             catch (Exception e)
             {
@@ -5600,7 +5601,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                                                  modify.ModifyBlock.BrushSize,
                                                  modify.ModifyBlock.Action, modify.ParcelData[i].North,
                                                  modify.ParcelData[i].West, modify.ParcelData[i].South,
-                                                 modify.ParcelData[i].East, AgentId);
+                                                 modify.ParcelData[i].East, AgentId,
+                                                 modify.ModifyBlockExtended[i].BrushSize);
                         }
                     }
                 }

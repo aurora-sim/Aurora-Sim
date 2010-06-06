@@ -1326,16 +1326,6 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools {
 		                                   ((STRING_CONSTANT)(yyq.StackAt(0).m_value))
 		                                   .yytext){}}
 	
-	public class Constant_5 : Constant {
-		public Constant_5(Parser yyq):base(yyq,"int",
-		                                   ((INTEGER_CONSTANT)(yyq.StackAt(0).m_value))
-		                                   .yytext){}}
-
-	public class Constant_6 : Constant {
-		public Constant_6(Parser yyq):base(yyq,"int",
-		                                   ((HEX_INTEGER_CONSTANT)(yyq.StackAt(0).m_value))
-		                                   .yytext){}}
-
 	public class ListConstant_1 : ListConstant {
 		public ListConstant_1(Parser yyq):base(yyq,
 		                                       ((ArgumentList)(yyq.StackAt(1).m_value))
@@ -11114,8 +11104,6 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools {
 		public static object Expression_factory(Parser yyp) { return new Expression(yyp); }
 		public static object Constant_3_factory(Parser yyp) { return new Constant_3(yyp); }
 		public static object Constant_4_factory(Parser yyp) { return new Constant_4(yyp); }
-		public static object Constant_5_factory(Parser yyp) { return new Constant_5(yyp); }
-		public static object Constant_6_factory(Parser yyp) { return new Constant_6(yyp); }
 		public static object BinaryExpression_1_factory(Parser yyp) { return new BinaryExpression_1(yyp); }
 		public static object IfStatement_2_factory(Parser yyp) { return new IfStatement_2(yyp); }
 		public static object IfStatement_3_factory(Parser yyp) { return new IfStatement_3(yyp); }

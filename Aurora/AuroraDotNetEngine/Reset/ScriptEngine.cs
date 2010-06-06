@@ -80,7 +80,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         private IConfigSource m_ConfigSource;
         public IConfig ScriptConfigSource;
         private bool m_enabled = false;
-        public SmartThreadPool m_ThreadPool;
 
         public IConfig Config
         {
@@ -94,7 +93,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public string ScriptEngineName
         {
-            get { return "AuroraDotNetEngine"; }
+            get { return "AuroraDotNetEngineReset"; }
         }
         
         public IScriptModule ScriptModule
@@ -147,31 +146,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// </summary>
         public int NumberOfEventQueueThreads;
 
-        /// <summary>
-        /// Maximum threads to run in all regions.
-        /// </summary>
-        public int MaxThreads;
-
-        /// <summary>
-        /// Time the thread can be idle.
-        /// </summary>
-        public int IdleTimeout;
-
-        /// <summary>
-        /// Minimum threads to run in all regions.
-        /// </summary>
-        public int MinThreads;
-
-        /// <summary>
-        /// Priority of the threads.
-        /// </summary>
-        public ThreadPriority ThreadPriority;
-
-        /// <summary>
-        /// Size of the stack.
-        /// </summary>
-        public int StackSize;
-
         #endregion
 
         #region Constructor and Shutdown
@@ -183,7 +157,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 try
                 {
-                    ID.CloseAndDispose();
+                    ID.CloseAndDispose(false);
                 }
                 catch (Exception) { }
             }
@@ -206,40 +180,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             SleepTime = ScriptConfigSource.GetInt("SleepTime", 50);
             LoadUnloadMaxQueueSize = ScriptConfigSource.GetInt("LoadUnloadMaxQueueSize", 100);
             EventExecutionMaxQueueSize = ScriptConfigSource.GetInt("EventExecutionMaxQueueSize", 300);
-
-            IdleTimeout = ScriptConfigSource.GetInt("IdleTimeout", 20);
-            MaxThreads = ScriptConfigSource.GetInt("MaxThreads", 100);
-            MinThreads = ScriptConfigSource.GetInt("MinThreads", 2);
-            string pri = ScriptConfigSource.GetString(
-                "ThreadPriority", "BelowNormal");
-
-            switch (pri.ToLower())
-            {
-                case "lowest":
-                    ThreadPriority = ThreadPriority.Lowest;
-                    break;
-                case "belownormal":
-                    ThreadPriority = ThreadPriority.BelowNormal;
-                    break;
-                case "normal":
-                    ThreadPriority = ThreadPriority.Normal;
-                    break;
-                case "abovenormal":
-                    ThreadPriority = ThreadPriority.AboveNormal;
-                    break;
-                case "highest":
-                    ThreadPriority = ThreadPriority.Highest;
-                    break;
-                default:
-                    ThreadPriority = ThreadPriority.BelowNormal;
-                    m_log.Error(
-                        "[ScriptEngine.DotNetEngine]: Unknown " +
-                        "priority type \"" + pri +
-                        "\" in config file. Defaulting to " +
-                        "\"BelowNormal\".");
-                    break;
-            }
-            StackSize = ScriptConfigSource.GetInt("StackSize", 2);
         }
 
         public void PostInitialise() { }
@@ -253,20 +193,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (!m_enabled)
                 return;
 
-            STPStartInfo startInfo = new STPStartInfo();
-            startInfo.IdleTimeout = IdleTimeout * 1000; // convert to seconds as stated in .ini
-            startInfo.MaxWorkerThreads = MaxThreads;
-            startInfo.MinWorkerThreads = MinThreads;
-            startInfo.ThreadPriority = ThreadPriority;
-            startInfo.StackSize = StackSize;
-            startInfo.StartSuspended = true;
-
-            m_ThreadPool = new SmartThreadPool(startInfo);
             //Register the console commands
             scene.AddCommand(this, "DotNet restart all scripts", "DotNet restart all scripts", "Restarts all scripts in the sim", RestartAllScripts);
             scene.AddCommand(this, "DotNet stop all scripts", "DotNet stop all scripts", "Stops all scripts in the sim", StopAllScripts);
             scene.AddCommand(this, "DotNet start all scripts", "DotNet start all scripts", "Restarts all scripts in the sim", StartAllScripts);
-            scene.AddCommand(this, "DotNet wipe state saves", "DotNet wipe state saves", "Restarts all scripts in the sim", WipeAllStateSaves);
             
             ScriptConfigSource = ConfigSource.Configs[ScriptEngineName];
 
@@ -317,7 +247,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     try
                     {
                         ScriptProtection.RemovePreviouslyCompiled(ID.Source);
-                        m_MaintenanceThread.RemoveState(ID);
                         ID.Start(false);
                     }
                     catch (Exception)
@@ -353,28 +282,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
         }
 
-        protected void WipeAllStateSaves(string module, string[] cmdparams)
-        {
-            string go = MainConsole.Instance.CmdPrompt("Are you sure you want to wipe the state save database? (This could cause loss of information in your scripts)", "no");
-            if (go == "yes" || go == "Yes")
-            {
-                foreach (ScriptData ID in ScriptProtection.GetAllScripts())
-                {
-                    try
-                    {
-                        m_MaintenanceThread.RemoveState(ID);
-                    }
-                    catch (Exception)
-                    {
-                    }
-                }
-            }
-            else
-            {
-                m_log.Info("Not wiping the state save database");
-            }
-        }
-
         protected void StopAllScripts(string module, string[] cmdparams)
         {
             string go = MainConsole.Instance.CmdPrompt("Are you sure you want to stop all scripts?", "no");
@@ -395,7 +302,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 try
                 {
                     ScriptProtection.RemovePreviouslyCompiled(ID.Source);
-                    ID.CloseAndDispose();
+                    ID.CloseAndDispose(false);
                 }
                 catch (Exception)
                 {
@@ -427,8 +334,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             if (!m_enabled)
                 return;
-
-            m_ThreadPool.Start();
             EventManager.HookUpEvents();
 
             scene.EventManager.OnScriptReset += OnScriptReset;
@@ -887,11 +792,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public string GetXMLState(UUID itemID)
         {
-            ScriptData instance = GetScriptByItemID(itemID);
-            if (instance != null)
-            {
-                instance.SerializeDatabase();
-            }
             return "";
         }
 
@@ -975,7 +875,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     m_log.WarnFormat("[{0}]: Event Queue is above the MaxQueueSize.", ScriptEngineName);
                     return false;
                 }
-
                 if (FunctionName == "timer")
                 {
                     if (ID.TimerQueued)
@@ -1137,7 +1036,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     id.Disabled = false;
                     id.Source = script;
                     id.World = m_Scene;
-                    ScriptProtection.RemovePreviouslyCompiled(id.Source);
                     try
                     {
                         id.Start(true);

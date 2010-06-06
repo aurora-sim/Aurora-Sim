@@ -75,7 +75,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 
         protected void StartRegionManagerThread()
         {
-            RegionManager manager = new RegionManager(false);
+            RegionManager manager = new RegionManager(false, m_openSim);
             System.Windows.Forms.Application.Run(manager);
         }
 
