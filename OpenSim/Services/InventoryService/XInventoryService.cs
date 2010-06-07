@@ -377,18 +377,25 @@ namespace OpenSim.Services.InventoryService
                 UUID nn;
                 if (!UUID.TryParse(xitem.creatorID, out nn))
                 {
-                    string FullName = xitem.creatorID.Remove(0,7);
-                    string[] FirstLast = FullName.Split(' ');
-                    UserAccount account = m_UserAccountService.GetUserAccount(UUID.Zero, FirstLast[0], FirstLast[1]);
-                    if (account == null)
+                    try
+                    {
+                        string FullName = xitem.creatorID.Remove(0, 7);
+                        string[] FirstLast = FullName.Split(' ');
+                        UserAccount account = m_UserAccountService.GetUserAccount(UUID.Zero, FirstLast[0], FirstLast[1]);
+                        if (account == null)
+                        {
+                            xitem.creatorID = UUID.Zero.ToString();
+                            m_Database.StoreItem(xitem);
+                        }
+                        else
+                        {
+                            xitem.creatorID = account.PrincipalID.ToString();
+                            m_Database.StoreItem(xitem);
+                        }
+                    }
+                    catch
                     {
                         xitem.creatorID = UUID.Zero.ToString();
-                        m_Database.StoreItem(xitem);
-                    }
-                    else
-                    {
-                        xitem.creatorID = account.PrincipalID.ToString();
-                        m_Database.StoreItem(xitem);
                     }
                 }
             }

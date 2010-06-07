@@ -1062,6 +1062,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     id.Disabled = false;
                     id.Source = script;
                     id.PostOnRez = postOnRez;
+                    id.World = m_Scene;
                     try
                     {
                         id.Start(true);

@@ -1504,6 +1504,11 @@ namespace OpenSim.Region.ScriptEngine.Shared
                 return new LSLInteger(s.m_string);
             }
 
+            public static explicit operator LSLString(LSLFloat f)
+            {
+                return new LSLString(f);
+            }
+
             public static explicit operator LSLString(double d)
             {
                 return new LSLString(d);

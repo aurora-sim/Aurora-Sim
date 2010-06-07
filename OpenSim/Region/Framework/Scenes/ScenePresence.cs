@@ -1806,6 +1806,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             //SceneObjectPart part =  m_scene.GetSceneObjectPart(targetID);
             SceneObjectPart part =  FindNextAvailableSitTarget(targetID);
+            m_requestedSitTargetUUID = targetID;
             if (part != null)
             {
                 // TODO: determine position to sit at based on scene geometry; don't trust offset from client
@@ -1886,7 +1887,6 @@ namespace OpenSim.Region.Framework.Scenes
             
             ControllingClient.SendAgentDataUpdate(UUID, UUID.Zero, Firstname, Lastname, 0, "", "");
             ControllingClient.SendSitResponse(part.UUID, part.OffsetPosition, sitOrientation, autopilot, Vector3.Zero, m_CameraCenter, forceMouselook);
-            m_requestedSitTargetUUID = targetID;
             // This calls HandleAgentSit twice, once from here, and the client calls
             // HandleAgentSit itself after it gets to the location
             // It doesn't get to the location until we've moved them there though
@@ -2254,7 +2254,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// Rotate the avatar to the given rotation and apply a movement in the given relative vector
         /// </summary>
         /// <param name="vec">The vector in which to move.  This is relative to the rotation argument</param>
-        /// <param name="rotation">The direction in which this avatar should now face.
+        /// <param name="rotation">The direction in which this avatar should now face.</param>
         public void AddNewMovement(Vector3 vec, Quaternion rotation)
         {
             if (m_isChildAgent)

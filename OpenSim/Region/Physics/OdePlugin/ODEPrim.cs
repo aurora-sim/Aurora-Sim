@@ -757,6 +757,7 @@ namespace OpenSim.Region.Physics.OdePlugin
                 {
                     if (Body != IntPtr.Zero)
                     {
+                        m_vehicle.Disable();
                         _parent_scene.remActivePrim(this);
                         m_collisionCategories &= ~CollisionCategories.Body;
                         m_collisionFlags &= ~(CollisionCategories.Wind | CollisionCategories.Land);
@@ -767,7 +768,6 @@ namespace OpenSim.Region.Physics.OdePlugin
                             d.GeomSetCollideBits(prim_geom, (int)m_collisionFlags);
                         }
 
-                        
                         d.BodyDestroy(Body);
                         lock (childrenPrim)
                         {
@@ -781,7 +781,6 @@ namespace OpenSim.Region.Physics.OdePlugin
                             }
                         }
                         Body = IntPtr.Zero;
-                        m_vehicle.Disable();
                     }
                 }
                 else

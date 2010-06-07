@@ -48,7 +48,6 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             if (null == m_datatypeLSL2OpenSim)
             {
                 m_datatypeLSL2OpenSim = new Dictionary<string, string>();
-                m_datatypeLSL2OpenSim.Add("int", "LSL_Types.LSLInteger");
                 m_datatypeLSL2OpenSim.Add("integer", "LSL_Types.LSLInteger");
                 m_datatypeLSL2OpenSim.Add("float", "LSL_Types.LSLFloat");
                 m_datatypeLSL2OpenSim.Add("key", "LSL_Types.LSLString");
@@ -159,8 +158,6 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
         {
             switch (constantType)
             {
-            case "int":
-                return new Constant(p, constantType, "0");
             case "integer":
                 return new Constant(p, constantType, "0");
             case "float":

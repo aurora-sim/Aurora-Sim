@@ -3568,6 +3568,14 @@ namespace OpenSim.Region.Framework.Scenes
                 part.TriggerScriptChangedEvent(val);
             }
         }
+
+        public void TriggerSetSitAvatarUUID(UUID agentID)
+        {
+            foreach (SceneObjectPart part in Children.Values)
+            {
+                part.SitTargetAvatar = agentID;
+            }
+        }
         
         public override string ToString()
         {

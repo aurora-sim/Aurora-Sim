@@ -251,7 +251,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
         /// </summary>
         /// <param name="Script">LSL script</param>
         /// <returns>Filename to .dll assembly</returns>
-        public void PerformScriptCompile(string Script, UUID assetID, UUID ownerUUID, UUID itemID, string InheritedClases, string ClassName, IScriptProtectionModule ScriptProtection, uint localID, object InstanceData,
+        public void PerformScriptCompile(string Script, UUID assetID, UUID ownerUUID, UUID itemID, string InheritedClases, string ClassName, IScriptProtectionModule ScriptProtection, uint localID, string AssmeblyName, object InstanceData,
             out string assembly, out Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> linemap, out string Identifier)
         {
         	string asset = assetID.ToString();
@@ -263,10 +263,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             
             linemap = null;
             m_warnings.Clear();
-            assembly = Path.Combine(ScriptEnginesPath, Path.Combine(
-                    m_scriptEngine.World.RegionInfo.RegionID.ToString(),
-                    FilePrefix + "_compiled_" + itemID.ToString() + ".dll"));
-
+            
             if (!Directory.Exists(ScriptEnginesPath))
             {
                 try
@@ -289,7 +286,19 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                 {
                 }
             }
+            string[] testDir = AssmeblyName.Split('\\');
 
+            if (!Directory.Exists(testDir[0] + "\\" + testDir[1]))
+            {
+                try
+                {
+                    Directory.CreateDirectory(testDir[0] + "\\" + testDir[1]);
+                }
+                catch (Exception)
+                {
+                }
+            }
+            assembly = AssmeblyName;
             assembly = CheckAssembly(assembly, 0);
             if (Script == String.Empty)
             {
@@ -396,7 +405,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                 catch (Exception e) // NOTLEGIT - Should be just FileIOException
                 {
                     assembly = assembly.Remove(assembly.Length - 4);
-                    assembly += i + ".dll";
+                    assembly += "A.dll";
                     i++;
                     return CheckAssembly(assembly, i);
                 }
@@ -479,8 +488,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             TempClassScript += "{\n";
             TempClassScript += "}\n";
 
-            TempClassScript += "if (!running)\n";
-            TempClassScript += "parts.Remove(parts[i % parts.Count]);\n";
+            TempClassScript += "if (!running)\n { \n";
+            TempClassScript += "parts.Remove(parts[i % parts.Count]);\n } \n";
+            TempClassScript += "else\n { } \n";
             TempClassScript += "}\n";
             TempClassScript += "}\n";
             TempClassScript += "}\n";

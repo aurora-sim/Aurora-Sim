@@ -476,13 +476,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             bool NeedsToCreateNewAppDomain = true;
 
-            //Try to find a previously compiled script in this instance
-            ScriptData PreviouslyCompiledID = (ScriptData)m_ScriptEngine.ScriptProtection.TryGetPreviouslyCompiledScript(Source);
-
             if (reupload)
             {
                 //Null everything and don't fire any events
                 CloseAndDispose(true);
+                m_ScriptEngine.ScriptProtection.RemovePreviouslyCompiled(Source);
+
+                AssemblyName = Path.Combine("ScriptEngines", Path.Combine(
+                    m_ScriptEngine.World.RegionInfo.RegionID.ToString(),
+                    FilePrefix + "_compiled_" + ItemID.ToString() + ".dll"));
                 AssemblyName = AssemblyName.Remove(AssemblyName.Length - 4);
                 AssemblyName += "A.dll";
                 LineMap = new Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>>();
@@ -492,13 +494,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 if (ScriptEngine.NeedsRemoved.ContainsKey(ItemID))
                     ScriptEngine.NeedsRemoved.Remove(ItemID);
             }
+            //Try to find a previously compiled script in this instance
+            ScriptData PreviouslyCompiledID = (ScriptData)m_ScriptEngine.ScriptProtection.TryGetPreviouslyCompiledScript(Source);
+
             //If the previous compile is there, retrive that
             if (PreviouslyCompiledID != null)
             {
                 ClassID = PreviouslyCompiledID.ClassID;
                 LineMap = PreviouslyCompiledID.LineMap;
                 AssemblyName = PreviouslyCompiledID.AssemblyName;
-                if (!File.Exists("ScriptEngines/" + m_ScriptEngine.World.RegionInfo.RegionID + "/" + AssemblyName))
+                if (!File.Exists(AssemblyName))
                 {
                     ClassID = "";
                     LineMap = new Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>>();
@@ -510,7 +515,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 try
                 {
-                    ScriptEngine.LSLCompiler.PerformScriptCompile(Source, AssetID, InventoryItem.OwnerID, ItemID, Inherited, ClassName, m_ScriptEngine.ScriptProtection, localID, this, out AssemblyName,
+                    ScriptEngine.LSLCompiler.PerformScriptCompile(Source, AssetID, InventoryItem.OwnerID, ItemID, Inherited, ClassName, m_ScriptEngine.ScriptProtection, localID, AssemblyName, this, out AssemblyName,
                                                                          out LineMap, out ClassID);
                     #region Warnings
 
