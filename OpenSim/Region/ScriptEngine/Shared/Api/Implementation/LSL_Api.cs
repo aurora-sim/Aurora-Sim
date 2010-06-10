@@ -1986,9 +1986,12 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             }
             else if (part.ParentGroup.RootPart == part)
             {
-                if ((targetPos.z < ground) && disable_underground_movement)
-                    targetPos.z = ground;
                 SceneObjectGroup parent = part.ParentGroup;
+                if (!part.IsAttachment)
+                {
+                    if ((targetPos.z < ground) && disable_underground_movement)
+                        targetPos.z = ground;
+                }
                 LSL_Vector real_vec = SetPosAdjust(currentPos, targetPos);
                 parent.UpdateGroupPosition(new Vector3((float)real_vec.x, (float)real_vec.y, (float)real_vec.z));
             }
