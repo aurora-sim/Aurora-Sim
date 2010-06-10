@@ -45,7 +45,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private Dictionary<string, MethodInfo> inits = new Dictionary<string, MethodInfo>();
-//        private ScriptSponsor m_sponser;
+        private ScriptSponsor m_sponser;
 
         public override Object InitializeLifetimeService()
         {
@@ -53,9 +53,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
             if (lease.CurrentState == LeaseState.Initial)
             {
                 // Infinite
-                lease.InitialLeaseTime = TimeSpan.FromMinutes(0);
-//                lease.RenewOnCallTime = TimeSpan.FromSeconds(10.0);
-//                lease.SponsorshipTimeout = TimeSpan.FromMinutes(1.0);
+                lease.InitialLeaseTime = TimeSpan.FromMinutes(1);
+                lease.RenewOnCallTime = TimeSpan.FromSeconds(10.0);
+                lease.SponsorshipTimeout = TimeSpan.FromMinutes(1.0);
             }
             return lease;
         }
@@ -83,7 +83,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
                 }
             }
 
-//            m_sponser = new ScriptSponsor();
+            m_sponser = new ScriptSponsor();
         }
 
         public Executor m_Executor = null;
@@ -115,9 +115,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
             if (!inits.ContainsKey(api))
                 return;
 
-            //ILease lease = (ILease)RemotingServices.GetLifetimeService(data as MarshalByRefObject);
-            //RemotingServices.GetLifetimeService(data as MarshalByRefObject);
-//            lease.Register(m_sponser);
+            ILease lease = (ILease)RemotingServices.GetLifetimeService(data as MarshalByRefObject);
+            RemotingServices.GetLifetimeService(data as MarshalByRefObject);
+            lease.Register(m_sponser);
 
             MethodInfo mi = inits[api];
 
@@ -135,7 +135,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
 
         public void Close()
         {
-//            m_sponser.Close();
+            m_sponser.Close();
         }
 
         public Dictionary<string, object> GetVars()

@@ -86,7 +86,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public AppDomain AppDomain;
         public Dictionary<string, IScriptApi> Apis = new Dictionary<string, IScriptApi>();
         public Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> LineMap;
-        public ISponsor ScriptSponsor;
+        public ScriptSponsor ScriptSponsor;
         public bool TimerQueued = false;
         public bool CollisionInQueue = false;
         public int LastControlLevel = 0;
@@ -179,7 +179,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     Script.Close();
                     Script.Dispose();
                     Script = null;
+                    ScriptSponsor.Close();
+                    ILease lease = (ILease)RemotingServices.GetLifetimeService(Script as ScriptBaseClass);
+                    lease.Unregister(ScriptSponsor);
                 }
+
                 try
                 {
                     if (AppDomain == null)
@@ -568,7 +572,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     ShowError(ex, 2, reupload);
                 }
             }
-            
+
+            ScriptSponsor = new ScriptSponsor();
+            ILease lease = (ILease)RemotingServices.GetLifetimeService(Script as ScriptBaseClass);
+            lease.Register(ScriptSponsor);
             //If its a reupload, an avatar is waiting for the script errors
             if (reupload)
                 m_ScriptEngine.Errors[ItemID] = new String[] { "SUCCESSFULL" };

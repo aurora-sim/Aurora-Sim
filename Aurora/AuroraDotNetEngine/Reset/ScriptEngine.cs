@@ -30,6 +30,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Runtime.Remoting;
+using System.Runtime.Remoting.Lifetime;
 using System.Threading;
 using System.Xml;
 using log4net;
@@ -146,6 +148,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// </summary>
         public int NumberOfEventQueueThreads;
 
+        public System.Timers.Timer UpdateLeasesTimer = null;
+
         #endregion
 
         #region Constructor and Shutdown
@@ -194,9 +198,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return;
 
             //Register the console commands
-            scene.AddCommand(this, "DotNet restart all scripts", "DotNet restart all scripts", "Restarts all scripts in the sim", RestartAllScripts);
-            scene.AddCommand(this, "DotNet stop all scripts", "DotNet stop all scripts", "Stops all scripts in the sim", StopAllScripts);
-            scene.AddCommand(this, "DotNet start all scripts", "DotNet start all scripts", "Restarts all scripts in the sim", StartAllScripts);
+            if (m_Scene == null)
+            {
+                scene.AddCommand(this, "DotNet restart all scripts", "DotNet restart all scripts", "Restarts all scripts in the sim", RestartAllScripts);
+                scene.AddCommand(this, "DotNet stop all scripts", "DotNet stop all scripts", "Stops all scripts in the sim", StopAllScripts);
+                scene.AddCommand(this, "DotNet start all scripts", "DotNet start all scripts", "Restarts all scripts in the sim", StartAllScripts);
+            }
             
             ScriptConfigSource = ConfigSource.Configs[ScriptEngineName];
 
@@ -340,6 +347,22 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             scene.EventManager.OnGetScriptRunning += OnGetScriptRunning;
             scene.EventManager.OnStartScript += OnStartScript;
             scene.EventManager.OnStopScript += OnStopScript;
+            UpdateLeasesTimer = new System.Timers.Timer(9.5 * 1000 * 60 /*9.5 minutes*/);
+            UpdateLeasesTimer.Enabled = true;
+            UpdateLeasesTimer.Elapsed += UpdateAllLeases;
+            UpdateLeasesTimer.Start();
+        }
+
+        public void UpdateAllLeases(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            foreach (ScriptData script in ScriptProtection.GetAllScripts())
+            {
+                if (script.Running == false || script.Disabled == true)
+                    return;
+
+                ILease lease = (ILease)RemotingServices.GetLifetimeService(script.Script as ScriptBaseClass);
+                lease.Renew(DateTime.Now.AddMinutes(10) - DateTime.Now);
+            }
         }
 
         public void Close()
