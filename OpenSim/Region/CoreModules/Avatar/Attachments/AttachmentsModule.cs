@@ -105,8 +105,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             // Calls attach with a Zero position
             if (AttachObject(remoteClient, objectLocalID, AttachmentPt, rot, Vector3.Zero, false))
             {
-                m_scene.EventManager.TriggerOnAttach(objectLocalID, part.ParentGroup.GetFromItemID(), remoteClient.AgentId);
-    
                 // Save avatar attachment information
                 ScenePresence presence;
                 if (m_scene.AvatarFactory != null && m_scene.TryGetScenePresence(remoteClient.AgentId, out presence))
@@ -126,6 +124,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             SceneObjectGroup group = m_scene.GetGroupByPrim(objectLocalID);
             if (group != null)
             {
+                SceneObjectPart part = m_scene.GetSceneObjectPart(objectLocalID);
                 if (m_scene.Permissions.CanTakeObject(group.UUID, remoteClient.AgentId))
                 {
                     // If the attachment point isn't the same as the one previously used
@@ -174,6 +173,9 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                     // it get cleaned up
                     group.RootPart.RemFlag(PrimFlags.TemporaryOnRez);
                     group.HasGroupChanged = false;
+                    if (part == null)
+                        return true;
+                    m_scene.EventManager.TriggerOnAttach(objectLocalID, part.ParentGroup.GetFromItemID(), remoteClient.AgentId);
                 }
                 else
                 {

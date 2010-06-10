@@ -3018,7 +3018,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
-            if (m_host.ParentGroup.RootPart.AttachmentPoint == 0)
+            if (m_host.ParentGroup.RootPart.AttachmentPoint != 0)
                 return;
 
             TaskInventoryItem item;
