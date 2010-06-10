@@ -937,31 +937,35 @@ namespace OpenSim.Region.Framework.Scenes
                     TriggerScriptChangedEvent(Changed.SHAPE);
             }
         }
-        
+
         public Vector3 Scale
         {
             get { return m_shape.Scale; }
             set
             {
-                StoreUndoState();
                 if (m_shape != null)
                 {
-                    m_shape.Scale = value;
-
-                    PhysicsActor actor = PhysActor;
-                    if (actor != null && m_parentGroup != null)
+                    if (m_shape.Scale != value)
                     {
-                        if (m_parentGroup.Scene != null)
+                        StoreUndoState();
+
+                        m_shape.Scale = value;
+
+                        PhysicsActor actor = PhysActor;
+                        if (actor != null && m_parentGroup != null)
                         {
-                            if (m_parentGroup.Scene.PhysicsScene != null)
+                            if (m_parentGroup.Scene != null)
                             {
-                                actor.Size = m_shape.Scale;
-                                m_parentGroup.Scene.PhysicsScene.AddPhysicsActorTaint(actor);
+                                if (m_parentGroup.Scene.PhysicsScene != null)
+                                {
+                                    actor.Size = m_shape.Scale;
+                                    m_parentGroup.Scene.PhysicsScene.AddPhysicsActorTaint(actor);
+                                }
                             }
                         }
+                        TriggerScriptChangedEvent(Changed.SCALE);
                     }
                 }
-                TriggerScriptChangedEvent(Changed.SCALE);
             }
         }
         public byte UpdateFlag
@@ -2696,8 +2700,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="scale"></param>
         public void Resize(Vector3 scale)
         {
-            StoreUndoState();
-            m_shape.Scale = scale;
+            Scale = scale;
 
             ParentGroup.HasGroupChanged = true;
             ScheduleFullUpdate();
@@ -4417,6 +4420,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_shape.PathTaperY = shapeBlock.PathTaperY;
             m_shape.PathTwist = shapeBlock.PathTwist;
             m_shape.PathTwistBegin = shapeBlock.PathTwistBegin;
+            Shape = m_shape;
             if (PhysActor != null)
             {
                 PhysActor.Shape = m_shape;
@@ -4473,8 +4477,36 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="textureEntry"></param>
         public void UpdateTextureEntry(byte[] textureEntry)
         {
+            Primitive.TextureEntry oldEntry = m_shape.Textures;
             m_shape.TextureEntry = textureEntry;
-            TriggerScriptChangedEvent(Changed.TEXTURE);
+            if (m_shape.Textures.DefaultTexture.RGBA.A != oldEntry.DefaultTexture.RGBA.A ||
+                m_shape.Textures.DefaultTexture.RGBA.R != oldEntry.DefaultTexture.RGBA.R ||
+                m_shape.Textures.DefaultTexture.RGBA.G != oldEntry.DefaultTexture.RGBA.G ||
+                m_shape.Textures.DefaultTexture.RGBA.B != oldEntry.DefaultTexture.RGBA.B)
+            {
+                TriggerScriptChangedEvent(Changed.COLOR);
+            }
+            else
+            {
+                for (int i = 0; i < 6; i++)
+                {
+                    if (m_shape.Textures.FaceTextures[i] != null &&
+                        oldEntry.FaceTextures[i] != null)
+                    {
+                        if (m_shape.Textures.FaceTextures[i].RGBA.A != oldEntry.FaceTextures[i].RGBA.A ||
+                            m_shape.Textures.FaceTextures[i].RGBA.R != oldEntry.FaceTextures[i].RGBA.R ||
+                            m_shape.Textures.FaceTextures[i].RGBA.G != oldEntry.FaceTextures[i].RGBA.G ||
+                            m_shape.Textures.FaceTextures[i].RGBA.B != oldEntry.FaceTextures[i].RGBA.B)
+                        {
+                            TriggerScriptChangedEvent(Changed.COLOR);
+                        }
+                        if (m_shape.Textures.FaceTextures[i].TextureID != oldEntry.FaceTextures[i].TextureID)
+                        {
+                            TriggerScriptChangedEvent(Changed.TEXTURE);
+                        }
+                    }
+                }
+            }
 
             ParentGroup.HasGroupChanged = true;
             //This is madness..
