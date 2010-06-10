@@ -802,3 +802,9 @@ BEGIN;
 ALTER TABLE `regionwindlight`  CHANGE COLUMN `cloud_scroll_x` `cloud_scroll_x` FLOAT(4,2) NOT NULL DEFAULT '0.20' AFTER `cloud_detail_density`,  CHANGE COLUMN `cloud_scroll_y` `cloud_scroll_y` FLOAT(4,2) NOT NULL DEFAULT '0.01' AFTER `cloud_scroll_x_lock`;
 COMMIT;
 
+:VERSION 35
+
+BEGIN;
+ALTER TABLE `terrain` ADD COLUMN `Revert` varchar(6) NOT NULL DEFAULT 'False';
+COMMIT;
+

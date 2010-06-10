@@ -87,14 +87,14 @@ namespace OpenSim.Region.Framework.Interfaces
         /// </summary>
         /// <param name="ter">HeightField data</param>
         /// <param name="regionID">region UUID</param>
-        void StoreTerrain(double[,] terrain, UUID regionID);
+        void StoreTerrain(double[,] terrain, UUID regionID, bool Revert);
         
         /// <summary>
         /// Load the latest terrain revision from region storage
         /// </summary>
         /// <param name="regionID">the region UUID</param>
         /// <returns>Heightfield data</returns>
-        double[,] LoadTerrain(UUID regionID);
+        double[,] LoadTerrain(UUID regionID, bool RevertMap);
 
         void StoreRegionSettings(RegionSettings rs);
         RegionSettings LoadRegionSettings(UUID regionUUID);

@@ -165,8 +165,30 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
 			Events.TryGetValue(EventName, out ev);
 			if (ev == null) // No event by that name!
 			{
-				//m_log.Debug("ScriptEngine Can not find any event named:" + EventName);
-                return 0;
+                //Attempt to find it just by name
+
+                if (!Events.ContainsKey(FunctionName))
+                {
+                    // Not found, create
+                    Type type = m_Script.GetType();
+                    try
+                    {
+                        MethodInfo mi = type.GetMethod(FunctionName);
+                        Events.Add(FunctionName, mi);
+                    }
+                    catch
+                    {
+                        if (!Events.ContainsKey(FunctionName))
+                            // Event name not found, cache it as not found
+                            Events.Add(FunctionName, null);
+                    }
+                }
+                Events.TryGetValue(EventName, out ev);
+                if (ev == null) // No event by that name!
+                {
+                    //m_log.Debug("ScriptEngine Can not find any event named:" + EventName);
+                    return 0;
+                }
 			}
 			IEnumerator thread = (IEnumerator)ev.Invoke(m_Script, args);
             int i = StartingPosition;

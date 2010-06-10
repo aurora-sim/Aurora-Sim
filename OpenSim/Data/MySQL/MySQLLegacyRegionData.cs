@@ -578,7 +578,7 @@ namespace OpenSim.Data.MySQL
             }
         }
 
-        public void StoreTerrain(double[,] ter, UUID regionID)
+        public void StoreTerrain(double[,] ter, UUID regionID, bool Revert)
         {
             m_log.Info("[REGION DB]: Storing terrain");
 
@@ -590,14 +590,15 @@ namespace OpenSim.Data.MySQL
 
                     using (MySqlCommand cmd = dbcon.CreateCommand())
                     {
-                        cmd.CommandText = "delete from terrain where RegionUUID = ?RegionUUID";
+                        cmd.CommandText = "delete from terrain where RegionUUID = ?RegionUUID and Revert = ?Revert";
                         cmd.Parameters.AddWithValue("RegionUUID", regionID.ToString());
+                        cmd.Parameters.AddWithValue("Revert", Revert.ToString());
 
                         ExecuteNonQuery(cmd);
 
                         cmd.CommandText = "insert into terrain (RegionUUID, " +
-                            "Revision, Heightfield) values (?RegionUUID, " +
-                            "1, ?Heightfield)";
+                            "Revision, Heightfield, Revert) values (?RegionUUID, " +
+                            "1, ?Heightfield, ?Revert)";
 
                         cmd.Parameters.AddWithValue("Heightfield", SerializeTerrain(ter));
 
@@ -607,7 +608,7 @@ namespace OpenSim.Data.MySQL
             }
         }
 
-        public double[,] LoadTerrain(UUID regionID)
+        public double[,] LoadTerrain(UUID regionID, bool Revert)
         {
             double[,] terrain = null;
 
@@ -620,8 +621,9 @@ namespace OpenSim.Data.MySQL
                     using (MySqlCommand cmd = dbcon.CreateCommand())
                     {
                         cmd.CommandText = "select RegionUUID, Revision, Heightfield " +
-                            "from terrain where RegionUUID = ?RegionUUID " +
+                            "from terrain where RegionUUID = ?RegionUUID and Revert = '" + Revert.ToString() + "'" +
                             "order by Revision desc limit 1";
+                        
                         cmd.Parameters.AddWithValue("RegionUUID", regionID.ToString());
 
                         using (IDataReader reader = ExecuteReader(cmd))

@@ -87,11 +87,11 @@ namespace OpenSim.Data.Null
             return new List<SceneObjectGroup>();
         }
 
-        public void StoreTerrain(double[,] ter, UUID regionID)
+        public void StoreTerrain(double[,] ter, UUID regionID, bool Revert)
         {
         }
 
-        public double[,] LoadTerrain(UUID regionID)
+        public double[,] LoadTerrain(UUID regionID, bool Revert)
         {
             return null;
         }

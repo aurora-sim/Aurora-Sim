@@ -124,7 +124,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 {
                     m_channel = m_scene.Heightmap;
                     m_revert = new TerrainChannel();
-                    UpdateRevertMap();
+                    FindRevertMap();
                 }
 
                 m_scene.RegisterModuleInterface<ITerrainModule>(this);
@@ -482,6 +482,22 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         }
 
         /// <summary>
+        /// Finds and updates the revert map from the database.
+        /// </summary>
+        public void FindRevertMap()
+        {
+            int x;
+            for (x = 0; x < m_channel.Width; x++)
+            {
+                int y;
+                for (y = 0; y < m_channel.Height; y++)
+                {
+                    m_revert[x, y] = m_channel[x, y];
+                }
+            }
+        }
+
+        /// <summary>
         /// Saves the current state of the region into the revert map buffer.
         /// </summary>
         public void UpdateRevertMap()
@@ -495,6 +511,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                     m_revert[x, y] = m_channel[x, y];
                 }
             }
+            m_scene.SaveRevertTerrain(m_revert);
         }
 
         /// <summary>
@@ -578,6 +595,31 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             client.OnModifyTerrain += client_OnModifyTerrain;
             client.OnBakeTerrain += client_OnBakeTerrain;
             client.OnLandUndo += client_OnLandUndo;
+            client.onGodlikeMessage += client_onGodlikeMessage;
+        }
+
+        void client_onGodlikeMessage(IClientAPI client, UUID requester, string Method, List<string> Parameters)
+        {
+            if (!m_scene.Permissions.IsGod(client.AgentId))
+                return;
+            if (((Scene)client.Scene).RegionInfo.RegionID != m_scene.RegionInfo.RegionID)
+                return;
+            string parameter1 = Parameters[0];
+            if (Method == "terrain")
+            {
+                if (parameter1 == "bake")
+                {
+                    InterfaceBakeTerrain(null);
+                }
+                if (parameter1 == "revert")
+                {
+                    UpdateRevertMap();
+                }
+                if (parameter1 == "swap")
+                {
+                    //TODO: What is this?
+                }
+            }
         }
 
         /// <summary>

@@ -548,7 +548,7 @@ namespace OpenSim.Data.SQLiteLegacy
         /// </summary>
         /// <param name="ter">terrain heightfield</param>
         /// <param name="regionID">region UUID</param>
-        public void StoreTerrain(double[,] ter, UUID regionID)
+        public void StoreTerrain(double[,] ter, UUID regionID, bool Revert)
         {
             lock (ds)
             {
@@ -563,25 +563,27 @@ namespace OpenSim.Data.SQLiteLegacy
 
                 using (
                     SqliteCommand cmd =
-                        new SqliteCommand("delete from terrain where RegionUUID=:RegionUUID and Revision <= :Revision",
+                        new SqliteCommand("delete from terrain where RegionUUID=:RegionUUID and Revision <= :Revision and Revert = :Revert",
                                           m_conn))
                 {
                     cmd.Parameters.Add(new SqliteParameter(":RegionUUID", regionID.ToString()));
                     cmd.Parameters.Add(new SqliteParameter(":Revision", revision));
+                    cmd.Parameters.Add(new SqliteParameter(":Revert", Revert));
                     cmd.ExecuteNonQuery();
                 }
 
                 // the following is an work around for .NET.  The perf
                 // issues associated with it aren't as bad as you think.
                 m_log.Info("[REGION DB]: Storing terrain revision r" + revision.ToString());
-                String sql = "insert into terrain(RegionUUID, Revision, Heightfield)" +
-                             " values(:RegionUUID, :Revision, :Heightfield)";
+                String sql = "insert into terrain(RegionUUID, Revision, Heightfield, Revert)" +
+                             " values(:RegionUUID, :Revision, :Heightfield, :Revert)";
 
                 using (SqliteCommand cmd = new SqliteCommand(sql, m_conn))
                 {
                     cmd.Parameters.Add(new SqliteParameter(":RegionUUID", regionID.ToString()));
                     cmd.Parameters.Add(new SqliteParameter(":Revision", revision));
                     cmd.Parameters.Add(new SqliteParameter(":Heightfield", serializeTerrain(ter)));
+                    cmd.Parameters.Add(new SqliteParameter(":Revert", Revert));
                     cmd.ExecuteNonQuery();
                 }
             }
@@ -592,7 +594,7 @@ namespace OpenSim.Data.SQLiteLegacy
         /// </summary>
         /// <param name="regionID">the region UUID</param>
         /// <returns>Heightfield data</returns>
-        public double[,] LoadTerrain(UUID regionID)
+        public double[,] LoadTerrain(UUID regionID, bool Revert)
         {
             lock (ds)
             {
@@ -600,11 +602,12 @@ namespace OpenSim.Data.SQLiteLegacy
                 terret.Initialize();
 
                 String sql = "select RegionUUID, Revision, Heightfield from terrain" +
-                             " where RegionUUID=:RegionUUID order by Revision desc";
+                             " where RegionUUID=:RegionUUID and Revert=:Revert order by Revision desc";
 
                 using (SqliteCommand cmd = new SqliteCommand(sql, m_conn))
                 {
                     cmd.Parameters.Add(new SqliteParameter(":RegionUUID", regionID.ToString()));
+                    cmd.Parameters.Add(new SqliteParameter(":Revert", Revert));
 
                     using (IDataReader row = cmd.ExecuteReader())
                     {

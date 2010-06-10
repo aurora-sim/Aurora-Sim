@@ -79,7 +79,6 @@ namespace Aurora.Modules
 
             scene.EventManager.OnAvatarKilled += KillAvatar;
             scene.EventManager.OnAvatarEnteringNewParcel += AvatarEnteringParcel;
-            scene.AuroraEventManager.OnGenericEvent += new Aurora.Framework.OnGenericEventHandler(AuroraEventManager_OnGenericEvent);
         }
 
         public void RemoveRegion(Scene scene)
@@ -95,52 +94,6 @@ namespace Aurora.Modules
         public Type ReplaceableInterface
         {
             get { return null; }
-        }
-
-        void AuroraEventManager_OnGenericEvent(string FunctionName, object parameters)
-        {
-            if (FunctionName == "HealthUpdate")
-            {
-                object[] Update = (Object[])parameters;
-                ScenePresence SP = (ScenePresence)Update[0];
-                Dictionary<uint, ContactPoint> coldata = (Dictionary<uint, ContactPoint>)Update[1];
-                if (SP.m_invulnerable)
-                    return;
-
-                float starthealth = SP.Health;
-                uint killerObj = 0;
-                foreach (uint localid in coldata.Keys)
-                {
-                    SceneObjectPart part = SP.Scene.GetSceneObjectPart(localid);
-
-                    if (part != null && part.ParentGroup.Damage != -1.0f)
-                        SP.Health -= part.ParentGroup.Damage;
-                    else
-                    {
-                        if (coldata[localid].PenetrationDepth >= 0.10f)
-                            SP.Health -= coldata[localid].PenetrationDepth * 5.0f;
-                    }
-
-                    if (SP.Health <= 0.0f)
-                    {
-                        if (localid != 0)
-                            killerObj = localid;
-                    }
-                    //m_log.Debug("[AVATAR]: Collision with localid: " + localid.ToString() + " at depth: " + coldata[localid].ToString());
-                }
-                //Health = 100;
-                if (!SP.m_invulnerable)
-                {
-                    if (starthealth != SP.Health)
-                    {
-                        SP.ControllingClient.SendHealth(SP.Health);
-                    }
-                    if (SP.Health <= 0)
-                    {
-                        SP.Scene.EventManager.TriggerAvatarKill(killerObj, SP);
-                    }
-                }
-            }
         }
 
         public void PostInitialise(){}
@@ -159,40 +112,31 @@ namespace Aurora.Modules
                 DeadAvatar.ControllingClient.SendAgentAlertMessage("You committed suicide!", true);
                 if (FireEvent)
                 {
-                    FireDeadAvatarEvent(DeadAvatar.Name, DeadAvatar);
+                    FireDeadAvatarEvent(DeadAvatar.Name, DeadAvatar, null);
                 }
             }
             else
             {
-                bool foundResult = false;
-                string resultstring = String.Empty;
-                DeadAvatar.Scene.ForEachScenePresence(delegate(ScenePresence sp)
-                                             {
-                        if (sp.LocalId == killerObjectLocalID)
-                        {
-                            sp.ControllingClient.SendAlertMessage("You fragged " + DeadAvatar.Firstname + " " + DeadAvatar.Lastname);
-                            resultstring = sp.Firstname + " " + sp.Lastname;
-                            foundResult = true;
-                            if (FireEvent)
-                            {
-                                FireDeadAvatarEvent(resultstring, DeadAvatar);
-                            }
-                        }
-                                                      });
-                if (!foundResult)
+                SceneObjectPart part = DeadAvatar.Scene.GetSceneObjectPart(killerObjectLocalID);
+                ScenePresence sp = DeadAvatar.Scene.GetScenePresence(killerObjectLocalID);
+                if (sp.LocalId != null)
                 {
-                    SceneObjectPart part = DeadAvatar.Scene.GetSceneObjectPart(killerObjectLocalID);
+                    sp.ControllingClient.SendAlertMessage("You fragged " + DeadAvatar.Firstname + " " + DeadAvatar.Lastname);
+                    if (FireEvent && part != null)
+                        FireDeadAvatarEvent(sp.Name, DeadAvatar, part.ParentGroup);
+                }
+                else
+                {
                     if (part != null)
                     {
                         ScenePresence av = DeadAvatar.Scene.GetScenePresence(part.OwnerID);
                         if (av != null)
                         {
                             av.ControllingClient.SendAlertMessage("You fragged " + DeadAvatar.Firstname + " " + DeadAvatar.Lastname);
-                            resultstring = av.Firstname + " " + av.Lastname;
-                            DeadAvatar.ControllingClient.SendAgentAlertMessage("You got killed by " + resultstring + "!", true);
+                            DeadAvatar.ControllingClient.SendAgentAlertMessage("You got killed by " + av.Name + "!", true);
                             if (FireEvent)
                             {
-                                FireDeadAvatarEvent(resultstring, DeadAvatar);
+                                FireDeadAvatarEvent(av.Name, DeadAvatar, part.ParentGroup);
                             }
                         }
                         else
@@ -201,17 +145,16 @@ namespace Aurora.Modules
                             DeadAvatar.ControllingClient.SendAgentAlertMessage("You impaled yourself on " + part.Name + " owned by " + killer + "!", true);
                             if (FireEvent)
                             {
-                                FireDeadAvatarEvent(killer, DeadAvatar);
+                                FireDeadAvatarEvent(killer, DeadAvatar, null);
                             }
                         }
-                        //DeadAvatar.Scene. part.ObjectOwner
                     }
                     else
                     {
                         DeadAvatar.ControllingClient.SendAgentAlertMessage("You died!", true);
                         if (FireEvent)
                         {
-                            FireDeadAvatarEvent("Unknown", DeadAvatar);
+                            FireDeadAvatarEvent("Unknown", DeadAvatar, null);
                         }
                     }
                 }
@@ -220,16 +163,15 @@ namespace Aurora.Modules
             DeadAvatar.Scene.TeleportClientHome(DeadAvatar.UUID, DeadAvatar.ControllingClient);
         }
 
-        private void FireDeadAvatarEvent(string Killer, ScenePresence SP)
+        private void FireDeadAvatarEvent(string Killer, ScenePresence DeadAv, SceneObjectGroup killer)
         {
-            foreach (IScriptModule m in SP.m_scriptEngines)
+            foreach (IScriptModule m in DeadAv.m_scriptEngines)
             {
-                foreach (EntityBase grp in SP.Scene.Entities.GetEntities())
+                foreach (SceneObjectPart part in killer.Children.Values)
                 {
-                    if (grp is SceneObjectGroup)
+                    foreach (UUID ID in part.Inventory.GetInventoryList())
                     {
-                        SceneObjectGroup group = (SceneObjectGroup)grp;
-                        m.PostObjectEvent(group.RootPart.UUID, "avatardead", new Object[] { SP.Name, Killer });
+                        m.PostObjectEvent(ID, "deadavatar", new object[] { DeadAv.Name, Killer, DeadAv.UUID });
                     }
                 }
             }

@@ -1810,7 +1810,19 @@ namespace OpenSim.Region.Framework.Scenes
                             m_scene.m_sceneGraph.UpdatePresences();
                         CheckExit();
 
-                        // Delete temp-on-rez stuff
+                        if (m_scene.m_frame % m_scene.m_update_coarse_locations == 0)
+                    {
+                        List<Vector3> coarseLocations;
+                        List<UUID> avatarUUIDs;
+                        m_scene.SceneGraph.GetCoarseLocations(out coarseLocations, out avatarUUIDs, 60);
+                        // Send coarse locations to clients 
+                        m_scene.ForEachScenePresence(delegate(ScenePresence presence)
+                        {
+                            presence.SendCoarseLocations(coarseLocations, avatarUUIDs);
+                        });
+                    }
+
+                     // Delete temp-on-rez stuff
                         if (m_scene.m_frame % m_scene.m_update_backup == 0)
                         {
                             int tmpTempOnRezMS = Util.EnvironmentTickCount();
@@ -2418,7 +2430,15 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void SaveTerrain()
         {
-            DataStore.StoreTerrain(Heightmap.GetDoubles(), RegionInfo.RegionID);
+            DataStore.StoreTerrain(Heightmap.GetDoubles(), RegionInfo.RegionID, false);
+        }
+
+        /// <summary>
+        /// Store the revert terrain in the persistant data store
+        /// </summary>
+        public void SaveRevertTerrain(ITerrainChannel channel)
+        {
+            DataStore.StoreTerrain(channel.GetDoubles(), RegionInfo.RegionID, true);
         }
 
         public void StoreWindlightProfile(RegionLightShareData wl)
@@ -2437,19 +2457,40 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         /// <summary>
+        /// Loads the World Revert heightmap
+        /// </summary>
+        public ITerrainChannel LoadRevertMap()
+        {
+            try
+            {
+                double[,] map = DataStore.LoadTerrain(RegionInfo.RegionID, true);
+                if (map == null)
+                {
+                    map = Heightmap.GetDoubles();
+                }
+                return new TerrainChannel(map);
+            }
+            catch (Exception e)
+            {
+                m_log.Warn("[TERRAIN]: Scene.cs: LoadRevertMap() - Failed with exception " + e.ToString());
+            }
+            return Heightmap;
+        }
+
+        /// <summary>
         /// Loads the World heightmap
         /// </summary>
         public override void LoadWorldMap()
         {
             try
             {
-                double[,] map = DataStore.LoadTerrain(RegionInfo.RegionID);
+                double[,] map = DataStore.LoadTerrain(RegionInfo.RegionID, false);
                 if (map == null)
                 {
                     m_log.Info("[TERRAIN]: No default terrain. Generating a new terrain.");
                     Heightmap = new TerrainChannel();
 
-                    DataStore.StoreTerrain(Heightmap.GetDoubles(), RegionInfo.RegionID);
+                    DataStore.StoreTerrain(Heightmap.GetDoubles(), RegionInfo.RegionID, false);
                 }
                 else
                 {
@@ -2466,7 +2507,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     Heightmap = new TerrainChannel();
 
-                    DataStore.StoreTerrain(Heightmap.GetDoubles(), RegionInfo.RegionID);
+                    DataStore.StoreTerrain(Heightmap.GetDoubles(), RegionInfo.RegionID, false);
                 }
             }
             catch (Exception e)
@@ -5178,13 +5219,6 @@ namespace OpenSim.Region.Framework.Scenes
         {
             ScenePresence cp = GetScenePresence(avatarID);
 
-            // FIXME: This is really crap - some logout code is relying on a NullReferenceException to halt its processing
-            // This needs to be fixed properly by cleaning up the logout code.
-            //if (cp != null)
-            //    return cp.IsChildAgent;
-
-            //return false;
-
             return cp.IsChildAgent;
         }
 
@@ -5199,25 +5233,6 @@ namespace OpenSim.Region.Framework.Scenes
                 m_sceneGraph.ForEachScenePresence(action);
             }
         }
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="action"></param>
-        //        public void ForEachObject(Action<SceneObjectGroup> action)
-        //        {
-        //            List<SceneObjectGroup> presenceList;
-        //
-        //            lock (m_sceneObjects)
-        //            {
-        //                presenceList = new List<SceneObjectGroup>(m_sceneObjects.Values);
-        //            }
-        //
-        //            foreach (SceneObjectGroup presence in presenceList)
-        //            {
-        //                action(presence);
-        //            }
-        //        }
 
         /// <summary>
         /// Get a named prim contained in this scene (will return the first
@@ -5785,9 +5800,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         public Vector3? GetNearestAllowedPosition(ScenePresence avatar)
         {
-            //simulate to make sure we have pretty up to date positions
-            PhysicsScene.Simulate(0);
-
             ILandObject nearestParcel = GetNearestAllowedParcel(avatar.UUID, avatar.AbsolutePosition.X, avatar.AbsolutePosition.Y);
 
             if (nearestParcel != null)

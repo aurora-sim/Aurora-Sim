@@ -77,3 +77,11 @@ update land
   where AuthbuyerID not like '%-%';
   
 COMMIT;
+
+:VERSION 19
+
+BEGIN;
+
+ALTER TABLE terrain ADD COLUMN Revert varchar(6) NOT NULL DEFAULT 'false';
+
+COMMIT;

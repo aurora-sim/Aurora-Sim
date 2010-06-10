@@ -531,18 +531,19 @@ ELSE
         /// </summary>
         /// <param name="regionID">regionID.</param>
         /// <returns></returns>
-        public double[,] LoadTerrain(UUID regionID)
+        public double[,] LoadTerrain(UUID regionID, bool Revert)
         {
             double[,] terrain = new double[(int)Constants.RegionSize, (int)Constants.RegionSize];
             terrain.Initialize();
 
-            string sql = "select top 1 RegionUUID, Revision, Heightfield from terrain where RegionUUID = @RegionUUID order by Revision desc";
+            string sql = "select top 1 RegionUUID, Revision, Heightfield from terrain where RegionUUID = @RegionUUID and Revert = @Revert order by Revision desc";
 
             using (SqlConnection conn = new SqlConnection(m_connectionString))
             using (SqlCommand cmd = new SqlCommand(sql, conn))
             {
                 // MySqlParameter param = new MySqlParameter();
                 cmd.Parameters.Add(_Database.CreateParameter("@RegionUUID", regionID));
+                cmd.Parameters.Add(_Database.CreateParameter("@Revert", Revert));
                 conn.Open();
                 using (SqlDataReader reader = cmd.ExecuteReader())
                 {
@@ -577,21 +578,22 @@ ELSE
         /// </summary>
         /// <param name="terrain">terrain map data.</param>
         /// <param name="regionID">regionID.</param>
-        public void StoreTerrain(double[,] terrain, UUID regionID)
+        public void StoreTerrain(double[,] terrain, UUID regionID, bool Revert)
         {
             int revision = Util.UnixTimeSinceEpoch();
 
             //Delete old terrain map
-            string sql = "delete from terrain where RegionUUID=@RegionUUID";
+            string sql = "delete from terrain where RegionUUID=@RegionUUID and Revert = @Revert";
             using (SqlConnection conn = new SqlConnection(m_connectionString))
             using (SqlCommand cmd = new SqlCommand(sql, conn))
             {
                 cmd.Parameters.Add(_Database.CreateParameter("@RegionUUID", regionID));
+                cmd.Parameters.Add(_Database.CreateParameter("@Revert", Revert.ToString()));
                 conn.Open();
                 cmd.ExecuteNonQuery();
             }
 
-            sql = "insert into terrain(RegionUUID, Revision, Heightfield) values(@RegionUUID, @Revision, @Heightfield)";
+            sql = "insert into terrain(RegionUUID, Revision, Heightfield, Revert) values(@RegionUUID, @Revision, @Heightfield, @Revert)";
 
             using (SqlConnection conn = new SqlConnection(m_connectionString))
             using (SqlCommand cmd = new SqlCommand(sql, conn))
@@ -599,6 +601,7 @@ ELSE
                 cmd.Parameters.Add(_Database.CreateParameter("@RegionUUID", regionID));
                 cmd.Parameters.Add(_Database.CreateParameter("@Revision", revision));
                 cmd.Parameters.Add(_Database.CreateParameter("@Heightfield", serializeTerrain(terrain)));
+                cmd.Parameters.Add(_Database.CreateParameter("@Revert", Revert.ToString()));
                 conn.Open();
                 cmd.ExecuteNonQuery();
             }

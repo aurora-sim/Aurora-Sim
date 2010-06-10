@@ -548,13 +548,29 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     client.SendTeleportFailed("Your home region could not be found.");
                     return;
                 }
-                m_log.DebugFormat("[ENTITY TRANSFER MODULE]: User's home region is {0} {1} ({2}-{3})", 
+                m_log.DebugFormat("[ENTITY TRANSFER MODULE]: User's home region is {0} {1} ({2}-{3})",
                     regionInfo.RegionName, regionInfo.RegionID, regionInfo.RegionLocX / Constants.RegionSize, regionInfo.RegionLocY / Constants.RegionSize);
 
                 // a little eekie that this goes back to Scene and with a forced cast, will fix that at some point...
                 ((Scene)(client.Scene)).RequestTeleportLocation(
                     client, regionInfo.RegionHandle, uinfo.HomePosition, uinfo.HomeLookAt,
                     (uint)(Constants.TeleportFlags.SetLastToTarget | Constants.TeleportFlags.ViaHome));
+            }
+            else
+            {
+                //Default region time...
+                List<GridRegion> Regions = m_aScene.GridService.GetDefaultRegions(UUID.Zero);
+                if (Regions.Count != 0)
+                {
+
+                    m_log.DebugFormat("[ENTITY TRANSFER MODULE]: User's home region was not found, using {0} {1} ({2}-{3})",
+                        Regions[0].RegionName, Regions[0].RegionID, Regions[0].RegionLocX / Constants.RegionSize, Regions[0].RegionLocY / Constants.RegionSize);
+
+                    // a little eekie that this goes back to Scene and with a forced cast, will fix that at some point...
+                    ((Scene)(client.Scene)).RequestTeleportLocation(
+                        client, Regions[0].RegionHandle, new Vector3(128, 128, 25), new Vector3(128, 128, 128),
+                        (uint)(Constants.TeleportFlags.SetLastToTarget | Constants.TeleportFlags.ViaHome));
+                }
             }
         }
 
