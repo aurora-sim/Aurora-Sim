@@ -3400,7 +3400,7 @@ namespace OpenSim.Region.Framework.Scenes
             //if ((Math.Abs(Velocity.X) > 0.1e-9f) || (Math.Abs(Velocity.Y) > 0.1e-9f))
             // The Physics Scene will send updates every 500 ms grep: m_physicsActor.SubscribeEvents(
             // as of this comment the interval is set in AddToPhysicalScene
-            if (Animator!=null)
+            if (Animator != null)
                 Animator.UpdateMovementAnimations();
 
             CollisionEventUpdate collisionData = (CollisionEventUpdate)e;
@@ -3439,7 +3439,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (m_invulnerable)
                 return;
-            
+
             float starthealth = Health;
             uint killerObj = 0;
             foreach (uint localid in coldata.Keys)
@@ -3461,16 +3461,12 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 //m_log.Debug("[AVATAR]: Collision with localid: " + localid.ToString() + " at depth: " + coldata[localid].ToString());
             }
-            //Health = 100;
-            if (!m_invulnerable)
+            if (starthealth != Health)
             {
-                if (starthealth != Health)
-                {
-                    ControllingClient.SendHealth(Health);
-                }
-                if (m_health <= 0)
-                    m_scene.EventManager.TriggerAvatarKill(killerObj, this);
+                ControllingClient.SendHealth(Health);
             }
+            if (m_health <= 0)
+                m_scene.EventManager.TriggerAvatarKill(killerObj, this);
         }
 
         public void setHealthWithUpdate(float health)

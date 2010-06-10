@@ -106,55 +106,58 @@ namespace Aurora.Modules
 
         private void KillAvatar(uint killerObjectLocalID, ScenePresence DeadAvatar)
         {
-            bool FireEvent = m_config.GetBoolean("FireDeadEvent", false);
-            if (killerObjectLocalID == 0)
+            if (m_config != null)
             {
-                DeadAvatar.ControllingClient.SendAgentAlertMessage("You committed suicide!", true);
-                if (FireEvent)
+                bool FireEvent = m_config.GetBoolean("FireDeadEvent", false);
+                if (killerObjectLocalID == 0)
                 {
-                    FireDeadAvatarEvent(DeadAvatar.Name, DeadAvatar, null);
-                }
-            }
-            else
-            {
-                SceneObjectPart part = DeadAvatar.Scene.GetSceneObjectPart(killerObjectLocalID);
-                ScenePresence sp = DeadAvatar.Scene.GetScenePresence(killerObjectLocalID);
-                if (sp.LocalId != null)
-                {
-                    sp.ControllingClient.SendAlertMessage("You fragged " + DeadAvatar.Firstname + " " + DeadAvatar.Lastname);
-                    if (FireEvent && part != null)
-                        FireDeadAvatarEvent(sp.Name, DeadAvatar, part.ParentGroup);
+                    DeadAvatar.ControllingClient.SendAgentAlertMessage("You committed suicide!", true);
+                    if (FireEvent)
+                    {
+                        FireDeadAvatarEvent(DeadAvatar.Name, DeadAvatar, null);
+                    }
                 }
                 else
                 {
-                    if (part != null)
+                    SceneObjectPart part = DeadAvatar.Scene.GetSceneObjectPart(killerObjectLocalID);
+                    ScenePresence sp = DeadAvatar.Scene.GetScenePresence(killerObjectLocalID);
+                    if (sp.LocalId != null)
                     {
-                        ScenePresence av = DeadAvatar.Scene.GetScenePresence(part.OwnerID);
-                        if (av != null)
+                        sp.ControllingClient.SendAlertMessage("You fragged " + DeadAvatar.Firstname + " " + DeadAvatar.Lastname);
+                        if (FireEvent && part != null)
+                            FireDeadAvatarEvent(sp.Name, DeadAvatar, part.ParentGroup);
+                    }
+                    else
+                    {
+                        if (part != null)
                         {
-                            av.ControllingClient.SendAlertMessage("You fragged " + DeadAvatar.Firstname + " " + DeadAvatar.Lastname);
-                            DeadAvatar.ControllingClient.SendAgentAlertMessage("You got killed by " + av.Name + "!", true);
-                            if (FireEvent)
+                            ScenePresence av = DeadAvatar.Scene.GetScenePresence(part.OwnerID);
+                            if (av != null)
                             {
-                                FireDeadAvatarEvent(av.Name, DeadAvatar, part.ParentGroup);
+                                av.ControllingClient.SendAlertMessage("You fragged " + DeadAvatar.Firstname + " " + DeadAvatar.Lastname);
+                                DeadAvatar.ControllingClient.SendAgentAlertMessage("You got killed by " + av.Name + "!", true);
+                                if (FireEvent)
+                                {
+                                    FireDeadAvatarEvent(av.Name, DeadAvatar, part.ParentGroup);
+                                }
+                            }
+                            else
+                            {
+                                string killer = DeadAvatar.Scene.GetUserName(part.OwnerID);
+                                DeadAvatar.ControllingClient.SendAgentAlertMessage("You impaled yourself on " + part.Name + " owned by " + killer + "!", true);
+                                if (FireEvent)
+                                {
+                                    FireDeadAvatarEvent(killer, DeadAvatar, null);
+                                }
                             }
                         }
                         else
                         {
-                            string killer = DeadAvatar.Scene.GetUserName(part.OwnerID);
-                            DeadAvatar.ControllingClient.SendAgentAlertMessage("You impaled yourself on " + part.Name + " owned by " + killer + "!", true);
+                            DeadAvatar.ControllingClient.SendAgentAlertMessage("You died!", true);
                             if (FireEvent)
                             {
-                                FireDeadAvatarEvent(killer, DeadAvatar, null);
+                                FireDeadAvatarEvent("Unknown", DeadAvatar, null);
                             }
-                        }
-                    }
-                    else
-                    {
-                        DeadAvatar.ControllingClient.SendAgentAlertMessage("You died!", true);
-                        if (FireEvent)
-                        {
-                            FireDeadAvatarEvent("Unknown", DeadAvatar, null);
                         }
                     }
                 }
