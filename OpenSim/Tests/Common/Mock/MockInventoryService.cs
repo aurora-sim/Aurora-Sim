@@ -25,40 +25,21 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using log4net;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
-using Nini.Config;
+using System.Text;
 using OpenSim.Framework;
-using OpenSim.Framework.Servers.HttpServer;
-using OpenSim.Services.Interfaces;
 using OpenMetaverse;
+using OpenSim.Services.Interfaces;
+using Nini.Config;
 
-namespace OpenSim.Services.Connectors
+namespace OpenSim.Tests.Common.Mock
 {
-    /// <summary>
-    /// This connector is temporary. It's used by the user server, before that server is refactored.
-    /// </summary>
-    public class QuickAndDirtyInventoryServiceConnector : IInventoryService
+    public class MockInventoryService : IInventoryService
     {
-//        private static readonly ILog m_log =
-//                LogManager.GetLogger(
-//                MethodBase.GetCurrentMethod().DeclaringType);
-
-        private string m_ServerURI = String.Empty;
-
-        //private Dictionary<UUID, InventoryReceiptCallback> m_RequestingInventory = new Dictionary<UUID, InventoryReceiptCallback>();
-
-        public QuickAndDirtyInventoryServiceConnector()
-        {
-        }
-
-        public QuickAndDirtyInventoryServiceConnector(string serverURI)
-        {
-            m_ServerURI = serverURI.TrimEnd('/');
-        }
+        public MockInventoryService() {}
+        
+        public MockInventoryService(IConfigSource config) {}
 
         /// <summary>
         /// <see cref="OpenSim.Framework.Communications.IInterServiceInventoryServices"/>
@@ -67,8 +48,7 @@ namespace OpenSim.Services.Connectors
         /// <returns></returns>
         public bool CreateUserInventory(UUID userId)
         {
-            return SynchronousRestObjectPoster.BeginPostObject<Guid, bool>(
-                "POST", m_ServerURI + "CreateInventory/", userId.Guid);
+            return false;
         }
 
         /// <summary>
@@ -78,8 +58,27 @@ namespace OpenSim.Services.Connectors
         /// <returns></returns>
         public List<InventoryFolderBase> GetInventorySkeleton(UUID userId)
         {
-            return SynchronousRestObjectPoster.BeginPostObject<Guid, List<InventoryFolderBase>>(
-                "POST", m_ServerURI + "RootFolders/", userId.Guid);
+            List<InventoryFolderBase> folders = new List<InventoryFolderBase>();
+            InventoryFolderBase folder = new InventoryFolderBase();
+            folder.ID = UUID.Random();
+            folder.Owner = userId;
+            folders.Add(folder);
+            return folders;
+        }
+
+        public InventoryFolderBase GetRootFolder(UUID userID)
+        {
+            return new InventoryFolderBase();
+        }
+
+        public InventoryCollection GetFolderContent(UUID userID, UUID folderID)
+        {
+            return null;
+        }
+
+        public InventoryFolderBase GetFolderForType(UUID userID, AssetType type)
+        {
+            return null;
         }
 
         /// <summary>
@@ -93,8 +92,7 @@ namespace OpenSim.Services.Connectors
         /// </returns>
         public List<InventoryItemBase> GetActiveGestures(UUID userId)
         {
-            return SynchronousRestObjectPoster.BeginPostObject<Guid, List<InventoryItemBase>>(
-                "POST", m_ServerURI + "ActiveGestures/", userId.Guid);
+            return null;
         }
 
         public InventoryCollection GetUserInventory(UUID userID)
@@ -102,18 +100,8 @@ namespace OpenSim.Services.Connectors
             return null;
         }
 
-        public void GetUserInventory(UUID userID, InventoryReceiptCallback callback)
+        public void GetUserInventory(UUID userID, OpenSim.Services.Interfaces.InventoryReceiptCallback callback)
         {
-        }
-
-        public InventoryFolderBase GetFolderForType(UUID userID, AssetType type)
-        {
-            return null;
-        }
-
-        public InventoryCollection GetFolderContent(UUID userID, UUID folderID)
-        {
-            return null;
         }
 
         public List<InventoryItemBase> GetFolderItems(UUID userID, UUID folderID)
@@ -136,11 +124,10 @@ namespace OpenSim.Services.Connectors
             return false;
         }
 
-        public bool DeleteFolders(UUID ownerID, List<UUID> folderIDs)
+        public bool DeleteFolders(UUID ownerID, List<UUID> ids)
         {
             return false;
         }
-
 
         public bool PurgeFolder(InventoryFolderBase folder)
         {
@@ -149,7 +136,7 @@ namespace OpenSim.Services.Connectors
 
         public bool AddItem(InventoryItemBase item)
         {
-            return false;
+            return true;
         }
 
         public bool UpdateItem(InventoryItemBase item)
@@ -162,7 +149,7 @@ namespace OpenSim.Services.Connectors
             return false;
         }
 
-        public bool DeleteItems(UUID owner, List<UUID> itemIDs)
+        public bool DeleteItems(UUID ownerID, List<UUID> itemIDs)
         {
             return false;
         }
@@ -170,11 +157,6 @@ namespace OpenSim.Services.Connectors
         public InventoryItemBase GetItem(InventoryItemBase item)
         {
             return null;
-        }
-        
-        public InventoryFolderBase GetFolder(UUID folderId, UUID userId) 
-        { 
-            return null; 
         }
 
         public InventoryFolderBase GetFolder(InventoryFolderBase folder)
@@ -187,20 +169,18 @@ namespace OpenSim.Services.Connectors
             return false;
         }
 
-        public InventoryFolderBase GetRootFolder(UUID userID)
+        public InventoryFolderBase RequestRootFolder(UUID userID)
         {
-            return null;
+            InventoryFolderBase root = new InventoryFolderBase();
+            root.ID = UUID.Random();
+            root.Owner = userID;
+            root.ParentID = UUID.Zero;
+            return root;
         }
 
         public int GetAssetPermissions(UUID userID, UUID assetID)
         {
-            return 0;
+            return 1;
         }
-
-        public bool LinkItem(IClientAPI client, UUID oldItemID, UUID parentID, uint Callback)
-        {
-            return false;
-        }
-
     }
 }
