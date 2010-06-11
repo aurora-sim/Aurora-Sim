@@ -1947,11 +1947,13 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             m_host.AddScriptLPS(1);
             InitLSL();
             LSL_List retVal = new LSL_List();
-            List<SceneObjectPart> parts = ((LSL_Api)m_LSL_Api).GetLinkParts(linknumber);
-            foreach (SceneObjectPart part in parts)
-            {
-                retVal += ((LSL_Api)m_LSL_Api).GetLinkPrimitiveParams(part, rules);
-            }
+            //Assign requested part directly
+            SceneObjectPart part = m_host.ParentGroup.GetLinkNumPart(linknumber);
+
+            //Check to see if the requested part exists (NOT null) and if so, get it's rules
+            if (part != null) retVal = ((LSL_Api)m_LSL_Api).GetLinkPrimitiveParams(part, rules);
+
+            //Will retun rules for specific part, or an empty list if part == null
             return retVal;
         }
 
