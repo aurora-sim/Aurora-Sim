@@ -44,7 +44,7 @@ namespace OpenSim.Framework.Capabilities
         string assetName, string description, UUID assetID, UUID inventoryItem, UUID parentFolder,
         byte[] data, string inventoryType, string assetType);
 
-    public delegate UUID UpdateItem(UUID itemID, byte[] data);
+    public delegate string UpdateItem(UUID itemID, byte[] data);
 
     public delegate void UpdateTaskScript(UUID itemID, UUID primID, bool isScriptRunning, byte[] data, ref ArrayList errors);
 
@@ -52,7 +52,7 @@ namespace OpenSim.Framework.Capabilities
 
     public delegate void NewAsset(AssetBase asset);
 
-    public delegate UUID ItemUpdatedCallback(UUID userID, UUID itemID, byte[] data);
+    public delegate string ItemUpdatedCallback(UUID userID, UUID itemID, byte[] data);
 
     public delegate ArrayList TaskScriptUpdatedCallback(UUID userID, UUID itemID, UUID primID,
                                                    bool isScriptRunning, byte[] data);
@@ -924,14 +924,14 @@ namespace OpenSim.Framework.Capabilities
         /// <param name="itemID">Item to update</param>
         /// <param name="data">New asset data</param>
         /// <returns></returns>
-        public UUID ItemUpdated(UUID itemID, byte[] data)
+        public string ItemUpdated(UUID itemID, byte[] data)
         {
             if (ItemUpdatedCall != null)
             {
                 return ItemUpdatedCall(m_agentID, itemID, data);
             }
 
-            return UUID.Zero;
+            return "";
         }
 
         /// <summary>
@@ -1082,19 +1082,11 @@ namespace OpenSim.Framework.Capabilities
             {
                 UUID inv = inventoryItemID;
                 string res = String.Empty;
-                LLSDAssetUploadComplete uploadComplete = new LLSDAssetUploadComplete();
-                UUID assetID = UUID.Zero;
                 handlerUpdateItem = OnUpLoad;
                 if (handlerUpdateItem != null)
                 {
-                    assetID = handlerUpdateItem(inv, data);
+                    res = handlerUpdateItem(inv, data);
                 }
-
-                uploadComplete.new_asset = assetID.ToString();
-                uploadComplete.new_inventory_item = inv;
-                uploadComplete.state = "complete";
-
-                res = LLSDHelpers.SerialiseLLSDReply(uploadComplete);
 
                 httpListener.RemoveStreamHandler("POST", uploaderPath);
 

@@ -26,6 +26,7 @@
  */
 
 using System;
+using System.Collections;
 using OpenMetaverse;
 
 namespace OpenSim.Framework.Capabilities
@@ -39,6 +40,20 @@ namespace OpenSim.Framework.Capabilities
         //public bool success = false;
 
         public LLSDAssetUploadComplete()
+        {
+        }
+    }
+
+    [LLSDType("MAP")]
+    public class LLSDScriptAssetUploadComplete
+    {
+        public string new_asset = String.Empty;
+        public UUID new_inventory_item = UUID.Zero;
+        public string state = String.Empty;
+        public bool compiled = true;
+        public ArrayList errors = new ArrayList();
+
+        public LLSDScriptAssetUploadComplete()
         {
         }
     }

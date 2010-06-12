@@ -128,7 +128,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// <see>CapsUpdatedInventoryItemAsset(IClientAPI, UUID, byte[])</see>
         /// </summary>
-        public UUID CapsUpdateInventoryItemAsset(UUID avatarId, UUID itemID, byte[] data)
+        public string CapsUpdateInventoryItemAsset(UUID avatarId, UUID itemID, byte[] data)
         {
             ScenePresence avatar;
 
@@ -146,7 +146,7 @@ namespace OpenSim.Region.Framework.Scenes
                     avatarId);
             }
 
-            return UUID.Zero;
+            return "";
         }
 
         /// <summary>

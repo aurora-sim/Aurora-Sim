@@ -30,6 +30,7 @@ using System.Collections.Generic;
 using System.Reflection;
 
 using OpenSim.Framework;
+using OpenSim.Framework.Capabilities;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Connectors.Hypergrid;
@@ -107,13 +108,17 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
         /// 
         /// CapsUpdateInventoryItemAsset
         ///
-        public override UUID CapsUpdateInventoryItemAsset(IClientAPI remoteClient, UUID itemID, byte[] data)
+        public override string CapsUpdateInventoryItemAsset(IClientAPI remoteClient, UUID itemID, byte[] data)
         {
-            UUID newAssetID = base.CapsUpdateInventoryItemAsset(remoteClient, itemID, data);
+            string response = base.CapsUpdateInventoryItemAsset(remoteClient, itemID, data);
 
-            UploadInventoryItem(remoteClient.AgentId, newAssetID, "", 0);
+            System.Collections.Hashtable hash = (System.Collections.Hashtable) LLSD.LLSDDeserialize(Utils.StringToBytes(response));
+            LLSDAssetUploadComplete llsdRequest = new LLSDAssetUploadComplete();
+            LLSDHelpers.DeserialiseOSDMap(hash, llsdRequest);
 
-            return newAssetID;
+            UploadInventoryItem(remoteClient.AgentId, UUID.Parse(llsdRequest.new_asset), "", 0);
+
+            return response;
         }
 
         ///

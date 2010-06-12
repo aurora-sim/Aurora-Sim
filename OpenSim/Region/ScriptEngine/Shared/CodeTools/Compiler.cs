@@ -393,6 +393,116 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             return;
         }
 
+        /// <summary>
+        /// Converts script from LSL to CS and calls CompileFromCSText
+        /// </summary>
+        /// <param name="Script">LSL script</param>
+        /// <returns>Filename to .dll assembly</returns>
+        public void PerformTestScriptCompile(string Script, UUID assetID)
+        {
+            string asset = assetID.ToString();
+
+            string Identifier = RandomString(36, true);
+            m_warnings.Clear();
+
+            if (!Directory.Exists(ScriptEnginesPath))
+            {
+                try
+                {
+                    Directory.CreateDirectory(ScriptEnginesPath);
+                }
+                catch (Exception)
+                {
+                }
+            }
+
+            if (!Directory.Exists(Path.Combine(ScriptEnginesPath,
+                                               m_scriptEngine.World.RegionInfo.RegionID.ToString())))
+            {
+                try
+                {
+                    Directory.CreateDirectory(ScriptEnginesPath);
+                }
+                catch (Exception)
+                {
+                }
+            }
+            string assembly = "TestAssmebly.dll";
+            assembly = CheckAssembly(assembly, 0);
+            if (Script == String.Empty)
+            {
+                throw new Exception("Cannot find script assembly and no script text present");
+            }
+
+            enumCompileType language = DefaultCompileLanguage;
+
+            if (Script.StartsWith("//c#", true, CultureInfo.InvariantCulture))
+                language = enumCompileType.cs;
+            if (Script.StartsWith("//vb", true, CultureInfo.InvariantCulture))
+            {
+                language = enumCompileType.vb;
+                // We need to remove //vb, it won't compile with that
+
+                Script = Script.Substring(4, Script.Length - 4);
+            }
+            if (Script.StartsWith("//lsl", true, CultureInfo.InvariantCulture))
+                language = enumCompileType.lsl;
+
+            if (Script.StartsWith("//js", true, CultureInfo.InvariantCulture))
+                language = enumCompileType.js;
+
+            if (Script.StartsWith("//yp", true, CultureInfo.InvariantCulture))
+                language = enumCompileType.yp;
+
+            if (!AllowedCompilers.ContainsKey(language.ToString()))
+            {
+                // Not allowed to compile to this language!
+                string errtext = String.Empty;
+                errtext += "The compiler for language \"" + language.ToString() + "\" is not in list of allowed compilers. Script will not be executed!";
+                throw new Exception(errtext);
+            }
+
+            string compileScript = Script;
+            if (language == enumCompileType.lsl)
+            {
+                // Its LSL, convert it to C#
+                LSL_Converter = (ICodeConverter)new CSCodeGenerator();
+                compileScript = LSL_Converter.Convert(Script);
+
+                // copy converter warnings into our warnings.
+                foreach (string warning in LSL_Converter.GetWarnings())
+                {
+                    AddWarning(warning);
+                }
+            }
+
+            if (language == enumCompileType.yp)
+            {
+                // Its YP, convert it to C#
+                compileScript = YP_Converter.Convert(Script);
+            }
+
+            switch (language)
+            {
+                case enumCompileType.cs:
+                case enumCompileType.lsl:
+                    compileScript = CreateTestCSCompilerScript(compileScript, Identifier);
+                    break;
+                case enumCompileType.vb:
+                    compileScript = CreateVBCompilerScript(compileScript);
+                    break;
+                //                case enumCompileType.js:
+                //                    compileScript = CreateJSCompilerScript(compileScript);
+                //                    break;
+                case enumCompileType.yp:
+                    compileScript = CreateYPCompilerScript(compileScript);
+                    break;
+            }
+
+            assembly = TestFromDotNetText(compileScript, language, asset, assembly);
+            return;
+        }
+
         private string CheckAssembly(string assembly, int i)
         {
             if (File.Exists(assembly) || File.Exists(assembly.Remove(assembly.Length - 4) + ".pdb"))
@@ -507,6 +617,71 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             return compiledScript;
         }
 
+        private static string CreateTestCSCompilerScript(string compileScript, string identifier)
+        {
+            string compiledScript = "";
+            compiledScript = String.Empty +
+                "using OpenSim.Region.ScriptEngine.Shared;" +
+                "\nusing System;" +
+                "\nusing System.Collections.Generic;" +
+                "\nusing System.Collections;\n" +
+                "using System.Timers;\n" +
+                "namespace Script\n{\n";
+            string TempClassScript = "";
+            TempClassScript = String.Empty + "[Serializable]\n public class " + identifier + " : OpenSim.Region.ScriptEngine.Shared.ScriptBase.ScriptBaseClass, IDisposable";
+            TempClassScript += "\n{\n" +
+                     "List<IEnumerator> parts = new List<IEnumerator>();\n";
+            TempClassScript += "System.Timers.Timer aTimer = new System.Timers.Timer(250);\n";
+            TempClassScript += "public " + identifier + "()\n{\n";
+            TempClassScript += "aTimer.Elapsed += new System.Timers.ElapsedEventHandler(Timer);\n";
+            TempClassScript += "aTimer.Enabled = true;\n";
+            TempClassScript += "aTimer.Start();\n";
+            TempClassScript += "}\n";
+            TempClassScript += "~" + identifier + "()\n{\n";
+            TempClassScript += "aTimer.Stop();\n";
+            TempClassScript += "aTimer.Dispose();\n";
+            TempClassScript += "}\n";
+            TempClassScript += "public void Dispose()\n";
+            TempClassScript += "{\n";
+            TempClassScript += "aTimer.Stop();\n";
+            TempClassScript += "aTimer.Dispose();\n";
+            TempClassScript += "}\n";
+
+            TempClassScript += "public void Timer(object source, System.Timers.ElapsedEventArgs e)\n{\n";
+            TempClassScript += "lock (parts)\n";
+            TempClassScript += "{\n";
+            TempClassScript += "int i = 0;\n";
+            TempClassScript += "if(parts.Count == 0)\n";
+            TempClassScript += "return;";
+            TempClassScript += "while (parts.Count > 0 && i < 1000)\n";
+            TempClassScript += "{\n";
+            TempClassScript += "i++;\n";
+
+            TempClassScript += "bool running = false;\n";
+            TempClassScript += "try\n";
+            TempClassScript += "{\n";
+            TempClassScript += "running = parts[i % parts.Count].MoveNext();\n";
+            TempClassScript += "}\n";
+            TempClassScript += "catch (Exception ex)\n";
+            TempClassScript += "{\n";
+            TempClassScript += "}\n";
+
+            TempClassScript += "if (!running)\n { \n";
+            TempClassScript += "parts.Remove(parts[i % parts.Count]);\n } \n";
+            TempClassScript += "else\n { } \n";
+            TempClassScript += "}\n";
+            TempClassScript += "}\n";
+            TempClassScript += "}\n";
+
+            TempClassScript +=
+                     compileScript +
+                     "\n}";
+
+            compiledScript += "\n}";
+
+            return compiledScript;
+        }
+
         private static string CreateYPCompilerScript(string compileScript)
         {
             compileScript = String.Empty +
@@ -533,6 +708,153 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                 compileScript +
                 ":End Class :End Namespace\r\n";
             return compileScript;
+        }
+
+        /// <summary>
+        /// Compile .NET script to .Net assembly (.dll)
+        /// </summary>
+        /// <param name="Script">CS script</param>
+        /// <returns>Filename to .dll assembly</returns>
+        internal string TestFromDotNetText(string Script, enumCompileType lang, string asset, string assembly)
+        {
+            // Output assembly name
+            try
+            {
+                File.Delete(assembly);
+            }
+            catch (Exception e) // NOTLEGIT - Should be just FileIOException
+            {
+                throw new Exception("Unable to delete old existing " +
+                        "script-file before writing new. Compile aborted: " +
+                        e.ToString());
+            }
+
+            // Do actual compile
+            CompilerParameters parameters = new CompilerParameters();
+
+            parameters.IncludeDebugInformation = true;
+            parameters.GenerateInMemory = true;
+
+            string rootPath =
+                Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory);
+
+            parameters.ReferencedAssemblies.Add(Path.Combine(rootPath,
+                    "OpenSim.Region.ScriptEngine.Shared.dll"));
+            parameters.ReferencedAssemblies.Add(Path.Combine(rootPath,
+                    "OpenSim.Region.ScriptEngine.Shared.Api.Runtime.dll"));
+            parameters.ReferencedAssemblies.Add("System.dll");
+
+            if (lang == enumCompileType.yp)
+            {
+                parameters.ReferencedAssemblies.Add(Path.Combine(rootPath,
+                        "OpenSim.Region.ScriptEngine.Shared.YieldProlog.dll"));
+            }
+
+            parameters.GenerateExecutable = false;
+            parameters.OutputAssembly = assembly;
+            parameters.IncludeDebugInformation = CompileWithDebugInformation;
+            //parameters.WarningLevel = 1; // Should be 4?
+            parameters.TreatWarningsAsErrors = false;
+
+            CompilerResults results;
+            switch (lang)
+            {
+                case enumCompileType.vb:
+                    results = VBcodeProvider.CompileAssemblyFromSource(
+                            parameters, Script);
+                    break;
+                case enumCompileType.cs:
+                case enumCompileType.lsl:
+                    bool complete = false;
+                    bool retried = false;
+                    do
+                    {
+                        lock (CScodeProvider)
+                        {
+                            results = CScodeProvider.CompileAssemblyFromSource(
+                                parameters, Script);
+                        }
+                        // Deal with an occasional segv in the compiler.
+                        // Rarely, if ever, occurs twice in succession.
+                        // Line # == 0 and no file name are indications that
+                        // this is a native stack trace rather than a normal
+                        // error log.
+                        if (results.Errors.Count > 0)
+                        {
+                            if (!retried && (results.Errors[0].FileName == null || results.Errors[0].FileName == String.Empty) &&
+                                results.Errors[0].Line == 0)
+                            {
+                                // System.Console.WriteLine("retrying failed compilation");
+                                retried = true;
+                            }
+                            else
+                            {
+                                complete = true;
+                            }
+                        }
+                        else
+                        {
+                            complete = true;
+                        }
+                    } while (!complete);
+                    break;
+                //                case enumCompileType.js:
+                //                    results = JScodeProvider.CompileAssemblyFromSource(
+                //                        parameters, Script);
+                //                    break;
+                case enumCompileType.yp:
+                    results = YPcodeProvider.CompileAssemblyFromSource(
+                        parameters, Script);
+                    break;
+                default:
+                    throw new Exception("Compiler is not able to recongnize " +
+                                        "language type \"" + lang.ToString() + "\"");
+            }
+
+            // Check result
+            // Go through errors
+
+            //
+            // WARNINGS AND ERRORS
+            //
+            bool hadErrors = false;
+            string errtext = String.Empty;
+
+            if (results.Errors.Count > 0)
+            {
+                foreach (CompilerError CompErr in results.Errors)
+                {
+                    string severity = CompErr.IsWarning ? "Warning" : "Error";
+
+                    KeyValuePair<int, int> lslPos;
+
+                    // Show 5 errors max, but check entire list for errors
+
+                    if (severity == "Error")
+                    {
+                        lslPos = FindErrorPosition(CompErr.Line, CompErr.Column, m_lineMaps[assembly]);
+                        string text = CompErr.ErrorText;
+
+                        // Use LSL type names
+                        if (lang == enumCompileType.lsl)
+                            text = ReplaceTypes(CompErr.ErrorText);
+
+                        // The Second Life viewer's script editor begins
+                        // countingn lines and columns at 0, so we subtract 1.
+                        errtext += String.Format("({0},{1}): {4} {2}: {3}\n",
+                                lslPos.Key - 1, lslPos.Value - 1,
+                                CompErr.ErrorNumber, text, severity);
+                        hadErrors = true;
+                    }
+                }
+            }
+
+            if (hadErrors)
+            {
+                throw new Exception(errtext);
+            }
+
+            return assembly;
         }
 
         /// <summary>

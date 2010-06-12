@@ -132,7 +132,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
         /// <param name="itemID"></param>
         /// <param name="data"></param>
         /// <returns></returns>
-        public virtual UUID CapsUpdateInventoryItemAsset(IClientAPI remoteClient, UUID itemID, byte[] data)
+        public virtual string CapsUpdateInventoryItemAsset(IClientAPI remoteClient, UUID itemID, byte[] data)
         {
             InventoryItemBase item = new InventoryItemBase(itemID, remoteClient.AgentId);
             item = m_Scene.InventoryService.GetItem(item);
@@ -143,32 +143,43 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                 {
                     if (!m_Scene.Permissions.CanEditNotecard(itemID, UUID.Zero, remoteClient.AgentId))
                     {
-                        remoteClient.SendAgentAlertMessage("Insufficient permissions to edit notecard", false);
-                        return UUID.Zero;
+                        remoteClient.SendAlertMessage("Insufficient permissions to edit notecard");
+                        return FailedPermissionsNotecardCAPSUpdate(item.AssetID, itemID);
                     }
 
-                    remoteClient.SendAgentAlertMessage("Notecard saved", false);
+                    AssetBase asset =
+                    CreateAsset(item.Name, item.Description, (sbyte)item.AssetType, data, remoteClient.AgentId.ToString());
+                    item.AssetID = asset.FullID;
+                    m_Scene.AssetService.Store(asset);
+
+                    m_Scene.InventoryService.UpdateItem(item);
+
+                    return SuccessNotecardCAPSUpdate(item.AssetID, itemID);
                 }
                 else if ((InventoryType)item.InvType == InventoryType.LSL)
                 {
                     if (!m_Scene.Permissions.CanEditScript(itemID, UUID.Zero, remoteClient.AgentId))
+                        return FailedPermissionsScriptCAPSUpdate(item.AssetID, itemID);
+
+                    IScriptModule ScriptEngine = m_Scene.RequestModuleInterface<IScriptModule>();
+
+                    AssetBase asset =
+                        CreateAsset(item.Name, item.Description, (sbyte)item.AssetType, data, remoteClient.AgentId.ToString());
+                        item.AssetID = asset.FullID;
+                        m_Scene.AssetService.Store(asset);
+
+                    m_Scene.InventoryService.UpdateItem(item);
+
+                    if (ScriptEngine != null)
                     {
-                        remoteClient.SendAgentAlertMessage("Insufficient permissions to edit script", false);
-                        return UUID.Zero;
+                        string Errors = ScriptEngine.TestCompileScript(asset.FullID);
+                        if (Errors != "")
+                            return FailedCompileScriptCAPSUpdate(item.AssetID, itemID, Errors);
                     }
 
-                    remoteClient.SendAgentAlertMessage("Script saved", false);
+                    return SuccessScriptCAPSUpdate(item.AssetID, itemID);
                 }
-
-                AssetBase asset =
-                    CreateAsset(item.Name, item.Description, (sbyte)item.AssetType, data, remoteClient.AgentId.ToString());
-                item.AssetID = asset.FullID;
-                m_Scene.AssetService.Store(asset);
-
-                m_Scene.InventoryService.UpdateItem(item);
-
-                // remoteClient.SendInventoryItemCreateUpdate(item);
-                return (asset.FullID);
+                return "";
             }
             else
             {
@@ -177,7 +188,60 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                     itemID);
             }
 
-            return UUID.Zero;
+            return "";
+        }
+
+        private string FailedCompileScriptCAPSUpdate(UUID assetID, UUID inv, string error)
+        {
+            LLSDScriptAssetUploadComplete uploadComplete = new LLSDScriptAssetUploadComplete();
+            uploadComplete.new_asset = assetID.ToString();
+            uploadComplete.new_inventory_item = inv;
+            uploadComplete.state = "complete";
+            uploadComplete.compiled = false;
+            uploadComplete.errors.Add(error);
+            return LLSDHelpers.SerialiseLLSDReply(uploadComplete);
+        }
+
+        private string FailedPermissionsScriptCAPSUpdate(UUID assetID, UUID inv)
+        {
+            LLSDScriptAssetUploadComplete uploadComplete = new LLSDScriptAssetUploadComplete();
+            uploadComplete.new_asset = assetID.ToString();
+            uploadComplete.new_inventory_item = inv;
+            uploadComplete.state = "complete";
+            uploadComplete.compiled = false;
+            uploadComplete.errors.Add("Insufficient permissions to edit script");
+            return LLSDHelpers.SerialiseLLSDReply(uploadComplete);
+        }
+
+        private string SuccessScriptCAPSUpdate(UUID assetID, UUID inv)
+        {
+            LLSDScriptAssetUploadComplete uploadComplete = new LLSDScriptAssetUploadComplete();
+            uploadComplete.new_asset = assetID.ToString();
+            uploadComplete.new_inventory_item = inv;
+            uploadComplete.state = "complete";
+            uploadComplete.compiled = true;
+
+            return LLSDHelpers.SerialiseLLSDReply(uploadComplete);
+        }
+
+        private string FailedPermissionsNotecardCAPSUpdate(UUID assetID, UUID inv)
+        {
+            LLSDAssetUploadComplete uploadComplete = new LLSDAssetUploadComplete();
+            uploadComplete.new_asset = assetID.ToString();
+            uploadComplete.new_inventory_item = inv;
+            uploadComplete.state = "complete";
+
+            return LLSDHelpers.SerialiseLLSDReply(uploadComplete);
+        }
+
+        private string SuccessNotecardCAPSUpdate(UUID assetID, UUID inv)
+        {
+            LLSDAssetUploadComplete uploadComplete = new LLSDAssetUploadComplete();
+            uploadComplete.new_asset = assetID.ToString();
+            uploadComplete.new_inventory_item = inv;
+            uploadComplete.state = "complete";
+
+            return LLSDHelpers.SerialiseLLSDReply(uploadComplete);
         }
 
         /// <summary>

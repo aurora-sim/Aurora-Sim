@@ -302,9 +302,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             
             try
             {
-                // DISPLAY ERROR INWORLD
-                string consoletext = "Error compiling script in stage " + stage + ":\n" + e.Message.ToString() + " itemID: " + ItemID + ", localID" + localID + ", CompiledFile: " + AssemblyName;
+                // DISPLAY ERROR ON CONSOLE
+                //string consoletext = "Error compiling script in stage " + stage + ":\n" + e.Message.ToString() + " itemID: " + ItemID + ", localID" + localID + ", CompiledFile: " + AssemblyName;
                 //m_log.Error(consoletext);
+                // DISPLAY ERROR INWORLD
                 string inworldtext = "Error compiling script: " + e;
                 if (inworldtext.Length > 1100)
                     inworldtext = inworldtext.Substring(0, 1099);

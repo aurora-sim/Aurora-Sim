@@ -1139,6 +1139,31 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             ScriptProtection.RemovePreviouslyCompiled(id.Source);
             ScriptProtection.RemoveScript(id);
         }
+
+        public string TestCompileScript(UUID assetID)
+        {
+            AssetBase asset = m_Scene.AssetService.Get(assetID.ToString());
+            if (null == asset)
+            {
+                return "Could not find script.";
+            }
+            else
+            {
+                string script = Utils.BytesToString(asset.Data);
+                try
+                {
+                    ScriptEngine.LSLCompiler.PerformTestScriptCompile(script, assetID);
+                }
+                catch (Exception e)
+                {
+                    string error = "Error compiling script: " + e;
+                    if (error.Length > 255)
+                        error = error.Substring(0, 255);
+                    return error;
+                }
+                return "";
+            }
+        }
     }
     /// <summary>
     /// Queue item structure
