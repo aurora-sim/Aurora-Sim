@@ -247,9 +247,6 @@ namespace OpenSim.Region.Framework.Scenes
         public delegate void ObjectBeingRemovedFromScene(SceneObjectGroup obj);
         public event ObjectBeingRemovedFromScene OnObjectBeingRemovedFromScene;
 
-        public delegate void NoticeNoLandDataFromStorage();
-        public event NoticeNoLandDataFromStorage OnNoticeNoLandDataFromStorage;
-
         public delegate void IncomingLandDataFromStorage(List<LandData> data);
         public event IncomingLandDataFromStorage OnIncomingLandDataFromStorage;
 
@@ -1629,27 +1626,6 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         m_log.ErrorFormat(
                             "[EVENT MANAGER]: Delegate for TriggerControlEvent failed - continuing.  {0} {1}", 
-                            e.Message, e.StackTrace);
-                    }
-                }
-            }
-        }
-
-        public void TriggerNoticeNoLandDataFromStorage()
-        {
-            NoticeNoLandDataFromStorage handlerNoticeNoLandDataFromStorage = OnNoticeNoLandDataFromStorage;
-            if (handlerNoticeNoLandDataFromStorage != null)
-            {
-                foreach (NoticeNoLandDataFromStorage d in handlerNoticeNoLandDataFromStorage.GetInvocationList())
-                {
-                    try
-                    {
-                        d();
-                    }
-                    catch (Exception e)
-                    {
-                        m_log.ErrorFormat(
-                            "[EVENT MANAGER]: Delegate for TriggerNoticeNoLandDataFromStorage failed - continuing.  {0} {1}", 
                             e.Message, e.StackTrace);
                     }
                 }

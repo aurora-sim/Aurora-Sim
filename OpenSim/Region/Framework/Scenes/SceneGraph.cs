@@ -57,9 +57,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Events
 
-        protected internal event PhysicsCrash UnRecoverableError;
-        private PhysicsCrash handlerPhysicsCrash = null;
-
         public event ObjectDuplicateDelegate OnObjectDuplicate;
         public event ObjectCreateDelegate OnObjectCreate;
         public event ObjectDeleteDelegate OnObjectRemove;
@@ -112,17 +109,7 @@ namespace OpenSim.Region.Framework.Scenes
             get { return _PhyScene; }
             set
             {
-                // If we're not doing the initial set
-                // Then we've got to remove the previous
-                // event handler
-
-                if (_PhyScene != null)
-                    _PhyScene.OnPhysicsCrash -= physicsBasedCrash;
-
                 _PhyScene = value;
-
-                if (_PhyScene != null)
-                    _PhyScene.OnPhysicsCrash += physicsBasedCrash;
             }
         }
 
@@ -960,15 +947,6 @@ namespace OpenSim.Region.Framework.Scenes
         #endregion
 
         #region Other Methods
-
-        protected internal void physicsBasedCrash()
-        {
-            handlerPhysicsCrash = UnRecoverableError;
-            if (handlerPhysicsCrash != null)
-            {
-                handlerPhysicsCrash();
-            }
-        }
 
         protected internal UUID ConvertLocalIDToFullID(uint localID)
         {

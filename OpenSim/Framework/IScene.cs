@@ -60,8 +60,7 @@ namespace OpenSim.Framework
     public interface IScene
     {
         RegionInfo RegionInfo { get; }
-        RegionStatus RegionStatus { get; set; }
-
+        
         IConfigSource Config { get; }
 
         float TimeDilation { get; }

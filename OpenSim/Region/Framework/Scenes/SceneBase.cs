@@ -100,8 +100,6 @@ namespace OpenSim.Region.Framework.Scenes
             get { return 1.0f; }
         }
 
-        protected ulong m_regionHandle;
-        protected string m_regionName;
         protected RegionInfo m_regInfo;
 
         public ITerrainChannel Heightmap;
@@ -125,16 +123,6 @@ namespace OpenSim.Region.Framework.Scenes
         public ScenePermissions Permissions
         {
             get { return m_permissions; }
-        }
-
-        protected string m_datastore;
-
-         /* Used by the loadbalancer plugin on GForge */
-        protected RegionStatus m_regStatus;
-        public RegionStatus RegionStatus
-        {
-            get { return m_regStatus; }
-            set { m_regStatus = value; }
         }
 
         #endregion

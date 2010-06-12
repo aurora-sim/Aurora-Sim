@@ -359,8 +359,11 @@ namespace Aurora.Modules
                 }
                 else
                 {
-                    mapitems = m_scene.SimMapConnector.GetMapItems(regionhandle, (OpenMetaverse.GridItemType)itemtype);
-                    remoteClient.SendMapItemReply(mapitems.ToArray(), itemtype, flags);
+                    object[] request = new object[3];
+                    request[0] = regionhandle;
+                    request[1] = itemtype;
+                    request[2] = remoteClient;
+                    Util.FireAndForget(GetMapItems, request);
                     // GridRegion R = m_scene.GridService.GetRegionByPosition(UUID.Zero, (int)xstart, (int)ystart);
                     // if (((int)GridConnector.GetRegionFlags(R.RegionID) & (int)SimMapFlags.Hidden) == (int)SimMapFlags.Hidden)
                     // {
@@ -383,6 +386,17 @@ namespace Aurora.Modules
                     // RequestMapItems("", remoteClient.AgentId, flags, EstateID, godlike, itemtype, regionhandle);
                 }
             }
+        }
+
+        private void GetMapItems(object req)
+        {
+            object[] request = (object[])req;
+            ulong regionhandle = (ulong)request[0];
+            uint itemtype = (uint)request[1];
+            IClientAPI remoteClient = (IClientAPI)request[2];
+
+            List<mapItemReply> mapitems = m_scene.SimMapConnector.GetMapItems(regionhandle, (OpenMetaverse.GridItemType)itemtype);
+            remoteClient.SendMapItemReply(mapitems.ToArray(), itemtype, 0);
         }
 
 		/// <summary>

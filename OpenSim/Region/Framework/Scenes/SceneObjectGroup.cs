@@ -296,8 +296,7 @@ namespace OpenSim.Region.Framework.Scenes
                     || m_scene.TestBorderCross(val - Vector3.UnitY, Cardinals.N) || m_scene.TestBorderCross(val + Vector3.UnitY, Cardinals.S)) 
                     && !IsAttachmentCheckFull())
                 {
-                    if (m_scene.CheckNeedsBorderCross(val, out val))
-                        m_scene.CrossPrimGroupIntoNewRegion(val, this, true);
+                    m_scene.CrossPrimGroupIntoNewRegion(val, this, true);
                 }
                 if (RootPart.GetStatusSandbox())
                 {
@@ -921,6 +920,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         #endregion
 
+        //Marked for deletion
         public void SaveScriptedState(XmlTextWriter writer)
         {
             XmlDocument doc = new XmlDocument();

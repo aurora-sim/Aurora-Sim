@@ -119,7 +119,6 @@ namespace OpenSim.Region.CoreModules.World.Land
             m_scene.EventManager.OnNewClient += EventManagerOnNewClient;
             m_scene.EventManager.OnSignificantClientMovement += EventManagerOnSignificantClientMovement;
             m_scene.EventManager.OnObjectBeingRemovedFromScene += EventManagerOnObjectBeingRemovedFromScene;
-            m_scene.EventManager.OnNoticeNoLandDataFromStorage += EventManagerOnNoLandDataFromStorage;
             m_scene.EventManager.OnIncomingLandDataFromStorage += EventManagerOnIncomingLandDataFromStorage;
             m_scene.EventManager.OnSetAllowForcefulBan += EventManagerOnSetAllowedForcefulBan;
             m_scene.EventManager.OnRequestParcelPrimCountUpdate += EventManagerOnRequestParcelPrimCountUpdate;
@@ -1344,9 +1343,14 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         public void EventManagerOnIncomingLandDataFromStorage(List<LandData> data)
         {
-            for (int i = 0; i < data.Count; i++)
+            if (data.Count == 0)
+                ResetSimLandObjects();
+            else
             {
-                IncomingLandObjectFromStorage(data[i]);
+                for (int i = 0; i < data.Count; i++)
+                {
+                    IncomingLandObjectFromStorage(data[i]);
+                }
             }
         }
 
@@ -1370,11 +1374,6 @@ namespace OpenSim.Region.CoreModules.World.Land
             if (selectedParcel == null) return;
 
             selectedParcel.ReturnLandObjects(returnType, agentIDs, taskIDs, remoteClient);
-        }
-
-        public void EventManagerOnNoLandDataFromStorage()
-        {
-            ResetSimLandObjects();
         }
 
         #endregion

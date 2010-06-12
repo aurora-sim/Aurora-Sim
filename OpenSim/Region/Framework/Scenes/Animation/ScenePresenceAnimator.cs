@@ -211,7 +211,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                         //TODO: Make this aware if under water physics are enabled before doing this second part of the check
                         //This check makes the underwater part look better as when you are 'swimming' (which is walking), this will play the slow fly instead of the flying animations
                         //which screws it up. As said above, this needs fixed.
-                        if (m_scenePresence.Scene.m_useFlySlow && actor.Position.Z > m_scenePresence.Scene.RegionInfo.RegionSettings.WaterHeight)
+                        if (actor.Position.Z > m_scenePresence.Scene.RegionInfo.RegionSettings.WaterHeight)
                         {
                             if (m_timesBeforeSlowFlyIsOff < SLOWFLY_DELAY)
                             {
@@ -228,14 +228,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                     }
                     else if (move.Z > 0)
                     {
-                        if (m_scenePresence.Scene.m_useFlySlow)
-                        {
-                            return "FLYSLOW";
-                        }
-                        else
-                        {
-                            return "FLY";
-                        }
+                        return "FLYSLOW";
                     }
                     return "FLY";
                 }
