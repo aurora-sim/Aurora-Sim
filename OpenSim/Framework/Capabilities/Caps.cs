@@ -175,13 +175,7 @@ namespace OpenSim.Framework.Capabilities
             {
                 // the root of all evil
                 m_capsHandlers["SEED"] = new RestStreamHandler("POST", capsBase + m_requestPath, CapsRequest);
-                //m_log.DebugFormat(
-                //    "[CAPS]: Registered seed capability {0} for {1}", capsBase + m_requestPath, m_agentID);
-
-                //m_capsHandlers["MapLayer"] =
-                //    new LLSDStreamhandler<OSDMapRequest, OSDMapLayerResponse>("POST",
-                //                                                                capsBase + m_mapLayerPath,
-                //                                                                GetMapLayer);
+                
                 m_capsHandlers["UpdateScriptTaskInventory"] =
                     new RestStreamHandler("POST", capsBase + m_notecardTaskUpdatePath, ScriptTaskInventory);
                 m_capsHandlers["UpdateScriptTask"] = m_capsHandlers["UpdateScriptTaskInventory"];
@@ -247,7 +241,6 @@ namespace OpenSim.Framework.Capabilities
         public void RegisterHandler(string capName, IRequestHandler handler)
         {
             m_capsHandlers[capName] = handler;
-            //m_log.DebugFormat("[CAPS]: Registering handler for \"{0}\": path {1}", capName, handler.Path);
         }
 
         /// <summary>

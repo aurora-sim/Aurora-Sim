@@ -360,8 +360,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 if (script.Running == false || script.Disabled == true)
                     return;
 
-                ILease lease = (ILease)RemotingServices.GetLifetimeService(script.Script as ScriptBaseClass);
-                lease.Renew(DateTime.Now.AddMinutes(10) - DateTime.Now);
+                try
+                {
+                    ILease lease = (ILease)RemotingServices.GetLifetimeService(script.Script as ScriptBaseClass);
+                    lease.Renew(DateTime.Now.AddMinutes(10) - DateTime.Now);
+                }
+                catch (Exception ex)
+                {
+                    m_log.Error("Lease found dead!" + script.ItemID);
+                }
             }
         }
 

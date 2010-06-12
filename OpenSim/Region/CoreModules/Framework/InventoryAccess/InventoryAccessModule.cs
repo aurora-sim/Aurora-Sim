@@ -191,40 +191,37 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
         public virtual UUID DeleteToInventory(DeRezAction action, UUID folderID,
                 List<SceneObjectGroup> objectGroups, IClientAPI remoteClient)
         {
-            // HACK: This is only working for lists containing a single item!
-            // It's just a hack to make this WIP compile and run. Nothing
-            // currently calls this with multiple items.
-            UUID ret = UUID.Zero; 
-
-            foreach (SceneObjectGroup g in objectGroups)
-                ret = DeleteToInventory(action, folderID, g, remoteClient);
-
-            return ret;
-        }
-
-        public virtual UUID DeleteToInventory(DeRezAction action, UUID folderID,
-                SceneObjectGroup objectGroup, IClientAPI remoteClient)
-        {
             UUID assetID = UUID.Zero;
+            Vector3 GroupMiddle = Vector3.Zero;
+            string AssetXML = "<groups>";
 
-            Vector3 inventoryStoredPosition = new Vector3
-                        (((objectGroup.AbsolutePosition.X > (int)Constants.RegionSize)
-                              ? 250
-                              : objectGroup.AbsolutePosition.X)
-                         ,
-                         (objectGroup.AbsolutePosition.X > (int)Constants.RegionSize)
-                             ? 250
-                             : objectGroup.AbsolutePosition.X,
-                         objectGroup.AbsolutePosition.Z);
+            foreach (SceneObjectGroup objectGroup in objectGroups)
+            {
+                Vector3 inventoryStoredPosition = new Vector3
+                            (((objectGroup.AbsolutePosition.X > (int)Constants.RegionSize)
+                                  ? 250
+                                  : objectGroup.AbsolutePosition.X)
+                             ,
+                             (objectGroup.AbsolutePosition.Y > (int)Constants.RegionSize)
+                                 ? 250
+                                 : objectGroup.AbsolutePosition.Y,
+                             objectGroup.AbsolutePosition.Z);
+                GroupMiddle += inventoryStoredPosition;
+                Vector3 originalPosition = objectGroup.AbsolutePosition;
 
-            Vector3 originalPosition = objectGroup.AbsolutePosition;
+                objectGroup.AbsolutePosition = inventoryStoredPosition;
 
-            objectGroup.AbsolutePosition = inventoryStoredPosition;
+                AssetXML += SceneObjectSerializer.ToOriginalXmlFormat(objectGroup);
 
-            string sceneObjectXml = SceneObjectSerializer.ToOriginalXmlFormat(objectGroup);
-
-            objectGroup.AbsolutePosition = originalPosition;
-
+                objectGroup.AbsolutePosition = originalPosition;
+            }
+            GroupMiddle.X /= objectGroups.Count;
+            GroupMiddle.Y /= objectGroups.Count;
+            GroupMiddle.Z /= objectGroups.Count;
+            AssetXML += "<middle>";
+            AssetXML += "<mid>" + GroupMiddle.ToRawString() + "</mid>";
+            AssetXML += "</middle>";
+            AssetXML += "</groups>";
             // Get the user info of the item destination
             //
             UUID userID = UUID.Zero;
@@ -245,7 +242,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                 // All returns / deletes go to the object owner
                 //
 
-                userID = objectGroup.RootPart.OwnerID;
+                userID = objectGroups[0].RootPart.OwnerID;
             }
 
             if (userID == UUID.Zero) // Can't proceed
@@ -264,7 +261,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
 
             if (DeRezAction.SaveToExistingUserInventoryItem == action)
             {
-                item = new InventoryItemBase(objectGroup.RootPart.FromUserInventoryItemID, userID);
+                item = new InventoryItemBase(objectGroups[0].RootPart.FromUserInventoryItemID, userID);
                 item = m_Scene.InventoryService.GetItem(item);
 
                 //item = userInfo.RootFolder.FindItem(
@@ -274,7 +271,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                 {
                     m_log.DebugFormat(
                         "[AGENT INVENTORY]: Object {0} {1} scheduled for save to inventory has already been deleted.",
-                        objectGroup.Name, objectGroup.UUID);
+                        objectGroups[0].Name, objectGroups[0].UUID);
                     return UUID.Zero;
                 }
             }
@@ -289,7 +286,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
 
 
                     if (remoteClient == null ||
-                        objectGroup.OwnerID != remoteClient.AgentId)
+                        objectGroups[0].OwnerID != remoteClient.AgentId)
                     {
                         // Folder skeleton may not be loaded and we
                         // have to wait for the inventory to find
@@ -342,7 +339,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                 }
 
                 item = new InventoryItemBase();
-                item.CreatorId = objectGroup.RootPart.CreatorID.ToString();
+                item.CreatorId = objectGroups[0].RootPart.CreatorID.ToString();
                 item.ID = UUID.Random();
                 item.InvType = (int)InventoryType.Object;
                 item.Folder = folder.ID;
@@ -350,11 +347,11 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
             }
 
             AssetBase asset = CreateAsset(
-                objectGroup.GetPartName(objectGroup.RootPart.LocalId),
-                objectGroup.GetPartDescription(objectGroup.RootPart.LocalId),
+                objectGroups[0].GetPartName(objectGroups[0].RootPart.LocalId),
+                objectGroups[0].GetPartDescription(objectGroups[0].RootPart.LocalId),
                 (sbyte)AssetType.Object,
-                Utils.StringToBytes(sceneObjectXml),
-                objectGroup.OwnerID.ToString());
+                Utils.StringToBytes(AssetXML),
+                objectGroups[0].OwnerID.ToString());
             m_Scene.AssetService.Store(asset);
             assetID = asset.FullID;
 
@@ -367,9 +364,9 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
             {
                 item.AssetID = asset.FullID;
 
-                if (remoteClient != null && (remoteClient.AgentId != objectGroup.RootPart.OwnerID) && m_Scene.Permissions.PropagatePermissions())
+                if (remoteClient != null && (remoteClient.AgentId != objectGroups[0].RootPart.OwnerID) && m_Scene.Permissions.PropagatePermissions())
                 {
-                    uint perms = objectGroup.GetEffectivePermissions();
+                    uint perms = objectGroups[0].GetEffectivePermissions();
                     uint nextPerms = (perms & 7) << 13;
                     if ((nextPerms & (uint)PermissionMask.Copy) == 0)
                         perms &= ~(uint)PermissionMask.Copy;
@@ -378,25 +375,27 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                     if ((nextPerms & (uint)PermissionMask.Modify) == 0)
                         perms &= ~(uint)PermissionMask.Modify;
 
-                    item.BasePermissions = perms & objectGroup.RootPart.NextOwnerMask;
+                    item.BasePermissions = perms & objectGroups[0].RootPart.NextOwnerMask;
                     item.CurrentPermissions = item.BasePermissions;
-                    item.NextPermissions = objectGroup.RootPart.NextOwnerMask;
-                    item.EveryOnePermissions = objectGroup.RootPart.EveryoneMask & objectGroup.RootPart.NextOwnerMask;
-                    item.GroupPermissions = objectGroup.RootPart.GroupMask & objectGroup.RootPart.NextOwnerMask;
+                    item.NextPermissions = objectGroups[0].RootPart.NextOwnerMask;
+                    item.EveryOnePermissions = objectGroups[0].RootPart.EveryoneMask & objectGroups[0].RootPart.NextOwnerMask;
+                    item.GroupPermissions = objectGroups[0].RootPart.GroupMask & objectGroups[0].RootPart.NextOwnerMask;
                     item.CurrentPermissions |= 8; // Slam!
                 }
                 else
                 {
-                    item.BasePermissions = objectGroup.GetEffectivePermissions();
-                    item.CurrentPermissions = objectGroup.GetEffectivePermissions();
-                    item.NextPermissions = objectGroup.RootPart.NextOwnerMask;
-                    item.EveryOnePermissions = objectGroup.RootPart.EveryoneMask;
-                    item.GroupPermissions = objectGroup.RootPart.GroupMask;
+                    item.BasePermissions = objectGroups[0].GetEffectivePermissions();
+                    item.CurrentPermissions = objectGroups[0].GetEffectivePermissions();
+                    item.NextPermissions = objectGroups[0].RootPart.NextOwnerMask;
+                    item.EveryOnePermissions = objectGroups[0].RootPart.EveryoneMask;
+                    item.GroupPermissions = objectGroups[0].RootPart.GroupMask;
 
                     item.CurrentPermissions |= 8; // Slam!
                 }
 
                 // TODO: add the new fields (Flags, Sale info, etc)
+                if(objectGroups.Count != 1)
+                    item.Flags = (uint)OpenMetaverse.InventoryItemFlags.ObjectHasMultipleItems;
                 item.CreationDate = Util.UnixTimeSinceEpoch();
                 item.Description = asset.Description;
                 item.Name = asset.Name;
@@ -491,154 +490,336 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                     }
 
                     string xmlData = Utils.BytesToString(rezAsset.Data);
-                    SceneObjectGroup group
-                        = SceneObjectSerializer.FromOriginalXmlFormat(itemId, xmlData);
+                    System.Xml.XmlDocument doc = new System.Xml.XmlDocument();
+                    doc.LoadXml(xmlData);
+                    System.Xml.XmlNode rootNode = doc.FirstChild;
 
-                    if (!m_Scene.Permissions.CanRezObject(
-                        group.Children.Count, remoteClient.AgentId, pos)
-                        && !attachment)
+                    Vector3 OldMiddlePos = Vector3.Zero;
+                    List<SceneObjectGroup> NewGroup = new List<SceneObjectGroup>();
+
+                    if (doc.ChildNodes[0].OuterXml.StartsWith("<groups>"))
                     {
-                        // The client operates in no fail mode. It will
-                        // have already removed the item from the folder
-                        // if it's no copy.
-                        // Put it back if it's not an attachment
-                        //
-                        if (((item.CurrentPermissions & (uint)PermissionMask.Copy) == 0) && (!attachment))
-                            remoteClient.SendBulkUpdateInventory(item);
-                        return null;
-                    }
+                        foreach (System.Xml.XmlNode aPrimNode in rootNode.ChildNodes)
+                        {
+                            if (aPrimNode.OuterXml.StartsWith("<middle>"))
+                            {
+                                string Position = aPrimNode.OuterXml.Remove(0, 13);
+                                Position = Position.Remove(Position.Length - 16, 16);
+                                string[] XYZ = Position.Split(' ');
+                                OldMiddlePos = new Vector3(float.Parse(XYZ[0]), float.Parse(XYZ[1]), float.Parse(XYZ[2]));
+                            }
+                            else
+                            {
+                                SceneObjectGroup group
+                                    = SceneObjectSerializer.FromOriginalXmlFormat(itemId, aPrimNode.OuterXml);
+                                NewGroup.Add(group);
+                                if (!m_Scene.Permissions.CanRezObject(
+                                    group.Children.Count, remoteClient.AgentId, pos)
+                                    && !attachment)
+                                {
+                                    // The client operates in no fail mode. It will
+                                    // have already removed the item from the folder
+                                    // if it's no copy.
+                                    // Put it back if it's not an attachment
+                                    //
+                                    if (((item.CurrentPermissions & (uint)PermissionMask.Copy) == 0) && (!attachment))
+                                        remoteClient.SendBulkUpdateInventory(item);
+                                    return null;
+                                }
 
-                    group.ResetIDs();
+                                group.ResetIDs();
 
-                    if (attachment)
-                    {
-                        group.RootPart.ObjectFlags |= (uint)PrimFlags.Phantom;
-                        group.RootPart.IsAttachment = true;
-                    }
-                    if(RezSelected)
-                        group.RootPart.AddFlag(PrimFlags.CreateSelected);
-                    // If we're rezzing an attachment then don't ask AddNewSceneObject() to update the client since
-                    // we'll be doing that later on.  Scheduling more than one full update during the attachment
-                    // process causes some clients to fail to display the attachment properly.
-                    m_Scene.AddNewSceneObject(group, true, false);
+                                if (attachment)
+                                {
+                                    group.RootPart.ObjectFlags |= (uint)PrimFlags.Phantom;
+                                    group.RootPart.IsAttachment = true;
+                                }
+                                if (RezSelected)
+                                    group.RootPart.AddFlag(PrimFlags.CreateSelected);
+                                // If we're rezzing an attachment then don't ask AddNewSceneObject() to update the client since
+                                // we'll be doing that later on.  Scheduling more than one full update during the attachment
+                                // process causes some clients to fail to display the attachment properly.
+                                m_Scene.AddNewSceneObject(group, true, false);
 
-                    //  m_log.InfoFormat("ray end point for inventory rezz is {0} {1} {2} ", RayEnd.X, RayEnd.Y, RayEnd.Z);
-                    // if attachment we set it's asset id so object updates can reflect that
-                    // if not, we set it's position in world.
-                    if (!attachment)
-                    {
-                        group.ScheduleGroupForFullUpdate();
-                        
-                        float offsetHeight = 0;
-                        pos = m_Scene.GetNewRezLocation(
-                            RayStart, RayEnd, RayTargetID, Quaternion.Identity,
-                            BypassRayCast, bRayEndIsIntersection, true, group.GetAxisAlignedBoundingBox(out offsetHeight), false);
-                        pos.Z += offsetHeight;
-                        group.AbsolutePosition = pos;
-                        //   m_log.InfoFormat("rezx point for inventory rezz is {0} {1} {2}  and offsetheight was {3}", pos.X, pos.Y, pos.Z, offsetHeight);
+                                //  m_log.InfoFormat("ray end point for inventory rezz is {0} {1} {2} ", RayEnd.X, RayEnd.Y, RayEnd.Z);
+                                // if attachment we set it's asset id so object updates can reflect that
+                                // if not, we set it's position in world.
+                                if (!attachment)
+                                {
+                                    group.ScheduleGroupForFullUpdate();
 
+                                    float offsetHeight = 0;
+                                    pos = m_Scene.GetNewRezLocation(
+                                        RayStart, RayEnd, RayTargetID, Quaternion.Identity,
+                                        BypassRayCast, bRayEndIsIntersection, true, group.GetAxisAlignedBoundingBox(out offsetHeight), false);
+                                    pos.Z += offsetHeight;
+                                    //group.AbsolutePosition = pos;
+                                    //   m_log.InfoFormat("rezx point for inventory rezz is {0} {1} {2}  and offsetheight was {3}", pos.X, pos.Y, pos.Z, offsetHeight);
+
+                                }
+                                else
+                                {
+                                    group.SetFromItemID(itemID);
+                                }
+
+                                SceneObjectPart rootPart = null;
+                                try
+                                {
+                                    rootPart = group.GetChildPart(group.UUID);
+                                }
+                                catch (NullReferenceException)
+                                {
+                                    string isAttachment = "";
+
+                                    if (attachment)
+                                        isAttachment = " Object was an attachment";
+
+                                    m_log.Error("[AGENT INVENTORY]: Error rezzing ItemID: " + itemID + " object has no rootpart." + isAttachment);
+                                }
+
+                                // Since renaming the item in the inventory does not affect the name stored
+                                // in the serialization, transfer the correct name from the inventory to the
+                                // object itself before we rez.
+                                rootPart.Name = item.Name;
+                                rootPart.Description = item.Description;
+
+                                List<SceneObjectPart> partList = new List<SceneObjectPart>(group.Children.Values);
+
+                                group.SetGroup(remoteClient.ActiveGroupId, remoteClient);
+                                if (rootPart.OwnerID != item.Owner)
+                                {
+                                    //Need to kill the for sale here
+                                    rootPart.ObjectSaleType = 0;
+                                    rootPart.SalePrice = 10;
+
+                                    if (m_Scene.Permissions.PropagatePermissions())
+                                    {
+                                        if ((item.CurrentPermissions & 8) != 0)
+                                        {
+                                            foreach (SceneObjectPart part in partList)
+                                            {
+                                                part.EveryoneMask = item.EveryOnePermissions;
+                                                part.NextOwnerMask = item.NextPermissions;
+                                                part.GroupMask = 0; // DO NOT propagate here
+                                            }
+                                        }
+
+                                        group.ApplyNextOwnerPermissions();
+                                    }
+                                }
+
+                                foreach (SceneObjectPart part in partList)
+                                {
+                                    if (part.OwnerID != item.Owner)
+                                    {
+                                        part.LastOwnerID = part.OwnerID;
+                                        part.OwnerID = item.Owner;
+                                        part.Inventory.ChangeInventoryOwner(item.Owner);
+                                    }
+                                    else if (((item.CurrentPermissions & 8) != 0) && (!attachment)) // Slam!
+                                    {
+                                        part.EveryoneMask = item.EveryOnePermissions;
+                                        part.NextOwnerMask = item.NextPermissions;
+
+                                        part.GroupMask = 0; // DO NOT propagate here
+                                    }
+                                }
+
+                                rootPart.TrimPermissions();
+
+                                if (!attachment)
+                                {
+                                    if (group.RootPart.Shape.PCode == (byte)PCode.Prim)
+                                    {
+                                        group.ClearPartAttachmentData();
+                                    }
+
+                                    // Fire on_rez
+                                    group.CreateScriptInstances(0, true, m_Scene.DefaultScriptEngine, 0);
+                                    rootPart.ParentGroup.ResumeScripts();
+                                }
+
+                                if (!m_Scene.Permissions.BypassPermissions())
+                                {
+                                    if ((item.CurrentPermissions & (uint)PermissionMask.Copy) == 0)
+                                    {
+                                        // If this is done on attachments, no
+                                        // copy ones will be lost, so avoid it
+                                        //
+                                        if (!attachment)
+                                        {
+                                            List<UUID> uuids = new List<UUID>();
+                                            uuids.Add(item.ID);
+                                            m_Scene.InventoryService.DeleteItems(item.Owner, uuids);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        foreach (SceneObjectGroup group in NewGroup)
+                        {
+                            if (!attachment && OldMiddlePos != Vector3.Zero)
+                            {
+                                Vector3 NewPosOffset = Vector3.Zero;
+                                NewPosOffset.X = group.AbsolutePosition.X - OldMiddlePos.X;
+                                NewPosOffset.Y = group.AbsolutePosition.Y - OldMiddlePos.Y;
+                                NewPosOffset.Z = group.AbsolutePosition.Z - OldMiddlePos.Z;
+                                group.AbsolutePosition = pos + NewPosOffset;
+                            }
+                            group.RootPart.ScheduleFullUpdate();
+                        }     
                     }
                     else
                     {
-                        group.SetFromItemID(itemID);
-                    }
+                        SceneObjectGroup group
+                                = SceneObjectSerializer.FromOriginalXmlFormat(itemId, doc.FirstChild.OuterXml);
 
-                    SceneObjectPart rootPart = null;
-                    try
-                    {
-                        rootPart = group.GetChildPart(group.UUID);
-                    }
-                    catch (NullReferenceException)
-                    {
-                        string isAttachment = "";
+                        if (!m_Scene.Permissions.CanRezObject(
+                            group.Children.Count, remoteClient.AgentId, pos)
+                            && !attachment)
+                        {
+                            // The client operates in no fail mode. It will
+                            // have already removed the item from the folder
+                            // if it's no copy.
+                            // Put it back if it's not an attachment
+                            //
+                            if (((item.CurrentPermissions & (uint)PermissionMask.Copy) == 0) && (!attachment))
+                                remoteClient.SendBulkUpdateInventory(item);
+                            return null;
+                        }
+
+                        group.ResetIDs();
 
                         if (attachment)
-                            isAttachment = " Object was an attachment";
-
-                        m_log.Error("[AGENT INVENTORY]: Error rezzing ItemID: " + itemID + " object has no rootpart." + isAttachment);
-                    }
-
-                    // Since renaming the item in the inventory does not affect the name stored
-                    // in the serialization, transfer the correct name from the inventory to the
-                    // object itself before we rez.
-                    rootPart.Name = item.Name;
-                    rootPart.Description = item.Description;
-
-                    List<SceneObjectPart> partList = new List<SceneObjectPart>(group.Children.Values);
-
-                    group.SetGroup(remoteClient.ActiveGroupId, remoteClient);
-                    if (rootPart.OwnerID != item.Owner)
-                    {
-                        //Need to kill the for sale here
-                        rootPart.ObjectSaleType = 0;
-                        rootPart.SalePrice = 10;
-
-                        if (m_Scene.Permissions.PropagatePermissions())
                         {
-                            if ((item.CurrentPermissions & 8) != 0)
+                            group.RootPart.ObjectFlags |= (uint)PrimFlags.Phantom;
+                            group.RootPart.IsAttachment = true;
+                        }
+                        if (RezSelected)
+                            group.RootPart.AddFlag(PrimFlags.CreateSelected);
+                        // If we're rezzing an attachment then don't ask AddNewSceneObject() to update the client since
+                        // we'll be doing that later on.  Scheduling more than one full update during the attachment
+                        // process causes some clients to fail to display the attachment properly.
+                        m_Scene.AddNewSceneObject(group, true, false);
+
+                        //  m_log.InfoFormat("ray end point for inventory rezz is {0} {1} {2} ", RayEnd.X, RayEnd.Y, RayEnd.Z);
+                        // if attachment we set it's asset id so object updates can reflect that
+                        // if not, we set it's position in world.
+                        if (!attachment)
+                        {
+                            group.ScheduleGroupForFullUpdate();
+
+                            float offsetHeight = 0;
+                            pos = m_Scene.GetNewRezLocation(
+                                RayStart, RayEnd, RayTargetID, Quaternion.Identity,
+                                BypassRayCast, bRayEndIsIntersection, true, group.GetAxisAlignedBoundingBox(out offsetHeight), false);
+                            pos.Z += offsetHeight;
+                            group.AbsolutePosition = pos;
+                            //   m_log.InfoFormat("rezx point for inventory rezz is {0} {1} {2}  and offsetheight was {3}", pos.X, pos.Y, pos.Z, offsetHeight);
+
+                        }
+                        else
+                        {
+                            group.SetFromItemID(itemID);
+                        }
+
+                        SceneObjectPart rootPart = null;
+                        try
+                        {
+                            rootPart = group.GetChildPart(group.UUID);
+                        }
+                        catch (NullReferenceException)
+                        {
+                            string isAttachment = "";
+
+                            if (attachment)
+                                isAttachment = " Object was an attachment";
+
+                            m_log.Error("[AGENT INVENTORY]: Error rezzing ItemID: " + itemID + " object has no rootpart." + isAttachment);
+                        }
+
+                        // Since renaming the item in the inventory does not affect the name stored
+                        // in the serialization, transfer the correct name from the inventory to the
+                        // object itself before we rez.
+                        rootPart.Name = item.Name;
+                        rootPart.Description = item.Description;
+
+                        List<SceneObjectPart> partList = new List<SceneObjectPart>(group.Children.Values);
+
+                        group.SetGroup(remoteClient.ActiveGroupId, remoteClient);
+                        if (rootPart.OwnerID != item.Owner)
+                        {
+                            //Need to kill the for sale here
+                            rootPart.ObjectSaleType = 0;
+                            rootPart.SalePrice = 10;
+
+                            if (m_Scene.Permissions.PropagatePermissions())
                             {
-                                foreach (SceneObjectPart part in partList)
+                                if ((item.CurrentPermissions & 8) != 0)
                                 {
-                                    part.EveryoneMask = item.EveryOnePermissions;
-                                    part.NextOwnerMask = item.NextPermissions;
-                                    part.GroupMask = 0; // DO NOT propagate here
+                                    foreach (SceneObjectPart part in partList)
+                                    {
+                                        part.EveryoneMask = item.EveryOnePermissions;
+                                        part.NextOwnerMask = item.NextPermissions;
+                                        part.GroupMask = 0; // DO NOT propagate here
+                                    }
+                                }
+
+                                group.ApplyNextOwnerPermissions();
+                            }
+                        }
+
+                        foreach (SceneObjectPart part in partList)
+                        {
+                            if (part.OwnerID != item.Owner)
+                            {
+                                part.LastOwnerID = part.OwnerID;
+                                part.OwnerID = item.Owner;
+                                part.Inventory.ChangeInventoryOwner(item.Owner);
+                            }
+                            else if (((item.CurrentPermissions & 8) != 0) && (!attachment)) // Slam!
+                            {
+                                part.EveryoneMask = item.EveryOnePermissions;
+                                part.NextOwnerMask = item.NextPermissions;
+
+                                part.GroupMask = 0; // DO NOT propagate here
+                            }
+                        }
+
+                        rootPart.TrimPermissions();
+
+                        if (!attachment)
+                        {
+                            if (group.RootPart.Shape.PCode == (byte)PCode.Prim)
+                            {
+                                group.ClearPartAttachmentData();
+                            }
+
+                            // Fire on_rez
+                            group.CreateScriptInstances(0, true, m_Scene.DefaultScriptEngine, 0);
+                            rootPart.ParentGroup.ResumeScripts();
+
+                            rootPart.ScheduleFullUpdate();
+                        }
+
+                        if (!m_Scene.Permissions.BypassPermissions())
+                        {
+                            if ((item.CurrentPermissions & (uint)PermissionMask.Copy) == 0)
+                            {
+                                // If this is done on attachments, no
+                                // copy ones will be lost, so avoid it
+                                //
+                                if (!attachment)
+                                {
+                                    List<UUID> uuids = new List<UUID>();
+                                    uuids.Add(item.ID);
+                                    m_Scene.InventoryService.DeleteItems(item.Owner, uuids);
                                 }
                             }
-                            
-                            group.ApplyNextOwnerPermissions();
                         }
                     }
 
-                    foreach (SceneObjectPart part in partList)
-                    {
-                        if (part.OwnerID != item.Owner)
-                        {
-                            part.LastOwnerID = part.OwnerID;
-                            part.OwnerID = item.Owner;
-                            part.Inventory.ChangeInventoryOwner(item.Owner);
-                        }
-                        else if (((item.CurrentPermissions & 8) != 0) && (!attachment)) // Slam!
-                        {
-                            part.EveryoneMask = item.EveryOnePermissions;
-                            part.NextOwnerMask = item.NextPermissions;
-
-                            part.GroupMask = 0; // DO NOT propagate here
-                        }
-                    }
-
-                    rootPart.TrimPermissions();
-
-                    if (!attachment)
-                    {
-                        if (group.RootPart.Shape.PCode == (byte)PCode.Prim)
-                        {
-                            group.ClearPartAttachmentData();
-                        }
-                        
-                        // Fire on_rez
-                        group.CreateScriptInstances(0, true, m_Scene.DefaultScriptEngine, 0);
-                        rootPart.ParentGroup.ResumeScripts();
-
-                        rootPart.ScheduleFullUpdate();
-                    }
-
-                    if (!m_Scene.Permissions.BypassPermissions())
-                    {
-                        if ((item.CurrentPermissions & (uint)PermissionMask.Copy) == 0)
-                        {
-                            // If this is done on attachments, no
-                            // copy ones will be lost, so avoid it
-                            //
-                            if (!attachment)
-                            {
-                                List<UUID> uuids = new List<UUID>();
-                                uuids.Add(item.ID);
-                                m_Scene.InventoryService.DeleteItems(item.Owner, uuids);
-                            }
-                        }
-                    }
-
-                    return rootPart.ParentGroup;
+                    return null;
                 }
             }
 

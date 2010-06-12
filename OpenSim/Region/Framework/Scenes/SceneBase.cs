@@ -441,19 +441,6 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="showParams">What to show</param>
         public virtual void Show(string[] showParams)
         {
-            /*switch (showParams[0])
-            {
-                case "modules":
-                    m_log.Error("The currently loaded modules in " + RegionInfo.RegionName + " are:");
-                    foreach (IRegionModule module in Modules.Values)
-                    {
-                        if (!module.IsSharedModule)
-                        {
-                            m_log.Error("Region Module: " + module.Name);
-                        }
-                    }
-                    break;
-            }*/
         }
 
         /// <summary>

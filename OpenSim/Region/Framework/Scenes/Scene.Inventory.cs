@@ -1517,10 +1517,7 @@ namespace OpenSim.Region.Framework.Scenes
         public virtual void DeRezObject(IClientAPI remoteClient, List<uint> localIDs,
                 UUID groupID, DeRezAction action, UUID destinationID)
         {
-            foreach (uint localID in localIDs)
-            {
-                DeRezObject(remoteClient, localID, groupID, action, destinationID);
-            }
+            DeRezObjects(remoteClient, localIDs, groupID, action, destinationID);
         }
 
         /// <summary>
