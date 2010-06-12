@@ -656,13 +656,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             if (id.State != state)
             {
-            	EventManager.state_exit(id.localID);
-            	id.State = state;
-            	int eventFlags = id.Script.GetStateEventFlags(id.State);
-
+                PostObjectEvent(id.localID, new EventParams(
+                    "state_exit", new object[0] { },
+                    new DetectParams[0]));
+                id.State = state;
+                int eventFlags = id.Script.GetStateEventFlags(id.State);
+                
             	id.part.SetScriptEvents(itemID, eventFlags);
+                UpdateScriptInstanceData(id);
 
-            	EventManager.state_entry(id.localID);
+                PostObjectEvent(id.localID, new EventParams(
+                    "state_entry", new object[] { },
+                    new DetectParams[0]));
             }
         }
 
@@ -853,35 +858,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         }
 
         /// <summary>
-        /// Posts event to the given object.
-        /// NOTE: Use AddToScriptQueue with InstanceData instead if possible.
-        /// </summary>
-        /// <param name="localID">Region object ID</param>
-        /// <param name="itemID">Region script ID</param>
-        /// <param name="FunctionName">Name of the function, will be state + "_event_" + FunctionName</param>
-        /// <param name="param">Array of parameters to match event mask</param>
-        public bool AddToScriptQueue(uint localID, UUID itemID, string FunctionName, DetectParams[] qParams, params object[] param)
-        {
-            lock (EventQueue)
-            {
-                if (EventQueue.Count >= EventExecutionMaxQueueSize)
-                {
-                    m_log.WarnFormat("[{0}]: Event Queue is above the MaxQueueSize.", ScriptEngineName);
-                    return false;
-                }
-
-                ScriptData id = GetScript(localID, itemID);
-                if (id == null)
-                {
-                    m_log.Warn("RETURNING FALSE IN ASQ");
-                    return false;
-                }
-
-                return AddToScriptQueue(id, FunctionName, qParams, param);
-            }
-        }
-
-        /// <summary>
         /// Posts the event to the given object.
         /// </summary>
         /// <param name="ID"></param>
@@ -967,18 +943,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 NeedsRemoved.Add(itemID, localID);
         }
 
-        /// <summary>
-        /// Adds the given item to the queue.
-        /// </summary>
-        /// <param name="ID">InstanceData that needs to be state saved</param>
-        /// <param name="create">true: create a new state. false: remove the state.</param>
-        public void AddToStateSaverQueue(ScriptData ID, bool create)
-        {
-            StateQueueItem SQ = new StateQueueItem();
-            SQ.ID = ID;
-            SQ.Create = create;
-            StateQueue.Enqueue(SQ);
-        }
         public Dictionary<UUID, string[]> Errors = new Dictionary<UUID, string[]>();
         /// <summary>
         /// Gets compile errors for the given itemID.

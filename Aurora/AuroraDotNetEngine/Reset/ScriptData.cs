@@ -245,7 +245,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //Release controls over people.
             ReleaseControls();
             //Must be posted immediately, otherwise the next line will delete it.
-            ScriptEngine.EventManager.state_exit(localID);
+            m_ScriptEngine.PostObjectEvent(localID, new EventParams(
+                    "state_exit", new object[0] { },
+                    new DetectParams[0]));
             //Remove items from the queue.
             m_ScriptEngine.RemoveFromEventQueue(ItemID, localID);
             //Reset the state to default
