@@ -546,8 +546,6 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                                 // if not, we set it's position in world.
                                 if (!attachment)
                                 {
-                                    group.ScheduleGroupForFullUpdate();
-
                                     float offsetHeight = 0;
                                     pos = m_Scene.GetNewRezLocation(
                                         RayStart, RayEnd, RayTargetID, Quaternion.Identity,
@@ -666,7 +664,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                                 NewPosOffset.Z = group.AbsolutePosition.Z - OldMiddlePos.Z;
                                 group.AbsolutePosition = pos + NewPosOffset;
                             }
-                            group.RootPart.ScheduleFullUpdate();
+                            group.ScheduleGroupForFullUpdate();
                         }     
                     }
                     else
@@ -707,14 +705,13 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                         // if not, we set it's position in world.
                         if (!attachment)
                         {
-                            group.ScheduleGroupForFullUpdate();
-
                             float offsetHeight = 0;
                             pos = m_Scene.GetNewRezLocation(
                                 RayStart, RayEnd, RayTargetID, Quaternion.Identity,
                                 BypassRayCast, bRayEndIsIntersection, true, group.GetAxisAlignedBoundingBox(out offsetHeight), false);
                             pos.Z += offsetHeight;
                             group.AbsolutePosition = pos;
+                            group.ScheduleGroupForFullUpdate();
                             //   m_log.InfoFormat("rezx point for inventory rezz is {0} {1} {2}  and offsetheight was {3}", pos.X, pos.Y, pos.Z, offsetHeight);
 
                         }
