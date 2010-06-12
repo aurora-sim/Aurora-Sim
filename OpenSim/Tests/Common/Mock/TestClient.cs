@@ -28,21 +28,33 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Reflection;
+using System.Threading;
+using log4net;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using OpenSim.Framework;
+using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using OpenSim.Framework.Client;
 
-namespace OpenSim.Region.Examples.SimpleModule
+namespace OpenSim.Tests.Common.Mock
 {
-    public class MyNpcCharacter : IClientAPI
+    public class TestClient : IClientAPI, IClientCore
     {
-        private uint movementFlag = 0;
-        private short flyState = 0;
-        private Quaternion bodyDirection = Quaternion.Identity;
-        private short count = 0;
-        private short frame = 0;
-        private Scene m_scene;
+        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
+        // Mock testing variables
+        public List<ImageDataPacket> sentdatapkt = new List<ImageDataPacket>();
+        public List<ImagePacketPacket> sentpktpkt = new List<ImagePacketPacket>();
+        EventWaitHandle wh = new EventWaitHandle (false, EventResetMode.AutoReset, "Crossing");
+
+        // TODO: This is a really nasty (and temporary) means of telling the test client which scene to invoke setup
+        // methods on when a teleport is requested
+        public Scene TeleportTargetScene;
+        private TestClient TeleportSceneClient;
+
+        private IScene m_scene;
 
 // disable warning: public events, part of the public API
 #pragma warning disable 67
@@ -82,7 +94,7 @@ namespace OpenSim.Region.Examples.SimpleModule
 
         public event DeRezObject OnDeRezObject;
         public event Action<IClientAPI> OnRegionHandShakeReply;
-        public event GenericCall2 OnRequestWearables;
+        public event GenericCall1 OnRequestWearables;
         public event GenericCall1 OnCompleteMovementToRegion;
         public event UpdateAgent OnPreAgentUpdate;
         public event UpdateAgent OnAgentUpdate;
@@ -108,8 +120,8 @@ namespace OpenSim.Region.Examples.SimpleModule
         public event UpdateShape OnUpdatePrimShape;
         public event ObjectExtraParams OnUpdateExtraParams;
         public event RequestObjectPropertiesFamily OnRequestObjectPropertiesFamily;
-        public event ObjectRequest OnObjectRequest;
         public event ObjectSelect OnObjectSelect;
+        public event ObjectRequest OnObjectRequest;
         public event GenericCall7 OnObjectDescription;
         public event GenericCall7 OnObjectName;
         public event GenericCall7 OnObjectClickAction;
@@ -119,8 +131,8 @@ namespace OpenSim.Region.Examples.SimpleModule
         public event UpdateVector OnUpdatePrimGroupPosition;
         public event UpdateVector OnUpdatePrimSinglePosition;
         public event UpdatePrimRotation OnUpdatePrimGroupRotation;
-        public event UpdatePrimSingleRotationPosition OnUpdatePrimSingleRotationPosition;
         public event UpdatePrimSingleRotation OnUpdatePrimSingleRotation;
+        public event UpdatePrimSingleRotationPosition OnUpdatePrimSingleRotationPosition;
         public event UpdatePrimGroupRotation OnUpdatePrimGroupMouseRotation;
         public event UpdateVector OnUpdatePrimScale;
         public event UpdateVector OnUpdatePrimGroupScale;
@@ -232,7 +244,7 @@ namespace OpenSim.Region.Examples.SimpleModule
         public event ActivateGesture OnActivateGesture;
         public event DeactivateGesture OnDeactivateGesture;
         public event ObjectOwner OnObjectOwner;
- 
+
         public event DirPlacesQuery OnDirPlacesQuery;
         public event DirFindQuery OnDirFindQuery;
         public event DirLandQuery OnDirLandQuery;
@@ -246,6 +258,7 @@ namespace OpenSim.Region.Examples.SimpleModule
         public event OfferCallingCard OnOfferCallingCard;
         public event AcceptCallingCard OnAcceptCallingCard;
         public event DeclineCallingCard OnDeclineCallingCard;
+
         public event SoundTrigger OnSoundTrigger;
 
         public event StartLure OnStartLure;
@@ -262,6 +275,7 @@ namespace OpenSim.Region.Examples.SimpleModule
         public event EventGodDelete OnEventGodDelete;
 
         public event ParcelDwellRequest OnParcelDwellRequest;
+
         public event UserInfoRequest OnUserInfoRequest;
         public event UpdateUserInfo OnUpdateUserInfo;
 
@@ -300,17 +314,17 @@ namespace OpenSim.Region.Examples.SimpleModule
 
 #pragma warning restore 67
 
-        private UUID myID = UUID.Random();
+        /// <value>
+        /// This agent's UUID
+        /// </value>
+        private UUID m_agentId;
 
-        public MyNpcCharacter(Scene scene)
-        {
+        /// <value>
+        /// The last caps seed url that this client was given.
+        /// </value>
+        public string CapsSeedUrl;
 
-            // startPos = new Vector3(128, (float)(Util.RandomClass.NextDouble()*100), 2);
-            m_scene = scene;
-            m_scene.EventManager.OnFrame += Update;
-        }
-
-        private Vector3 startPos = new Vector3(128, 128, 30);
+        private Vector3 startPos = new Vector3(((int)Constants.RegionSize * 0.5f), ((int)Constants.RegionSize * 0.5f), 2);
 
         public virtual Vector3 StartPos
         {
@@ -320,7 +334,7 @@ namespace OpenSim.Region.Examples.SimpleModule
 
         public virtual UUID AgentId
         {
-            get { return myID; }
+            get { return m_agentId; }
         }
 
         public UUID SessionId
@@ -335,19 +349,19 @@ namespace OpenSim.Region.Examples.SimpleModule
 
         public virtual string FirstName
         {
-            get { return "Only"; }
+            get { return m_firstName; }
         }
-
-        private string lastName = "Today" + Util.RandomClass.Next(1, 1000);
+        private string m_firstName;
 
         public virtual string LastName
         {
-            get { return lastName; }
+            get { return m_lastName; }
         }
+        private string m_lastName;
 
         public virtual String Name
         {
-            get { return FirstName + LastName; }
+            get { return FirstName + " " + LastName; }
         }
 
         public bool IsActive
@@ -398,6 +412,50 @@ namespace OpenSim.Region.Examples.SimpleModule
         public bool SendLogoutPacketWhenClosing
         {
             set { }
+        }
+
+        private uint m_circuitCode;
+
+        public uint CircuitCode
+        {
+            get { return m_circuitCode; }
+            set { m_circuitCode = value; }
+        }
+
+        public IPEndPoint RemoteEndPoint
+        {
+            get { return new IPEndPoint(IPAddress.Loopback, (ushort)m_circuitCode); }
+        }
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="agentData"></param>
+        /// <param name="scene"></param>
+        public TestClient(AgentCircuitData agentData, IScene scene)
+        {
+            m_agentId = agentData.AgentID;
+            m_firstName = agentData.firstname;
+            m_lastName = agentData.lastname;
+            m_circuitCode = agentData.circuitcode;
+            m_scene = scene;
+            CapsSeedUrl = agentData.CapsPath;
+        }
+
+        /// <summary>
+        /// Attempt a teleport to the given region.
+        /// </summary>
+        /// <param name="regionHandle"></param>
+        /// <param name="position"></param>
+        /// <param name="lookAt"></param>
+        public void Teleport(ulong regionHandle, Vector3 position, Vector3 lookAt)
+        {
+            OnTeleportLocationRequest(this, regionHandle, position, lookAt, 16);
+        }
+
+        public void CompleteMovement()
+        {
+            OnCompleteMovementToRegion(this);
         }
 
         public virtual void ActivateGesture(UUID assetId, UUID gestureId)
@@ -458,11 +516,12 @@ namespace OpenSim.Region.Examples.SimpleModule
 
         public void SendInstantMessage(GridInstantMessage im)
         {
-            
+
         }
 
         public void SendGenericMessage(string method, List<string> message)
         {
+
         }
 
         public void SendGenericMessage(string method, List<byte[]> message)
@@ -489,18 +548,62 @@ namespace OpenSim.Region.Examples.SimpleModule
         {
         }
 
-        public virtual void InformClientOfNeighbour(ulong neighbourHandle, IPEndPoint neighbourExternalEndPoint)
-        {
-        }
-
         public virtual AgentCircuitData RequestClientInfo()
         {
-            return new AgentCircuitData();
+            AgentCircuitData agentData = new AgentCircuitData();
+            agentData.AgentID = AgentId;
+            agentData.SessionID = UUID.Zero;
+            agentData.SecureSessionID = UUID.Zero;
+            agentData.circuitcode = m_circuitCode;
+            agentData.child = false;
+            agentData.firstname = m_firstName;
+            agentData.lastname = m_lastName;
+
+            ICapabilitiesModule capsModule = m_scene.RequestModuleInterface<ICapabilitiesModule>();
+            agentData.CapsPath = capsModule.GetCapsPath(m_agentId);
+            agentData.ChildrenCapSeeds = new Dictionary<ulong, string>(capsModule.GetChildrenSeeds(m_agentId));
+
+            return agentData;
+        }
+
+        public virtual void InformClientOfNeighbour(ulong neighbourHandle, IPEndPoint neighbourExternalEndPoint)
+        {
+            m_log.DebugFormat("[TEST CLIENT]: Processing inform client of neighbour");
+
+            // In response to this message, we are going to make a teleport to the scene we've previous been told
+            // about by test code (this needs to be improved).
+            AgentCircuitData newAgent = RequestClientInfo();
+
+            // Stage 2: add the new client as a child agent to the scene
+            TeleportSceneClient = new TestClient(newAgent, TeleportTargetScene);
+            TeleportTargetScene.AddNewClient(TeleportSceneClient);
+        }
+
+        public virtual void SendRegionTeleport(ulong regionHandle, byte simAccess, IPEndPoint regionExternalEndPoint,
+                                               uint locationID, uint flags, string capsURL)
+        {
+            m_log.DebugFormat("[TEST CLIENT]: Received SendRegionTeleport");
+
+            CapsSeedUrl = capsURL;
+
+            TeleportSceneClient.CompleteMovement();
+            //TeleportTargetScene.AgentCrossing(newAgent.AgentID, new Vector3(90, 90, 90), false);
+        }
+
+        public virtual void SendTeleportFailed(string reason)
+        {
+            m_log.DebugFormat("[TEST CLIENT]: Teleport failed with reason {0}", reason);
         }
 
         public virtual void CrossRegion(ulong newRegionHandle, Vector3 pos, Vector3 lookAt,
                                         IPEndPoint newRegionExternalEndPoint, string capsURL)
         {
+            // This is supposed to send a packet to the client telling it's ready to start region crossing.
+            // Instead I will just signal I'm ready, mimicking the communication behavior.
+            // It's ugly, but avoids needless communication setup. This is used in ScenePresenceTests.cs.
+            // Arthur V.
+
+            wh.Set();
         }
 
         public virtual void SendMapBlock(List<MapBlockData> mapBlocks, uint flag)
@@ -511,16 +614,11 @@ namespace OpenSim.Region.Examples.SimpleModule
         {
         }
 
-        public virtual void SendRegionTeleport(ulong regionHandle, byte simAccess, IPEndPoint regionExternalEndPoint,
-                                               uint locationID, uint flags, string capsURL)
+        public virtual void SendTeleportStart(uint flags)
         {
         }
 
-        public virtual void SendTeleportFailed(string reason)
-        {
-        }
-
-        public virtual void SendTeleportLocationStart()
+        public void SendTeleportProgress(uint flags, string message)
         {
         }
 
@@ -533,10 +631,6 @@ namespace OpenSim.Region.Examples.SimpleModule
         }
 
         public virtual void SendCoarseLocationUpdate(List<UUID> users, List<Vector3> CoarseLocations)
-        {
-        }
-
-        public virtual void AttachObject(uint localID, Quaternion rotation, byte attachPoint, UUID ownerID)
         {
         }
 
@@ -563,7 +657,7 @@ namespace OpenSim.Region.Examples.SimpleModule
         public virtual void SendInventoryFolderDetails(UUID ownerID, UUID folderID,
                                                        List<InventoryItemBase> items,
                                                        List<InventoryFolderBase> folders,
-                                                       int version,
+                                                       int version, 
                                                        bool fetchFolders,
                                                        bool fetchItems)
         {
@@ -607,8 +701,8 @@ namespace OpenSim.Region.Examples.SimpleModule
             int PriceParcelClaim, float PriceParcelClaimFactor, int PriceParcelRent, int PricePublicObjectDecay,
             int PricePublicObjectDelete, int PriceRentLight, int PriceUpload, int TeleportMinPrice, float TeleportPriceExponent)
         {
-
         }
+
         public virtual void SendNameReply(UUID profileId, string firstname, string lastname)
         {
         }
@@ -678,16 +772,34 @@ namespace OpenSim.Region.Examples.SimpleModule
 
         public void SendImageFirstPart(ushort numParts, UUID ImageUUID, uint ImageSize, byte[] ImageData, byte imageCodec)
         {
+            ImageDataPacket im = new ImageDataPacket();
+            im.Header.Reliable = false;
+            im.ImageID.Packets = numParts;
+            im.ImageID.ID = ImageUUID;
+
+            if (ImageSize > 0)
+                im.ImageID.Size = ImageSize;
+
+            im.ImageData.Data = ImageData;
+            im.ImageID.Codec = imageCodec;
+            im.Header.Zerocoded = true;
+            sentdatapkt.Add(im);
         }
-        
+
         public void SendImageNextPart(ushort partNumber, UUID imageUuid, byte[] imageData)
         {
+            ImagePacketPacket im = new ImagePacketPacket();
+            im.Header.Reliable = false;
+            im.ImageID.Packet = partNumber;
+            im.ImageID.ID = imageUuid;
+            im.ImageData.Data = imageData;
+            sentpktpkt.Add(im);
         }
-         
+
         public void SendImageNotFound(UUID imageid)
         {
         }
-        
+
         public void SendShutdownConnectionNotice()
         {
         }
@@ -736,60 +848,6 @@ namespace OpenSim.Region.Examples.SimpleModule
 
         }
 
-        private void Update()
-        {
-            frame++;
-            if (frame > 20)
-            {
-                frame = 0;
-                if (OnAgentUpdate != null)
-                {
-                    AgentUpdateArgs pack = new AgentUpdateArgs();
-                    pack.ControlFlags = movementFlag;
-                    pack.BodyRotation = bodyDirection;
-
-                    OnAgentUpdate(this, pack);
-                }
-                if (flyState == 0)
-                {
-                    movementFlag = (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY |
-                                   (uint)AgentManager.ControlFlags.AGENT_CONTROL_UP_NEG;
-                    flyState = 1;
-                }
-                else if (flyState == 1)
-                {
-                    movementFlag = (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY |
-                                   (uint)AgentManager.ControlFlags.AGENT_CONTROL_UP_POS;
-                    flyState = 2;
-                }
-                else
-                {
-                    movementFlag = (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY;
-                    flyState = 0;
-                }
-
-                if (count >= 10)
-                {
-                    if (OnChatFromClient != null)
-                    {
-                        OSChatMessage args = new OSChatMessage();
-                        args.Message = "Hey You! Get out of my Home. This is my Region";
-                        args.Channel = 0;
-                        args.From = FirstName + " " + LastName;
-                        args.Scene = m_scene;
-                        args.Position = new Vector3(128, 128, 26);
-                        args.Sender = this;
-                        args.Type = ChatTypeEnum.Shout;
-
-                        OnChatFromClient(this, args);
-                    }
-                    count = -1;
-                }
-
-                count++;
-            }
-        }
-
         public bool AddMoney(int debit)
         {
             return false;
@@ -798,7 +856,7 @@ namespace OpenSim.Region.Examples.SimpleModule
         public void SendSunPos(Vector3 sunPos, Vector3 sunVel, ulong time, uint dlen, uint ylen, float phase)
         {
         }
-        
+
         public void SendViewerEffect(ViewerEffectPacket.EffectBlock[] effectBlocks)
         {
         }
@@ -827,27 +885,15 @@ namespace OpenSim.Region.Examples.SimpleModule
 
         public void Close()
         {
+            m_scene.RemoveClient(AgentId);
         }
 
         public void Start()
         {
         }
-        
+
         public void Stop()
         {
-        }
-
-        private uint m_circuitCode;
-
-        public uint CircuitCode
-        {
-            get { return m_circuitCode; }
-            set { m_circuitCode = value; }
-        }
-
-        public IPEndPoint RemoteEndPoint
-        {
-            get { return new IPEndPoint(IPAddress.Loopback, (ushort)m_circuitCode); }
         }
 
         public void SendBlueBoxMessage(UUID FromAvatarID, String FromAvatarName, String Message)
@@ -894,11 +940,11 @@ namespace OpenSim.Region.Examples.SimpleModule
         public void SendRegionInfoToEstateMenu(RegionInfoForEstateMenuArgs args)
         {
         }
-        
+
         public void SendEstateCovenantInformation(UUID covenant)
         {
         }
-        
+
         public void SendDetailedEstateData(UUID invoice, string estateName, uint estateID, uint parentEstate, uint estateFlags, uint sunPosition, UUID covenant, string abuseEmail, UUID estateOwner)
         {
         }
@@ -906,24 +952,23 @@ namespace OpenSim.Region.Examples.SimpleModule
         public void SendLandProperties(int sequence_id, bool snap_selection, int request_result, LandData landData, float simObjectBonusFactor, int parcelObjectCapacity, int simObjectCapacity, uint regionFlags)
         {
         }
-        
+
         public void SendLandAccessListData(List<UUID> avatars, uint accessFlag, int localLandID)
         {
         }
-        
+
         public void SendForceClientSelectObjects(List<uint> objectIDs)
-        {
-        }
-        
-        public void SendLandObjectOwners(LandData land, List<UUID> groups, Dictionary<UUID, int> ownersAndCount)
         {
         }
 
         public void SendCameraConstraint(Vector4 ConstraintPlane)
         {
-
         }
-        
+
+        public void SendLandObjectOwners(LandData land, List<UUID> groups, Dictionary<UUID, int> ownersAndCount)
+        {
+        }
+
         public void SendLandParcelOverlay(byte[] data, int sequence_id)
         {
         }
@@ -1059,12 +1104,10 @@ namespace OpenSim.Region.Examples.SimpleModule
         {
         }
 
-        #region IClientAPI Members
-
-
         public bool AddGenericPacketHandler(string MethodName, GenericMessage handler)
         {
-            return true;
+            //throw new NotImplementedException();
+            return false;
         }
 
         public void SendAvatarClassifiedReply(UUID targetID, UUID[] classifiedID, string[] name)
@@ -1114,16 +1157,34 @@ namespace OpenSim.Region.Examples.SimpleModule
         public void SendMuteListUpdate(string filename)
         {
         }
-
+        
         public void SendPickInfoReply(UUID pickID,UUID creatorID, bool topPick, UUID parcelID, string name, string desc, UUID snapshotID, string user, string originalName, string simName, Vector3 posGlobal, int sortOrder, bool enabled)
         {
         }
-        #endregion
-        
-        public void SendRebakeAvatarTextures(UUID textureID)
+
+        public bool TryGet<T>(out T iface)
+        {
+            iface = default(T);
+            return false;
+        }
+
+        public T Get<T>()
+        {
+            return default(T);
+        }
+
+        public void Disconnect(string reason)
         {
         }
 
+        public void Disconnect() 
+        {
+        }
+
+        public void SendRebakeAvatarTextures(UUID textureID)
+        {
+        }
+        
         public void SendAvatarInterestsReply(UUID avatarID, uint wantMask, string wantText, uint skillsMask, string skillsText, string languages)
         {
         }
