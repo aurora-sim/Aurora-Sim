@@ -182,6 +182,9 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
                     sp.ControllingClient.SendLocalTeleport(position, lookAt, teleportFlags);
                     sp.Teleport(position);
+
+                    foreach (SceneObjectGroup grp in sp.Attachments)
+                        sp.Scene.EventManager.TriggerOnScriptChangedEvent(grp.LocalId, (uint)Changed.TELEPORT);
                 }
                 else // Another region possibly in another simulator
                 {
