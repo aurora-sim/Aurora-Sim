@@ -477,51 +477,40 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                                     // loop so we don't lag to death on error handling
                                     DrawStruct ds = new DrawStruct();
                                     ds.brush = new SolidBrush(mapdotspot);
-                                    //ds.rect = new Rectangle(mapdrawstartX, (255 - mapdrawstartY), mapdrawendX - mapdrawstartX, mapdrawendY - mapdrawstartY);
-
-                                    ds.trns = new face[FaceA.Length];
-
-                                    for (int i = 0; i < FaceA.Length; i++)
+                                    if (mapdot.RootPart.Shape.ProfileShape == ProfileShape.Circle)
                                     {
-                                        Point[] working = new Point[5];
-                                        working[0] = project(FaceA[i], axPos);
-                                        working[1] = project(FaceB[i], axPos);
-                                        working[2] = project(FaceD[i], axPos);
-                                        working[3] = project(FaceC[i], axPos);
-                                        working[4] = project(FaceA[i], axPos);
+                                        ds.dr = DrawRoutine.Ellipse;
+                                        Vector3 Location = new Vector3(mapdrawstartX + Math.Abs(part.Shape.Scale.X / 2),
+                                            (256 - (mapdrawendY - Math.Abs(part.Shape.Scale.Y / 2))), 0);
+                                        Location = Location * part.GetWorldRotation();
+                                        ds.rect = new Rectangle((int)Location.X, (int)Location.Y, (int)Math.Abs(part.Shape.Scale.X), (int)Math.Abs(part.Shape.Scale.Y));
+                                    }
+                                    else //if (mapdot.RootPart.Shape.ProfileShape == ProfileShape.Square)
+                                    {
+                                        ds.dr = DrawRoutine.Rectangle;
+                                        //ds.rect = new Rectangle(mapdrawstartX, (255 - mapdrawstartY), mapdrawendX - mapdrawstartX, mapdrawendY - mapdrawstartY);
 
-                                        face workingface = new face();
-                                        workingface.pts = working;
+                                        ds.trns = new face[FaceA.Length];
 
-                                        ds.trns[i] = workingface;
+                                        for (int i = 0; i < FaceA.Length; i++)
+                                        {
+                                            Point[] working = new Point[5];
+                                            working[0] = project(FaceA[i], axPos);
+                                            working[1] = project(FaceB[i], axPos);
+                                            working[2] = project(FaceD[i], axPos);
+                                            working[3] = project(FaceC[i], axPos);
+                                            working[4] = project(FaceA[i], axPos);
+
+                                            face workingface = new face();
+                                            workingface.pts = working;
+
+                                            ds.trns[i] = workingface;
+                                        }
                                     }
 
                                     z_sort.Add(part.LocalId, ds);
                                     z_localIDs.Add(part.LocalId);
                                     z_sortheights.Add(pos.Z);
-
-                                    //for (int wx = mapdrawstartX; wx < mapdrawendX; wx++)
-                                    //{
-                                        //for (wy = mapdrawstartY; wy < mapdrawendY; wy++)
-                                        //{
-                                            //m_log.InfoFormat("[MAPDEBUG]: {0},{1}({2})", wx, (255 - wy),wy);
-                                            //try
-                                            //{
-                                                // Remember, flip the y!
-                                            //    mapbmp.SetPixel(wx, (255 - wy), mapdotspot);
-                                            //}
-                                            //catch (ArgumentException)
-                                            //{
-                                            //    breakYN = true;
-                                            //}
-
-                                            //if (breakYN)
-                                            //    break;
-                                        //}
-
-                                        //if (breakYN)
-                                        //    break;
-                                    //}
                                 } // Object is within 256m Z of terrain
                             } // object is at least a meter wide
                         } // loop over group children
@@ -541,9 +530,16 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                     if (z_sort.ContainsKey(sortedlocalIds[s]))
                     {
                         DrawStruct rectDrawStruct = z_sort[sortedlocalIds[s]];
-                        for (int r = 0; r < rectDrawStruct.trns.Length; r++)
+                        if (rectDrawStruct.dr == DrawRoutine.Rectangle)
                         {
-                            g.FillPolygon(rectDrawStruct.brush,rectDrawStruct.trns[r].pts);
+                            for (int r = 0; r < rectDrawStruct.trns.Length; r++)
+                            {
+                                g.FillPolygon(rectDrawStruct.brush, rectDrawStruct.trns[r].pts);
+                            }
+                        }
+                        else //if (rectDrawStruct.dr == DrawRoutine.Ellipse)
+                        {
+                            g.FillEllipse(rectDrawStruct.brush, rectDrawStruct.rect);
                         }
                         //g.FillRectangle(rectDrawStruct.brush , rectDrawStruct.rect);
                     }

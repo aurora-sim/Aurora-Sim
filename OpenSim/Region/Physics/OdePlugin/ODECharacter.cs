@@ -532,7 +532,7 @@ namespace OpenSim.Region.Physics.OdePlugin
             // the "-" sign is to force the tilt to be OPPOSITE the direction of movement.
             float xTiltComponent = -movementVector.X * m_tiltMagnitudeWhenProjectedOnXYPlane;
             float yTiltComponent = -movementVector.Y * m_tiltMagnitudeWhenProjectedOnXYPlane;
-
+            //m_log.Debug(movementVector.X + " " + movementVector.Y);
             //m_log.Debug("[PHYSICS] changing avatar tilt");
             d.JointSetAMotorParam(Amotor, (int)dParam.LowStop, xTiltComponent);
             d.JointSetAMotorParam(Amotor, (int)dParam.HiStop, xTiltComponent); // must be same as lowstop, else a different, spurious tilt is introduced

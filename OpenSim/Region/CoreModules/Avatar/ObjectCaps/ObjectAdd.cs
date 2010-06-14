@@ -89,46 +89,34 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
         {
             UUID capuuid = UUID.Random();
             
-            //m_log.InfoFormat("[OBJECTADD]: {0}", "/CAPS/OA/" + capuuid + "/");
-
             caps.RegisterHandler("ObjectAdd",
                                  new RestHTTPHandler("POST", "/CAPS/OA/" + capuuid + "/",
                                                        delegate(Hashtable m_dhttpMethod)
                                                        {
                                                            return ProcessAdd(m_dhttpMethod, agentID, caps);
                                                        }));
-            
-            caps.RegisterHandler("ObjectMedia",
-                                new RestHTTPHandler("POST", "/CAPS/ObjectMedia/" + capuuid + "/",
-                                                      delegate(Hashtable m_dhttpMethod)
-                                                      {
-                                                          return ProcessObjectMedia(m_dhttpMethod, capuuid);
-                                                      }));
 
-            caps.RegisterHandler("ObjectMediaNavigate",
-                                new RestHTTPHandler("POST", "/CAPS/ObjectMediaNavigate/" + capuuid + "/",
-                                                      delegate(Hashtable m_dhttpMethod)
-                                                      {
-                                                          return ProcessObjectMediaNavigate(m_dhttpMethod, capuuid);
-                                                      }));
             caps.RegisterHandler("ParcelPropertiesUpdate",
                                 new RestHTTPHandler("POST", "/CAPS/ParcelPropertiesUpdate/" + capuuid + "/",
                                                       delegate(Hashtable m_dhttpMethod)
                                                       {
                                                           return ProcessUpdateParcel(m_dhttpMethod, agentID, capuuid);
                                                       }));
+
             caps.RegisterHandler("UpdateAgentInformation",
                                 new RestHTTPHandler("POST", "/CAPS/UpdateAgentInformation/" + capuuid + "/",
                                                       delegate(Hashtable m_dhttpMethod)
                                                       {
                                                           return ProcessUpdateAgentInfo(m_dhttpMethod, agentID, capuuid);
                                                       }));
+
             caps.RegisterHandler("ServerReleaseNotes",
                                 new RestHTTPHandler("POST", "/CAPS/ServerReleaseNotes/" + capuuid + "/",
                                                       delegate(Hashtable m_dhttpMethod)
                                                       {
                                                           return ProcessServerReleaseNotes(m_dhttpMethod, agentID, capuuid);
                                                       }));
+
             caps.RegisterHandler("UpdateAgentLanguage",
                                 new RestHTTPHandler("POST", "/CAPS/UpdateAgentLanguage/" + capuuid + "/",
                                                       delegate(Hashtable m_dhttpMethod)
@@ -250,225 +238,6 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
             responsedata["content_type"] = "text/plain";
             responsedata["keepalive"] = false;
             responsedata["str_response_string"] = "Updated.";
-            return responsedata;
-        }
-
-        private Hashtable ProcessObjectMediaNavigate(Hashtable mDhttpMethod, UUID capuuid)
-        {
-            OSD r = OSDParser.DeserializeLLSDXml((string)mDhttpMethod["requestbody"]);
-            Hashtable responsedata = new Hashtable();
-            responsedata["int_response_code"] = 200; //501; //410; //404;
-            responsedata["content_type"] = "text/plain";
-            responsedata["keepalive"] = false;
-            responsedata["str_response_string"] = "";
-            OSDMap rm = (OSDMap)r;
-            List<string> Values = new List<string>();
-            List<string> Keys = new List<string>();
-            string objectUUID = rm["object_id"].AsString();
-            string currentURL = rm["current_url"].AsString();
-            string currentSide = rm["texture_index"].AsString();
-            ObjectMediaURL media = AC.GetObjectMediaInfo(objectUUID, int.Parse(currentSide));
-            media.current_url = currentURL;
-            AC.UpdateObjectMediaInfo(media);
-            return responsedata;
-        }
-
-        private void GenerateAssetWebSide(int side, UUID objectUUID, UUID OwnerID)
-        {
-            List<string> Values = new List<string>();
-            ObjectMediaURL media = new ObjectMediaURL();
-            media.Side = side;
-            media.ObjectID = objectUUID;
-            media.OwnerID = OwnerID;
-            AC.UpdateObjectMediaInfo(media);
-        }
-
-        private Hashtable ProcessObjectMedia(Hashtable mDhttpMethod, UUID objectID)
-        {
-            OSD r = OSDParser.DeserializeLLSDXml((string)mDhttpMethod["requestbody"]);
-            Hashtable responsedata = new Hashtable();
-            responsedata["int_response_code"] = 200; //501; //410; //404;
-            responsedata["content_type"] = "text/plain";
-            responsedata["keepalive"] = false;
-            responsedata["str_response_string"] = "";
-            OSDMap rm = (OSDMap)r;
-
-            if (rm.ContainsKey("verb"))
-            {
-                #region Get
-                if (rm["verb"].ToString() == "GET")
-                {
-                    OSDMap MainMap = new OSDMap();
-                    OSD osd = new OSD();
-
-                    SceneObjectPart part = m_scene.GetSceneObjectPart(new UUID(rm["object_id"].ToString()));
-                    ObjectMediaURL info1 = AC.GetObjectMediaInfo(rm["object_id"].ToString(), 1);
-                    ObjectMediaURL info2 = AC.GetObjectMediaInfo(rm["object_id"].ToString(), 2);
-                    ObjectMediaURL info3 = AC.GetObjectMediaInfo(rm["object_id"].ToString(), 3);
-                    ObjectMediaURL info4 = AC.GetObjectMediaInfo(rm["object_id"].ToString(), 4);
-                    ObjectMediaURL info5 = AC.GetObjectMediaInfo(rm["object_id"].ToString(), 5);
-                    ObjectMediaURL info6 = AC.GetObjectMediaInfo(rm["object_id"].ToString(), 6);
-                    
-                    #region null checks
-                    /*if (info1 == null)
-                    {
-                        GenerateAssetWebSide(1, objectID, part.OwnerID);
-                        info1 = new ObjectMediaURLInfo();
-                    }
-                    if (info2 == null)
-                    {
-                        GenerateAssetWebSide(2, objectID, part.OwnerID);
-                        info2 = new ObjectMediaURLInfo();
-                    }
-                    if (info3 == null)
-                    {
-                        GenerateAssetWebSide(3, objectID, part.OwnerID);
-                        info3 = new ObjectMediaURLInfo();
-                    }
-                    if (info4 == null)
-                    {
-                        GenerateAssetWebSide(4, objectID, part.OwnerID);
-                        info4 = new ObjectMediaURLInfo();
-                    }
-                    if (info5 == null)
-                    {
-                        GenerateAssetWebSide(5, objectID, part.OwnerID);
-                        info5 = new ObjectMediaURLInfo();
-                    }
-                    if (info6 == null)
-                    {
-                        GenerateAssetWebSide(6, objectID, part.OwnerID);
-                        info6 = new ObjectMediaURLInfo();
-                    }*/
-                    #endregion
-
-                    List<ObjectMediaURL> infos = new List<ObjectMediaURL>();
-                    infos.Add(info1);
-                    infos.Add(info2);
-                    infos.Add(info3);
-                    infos.Add(info4);
-                    infos.Add(info5);
-                    infos.Add(info6);
-                    
-                    OSDArray array = new OSDArray(6);
-                    foreach (ObjectMediaURL info in infos)
-                    {
-                        if (info == null)
-                        {
-                            OSD nullMap = new OSD();
-                            array.Add(nullMap);
-                            continue;
-                        }
-                        
-                        OSDMap mediadataMap = new OSDMap();
-                        osd = new OSDBoolean(info.alt_image_enable);
-                        mediadataMap.Add("alt_image_enable", osd);
-
-                        osd = new OSDBoolean(info.auto_loop);
-                        mediadataMap.Add("auto_loop", osd);
-
-                        osd = new OSDBoolean(info.auto_play);
-                        mediadataMap.Add("auto_play", osd);
-
-                        osd = new OSDBoolean(info.auto_scale);
-                        mediadataMap.Add("auto_scale", osd);
-
-                        osd = new OSDBoolean(info.auto_zoom);
-                        mediadataMap.Add("auto_zoom", osd);
-
-                        osd = new OSDInteger(info.controls);
-                        mediadataMap.Add("controls", osd);
-
-                        osd = new OSDString(info.current_url);
-                        mediadataMap.Add("current_url", osd);
-
-                        osd = new OSDBoolean(info.first_click_interact);
-                        mediadataMap.Add("first_click_interact", osd);
-
-                        osd = new OSDInteger(info.height_pixels);
-                        mediadataMap.Add("height_pixels", osd);
-
-                        osd = new OSDString(info.home_url);
-                        mediadataMap.Add("home_url", osd);
-
-                        osd = new OSDInteger(info.perms_control);
-                        mediadataMap.Add("perms_control", osd);
-
-                        osd = new OSDBoolean(info.whitelist_enable);
-                        mediadataMap.Add("whitelist_enable", osd);
-
-                        osd = new OSDInteger(info.width_pixels);
-                        mediadataMap.Add("width_pixels", osd);
-                        array.Add(mediadataMap);
-                    }
-                    osd = new OSDString(objectID.ToString());
-                    MainMap.Add("object_id", osd);
-
-                    MainMap.Add("object_media_data", array);
-
-                    osd = new OSDString("x-mv:000000000" + "1"/*infos[1].object_media_version*/+"/"+new Guid().ToString());
-                    MainMap.Add("object_media_version", osd);
-
-
-                    string response = OSDParser.SerializeLLSDXmlString(MainMap);
-                    responsedata["str_response_string"] = response; //String.Format(@"<llsd><map><key>object_id</key><uuid>{0}</uuid><key>object_media_data</key><array><map><key>alt_image_enable</key><boolean>0</boolean><key>auto_loop</key><boolean>0</boolean><key>auto_play</key><boolean>1</boolean><key>auto_scale</key><boolean>1</boolean><key>auto_zoom</key><boolean>0</boolean><key>controls</key><integer>0</integer><key>current_url</key><string>http://v01.wwweb3d.net/dahliaUnityPlayer/dahliaWebPlayer03.html</string><key>first_click_interact</key><boolean>0</boolean><key>height_pixels</key><integer>0</integer><key>home_url</key><string>http://v01.wwweb3d.net/dahliaUnityPlayer/dahliaWebPlayer03.html</string><key>perms_control</key><integer>7</integer><key>perms_interact</key><integer>7</integer><key>whitelist_enable</key><boolean>0</boolean><key>width_pixels</key><integer>0</integer></map><map><key>alt_image_enable</key><boolean>0</boolean><key>auto_loop</key><boolean>0</boolean><key>auto_play</key><boolean>1</boolean><key>auto_scale</key><boolean>1</boolean><key>auto_zoom</key><boolean>0</boolean><key>controls</key><integer>0</integer><key>current_url</key><string>http://www.google.com/</string><key>first_click_interact</key><boolean>0</boolean><key>height_pixels</key><integer>0</integer><key>home_url</key><string>http://www.google.com</string><key>perms_control</key><integer>7</integer><key>perms_interact</key><integer>7</integer><key>whitelist_enable</key><boolean>0</boolean><key>width_pixels</key><integer>0</integer></map><undef /><undef /><undef /><undef /></array><key>object_media_version</key><string>x-mv:0000000042/79e7c4ad-3361-4736-bced-1f72e6c3dbd4</string></map></llsd>",uuid.ToString());
-                }
-                #endregion
-                #region Update
-                else if (rm["verb"].ToString() == "UPDATE")
-                {
-                    OSDArray media_data_map = (OSDArray)rm["object_media_data"];
-                    SceneObjectPart part = m_scene.GetSceneObjectPart(new UUID(rm["object_id"].ToString()));
-                    int side = 1;
-                    foreach (OSD osd in media_data_map)
-                    {
-                        string type = osd.Type.ToString();
-                        if (type == "Unknown")
-                        {
-                            side++;
-                            continue;
-                        }
-                        List<string> Values = new List<string>();
-                        OSDMap map = (OSDMap)osd;
-
-                        ObjectMediaURL info = AC.GetObjectMediaInfo(rm["object_id"].ToString(), side);
-                        if (info == null)
-                            info = new ObjectMediaURL();
-
-                        info.ObjectID = new UUID(rm["object_id"].ToString());
-                        info.OwnerID = new UUID(part.OwnerID.ToString());
-                        info.Side = side;
-                        info.alt_image_enable = bool.Parse(map["alt_image_enable"].ToString());
-                        info.auto_loop = bool.Parse(map["auto_loop"].ToString());
-                        info.auto_play = bool.Parse(map["auto_play"].ToString());
-                        info.auto_scale = bool.Parse(map["auto_scale"].ToString());
-                        info.auto_zoom = bool.Parse(map["auto_zoom"].ToString());
-                        info.controls = int.Parse(map["controls"].ToString());
-                        info.current_url = map["current_url"].ToString();
-                        info.first_click_interact = bool.Parse(map["first_click_interact"].ToString());
-                        info.height_pixels = int.Parse(map["height_pixels"].ToString());
-                        info.home_url = map["home_url"].ToString();
-                        info.perms_control = int.Parse(map["perms_control"].ToString());
-                        info.perms_interact = int.Parse(map["perms_interact"].ToString());
-                        info.whitelist = map["whitelist"].ToString();
-                        info.whitelist_enable = bool.Parse(map["whitelist_enable"].ToString());
-                        info.width_pixels = int.Parse(map["width_pixels"].ToString());
-
-                        if (info.object_media_version == "" || info.object_media_version == " ")
-                            info.object_media_version = "1";
-
-                        AC.UpdateObjectMediaInfo(info);
-            
-                        side++;
-                    }
-                }
-                #endregion
-                else
-                {
-                    m_log.Error("[OBJECTADD] Unknown verb in ObjectMedia: " + rm["verb"].ToString());
-                }
-            }
-
             return responsedata;
         }
 

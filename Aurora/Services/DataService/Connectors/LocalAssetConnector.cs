@@ -27,22 +27,25 @@ namespace Aurora.Services.DataService
 			}, "assetMediaURL", "*");
 			if (data.Count == 0)
 				return null;
-			info.alt_image_enable = bool.Parse(data[2]);
-			info.auto_loop = Convert.ToInt32(data[3]) == 1;
-			info.auto_play = Convert.ToInt32(data[4]) == 1;
-			info.auto_scale = Convert.ToInt32(data[5]) == 1;
-			info.auto_zoom = Convert.ToInt32(data[6]) == 1;
+            info.ObjectID = OpenMetaverse.UUID.Parse(data[0]);
+            info.OwnerID = OpenMetaverse.UUID.Parse(data[1]);
+            info.alt_image_enable = bool.Parse(data[2]);
+            info.auto_loop = bool.Parse(data[3]);
+            info.auto_play = bool.Parse(data[4]);
+            info.auto_scale = bool.Parse(data[5]);
+            info.auto_zoom = bool.Parse(data[6]);
 			info.controls = Convert.ToInt32(data[7]);
 			info.current_url = data[8];
-			info.first_click_interact = Convert.ToInt32(data[9]) == 1;
+			info.first_click_interact = bool.Parse(data[9]);
 			info.height_pixels = Convert.ToInt32(data[10]);
 			info.home_url = data[11];
 			info.perms_control = Convert.ToInt32(data[12]);
 			info.perms_interact = Convert.ToInt32(data[13]);
 			info.whitelist = data[14];
-			info.whitelist_enable = Convert.ToInt32(data[15]) == 1;
+			info.whitelist_enable = bool.Parse(data[15]);
 			info.width_pixels = Convert.ToInt32(data[16]);
 			info.object_media_version = data[17];
+            info.Side = Convert.ToInt32(data[18]);
 			return info;
 		}
 
@@ -66,12 +69,13 @@ namespace Aurora.Services.DataService
             Values.Add(media.first_click_interact);
             Values.Add(media.height_pixels); 
             Values.Add(media.home_url);
-            Values.Add(media.object_media_version);
             Values.Add(media.perms_control);
             Values.Add(media.perms_interact);
             Values.Add(media.whitelist);
             Values.Add(media.whitelist_enable);
             Values.Add(media.width_pixels);
+            Values.Add(media.object_media_version);
+            Values.Add(media.Side);
             GD.Insert("assetMediaURL", Values.ToArray());
         }
     }

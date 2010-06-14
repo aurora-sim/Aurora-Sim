@@ -322,7 +322,9 @@ namespace OpenSim.Region.Physics.OdePlugin
         public bool AllowUnderwaterPhysics = false;
 
         private ODERayCastRequestManager m_rayCastManager;
-
+        private bool IsLocked = false;
+        private List<PhysicsActor> RemoveQueue;
+        
         /// <summary>
         /// Initiailizes the scene
         /// Sets many properties that ODE requires to be stable
@@ -382,6 +384,7 @@ namespace OpenSim.Region.Physics.OdePlugin
         // Initialize the mesh plugin
         public override void Initialise(IMesher meshmerizer, IConfigSource config)
         {
+            RemoveQueue = new List<PhysicsActor>();
             mesher = meshmerizer;
             m_config = config;
             // Defaults
@@ -2143,13 +2146,21 @@ namespace OpenSim.Region.Physics.OdePlugin
         {
             if (prim is OdePrim)
             {
-                lock (OdeLock)
+                if (!IsLocked) //Fix a deadlock situation.. have we been locked by Simulate?
                 {
-                    OdePrim p = (OdePrim) prim;
+                    lock (OdeLock)
+                    {
+                        OdePrim p = (OdePrim)prim;
 
-                    p.setPrimForRemoval();
-                    AddPhysicsActorTaint(prim);
-                    //RemovePrimThreadLocked(p);
+                        p.setPrimForRemoval();
+                        AddPhysicsActorTaint(prim);
+                        //RemovePrimThreadLocked(p);
+                    }
+                }
+                else
+                {
+                    //Add the prim to a queue which will be removed when Simulate has finished what it's doing.
+                    RemoveQueue.Add(prim);
                 }
             }
         }
@@ -2684,6 +2695,7 @@ namespace OpenSim.Region.Physics.OdePlugin
                 CreateRequestedJoints(); // this must be outside of the lock (OdeLock) to avoid deadlocks
             }
 
+            IsLocked = true;
             lock (OdeLock)
             {
                 // Process 10 frames if the sim is running normal..
@@ -3124,6 +3136,19 @@ namespace OpenSim.Region.Physics.OdePlugin
                     }
                     d.WorldExportDIF(world, fname, physics_logging_append_existing_logfile, prefix);
                 }
+            }
+            IsLocked = false;
+            if (RemoveQueue.Count > 0)
+            {
+                do
+                {
+                    if (RemoveQueue[0] != null)
+                    {
+                        RemovePrimThreadLocked((OdePrim)RemoveQueue[0]);
+                    }
+                    RemoveQueue.RemoveAt(0);
+                }
+                while (RemoveQueue.Count > 0);
             }
 
             return fps;

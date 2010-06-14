@@ -2887,6 +2887,12 @@ namespace OpenSim.Region.Framework.Scenes
 
             // Serialise calls to RemoveScriptInstances to avoid
             // deadlocking on m_parts inside SceneObjectGroup
+            if (group.RootPart.SitTargetAvatar != UUID.Zero)
+            {
+                ScenePresence SP = GetScenePresence(group.RootPart.ParentUUID);
+                if(SP != null)
+                    SP.StandUp();
+            }
             lock (m_deleting_scene_object)
             {
                 group.RemoveScriptInstances(true);
@@ -4687,13 +4693,32 @@ namespace OpenSim.Region.Framework.Scenes
                 }
 
                 if (m_teleportModule != null)
-                    m_teleportModule.Teleport(sp, regionHandle, position, lookAt, teleportFlags);
+                {
+                    object[] request = new object[5];
+                    request[0] = sp;
+                    request[1] = regionHandle;
+                    request[2] = position;
+                    request[3] = lookAt;
+                    request[4] = teleportFlags;
+                    Util.FireAndForget(FireTeleportAsync, request);
+                }
                 else
                 {
                     m_log.DebugFormat("[SCENE]: Unable to perform teleports: no AgentTransferModule is active");
                     sp.ControllingClient.SendTeleportFailed("Unable to perform teleports on this simulator.");
                 }
             }
+        }
+
+        private void FireTeleportAsync(object val)
+        {
+            object[] request = (object[])val;
+            ScenePresence sp = (ScenePresence)request[0];
+            ulong regionHandle = (ulong)request[1];
+            Vector3 position = (Vector3)request[2];
+            Vector3 lookAt = (Vector3)request[3];
+            uint teleportFlags = (uint)request[4];
+            m_teleportModule.Teleport(sp, regionHandle, position, lookAt, teleportFlags);
         }
 
         /// <summary>

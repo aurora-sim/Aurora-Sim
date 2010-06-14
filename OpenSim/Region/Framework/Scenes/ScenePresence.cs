@@ -988,11 +988,11 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (PhysicsActor != null)
             {
+                m_physicsActor.OnCollisionUpdate -= PhysicsCollisionUpdate;
                 m_physicsActor.OnRequestTerseUpdate -= SendTerseUpdateToAllClients;
                 m_physicsActor.OnOutOfBounds -= OutOfBoundsCall;
                 m_scene.PhysicsScene.RemoveAvatar(PhysicsActor);
                 m_physicsActor.UnSubscribeEvents();
-                m_physicsActor.OnCollisionUpdate -= PhysicsCollisionUpdate;
                 PhysicsActor = null;
             }
         }
@@ -1663,13 +1663,15 @@ namespace OpenSim.Region.Framework.Scenes
                     SceneObjectPart part = m_scene.GetSceneObjectPart(m_requestedSitTargetUUID);
                     if (part != null)
                     {
-                        AbsolutePosition = part.AbsolutePosition;
-                        Velocity = Vector3.Zero;
-                        SendFullUpdateToAllClients();
-
+                        //AbsolutePosition = part.AbsolutePosition;
+                        //Velocity = Vector3.Zero;
+                        m_autoPilotTarget = Vector3.Zero;
+                        m_autopilotMoving = false;
+                        SendSitResponse(ControllingClient, m_requestedSitTargetUUID, Vector3.Zero, Quaternion.Identity);
+                        m_requestedSitTargetUUID = UUID.Zero;
                         //HandleAgentSit(ControllingClient, m_requestedSitTargetUUID);
                     }
-                    //ControllingClient.SendSitResponse(m_requestedSitTargetID, m_requestedSitOffset, Quaternion.Identity, false, Vector3.Zero, Vector3.Zero, false);
+                    //ControllingClient.SendSitResponse(part.UUID, m_requestedSitOffset, Quaternion.Identity, false, Vector3.Zero, Vector3.Zero, false);
                     m_requestedSitTargetUUID = UUID.Zero;
                 }
                     /*
@@ -1867,8 +1869,16 @@ namespace OpenSim.Region.Framework.Scenes
                 cameraEyeOffset = part.GetCameraEyeOffset();
                 forceMouselook = part.GetForceMouselook();
             }
-            AbsolutePosition = part.AbsolutePosition;
-            const float HeightFudgeFactor = -.00f;
+            Vector3 Position = part.AbsolutePosition;
+            Position.Z += part.Scale.Z / 2;
+            Position.Z += m_appearance.AvatarHeight / 2;
+            Position.Z -= m_appearance.AvatarHeight / 10;
+            AbsolutePosition = Position;
+            float rotX = Rotation.X * Utils.RAD_TO_DEG;
+            float rotY = Rotation.Y * Utils.RAD_TO_DEG;
+            float rotZ = Rotation.Z * Utils.RAD_TO_DEG;
+            Rotation = new Quaternion(rotX, rotY, rotZ, Rotation.W);
+            /*const float HeightFudgeFactor = -.00f;
 
             float X = (part.Scale.X / 2);
             float Y = (part.Scale.Y / 2);
@@ -1881,10 +1891,10 @@ namespace OpenSim.Region.Framework.Scenes
             float rotZ = Rotation.Z * Utils.RAD_TO_DEG;
             Rotation = new Quaternion(rotX, rotY, rotZ, Rotation.W);
             sitOrientation = Quaternion.Identity;
-            AbsolutePosition = new Vector3((float)(AbsolutePosition.X + (X * Math.Cos(Rotation.X * Utils.RAD_TO_DEG))), (float)(AbsolutePosition.Y + (Y * Math.Sin(Rotation.Y * Utils.RAD_TO_DEG))), (float)(AbsolutePosition.Z + (Z/* * Math.Cos(Rotation.Z * Utils.RAD_TO_DEG)*/)));
+            AbsolutePosition = new Vector3((float)(AbsolutePosition.X + (X * Math.Cos(Rotation.X * Utils.RAD_TO_DEG))), (float)(AbsolutePosition.Y + (Y * Math.Sin(Rotation.Y * Utils.RAD_TO_DEG))), (float)(AbsolutePosition.Z + (Z/* * Math.Cos(Rotation.Z * Utils.RAD_TO_DEG))));
             //AbsolutePosition = new Vector3((float)(AbsolutePosition.X + (X * Math.Cos(Rotation.X * Utils.RAD_TO_DEG)) + (Y * Math.Sin(Rotation.Y * Utils.RAD_TO_DEG)) + (Z * Math.Sin(Rotation.Z * Utils.RAD_TO_DEG))), (float)(AbsolutePosition.Y + (X * Math.Sin(Rotation.X * Utils.RAD_TO_DEG)) + (Y * Math.Cos(Rotation.Y * Utils.RAD_TO_DEG)) + (Z * Math.Sin(Rotation.Z * Utils.RAD_TO_DEG))), (float)(AbsolutePosition.Z + (X * Math.Sin(Rotation.X * Utils.RAD_TO_DEG)) + (Y * Math.Sin(Rotation.Y * Utils.RAD_TO_DEG)) + (Z * Math.Cos(Rotation.Z * Utils.RAD_TO_DEG))));
             AbsolutePosition = new Vector3(AbsolutePosition.X, AbsolutePosition.Y, AbsolutePosition.Z + HeightFudgeFactor + (Appearance.AvatarHeight / 2) + HeightFudgeFactor);
-            
+            */
             ControllingClient.SendAgentDataUpdate(UUID, UUID.Zero, Firstname, Lastname, 0, "", "");
             ControllingClient.SendSitResponse(part.UUID, part.OffsetPosition, sitOrientation, autopilot, Vector3.Zero, m_CameraCenter, forceMouselook);
             // This calls HandleAgentSit twice, once from here, and the client calls
@@ -2217,10 +2227,17 @@ namespace OpenSim.Region.Framework.Scenes
             m_parentID = m_requestedSitTargetID;
 
             Velocity = Vector3.Zero;
-            RemoveFromPhysicalScene();
+            try
+            {
+                RemoveFromPhysicalScene();
+            }
+            catch (Exception ex)
+            {
+                m_log.Warn(ex);
+            }
 
-            Animator.TrySetMovementAnimation(sitAnimation);
             SendFullUpdateToAllClients();
+            Animator.TrySetMovementAnimation(sitAnimation);
             // This may seem stupid, but Our Full updates don't send avatar rotation :P
             // So we're also sending a terse update (which has avatar rotation)
             // [Update] We do now.
@@ -2680,6 +2697,9 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="visualParam"></param>
         public void SetAppearance(Primitive.TextureEntry textureEntry, byte[] visualParams)
         {
+            bool flyingTemp = false;
+            Vector3 pos = m_pos;
+            pos.Z -= m_appearance.HipOffset;
             if (m_physicsActor != null)
             {
                 if (!IsChildAgent)
@@ -2687,13 +2707,11 @@ namespace OpenSim.Region.Framework.Scenes
                     // This may seem like it's redundant, remove the avatar from the physics scene
                     // just to add it back again, but it saves us from having to update
                     // 3 variables 10 times a second.
-                    bool flyingTemp = m_physicsActor.Flying;
+                    flyingTemp = m_physicsActor.Flying;
                     RemoveFromPhysicalScene();
                     //m_scene.PhysicsScene.RemoveAvatar(m_physicsActor);
 
                     //PhysicsActor = null;
-
-                    AddToPhysicalScene(flyingTemp);
                 }
             }
 
@@ -2736,8 +2754,9 @@ namespace OpenSim.Region.Framework.Scenes
                 m_startAnimationSet = true;
             }
 
-            Vector3 pos = m_pos;
             pos.Z += m_appearance.HipOffset;
+
+            AddToPhysicalScene(flyingTemp);
 
             m_controllingClient.SendAvatarDataImmediate(this);
         }
@@ -2904,15 +2923,15 @@ namespace OpenSim.Region.Framework.Scenes
                         {
                             Vector3 pos = AbsolutePosition;
                             if (AbsolutePosition.X < 0)
-                                pos.X += Math.Abs(Velocity.X) - 2.5f;
+                                pos.X += Math.Abs(Velocity.X) + 2.5f;
                             else if (AbsolutePosition.X > Constants.RegionSize - .861f)
-                                pos.X -= Math.Abs(Velocity.X) + 2.5f;
+                                pos.X -= Math.Abs(Velocity.X) - 2.5f;
                             if (AbsolutePosition.Y < 0)
-                                pos.Y += Math.Abs(Velocity.Y) - 2.5f;
+                                pos.Y += Math.Abs(Velocity.Y) + 2.5f;
                             else if (AbsolutePosition.Y > Constants.RegionSize - .851f)
-                                pos.Y -= Math.Abs(Velocity.Y) + 2.5f;
+                                pos.Y -= Math.Abs(Velocity.Y) - 2.5f;
                             //AbsolutePosition = pos;
-                            ///PhysicsActor.Position = AbsolutePosition;
+                            //PhysicsActor.Position = AbsolutePosition;
                         }
                     }
                 }
@@ -3182,6 +3201,7 @@ namespace OpenSim.Region.Framework.Scenes
             else 
                 cAgent.GodLevel = (byte) 0;
 
+            cAgent.Speed = SpeedModifier;
             cAgent.AlwaysRun = m_setAlwaysRun;
 
             try
@@ -3268,6 +3288,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (m_scene.Permissions.IsGod(new UUID(cAgent.AgentID)))
                 m_godLevel = cAgent.GodLevel;
+            m_speedModifier = cAgent.Speed;
             m_setAlwaysRun = cAgent.AlwaysRun;
 
             uint i = 0;

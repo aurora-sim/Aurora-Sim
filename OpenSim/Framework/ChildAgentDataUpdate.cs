@@ -297,6 +297,7 @@ namespace OpenSim.Framework
         public uint ControlFlags;
         public float EnergyLevel;
         public Byte GodLevel;
+        public float Speed;
         public bool AlwaysRun;
         public UUID PreyAgent;
         public Byte AgentAccess;
@@ -347,6 +348,7 @@ namespace OpenSim.Framework
             args["control_flags"] = OSD.FromString(ControlFlags.ToString());
 
             args["energy_level"] = OSD.FromReal(EnergyLevel);
+            args["speed"] = OSD.FromString(Speed.ToString());
             args["god_level"] = OSD.FromString(GodLevel.ToString());
             args["always_run"] = OSD.FromBoolean(AlwaysRun);
             args["prey_agent"] = OSD.FromUUID(PreyAgent);
@@ -480,6 +482,9 @@ namespace OpenSim.Framework
 
             if (args["god_level"] != null)
                 Byte.TryParse(args["god_level"].AsString(), out GodLevel);
+
+            if (args["speed"] != null)
+                float.TryParse(args["speed"].AsString(), out Speed);
 
             if (args["always_run"] != null)
                 AlwaysRun = args["always_run"].AsBoolean();

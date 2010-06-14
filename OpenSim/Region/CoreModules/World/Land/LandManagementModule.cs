@@ -1501,6 +1501,11 @@ namespace OpenSim.Region.CoreModules.World.Land
                                                                             extLandData.RegionHandle, extLandData.X, extLandData.Y);
             IDirectoryServiceConnector DSC = Aurora.DataManager.DataManager.IDirectoryServiceConnector;
             AuroraLandData data = DSC.GetParcelInfo(parcelID);
+            if (data == null)
+            {
+                ILandObject land = m_scene.LandChannel.GetLandObject(extLandData.X, extLandData.Y);
+                data = DSC.GetParcelInfo(land.LandData.InfoUUID);
+            }
             extLandData.LandData = ConvertAuroraLandData(data);
 
             if (extLandData != null)  // if we found some data, send it

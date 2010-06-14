@@ -286,9 +286,14 @@ namespace OpenSim.Services.LLLoginService
                     //This gets if the viewer has accepted the new TOS
                     if(requestData.ContainsKey("agree_to_tos"))
                     {
-                        AcceptedNewTOS = bool.Parse(requestData["agree_to_tos"].ToString());
+                        if (requestData["agree_to_tos"].ToString() == "0")
+                            AcceptedNewTOS = false;
+                        else if (requestData["agree_to_tos"].ToString() == "1")
+                            AcceptedNewTOS = true;
+                        else
+                            AcceptedNewTOS = bool.Parse(requestData["agree_to_tos"].ToString());
                     }
-                    if (!AcceptedNewTOS && agent.AcceptTOS == false && m_UseTOS)
+                    if (!AcceptedNewTOS && !agent.AcceptTOS && m_UseTOS)
                     {
                         StreamReader reader = new StreamReader(Path.Combine(Environment.CurrentDirectory, m_TOSLocation));
                         string TOS = reader.ReadToEnd();

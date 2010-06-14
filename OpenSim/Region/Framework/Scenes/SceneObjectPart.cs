@@ -420,6 +420,12 @@ namespace OpenSim.Region.Framework.Scenes
         private DateTime m_expires;
         private DateTime m_rezzed;
         private bool m_createSelected = false;
+        private string m_mediaURL = "";
+        public string MediaURL
+        {
+            get { return m_mediaURL; }
+            set { m_mediaURL = value; }
+        }
 
         public UUID CreatorID 
         {

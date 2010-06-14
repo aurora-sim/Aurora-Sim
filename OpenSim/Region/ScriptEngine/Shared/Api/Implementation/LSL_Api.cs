@@ -1397,7 +1397,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             tmp.Y = (float)scale.y;
             tmp.Z = (float)scale.z;
             part.Scale = tmp;
-            part.SendFullUpdateToAllClients();
+            part.ScheduleFullUpdate();
         }
 
         public LSL_Vector llGetScale()
@@ -2366,7 +2366,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             m_host.SoundRadius = 20;    // Magic number, 20 seems reasonable. Make configurable?
 
             m_host.ScheduleFullUpdate();
-            m_host.SendFullUpdateToAllClients();
+            //m_host.SendFullUpdateToAllClients();
         }
 
         public void llLoopSoundMaster(string sound, double volume)
@@ -2387,7 +2387,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                     prim.SoundRadius = 20;    // Magic number, 20 seems reasonable. Make configurable?
 
                     prim.ScheduleFullUpdate();
-                    prim.SendFullUpdateToAllClients();
+                    //prim.SendFullUpdateToAllClients();
                 }
             }
             if (m_host.Sound != UUID.Zero)
@@ -2399,7 +2399,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             m_host.SoundRadius = 20;    // Magic number, 20 seems reasonable. Make configurable?
 
             m_host.ScheduleFullUpdate();
-            m_host.SendFullUpdateToAllClients();
+            //m_host.SendFullUpdateToAllClients();
         }
 
         public void llLoopSoundSlave(string sound, double volume)
@@ -2445,7 +2445,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                         part.SoundFlags = 0;
                         part.SoundRadius = 0;
                         part.ScheduleFullUpdate();
-                        part.SendFullUpdateToAllClients();
+                        //part.SendFullUpdateToAllClients();
                     }
                     m_host.ParentGroup.LoopSoundMasterPrim = null;
                     m_host.ParentGroup.LoopSoundSlavePrims.Clear();
@@ -2457,7 +2457,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                     m_host.SoundFlags = 0;
                     m_host.SoundRadius = 0;
                     m_host.ScheduleFullUpdate();
-                    m_host.SendFullUpdateToAllClients();
+                    //m_host.SendFullUpdateToAllClients();
                 }
             }
             else
@@ -2467,7 +2467,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                 m_host.SoundFlags = 0;
                 m_host.SoundRadius = 0;
                 m_host.ScheduleFullUpdate();
-                m_host.SendFullUpdateToAllClients();
+                //m_host.SendFullUpdateToAllClients();
             }
         }
 
@@ -3408,7 +3408,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             m_host.AddScriptLPS(1);
             m_host.AngularVelocity = new Vector3((float)(axis.x * spinrate), (float)(axis.y * spinrate), (float)(axis.z * spinrate));
             m_host.ScheduleTerseUpdate();
-            m_host.SendTerseUpdateToAllClients();
+            //m_host.SendTerseUpdateToAllClients();
             m_host.ParentGroup.HasGroupChanged = true;
         }
 
@@ -3423,7 +3423,48 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
-            NotImplemented("llGodLikeRezObject");
+            AssetBase asset = World.AssetService.Get(inventory);
+            SceneObjectGroup group
+                                = OpenSim.Region.Framework.Scenes.Serialization.SceneObjectSerializer.FromOriginalXmlFormat(UUID.Zero, Utils.BytesToString(asset.Data));
+            group.ResetIDs();
+
+            group.OwnerID = m_host.OwnerID;
+
+            group.RootPart.AddFlag(PrimFlags.CreateSelected);
+            // If we're rezzing an attachment then don't ask AddNewSceneObject() to update the client since
+            // we'll be doing that later on.  Scheduling more than one full update during the attachment
+            // process causes some clients to fail to display the attachment properly.
+            World.AddNewSceneObject(group, true, false);
+
+            //  m_log.InfoFormat("ray end point for inventory rezz is {0} {1} {2} ", RayEnd.X, RayEnd.Y, RayEnd.Z);
+            // if attachment we set it's asset id so object updates can reflect that
+            // if not, we set it's position in world.
+            group.AbsolutePosition = new Vector3((float)pos.x, (float)pos.y, (float)pos.z);
+            group.ScheduleGroupForFullUpdate();
+
+            SceneObjectPart rootPart = null;
+            try
+            {
+                rootPart = group.GetChildPart(group.UUID);
+            }
+            catch (NullReferenceException)
+            {
+
+            }
+
+            List<SceneObjectPart> partList = new List<SceneObjectPart>(group.Children.Values);
+            ScenePresence SP = World.GetScenePresence(m_host.OwnerID);
+            if (SP != null)
+                group.SetGroup(m_host.GroupID, SP.ControllingClient);
+
+            if (group.RootPart.Shape.PCode == (byte)PCode.Prim)
+            {
+                group.ClearPartAttachmentData();
+            }
+
+            // Fire on_rez
+            group.CreateScriptInstances(0, true, World.DefaultScriptEngine, 0);
+            rootPart.ParentGroup.ResumeScripts();
         }
 
         public void llRequestPermissions(string agent, int perm)

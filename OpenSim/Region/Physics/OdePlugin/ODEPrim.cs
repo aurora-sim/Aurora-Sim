@@ -286,19 +286,16 @@ namespace OpenSim.Region.Physics.OdePlugin
                 // without this, if an avatar selects prim, they can walk right
                 // through it while it's selected
                 m_collisionscore = 0;
+                m_taintselected = value;
                 if ((m_isphysical && !_zeroFlag) || !value)
                 {
-                    m_taintselected = value;
                     _parent_scene.AddPhysicsActorTaint(this);
                 }
                 else
                 {
-                    m_taintselected = value;
                     m_isSelected = value;
                 }
-                //Fixes the bug when you would edit a prim and would fall through it.
-                // --Revolution
-                //if (m_isSelected) disableBodySoft();
+                if (m_isSelected) disableBodySoft();
             }
         }
 
@@ -1576,7 +1573,7 @@ Console.WriteLine(" JointCreateFixed");
                 }
                 else
                 {
-//Console.WriteLine("Move " +  m_primName);
+                    //Console.WriteLine("Move " +  m_primName);
                     if (!d.BodyIsEnabled (Body))  d.BodyEnable (Body); // KF add 161009
                     // NON-'VEHICLES' are dealt with here
                     if (d.BodyIsEnabled(Body) && !m_angularlock.ApproxEquals(Vector3.Zero, 0.003f))

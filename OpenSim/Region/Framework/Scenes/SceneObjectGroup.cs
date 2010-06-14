@@ -1279,14 +1279,21 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 foreach (SceneObjectPart part in m_parts.Values)
                 {
+                    if (part.SitTargetAvatar != UUID.Zero)
+                    {
+                        ScenePresence SP = Scene.GetScenePresence(part.SitTargetAvatar);
+                        if (SP != null)
+                        {
+                            SP.StandUp();
+                        }
+                    }
 //                    part.Inventory.RemoveScriptInstances();
                     Scene.ForEachScenePresence(delegate(ScenePresence avatar)
                     {
-                        if (avatar.ParentID == LocalId)
+                        if (avatar.ParentID == part.LocalId)
                         {
                             avatar.StandUp();
                         }
-
                         if (!silent)
                         {
                             part.UpdateFlag = 0;
