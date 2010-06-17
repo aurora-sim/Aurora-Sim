@@ -28,6 +28,7 @@
 using System;
 using System.Collections.Generic;
 using Nini.Config;
+using OpenSim.Region.Physics.Manager;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenMetaverse;
@@ -36,6 +37,172 @@ using Mono.Addins;
 namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
 {
     [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
+    public class AuroraCombatModule : INonSharedRegionModule
+    {
+        public string Name
+        {
+            get { return "AuroraCombatModule"; }
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
+        }
+
+        public void Initialise(IConfigSource source)
+        {
+        }
+
+        public void Close()
+        {
+        }
+
+        public void AddRegion(Scene scene)
+        {
+            scene.EventManager.OnNewPresence += EventManager_OnNewPresence;
+            scene.EventManager.OnAvatarEnteringNewParcel += AvatarEnteringParcel;
+        }
+
+        public void RemoveRegion(Scene scene)
+        {
+            scene.EventManager.OnNewPresence -= EventManager_OnNewPresence;
+            scene.EventManager.OnAvatarEnteringNewParcel -= AvatarEnteringParcel;
+        }
+
+        void EventManager_OnNewPresence(ScenePresence presence)
+        {
+            presence.RegisterModuleInterface<ScenePresenceCombat>(new ScenePresenceCombat(presence));
+        }
+
+        public void RegionLoaded(Scene scene)
+        {
+        }
+
+        private class ScenePresenceCombat
+        {
+            ScenePresence m_SP;
+            public ScenePresenceCombat(ScenePresence SP)
+            {
+                m_SP = SP;
+                SP.PhysicsActor.OnCollisionUpdate += new OpenSim.Region.Physics.Manager.PhysicsActor.CollisionUpdate(PhysicsActor_OnCollisionUpdate);
+            }
+
+            void PhysicsActor_OnCollisionUpdate(EventArgs e)
+            {
+                if (e == null)
+                    return;
+
+                CollisionEventUpdate collisionData = (CollisionEventUpdate)e;
+                Dictionary<uint, ContactPoint> coldata = collisionData.m_objCollisionList;
+
+                if (m_SP.m_invulnerable)
+                    return;
+
+                float starthealth = m_SP.Health;
+                uint killerObj = 0;
+                foreach (uint localid in coldata.Keys)
+                {
+                    SceneObjectPart part = m_SP.Scene.GetSceneObjectPart(localid);
+
+                    if (part != null && part.ParentGroup.Damage != -1.0f)
+                        m_SP.Health -= part.ParentGroup.Damage;
+                    else
+                    {
+                        if (coldata[localid].PenetrationDepth >= 0.10f)
+                            m_SP.Health -= coldata[localid].PenetrationDepth * 5.0f;
+                    }
+
+                    if (m_SP.Health <= 0.0f)
+                    {
+                        if (localid != 0)
+                            killerObj = localid;
+                    }
+                    //m_log.Debug("[AVATAR]: Collision with localid: " + localid.ToString() + " at depth: " + coldata[localid].ToString());
+                }
+                if (starthealth != m_SP.Health)
+                {
+                    m_SP.ControllingClient.SendHealth(m_SP.Health);
+                }
+                if (m_SP.Health <= 0)
+                {
+                    KillAvatar(killerObj);
+                }
+            }
+
+            private void KillAvatar(uint killerObjectLocalID)
+            {
+                string deadAvatarMessage;
+                ScenePresence killingAvatar = null;
+                string killingAvatarMessage;
+
+                if (killerObjectLocalID == 0)
+                    deadAvatarMessage = "You committed suicide!";
+                else
+                {
+                    // Try to get the avatar responsible for the killing
+                    killingAvatar = m_SP.Scene.GetScenePresence(killerObjectLocalID);
+                    if (killingAvatar == null)
+                    {
+                        // Try to get the object which was responsible for the killing
+                        SceneObjectPart part = m_SP.Scene.GetSceneObjectPart(killerObjectLocalID);
+                        if (part == null)
+                        {
+                            // Cause of death: Unknown
+                            deadAvatarMessage = "You died!";
+                        }
+                        else
+                        {
+                            // Try to find the avatar wielding the killing object
+                            killingAvatar = m_SP.Scene.GetScenePresence(part.OwnerID);
+                            if (killingAvatar == null)
+                                deadAvatarMessage = String.Format("You impaled yourself on {0} owned by {1}!", part.Name, m_SP.Scene.GetUserName(part.OwnerID));
+                            else
+                            {
+                                killingAvatarMessage = String.Format("You fragged {0}!", m_SP.Name);
+                                deadAvatarMessage = String.Format("You got killed by {0}!", killingAvatar.Name);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        killingAvatarMessage = String.Format("You fragged {0}!", m_SP.Name);
+                        deadAvatarMessage = String.Format("You got killed by {0}!", killingAvatar.Name);
+                    }
+                }
+                try
+                {
+                    m_SP.ControllingClient.SendAgentAlertMessage(deadAvatarMessage, true);
+                    if (killingAvatar != null)
+                        killingAvatar.ControllingClient.SendAlertMessage("You fragged " + m_SP.Firstname + " " + m_SP.Lastname);
+                }
+                catch (InvalidOperationException)
+                { }
+
+                m_SP.Health = 100;
+                m_SP.Scene.TeleportClientHome(m_SP.UUID, m_SP.ControllingClient);
+            }
+        }
+
+        private void AvatarEnteringParcel(ScenePresence avatar, int localLandID, UUID regionID)
+        {
+            try
+            {
+                ILandObject obj = avatar.Scene.LandChannel.GetLandObject(avatar.AbsolutePosition.X, avatar.AbsolutePosition.Y);
+
+                if ((obj.LandData.Flags & (uint)ParcelFlags.AllowDamage) != 0)
+                {
+                    avatar.Invulnerable = false;
+                }
+                else
+                {
+                    avatar.Invulnerable = true;
+                }
+            }
+            catch (Exception)
+            {
+            }
+        }
+    }
     public class CombatModule : INonSharedRegionModule
     {
         //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);

@@ -50,7 +50,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
             {
                 for (y = 0; y < map.Height; y++)
                 {
-                    double z = TerrainUtil.SphericalFactor(x, y, rx, ry, strength) / (strength * strength);
+                    double z = TerrainUtil.SphericalFactor(x, y, rx, ry, strength) / (strength);
 
                     if (z > 0) // add in non-zero amount
                     {
@@ -79,7 +79,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
                     if (!mask[x, y])
                         continue;
 
-                    double z = TerrainUtil.SphericalFactor(x, y, rx, ry, strength) / (strength * strength);
+                    double z = TerrainUtil.SphericalFactor(x, y, rx, ry, strength) / (strength);
 
                     if (z > 0) // add in non-zero amount
                     {

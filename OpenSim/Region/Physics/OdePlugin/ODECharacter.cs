@@ -181,6 +181,7 @@ namespace OpenSim.Region.Physics.OdePlugin
 
             PID_D = pid_d;
             PID_P = pid_p;
+            capsule_radius = .23f;
             CAPSULE_RADIUS = capsule_radius;
             m_tensor = tensor;
             m_density = density;
@@ -196,7 +197,7 @@ namespace OpenSim.Region.Physics.OdePlugin
             {
                 m_colliderarr[i] = false;
             }
-            CAPSULE_LENGTH = (size.Z * 1.15f) - CAPSULE_RADIUS * 2.0f;
+            CAPSULE_LENGTH = (size.Z * 1.15f) - CAPSULE_RADIUS * 4f;
             //m_log.Info("[SIZE]: " + CAPSULE_LENGTH.ToString());
             m_tainted_CAPSULE_LENGTH = CAPSULE_LENGTH;
 
