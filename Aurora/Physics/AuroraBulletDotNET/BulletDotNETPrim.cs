@@ -2248,7 +2248,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             }
             else
             {
-                // bool hasTrimesh = false;
+                bool hasTrimesh = false;
                 lock (childrenPrim)
                 {
                     foreach (BulletDotNETPrim chld in childrenPrim)
@@ -2256,13 +2256,13 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
                         if (chld == null)
                             continue;
 
-                        // if (chld.NeedsMeshing())
-                        //     hasTrimesh = true;
+                        if (chld.NeedsMeshing())
+                             hasTrimesh = true;
                     }
                 }
 
-                //if (hasTrimesh)
-                //{
+                if (hasTrimesh)
+                {
                 ProcessGeomCreationAsTriMesh(Vector3.Zero, Quaternion.Identity);
                 // createmesh returns null when it doesn't mesh.
 
@@ -2297,7 +2297,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
                 }
                 setMesh(_parent_scene, _mesh);
 
-                //}
+                }
 
                 if (tempMotionState1 != null && tempMotionState1.Handle != IntPtr.Zero)
                     tempMotionState1.Dispose();
