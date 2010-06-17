@@ -760,22 +760,33 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
 
         internal void Dispose()
         {
+            m_parent_scene.RemoveAvatarFromList(this);
             if (Body != null)
             {
                 if (Body.isInWorld())
-                    m_parent_scene.removeFromWorld(Body);
+                {
+                    m_parent_scene.removeFromWorld(this, Body);
+                    m_parent_scene.RemoveCollisionObject(Body);
+                }
+                Body.Dispose(); 
+                Body = null;
             }
 
-            if (m_aMotor.Handle != IntPtr.Zero)
-                m_parent_scene.getBulletWorld().removeConstraint(m_aMotor);
-
-            m_aMotor.Dispose(); m_aMotor = null;
-            ClosestCastResult.Dispose(); ClosestCastResult = null;
-            if (Body != null)
+            if (m_aMotor != null)
             {
-                Body.Dispose(); Body = null;
+                if (m_aMotor.Handle != IntPtr.Zero)
+                    m_parent_scene.getBulletWorld().removeConstraint(m_aMotor);
+
+                m_aMotor.Dispose(); m_aMotor = null;
             }
-            Shell.Dispose(); Shell = null;
+            if (ClosestCastResult != null)
+            {
+                ClosestCastResult.Dispose(); ClosestCastResult = null;
+            }
+            if (Shell != null)
+            {
+                Shell.Dispose(); Shell = null;
+            }
             tempQuat1.Dispose();
             tempTrans1.Dispose();
             tempVector1.Dispose();

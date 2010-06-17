@@ -52,6 +52,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
         private Dictionary<uint, BulletDotNETPrim> m_primsLocalID = new Dictionary<uint, BulletDotNETPrim>();
         private HashSet<BulletDotNETPrim> m_activePrims = new HashSet<BulletDotNETPrim>();
         private HashSet<PhysicsActor> m_taintedActors = new HashSet<PhysicsActor>();
+        private HashSet<PhysicsActor> m_waitingtaintedActors = new HashSet<PhysicsActor>();
         private btDiscreteDynamicsWorld m_world;
         private btAxisSweep3 m_broadphase;
         private btCollisionConfiguration m_collisionConfiguration;
@@ -112,9 +113,10 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
         private ContactAddedCallbackHandler m_CollisionInterface;
 
         private bool Locked = false;
-        private object BulletLock = null;
+        public object BulletLock = null;
         public int geomUpdatesPerThrottledUpdate = 15;
         private List<PhysicsActor> RemoveQueue = new List<PhysicsActor>();
+        private bool forceSimplePrimMeshing = false;
 
         public BulletDotNETScene(string sceneIdentifier)
         {
@@ -175,6 +177,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
                         bodyMotorJointMaxforceTensor = physicsconfig.GetFloat("body_motor_joint_maxforce_tensor_win", 2f);
                     }
 
+                    forceSimplePrimMeshing = physicsconfig.GetBoolean("force_simple_prim_meshing", forceSimplePrimMeshing);
                     minimumGroundFlightOffset = physicsconfig.GetFloat("minimum_ground_flight_offset", 3f);
                     maximumMassObject = physicsconfig.GetFloat("maximum_mass_object", 10000.01f);
                 }
@@ -191,6 +194,20 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             }
         }
 
+        public void RemoveAvatarFromList(BulletDotNETCharacter chr)
+        {
+            lock (m_characters)
+            {
+                m_charactersLocalID.Remove(chr.m_localID);
+                m_characters.Remove(chr);
+            }
+        }
+
+        public void RemoveCollisionObject(btRigidBody body)
+        {
+            m_world.removeCollisionObject(body);
+        }
+
         public override PhysicsActor AddAvatar(string avName, Vector3 position, Vector3 size, bool isFlying)
         {
             lock (BulletLock)
@@ -201,8 +218,11 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
                                                                       avMovementDivisorRun);
                 try
                 {
-                    m_characters.Add(chr);
-                    m_charactersLocalID.Add(chr.m_localID, chr);
+                    lock (m_characters)
+                    {
+                        m_characters.Add(chr);
+                        m_charactersLocalID.Add(chr.m_localID, chr);
+                    }
                 }
                 catch
                 {
@@ -218,19 +238,18 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
         {
             lock (BulletLock)
             {
-                BulletDotNETCharacter chr = (BulletDotNETCharacter)actor;
-
-                m_charactersLocalID.Remove(chr.m_localID);
-                m_characters.Remove(chr);
-                if (chr.Body != null)
+                if (!Locked)
                 {
-                    m_world.removeRigidBody(chr.Body);
-                    m_world.removeCollisionObject(chr.Body);
+                    BulletDotNETCharacter chr = (BulletDotNETCharacter)actor;
+
+                    chr.Remove();
+                    AddPhysicsActorTaint(chr);
+                    //chr = null;
                 }
-                
-                chr.Remove();
-                AddPhysicsActorTaint(chr);
-                //chr = null;
+                else
+                {
+                    RemoveQueue.Add(actor);
+                }
             }
         }
 
@@ -246,8 +265,6 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
 
                         p.setPrimForRemoval();
                         AddPhysicsActorTaint(prim);
-                        //RemovePrimThreadLocked(p);
-
                     }
                 }
             }
@@ -317,12 +334,19 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
 
         public override void AddPhysicsActorTaint(PhysicsActor prim)
         {
-            lock (m_taintedActors)
+            if (!Locked)
             {
-                if (!m_taintedActors.Contains(prim))
+                lock (m_taintedActors)
                 {
-                    m_taintedActors.Add(prim);
+                    if (!m_taintedActors.Contains(prim))
+                    {
+                        m_taintedActors.Add(prim);
+                    }
                 }
+            }
+            else
+            {
+                m_waitingtaintedActors.Add(prim);
             }
         }
         internal void SetUsingGImpact()
@@ -415,6 +439,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
                 }
             }
             Locked = false;
+            //No lock, as the lock that was adding to this was just removed
             if (RemoveQueue.Count > 0)
             {
                 do
@@ -426,10 +451,24 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
                             BulletDotNETPrim prim = RemoveQueue[0] as BulletDotNETPrim;
                             prim.Dispose();
                         }
+                        else if (RemoveQueue[0] is BulletDotNETCharacter)
+                        {
+                            BulletDotNETCharacter chr = RemoveQueue[0] as BulletDotNETCharacter;
+                            chr.Dispose();
+                        }
                     }
                     RemoveQueue.RemoveAt(0);
                 }
                 while (RemoveQueue.Count > 0);
+            }
+            //No lock, as the lock that was adding to this was just removed
+            if (m_waitingtaintedActors.Count != 0)
+            {
+                foreach (PhysicsActor actor in m_waitingtaintedActors)
+                {
+                    if (!m_taintedActors.Contains(actor))
+                        m_taintedActors.Add(actor);
+                }
             }
             return steps;
         }
@@ -675,10 +714,17 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
         {
             m_world.addRigidBody(Body);
         }
-        [Obsolete("bad!")]
-        internal void removeFromWorld(btRigidBody body)
+        
+        internal void removeFromWorld(BulletDotNETCharacter chr, btRigidBody body)
         {
-            m_world.removeRigidBody(body);
+            lock (m_characters)
+            {
+                if (m_characters.Contains(chr))
+                {
+                    m_world.removeRigidBody(body);
+                    m_characters.Remove(chr);
+                }
+            }
         }
 
         internal void removeFromWorld(BulletDotNETPrim prm ,btRigidBody body)
@@ -724,6 +770,8 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
         /// <returns></returns>
         public bool needsMeshing(PrimitiveBaseShape pbs)
         {
+            if (forceSimplePrimMeshing)
+                return true;
             // most of this is redundant now as the mesher will return null if it cant mesh a prim
             // but we still need to check for sculptie meshing being enabled so this is the most
             // convenient place to do it for now...

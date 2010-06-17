@@ -6,7 +6,7 @@ using OpenSim.Region.Physics.Manager;
 using BulletDotNET;
 using OpenMetaverse;
 
-namespace Aurora.Physics.BulletDotNETPlugin
+namespace OpenSim.Region.Physics.BulletDotNETPlugin
 {
     public class BulletDotNETVehicle
     {
@@ -85,7 +85,7 @@ namespace Aurora.Physics.BulletDotNETPlugin
             parent_scene = _parent_scene;
             if (m_body == null || m_type == Vehicle.TYPE_NONE)
                 return;
-            if (m_prim.m_force.X == 0.0f && m_prim.m_force.Y == 0.0f && m_prim.m_force.Z == 0.0f && m_prim.IsPhysical)
+            /*if (m_prim.m_force.X == 0.0f && m_prim.m_force.Y == 0.0f && m_prim.m_force.Z == 0.0f && m_prim.IsPhysical)
             {
                 //  keep track of where we stopped.  No more slippin' & slidin'
                 if (!m_prim._zeroFlag)
@@ -97,7 +97,7 @@ namespace Aurora.Physics.BulletDotNETPlugin
                     m_prim.m_velocity = Vector3.Zero;
                     m_prim.Body.setLinearVelocity(new btVector3(0, 0, 0));
                 }
-            }
+            }*/
 
             MoveLinear(timestep);
             MoveAngular(timestep);
@@ -281,7 +281,8 @@ namespace Aurora.Physics.BulletDotNETPlugin
             Vector3 grav = Vector3.Zero;
             // There is some gravity, make a gravity force vector
             // that is applied after object velocity.
-            float objMass =  m_prim.CalculateMass();
+
+            float objMass =  m_prim.Mass;
             // m_VehicleBuoyancy: -1=2g; 0=1g; 1=0g;
             //Rev: bullet does gravity internally
             grav.Z = -parent_scene.gravityz * objMass * m_VehicleBuoyancy; //parent_scene.gravityz/* * objMass*/ * (1f - m_VehicleBuoyancy);
@@ -291,8 +292,7 @@ namespace Aurora.Physics.BulletDotNETPlugin
 
             btVector3 newpos = pos;
 
-            btVector3 vel_now = m_body.getVelocityInLocalPoint(newpos);
-            m_dir.Z = vel_now.getZ();        // Preserve the accumulated falling velocity
+            m_dir.Z = m_prim.Velocity.Z; // Preserve the accumulated falling velocity
 
             Vector3 accel = new Vector3(-(m_dir.X - m_lastLinearVelocityVector.X / 0.1f), -(m_dir.Y - m_lastLinearVelocityVector.Y / 0.1f), m_dir.Z - m_lastLinearVelocityVector.Z / 0.1f);
             Vector3 posChange = new Vector3();
@@ -301,7 +301,7 @@ namespace Aurora.Physics.BulletDotNETPlugin
             posChange.Z = newpos.getZ() - m_lastPositionVector.getZ();
             double Zchange = Math.Abs(posChange.Z);
             btQuaternion Orientation2 = m_body.getWorldTransform().getRotation();
-            if (m_BlockingEndPoint != Vector3.Zero)
+            /*if (m_BlockingEndPoint != Vector3.Zero)
             {
                 if (newpos.getX() >= (m_BlockingEndPoint.X - (float)1))
                     newpos.setX(newpos.getX() - (posChange.X + 1));
@@ -314,7 +314,7 @@ namespace Aurora.Physics.BulletDotNETPlugin
                 if (newpos.getY() <= 0)
                     newpos.setY(newpos.getY() + (posChange.Y + 1));
             }
-
+            */
             if (newpos.getZ() < parent_scene.GetTerrainHeightAtXY(newpos.getX(), newpos.getY()))
                 newpos.setZ(parent_scene.GetTerrainHeightAtXY(newpos.getX(), newpos.getY()) + 2);
 
@@ -354,7 +354,7 @@ namespace Aurora.Physics.BulletDotNETPlugin
                 }
             }
 
-            if ((m_flags & (VehicleFlag.LIMIT_MOTOR_UP)) != 0)
+            /*if ((m_flags & (VehicleFlag.LIMIT_MOTOR_UP)) != 0)
             {
                 //Start Experimental Values
                 if (Zchange > .3)
@@ -374,7 +374,7 @@ namespace Aurora.Physics.BulletDotNETPlugin
                 if (postemp > 2.5f)
                     grav.Z = (float)(grav.Z * 1.037125);
                 //End Experimental Values
-            }
+            }*/
 
             if ((m_flags & (VehicleFlag.NO_X)) != 0)
                 m_dir.X = 0;
@@ -391,13 +391,13 @@ namespace Aurora.Physics.BulletDotNETPlugin
             // apply gravity force
             //m_body.applyCentralImpulse(new btVector3(0, 0, 9.8f));
 
-            Vector3 newpos2 = new Vector3(newpos.getX(), newpos.getY(), newpos.getZ());
+            /*ector3 newpos2 = new Vector3(newpos.getX(), newpos.getY(), newpos.getZ());
             if (newpos2.X != m_prim.Position.X || newpos2.Y != m_prim.Position.Y || newpos2.Z != m_prim.Position.Z)
             {
                 btTransform trans = new btTransform(Orientation2, newpos);
                 m_body.setWorldTransform(trans);
-            }
-            m_prim.RequestPhysicsterseUpdate();
+            }*/
+
 
             // apply friction
             Vector3 decayamount = Vector3.One / (m_linearFrictionTimescale / timestep);

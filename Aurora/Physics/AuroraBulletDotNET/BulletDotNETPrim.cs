@@ -191,6 +191,8 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
 
         public btRigidBody Body;
 
+        public BulletDotNETVehicle m_vehicle;
+
         public BulletDotNETPrim(String primName, BulletDotNETScene parent_scene, Vector3 pos, Vector3 size,
                        Quaternion rotation, IMesh mesh, PrimitiveBaseShape pbs, bool pisPhysical)
         {
@@ -265,7 +267,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             m_primName = primName;
             m_taintadd = true;
             _parent_scene.AddPhysicsActorTaint(this);
-
+            m_vehicle = new BulletDotNETVehicle();
         }
 
         #region PhysicsActor overrides
@@ -380,35 +382,41 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
 
         public override int VehicleType
         {
-            get { return 0; }
-            set { return; }
+            get { return (int)m_vehicle.Type; }
+            set
+            {
+                m_vehicle.Enable(Body, this);
+                m_vehicle.ProcessTypeChange((Vehicle)value);
+            }
         }
 
         public override void VehicleFloatParam(int param, float value)
         {
-            //TODO:
+            m_vehicle.ProcessFloatVehicleParam((Vehicle)param, value);
         }
 
         public override void VehicleVectorParam(int param, Vector3 value)
         {
-            //TODO:
+            m_vehicle.ProcessVectorVehicleParam((Vehicle)param, value);
         }
 
         public override void VehicleRotationParam(int param, Quaternion rotation)
         {
-            //TODO:
+            m_vehicle.ProcessRotationVehicleParam((Vehicle)param, rotation);
         }
 
         public override void VehicleFlags(int param, bool remove)
         {
-
+            m_vehicle.ProcessVehicleFlags(param, remove);
         }
 
         public override void SetVolumeDetect(int param)
         {
-            //TODO: GhostObject
-            m_isVolumeDetect = (param != 0);
-
+            lock (_parent_scene.BulletLock)
+            {
+                //TODO: GhostObject
+                m_isVolumeDetect = (param != 0);
+            }
         }
 
         public override Vector3 GeometricCenter
@@ -911,31 +919,33 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
                 //Body = null;
                 // TODO: dispose parts that make up body
             }
-            if (_parent_scene.needsMeshing(_pbs))
+            lock (_parent_scene.BulletLock)
             {
-                // Don't need to re-enable body..   it's done in SetMesh
-                float meshlod = _parent_scene.meshSculptLOD;
+                if (_parent_scene.needsMeshing(_pbs))
+                {
+                    // Don't need to re-enable body..   it's done in SetMesh
+                    float meshlod = _parent_scene.meshSculptLOD;
+
+                    if (IsPhysical)
+                        meshlod = _parent_scene.MeshSculptphysicalLOD;
+
+                    IMesh mesh = _parent_scene.mesher.CreateMesh(SOPName, _pbs, _size, meshlod, IsPhysical);
+                    // createmesh returns null when it doesn't mesh.
+                    CreateGeom(IntPtr.Zero, mesh);
+                }
+                else
+                {
+                    _mesh = null;
+                    CreateGeom(IntPtr.Zero, null);
+                }
 
                 if (IsPhysical)
-                    meshlod = _parent_scene.MeshSculptphysicalLOD;
-
-                IMesh mesh = _parent_scene.mesher.CreateMesh(SOPName, _pbs, _size, meshlod, IsPhysical);
-                // createmesh returns null when it doesn't mesh.
-                CreateGeom(IntPtr.Zero, mesh);
+                    SetBody(Mass);
+                else
+                    SetBody(0);
+                //changeSelectedStatus(timestep);
+                m_taintadd = false;
             }
-            else
-            {
-                _mesh = null;
-                CreateGeom(IntPtr.Zero, null);
-            }
-
-            if (IsPhysical)
-                SetBody(Mass);
-            else
-                SetBody(0);
-            //changeSelectedStatus(timestep);
-            m_taintadd = false;
-
         }
 
         private void changemove(float timestep)
@@ -995,6 +1005,10 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
                 changeSelectedStatus(timestep);
 
                 resetCollisionAccounting();
+                if (m_vehicle.Type != Vehicle.TYPE_NONE)
+                {
+                    m_vehicle.Enable(Body, this);
+                }
             }
             m_taintposition = _position;
         }
@@ -1071,6 +1085,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
                 meshlod = _parent_scene.MeshSculptphysicalLOD;
 
             IMesh mesh = _parent_scene.mesher.CreateMesh(SOPName, _pbs, _size, meshlod, IsPhysical);
+            _mesh = mesh; 
             if (!positionOffset.ApproxEquals(Vector3.Zero, 0.001f) || orientation != Quaternion.Identity)
             {
 
@@ -1093,14 +1108,19 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
                 matrix[2, 1] = m4.M32;
                 matrix[2, 2] = m4.M33;
 
-
-                mesh.TransformLinear(matrix, xyz);
+                try
+                {
+                    mesh.TransformLinear(matrix, xyz);
+                }
+                catch (NotSupportedException ex)
+                {
+                    mesh.releasePinned();
+                    mesh.TransformLinear(matrix, xyz);
+                }
 
 
 
             }
-
-            _mesh = mesh;
         }
 
         private void changesize(float timestep)
@@ -1320,17 +1340,17 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
         private void changeSelectedStatus(float timestep)
         {
             // TODO: throw new NotImplementedException();
-            if (m_taintselected)
-            {
-                // Body.setCollisionFlags((int)ContactFlags.CF_NO_CONTACT_RESPONSE);
-                disableBodySoft();
+            //if (m_taintselected)
+            //{
+                //Body.setCollisionFlags((int)ContactFlags.CF_NO_CONTACT_RESPONSE);
+            //    disableBodySoft();
 
-            }
-            else
-            {
-                // Body.setCollisionFlags(0 | (int)ContactFlags.CF_CUSTOM_MATERIAL_CALLBACK);
+            //}
+            //else
+            //{
+                //Body.setCollisionFlags(0 | (int)ContactFlags.CF_CUSTOM_MATERIAL_CALLBACK);
                 enableBodySoft();
-            }
+            //}
             m_isSelected = m_taintselected;
 
         }
@@ -1408,7 +1428,19 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
 
         private void changefloatonwater(float timestep)
         {
-            // TODO: throw new NotImplementedException();
+            m_collidesWater = m_taintCollidesWater;
+
+            if (prim_geom != btCollisionShape.FromIntPtr(IntPtr.Zero))
+            {
+                if (m_collidesWater)
+                {
+                    Body.setCollisionFlags(Body.getCollisionFlags() | (int)CollisionCategories.Water);
+                }
+                else
+                {
+                    Body.setCollisionFlags(Body.getCollisionFlags() & (int)CollisionCategories.Water);
+                }
+            }
         }
 
         private void changeAngularLock(float timestep)
@@ -1445,241 +1477,246 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             float fy = 0;
             float fz = 0;
 
-            if (IsPhysical && Body != null && Body.Handle != IntPtr.Zero && !m_isSelected)
+            if (m_vehicle.Type != Vehicle.TYPE_NONE)
             {
-                float m_mass = CalculateMass();
-
-                fz = 0f;
-                //m_log.Info(m_collisionFlags.ToString());
-
-                if (m_buoyancy != 0)
+                // 'VEHICLES' are dealt with in BulletDotNETVehicles.cs
+                m_vehicle.Step(timestep, _parent_scene);
+            }
+            else
+            {
+                if (IsPhysical && Body != null && Body.Handle != IntPtr.Zero && !m_isSelected)
                 {
-                    if (m_buoyancy > 0)
+                    float m_mass = CalculateMass();
+
+                    fz = 0f;
+                    //m_log.Info(m_collisionFlags.ToString());
+
+                    if (m_buoyancy != 0)
                     {
-                        fz = (((-1 * _parent_scene.gravityz) * m_buoyancy) * m_mass) * 0.035f;
+                        if (m_buoyancy > 0)
+                        {
+                            fz = (((-1 * _parent_scene.gravityz) * m_buoyancy) * m_mass) * 0.035f;
 
-                        //d.Vector3 l_velocity = d.BodyGetLinearVel(Body);
-                        //m_log.Info("Using Buoyancy: " + buoyancy + " G: " + (_parent_scene.gravityz * m_buoyancy) + "mass:" + m_mass + "  Pos: " + Position.ToString());
-                    }
-                    else
-                    {
-                        fz = (-1 * (((-1 * _parent_scene.gravityz) * (-1 * m_buoyancy)) * m_mass) * 0.035f);
-                    }
-                }
-
-                if (m_usePID)
-                {
-                    PID_D = 61f;
-                    PID_G = 65f;
-                    //if (!d.BodyIsEnabled(Body))
-                    //d.BodySetForce(Body, 0f, 0f, 0f);
-                    // If we're using the PID controller, then we have no gravity
-                    fz = ((-1 * _parent_scene.gravityz) * m_mass) * 1.025f;
-
-                    //  no lock; for now it's only called from within Simulate()
-
-                    // If the PID Controller isn't active then we set our force
-                    // calculating base velocity to the current position
-
-                    if ((m_PIDTau < 1) && (m_PIDTau != 0))
-                    {
-                        //PID_G = PID_G / m_PIDTau;
-                        m_PIDTau = 1;
+                            //d.Vector3 l_velocity = d.BodyGetLinearVel(Body);
+                            //m_log.Info("Using Buoyancy: " + buoyancy + " G: " + (_parent_scene.gravityz * m_buoyancy) + "mass:" + m_mass + "  Pos: " + Position.ToString());
+                        }
+                        else
+                        {
+                            fz = (-1 * (((-1 * _parent_scene.gravityz) * (-1 * m_buoyancy)) * m_mass) * 0.035f);
+                        }
                     }
 
-                    if ((PID_G - m_PIDTau) <= 0)
+                    if (m_usePID)
                     {
-                        PID_G = m_PIDTau + 1;
+                        PID_D = 61f;
+                        PID_G = 65f;
+                        //if (!d.BodyIsEnabled(Body))
+                        //d.BodySetForce(Body, 0f, 0f, 0f);
+                        // If we're using the PID controller, then we have no gravity
+                        fz = ((-1 * _parent_scene.gravityz) * m_mass) * 1.025f;
+
+                        //  no lock; for now it's only called from within Simulate()
+
+                        // If the PID Controller isn't active then we set our force
+                        // calculating base velocity to the current position
+
+                        if ((m_PIDTau < 1) && (m_PIDTau != 0))
+                        {
+                            //PID_G = PID_G / m_PIDTau;
+                            m_PIDTau = 1;
+                        }
+
+                        if ((PID_G - m_PIDTau) <= 0)
+                        {
+                            PID_G = m_PIDTau + 1;
+                        }
+
+                        // TODO: NEED btVector3 for Linear Velocity
+                        // NEED btVector3 for Position
+
+                        Vector3 pos = _position; //TODO: Insert values gotten from bullet
+                        Vector3 vel = _velocity;
+
+                        _target_velocity =
+                            new Vector3(
+                                (m_PIDTarget.X - pos.X) * ((PID_G - m_PIDTau) * timestep),
+                                (m_PIDTarget.Y - pos.Y) * ((PID_G - m_PIDTau) * timestep),
+                                (m_PIDTarget.Z - pos.Z) * ((PID_G - m_PIDTau) * timestep)
+                                );
+
+                        if (_target_velocity.ApproxEquals(Vector3.Zero, 0.1f))
+                        {
+
+                            /* TODO: Do Bullet equiv
+                             * 
+                            d.BodySetPosition(Body, m_PIDTarget.X, m_PIDTarget.Y, m_PIDTarget.Z);
+                            d.BodySetLinearVel(Body, 0, 0, 0);
+                            d.BodyAddForce(Body, 0, 0, fz);
+                            return;
+                            */
+                        }
+                        else
+                        {
+                            _zeroFlag = false;
+
+                            fx = ((_target_velocity.X) - vel.X) * (PID_D);
+                            fy = ((_target_velocity.Y) - vel.Y) * (PID_D);
+                            fz = fz + ((_target_velocity.Z - vel.Z) * (PID_D) * m_mass);
+
+                        }
+
                     }
 
-                    // TODO: NEED btVector3 for Linear Velocity
-                    // NEED btVector3 for Position
-                    
-                    Vector3 pos = _position; //TODO: Insert values gotten from bullet
-                    Vector3 vel = _velocity;
-
-                    _target_velocity =
-                        new Vector3(
-                            (m_PIDTarget.X - pos.X) * ((PID_G - m_PIDTau) * timestep),
-                            (m_PIDTarget.Y - pos.Y) * ((PID_G - m_PIDTau) * timestep),
-                            (m_PIDTarget.Z - pos.Z) * ((PID_G - m_PIDTau) * timestep)
-                            );
-
-                    if (_target_velocity.ApproxEquals(Vector3.Zero, 0.1f))
+                    if (m_useHoverPID && !m_usePID)
                     {
+                        // If we're using the PID controller, then we have no gravity
+                        fz = (-1 * _parent_scene.gravityz) * m_mass;
 
-                        /* TODO: Do Bullet equiv
-                         * 
-                        d.BodySetPosition(Body, m_PIDTarget.X, m_PIDTarget.Y, m_PIDTarget.Z);
-                        d.BodySetLinearVel(Body, 0, 0, 0);
-                        d.BodyAddForce(Body, 0, 0, fz);
-                        return;
-                        */
-                    }
-                    else
-                    {
-                        _zeroFlag = false;
+                        //  no lock; for now it's only called from within Simulate()
 
-                        fx = ((_target_velocity.X) - vel.X) * (PID_D);
-                        fy = ((_target_velocity.Y) - vel.Y) * (PID_D);
-                        fz = fz + ((_target_velocity.Z - vel.Z) * (PID_D) * m_mass);
+                        // If the PID Controller isn't active then we set our force
+                        // calculating base velocity to the current position
 
-                    }
+                        if ((m_PIDTau < 1))
+                        {
+                            PID_G = PID_G / m_PIDTau;
+                        }
 
-                }
+                        if ((PID_G - m_PIDTau) <= 0)
+                        {
+                            PID_G = m_PIDTau + 1;
+                        }
+                        Vector3 pos = Vector3.Zero; //TODO: Insert values gotten from bullet
+                        Vector3 vel = Vector3.Zero;
 
-                if (m_useHoverPID && !m_usePID)
-                {
-                    // If we're using the PID controller, then we have no gravity
-                    fz = (-1 * _parent_scene.gravityz) * m_mass;
-
-                    //  no lock; for now it's only called from within Simulate()
-
-                    // If the PID Controller isn't active then we set our force
-                    // calculating base velocity to the current position
-
-                    if ((m_PIDTau < 1))
-                    {
-                        PID_G = PID_G / m_PIDTau;
-                    }
-
-                    if ((PID_G - m_PIDTau) <= 0)
-                    {
-                        PID_G = m_PIDTau + 1;
-                    }
-                    Vector3 pos = Vector3.Zero; //TODO: Insert values gotten from bullet
-                    Vector3 vel = Vector3.Zero;
-
-                    // determine what our target height really is based on HoverType
-                    switch (m_PIDHoverType)
-                    {
-                        case PIDHoverType.Absolute:
-                            m_targetHoverHeight = m_PIDHoverHeight;
-                            break;
-                        case PIDHoverType.Ground:
-                            m_groundHeight = _parent_scene.GetTerrainHeightAtXY(pos.X, pos.Y);
-                            m_targetHoverHeight = m_groundHeight + m_PIDHoverHeight;
-                            break;
-                        case PIDHoverType.GroundAndWater:
-                            m_groundHeight = _parent_scene.GetTerrainHeightAtXY(pos.X, pos.Y);
-                            m_waterHeight = _parent_scene.GetWaterLevel();
-                            if (m_groundHeight > m_waterHeight)
-                            {
+                        // determine what our target height really is based on HoverType
+                        switch (m_PIDHoverType)
+                        {
+                            case PIDHoverType.Absolute:
+                                m_targetHoverHeight = m_PIDHoverHeight;
+                                break;
+                            case PIDHoverType.Ground:
+                                m_groundHeight = _parent_scene.GetTerrainHeightAtXY(pos.X, pos.Y);
                                 m_targetHoverHeight = m_groundHeight + m_PIDHoverHeight;
-                            }
-                            else
-                            {
+                                break;
+                            case PIDHoverType.GroundAndWater:
+                                m_groundHeight = _parent_scene.GetTerrainHeightAtXY(pos.X, pos.Y);
+                                m_waterHeight = _parent_scene.GetWaterLevel();
+                                if (m_groundHeight > m_waterHeight)
+                                {
+                                    m_targetHoverHeight = m_groundHeight + m_PIDHoverHeight;
+                                }
+                                else
+                                {
+                                    m_targetHoverHeight = m_waterHeight + m_PIDHoverHeight;
+                                }
+                                break;
+                            case PIDHoverType.Water:
+                                m_waterHeight = _parent_scene.GetWaterLevel();
                                 m_targetHoverHeight = m_waterHeight + m_PIDHoverHeight;
+                                break;
+                        }
+
+
+                        _target_velocity =
+                            new Vector3(0.0f, 0.0f,
+                                (m_targetHoverHeight - pos.Z) * ((PID_G - m_PIDHoverTau) * timestep)
+                                );
+
+                        //  if velocity is zero, use position control; otherwise, velocity control
+
+                        if (_target_velocity.ApproxEquals(Vector3.Zero, 0.1f))
+                        {
+
+                            /* TODO: Do Bullet Equiv
+                            d.BodySetPosition(Body, pos.X, pos.Y, m_targetHoverHeight);
+                            d.BodySetLinearVel(Body, vel.X, vel.Y, 0);
+                            d.BodyAddForce(Body, 0, 0, fz);
+                            */
+                            if (Body != null && Body.Handle != IntPtr.Zero)
+                            {
+                                Body.setLinearVelocity(_parent_scene.VectorZero);
+                                Body.clearForces();
                             }
-                            break;
-                        case PIDHoverType.Water:
-                            m_waterHeight = _parent_scene.GetWaterLevel();
-                            m_targetHoverHeight = m_waterHeight + m_PIDHoverHeight;
-                            break;
+                            return;
+                        }
+                        else
+                        {
+                            _zeroFlag = false;
+
+                            // We're flying and colliding with something
+                            fz = fz + ((_target_velocity.Z - vel.Z) * (PID_D) * m_mass);
+                        }
                     }
 
+                    fx *= m_mass;
+                    fy *= m_mass;
+                    //fz *= m_mass;
 
-                    _target_velocity =
-                        new Vector3(0.0f, 0.0f,
-                            (m_targetHoverHeight - pos.Z) * ((PID_G - m_PIDHoverTau) * timestep)
-                            );
+                    fx += m_force.X;
+                    fy += m_force.Y;
+                    fz += m_force.Z;
 
-                    //  if velocity is zero, use position control; otherwise, velocity control
-
-                    if (_target_velocity.ApproxEquals(Vector3.Zero, 0.1f))
+                    //m_log.Info("[OBJPID]: X:" + fx.ToString() + " Y:" + fy.ToString() + " Z:" + fz.ToString());
+                    if (fx != 0 || fy != 0 || fz != 0)
                     {
-
-                        /* TODO: Do Bullet Equiv
-                        d.BodySetPosition(Body, pos.X, pos.Y, m_targetHoverHeight);
-                        d.BodySetLinearVel(Body, vel.X, vel.Y, 0);
-                        d.BodyAddForce(Body, 0, 0, fz);
+                        /*
+                         * TODO: Do Bullet Equiv
+                        if (!d.BodyIsEnabled(Body))
+                        {
+                            d.BodySetLinearVel(Body, 0f, 0f, 0f);
+                            d.BodySetForce(Body, 0, 0, 0);
+                            enableBodySoft();
+                        }
                         */
+                        if (!Body.isActive())
+                        {
+                            Body.clearForces();
+                            enableBodySoft();
+                        }
+                        // 35x10 = 350n times the mass per second applied maximum.
+
+                        float nmax = 35f * m_mass;
+                        float nmin = -35f * m_mass;
+
+
+                        if (fx > nmax)
+                            fx = nmax;
+                        if (fx < nmin)
+                            fx = nmin;
+                        if (fy > nmax)
+                            fy = nmax;
+                        if (fy < nmin)
+                            fy = nmin;
+
+                        // TODO: Do Bullet Equiv
+                        // d.BodyAddForce(Body, fx, fy, fz);
                         if (Body != null && Body.Handle != IntPtr.Zero)
                         {
-                            Body.setLinearVelocity(_parent_scene.VectorZero);
-                            Body.clearForces();
+                            Body.activate(true);
+                            if (tempAddForce != null && tempAddForce.Handle != IntPtr.Zero)
+                                tempAddForce.Dispose();
+
+                            tempAddForce = new btVector3(fx * 0.01f, fy * 0.01f, fz * 0.01f);
+                            Body.applyCentralImpulse(tempAddForce);
                         }
-                        return;
                     }
                     else
                     {
-                        _zeroFlag = false;
-
-                        // We're flying and colliding with something
-                        fz = fz + ((_target_velocity.Z - vel.Z) * (PID_D) * m_mass);
-                    }
-                }
-
-                fx *= m_mass;
-                fy *= m_mass;
-                //fz *= m_mass;
-
-                fx += m_force.X;
-                fy += m_force.Y;
-                fz += m_force.Z;
-
-                //m_log.Info("[OBJPID]: X:" + fx.ToString() + " Y:" + fy.ToString() + " Z:" + fz.ToString());
-                if (fx != 0 || fy != 0 || fz != 0)
-                {
-                    /*
-                     * TODO: Do Bullet Equiv
-                    if (!d.BodyIsEnabled(Body))
-                    {
-                        d.BodySetLinearVel(Body, 0f, 0f, 0f);
-                        d.BodySetForce(Body, 0, 0, 0);
-                        enableBodySoft();
-                    }
-                    */
-                    if (!Body.isActive())
-                    {
+                        // if no forces on the prim, make sure everything is zero
                         Body.clearForces();
                         enableBodySoft();
-                    }
-                    // 35x10 = 350n times the mass per second applied maximum.
-
-                    float nmax = 35f * m_mass;
-                    float nmin = -35f * m_mass;
-
-
-                    if (fx > nmax)
-                        fx = nmax;
-                    if (fx < nmin)
-                        fx = nmin;
-                    if (fy > nmax)
-                        fy = nmax;
-                    if (fy < nmin)
-                        fy = nmin;
-
-                    // TODO: Do Bullet Equiv
-                    // d.BodyAddForce(Body, fx, fy, fz);
-                    if (Body != null && Body.Handle != IntPtr.Zero)
-                    {
-                        Body.activate(true);
-                        if (tempAddForce != null && tempAddForce.Handle != IntPtr.Zero)
-                            tempAddForce.Dispose();
-
-                        tempAddForce = new btVector3(fx * 0.01f, fy * 0.01f, fz * 0.01f);
-                        Body.applyCentralImpulse(tempAddForce);
                     }
                 }
                 else
                 {
-                    // if no forces on the prim, make sure everything is zero
-                    Body.clearForces();
-                    enableBodySoft();
+                    if (m_zeroPosition == null)
+                        m_zeroPosition = Vector3.Zero;
+                    m_zeroPosition = _position;
+                    return;
                 }
             }
-            else
-            {
-                if (m_zeroPosition == null)
-                    m_zeroPosition = Vector3.Zero;
-                m_zeroPosition = _position;
-                return;
-            }
         }
-
-
-
 
         #region Mass Calculation
 
@@ -2140,11 +2177,8 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
 
         private void SetCollisionShape(btCollisionShape shape)
         {
-            /*
-            if (shape == null)
+            /*if (shape == null)
                 m_log.Debug("[PHYSICS]:SetShape!Null");
-            else
-                m_log.Debug("[PHYSICS]:SetShape!");
             
             if (Body != null)
             {
@@ -2155,8 +2189,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             {
                 prim_geom.Dispose();
                 prim_geom = null;
-            }
-             */
+            }*/
             prim_geom = shape;
 
             //Body.set
@@ -2250,16 +2283,17 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
                 {
                     if (chld == null)
                         continue;
-                    Vector3 offset = chld.Position - Position;
-                    Vector3 pos = new Vector3(offset.X, offset.Y, offset.Z);
-                    pos *= Quaternion.Inverse(Orientation);
-                    //pos *= Orientation;
-                    offset = pos;
-                    chld.ProcessGeomCreationAsTriMesh(offset, chld.Orientation);
+                    if (chld._triMeshData != IntPtr.Zero)
+                    {
+                        Vector3 offset = chld.Position - Position;
+                        Vector3 pos = new Vector3(offset.X, offset.Y, offset.Z);
+                        pos *= Quaternion.Inverse(Orientation);
+                        //pos *= Orientation;
+                        offset = pos;
+                        chld.ProcessGeomCreationAsTriMesh(offset, chld.Orientation);
 
-                    _mesh.Append(chld._mesh);
-
-
+                        _mesh.Append(chld._mesh);
+                    }
                 }
                 setMesh(_parent_scene, _mesh);
 
@@ -2380,6 +2414,10 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
                 if (!childrenPrim.Contains(prm))
                 {
                     childrenPrim.Add(prm);
+                    if (m_vehicle.Type != Vehicle.TYPE_NONE)
+                    {
+                        m_vehicle.Enable(prm.Body, prm);
+                    }
                 }
             }
 
@@ -2472,6 +2510,10 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
 
                 }
                 m_disabled = false;
+                if (m_vehicle.Type != Vehicle.TYPE_NONE)
+                {
+                    m_vehicle.Enable(Body, this);
+                }
             }
         }
 
@@ -2495,6 +2537,10 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
                 if ((!m_angularlock.ApproxEquals(Vector3.Zero, 0f)) && _parent == null)
                 {
                     // TODO: Create Angular Motor on Axis Lock!
+                }
+                if (m_vehicle.Type != Vehicle.TYPE_NONE)
+                {
+                    m_vehicle.Enable(Body, this);
                 }
                 _parent_scene.addActivePrim(this);
             }
