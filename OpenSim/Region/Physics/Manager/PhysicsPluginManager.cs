@@ -187,12 +187,18 @@ namespace OpenSim.Region.Physics.Manager
 
                                 if (meshTypeInterface != null)
                                 {
-                                    IMeshingPlugin plug =
-                                        (IMeshingPlugin)Activator.CreateInstance(pluginAssembly.GetType(pluginType.ToString()));
-                                    if (!_MeshPlugins.ContainsKey(plug.GetName()))
+                                    try
                                     {
-                                        _MeshPlugins.Add(plug.GetName(), plug);
-                                        //m_log.Info("[PHYSICS]: Added meshing engine: " + plug.GetName());
+                                        IMeshingPlugin plug =
+                                            (IMeshingPlugin)Activator.CreateInstance(pluginAssembly.GetType(pluginType.ToString()));
+                                        if (!_MeshPlugins.ContainsKey(plug.GetName()))
+                                        {
+                                            _MeshPlugins.Add(plug.GetName(), plug);
+                                            //m_log.Info("[PHYSICS]: Added meshing engine: " + plug.GetName());
+                                        }
+                                    }
+                                    catch
+                                    {
                                     }
                                 }
 

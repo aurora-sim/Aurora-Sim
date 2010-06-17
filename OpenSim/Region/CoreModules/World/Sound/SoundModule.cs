@@ -26,6 +26,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Framework;
@@ -85,45 +86,122 @@ namespace OpenSim.Region.CoreModules.World.Sound
         {
             m_scene.ForEachScenePresence(delegate(ScenePresence sp)
             {
-                if (sp.IsChildAgent)
-                    return;
+                if (Cones.Count != 0)
+                {
+                    foreach (ConeOfSilence CS in Cones.Values)
+                    {
+                        if (Util.GetDistanceTo(sp.AbsolutePosition, CS.Position) > CS.Radius)
+                        {
+                            // Presence is outside of the Cone of silence
 
-                double dis = Util.GetDistanceTo(sp.AbsolutePosition, position);
-                if (dis > 100.0) // Max audio distance
-                    return;
-
-                // Scale by distance
-                if (radius == 0)
-                    gain = (float)((double)gain * ((100.0 - dis) / 100.0));
+                            if (Util.GetDistanceTo(CS.Position, position) < CS.Radius)
+                            {
+                                //Sound was triggered inside the cone, but avatar is outside
+                                continue;
+                            }
+                        }
+                        else
+                        {
+                            // Avatar is inside the cone of silence
+                            if (Util.GetDistanceTo(CS.Position, position) > CS.Radius)
+                            {
+                                //Sound was triggered outside of the cone, but avatar is inside of the cone.
+                                continue;
+                            }
+                        }
+                    }
+                }
                 else
-                    gain = (float)((double)gain * ((radius - dis) / radius));
+                {
+                    if (sp.IsChildAgent)
+                        return;
 
-                if (sp.Scene.GetSceneObjectPart(objectID).m_UseSoundQueue == 1)
-                    flags += (int)OpenMetaverse.SoundFlags.Queue;
-                sp.ControllingClient.SendPlayAttachedSound(soundID, objectID, ownerID, (float)gain, flags);
+                    double dis = Util.GetDistanceTo(sp.AbsolutePosition, position);
+                    if (dis > 100.0) // Max audio distance
+                        return;
+
+                    // Scale by distance
+                    if (radius == 0)
+                        gain = (float)((double)gain * ((100.0 - dis) / 100.0));
+                    else
+                        gain = (float)((double)gain * ((radius - dis) / radius));
+
+                    if (sp.Scene.GetSceneObjectPart(objectID).m_UseSoundQueue == 1)
+                        flags += (int)OpenMetaverse.SoundFlags.Queue;
+                    sp.ControllingClient.SendPlayAttachedSound(soundID, objectID, ownerID, (float)gain, flags);
+                }
             });
         }
-        
+
+        private class ConeOfSilence
+        {
+            public Vector3 Position;
+            public float Radius;
+        }
+
+        private Dictionary<UUID, ConeOfSilence> Cones = new Dictionary<UUID, ConeOfSilence>();
+
+        public virtual void AddConeOfSilence(UUID objectID, Vector3 position, float Radius)
+        {
+            ConeOfSilence CS = new ConeOfSilence();
+            CS.Position = position;
+            CS.Radius = Radius;
+            Cones.Add(objectID, CS);
+        }
+
+        public virtual void RemoveConeOfSilence(UUID objectID)
+        {
+            Cones.Remove(objectID);
+        }
+
         public virtual void TriggerSound(
             UUID soundId, UUID ownerID, UUID objectID, UUID parentID, double gain, Vector3 position, UInt64 handle, float radius)
         {
             m_scene.ForEachScenePresence(delegate(ScenePresence sp)
             {
-                if (sp.IsChildAgent)
-                    return;
+                if (Cones.Count != 0)
+                {
+                    foreach (ConeOfSilence CS in Cones.Values)
+                    {
+                        if (Util.GetDistanceTo(sp.AbsolutePosition, CS.Position) > CS.Radius)
+                        {
+                            // Presence is outside of the Cone of silence
 
-                double dis = Util.GetDistanceTo(sp.AbsolutePosition, position);
-                if (dis > 100.0) // Max audio distance
-                    return;
-
-                // Scale by distance
-                if (radius == 0)
-                    gain = (float)((double)gain * ((100.0 - dis) / 100.0));
+                            if (Util.GetDistanceTo(CS.Position, position) < CS.Radius)
+                            {
+                                //Sound was triggered inside the cone, but avatar is outside
+                                continue;
+                            }
+                        }
+                        else
+                        {
+                            // Avatar is inside the cone of silence
+                            if (Util.GetDistanceTo(CS.Position, position) > CS.Radius)
+                            {
+                                //Sound was triggered outside of the cone, but avatar is inside of the cone.
+                                continue;
+                            }
+                        }
+                    }
+                }
                 else
-                    gain = (float)((double)gain * ((radius - dis) / radius));
+                {
+                    if (sp.IsChildAgent)
+                        return;
 
-                sp.ControllingClient.SendTriggeredSound(
-                    soundId, ownerID, objectID, parentID, handle, position, (float)gain);
+                    double dis = Util.GetDistanceTo(sp.AbsolutePosition, position);
+                    if (dis > 100.0) // Max audio distance
+                        return;
+
+                    // Scale by distance
+                    if (radius == 0)
+                        gain = (float)((double)gain * ((100.0 - dis) / 100.0));
+                    else
+                        gain = (float)((double)gain * ((radius - dis) / radius));
+
+                    sp.ControllingClient.SendTriggeredSound(
+                        soundId, ownerID, objectID, parentID, handle, position, (float)gain);
+                }
             });
         }
     }

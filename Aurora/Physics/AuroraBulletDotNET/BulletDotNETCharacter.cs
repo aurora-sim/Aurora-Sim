@@ -33,7 +33,7 @@ using OpenSim.Framework;
 using OpenSim.Region.Physics.Manager;
 using log4net;
 
-namespace Aurora.Physics.BulletDotNETPlugin
+namespace OpenSim.Region.Physics.BulletDotNETPlugin
 {
     public class BulletDotNETCharacter : PhysicsActor
     {
@@ -61,13 +61,13 @@ namespace Aurora.Physics.BulletDotNETPlugin
         private btDefaultMotionState m_bodyMotionState;
         private btGeneric6DofConstraint m_aMotor;
         // private Vector3 m_movementComparision;
-        private Vector3 m_acceleration;
         private Vector3 m_position;
         private Vector3 m_zeroPosition;
         private bool m_zeroFlag = false;
         private bool m_lastUpdateSent = false;
         private Vector3 m_velocity;
         private Vector3 m_target_velocity;
+        private Vector3 m_acceleration;
         private Vector3 m_rotationalVelocity;
         private bool m_pidControllerActive = true;
         public float PID_D = 80.0f;
@@ -94,7 +94,7 @@ namespace Aurora.Physics.BulletDotNETPlugin
         public bool m_isPhysical = false; // the current physical status
         public bool m_tainted_isPhysical = false; // set when the physical status is tainted (false=not existing in physics engine, true=existing)
         private float m_tainted_CAPSULE_LENGTH; // set when the capsule length changes. 
-        public bool m_taintRemove = false;
+        private bool m_taintRemove = false;
         // private bool m_taintedPosition = false;
         // private Vector3 m_taintedPosition_value;
         private Vector3 m_taintedForce;
@@ -108,12 +108,11 @@ namespace Aurora.Physics.BulletDotNETPlugin
         private bool[] m_colliderarr = new bool[11];
         private bool[] m_colliderGroundarr = new bool[11];
 
-
-
         private BulletDotNETScene m_parent_scene;
 
         public int m_eventsubscription = 0;
-        // private CollisionEventUpdate CollisionEventsThisFrame = new CollisionEventUpdate();
+        private CollisionEventUpdate CollisionEventsThisFrame = null;
+        private int m_requestedUpdateFrequency = 0;
 
         public BulletDotNETCharacter(string avName, BulletDotNETScene parent_scene, Vector3 pos, Vector3 size, float pid_d, float pid_p, float capsule_radius, float tensor, float density, float height_fudge_factor, float walk_divisor, float rundivisor)
         {
@@ -136,7 +135,7 @@ namespace Aurora.Physics.BulletDotNETPlugin
             {
                 m_colliderGroundarr[i] = false;
             }
-            CAPSULE_LENGTH = (size.Z * 1.65f) - CAPSULE_RADIUS * 2.0f;
+            CAPSULE_LENGTH = (size.Z * 1.15f) - CAPSULE_RADIUS * 2.0f;
             m_tainted_CAPSULE_LENGTH = CAPSULE_LENGTH;
             m_isPhysical = false; // current status: no ODE information exists
             m_tainted_isPhysical = true; // new tainted status: need to create ODE information
@@ -156,7 +155,7 @@ namespace Aurora.Physics.BulletDotNETPlugin
             tempQuat1 = new btQuaternion(0, 0, 0, 1);
             tempTrans1 = new btTransform(tempQuat1, tempVector1);
             // m_movementComparision = new PhysicsVector(0, 0, 0);
-            m_CapsuleOrientationAxis = new btVector3(1, 0, 0);
+            m_CapsuleOrientationAxis = new btVector3(1, 0, 1);
         }
 
         /// <summary>
@@ -187,6 +186,7 @@ namespace Aurora.Physics.BulletDotNETPlugin
             }
 
             Shell = new btCapsuleShape(CAPSULE_RADIUS, CAPSULE_LENGTH);
+
             if (m_bodyPosition == null)
                 m_bodyPosition = new btVector3(npositionX, npositionY, npositionZ);
 
@@ -211,7 +211,8 @@ namespace Aurora.Physics.BulletDotNETPlugin
             m_mass = Mass;
 
             Body = new btRigidBody(m_mass, m_bodyMotionState, Shell);
-            Body.setUserPointer(new IntPtr((int)Body.Handle));
+            // this is used for self identification. User localID instead of body handle
+            Body.setUserPointer(new IntPtr((int)m_localID));
             
             if (ClosestCastResult != null)
                 ClosestCastResult.Dispose();
@@ -703,13 +704,20 @@ namespace Aurora.Physics.BulletDotNETPlugin
             }
         }
 
-        public override void AddAngularForce(Vector3 force, bool pushforce){}
+        public override void AddAngularForce(Vector3 force, bool pushforce)
+        {
 
-        public override void SetMomentum(Vector3 momentum){}
+        }
+
+        public override void SetMomentum(Vector3 momentum)
+        {
+            
+        }
 
         public override void SubscribeEvents(int ms)
         {
             m_eventsubscription = ms;
+            m_requestedUpdateFrequency = ms;
             m_parent_scene.addCollisionEventReporting(this);
         }
 
@@ -717,6 +725,7 @@ namespace Aurora.Physics.BulletDotNETPlugin
         {
              m_parent_scene.remCollisionEventReporting(this);
             m_eventsubscription = 0;
+            m_requestedUpdateFrequency = 0;
         }
 
         public override bool SubscribedEvents()
@@ -726,22 +735,46 @@ namespace Aurora.Physics.BulletDotNETPlugin
             return false;
         }
 
+        public void AddCollision(uint collideWith, ContactPoint contact)
+        {
+            if (CollisionEventsThisFrame == null)
+            {
+                CollisionEventsThisFrame = new CollisionEventUpdate();
+            }
+            CollisionEventsThisFrame.addCollider(collideWith, contact);
+        }
+
+        public void SendCollisions()
+        {
+            if (m_eventsubscription >= m_requestedUpdateFrequency)
+            {
+                if (CollisionEventsThisFrame != null)
+                {
+                    base.SendCollisionUpdate(CollisionEventsThisFrame);
+                }
+                CollisionEventsThisFrame = new CollisionEventUpdate();
+                m_eventsubscription = 0;
+            }
+            return;
+        }
+
         internal void Dispose()
         {
-            if (Body.isInWorld())
-                m_parent_scene.removeFromWorld(Body);
-
-            if (m_aMotor.Handle != IntPtr.Zero)
+            if (Body != null)
             {
-                lock(m_aMotor)
-                    lock (m_parent_scene)
-                        m_parent_scene.getBulletWorld().removeConstraint(m_aMotor);
+                if (Body.isInWorld())
+                    m_parent_scene.removeFromWorld(Body);
             }
 
-            m_aMotor.Dispose();
-            m_aMotor = null;
+            if (m_aMotor.Handle != IntPtr.Zero)
+                m_parent_scene.getBulletWorld().removeConstraint(m_aMotor);
+
+            m_aMotor.Dispose(); m_aMotor = null;
             ClosestCastResult.Dispose(); ClosestCastResult = null;
-            Body.Dispose(); Body = null;
+            if (Body != null)
+            {
+                Body.Dispose(); Body = null;
+            }
             Shell.Dispose(); Shell = null;
             tempQuat1.Dispose();
             tempTrans1.Dispose();
@@ -756,11 +789,7 @@ namespace Aurora.Physics.BulletDotNETPlugin
 
         public void ProcessTaints(float timestep)
         {
-            if (m_taintedForce != Vector3.Zero)
-            {
-                Body.applyCentralForce(new btVector3(m_taintedForce.X,m_taintedForce.Y,m_taintedForce.Z));
-                m_taintedForce = Vector3.Zero;
-            }
+
             if (m_tainted_isPhysical != m_isPhysical)
             {
                 if (m_tainted_isPhysical)
@@ -793,7 +822,7 @@ namespace Aurora.Physics.BulletDotNETPlugin
                     tempQuat1 = new btQuaternion(0, 0, 0, 1);
                     tempTrans1 = new btTransform(tempQuat1, tempVector1);
                     // m_movementComparision = new PhysicsVector(0, 0, 0);
-                    m_CapsuleOrientationAxis = new btVector3(1, 0, 0);
+                    m_CapsuleOrientationAxis = new btVector3(1, 0, 1);
                 }
 
                 m_isPhysical = m_tainted_isPhysical;
@@ -824,7 +853,7 @@ namespace Aurora.Physics.BulletDotNETPlugin
                     tempQuat1 = new btQuaternion(0, 0, 0, 1);
                     tempTrans1 = new btTransform(tempQuat1, tempVector1);
                     // m_movementComparision = new PhysicsVector(0, 0, 0);
-                    m_CapsuleOrientationAxis = new btVector3(1, 0, 0);
+                    m_CapsuleOrientationAxis = new btVector3(1, 0, 1);
 
                     AvatarGeomAndBodyCreation(m_position.X, m_position.Y,
                                       m_position.Z + (Math.Abs(CAPSULE_LENGTH - prevCapsule) * 2));
@@ -886,10 +915,7 @@ namespace Aurora.Physics.BulletDotNETPlugin
             {
                 movementdivisor = runDivisor;
             }
-            if (!m_position.IsFinite())
-            {
-                m_position = new Vector3(128, 128, 128);
-            }
+
             //  if velocity is zero, use position control; otherwise, velocity control
             if (m_target_velocity.X == 0.0f && m_target_velocity.Y == 0.0f && m_target_velocity.Z == 0.0f && m_iscolliding)
             {
@@ -990,11 +1016,12 @@ namespace Aurora.Physics.BulletDotNETPlugin
 
 
                 //auto fly height. Kitto Flora
+                //d.Vector3 pos = d.BodyGetPosition(Body);
                 float target_altitude = m_parent_scene.GetTerrainHeightAtXY(m_position.X, m_position.Y) + m_parent_scene.minimumGroundFlightOffset;
 
                 if (m_position.Z < target_altitude)
                 {
-                    vec.Z += (target_altitude - m_position.Z) * PID_P * 3.0f;
+                    vec.Z += (target_altitude - m_position.Z) * PID_P * 5.0f;
                 }
 
             }
@@ -1008,17 +1035,13 @@ namespace Aurora.Physics.BulletDotNETPlugin
             {
                 int activationstate = Body.getActivationState();
                 if (activationstate == 0)
+                {
                     Body.forceActivationState(1);
+                }
+               
+
             }
             doImpulse(vec, true);
-
-            float terrainheight = m_parent_scene.GetTerrainHeightAtXY(tempVector1.getX(), tempVector1.getY());
-            if (tempVector1.getZ() < terrainheight)
-            {
-                tempVector1.setZ(terrainheight + 2);
-                btTransform trans = new btTransform(tempTrans1.getRotation(), tempVector1);
-                Body.setWorldTransform(trans);
-            }
         }
 
         /// <summary>
@@ -1040,7 +1063,7 @@ namespace Aurora.Physics.BulletDotNETPlugin
             tempVector1 = tempTrans1.getOrigin();
             tempVector2.Dispose();
             tempVector2 = Body.getInterpolationLinearVelocity();
-
+            
             //  no lock; called from Simulate() -- if you call this from elsewhere, gotta lock or do Monitor.Enter/Exit!
             Vector3 vec = new Vector3(tempVector1.getX(), tempVector1.getY(), tempVector1.getZ());
 
@@ -1067,7 +1090,7 @@ namespace Aurora.Physics.BulletDotNETPlugin
                 if (!m_lastUpdateSent)
                 {
                     m_lastUpdateSent = true;
-                    //base.RequestPhysicsterseUpdate();
+                    base.RequestPhysicsterseUpdate();
 
                 }
             }
@@ -1111,7 +1134,7 @@ namespace Aurora.Physics.BulletDotNETPlugin
             float capsuleHalfHeight = ((CAPSULE_LENGTH + 2*CAPSULE_RADIUS)*0.5f);
 
             tempVector5RayCast.setValue(m_position.X, m_position.Y, m_position.Z);
-            tempVector6RayCast.setValue(m_position.X, m_position.Y, m_position.Z - 1 * capsuleHalfHeight * 1.1f);
+            tempVector6RayCast.setValue(m_position.X, m_position.Y, m_position.Z - capsuleHalfHeight * 1.1f);
 
 
             ClosestCastResult.Dispose();
@@ -1169,5 +1192,10 @@ namespace Aurora.Physics.BulletDotNETPlugin
                 m_iscolliding = false;
             }
         }
+
+        public override void SetCameraPos(Quaternion CameraRotation)
+        {
+        }
     }
+
 }

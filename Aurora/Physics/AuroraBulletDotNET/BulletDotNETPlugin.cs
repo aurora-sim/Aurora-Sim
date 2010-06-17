@@ -27,12 +27,12 @@
 
 using OpenSim.Region.Physics.Manager;
 
-namespace Aurora.Physics.BulletDotNETPlugin
+namespace OpenSim.Region.Physics.BulletDotNETPlugin
 {
     public class BulletDotNetPlugin : IPhysicsPlugin
     {
         private BulletDotNETScene m_scene;
-        private const string m_pluginName = "AuroraBulletDotNET";
+        private const string m_pluginName = "AuroraBulletDotNet";
 
         #region IPhysicsPlugin Members
 

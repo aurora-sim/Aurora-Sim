@@ -37,20 +37,21 @@ using OpenSim.Framework;
 using OpenSim.Region.Physics.Manager;
 using OpenMetaverse;
 using BulletDotNET;
-using Aurora.Framework;
 
-namespace Aurora.Physics.BulletDotNETPlugin
+namespace OpenSim.Region.Physics.BulletDotNETPlugin
 {
     public class BulletDotNETScene : PhysicsScene
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         // private string m_sceneIdentifier = string.Empty;
-        
-        private List<BulletDotNETCharacter> m_characters = new List<BulletDotNETCharacter>();
-        private List<BulletDotNETPrim> m_prims = new List<BulletDotNETPrim>();
-        private List<BulletDotNETPrim> m_activePrims = new List<BulletDotNETPrim>();
-        private List<PhysicsActor> m_taintedActors = new List<PhysicsActor>();
+
+        private HashSet<BulletDotNETCharacter> m_characters = new HashSet<BulletDotNETCharacter>();
+        private Dictionary<uint, BulletDotNETCharacter> m_charactersLocalID = new Dictionary<uint, BulletDotNETCharacter>();
+        private HashSet<BulletDotNETPrim> m_prims = new HashSet<BulletDotNETPrim>();
+        private Dictionary<uint, BulletDotNETPrim> m_primsLocalID = new Dictionary<uint, BulletDotNETPrim>();
+        private HashSet<BulletDotNETPrim> m_activePrims = new HashSet<BulletDotNETPrim>();
+        private HashSet<PhysicsActor> m_taintedActors = new HashSet<PhysicsActor>();
         private btDiscreteDynamicsWorld m_world;
         private btAxisSweep3 m_broadphase;
         private btCollisionConfiguration m_collisionConfiguration;
@@ -93,10 +94,12 @@ namespace Aurora.Physics.BulletDotNETPlugin
         public int bodyFramesAutoDisable = 20;
 
         public float WorldTimeStep = 10f/60f;
-        public const float WorldTimeComp = 1/60f;
+        public const float WorldTimeComp = 1 / 60f;
         public float gravityx = 0;
         public float gravityy = 0;
         public float gravityz = -9.8f;
+        public float maximumMassObject = 10000.01f;
+        public float minimumGroundFlightOffset = 3;
 
         private float[] _origheightmap;    // Used for Fly height. Kitto Flora
         private bool usingGImpactAlgorithm = false;
@@ -107,21 +110,27 @@ namespace Aurora.Physics.BulletDotNETPlugin
 
         public IMesher mesher;
         private ContactAddedCallbackHandler m_CollisionInterface;
-        public float maximumMassObject = 10000.01f;
-        public float minimumGroundFlightOffset = 3;
+
+        private bool Locked = false;
+        private object BulletLock = null;
+        public int geomUpdatesPerThrottledUpdate = 15;
+        private List<PhysicsActor> RemoveQueue = new List<PhysicsActor>();
 
         public BulletDotNETScene(string sceneIdentifier)
         {
+            BulletLock = new object();
             // m_sceneIdentifier = sceneIdentifier;
             VectorZero = new btVector3(0, 0, 0);
             QuatIdentity = new btQuaternion(0, 0, 0, 1);
             TransZero = new btTransform(QuatIdentity, VectorZero);
+            m_gravity = new btVector3(0, 0, gravityz);
             _origheightmap = new float[(int)Constants.RegionSize * (int)Constants.RegionSize];
         }
 
         public override void Initialise(IMesher meshmerizer, IConfigSource config)
         {
             mesher = meshmerizer;
+            //m_config = config;
             if (config != null)
             {
                 IConfig physicsconfig = config.Configs["BulletPhysicsSettings"];
@@ -136,7 +145,7 @@ namespace Aurora.Physics.BulletDotNETPlugin
                     avMovementDivisorWalk = physicsconfig.GetFloat("av_movement_divisor_walk", 1.3f);
                     avMovementDivisorRun = physicsconfig.GetFloat("av_movement_divisor_run", 0.8f);
                     avCapRadius = physicsconfig.GetFloat("av_capsule_radius", 0.37f);
-                    
+
                     //contactsPerCollision = physicsconfig.GetInt("contacts_per_collision", 80);
 
                     geomCrossingFailuresBeforeOutofbounds = physicsconfig.GetInt("geom_crossing_failures_before_outofbounds", 4);
@@ -150,7 +159,7 @@ namespace Aurora.Physics.BulletDotNETPlugin
                     meshSculptedPrim = physicsconfig.GetBoolean("mesh_sculpted_prim", true);
                     meshSculptLOD = physicsconfig.GetFloat("mesh_lod", 32f);
                     MeshSculptphysicalLOD = physicsconfig.GetFloat("mesh_physical_lod", 16f);
-                    
+
                     if (Environment.OSVersion.Platform == PlatformID.Unix)
                     {
                         avPIDD = physicsconfig.GetFloat("av_pid_derivative_linux", 65f);
@@ -170,62 +179,88 @@ namespace Aurora.Physics.BulletDotNETPlugin
                     maximumMassObject = physicsconfig.GetFloat("maximum_mass_object", 10000.01f);
                 }
             }
-            m_gravity = new btVector3(gravityx, gravityy, gravityz);
-            m_broadphase = new btAxisSweep3(worldAabbMin, worldAabbMax, 16000);
-            m_collisionConfiguration = new btDefaultCollisionConfiguration();
-            m_solver = new btSequentialImpulseConstraintSolver();
-            m_dispatcher = new btCollisionDispatcher(m_collisionConfiguration);
-            m_world = new btDiscreteDynamicsWorld(m_dispatcher, m_broadphase, m_solver, m_collisionConfiguration);
-            m_world.setGravity(m_gravity);
-            //EnableCollisionInterface();
-            
+            lock (BulletLock)
+            {
+                m_broadphase = new btAxisSweep3(worldAabbMin, worldAabbMax, 16000);
+                m_collisionConfiguration = new btDefaultCollisionConfiguration();
+                m_solver = new btSequentialImpulseConstraintSolver();
+                m_dispatcher = new btCollisionDispatcher(m_collisionConfiguration);
+                m_world = new btDiscreteDynamicsWorld(m_dispatcher, m_broadphase, m_solver, m_collisionConfiguration);
+                m_world.setGravity(m_gravity);
+                EnableCollisionInterface();
+            }
         }
 
         public override PhysicsActor AddAvatar(string avName, Vector3 position, Vector3 size, bool isFlying)
         {
-            BulletDotNETCharacter chr = new BulletDotNETCharacter(avName, this, position, size, avPIDD, avPIDP,
-                                                                  avCapRadius, avStandupTensor, avDensity,
-                                                                  avHeightFudgeFactor, avMovementDivisorWalk,
-                                                                  avMovementDivisorRun);
-            m_characters.Add(chr);
-            AddPhysicsActorTaint(chr);
-            return chr;
+            lock (BulletLock)
+            {
+                BulletDotNETCharacter chr = new BulletDotNETCharacter(avName, this, position, size, avPIDD, avPIDP,
+                                                                      avCapRadius, avStandupTensor, avDensity,
+                                                                      avHeightFudgeFactor, avMovementDivisorWalk,
+                                                                      avMovementDivisorRun);
+                try
+                {
+                    m_characters.Add(chr);
+                    m_charactersLocalID.Add(chr.m_localID, chr);
+                }
+                catch
+                {
+                    // noop if it's already there
+                    m_log.Debug("[PHYSICS] BulletDotNet: adding duplicate avatar localID");
+                }
+                AddPhysicsActorTaint(chr);
+                return chr;
+            }
         }
 
         public override void RemoveAvatar(PhysicsActor actor)
         {
-            BulletDotNETCharacter chr = (BulletDotNETCharacter) actor;
-
-            if (chr.Body != null)
+            lock (BulletLock)
             {
-                m_world.removeRigidBody(chr.Body);
-                m_world.removeCollisionObject(chr.Body);
-            }
-            m_world.removeRigidBody(chr.Body);
-            m_world.removeCollisionObject(chr.Body);
+                BulletDotNETCharacter chr = (BulletDotNETCharacter)actor;
 
-            chr.Remove();
-            AddPhysicsActorTaint(chr);
-            //chr = null;
+                m_charactersLocalID.Remove(chr.m_localID);
+                m_characters.Remove(chr);
+                if (chr.Body != null)
+                {
+                    m_world.removeRigidBody(chr.Body);
+                    m_world.removeCollisionObject(chr.Body);
+                }
+                
+                chr.Remove();
+                AddPhysicsActorTaint(chr);
+                //chr = null;
+            }
         }
 
         public override void RemovePrim(PhysicsActor prim)
         {
             if (prim is BulletDotNETPrim)
             {
+                if (!Locked)
+                {
+                    lock (BulletLock)
+                    {
+                        BulletDotNETPrim p = (BulletDotNETPrim)prim;
 
-                BulletDotNETPrim p = (BulletDotNETPrim)prim;
+                        p.setPrimForRemoval();
+                        AddPhysicsActorTaint(prim);
+                        //RemovePrimThreadLocked(p);
 
-                p.setPrimForRemoval();
-                AddPhysicsActorTaint(prim);
-                //RemovePrimThreadLocked(p);
-                
+                    }
+                }
+            }
+            else
+            {
+                RemoveQueue.Add(prim);
             }
         }
 
         private PhysicsActor AddPrim(String name, Vector3 position, Vector3 size, Quaternion rotation,
                                     IMesh mesh, PrimitiveBaseShape pbs, bool isphysical)
         {
+
             Vector3 pos = position;
             //pos.X = position.X;
             //pos.Y = position.Y;
@@ -237,11 +272,14 @@ namespace Aurora.Physics.BulletDotNETPlugin
             Quaternion rot = rotation;
 
             BulletDotNETPrim newPrim;
-            
-            newPrim = new BulletDotNETPrim(name, this, pos, siz, rot, mesh, pbs, isphysical);
+            lock (BulletLock)
+            {
 
-            //lock (m_prims)
-            //    m_prims.Add(newPrim);
+                newPrim = new BulletDotNETPrim(name, this, pos, siz, rot, mesh, pbs, isphysical);
+
+                //lock (m_prims)
+                //    m_prims.Add(newPrim);
+            }
             
 
             return newPrim;
@@ -296,64 +334,135 @@ namespace Aurora.Physics.BulletDotNETPlugin
 
         public override float Simulate(float timeStep)
         {
-            
-            lock (m_taintedActors)
+            Locked = true;
+            float steps = 0;
+            lock (BulletLock)
             {
-                foreach (PhysicsActor act in m_taintedActors)
+                lock (m_taintedActors)
                 {
-                    if (act is BulletDotNETCharacter)
-                        ((BulletDotNETCharacter) act).ProcessTaints(timeStep);
-                    if (act is BulletDotNETPrim)
-                        ((BulletDotNETPrim)act).ProcessTaints(timeStep);
-                }
-                m_taintedActors.Clear();
-            }
-
-            lock (m_characters)
-            {
-                foreach (BulletDotNETCharacter chr in m_characters)
-                {
-                    chr.Move(timeStep);
-                }
-            }
-
-            lock (m_prims)
-            {
-                foreach (BulletDotNETPrim prim in m_prims)
-                {
-                    if (prim != null)
-                    prim.Move(timeStep);
-                }
-            }
-            float steps = m_world.stepSimulation(timeStep * 1000, 10, WorldTimeComp);
-
-            foreach (BulletDotNETCharacter chr in m_characters)
-            {
-                chr.UpdatePositionAndVelocity();
-            }
-
-            foreach (BulletDotNETPrim prm in m_activePrims)
-            {
-                /*
-                if (prm != null)
-                    if (prm.Body != null)
-                */
-                prm.UpdatePositionAndVelocity();
-            }
-            if (m_CollisionInterface != null)
-            {
-                List<int> collisions = m_CollisionInterface.GetContactList();
-                lock (collisions)
-                {
-                    foreach (int pvalue in collisions)
+                    foreach (PhysicsActor act in m_taintedActors)
                     {
-                        System.Console.Write(string.Format("{0} ", pvalue));
+                        if (act is BulletDotNETCharacter)
+                            ((BulletDotNETCharacter)act).ProcessTaints(timeStep);
+                        if (act is BulletDotNETPrim)
+                            ((BulletDotNETPrim)act).ProcessTaints(timeStep);
+                    }
+                    m_taintedActors.Clear();
+                }
+
+                lock (m_characters)
+                {
+                    foreach (BulletDotNETCharacter chr in m_characters)
+                    {
+                        chr.Move(timeStep);
                     }
                 }
-                m_CollisionInterface.Clear();
 
+                lock (m_prims)
+                {
+                    foreach (BulletDotNETPrim prim in m_prims)
+                    {
+                        if (prim != null)
+                            prim.Move(timeStep);
+                    }
+                }
+                lock (m_world)
+                {
+                    steps = m_world.stepSimulation(timeStep, 10, WorldTimeComp);
+                }
+
+                foreach (BulletDotNETCharacter chr in m_characters)
+                {
+                    chr.UpdatePositionAndVelocity();
+                }
+
+                foreach (BulletDotNETPrim prm in m_activePrims)
+                {
+                    /*
+                    if (prm != null)
+                        if (prm.Body != null)
+                    */
+                    prm.UpdatePositionAndVelocity();
+                }
+                if (m_CollisionInterface != null)
+                {
+                    List<BulletDotNETPrim> primsWithCollisions = new List<BulletDotNETPrim>();
+                    List<BulletDotNETCharacter> charactersWithCollisions = new List<BulletDotNETCharacter>();
+
+                    // get the collisions that happened this tick
+                    List<BulletDotNET.ContactAddedCallbackHandler.ContactInfo> collisions = m_CollisionInterface.GetContactList();
+                    // passed back the localID of the prim so we can associate the prim
+                    foreach (BulletDotNET.ContactAddedCallbackHandler.ContactInfo ci in collisions)
+                    {
+                        // ContactPoint = { contactPoint, contactNormal, penetrationDepth }
+                        ContactPoint contact = new ContactPoint(new Vector3(ci.pX, ci.pY, ci.pZ),
+                                        new Vector3(ci.nX, ci.nY, ci.nZ), ci.depth);
+
+                        ProcessContact(ci.contact, ci.contactWith, contact, ref primsWithCollisions, ref charactersWithCollisions);
+                        ProcessContact(ci.contactWith, ci.contact, contact, ref primsWithCollisions, ref charactersWithCollisions);
+
+                    }
+                    m_CollisionInterface.Clear();
+                    // for those prims and characters that had collisions cause collision events
+                    foreach (BulletDotNETPrim bdnp in primsWithCollisions)
+                    {
+                        bdnp.SendCollisions();
+                    }
+                    foreach (BulletDotNETCharacter bdnc in charactersWithCollisions)
+                    {
+                        bdnc.SendCollisions();
+                    }
+                }
+            }
+            Locked = false;
+            if (RemoveQueue.Count > 0)
+            {
+                do
+                {
+                    if (RemoveQueue[0] != null)
+                    {
+                        if (RemoveQueue[0] is BulletDotNETPrim)
+                        {
+                            BulletDotNETPrim prim = RemoveQueue[0] as BulletDotNETPrim;
+                            prim.Dispose();
+                        }
+                    }
+                    RemoveQueue.RemoveAt(0);
+                }
+                while (RemoveQueue.Count > 0);
             }
             return steps;
+        }
+
+        private void ProcessContact(uint cont, uint contWith, ContactPoint contact, 
+                    ref List<BulletDotNETPrim> primsWithCollisions,
+                    ref List<BulletDotNETCharacter> charactersWithCollisions)
+        {
+            BulletDotNETPrim bdnp;
+            // collisions with a normal prim?
+            if (m_primsLocalID.TryGetValue(cont, out bdnp))
+            {
+                // Added collision event to the prim. This creates a pile of events
+                // that will be sent to any subscribed listeners.
+                bdnp.AddCollision(contWith, contact);
+                if (!primsWithCollisions.Contains(bdnp))
+                {
+                    primsWithCollisions.Add(bdnp);
+                }
+            }
+            else
+            {
+                BulletDotNETCharacter bdnc;
+                // if not a prim, maybe it's one of the characters
+                if (m_charactersLocalID.TryGetValue(cont, out bdnc))
+                {
+                    bdnc.AddCollision(contWith, contact);
+                    if (!charactersWithCollisions.Contains(bdnc))
+                    {
+                        charactersWithCollisions.Add(bdnc);
+                    }
+                }
+            }
         }
 
         public override void GetResults()
@@ -433,6 +542,7 @@ namespace Aurora.Physics.BulletDotNETPlugin
             m_terrainTransform = new btTransform(QuatIdentity, m_terrainPosition);
             m_terrainMotionState = new btDefaultMotionState(m_terrainTransform);
             TerrainBody = new btRigidBody(0, m_terrainMotionState, m_terrainShape);
+            TerrainBody.setUserPointer((IntPtr)0);
             m_world.addRigidBody(TerrainBody);
 
 
@@ -440,11 +550,7 @@ namespace Aurora.Physics.BulletDotNETPlugin
 
         public override void SetWaterLevel(float baseheight)
         {
-           /* btVector3 waterpos = new btVector3(Constants.RegionSize / 2f, Constants.RegionSize / 2f, baseheight);
-            btTransform waterTransform = new btTransform(QuatIdentity, waterpos);
-            btDefaultMotionState WaterMotionState = new btDefaultMotionState(waterTransform);
-            btRigidBody waterBody = new btRigidBody(0, m_terrainMotionState, m_terrainShape);
-            m_world.addRigidBody(waterBody);*/
+            
         }
 
         public override void DeleteTerrain()
@@ -481,18 +587,21 @@ namespace Aurora.Physics.BulletDotNETPlugin
 
         public override void Dispose()
         {
-            disposeAllBodies();
-            m_world.Dispose();
-            m_broadphase.Dispose();
-            ((btDefaultCollisionConfiguration) m_collisionConfiguration).Dispose();
-            ((btSequentialImpulseConstraintSolver) m_solver).Dispose();
-            worldAabbMax.Dispose();
-            worldAabbMin.Dispose();
-            VectorZero.Dispose();
-            QuatIdentity.Dispose();
-            m_gravity.Dispose();
-            VectorZero = null;
-            QuatIdentity = null;
+            lock (BulletLock)
+            {
+                disposeAllBodies();
+                m_world.Dispose();
+                m_broadphase.Dispose();
+                ((btDefaultCollisionConfiguration)m_collisionConfiguration).Dispose();
+                ((btSequentialImpulseConstraintSolver)m_solver).Dispose();
+                worldAabbMax.Dispose();
+                worldAabbMin.Dispose();
+                VectorZero.Dispose();
+                QuatIdentity.Dispose();
+                m_gravity.Dispose();
+                VectorZero = null;
+                QuatIdentity = null;
+            }
         }
 
         public override Dictionary<uint, float> GetTopColliders()
@@ -527,23 +636,22 @@ namespace Aurora.Physics.BulletDotNETPlugin
         {
             lock (m_prims)
             {
+                m_primsLocalID.Clear();
                 foreach (BulletDotNETPrim prim in m_prims)
                 {
                     if (prim.Body != null)
                         m_world.removeRigidBody(prim.Body);
 
-                    prim.m_taintremove = true;
+                    prim.Dispose();
                 }
-                
+                m_prims.Clear();
+
                 foreach (BulletDotNETCharacter chr in m_characters)
                 {
                     if (chr.Body != null)
                         m_world.removeRigidBody(chr.Body);
-
-                    chr.m_taintRemove = true;
+                    chr.Dispose();
                 }
-                Simulate(.1f);
-                m_prims.Clear();
                 m_characters.Clear();
             }
         }
@@ -570,7 +678,6 @@ namespace Aurora.Physics.BulletDotNETPlugin
         [Obsolete("bad!")]
         internal void removeFromWorld(btRigidBody body)
         {
-            
             m_world.removeRigidBody(body);
         }
 
@@ -583,6 +690,7 @@ namespace Aurora.Physics.BulletDotNETPlugin
                     m_world.removeRigidBody(body);
                 }
                 remActivePrim(prm);
+                m_primsLocalID.Remove(prm.m_localID);
                 m_prims.Remove(prm);
             }
 
@@ -756,11 +864,18 @@ namespace Aurora.Physics.BulletDotNETPlugin
             {
                 if (!m_prims.Contains(pPrim))
                 {
-                    m_prims.Add(pPrim);
+                    try
+                    {
+                        m_prims.Add(pPrim);
+                        m_primsLocalID.Add(pPrim.m_localID, pPrim);
+                    }
+                    catch
+                    {
+                        // noop if it's already there
+                        m_log.Debug("[PHYSICS] BulletDotNet: adding duplicate prim localID");
+                    }
                     m_world.addRigidBody(pPrim.Body);
-                    #if SPAM
-            m_log.Debug("ADDED");
-#endif
+                    // m_log.Debug("[PHYSICS] added prim to scene");
                 }
             }
         }
@@ -768,12 +883,9 @@ namespace Aurora.Physics.BulletDotNETPlugin
         {
             if (m_CollisionInterface == null)
             {
-                m_CollisionInterface = new ContactAddedCallbackHandler();
-                m_world.SetCollisionAddedCallback(m_CollisionInterface);
+                m_CollisionInterface = new ContactAddedCallbackHandler(m_world);
+                // m_world.SetCollisionAddedCallback(m_CollisionInterface);
             }
         }
-        
-
-
     }
 }
