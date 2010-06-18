@@ -123,6 +123,7 @@ namespace OpenSim.Region.Framework.Interfaces
 
         /// <summary>
         /// Update the user inventory to show a detach.
+        /// Notes: only use for the packet the client calls.
         /// </summary>
         /// <param name="itemID">
         /// A <see cref="UUID"/>
@@ -130,6 +131,17 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="remoteClient">
         /// A <see cref="IClientAPI"/>
         /// </param>
-        void ShowDetachInUserInventory(UUID itemID, IClientAPI remoteClient);
+        void ShowDetachInUserInventoryClient(UUID itemID, IClientAPI remoteClient);
+
+        /// <summary>
+        /// Update the user inventory to show a detach.
+        /// </summary>
+        /// <param name="itemID">
+        /// A <see cref="UUID"/>
+        /// </param>
+        /// <param name="remoteClient">
+        /// A <see cref="IClientAPI"/>
+        /// </param>
+        void ShowDetachInUserInventory(UUID itemID, SceneObjectGroup group, IClientAPI remoteClient);
     }
 }

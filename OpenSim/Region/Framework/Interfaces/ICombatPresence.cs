@@ -7,7 +7,7 @@ namespace OpenSim.Region.Framework.Interfaces
 {
     public interface ICombatPresence
     {
-        public string Team { get; set; }
+        string Team { get; set; }
         void KillAvatar(uint killerObjectLocalID);
         void LeaveCombat();
         void JoinCombat();

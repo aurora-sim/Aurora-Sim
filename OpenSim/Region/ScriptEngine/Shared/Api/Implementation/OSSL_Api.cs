@@ -382,7 +382,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             }
         }
 
-        public int osShutDown()
+        public void osShutDown()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osShutDown", m_host, "OSSL");
 
@@ -390,11 +390,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             if (World.Permissions.CanIssueEstateCommand(m_host.OwnerID, false))
             {
                 MainConsole.Instance.RunCommand("shutdown");
-                return 1;
             }
             else
             {
-                return 0;
             }
         }
 

@@ -3549,7 +3549,7 @@ namespace OpenSim.Region.Framework.Scenes
                 client.OnRezMultipleAttachmentsFromInv += AttachmentsModule.RezMultipleAttachmentsFromInventory;
                 client.OnObjectAttach += AttachmentsModule.AttachObject;
                 client.OnObjectDetach += AttachmentsModule.DetachObject;
-                client.OnDetachAttachmentIntoInv += AttachmentsModule.ShowDetachInUserInventory;
+                client.OnDetachAttachmentIntoInv += AttachmentsModule.ShowDetachInUserInventoryClient;
             }
         }
 
@@ -3706,7 +3706,7 @@ namespace OpenSim.Region.Framework.Scenes
                 client.OnRezMultipleAttachmentsFromInv -= AttachmentsModule.RezMultipleAttachmentsFromInventory;
                 client.OnObjectAttach -= AttachmentsModule.AttachObject;
                 client.OnObjectDetach -= AttachmentsModule.DetachObject;
-                client.OnDetachAttachmentIntoInv -= AttachmentsModule.ShowDetachInUserInventory;
+                client.OnDetachAttachmentIntoInv -= AttachmentsModule.ShowDetachInUserInventoryClient;
             }
         }
 

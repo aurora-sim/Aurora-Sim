@@ -16,7 +16,8 @@ using Mono.Addins;
 
 namespace Aurora.Modules
 {
-    enum PrimTypes
+    //Needs to wait until SOP refactor
+    /*enum PrimTypes
     {
         Normal = 0,
         Bot = 1,
@@ -241,6 +242,6 @@ namespace Aurora.Modules
             values.Add("");
             GenericData.Insert("auroraprims", values.ToArray());
         }
-        
     }
+    */
 }

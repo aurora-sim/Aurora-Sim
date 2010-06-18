@@ -440,7 +440,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (group != null)
             {
                 //group.DetachToGround();
-                m_parentScene.AttachmentsModule.ShowDetachInUserInventory(group.GetFromItemID(), remoteClient);
+                m_parentScene.AttachmentsModule.ShowDetachInUserInventory(group.GetFromItemID(), group, remoteClient);
             }
         }
 
