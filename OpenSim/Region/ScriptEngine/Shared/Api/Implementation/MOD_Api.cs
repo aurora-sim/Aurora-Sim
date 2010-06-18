@@ -235,9 +235,64 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                 ICombatPresence CP = SP.RequestModuleInterface<ICombatPresence>();
                 if (CP != null)
                 {
+                    if (team.m_string == "No Team")
+                    {
+                        SP.ControllingClient.SendAlertMessage("You cannot join this team.");
+                        return;
+                    }
                     CP.Team = team.m_string;
                 }
             }
+        }
+
+        public void AALeaveCombat()
+        {
+            ScenePresence SP = World.GetScenePresence(m_host.OwnerID);
+            if (SP != null)
+            {
+                ICombatPresence CP = SP.RequestModuleInterface<ICombatPresence>();
+                if (CP != null)
+                {
+                    CP.LeaveCombat();
+                }
+            }
+        }
+
+        public void AAJoinCombat()
+        {
+            ScenePresence SP = World.GetScenePresence(m_host.OwnerID);
+            if (SP != null)
+            {
+                ICombatPresence CP = SP.RequestModuleInterface<ICombatPresence>();
+                if (CP != null)
+                {
+                    CP.JoinCombat();
+                }
+            }
+        }
+
+        public LSL_Float AAGetHealth()
+        {
+            ScenePresence SP = World.GetScenePresence(m_host.OwnerID);
+            if (SP != null)
+            {
+                return new LSL_Float(SP.Health);
+            }
+            return new LSL_Float(-1);
+        }
+
+        public LSL_String AAGetTeam()
+        {
+            ScenePresence SP = World.GetScenePresence(m_host.OwnerID);
+            if (SP != null)
+            {
+                ICombatPresence CP = SP.RequestModuleInterface<ICombatPresence>();
+                if (CP != null)
+                {
+                    return CP.Team;
+                }
+            }
+            return "No Team";
         }
     }
 }

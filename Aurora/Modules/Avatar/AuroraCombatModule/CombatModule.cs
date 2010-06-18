@@ -94,13 +94,15 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
             float TeamHitsBeforeSend;
             float DamageToTeamKillers;
             string m_Team;
-            public string Team
-            {
-                get{return m_Team;}
-                set{m_Team = value;}
-            }
+            bool HasLeftCombat = false;
 
             Dictionary<UUID, float> TeamHits = new Dictionary<UUID, float>();
+
+            public string Team
+            {
+                get { return m_Team; }
+                set { m_Team = value; }
+            }
 
             public CombatPresence(ScenePresence SP, IConfig m_config)
             {
@@ -136,6 +138,9 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                 if (m_SP.m_invulnerable)
                     return;
 
+                if (HasLeftCombat)
+                    return;
+
                 if (e == null)
                     return;
 
@@ -147,15 +152,22 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                 foreach (uint localid in coldata.Keys)
                 {
                     SceneObjectPart part = m_SP.Scene.GetSceneObjectPart(localid);
-
                     if (part != null && part.ParentGroup.Damage != -1.0f)
                     {
+                        ScenePresence otherAvatar = m_SP.Scene.GetScenePresence(part.OwnerID);
+                        if (otherAvatar != null) // If the avatar is null, the person is not inworld, and not on a team
+                        {
+                            if (otherAvatar.RequestModuleInterface<CombatPresence>().HasLeftCombat)
+                            {
+                                //If they have left combat, do not let them cause any damage.
+                                continue;
+                            }
+                        } 
                         if (part.ParentGroup.Damage > MaximumDamageToInflict)
                             part.ParentGroup.Damage = MaximumDamageToInflict;
 
                         if (AllowTeams)
                         {
-                            ScenePresence otherAvatar = m_SP.Scene.GetScenePresence(part.OwnerID);
                             if (otherAvatar != null) // If the avatar is null, the person is not inworld, and not on a team
                             {
                                 if (otherAvatar.RequestModuleInterface<CombatPresence>().Team == Team)
@@ -292,6 +304,16 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                         }
                     }
                 }
+            }
+
+            public void LeaveCombat()
+            {
+                HasLeftCombat = true;
+            }
+
+            public void JoinCombat()
+            {
+                HasLeftCombat = false;
             }
         }
 

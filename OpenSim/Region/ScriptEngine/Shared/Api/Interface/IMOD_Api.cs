@@ -56,5 +56,15 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api.Interfaces
         void AASetConeOfSilence(LSL_Float radius);
 
         LSL_Types.LSLString AASerializeXML(LSL_Types.list keys, LSL_Types.list values);
+
+        LSL_String AAGetTeam();
+
+        LSL_Float AAGetHealth();
+
+        void AAJoinCombat();
+
+        void AALeaveCombat();
+
+        void AAJoinCombatTeam(LSL_String team);
     }
 }

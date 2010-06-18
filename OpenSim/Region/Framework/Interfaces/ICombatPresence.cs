@@ -9,5 +9,7 @@ namespace OpenSim.Region.Framework.Interfaces
     {
         public string Team { get; set; }
         void KillAvatar(uint killerObjectLocalID);
+        void LeaveCombat();
+        void JoinCombat();
     }
 }

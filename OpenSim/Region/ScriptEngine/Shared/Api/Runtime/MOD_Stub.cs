@@ -104,5 +104,30 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
         {
             m_MOD_Functions.AASetConeOfSilence(radius);
         }
+
+        public void AAJoinCombatTeam(LSL_String team)
+        {
+            m_MOD_Functions.AAJoinCombatTeam(team);
+        }
+
+        public void AAJoinCombat()
+        {
+            m_MOD_Functions.AAJoinCombat();
+        }
+
+        public void AALeaveCombat()
+        {
+            m_MOD_Functions.AALeaveCombat();
+        }
+
+        public LSL_Float AAGetHealth()
+        {
+            return m_MOD_Functions.AAGetHealth();
+        }
+
+        public LSL_String AAGetTeam()
+        {
+            return m_MOD_Functions.AAGetTeam();
+        }
     }
 }
