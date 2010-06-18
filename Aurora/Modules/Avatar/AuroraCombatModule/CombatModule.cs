@@ -94,7 +94,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
             float TeamHitsBeforeSend;
             float DamageToTeamKillers;
             string m_Team;
-            bool HasLeftCombat = false;
+            bool HasLeftCombat;
 
             Dictionary<UUID, float> TeamHits = new Dictionary<UUID, float>();
 
@@ -117,6 +117,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                 MaximumHealth = m_config.GetFloat("MaximumHealth", 100);
                 MaximumDamageToInflict = m_config.GetFloat("MaximumDamageToInflict", 100);
 
+                HasLeftCombat = false;
                 Team = "";
 
                 SP.OnAddPhysics += new ScenePresence.AddPhysics(SP_OnAddPhysics);

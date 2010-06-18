@@ -88,8 +88,8 @@ namespace Aurora.Modules
 
         public void GodSaveState(IClientAPI client, UUID agentID)
         {
-            UserAccount UA = m_scenes[0].UserAccountService.GetUserAccount(UUID.Zero, client.AgentId);
-            if (UA.UserFlags >= 0)
+            ScenePresence Sp = ((Scene)client.Scene).GetScenePresence(client.AgentId);
+            if (Sp.GodLevel >= 0)
             {
                 MainConsole.Instance.RunCommand("change region " + ((Scene)client.Scene).RegionInfo.RegionName);
                 MainConsole.Instance.RunCommand("save oar " + ((Scene)client.Scene).RegionInfo.RegionName + Util.UnixTimeSinceEpoch().ToString() + ".ss");
@@ -99,8 +99,8 @@ namespace Aurora.Modules
 
         public void GodUpdateRegionInfoUpdate(IClientAPI client, float BillableFactor, ulong EstateID, ulong RegionFlags, byte[] SimName, int RedirectX, int RedirectY)
         {
-            UserAccount UA = ((Scene)client.Scene).UserAccountService.GetUserAccount(UUID.Zero, client.AgentId);
-            if (UA.UserLevel == 0)
+            ScenePresence Sp = ((Scene)client.Scene).GetScenePresence(client.AgentId);
+            if (Sp.GodLevel == 0)
                 return;
             ((Scene)client.Scene).RegionInfo.RegionName = OpenMetaverse.Utils.BytesToString(SimName);
             if(RedirectX != 0)

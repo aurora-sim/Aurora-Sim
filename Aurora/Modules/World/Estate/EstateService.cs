@@ -131,6 +131,9 @@ namespace Aurora.Modules
 
         public void GodlikeMessage(IClientAPI client, UUID requester, string Method, List<string> Parameters)
         {
+            ScenePresence Sp = ((Scene)client.Scene).GetScenePresence(client.AgentId);
+            if (Sp.GodLevel == 0)
+                return;
             string parameter1 = Parameters[0];
             if (Method == "telehub")
             {
@@ -194,6 +197,12 @@ namespace Aurora.Modules
         public bool AllowTeleport(IScene scene, UUID userID, Vector3 Position, out Vector3 newPosition)
         {
             newPosition = Position;
+            
+            //Gods tp freely
+            ScenePresence Sp = ((Scene)scene).GetScenePresence(userID);
+            if (Sp.GodLevel != 0)
+                return true;
+            
             EstateSettings ES = ((Scene)scene).EstateService.LoadEstateSettings(scene.RegionInfo.RegionID, false);
             IAgentConnector data = DataManager.DataManager.IAgentConnector;
             IAgentInfo agent = data.GetAgent(userID);

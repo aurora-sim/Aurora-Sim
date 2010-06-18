@@ -130,6 +130,7 @@ namespace Aurora.Modules
 			{
                 if (target.UserFlags >= 1)
 				{
+                    //Gods do not tp other gods
 					m = new GridInstantMessage(scene, client.AgentId,
 					                           client.FirstName+" "+client.LastName, targetid,
 					                           (byte)InstantMessageDialog.RequestTeleport, false,
@@ -138,6 +139,7 @@ namespace Aurora.Modules
 				}
 				else
 				{
+                    //God tp them
 					m = new GridInstantMessage(scene, client.AgentId,
 					                           client.FirstName+" "+client.LastName, targetid,
 					                           (byte)InstantMessageDialog.GodLikeRequestTeleport, false,
@@ -147,6 +149,7 @@ namespace Aurora.Modules
 			}
 			else
 			{
+                //Not a god, so no god tp
 				m = new GridInstantMessage(scene, client.AgentId,
 				                           client.FirstName+" "+client.LastName, targetid,
 				                           (byte)InstantMessageDialog.RequestTeleport, false,

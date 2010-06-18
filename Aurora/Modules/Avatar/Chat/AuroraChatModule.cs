@@ -58,6 +58,8 @@ namespace Aurora.Modules
         private IGenericData GenericData = null;
         internal object m_syncy = new object();
         private IMuteListConnector MuteListConnector;
+        private bool m_indicategod;
+        private string m_godPrefix;
 
         internal IConfig m_config;
 
@@ -81,6 +83,8 @@ namespace Aurora.Modules
             }
 
             m_useAuth = m_config.GetBoolean("use_Auth", true);
+            m_indicategod = m_config.GetBoolean("indicate_god", true);
+            m_godPrefix = m_config.GetString("godPrefix", "");
             m_whisperdistance = m_config.GetInt("whisper_distance", m_whisperdistance);
             m_saydistance = m_config.GetInt("say_distance", m_saydistance);
             m_shoutdistance = m_config.GetInt("shout_distance", m_shoutdistance);
@@ -188,8 +192,18 @@ namespace Aurora.Modules
                 m_log.ErrorFormat("[CHAT] OnChatFromClient from {0} has empty Sender field!", sender);
                 return;
             }
+
+            ScenePresence SP = m_scenes[0].GetScenePresence(c.SenderUUID);
+            //Always allow gods to do what they want
+            if(SP.GodLevel != 0 && !!m_authorizedSpeakers.Contains(c.SenderUUID))
+                m_authorizedSpeakers.Add(c.SenderUUID);
+
+            if (SP.GodLevel != 0 && !!m_authList.Contains(c.SenderUUID))
+                m_authList.Add(c.SenderUUID);
+            
             if (!m_authorizedSpeakers.Contains(c.SenderUUID))
                 return;
+
             if (c.Message.StartsWith("Chat."))
             {
                 if (!m_useAuth || m_authList.Contains(c.SenderUUID))
@@ -263,6 +277,9 @@ namespace Aurora.Modules
             }
             else
             {
+                if (SP.GodLevel != 0 && m_indicategod)
+                    c.Message = m_godPrefix + c.Message;
+
                 DeliverChatToAvatars(ChatSourceType.Agent, c);
             }
         }
