@@ -99,5 +99,10 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
         {
             return m_MOD_Functions.AADeserializeXMLValues(xmlFile);
         }
+
+        public void AASetConeOfSilence(LSL_Float radius)
+        {
+            m_MOD_Functions.AASetConeOfSilence(radius);
+        }
     }
 }

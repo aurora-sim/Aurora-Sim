@@ -136,12 +136,12 @@ namespace OpenSim.Region.CoreModules.World.Sound
         private class ConeOfSilence
         {
             public Vector3 Position;
-            public float Radius;
+            public double Radius;
         }
 
         private Dictionary<UUID, ConeOfSilence> Cones = new Dictionary<UUID, ConeOfSilence>();
 
-        public virtual void AddConeOfSilence(UUID objectID, Vector3 position, float Radius)
+        public virtual void AddConeOfSilence(UUID objectID, Vector3 position, double Radius)
         {
             ConeOfSilence CS = new ConeOfSilence();
             CS.Position = position;

@@ -37,7 +37,7 @@ namespace OpenSim.Region.Framework.Interfaces
         void TriggerSound(
             UUID soundId, UUID ownerID, UUID objectID, UUID parentID, double gain, Vector3 position, UInt64 handle, float radius);
 
-        void AddConeOfSilence(UUID objectID, Vector3 position, float Radius);
+        void AddConeOfSilence(UUID objectID, Vector3 position, double Radius);
 
         void RemoveConeOfSilence(UUID objectID);
     }

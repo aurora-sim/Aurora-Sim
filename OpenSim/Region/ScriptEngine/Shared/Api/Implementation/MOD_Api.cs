@@ -221,5 +221,10 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             }
             return values;
         }
+
+        public void AASetConeOfSilence(LSL_Float radius)
+        {
+            m_host.SetConeOfSilence(radius.value);
+        }
     }
 }

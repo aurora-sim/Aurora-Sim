@@ -53,6 +53,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api.Interfaces
 
         LSL_Types.list AADeserializeXMLKeys(LSL_Types.LSLString xmlFile);
 
+        void AASetConeOfSilence(LSL_Float radius);
+
         LSL_Types.LSLString AASerializeXML(LSL_Types.list keys, LSL_Types.list values);
     }
 }

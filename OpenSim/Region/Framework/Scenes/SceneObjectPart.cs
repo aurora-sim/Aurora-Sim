@@ -4756,5 +4756,18 @@ namespace OpenSim.Region.Framework.Scenes
         {
             m_UseSoundQueue = queue;
         }
+
+        public void SetConeOfSilence(double radius)
+        {
+            ISoundModule module = m_parentGroup.Scene.RequestModuleInterface<ISoundModule>();
+            //TODO: Save this property!
+            if (module != null)
+            {
+                if (radius != 0)
+                    module.AddConeOfSilence(UUID, AbsolutePosition, radius);
+                else
+                    module.RemoveConeOfSilence(UUID);
+            }
+        }
     }
 }
