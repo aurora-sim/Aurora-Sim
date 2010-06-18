@@ -1280,6 +1280,8 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        public string DefaultLSLScript = "default\n{\n    state_entry()\n    {\n        llSay(0, \"Script running.\");\n    } \n touch_start(integer number)\n   { \n   llSay(0,\"Touched.\"); \n}\n}";
+
         /// <summary>
         /// Rez a script into a prim's inventory, either ex nihilo or from an existing avatar inventory
         /// </summary>
@@ -1361,7 +1363,7 @@ namespace OpenSim.Region.Framework.Scenes
                     return;
 
                 AssetBase asset = CreateAsset(itemBase.Name, itemBase.Description, (sbyte)itemBase.AssetType,
-                    Encoding.ASCII.GetBytes("default\n{\n    state_entry()\n    {\n        llSay(0, \"Script running\");\n    }\n}"),
+                    Encoding.ASCII.GetBytes(DefaultLSLScript),
                     remoteClient.AgentId);
                 AssetService.Store(asset);
 

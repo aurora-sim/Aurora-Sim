@@ -32,6 +32,87 @@ using Tools;
 
 namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
 {
+    public static class Extension
+    {
+        public static bool CompareWildcards(this string WildString, string Mask, bool IgnoreCase)
+        {
+            int i = 0;
+
+            if (String.IsNullOrEmpty(Mask))
+                return false;
+            if (Mask == "*")
+                return true;
+
+            while (i != Mask.Length)
+            {
+                if (CompareWildcard(WildString, Mask.Substring(i), IgnoreCase))
+                    return true;
+
+                while (i != Mask.Length && Mask[i] != ';')
+                    i += 1;
+
+                if (i != Mask.Length && Mask[i] == ';')
+                {
+                    i += 1;
+
+                    while (i != Mask.Length && Mask[i] == ' ')
+                        i += 1;
+                }
+            }
+
+            return false;
+        }
+
+        public static bool CompareWildcard(this string WildString, string Mask, bool IgnoreCase)
+        {
+            int i = 0, k = 0;
+
+            while (k != WildString.Length)
+            {
+                switch (Mask[i])
+                {
+                    case '*':
+
+                        if ((i + 1) == Mask.Length)
+                            return true;
+
+                        while (k != WildString.Length)
+                        {
+                            if (CompareWildcard(WildString.Substring(k + 1), Mask.Substring(i + 1), IgnoreCase))
+                                return true;
+
+                            k += 1;
+                        }
+
+                        return false;
+
+                    case '?':
+
+                        break;
+
+                    default:
+
+                        if (IgnoreCase == false && WildString[k] != Mask[i])
+                            return false;
+                        if (IgnoreCase && Char.ToLower(WildString[k]) != Char.ToLower(Mask[i]))
+                            return false;
+
+                        break;
+                }
+
+                i += 1;
+                k += 1;
+            }
+
+            if (k == WildString.Length)
+            {
+                if (i == Mask.Length || Mask[i] == ';' || Mask[i] == '*')
+                    return true;
+            }
+
+            return false;
+        }
+    }
     public class CSCodeGenerator : ICodeConverter
     {
         private SYMBOL m_astRoot = null;
@@ -978,19 +1059,28 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             string tempString = "";
             foreach (SYMBOL kid in fc.kids)
                 tempString += GenerateNode(kid);
-            //Cuts up to the line
-            string tempscript = OriginalScript;//OriginalScript.Split(new string[]{fc.Id});
-            tempscript = tempscript.Remove(0, fc.Id.Length + 1);
 
-            if (OriginalScript.Contains(fc.Id + "(" + tempscript.Split(')')[0] + ")" + "\n{"))
-            {
-                 isEnumerable = true;
-            }
-            if (script.Contains("IEnumerator " + fc.Id))
+            string TempStringForEnum = "";
+            TempStringForEnum = OriginalScript.Remove(0, fc.pos);
+            TempStringForEnum = TempStringForEnum.Remove(0, fc.Id.Length);
+            TempStringForEnum = TempStringForEnum.Split(')')[0];
+            string TestOriginal = OriginalScript.Replace(" ", "");
+            TestOriginal = TestOriginal.Replace("\n", "");
+            string TestScript = fc.Id + TempStringForEnum + ")" + "{";
+            string TestTestScript = fc.Id + "(*";
+            if (TestOriginal.CompareWildcard(TestTestScript, true))
             {
                 isEnumerable = true;
             }
-
+            else if (TestOriginal.Contains(TestScript))
+            {
+                 isEnumerable = true;
+            }
+            else if (script.Contains("IEnumerator " + fc.Id))
+            {
+                isEnumerable = true;
+            }
+            
             if (isEnumerable)
             {
                 retstr += Generate("parts.Add(");
@@ -1001,7 +1091,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             retstr += Generate(")");
             if (isEnumerable)
             {
-                retstr += Generate(");\r\n");
+                retstr += Generate(")");
             }
             return retstr;
         }

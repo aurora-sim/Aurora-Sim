@@ -185,26 +185,31 @@ namespace OpenSim.Region.Framework.Scenes
                 // Use group position for child prims
                 Vector3 entityPos = entity.AbsolutePosition;
                 if (entity is SceneObjectPart)
-                    entityPos = m_scene.GetGroupByPrim(entity.LocalId).AbsolutePosition;
+                {
+                    SceneObjectGroup group = m_scene.GetGroupByPrim(entity.LocalId);
+                    if(group != null)
+                        entityPos = group.AbsolutePosition;
+                    else
+                        entityPos = entity.AbsolutePosition;
+                }
                 else
                     entityPos = entity.AbsolutePosition;
 
                 // Objects avatars are sitting on should be prioritized more
                 if (entity is SceneObjectPart)
                 {
-                    if (presence.SittingOnUUID == entity.UUID)
+                    if (presence.SittingOnUUID == entity.UUID || 
+                        presence.SittingOnID == entity.LocalId)
                     {
                         //Objects that are physical get more priority.
-                        PhysicsActor physActor = ((SceneObjectPart)entity).ParentGroup.RootPart.PhysActor;
-                        if (physActor != null && physActor.IsPhysical)
-                            return 0.0;
-                    }
-                    else if (presence.SittingOnID == entity.LocalId)
-                    {
-                        //Objects that are physical get more priority.
-                        PhysicsActor physActor = ((SceneObjectPart)entity).ParentGroup.RootPart.PhysActor;
-                        if (physActor != null && physActor.IsPhysical)
-                            return 0.0;
+                        if (((SceneObjectPart)entity).ParentGroup != null)
+                        {
+                            PhysicsActor physActor = ((SceneObjectPart)entity).ParentGroup.RootPart.PhysActor;
+                            if (physActor != null && physActor.IsPhysical)
+                                return 0.0;
+                            else
+                                return 1.1;
+                        }
                     }
                 }
                 if (entity is SceneObjectGroup)
