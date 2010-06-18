@@ -42,6 +42,7 @@ namespace OpenSim.Region.Framework.Interfaces
 
         LandData LandData { get; set; }
         bool[,] LandBitmap { get; set; }
+        List<SceneObjectGroup> PrimsOverMe { get; set; }
         UUID RegionUUID { get; }
         bool ContainsPoint(int x, int y);
         ILandObject Copy();

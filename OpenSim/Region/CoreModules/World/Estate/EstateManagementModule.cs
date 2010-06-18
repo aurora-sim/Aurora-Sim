@@ -547,21 +547,28 @@ namespace OpenSim.Region.CoreModules.World.Estate
                 try
                 {
 
-                    string localfilename = "terrain.raw";
+                    string localfilename = filename + ".raw";
 
                     if (terrainData.Length == 851968)
                     {
-                        localfilename = Path.Combine(Util.dataDir(),"terrain.raw"); // It's a .LLRAW
+                        localfilename = Path.Combine(Util.dataDir(), filename + ".raw"); // It's a .LLRAW
                     }
 
+                    bool OARUpload = false;
                     if (terrainData.Length == 196662) // 24-bit 256x256 Bitmap
-                        localfilename = Path.Combine(Util.dataDir(), "terrain.bmp");
+                        localfilename = Path.Combine(Util.dataDir(), filename + ".bmp");
 
-                    if (terrainData.Length == 256 * 256 * 4) // It's a .R32
-                        localfilename = Path.Combine(Util.dataDir(), "terrain.r32");
+                    else if (terrainData.Length == 256 * 256 * 4) // It's a .R32
+                        localfilename = Path.Combine(Util.dataDir(), filename + ".r32");
 
-                    if (terrainData.Length == 256 * 256 * 8) // It's a .R64
-                        localfilename = Path.Combine(Util.dataDir(), "terrain.r64");
+                    else if (terrainData.Length == 256 * 256 * 8) // It's a .R64
+                        localfilename = Path.Combine(Util.dataDir(), filename + ".r64");
+                    else
+                    {
+                        // Assume its a .oar then
+                        OARUpload = true;
+                        localfilename = Path.Combine(Util.dataDir(), filename + ".oar");
+                    }
 
                     if (File.Exists(localfilename))
                     {
@@ -574,9 +581,16 @@ namespace OpenSim.Region.CoreModules.World.Estate
 
                     FileInfo x = new FileInfo(localfilename);
 
-                    terr.LoadFromFile(localfilename);
-                    remoteClient.SendAlertMessage("Your terrain was loaded as a ." + x.Extension + " file. It may take a few moments to appear.");
-
+                    if (!OARUpload)
+                    {
+                        terr.LoadFromFile(localfilename);
+                        remoteClient.SendAlertMessage("Your terrain was loaded as a ." + x.Extension + " file. It may take a few moments to appear.");
+                    }
+                    else
+                    {
+                        OpenSim.Framework.Console.MainConsole.Instance.RunCommand("load oar " + localfilename);
+                        remoteClient.SendAlertMessage("Your oar file was loaded. It may take a few moments to appear.");
+                    }
                 }
                 catch (IOException e)
                 {

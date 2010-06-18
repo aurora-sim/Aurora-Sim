@@ -54,6 +54,11 @@ namespace OpenSim.Region.CoreModules.World.Land
         protected LandData m_landData = new LandData();
         protected Scene m_scene;
         protected List<SceneObjectGroup> primsOverMe = new List<SceneObjectGroup>();
+        public List<SceneObjectGroup> PrimsOverMe
+        {
+            get { return primsOverMe; }
+            set { primsOverMe = value; }
+        }
 
         public bool[,] LandBitmap
         {

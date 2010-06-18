@@ -382,6 +382,101 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             }
         }
 
+        public int osShutDown()
+        {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osShutDown", m_host, "OSSL");
+
+            m_host.AddScriptLPS(1);
+            if (World.Permissions.CanIssueEstateCommand(m_host.OwnerID, false))
+            {
+                MainConsole.Instance.RunCommand("shutdown");
+                return 1;
+            }
+            else
+            {
+                return 0;
+            }
+        }
+
+        public void osReturnObjects(LSL_Float Parameter)
+        {
+            Dictionary<UUID, List<SceneObjectGroup>> returns =
+                    new Dictionary<UUID, List<SceneObjectGroup>>();
+            ILandObject LO = World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y);
+                
+            if (Parameter == 0) // Owner objects
+            {
+                foreach (SceneObjectGroup obj in LO.PrimsOverMe)
+                {
+                    if (obj.OwnerID == LO.LandData.OwnerID)
+                    {
+                        if (!returns.ContainsKey(obj.OwnerID))
+                            returns[obj.OwnerID] =
+                                    new List<SceneObjectGroup>();
+                        returns[obj.OwnerID].Add(obj);
+                    }
+                }
+            }
+            if (Parameter == 1) //Everyone elses
+            {
+                foreach (SceneObjectGroup obj in LO.PrimsOverMe)
+                {
+                    if (obj.OwnerID != LO.LandData.OwnerID &&
+                        (obj.GroupID != LO.LandData.GroupID ||
+                        LO.LandData.GroupID == UUID.Zero))
+                    {
+                        if (!returns.ContainsKey(obj.OwnerID))
+                            returns[obj.OwnerID] =
+                                    new List<SceneObjectGroup>();
+                        returns[obj.OwnerID].Add(obj);
+                    }
+                }
+            }
+            if (Parameter == 2) // Group
+            {
+                foreach (SceneObjectGroup obj in LO.PrimsOverMe)
+                {
+                    if (obj.GroupID == LO.LandData.GroupID)
+                    {
+                        if (!returns.ContainsKey(obj.OwnerID))
+                            returns[obj.OwnerID] =
+                                    new List<SceneObjectGroup>();
+                        returns[obj.OwnerID].Add(obj);
+                    }
+                }
+            }
+
+            foreach (List<SceneObjectGroup> ol in returns.Values)
+            {
+                if (World.Permissions.CanReturnObjects(LO, m_host.OwnerID, ol))
+                    World.returnObjects(ol.ToArray(), m_host.OwnerID);
+            }
+        }
+
+        public void osReturnObject(LSL_Key userID)
+        {
+            Dictionary<UUID, List<SceneObjectGroup>> returns =
+                    new Dictionary<UUID, List<SceneObjectGroup>>();
+            ILandObject LO = World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y);
+
+            foreach (SceneObjectGroup obj in LO.PrimsOverMe)
+            {
+                if (obj.OwnerID == new UUID(userID.m_string))
+                {
+                    if (!returns.ContainsKey(obj.OwnerID))
+                        returns[obj.OwnerID] =
+                                new List<SceneObjectGroup>();
+                    returns[obj.OwnerID].Add(obj);
+                }
+            }
+
+            foreach (List<SceneObjectGroup> ol in returns.Values)
+            {
+                if (World.Permissions.CanReturnObjects(LO, m_host.OwnerID, ol))
+                    World.returnObjects(ol.ToArray(), m_host.OwnerID);
+            }
+        }
+
         public void osRegionNotice(string msg)
         {
             // This implementation provides absolutely no security

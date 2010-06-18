@@ -164,5 +164,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api.Interfaces
         void osSetPrimitiveParams(LSL_Key prim, LSL_List rules);
         LSL_List osGetAvatarList();
 
+        void osReturnObject(LSL_Key userID);
+        void osReturnObjects(LSL_Float Parameter);
+        void osShutDown();
+
     }
 }
