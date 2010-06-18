@@ -69,6 +69,7 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
             new Dictionary<ulong, Scene>();
 
         private bool m_Enabled = false;
+        private bool m_localOnly = true;
 
         public void InsertEmail(UUID to, Email email)
         {
@@ -99,30 +100,23 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
             m_Config = config;
             IConfig SMTPConfig;
 
-            //FIXME: RegionName is correct??
-            //m_RegionName = scene.RegionInfo.RegionName;
-
-            IConfig startupConfig = m_Config.Configs["Startup"];
-
-            m_Enabled = (startupConfig.GetString("emailmodule", "DefaultEmailModule") == "DefaultEmailModule");
-
             //Load SMTP SERVER config
             try
             {
                 if ((SMTPConfig = m_Config.Configs["SMTP"]) == null)
                 {
-                    //m_log.InfoFormat("[SMTP] SMTP server not configured");
+                    m_log.InfoFormat("[SMTP] SMTP server not configured");
                     m_Enabled = false;
                     return;
                 }
-
-                if (!SMTPConfig.GetBoolean("enabled", false))
+                m_Enabled = SMTPConfig.GetBoolean("enabled", true);
+                if (!m_Enabled)
                 {
                     //m_log.InfoFormat("[SMTP] module disabled in configuration");
                     m_Enabled = false;
                     return;
                 }
-
+                m_localOnly = SMTPConfig.GetBoolean("local_only", true);
                 m_HostName = SMTPConfig.GetString("host_domain_header_from", m_HostName);
                 m_InterObjectHostname = SMTPConfig.GetString("internal_object_host", m_InterObjectHostname);
                 SMTP_SERVER_HOSTNAME = SMTPConfig.GetString("SMTP_SERVER_HOSTNAME", SMTP_SERVER_HOSTNAME);
@@ -302,6 +296,26 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
 
             if (!address.EndsWith(m_InterObjectHostname))
             {
+                if (!m_localOnly)
+                {
+                    string m_ObjectRegionName;
+                    SceneObjectPart part = findPrim(objectID, out m_ObjectRegionName);
+                    if (part != null)
+                    {
+                        lock (m_Scenes)
+                        {
+                            foreach (Scene s in m_Scenes.Values)
+                            {
+                                ScenePresence SP = s.GetScenePresence(part.OwnerID);
+                                if (SP != null)
+                                {
+                                    if (!SP.IsChildAgent)
+                                        SP.ControllingClient.SendAlertMessage("llEmail: email module not configured for outgoing emails");
+                                }
+                            }
+                        }
+                    }
+                }
                 // regular email, send it out
                 try
                 {

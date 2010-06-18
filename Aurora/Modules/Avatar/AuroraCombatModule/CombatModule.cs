@@ -49,11 +49,13 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
             get { return null; }
         }
         private IConfig m_config;
-        private float MaximumHealth = 100;
+        private float MaximumHealth;
+        private bool m_enabled;
 
         public void Initialise(IConfigSource source)
         {
             m_config = source.Configs["CombatModule"];
+            m_enabled = m_config.GetBoolean("Enabled", true);
             MaximumHealth = m_config.GetFloat("MaximumHealth", 100);
         }
 
@@ -63,14 +65,20 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
 
         public void AddRegion(Scene scene)
         {
-            scene.EventManager.OnNewPresence += EventManager_OnNewPresence;
-            scene.EventManager.OnAvatarEnteringNewParcel += AvatarEnteringParcel;
+            if (m_enabled)
+            {
+                scene.EventManager.OnNewPresence += EventManager_OnNewPresence;
+                scene.EventManager.OnAvatarEnteringNewParcel += AvatarEnteringParcel;
+            }
         }
 
         public void RemoveRegion(Scene scene)
         {
-            scene.EventManager.OnNewPresence -= EventManager_OnNewPresence;
-            scene.EventManager.OnAvatarEnteringNewParcel -= AvatarEnteringParcel;
+            if (m_enabled)
+            {
+                scene.EventManager.OnNewPresence -= EventManager_OnNewPresence;
+                scene.EventManager.OnAvatarEnteringNewParcel -= AvatarEnteringParcel;
+            }
         }
 
         void EventManager_OnNewPresence(ScenePresence presence)
