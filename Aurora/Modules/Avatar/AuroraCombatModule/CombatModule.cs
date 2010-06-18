@@ -27,154 +27,269 @@
 
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using Nini.Config;
+using OpenSim.Region.Physics.Manager;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
-using OpenSim.Region.Physics.Manager;
-using log4net;
 using OpenMetaverse;
 using Mono.Addins;
 
-namespace Aurora.Modules
+namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
 {
     [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
-    public class CombatModule : ISharedRegionModule
+    public class AuroraCombatModule : INonSharedRegionModule
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
-        /// <summary>
-        /// Region UUIDS indexed by AgentID
-        /// </summary>
-        //private Dictionary<UUID, UUID> m_rootAgents = new Dictionary<UUID, UUID>();
-
-        /// <summary>
-        /// Scenes by Region Handle
-        /// </summary>
-        private Dictionary<ulong, Scene> m_scenel = new Dictionary<ulong, Scene>();
-        private IConfig m_config;
-        /// <summary>
-        /// Startup
-        /// </summary>
-        /// <param name="scene"></param>
-        /// <param name="config"></param>
-        public void Initialise(IConfigSource config)
+        public string Name
         {
-            m_config = config.Configs["CombatModule"];
-        }
-
-        public void AddRegion(Scene scene)
-        {
-            lock (m_scenel)
-            {
-                if (m_scenel.ContainsKey(scene.RegionInfo.RegionHandle))
-                {
-                    m_scenel[scene.RegionInfo.RegionHandle] = scene;
-                }
-                else
-                {
-                    m_scenel.Add(scene.RegionInfo.RegionHandle, scene);
-                }
-            }
-
-            scene.EventManager.OnAvatarKilled += KillAvatar;
-            scene.EventManager.OnAvatarEnteringNewParcel += AvatarEnteringParcel;
-        }
-
-        public void RemoveRegion(Scene scene)
-        {
-
-        }
-
-        public void RegionLoaded(Scene scene)
-        {
-
+            get { return "AuroraCombatModule"; }
         }
 
         public Type ReplaceableInterface
         {
             get { return null; }
         }
+        private IConfig m_config;
+        private float MaximumHealth = 100;
 
-        public void PostInitialise(){}
-
-        public void Close(){}
-
-        public string Name{get { return "AuroraCombatModule"; }}
-
-        public bool IsSharedModule{get { return true; }}
-
-        private void KillAvatar(uint killerObjectLocalID, ScenePresence DeadAvatar)
+        public void Initialise(IConfigSource source)
         {
-            if (m_config != null)
+            m_config = source.Configs["CombatModule"];
+            MaximumHealth = m_config.GetFloat("MaximumHealth", 100);
+        }
+
+        public void Close()
+        {
+        }
+
+        public void AddRegion(Scene scene)
+        {
+            scene.EventManager.OnNewPresence += EventManager_OnNewPresence;
+            scene.EventManager.OnAvatarEnteringNewParcel += AvatarEnteringParcel;
+        }
+
+        public void RemoveRegion(Scene scene)
+        {
+            scene.EventManager.OnNewPresence -= EventManager_OnNewPresence;
+            scene.EventManager.OnAvatarEnteringNewParcel -= AvatarEnteringParcel;
+        }
+
+        void EventManager_OnNewPresence(ScenePresence presence)
+        {
+            presence.RegisterModuleInterface<ICombatPresence>(new CombatPresence(presence, m_config));
+        }
+
+        public void RegionLoaded(Scene scene)
+        {
+        }
+
+        private class CombatPresence : ICombatPresence
+        {
+            ScenePresence m_SP;
+            bool FireOnDeadEvent;
+            bool AllowTeamKilling;
+            bool AllowTeams;
+            bool SendTeamKillerInfo;
+            float MaximumHealth;
+            float MaximumDamageToInflict;
+            float TeamHitsBeforeSend;
+            float DamageToTeamKillers;
+            string m_Team;
+            public string Team
             {
-                bool FireEvent = m_config.GetBoolean("FireDeadEvent", false);
+                get{return m_Team;}
+                set{m_Team = value;}
+            }
+
+            Dictionary<UUID, float> TeamHits = new Dictionary<UUID, float>();
+
+            public CombatPresence(ScenePresence SP, IConfig m_config)
+            {
+                m_SP = SP;
+
+                FireOnDeadEvent = m_config.GetBoolean("FireDeadEvent", false);
+                AllowTeamKilling = m_config.GetBoolean("AllowTeamKilling", true);
+                AllowTeams = m_config.GetBoolean("AllowTeams", false);
+                SendTeamKillerInfo = m_config.GetBoolean("SendTeamKillerInfo", false);
+                TeamHitsBeforeSend = m_config.GetFloat("TeamHitsBeforeSend", 3);
+                DamageToTeamKillers = m_config.GetFloat("DamageToTeamKillers", 100);
+                MaximumHealth = m_config.GetFloat("MaximumHealth", 100);
+                MaximumDamageToInflict = m_config.GetFloat("MaximumDamageToInflict", 100);
+
+                Team = "";
+
+                SP.OnAddPhysics += new ScenePresence.AddPhysics(SP_OnAddPhysics);
+                SP.OnRemovePhysics += new ScenePresence.RemovePhysics(SP_OnRemovePhysics);
+            }
+
+            void SP_OnRemovePhysics()
+            {
+                m_SP.PhysicsActor.OnCollisionUpdate -= PhysicsActor_OnCollisionUpdate;
+            }
+
+            void SP_OnAddPhysics()
+            {
+                m_SP.PhysicsActor.OnCollisionUpdate += PhysicsActor_OnCollisionUpdate;
+            }
+
+            void PhysicsActor_OnCollisionUpdate(EventArgs e)
+            {
+                if (m_SP.m_invulnerable)
+                    return;
+
+                if (e == null)
+                    return;
+
+                CollisionEventUpdate collisionData = (CollisionEventUpdate)e;
+                Dictionary<uint, ContactPoint> coldata = collisionData.m_objCollisionList;
+
+                float starthealth = m_SP.Health;
+                uint killerObj = 0;
+                foreach (uint localid in coldata.Keys)
+                {
+                    SceneObjectPart part = m_SP.Scene.GetSceneObjectPart(localid);
+
+                    if (part != null && part.ParentGroup.Damage != -1.0f)
+                    {
+                        if (part.ParentGroup.Damage > MaximumDamageToInflict)
+                            part.ParentGroup.Damage = MaximumDamageToInflict;
+
+                        if (AllowTeams)
+                        {
+                            ScenePresence otherAvatar = m_SP.Scene.GetScenePresence(part.OwnerID);
+                            if (otherAvatar != null) // If the avatar is null, the person is not inworld, and not on a team
+                            {
+                                if (otherAvatar.RequestModuleInterface<CombatPresence>().Team == Team)
+                                {
+                                    float Hits = 0;
+                                    if(TeamHits.ContainsKey(otherAvatar.UUID))
+                                    {
+                                        TeamHits.TryGetValue(otherAvatar.UUID, out Hits);
+                                        TeamHits.Remove(otherAvatar.UUID);
+                                    }
+                                    Hits++;
+                                    if (Hits == TeamHitsBeforeSend)
+                                    {
+                                        otherAvatar.ControllingClient.SendAlertMessage("You have shot too many teammates!");
+                                        otherAvatar.Health -= DamageToTeamKillers;
+                                        if (otherAvatar.Health <= 0)
+                                        {
+                                            KillAvatar(m_SP.LocalId);
+                                        }
+                                        Hits = 0;
+                                    }
+                                    TeamHits.Add(otherAvatar.UUID, Hits);
+                                }
+                            }
+                        }
+
+                        m_SP.Health -= part.ParentGroup.Damage;
+                    }
+                    else
+                    {
+                        if (coldata[localid].PenetrationDepth >= 0.10f)
+                            m_SP.Health -= coldata[localid].PenetrationDepth * 5.0f;
+                    }
+
+                    if (m_SP.Health <= 0.0f)
+                    {
+                        if (localid != 0)
+                            killerObj = localid;
+                    }
+                    //m_log.Debug("[AVATAR]: Collision with localid: " + localid.ToString() + " at depth: " + coldata[localid].ToString());
+                }
+                if (starthealth != m_SP.Health)
+                {
+                    m_SP.ControllingClient.SendHealth(m_SP.Health);
+                }
+                if (m_SP.Health <= 0)
+                {
+                    KillAvatar(killerObj);
+                }
+            }
+
+            public void KillAvatar(uint killerObjectLocalID)
+            {
+                string deadAvatarMessage;
+                ScenePresence killingAvatar = null;
+                string killingAvatarMessage = "You fragged " + m_SP.Firstname + " " + m_SP.Lastname;
+
                 if (killerObjectLocalID == 0)
                 {
-                    DeadAvatar.ControllingClient.SendAgentAlertMessage("You committed suicide!", true);
-                    if (FireEvent)
+                    deadAvatarMessage = "You committed suicide!";
+                    if (FireOnDeadEvent)
                     {
-                        FireDeadAvatarEvent(DeadAvatar.Name, DeadAvatar, null);
+                        FireDeadAvatarEvent(m_SP.Name, m_SP, null);
                     }
                 }
                 else
                 {
-                    SceneObjectPart part = DeadAvatar.Scene.GetSceneObjectPart(killerObjectLocalID);
-                    ScenePresence sp = DeadAvatar.Scene.GetScenePresence(killerObjectLocalID);
-                    if (sp.LocalId != null)
+                    // Try to get the avatar responsible for the killing
+                    killingAvatar = m_SP.Scene.GetScenePresence(killerObjectLocalID);
+                    if (killingAvatar == null)
                     {
-                        sp.ControllingClient.SendAlertMessage("You fragged " + DeadAvatar.Firstname + " " + DeadAvatar.Lastname);
-                        if (FireEvent && part != null)
-                            FireDeadAvatarEvent(sp.Name, DeadAvatar, part.ParentGroup);
-                    }
-                    else
-                    {
-                        if (part != null)
+                        // Try to get the object which was responsible for the killing
+                        SceneObjectPart part = m_SP.Scene.GetSceneObjectPart(killerObjectLocalID);
+                        if (part == null)
                         {
-                            ScenePresence av = DeadAvatar.Scene.GetScenePresence(part.OwnerID);
-                            if (av != null)
-                            {
-                                av.ControllingClient.SendAlertMessage("You fragged " + DeadAvatar.Firstname + " " + DeadAvatar.Lastname);
-                                DeadAvatar.ControllingClient.SendAgentAlertMessage("You got killed by " + av.Name + "!", true);
-                                if (FireEvent)
-                                {
-                                    FireDeadAvatarEvent(av.Name, DeadAvatar, part.ParentGroup);
-                                }
-                            }
-                            else
-                            {
-                                string killer = DeadAvatar.Scene.GetUserName(part.OwnerID);
-                                DeadAvatar.ControllingClient.SendAgentAlertMessage("You impaled yourself on " + part.Name + " owned by " + killer + "!", true);
-                                if (FireEvent)
-                                {
-                                    FireDeadAvatarEvent(killer, DeadAvatar, null);
-                                }
-                            }
+                            // Cause of death: Unknown
+                            deadAvatarMessage = "You died!";
+                            if (FireOnDeadEvent)
+                                FireDeadAvatarEvent("", m_SP, part.ParentGroup);
                         }
                         else
                         {
-                            DeadAvatar.ControllingClient.SendAgentAlertMessage("You died!", true);
-                            if (FireEvent)
+                            // Try to find the avatar wielding the killing object
+                            killingAvatar = m_SP.Scene.GetScenePresence(part.OwnerID);
+                            if (killingAvatar == null)
                             {
-                                FireDeadAvatarEvent("Unknown", DeadAvatar, null);
+                                deadAvatarMessage = String.Format("You impaled yourself on {0} owned by {1}!", part.Name, m_SP.Scene.GetUserName(part.OwnerID));
+                                if (FireOnDeadEvent)
+                                    FireDeadAvatarEvent(m_SP.Scene.GetUserName(part.OwnerID), m_SP, part.ParentGroup);
+                            }
+                            else
+                            {
+                                killingAvatarMessage = String.Format("You fragged {0}!", m_SP.Name);
+                                if (FireOnDeadEvent)
+                                    FireDeadAvatarEvent(killingAvatar.Name, m_SP, part.ParentGroup);
+                                deadAvatarMessage = String.Format("You got killed by {0}!", killingAvatar.Name);
                             }
                         }
                     }
-                }
-            }
-            DeadAvatar.Health = 100;
-            DeadAvatar.Scene.TeleportClientHome(DeadAvatar.UUID, DeadAvatar.ControllingClient);
-        }
-
-        private void FireDeadAvatarEvent(string Killer, ScenePresence DeadAv, SceneObjectGroup killer)
-        {
-            foreach (IScriptModule m in DeadAv.m_scriptEngines)
-            {
-                foreach (SceneObjectPart part in killer.Children.Values)
-                {
-                    foreach (UUID ID in part.Inventory.GetInventoryList())
+                    else
                     {
-                        m.PostObjectEvent(ID, "deadavatar", new object[] { DeadAv.Name, Killer, DeadAv.UUID });
+                        SceneObjectPart part = m_SP.Scene.GetSceneObjectPart(killerObjectLocalID);
+                        killingAvatarMessage = String.Format("You fragged {0}!", m_SP.Name);
+                        deadAvatarMessage = String.Format("You got killed by {0}!", killingAvatar.Name);
+                        if (FireOnDeadEvent)
+                            FireDeadAvatarEvent(killingAvatar.Name, m_SP, part.ParentGroup);
+                    }
+                }
+                try
+                {
+                    m_SP.ControllingClient.SendAgentAlertMessage(deadAvatarMessage, true);
+                    if (killingAvatar != null)
+                        killingAvatar.ControllingClient.SendAlertMessage(killingAvatarMessage);
+                }
+                catch (InvalidOperationException)
+                { }
+
+                m_SP.Health = MaximumHealth;
+                m_SP.Scene.TeleportClientHome(m_SP.UUID, m_SP.ControllingClient);
+            }
+
+            private void FireDeadAvatarEvent(string KillerName, ScenePresence DeadAv, SceneObjectGroup killer)
+            {
+                foreach (IScriptModule m in DeadAv.m_scriptEngines)
+                {
+                    if (killer != null)
+                    {
+                        foreach (SceneObjectPart part in killer.Children.Values)
+                        {
+                            foreach (UUID ID in part.Inventory.GetInventoryList())
+                            {
+                                m.PostObjectEvent(ID, "deadavatar", new object[] { DeadAv.Name, KillerName, DeadAv.UUID });
+                            }
+                        }
                     }
                 }
             }
@@ -182,11 +297,13 @@ namespace Aurora.Modules
 
         private void AvatarEnteringParcel(ScenePresence avatar, int localLandID, UUID regionID)
         {
-            ILandObject obj = avatar.Scene.LandChannel.GetLandObject(avatar.AbsolutePosition.X, avatar.AbsolutePosition.Y);
             try
             {
+                ILandObject obj = avatar.Scene.LandChannel.GetLandObject(avatar.AbsolutePosition.X, avatar.AbsolutePosition.Y);
+
                 if ((obj.LandData.Flags & (uint)ParcelFlags.AllowDamage) != 0)
                 {
+                    avatar.Health = MaximumHealth;
                     avatar.Invulnerable = false;
                 }
                 else

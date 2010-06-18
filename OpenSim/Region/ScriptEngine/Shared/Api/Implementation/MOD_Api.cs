@@ -226,5 +226,18 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         {
             m_host.SetConeOfSilence(radius.value);
         }
+
+        public void AAJoinCombatTeam(LSL_String team)
+        {
+            ScenePresence SP = World.GetScenePresence(m_host.OwnerID);
+            if (SP != null)
+            {
+                ICombatPresence CP = SP.RequestModuleInterface<ICombatPresence>();
+                if (CP != null)
+                {
+                    CP.Team = team.m_string;
+                }
+            }
+        }
     }
 }
