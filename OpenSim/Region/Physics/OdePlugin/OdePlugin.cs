@@ -1786,6 +1786,7 @@ namespace OpenSim.Region.Physics.OdePlugin
                     m_log.ErrorFormat("[PHYSICS]: Exception while meshing prim {0}.", primName);
                     m_log.Debug(e.ToString());
                     mesh = null;
+                    return null;
                 }
             }
 
