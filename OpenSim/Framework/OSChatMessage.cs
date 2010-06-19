@@ -52,6 +52,21 @@ namespace OpenSim.Framework
         protected ChatTypeEnum m_type;
         protected UUID m_fromID;
 
+        public OSChatMessage Copy()
+        {
+            OSChatMessage message = new OSChatMessage();
+            message.Channel = Channel;
+            message.From = From;
+            message.Message = Message;
+            message.Position = Position;
+            message.Scene = Scene;
+            message.Sender = Sender;
+            message.SenderObject = SenderObject;
+            message.SenderUUID = SenderUUID;
+            message.Type = Type;
+            return message;
+        }
+
         public OSChatMessage()
         {
             m_position = new Vector3();
