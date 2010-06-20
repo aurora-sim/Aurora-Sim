@@ -1530,6 +1530,15 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             OutPacket(tpStart, ThrottleOutPacketType.Unknown);
         }
 
+        public void SendTeleportProgress(string reason)
+        {
+            TeleportProgressPacket tpProgress = new TeleportProgressPacket();
+            tpProgress.AgentData.AgentID = this.AgentId;
+            tpProgress.Info.Message = Utils.StringToBytes(reason);
+            tpProgress.Info.TeleportFlags = 16;
+            OutPacket(tpProgress, ThrottleOutPacketType.Unknown);
+        }
+
         public void SendMoneyBalance(UUID transaction, bool success, byte[] description, int balance)
         {
             MoneyBalanceReplyPacket money = (MoneyBalanceReplyPacket)PacketPool.Instance.GetPacket(PacketType.MoneyBalanceReply);
@@ -4181,8 +4190,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             rinfopack.RegionInfo2 = new RegionInfoPacket.RegionInfo2Block();
             rinfopack.RegionInfo2.HardMaxAgents = uint.MaxValue;
             rinfopack.RegionInfo2.HardMaxObjects = uint.MaxValue;
-            rinfopack.RegionInfo2.MaxAgents32 = uint.MaxValue;
-            rinfopack.RegionInfo2.ProductName = Utils.EmptyBytes;
+            rinfopack.RegionInfo2.MaxAgents32 = args.MaxAgents;
+            rinfopack.RegionInfo2.ProductName = Utils.StringToBytes(args.RegionType);
             rinfopack.RegionInfo2.ProductSKU = Utils.EmptyBytes;
 
             rinfopack.HasVariableBlocks = true;

@@ -197,7 +197,7 @@ namespace OpenSim.Region.Physics.OdePlugin
             {
                 m_colliderarr[i] = false;
             }
-            CAPSULE_LENGTH = (size.Z * 1.15f) - CAPSULE_RADIUS * 4f;
+            CAPSULE_LENGTH = (size.Z * 1.15f) - CAPSULE_RADIUS * 3.2f;
             //m_log.Info("[SIZE]: " + CAPSULE_LENGTH.ToString());
             m_tainted_CAPSULE_LENGTH = CAPSULE_LENGTH;
 
@@ -1061,6 +1061,11 @@ namespace OpenSim.Region.Physics.OdePlugin
                     vec.Z += (target_altitude - _position.Z) * PID_P * 5.0f;
                 }
                 // end add Kitto Flora
+            }
+            float groundHeight = _parent_scene.GetTerrainHeightAtXY(_position.X, _position.Y);
+            if (_position.Z - CAPSULE_LENGTH + (CAPSULE_LENGTH / 5) < groundHeight)
+            {
+                vec.Z += ((groundHeight - (_position.Z - CAPSULE_LENGTH + (CAPSULE_LENGTH / 5))) * 100);
             }
             if (vec.IsFinite())
             {

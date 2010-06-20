@@ -47,5 +47,7 @@ namespace OpenSim.Framework
         public bool useEstateSun;
         public float waterHeight;
         public string simName;
+        public string RegionType;
+        public uint MaxAgents;
     }
 }

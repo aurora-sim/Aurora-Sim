@@ -284,7 +284,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             foreach (string api in am.GetApis())
             {
                 Apis[api] = am.CreateApi(api);
-                Apis[api].Initialize(m_ScriptEngine, part, localID, ItemID, m_ScriptEngine.ScriptProtection);
+                Apis[api].Initialize(m_ScriptEngine, part, localID, ItemID, ScriptEngine.ScriptProtection);
             }
             foreach (KeyValuePair<string, IScriptApi> kv in Apis)
             {
@@ -401,7 +401,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             string Inherited = "";
             string ClassName = "";
 
-            if (m_ScriptEngine.ScriptProtection.AllowMacroScripting)
+            if (ScriptEngine.ScriptProtection.AllowMacroScripting)
             {
                 if (Source.Contains("#Inherited"))
                 {
@@ -425,8 +425,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     URL = URL.Replace("#IncludeHTML ", "");
                     Source = Source.Replace("#IncludeHTML " + URL, "");
                     string webSite = ReadExternalWebsite(URL);
-                    m_ScriptEngine.ScriptProtection.AddNewClassSource(URL, webSite, null);
-                    m_ScriptEngine.ScriptProtection.AddWantedSRC(ItemID, URL);
+                    ScriptEngine.ScriptProtection.AddNewClassSource(URL, webSite, null);
+                    ScriptEngine.ScriptProtection.AddWantedSRC(ItemID, URL);
                 }
                 if (Source.Contains("#Include "))
                 {
@@ -435,7 +435,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     WantedClass = Source.Split('\n')[line];
                     WantedClass = WantedClass.Replace("#Include ", "");
                     Source = Source.Replace("#Include " + WantedClass, "");
-                    m_ScriptEngine.ScriptProtection.AddWantedSRC(ItemID, WantedClass);
+                    ScriptEngine.ScriptProtection.AddWantedSRC(ItemID, WantedClass);
                 }
             }
             else
@@ -474,7 +474,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     WantedClass = Source.Split('\n')[line];
                     WantedClass = WantedClass.Replace("#Include ", "");
                     Source = Source.Replace("#Include " + WantedClass, "");
-                    m_ScriptEngine.ScriptProtection.AddWantedSRC(ItemID, WantedClass);
+                    ScriptEngine.ScriptProtection.AddWantedSRC(ItemID, WantedClass);
                     WantedClass = "";
                 }
             }
@@ -487,7 +487,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 //Null everything and don't fire any events
                 CloseAndDispose(true);
-                m_ScriptEngine.ScriptProtection.RemovePreviouslyCompiled(Source);
+                ScriptEngine.ScriptProtection.RemovePreviouslyCompiled(Source);
 
                 AssemblyName = Path.Combine("ScriptEngines", Path.Combine(
                     m_ScriptEngine.World.RegionInfo.RegionID.ToString(),
@@ -502,7 +502,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     ScriptEngine.NeedsRemoved.Remove(ItemID);
             }
             //Try to find a previously compiled script in this instance
-            ScriptData PreviouslyCompiledID = (ScriptData)m_ScriptEngine.ScriptProtection.TryGetPreviouslyCompiledScript(Source);
+            ScriptData PreviouslyCompiledID = (ScriptData)ScriptEngine.ScriptProtection.TryGetPreviouslyCompiledScript(Source);
 
             //If the previous compile is there, retrive that
             if (PreviouslyCompiledID != null)
@@ -522,7 +522,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 try
                 {
-                    ScriptEngine.LSLCompiler.PerformScriptCompile(Source, AssetID, InventoryItem.OwnerID, ItemID, Inherited, ClassName, m_ScriptEngine.ScriptProtection, localID, AssemblyName, this, out AssemblyName,
+                    ScriptEngine.LSLCompiler.PerformScriptCompile(Source, AssetID, InventoryItem.OwnerID, ItemID, Inherited, ClassName, ScriptEngine.ScriptProtection, localID, AssemblyName, this, out AssemblyName,
                                                                          out LineMap, out ClassID);
                     #region Warnings
 
@@ -568,7 +568,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         Script = ScriptEngine.AppDomainManager.LoadScript(AssemblyName, "Script." + ClassName, out AppDomain);
                     else
                         Script = ScriptEngine.AppDomainManager.LoadScript(AssemblyName, "Script." + ClassID, out AppDomain);
-                    m_ScriptEngine.ScriptProtection.AddPreviouslyCompiled(Source, this);
+                    ScriptEngine.ScriptProtection.AddPreviouslyCompiled(Source, this);
                 }
                 catch (Exception ex)
                 {

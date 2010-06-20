@@ -691,6 +691,8 @@ namespace OpenSim.Region.CoreModules.World.Estate
            args.useEstateSun = m_scene.RegionInfo.RegionSettings.UseEstateSun;
            args.waterHeight = (float)m_scene.RegionInfo.RegionSettings.WaterHeight;
            args.simName = m_scene.RegionInfo.RegionName;
+           args.RegionType = m_scene.RegionInfo.RegionType;
+           args.MaxAgents = (uint)m_scene.RegionInfo.RegionSettings.AgentLimit;
 
            remote_client.SendRegionInfoToEstateMenu(args);
         }

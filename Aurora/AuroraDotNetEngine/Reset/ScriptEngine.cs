@@ -106,7 +106,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public event ScriptRemoved OnScriptRemoved;
         public event ObjectRemoved OnObjectRemoved;
         private IXmlRpcRouter m_XmlRpcRouter;
-        public IScriptProtectionModule ScriptProtection;
+        public static IScriptProtectionModule ScriptProtection;
         
         /// <summary>
         /// Removes the script from the event queue so it does not fire anymore events.

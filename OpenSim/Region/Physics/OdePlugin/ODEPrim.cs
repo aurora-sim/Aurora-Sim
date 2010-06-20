@@ -2132,39 +2132,46 @@ Console.WriteLine(" JointCreateFixed");
             {
                 lock (m_forcelist)
                 {
-                    //m_log.Info("[PHYSICS]: dequeing forcelist");
-                    if (IsPhysical)
+                    if (m_vehicle.Type == Vehicle.TYPE_NONE)
                     {
-                        Vector3 iforce = Vector3.Zero;
-                        int i = 0;
-                        try
+                        //m_log.Info("[PHYSICS]: dequeing forcelist");
+                        if (IsPhysical)
                         {
-                            for (i = 0; i < m_forcelist.Count; i++)
+                            Vector3 iforce = Vector3.Zero;
+                            int i = 0;
+                            try
                             {
+                                for (i = 0; i < m_forcelist.Count; i++)
+                                {
 
-                                iforce = iforce + (m_forcelist[i] * 100);
+                                    iforce = iforce + (m_forcelist[i] * 100);
+                                }
                             }
+                            catch (IndexOutOfRangeException)
+                            {
+                                m_forcelist = new List<Vector3>();
+                                m_collisionscore = 0;
+                                m_interpenetrationcount = 0;
+                                m_taintforce = false;
+                                return;
+                            }
+                            catch (ArgumentOutOfRangeException)
+                            {
+                                m_forcelist = new List<Vector3>();
+                                m_collisionscore = 0;
+                                m_interpenetrationcount = 0;
+                                m_taintforce = false;
+                                return;
+                            }
+                            d.BodyEnable(Body);
+                            d.BodyAddForce(Body, iforce.X, iforce.Y, iforce.Z);
                         }
-                        catch (IndexOutOfRangeException)
-                        {
-                            m_forcelist = new List<Vector3>();
-                            m_collisionscore = 0;
-                            m_interpenetrationcount = 0;
-                            m_taintforce = false;
-                            return;
-                        }
-                        catch (ArgumentOutOfRangeException)
-                        {
-                            m_forcelist = new List<Vector3>();
-                            m_collisionscore = 0;
-                            m_interpenetrationcount = 0;
-                            m_taintforce = false;
-                            return;
-                        }
-                        d.BodyEnable(Body);
-                        d.BodyAddForce(Body, iforce.X, iforce.Y, iforce.Z);
+                        m_forcelist.Clear();
                     }
-                    m_forcelist.Clear();
+                    else
+                    {
+                        m_vehicle.ProcessForceTaint(m_forcelist);
+                    }
                 }
 
                 m_collisionscore = 0;

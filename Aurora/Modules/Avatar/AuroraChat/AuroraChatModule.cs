@@ -160,7 +160,7 @@ namespace Aurora.Modules
 
         #endregion
 
-        private virtual void OnNewClient(IClientAPI client)
+        public virtual void OnNewClient(IClientAPI client)
         {
             client.OnChatFromClient += OnChatFromClient;
             client.OnMuteListRequest += OnMuteListRequest;
@@ -199,7 +199,7 @@ namespace Aurora.Modules
             }
         }
 
-        private virtual void OnClientClosed(UUID clientID, Scene scene)
+        public virtual void OnClientClosed(UUID clientID, Scene scene)
         {
             int AgentCount = 0;
             RegionAgentCount.TryGetValue(scene.RegionInfo.RegionID, out AgentCount);
