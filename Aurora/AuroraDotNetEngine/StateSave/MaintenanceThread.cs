@@ -55,15 +55,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             for (int i = 0; i < Engine.NumberOfEventQueueThreads; i++)
             {
                 EventQueue eqtc = new EventQueue(m_ScriptEngine, Engine.SleepTime);
-                Watchdog.StartThread(eqtc.DoProcessQueue, "EventQueueThread", ThreadPriority.Normal, true);
+                Watchdog.StartThread(eqtc.DoProcessQueue, "EventQueueThread", ThreadPriority.BelowNormal, true);
             }
             for (int i = 0; i < Engine.NumberOfStateSavingThreads; i++)
             {
-                Watchdog.StartThread(StateSavingMaintenance, "StateSavingMaintenance", ThreadPriority.Normal, true);
+                Watchdog.StartThread(StateSavingMaintenance, "StateSavingMaintenance", ThreadPriority.BelowNormal, true);
             }
             for (int i = 0; i < Engine.NumberOfStartStopThreads; i++)
             {
-                Watchdog.StartThread(StartEndScriptMaintenance, "StartEndScriptMaintenance", ThreadPriority.Normal, true);
+                Watchdog.StartThread(StartEndScriptMaintenance, "StartEndScriptMaintenance", ThreadPriority.BelowNormal, true);
             }
         }
 

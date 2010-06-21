@@ -61,102 +61,106 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             while (true)
             {
-                Thread.Sleep(SleepTime);
                 try
                 {
                     if (ScriptEngine.EventQueue.Count == 0)
                     {
+                        Thread.Sleep(SleepTime);
                         continue;
                     }
-                    // Something in queue, process
-                    QueueItemStruct QIS = null;
-                    ScriptEngine.EventQueue.Dequeue(out QIS);
-                    if (QIS == null)
-                        continue;
-
-                    //Suspended scripts get readded
-                    if (QIS.ID.Suspended)
+                    while (ScriptEngine.EventQueue.Count != 0)
                     {
-                        ScriptEngine.EventQueue.Enqueue(QIS);
-                        continue;
-                    }
-                    //Disabled or not running scripts dont get events saved.
-                    if (QIS.ID.Disabled)
-                    {
-                        continue;
-                    }
-                    if (!QIS.ID.Running)
-                    {
-                        continue;
-                    }
-
-                    //Clear scripts that shouldn't be in the queue anymore
-                    if (ScriptEngine.NeedsRemoved.ContainsKey(QIS.ID.ItemID))
-                    {
-                        //Check the localID too...
-                        uint localID = 0;
-                        ScriptEngine.NeedsRemoved.TryGetValue(QIS.ID.ItemID, out localID);
-                        if (localID == QIS.ID.localID)
-                        {
+                        m_log.Warn("ScriptEngine.Count " + ScriptEngine.EventQueue.Count);
+                        // Something in queue, process
+                        QueueItemStruct QIS = null;
+                        ScriptEngine.EventQueue.Dequeue(out QIS);
+                        if (QIS == null)
                             continue;
-                        }
-                    }
-                    try
-                    {
-                        QIS.ID.SetEventParams(QIS.llDetectParams);
-                        int Running = 0;
-                        Running = QIS.ID.Script.ExecuteEvent(
-                            QIS.ID.State,
-                            QIS.functionName,
-                            QIS.param, QIS.CurrentlyAt);
-                        //Finished with nothing left.
-                        if (Running == 0)
+
+                        //Suspended scripts get readded
+                        if (QIS.ID.Suspended)
                         {
-                            if (QIS.functionName == "timer")
-                                QIS.ID.TimerQueued = false;
-                            if (QIS.functionName == "control")
-                            {
-                                if (QIS.ID.ControlEventsInQueue > 0)
-                                    QIS.ID.ControlEventsInQueue--;
-                            }
-                            if (QIS.functionName == "collision")
-                                QIS.ID.CollisionInQueue = false;
-                            continue;
-                        }
-                        //Did not finish and returned where it should start now
-                        if (Running != 0)
-                        {
-                            if (ScriptEngine.NeedsRemoved.ContainsKey(QIS.ID.ItemID))
-                            {
-                                //Check the localID too...
-                                uint localID = 0;
-                                ScriptEngine.NeedsRemoved.TryGetValue(QIS.ID.ItemID, out localID);
-                                if (localID == QIS.ID.localID)
-                                {
-                                    continue;
-                                }
-                                else
-                                {
-                                    //Remove it then.
-                                    ScriptEngine.NeedsRemoved.Remove(QIS.ID.ItemID);
-                                }
-                            }
-                            QIS.CurrentlyAt = Running;
                             ScriptEngine.EventQueue.Enqueue(QIS);
+                            continue;
                         }
+                        //Disabled or not running scripts dont get events saved.
+                        if (QIS.ID.Disabled)
+                        {
+                            continue;
+                        }
+                        if (!QIS.ID.Running)
+                        {
+                            continue;
+                        }
+
+                        //Clear scripts that shouldn't be in the queue anymore
+                        if (ScriptEngine.NeedsRemoved.ContainsKey(QIS.ID.ItemID))
+                        {
+                            //Check the localID too...
+                            uint localID = 0;
+                            ScriptEngine.NeedsRemoved.TryGetValue(QIS.ID.ItemID, out localID);
+                            if (localID == QIS.ID.localID)
+                            {
+                                continue;
+                            }
+                        }
+                        try
+                        {
+                            QIS.ID.SetEventParams(QIS.llDetectParams);
+                            int Running = 0;
+                            Running = QIS.ID.Script.ExecuteEvent(
+                                QIS.ID.State,
+                                QIS.functionName,
+                                QIS.param, QIS.CurrentlyAt);
+                            //Finished with nothing left.
+                            if (Running == 0)
+                            {
+                                if (QIS.functionName == "timer")
+                                    QIS.ID.TimerQueued = false;
+                                if (QIS.functionName == "control")
+                                {
+                                    if (QIS.ID.ControlEventsInQueue > 0)
+                                        QIS.ID.ControlEventsInQueue--;
+                                }
+                                if (QIS.functionName == "collision")
+                                    QIS.ID.CollisionInQueue = false;
+                                continue;
+                            }
+                            //Did not finish and returned where it should start now
+                            if (Running != 0)
+                            {
+                                if (ScriptEngine.NeedsRemoved.ContainsKey(QIS.ID.ItemID))
+                                {
+                                    //Check the localID too...
+                                    uint localID = 0;
+                                    ScriptEngine.NeedsRemoved.TryGetValue(QIS.ID.ItemID, out localID);
+                                    if (localID == QIS.ID.localID)
+                                    {
+                                        continue;
+                                    }
+                                    else
+                                    {
+                                        //Remove it then.
+                                        ScriptEngine.NeedsRemoved.Remove(QIS.ID.ItemID);
+                                    }
+                                }
+                                QIS.CurrentlyAt = Running;
+                                ScriptEngine.EventQueue.Enqueue(QIS);
+                            }
+                        }
+                        catch (SelfDeleteException) // Must delete SOG
+                        {
+                            if (QIS.ID.part != null && QIS.ID.part.ParentGroup != null)
+                                m_ScriptEngine.World.DeleteSceneObject(
+                                    QIS.ID.part.ParentGroup, false, true);
+                        }
+                        catch (ScriptDeleteException) // Must delete item
+                        {
+                            if (QIS.ID.part != null && QIS.ID.part.ParentGroup != null)
+                                QIS.ID.part.Inventory.RemoveInventoryItem(QIS.ID.ItemID);
+                        }
+                        catch (Exception) { }
                     }
-                    catch (SelfDeleteException) // Must delete SOG
-                    {
-                        if (QIS.ID.part != null && QIS.ID.part.ParentGroup != null)
-                            m_ScriptEngine.World.DeleteSceneObject(
-                                QIS.ID.part.ParentGroup, false, true);
-                    }
-                    catch (ScriptDeleteException) // Must delete item
-                    {
-                        if (QIS.ID.part != null && QIS.ID.part.ParentGroup != null)
-                            QIS.ID.part.Inventory.RemoveInventoryItem(QIS.ID.ItemID);
-                    }
-                    catch (Exception) { }
                 }
                 catch (Exception ex)
                 {

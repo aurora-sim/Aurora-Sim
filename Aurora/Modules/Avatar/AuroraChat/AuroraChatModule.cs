@@ -181,9 +181,8 @@ namespace Aurora.Modules
             {
                 ((Scene)client.Scene).ForEachScenePresence(delegate(ScenePresence SP)
                 {
-                    if (SP.UUID != client.AgentId)
+                    if (SP.UUID != client.AgentId && !SP.IsChildAgent)
                     {
-
                         SP.ControllingClient.SendChatMessage(client.Name + " has joined the region. Total Agents: " + AgentCount, 1, SP.AbsolutePosition, "System",
                                                            UUID.Zero, (byte)ChatSourceType.System, (byte)ChatAudibleLevel.Fully);
                     }
@@ -212,7 +211,7 @@ namespace Aurora.Modules
                 string leavingAvatar = scene.GetUserName(clientID);
                 scene.ForEachScenePresence(delegate(ScenePresence SP)
                 {
-                    if (SP.UUID != clientID)
+                    if (SP.UUID != clientID && !SP.IsChildAgent)
                     {
                         SP.ControllingClient.SendChatMessage(leavingAvatar + " has left the region. Total Agents: " + AgentCount, 1, SP.AbsolutePosition, "System",
                                                            UUID.Zero, (byte)ChatSourceType.System, (byte)ChatAudibleLevel.Fully);

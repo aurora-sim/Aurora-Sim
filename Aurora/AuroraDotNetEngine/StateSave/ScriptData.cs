@@ -144,7 +144,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             Disabled = true;
 
             // Remove from internal structure
-            m_ScriptEngine.RemoveScript(this);
+            ScriptEngine.ScriptProtection.RemoveScript(this);
 
             m_ScriptEngine.RemoveFromEventQueue(ItemID, localID);
             if (m_ScriptEngine.Errors.ContainsKey(ItemID))

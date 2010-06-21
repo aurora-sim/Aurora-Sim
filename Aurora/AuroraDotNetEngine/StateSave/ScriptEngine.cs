@@ -951,68 +951,116 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <returns></returns>
         public bool AddToScriptQueue(ScriptData ID, string FunctionName, DetectParams[] qParams, params object[] param)
         {
-            lock (EventQueue)
+            if (EventQueue.Count >= EventExecutionMaxQueueSize)
             {
-                if (EventQueue.Count >= EventExecutionMaxQueueSize)
+                m_log.WarnFormat("[{0}]: Event Queue is above the MaxQueueSize.", ScriptEngineName);
+                return false;
+            }
+            if (FunctionName == "timer")
+            {
+                if (ID.TimerQueued)
+                    return true;
+                ID.TimerQueued = true;
+            }
+
+            if (FunctionName == "control")
+            {
+                int held = ((LSL_Types.LSLInteger)param[1]).value;
+                // int changed = ((LSL_Types.LSLInteger)data.Params[2]).value;
+
+                // If the last message was a 0 (nothing held)
+                // and this one is also nothing held, drop it
+                //
+                if (ID.LastControlLevel == held && held == 0)
+                    return true;
+
+                // If there is one or more queued, then queue
+                // only changed ones, else queue unconditionally
+                //
+                if (ID.ControlEventsInQueue > 0)
                 {
-                    m_log.WarnFormat("[{0}]: Event Queue is above the MaxQueueSize.", ScriptEngineName);
-                    return false;
-                }
-                if (FunctionName == "timer")
-                {
-                    if (ID.TimerQueued)
+                    if (ID.LastControlLevel == held)
                         return true;
-                    ID.TimerQueued = true;
                 }
 
-                if (FunctionName == "control")
+                //Clear scripts that shouldn't be in the queue anymore
+                if (ScriptEngine.NeedsRemoved.ContainsKey(ID.ItemID))
                 {
-                    int held = ((LSL_Types.LSLInteger)param[1]).value;
-                    // int changed = ((LSL_Types.LSLInteger)data.Params[2]).value;
-
-                    // If the last message was a 0 (nothing held)
-                    // and this one is also nothing held, drop it
-                    //
-                    if (ID.LastControlLevel == held && held == 0)
-                        return true;
-
-                    // If there is one or more queued, then queue
-                    // only changed ones, else queue unconditionally
-                    //
-                    if (ID.ControlEventsInQueue > 0)
+                    //Check the localID too...
+                    uint localID = 0;
+                    ScriptEngine.NeedsRemoved.TryGetValue(ID.ItemID, out localID);
+                    if (localID == ID.localID)
                     {
-                        if (ID.LastControlLevel == held)
-                            return true;
+                        return true;
                     }
-
-                    ID.LastControlLevel = held;
-                    ID.ControlEventsInQueue++;
                 }
-
-                if (FunctionName == "collision")
+                try
                 {
-                    if (ID.CollisionInQueue)
-                        return true;
-                    if (qParams == null)
-                        return true;
-
-                    ID.CollisionInQueue = true;
+                    ID.SetEventParams(qParams);
+                    int Running = 0;
+                    Running = ID.Script.ExecuteEvent(
+                        ID.State,
+                        FunctionName,
+                        param, 0);
+                    //Did not finish and returned where it should start now
+                    /*if (Running != 0)
+                    {
+                        if (ScriptEngine.NeedsRemoved.ContainsKey(ID.ItemID))
+                        {
+                            //Check the localID too...
+                            uint localID = 0;
+                            ScriptEngine.NeedsRemoved.TryGetValue(ID.ItemID, out localID);
+                            if (localID == ID.localID)
+                            {
+                                return true;
+                            }
+                            else
+                            {
+                                //Remove it then.
+                                ScriptEngine.NeedsRemoved.Remove(ID.ItemID);
+                            }
+                        }
+                        CurrentlyAt = Running;
+                        ScriptEngine.EventQueue.Enqueue(QIS);
+                    }*/
                 }
-                // Create a structure and add data
-                QueueItemStruct QIS = new QueueItemStruct();
-                QIS.ID = ID;
-                QIS.functionName = FunctionName;
-                QIS.llDetectParams = qParams;
-                QIS.param = param;
-                if (ID == null)
-                    return false;
-                QIS.LineMap = ID.LineMap;
-                if (World.PipeEventsForScript(
-                    QIS.ID.localID))
+                catch (SelfDeleteException) // Must delete SOG
                 {
-                    // Add it to queue
-                    EventQueue.Enqueue(QIS);
+                    if (ID.part != null && ID.part.ParentGroup != null)
+                        World.DeleteSceneObject(
+                            ID.part.ParentGroup, false, true);
                 }
+                catch (ScriptDeleteException) // Must delete item
+                {
+                    if (ID.part != null && ID.part.ParentGroup != null)
+                        ID.part.Inventory.RemoveInventoryItem(ID.ItemID);
+                }
+                catch (Exception) { }
+            }
+
+            if (FunctionName == "collision")
+            {
+                if (ID.CollisionInQueue)
+                    return true;
+                if (qParams == null)
+                    return true;
+
+                ID.CollisionInQueue = true;
+            }
+            // Create a structure and add data
+            QueueItemStruct QIS = new QueueItemStruct();
+            QIS.ID = ID;
+            QIS.functionName = FunctionName;
+            QIS.llDetectParams = qParams;
+            QIS.param = param;
+            if (ID == null)
+                return false;
+            QIS.LineMap = ID.LineMap;
+            if (World.PipeEventsForScript(
+                QIS.ID.localID))
+            {
+                // Add it to queue
+                EventQueue.Enqueue(QIS);
             }
             return true;
         }
