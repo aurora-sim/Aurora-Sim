@@ -11,7 +11,7 @@ using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Region.ScriptEngine.Interfaces;
 
-namespace Aurora.ScriptEngine.AuroraDotNetEngineStateSave
+namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
     public class ScriptProtectionModule: IScriptProtectionModule
 	{

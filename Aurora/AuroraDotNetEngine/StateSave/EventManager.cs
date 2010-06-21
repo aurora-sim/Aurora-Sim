@@ -38,7 +38,7 @@ using OpenSim.Region.ScriptEngine.Shared;
 using OpenSim.Region.ScriptEngine.Interfaces;
 using log4net;
 
-namespace Aurora.ScriptEngine.AuroraDotNetEngineStateSave
+namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
     /// <summary>
     /// Prepares events so they can be directly executed upon a script by EventQueueManager, then queues it.

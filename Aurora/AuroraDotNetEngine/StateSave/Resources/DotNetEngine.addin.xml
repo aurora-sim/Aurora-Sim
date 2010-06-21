@@ -8,6 +8,6 @@
     </Dependencies>
 
     <Extension path = "/OpenSim/RegionModules">
-        <RegionModule id="AuroraDotNetEngineStateSave" type="Aurora.ScriptEngine.AuroraDotNetEngineStateSave.ScriptEngine" />
+        <RegionModule id="AuroraDotNetEngine" type="Aurora.ScriptEngine.AuroraDotNetEngine.ScriptEngine" />
     </Extension>
 </Addin>

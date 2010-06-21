@@ -30,6 +30,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Runtime.Remoting;
+using System.Runtime.Remoting.Lifetime;
 using System.Threading;
 using System.Xml;
 using log4net;
@@ -48,7 +50,7 @@ using OpenSim.Region.ScriptEngine.Shared.Api;
 using OpenSim.Framework.Console;
 using Amib.Threading;
 
-namespace Aurora.ScriptEngine.AuroraDotNetEngineStateSave
+namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
     [Serializable]
     public class ScriptEngine : INonSharedRegionModule, IScriptEngine, IScriptModule
@@ -94,7 +96,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngineStateSave
 
         public string ScriptEngineName
         {
-            get { return "AuroraDotNetEngineStateSave"; }
+            get { return "AuroraDotNetEngine"; }
         }
         
         public IScriptModule ScriptModule
@@ -105,7 +107,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngineStateSave
         public event ScriptRemoved OnScriptRemoved;
         public event ObjectRemoved OnObjectRemoved;
         private IXmlRpcRouter m_XmlRpcRouter;
-        public IScriptProtectionModule ScriptProtection;
+        public static IScriptProtectionModule ScriptProtection;
         
         /// <summary>
         /// Removes the script from the event queue so it does not fire anymore events.
@@ -171,6 +173,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngineStateSave
         /// Size of the stack.
         /// </summary>
         public int StackSize;
+
+        public System.Timers.Timer UpdateLeasesTimer = null;
+
+        public static bool FirstStartup = true;
 
         #endregion
 
@@ -263,10 +269,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngineStateSave
 
             m_ThreadPool = new SmartThreadPool(startInfo);
             //Register the console commands
-            scene.AddCommand(this, "DotNet restart all scripts", "DotNet restart all scripts", "Restarts all scripts in the sim", RestartAllScripts);
-            scene.AddCommand(this, "DotNet stop all scripts", "DotNet stop all scripts", "Stops all scripts in the sim", StopAllScripts);
-            scene.AddCommand(this, "DotNet start all scripts", "DotNet start all scripts", "Restarts all scripts in the sim", StartAllScripts);
-            
+            if (FirstStartup)
+            {
+                scene.AddCommand(this, "DotNet restart all scripts", "DotNet restart all scripts", "Restarts all scripts in the sim", RestartAllScripts);
+                scene.AddCommand(this, "DotNet stop all scripts", "DotNet stop all scripts", "Stops all scripts in the sim", StopAllScripts);
+                scene.AddCommand(this, "DotNet start all scripts", "DotNet start all scripts", "Restarts all scripts in the sim", StartAllScripts);
+            }
+            FirstStartup = false;
+
             ScriptConfigSource = ConfigSource.Configs[ScriptEngineName];
 
         	//m_log.Info("[" + ScriptEngineName + "]: ScriptEngine initializing");
@@ -395,6 +405,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngineStateSave
             }
 
             scene.UnregisterModuleInterface<IScriptModule>(this);
+            UpdateLeasesTimer.Enabled = false;
+            UpdateLeasesTimer.Elapsed -= UpdateAllLeases;
+            UpdateLeasesTimer.Stop();
 
             Shutdown();
         }
@@ -411,6 +424,29 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngineStateSave
             scene.EventManager.OnGetScriptRunning += OnGetScriptRunning;
             scene.EventManager.OnStartScript += OnStartScript;
             scene.EventManager.OnStopScript += OnStopScript;
+            UpdateLeasesTimer = new System.Timers.Timer(9.5 * 1000 * 60 /*9.5 minutes*/);
+            UpdateLeasesTimer.Enabled = true;
+            UpdateLeasesTimer.Elapsed += UpdateAllLeases;
+            UpdateLeasesTimer.Start();
+        }
+
+        public void UpdateAllLeases(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            foreach (ScriptData script in ScriptProtection.GetAllScripts())
+            {
+                if (script.Running == false || script.Disabled == true || script.Script == null)
+                    return;
+
+                try
+                {
+                    ILease lease = (ILease)RemotingServices.GetLifetimeService(script.Script as ScriptBaseClass);
+                    lease.Renew(DateTime.Now.AddMinutes(10) - DateTime.Now);
+                }
+                catch (Exception ex)
+                {
+                    m_log.Error("Lease found dead!" + script.ItemID);
+                }
+            }
         }
 
         public void Close()
@@ -704,13 +740,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngineStateSave
 
             if (id.State != state)
             {
-            	EventManager.state_exit(id.localID);
-            	id.State = state;
-            	int eventFlags = id.Script.GetStateEventFlags(id.State);
+                PostObjectEvent(id.localID, new EventParams(
+                    "state_exit", new object[0] { },
+                    new DetectParams[0]));
+                id.State = state;
+                int eventFlags = id.Script.GetStateEventFlags(id.State);
 
-            	id.part.SetScriptEvents(itemID, eventFlags);
+                id.part.SetScriptEvents(itemID, eventFlags);
+                UpdateScriptInstanceData(id);
 
-            	EventManager.state_entry(id.localID);
+                PostObjectEvent(id.localID, new EventParams(
+                    "state_entry", new object[] { },
+                    new DetectParams[0]));
             }
         }
 
@@ -901,35 +942,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngineStateSave
         }
 
         /// <summary>
-        /// Posts event to the given object.
-        /// NOTE: Use AddToScriptQueue with InstanceData instead if possible.
-        /// </summary>
-        /// <param name="localID">Region object ID</param>
-        /// <param name="itemID">Region script ID</param>
-        /// <param name="FunctionName">Name of the function, will be state + "_event_" + FunctionName</param>
-        /// <param name="param">Array of parameters to match event mask</param>
-        public bool AddToScriptQueue(uint localID, UUID itemID, string FunctionName, DetectParams[] qParams, params object[] param)
-        {
-            lock (EventQueue)
-            {
-                if (EventQueue.Count >= EventExecutionMaxQueueSize)
-                {
-                    m_log.WarnFormat("[{0}]: Event Queue is above the MaxQueueSize.", ScriptEngineName);
-                    return false;
-                }
-
-                ScriptData id = GetScript(localID, itemID);
-                if (id == null)
-                {
-                    m_log.Warn("RETURNING FALSE IN ASQ");
-                    return false;
-                }
-
-                return AddToScriptQueue(id, FunctionName, qParams, param);
-            }
-        }
-
-        /// <summary>
         /// Posts the event to the given object.
         /// </summary>
         /// <param name="ID"></param>
@@ -1059,35 +1071,33 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngineStateSave
         {
             ScriptData id = null;
             id = GetScript(localID, itemID);
-            lock (LUQueue)
+            if ((LUQueue.Count >= LoadUnloadMaxQueueSize))
             {
-                if ((LUQueue.Count >= LoadUnloadMaxQueueSize))
-                {
-                    m_log.Error("[" + ScriptEngineName + "]: ERROR: Load/unload queue item count is at " + LUQueue.Count + ". Config variable \"LoadUnloadMaxQueueSize\" " + "is set to " + LoadUnloadMaxQueueSize + ", so ignoring new script.");
-                    return;
-                }
-                LUStruct ls = new LUStruct();
-                //Its a change of the script source, needs to be recompiled and such.
-                if (id != null)
-                    ls.Action = LUType.Reupload;
-                else
-                    ls.Action = LUType.Load;
-                if (id == null)
-                    id = new ScriptData(this);
-                id.World = m_Scene;
-                id.localID = localID;
-                id.ItemID = itemID;
-                id.PostOnRez = postOnRez;
-                id.StartParam = startParam;
-                id.stateSource = statesource;
-                id.State = "default";
-                id.Running = true;
-                id.Disabled = false;
-                id.Source = Script;
-                ScriptProtection.RemovePreviouslyCompiled(id.Source);
-                ls.ID = id;
-                LUQueue.Enqueue(ls);
+                m_log.Error("[" + ScriptEngineName + "]: ERROR: Load/unload queue item count is at " + LUQueue.Count + ". Config variable \"LoadUnloadMaxQueueSize\" " + "is set to " + LoadUnloadMaxQueueSize + ", so ignoring new script.");
+                return;
             }
+            LUStruct ls = new LUStruct();
+            //Its a change of the script source, needs to be recompiled and such.
+            if (id != null)
+                ls.Action = LUType.Reupload;
+            else
+                ls.Action = LUType.Load;
+            if (id == null)
+                id = new ScriptData(this);
+            id.World = m_Scene;
+            id.localID = localID;
+            id.ItemID = itemID;
+            id.PostOnRez = postOnRez;
+            id.StartParam = startParam;
+            id.stateSource = statesource;
+            id.State = "default";
+            id.Running = true;
+            id.Disabled = false;
+            id.Source = Script;
+            id.World = m_Scene;
+            ScriptProtection.RemovePreviouslyCompiled(id.Source);
+            ls.ID = id;
+            LUQueue.Enqueue(ls);
         }
 
         public void UpdateScript(uint localID, UUID itemID, string script, int startParam, bool postOnRez, int stateSource)
@@ -1097,48 +1107,48 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngineStateSave
             //Its a change of the script source, needs to be recompiled and such.
             if (id != null)
             {
-                lock (LUQueue)
+                if ((LUQueue.Count >= LoadUnloadMaxQueueSize))
                 {
-                    id.PostOnRez = postOnRez;
-                    id.StartParam = startParam;
-                    id.stateSource = (StateSource)stateSource;
-                    id.State = "default";
-                    id.Running = true;
-                    id.Disabled = false;
-                    id.Source = script;
-                    id.World = m_Scene;
-                    try
-                    {
-                        id.Start(true);
-                    }
-                    catch (Exception) { }
+                    m_log.Error("[" + ScriptEngineName + "]: ERROR: Load/unload queue item count is at " + LUQueue.Count + ". Config variable \"LoadUnloadMaxQueueSize\" " + "is set to " + LoadUnloadMaxQueueSize + ", so ignoring new script.");
+                    return;
                 }
+                LUStruct ls = new LUStruct();
+                //Its a change of the script source, needs to be recompiled and such.
+                ls.Action = LUType.Reupload;
+                id.PostOnRez = postOnRez;
+                id.StartParam = startParam;
+                id.stateSource = (StateSource)stateSource;
+                id.State = "default";
+                id.Running = true;
+                id.Disabled = false;
+                id.Source = script;
+                id.World = m_Scene;
+                ls.ID = id;
+                LUQueue.Enqueue(ls);
             }
             else
             {
-                lock (LUQueue)
+                if ((LUQueue.Count >= LoadUnloadMaxQueueSize))
                 {
-                    if ((LUQueue.Count >= LoadUnloadMaxQueueSize))
-                    {
-                        m_log.Error("[" + ScriptEngineName + "]: ERROR: Load/unload queue item count is at " + LUQueue.Count + ". Config variable \"LoadUnloadMaxQueueSize\" " + "is set to " + LoadUnloadMaxQueueSize + ", so ignoring new script.");
-                        return;
-                    }
-                    id = new ScriptData(this);
-                    id.ItemID = itemID;
-                    id.localID = localID;
-                    id.StartParam = startParam;
-                    id.stateSource = (StateSource)stateSource;
-                    id.State = "default";
-                    id.Running = true;
-                    id.Disabled = false;
-                    id.Source = script;
-                    id.PostOnRez = postOnRez;
-                    try
-                    {
-                        id.Start(true);
-                    }
-                    catch (Exception) { }
+                    m_log.Error("[" + ScriptEngineName + "]: ERROR: Load/unload queue item count is at " + LUQueue.Count + ". Config variable \"LoadUnloadMaxQueueSize\" " + "is set to " + LoadUnloadMaxQueueSize + ", so ignoring new script.");
+                    return;
                 }
+                LUStruct ls = new LUStruct();
+                //Its a change of the script source, needs to be recompiled and such.
+                ls.Action = LUType.Reupload;
+                id = new ScriptData(this);
+                id.ItemID = itemID;
+                id.localID = localID;
+                id.StartParam = startParam;
+                id.stateSource = (StateSource)stateSource;
+                id.State = "default";
+                id.Running = true;
+                id.Disabled = false;
+                id.Source = script;
+                id.PostOnRez = postOnRez;
+                id.World = m_Scene;
+                ls.ID = id;
+                LUQueue.Enqueue(ls);
             }
         }
 
@@ -1157,10 +1167,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngineStateSave
             ls.ID = data;
             ls.Action = LUType.Unload;
             RemoveFromEventQueue(itemID, localID);
-            lock (LUQueue)
-            {
-                LUQueue.Enqueue(ls);
-            }
+            LUQueue.Enqueue(ls);
         }
 
         /// <summary>
@@ -1214,6 +1221,63 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngineStateSave
         {
             ScriptProtection.RemovePreviouslyCompiled(id.Source);
             ScriptProtection.RemoveScript(id);
+        }
+
+        public string TestCompileScript(UUID assetID)
+        {
+            AssetBase asset = m_Scene.AssetService.Get(assetID.ToString());
+            if (null == asset)
+            {
+                return "Could not find script.";
+            }
+            else
+            {
+                string script = Utils.BytesToString(asset.Data);
+                try
+                {
+                    ScriptEngine.LSLCompiler.PerformTestScriptCompile(script, assetID);
+                }
+                catch (Exception e)
+                {
+                    string error = "Error compiling script: " + e;
+                    if (error.Length > 255)
+                        error = error.Substring(0, 255);
+                    return error;
+                }
+                return "";
+            }
+        }
+
+        public void SaveStateSave(UUID itemID)
+        {
+            IScriptData script = ScriptProtection.GetScript(itemID);
+            if(script != null)
+                ((ScriptData)script).SerializeDatabase();
+        }
+
+        public void UpdateScriptToNewObject(UUID olditemID, TaskInventoryItem newItem, SceneObjectPart newPart)
+        {
+            try
+            {
+                if (newPart.ParentGroup.Scene != null)
+                {
+                    ScriptData SD = GetScriptByItemID(olditemID);
+                    SD.part = newPart;
+                    SD.localID = newPart.LocalId;
+                    SD.ItemID = newItem.ItemID;
+                    //Find the asset ID
+                    SD.InventoryItem = newItem;
+                    SD.AssetID = SD.InventoryItem.AssetID;
+                    //Try to see if this was rezzed from someone's inventory
+                    SD.UserInventoryItemID = SD.part.FromUserInventoryItemID;
+                    SD.SerializeDatabase();
+                    SD.presence = SD.World.GetScenePresence(SD.presence.UUID);
+                    SD.World = newPart.ParentGroup.Scene;
+                }
+            }
+            catch
+            {
+            }
         }
     }
     /// <summary>

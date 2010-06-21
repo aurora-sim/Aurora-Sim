@@ -119,7 +119,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 StateQueueItem item = null;
                 ScriptEngine.StateQueue.Dequeue(out item);
-                if (item == null)
+                if (item == null || item.ID == null)
                     return;
                 if (item.Create)
                     item.ID.SerializeDatabase();

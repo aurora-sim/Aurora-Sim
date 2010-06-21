@@ -275,17 +275,6 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                 }
             }
 
-            if (!Directory.Exists(Path.Combine(ScriptEnginesPath,
-                                               m_scriptEngine.World.RegionInfo.RegionID.ToString())))
-            {
-                try
-                {
-                    Directory.CreateDirectory(ScriptEnginesPath);
-                }
-                catch (Exception)
-                {
-                }
-            }
             string[] testDir = AssmeblyName.Split('\\');
 
             if (!Directory.Exists(testDir[0] + "\\" + testDir[1]))

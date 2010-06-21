@@ -27,11 +27,12 @@
 
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using OpenMetaverse;
 
 namespace OpenSim.Region.Framework.Interfaces
 {
-    public interface IScriptModule: INonSharedRegionModule
+    public interface IScriptModule : INonSharedRegionModule
     {
         string ScriptEngineName { get; }
 
@@ -56,5 +57,8 @@ namespace OpenSim.Region.Framework.Interfaces
 
         string TestCompileScript(UUID assetID);
 
+        void SaveStateSave(UUID itemID);
+        List<UUID> GetScriptKeys(uint localID);
+        void UpdateScriptToNewObject(UUID olditemID, OpenSim.Framework.TaskInventoryItem newItem, OpenSim.Region.Framework.Scenes.SceneObjectPart newPart);
     }
 }

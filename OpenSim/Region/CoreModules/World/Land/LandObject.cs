@@ -952,6 +952,20 @@ namespace OpenSim.Region.CoreModules.World.Land
                         }
                     }
                 }
+                else if (type == 1)
+                {
+                    foreach (SceneObjectGroup obj in primsOverMe)
+                    {
+                        List<UUID> Tasks = new List<UUID>(tasks);
+                        if (Tasks.Contains(obj.UUID))
+                        {
+                            if (!returns.ContainsKey(obj.OwnerID))
+                                returns[obj.OwnerID] =
+                                        new List<SceneObjectGroup>();
+                            returns[obj.OwnerID].Add(obj);
+                        }
+                    }
+                }
             }
 
             foreach (List<SceneObjectGroup> ol in returns.Values)

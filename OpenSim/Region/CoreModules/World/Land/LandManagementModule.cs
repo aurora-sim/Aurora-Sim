@@ -1365,15 +1365,25 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         public void ReturnObjectsInParcel(int localID, uint returnType, UUID[] agentIDs, UUID[] taskIDs, IClientAPI remoteClient)
         {
-            ILandObject selectedParcel = null;
-            lock (m_landList)
+            if (localID != -1)
             {
-                m_landList.TryGetValue(localID, out selectedParcel);
+                ILandObject selectedParcel = null;
+                lock (m_landList)
+                {
+                    m_landList.TryGetValue(localID, out selectedParcel);
+                }
+
+                if (selectedParcel == null) return;
+
+                selectedParcel.ReturnLandObjects(returnType, agentIDs, taskIDs, remoteClient);
             }
-
-            if (selectedParcel == null) return;
-
-            selectedParcel.ReturnLandObjects(returnType, agentIDs, taskIDs, remoteClient);
+            else
+            {
+                foreach (ILandObject selectedParcel in AllParcels())
+                {
+                    selectedParcel.ReturnLandObjects(returnType, agentIDs, taskIDs, remoteClient);
+                }
+            }
         }
 
         #endregion

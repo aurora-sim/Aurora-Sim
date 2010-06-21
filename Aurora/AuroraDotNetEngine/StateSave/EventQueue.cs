@@ -41,7 +41,7 @@ using OpenSim.Region.ScriptEngine.Shared;
 using OpenSim.Region.ScriptEngine.Shared.CodeTools;
 using Amib.Threading;
 
-namespace Aurora.ScriptEngine.AuroraDotNetEngineStateSave
+namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
     public class EventQueue
     {
@@ -149,7 +149,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngineStateSave
                     {
                         if (QIS.ID.part != null && QIS.ID.part.ParentGroup != null)
                             m_ScriptEngine.World.DeleteSceneObject(
-                                QIS.ID.part.ParentGroup, false);
+                                QIS.ID.part.ParentGroup, false, true);
                     }
                     catch (ScriptDeleteException) // Must delete item
                     {

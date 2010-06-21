@@ -734,7 +734,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             m_scene.ForEachClient(
                 delegate(IClientAPI controller)
                 {
-                    controller.SendLayerPacket(serialised, x / Constants.TerrainPatchSize, y / Constants.TerrainPatchSize);
+                    controller.SendLayerData(x / Constants.TerrainPatchSize, y / Constants.TerrainPatchSize, serialised);
                 }
             );
         }

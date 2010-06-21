@@ -761,7 +761,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Instance
                             {
                                 m_InSelfDelete = true;
                                 if (part != null && part.ParentGroup != null)
-                                    m_Engine.World.DeleteSceneObject(part.ParentGroup, false);
+                                    m_Engine.World.DeleteSceneObject(part.ParentGroup, false, true);
                             }
                             else if ((e is TargetInvocationException) && (e.InnerException is ScriptDeleteException))
                             {

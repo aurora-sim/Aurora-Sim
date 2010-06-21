@@ -197,54 +197,65 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
                         if (m_Fields[var.Key].FieldType == typeof(LSL_Types.list))
                         {
                             LSL_Types.list v = (LSL_Types.list)m_Fields[var.Key].GetValue(this);
-                            Object[] data = ((LSL_Types.list)var.Value).Data;
+                            Object[] data = (new LSL_Types.list(var.Value.ToString())).Data;
                             v.Data = new Object[data.Length];
                             Array.Copy(data, 0, v.Data, 0, data.Length);
                             m_Fields[var.Key].SetValue(this, v);
                         }
                         else if (m_Fields[var.Key].FieldType == typeof(LSL_Types.LSLInteger))
                         {
-                            m_Fields[var.Key].SetValue(this, (LSL_Types.LSLInteger)var.Value);
+                            int val = int.Parse(var.Value.ToString());
+                            m_Fields[var.Key].SetValue(this, new LSL_Types.LSLInteger(val));
                         }
                         else if (m_Fields[var.Key].FieldType == typeof(LSL_Types.LSLString))
                         {
-                            m_Fields[var.Key].SetValue(this, (LSL_Types.LSLString)var.Value);
+                            string val = var.Value.ToString();
+                            m_Fields[var.Key].SetValue(this, new LSL_Types.LSLString(val));
                         }
                         else if (m_Fields[var.Key].FieldType == typeof(LSL_Types.LSLFloat))
                         {
-                            m_Fields[var.Key].SetValue(this, (LSL_Types.LSLFloat)var.Value);
+                            float val = float.Parse(var.Value.ToString());
+                            m_Fields[var.Key].SetValue(this,  new LSL_Types.LSLFloat(val));
                         }
                         else if (m_Fields[var.Key].FieldType == typeof(Int32))
                         {
-                            m_Fields[var.Key].SetValue(this, (Int32)var.Value);
+                            Int32 val = Int32.Parse(var.Value.ToString());
+                            m_Fields[var.Key].SetValue(this, val);
                         }
                         else if (m_Fields[var.Key].FieldType == typeof(Double))
                         {
-                            m_Fields[var.Key].SetValue(this, (Double)var.Value);
+                            Double val = Double.Parse(var.Value.ToString());
+                            m_Fields[var.Key].SetValue(this, val);
                         }
                         else if (m_Fields[var.Key].FieldType == typeof(Single))
                         {
-                            m_Fields[var.Key].SetValue(this, (Single)var.Value);
+                            Single val = Single.Parse(var.Value.ToString());
+                            m_Fields[var.Key].SetValue(this, val);
                         }
                         else if (m_Fields[var.Key].FieldType == typeof(String))
                         {
-                            m_Fields[var.Key].SetValue(this, (String)var.Value);
+                            String val = var.Value.ToString();
+                            m_Fields[var.Key].SetValue(this, val);
                         }
                         else if (m_Fields[var.Key].FieldType == typeof(Byte))
                         {
-                            m_Fields[var.Key].SetValue(this, (Byte)var.Value);
+                            Byte val = Byte.Parse(var.Value.ToString());
+                            m_Fields[var.Key].SetValue(this, val);
                         }
                         else if (m_Fields[var.Key].FieldType == typeof(short))
                         {
-                            m_Fields[var.Key].SetValue(this, (short)var.Value);
+                            short val = short.Parse(var.Value.ToString());
+                            m_Fields[var.Key].SetValue(this, val);
                         }
                         else if (m_Fields[var.Key].FieldType == typeof(LSL_Types.Quaternion))
                         {
-                            m_Fields[var.Key].SetValue(this, (LSL_Types.Quaternion)var.Value);
+                            LSL_Types.Quaternion val = new LSL_Types.Quaternion(var.Value.ToString());
+                            m_Fields[var.Key].SetValue(this, val);
                         }
                         else if (m_Fields[var.Key].FieldType == typeof(LSL_Types.Vector3))
                         {
-                            m_Fields[var.Key].SetValue(this, (LSL_Types.Vector3)var.Value);
+                            LSL_Types.Vector3 val = new LSL_Types.Vector3(var.Value.ToString());
+                            m_Fields[var.Key].SetValue(this, val);
                         }
                     }
                     catch (Exception) { }

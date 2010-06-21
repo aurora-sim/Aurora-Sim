@@ -346,6 +346,8 @@ namespace Aurora.Modules
             // early return if not on public or debug channel
             if (c.Channel != 0 && c.Channel != DEBUG_CHANNEL) return;
 
+            bool Sent = false;
+
             if (c.Type == ChatTypeEnum.Say)
             {
                 if (c.Position.X + m_saydistance > 256)
@@ -359,6 +361,7 @@ namespace Aurora.Modules
                         Position.X -= Constants.RegionSize;
                         newC.Position = Position;
                         DeliverChatToAvatars(ChatSourceType.Object, newC);
+                        Sent = true;
                     }
                 }
                 if (c.Position.Y + m_saydistance > 256)
@@ -372,6 +375,7 @@ namespace Aurora.Modules
                         Position.Y -= Constants.RegionSize;
                         newC.Position = Position;
                         DeliverChatToAvatars(ChatSourceType.Object, newC);
+                        Sent = true;
                     }
                 }
                 if (c.Position.X + m_saydistance > 256 && c.Position.Y + m_saydistance > 256)
@@ -386,6 +390,7 @@ namespace Aurora.Modules
                         Position.Y -= Constants.RegionSize;
                         newC.Position = Position;
                         DeliverChatToAvatars(ChatSourceType.Object, newC);
+                        Sent = true;
                     }
                 }
                 if (c.Position.X + m_saydistance > 256 && c.Position.Y - m_saydistance < 0)
@@ -400,6 +405,7 @@ namespace Aurora.Modules
                         Position.Y += Constants.RegionSize;
                         newC.Position = Position;
                         DeliverChatToAvatars(ChatSourceType.Object, newC);
+                        Sent = true;
                     }
                 }
                 if (c.Position.Y - m_saydistance < 0)
@@ -413,6 +419,7 @@ namespace Aurora.Modules
                         Position.Y += Constants.RegionSize;
                         newC.Position = Position;
                         DeliverChatToAvatars(ChatSourceType.Object, newC);
+                        Sent = true;
                     }
                 }
                 if (c.Position.X - m_saydistance < 0 && c.Position.Y - m_saydistance < 0)
@@ -427,6 +434,7 @@ namespace Aurora.Modules
                         Position.Y += Constants.RegionSize;
                         newC.Position = Position;
                         DeliverChatToAvatars(ChatSourceType.Object, newC);
+                        Sent = true;
                     }
                 }
                 if (c.Position.X - m_saydistance < 0)
@@ -440,6 +448,7 @@ namespace Aurora.Modules
                         Position.X += Constants.RegionSize;
                         newC.Position = Position;
                         DeliverChatToAvatars(ChatSourceType.Object, newC);
+                        Sent = true;
                     }
                 }
                 if (c.Position.X - m_saydistance < 0 && c.Position.Y + m_saydistance > 256)
@@ -454,6 +463,7 @@ namespace Aurora.Modules
                         Position.Y -= Constants.RegionSize;
                         newC.Position = Position;
                         DeliverChatToAvatars(ChatSourceType.Object, newC);
+                        Sent = true;
                     }
                 }
             }
@@ -470,6 +480,7 @@ namespace Aurora.Modules
                         Position.X -= Constants.RegionSize;
                         newC.Position = Position;
                         DeliverChatToAvatars(ChatSourceType.Object, newC);
+                        Sent = true;
                     }
                 }
                 if (c.Position.Y + m_whisperdistance > 256)
@@ -483,6 +494,7 @@ namespace Aurora.Modules
                         Position.Y -= Constants.RegionSize;
                         newC.Position = Position;
                         DeliverChatToAvatars(ChatSourceType.Object, newC);
+                        Sent = true;
                     }
                 }
                 if (c.Position.X + m_whisperdistance > 256 && c.Position.Y + m_whisperdistance > 256)
@@ -497,6 +509,7 @@ namespace Aurora.Modules
                         Position.Y -= Constants.RegionSize;
                         newC.Position = Position;
                         DeliverChatToAvatars(ChatSourceType.Object, newC);
+                        Sent = true;
                     }
                 }
                 if (c.Position.X + m_whisperdistance > 256 && c.Position.Y - m_whisperdistance < 0)
@@ -511,6 +524,7 @@ namespace Aurora.Modules
                         Position.Y += Constants.RegionSize;
                         newC.Position = Position;
                         DeliverChatToAvatars(ChatSourceType.Object, newC);
+                        Sent = true;
                     }
                 }
                 if (c.Position.Y - m_whisperdistance < 0)
@@ -524,6 +538,7 @@ namespace Aurora.Modules
                         Position.Y += Constants.RegionSize;
                         newC.Position = Position;
                         DeliverChatToAvatars(ChatSourceType.Object, newC);
+                        Sent = true;
                     }
                 }
                 if (c.Position.X - m_whisperdistance < 0 && c.Position.Y - m_whisperdistance < 0)
@@ -538,6 +553,7 @@ namespace Aurora.Modules
                         Position.Y += Constants.RegionSize;
                         newC.Position = Position;
                         DeliverChatToAvatars(ChatSourceType.Object, newC);
+                        Sent = true;
                     }
                 }
                 if (c.Position.X - m_whisperdistance < 0)
@@ -551,6 +567,7 @@ namespace Aurora.Modules
                         Position.X += Constants.RegionSize;
                         newC.Position = Position;
                         DeliverChatToAvatars(ChatSourceType.Object, newC);
+                        Sent = true;
                     }
                 }
                 if (c.Position.X - m_whisperdistance < 0 && c.Position.Y + m_whisperdistance > 256)
@@ -565,6 +582,7 @@ namespace Aurora.Modules
                         Position.Y -= Constants.RegionSize;
                         newC.Position = Position;
                         DeliverChatToAvatars(ChatSourceType.Object, newC);
+                        Sent = true;
                     }
                 }
             }
@@ -581,6 +599,7 @@ namespace Aurora.Modules
                         Position.X -= Constants.RegionSize;
                         newC.Position = Position;
                         DeliverChatToAvatars(ChatSourceType.Object, newC);
+                        Sent = true;
                     }
                 }
                 if (c.Position.Y + m_shoutdistance > 256)
@@ -594,6 +613,7 @@ namespace Aurora.Modules
                         Position.Y -= Constants.RegionSize;
                         newC.Position = Position;
                         DeliverChatToAvatars(ChatSourceType.Object, newC);
+                        Sent = true;
                     }
                 }
                 if (c.Position.X + m_shoutdistance > 256 && c.Position.Y + m_shoutdistance > 256)
@@ -608,6 +628,7 @@ namespace Aurora.Modules
                         Position.Y -= Constants.RegionSize;
                         newC.Position = Position;
                         DeliverChatToAvatars(ChatSourceType.Object, newC);
+                        Sent = true;
                     }
                 }
                 if (c.Position.X + m_shoutdistance > 256 && c.Position.Y - m_shoutdistance < 0)
@@ -622,6 +643,7 @@ namespace Aurora.Modules
                         Position.Y += Constants.RegionSize;
                         newC.Position = Position;
                         DeliverChatToAvatars(ChatSourceType.Object, newC);
+                        Sent = true;
                     }
                 }
                 if (c.Position.Y - m_shoutdistance < 0)
@@ -635,6 +657,7 @@ namespace Aurora.Modules
                         Position.Y += Constants.RegionSize;
                         newC.Position = Position;
                         DeliverChatToAvatars(ChatSourceType.Object, newC);
+                        Sent = true;
                     }
                 }
                 if (c.Position.X - m_shoutdistance < 0 && c.Position.Y - m_shoutdistance < 0)
@@ -649,6 +672,7 @@ namespace Aurora.Modules
                         Position.Y += Constants.RegionSize;
                         newC.Position = Position;
                         DeliverChatToAvatars(ChatSourceType.Object, newC);
+                        Sent = true;
                     }
                 }
                 if (c.Position.X - m_shoutdistance < 0)
@@ -662,6 +686,7 @@ namespace Aurora.Modules
                         Position.X += Constants.RegionSize;
                         newC.Position = Position;
                         DeliverChatToAvatars(ChatSourceType.Object, newC);
+                        Sent = true;
                     }
                 }
                 if (c.Position.X - m_shoutdistance < 0 && c.Position.Y + m_shoutdistance > 256)
@@ -676,9 +701,11 @@ namespace Aurora.Modules
                         Position.Y -= Constants.RegionSize;
                         newC.Position = Position;
                         DeliverChatToAvatars(ChatSourceType.Object, newC);
+                        Sent = true;
                     }
                 }
             }
+            if(!Sent)
             DeliverChatToAvatars(ChatSourceType.Object, c);
         }
 

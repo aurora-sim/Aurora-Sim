@@ -944,7 +944,7 @@ namespace OpenSim
 				} else {
 					MainConsole.Instance.Output(String.Format("[KillUUID]: Found UUID {0} in scene {1}", id, sc.RegionInfo.RegionName));
 					try {
-						sc.DeleteSceneObject(grp, false);
+                        sc.DeleteSceneObject(grp, false, true);
 					} catch (Exception e) {
 						m_log.ErrorFormat("[KillUUID]: Error while removing objects from scene: " + e);
 					}

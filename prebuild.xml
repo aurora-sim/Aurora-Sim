@@ -1078,38 +1078,7 @@
       </Files>
     </Project>
 
-    <Project frameworkVersion="v3_5" name="OpenSim.ConsoleClient" path="OpenSim/ConsoleClient" type="Exe">
-      <Configuration name="Debug">
-        <Options>
-          <OutputPath>../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release">
-        <Options>
-          <OutputPath>../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-
-      <ReferencePath>../../bin/</ReferencePath>
-      <Reference name="System"/>
-      <Reference name="System.Xml"/>
-      <Reference name="OpenMetaverseTypes.dll"/>
-      <Reference name="OpenMetaverse.dll"/>
-      <Reference name="OpenMetaverse.StructuredData.dll"/>
-      <Reference name="OpenSim.Framework"/>
-      <Reference name="OpenSim.Framework.Servers.HttpServer"/>
-      <Reference name="OpenSim.Server.Base"/>
-      <Reference name="Nini.dll" />
-      <Reference name="log4net.dll"/>
-
-      <Files>
-        <Match pattern="*.cs" recurse="false">
-          <Exclude pattern="Tests" />
-        </Match>
-      </Files>
-    </Project>
-
-    <Project frameworkVersion="v3_5" name="OpenSim.Region.CoreModules" path="OpenSim/Region/CoreModules" type="Library">
+        <Project frameworkVersion="v3_5" name="OpenSim.Region.CoreModules" path="OpenSim/Region/CoreModules" type="Library">
       <Configuration name="Debug">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
@@ -1831,6 +1800,7 @@
 
       <ReferencePath>../../../../../bin/</ReferencePath>
       <Reference name="System"/>
+      <Reference name="System.Core"/>
       <Reference name="OpenSim.Framework" />
       <Reference name="OpenSim.Region.Framework" />
       <Reference name="OpenSim.Region.ScriptEngine.Shared"/>
@@ -2302,6 +2272,7 @@
 
       <ReferencePath>../../../bin/</ReferencePath>
       <Reference name="System"/>
+      <Reference name="System.Core"/>
       <Reference name="OpenMetaverseTypes.dll"/>
       <Reference name="Nini.dll" />
       <Reference name="OpenSim.Framework"/>
@@ -2350,64 +2321,19 @@
       </Files>
     </Project>
 
-    <Project frameworkVersion="v3_5" name="Aurora.ScriptEngine.AuroraDotNetEngine.Reset" path="Aurora/AuroraDotNetEngine/Reset" type="Library">
+    <Project frameworkVersion="v3_5" name="Aurora.ScriptEngine.AuroraDotNetEngine" path="Aurora/AuroraDotNetEngine" type="Library">
       <Configuration name="Debug">
         <Options>
-          <OutputPath>../../../bin/</OutputPath>
+          <OutputPath>../../bin/</OutputPath>
         </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
-          <OutputPath>../../../bin/</OutputPath>
+          <OutputPath>../../bin/</OutputPath>
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../bin/</ReferencePath>
-      <ReferencePath>../../../bin/</ReferencePath>
-      <Reference name="System"/>
-      <Reference name="System.Data"/>
-      <Reference name="System.Xml"/>
-      <Reference name="System.Runtime.Remoting"/>
-      <Reference name="OpenMetaverse.dll"/>
-      <Reference name="OpenMetaverseTypes.dll"/>
-      <Reference name="OpenMetaverse.StructuredData.dll"/>
-      <Reference name="RAIL.dll"/>
-      <Reference name="Aurora.Framework"/>
-      <Reference name="Aurora.DataManager"/>
-      <Reference name="OpenSim.Framework"/>
-      <Reference name="OpenSim.Region.CoreModules" />
-      <Reference name="OpenSim.Region.Framework" />
-      <Reference name="OpenSim.Services.Interfaces"/>
-      <Reference name="OpenSim.Region.ScriptEngine.Shared"/>
-      <Reference name="OpenSim.Region.ScriptEngine.Shared.Api"/>
-      <Reference name="OpenSim.Region.ScriptEngine.Shared.Api.Runtime"/>
-      <Reference name="OpenSim.Region.ScriptEngine.Shared.CodeTools"/>
-      <Reference name="Microsoft.JScript"/>
-      <Reference name="Nini.dll" />
-      <Reference name="log4net.dll"/>
-      <Reference name="Tools.dll"/>
-      <Reference name="SmartThreadPool" />
-
-      <Files>
-        <Match pattern="*.addin.xml" path="Resources" buildAction="EmbeddedResource" recurse="true"/>
-        <Match pattern="*.cs" recurse="true"/>
-      </Files>
-    </Project>
-
-<Project frameworkVersion="v3_5" name="Aurora.ScriptEngine.AuroraDotNetEngine.StateSave" path="Aurora/AuroraDotNetEngine/StateSave" type="Library">
-      <Configuration name="Debug">
-        <Options>
-          <OutputPath>../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release">
-        <Options>
-          <OutputPath>../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-
-      <ReferencePath>../../../bin/</ReferencePath>
-      <ReferencePath>../../../bin/</ReferencePath>
+      <ReferencePath>../../bin/</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Data"/>
       <Reference name="System.Xml"/>

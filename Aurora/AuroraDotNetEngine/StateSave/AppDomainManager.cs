@@ -36,7 +36,7 @@ using OpenSim.Region.ScriptEngine.Interfaces;
 using OpenSim.Region.ScriptEngine.Shared.ScriptBase;
 using log4net;
 
-namespace Aurora.ScriptEngine.AuroraDotNetEngineStateSave
+namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
     public class AppDomainManager
     {

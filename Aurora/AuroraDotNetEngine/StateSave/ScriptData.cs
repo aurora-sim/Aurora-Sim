@@ -86,7 +86,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public AppDomain AppDomain;
         public Dictionary<string, IScriptApi> Apis = new Dictionary<string, IScriptApi>();
         public Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> LineMap;
-        public ISponsor ScriptSponsor;
+        public ScriptSponsor ScriptSponsor;
         public bool TimerQueued = false;
         public bool CollisionInQueue = false;
         public int LastControlLevel = 0;
@@ -177,6 +177,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 // Stop long command on script
                 AsyncCommandManager.RemoveScript(m_ScriptEngine, localID, ItemID);
+                ScriptSponsor.Close();
+                ILease lease = (ILease)RemotingServices.GetLifetimeService(Script as ScriptBaseClass);
+                lease.Unregister(ScriptSponsor);
                 Script.Close();
                 Script.Dispose();
                 Script = null;
@@ -240,7 +243,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //Release controls over people.
             ReleaseControls();
             //Must be posted immediately, otherwise the next line will delete it.
-            ScriptEngine.EventManager.state_exit(localID);
+            m_ScriptEngine.PostObjectEvent(localID, new EventParams(
+                    "state_exit", new object[0] { },
+                    new DetectParams[0]));
             //Remove items from the queue.
             m_ScriptEngine.RemoveFromEventQueue(ItemID, localID);
             //Reset the state to default
@@ -277,7 +282,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             foreach (string api in am.GetApis())
             {
                 Apis[api] = am.CreateApi(api);
-                Apis[api].Initialize(m_ScriptEngine, part, localID, ItemID, m_ScriptEngine.ScriptProtection);
+                Apis[api].Initialize(m_ScriptEngine, part, localID, ItemID, ScriptEngine.ScriptProtection);
             }
             foreach (KeyValuePair<string, IScriptApi> kv in Apis)
             {
@@ -295,9 +300,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             
             try
             {
-                // DISPLAY ERROR INWORLD
-                string consoletext = "Error compiling script in stage " + stage + ":\n" + e.Message.ToString() + " itemID: " + ItemID + ", localID" + localID + ", CompiledFile: " + AssemblyName;
+                // DISPLAY ERROR ON CONSOLE
+                //string consoletext = "Error compiling script in stage " + stage + ":\n" + e.Message.ToString() + " itemID: " + ItemID + ", localID" + localID + ", CompiledFile: " + AssemblyName;
                 //m_log.Error(consoletext);
+                // DISPLAY ERROR INWORLD
                 string inworldtext = "Error compiling script: " + e;
                 if (inworldtext.Length > 1100)
                     inworldtext = inworldtext.Substring(0, 1099);
@@ -395,7 +401,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
 
             AssemblyName = Path.Combine("ScriptEngines", Path.Combine(
-                    m_ScriptEngine.World.RegionInfo.RegionID.ToString(),
+                    "Script",
                     FilePrefix + "_compiled_" + ItemID.ToString() + ".dll"));
          
             //Macrothreading
@@ -404,7 +410,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             string Inherited = "";
             string ClassName = "";
 
-            if (m_ScriptEngine.ScriptProtection.AllowMacroScripting)
+            if (ScriptEngine.ScriptProtection.AllowMacroScripting)
             {
                 if (Source.Contains("#Inherited"))
                 {
@@ -428,8 +434,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     URL = URL.Replace("#IncludeHTML ", "");
                     Source = Source.Replace("#IncludeHTML " + URL, "");
                     string webSite = ReadExternalWebsite(URL);
-                    m_ScriptEngine.ScriptProtection.AddNewClassSource(URL, webSite, null);
-                    m_ScriptEngine.ScriptProtection.AddWantedSRC(ItemID, URL);
+                    ScriptEngine.ScriptProtection.AddNewClassSource(URL, webSite, null);
+                    ScriptEngine.ScriptProtection.AddWantedSRC(ItemID, URL);
                 }
                 if (Source.Contains("#Include "))
                 {
@@ -438,7 +444,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     WantedClass = Source.Split('\n')[line];
                     WantedClass = WantedClass.Replace("#Include ", "");
                     Source = Source.Replace("#Include " + WantedClass, "");
-                    m_ScriptEngine.ScriptProtection.AddWantedSRC(ItemID, WantedClass);
+                    ScriptEngine.ScriptProtection.AddWantedSRC(ItemID, WantedClass);
                 }
             }
             else
@@ -477,7 +483,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     WantedClass = Source.Split('\n')[line];
                     WantedClass = WantedClass.Replace("#Include ", "");
                     Source = Source.Replace("#Include " + WantedClass, "");
-                    m_ScriptEngine.ScriptProtection.AddWantedSRC(ItemID, WantedClass);
+                    ScriptEngine.ScriptProtection.AddWantedSRC(ItemID, WantedClass);
                     WantedClass = "";
                 }
             }
@@ -487,7 +493,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             bool NeedsToCreateNewAppDomain = true;
 
             //Try to find a previously compiled script in this instance
-            ScriptData PreviouslyCompiledID = (ScriptData)m_ScriptEngine.ScriptProtection.TryGetPreviouslyCompiledScript(Source);
+            ScriptData PreviouslyCompiledID = (ScriptData)ScriptEngine.ScriptProtection.TryGetPreviouslyCompiledScript(Source);
 
             LastStateSave = ScriptFrontend.GetStateSave(ItemID, UserInventoryItemID);
             if (!reupload && Loading && LastStateSave != null)
@@ -501,7 +507,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 {
                     //Null everything and don't fire any events
                     CloseAndDispose(true);
-                    AssemblyName = "";
+                    ScriptEngine.ScriptProtection.RemovePreviouslyCompiled(Source);
+
+                    AssemblyName = Path.Combine("ScriptEngines", Path.Combine(
+                        "Script",
+                        FilePrefix + "_compiled_" + ItemID.ToString() + ".dll"));
                     LineMap = new Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>>();
                     Running = true;
                     Disabled = false;
@@ -515,13 +525,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     ClassID = PreviouslyCompiledID.ClassID;
                     LineMap = PreviouslyCompiledID.LineMap;
                     AssemblyName = PreviouslyCompiledID.AssemblyName;
+                    if (!File.Exists(AssemblyName))
+                    {
+                        ClassID = "";
+                        LineMap = new Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>>();
+                        //We can reuse the assembly name
+                    }
                 }
                 //Otherwise, compile the script.
                 else
                 {
                     try
                     {
-                        ScriptEngine.LSLCompiler.PerformScriptCompile(Source, AssetID, InventoryItem.OwnerID, ItemID, Inherited, ClassName, m_ScriptEngine.ScriptProtection, localID, this, out AssemblyName,
+                        ScriptEngine.LSLCompiler.PerformScriptCompile(Source, AssetID, InventoryItem.OwnerID, ItemID, Inherited, ClassName, ScriptEngine.ScriptProtection, localID, AssemblyName, this, out AssemblyName,
                                                                              out LineMap, out ClassID);
                         #region Warnings
 
@@ -568,11 +584,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         Script = ScriptEngine.AppDomainManager.LoadScript(AssemblyName, "Script." + ClassName, out AppDomain);
                     else
                         Script = ScriptEngine.AppDomainManager.LoadScript(AssemblyName, "Script." + ClassID, out AppDomain);
-                    m_ScriptEngine.ScriptProtection.AddPreviouslyCompiled(Source, this);
+                    ScriptEngine.ScriptProtection.AddPreviouslyCompiled(Source, this);
                 }
                 catch (System.IO.FileNotFoundException)
                 {
                     ScriptFrontend.DeleteStateSave(AssemblyName);
+                    ScriptEngine.ScriptProtection.RemovePreviouslyCompiled(Source);
                     Start(reupload);
                     return;
                 }
@@ -581,7 +598,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     ShowError(ex, 2, reupload);
                 }
             }
-            
+
+            ScriptSponsor = new ScriptSponsor();
+            ILease lease = (ILease)RemotingServices.GetLifetimeService(Script as ScriptBaseClass);
+            lease.Register(ScriptSponsor);
             //If its a reupload, an avatar is waiting for the script errors
             if (reupload)
                 m_ScriptEngine.Errors[ItemID] = new String[] { "SUCCESSFULL" };
@@ -669,17 +689,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             ClassID = LastStateSave.ClassName;
             LineMap = OpenSim.Region.ScriptEngine.Shared.CodeTools.Compiler.ReadMapFileFromString(LastStateSave.LineMap);
-            AssemblyName = LastStateSave.AssemblyName;
+            AssemblyName = Path.Combine("ScriptEngines", Path.Combine(
+                    "Script",
+                    LastStateSave.AssemblyName));
         }
 
         private void DeserializeDatabase()
         {
-            Dictionary<string, object> vars = new Dictionary<string, object>();
+            Dictionary<string, object> vars = LastStateSave.Variables as Dictionary<string,object>;
             State = LastStateSave.State;
             Running = LastStateSave.Running;
 
-            if (vars.Count != 0)
-                Script.SetVars((Dictionary<string, object>)LastStateSave.Variables);
+            if (vars != null && vars.Count != 0)
+                Script.SetVars(vars);
 
             PluginData = (object[])LastStateSave.Plugins;
             if (LastStateSave.Permissions != "")
@@ -962,15 +984,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             //perms
             string perms = "";
-            if (InventoryItem.PermsMask != 0 && InventoryItem.PermsGranter != UUID.Zero)
+            if (InventoryItem != null)
             {
-                perms += InventoryItem.PermsGranter.ToString() + "," + InventoryItem.PermsMask.ToString();
+                if (InventoryItem.PermsMask != 0 && InventoryItem.PermsGranter != UUID.Zero)
+                {
+                    perms += InventoryItem.PermsGranter.ToString() + "," + InventoryItem.PermsMask.ToString();
 
+                }
             }
             Insert.Permissions = perms;
             
             Insert.MinEventDelay = EventDelayTicks;
-            Insert.AssemblyName = AssemblyName;
+            try
+            {
+                Insert.AssemblyName = AssemblyName.Split('\\')[2];
+            }
+            catch
+            {
+                Insert.AssemblyName = AssemblyName;
+            }
             Insert.Disabled = Disabled;
             Insert.UserInventoryID = UserInventoryItemID;
             ScriptFrontend.SaveStateSave(Insert);

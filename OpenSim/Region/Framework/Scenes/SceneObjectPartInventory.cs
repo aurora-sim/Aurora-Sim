@@ -128,8 +128,19 @@ namespace OpenSim.Region.Framework.Scenes
 
                 foreach (TaskInventoryItem item in items)
                 {
+                    UUID oldItemID = item.ItemID;
                     item.ResetIDs(m_part.UUID);
-                    Items.Add(item.ItemID, item);
+                    lock (m_part.ParentGroup)
+                    {
+                        if (m_part.ParentGroup.Scene != null)
+                        {
+                            foreach (IScriptModule engine in m_part.ParentGroup.Scene.RequestModuleInterfaces<IScriptModule>())
+                            {
+                                engine.UpdateScriptToNewObject(oldItemID, item, m_part);
+                            }
+                        }
+                        Items.Add(item.ItemID, item);
+                    }
                 }
             }
         }

@@ -1646,7 +1646,7 @@ namespace OpenSim.Region.Framework.Scenes
             else if (permissionToDelete)
             {
                 foreach (SceneObjectGroup g in deleteGroups)
-                    DeleteSceneObject(g, false);
+                    DeleteSceneObject(g, false, true);
             }
         }
 
