@@ -57,10 +57,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 EventQueue eqtc = new EventQueue(m_ScriptEngine, Engine.SleepTime);
                 Watchdog.StartThread(eqtc.DoProcessQueue, "EventQueueThread", ThreadPriority.BelowNormal, true);
             }
-            for (int i = 0; i < Engine.NumberOfStateSavingThreads; i++)
-            {
-                Watchdog.StartThread(StateSavingMaintenance, "StateSavingMaintenance", ThreadPriority.BelowNormal, true);
-            }
+            //for (int i = 0; i < Engine.NumberOfStateSavingThreads; i++)
+            //{
+            //    Watchdog.StartThread(StateSavingMaintenance, "StateSavingMaintenance", ThreadPriority.BelowNormal, true);
+            //}
             for (int i = 0; i < Engine.NumberOfStartStopThreads; i++)
             {
                 Watchdog.StartThread(StartEndScriptMaintenance, "StartEndScriptMaintenance", ThreadPriority.BelowNormal, true);
@@ -78,6 +78,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     Thread.Sleep(m_ScriptEngine.SleepTime); // Sleep before next pass
                     // LOAD / UNLOAD SCRIPTS
                     DoScriptsLoadUnload();
+                    DoStateQueue();
                     lock (Resumeable)
                     {
                         for (int i = 0; i < Resumeable.Count; i++)
@@ -185,7 +186,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 {
                     item.ID.Start(false);
                 }
-                catch (Exception ex) { /*m_log.Warn(ex);*/ }
+                catch (Exception ex) { m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: LEAKED COMPILE ERROR: " + ex); }
             }
             else if (item.Action == LUType.Reupload)
             {
@@ -193,7 +194,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 {
                     item.ID.Start(true);
                 }
-                catch (Exception ex) { /*m_log.Warn(ex);*/ }
+                catch (Exception ex) { m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: LEAKED COMPILE ERROR: " + ex); }
             }
         }
 

@@ -193,7 +193,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
 			IEnumerator thread = (IEnumerator)ev.Invoke(m_Script, args);
             int i = StartingPosition;
 			bool running = false;
-            while (i < i + 10)
+            while (i < i + 5)
 			{
 				i++;
 				try

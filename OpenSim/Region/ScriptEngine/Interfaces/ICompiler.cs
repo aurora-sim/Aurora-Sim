@@ -38,16 +38,12 @@ namespace OpenSim.Region.ScriptEngine.Interfaces
 {
     public interface ICompiler
     {
-        void PerformScriptCompile(string Script, UUID assetID, UUID ownerUUID, UUID itemID, string InheritedClases, string ClassName, IScriptProtectionModule ScriptProtection, uint localID, string AssmeblyName, object InstanceData,
-            out string assembly, out Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> linemap, out string Identifier);
+        void PerformScriptCompile(string Script, UUID itemID, UUID ownerUUID, out string assembly);
         string[] GetWarnings();
     }
     
     public interface IScriptProtectionModule
     {
-        void AddWantedSRC(UUID itemID, string ClassName);
-        string GetSRC(UUID itemID, uint localID, UUID OwnerID);
-        void AddNewClassSource(string ClassName, string SRC, object ID);
         bool AllowMacroScripting { get; }
         ThreatLevel GetThreatLevel();
         void CheckThreatLevel(ThreatLevel level, string function, SceneObjectPart m_host, string API);

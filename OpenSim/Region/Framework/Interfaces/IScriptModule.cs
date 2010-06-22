@@ -55,7 +55,7 @@ namespace OpenSim.Region.Framework.Interfaces
         void UpdateScript(uint localID, UUID itemID, string script, int startParam, bool postOnRez, int stateSource);
         void StopAllScripts();
 
-        string TestCompileScript(UUID assetID);
+        string TestCompileScript(UUID assetID, UUID itemID);
 
         void SaveStateSave(UUID itemID);
         List<UUID> GetScriptKeys(uint localID);

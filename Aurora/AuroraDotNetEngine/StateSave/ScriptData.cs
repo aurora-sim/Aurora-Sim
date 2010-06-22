@@ -76,16 +76,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public string State;
         public bool Running = true;
         public bool Disabled = false;
-        public bool Compiling = false;
         public bool Suspended = false;
         public bool Loading = true;
         public string Source;
-        public string ClassSource;
         public int StartParam;
         public StateSource stateSource;
         public AppDomain AppDomain;
         public Dictionary<string, IScriptApi> Apis = new Dictionary<string, IScriptApi>();
-        public Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> LineMap;
         public ScriptSponsor ScriptSponsor;
         public bool TimerQueued = false;
         public bool CollisionInQueue = false;
@@ -103,12 +100,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public UUID UserInventoryItemID;
         //This is the localUUID of the object the script is in.
         public uint localID;
-        public string ClassID;
         public bool PostOnRez;
         public TaskInventoryItem InventoryItem;
         public ScenePresence presence;
         public DetectParams[] LastDetectParams;
-        public bool m_startedFromSavedState = false;
         public Object[] PluginData = new Object[0];
         private StateSave LastStateSave = null;
         private IScriptDataConnector ScriptFrontend;
@@ -326,9 +321,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <summary>
         /// Fires the events after the compiling has occured
         /// </summary>
-        public void FireEvents()
+        public void FireEvents(bool startedFromSavedState)
         {
-            if (m_startedFromSavedState)
+            if (startedFromSavedState)
             {
                 if (PostOnRez)
                     m_ScriptEngine.AddToScriptQueue(this, "on_rez", new DetectParams[0], new object[] { new LSL_Types.LSLInteger(StartParam) });
@@ -361,8 +356,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //Clear out the removing of events for this script.
             if (ScriptEngine.NeedsRemoved.ContainsKey(ItemID))
                 ScriptEngine.NeedsRemoved.Remove(ItemID);
-
-            Compiling = true;
 
             //Remove any script errors that might be waiting.
             if (m_ScriptEngine.Errors.ContainsKey(ItemID))
@@ -400,171 +393,91 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 FilePrefix = FilePrefix.Replace(c, '_');
             }
 
-            AssemblyName = Path.Combine("ScriptEngines", Path.Combine(
-                    "Script",
-                    FilePrefix + "_compiled_" + ItemID.ToString() + ".dll"));
-         
-            //Macrothreading
-            #region Class and interface reader
-
-            string Inherited = "";
-            string ClassName = "";
+            #region HTML Reader
 
             if (ScriptEngine.ScriptProtection.AllowMacroScripting)
             {
-                if (Source.Contains("#Inherited"))
-                {
-                    int line = Source.IndexOf("#Inherited ");
-                    Inherited = Source.Split('\n')[line];
-                    Inherited = Inherited.Replace("#Inherited ", "");
-                    Source = Source.Replace("#Inherited " + Inherited, "");
-                }
-                if (Source.Contains("#ClassName "))
-                {
-                    int line = Source.IndexOf("#ClassName ");
-                    ClassName = Source.Split('\n')[line];
-                    ClassName = ClassName.Replace("#ClassName ", "");
-                    Source = Source.Replace("#ClassName " + ClassName, "");
-                }
                 if (Source.Contains("#IncludeHTML "))
                 {
                     string URL = "";
                     int line = Source.IndexOf("#IncludeHTML ");
-                    URL = Source.Split('\n')[line];
+                    URL = Source.Remove(0, line);
                     URL = URL.Replace("#IncludeHTML ", "");
-                    Source = Source.Replace("#IncludeHTML " + URL, "");
+                    URL = URL.Split('\n')[0];
                     string webSite = ReadExternalWebsite(URL);
-                    ScriptEngine.ScriptProtection.AddNewClassSource(URL, webSite, null);
-                    ScriptEngine.ScriptProtection.AddWantedSRC(ItemID, URL);
-                }
-                if (Source.Contains("#Include "))
-                {
-                    string WantedClass = "";
-                    int line = Source.IndexOf("#Include ");
-                    WantedClass = Source.Split('\n')[line];
-                    WantedClass = WantedClass.Replace("#Include ", "");
-                    Source = Source.Replace("#Include " + WantedClass, "");
-                    ScriptEngine.ScriptProtection.AddWantedSRC(ItemID, WantedClass);
+                    Source = Source.Replace("#IncludeHTML " + URL, webSite);
                 }
             }
             else
             {
-                if (Source.Contains("#Inherited"))
-                {
-                    int line = Source.IndexOf("#Inherited ");
-                    Inherited = Source.Split('\n')[line];
-                    Inherited = Inherited.Replace("#Inherited ", "");
-                    Source = Source.Replace("#Inherited " + Inherited, "");
-                    Inherited = "";
-                }
-                if (Source.Contains("#ClassName "))
-                {
-                    int line = Source.IndexOf("#ClassName ");
-                    ClassName = Source.Split('\n')[line];
-                    ClassName = ClassName.Replace("#ClassName ", "");
-                    Source = Source.Replace("#ClassName " + ClassName, "");
-                    ClassName = "";
-                }
                 if (Source.Contains("#IncludeHTML "))
                 {
                     string URL = "";
                     int line = Source.IndexOf("#IncludeHTML ");
-                    URL = Source.Split('\n')[line];
+                    URL = Source.Remove(0,line);
                     URL = URL.Replace("#IncludeHTML ", "");
+                    URL = URL.Split('\n')[0];
                     Source = Source.Replace("#IncludeHTML " + URL, "");
-                    string webSite = ReadExternalWebsite(URL);
-                    URL = "";
-                    webSite = "";
-                }
-                if (Source.Contains("#Include "))
-                {
-                    string WantedClass = "";
-                    int line = Source.IndexOf("#Include ");
-                    WantedClass = Source.Split('\n')[line];
-                    WantedClass = WantedClass.Replace("#Include ", "");
-                    Source = Source.Replace("#Include " + WantedClass, "");
-                    ScriptEngine.ScriptProtection.AddWantedSRC(ItemID, WantedClass);
-                    WantedClass = "";
                 }
             }
 
             #endregion
 
-            bool NeedsToCreateNewAppDomain = true;
-
-            //Try to find a previously compiled script in this instance
-            ScriptData PreviouslyCompiledID = (ScriptData)ScriptEngine.ScriptProtection.TryGetPreviouslyCompiledScript(Source);
-
+            // Attempt to find a state save
             LastStateSave = ScriptFrontend.GetStateSave(ItemID, UserInventoryItemID);
-            if (!reupload && Loading && LastStateSave != null)
+
+            if (!reupload && Loading && LastStateSave != null && File.Exists(LastStateSave.AssemblyName))
             {
                 //Retrive the needed parts for a compileless start from the state save.
                 FindRequiredForCompileless();
             }
             else
             {
+                LastStateSave = null;
+
+                //Try to find a previously compiled script in this instance
+                ScriptData PreviouslyCompiledID = (ScriptData)ScriptEngine.ScriptProtection.TryGetPreviouslyCompiledScript(Source);
                 if (reupload)
                 {
                     //Null everything and don't fire any events
                     CloseAndDispose(true);
                     ScriptEngine.ScriptProtection.RemovePreviouslyCompiled(Source);
 
-                    AssemblyName = Path.Combine("ScriptEngines", Path.Combine(
-                        "Script",
-                        FilePrefix + "_compiled_" + ItemID.ToString() + ".dll"));
-                    LineMap = new Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>>();
                     Running = true;
                     Disabled = false;
                     //Clear out the removing of events for this script.
                     if (ScriptEngine.NeedsRemoved.ContainsKey(ItemID))
                         ScriptEngine.NeedsRemoved.Remove(ItemID);
                 }
-                //If the previous compile is there, retrive that
-                if (PreviouslyCompiledID != null)
-                {
-                    ClassID = PreviouslyCompiledID.ClassID;
-                    LineMap = PreviouslyCompiledID.LineMap;
-                    AssemblyName = PreviouslyCompiledID.AssemblyName;
-                    if (!File.Exists(AssemblyName))
-                    {
-                        ClassID = "";
-                        LineMap = new Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>>();
-                        //We can reuse the assembly name
-                    }
-                }
-                //Otherwise, compile the script.
-                else
-                {
-                    try
-                    {
-                        ScriptEngine.LSLCompiler.PerformScriptCompile(Source, AssetID, InventoryItem.OwnerID, ItemID, Inherited, ClassName, ScriptEngine.ScriptProtection, localID, AssemblyName, this, out AssemblyName,
-                                                                             out LineMap, out ClassID);
-                        #region Warnings
 
-                        string[] compilewarnings = ScriptEngine.LSLCompiler.GetWarnings();
+                try
+                {
+                    ScriptEngine.LSLCompiler.PerformScriptCompile(Source, ItemID, part.OwnerID, out AssemblyName);
+                    #region Warnings
 
-                        if (compilewarnings != null && compilewarnings.Length != 0)
+                    string[] compilewarnings = ScriptEngine.LSLCompiler.GetWarnings();
+
+                    if (compilewarnings != null && compilewarnings.Length != 0)
+                    {
+                        if (presence != null && (!PostOnRez))
+                            presence.ControllingClient.SendAgentAlertMessage("Script saved with warnings, check debug window!", false);
+
+                        foreach (string warning in compilewarnings)
                         {
-                            if (presence != null && (!PostOnRez))
-                                presence.ControllingClient.SendAgentAlertMessage("Script saved with warnings, check debug window!", false);
+                            // DISPLAY WARNING INWORLD
+                            string text = "Warning:\n" + warning;
+                            if (text.Length > 1100)
+                                text = text.Substring(0, 1099);
 
-                            foreach (string warning in compilewarnings)
-                            {
-                                // DISPLAY WARNING INWORLD
-                                string text = "Warning:\n" + warning;
-                                if (text.Length > 1100)
-                                    text = text.Substring(0, 1099);
-
-                                World.SimChat(OpenMetaverse.Utils.StringToBytes(text), ChatTypeEnum.DebugChannel, 2147483647, part.AbsolutePosition, part.Name, part.UUID, false);
-                            }
+                            World.SimChat(OpenMetaverse.Utils.StringToBytes(text), ChatTypeEnum.DebugChannel, 2147483647, part.AbsolutePosition, part.Name, part.UUID, false);
                         }
+                    }
 
-                        #endregion
-                    }
-                    catch (Exception ex)
-                    {
-                        ShowError(ex, 1, reupload);
-                    }
+                    #endregion
+                }
+                catch (Exception ex)
+                {
+                    ShowError(ex, 1, reupload);
                 }
             }
 
@@ -572,36 +485,31 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (useDebug)
             {
                 TimeSpan t = (DateTime.Now.ToUniversalTime() - StartTime);
-                m_log.Debug("Stage 1: " + t.TotalSeconds);
+                m_log.Debug("[" + m_ScriptEngine.ScriptEngineName + "]: Stage 1 compile: " + t.TotalSeconds);
             }
 
             //Create the app domain if needed.
-            if (NeedsToCreateNewAppDomain)
+            try
             {
-                try
-                {
-                    if (ClassName != "")
-                        Script = ScriptEngine.AppDomainManager.LoadScript(AssemblyName, "Script." + ClassName, out AppDomain);
-                    else
-                        Script = ScriptEngine.AppDomainManager.LoadScript(AssemblyName, "Script." + ClassID, out AppDomain);
-                    ScriptEngine.ScriptProtection.AddPreviouslyCompiled(Source, this);
-                }
-                catch (System.IO.FileNotFoundException)
-                {
-                    ScriptFrontend.DeleteStateSave(AssemblyName);
-                    ScriptEngine.ScriptProtection.RemovePreviouslyCompiled(Source);
-                    Start(reupload);
-                    return;
-                }
-                catch (Exception ex)
-                {
-                    ShowError(ex, 2, reupload);
-                }
+                Script = ScriptEngine.AppDomainManager.LoadScript(AssemblyName, "Script.LSL", out AppDomain);
+                ScriptEngine.ScriptProtection.AddPreviouslyCompiled(Source, this);
+            }
+            catch (System.IO.FileNotFoundException) // Not valid!!!
+            {
+                m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: FILE NOT FOUND EXCEPTION THROWN IN APP DOMAIN CREATION!!!");
+                ScriptEngine.ScriptProtection.RemovePreviouslyCompiled(Source);
+                ScriptFrontend.DeleteStateSave(AssemblyName);
+                return;
+            }
+            catch (Exception ex)
+            {
+                ShowError(ex, 2, reupload);
             }
 
             ScriptSponsor = new ScriptSponsor();
             ILease lease = (ILease)RemotingServices.GetLifetimeService(Script as ScriptBaseClass);
             lease.Register(ScriptSponsor);
+            
             //If its a reupload, an avatar is waiting for the script errors
             if (reupload)
                 m_ScriptEngine.Errors[ItemID] = new String[] { "SUCCESSFULL" };
@@ -609,14 +517,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (useDebug)
             {
                 TimeSpan t = (DateTime.Now.ToUniversalTime() - StartTime);
-                m_log.Debug("Stage 2: " + t.TotalSeconds);
+                m_log.Debug("[" + m_ScriptEngine.ScriptEngineName + "]: Stage 2 compile: " + t.TotalSeconds);
             }
 
-            //ALWAYS reset up APIs, otherwise m_host doesn't get updated and LSL thinks its in another prim.
+            //ALWAYS reset up APIs, otherwise m_host doesn't get updated and APIs could think that they are in another prim.
             SetApis();
 
+            //Set the event flags
+            int eventFlags = Script.GetStateEventFlags(State);
+            part.SetScriptEvents(ItemID, eventFlags);
+
             //Now do the full state save finding now that we have an app domain.
-            if (!reupload && LastStateSave != null && Loading)
+            if (LastStateSave != null)
             {
                 DeserializeDatabase();
 
@@ -627,27 +539,22 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 // we get new rez events on sim restart, too
                 // but if there is state, then we fire the change
                 // event
+                FireEvents(true);
 
                 // We loaded state, don't force a re-save
-                m_startedFromSavedState = true;
             }
             else
             {
                 // Add it to our script memstruct so it can be found by other scripts
                 m_ScriptEngine.UpdateScriptInstanceData(this);
+
+                FireEvents(false);
+
+                //Make a new state save now
+                m_ScriptEngine.AddToStateSaverQueue(this, true);
             }
 
-            //Make a new state save now
-            m_ScriptEngine.AddToStateSaverQueue(this, true);
-            
-            //Set the event flags
-            int eventFlags = Script.GetStateEventFlags(State);
-            part.SetScriptEvents(ItemID, eventFlags);
-
-            FireEvents();
-
             //All done, compiled successfully
-            Compiling = false;
             Loading = false;
 
             TimeSpan time = (DateTime.Now.ToUniversalTime() - StartTime);
@@ -687,8 +594,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// </summary>
         public void FindRequiredForCompileless()
         {
-            ClassID = LastStateSave.ClassName;
-            LineMap = OpenSim.Region.ScriptEngine.Shared.CodeTools.Compiler.ReadMapFileFromString(LastStateSave.LineMap);
             AssemblyName = Path.Combine("ScriptEngines", Path.Combine(
                     "Script",
                     LastStateSave.AssemblyName));
@@ -852,16 +757,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             Insert.ItemID = ItemID;
             string source = Source.Replace("\n", " ");
             Insert.Source = source.Replace("'", " ");
-            //LineMap
-            LSL_Types.LSLString map = String.Empty;
-            foreach (KeyValuePair<KeyValuePair<int, int>, KeyValuePair<int, int>> kvp in LineMap)
-            {
-                KeyValuePair<int, int> k = kvp.Key;
-                KeyValuePair<int, int> v = kvp.Value;
-                map += String.Format("{0},{1},{2},{3};", k.Key, k.Value, v.Key, v.Value);
-            }
-            Insert.LineMap = map;
-            
             Insert.Running = Running;
             //Vars
             Dictionary<string, Object> vars = new Dictionary<string,object>();
@@ -880,7 +775,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 plugins += plugin + ",";
             Insert.Plugins = plugins;
 
-            Insert.ClassName = ClassID;
             //Queue
             #region Queue
             XmlDocument xmldoc = new XmlDocument();

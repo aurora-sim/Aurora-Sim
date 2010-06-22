@@ -10,12 +10,10 @@ namespace Aurora.Framework
         public string State;
         public UUID ItemID;
         public string Source;
-        public string LineMap;
         public bool Running;
         public bool Disabled;
         public object Variables;
         public object Plugins;
-        public string ClassName;
         public string Queue;
         public string Permissions;
         public double MinEventDelay;

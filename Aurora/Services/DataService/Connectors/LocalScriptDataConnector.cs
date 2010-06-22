@@ -70,8 +70,6 @@ namespace Aurora.Services.DataService
                 StateSave.Disabled = Convert.ToBoolean(StateSaveRetVals[12]);
                 StateSave.UserInventoryID = UUID.Parse(StateSaveRetVals[13]);
                 StateSave.Queue = StateSaveRetVals[8];
-                StateSave.ClassName = StateSaveRetVals[7];
-                StateSave.LineMap = StateSaveRetVals[3];
 
                 return StateSave;
             }
@@ -87,11 +85,9 @@ namespace Aurora.Services.DataService
 			Insert.Add(state.State);
 			Insert.Add(state.ItemID);
 			Insert.Add(state.Source);
-			Insert.Add(state.LineMap);
 			Insert.Add(state.Running);
 			Insert.Add(state.Variables);
 			Insert.Add(state.Plugins);
-			Insert.Add(state.ClassName);
 			Insert.Add(state.Queue);
 			Insert.Add(state.Permissions);
 			Insert.Add(state.MinEventDelay);

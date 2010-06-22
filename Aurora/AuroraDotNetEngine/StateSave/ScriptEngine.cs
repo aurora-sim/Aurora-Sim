@@ -951,6 +951,30 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <returns></returns>
         public bool AddToScriptQueue(ScriptData ID, string FunctionName, DetectParams[] qParams, params object[] param)
         {
+            #region Should be fired checks
+
+            if (ID == null)
+                return false;
+            //Clear scripts that shouldn't be in the queue anymore
+            if (ScriptEngine.NeedsRemoved.ContainsKey(ID.ItemID))
+            {
+                //Check the localID too...
+                uint localID = 0;
+                ScriptEngine.NeedsRemoved.TryGetValue(ID.ItemID, out localID);
+                if (localID == ID.localID)
+                    return true;
+            }
+
+            //Disabled or not running scripts dont get events fired
+            if (ID.Disabled || !ID.Running)
+                return true;
+
+            if (!World.PipeEventsForScript(
+                ID.localID))
+                return true;
+
+            #endregion
+
             if (EventQueue.Count >= EventExecutionMaxQueueSize)
             {
                 m_log.WarnFormat("[{0}]: Event Queue is above the MaxQueueSize.", ScriptEngineName);
@@ -982,60 +1006,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     if (ID.LastControlLevel == held)
                         return true;
                 }
-
-                //Clear scripts that shouldn't be in the queue anymore
-                if (ScriptEngine.NeedsRemoved.ContainsKey(ID.ItemID))
-                {
-                    //Check the localID too...
-                    uint localID = 0;
-                    ScriptEngine.NeedsRemoved.TryGetValue(ID.ItemID, out localID);
-                    if (localID == ID.localID)
-                    {
-                        return true;
-                    }
-                }
-                try
-                {
-                    ID.SetEventParams(qParams);
-                    int Running = 0;
-                    Running = ID.Script.ExecuteEvent(
-                        ID.State,
-                        FunctionName,
-                        param, 0);
-                    //Did not finish and returned where it should start now
-                    /*if (Running != 0)
-                    {
-                        if (ScriptEngine.NeedsRemoved.ContainsKey(ID.ItemID))
-                        {
-                            //Check the localID too...
-                            uint localID = 0;
-                            ScriptEngine.NeedsRemoved.TryGetValue(ID.ItemID, out localID);
-                            if (localID == ID.localID)
-                            {
-                                return true;
-                            }
-                            else
-                            {
-                                //Remove it then.
-                                ScriptEngine.NeedsRemoved.Remove(ID.ItemID);
-                            }
-                        }
-                        CurrentlyAt = Running;
-                        ScriptEngine.EventQueue.Enqueue(QIS);
-                    }*/
-                }
-                catch (SelfDeleteException) // Must delete SOG
-                {
-                    if (ID.part != null && ID.part.ParentGroup != null)
-                        World.DeleteSceneObject(
-                            ID.part.ParentGroup, false, true);
-                }
-                catch (ScriptDeleteException) // Must delete item
-                {
-                    if (ID.part != null && ID.part.ParentGroup != null)
-                        ID.part.Inventory.RemoveInventoryItem(ID.ItemID);
-                }
-                catch (Exception) { }
             }
 
             if (FunctionName == "collision")
@@ -1047,22 +1017,70 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
                 ID.CollisionInQueue = true;
             }
+
             // Create a structure and add data
             QueueItemStruct QIS = new QueueItemStruct();
             QIS.ID = ID;
             QIS.functionName = FunctionName;
             QIS.llDetectParams = qParams;
             QIS.param = param;
-            if (ID == null)
-                return false;
-            QIS.LineMap = ID.LineMap;
-            if (World.PipeEventsForScript(
-                QIS.ID.localID))
+
+            //Suspended scripts get added
+            if (QIS.ID.Suspended)
             {
-                // Add it to queue
-                EventQueue.Enqueue(QIS);
+                ScriptEngine.EventQueue.Enqueue(QIS);
+            }
+            else
+            {
+                //Process it quickly... once
+                ProcessQIS(QIS);
             }
             return true;
+        }
+
+        public void ProcessQIS(QueueItemStruct QIS)
+        {
+            try
+            {
+                QIS.ID.SetEventParams(QIS.llDetectParams);
+                int Running = 0;
+                Running = QIS.ID.Script.ExecuteEvent(
+                    QIS.ID.State,
+                    QIS.functionName,
+                    QIS.param, QIS.CurrentlyAt);
+                //Finished with nothing left.
+                if (Running == 0)
+                {
+                    if (QIS.functionName == "timer")
+                        QIS.ID.TimerQueued = false;
+                    if (QIS.functionName == "control")
+                    {
+                        if (QIS.ID.ControlEventsInQueue > 0)
+                            QIS.ID.ControlEventsInQueue--;
+                    }
+                    if (QIS.functionName == "collision")
+                        QIS.ID.CollisionInQueue = false;
+                    return;
+                }
+                else
+                {
+                    //Did not finish so requeue it
+                    QIS.CurrentlyAt = Running;
+                    ScriptEngine.EventQueue.Enqueue(QIS);
+                }
+            }
+            catch (SelfDeleteException) // Must delete SOG
+            {
+                if (QIS.ID.part != null && QIS.ID.part.ParentGroup != null)
+                    World.DeleteSceneObject(
+                        QIS.ID.part.ParentGroup, false, true);
+            }
+            catch (ScriptDeleteException) // Must delete item
+            {
+                if (QIS.ID.part != null && QIS.ID.part.ParentGroup != null)
+                    QIS.ID.part.Inventory.RemoveInventoryItem(QIS.ID.ItemID);
+            }
+            catch (Exception) { }
         }
 
         /// <summary>
@@ -1087,6 +1105,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             SQ.Create = create;
             StateQueue.Enqueue(SQ);
         }
+
         public Dictionary<UUID, string[]> Errors = new Dictionary<UUID, string[]>();
         /// <summary>
         /// Gets compile errors for the given itemID.
@@ -1271,7 +1290,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             ScriptProtection.RemoveScript(id);
         }
 
-        public string TestCompileScript(UUID assetID)
+        public string TestCompileScript(UUID assetID, UUID itemID)
         {
             AssetBase asset = m_Scene.AssetService.Get(assetID.ToString());
             if (null == asset)
@@ -1283,7 +1302,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 string script = Utils.BytesToString(asset.Data);
                 try
                 {
-                    ScriptEngine.LSLCompiler.PerformTestScriptCompile(script, assetID);
+                    string assembly;
+                    ScriptEngine.LSLCompiler.PerformScriptCompile(script, itemID, UUID.Zero, out assembly);
                 }
                 catch (Exception e)
                 {

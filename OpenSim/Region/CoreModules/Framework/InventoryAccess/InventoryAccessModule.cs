@@ -172,7 +172,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
 
                     if (ScriptEngine != null)
                     {
-                        string Errors = ScriptEngine.TestCompileScript(asset.FullID);
+                        string Errors = ScriptEngine.TestCompileScript(asset.FullID, itemID);
                         if (Errors != "")
                             return FailedCompileScriptCAPSUpdate(item.AssetID, itemID, Errors);
                     }
