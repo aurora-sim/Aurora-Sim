@@ -141,7 +141,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             catch (SelfDeleteException) // Must delete SOG
             {
                 if (QIS.ID.part != null && QIS.ID.part.ParentGroup != null)
-                    m_ScriptEngine.World.DeleteSceneObject(
+                    m_ScriptEngine.findPrimsScene(QIS.ID.localID).DeleteSceneObject(
                         QIS.ID.part.ParentGroup, false, true);
             }
             catch (ScriptDeleteException) // Must delete item

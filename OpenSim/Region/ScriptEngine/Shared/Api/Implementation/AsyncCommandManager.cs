@@ -47,7 +47,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         private static Thread cmdHandlerThread;
         private static int cmdHandlerThreadCycleSleepms;
 
-        private static List<IScene> m_Scenes = new List<IScene>();
+        public static List<IScene> m_Scenes = new List<IScene>();
         private static List<IScriptEngine> m_ScriptEngines =
                 new List<IScriptEngine>();
 
@@ -102,10 +102,10 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             get { return m_ScriptEngines.ToArray(); }
         }
 
-        public AsyncCommandManager(IScriptEngine _ScriptEngine)
+        public AsyncCommandManager(IScriptEngine _ScriptEngine, IScene scene)
         {
             m_ScriptEngine = _ScriptEngine;
-            m_Scene = m_ScriptEngine.World;
+            m_Scene = scene;
 
             if (m_Scenes.Count == 0)
                 ReadConfig();

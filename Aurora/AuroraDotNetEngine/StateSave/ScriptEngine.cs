@@ -53,17 +53,18 @@ using Amib.Threading;
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
     [Serializable]
-    public class ScriptEngine : INonSharedRegionModule, IScriptEngine, IScriptModule
+    public class ScriptEngine : ISharedRegionModule, IScriptEngine, IScriptModule
     {
         #region Declares 
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private Scene m_Scene;
         public Scene World
         {
-            get { return m_Scene; }
+            get { return m_Scenes[0]; }
         }
+
+        private List<Scene> m_Scenes = new List<Scene>();
 
         // Handles and queues incoming events from OpenSim
         public static EventManager EventManager;
@@ -176,7 +177,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public System.Timers.Timer UpdateLeasesTimer = null;
 
-        public static bool FirstStartup = true;
+        public bool FirstStartup = true;
 
         #endregion
 
@@ -197,7 +198,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         #endregion
 
-        #region INonSharedRegionModule
+        #region ISharedRegionModule
 
         public void Initialise(IConfigSource config)
         {
@@ -248,7 +249,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             StackSize = ScriptConfigSource.GetInt("StackSize", 2);
         }
 
-        public void PostInitialise() { }
+        public void PostInitialise()
+        { 
+        }
+
         public void AddRegion(Scene scene)
         {
             // Make sure we have config
@@ -280,7 +284,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             ScriptConfigSource = ConfigSource.Configs[ScriptEngineName];
 
         	//m_log.Info("[" + ScriptEngineName + "]: ScriptEngine initializing");
-            m_Scene = scene;
+            m_Scenes.Add(scene);
 
             // Create all objects we'll be using
             if(ScriptProtection == null)
@@ -298,12 +302,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if(m_MaintenanceThread == null)
                 m_MaintenanceThread = new MaintenanceThread(this);
 
-            //m_log.Info("[" + ScriptEngineName + "]: Reading configuration "+
-            //        "from config section \"" + ScriptEngineName + "\"");
-
+            
             scene.StackModuleInterface<IScriptModule>(this);
 
-            m_XmlRpcRouter = m_Scene.RequestModuleInterface<IXmlRpcRouter>();
+            m_XmlRpcRouter = m_Scenes[0].RequestModuleInterface<IXmlRpcRouter>();
             if (m_XmlRpcRouter != null)
             {
                 OnScriptRemoved += m_XmlRpcRouter.ScriptRemoved;
@@ -313,6 +315,61 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             scene.EventManager.OnRezScript += OnRezScript;
             scene.EventManager.OnRezScripts += OnRezScripts;
         }
+
+        public void RegionLoaded(Scene scene)
+        {
+            if (!m_enabled)
+                return;
+
+            m_ThreadPool.Start();
+            EventManager.HookUpRegionEvents(scene);
+
+            scene.EventManager.OnScriptReset += OnScriptReset;
+            scene.EventManager.OnGetScriptRunning += OnGetScriptRunning;
+            scene.EventManager.OnStartScript += OnStartScript;
+            scene.EventManager.OnStopScript += OnStopScript;
+            UpdateLeasesTimer = new System.Timers.Timer(9.5 * 1000 * 60 /*9.5 minutes*/);
+            UpdateLeasesTimer.Enabled = true;
+            UpdateLeasesTimer.Elapsed += UpdateAllLeases;
+            UpdateLeasesTimer.Start();
+        }
+
+        public void RemoveRegion(Scene scene)
+        {
+            scene.EventManager.OnScriptReset -= OnScriptReset;
+            scene.EventManager.OnGetScriptRunning -= OnGetScriptRunning;
+            scene.EventManager.OnStartScript -= OnStartScript;
+            scene.EventManager.OnStopScript -= OnStopScript;
+
+            if (m_XmlRpcRouter != null)
+            {
+                OnScriptRemoved -= m_XmlRpcRouter.ScriptRemoved;
+                OnObjectRemoved -= m_XmlRpcRouter.ObjectRemoved;
+            }
+
+            scene.UnregisterModuleInterface<IScriptModule>(this);
+            UpdateLeasesTimer.Enabled = false;
+            UpdateLeasesTimer.Elapsed -= UpdateAllLeases;
+            UpdateLeasesTimer.Stop();
+
+            Shutdown();
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
+        }
+
+        public string Name
+        {
+            get { return ScriptEngineName; }
+        }
+
+        public void Close()
+        {
+        }
+
+        #endregion
 
         #region Console Commands
 
@@ -391,45 +448,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         #endregion
 
-        public void RemoveRegion(Scene scene)
-        {
-            scene.EventManager.OnScriptReset -= OnScriptReset;
-            scene.EventManager.OnGetScriptRunning -= OnGetScriptRunning;
-            scene.EventManager.OnStartScript -= OnStartScript;
-            scene.EventManager.OnStopScript -= OnStopScript;
-            
-            if (m_XmlRpcRouter != null)
-            {
-                OnScriptRemoved -= m_XmlRpcRouter.ScriptRemoved;
-                OnObjectRemoved -= m_XmlRpcRouter.ObjectRemoved;
-            }
-
-            scene.UnregisterModuleInterface<IScriptModule>(this);
-            UpdateLeasesTimer.Enabled = false;
-            UpdateLeasesTimer.Elapsed -= UpdateAllLeases;
-            UpdateLeasesTimer.Stop();
-
-            Shutdown();
-        }
-
-        public void RegionLoaded(Scene scene)
-        {
-            if (!m_enabled)
-                return;
-
-            m_ThreadPool.Start();
-            EventManager.HookUpEvents();
-
-            scene.EventManager.OnScriptReset += OnScriptReset;
-            scene.EventManager.OnGetScriptRunning += OnGetScriptRunning;
-            scene.EventManager.OnStartScript += OnStartScript;
-            scene.EventManager.OnStopScript += OnStopScript;
-            UpdateLeasesTimer = new System.Timers.Timer(9.5 * 1000 * 60 /*9.5 minutes*/);
-            UpdateLeasesTimer.Enabled = true;
-            UpdateLeasesTimer.Elapsed += UpdateAllLeases;
-            UpdateLeasesTimer.Start();
-        }
-
         public void UpdateAllLeases(object sender, System.Timers.ElapsedEventArgs e)
         {
             foreach (ScriptData script in ScriptProtection.GetAllScripts())
@@ -449,22 +467,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
         }
 
-        public void Close()
-        {
-        }
-
-        public Type ReplaceableInterface 
-        {
-            get { return null; }
-        }
-
-        public string Name
-        {
-            get { return ScriptEngineName; }
-        }
-        
-		#endregion
-
         public void OnRezScript(uint localID, UUID itemID, string script,
                 int startParam, bool postOnRez, string engine, int stateSource)
         {
@@ -473,7 +475,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             List<IScriptModule> engines =
                 new List<IScriptModule>(
-                World.RequestModuleInterfaces<IScriptModule>());
+                m_Scenes[0].RequestModuleInterfaces<IScriptModule>());
 
             List<string> names = new List<string>();
             foreach (IScriptModule m in engines)
@@ -501,14 +503,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         if (engine == ScriptEngineName)
                         {
                             SceneObjectPart part =
-                                    World.GetSceneObjectPart(
+                                    findPrimsScene(localID).GetSceneObjectPart(
                                     localID);
 
                             TaskInventoryItem item =
                                     part.Inventory.GetInventoryItem(itemID);
 
                             ScenePresence presence =
-                                    World.GetScenePresence(
+                                    findPrimsScene(localID).GetScenePresence(
                                     item.OwnerID);
 
                             if (presence != null)
@@ -537,7 +539,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             List<TaskInventoryItem> ItemsToStart = new List<TaskInventoryItem>();
             foreach (TaskInventoryItem item in items)
             {
-                AssetBase asset = m_Scene.AssetService.Get(item.AssetID.ToString());
+                AssetBase asset = m_Scenes[0].AssetService.Get(item.AssetID.ToString());
                 if (null == asset)
                 {
                     m_log.ErrorFormat(
@@ -553,7 +555,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
                 List<IScriptModule> engines =
                     new List<IScriptModule>(
-                    World.RequestModuleInterfaces<IScriptModule>());
+                    m_Scenes[0].RequestModuleInterfaces<IScriptModule>());
 
                 List<string> names = new List<string>();
                 foreach (IScriptModule m in engines)
@@ -581,11 +583,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                             if (engine == ScriptEngineName)
                             {
                                 SceneObjectPart part =
-                                        World.GetSceneObjectPart(
+                                        findPrimsScene(localID).GetSceneObjectPart(
                                         localID);
 
                                 ScenePresence presence =
-                                        World.GetScenePresence(
+                                        findPrimsScene(localID).GetScenePresence(
                                         item.OwnerID);
 
                                 if (presence != null)
@@ -608,7 +610,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             foreach (TaskInventoryItem item in ItemsToStart)
             {
-                AssetBase asset = m_Scene.AssetService.Get(item.AssetID.ToString());
+                AssetBase asset = m_Scenes[0].AssetService.Get(item.AssetID.ToString());
                 if (null == asset)
                 {
                     m_log.ErrorFormat(
@@ -663,7 +665,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public bool PostObjectEvent(UUID itemID, string name, Object[] p)
         {
-            SceneObjectPart part = m_Scene.GetSceneObjectPart(itemID);
+            SceneObjectPart part = findPrimsScene(itemID).GetSceneObjectPart(itemID);
             if (part == null)
                 return false;
 
@@ -835,7 +837,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (id == null)
                 return;        
 
-            IEventQueue eq = World.RequestModuleInterface<IEventQueue>();
+            IEventQueue eq = id.World.RequestModuleInterface<IEventQueue>();
             if (eq == null)
             {
                 controllingClient.SendScriptRunningReply(objectID, itemID,
@@ -907,11 +909,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             return "";
         }
 
-        public ArrayList GetScriptErrors(UUID itemID)
-        {
-            return new ArrayList(GetErrors(itemID));
-        }
-
         public bool SetXMLState(UUID itemID, string xml)
         {
             return true;
@@ -969,7 +966,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (ID.Disabled || !ID.Running)
                 return true;
 
-            if (!World.PipeEventsForScript(
+            if (!ID.World.PipeEventsForScript(
                 ID.localID))
                 return true;
 
@@ -1072,7 +1069,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             catch (SelfDeleteException) // Must delete SOG
             {
                 if (QIS.ID.part != null && QIS.ID.part.ParentGroup != null)
-                    World.DeleteSceneObject(
+                    findPrimsScene(QIS.ID.localID).DeleteSceneObject(
                         QIS.ID.part.ParentGroup, false, true);
             }
             catch (ScriptDeleteException) // Must delete item
@@ -1104,6 +1101,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             SQ.ID = ID;
             SQ.Create = create;
             StateQueue.Enqueue(SQ);
+        }
+
+        public ArrayList GetScriptErrors(UUID itemID)
+        {
+            return new ArrayList(GetErrors(itemID));
         }
 
         public Dictionary<UUID, string[]> Errors = new Dictionary<UUID, string[]>();
@@ -1151,7 +1153,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 ls.Action = LUType.Load;
             if (id == null)
                 id = new ScriptData(this);
-            id.World = m_Scene;
             id.localID = localID;
             id.ItemID = itemID;
             id.PostOnRez = postOnRez;
@@ -1161,10 +1162,43 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             id.Running = true;
             id.Disabled = false;
             id.Source = Script;
-            id.World = m_Scene;
+
+            id.World = findPrimsScene(localID);
             ScriptProtection.RemovePreviouslyCompiled(id.Source);
             ls.ID = id;
             LUQueue.Enqueue(ls);
+        }
+
+        public Scene findPrimsScene(UUID objectID)
+        {
+            lock (m_Scenes)
+            {
+                foreach (Scene s in m_Scenes)
+                {
+                    SceneObjectPart part = s.GetSceneObjectPart(objectID);
+                    if (part != null)
+                    {
+                        return s;
+                    }
+                }
+            }
+            return null;
+        }
+
+        public Scene findPrimsScene(uint localID)
+        {
+            lock (m_Scenes)
+            {
+                foreach (Scene s in m_Scenes)
+                {
+                    SceneObjectPart part = s.GetSceneObjectPart(localID);
+                    if (part != null)
+                    {
+                        return s;
+                    }
+                }
+            }
+            return null;
         }
 
         public void UpdateScript(uint localID, UUID itemID, string script, int startParam, bool postOnRez, int stateSource)
@@ -1189,7 +1223,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 id.Running = true;
                 id.Disabled = false;
                 id.Source = script;
-                id.World = m_Scene;
+                id.World = findPrimsScene(localID);
                 ls.ID = id;
                 LUQueue.Enqueue(ls);
             }
@@ -1213,7 +1247,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 id.Disabled = false;
                 id.Source = script;
                 id.PostOnRez = postOnRez;
-                id.World = m_Scene;
+                id.World = findPrimsScene(localID);
                 ls.ID = id;
                 LUQueue.Enqueue(ls);
             }
@@ -1292,7 +1326,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public string TestCompileScript(UUID assetID, UUID itemID)
         {
-            AssetBase asset = m_Scene.AssetService.Get(assetID.ToString());
+            AssetBase asset = m_Scenes[0].AssetService.Get(assetID.ToString());
             if (null == asset)
             {
                 return "Could not find script.";

@@ -74,7 +74,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             m_itemID = itemID;
             ScriptProtection = module;
 
-            m_comms = m_ScriptEngine.World.RequestModuleInterface<IScriptModuleComms>();
+            m_comms = World.RequestModuleInterface<IScriptModuleComms>();
         }
 
         public override Object InitializeLifetimeService()
@@ -92,7 +92,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public Scene World
         {
-            get { return m_ScriptEngine.World; }
+            get { return m_host.ParentGroup.Scene; }
         }
 
         internal void MODError(string msg)
@@ -112,7 +112,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             World.SimChat(OpenMetaverse.Utils.StringToBytes(message),
                           ChatTypeEnum.Shout, ScriptBaseClass.DEBUG_CHANNEL, m_host.ParentGroup.RootPart.AbsolutePosition, m_host.Name, m_host.UUID, true);
 
-            IWorldComm wComm = m_ScriptEngine.World.RequestModuleInterface<IWorldComm>();
+            IWorldComm wComm = World.RequestModuleInterface<IWorldComm>();
             wComm.DeliverMessage(ChatTypeEnum.Shout, ScriptBaseClass.DEBUG_CHANNEL, m_host.Name, m_host.UUID, message);
         }
 
@@ -151,7 +151,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "AASetCloudDensity", m_host, "AA");
             if (!World.Permissions.CanIssueEstateCommand(m_host.OwnerID, false))
                 return;
-            ICloudModule CloudModule = m_ScriptEngine.World.RequestModuleInterface<ICloudModule>();
+            ICloudModule CloudModule = World.RequestModuleInterface<ICloudModule>();
             if (CloudModule == null)
                 return;
             CloudModule.SetCloudDensity((float)density);

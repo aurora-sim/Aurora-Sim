@@ -164,37 +164,37 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// </summary>
         public void DoScriptsLoadUnload()
         {
-            if (ScriptEngine.LUQueue.Count == 0)
-                return;
+            while (ScriptEngine.LUQueue.Count != 0)
+            {
+                LUStruct item;
+                ScriptEngine.LUQueue.Dequeue(out item);
+                if (item == null)
+                    return;
 
-            LUStruct item;
-            ScriptEngine.LUQueue.Dequeue(out item);
-            if (item == null)
-                return;
-
-            if (item.Action == LUType.Unload)
-            {
-                try
+                if (item.Action == LUType.Unload)
                 {
-                    item.ID.CloseAndDispose(false);
+                    try
+                    {
+                        item.ID.CloseAndDispose(false);
+                    }
+                    catch (Exception ex) { m_log.Warn(ex); }
                 }
-                catch (Exception ex) { m_log.Warn(ex); }
-            }
-            else if (item.Action == LUType.Load)
-            {
-                try
+                else if (item.Action == LUType.Load)
                 {
-                    item.ID.Start(false);
+                    try
+                    {
+                        item.ID.Start(false);
+                    }
+                    catch (Exception ex) { m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: LEAKED COMPILE ERROR: " + ex); }
                 }
-                catch (Exception ex) { m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: LEAKED COMPILE ERROR: " + ex); }
-            }
-            else if (item.Action == LUType.Reupload)
-            {
-                try
+                else if (item.Action == LUType.Reupload)
                 {
-                    item.ID.Start(true);
+                    try
+                    {
+                        item.ID.Start(true);
+                    }
+                    catch (Exception ex) { m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: LEAKED COMPILE ERROR: " + ex); }
                 }
-                catch (Exception ex) { m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: LEAKED COMPILE ERROR: " + ex); }
             }
         }
 

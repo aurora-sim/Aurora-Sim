@@ -165,7 +165,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public Scene World
         {
-            get { return m_ScriptEngine.World; }
+            get { return m_host.ParentGroup.Scene; }
         }
 
         internal void OSSLError(string msg)
@@ -193,7 +193,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             World.SimChat(Utils.StringToBytes(message),
                           ChatTypeEnum.Shout, ScriptBaseClass.DEBUG_CHANNEL, m_host.ParentGroup.RootPart.AbsolutePosition, m_host.Name, m_host.UUID, true);
 
-            IWorldComm wComm = m_ScriptEngine.World.RequestModuleInterface<IWorldComm>();
+            IWorldComm wComm = World.RequestModuleInterface<IWorldComm>();
             wComm.DeliverMessage(ChatTypeEnum.Shout, ScriptBaseClass.DEBUG_CHANNEL, m_host.Name, m_host.UUID, message);
         }
 
@@ -1440,7 +1440,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             //
             ScriptProtection.CheckThreatLevel(ThreatLevel.High,"osGetSimulatorVersion", m_host, "OSSL");
             m_host.AddScriptLPS(1);
-            return m_ScriptEngine.World.GetSimulatorVersion();
+            return World.GetSimulatorVersion();
         }
 
         public Hashtable osParseJSON(string JSON)
@@ -2110,7 +2110,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         public LSL_Key osGetMapTexture()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osGetMapTexture", m_host, "OSSL");
-            return m_ScriptEngine.World.RegionInfo.RegionSettings.TerrainImageID.ToString();
+            return World.RegionInfo.RegionSettings.TerrainImageID.ToString();
         }
 
         /// <summary>
@@ -2121,7 +2121,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         public LSL_Key osGetRegionMapTexture(string regionName)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osGetRegionMapTexture", m_host, "OSSL");
-            Scene scene = m_ScriptEngine.World;
+            Scene scene = m_host.ParentGroup.Scene;
             UUID key = UUID.Zero;
             GridRegion region;
 

@@ -114,8 +114,6 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             CompileWithDebugInformation = m_scriptEngine.Config.GetBoolean("CompileWithDebugInformation", true);
             
             MakeFilePrefixSafe();
-            // First time we start? Make sure the directory exists
-            MakeSureDirectoryExists();
             //Set up the compilers
             MapCompilers();
             //Find the default compiler
@@ -186,60 +184,6 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             LanguageMapping.Add(enumCompileType.lsl.ToString(), enumCompileType.lsl);
             LanguageMapping.Add(enumCompileType.js.ToString(), enumCompileType.js);
             LanguageMapping.Add(enumCompileType.yp.ToString(), enumCompileType.yp);
-        }
-
-        /// <summary>
-        /// Create the directories if needed
-        /// </summary>
-        private void MakeSureDirectoryExists()
-        {
-            if (!firstStartup)
-                return;
-            firstStartup = false;
-                
-            // CREATE FOLDER IF IT DOESNT EXIST
-            if (!Directory.Exists(ScriptEnginesPath))
-            {
-                try
-                {
-                    Directory.CreateDirectory(ScriptEnginesPath);
-                }
-                catch (Exception ex)
-                {
-                    m_log.Error("[Compiler]: Exception trying to create ScriptEngine directory \"" + ScriptEnginesPath + "\": " + ex.ToString());
-                }
-            }
-
-            if (!Directory.Exists(Path.Combine(ScriptEnginesPath,
-                    m_scriptEngine.World.RegionInfo.RegionID.ToString())))
-            {
-                try
-                {
-                    Directory.CreateDirectory(Path.Combine(ScriptEnginesPath,
-                        m_scriptEngine.World.RegionInfo.RegionID.ToString()));
-                }
-                catch (Exception ex)
-                {
-                    m_log.Error("[Compiler]: Exception trying to create ScriptEngine directory \"" + Path.Combine(ScriptEnginesPath,
-                                            m_scriptEngine.World.RegionInfo.RegionID.ToString()) + "\": " + ex.ToString());
-                }
-            }
-        }
-
-        #endregion
-
-        #region Find the output
-
-        public string GetCompilerOutput(string assetID)
-        {
-            return Path.Combine(ScriptEnginesPath, Path.Combine(
-                    m_scriptEngine.World.RegionInfo.RegionID.ToString(),
-                    FilePrefix + "_compiled_" + assetID + ".dll"));
-        }
-
-        public string GetCompilerOutput(UUID assetID)
-        {
-            return GetCompilerOutput(assetID.ToString());
         }
 
         #endregion
@@ -613,7 +557,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                 {
                     File.WriteAllText(Path.Combine(Path.Combine(
                         ScriptEnginesPath,
-                        m_scriptEngine.World.RegionInfo.RegionID.ToString()),
+                        "Script"),
                         srcFileName), Script);
                 }
                 catch (Exception ex) //NOTLEGIT - Should be just FileIOException

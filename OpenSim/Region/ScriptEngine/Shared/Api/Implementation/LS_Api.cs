@@ -75,7 +75,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             if (m_ScriptEngine.Config.GetBoolean("AllowCareminsterFunctions", false))
                 m_CMFunctionsEnabled = true;
 
-            m_comms = m_ScriptEngine.World.RequestModuleInterface<IScriptModuleComms>();
+            m_comms = World.RequestModuleInterface<IScriptModuleComms>();
             if (m_comms == null)
                 m_CMFunctionsEnabled = false;
         }
@@ -95,7 +95,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public Scene World
         {
-            get { return m_ScriptEngine.World; }
+            get { return m_host.ParentGroup.Scene; }
         }
 
         //
@@ -110,7 +110,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             World.SimChat(Utils.StringToBytes(message),
                           ChatTypeEnum.Shout, ScriptBaseClass.DEBUG_CHANNEL, m_host.ParentGroup.RootPart.AbsolutePosition, m_host.Name, m_host.UUID, true);
 
-            IWorldComm wComm = m_ScriptEngine.World.RequestModuleInterface<IWorldComm>();
+            IWorldComm wComm = World.RequestModuleInterface<IWorldComm>();
             wComm.DeliverMessage(ChatTypeEnum.Shout, ScriptBaseClass.DEBUG_CHANNEL, m_host.Name, m_host.UUID, message);
         }
 

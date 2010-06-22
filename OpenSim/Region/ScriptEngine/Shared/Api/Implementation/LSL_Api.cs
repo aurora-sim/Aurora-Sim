@@ -116,15 +116,15 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                 m_notecardLineReadCharsMax = 65535;
 
             m_TransferModule =
-                    m_ScriptEngine.World.RequestModuleInterface<IMessageTransferModule>();
-            m_UrlModule = m_ScriptEngine.World.RequestModuleInterface<IUrlModule>();
+                    World.RequestModuleInterface<IMessageTransferModule>();
+            m_UrlModule = World.RequestModuleInterface<IUrlModule>();
             if (m_UrlModule != null)
             {
                 m_ScriptEngine.OnScriptRemoved += m_UrlModule.ScriptRemoved;
                 m_ScriptEngine.OnObjectRemoved += m_UrlModule.ObjectRemoved;
             }
 
-            AsyncCommands = new AsyncCommandManager(ScriptEngine);
+            AsyncCommands = new AsyncCommandManager(ScriptEngine, m_host.ParentGroup.Scene);
         }
 
         public override Object InitializeLifetimeService()
@@ -150,7 +150,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public Scene World
         {
-            get { return m_ScriptEngine.World; }
+            get { return m_host.ParentGroup.Scene; }
         }
 
         public void state(string newState)
@@ -762,7 +762,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             World.SimChat(Utils.StringToBytes(text),
                           ChatTypeEnum.Whisper, channelID, m_host.ParentGroup.RootPart.AbsolutePosition, m_host.Name, m_host.UUID, false);
 
-            IWorldComm wComm = m_ScriptEngine.World.RequestModuleInterface<IWorldComm>();
+            IWorldComm wComm = World.RequestModuleInterface<IWorldComm>();
             if (wComm != null)
                 wComm.DeliverMessage(ChatTypeEnum.Whisper, channelID, m_host.Name, m_host.UUID, text);
         }
@@ -784,7 +784,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                 World.SimChat(Utils.StringToBytes(text),
                               ChatTypeEnum.Say, channelID, m_host.ParentGroup.RootPart.AbsolutePosition, m_host.Name, m_host.UUID, false);
 
-                IWorldComm wComm = m_ScriptEngine.World.RequestModuleInterface<IWorldComm>();
+                IWorldComm wComm = World.RequestModuleInterface<IWorldComm>();
                 if (wComm != null)
                     wComm.DeliverMessage(ChatTypeEnum.Say, channelID, m_host.Name, m_host.UUID, text);
             }
@@ -801,7 +801,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             World.SimChat(Utils.StringToBytes(text),
                           ChatTypeEnum.Shout, channelID, m_host.ParentGroup.RootPart.AbsolutePosition, m_host.Name, m_host.UUID, true);
 
-            IWorldComm wComm = m_ScriptEngine.World.RequestModuleInterface<IWorldComm>();
+            IWorldComm wComm = World.RequestModuleInterface<IWorldComm>();
             if (wComm != null)
                 wComm.DeliverMessage(ChatTypeEnum.Shout, channelID, m_host.Name, m_host.UUID, text);
         }
@@ -817,7 +817,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
             	m_host.AddScriptLPS(1);
 
-            	IWorldComm wComm1 = m_ScriptEngine.World.RequestModuleInterface<IWorldComm>();
+            	IWorldComm wComm1 = World.RequestModuleInterface<IWorldComm>();
             	if (wComm1 != null)
                 	wComm1.DeliverMessage(ChatTypeEnum.Region, channelID, m_host.Name, m_host.UUID, text);
             }
@@ -827,7 +827,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
             m_host.AddScriptLPS(1);
 
-            IWorldComm wComm = m_ScriptEngine.World.RequestModuleInterface<IWorldComm>();
+            IWorldComm wComm = World.RequestModuleInterface<IWorldComm>();
             if (wComm != null)
                 wComm.DeliverMessage(ChatTypeEnum.Region, channelID, m_host.Name, m_host.UUID, text);
         }
@@ -838,7 +838,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             m_host.AddScriptLPS(1);
             UUID keyID;
             UUID.TryParse(ID, out keyID);
-            IWorldComm wComm = m_ScriptEngine.World.RequestModuleInterface<IWorldComm>();
+            IWorldComm wComm = World.RequestModuleInterface<IWorldComm>();
             if (wComm != null)
                 return wComm.Listen(m_localID, m_itemID, m_host.UUID, channelID, name, keyID, msg);
             else
@@ -849,7 +849,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
-            IWorldComm wComm = m_ScriptEngine.World.RequestModuleInterface<IWorldComm>();
+            IWorldComm wComm = World.RequestModuleInterface<IWorldComm>();
             if (wComm != null)
                 wComm.ListenControl(m_itemID, number, active);
         }
@@ -858,7 +858,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
-            IWorldComm wComm = m_ScriptEngine.World.RequestModuleInterface<IWorldComm>();
+            IWorldComm wComm = World.RequestModuleInterface<IWorldComm>();
             if (wComm != null)
                 wComm.ListenRemove(m_itemID, number);
         }
@@ -3043,7 +3043,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
                 ScenePresence presence = World.GetScenePresence(m_host.OwnerID);
 
-                IAttachmentsModule attachmentsModule = m_ScriptEngine.World.AttachmentsModule;
+                IAttachmentsModule attachmentsModule = World.AttachmentsModule;
                 if (attachmentsModule != null)
                     attachmentsModule.AttachObject(
                         presence.ControllingClient, grp.LocalId, 
@@ -3079,7 +3079,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
                 ScenePresence presence = World.GetScenePresence(m_host.OwnerID);
 
-                IAttachmentsModule attachmentsModule = m_ScriptEngine.World.AttachmentsModule;
+                IAttachmentsModule attachmentsModule = World.AttachmentsModule;
                 if (attachmentsModule != null)
                     attachmentsModule.ShowDetachInUserInventory(itemID, grp, presence.ControllingClient);
             }
@@ -3164,7 +3164,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "llEmail", m_host, "LSL");
             m_host.AddScriptLPS(1);
-            IEmailModule emailModule = m_ScriptEngine.World.RequestModuleInterface<IEmailModule>();
+            IEmailModule emailModule = World.RequestModuleInterface<IEmailModule>();
             if (emailModule == null)
             {
                 ShoutError("llEmail: email module not configured");
@@ -3179,7 +3179,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
-            IEmailModule emailModule = m_ScriptEngine.World.RequestModuleInterface<IEmailModule>();
+            IEmailModule emailModule = World.RequestModuleInterface<IEmailModule>();
             if (emailModule == null)
             {
                 ShoutError("llGetNextEmail: email module not configured");
@@ -4272,7 +4272,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
-            ITerrainModule tm = m_ScriptEngine.World.RequestModuleInterface<ITerrainModule>();
+            ITerrainModule tm = World.RequestModuleInterface<ITerrainModule>();
             if (tm != null)
             {
                 tm.ModifyTerrain(m_host.OwnerID, m_host.AbsolutePosition, (byte) brush, (byte) action, m_host.OwnerID);
@@ -6388,7 +6388,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             if (itemList.Count == 0)
                 return;
 
-            UUID folderID = m_ScriptEngine.World.MoveTaskInventoryItems(destID, category, m_host, itemList);
+            UUID folderID = World.MoveTaskInventoryItems(destID, category, m_host, itemList);
 
             if (folderID == UUID.Zero)
                 return;
@@ -6715,14 +6715,14 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         public void llOpenRemoteDataChannel()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            IXMLRPC xmlrpcMod = m_ScriptEngine.World.RequestModuleInterface<IXMLRPC>();
+            IXMLRPC xmlrpcMod = World.RequestModuleInterface<IXMLRPC>();
             if (xmlrpcMod.IsEnabled())
             {
                 UUID channelID = xmlrpcMod.OpenXMLRPCChannel(m_localID, m_itemID, UUID.Zero);
-                IXmlRpcRouter xmlRpcRouter = m_ScriptEngine.World.RequestModuleInterface<IXmlRpcRouter>();
+                IXmlRpcRouter xmlRpcRouter = World.RequestModuleInterface<IXmlRpcRouter>();
                 if (xmlRpcRouter != null)
                 {
-                    string ExternalHostName = m_ScriptEngine.World.RegionInfo.ExternalHostName;
+                    string ExternalHostName = World.RegionInfo.ExternalHostName;
                     
                     xmlRpcRouter.RegisterNewReceiver(m_ScriptEngine.ScriptModule, channelID, m_host.UUID, 
                                                      m_itemID, String.Format("http://{0}:{1}/", ExternalHostName, 
@@ -6746,7 +6746,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         public LSL_String llSendRemoteData(string channel, string dest, int idata, string sdata)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            IXMLRPC xmlrpcMod = m_ScriptEngine.World.RequestModuleInterface<IXMLRPC>();
+            IXMLRPC xmlrpcMod = World.RequestModuleInterface<IXMLRPC>();
             ScriptSleep(3000);
             return (xmlrpcMod.SendRemoteData(m_localID, m_itemID, channel, dest, idata, sdata)).ToString();
         }
@@ -6754,7 +6754,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         public void llRemoteDataReply(string channel, string message_id, string sdata, int idata)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            IXMLRPC xmlrpcMod = m_ScriptEngine.World.RequestModuleInterface<IXMLRPC>();
+            IXMLRPC xmlrpcMod = World.RequestModuleInterface<IXMLRPC>();
             xmlrpcMod.RemoteDataReply(channel, message_id, sdata, idata);
             ScriptSleep(3000);
         }
@@ -6762,7 +6762,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         public void llCloseRemoteDataChannel(string channel)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            IXMLRPC xmlrpcMod = m_ScriptEngine.World.RequestModuleInterface<IXMLRPC>();
+            IXMLRPC xmlrpcMod = World.RequestModuleInterface<IXMLRPC>();
             xmlrpcMod.CloseXMLRPCChannel((UUID)channel);
             ScriptSleep(1000);
         }
@@ -8647,7 +8647,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
             World.SimChatBroadcast(Utils.StringToBytes(msg), ChatTypeEnum.Owner, 0,
                                    m_host.AbsolutePosition, m_host.Name, m_host.UUID, false);
-//            IWorldComm wComm = m_ScriptEngine.World.RequestModuleInterface<IWorldComm>();
+//            IWorldComm wComm = World.RequestModuleInterface<IWorldComm>();
 //            wComm.DeliverMessage(ChatTypeEnum.Owner, 0, m_host.Name, m_host.UUID, msg);
         }
 
@@ -8669,7 +8669,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
                 string reply = String.Empty;
 
-                GridRegion info = m_ScriptEngine.World.GridService.GetRegionByName(m_ScriptEngine.World.RegionInfo.ScopeID, simulator);
+                GridRegion info = World.GridService.GetRegionByName(World.RegionInfo.ScopeID, simulator);
 
                 switch (data)
                 {
@@ -9549,7 +9549,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             IHttpRequestModule httpScriptMod =
-                m_ScriptEngine.World.RequestModuleInterface<IHttpRequestModule>();
+                World.RequestModuleInterface<IHttpRequestModule>();
             List<string> param = new List<string>();
             foreach (object o in parameters.Data)
             {
