@@ -41,7 +41,7 @@ namespace OpenSim.Region.ScriptEngine.Interfaces
         void PerformScriptCompile(string Script, UUID itemID, UUID ownerUUID, out string assembly);
         string[] GetWarnings();
     }
-    
+
     public interface IScriptProtectionModule
     {
         bool AllowMacroScripting { get; }
@@ -50,15 +50,15 @@ namespace OpenSim.Region.ScriptEngine.Interfaces
         IScriptData TryGetPreviouslyCompiledScript(string source);
         void AddPreviouslyCompiled(string source, IScriptData ID);
         void RemovePreviouslyCompiled(string source);
-        IScriptData GetScript(uint localID, UUID itemID);
+        IScriptData GetScript(UUID primID, UUID itemID);
         IScriptData GetScript(UUID itemID);
-        IScriptData[] GetScript(uint localID);
+        IScriptData[] GetScripts(UUID primID);
         void AddNewScript(IScriptData Data);
         IScriptData[] GetAllScripts();
         void RemoveScript(IScriptData Data);
     }
-	
-	public enum ThreatLevel
+
+    public enum ThreatLevel
     {
         None = 0,
         Nuisance = 1,
@@ -69,52 +69,52 @@ namespace OpenSim.Region.ScriptEngine.Interfaces
         VeryHigh = 6,
         Severe = 7
     };
-	
-	public interface IScript: IDisposable
+
+    public interface IScript : IDisposable
     {
         string[] GetApis();
         void InitApi(string name, IScriptApi data);
 
         int GetStateEventFlags(string state);
         int ExecuteEvent(string state, string FunctionName, object[] args, int startingposition);
-        Dictionary<string,Object> GetVars();
-        void SetVars(Dictionary<string,Object> vars);
+        Dictionary<string, Object> GetVars();
+        void SetVars(Dictionary<string, Object> vars);
         void ResetVars();
 
         void Close();
-        string Name { get;}
+        string Name { get; }
     }
-	
-	public class IScriptData
-	{
-		IScript Script;
-		string State;
-		bool Running;
-		bool Disabled;
-		string Source;
-		string ClassSource;
-		int StartParam;
-		StateSource stateSource;
-		AppDomain AppDomain;
-		Dictionary<string, IScriptApi> Apis;
-		Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> LineMap;
-		
-		SceneObjectPart part;
 
-		long EventDelayTicks = 0;
-		long NextEventTimeTicks = 0;
-		UUID AssetID;
-		string AssemblyName;
-		//This is the UUID of the actual script.
-		UUID ItemID;
-		//This is the localUUID of the object the script is in.
-		uint localID;
-		string ClassID;
-		bool PostOnRez;
-		TaskInventoryItem InventoryItem;
-		ScenePresence presence;
-		DetectParams[] LastDetectParams;
-		bool IsCompiling;
-		bool ErrorsWaiting;
-	}
+    public class IScriptData
+    {
+        IScript Script;
+        string State;
+        bool Running;
+        bool Disabled;
+        string Source;
+        string ClassSource;
+        int StartParam;
+        StateSource stateSource;
+        AppDomain AppDomain;
+        Dictionary<string, IScriptApi> Apis;
+        Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> LineMap;
+
+        SceneObjectPart part;
+
+        long EventDelayTicks = 0;
+        long NextEventTimeTicks = 0;
+        UUID AssetID;
+        string AssemblyName;
+        //This is the UUID of the actual script.
+        UUID ItemID;
+        //This is the localUUID of the object the script is in.
+        uint localID;
+        string ClassID;
+        bool PostOnRez;
+        TaskInventoryItem InventoryItem;
+        ScenePresence presence;
+        DetectParams[] LastDetectParams;
+        bool IsCompiling;
+        bool ErrorsWaiting;
+    }
 }

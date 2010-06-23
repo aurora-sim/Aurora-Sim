@@ -329,7 +329,7 @@ namespace Aurora.Modules
                     if (isLocalCall)
                     {
                         // We need to make a local copy of the object
-                        ISceneObject sogClone = sog.CloneForNewScene();
+                        ISceneObject sogClone = sog.CloneForNewScene(s);
                         sogClone.SetState(sog.GetStateSnapshot(), s);
                         return s.IncomingCreateObject(sogClone);
                     }

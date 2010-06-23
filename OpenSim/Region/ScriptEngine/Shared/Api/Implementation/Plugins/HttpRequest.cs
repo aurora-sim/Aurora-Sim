@@ -43,13 +43,13 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api.Plugins
             m_CmdManager = CmdManager;
         }
 
-        public void CheckHttpRequests()
+        public void CheckHttpRequests(OpenSim.Framework.IScene scene)
         {
-            if (m_CmdManager.m_ScriptEngine.World == null)
+            if (scene == null)
                 return;
 
             IHttpRequestModule iHttpReq =
-                m_CmdManager.m_ScriptEngine.World.RequestModuleInterface<IHttpRequestModule>();
+                scene.RequestModuleInterface<IHttpRequestModule>();
 
             HttpRequestClass httpInfo = null;
 

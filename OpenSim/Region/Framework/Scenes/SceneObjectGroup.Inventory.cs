@@ -64,23 +64,10 @@ namespace OpenSim.Region.Framework.Scenes
             // Don't start scripts if they're turned off in the region!
             if (!m_scene.RegionInfo.RegionSettings.DisableScripts)
             {
-                Action<SceneObjectPart> protectedAction = new Action<SceneObjectPart>(delegate(SceneObjectPart part)
+                foreach (SceneObjectPart part in m_parts.Values)
                 {
-                    try
-                    {
-                        part.Inventory.CreateScriptInstances(startParam, postOnRez, engine, stateSource);
-                    }
-                    catch (Exception e)
-                    {
-                        m_log.Info("[BUG] in " + Scene.RegionInfo.RegionName + ": " + e.ToString());
-                        m_log.Info("[BUG] Stack Trace: " + e.StackTrace);
-                    }
-                });
-                Parallel.ForEach<SceneObjectPart>(m_parts.Values, protectedAction);
-                //foreach (SceneObjectPart part in m_parts.Values)
-                //{
-                //    part.Inventory.CreateScriptInstances(startParam, postOnRez, engine, stateSource);
-                //}
+                    part.Inventory.CreateScriptInstances(startParam, postOnRez, engine, stateSource);
+                }
             }
         }
 

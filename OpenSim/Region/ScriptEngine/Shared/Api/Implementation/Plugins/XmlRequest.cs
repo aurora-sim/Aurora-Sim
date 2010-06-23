@@ -43,12 +43,12 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api.Plugins
             m_CmdManager = CmdManager;
         }
 
-        public void CheckXMLRPCRequests()
+        public void CheckXMLRPCRequests(OpenSim.Framework.IScene scene)
         {
-            if (m_CmdManager.m_ScriptEngine.World == null)
+            if (scene == null)
                 return;
 
-            IXMLRPC xmlrpc = m_CmdManager.m_ScriptEngine.World.RequestModuleInterface<IXMLRPC>();
+            IXMLRPC xmlrpc = scene.RequestModuleInterface<IXMLRPC>();
 
             if (xmlrpc != null)
             {

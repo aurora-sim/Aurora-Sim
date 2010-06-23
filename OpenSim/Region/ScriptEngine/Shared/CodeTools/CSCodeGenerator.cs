@@ -161,6 +161,11 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             m_CSharpCol = 1;
             m_positionMap = new Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>>();
             m_astRoot = null;
+            IsParentEnumerable = false;
+            IsInLoop = false;
+            OriginalScript = "";
+            script = "";
+            m_warnings.Clear();
         }
 
         /// <summary>
@@ -170,7 +175,6 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
         /// <returns>String containing the generated C# code.</returns>
         public string Convert(string script)
         {
-            m_warnings.Clear();
             ResetCounters();
             Parser p = new LSLSyntax(new yyLSLSyntax(), new ErrorHandler(true));
 
@@ -813,8 +817,13 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
         private string GenerateWhileStatement(WhileStatement ws)
         {
             string retstr = String.Empty;
+
             if (IsParentEnumerable)
-            	IsInLoop = true;
+            {
+                retstr += GenerateLine("yield return null;");
+                IsInLoop = true;
+            }
+
             retstr += GenerateIndented("while (", ws);
             retstr += GenerateNode((SYMBOL) ws.kids.Pop());
             retstr += GenerateLine(")");
@@ -837,6 +846,12 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
         private string GenerateDoWhileStatement(DoWhileStatement dws)
         {
             string retstr = String.Empty;
+
+            if (IsParentEnumerable)
+            {
+                retstr += GenerateLine("yield return null;");
+                IsInLoop = true;
+            }
 
             retstr += GenerateIndentedLine("do", dws);
 
@@ -906,6 +921,13 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
         private string GenerateForLoopStatement(ForLoopStatement fls)
         {
             string retstr = String.Empty;
+
+
+            if (IsParentEnumerable)
+            {
+                retstr += GenerateLine("yield return null;");
+                IsInLoop = true;
+            }
 
             int comma = fls.kids.Count - 1;  // tells us whether to print a comma
 
@@ -1068,6 +1090,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             TestOriginal = TestOriginal.Replace("\n", "");
             string TestScript = fc.Id + TempStringForEnum + ")" + "{";
             string TestTestScript = fc.Id + "(*";
+
             if (TestOriginal.CompareWildcard(TestTestScript, true))
             {
                 isEnumerable = true;

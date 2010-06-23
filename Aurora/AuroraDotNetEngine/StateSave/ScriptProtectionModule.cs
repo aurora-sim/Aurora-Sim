@@ -195,90 +195,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
         }
         
-        public void AddNewClassSource(string ClassName, string SRC, object ID)
-        {
-            if (!ClassScripts.ContainsKey(ClassName))
-            {
-                ClassScripts.Add(ClassName, SRC);
-                if(ID != null)
-                    ClassInstances.Add(ClassName, (ScriptData)ID);
-            }
-        }
-
-        public string GetSRC(OpenMetaverse.UUID itemID, uint localID, UUID OwnerID)
-        {
-            string ReturnValue = "";
-            List<string> SRCWanted = new List<string>();
-            if (WantedClassesByItemID.ContainsKey(itemID))
-            {
-                WantedClassesByItemID.TryGetValue(itemID, out SRCWanted);
-                foreach (string ClassName in SRCWanted)
-                {
-                	if (!ClassInstances.ContainsKey(ClassName))
-                	{
-                		//Its a web URL
-                		if (MacroTrustLevel == Trust.Low)
-                			continue;
-                		else
-                			ReturnValue += ClassScripts[ClassName];
-                	}
-                	else
-                	{
-                    	ScriptData id = ClassInstances[ClassName];
-                    	
-                    	bool isInSameObject = (id.localID == localID);
-                    	bool isSameOwner = (id.InventoryItem.OwnerID == OwnerID);
-                    	if (isInSameObject)
-                    	{
-                    		//Only check for owner
-                    		if (isSameOwner)
-                    		{
-                    			//No checks required
-                    			ReturnValue += ClassScripts[ClassName];
-                    		}
-                    		else
-                    		{
-                    			if (MacroTrustLevel == Trust.Low)
-                    				continue;
-                    			else
-                    				ReturnValue += ClassScripts[ClassName];
-                    		}
-                    	}
-                    	else
-                    	{
-                    		if (isSameOwner)
-                    		{
-                    			if (MacroTrustLevel == Trust.Low)
-                    				continue;
-                    			else
-                    				ReturnValue += ClassScripts[ClassName];
-                    		}
-                    		else
-                    		{
-                    			if (MacroTrustLevel < Trust.Full)
-                    				continue;
-                    			else
-                    				ReturnValue += ClassScripts[ClassName];
-                    		}
-                    	}
-                    }
-                }
-            }
-            return ReturnValue;
-        }
-
-        public void AddWantedSRC(UUID itemID, string ClassName)
-        {
-            List<string> SRCWanted = new List<string>();
-            if(WantedClassesByItemID.ContainsKey(itemID))
-            {
-                WantedClassesByItemID.TryGetValue(itemID, out SRCWanted);
-                WantedClassesByItemID.Remove(itemID);
-            }
-            SRCWanted.Add(ClassName);
-            WantedClassesByItemID.Add(itemID, SRCWanted);
-        }
-        
         #endregion
         
         #region Previously Compiled Scripts
@@ -309,13 +225,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         	return (IScriptData)ID;
         }
         
-        public Dictionary<UUID, uint> ScriptsItems = new Dictionary<UUID, uint>();
-        public Dictionary<uint, Dictionary<UUID, ScriptData>> Scripts = new Dictionary<uint, Dictionary<UUID, ScriptData>>();
-        public IScriptData GetScript(uint localID, UUID itemID)
+        public Dictionary<UUID, UUID> ScriptsItems = new Dictionary<UUID, UUID>();
+        public Dictionary<UUID, Dictionary<UUID, ScriptData>> Scripts = new Dictionary<UUID, Dictionary<UUID, ScriptData>>();
+        public IScriptData GetScript(UUID primID, UUID itemID)
         {
-        	if(!Scripts.ContainsKey(localID))
+            if (!Scripts.ContainsKey(primID))
         		return null;
-        	Dictionary<UUID, ScriptData> Instances = Scripts[localID]; 
+            Dictionary<UUID, ScriptData> Instances = Scripts[primID]; 
         	if(!Instances.ContainsKey(itemID))
         		return null;
         	return Instances[itemID];
@@ -325,15 +241,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
         	if(!ScriptsItems.ContainsKey(itemID))
         		return null;
-        	uint LocalID = ScriptsItems[itemID];
-        	return GetScript(LocalID, itemID);
+        	UUID primID = ScriptsItems[itemID];
+            return GetScript(primID, itemID);
         }
-        
-        public IScriptData[] GetScript(uint localID)
+
+        public IScriptData[] GetScripts(UUID primID)
         {
-        	if(!Scripts.ContainsKey(localID))
+            if (!Scripts.ContainsKey(primID))
         		return null;
-        	Dictionary<UUID, ScriptData> Instances = Scripts[localID];
+            Dictionary<UUID, ScriptData> Instances = Scripts[primID];
         	List<IScriptData> RetVal = new List<IScriptData>();
         	foreach(ScriptData ID in Instances.Values)
         	{
@@ -347,17 +263,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         	ScriptData ID = (ScriptData)Data;
             if (ScriptsItems.ContainsKey(ID.ItemID))
                 ScriptsItems.Remove(ID.ItemID);
-        	ScriptsItems.Add(ID.ItemID, ID.localID);
+        	ScriptsItems.Add(ID.ItemID, ID.part.UUID);
         	Dictionary<UUID, ScriptData> Instances = new Dictionary<UUID, ScriptData>();
-        	if(Scripts.ContainsKey(ID.localID))
+            if (Scripts.ContainsKey(ID.part.UUID))
         	{
-        		Scripts.TryGetValue(ID.localID, out Instances);
-                Scripts.Remove(ID.localID);
+                Scripts.TryGetValue(ID.part.UUID, out Instances);
+                Scripts.Remove(ID.part.UUID);
         	}
             if (Instances.ContainsKey(ID.ItemID))
                 Instances.Remove(ID.ItemID);
         	Instances.Add(ID.ItemID,ID);
-        	Scripts.Add(ID.localID,Instances);
+            Scripts.Add(ID.part.UUID, Instances);
         }
         
         public IScriptData[] GetAllScripts()
@@ -378,12 +294,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         	ScriptData ID = (ScriptData)Data;
         	ScriptsItems.Remove(ID.ItemID);
         	Dictionary<UUID, ScriptData> Instances = new Dictionary<UUID, ScriptData>();
-        	if(Scripts.ContainsKey(ID.localID))
+            if (Scripts.ContainsKey(ID.part.UUID))
         	{
-        		Instances = Scripts[ID.localID];
+                Instances = Scripts[ID.part.UUID];
         		Instances.Remove(ID.ItemID);
         	}
-        	Scripts[ID.localID] = Instances;
+            Scripts[ID.part.UUID] = Instances;
         }
         
         #endregion

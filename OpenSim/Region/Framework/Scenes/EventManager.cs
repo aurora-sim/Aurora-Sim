@@ -127,10 +127,10 @@ namespace OpenSim.Region.Framework.Scenes
         /// Fired when a new script is created.
         /// </summary>
         public event NewRezScript OnRezScript;
-        public delegate void NewRezScript(uint localID, UUID itemID, string script, int startParam, bool postOnRez, string engine, int stateSource);
+        public delegate void NewRezScript(SceneObjectPart part, UUID itemID, string script, int startParam, bool postOnRez, string engine, int stateSource);
 
         public event NewRezScripts OnRezScripts;
-        public delegate void NewRezScripts(uint localID, TaskInventoryItem[] taskInventoryItem, int startParam, bool postOnRez, string engine, int stateSource);
+        public delegate void NewRezScripts(SceneObjectPart part, TaskInventoryItem[] taskInventoryItem, int startParam, bool postOnRez, string engine, int stateSource);
 
         public delegate void RemoveScript(uint localID, UUID itemID);
         public event RemoveScript OnRemoveScript;
@@ -885,7 +885,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void TriggerRezScript(uint localID, UUID itemID, string script, int startParam, bool postOnRez, string engine, int stateSource)
+        public void TriggerRezScript(SceneObjectPart part, UUID itemID, string script, int startParam, bool postOnRez, string engine, int stateSource)
         {
             NewRezScript handlerRezScript = OnRezScript;
             if (handlerRezScript != null)
@@ -894,7 +894,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     try
                     {
-                        d(localID, itemID, script, startParam, postOnRez, engine, stateSource);
+                        d(part, itemID, script, startParam, postOnRez, engine, stateSource);
                     }
                     catch (Exception e)
                     {
@@ -906,7 +906,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void TriggerRezScripts(uint localID, TaskInventoryItem[] taskInventoryItem, int startParam, bool postOnRez, string engine, int stateSource)
+        public void TriggerRezScripts(SceneObjectPart part, TaskInventoryItem[] taskInventoryItem, int startParam, bool postOnRez, string engine, int stateSource)
         {
             NewRezScripts handlerRezScripts = OnRezScripts;
             if (handlerRezScripts != null)
@@ -915,7 +915,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     try
                     {
-                        d(localID, taskInventoryItem, startParam, postOnRez, engine, stateSource);
+                        d(part, taskInventoryItem, startParam, postOnRez, engine, stateSource);
                     }
                     catch (Exception e)
                     {

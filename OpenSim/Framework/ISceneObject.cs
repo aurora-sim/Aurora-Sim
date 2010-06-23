@@ -33,7 +33,7 @@ namespace OpenSim.Framework
     public interface ISceneObject
     {
         UUID UUID { get; }
-        ISceneObject CloneForNewScene();
+        ISceneObject CloneForNewScene(IScene scene);
         string ToXml2();
         string ExtraToXmlString();
         void ExtraFromXmlString(string xmlstr);

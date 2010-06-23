@@ -27,6 +27,7 @@
 
 using log4net;
 using System;
+using System.Collections.Generic;
 using OpenSim.Region.ScriptEngine.Shared;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Region.Framework.Interfaces;
@@ -53,7 +54,7 @@ namespace OpenSim.Region.ScriptEngine.Interfaces
         /// </summary>
         IScriptWorkItem QueueEventHandler(object parms);
 
-        Scene World { get; }
+        List<IScene> Worlds { get; }
 
         IScriptModule ScriptModule { get; }
 

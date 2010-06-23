@@ -2378,6 +2378,35 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        /// <summary>
+        /// Return object to avatar Message
+        /// </summary>
+        /// <param name="agentID">Avatar Unique Id</param>
+        /// <param name="objectName">Name of object returned</param>
+        /// <param name="location">Location of object returned</param>
+        /// <param name="reason">Reasion for object return</param>
+        public void AddReturns(UUID agentID, string objectName, int Count, Vector3 location, string reason)
+        {
+            lock (m_returns)
+            {
+                if (m_returns.ContainsKey(agentID))
+                {
+                    ReturnInfo info = m_returns[agentID];
+                    info.count += Count;
+                    m_returns[agentID] = info;
+                }
+                else
+                {
+                    ReturnInfo info = new ReturnInfo();
+                    info.count = Count;
+                    info.objectName = objectName;
+                    info.location = location;
+                    info.reason = reason;
+                    m_returns[agentID] = info;
+                }
+            }
+        }
+
         #endregion
 
         #region Load Terrain
@@ -3934,7 +3963,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 childagentYN = avatar.IsChildAgent;
 
-                if (avatar.ParentID != 0)
+                if (avatar.ParentID != UUID.Zero)
                 {
                     avatar.StandUp();
                 }

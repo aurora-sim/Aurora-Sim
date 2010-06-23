@@ -93,13 +93,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public long EventDelayTicks = 0;
         public long NextEventTimeTicks = 0;
-        public UUID AssetID;
         public string AssemblyName;
         //This is the UUID of the actual script.
         public UUID ItemID;
         public UUID UserInventoryItemID;
-        //This is the localUUID of the object the script is in.
-        public uint localID;
         public bool PostOnRez;
         public TaskInventoryItem InventoryItem;
         public ScenePresence presence;
@@ -141,7 +138,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             // Remove from internal structure
             ScriptEngine.ScriptProtection.RemoveScript(this);
 
-            m_ScriptEngine.RemoveFromEventQueue(ItemID, localID);
+            ScriptEngine.NeedsRemoved.Remove(part.UUID);
             if (m_ScriptEngine.Errors.ContainsKey(ItemID))
                 m_ScriptEngine.Errors.Remove(ItemID);
             
@@ -171,10 +168,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (Script != null)
             {
                 // Stop long command on script
-                AsyncCommandManager.RemoveScript(m_ScriptEngine, localID, ItemID);
+                AsyncCommandManager.RemoveScript(m_ScriptEngine, World, part.LocalId, ItemID);
                 ScriptSponsor.Close();
                 ILease lease = (ILease)RemotingServices.GetLifetimeService(Script as ScriptBaseClass);
-                lease.Unregister(ScriptSponsor);
+                if(lease != null)
+                    lease.Unregister(ScriptSponsor);
                 Script.Close();
                 Script.Dispose();
                 Script = null;
@@ -187,7 +185,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 try
                 {
                     // Tell AppDomain that we have stopped script
-                    ScriptEngine.AppDomainManager.UnloadScriptAppDomain(AppDomain);
+                    m_ScriptEngine.AppDomainManager.UnloadScriptAppDomain(AppDomain);
                     AppDomain = null;
                 }
                 //Legit: If the script had an error, this can happen... really shouldn't, but it does.
@@ -195,7 +193,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             catch (Exception e)
             {
-                m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: Exception stopping script localID: " + localID + " LLUID: " + ItemID.ToString() + ": " + e.ToString());
+                m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: Exception stopping script UUID: " + part.UUID + " LLUID: " + ItemID.ToString() + ": " + e.ToString());
             }
             m_log.DebugFormat("[{0}]: Closed Script {1} in " + part.Name, m_ScriptEngine.ScriptEngineName, InventoryItem.Name);
         }
@@ -216,7 +214,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 if ((permsMask & ScriptBaseClass.PERMISSION_TAKE_CONTROLS) != 0)
                 {
                     if (presence != null)
-                        presence.UnRegisterControlEventsToScript(localID, ItemID);
+                        presence.UnRegisterControlEventsToScript(part.LocalId, ItemID);
                 }
             }
 
@@ -238,11 +236,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //Release controls over people.
             ReleaseControls();
             //Must be posted immediately, otherwise the next line will delete it.
-            m_ScriptEngine.PostObjectEvent(localID, new EventParams(
-                    "state_exit", new object[0] { },
-                    new DetectParams[0]));
+            m_ScriptEngine.AddToObjectQueue(part.UUID, "state_exit", new DetectParams[0], new object[0] { });
             //Remove items from the queue.
-            m_ScriptEngine.RemoveFromEventQueue(ItemID, localID);
+            ScriptEngine.NeedsRemoved.Remove(part.UUID);
             //Reset the state to default
             State = "default";
             //Tell the SOP about the change.
@@ -251,8 +247,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //Reset all variables back to their original values.
             Script.ResetVars();
             //Fire state_entry
-            if (ScriptEngine.NeedsRemoved.ContainsKey(ItemID))
-                ScriptEngine.NeedsRemoved.Remove(ItemID);
+            if (ScriptEngine.NeedsRemoved.Contains(part.UUID))
+                ScriptEngine.NeedsRemoved.Remove(part.UUID);
             m_ScriptEngine.AddToScriptQueue(this, "state_entry", new DetectParams[0], new object[] { });
             m_log.InfoFormat("[{0}]: Reset Script {1}", m_ScriptEngine.ScriptEngineName, ItemID);
         }
@@ -263,7 +259,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         //Makes ToString look nicer
         public override string ToString()
         {
-            return "localID: " + localID + ", itemID: " + ItemID;
+            return "UUID: " + part.UUID + ", itemID: " + ItemID;
         }
 
         /// <summary>
@@ -277,7 +273,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             foreach (string api in am.GetApis())
             {
                 Apis[api] = am.CreateApi(api);
-                Apis[api].Initialize(m_ScriptEngine, part, localID, ItemID, ScriptEngine.ScriptProtection);
+                Apis[api].Initialize(m_ScriptEngine, part, part.LocalId, ItemID, ScriptEngine.ScriptProtection);
             }
             foreach (KeyValuePair<string, IScriptApi> kv in Apis)
             {
@@ -292,26 +288,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             if (reupload)
                 m_ScriptEngine.Errors[ItemID] = new String[] { e.Message.ToString() };
-            
-            try
-            {
-                // DISPLAY ERROR ON CONSOLE
-                //string consoletext = "Error compiling script in stage " + stage + ":\n" + e.Message.ToString() + " itemID: " + ItemID + ", localID" + localID + ", CompiledFile: " + AssemblyName;
-                //m_log.Error(consoletext);
-                // DISPLAY ERROR INWORLD
-                string inworldtext = "Error compiling script: " + e;
-                if (inworldtext.Length > 1100)
-                    inworldtext = inworldtext.Substring(0, 1099);
 
-                World.SimChat(OpenMetaverse.Utils.StringToBytes(inworldtext), ChatTypeEnum.DebugChannel, 2147483647, part.AbsolutePosition, part.Name, part.UUID, false);
-                // LEGIT: User Scripting
-            }
-            catch (Exception e2)
-            {
-                m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: Error displaying error in-world: " + e2.ToString());
-                m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: " + "Errormessage: Error compiling script:\r\n" + e2.Message.ToString());
-            }
-            throw e;
+            // DISPLAY ERROR ON CONSOLE
+            //string consoletext = "Error compiling script in stage " + stage + ":\n" + e.Message.ToString() + " itemID: " + ItemID + ", localID" + localID + ", CompiledFile: " + AssemblyName;
+            //m_log.Error(consoletext);
+            // DISPLAY ERROR INWORLD
+            string inworldtext = "Error compiling script: " + e.Message.ToString();
+            if (inworldtext.Length > 1100)
+                inworldtext = inworldtext.Substring(0, 1099);
+
+            World.SimChat(OpenMetaverse.Utils.StringToBytes(inworldtext), ChatTypeEnum.DebugChannel, 2147483647, part.AbsolutePosition, part.Name, part.UUID, false);
+
+            //throw e;
         }
 
         #endregion
@@ -354,44 +342,23 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public void Start(bool reupload)
         {
             //Clear out the removing of events for this script.
-            if (ScriptEngine.NeedsRemoved.ContainsKey(ItemID))
-                ScriptEngine.NeedsRemoved.Remove(ItemID);
+            if (ScriptEngine.NeedsRemoved.Contains(part.UUID))
+                ScriptEngine.NeedsRemoved.Remove(part.UUID);
 
             //Remove any script errors that might be waiting.
             if (m_ScriptEngine.Errors.ContainsKey(ItemID))
                 m_ScriptEngine.Errors.Remove(ItemID);
 
-
             DateTime StartTime = DateTime.Now.ToUniversalTime();
 
-            part = World.GetSceneObjectPart(localID);
+            //Find the inventory item
+            part.TaskInventory.TryGetValue(ItemID, out InventoryItem);
 
-            //No SOP, no compile.
-            if (null == part)
-            {
-                m_log.ErrorFormat("[{0}]: Could not find scene object part corresponding " + "to localID {1} to start script", m_ScriptEngine.ScriptEngineName, localID);
-                throw new NullReferenceException();
-            }
-
-            //Find the asset ID
-            if (part.TaskInventory.TryGetValue(ItemID, out InventoryItem))
-                AssetID = InventoryItem.AssetID;
-            //m_log.Warn(InventoryItem.Name);
             //Try to see if this was rezzed from someone's inventory
             UserInventoryItemID = part.FromUserInventoryItemID;
+
             //Try to find the avatar who started this.
-            presence = World.GetScenePresence(InventoryItem.OwnerID);
-
-            //Set the thread culture and etc.
-            CultureInfo USCulture = new CultureInfo("en-US");
-            Thread.CurrentThread.CurrentCulture = USCulture;
-
-            //Attempt to find previously compiled assemblys
-            string FilePrefix = "CommonCompiler";
-            foreach (char c in Path.GetInvalidFileNameChars())
-            {
-                FilePrefix = FilePrefix.Replace(c, '_');
-            }
+            presence = World.GetScenePresence(part.OwnerID);
 
             #region HTML Reader
 
@@ -426,10 +393,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             // Attempt to find a state save
             LastStateSave = ScriptFrontend.GetStateSave(ItemID, UserInventoryItemID);
 
-            if (!reupload && Loading && LastStateSave != null && File.Exists(LastStateSave.AssemblyName))
+            if (!reupload && Loading && LastStateSave != null
+                && File.Exists(Path.Combine("ScriptEngines", Path.Combine(
+                    "Script",
+                    LastStateSave.AssemblyName))))
             {
-                //Retrive the needed parts for a compileless start from the state save.
-                FindRequiredForCompileless();
+                //Retrive the previous assembly
+                AssemblyName = Path.Combine("ScriptEngines", Path.Combine(
+                    "Script",
+                    LastStateSave.AssemblyName));
             }
             else
             {
@@ -439,45 +411,52 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 ScriptData PreviouslyCompiledID = (ScriptData)ScriptEngine.ScriptProtection.TryGetPreviouslyCompiledScript(Source);
                 if (reupload)
                 {
-                    //Null everything and don't fire any events
+                    //Close the previous script
                     CloseAndDispose(true);
                     ScriptEngine.ScriptProtection.RemovePreviouslyCompiled(Source);
 
                     Running = true;
                     Disabled = false;
                     //Clear out the removing of events for this script.
-                    if (ScriptEngine.NeedsRemoved.ContainsKey(ItemID))
-                        ScriptEngine.NeedsRemoved.Remove(ItemID);
+                    if (ScriptEngine.NeedsRemoved.Contains(part.UUID))
+                        ScriptEngine.NeedsRemoved.Remove(part.UUID);
                 }
-
-                try
+                if (PreviouslyCompiledID != null)
                 {
-                    ScriptEngine.LSLCompiler.PerformScriptCompile(Source, ItemID, part.OwnerID, out AssemblyName);
-                    #region Warnings
-
-                    string[] compilewarnings = ScriptEngine.LSLCompiler.GetWarnings();
-
-                    if (compilewarnings != null && compilewarnings.Length != 0)
+                    AssemblyName = PreviouslyCompiledID.AssemblyName;
+                }
+                else
+                {
+                    try
                     {
-                        if (presence != null && (!PostOnRez))
-                            presence.ControllingClient.SendAgentAlertMessage("Script saved with warnings, check debug window!", false);
+                        m_ScriptEngine.LSLCompiler.PerformScriptCompile(Source, ItemID, part.OwnerID, out AssemblyName);
+                        #region Warnings
 
-                        foreach (string warning in compilewarnings)
+                        string[] compilewarnings = m_ScriptEngine.LSLCompiler.GetWarnings();
+
+                        if (compilewarnings != null && compilewarnings.Length != 0)
                         {
-                            // DISPLAY WARNING INWORLD
-                            string text = "Warning:\n" + warning;
-                            if (text.Length > 1100)
-                                text = text.Substring(0, 1099);
+                            if (presence != null && (!PostOnRez))
+                                presence.ControllingClient.SendAgentAlertMessage("Script saved with warnings, check debug window!", false);
 
-                            World.SimChat(OpenMetaverse.Utils.StringToBytes(text), ChatTypeEnum.DebugChannel, 2147483647, part.AbsolutePosition, part.Name, part.UUID, false);
+                            foreach (string warning in compilewarnings)
+                            {
+                                // DISPLAY WARNING INWORLD
+                                string text = "Warning:\n" + warning;
+                                if (text.Length > 1100)
+                                    text = text.Substring(0, 1099);
+
+                                World.SimChat(OpenMetaverse.Utils.StringToBytes(text), ChatTypeEnum.DebugChannel, 2147483647, part.AbsolutePosition, part.Name, part.UUID, false);
+                            }
                         }
-                    }
 
-                    #endregion
-                }
-                catch (Exception ex)
-                {
-                    ShowError(ex, 1, reupload);
+                        #endregion
+                    }
+                    catch (Exception ex)
+                    {
+                        ShowError(ex, 1, reupload);
+                        return;
+                    }
                 }
             }
 
@@ -491,7 +470,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //Create the app domain if needed.
             try
             {
-                Script = ScriptEngine.AppDomainManager.LoadScript(AssemblyName, "Script.LSL", out AppDomain);
+                Script = m_ScriptEngine.AppDomainManager.LoadScript(AssemblyName, "Script.LSL", out AppDomain);
                 ScriptEngine.ScriptProtection.AddPreviouslyCompiled(Source, this);
             }
             catch (System.IO.FileNotFoundException) // Not valid!!!
@@ -504,11 +483,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             catch (Exception ex)
             {
                 ShowError(ex, 2, reupload);
+                return;
             }
 
             ScriptSponsor = new ScriptSponsor();
             ILease lease = (ILease)RemotingServices.GetLifetimeService(Script as ScriptBaseClass);
-            lease.Register(ScriptSponsor);
+            if(lease != null)
+                lease.Register(ScriptSponsor);
             
             //If its a reupload, an avatar is waiting for the script errors
             if (reupload)
@@ -532,8 +513,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 DeserializeDatabase();
 
-                AsyncCommandManager.CreateFromData(m_ScriptEngine,
-                    localID, ItemID, part.UUID,
+                AsyncCommandManager.CreateFromData(m_ScriptEngine, part.ParentGroup.Scene,
+                    part.LocalId, ItemID, part.UUID,
                     PluginData);
 
                 // we get new rez events on sim restart, too
@@ -588,16 +569,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         #endregion
 
         #region Serialize
-
-        /// <summary>
-        /// Finds all the required parts so that we don't have to compile the script.
-        /// </summary>
-        public void FindRequiredForCompileless()
-        {
-            AssemblyName = Path.Combine("ScriptEngines", Path.Combine(
-                    "Script",
-                    LastStateSave.AssemblyName));
-        }
 
         private void DeserializeDatabase()
         {
@@ -769,7 +740,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             Insert.Variables = varsmap;
             //Plugins
-            object[] Plugins = AsyncCommandManager.GetSerializationData(m_ScriptEngine, ItemID);
+            object[] Plugins = AsyncCommandManager.GetSerializationData(m_ScriptEngine, part.ParentGroup.Scene, ItemID);
             string plugins = "";
             foreach (object plugin in Plugins)
                 plugins += plugin + ",";
@@ -777,6 +748,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             //Queue
             #region Queue
+            /*
             XmlDocument xmldoc = new XmlDocument();
             XmlNode mainNode = xmldoc.CreateElement("", "Item", "");
             XmlElement queue = xmldoc.CreateElement("", "Queue", "");
@@ -871,8 +843,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 }
                 i++;
             }
-            mainNode.AppendChild(queue);
-            Insert.Queue = mainNode.InnerXml;
+            mainNode.AppendChild(queue);*/
+            Insert.Queue = "";//mainNode.InnerXml;
 
             #endregion
 

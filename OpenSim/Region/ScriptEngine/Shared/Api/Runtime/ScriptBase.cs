@@ -117,7 +117,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
 
             ILease lease = (ILease)RemotingServices.GetLifetimeService(data as MarshalByRefObject);
             RemotingServices.GetLifetimeService(data as MarshalByRefObject);
-            lease.Register(m_sponser);
+            if(lease != null)
+                lease.Register(m_sponser);
 
             MethodInfo mi = inits[api];
 
@@ -282,5 +283,13 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
                 return "ScriptBase";
             }
         }
+    }
+
+    /// Interface that can be run over the remote AppDomain boundary.
+    /// Thanks to Rick Strahl for this interface and remote AppDomain loading
+    /// http://www.west-wind.com/presentations/dynamicCode/DynamicCode.htm
+    public interface IRemoteInterface
+    {
+        object Invoke(string lcMethod, object[] Parameters);
     }
 }

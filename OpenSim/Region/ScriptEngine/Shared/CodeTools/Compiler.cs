@@ -246,7 +246,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                 throw new Exception(errtext);
             }
 
-            if (m_scriptEngine.World.Permissions.CanCompileScript(ownerID, (int)language) == false)
+            if (((OpenSim.Region.Framework.Scenes.Scene)m_scriptEngine.Worlds[0]).Permissions.CanCompileScript(ownerID, (int)language) == false)
             {
                 // Not allowed to compile to this language!
                 string errtext = String.Empty;
@@ -439,14 +439,16 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
         {
             string compiledScript = "";
             compiledScript = String.Empty +
-                "using OpenSim.Region.ScriptEngine.Shared;" +
-                "\nusing System;" +
-                "\nusing System.Collections.Generic;" +
-                "\nusing System.Collections;\n" +
+                "using OpenSim.Region.ScriptEngine.Shared;\n" +
+                "using System;\n" +
+                "using System.Collections.Generic;\n" +
+                "using System.Collections;\n" +
+                "using System.Reflection;\n" +
                 "using System.Timers;\n" +
-                "namespace Script\n{\n";
+                "namespace Script\n"+
+                "{\n";
 
-            compiledScript += "[Serializable]\n public class LSL : OpenSim.Region.ScriptEngine.Shared.ScriptBase.ScriptBaseClass, IDisposable";
+            compiledScript += "[Serializable]\n public class LSL : OpenSim.Region.ScriptEngine.Shared.ScriptBase.ScriptBaseClass, IDisposable, OpenSim.Region.ScriptEngine.Shared.ScriptBase.IRemoteInterface";
             compiledScript += "\n{\n" +
                      "List<IEnumerator> parts = new List<IEnumerator>();\n";
             compiledScript += "System.Timers.Timer aTimer = new System.Timers.Timer(250);\n";
@@ -487,6 +489,10 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             compiledScript += "else\n { } \n";
             compiledScript += "}\n";
             compiledScript += "}\n";
+            compiledScript += "}\n";
+
+            compiledScript += "public object Invoke(string lcMethod,object[] Parameters)\n {\n";
+            compiledScript += "return this.GetType().InvokeMember(lcMethod, BindingFlags.InvokeMethod,null,this,Parameters);\n";
             compiledScript += "}\n";
 
             compiledScript +=

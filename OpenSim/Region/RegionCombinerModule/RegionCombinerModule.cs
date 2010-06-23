@@ -897,7 +897,7 @@ namespace OpenSim.Region.RegionCombinerModule
                     return;
                 if (sp.UUID != presence.UUID)
                 {
-                    if (sp.ParentID != 0)
+                    if (sp.ParentID != UUID.Zero)
                     {
                         // sitting avatar
                         SceneObjectPart sop = connectiondata.RegionScene.GetSceneObjectPart(sp.ParentID);

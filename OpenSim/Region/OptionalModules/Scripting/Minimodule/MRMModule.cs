@@ -236,13 +236,13 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
         }
 
 
-        void EventManager_OnRezScript(uint localID, UUID itemID, string script, int startParam, bool postOnRez, string engine, int stateSource)
+        void EventManager_OnRezScript(SceneObjectPart part, UUID itemID, string script, int startParam, bool postOnRez, string engine, int stateSource)
         {
             if (script.StartsWith("//MRM:C#"))
             {
                 if (m_config.GetBoolean("OwnerOnly", true))
-                    if (m_scene.GetSceneObjectPart(localID).OwnerID != m_scene.RegionInfo.EstateSettings.EstateOwner
-                        || m_scene.GetSceneObjectPart(localID).CreatorID != m_scene.RegionInfo.EstateSettings.EstateOwner)
+                    if (m_scene.GetSceneObjectPart(part.LocalId).OwnerID != m_scene.RegionInfo.EstateSettings.EstateOwner
+                        || m_scene.GetSceneObjectPart(part.LocalId).CreatorID != m_scene.RegionInfo.EstateSettings.EstateOwner)
                         return;
 
                 script = ConvertMRMKeywords(script);
@@ -273,7 +273,7 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
                                                 "OpenSim.MiniModule");
 
                     m_log.Info("[MRM] Initialising MRM Globals");
-                    InitializeMRM(mmb, localID, itemID);
+                    InitializeMRM(mmb, part.LocalId, itemID);
 
                     m_scripts[itemID] = mmb;
 

@@ -880,8 +880,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                         }
                         return group;
                     }
-
-                    return null;
+                    return NewGroup[0];
                 }
             }
 

@@ -29,6 +29,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Reflection.Emit;
 using System.Runtime.Remoting.Lifetime;
 using OpenSim.Region.ScriptEngine.Shared;
 using OpenSim.Region.ScriptEngine.Shared.ScriptBase;
@@ -37,6 +38,8 @@ using OpenSim.Region.ScriptEngine.Interfaces;
 
 namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
 {
+    public delegate object FastInvokeHandler(object target, object[] paramters);
+
     public class Executor
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -141,7 +144,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
             string EventName = state + "_event_" + FunctionName;
 
             //#if DEBUG
-            //m_log.Debug("ScriptEngine: Script event function name: " + EventName);
+            m_log.Debug("ScriptEngine: Script event function name: " + EventName);
             //#endif
 
             if (!Events.ContainsKey(EventName))
@@ -190,34 +193,154 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
                     return 0;
                 }
 			}
-			IEnumerator thread = (IEnumerator)ev.Invoke(m_Script, args);
-            int i = StartingPosition;
-			bool running = false;
-            while (i < i + 5)
-			{
-				i++;
-				try
-				{
-					running = thread.MoveNext();
-					if(!running)
-						return 0;
-				}
-				catch (TargetInvocationException tie)
-				{
-					// Grab the inner exception and rethrow it, unless the inner
-					// exception is an EventAbortException as this indicates event
-					// invocation termination due to a state change.
-					// DO NOT THROW JUST THE INNER EXCEPTION!
-					// FriendlyErrors depends on getting the whole exception!
-					//
-					if (!(tie.InnerException is EventAbortException))
-					{
-						throw;
-					}
-				}
-			}
-            return i;
+            FastInvokeHandler fastInvoker = GetMethodInvoker(ev);
+			IEnumerator thread = (IEnumerator)fastInvoker(m_Script, args);
+            if (thread != null)
+            {
+                int i = StartingPosition;
+                bool running = false;
+                while (i < StartingPosition + 5)
+                {
+                    i++;
+                    try
+                    {
+                        running = thread.MoveNext();
+                        if (!running)
+                            return 0;
+                    }
+                    catch (TargetInvocationException tie)
+                    {
+                        // Grab the inner exception and rethrow it, unless the inner
+                        // exception is an EventAbortException as this indicates event
+                        // invocation termination due to a state change.
+                        // DO NOT THROW JUST THE INNER EXCEPTION!
+                        // FriendlyErrors depends on getting the whole exception!
+                        //
+                        if (!(tie.InnerException is EventAbortException))
+                        {
+                            throw;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                fastInvoker(m_Script, args);
+            }
+            return StartingPosition;
         }
+        #region From http://www.codeproject.com/KB/cs/FastMethodInvoker.aspx Thanks to Luyan for this code
+
+        private static void EmitCastToReference(ILGenerator il, System.Type type)
+        {
+            if (type.IsValueType)
+            {
+                il.Emit(OpCodes.Unbox_Any, type);
+            }
+            else
+            {
+                il.Emit(OpCodes.Castclass, type);
+            }
+        }
+
+        private static void EmitBoxIfNeeded(ILGenerator il, System.Type type)
+        {
+            if (type.IsValueType)
+            {
+                il.Emit(OpCodes.Box, type);
+            }
+        }
+
+        private static void EmitFastInt(ILGenerator il, int value)
+        {
+            switch (value)
+            {
+                case -1:
+                    il.Emit(OpCodes.Ldc_I4_M1);
+                    return;
+                case 0:
+                    il.Emit(OpCodes.Ldc_I4_0);
+                    return;
+                case 1:
+                    il.Emit(OpCodes.Ldc_I4_1);
+                    return;
+                case 2:
+                    il.Emit(OpCodes.Ldc_I4_2);
+                    return;
+                case 3:
+                    il.Emit(OpCodes.Ldc_I4_3);
+                    return;
+                case 4:
+                    il.Emit(OpCodes.Ldc_I4_4);
+                    return;
+                case 5:
+                    il.Emit(OpCodes.Ldc_I4_5);
+                    return;
+                case 6:
+                    il.Emit(OpCodes.Ldc_I4_6);
+                    return;
+                case 7:
+                    il.Emit(OpCodes.Ldc_I4_7);
+                    return;
+                case 8:
+                    il.Emit(OpCodes.Ldc_I4_8);
+                    return;
+            }
+
+            if (value > -129 && value < 128)
+            {
+                il.Emit(OpCodes.Ldc_I4_S, (SByte)value);
+            }
+            else
+            {
+                il.Emit(OpCodes.Ldc_I4, value);
+            }
+        }
+
+        public static FastInvokeHandler GetMethodInvoker(MethodInfo methodInfo)
+        {
+            DynamicMethod dynamicMethod = new DynamicMethod(string.Empty,
+                             typeof(object), new Type[] { typeof(object), 
+                     typeof(object[]) },
+                             methodInfo.DeclaringType.Module);
+            ILGenerator il = dynamicMethod.GetILGenerator();
+            ParameterInfo[] ps = methodInfo.GetParameters();
+            Type[] paramTypes = new Type[ps.Length];
+            for (int i = 0; i < paramTypes.Length; i++)
+            {
+                paramTypes[i] = ps[i].ParameterType;
+            }
+            LocalBuilder[] locals = new LocalBuilder[paramTypes.Length];
+            for (int i = 0; i < paramTypes.Length; i++)
+            {
+                locals[i] = il.DeclareLocal(paramTypes[i]);
+            }
+            for (int i = 0; i < paramTypes.Length; i++)
+            {
+                il.Emit(OpCodes.Ldarg_1);
+                EmitFastInt(il, i);
+                il.Emit(OpCodes.Ldelem_Ref);
+                EmitCastToReference(il, paramTypes[i]);
+                il.Emit(OpCodes.Stloc, locals[i]);
+            }
+            il.Emit(OpCodes.Ldarg_0);
+            for (int i = 0; i < paramTypes.Length; i++)
+            {
+                il.Emit(OpCodes.Ldloc, locals[i]);
+            }
+            il.EmitCall(OpCodes.Call, methodInfo, null);
+            if (methodInfo.ReturnType == typeof(void))
+                il.Emit(OpCodes.Ldnull);
+            else
+                EmitBoxIfNeeded(il, methodInfo.ReturnType);
+            il.Emit(OpCodes.Ret);
+            FastInvokeHandler invoder =
+              (FastInvokeHandler)dynamicMethod.CreateDelegate(
+              typeof(FastInvokeHandler));
+            return invoder;
+        }
+
+        #endregion
 
         protected void initEventFlags()
         {

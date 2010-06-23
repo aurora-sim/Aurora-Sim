@@ -52,7 +52,7 @@ namespace OpenSim.Region.Framework.Interfaces
 
         ArrayList GetScriptErrors(UUID itemID);
 
-        void UpdateScript(uint localID, UUID itemID, string script, int startParam, bool postOnRez, int stateSource);
+        void UpdateScript(UUID partID, UUID itemID, string script, int startParam, bool postOnRez, int stateSource);
         void StopAllScripts();
 
         string TestCompileScript(UUID assetID, UUID itemID);

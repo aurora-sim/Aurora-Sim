@@ -321,7 +321,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Instance
 
                             ScriptSerializer.Deserialize(xml, this);
 
-                            AsyncCommandManager.CreateFromData(m_Engine,
+                            AsyncCommandManager.CreateFromData(m_Engine, m_Engine.Worlds[0],
                                 m_LocalID, m_ItemID, m_ObjectID,
                                 PluginData);
 
@@ -423,7 +423,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Instance
 
         private void ReleaseControls()
         {
-            SceneObjectPart part = m_Engine.World.GetSceneObjectPart(m_LocalID);
+            SceneObjectPart part = ((Scene)m_Engine.Worlds[0]).GetSceneObjectPart(m_LocalID);
             
             if (part != null)
             {
@@ -440,7 +440,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Instance
 
                 if ((permsMask & ScriptBaseClass.PERMISSION_TAKE_CONTROLS) != 0)
                 {
-                    ScenePresence presence = m_Engine.World.GetScenePresence(permsGranter);
+                    ScenePresence presence = ((Scene)m_Engine.Worlds[0]).GetScenePresence(permsGranter);
                     if (presence != null)
                         presence.UnRegisterControlEventsToScript(m_LocalID, m_ItemID);
                 }
@@ -450,7 +450,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Instance
         public void DestroyScriptInstance()
         {
             ReleaseControls();
-            AsyncCommandManager.RemoveScript(m_Engine, m_LocalID, m_ItemID);
+            AsyncCommandManager.RemoveScript(m_Engine, ((Scene)m_Engine.Worlds[0]), m_LocalID, m_ItemID);
         }
 
         public void RemoveState()
@@ -682,10 +682,10 @@ namespace OpenSim.Region.ScriptEngine.Shared.Instance
     //                m_log.DebugFormat("[Script] Script {0}.{1} state set to {2}",
     //                        m_PrimName, m_ScriptName, data.Params[0].ToString());
                     m_State=data.Params[0].ToString();
-                    AsyncCommandManager.RemoveScript(m_Engine,
+                    AsyncCommandManager.RemoveScript(m_Engine, ((Scene)m_Engine.Worlds[0]),
                         m_LocalID, m_ItemID);
 
-                    SceneObjectPart part = m_Engine.World.GetSceneObjectPart(
+                    SceneObjectPart part = ((Scene)m_Engine.Worlds[0]).GetSceneObjectPart(
                         m_LocalID);
                     if (part != null)
                     {
@@ -695,10 +695,10 @@ namespace OpenSim.Region.ScriptEngine.Shared.Instance
                 }
                 else
                 {
-                    if (m_Engine.World.PipeEventsForScript(m_LocalID) ||
+                    if (((Scene)m_Engine.Worlds[0]).PipeEventsForScript(m_LocalID) ||
                         data.EventName == "control") // Don't freeze avies!
                     {
-                        SceneObjectPart part = m_Engine.World.GetSceneObjectPart(
+                        SceneObjectPart part = ((Scene)m_Engine.Worlds[0]).GetSceneObjectPart(
                             m_LocalID);
         //                m_log.DebugFormat("[Script] Delivered event {2} in state {3} to {0}.{1}",
         //                        m_PrimName, m_ScriptName, data.EventName, m_State);
@@ -739,7 +739,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Instance
 
                                     if (text.Length > 1000)
                                         text = text.Substring(0, 1000);
-                                    m_Engine.World.SimChat(Utils.StringToBytes(text),
+                                    ((Scene)m_Engine.Worlds[0]).SimChat(Utils.StringToBytes(text),
                                                            ChatTypeEnum.DebugChannel, 2147483647,
                                                            part.AbsolutePosition,
                                                            part.Name, part.UUID, false);
@@ -761,7 +761,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Instance
                             {
                                 m_InSelfDelete = true;
                                 if (part != null && part.ParentGroup != null)
-                                    m_Engine.World.DeleteSceneObject(part.ParentGroup, false, true);
+                                    ((Scene)m_Engine.Worlds[0]).DeleteSceneObject(part.ParentGroup, false, true);
                             }
                             else if ((e is TargetInvocationException) && (e.InnerException is ScriptDeleteException))
                             {
@@ -810,10 +810,10 @@ namespace OpenSim.Region.ScriptEngine.Shared.Instance
             ReleaseControls();
 
             Stop(0);
-            SceneObjectPart part=m_Engine.World.GetSceneObjectPart(m_LocalID);
+            SceneObjectPart part = ((Scene)m_Engine.Worlds[0]).GetSceneObjectPart(m_LocalID);
             part.Inventory.GetInventoryItem(m_ItemID).PermsMask = 0;
             part.Inventory.GetInventoryItem(m_ItemID).PermsGranter = UUID.Zero;
-            AsyncCommandManager.RemoveScript(m_Engine, m_LocalID, m_ItemID);
+            AsyncCommandManager.RemoveScript(m_Engine, ((Scene)m_Engine.Worlds[0]), m_LocalID, m_ItemID);
             m_EventQueue.Clear();
             m_Script.ResetVars();
             m_State = "default";
@@ -835,10 +835,10 @@ namespace OpenSim.Region.ScriptEngine.Shared.Instance
             ReleaseControls();
 
             m_Script.ResetVars();
-            SceneObjectPart part=m_Engine.World.GetSceneObjectPart(m_LocalID);
+            SceneObjectPart part = ((Scene)m_Engine.Worlds[0]).GetSceneObjectPart(m_LocalID);
             part.Inventory.GetInventoryItem(m_ItemID).PermsMask = 0;
             part.Inventory.GetInventoryItem(m_ItemID).PermsGranter = UUID.Zero;
-            AsyncCommandManager.RemoveScript(m_Engine, m_LocalID, m_ItemID);
+            AsyncCommandManager.RemoveScript(m_Engine, ((Scene)m_Engine.Worlds[0]), m_LocalID, m_ItemID);
 
             m_EventQueue.Clear();
             m_Script.ResetVars();
@@ -898,7 +898,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Instance
                 return;
             }
 
-            PluginData = AsyncCommandManager.GetSerializationData(m_Engine, m_ItemID);
+            PluginData = AsyncCommandManager.GetSerializationData(m_Engine, m_Engine.Worlds[0], m_ItemID);
 
             string xml = ScriptSerializer.Serialize(this);
 
@@ -1005,7 +1005,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Instance
 
             // Force an update of the in-memory plugin data
             //
-            PluginData = AsyncCommandManager.GetSerializationData(m_Engine, m_ItemID);
+            PluginData = AsyncCommandManager.GetSerializationData(m_Engine, m_Engine.Worlds[0], m_ItemID);
 
             return ScriptSerializer.Serialize(this);
         }

@@ -194,24 +194,27 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         private static void DoOneCmdHandlerPass()
         {
             // Check HttpRequests
-            m_HttpRequest[m_ScriptEngines[0]].CheckHttpRequests();
+            m_HttpRequest[m_ScriptEngines[0]].CheckHttpRequests(m_ScriptEngines[0].Worlds[0]);
 
             // Check XMLRPCRequests
-            m_XmlRequest[m_ScriptEngines[0]].CheckXMLRPCRequests();
+            m_XmlRequest[m_ScriptEngines[0]].CheckXMLRPCRequests(m_ScriptEngines[0].Worlds[0]);
 
             foreach (IScriptEngine s in m_ScriptEngines)
             {
-                // Check Listeners
-                m_Listener[s].CheckListeners();
+                foreach (IScene scene in s.Worlds)
+                {
+                    // Check Listeners
+                    m_Listener[s].CheckListeners(scene);
 
-                // Check timers
-                m_Timer[s].CheckTimerEvents();
+                    // Check timers
+                    m_Timer[s].CheckTimerEvents();
 
-                // Check Sensors
-                m_SensorRepeat[s].CheckSenseRepeaterEvents();
+                    // Check Sensors
+                    m_SensorRepeat[s].CheckSenseRepeaterEvents();
 
-                // Check dataserver
-                m_Dataserver[s].ExpireRequests();
+                    // Check dataserver
+                    m_Dataserver[s].ExpireRequests();
+                }
             }
         }
 
@@ -220,7 +223,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         /// </summary>
         /// <param name="localID"></param>
         /// <param name="itemID"></param>
-        public static void RemoveScript(IScriptEngine engine, uint localID, UUID itemID)
+        public static void RemoveScript(IScriptEngine engine, IScene scene, uint localID, UUID itemID)
         {
             // Remove a specific script
 
@@ -232,14 +235,14 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
             // Remove from: HttpRequest
             IHttpRequestModule iHttpReq =
-                engine.World.RequestModuleInterface<IHttpRequestModule>();
+                scene.RequestModuleInterface<IHttpRequestModule>();
             iHttpReq.StopHttpRequest(localID, itemID);
 
-            IWorldComm comms = engine.World.RequestModuleInterface<IWorldComm>();
+            IWorldComm comms = scene.RequestModuleInterface<IWorldComm>();
             if (comms != null)
                 comms.DeleteListener(itemID);
 
-            IXMLRPC xmlrpc = engine.World.RequestModuleInterface<IXMLRPC>();
+            IXMLRPC xmlrpc = scene.RequestModuleInterface<IXMLRPC>();
             xmlrpc.DeleteChannels(itemID);
             xmlrpc.CancelSRDRequests(itemID);
 
@@ -248,11 +251,11 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         }
 
-        public static Object[] GetSerializationData(IScriptEngine engine, UUID itemID)
+        public static Object[] GetSerializationData(IScriptEngine engine, IScene scene, UUID itemID)
         {
             List<Object> data = new List<Object>();
 
-            Object[] listeners=m_Listener[engine].GetSerializationData(itemID);
+            Object[] listeners = m_Listener[engine].GetSerializationData(itemID, scene);
             if (listeners.Length > 0)
             {
                 data.Add("listener");
@@ -279,7 +282,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             return data.ToArray();
         }
 
-        public static void CreateFromData(IScriptEngine engine, uint localID,
+        public static void CreateFromData(IScriptEngine engine, IScene scene, uint localID,
                 UUID itemID, UUID hostID, Object[] data)
         {
             int idx = 0;
@@ -302,7 +305,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                     {
                     case "listener":
                         m_Listener[engine].CreateFromData(localID, itemID,
-                                                    hostID, item);
+                                                    hostID, item, scene);
                         break;
                     case "timer":
                         m_Timer[engine].CreateFromData(localID, itemID,

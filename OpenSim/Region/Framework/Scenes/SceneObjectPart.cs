@@ -1565,6 +1565,8 @@ namespace OpenSim.Region.Framework.Scenes
             dupe.m_inventory = new SceneObjectPartInventory(dupe);
             dupe.m_inventory.Items = (TaskInventoryDictionary)m_inventory.Items.Clone();
 
+            // Move afterwards ResetIDs as it clears the localID
+            dupe.LocalId = localID;
             if (userExposed)
             {
                 dupe.ResetIDs(linkNum);
@@ -1590,11 +1592,21 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     m_parentGroup.Scene.AssetService.Get(dupe.m_shape.SculptTexture.ToString(), dupe, AssetReceived); 
                 }
-                
-                bool UsePhysics = ((dupe.ObjectFlags & (uint)PrimFlags.Physics) != 0);
-                dupe.DoPhysicsPropertyUpdate(UsePhysics, true);
+
+                PrimitiveBaseShape pbs = dupe.Shape;
+
+                dupe.PhysActor = ParentGroup.Scene.PhysicsScene.AddPrimShape(
+                    dupe.Name,
+                    pbs,
+                    dupe.AbsolutePosition,
+                    dupe.Scale,
+                    dupe.RotationOffset,
+                    dupe.PhysActor.IsPhysical);
+
+                dupe.PhysActor.LocalID = dupe.LocalId;
+                dupe.DoPhysicsPropertyUpdate(dupe.PhysActor.IsPhysical, true);
             }
-            
+
             return dupe;
         }
 
@@ -2696,7 +2708,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             UUID = UUID.Random();
             LinkNum = linkNum;
-            LocalId = 0;
+            //LocalId = 0;
             Inventory.ResetInventoryIDs();
         }
 

@@ -63,20 +63,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 try
                 {
-                    if (ScriptEngine.EventQueue.Count == 0)
+                    Thread.Sleep(SleepTime);
+                    QueueItemStruct QIS = null;
+                    while (ScriptEngine.EventQueue.Dequeue(out QIS))
                     {
-                        Thread.Sleep(SleepTime);
-                        continue;
-                    }
-                    while (ScriptEngine.EventQueue.Count != 0)
-                    {
-                        m_log.Warn("ScriptEngine.Count " + ScriptEngine.EventQueue.Count);
-                        // Something in queue, process
-                        QueueItemStruct QIS = null;
-                        ScriptEngine.EventQueue.Dequeue(out QIS);
-                        if (QIS == null)
-                            continue;
-
                         ProcessQIS(QIS);
                     }
                 }
@@ -96,18 +86,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return;
             }
             //Disabled or not running scripts dont get events saved.
-            if (QIS.ID.Disabled || !QIS.ID.Running)
+            if (QIS.ID.Disabled || !QIS.ID.Running || ScriptEngine.NeedsRemoved.Contains(QIS.ID.part.UUID))
                 return;
-
-            //Clear scripts that shouldn't be in the queue anymore
-            if (ScriptEngine.NeedsRemoved.ContainsKey(QIS.ID.ItemID))
-            {
-                //Check the localID too...
-                uint localID = 0;
-                ScriptEngine.NeedsRemoved.TryGetValue(QIS.ID.ItemID, out localID);
-                if (localID == QIS.ID.localID)
-                    return;
-            }
 
             try
             {
@@ -141,7 +121,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             catch (SelfDeleteException) // Must delete SOG
             {
                 if (QIS.ID.part != null && QIS.ID.part.ParentGroup != null)
-                    m_ScriptEngine.findPrimsScene(QIS.ID.localID).DeleteSceneObject(
+                    m_ScriptEngine.findPrimsScene(QIS.ID.part.UUID).DeleteSceneObject(
                         QIS.ID.part.ParentGroup, false, true);
             }
             catch (ScriptDeleteException) // Must delete item

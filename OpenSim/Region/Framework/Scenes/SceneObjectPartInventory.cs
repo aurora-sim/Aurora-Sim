@@ -245,15 +245,15 @@ namespace OpenSim.Region.Framework.Scenes
 
                                 lock (m_items)
                                 {
-                                    m_items[item.ItemID].PermsMask = 0;
-                                    m_items[item.ItemID].PermsGranter = UUID.Zero;
+                                    //m_items[item.ItemID].PermsMask = 0;
+                                    //m_items[item.ItemID].PermsGranter = UUID.Zero;
                                 }
                             }
                         }
                     }
                 }
                 m_part.ParentGroup.Scene.EventManager.TriggerRezScripts(
-                                        m_part.LocalId, LSLItems.ToArray(), startParam, postOnRez, engine, stateSource);
+                                        m_part, LSLItems.ToArray(), startParam, postOnRez, engine, stateSource);
                 m_part.ParentGroup.AddActiveScriptCount(LSLItems.Count);
                 m_part.ScheduleFullUpdate();
             }
@@ -333,7 +333,7 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                     
                     m_part.ParentGroup.Scene.EventManager.TriggerRezScript(
-                        m_part.LocalId, item.ItemID, String.Empty, startParam, postOnRez, engine, stateSource);
+                        m_part, item.ItemID, String.Empty, startParam, postOnRez, engine, stateSource);
                     m_part.ParentGroup.AddActiveScriptCount(1);
                     m_part.ScheduleFullUpdate();
                     return;
@@ -361,7 +361,7 @@ namespace OpenSim.Region.Framework.Scenes
                 
                     string script = Utils.BytesToString(asset.Data);
                     m_part.ParentGroup.Scene.EventManager.TriggerRezScript(
-                        m_part.LocalId, item.ItemID, script, startParam, postOnRez, engine, stateSource);
+                        m_part, item.ItemID, script, startParam, postOnRez, engine, stateSource);
                     m_part.ParentGroup.AddActiveScriptCount(1);
                     m_part.ScheduleFullUpdate();
                 }
@@ -406,7 +406,7 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         if (module.ScriptEngineName == engine)
                         {
-                            module.UpdateScript(m_part.LocalId, item.ItemID, script, startParam, postOnRez, stateSource);
+                            module.UpdateScript(m_part.UUID, item.ItemID, script, startParam, postOnRez, stateSource);
                         }
                     }
                     m_part.ParentGroup.AddActiveScriptCount(1);

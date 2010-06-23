@@ -57,10 +57,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 EventQueue eqtc = new EventQueue(m_ScriptEngine, Engine.SleepTime);
                 Watchdog.StartThread(eqtc.DoProcessQueue, "EventQueueThread", ThreadPriority.BelowNormal, true);
             }
-            //for (int i = 0; i < Engine.NumberOfStateSavingThreads; i++)
-            //{
-            //    Watchdog.StartThread(StateSavingMaintenance, "StateSavingMaintenance", ThreadPriority.BelowNormal, true);
-            //}
             for (int i = 0; i < Engine.NumberOfStartStopThreads; i++)
             {
                 Watchdog.StartThread(StartEndScriptMaintenance, "StartEndScriptMaintenance", ThreadPriority.BelowNormal, true);
@@ -94,31 +90,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
         }
 
-        public void StateSavingMaintenance()
-        {
-            while (true)
-            {
-                try
-                {
-                    Thread.Sleep(m_ScriptEngine.SleepTime); // Sleep before next pass
-                    DoStateQueue();
-                }
-                catch (Exception ex)
-                {
-                    m_log.ErrorFormat("Exception in StateSavingMaintenance. Exception: {0}", ex.ToString());
-                }
-            }
-        }
-
         #endregion
 
         #region State Queue
 
         public void DoStateQueue()
         {
-            if (ScriptEngine.StateQueue.Count != 0)
+            StateQueueItem item = null;
+            if (ScriptEngine.StateQueue.Dequeue(out item))
             {
-                StateQueueItem item = null;
                 ScriptEngine.StateQueue.Dequeue(out item);
                 if (item == null || item.ID == null)
                     return;
@@ -164,13 +144,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// </summary>
         public void DoScriptsLoadUnload()
         {
-            while (ScriptEngine.LUQueue.Count != 0)
+            LUStruct item;
+            while (m_ScriptEngine.LUQueue.Dequeue(out item))
             {
-                LUStruct item;
-                ScriptEngine.LUQueue.Dequeue(out item);
-                if (item == null)
-                    return;
-
                 if (item.Action == LUType.Unload)
                 {
                     try

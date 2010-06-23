@@ -47,11 +47,11 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api.Plugins
             m_CmdManager = CmdManager;
         }
 
-        public void CheckListeners()
+        public void CheckListeners(OpenSim.Framework.IScene scene)
         {
-            if (m_CmdManager.m_ScriptEngine.World == null)
+            if (scene == null)
                 return;
-            IWorldComm comms = m_CmdManager.m_ScriptEngine.World.RequestModuleInterface<IWorldComm>();
+            IWorldComm comms = scene.RequestModuleInterface<IWorldComm>();
 
             if (comms != null)
             {
@@ -79,17 +79,17 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api.Plugins
             }
         }
 
-        public Object[] GetSerializationData(UUID itemID)
+        public Object[] GetSerializationData(UUID itemID, OpenSim.Framework.IScene scene)
         {
-            IWorldComm comms = m_CmdManager.m_ScriptEngine.World.RequestModuleInterface<IWorldComm>();
+            IWorldComm comms = scene.RequestModuleInterface<IWorldComm>();
 
             return comms.GetSerializationData(itemID);
         }
 
         public void CreateFromData(uint localID, UUID itemID, UUID hostID,
-                Object[] data)
+                Object[] data, OpenSim.Framework.IScene scene)
         {
-            IWorldComm comms = m_CmdManager.m_ScriptEngine.World.RequestModuleInterface<IWorldComm>();
+            IWorldComm comms = scene.RequestModuleInterface<IWorldComm>();
 
             comms.CreateFromData(localID, itemID, hostID, data);
         }
