@@ -88,6 +88,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         private IConfigSource m_ConfigSource;
         public IConfig ScriptConfigSource;
         private bool m_enabled = false;
+        public bool DisplayErrorsOnConsole = false;
 
         public IConfig Config
         {
@@ -204,6 +205,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             NumberOfEventQueueThreads = ScriptConfigSource.GetInt("NumberOfEventQueueThreads", 5);
             NumberOfStartStopThreads = ScriptConfigSource.GetInt("NumberOfStartStopThreads", 1);
             SleepTime = ScriptConfigSource.GetInt("SleepTime", 50);
+            DisplayErrorsOnConsole = ScriptConfigSource.GetBoolean("DisplayErrorsOnConsole", false);
         }
 
         public void PostInitialise()
@@ -979,67 +981,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             else
             {
-                ProcessQIS(QIS);
+                AuroraDotNetEngine.EventQueue.ProcessQIS(QIS);
                 return true;
             }
 
             EventQueue.Enqueue(QIS, EventPriority.FirstStart);
             return true;
-        }
-
-        public void ProcessQIS(QueueItemStruct QIS)
-        {
-            //Suspended scripts get readded
-            if (QIS.ID.Suspended)
-            {
-                ScriptEngine.EventQueue.Enqueue(QIS, EventPriority.Suspended);
-                return;
-            }
-            //Disabled or not running scripts dont get events saved.
-            if (QIS.ID.Disabled || !QIS.ID.Running || ScriptEngine.NeedsRemoved.Contains(QIS.ID.part.UUID))
-                return;
-
-            try
-            {
-                QIS.ID.SetEventParams(QIS.llDetectParams);
-                int Running = 0;
-                Running = QIS.ID.Script.ExecuteEvent(
-                    QIS.ID.State,
-                    QIS.functionName,
-                    QIS.param, QIS.CurrentlyAt);
-                //Finished with nothing left.
-                if (Running == 0)
-                {
-                    if (QIS.functionName == "timer")
-                        QIS.ID.TimerQueued = false;
-                    if (QIS.functionName == "control")
-                    {
-                        if (QIS.ID.ControlEventsInQueue > 0)
-                            QIS.ID.ControlEventsInQueue--;
-                    }
-                    if (QIS.functionName == "collision")
-                        QIS.ID.CollisionInQueue = false;
-                    return;
-                }
-                else
-                {
-                    //Did not finish so requeue it
-                    QIS.CurrentlyAt = Running;
-                    ScriptEngine.EventQueue.Enqueue(QIS, EventPriority.Continued);
-                }
-            }
-            catch (SelfDeleteException) // Must delete SOG
-            {
-                if (QIS.ID.part != null && QIS.ID.part.ParentGroup != null)
-                    findPrimsScene(QIS.ID.part.UUID).DeleteSceneObject(
-                        QIS.ID.part.ParentGroup, false, true);
-            }
-            catch (ScriptDeleteException) // Must delete item
-            {
-                if (QIS.ID.part != null && QIS.ID.part.ParentGroup != null)
-                    QIS.ID.part.Inventory.RemoveInventoryItem(QIS.ID.ItemID);
-            }
-            catch (Exception) { }
         }
 
         /// <summary>

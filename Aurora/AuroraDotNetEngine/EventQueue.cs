@@ -47,7 +47,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private ScriptEngine m_ScriptEngine;
+        private static ScriptEngine m_ScriptEngine;
 
         private int SleepTime;
 
@@ -77,7 +77,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
         }
 
-        public void ProcessQIS(QueueItemStruct QIS)
+        public static void ProcessQIS(QueueItemStruct QIS)
         {
             //Suspended scripts get readded
             if (QIS.ID.Suspended)
@@ -139,7 +139,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 if (QIS.ID.part != null && QIS.ID.part.ParentGroup != null)
                     QIS.ID.part.Inventory.RemoveInventoryItem(QIS.ID.ItemID);
             }
-            catch (Exception) { }
+            catch (Exception ex)
+            {
+                QIS.ID.ShowError(ex, "executing", false);
+            }
         }
     }
 }

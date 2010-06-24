@@ -227,7 +227,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
             {
                 fastInvoker(m_Script, args);
             }
-            return StartingPosition;
+            return StartingPosition + 5;
         }
 
         #region From http://www.codeproject.com/KB/cs/FastMethodInvoker.aspx Thanks to Luyan for this code

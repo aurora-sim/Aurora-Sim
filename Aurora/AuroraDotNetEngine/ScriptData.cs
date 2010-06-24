@@ -284,19 +284,23 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
         }
 
-        public void ShowError(Exception e, int stage, bool reupload)
+        public void ShowError(Exception e, string stage, bool postScriptCAPSError)
         {
             if (presence != null && (!PostOnRez))
                 presence.ControllingClient.SendAgentAlertMessage("Script saved with errors, check debug window!", false);
 
-            if (reupload)
+            if (postScriptCAPSError)
                 m_ScriptEngine.Errors[ItemID] = new String[] { e.Message.ToString() };
 
             // DISPLAY ERROR ON CONSOLE
-            //string consoletext = "Error compiling script in stage " + stage + ":\n" + e.Message.ToString() + " itemID: " + ItemID + ", localID" + localID + ", CompiledFile: " + AssemblyName;
-            //m_log.Error(consoletext);
+            if (m_ScriptEngine.DisplayErrorsOnConsole)
+            {
+                string consoletext = "Error " + stage + " script:\n" + e.Message.ToString() + " itemID: " + ItemID + ", CompiledFile: " + AssemblyName;
+                m_log.Error(consoletext);
+            }
+
             // DISPLAY ERROR INWORLD
-            string inworldtext = "Error compiling script: " + e.Message.ToString();
+            string inworldtext = "Error " + stage + " script: " + e.Message.ToString();
             if (inworldtext.Length > 1100)
                 inworldtext = inworldtext.Substring(0, 1099);
 
@@ -457,7 +461,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     }
                     catch (Exception ex)
                     {
-                        ShowError(ex, 1, reupload);
+                        ShowError(ex, "compiling", reupload);
                         return;
                     }
                 }
@@ -485,7 +489,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             catch (Exception ex)
             {
-                ShowError(ex, 2, reupload);
+                ShowError(ex, "compiling", reupload);
                 return;
             }
 
