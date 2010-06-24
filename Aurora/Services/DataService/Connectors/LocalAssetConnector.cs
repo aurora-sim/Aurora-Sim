@@ -56,27 +56,30 @@ namespace Aurora.Services.DataService
                 GD.Delete("assetMediaURL", new string[] { "objectUUID" }, new object[] { media.ObjectID });
             }
             catch(Exception) { }
-            List<object> Values = new List<object>();
-            Values.Add(media.ObjectID);
-            Values.Add(media.OwnerID);
-            Values.Add(media.alt_image_enable);
-            Values.Add(media.auto_loop);
-            Values.Add(media.auto_play);
-            Values.Add(media.auto_scale);
-            Values.Add(media.auto_zoom);
-            Values.Add(media.controls);
-            Values.Add(media.current_url);
-            Values.Add(media.first_click_interact);
-            Values.Add(media.height_pixels); 
-            Values.Add(media.home_url);
-            Values.Add(media.perms_control);
-            Values.Add(media.perms_interact);
-            Values.Add(media.whitelist);
-            Values.Add(media.whitelist_enable);
-            Values.Add(media.width_pixels);
-            Values.Add(media.object_media_version);
-            Values.Add(media.Side);
-            GD.Insert("assetMediaURL", Values.ToArray());
+            if (media != null)
+            {
+                List<object> Values = new List<object>();
+                Values.Add(media.ObjectID);
+                Values.Add(media.OwnerID);
+                Values.Add(media.alt_image_enable);
+                Values.Add(media.auto_loop);
+                Values.Add(media.auto_play);
+                Values.Add(media.auto_scale);
+                Values.Add(media.auto_zoom);
+                Values.Add(media.controls);
+                Values.Add(media.current_url);
+                Values.Add(media.first_click_interact);
+                Values.Add(media.height_pixels);
+                Values.Add(media.home_url);
+                Values.Add(media.perms_control);
+                Values.Add(media.perms_interact);
+                Values.Add(media.whitelist);
+                Values.Add(media.whitelist_enable);
+                Values.Add(media.width_pixels);
+                Values.Add(media.object_media_version);
+                Values.Add(media.Side);
+                GD.Insert("assetMediaURL", Values.ToArray());
+            }
         }
     }
 }

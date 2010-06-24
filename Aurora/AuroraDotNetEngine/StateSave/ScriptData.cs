@@ -86,6 +86,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public ScriptSponsor ScriptSponsor;
         public bool TimerQueued = false;
         public bool CollisionInQueue = false;
+        public bool TouchInQueue = false;
+        public bool LandCollisionInQueue = false;
+        public List<Changed> ChangedInQueue = new List<Changed>();
         public int LastControlLevel = 0;
         public int ControlEventsInQueue = 0;
 

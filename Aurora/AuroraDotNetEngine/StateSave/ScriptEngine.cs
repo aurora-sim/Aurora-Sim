@@ -964,6 +964,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return true;
 
             #endregion
+            
+            // Create a structure and add data
+            QueueItemStruct QIS = new QueueItemStruct();
+            QIS.ID = ID;
+            QIS.functionName = FunctionName;
+            QIS.llDetectParams = qParams;
+            QIS.param = param;
 
             if (FunctionName == "timer")
             {
@@ -971,8 +978,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     return true;
                 ID.TimerQueued = true;
             }
-
-            if (FunctionName == "control")
+            else if (FunctionName == "control")
             {
                 int held = ((LSL_Types.LSLInteger)param[1]).value;
                 // int changed = ((LSL_Types.LSLInteger)data.Params[2]).value;
@@ -992,8 +998,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         return true;
                 }
             }
-
-            if (FunctionName == "collision")
+            else if (FunctionName == "collision")
             {
                 if (ID.CollisionInQueue)
                     return true;
@@ -1002,16 +1007,97 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
                 ID.CollisionInQueue = true;
             }
+            else if (FunctionName == "touch")
+            {
+                if (ID.TouchInQueue)
+                    return true;
+                if (qParams == null)
+                    return true;
 
-            // Create a structure and add data
-            QueueItemStruct QIS = new QueueItemStruct();
-            QIS.ID = ID;
-            QIS.functionName = FunctionName;
-            QIS.llDetectParams = qParams;
-            QIS.param = param;
+                ID.TouchInQueue = true;
+            }
+            else if (FunctionName == "land_collision")
+            {
+                if (ID.LandCollisionInQueue)
+                    return true;
+                if (qParams == null)
+                    return true;
+
+                ID.LandCollisionInQueue = true;
+            }
+            //else if (FunctionName == "link_message")
+            //{
+            //    ProcessQIS(QIS);
+            //}
+            else if (FunctionName == "changed")
+            {
+                Changed changed = (Changed)(new LSL_Types.LSLInteger(param[0].ToString()).value);
+                if (QIS.ID.ChangedInQueue.Contains(changed))
+                    return true;
+                QIS.ID.ChangedInQueue.Add(changed);
+            }
+            else
+            {
+                ProcessQIS(QIS);
+            }
 
             EventQueue.Enqueue(QIS);
             return true;
+        }
+
+        public void ProcessQIS(QueueItemStruct QIS)
+        {
+            //Suspended scripts get readded
+            if (QIS.ID.Suspended)
+            {
+                ScriptEngine.EventQueue.Enqueue(QIS);
+                return;
+            }
+            //Disabled or not running scripts dont get events saved.
+            if (QIS.ID.Disabled || !QIS.ID.Running || ScriptEngine.NeedsRemoved.Contains(QIS.ID.part.UUID))
+                return;
+
+            try
+            {
+                QIS.ID.SetEventParams(QIS.llDetectParams);
+                int Running = 0;
+                Running = QIS.ID.Script.ExecuteEvent(
+                    QIS.ID.State,
+                    QIS.functionName,
+                    QIS.param, QIS.CurrentlyAt);
+                //Finished with nothing left.
+                if (Running == 0)
+                {
+                    if (QIS.functionName == "timer")
+                        QIS.ID.TimerQueued = false;
+                    if (QIS.functionName == "control")
+                    {
+                        if (QIS.ID.ControlEventsInQueue > 0)
+                            QIS.ID.ControlEventsInQueue--;
+                    }
+                    if (QIS.functionName == "collision")
+                        QIS.ID.CollisionInQueue = false;
+                    return;
+                }
+                else
+                {
+                    //Did not finish so requeue it
+                    QIS.CurrentlyAt = Running;
+                    ScriptEngine.EventQueue.Enqueue(QIS);
+                }
+            }
+            catch (SelfDeleteException) // Must delete SOG
+            {
+                if (QIS.ID.part != null && QIS.ID.part.ParentGroup != null)
+                    findPrimsScene(QIS.ID.part.UUID).DeleteSceneObject(
+                        QIS.ID.part.ParentGroup, false, true);
+            }
+            catch (ScriptDeleteException) // Must delete item
+            {
+                if (QIS.ID.part != null && QIS.ID.part.ParentGroup != null)
+                    QIS.ID.part.Inventory.RemoveInventoryItem(QIS.ID.ItemID);
+            }
+            catch (Exception) { }
         }
 
         /// <summary>

@@ -109,6 +109,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     }
                     if (QIS.functionName == "collision")
                         QIS.ID.CollisionInQueue = false;
+                    if (QIS.functionName == "touch")
+                        QIS.ID.TouchInQueue = false;
+                    if (QIS.functionName == "land_collision")
+                        QIS.ID.LandCollisionInQueue = false;
+                    if (QIS.functionName == "changed")
+                    {
+                        Changed changed = (Changed)(new LSL_Types.LSLInteger(QIS.param[0].ToString()).value);
+                        if(QIS.ID.ChangedInQueue.Contains(changed))
+                            QIS.ID.ChangedInQueue.Remove(changed);
+                    }
                     return;
                 }
                 else

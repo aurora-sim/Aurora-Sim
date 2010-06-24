@@ -398,5 +398,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api.Interfaces
 
         void SetPrimitiveParamsEx(LSL_Key prim, LSL_List rules);
         LSL_List GetLinkPrimitiveParamsEx(LSL_Key prim, LSL_List rules);
+        LSL_Integer llSetPrimMediaParams(LSL_Integer face, LSL_List commandList);
+        LSL_Integer llClearPrimMedia(LSL_Integer face);
+        LSL_List llGetPrimMediaParams(LSL_Integer face, LSL_List aList);
     }
 }

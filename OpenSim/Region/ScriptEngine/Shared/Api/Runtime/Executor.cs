@@ -229,6 +229,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
             }
             return StartingPosition;
         }
+
         #region From http://www.codeproject.com/KB/cs/FastMethodInvoker.aspx Thanks to Luyan for this code
 
         private static void EmitCastToReference(ILGenerator il, System.Type type)

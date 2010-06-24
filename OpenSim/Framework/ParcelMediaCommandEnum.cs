@@ -43,4 +43,33 @@ namespace OpenSim.Framework
         Size = 11,
         Desc = 12
     }
+    public enum PrimMediaCommandEnum
+    {
+        AltImageEnable = 0,
+        Controls = 1,
+        CurrentURL = 2,
+        HomeURL = 3,
+        AutoLoop = 4,
+        AutoPlay = 5,
+        AutoScale = 6,
+        AutoZoom = 7,
+        FirstClickInteract = 8,
+        WidthPixels = 9,
+        HeightPixels = 10,
+        WhitelistEnable = 11,
+        Whitelist = 12,
+        PermsInteract = 13,
+        PermsControl = 14
+    }
+    public enum PrimMediaUpdate : int
+    {
+        OK = 0,
+        MALFORMED_PARAMS = 1000,
+        TYPE_MISMATCH = 1001,
+        BOUNDS_ERROR = 1002,
+        NOT_FOUND = 1003,
+        NOT_SUPPORTED = 1004,
+        INTERNAL_ERROR = 1999,
+        WHITELIST_FAILED = 2001,
+    }
 }

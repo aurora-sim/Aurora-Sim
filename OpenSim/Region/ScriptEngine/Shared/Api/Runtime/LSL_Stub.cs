@@ -1832,5 +1832,20 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
         {
             return m_LSL_Functions.llXorBase64StringsCorrect(str1, str2);
         }
+
+        public LSL_Integer llSetPrimMediaParams(LSL_Integer face, LSL_List commandList)
+        {
+            return m_LSL_Functions.llSetPrimMediaParams(face, commandList);
+        }
+
+        public LSL_Integer llClearPrimMedia(LSL_Integer face)
+        {
+            return m_LSL_Functions.llClearPrimMedia(face);
+        }
+
+        public LSL_List llGetPrimMediaParams(LSL_Integer face, LSL_List commandList)
+        {
+            return m_LSL_Functions.llGetPrimMediaParams(face, commandList);
+        }
     }
 }

@@ -9155,6 +9155,283 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             return list;
         }
 
+        public LSL_Integer llClearPrimMedia(LSL_Integer face)
+        {
+            Aurora.Framework.IAssetConnector connector = Aurora.DataManager.DataManager.IAssetConnector;
+            connector.UpdateObjectMediaInfo(null);
+            return new LSL_Integer((int)PrimMediaUpdate.OK);
+        }
+
+        public LSL_Integer llSetPrimMediaParams(LSL_Integer face, LSL_List commandList)
+        {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
+            Aurora.Framework.IAssetConnector connector = Aurora.DataManager.DataManager.IAssetConnector;
+            Aurora.Framework.ObjectMediaURL MediaFace = connector.GetObjectMediaInfo(m_host.UUID.ToString(), face.value);
+            if (MediaFace == null)
+            {
+                MediaFace = new Aurora.Framework.ObjectMediaURL();
+            }
+            for (int i = 0; i < commandList.Data.Length; i++)
+            {
+                PrimMediaCommandEnum command = (PrimMediaCommandEnum)commandList.Data[i];
+                switch (command)
+                {
+                    case PrimMediaCommandEnum.AltImageEnable:
+                        if ((i + 1) < commandList.Length)
+                        {
+                            if (commandList.Data[i + 1] is LSL_Integer)
+                            {
+                                MediaFace.alt_image_enable = ((LSL_Integer)commandList.Data[i + 1]).value == 1;
+                            }
+                            else
+                                return new LSL_Integer((int)PrimMediaUpdate.TYPE_MISMATCH);
+                        }
+                        break;
+
+                    case PrimMediaCommandEnum.AutoLoop:
+                        if ((i + 1) < commandList.Length)
+                        {
+                            if (commandList.Data[i + 1] is LSL_Integer)
+                            {
+                                MediaFace.auto_loop = ((LSL_Integer)commandList.Data[i + 1]).value == 1;
+                            }
+                            else
+                                return new LSL_Integer((int)PrimMediaUpdate.TYPE_MISMATCH);
+                        }
+                        break;
+                    case PrimMediaCommandEnum.AutoPlay:
+                        if ((i + 1) < commandList.Length)
+                        {
+                            if (commandList.Data[i + 1] is LSL_Integer)
+                            {
+                                MediaFace.auto_play = ((LSL_Integer)commandList.Data[i + 1]).value == 1;
+                            }
+                            else
+                                return new LSL_Integer((int)PrimMediaUpdate.TYPE_MISMATCH);
+                        }
+                        break;
+                    case PrimMediaCommandEnum.AutoScale:
+                        if ((i + 1) < commandList.Length)
+                        {
+                            if (commandList.Data[i + 1] is LSL_Integer)
+                            {
+                                MediaFace.auto_scale = ((LSL_Integer)commandList.Data[i + 1]).value == 1;
+                            }
+                            else
+                                return new LSL_Integer((int)PrimMediaUpdate.TYPE_MISMATCH);
+                        }
+                        break;
+                    case PrimMediaCommandEnum.AutoZoom:
+                        if ((i + 1) < commandList.Length)
+                        {
+                            if (commandList.Data[i + 1] is LSL_Integer)
+                            {
+                                MediaFace.auto_zoom = ((LSL_Integer)commandList.Data[i + 1]).value == 1;
+                            }
+                            else
+                                return new LSL_Integer((int)PrimMediaUpdate.TYPE_MISMATCH);
+                        }
+                        break;
+                    case PrimMediaCommandEnum.Controls:
+                        if ((i + 1) < commandList.Length)
+                        {
+                            if (commandList.Data[i + 1] is LSL_Integer)
+                            {
+                                MediaFace.controls = ((LSL_Integer)commandList.Data[i + 1]).value;
+                            }
+                            else
+                                return new LSL_Integer((int)PrimMediaUpdate.TYPE_MISMATCH);
+                        }
+                        break;
+                    case PrimMediaCommandEnum.CurrentURL:
+                        if ((i + 1) < commandList.Length)
+                        {
+                            if (commandList.Data[i + 1] is LSL_String)
+                            {
+                                MediaFace.current_url = ((LSL_String)commandList.Data[i + 1]).m_string;
+                            }
+                            else
+                                return new LSL_Integer((int)PrimMediaUpdate.TYPE_MISMATCH);
+                        }
+                        break;
+                    case PrimMediaCommandEnum.FirstClickInteract:
+                        if ((i + 1) < commandList.Length)
+                        {
+                            if (commandList.Data[i + 1] is LSL_Integer)
+                            {
+                                MediaFace.first_click_interact = ((LSL_Integer)commandList.Data[i + 1]).value == 1;
+                            }
+                            else
+                                return new LSL_Integer((int)PrimMediaUpdate.TYPE_MISMATCH);
+                        }
+                        break;
+                    case PrimMediaCommandEnum.HeightPixels:
+                        if ((i + 1) < commandList.Length)
+                        {
+                            if (commandList.Data[i + 1] is LSL_Integer)
+                            {
+                                MediaFace.height_pixels = ((LSL_Integer)commandList.Data[i + 1]).value;
+                            }
+                            else
+                                return new LSL_Integer((int)PrimMediaUpdate.TYPE_MISMATCH);
+                        }
+                        break;
+                    case PrimMediaCommandEnum.HomeURL:
+                        if ((i + 1) < commandList.Length)
+                        {
+                            if (commandList.Data[i + 1] is LSL_String)
+                            {
+                                MediaFace.home_url = ((LSL_String)commandList.Data[i + 1]).m_string;
+                            }
+                            else
+                                return new LSL_Integer((int)PrimMediaUpdate.TYPE_MISMATCH);
+                        }
+                        break;
+                    case PrimMediaCommandEnum.PermsControl:
+                        if ((i + 1) < commandList.Length)
+                        {
+                            if (commandList.Data[i + 1] is LSL_Integer)
+                            {
+                                MediaFace.perms_control = ((LSL_Integer)commandList.Data[i + 1]).value;
+                            }
+                            else
+                                return new LSL_Integer((int)PrimMediaUpdate.TYPE_MISMATCH);
+                        }
+                        break;
+                    case PrimMediaCommandEnum.PermsInteract:
+                        if ((i + 1) < commandList.Length)
+                        {
+                            if (commandList.Data[i + 1] is LSL_Integer)
+                            {
+                                MediaFace.perms_interact = ((LSL_Integer)commandList.Data[i + 1]).value;
+                            }
+                            else
+                                return new LSL_Integer((int)PrimMediaUpdate.TYPE_MISMATCH);
+                        }
+                        break;
+                    case PrimMediaCommandEnum.Whitelist:
+                        if ((i + 1) < commandList.Length)
+                        {
+                            if (commandList.Data[i + 1] is LSL_String)
+                            {
+                                MediaFace.whitelist = ((LSL_String)commandList.Data[i + 1]).m_string;
+                            }
+                            else
+                                return new LSL_Integer((int)PrimMediaUpdate.TYPE_MISMATCH);
+                        }
+                        break;
+                    case PrimMediaCommandEnum.WhitelistEnable:
+                        if ((i + 1) < commandList.Length)
+                        {
+                            if (commandList.Data[i + 1] is LSL_Integer)
+                            {
+                                MediaFace.whitelist_enable = ((LSL_Integer)commandList.Data[i + 1]).value == 1;
+                            }
+                            else
+                                return new LSL_Integer((int)PrimMediaUpdate.TYPE_MISMATCH);
+                        }
+                        break;
+                    case PrimMediaCommandEnum.WidthPixels:
+                        if ((i + 1) < commandList.Length)
+                        {
+                            if (commandList.Data[i + 1] is LSL_Integer)
+                            {
+                                MediaFace.width_pixels = ((LSL_Integer)commandList.Data[i + 1]).value;
+                            }
+                            else
+                                return new LSL_Integer((int)PrimMediaUpdate.TYPE_MISMATCH);
+                        }
+                        break;
+                    default:
+                        PrimMediaCommandEnum mediaCommandEnum = PrimMediaCommandEnum.WidthPixels;
+                        NotImplemented("llSetPrimMediaParams parameter do not supported yet: " + Enum.Parse(mediaCommandEnum.GetType(), commandList.Data[i].ToString()).ToString());
+                        break;
+                }//end switch
+            }//end for
+
+            connector.UpdateObjectMediaInfo(MediaFace);
+            //Is this needed?
+            m_host.MediaURL = MediaFace.current_url;
+            m_host.SendFullUpdateToAllClients();
+
+            return new LSL_Integer((int)PrimMediaUpdate.OK);
+        }
+
+        public LSL_List llGetPrimMediaParams(LSL_Integer face, LSL_List aList)
+        {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
+            LSL_List list = new LSL_List();
+            Aurora.Framework.IAssetConnector connector = Aurora.DataManager.DataManager.IAssetConnector;
+            Aurora.Framework.ObjectMediaURL MediaFace = connector.GetObjectMediaInfo(m_host.UUID.ToString(), face.value);
+            if (MediaFace == null)
+            {
+                //Fail silently..
+                return new LSL_Integer((int)PrimMediaUpdate.OK);
+            }
+            
+            for (int i = 0; i < aList.Data.Length; i++)
+            {
+                if (aList.Data[i] != null)
+                {
+                    switch ((PrimMediaCommandEnum)aList.Data[i])
+                    {
+                        case PrimMediaCommandEnum.AltImageEnable:
+                            list.Add(new LSL_String(MediaFace.alt_image_enable));
+                            break;
+                        case PrimMediaCommandEnum.AutoLoop:
+                            list.Add(new LSL_String(MediaFace.auto_loop));
+                            break;
+                        case PrimMediaCommandEnum.AutoPlay:
+                            list.Add(new LSL_String(MediaFace.auto_play));
+                            break;
+                        case PrimMediaCommandEnum.AutoScale:
+                            list.Add(new LSL_String(MediaFace.auto_scale));
+                            break;
+                        case PrimMediaCommandEnum.AutoZoom:
+                            list.Add(new LSL_String(MediaFace.auto_zoom));
+                            break;
+                        case PrimMediaCommandEnum.Controls:
+                            list.Add(new LSL_String(MediaFace.controls));
+                            break;
+                        case PrimMediaCommandEnum.CurrentURL:
+                            list.Add(new LSL_String(MediaFace.current_url));
+                            break;
+                        case PrimMediaCommandEnum.FirstClickInteract:
+                            list.Add(new LSL_String(MediaFace.first_click_interact));
+                            break;
+                        case PrimMediaCommandEnum.HeightPixels:
+                            list.Add(new LSL_String(MediaFace.height_pixels));
+                            break;
+                        case PrimMediaCommandEnum.HomeURL:
+                            list.Add(new LSL_String(MediaFace.home_url));
+                            break;
+                        case PrimMediaCommandEnum.PermsControl:
+                            list.Add(new LSL_String(MediaFace.perms_control));
+                            break;
+                        case PrimMediaCommandEnum.PermsInteract:
+                            list.Add(new LSL_String(MediaFace.perms_interact));
+                            break;
+                        case PrimMediaCommandEnum.Whitelist:
+                            list.Add(new LSL_String(MediaFace.whitelist));
+                            break;
+                        case PrimMediaCommandEnum.WhitelistEnable:
+                            list.Add(new LSL_String(MediaFace.whitelist_enable));
+                            break;
+                        case PrimMediaCommandEnum.WidthPixels:
+                            list.Add(new LSL_String(MediaFace.width_pixels));
+                            break;
+                        default:
+                            PrimMediaCommandEnum mediaCommandEnum = PrimMediaCommandEnum.WidthPixels;
+                            NotImplemented("llGetPrimMediaParams parameter do not supported yet: " + Enum.Parse(mediaCommandEnum.GetType(), aList.Data[i].ToString()).ToString());
+                            break;
+                    }
+
+                }
+            }
+            ScriptSleep(2000);
+            return list;
+        }
+
         public LSL_Integer llModPow(int a, int b, int c)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
