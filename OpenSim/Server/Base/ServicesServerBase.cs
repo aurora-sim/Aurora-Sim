@@ -30,7 +30,6 @@ using System.IO;
 using System.Xml;
 using System.Threading;
 using System.Reflection;
-using OpenSim.Framework;
 using OpenSim.Framework.Console;
 using log4net;
 using log4net.Config;
@@ -155,19 +154,17 @@ namespace OpenSim.Server.Base
 
             if (consoleType == "basic")
             {
-                MainConsole.Instance = new CommandConsole();
+                MainConsole.Instance = new CommandConsole(prompt);
             }
             else if (consoleType == "rest")
             {
-                MainConsole.Instance = new RemoteConsole();
+                MainConsole.Instance = new RemoteConsole(prompt);
                 ((RemoteConsole)MainConsole.Instance).ReadConfig(Config);
             }
             else
             {
-                MainConsole.Instance = new LocalConsole();
+                MainConsole.Instance = new LocalConsole(prompt);
             }
-            MainConsole.Instance.DefaultPrompt = prompt;
-            MainConsole.Instance.Initialise(prompt, Config, null);
 
             // Configure the appenders for log4net
             //
@@ -233,10 +230,21 @@ namespace OpenSim.Server.Base
                     "shutdown",
                     "Quit the application", HandleQuit);
 
+            // Register a command to read other commands from a file
+            MainConsole.Instance.Commands.AddCommand("base", false, "command-script",
+                                          "command-script <script>",
+                                          "Run a command script from file", HandleScript);
+
+
             // Allow derived classes to perform initialization that
             // needs to be done after the console has opened
             //
             Initialise();
+        }
+
+        public bool Running
+        {
+            get { return m_Running; }
         }
 
         public virtual int Run()
@@ -256,6 +264,41 @@ namespace OpenSim.Server.Base
             m_Running = false;
             m_log.Info("[CONSOLE] Quitting");
         }
+
+        protected virtual void HandleScript(string module, string[] parms)
+        {
+            if (parms.Length != 2)
+            {
+                return;
+            }
+            RunCommandScript(parms[1]);
+        }
+
+        /// <summary>
+        /// Run an optional startup list of commands
+        /// </summary>
+        /// <param name="fileName"></param>
+        private void RunCommandScript(string fileName)
+        {
+            if (File.Exists(fileName))
+            {
+                m_log.Info("[COMMANDFILE]: Running " + fileName);
+
+                using (StreamReader readFile = File.OpenText(fileName))
+                {
+                    string currentCommand;
+                    while ((currentCommand = readFile.ReadLine()) != null)
+                    {
+                        if (currentCommand != String.Empty)
+                        {
+                            m_log.Info("[COMMANDFILE]: Running '" + currentCommand + "'");
+                            MainConsole.Instance.RunCommand(currentCommand);
+                        }
+                    }
+                }
+            }
+        }
+
 
         protected virtual void ReadConfig()
         {
