@@ -418,7 +418,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
         public const int PRIM_MEDIA_WIDTH_PIXELS = 9;
         public const int PRIM_MEDIA_HEIGHT_PIXELS = 10;
         public const int PRIM_MEDIA_WHITELIST_ENABLE = 11;
-        public const int PRIM_MEDIA_PERMS_INTERACT = 12;
+        public const int PRIM_MEDIA_WHITELIST = 12;
         public const int PRIM_MEDIA_PERMS_INTERACT = 13;
         public const int PRIM_MEDIA_PERMS_CONTROL = 14;
 

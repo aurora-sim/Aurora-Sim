@@ -9,6 +9,6 @@ namespace Aurora.Framework
 	{
 		ObjectMediaURL GetObjectMediaInfo(string objectID, int side);
 
-        void UpdateObjectMediaInfo(ObjectMediaURL media);
+        void UpdateObjectMediaInfo(ObjectMediaURL media, int side, OpenMetaverse.UUID ObjectID);
     }
 }

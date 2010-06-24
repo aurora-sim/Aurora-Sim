@@ -11,8 +11,8 @@ namespace Aurora.Framework
         public int Side;
         public UUID ObjectID;
         public UUID OwnerID;
-        public bool alt_image_enable = true;
-        public bool auto_loop = true;
+        public bool alt_image_enable = false;
+        public bool auto_loop = false;
         public bool auto_play = true;
         public bool auto_scale = true;
         public bool auto_zoom = false;

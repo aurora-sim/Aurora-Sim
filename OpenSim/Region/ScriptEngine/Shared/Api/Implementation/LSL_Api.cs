@@ -9158,7 +9158,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         public LSL_Integer llClearPrimMedia(LSL_Integer face)
         {
             Aurora.Framework.IAssetConnector connector = Aurora.DataManager.DataManager.IAssetConnector;
-            connector.UpdateObjectMediaInfo(null);
+            connector.UpdateObjectMediaInfo(null, face.value, m_host.UUID);
             return new LSL_Integer((int)PrimMediaUpdate.OK);
         }
 
@@ -9170,8 +9170,12 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             if (MediaFace == null)
             {
                 MediaFace = new Aurora.Framework.ObjectMediaURL();
+                MediaFace.ObjectID = m_host.UUID;
+                MediaFace.OwnerID = m_host.OwnerID;
+                MediaFace.Side = face.value;
+                MediaFace.object_media_version = "x-mv:0000000001/00000000-0000-0000-0000-000000000000";
             }
-            for (int i = 0; i < commandList.Data.Length; i++)
+            for (int i = 0; i < commandList.Data.Length; i += 2)
             {
                 PrimMediaCommandEnum command = (PrimMediaCommandEnum)commandList.Data[i];
                 switch (command)
@@ -9349,9 +9353,24 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                 }//end switch
             }//end for
 
-            connector.UpdateObjectMediaInfo(MediaFace);
+            connector.UpdateObjectMediaInfo(MediaFace, MediaFace.Side, m_host.UUID);
             //Is this needed?
-            m_host.MediaURL = MediaFace.current_url;
+            Primitive.TextureEntry textures = m_host.Shape.Textures;
+            if (textures.FaceTextures[face.value] == null)
+            {
+                Primitive.TextureEntryFace texface = m_host.Shape.Textures.CreateFace((uint)face.value);
+                textures.FaceTextures[face.value] = texface;
+            }
+            textures.FaceTextures[face.value].MediaFlags = true;
+            m_host.Shape.Textures = textures;
+
+            string Version = m_host.CurrentMediaVersion.Remove(0, 14);
+            Version = Version.Remove(1, Version.Length - 1);
+            int version = int.Parse(Version);
+            version++;
+            Version = "x-mv:000000000" + version + "/00000000-0000-0000-0000-000000000000";
+            m_host.CurrentMediaVersion = Version;
+
             m_host.SendFullUpdateToAllClients();
 
             return new LSL_Integer((int)PrimMediaUpdate.OK);

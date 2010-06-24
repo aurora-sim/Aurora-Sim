@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using Aurora.DataManager;
 using Aurora.Framework;
+using OpenMetaverse;
 
 namespace Aurora.Services.DataService
 {
@@ -49,11 +50,11 @@ namespace Aurora.Services.DataService
 			return info;
 		}
 
-        public void UpdateObjectMediaInfo(ObjectMediaURL media)
+        public void UpdateObjectMediaInfo(ObjectMediaURL media, int side, UUID ObjectID)
         {
             try
             {
-                GD.Delete("assetMediaURL", new string[] { "objectUUID" }, new object[] { media.ObjectID });
+                GD.Delete("assetMediaURL", new string[] { "ObjectUUID", "side" }, new object[] { ObjectID, side });
             }
             catch(Exception) { }
             if (media != null)

@@ -85,9 +85,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
             
             //Sends out an update for everyone else
             SceneObjectPart part = m_scene.GetSceneObjectPart(UUID.Parse(objectUUID));
-            part.MediaURL = currentURL;
-            part.SendFullUpdateToAllClients();
-
+            
             //Update the database.
             ObjectMediaURL media = AC.GetObjectMediaInfo(objectUUID, int.Parse(currentSide));
             if (media == null)
@@ -96,10 +94,27 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                 media.Side = int.Parse(currentSide);
                 media.OwnerID = part.OwnerID;
                 media.ObjectID = part.UUID;
-                media.object_media_version = "1";
+                media.object_media_version = "x-mv:0000000001/00000000-0000-0000-0000-000000000000";
             }
             media.current_url = currentURL;
-            AC.UpdateObjectMediaInfo(media);
+            AC.UpdateObjectMediaInfo(media, media.Side, media.ObjectID);
+            Primitive.TextureEntry textures = part.Shape.Textures;
+            if (textures.FaceTextures[media.Side] == null)
+            {
+                Primitive.TextureEntryFace texface = part.Shape.Textures.CreateFace((uint)media.Side);
+                textures.FaceTextures[media.Side] = texface;
+            }
+            textures.FaceTextures[media.Side].MediaFlags = true;
+            part.Shape.Textures = textures;
+
+            string Version = part.CurrentMediaVersion.Remove(0, 14);
+            Version = Version.Remove(1, Version.Length - 1);
+            int version = int.Parse(Version);
+            version++;
+            Version = "x-mv:000000000" + version + "/00000000-0000-0000-0000-000000000000";
+            part.CurrentMediaVersion = Version;
+
+            part.SendFullUpdateToAllClients();
 
             //Send back data
             Hashtable responsedata = new Hashtable();
@@ -115,7 +130,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
             //Response for CAPS
             Hashtable responsedata = new Hashtable();
             responsedata["int_response_code"] = 200; //501; //410; //404;
-            responsedata["content_type"] = "text/plain";
+            responsedata["content_type"] = "application/llsd+xml";
             responsedata["keepalive"] = false;
             responsedata["str_response_string"] = "";
 
@@ -131,12 +146,12 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                     OSD osd = new OSD();
 
                     SceneObjectPart part = m_scene.GetSceneObjectPart(new UUID(rm["object_id"].ToString()));
-                    ObjectMediaURL info1 = AC.GetObjectMediaInfo(rm["object_id"].ToString(), 1);
-                    ObjectMediaURL info2 = AC.GetObjectMediaInfo(rm["object_id"].ToString(), 2);
-                    ObjectMediaURL info3 = AC.GetObjectMediaInfo(rm["object_id"].ToString(), 3);
-                    ObjectMediaURL info4 = AC.GetObjectMediaInfo(rm["object_id"].ToString(), 4);
-                    ObjectMediaURL info5 = AC.GetObjectMediaInfo(rm["object_id"].ToString(), 5);
-                    ObjectMediaURL info6 = AC.GetObjectMediaInfo(rm["object_id"].ToString(), 6);
+                    ObjectMediaURL info1 = AC.GetObjectMediaInfo(rm["object_id"].ToString(), 0);
+                    ObjectMediaURL info2 = AC.GetObjectMediaInfo(rm["object_id"].ToString(), 1);
+                    ObjectMediaURL info3 = AC.GetObjectMediaInfo(rm["object_id"].ToString(), 2);
+                    ObjectMediaURL info4 = AC.GetObjectMediaInfo(rm["object_id"].ToString(), 3);
+                    ObjectMediaURL info5 = AC.GetObjectMediaInfo(rm["object_id"].ToString(), 4);
+                    ObjectMediaURL info6 = AC.GetObjectMediaInfo(rm["object_id"].ToString(), 5);
 
                     List<ObjectMediaURL> infos = new List<ObjectMediaURL>();
                     infos.Add(info1);
@@ -190,6 +205,9 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                         osd = new OSDInteger(info.perms_control);
                         mediadataMap.Add("perms_control", osd);
 
+                        osd = new OSDInteger(info.perms_interact);
+                        mediadataMap.Add("perms_interact", osd);
+
                         osd = new OSDBoolean(info.whitelist_enable);
                         mediadataMap.Add("whitelist_enable", osd);
 
@@ -197,20 +215,12 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                         mediadataMap.Add("width_pixels", osd);
                         array.Add(mediadataMap);
                     }
-                    osd = new OSDString(objectID.ToString());
+                    osd = new OSDUUID(objectID);
                     MainMap.Add("object_id", osd);
 
                     MainMap.Add("object_media_data", array);
 
-                    int Version = 1;
-                    for (int i = 0; i < infos.Count; i++)
-                    {
-                        if (infos[i] != null)
-                        {
-                            Version = int.Parse(infos[i].object_media_version);
-                        }
-                    }
-                    osd = new OSDString("x-mv:000000000" + Version + "/" + new Guid().ToString());
+                    osd = new OSDString(part.CurrentMediaVersion);
                     MainMap.Add("object_media_version", osd);
 
 
@@ -218,55 +228,96 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                     responsedata["str_response_string"] = response; //String.Format(@"<llsd><map><key>object_id</key><uuid>{0}</uuid><key>object_media_data</key><array><map><key>alt_image_enable</key><boolean>0</boolean><key>auto_loop</key><boolean>0</boolean><key>auto_play</key><boolean>1</boolean><key>auto_scale</key><boolean>1</boolean><key>auto_zoom</key><boolean>0</boolean><key>controls</key><integer>0</integer><key>current_url</key><string>http://v01.wwweb3d.net/dahliaUnityPlayer/dahliaWebPlayer03.html</string><key>first_click_interact</key><boolean>0</boolean><key>height_pixels</key><integer>0</integer><key>home_url</key><string>http://v01.wwweb3d.net/dahliaUnityPlayer/dahliaWebPlayer03.html</string><key>perms_control</key><integer>7</integer><key>perms_interact</key><integer>7</integer><key>whitelist_enable</key><boolean>0</boolean><key>width_pixels</key><integer>0</integer></map><map><key>alt_image_enable</key><boolean>0</boolean><key>auto_loop</key><boolean>0</boolean><key>auto_play</key><boolean>1</boolean><key>auto_scale</key><boolean>1</boolean><key>auto_zoom</key><boolean>0</boolean><key>controls</key><integer>0</integer><key>current_url</key><string>http://www.google.com/</string><key>first_click_interact</key><boolean>0</boolean><key>height_pixels</key><integer>0</integer><key>home_url</key><string>http://www.google.com</string><key>perms_control</key><integer>7</integer><key>perms_interact</key><integer>7</integer><key>whitelist_enable</key><boolean>0</boolean><key>width_pixels</key><integer>0</integer></map><undef /><undef /><undef /><undef /></array><key>object_media_version</key><string>x-mv:0000000042/79e7c4ad-3361-4736-bced-1f72e6c3dbd4</string></map></llsd>",uuid.ToString());
                 }
                 #endregion
+
                 #region Update
                 else if (rm["verb"].ToString() == "UPDATE")
                 {
                     OSDArray media_data_map = (OSDArray)rm["object_media_data"];
                     SceneObjectPart part = m_scene.GetSceneObjectPart(new UUID(rm["object_id"].ToString()));
-                    int side = 1;
+                    int side = 0;
                     foreach (OSD osd in media_data_map)
                     {
                         string type = osd.Type.ToString();
                         if (type == "Unknown")
                         {
+                            // Remove the media
+                            AC.UpdateObjectMediaInfo(null, side, part.UUID);
+                            Primitive.TextureEntry textures = part.Shape.Textures;
+                            if (textures.FaceTextures[side] != null)
+                            {
+                                textures.FaceTextures[side].MediaFlags = false;
+                            }
+                            part.Shape.Textures = textures;
                             side++;
                             continue;
                         }
-                        List<string> Values = new List<string>();
-                        OSDMap map = (OSDMap)osd;
+                        else
+                        {
+                            // Add/Update the media
+                            List<string> Values = new List<string>();
+                            OSDMap map = (OSDMap)osd;
 
-                        ObjectMediaURL info = AC.GetObjectMediaInfo(rm["object_id"].ToString(), side);
-                        if (info == null)
-                            info = new ObjectMediaURL();
+                            ObjectMediaURL info = AC.GetObjectMediaInfo(rm["object_id"].ToString(), side);
+                            if (info == null)
+                                info = new ObjectMediaURL();
 
-                        info.ObjectID = new UUID(rm["object_id"].ToString());
-                        info.OwnerID = new UUID(part.OwnerID.ToString());
-                        info.Side = side;
-                        info.alt_image_enable = map["alt_image_enable"].AsInteger() == 1;
-                        info.auto_loop = map["auto_loop"].AsInteger() == 1;
-                        info.auto_play = map["auto_play"].AsInteger() == 1;
-                        info.auto_scale = map["auto_scale"].AsInteger() == 1;
-                        info.auto_zoom = map["auto_zoom"].AsInteger() == 1;
-                        string controls = map["controls"].ToString();
-                        if(controls != "")
-                            info.controls = int.Parse(map["controls"].ToString());
-                        info.current_url = map["current_url"].ToString();
-                        info.first_click_interact = map["first_click_interact"].AsInteger() == 1;
-                        info.height_pixels = int.Parse(map["height_pixels"].ToString());
-                        info.home_url = map["home_url"].ToString();
-                        info.perms_control = int.Parse(map["perms_control"].ToString());
-                        info.perms_interact = int.Parse(map["perms_interact"].ToString());
-                        info.whitelist = map["whitelist"].ToString();
-                        info.whitelist_enable = map["whitelist_enable"].AsInteger() == 1;
-                        info.width_pixels = int.Parse(map["width_pixels"].ToString());
+                            info.ObjectID = new UUID(rm["object_id"].ToString());
+                            info.OwnerID = new UUID(part.OwnerID.ToString());
+                            info.Side = side;
+                            info.alt_image_enable = map["alt_image_enable"].AsInteger() == 1;
+                            info.auto_loop = map["auto_loop"].AsInteger() == 1;
+                            info.auto_play = map["auto_play"].AsInteger() == 1;
+                            info.auto_scale = map["auto_scale"].AsInteger() == 1;
+                            info.auto_zoom = map["auto_zoom"].AsInteger() == 1;
+                            string controls = map["controls"].ToString();
+                            if (controls != "")
+                                info.controls = int.Parse(map["controls"].ToString());
+                            info.current_url = map["current_url"].ToString();
+                            info.first_click_interact = map["first_click_interact"].AsInteger() == 1;
+                            info.height_pixels = int.Parse(map["height_pixels"].ToString());
+                            info.home_url = map["home_url"].ToString();
+                            info.perms_control = int.Parse(map["perms_control"].ToString());
+                            info.perms_interact = int.Parse(map["perms_interact"].ToString());
+                            info.whitelist = map["whitelist"].ToString();
+                            info.whitelist_enable = map["whitelist_enable"].AsInteger() == 1;
+                            info.width_pixels = int.Parse(map["width_pixels"].ToString());
 
-                        if (info.object_media_version == null || info.object_media_version == "")
-                            info.object_media_version = "1";
+                            if (info.object_media_version == null || info.object_media_version == "")
+                                info.object_media_version = "x-mv:0000000001/00000000-0000-0000-0000-000000000000";
 
-                        AC.UpdateObjectMediaInfo(info);
+                            AC.UpdateObjectMediaInfo(info, info.Side, info.ObjectID);
+                            Primitive.TextureEntry textures = part.Shape.Textures;
+                            if (textures.FaceTextures[info.Side] == null)
+                            {
+                                Primitive.TextureEntryFace texface = part.Shape.Textures.CreateFace((uint)info.Side);
+                                textures.FaceTextures[info.Side] = texface;
+                            }
+                            textures.FaceTextures[info.Side].MediaFlags = true;
+                            part.Shape.Textures = textures;
 
-                        side++;
+                            side++;
+                        }
                     }
+                    ObjectMediaURL info1 = AC.GetObjectMediaInfo(rm["object_id"].ToString(), 0);
+                    ObjectMediaURL info2 = AC.GetObjectMediaInfo(rm["object_id"].ToString(), 1);
+                    ObjectMediaURL info3 = AC.GetObjectMediaInfo(rm["object_id"].ToString(), 2);
+                    ObjectMediaURL info4 = AC.GetObjectMediaInfo(rm["object_id"].ToString(), 3);
+                    ObjectMediaURL info5 = AC.GetObjectMediaInfo(rm["object_id"].ToString(), 4);
+                    ObjectMediaURL info6 = AC.GetObjectMediaInfo(rm["object_id"].ToString(), 5);
+                    if (info1 == null && info2 == null && info3 == null &&
+                        info4 == null && info5 == null && info6 == null)
+                        part.CurrentMediaVersion = "";
+                    else
+                    {
+                        string Version = part.CurrentMediaVersion.Remove(0, 14);
+                        Version = Version.Remove(1, Version.Length - 1);
+                        int version = int.Parse(Version);
+                        version++;
+                        Version = "x-mv:000000000" + version + "/00000000-0000-0000-0000-000000000000";
+                        part.CurrentMediaVersion = Version;
+                    }
+
+                    part.SendFullUpdateToAllClients();
                 }
                 #endregion
                 else

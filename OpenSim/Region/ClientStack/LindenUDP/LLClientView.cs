@@ -4668,7 +4668,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             //update.JointPivot = Vector3.Zero;
             //update.JointType = 0;
             update.Material = data.Material;
-            update.MediaURL = Utils.StringToBytes(data.MediaURL);
+            update.MediaURL = Utils.StringToBytes(data.CurrentMediaVersion);
             if (data.IsAttachment)
             {
                 update.NameValue = Util.StringToBytes256("AttachItemID STRING RW SV " + data.FromItemID);
@@ -4711,7 +4711,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             #region PrimFlags
 
             PrimFlags flags = (PrimFlags)m_scene.Permissions.GenerateClientFlags(recipientID, data.UUID);
-
+            
             // Don't send the CreateSelected flag to everyone
             flags &= ~PrimFlags.CreateSelected;
 
