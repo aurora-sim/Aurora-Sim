@@ -56,6 +56,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         private int maxScriptsPerAppDomain = 1;
 
+        private bool loadAllScriptsIntoOneAppDomain = false;
+
         private string PermissionLevel = "Internet";
 
         // Internal list of all AppDomains
@@ -95,16 +97,21 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     "ScriptsPerAppDomain", 1);
             PermissionLevel = m_scriptEngine.ScriptConfigSource.GetString(
                     "AppDomainPermissions", "Internet");
+            loadAllScriptsIntoOneAppDomain = m_scriptEngine.ScriptConfigSource.GetBoolean("LoadAllScriptsIntoOneAppDomain ", false);
         }
 
         // Find a free AppDomain, creating one if necessary
         private AppDomainStructure GetFreeAppDomain()
         {
+            AppDomainStructure currentAD = new AppDomainStructure();
+            currentAD.CurrentAppDomain = AppDomain.CurrentDomain;
+            return currentAD;
             lock (getLock)
             {
                 // Current full?
-                if (currentAD != null &&
-                    currentAD.ScriptsLoaded >= maxScriptsPerAppDomain)
+                if (currentAD != null && (
+                    currentAD.ScriptsLoaded >= maxScriptsPerAppDomain 
+                    || !loadAllScriptsIntoOneAppDomain))
                 {
                     // Add it to AppDomains list and empty current
                     appDomains.Add(currentAD);
@@ -139,8 +146,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             ads.ShadowCopyFiles = "false"; // Disable shadowing
             ads.ConfigurationFile = AppDomain.CurrentDomain.SetupInformation.ConfigurationFile;
 
-            AppDomain AD = CreateRestrictedDomain(PermissionLevel, "ScriptAppDomain_" +
-                    AppDomainNameCount,ads);
+            AppDomain AD = CreateRestrictedDomain(PermissionLevel, 
+                "ScriptAppDomain_" + AppDomainNameCount,ads);
 
             AD.Load(AssemblyName.GetAssemblyName(
                         "OpenSim.Region.ScriptEngine.Shared.dll"));

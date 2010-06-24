@@ -1429,7 +1429,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public IScriptApi[] GetAPIs()
         {
-            return Aurora.Framework.AuroraModuleLoader.LoadPlugins<IScriptApi>("/OpenSim/ScriptPlugins", new PluginInitialiserBase()).ToArray();
+            List<IScriptApi> APIs = Aurora.Framework.AuroraModuleLoader.LoadPlugins<IScriptApi>("/OpenSim/ScriptPlugins", new PluginInitialiserBase());
+            return APIs.ToArray();
         }
 
         #endregion
