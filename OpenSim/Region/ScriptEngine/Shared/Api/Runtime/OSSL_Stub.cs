@@ -692,17 +692,25 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
         {
             return m_OSSL_Functions.osGetAvatarList();
         }
+
         public void osShutDown()
         {
             m_OSSL_Functions.osShutDown();
         }
+
         public void osReturnObject(LSL_Key userID)
         {
             m_OSSL_Functions.osReturnObject(userID);
         }
+
         public void osReturnObjects(LSL_Float parameter)
         {
             m_OSSL_Functions.osReturnObjects(parameter);
+        }
+
+        public LSL_Integer osAddAgentToGroup(LSL_Key AgentID, LSL_Key GroupID, LSL_Key RequestedRoleID)
+        {
+            return m_OSSL_Functions.osAddAgentToGroup(AgentID, GroupID, RequestedRoleID);
         }
     }
 }

@@ -30,9 +30,7 @@ using System.Collections.Generic;
 
 using OpenMetaverse;
 
-using OpenSim.Framework;
-
-namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
+namespace OpenSim.Framework
 {
     public interface IGroupsServicesConnector
     {
@@ -85,5 +83,13 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
         public UUID RoleID   = UUID.Zero;
         public UUID AgentID  = UUID.Zero;
         public UUID InviteID = UUID.Zero;
+    }
+
+    public class GroupNoticeInfo
+    {
+        public GroupNoticeData noticeData = new GroupNoticeData();
+        public UUID GroupID = UUID.Zero;
+        public string Message = string.Empty;
+        public byte[] BinaryBucket = new byte[0];
     }
 }

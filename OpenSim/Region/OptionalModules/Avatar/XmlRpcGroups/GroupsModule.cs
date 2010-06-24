@@ -1325,12 +1325,4 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             return requestingAgentID;
         }
     }
-
-    public class GroupNoticeInfo
-    {
-        public GroupNoticeData noticeData = new GroupNoticeData();
-        public UUID GroupID = UUID.Zero;
-        public string Message = string.Empty;
-        public byte[] BinaryBucket = new byte[0];
-    }
 }

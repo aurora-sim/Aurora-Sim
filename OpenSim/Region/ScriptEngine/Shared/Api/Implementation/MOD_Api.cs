@@ -77,6 +77,15 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             m_comms = World.RequestModuleInterface<IScriptModuleComms>();
         }
 
+        public string Name
+        {
+            get { return "MOD"; }
+        }
+
+        public void Dispose()
+        {
+        }
+
         public override Object InitializeLifetimeService()
         {
             ILease lease = (ILease)base.InitializeLifetimeService();

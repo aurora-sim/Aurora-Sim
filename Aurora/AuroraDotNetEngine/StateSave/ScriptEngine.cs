@@ -1424,6 +1424,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
             }
         }
+
+        #region API Manager
+
+        public IScriptApi[] GetAPIs()
+        {
+            return Aurora.Framework.AuroraModuleLoader.LoadPlugins<IScriptApi>("/OpenSim/ScriptPlugins", new PluginInitialiserBase()).ToArray();
+        }
+
+        #endregion
     }
     /// <summary>
     /// Queue item structure

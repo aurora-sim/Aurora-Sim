@@ -9,67 +9,6 @@ using Nini.Config;
 
 namespace Aurora.Framework
 {
-    public interface IGroupsServicesConnector
-    {
-        UUID CreateGroup(UUID RequestingAgentID, string name, string charter, bool showInList, UUID insigniaID, int membershipFee, bool openEnrollment, bool allowPublish, bool maturePublish, UUID founderID);
-        void UpdateGroup(UUID RequestingAgentID, UUID groupID, string charter, bool showInList, UUID insigniaID, int membershipFee, bool openEnrollment, bool allowPublish, bool maturePublish);
-        GroupRecord GetGroupRecord(UUID RequestingAgentID, UUID GroupID, string GroupName);
-        List<DirGroupsReplyData> FindGroups(UUID RequestingAgentID, string search);
-        List<GroupMembersData> GetGroupMembers(UUID RequestingAgentID, UUID GroupID);
-
-        void AddGroupRole(UUID RequestingAgentID, UUID groupID, UUID roleID, string name, string description, string title, ulong powers);
-        void UpdateGroupRole(UUID RequestingAgentID, UUID groupID, UUID roleID, string name, string description, string title, ulong powers);
-        void RemoveGroupRole(UUID RequestingAgentID, UUID groupID, UUID roleID);
-        List<GroupRolesData> GetGroupRoles(UUID RequestingAgentID, UUID GroupID);
-        List<GroupRoleMembersData> GetGroupRoleMembers(UUID RequestingAgentID, UUID GroupID);
-
-        void AddAgentToGroup(UUID RequestingAgentID, UUID AgentID, UUID GroupID, UUID RoleID);
-        void RemoveAgentFromGroup(UUID RequestingAgentID, UUID AgentID, UUID GroupID);
-
-        void AddAgentToGroupInvite(UUID RequestingAgentID, UUID inviteID, UUID groupID, UUID roleID, UUID agentID);
-        GroupInviteInfo GetAgentToGroupInvite(UUID RequestingAgentID, UUID inviteID);
-        void RemoveAgentToGroupInvite(UUID RequestingAgentID, UUID inviteID);
-
-        void AddAgentToGroupRole(UUID RequestingAgentID, UUID AgentID, UUID GroupID, UUID RoleID);
-        void RemoveAgentFromGroupRole(UUID RequestingAgentID, UUID AgentID, UUID GroupID, UUID RoleID);
-        List<GroupRolesData> GetAgentGroupRoles(UUID RequestingAgentID, UUID AgentID, UUID GroupID);
-
-        void SetAgentActiveGroup(UUID RequestingAgentID, UUID AgentID, UUID GroupID);
-        GroupMembershipData GetAgentActiveMembership(UUID RequestingAgentID, UUID AgentID);
-
-        void SetAgentActiveGroupRole(UUID RequestingAgentID, UUID AgentID, UUID GroupID, UUID RoleID);
-        void SetAgentGroupInfo(UUID RequestingAgentID, UUID AgentID, UUID GroupID, bool AcceptNotices, bool ListInProfile);
-
-        GroupMembershipData GetAgentGroupMembership(UUID RequestingAgentID, UUID AgentID, UUID GroupID);
-        List<GroupMembershipData> GetAgentGroupMemberships(UUID RequestingAgentID, UUID AgentID);
-
-        void AddGroupNotice(UUID RequestingAgentID, UUID groupID, UUID noticeID, string fromName, string subject, string message, byte[] binaryBucket);
-        GroupNoticeInfo GetGroupNotice(UUID RequestingAgentID, UUID noticeID);
-        List<GroupNoticeData> GetGroupNotices(UUID RequestingAgentID, UUID GroupID);
-
-        void ResetAgentGroupChatSessions(UUID agentID);
-        bool hasAgentBeenInvitedToGroupChatSession(UUID agentID, UUID groupID);
-        bool hasAgentDroppedGroupChatSession(UUID agentID, UUID groupID);
-        void AgentDroppedFromGroupChatSession(UUID agentID, UUID groupID);
-        void AgentInvitedToGroupChatSession(UUID agentID, UUID groupID);
-    }
-
-    public class GroupNoticeInfo
-    {
-        public GroupNoticeData noticeData = new GroupNoticeData();
-        public UUID GroupID = UUID.Zero;
-        public string Message = string.Empty;
-        public byte[] BinaryBucket = new byte[0];
-    }
-
-    public class GroupInviteInfo
-    {
-        public UUID GroupID = UUID.Zero;
-        public UUID RoleID = UUID.Zero;
-        public UUID AgentID = UUID.Zero;
-        public UUID InviteID = UUID.Zero;
-    }
-    
     public interface IGenericData
     {
         /// <summary>

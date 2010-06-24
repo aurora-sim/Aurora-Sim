@@ -1,0 +1,16 @@
+<Addin id="OpenSim.Region.ScriptEngine.Shared.Api" version="0.2">
+    <Runtime>
+        <Import assembly="OpenSim.Region.ScriptEngine.Shared.Api.dll"/>
+    </Runtime>
+
+    <Dependencies>
+        <Addin id="OpenSim" version="0.5" />
+    </Dependencies>
+
+    <Extension path = "/OpenSim/ScriptPlugins">
+		<ScriptPlugin id="LS_Api"           type="OpenSim.Region.ScriptEngine.Shared.Api.LS_Api" />
+		<ScriptPlugin id="LSL_Api"           type="OpenSim.Region.ScriptEngine.Shared.Api.LSL_Api" />
+		<ScriptPlugin id="MOD_Api" type="OpenSim.Region.ScriptEngine.Shared.Api.MOD_Api" />
+		<ScriptPlugin id="OSSL_Api"           type="OpenSim.Region.ScriptEngine.Shared.Api.OSSL_Api" />
+    </Extension>
+</Addin>

@@ -32,7 +32,7 @@ using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.ScriptEngine.Interfaces
 {
-    public interface IScriptApi
+    public interface IScriptApi : OpenSim.Framework.IPlugin
     {
         //
         // Each API has an identifier, which is used to load the

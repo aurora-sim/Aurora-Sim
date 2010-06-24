@@ -168,5 +168,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api.Interfaces
         void osReturnObjects(LSL_Float Parameter);
         void osShutDown();
 
+        LSL_Integer osAddAgentToGroup(LSL_Key AgentID, LSL_Key GroupID, LSL_Key RequestedRoleID);
+
     }
 }

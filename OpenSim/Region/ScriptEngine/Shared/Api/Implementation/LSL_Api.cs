@@ -128,6 +128,15 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             AsyncCommands = new AsyncCommandManager(ScriptEngine, m_host.ParentGroup.Scene);
         }
 
+        public string Name
+        {
+            get { return "LSL"; }
+        }
+
+        public void Dispose()
+        {
+        }
+
         public override Object InitializeLifetimeService()
         {
             ILease lease = (ILease)base.InitializeLifetimeService();

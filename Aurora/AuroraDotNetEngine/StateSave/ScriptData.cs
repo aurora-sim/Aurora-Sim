@@ -272,11 +272,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             Apis = new Dictionary<string, IScriptApi>();
 
-            ApiManager am = new ApiManager();
-            foreach (string api in am.GetApis())
+            foreach (IScriptApi api in m_ScriptEngine.GetAPIs())
             {
-                Apis[api] = am.CreateApi(api);
-                Apis[api].Initialize(m_ScriptEngine, part, part.LocalId, ItemID, ScriptEngine.ScriptProtection);
+                Apis[api.Name] = api;
+                Apis[api.Name].Initialize(m_ScriptEngine, part, part.LocalId, ItemID, ScriptEngine.ScriptProtection);
             }
             foreach (KeyValuePair<string, IScriptApi> kv in Apis)
             {
