@@ -393,6 +393,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
         public const int PARCEL_MEDIA_COMMAND_TYPE = 10;
         public const int PARCEL_MEDIA_COMMAND_SIZE = 11;
         public const int PARCEL_MEDIA_COMMAND_DESC = 12;
+        public const int PARCEL_MEDIA_COMMAND_LOOP_SET = 13;
 
         public const int LSL_STATUS_OK = 0;
         public const int LSL_STATUS_MALFORMED_PARAMS = 1000;

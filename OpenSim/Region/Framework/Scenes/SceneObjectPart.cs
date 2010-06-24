@@ -328,6 +328,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         // TODO: Collision sound should have default.
         private UUID m_collisionSound;
+        private UUID m_collisionSprite;
         private float m_collisionSoundVolume;
 
         #endregion Fields
@@ -1199,6 +1200,15 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 m_collisionSound = value;
                 aggregateScriptEvents();
+            }
+        }
+
+        public UUID CollisionSprite
+        {
+            get { return m_collisionSprite; }
+            set
+            {
+                m_collisionSprite = value;
             }
         }
 
@@ -2103,6 +2113,11 @@ namespace OpenSim.Region.Framework.Scenes
             if (startedColliders.Count > 0 && CollisionSound != UUID.Zero && CollisionSoundVolume > 0.0f)
             {
                 SendSound(CollisionSound.ToString(), CollisionSoundVolume, true, (byte)0, 0, false, false);
+            }
+            if (CollisionSprite != UUID.Zero && CollisionSoundVolume > 0.0f)
+            {
+                // TODO: make a sprite!
+
             }
 
             if ((m_parentGroup.RootPart.ScriptEvents & scriptEvents.collision_start) != 0)

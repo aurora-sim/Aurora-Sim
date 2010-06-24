@@ -41,7 +41,8 @@ namespace OpenSim.Framework
         AutoAlign = 9,
         Type = 10,
         Size = 11,
-        Desc = 12
+        Desc = 12,
+        LoopSet = 13
     }
     public enum PrimMediaCommandEnum
     {

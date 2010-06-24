@@ -56,6 +56,7 @@ using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 using PresenceInfo = OpenSim.Services.Interfaces.PresenceInfo;
 using PrimType = OpenSim.Region.Framework.Scenes.PrimType;
 using AssetLandmark = OpenSim.Framework.AssetLandmark;
+using OpenSim.Region.ScriptEngine.Shared.ScriptBase;
 
 using LSL_Float = OpenSim.Region.ScriptEngine.Shared.LSL_Types.LSLFloat;
 using LSL_Integer = OpenSim.Region.ScriptEngine.Shared.LSL_Types.LSLInteger;
@@ -2774,7 +2775,74 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
-            Deprecated("llMakeExplosion");
+
+            /*llParticleSystem([
+        PSYS_PART_FLAGS,            PSYS_PART_INTERP_COLOR_MASK | PSYS_PART_INTERP_SCALE_MASK | PSYS_PART_EMISSIVE_MASK | PSYS_PART_WIND_MASK,
+        PSYS_SRC_PATTERN,           PSYS_SRC_PATTERN_ANGLE_CONE,
+        PSYS_PART_START_COLOR,      <1.0, 1.0, 1.0>,
+        PSYS_PART_END_COLOR,        <1.0, 1.0, 1.0>,
+        PSYS_PART_START_ALPHA,      0.50,
+        PSYS_PART_END_ALPHA,        0.25,
+        PSYS_PART_START_SCALE,      <particle_scale, particle_scale, 0.0>,
+        PSYS_PART_END_SCALE,        <particle_scale * 2 + particle_lifetime, particle_scale * 2 + particle_lifetime, 0.0>,
+        PSYS_PART_MAX_AGE,          particle_lifetime,
+        PSYS_SRC_ACCEL,             <0.0, 0.0, 0.0>,
+        PSYS_SRC_TEXTURE,           source_texture_id,
+        PSYS_SRC_BURST_RATE,        1.0,
+        PSYS_SRC_ANGLE_BEGIN,       0.0,
+        PSYS_SRC_ANGLE_END,         source_cone * PI,
+        PSYS_SRC_BURST_PART_COUNT,  particle_count / 2,
+        PSYS_SRC_BURST_RADIUS,      0.0,
+        PSYS_SRC_BURST_SPEED_MIN,   particle_speed / 3,
+        PSYS_SRC_BURST_SPEED_MAX,   particle_speed * 2/3,
+        PSYS_SRC_MAX_AGE,           particle_lifetime / 2,
+        PSYS_SRC_OMEGA,             <0.0, 0.0, 0.0>
+        ]);*/
+
+            List<object> list = new List<object>();
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_FLAGS);
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_INTERP_COLOR_MASK | ScriptBase.ScriptBaseClass.PSYS_PART_INTERP_SCALE_MASK | ScriptBase.ScriptBaseClass.PSYS_PART_EMISSIVE_MASK | ScriptBase.ScriptBaseClass.PSYS_PART_WIND_MASK);
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_PATTERN);
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_PATTERN_ANGLE_CONE);
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_START_COLOR);
+            list.Add(new LSL_Vector(1, 1, 1));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_END_COLOR);
+            list.Add(new LSL_Vector(1, 1, 1));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_START_ALPHA);
+            list.Add(new LSL_Float(0.50));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_END_ALPHA);
+            list.Add(new LSL_Float(0.25));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_START_SCALE);
+            list.Add(new LSL_Vector(scale, scale, 0));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_END_SCALE);
+            list.Add(new LSL_Vector(scale * 2 + lifetime, scale * 2 + lifetime, 0));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_MAX_AGE);
+            list.Add(new LSL_Float(lifetime));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_ACCEL);
+            list.Add(new LSL_Vector(0, 0, 0));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_TEXTURE);
+            list.Add(new LSL_String(texture));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_BURST_RATE);
+            list.Add(new LSL_Float(1));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_ANGLE_BEGIN);
+            list.Add(new LSL_Float(0.0));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_ANGLE_END);
+            list.Add(new LSL_Float(arc * Math.PI));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_BURST_PART_COUNT);
+            list.Add(new LSL_Float(particles / 2));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_BURST_RADIUS);
+            list.Add(new LSL_Float(0.0));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_BURST_SPEED_MIN);
+            list.Add(new LSL_Float(vel / 3));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_BURST_SPEED_MAX);
+            list.Add(new LSL_Float(vel * 2 / 3));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_MAX_AGE);
+            list.Add(new LSL_Float(lifetime / 2));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_OMEGA);
+            list.Add(new LSL_Vector(0, 0, 0));
+
+            llParticleSystem(new LSL_Types.list(list.ToArray()));
+
             ScriptSleep(100);
         }
 
@@ -2782,7 +2850,74 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
-            Deprecated("llMakeFountain");
+
+            /*llParticleSystem([
+        PSYS_PART_FLAGS,            PSYS_PART_INTERP_COLOR_MASK | PSYS_PART_INTERP_SCALE_MASK | PSYS_PART_WIND_MASK | PSYS_PART_BOUNCE_MASK | PSYS_PART_EMISSIVE_MASK,
+        PSYS_SRC_PATTERN,           PSYS_SRC_PATTERN_ANGLE_CONE,
+        PSYS_PART_START_COLOR,      <1.0, 1.0, 1.0>,
+        PSYS_PART_END_COLOR,        <1.0, 1.0, 1.0>,
+        PSYS_PART_START_ALPHA,      0.50,
+        PSYS_PART_END_ALPHA,        0.25,
+        PSYS_PART_START_SCALE,      <particle_scale/1.5, particle_scale/1.5, 0.0>,
+        PSYS_PART_END_SCALE,        <0.0, 0.0, 0.0>,
+        PSYS_PART_MAX_AGE,          3.0,
+        PSYS_SRC_ACCEL,             <1.0, 0.0, -4>,
+        PSYS_SRC_TEXTURE,           source_texture_id,
+        PSYS_SRC_BURST_RATE,        5/particle_count,
+        PSYS_SRC_ANGLE_BEGIN,       0.0,
+        PSYS_SRC_ANGLE_END,         source_cone*PI,
+        PSYS_SRC_BURST_PART_COUNT,  1,
+        PSYS_SRC_BURST_RADIUS,      0.0,
+        PSYS_SRC_BURST_SPEED_MIN,   particle_speed,
+        PSYS_SRC_BURST_SPEED_MAX,   particle_speed,
+        PSYS_SRC_MAX_AGE,           particle_lifetime/2,
+        PSYS_SRC_OMEGA,             <0.0, 0.0, 0.0>
+    ]);*/
+
+            List<object> list = new List<object>();
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_FLAGS);
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_INTERP_COLOR_MASK | ScriptBase.ScriptBaseClass.PSYS_PART_INTERP_SCALE_MASK | ScriptBase.ScriptBaseClass.PSYS_PART_WIND_MASK | ScriptBase.ScriptBaseClass.PSYS_PART_BOUNCE_MASK | ScriptBase.ScriptBaseClass.PSYS_PART_EMISSIVE_MASK);
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_PATTERN);
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_PATTERN_ANGLE_CONE);
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_START_COLOR);
+            list.Add(new LSL_Vector(1, 1, 1));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_END_COLOR);
+            list.Add(new LSL_Vector(1, 1, 1));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_START_ALPHA);
+            list.Add(new LSL_Float(0.50));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_END_ALPHA);
+            list.Add(new LSL_Float(0.25));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_START_SCALE);
+            list.Add(new LSL_Vector(scale / 1.5, scale / 1.5, 0));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_END_SCALE);
+            list.Add(new LSL_Vector(0, 0, 0));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_MAX_AGE);
+            list.Add(new LSL_Float(3));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_ACCEL);
+            list.Add(new LSL_Vector(1, 0, -4));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_TEXTURE);
+            list.Add(new LSL_String(texture));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_BURST_RATE);
+            list.Add(new LSL_Float(5 / particles));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_ANGLE_BEGIN);
+            list.Add(new LSL_Float(0.0));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_ANGLE_END);
+            list.Add(new LSL_Float(arc * Math.PI));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_BURST_PART_COUNT);
+            list.Add(new LSL_Float(1));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_BURST_RADIUS);
+            list.Add(new LSL_Float(0.0));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_BURST_SPEED_MIN);
+            list.Add(new LSL_Float(vel));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_BURST_SPEED_MAX);
+            list.Add(new LSL_Float(vel));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_MAX_AGE);
+            list.Add(new LSL_Float(lifetime / 2));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_OMEGA);
+            list.Add(new LSL_Vector(0, 0, 0));
+
+            llParticleSystem(new LSL_Types.list(list.ToArray()));
+
             ScriptSleep(100);
         }
 
@@ -2790,7 +2925,71 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
-            Deprecated("llMakeSmoke");
+            /*llParticleSystem([
+       PSYS_PART_FLAGS,            PSYS_PART_INTERP_COLOR_MASK | PSYS_PART_INTERP_SCALE_MASK | PSYS_PART_EMISSIVE_MASK | PSYS_PART_WIND_MASK,
+       PSYS_SRC_PATTERN,           PSYS_SRC_PATTERN_ANGLE_CONE,
+       PSYS_PART_START_COLOR,      <1.0, 1.0, 1.0>,
+       PSYS_PART_END_COLOR,        <1.0, 1.0, 1.0>,
+       PSYS_PART_START_ALPHA,      1.00,
+       PSYS_PART_END_ALPHA,        0.05,
+       PSYS_PART_START_SCALE,      <particle_scale, particle_scale, 0.0>,
+       PSYS_PART_END_SCALE,        <10, 10, 0.0>,
+       PSYS_PART_MAX_AGE,          3.0,
+       PSYS_SRC_ACCEL,             <0.0, 0.0, 0.0>,
+       PSYS_SRC_TEXTURE,           source_texture_id,
+       PSYS_SRC_BURST_RATE,        10.0 / particle_count,
+       PSYS_SRC_ANGLE_BEGIN,       0.0,
+       PSYS_SRC_ANGLE_END,         source_cone * PI,
+       PSYS_SRC_BURST_PART_COUNT,  1,
+       PSYS_SRC_BURST_RADIUS,      0.0,
+       PSYS_SRC_BURST_SPEED_MIN,   particle_speed,
+       PSYS_SRC_BURST_SPEED_MAX,   particle_speed,
+       PSYS_SRC_MAX_AGE,           particle_lifetime / 2,
+       PSYS_SRC_OMEGA,             <0.0, 0.0, 0.0>
+       ]);*/
+            List<object> list = new List<object>();
+            list.Add(OpenSim.Region.ScriptEngine.Shared.ScriptBase.ScriptBaseClass.PSYS_PART_FLAGS);
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_INTERP_COLOR_MASK | ScriptBase.ScriptBaseClass.PSYS_PART_INTERP_SCALE_MASK | ScriptBase.ScriptBaseClass.PSYS_PART_EMISSIVE_MASK | ScriptBase.ScriptBaseClass.PSYS_PART_WIND_MASK);
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_PATTERN);
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_PATTERN_ANGLE_CONE);
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_START_COLOR);
+            list.Add(new LSL_Vector(1, 1, 1));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_END_COLOR);
+            list.Add(new LSL_Vector(1, 1, 1));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_START_ALPHA);
+            list.Add(new LSL_Float(1));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_END_ALPHA);
+            list.Add(new LSL_Float(0.05));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_START_SCALE);
+            list.Add(new LSL_Vector(scale, scale, 0));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_END_SCALE);
+            list.Add(new LSL_Vector(10, 10, 0));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_MAX_AGE);
+            list.Add(new LSL_Float(3));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_ACCEL);
+            list.Add(new LSL_Vector(0, 0, 0));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_TEXTURE);
+            list.Add(new LSL_String(texture));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_BURST_RATE);
+            list.Add(new LSL_Float(10 / particles));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_ANGLE_BEGIN);
+            list.Add(new LSL_Float(0.0));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_ANGLE_END);
+            list.Add(new LSL_Float(arc * Math.PI));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_BURST_PART_COUNT);
+            list.Add(new LSL_Float(1));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_BURST_RADIUS);
+            list.Add(new LSL_Float(0.0));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_BURST_SPEED_MIN);
+            list.Add(new LSL_Float(vel));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_BURST_SPEED_MAX);
+            list.Add(new LSL_Float(vel));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_MAX_AGE);
+            list.Add(new LSL_Float(lifetime / 2));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_OMEGA);
+            list.Add(new LSL_Vector(0, 0, 0));
+
+            llParticleSystem(new LSL_Types.list(list.ToArray()));
             ScriptSleep(100);
         }
 
@@ -2798,7 +2997,73 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
-            Deprecated("llMakeFire");
+
+            /*llParticleSystem([
+        PSYS_PART_FLAGS,            PSYS_PART_INTERP_COLOR_MASK | PSYS_PART_INTERP_SCALE_MASK | PSYS_PART_EMISSIVE_MASK | PSYS_PART_WIND_MASK,
+        PSYS_SRC_PATTERN,           PSYS_SRC_PATTERN_ANGLE_CONE,
+        PSYS_PART_START_COLOR,      <1.0, 1.0, 1.0>,
+        PSYS_PART_END_COLOR,        <1.0, 1.0, 1.0>,
+        PSYS_PART_START_ALPHA,      0.50,
+        PSYS_PART_END_ALPHA,        0.10,
+        PSYS_PART_START_SCALE,      <particle_scale/2, particle_scale/2, 0.0>,
+        PSYS_PART_END_SCALE,        <particle_scale, particle_scale, 0.0>,
+        PSYS_PART_MAX_AGE,          0.5,
+        PSYS_SRC_ACCEL,             <0.0, 0.0, 0.0>,
+        PSYS_SRC_TEXTURE,           source_texture_id,
+        PSYS_SRC_BURST_RATE,        5 / particle_count,
+        PSYS_SRC_ANGLE_BEGIN,       0.0,
+        PSYS_SRC_ANGLE_END,         source_cone * PI,
+        PSYS_SRC_BURST_PART_COUNT,  1,
+        PSYS_SRC_BURST_RADIUS,      0.0,
+        PSYS_SRC_BURST_SPEED_MIN,   particle_speed,
+        PSYS_SRC_BURST_SPEED_MAX,   particle_speed,
+        PSYS_SRC_MAX_AGE,           particle_lifetime / 2,
+        PSYS_SRC_OMEGA,             <0.0, 0.0, 0.0>
+        ]);*/
+
+            List<object> list = new List<object>();
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_FLAGS);
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_INTERP_COLOR_MASK | ScriptBase.ScriptBaseClass.PSYS_PART_INTERP_SCALE_MASK | ScriptBase.ScriptBaseClass.PSYS_PART_EMISSIVE_MASK | ScriptBase.ScriptBaseClass.PSYS_PART_WIND_MASK);
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_PATTERN);
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_PATTERN_ANGLE_CONE);
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_START_COLOR);
+            list.Add(new LSL_Vector(1, 1, 1));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_END_COLOR);
+            list.Add(new LSL_Vector(1, 1, 1));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_START_ALPHA);
+            list.Add(new LSL_Float(0.50));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_END_ALPHA);
+            list.Add(new LSL_Float(0.10));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_START_SCALE);
+            list.Add(new LSL_Vector(scale / 2, scale / 2, 0));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_END_SCALE);
+            list.Add(new LSL_Vector(scale, scale, 0));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_MAX_AGE);
+            list.Add(new LSL_Float(0.50));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_ACCEL);
+            list.Add(new LSL_Vector(0, 0, 0));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_TEXTURE);
+            list.Add(new LSL_String(texture));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_BURST_RATE);
+            list.Add(new LSL_Float(5 / particles));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_ANGLE_BEGIN);
+            list.Add(new LSL_Float(0.0));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_ANGLE_END);
+            list.Add(new LSL_Float(arc * Math.PI));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_BURST_PART_COUNT);
+            list.Add(new LSL_Float(1));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_BURST_RADIUS);
+            list.Add(new LSL_Float(0.0));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_BURST_SPEED_MIN);
+            list.Add(new LSL_Float(vel));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_BURST_SPEED_MAX);
+            list.Add(new LSL_Float(vel));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_MAX_AGE);
+            list.Add(new LSL_Float(lifetime / 2));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_OMEGA);
+            list.Add(new LSL_Vector(0, 0, 0));
+
+            llParticleSystem(new LSL_Types.list(list.ToArray()));
             ScriptSleep(100);
         }
 
@@ -4308,7 +4573,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
-            NotImplemented("llCollisionSprite");
+            // Since this is broken in SL, we can do this however we want, until they fix it.
+            m_host.CollisionSprite = UUID.Parse(impact_sprite);
         }
 
         public LSL_String llGetAnimation(string id)
@@ -6172,9 +6438,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             SetParticleSystem(m_host, rules);
         }
 
-        private void SetParticleSystem(SceneObjectPart part, LSL_List rules) {
-
-       
+        private void SetParticleSystem(SceneObjectPart part, LSL_List rules) 
+        {
             if (rules.Length == 0)
             {
                 part.RemoveParticleSystem();
@@ -8926,6 +9191,11 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                         update = true; //need to send the media update packet to set looping
                         break;
 
+                    case ParcelMediaCommandEnum.LoopSet:
+                        ShoutError("PARCEL_MEDIA_COMMAND_LOOP_SET is not currently supported.");
+                        return;
+                        break;
+
                     case ParcelMediaCommandEnum.Play:
                         loop = 0;
                         commandToSend = command;
@@ -9138,6 +9408,10 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                             break;
                         case ParcelMediaCommandEnum.Loop:
                             list.Add(new LSL_Integer(World.GetLandData(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).MediaLoop));
+                            break;
+                        case ParcelMediaCommandEnum.LoopSet:
+                            ShoutError("PARCEL_MEDIA_COMMAND_LOOP_SET is not supported at this time.");
+                            list.Add(new LSL_Integer(0));
                             break;
                         case ParcelMediaCommandEnum.Size:
                             list.Add(new LSL_String(World.GetLandData(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).MediaSize[0]));
