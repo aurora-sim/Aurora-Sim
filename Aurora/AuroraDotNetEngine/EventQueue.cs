@@ -82,7 +82,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //Suspended scripts get readded
             if (QIS.ID.Suspended)
             {
-                ScriptEngine.EventQueue.Enqueue(QIS);
+                ScriptEngine.EventQueue.Enqueue(QIS, ScriptEngine.EventPriority.Suspended);
                 return;
             }
             //Disabled or not running scripts dont get events saved.
@@ -125,7 +125,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 {
                     //Did not finish so requeue it
                     QIS.CurrentlyAt = Running;
-                    ScriptEngine.EventQueue.Enqueue(QIS);
+                    ScriptEngine.EventQueue.Enqueue(QIS, ScriptEngine.EventPriority.Continued);
                 }
             }
             catch (SelfDeleteException) // Must delete SOG

@@ -81,14 +81,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public Compiler LSLCompiler;
 
         //Queue that handles the loading and unloading of scripts
-        public OpenSim.Framework.LockFreeQueue<LUStruct> LUQueue = new OpenSim.Framework.LockFreeQueue<LUStruct>();
+        public OpenSim.Framework.LockFreeQueue<LUStruct[]> LUQueue = new OpenSim.Framework.LockFreeQueue<LUStruct[]>();
 
         public MaintenanceThread m_MaintenanceThread;
 
         private IConfigSource m_ConfigSource;
         public IConfig ScriptConfigSource;
         private bool m_enabled = false;
-        public SmartThreadPool m_ThreadPool;
 
         public IConfig Config
         {
@@ -120,21 +119,36 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// </summary>
         public static List<UUID> NeedsRemoved = new List<UUID>();
 
+        public enum EventPriority : int
+        {
+            FirstStart = 0,
+            Suspended = 1,
+            Continued = 2
+        }
+
+        public class Priority : OpenSim.Framework.IPriorityConverter<EventPriority>
+        {
+            public int Convert(EventPriority priority)
+            {
+                return (int)priority;
+            }
+
+            public int PriorityCount
+            {
+                get { return 3; }
+            }
+        }
+
         /// <summary>
         /// Queue containing events waiting to be executed.
         /// </summary>
-        public static OpenSim.Framework.LockFreeQueue<QueueItemStruct> EventQueue = new OpenSim.Framework.LockFreeQueue<QueueItemStruct>();
+        public static OpenSim.Framework.LimitedPriorityQueue<QueueItemStruct, EventPriority> EventQueue = new OpenSim.Framework.LimitedPriorityQueue<QueueItemStruct, EventPriority>(new Priority());
 
         /// <summary>
         /// Queue containing scripts that need to have states saved or deleted.
         /// </summary>
         public static OpenSim.Framework.LockFreeQueue<StateQueueItem> StateQueue = new OpenSim.Framework.LockFreeQueue<StateQueueItem>();
         
-        /// <summary>
-        /// Maximum events in the event queue at any one time
-        /// </summary>
-        public int EventExecutionMaxQueueSize;
-
         /// <summary>
         /// Time for each of the smart thread pool threads to sleep before doing the queues.
         /// </summary>
@@ -146,39 +160,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public int NumberOfStartStopThreads;
 
         /// <summary>
-        /// Number of threads that should be running to save the states
-        /// </summary>
-        public int NumberOfStateSavingThreads;
-
-        /// <summary>
         /// Number of Event Queue threads that should be running
         /// </summary>
         public int NumberOfEventQueueThreads;
 
         /// <summary>
-        /// Maximum threads to run in all regions.
-        /// </summary>
-        public int MaxThreads;
-
-        /// <summary>
-        /// Time the thread can be idle.
-        /// </summary>
-        public int IdleTimeout;
-
-        /// <summary>
-        /// Minimum threads to run in all regions.
-        /// </summary>
-        public int MinThreads;
-
-        /// <summary>
         /// Priority of the threads.
         /// </summary>
         public ThreadPriority ThreadPriority;
-
-        /// <summary>
-        /// Size of the stack.
-        /// </summary>
-        public int StackSize;
 
         public System.Timers.Timer UpdateLeasesTimer = null;
 
@@ -213,45 +202,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return;
 
             NumberOfEventQueueThreads = ScriptConfigSource.GetInt("NumberOfEventQueueThreads", 5);
-            NumberOfStateSavingThreads = ScriptConfigSource.GetInt("NumberOfStateSavingThreads", 1);
             NumberOfStartStopThreads = ScriptConfigSource.GetInt("NumberOfStartStopThreads", 1);
             SleepTime = ScriptConfigSource.GetInt("SleepTime", 50);
-            LoadUnloadMaxQueueSize = ScriptConfigSource.GetInt("LoadUnloadMaxQueueSize", 100);
-            EventExecutionMaxQueueSize = ScriptConfigSource.GetInt("EventExecutionMaxQueueSize", 300);
-
-            IdleTimeout = ScriptConfigSource.GetInt("IdleTimeout", 20);
-            MaxThreads = ScriptConfigSource.GetInt("MaxThreads", 100);
-            MinThreads = ScriptConfigSource.GetInt("MinThreads", 2);
-            string pri = ScriptConfigSource.GetString(
-                "ThreadPriority", "BelowNormal");
-
-            switch (pri.ToLower())
-            {
-                case "lowest":
-                    ThreadPriority = ThreadPriority.Lowest;
-                    break;
-                case "belownormal":
-                    ThreadPriority = ThreadPriority.BelowNormal;
-                    break;
-                case "normal":
-                    ThreadPriority = ThreadPriority.Normal;
-                    break;
-                case "abovenormal":
-                    ThreadPriority = ThreadPriority.AboveNormal;
-                    break;
-                case "highest":
-                    ThreadPriority = ThreadPriority.Highest;
-                    break;
-                default:
-                    ThreadPriority = ThreadPriority.BelowNormal;
-                    m_log.Error(
-                        "[ScriptEngine.DotNetEngine]: Unknown " +
-                        "priority type \"" + pri +
-                        "\" in config file. Defaulting to " +
-                        "\"BelowNormal\".");
-                    break;
-            }
-            StackSize = ScriptConfigSource.GetInt("StackSize", 2);
         }
 
         public void PostInitialise()
@@ -268,15 +220,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (!m_enabled)
                 return;
 
-            STPStartInfo startInfo = new STPStartInfo();
-            startInfo.IdleTimeout = IdleTimeout * 1000; // convert to seconds as stated in .ini
-            startInfo.MaxWorkerThreads = MaxThreads;
-            startInfo.MinWorkerThreads = MinThreads;
-            startInfo.ThreadPriority = ThreadPriority;
-            startInfo.StackSize = StackSize;
-            startInfo.StartSuspended = true;
-
-            m_ThreadPool = new SmartThreadPool(startInfo);
             //Register the console commands
             if (FirstStartup)
             {
@@ -326,7 +269,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (!m_enabled)
                 return;
 
-            m_ThreadPool.Start();
             EventManager.HookUpRegionEvents(scene);
 
             scene.EventManager.OnScriptReset += OnScriptReset;
@@ -530,8 +472,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (engine != ScriptEngineName)
                 return;
 
-            StartScript(part, itemID, script,
+            LUStruct itemToQueue = StartScript(part, itemID, script,
                     startParam, postOnRez, (StateSource)stateSource);
+            if(itemToQueue != null)
+                LUQueue.Enqueue(new LUStruct[]{itemToQueue});
         }
 
         public void OnRezScripts(SceneObjectPart part, TaskInventoryItem[] items,
@@ -605,6 +549,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 ItemsToStart.Add(item);
             }
 
+            List<LUStruct> ItemsToQueue = new List<LUStruct>();
             foreach (TaskInventoryItem item in ItemsToStart)
             {
                 AssetBase asset = m_Scenes[0].AssetService.Get(item.AssetID.ToString());
@@ -618,9 +563,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 }
                 string script = Utils.BytesToString(asset.Data);
 
-                StartScript(part, item.ItemID, script,
+                LUStruct itemToQueue = StartScript(part, item.ItemID, script,
                         startParam, postOnRez, (StateSource)stateSource);
+                if (itemToQueue != null)
+                    ItemsToQueue.Add(itemToQueue);
             }
+            LUQueue.Enqueue(ItemsToQueue.ToArray());
+
         }
 
 		#region Post Object Events
@@ -820,7 +769,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (!id.Disabled)
                 id.Running = true;
 
-            StartScript(id.part, itemID, id.Source, id.StartParam, true, id.stateSource);
+            LUStruct item = StartScript(id.part, itemID, id.Source, id.StartParam, true, id.stateSource);
+            if (item != null)
+                LUQueue.Enqueue(new LUStruct[] { item });
         }
 
         public void OnStopScript(uint localID, UUID itemID)
@@ -855,21 +806,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public void SuspendScript(UUID itemID)
         {
             ScriptData ID = GetScriptByItemID(itemID);
-            if (ID == null)
-                return;
-            ID.Suspended = true;
+            if (ID != null)
+                ID.Suspended = true;
         }
 
         public void ResumeScript(UUID itemID)
         {
             ScriptData ID = GetScriptByItemID(itemID);
-            if (ID == null)
-                m_MaintenanceThread.AddResumeScript(itemID);
-            else
-            {
+            if (ID != null)
                 ID.Suspended = false;
-                m_MaintenanceThread.RemoveResumeScript(itemID);
-            }
         }
 
         #endregion
@@ -1025,10 +970,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
                 ID.LandCollisionInQueue = true;
             }
-            //else if (FunctionName == "link_message")
-            //{
-            //    ProcessQIS(QIS);
-            //}
             else if (FunctionName == "changed")
             {
                 Changed changed = (Changed)(new LSL_Types.LSLInteger(param[0].ToString()).value);
@@ -1039,9 +980,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             else
             {
                 ProcessQIS(QIS);
+                return true;
             }
 
-            EventQueue.Enqueue(QIS);
+            EventQueue.Enqueue(QIS, EventPriority.FirstStart);
             return true;
         }
 
@@ -1050,7 +992,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //Suspended scripts get readded
             if (QIS.ID.Suspended)
             {
-                ScriptEngine.EventQueue.Enqueue(QIS);
+                ScriptEngine.EventQueue.Enqueue(QIS, EventPriority.Suspended);
                 return;
             }
             //Disabled or not running scripts dont get events saved.
@@ -1083,7 +1025,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 {
                     //Did not finish so requeue it
                     QIS.CurrentlyAt = Running;
-                    ScriptEngine.EventQueue.Enqueue(QIS);
+                    ScriptEngine.EventQueue.Enqueue(QIS, EventPriority.Continued);
                 }
             }
             catch (SelfDeleteException) // Must delete SOG
@@ -1140,13 +1082,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
         }
 
-        private int LoadUnloadMaxQueueSize;
         /// <summary>
         /// Fetches, loads and hooks up a script to an objects events
         /// </summary>
         /// <param name="itemID"></param>
         /// <param name="localID"></param>
-        public void StartScript(SceneObjectPart part, UUID itemID, string Script, int startParam, bool postOnRez, StateSource statesource)
+        public LUStruct StartScript(SceneObjectPart part, UUID itemID, string Script, int startParam, bool postOnRez, StateSource statesource)
         {
             ScriptData id = null;
             id = GetScript(part.UUID, itemID);
@@ -1160,7 +1101,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 {
                     //Post the changed event though
                     AddToScriptQueue(id, "changed", new DetectParams[0], new Object[] { new LSL_Types.LSLInteger(512) });
-                    return;
+                    return null;
                 }
                 else
                 {
@@ -1185,7 +1126,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             id.World = part.ParentGroup.Scene;
             ScriptProtection.RemovePreviouslyCompiled(id.Source);
             ls.ID = id;
-            LUQueue.Enqueue(ls);
+            return ls;
         }
 
         public void UpdateScript(UUID partID, UUID itemID, string script, int startParam, bool postOnRez, int stateSource)
@@ -1215,7 +1156,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     return;
                 }
                 ls.ID = id;
-                LUQueue.Enqueue(ls);
+                LUQueue.Enqueue(new LUStruct[] { ls });
             }
             else
             {
@@ -1241,7 +1182,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     return;
                 }
                 ls.ID = id;
-                LUQueue.Enqueue(ls);
+                LUQueue.Enqueue(new LUStruct[] { ls });
             }
         }
 
@@ -1292,7 +1233,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             ls.ID = data;
             ls.Action = LUType.Unload;
             NeedsRemoved.Add(data.part.UUID);
-            LUQueue.Enqueue(ls);
+            LUQueue.Enqueue(new LUStruct[]{ls});
         }
 
         /// <summary>
@@ -1429,8 +1370,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public IScriptApi[] GetAPIs()
         {
-            List<IScriptApi> APIs = Aurora.Framework.AuroraModuleLoader.LoadPlugins<IScriptApi>("/OpenSim/ScriptPlugins", new PluginInitialiserBase());
-            return APIs.ToArray();
+            return Aurora.Framework.AuroraModuleLoader.LoadPlugins<IScriptApi>("/OpenSim/ScriptPlugins", new PluginInitialiserBase()).ToArray();
         }
 
         #endregion

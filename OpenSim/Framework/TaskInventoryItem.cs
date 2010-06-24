@@ -65,7 +65,17 @@ namespace OpenSim.Framework
                 String.Empty,
                 "wearable",
                 "animation",
-                "gesture"
+                "gesture",
+                String.Empty,
+                String.Empty,
+                "link",
+                String.Empty,
+                String.Empty,
+                String.Empty,
+                String.Empty,
+                String.Empty,
+                String.Empty,
+                String.Empty,
             };
 
         /// <summary>
@@ -94,7 +104,18 @@ namespace OpenSim.Framework
                 "img_tga",
                 "jpeg",
                 "animatn",
-                "gesture"
+                "gesture",
+                "simstate",
+                "favoritefolder",
+                "link",
+                "linkfolder",
+                "ensemblestart",
+                "ensembleend",
+                "currentoutfitfolder",
+                "outfitfolder",
+                "myoutfitsfolder",
+                "inboxfolder"
+
             };
 
         private UUID _assetID = UUID.Zero;

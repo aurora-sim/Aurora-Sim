@@ -91,6 +91,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public List<Changed> ChangedInQueue = new List<Changed>();
         public int LastControlLevel = 0;
         public int ControlEventsInQueue = 0;
+        public bool StartedFromSavedState = false;
 
         public SceneObjectPart part;
 
@@ -311,9 +312,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <summary>
         /// Fires the events after the compiling has occured
         /// </summary>
-        public void FireEvents(bool startedFromSavedState)
+        public void FireEvents()
         {
-            if (startedFromSavedState)
+            if (StartedFromSavedState)
             {
                 if (PostOnRez)
                     m_ScriptEngine.AddToScriptQueue(this, "on_rez", new DetectParams[0], new object[] { new LSL_Types.LSLInteger(StartParam) });
@@ -522,7 +523,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 // we get new rez events on sim restart, too
                 // but if there is state, then we fire the change
                 // event
-                FireEvents(true);
+                StartedFromSavedState = true;
 
                 // We loaded state, don't force a re-save
             }
@@ -530,8 +531,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 // Add it to our script memstruct so it can be found by other scripts
                 m_ScriptEngine.UpdateScriptInstanceData(this);
-
-                FireEvents(false);
 
                 //Make a new state save now
                 m_ScriptEngine.AddToStateSaverQueue(this, true);

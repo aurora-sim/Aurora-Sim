@@ -56,7 +56,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         private int maxScriptsPerAppDomain = 1;
 
-        private bool loadAllScriptsIntoOneAppDomain = false;
+        private bool loadAllScriptsIntoCurrentDomain = false;
 
         private string PermissionLevel = "Internet";
 
@@ -97,21 +97,23 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     "ScriptsPerAppDomain", 1);
             PermissionLevel = m_scriptEngine.ScriptConfigSource.GetString(
                     "AppDomainPermissions", "Internet");
-            loadAllScriptsIntoOneAppDomain = m_scriptEngine.ScriptConfigSource.GetBoolean("LoadAllScriptsIntoOneAppDomain ", false);
+            loadAllScriptsIntoCurrentDomain = m_scriptEngine.ScriptConfigSource.GetBoolean("LoadAllScriptsIntoCurrentAppDomain ", false);
         }
 
         // Find a free AppDomain, creating one if necessary
         private AppDomainStructure GetFreeAppDomain()
         {
-            AppDomainStructure currentAD = new AppDomainStructure();
-            currentAD.CurrentAppDomain = AppDomain.CurrentDomain;
-            return currentAD;
+            if (loadAllScriptsIntoCurrentDomain)
+            {
+                AppDomainStructure currentAD = new AppDomainStructure();
+                currentAD.CurrentAppDomain = AppDomain.CurrentDomain;
+                return currentAD;
+            }
             lock (getLock)
             {
                 // Current full?
-                if (currentAD != null && (
-                    currentAD.ScriptsLoaded >= maxScriptsPerAppDomain 
-                    || !loadAllScriptsIntoOneAppDomain))
+                if (currentAD != null &&
+                    currentAD.ScriptsLoaded >= maxScriptsPerAppDomain)
                 {
                     // Add it to AppDomains list and empty current
                     appDomains.Add(currentAD);

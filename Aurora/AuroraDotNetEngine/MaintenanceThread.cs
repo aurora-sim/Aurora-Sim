@@ -74,18 +74,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     Thread.Sleep(m_ScriptEngine.SleepTime); // Sleep before next pass
                     // LOAD / UNLOAD SCRIPTS
                     DoScriptsLoadUnload();
+                    // Save states
                     DoStateQueue();
-                    lock (Resumeable)
-                    {
-                        for (int i = 0; i < Resumeable.Count; i++)
-                        {
-                            m_ScriptEngine.ResumeScript(Resumeable[i]);
-                        }
-                    }
                 }
                 catch (Exception ex)
                 {
-                    m_log.ErrorFormat("Exception in StartEndScriptMaintenance. Exception: {0}", ex.ToString());
+                    m_log.ErrorFormat("Exception in StartEndScriptMaintenance : {0}", ex.ToString());
                 }
             }
         }
@@ -116,27 +110,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         #endregion
 
-        #region Resume Scripts
-
-        //Scripts that need to be unsuspended, but havnt finished starting yet.
-        List<OpenMetaverse.UUID> Resumeable = new List<OpenMetaverse.UUID>();
-
-        //This just lets the maintenance thread pick up the slack for finding the scripts that need to be resumed.
-        internal void AddResumeScript(OpenMetaverse.UUID itemID)
-        {
-            if(!Resumeable.Contains(itemID))
-                Resumeable.Add(itemID);
-        }
-
-        //Removes a script from the list after it has been successfully resumed.
-        internal void RemoveResumeScript(OpenMetaverse.UUID itemID)
-        {
-            if (Resumeable.Contains(itemID))
-                Resumeable.Remove(itemID);
-        }
-
-        #endregion
-
         #region Script Load and Unload Queue
 
         /// <summary>
@@ -144,32 +117,39 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// </summary>
         public void DoScriptsLoadUnload()
         {
-            LUStruct item;
-            while (m_ScriptEngine.LUQueue.Dequeue(out item))
+            LUStruct[] items;
+            while (m_ScriptEngine.LUQueue.Dequeue(out items))
             {
-                if (item.Action == LUType.Unload)
+                foreach (LUStruct item in items)
                 {
-                    try
+                    if (item.Action == LUType.Unload)
                     {
-                        item.ID.CloseAndDispose(false);
+                        try
+                        {
+                            item.ID.CloseAndDispose(false);
+                        }
+                        catch (Exception ex) { m_log.Warn(ex); }
                     }
-                    catch (Exception ex) { m_log.Warn(ex); }
+                    else if (item.Action == LUType.Load)
+                    {
+                        try
+                        {
+                            item.ID.Start(false);
+                        }
+                        catch (Exception ex) { m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: LEAKED COMPILE ERROR: " + ex); }
+                    }
+                    else if (item.Action == LUType.Reupload)
+                    {
+                        try
+                        {
+                            item.ID.Start(true);
+                        }
+                        catch (Exception ex) { m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: LEAKED COMPILE ERROR: " + ex); }
+                    }
                 }
-                else if (item.Action == LUType.Load)
+                foreach (LUStruct item in items)
                 {
-                    try
-                    {
-                        item.ID.Start(false);
-                    }
-                    catch (Exception ex) { m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: LEAKED COMPILE ERROR: " + ex); }
-                }
-                else if (item.Action == LUType.Reupload)
-                {
-                    try
-                    {
-                        item.ID.Start(true);
-                    }
-                    catch (Exception ex) { m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: LEAKED COMPILE ERROR: " + ex); }
+                    item.ID.FireEvents();
                 }
             }
         }
