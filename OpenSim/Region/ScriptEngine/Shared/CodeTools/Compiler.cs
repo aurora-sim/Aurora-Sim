@@ -67,8 +67,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
         /// <summary>
         /// This contains number of lines WE use for header when compiling script. User will get error in line x-LinesToRemoveOnError when error occurs.
         /// </summary>
-        // Not used anymore?
-        public int LinesToRemoveOnError = 3;
+        public static int LinesToRemoveOnError = 9;
 
         private enumCompileType DefaultCompileLanguage;
         private bool WriteScriptSourceToDebugFile;
@@ -448,9 +447,13 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                 "namespace Script\n"+
                 "{\n";
 
-            compiledScript += "[Serializable]\n public class LSL : OpenSim.Region.ScriptEngine.Shared.ScriptBase.ScriptBaseClass, IDisposable, OpenSim.Region.ScriptEngine.Shared.ScriptBase.IRemoteInterface";
-            compiledScript += "\n{\n" +
-                     "List<IEnumerator> parts = new List<IEnumerator>();\n";
+            compiledScript += "[Serializable]\n public class LSL : OpenSim.Region.ScriptEngine.Shared.ScriptBase.ScriptBaseClass, IDisposable, OpenSim.Region.ScriptEngine.Shared.ScriptBase.IRemoteInterface\n";
+            compiledScript += "{\n";
+            compiledScript +=
+                     compileScript;
+
+
+            compiledScript += "List<IEnumerator> parts = new List<IEnumerator>();\n";
             compiledScript += "System.Timers.Timer aTimer = new System.Timers.Timer(250);\n";
             compiledScript += "public LSL()\n{\n";
             compiledScript += "aTimer.Elapsed += new System.Timers.ElapsedEventHandler(Timer);\n";
@@ -494,10 +497,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             compiledScript += "public object Invoke(string lcMethod,object[] Parameters)\n {\n";
             compiledScript += "return this.GetType().InvokeMember(lcMethod, BindingFlags.InvokeMethod,null,this,Parameters);\n";
             compiledScript += "}\n";
-
-            compiledScript +=
-                     compileScript +
-                     "\n}"; // Close Class
+            compiledScript += "\n}"; // Close Class
 
             compiledScript += "\n}"; // Close Namespace
 
@@ -683,11 +683,13 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                         if (lang == enumCompileType.lsl)
                             text = ReplaceTypes(CompErr.ErrorText);
 
+                        if (lang == enumCompileType.lsl)
+                            text = CleanError(text);
+
                         // The Second Life viewer's script editor begins
                         // countingn lines and columns at 0, so we subtract 1.
-                        errtext += String.Format("({0},{1}): {4} {2}: {3}\n",
-                                lslPos.Key -1 , lslPos.Value -1 ,
-                                CompErr.ErrorNumber, text, severity);
+                        errtext += String.Format("({0},{1}): {3}: {2}\n",
+                                lslPos.Key - 1 , lslPos.Value - 1, text, severity);
                         hadErrors = true;
                     }
                 }
@@ -781,6 +783,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                 return new KeyValuePair<int, int>(line, col);
 
             KeyValuePair<int, int> ret = new KeyValuePair<int, int>();
+            line -= LinesToRemoveOnError;
 
             if (positionMap.TryGetValue(new KeyValuePair<int, int>(line, col),
                     out ret))
@@ -832,6 +835,29 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                     "OpenSim.Region.ScriptEngine.Shared.LSL_Types.list",
                     "list");
 
+            return message;
+        }
+
+        string CleanError(string message)
+        {
+            //Remove these long strings
+            message = message.Replace(
+                    "OpenSim.Region.ScriptEngine.Shared.ScriptBase.ScriptBaseClass",
+                    "");
+            if (message.Contains("The best overloaded method match for"))
+            {
+                string[] messageSplit = message.Split('\'');
+                string Function = messageSplit[1];
+                Function = Function.Remove(0, 1);
+                string[] FunctionSplit = Function.Split('(');
+                string FunctionName = FunctionSplit[0];
+                string Arguments = FunctionSplit[1].Split(')')[0];
+                message = "Incorrect argument in " + FunctionName + ", arguments should be " + Arguments + "\n";
+            }
+            if (message == "Unexpected EOF")
+            {
+                message = "Missing one or more }." + "\n";
+            }
             return message;
         }
 

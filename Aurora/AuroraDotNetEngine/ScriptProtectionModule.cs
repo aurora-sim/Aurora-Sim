@@ -103,7 +103,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 		public void CheckThreatLevel(ThreatLevel level, string function, SceneObjectPart m_host, string API)
         {
             if (!EnabledAPIs.Contains(API))
-                Error("Runtime Error: ", String.Format("{0} permission denied.  All "+API+" functions are disabled.", function)); // throws
+                Error("", String.Format("{0} permission denied.  All "+API+" functions are disabled.", function)); // throws
 
             if (!m_FunctionPerms.ContainsKey(function))
             {

@@ -238,7 +238,848 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             // cleaner way of doing this?
             retstr=retstr.Replace("\r", "");
 
+            CheckEventCasts(retstr);
+
             return retstr;
+        }
+
+        /// <summary>
+        /// Checks the C# script for the correct casts in events
+        /// This stops errors from misformed events ex. 'touch(vector3 position)' instead of 'touch(int touch)'
+        /// </summary>
+        /// <param name="script"></param>
+        private void CheckEventCasts(string script)
+        {
+            if (script.Contains("default_event_state_entry"))
+            {
+                string Valid = "default_event_state_entry()";
+                int charNum = script.IndexOf("default_event_state_entry");
+                string splitScript = script.Remove(0, charNum);
+                charNum = splitScript.IndexOf('\n');
+                splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
+                if (splitScript != Valid)
+                {
+                    FindLineNumbers("state_entry", "Too many arguments");
+                }
+            }
+            if (script.Contains("default_event_touch_start"))
+            {
+                //Valid : default_event_touch_start(LSL_Types.LSLInteger number)
+                int charNum = script.IndexOf("default_event_touch_start");
+                string splitScript = script.Remove(0, charNum);
+                charNum = splitScript.IndexOf('\n');
+                splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
+
+                string arguments = splitScript.Split('(')[1];
+                arguments = arguments.Split(')')[0];
+
+                string[] AllArguments = arguments.Split(',');
+
+                int i = 0;
+                foreach (string argument in AllArguments)
+                {
+                    if (i == 0)
+                    {
+                        if (!argument.Contains("LSL_Types.LSLInteger"))
+                            FindLineNumbers("touch_start", "Invalid argument");
+                    }
+                    i++;
+                }
+                if (i != 1)
+                {
+                    FindLineNumbers("touch_start", "Too many arguments");
+                }
+            }
+            if (script.Contains("default_event_at_rot_target"))
+            {
+                //Valid : default_event_at_rot_target(LSL_Types.LSLInteger tnum, LSL_Types.Quaternion targetrot, LSL_Types.Quaternion ourrot)
+                int charNum = script.IndexOf("default_event_at_rot_target");
+                string splitScript = script.Remove(0, charNum);
+                charNum = splitScript.IndexOf('\n');
+                splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
+
+                string arguments = splitScript.Split('(')[1];
+                arguments = arguments.Split(')')[0];
+
+                string[] AllArguments = arguments.Split(',');
+
+                int i = 0;
+                foreach (string argument in AllArguments)
+                {
+                    if (i == 0)
+                        if (!argument.Contains("LSL_Types.LSLInteger"))
+                            FindLineNumbers("at_rot_target", "Invalid argument");
+                    if (i == 1 || i == 2)
+                        if (!argument.Contains("LSL_Types.Quaternion"))
+                            FindLineNumbers("at_rot_target", "Invalid argument");
+                    i++;
+                }
+                if (i != 3)
+                {
+                    FindLineNumbers("at_rot_target", "Too many arguments");
+                }
+            }
+            if (script.Contains("default_event_at_target"))
+            {
+                //Valid : default_event_at_rot_target(LSL_Types.LSLInteger tnum, LSL_Types.Quaternion targetrot, LSL_Types.Quaternion ourrot)
+                int charNum = script.IndexOf("default_event_at_target");
+                string splitScript = script.Remove(0, charNum);
+                charNum = splitScript.IndexOf('\n');
+                splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
+
+                string arguments = splitScript.Split('(')[1];
+                arguments = arguments.Split(')')[0];
+
+                string[] AllArguments = arguments.Split(',');
+
+                int i = 0;
+                foreach (string argument in AllArguments)
+                {
+                    if (i == 0)
+                        if (!argument.Contains("LSL_Types.LSLInteger"))
+                            FindLineNumbers("at_target", "Invalid argument");
+                    if (i == 1 || i == 2)
+                        if (!argument.Contains("LSL_Types.Vector3"))
+                            FindLineNumbers("at_target", "Invalid argument");
+                    i++;
+                }
+                if (i != 3)
+                {
+                    FindLineNumbers("at_target", "Too many arguments");
+                }
+            }
+            if (script.Contains("default_event_not_at_target"))
+            {
+                int charNum = script.IndexOf("default_event_not_at_target");
+                string splitScript = script.Remove(0, charNum);
+                charNum = splitScript.IndexOf('\n');
+                splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
+
+                string arguments = splitScript.Split('(')[1];
+                arguments = arguments.Split(')')[0];
+
+                string[] AllArguments = arguments.Split(',');
+
+                string Valid = "default_event_not_at_target()";
+                if (splitScript != Valid)
+                {
+                    FindLineNumbers("not_at_target", "Too many arguments");
+                }
+            }
+            if (script.Contains("default_event_attach"))
+            {
+                int charNum = script.IndexOf("default_event_attach");
+                string splitScript = script.Remove(0, charNum);
+                charNum = splitScript.IndexOf('\n');
+                splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
+
+                string arguments = splitScript.Split('(')[1];
+                arguments = arguments.Split(')')[0];
+
+                string[] AllArguments = arguments.Split(',');
+
+                int i = 0;
+                foreach (string argument in AllArguments)
+                {
+                    if (i == 0)
+                    {
+                        if (!argument.Contains("LSL_Types.LSLString"))
+                            FindLineNumbers("attach", "Invalid argument");
+                    }
+                    i++;
+                }
+                if (i != 1)
+                {
+                    FindLineNumbers("attach", "Too many arguments");
+                }
+            }
+            if (script.Contains("default_event_changed"))
+            {
+                int charNum = script.IndexOf("default_event_changed");
+                string splitScript = script.Remove(0, charNum);
+                charNum = splitScript.IndexOf('\n');
+                splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
+
+                string arguments = splitScript.Split('(')[1];
+                arguments = arguments.Split(')')[0];
+
+                string[] AllArguments = arguments.Split(',');
+
+                int i = 0;
+                foreach (string argument in AllArguments)
+                {
+                    if (i == 0)
+                    {
+                        if (!argument.Contains("LSL_Types.LSLInteger"))
+                            FindLineNumbers("changed", "Invalid argument");
+                    }
+                    i++;
+                }
+                if (i != 1)
+                {
+                    FindLineNumbers("changed", "Too many arguments");
+                }
+            }
+            if (script.Contains("default_event_collision"))
+            {
+                int charNum = script.IndexOf("default_event_collision");
+                string splitScript = script.Remove(0, charNum);
+                charNum = splitScript.IndexOf('\n');
+                splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
+
+                string arguments = splitScript.Split('(')[1];
+                arguments = arguments.Split(')')[0];
+
+                string[] AllArguments = arguments.Split(',');
+
+                int i = 0;
+                foreach (string argument in AllArguments)
+                {
+                    if (i == 0)
+                    {
+                        if (!argument.Contains("LSL_Types.LSLInteger"))
+                            FindLineNumbers("collision", "Invalid argument");
+                    }
+                    i++;
+                }
+                if (i != 1)
+                {
+                    FindLineNumbers("collision", "Too many arguments");
+                }
+            }
+            if (script.Contains("default_event_collision_end"))
+            {
+                int charNum = script.IndexOf("default_event_collision_end");
+                string splitScript = script.Remove(0, charNum);
+                charNum = splitScript.IndexOf('\n');
+                splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
+
+                string arguments = splitScript.Split('(')[1];
+                arguments = arguments.Split(')')[0];
+
+                string[] AllArguments = arguments.Split(',');
+
+                int i = 0;
+                foreach (string argument in AllArguments)
+                {
+                    if (i == 0)
+                    {
+                        if (!argument.Contains("LSL_Types.LSLInteger"))
+                            FindLineNumbers("collision_end", "Invalid argument");
+                    }
+                    i++;
+                }
+                if (i != 1)
+                {
+                    FindLineNumbers("collision_end", "Too many arguments");
+                }
+            }
+            if (script.Contains("default_event_collision_start"))
+            {
+                int charNum = script.IndexOf("default_event_collision_start");
+                string splitScript = script.Remove(0, charNum);
+                charNum = splitScript.IndexOf('\n');
+                splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
+
+                string arguments = splitScript.Split('(')[1];
+                arguments = arguments.Split(')')[0];
+
+                string[] AllArguments = arguments.Split(',');
+
+                int i = 0;
+                foreach (string argument in AllArguments)
+                {
+                    if (i == 0)
+                    {
+                        if (!argument.Contains("LSL_Types.LSLInteger"))
+                            FindLineNumbers("collision_start", "Invalid argument");
+                    }
+                    i++;
+                }
+                if (i != 1)
+                {
+                    FindLineNumbers("collision_start", "Too many arguments");
+                }
+            }
+            if (script.Contains("default_event_run_time_permissions"))
+            {
+                int charNum = script.IndexOf("default_event_run_time_permissions");
+                string splitScript = script.Remove(0, charNum);
+                charNum = splitScript.IndexOf('\n');
+                splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
+
+                string arguments = splitScript.Split('(')[1];
+                arguments = arguments.Split(')')[0];
+
+                string[] AllArguments = arguments.Split(',');
+
+                int i = 0;
+                foreach (string argument in AllArguments)
+                {
+                    if (i == 0)
+                    {
+                        if (!argument.Contains("LSL_Types.LSLInteger"))
+                            FindLineNumbers("run_time_permissions", "Invalid argument");
+                    }
+                    i++;
+                }
+                if (i != 1)
+                {
+                    FindLineNumbers("run_time_permissions", "Too many arguments");
+                }
+            }
+            if (script.Contains("default_event_control"))
+            {
+                int charNum = script.IndexOf("default_event_control");
+                string splitScript = script.Remove(0, charNum);
+                charNum = splitScript.IndexOf('\n');
+                splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
+
+                string arguments = splitScript.Split('(')[1];
+                arguments = arguments.Split(')')[0];
+
+                string[] AllArguments = arguments.Split(',');
+
+                int i = 0;
+                foreach (string argument in AllArguments)
+                {
+                    if (i == 0)
+                        if (!argument.Contains("LSL_Types.LSLString"))
+                            FindLineNumbers("control", "Invalid argument");
+                    if (i == 1 || i == 2)
+                        if (!argument.Contains("LSL_Types.LSLInteger"))
+                            FindLineNumbers("control", "Invalid argument");
+                    i++;
+                }
+                if (i != 3)
+                {
+                    FindLineNumbers("control", "Too many arguments");
+                }
+            }
+            if (script.Contains("default_event_dataserver"))
+            {
+                int charNum = script.IndexOf("default_event_dataserver");
+                string splitScript = script.Remove(0, charNum);
+                charNum = splitScript.IndexOf('\n');
+                splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
+
+                string arguments = splitScript.Split('(')[1];
+                arguments = arguments.Split(')')[0];
+
+                string[] AllArguments = arguments.Split(',');
+
+                int i = 0;
+                foreach (string argument in AllArguments)
+                {
+                    if (i == 0 || i == 1)
+                        if (!argument.Contains("LSL_Types.LSLString"))
+                            FindLineNumbers("dataserver", "Invalid argument");
+                    i++;
+                }
+                if (i != 2)
+                {
+                    FindLineNumbers("dataserver", "Too many arguments");
+                }
+            }
+            if (script.Contains("default_event_timer"))
+            {
+                int charNum = script.IndexOf("default_event_timer");
+                string splitScript = script.Remove(0, charNum);
+                charNum = splitScript.IndexOf('\n');
+                splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
+
+                string arguments = splitScript.Split('(')[1];
+                arguments = arguments.Split(')')[0];
+
+                string[] AllArguments = arguments.Split(',');
+
+                string Valid = "default_event_timer()";
+                if (splitScript != Valid)
+                {
+                    FindLineNumbers("timer", "Too many arguments");
+                }
+            }
+            if (script.Contains("default_event_email"))
+            {
+                int charNum = script.IndexOf("default_event_email");
+                string splitScript = script.Remove(0, charNum);
+                charNum = splitScript.IndexOf('\n');
+                splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
+
+                string arguments = splitScript.Split('(')[1];
+                arguments = arguments.Split(')')[0];
+
+                string[] AllArguments = arguments.Split(',');
+
+                int i = 0;
+                foreach (string argument in AllArguments)
+                {
+                    if (i == 0 || i == 1 || i == 2 || i == 3)
+                        if (!argument.Contains("LSL_Types.LSLString"))
+                            FindLineNumbers("email", "Invalid argument");
+                    if (i == 4)
+                        if (!argument.Contains("LSL_Types.LSLInteger"))
+                            FindLineNumbers("email", "Invalid argument");
+                    i++;
+                }
+                if (i != 5)
+                {
+                    FindLineNumbers("email", "Too many arguments");
+                }
+            }
+            if (script.Contains("default_event_http_request"))
+            {
+                int charNum = script.IndexOf("default_event_http_request");
+                string splitScript = script.Remove(0, charNum);
+                charNum = splitScript.IndexOf('\n');
+                splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
+
+                string arguments = splitScript.Split('(')[1];
+                arguments = arguments.Split(')')[0];
+
+                string[] AllArguments = arguments.Split(',');
+
+                int i = 0;
+                foreach (string argument in AllArguments)
+                {
+                    if (i == 0 || i == 1 || i == 2)
+                        if (!argument.Contains("LSL_Types.LSLString"))
+                            FindLineNumbers("http_request", "Invalid argument");
+                    i++;
+                }
+                if (i != 3)
+                {
+                    FindLineNumbers("http_request", "Too many arguments");
+                }
+            }
+            if (script.Contains("default_event_http_response"))
+            {
+                int charNum = script.IndexOf("default_event_http_response");
+                string splitScript = script.Remove(0, charNum);
+                charNum = splitScript.IndexOf('\n');
+                splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
+
+                string arguments = splitScript.Split('(')[1];
+                arguments = arguments.Split(')')[0];
+
+                string[] AllArguments = arguments.Split(',');
+
+                int i = 0;
+                foreach (string argument in AllArguments)
+                {
+                    if (i == 0 || i == 3)
+                        if (!argument.Contains("LSL_Types.LSLString"))
+                            FindLineNumbers("http_response", "Invalid argument");
+                    if (i == 1)
+                        if (!argument.Contains("LSL_Types.LSLInteger"))
+                            FindLineNumbers("http_response", "Invalid argument");
+                    if (i == 2)
+                        if (!argument.Contains("LSL_Types.list"))
+                            FindLineNumbers("http_response", "Invalid argument");
+                    i++;
+                }
+                if (i != 3)
+                {
+                    FindLineNumbers("http_response", "Too many arguments");
+                }
+            }
+            if (script.Contains("default_event_land_collision_end"))
+            {
+                int charNum = script.IndexOf("default_event_land_collision_end");
+                string splitScript = script.Remove(0, charNum);
+                charNum = splitScript.IndexOf('\n');
+                splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
+
+                string arguments = splitScript.Split('(')[1];
+                arguments = arguments.Split(')')[0];
+
+                string[] AllArguments = arguments.Split(',');
+
+                int i = 0;
+                foreach (string argument in AllArguments)
+                {
+                    if (i == 0)
+                        if (!argument.Contains("LSL_Types.Vector3"))
+                            FindLineNumbers("land_collision_end", "Invalid argument");
+                    i++;
+                }
+                if (i != 1)
+                {
+                    FindLineNumbers("land_collision_end", "Too many arguments");
+                }
+            }
+            if (script.Contains("default_event_land_collision_start"))
+            {
+                int charNum = script.IndexOf("default_event_land_collision_start");
+                string splitScript = script.Remove(0, charNum);
+                charNum = splitScript.IndexOf('\n');
+                splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
+
+                string arguments = splitScript.Split('(')[1];
+                arguments = arguments.Split(')')[0];
+
+                string[] AllArguments = arguments.Split(',');
+
+                int i = 0;
+                foreach (string argument in AllArguments)
+                {
+                    if (i == 0)
+                        if (!argument.Contains("LSL_Types.Vector3"))
+                            FindLineNumbers("land_collision_start", "Invalid argument");
+                    i++;
+                }
+                if (i != 1)
+                {
+                    FindLineNumbers("land_collision_start", "Too many arguments");
+                }
+            }
+            if (script.Contains("default_event_link_message"))
+            {
+                int charNum = script.IndexOf("default_event_link_message");
+                string splitScript = script.Remove(0, charNum);
+                charNum = splitScript.IndexOf('\n');
+                splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
+
+                string arguments = splitScript.Split('(')[1];
+                arguments = arguments.Split(')')[0];
+
+                string[] AllArguments = arguments.Split(',');
+
+                int i = 0;
+                foreach (string argument in AllArguments)
+                {
+                    if (i == 0 || i == 1)
+                        if (!argument.Contains("LSL_Types.LSLInteger"))
+                            FindLineNumbers("link_message", "Invalid argument");
+                    if (i == 2 || i == 3)
+                        if (!argument.Contains("LSL_Types.LSLString"))
+                            FindLineNumbers("link_message", "Invalid argument");
+                    i++;
+                }
+                if (i != 4)
+                {
+                    FindLineNumbers("link_message", "Too many arguments");
+                }
+            }
+            if (script.Contains("default_event_listen"))
+            {
+                int charNum = script.IndexOf("default_event_listen");
+                string splitScript = script.Remove(0, charNum);
+                charNum = splitScript.IndexOf('\n');
+                splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
+
+                string arguments = splitScript.Split('(')[1];
+                arguments = arguments.Split(')')[0];
+
+                string[] AllArguments = arguments.Split(',');
+
+                int i = 0;
+                foreach (string argument in AllArguments)
+                {
+                    if (i == 0)
+                        if (!argument.Contains("LSL_Types.LSLInteger"))
+                            FindLineNumbers("listen", "Invalid argument");
+                    if (i ==1 || i == 2 || i == 3)
+                        if (!argument.Contains("LSL_Types.LSLString"))
+                            FindLineNumbers("listen", "Invalid argument");
+                    i++;
+                }
+                if (i != 4)
+                {
+                    FindLineNumbers("listen", "Too many arguments");
+                }
+            }
+            if (script.Contains("default_event_on_rez"))
+            {
+                int charNum = script.IndexOf("default_event_on_rez");
+                string splitScript = script.Remove(0, charNum);
+                charNum = splitScript.IndexOf('\n');
+                splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
+
+                string arguments = splitScript.Split('(')[1];
+                arguments = arguments.Split(')')[0];
+
+                string[] AllArguments = arguments.Split(',');
+
+                int i = 0;
+                foreach (string argument in AllArguments)
+                {
+                    if (i == 0)
+                        if (!argument.Contains("LSL_Types.LSLInteger"))
+                            FindLineNumbers("on_rez", "Invalid argument");
+                    i++;
+                }
+                if (i != 1)
+                {
+                    FindLineNumbers("on_rez", "Too many arguments");
+                }
+            }
+            if (script.Contains("default_event_money"))
+            {
+                int charNum = script.IndexOf("default_event_money");
+                string splitScript = script.Remove(0, charNum);
+                charNum = splitScript.IndexOf('\n');
+                splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
+
+                string arguments = splitScript.Split('(')[1];
+                arguments = arguments.Split(')')[0];
+
+                string[] AllArguments = arguments.Split(',');
+
+                int i = 0;
+                foreach (string argument in AllArguments)
+                {
+                    if (i == 1)
+                        if (!argument.Contains("LSL_Types.LSLString"))
+                            FindLineNumbers("money", "Invalid argument");
+                    if (i == 0)
+                        if (!argument.Contains("LSL_Types.LSLInteger"))
+                            FindLineNumbers("money", "Invalid argument");
+                    i++;
+                }
+                if (i != 2)
+                {
+                    FindLineNumbers("money", "Too many arguments");
+                }
+            }
+            if (script.Contains("default_event_moving_end"))
+            {
+                int charNum = script.IndexOf("default_event_moving_end");
+                string splitScript = script.Remove(0, charNum);
+                charNum = splitScript.IndexOf('\n');
+                splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
+
+                string arguments = splitScript.Split('(')[1];
+                arguments = arguments.Split(')')[0];
+
+                string[] AllArguments = arguments.Split(',');
+
+                string Valid = "default_event_moving_end()";
+                if (splitScript != Valid)
+                {
+                    FindLineNumbers("moving_end", "Too many arguments");
+                }
+            }
+            if (script.Contains("default_event_moving_start"))
+            {
+                int charNum = script.IndexOf("default_event_moving_start");
+                string splitScript = script.Remove(0, charNum);
+                charNum = splitScript.IndexOf('\n');
+                splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
+
+                string arguments = splitScript.Split('(')[1];
+                arguments = arguments.Split(')')[0];
+
+                string[] AllArguments = arguments.Split(',');
+
+                string Valid = "default_event_moving_start()";
+                if (splitScript != Valid)
+                {
+                    FindLineNumbers("moving_start", "Too many arguments");
+                }
+            }
+            if (script.Contains("default_event_no_sensor"))
+            {
+                int charNum = script.IndexOf("default_event_no_sensor");
+                string splitScript = script.Remove(0, charNum);
+                charNum = splitScript.IndexOf('\n');
+                splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
+
+                string arguments = splitScript.Split('(')[1];
+                arguments = arguments.Split(')')[0];
+
+                string[] AllArguments = arguments.Split(',');
+
+                string Valid = "default_event_no_sensor()";
+                if (splitScript != Valid)
+                {
+                    FindLineNumbers("no_sensor", "Too many arguments");
+                }
+            }
+            if (script.Contains("default_event_not_at_rot_target"))
+            {
+                int charNum = script.IndexOf("default_event_not_at_rot_target");
+                string splitScript = script.Remove(0, charNum);
+                charNum = splitScript.IndexOf('\n');
+                splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
+
+                string arguments = splitScript.Split('(')[1];
+                arguments = arguments.Split(')')[0];
+
+                string[] AllArguments = arguments.Split(',');
+
+                string Valid = "default_event_not_at_rot_target()";
+                if (splitScript != Valid)
+                {
+                    FindLineNumbers("not_at_rot_target", "Too many arguments");
+                }
+            }
+            if (script.Contains("default_event_object_rez"))
+            {
+                int charNum = script.IndexOf("default_event_object_rez");
+                string splitScript = script.Remove(0, charNum);
+                charNum = splitScript.IndexOf('\n');
+                splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
+
+                string arguments = splitScript.Split('(')[1];
+                arguments = arguments.Split(')')[0];
+
+                string[] AllArguments = arguments.Split(',');
+
+                int i = 0;
+                foreach (string argument in AllArguments)
+                {
+                    if (i == 0)
+                        if (!argument.Contains("LSL_Types.LSLString"))
+                            FindLineNumbers("object_rez", "Invalid argument");
+                    i++;
+                }
+                if (i != 1)
+                {
+                    FindLineNumbers("object_rez", "Too many arguments");
+                }
+            }
+            if (script.Contains("default_event_remote_data"))
+            {
+                int charNum = script.IndexOf("default_event_remote_data");
+                string splitScript = script.Remove(0, charNum);
+                charNum = splitScript.IndexOf('\n');
+                splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
+
+                string arguments = splitScript.Split('(')[1];
+                arguments = arguments.Split(')')[0];
+
+                string[] AllArguments = arguments.Split(',');
+
+                int i = 0;
+                foreach (string argument in AllArguments)
+                {
+                    if (i == 0 || i == 4)
+                        if (!argument.Contains("LSL_Types.LSLInteger"))
+                            FindLineNumbers("remote_data", "Invalid argument");
+                    if (i == 1 || i == 2 || i == 3 || i == 5)
+                        if (!argument.Contains("LSL_Types.LSLString"))
+                            FindLineNumbers("remote_data", "Invalid argument");
+                    i++;
+                }
+                if (i != 6)
+                {
+                    FindLineNumbers("remote_data", "Too many arguments");
+                }
+            }
+            if (script.Contains("default_event_sensor"))
+            {
+                int charNum = script.IndexOf("default_event_sensor");
+                string splitScript = script.Remove(0, charNum);
+                charNum = splitScript.IndexOf('\n');
+                splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
+
+                string arguments = splitScript.Split('(')[1];
+                arguments = arguments.Split(')')[0];
+
+                string[] AllArguments = arguments.Split(',');
+
+                int i = 0;
+                foreach (string argument in AllArguments)
+                {
+                    if (i == 0)
+                        if (!argument.Contains("LSL_Types.LSLInteger"))
+                            FindLineNumbers("sensor", "Invalid argument");
+                    i++;
+                }
+                if (i != 1)
+                {
+                    FindLineNumbers("sensor", "Too many arguments");
+                }
+            }
+            if (script.Contains("default_event_state_exit"))
+            {
+                int charNum = script.IndexOf("default_event_state_exit");
+                string splitScript = script.Remove(0, charNum);
+                charNum = splitScript.IndexOf('\n');
+                splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
+
+                string arguments = splitScript.Split('(')[1];
+                arguments = arguments.Split(')')[0];
+
+                string[] AllArguments = arguments.Split(',');
+
+                string Valid = "default_event_state_exit()";
+                if (splitScript != Valid)
+                {
+                    FindLineNumbers("state_exit", "Too many arguments");
+                }
+            }
+            if (script.Contains("default_event_touch"))
+            {
+                int charNum = script.IndexOf("default_event_touch");
+                string splitScript = script.Remove(0, charNum);
+                charNum = splitScript.IndexOf('\n');
+                splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
+
+                string arguments = splitScript.Split('(')[1];
+                arguments = arguments.Split(')')[0];
+
+                string[] AllArguments = arguments.Split(',');
+
+                int i = 0;
+                foreach (string argument in AllArguments)
+                {
+                    if (i == 0)
+                        if (!argument.Contains("LSL_Types.LSLInteger"))
+                            FindLineNumbers("touch", "Invalid argument");
+                    i++;
+                }
+                if (i != 1)
+                {
+                    FindLineNumbers("touch", "Too many arguments");
+                }
+            }
+            if (script.Contains("default_event_touch_end"))
+            {
+                int charNum = script.IndexOf("default_event_touch_end");
+                string splitScript = script.Remove(0, charNum);
+                charNum = splitScript.IndexOf('\n');
+                splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
+
+                string arguments = splitScript.Split('(')[1];
+                arguments = arguments.Split(')')[0];
+
+                string[] AllArguments = arguments.Split(',');
+
+                int i = 0;
+                foreach (string argument in AllArguments)
+                {
+                    if (i == 0)
+                        if (!argument.Contains("LSL_Types.LSLInteger"))
+                            FindLineNumbers("touch_end", "Invalid argument");
+                    i++;
+                }
+                if (i != 1)
+                {
+                    FindLineNumbers("touch_end", "Too many arguments");
+                }
+            }
+        }
+
+        void FindLineNumbers(string EventName, string Problem)
+        {
+            int lineNumber = 0;
+            int charNumber = 0;
+            int i = 0;
+            foreach (string str in OriginalScript.Split('\n'))
+            {
+                if (str.Contains(EventName))
+                {
+                    lineNumber = i;
+                    charNumber = str.IndexOf(EventName);
+                    break;
+                }
+                i++;
+            }
+            throw new Exception(String.Format("({0},{1}) {2}",
+                lineNumber,
+                charNumber, Problem + " in " + EventName));
         }
 
         /// <summary>
