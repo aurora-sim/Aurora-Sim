@@ -213,17 +213,17 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("auto_scale", ColumnTypes.String100),
                 ColDef("auto_zoom", ColumnTypes.String100),
                 ColDef("controls", ColumnTypes.String100),
-                ColDef("current_url", ColumnTypes.String100),
+                ColDef("current_url", ColumnTypes.String8196),
                 ColDef("first_click_interact", ColumnTypes.String100),
                 ColDef("height_pixels", ColumnTypes.String100),
-                ColDef("home_url", ColumnTypes.String100),
+                ColDef("home_url", ColumnTypes.String8196),
                 ColDef("perms_control", ColumnTypes.String100),
                 ColDef("perms_interact", ColumnTypes.String100),
                 ColDef("whitelist", ColumnTypes.String100),
                 ColDef("whitelist_enable", ColumnTypes.String100),
                 ColDef("width_pixels", ColumnTypes.String100),
                 ColDef("object_media_version", ColumnTypes.String100, true),
-                ColDef("side", ColumnTypes.String100)
+                ColDef("side", ColumnTypes.String100, true)
                 ));
             
             AddSchema("auroraprims", ColDefs(
