@@ -241,9 +241,12 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
                 FastInvokeHandler fastInvoker = GetMethodInvoker(ev);
                 fastInvoker(m_Script, args);
             }
-            OpenMetaverse.UUID ID = OpenMetaverse.UUID.Random();
-            m_enumerators.Add(ID, thread);
-            return ID;
+            if (Start == OpenMetaverse.UUID.Zero)
+            {
+                Start = OpenMetaverse.UUID.Random();
+                m_enumerators.Add(Start, thread);
+            }
+            return Start;
         }
 
         #region From http://www.codeproject.com/KB/cs/FastMethodInvoker.aspx Thanks to Luyan for this code
