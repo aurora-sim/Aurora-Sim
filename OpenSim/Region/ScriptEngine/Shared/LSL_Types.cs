@@ -1469,10 +1469,6 @@ namespace OpenSim.Region.ScriptEngine.Shared
             {
                 return new LSLString(s1.m_string + s2.ToString());
             }
-            public static LSLString operator +(LSLString s1, list s2)
-            {
-                return new LSLString(s1.m_string + s2.ToPrettyString());
-            }
             public static LSLString operator +(LSL_Types.Vector3 s1, LSLString s2)
             {
                 return new LSLString(s1.ToString() + s2.m_string);
@@ -1488,10 +1484,6 @@ namespace OpenSim.Region.ScriptEngine.Shared
             public static LSLString operator +(LSL_Types.LSLFloat s1, LSLString s2)
             {
                 return new LSLString(s1.ToString() + s2.m_string);
-            }
-            public static LSLString operator +(LSL_Types.list s1, LSLString s2)
-            {
-                return new LSLString(s1.ToPrettyString() + s2.m_string);
             }
 
             public static explicit operator double(LSLString s)

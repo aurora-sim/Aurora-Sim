@@ -721,6 +721,10 @@ namespace OpenSim.Region.Framework.Scenes
                             presence.RegionHandle);
                         data = Encoding.ASCII.GetBytes(strdata);
                     }
+                    if (invType == (sbyte)InventoryType.LSL)
+                    {
+                        data = Encoding.ASCII.GetBytes(DefaultLSLScript);
+                    }
 
                     AssetBase asset = CreateAsset(name, description, assetType, data, remoteClient.AgentId);
                     AssetService.Store(asset);

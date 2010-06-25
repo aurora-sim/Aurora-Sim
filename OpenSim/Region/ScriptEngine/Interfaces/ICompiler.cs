@@ -76,7 +76,7 @@ namespace OpenSim.Region.ScriptEngine.Interfaces
         void InitApi(string name, IScriptApi data);
 
         int GetStateEventFlags(string state);
-        int ExecuteEvent(string state, string FunctionName, object[] args, int startingposition);
+        OpenMetaverse.UUID ExecuteEvent(string state, string FunctionName, object[] args, OpenMetaverse.UUID Start);
         Dictionary<string, Object> GetVars();
         void SetVars(Dictionary<string, Object> vars);
         void ResetVars();

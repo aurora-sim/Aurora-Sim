@@ -50,6 +50,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
         protected IScript m_Script;
 
         protected Dictionary<string, scriptEvents> m_eventFlagsMap = new Dictionary<string, scriptEvents>();
+        protected Dictionary<OpenMetaverse.UUID, IEnumerator> m_enumerators = new Dictionary<OpenMetaverse.UUID, IEnumerator>();
 
         [Flags]
         public enum scriptEvents : int
@@ -137,7 +138,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
             return (eventFlags);
         }
 
-        public int ExecuteEvent(string state, string FunctionName, object[] args, int StartingPosition)
+        public OpenMetaverse.UUID ExecuteEvent(string state, string FunctionName, object[] args, OpenMetaverse.UUID Start)
         {
             // IMPORTANT: Types and MemberInfo-derived objects require a LOT of memory.
             // Instead use RuntimeTypeHandle, RuntimeFieldHandle and RunTimeHandle (IntPtr) instead!
@@ -190,23 +191,35 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
                 if (ev == null) // No event by that name!
                 {
                     //m_log.Debug("ScriptEngine Can not find any event named:" + EventName);
-                    return 0;
+                    return OpenMetaverse.UUID.Zero;
                 }
 			}
-            FastInvokeHandler fastInvoker = GetMethodInvoker(ev);
-			IEnumerator thread = (IEnumerator)fastInvoker(m_Script, args);
+            IEnumerator thread = null;
+            if (Start != OpenMetaverse.UUID.Zero)
+            {
+                m_enumerators.TryGetValue(Start, out thread);
+            }
+            else
+            {
+                FastInvokeHandler fastInvoker = GetMethodInvoker(ev);
+			    thread = (IEnumerator)fastInvoker(m_Script, args);
+            }
             if (thread != null)
             {
-                int i = StartingPosition;
+                int i = 0;
                 bool running = false;
-                while (i < StartingPosition + 5)
+                while (i < 5)
                 {
                     i++;
                     try
                     {
                         running = thread.MoveNext();
                         if (!running)
-                            return 0;
+                        {
+                            if(m_enumerators.ContainsKey(Start))
+                                m_enumerators.Remove(Start);
+                            return OpenMetaverse.UUID.Zero;
+                        }
                     }
                     catch (TargetInvocationException tie)
                     {
@@ -225,9 +238,12 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
             }
             else
             {
+                FastInvokeHandler fastInvoker = GetMethodInvoker(ev);
                 fastInvoker(m_Script, args);
             }
-            return StartingPosition + 5;
+            OpenMetaverse.UUID ID = OpenMetaverse.UUID.Random();
+            m_enumerators.Add(ID, thread);
+            return ID;
         }
 
         #region From http://www.codeproject.com/KB/cs/FastMethodInvoker.aspx Thanks to Luyan for this code

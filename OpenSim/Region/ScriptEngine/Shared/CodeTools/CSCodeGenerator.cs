@@ -1764,13 +1764,6 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
         {
             string retstr = String.Empty;
 
-
-            if (IsParentEnumerable)
-            {
-                retstr += GenerateLine("yield return null;");
-                IsInLoop = true;
-            }
-
             int comma = fls.kids.Count - 1;  // tells us whether to print a comma
 
             // It's possible that all we have is an empty Ident, for example:

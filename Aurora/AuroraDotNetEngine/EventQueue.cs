@@ -92,13 +92,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             try
             {
                 QIS.ID.SetEventParams(QIS.llDetectParams);
-                int Running = 0;
+                UUID Running = UUID.Zero;
                 Running = QIS.ID.Script.ExecuteEvent(
                     QIS.ID.State,
                     QIS.functionName,
                     QIS.param, QIS.CurrentlyAt);
                 //Finished with nothing left.
-                if (Running == 0)
+                if (Running == UUID.Zero)
                 {
                     if (QIS.functionName == "timer")
                         QIS.ID.TimerQueued = false;

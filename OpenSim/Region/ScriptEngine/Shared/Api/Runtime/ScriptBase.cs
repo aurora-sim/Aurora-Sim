@@ -93,9 +93,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
             return (int)m_Executor.GetStateEventFlags(state);
         }
 
-        public int ExecuteEvent(string state, string FunctionName, object[] args, int startingposition)
+        public OpenMetaverse.UUID ExecuteEvent(string state, string FunctionName, object[] args, OpenMetaverse.UUID Start)
         {
-            return m_Executor.ExecuteEvent(state, FunctionName, args, startingposition);
+            return m_Executor.ExecuteEvent(state, FunctionName, args, Start);
         }
 
         public string[] GetApis()

@@ -1708,6 +1708,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 m_log.Debug("StandupCode Executed");
                 SceneObjectPart part = m_scene.GetSceneObjectPart(m_parentID);
+                m_log.Debug("StandupCode Executed part 2");
                 if (part != null)
                 {
                     TaskInventoryDictionary taskIDict = part.TaskInventory;

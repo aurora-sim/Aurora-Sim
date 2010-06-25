@@ -40,7 +40,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (part != null)
             {
-                if (part.ParentID == 0)
+                if (part.UUID == part.ParentGroup.RootPart.UUID)
                 {
                     Position = part.ParentGroup.AbsolutePosition;
                     Rotation = part.RotationOffset;
@@ -59,9 +59,9 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (part != null)
             {
-                if (part.ParentID == 0)
+                if (part.UUID == part.ParentGroup.RootPart.UUID)
                 {
-                    if (Position == part.ParentGroup.AbsolutePosition && Rotation == part.ParentGroup.Rotation)
+                    if (Position == part.AbsolutePosition && Rotation == part.RotationOffset && Scale == part.Shape.Scale)
                         return true;
                     else
                         return false;
@@ -84,14 +84,20 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 part.Undoing = true;
 
-                if (part.ParentID == 0)
+                if (part.UUID == part.ParentGroup.RootPart.UUID)
                 {
+                    part.Undoing = true;
                     if (Position != Vector3.Zero)
                         part.ParentGroup.AbsolutePosition = Position;
                     part.RotationOffset = Rotation;
                     if (Scale != Vector3.Zero)
-                        part.Resize(Scale);
-                    part.ParentGroup.ScheduleGroupForTerseUpdate();
+                        part.Scale = Scale;
+                    part.ParentGroup.ScheduleGroupForFullUpdate();
+                    foreach (SceneObjectPart child in part.ParentGroup.Children.Values)
+                    {
+                        if(child.UUID != part.UUID)
+                            child.Undo();
+                    }
                 }
                 else
                 {
@@ -99,10 +105,10 @@ namespace OpenSim.Region.Framework.Scenes
                         part.OffsetPosition = Position;
                     part.UpdateRotation(Rotation);
                     if (Scale != Vector3.Zero)
-                        part.Resize(Scale); part.ScheduleTerseUpdate();
+                        part.Resize(Scale);
                 }
                 part.Undoing = false;
-
+                part.ScheduleFullUpdate();
             }
         }
         public void PlayfwdState(SceneObjectPart part)

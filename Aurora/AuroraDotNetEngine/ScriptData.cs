@@ -130,7 +130,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     SetEventParams(new DetectParams[0]);
                     Script.ExecuteEvent(State,
                                         "state_exit",
-                                        new object[0], 0);
+                                        new object[0], UUID.Zero);
                 }
             }
             ReleaseControls();

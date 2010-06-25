@@ -979,6 +979,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     return true;
                 QIS.ID.ChangedInQueue.Add(changed);
             }
+            else if (FunctionName == "link_message")
+            {
+            }
             else
             {
                 AuroraDotNetEngine.EventQueue.ProcessQIS(QIS);
@@ -1333,7 +1336,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public object[] param;
         public Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>>
                 LineMap;
-        public int CurrentlyAt = 0;
+        public OpenMetaverse.UUID CurrentlyAt = OpenMetaverse.UUID.Zero;
     }
     public class StateQueueItem
     {
