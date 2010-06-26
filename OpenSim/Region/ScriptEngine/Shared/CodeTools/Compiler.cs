@@ -118,7 +118,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             AllowedCompilers.Clear();
 
             // Default language
-            string defaultCompileLanguage = m_scriptEngine.Config.GetString("DefaultCompileLanguage", "lsl").ToLower();
+            DefaultCompileLanguage = m_scriptEngine.Config.GetString("DefaultCompileLanguage", "lsl").ToLower();
 
             bool found = false;
             foreach (string strl in allowComp.Split(','))
@@ -129,7 +129,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                     if (converter.Name == strlan)
                     {
                         AllowedCompilers.Add(strlan, converter);
-                        if (converter.Name == defaultCompileLanguage)
+                        if (converter.Name == DefaultCompileLanguage)
                         {
                             found = true;
                         }
@@ -141,13 +141,13 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             
             if (!found)
                 m_log.Error("[Compiler]: " +
-                                            "Config error. Default language \"" + defaultCompileLanguage + "\" specified in \"DefaultCompileLanguage\" is not recognized as a valid language. Changing default to: \"lsl\".");
+                                            "Config error. Default language \"" + DefaultCompileLanguage + "\" specified in \"DefaultCompileLanguage\" is not recognized as a valid language. Changing default to: \"lsl\".");
 
             // Is this language in allow-list?
-            if (!AllowedCompilers.ContainsKey(defaultCompileLanguage))
+            if (!AllowedCompilers.ContainsKey(DefaultCompileLanguage))
             {
                 m_log.Error("[Compiler]: " +
-                            "Config error. Default language \"" + defaultCompileLanguage + "\"specified in \"DefaultCompileLanguage\" is not in list of \"AllowedCompilers\". Scripts may not be executed!");
+                            "Config error. Default language \"" + DefaultCompileLanguage + "\"specified in \"DefaultCompileLanguage\" is not in list of \"AllowedCompilers\". Scripts may not be executed!");
             }
 
             // We now have an allow-list, a mapping list, and a default language
@@ -211,8 +211,6 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                 if (Script.StartsWith("//" + convert.Name, true, CultureInfo.InvariantCulture))
                     language = convert.Name;
             }
-            // Remove the chars
-            Script = Script.Substring(4, Script.Length - 4);
 
             if (!AllowedCompilers.ContainsKey(language))
             {
@@ -397,20 +395,28 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
 
                     if (severity == "Error")
                     {
-                        lslPos = FindErrorPosition(CompErr.Line, CompErr.Column, ((CSCodeGenerator)LSL_Converter).PositionMap);
                         string text = CompErr.ErrorText;
-
+                        int LineN = 0;
+                        int CharN = 0;
                         // Use LSL type names
                         if (converter.Name == "lsl")
                         {
                             text = ReplaceTypes(CompErr.ErrorText);
                             text = CleanError(text);
+                            lslPos = FindErrorPosition(CompErr.Line, CompErr.Column, ((CSCodeGenerator)LSL_Converter).PositionMap);
+                            LineN = lslPos.Key - 1;
+                            CharN = lslPos.Value - 1;
+                        }
+                        else
+                        {
+                            LineN = CompErr.Line;
+                            CharN = CompErr.Column;
                         }
 
                         // The Second Life viewer's script editor begins
                         // countingn lines and columns at 0, so we subtract 1.
                         errtext += String.Format("({0},{1}): {3}: {2}\n",
-                                lslPos.Key - 1 , lslPos.Value - 1, text, severity);
+                                LineN, CharN, text, severity);
                         hadErrors = true;
                     }
                 }

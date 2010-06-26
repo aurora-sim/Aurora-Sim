@@ -39,12 +39,12 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
         public void Dispose()
         {
         }
-        private static string CreateCompilerScript(string compileScript)
+        private string CreateCompilerScript(string compileScript)
         {
             compileScript = String.Empty +
             "import OpenSim.Region.ScriptEngine.Shared; import System.Collections.Generic;\r\n" +
-            "package SecondLife {\r\n" +
-            "class Script extends OpenSim.Region.ScriptEngine.Shared.ScriptBase.ScriptBaseClass { \r\n" +
+            "package Script {\r\n" +
+            "class ScriptClass extends OpenSim.Region.ScriptEngine.Shared.ScriptBase.ScriptBaseClass { \r\n" +
             compileScript +
             "} }\r\n";
             return compileScript;

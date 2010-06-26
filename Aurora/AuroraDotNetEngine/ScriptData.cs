@@ -477,7 +477,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //Create the app domain if needed.
             try
             {
-                Script = m_ScriptEngine.AppDomainManager.LoadScript(AssemblyName, "Script.LSL", out AppDomain);
+                Script = m_ScriptEngine.AppDomainManager.LoadScript(AssemblyName, "Script.ScriptClass", out AppDomain);
                 ScriptEngine.ScriptProtection.AddPreviouslyCompiled(Source, this);
             }
             catch (System.IO.FileNotFoundException) // Not valid!!!

@@ -41,13 +41,13 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
         public void Dispose()
         {
         }
-        private static string CreateCompilerScript(string compileScript)
+        private string CreateCompilerScript(string compileScript)
         {
             compileScript = String.Empty +
                    "using OpenSim.Region.ScriptEngine.Shared.YieldProlog; " +
                     "using OpenSim.Region.ScriptEngine.Shared; using System.Collections.Generic;\r\n" +
-                    String.Empty + "namespace SecondLife { " +
-                    String.Empty + "public class Script : OpenSim.Region.ScriptEngine.Shared.ScriptBase.ScriptBaseClass  { \r\n" +
+                    String.Empty + "namespace Script { " +
+                    String.Empty + "public class ScriptClass : OpenSim.Region.ScriptEngine.Shared.ScriptBase.ScriptBaseClass  { \r\n" +
                 //@"public Script() { } " +
                     @"static OpenSim.Region.ScriptEngine.Shared.YieldProlog.YP YP=null; " +
                     @"public Script() {  YP= new OpenSim.Region.ScriptEngine.Shared.YieldProlog.YP(); } " +

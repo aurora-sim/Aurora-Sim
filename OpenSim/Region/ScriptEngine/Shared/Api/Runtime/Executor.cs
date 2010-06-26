@@ -240,6 +240,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
             {
                 FastInvokeHandler fastInvoker = GetMethodInvoker(ev);
                 fastInvoker(m_Script, args);
+                return OpenMetaverse.UUID.Zero;
             }
             if (Start == OpenMetaverse.UUID.Zero)
             {

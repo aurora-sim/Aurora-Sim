@@ -39,7 +39,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools.Converters
         public void Dispose()
         {
         }
-        private static string CreateCompilerScript(string compileScript)
+        private string CreateCompilerScript(string compileScript)
         {
             string compiledScript = "";
             compiledScript = String.Empty +
@@ -50,7 +50,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools.Converters
                 "namespace Script\n" +
                 "{\n";
 
-            compiledScript += "public class CS : OpenSim.Region.ScriptEngine.Shared.ScriptBase.ScriptBaseClass, IDisposable, OpenSim.Region.ScriptEngine.Shared.ScriptBase.IRemoteInterface\n";
+            compiledScript += "public class ScriptClass : OpenSim.Region.ScriptEngine.Shared.ScriptBase.ScriptBaseClass, IDisposable\n";
             compiledScript += "{\n";
             compiledScript +=
                      compileScript;

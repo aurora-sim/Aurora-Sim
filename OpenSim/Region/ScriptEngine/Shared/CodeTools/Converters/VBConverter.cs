@@ -28,6 +28,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
 
         public void Convert(string Script, out string CompiledScript, out string[] Warnings)
         {
+            // Remove the //vb chars
+            Script = Script.Substring(4, Script.Length - 4);
             Warnings = new List<string>().ToArray();
             CompiledScript = CreateCompilerScript(Script);
         }
@@ -39,12 +41,12 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
         public void Dispose()
         {
         }
-        private static string CreateCompilerScript(string compileScript)
+        private string CreateCompilerScript(string compileScript)
         {
             compileScript = String.Empty +
             "Imports OpenSim.Region.ScriptEngine.Shared: Imports System.Collections.Generic: " +
-            String.Empty + "NameSpace SecondLife:" +
-            String.Empty + "Public Class Script: Inherits OpenSim.Region.ScriptEngine.Shared.ScriptBase.ScriptBaseClass: " +
+            String.Empty + "NameSpace Script:" +
+            String.Empty + "Public Class ScriptClass: Inherits OpenSim.Region.ScriptEngine.Shared.ScriptBase.ScriptBaseClass: " +
             "\r\nPublic Sub New()\r\nEnd Sub: " +
             compileScript +
             ":End Class :End Namespace\r\n";

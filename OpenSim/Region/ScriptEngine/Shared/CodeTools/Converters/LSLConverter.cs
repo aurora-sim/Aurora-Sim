@@ -42,7 +42,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
         public void Dispose()
         {
         }
-        private static string CreateCompilerScript(string compileScript)
+        private string CreateCompilerScript(string compileScript)
         {
             string compiledScript = "";
             compiledScript = String.Empty +
@@ -55,7 +55,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                 "namespace Script\n" +
                 "{\n";
 
-            compiledScript += "[Serializable]\n public class LSL : OpenSim.Region.ScriptEngine.Shared.ScriptBase.ScriptBaseClass, IDisposable, OpenSim.Region.ScriptEngine.Shared.ScriptBase.IRemoteInterface\n";
+            compiledScript += "[Serializable]\n public class ScriptClass : OpenSim.Region.ScriptEngine.Shared.ScriptBase.ScriptBaseClass, IDisposable, OpenSim.Region.ScriptEngine.Shared.ScriptBase.IRemoteInterface\n";
             compiledScript += "{\n";
             compiledScript +=
                      compileScript;
@@ -63,12 +63,12 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
 
             compiledScript += "List<IEnumerator> parts = new List<IEnumerator>();\n";
             compiledScript += "System.Timers.Timer aTimer = new System.Timers.Timer(250);\n";
-            compiledScript += "public LSL()\n{\n";
+            compiledScript += "public ScriptClass()\n{\n";
             compiledScript += "aTimer.Elapsed += new System.Timers.ElapsedEventHandler(Timer);\n";
             compiledScript += "aTimer.Enabled = true;\n";
             compiledScript += "aTimer.Start();\n";
             compiledScript += "}\n";
-            compiledScript += "~LSL()\n{\n";
+            compiledScript += "~ScriptClass()\n{\n";
             compiledScript += "aTimer.Stop();\n";
             compiledScript += "aTimer.Dispose();\n";
             compiledScript += "}\n";
