@@ -155,7 +155,7 @@ namespace OpenSim.Region.RegionCombinerModule
             return m_rootScene.Permissions.CanRunScript(script, objectid, user);
         }
 
-        public bool CanCompileScript(UUID owneruuid, int scripttype, Scene scene)
+        public bool CanCompileScript(UUID owneruuid, string scripttype, Scene scene)
         {
             return m_rootScene.Permissions.CanCompileScript(owneruuid, scripttype);
         }

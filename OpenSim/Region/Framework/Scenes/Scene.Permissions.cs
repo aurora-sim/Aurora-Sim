@@ -56,7 +56,7 @@ namespace OpenSim.Region.Framework.Scenes
     public delegate bool EditScriptHandler(UUID script, UUID objectID, UUID user, Scene scene);
     public delegate bool EditNotecardHandler(UUID notecard, UUID objectID, UUID user, Scene scene);
     public delegate bool RunScriptHandler(UUID script, UUID objectID, UUID user, Scene scene);
-    public delegate bool CompileScriptHandler(UUID ownerUUID, int scriptType, Scene scene);
+    public delegate bool CompileScriptHandler(UUID ownerUUID, string scriptType, Scene scene);
     public delegate bool StartScriptHandler(UUID script, UUID user, Scene scene);
     public delegate bool StopScriptHandler(UUID script, UUID user, Scene scene);
     public delegate bool ResetScriptHandler(UUID prim, UUID script, UUID user, Scene scene);
@@ -513,7 +513,7 @@ namespace OpenSim.Region.Framework.Scenes
         #endregion
 
         #region COMPILE SCRIPT (When Script needs to get (re)compiled)
-        public bool CanCompileScript(UUID ownerUUID, int scriptType)
+        public bool CanCompileScript(UUID ownerUUID, string scriptType)
         {
             CompileScriptHandler handler = OnCompileScript;
             if (handler != null)

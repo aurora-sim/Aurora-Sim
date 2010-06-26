@@ -1887,32 +1887,32 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             return GenericObjectPermission(agentID, prim, false);
         }
 
-        private bool CanCompileScript(UUID ownerUUID, int scriptType, Scene scene) 
+        private bool CanCompileScript(UUID ownerUUID, string scriptType, Scene scene) 
         {
              //m_log.DebugFormat("check if {0} is allowed to compile {1}", ownerUUID, scriptType);
             switch (scriptType) {
-                case 0:
+                case "lsl":
                     if (GrantLSL.Count == 0 || GrantLSL.ContainsKey(ownerUUID.ToString())) {
                         return(true);
                     }
                     break;
-                case 1:
+                case "cs":
                     if (GrantCS.Count == 0 || GrantCS.ContainsKey(ownerUUID.ToString())) {
                         return(true);
                     }
                     break;
-                case 2:
+                case "vb":
                     if (GrantVB.Count == 0 || GrantVB.ContainsKey(ownerUUID.ToString())) {
                         return(true);
                     }
                     break;
-                case 3:
+                case "js":
                     if (GrantJS.Count == 0 || GrantJS.ContainsKey(ownerUUID.ToString()))
                     {
                         return (true);
                     }
                     break;
-                case 4:
+                case "yp":
                     if (GrantYP.Count == 0 || GrantYP.ContainsKey(ownerUUID.ToString()))
                     {
                         return (true);

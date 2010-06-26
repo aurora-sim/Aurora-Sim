@@ -55,25 +55,16 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
         // Assembly is compiled using LSL_BaseClass as base. Look at debug C# code file created when LSL script is compiled for full details.
         //
 
-        internal enum enumCompileType
-        {
-            lsl = 0,
-            cs = 1,
-            vb = 2,
-            js = 3,
-            yp = 4
-        }
-
         /// <summary>
         /// This contains number of lines WE use for header when compiling script. User will get error in line x-LinesToRemoveOnError when error occurs.
         /// </summary>
         public static int LinesToRemoveOnError = 9;
 
-        private enumCompileType DefaultCompileLanguage;
+        private string DefaultCompileLanguage;
         private bool WriteScriptSourceToDebugFile;
         private bool CompileWithDebugInformation;
-        private Dictionary<string, bool> AllowedCompilers = new Dictionary<string, bool>(StringComparer.CurrentCultureIgnoreCase);
-        private Dictionary<string, enumCompileType> LanguageMapping = new Dictionary<string, enumCompileType>(StringComparer.CurrentCultureIgnoreCase);
+        public Dictionary<string, IScriptConverter> AllowedCompilers = new Dictionary<string, IScriptConverter>(StringComparer.CurrentCultureIgnoreCase);
+        List<IScriptConverter> converters = new List<IScriptConverter>();
 
         public bool firstStartup = true;
         private string FilePrefix;
@@ -83,15 +74,6 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
 
         private List<string> m_warnings = new List<string>();
 
-        // private object m_syncy = new object();
-
-        private static CSharpCodeProvider CScodeProvider = new CSharpCodeProvider();
-        private static VBCodeProvider VBcodeProvider = new VBCodeProvider();
-//        private static JScriptCodeProvider JScodeProvider = new JScriptCodeProvider();
-        private static CSharpCodeProvider YPcodeProvider = new CSharpCodeProvider(); // YP is translated into CSharp
-        private static YP2CSConverter YP_Converter = new YP2CSConverter();
-
-        // private static int instanceID = new Random().Next(0, int.MaxValue);                 // Unique number to use on our compiled files
         private static UInt64 scriptCompileCounter = 0;                                     // And a counter
 
         public IScriptEngine m_scriptEngine;
@@ -135,30 +117,31 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             string allowComp = m_scriptEngine.Config.GetString("AllowedCompilers", "lsl");
             AllowedCompilers.Clear();
 
-            //m_log.Debug("[Compiler]: Allowed languages: " + allowComp);
-
-            foreach (string strl in allowComp.Split(','))
-            {
-                string strlan = strl.Trim(" \t".ToCharArray()).ToLower();
-                if (!LanguageMapping.ContainsKey(strlan))
-                {
-                    m_log.Error("[Compiler]: Config error. Compiler is unable to recognize language type \"" + strlan + "\" specified in \"AllowedCompilers\".");
-                }
-                AllowedCompilers.Add(strlan, true);
-            }
-            if (AllowedCompilers.Count == 0)
-                m_log.Error("[Compiler]: Config error. Compiler could not recognize any language in \"AllowedCompilers\". Scripts will not be executed!");
-
             // Default language
             string defaultCompileLanguage = m_scriptEngine.Config.GetString("DefaultCompileLanguage", "lsl").ToLower();
 
-            // Is this language recognized at all?
-            if (!LanguageMapping.ContainsKey(defaultCompileLanguage))
+            bool found = false;
+            foreach (string strl in allowComp.Split(','))
             {
+                string strlan = strl.Trim(" \t".ToCharArray()).ToLower();
+                foreach (IScriptConverter converter in converters)
+                {
+                    if (converter.Name == strlan)
+                    {
+                        AllowedCompilers.Add(strlan, converter);
+                        if (converter.Name == defaultCompileLanguage)
+                        {
+                            found = true;
+                        }
+                    }
+                }
+            }
+            if (AllowedCompilers.Count == 0)
+                m_log.Error("[Compiler]: Config error. Compiler could not recognize any language in \"AllowedCompilers\". Scripts will not be executed!");
+            
+            if (!found)
                 m_log.Error("[Compiler]: " +
                                             "Config error. Default language \"" + defaultCompileLanguage + "\" specified in \"DefaultCompileLanguage\" is not recognized as a valid language. Changing default to: \"lsl\".");
-                defaultCompileLanguage = "lsl";
-            }
 
             // Is this language in allow-list?
             if (!AllowedCompilers.ContainsKey(defaultCompileLanguage))
@@ -166,23 +149,27 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                 m_log.Error("[Compiler]: " +
                             "Config error. Default language \"" + defaultCompileLanguage + "\"specified in \"DefaultCompileLanguage\" is not in list of \"AllowedCompilers\". Scripts may not be executed!");
             }
-            else
-            {
-                // LANGUAGE IS IN ALLOW-LIST
-                DefaultCompileLanguage = LanguageMapping[defaultCompileLanguage];
-            }
 
             // We now have an allow-list, a mapping list, and a default language
+        }
+        public class ScriptConverterInitialiser : OpenSim.Framework.PluginInitialiserBase
+        {
+            Compiler m_compiler;
+            public ScriptConverterInitialiser(Compiler compiler)
+            {
+                m_compiler = compiler;
+            }
+
+            public override void Initialise(OpenSim.Framework.IPlugin plugin)
+            {
+                IScriptConverter convert = (IScriptConverter)plugin;
+                convert.Initialise(m_compiler);
+            }
         }
 
         public void MapCompilers()
         {
-            // Map name and enum type of our supported languages
-            LanguageMapping.Add(enumCompileType.cs.ToString(), enumCompileType.cs);
-            LanguageMapping.Add(enumCompileType.vb.ToString(), enumCompileType.vb);
-            LanguageMapping.Add(enumCompileType.lsl.ToString(), enumCompileType.lsl);
-            LanguageMapping.Add(enumCompileType.js.ToString(), enumCompileType.js);
-            LanguageMapping.Add(enumCompileType.yp.ToString(), enumCompileType.yp);
+            converters = Aurora.Framework.AuroraModuleLoader.LoadPlugins<IScriptConverter>("/OpenSim/ScriptConverter", new ScriptConverterInitialiser(this));
         }
 
         #endregion
@@ -207,37 +194,27 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                         "Script",
                         FilePrefix + "_compiled_" + itemID.ToString() + ".dll")));
 
-            enumCompileType language;
+            IScriptConverter converter;
             string compileScript;
 
-            CheckLanguageAndConvert(Script, ownerUUID, out language, out compileScript);
+            CheckLanguageAndConvert(Script, ownerUUID, out converter, out compileScript);
 
-			assembly = CompileFromDotNetText(compileScript, language, assembly);
+            assembly = CompileFromDotNetText(compileScript, converter, assembly);
         }
 
-        private void CheckLanguageAndConvert(string Script,UUID ownerID, out enumCompileType language, out string compileScript)
+        private void CheckLanguageAndConvert(string Script,UUID ownerID, out IScriptConverter converter, out string compileScript)
         {
-            language = DefaultCompileLanguage;
+            string language = DefaultCompileLanguage;
 
-            if (Script.StartsWith("//c#", true, CultureInfo.InvariantCulture))
-                language = enumCompileType.cs;
-            if (Script.StartsWith("//vb", true, CultureInfo.InvariantCulture))
+            foreach (IScriptConverter convert in converters)
             {
-                language = enumCompileType.vb;
-                // We need to remove //vb, it won't compile with that
-
-                Script = Script.Substring(4, Script.Length - 4);
+                if (Script.StartsWith("//" + convert.Name, true, CultureInfo.InvariantCulture))
+                    language = convert.Name;
             }
-            if (Script.StartsWith("//lsl", true, CultureInfo.InvariantCulture))
-                language = enumCompileType.lsl;
+            // Remove the chars
+            Script = Script.Substring(4, Script.Length - 4);
 
-            if (Script.StartsWith("//js", true, CultureInfo.InvariantCulture))
-                language = enumCompileType.js;
-
-            if (Script.StartsWith("//yp", true, CultureInfo.InvariantCulture))
-                language = enumCompileType.yp;
-
-            if (!AllowedCompilers.ContainsKey(language.ToString()))
+            if (!AllowedCompilers.ContainsKey(language))
             {
                 // Not allowed to compile to this language!
                 string errtext = String.Empty;
@@ -245,7 +222,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                 throw new Exception(errtext);
             }
 
-            if (((OpenSim.Region.Framework.Scenes.Scene)m_scriptEngine.Worlds[0]).Permissions.CanCompileScript(ownerID, (int)language) == false)
+            if (((OpenSim.Region.Framework.Scenes.Scene)m_scriptEngine.Worlds[0]).Permissions.CanCompileScript(ownerID, language) == false)
             {
                 // Not allowed to compile to this language!
                 string errtext = String.Empty;
@@ -254,40 +231,16 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             }
 
             compileScript = Script;
-            if (language == enumCompileType.lsl)
-            {
-                // Its LSL, convert it to C#
-                LSL_Converter = (ICodeConverter)new CSCodeGenerator();
-                compileScript = LSL_Converter.Convert(Script);
 
-                // copy converter warnings into our warnings.
-                foreach (string warning in LSL_Converter.GetWarnings())
-                {
-                    AddWarning(warning);
-                }
-            }
+            string[] Warnings;
+            AllowedCompilers.TryGetValue(language, out converter);
 
-            if (language == enumCompileType.yp)
-            {
-                // Its YP, convert it to C#
-                compileScript = YP_Converter.Convert(Script);
-            }
+            converter.Convert(Script, out compileScript, out Warnings);
 
-            switch (language)
+            // copy converter warnings into our warnings.
+            foreach (string warning in Warnings)
             {
-                case enumCompileType.cs:
-                case enumCompileType.lsl:
-                    compileScript = CreateCSCompilerScript(compileScript);
-                    break;
-                case enumCompileType.vb:
-                    compileScript = CreateVBCompilerScript(compileScript);
-                    break;
-                //                case enumCompileType.js:
-                //                    compileScript = CreateJSCompilerScript(compileScript);
-                //                    break;
-                case enumCompileType.yp:
-                    compileScript = CreateYPCompilerScript(compileScript);
-                    break;
+                AddWarning(warning);
             }
         }
 
@@ -353,193 +306,14 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             }
         }
 
-//        private static string CreateJSCompilerScript(string compileScript)
-//        {
-//            compileScript = String.Empty +
-//                "import OpenSim.Region.ScriptEngine.Shared; import System.Collections.Generic;\r\n" +
-//                "package SecondLife {\r\n" +
-//                "class Script extends OpenSim.Region.ScriptEngine.Shared.ScriptBase.ScriptBaseClass { \r\n" +
-//                compileScript +
-//                "} }\r\n";
-//            return compileScript;
-//        }
-
-        /*private static string CreateCSCompilerScript(string compileScript, string identifier, string InheritedClasses, UUID itemID, uint localID, UUID ownerID, IScriptProtectionModule ScriptProtection, object InstanceData)
-        {             
-        	string compiledScript = "";
-            compiledScript = String.Empty +
-                "using OpenSim.Region.ScriptEngine.Shared;" +
-            	"\nusing System;" +
-            	"\nusing System.Collections.Generic;" +
-            	"\nusing System.Collections;\n" +
-                "using System.Timers;\n" +
-                "namespace Script\n{\n";
-            string TempClassScript = "";
-            TempClassScript = String.Empty + "[Serializable]\n public class " + identifier + " : OpenSim.Region.ScriptEngine.Shared.ScriptBase.ScriptBaseClass, IDisposable";
-            if (InheritedClasses != "")
-                TempClassScript += "," + InheritedClasses;
-            TempClassScript += "\n{\n" +
-                     "List<IEnumerator> parts = new List<IEnumerator>();\n";
-            TempClassScript += "System.Timers.Timer aTimer = new System.Timers.Timer(250);\n";
-            TempClassScript += "public " + identifier + "()\n{\n";
-            TempClassScript += "aTimer.Elapsed += new System.Timers.ElapsedEventHandler(Timer);\n";
-            TempClassScript += "aTimer.Enabled = true;\n";
-            TempClassScript += "aTimer.Start();\n";
-            TempClassScript += "}\n";
-            TempClassScript += "~" + identifier + "()\n{\n";
-            TempClassScript += "aTimer.Stop();\n";
-            TempClassScript += "aTimer.Dispose();\n";
-            TempClassScript += "}\n";
-            TempClassScript += "public void Dispose()\n";
-            TempClassScript += "{\n";
-            TempClassScript += "aTimer.Stop();\n";
-            TempClassScript += "aTimer.Dispose();\n";
-            TempClassScript += "}\n";
-        
-            TempClassScript += "public void Timer(object source, System.Timers.ElapsedEventArgs e)\n{\n";
-            TempClassScript += "lock (parts)\n";
-            TempClassScript += "{\n";
-            TempClassScript += "int i = 0;\n";
-            TempClassScript += "if(parts.Count == 0)\n";
-            TempClassScript += "return;";
-            TempClassScript += "while (parts.Count > 0 && i < 1000)\n";
-            TempClassScript += "{\n";
-            TempClassScript += "i++;\n";
-
-            TempClassScript += "bool running = false;\n";
-            TempClassScript += "try\n";
-            TempClassScript += "{\n";
-            TempClassScript += "running = parts[i % parts.Count].MoveNext();\n";
-            TempClassScript += "}\n";
-            TempClassScript += "catch (Exception ex)\n";
-            TempClassScript += "{\n";
-            TempClassScript += "}\n";
-
-            TempClassScript += "if (!running)\n { \n";
-            TempClassScript += "parts.Remove(parts[i % parts.Count]);\n } \n";
-            TempClassScript += "else\n { } \n";
-            TempClassScript += "}\n";
-            TempClassScript += "}\n";
-            TempClassScript += "}\n";
-
-            TempClassScript +=
-                     compileScript +
-                     "\n}";
-
-            ScriptProtection.AddNewClassSource(identifier, TempClassScript, InstanceData);
-            TempClassScript += ScriptProtection.GetSRC(itemID, localID, ownerID);
-            compiledScript += TempClassScript +
-                 "\n}";
-
-            return compiledScript;
-        }*/
-
-        private static string CreateCSCompilerScript(string compileScript)
-        {
-            string compiledScript = "";
-            compiledScript = String.Empty +
-                "using OpenSim.Region.ScriptEngine.Shared;\n" +
-                "using System;\n" +
-                "using System.Collections.Generic;\n" +
-                "using System.Collections;\n" +
-                "using System.Reflection;\n" +
-                "using System.Timers;\n" +
-                "namespace Script\n"+
-                "{\n";
-
-            compiledScript += "[Serializable]\n public class LSL : OpenSim.Region.ScriptEngine.Shared.ScriptBase.ScriptBaseClass, IDisposable, OpenSim.Region.ScriptEngine.Shared.ScriptBase.IRemoteInterface\n";
-            compiledScript += "{\n";
-            compiledScript +=
-                     compileScript;
-
-
-            compiledScript += "List<IEnumerator> parts = new List<IEnumerator>();\n";
-            compiledScript += "System.Timers.Timer aTimer = new System.Timers.Timer(250);\n";
-            compiledScript += "public LSL()\n{\n";
-            compiledScript += "aTimer.Elapsed += new System.Timers.ElapsedEventHandler(Timer);\n";
-            compiledScript += "aTimer.Enabled = true;\n";
-            compiledScript += "aTimer.Start();\n";
-            compiledScript += "}\n";
-            compiledScript += "~LSL()\n{\n";
-            compiledScript += "aTimer.Stop();\n";
-            compiledScript += "aTimer.Dispose();\n";
-            compiledScript += "}\n";
-            compiledScript += "public void Dispose()\n";
-            compiledScript += "{\n";
-            compiledScript += "aTimer.Stop();\n";
-            compiledScript += "aTimer.Dispose();\n";
-            compiledScript += "}\n";
-
-            compiledScript += "public void Timer(object source, System.Timers.ElapsedEventArgs e)\n{\n";
-            compiledScript += "lock (parts)\n";
-            compiledScript += "{\n";
-            compiledScript += "int i = 0;\n";
-            compiledScript += "if(parts.Count == 0)\n";
-            compiledScript += "return;";
-            compiledScript += "while (parts.Count > 0 && i < 1000)\n";
-            compiledScript += "{\n";
-            compiledScript += "i++;\n";
-            compiledScript += "bool running = false;\n";
-            compiledScript += "try\n";
-            compiledScript += "{\n";
-            compiledScript += "running = parts[i % parts.Count].MoveNext();\n";
-            compiledScript += "}\n";
-            compiledScript += "catch (Exception ex)\n";
-            compiledScript += "{\n";
-            compiledScript += "}\n";
-            compiledScript += "if (!running)\n { \n";
-            compiledScript += "parts.Remove(parts[i % parts.Count]);\n } \n";
-            compiledScript += "else\n { } \n";
-            compiledScript += "}\n";
-            compiledScript += "}\n";
-            compiledScript += "}\n";
-
-            compiledScript += "public object Invoke(string lcMethod,object[] Parameters)\n {\n";
-            compiledScript += "return this.GetType().InvokeMember(lcMethod, BindingFlags.InvokeMethod,null,this,Parameters);\n";
-            compiledScript += "}\n";
-            compiledScript += "\n}"; // Close Class
-
-            compiledScript += "\n}"; // Close Namespace
-
-            return compiledScript;
-        }
-
-        private static string CreateYPCompilerScript(string compileScript)
-        {
-            compileScript = String.Empty +
-                       "using OpenSim.Region.ScriptEngine.Shared.YieldProlog; " +
-                        "using OpenSim.Region.ScriptEngine.Shared; using System.Collections.Generic;\r\n" +
-                        String.Empty + "namespace SecondLife { " +
-                        String.Empty + "public class Script : OpenSim.Region.ScriptEngine.Shared.ScriptBase.ScriptBaseClass  { \r\n" +
-                        //@"public Script() { } " +
-                        @"static OpenSim.Region.ScriptEngine.Shared.YieldProlog.YP YP=null; " +
-                        @"public Script() {  YP= new OpenSim.Region.ScriptEngine.Shared.YieldProlog.YP(); } " +
-
-                        compileScript +
-                        "} }\r\n";
-            return compileScript;
-        }
-
-        private static string CreateVBCompilerScript(string compileScript)
-        {
-            compileScript = String.Empty +
-                "Imports OpenSim.Region.ScriptEngine.Shared: Imports System.Collections.Generic: " +
-                String.Empty + "NameSpace SecondLife:" +
-                String.Empty + "Public Class Script: Inherits OpenSim.Region.ScriptEngine.Shared.ScriptBase.ScriptBaseClass: " +
-                "\r\nPublic Sub New()\r\nEnd Sub: " +
-                compileScript +
-                ":End Class :End Namespace\r\n";
-            return compileScript;
-        }
-
         /// <summary>
         /// Compile .NET script to .Net assembly (.dll)
         /// </summary>
         /// <param name="Script">CS script</param>
         /// <returns>Filename to .dll assembly</returns>
-        internal string CompileFromDotNetText(string Script, enumCompileType lang, string assembly)
+        internal string CompileFromDotNetText(string Script, IScriptConverter converter, string assembly)
         {
-            string ext = "." + lang.ToString();
+            string ext = "." + converter.Name;
 
             // Output assembly name
             scriptCompileCounter++;
@@ -587,8 +361,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             parameters.ReferencedAssemblies.Add(Path.Combine(rootPath,
                     "OpenSim.Region.ScriptEngine.Shared.Api.Runtime.dll"));
             parameters.ReferencedAssemblies.Add("System.dll");
-            
-            if (lang == enumCompileType.yp)
+
+            if (converter.Name == "yp")
             {
                 parameters.ReferencedAssemblies.Add(Path.Combine(rootPath,
                         "OpenSim.Region.ScriptEngine.Shared.YieldProlog.dll"));
@@ -600,60 +374,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             //parameters.WarningLevel = 1; // Should be 4?
             parameters.TreatWarningsAsErrors = false;
 
-            CompilerResults results;
-            switch (lang)
-            {
-                case enumCompileType.vb:
-                    results = VBcodeProvider.CompileAssemblyFromSource(
-                            parameters, Script);
-                    break;
-                case enumCompileType.cs:
-                case enumCompileType.lsl:
-                    bool complete = false;
-                    bool retried = false;
-                    do
-                    {
-                        lock (CScodeProvider)
-                        {
-                            results = CScodeProvider.CompileAssemblyFromSource(
-                                parameters, Script);
-                        }
-                        // Deal with an occasional segv in the compiler.
-                        // Rarely, if ever, occurs twice in succession.
-                        // Line # == 0 and no file name are indications that
-                        // this is a native stack trace rather than a normal
-                        // error log.
-                        if (results.Errors.Count > 0)
-                        {
-                            if (!retried && (results.Errors[0].FileName == null || results.Errors[0].FileName == String.Empty) &&
-                                results.Errors[0].Line == 0)
-                            {
-                                // System.Console.WriteLine("retrying failed compilation");
-                                retried = true;
-                            }
-                            else
-                            {
-                                complete = true;
-                            }
-                        }
-                        else
-                        {
-                            complete = true;
-                        }
-                    } while (!complete);
-                    break;
-//                case enumCompileType.js:
-//                    results = JScodeProvider.CompileAssemblyFromSource(
-//                        parameters, Script);
-//                    break;
-                case enumCompileType.yp:
-                    results = YPcodeProvider.CompileAssemblyFromSource(
-                        parameters, Script);
-                    break;
-                default:
-                    throw new Exception("Compiler is not able to recongnize " +
-                                        "language type \"" + lang.ToString() + "\"");
-            }
+            CompilerResults results = converter.Compile(parameters, Script);
 
             // Check result
             // Go through errors
@@ -680,11 +401,11 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                         string text = CompErr.ErrorText;
 
                         // Use LSL type names
-                        if (lang == enumCompileType.lsl)
+                        if (converter.Name == "lsl")
+                        {
                             text = ReplaceTypes(CompErr.ErrorText);
-
-                        if (lang == enumCompileType.lsl)
                             text = CleanError(text);
+                        }
 
                         // The Second Life viewer's script editor begins
                         // countingn lines and columns at 0, so we subtract 1.
@@ -859,112 +580,6 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                 message = "Missing one or more }." + "\n";
             }
             return message;
-        }
-
-        #region LineMaps
-
-        private static void WriteMapFile(string filename, Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> linemap)
-        {
-            string mapstring = String.Empty;
-            foreach (KeyValuePair<KeyValuePair<int, int>, KeyValuePair<int, int>> kvp in linemap)
-            {
-                KeyValuePair<int, int> k = kvp.Key;
-                KeyValuePair<int, int> v = kvp.Value;
-                mapstring += String.Format("{0},{1},{2},{3}\n", k.Key, k.Value, v.Key, v.Value);
-            }
-
-            System.Text.ASCIIEncoding enc = new System.Text.ASCIIEncoding();
-            Byte[] mapbytes = enc.GetBytes(mapstring);
-            FileStream mfs = File.Create(filename);
-            mfs.Write(mapbytes, 0, mapbytes.Length);
-            mfs.Close();
-        }
-
-
-        public static Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> ReadMapFile(string filename)
-        {
-            Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> linemap;
-            try
-            {
-                StreamReader r = File.OpenText(filename);
-                linemap = new Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>>();
-
-                string line;
-                while ((line = r.ReadLine()) != null)
-                {
-                    String[] parts = line.Split(new Char[] { ',' });
-                    int kk = System.Convert.ToInt32(parts[0]);
-                    int kv = System.Convert.ToInt32(parts[1]);
-                    int vk = System.Convert.ToInt32(parts[2]);
-                    int vv = System.Convert.ToInt32(parts[3]);
-
-                    KeyValuePair<int, int> k = new KeyValuePair<int, int>(kk, kv);
-                    KeyValuePair<int, int> v = new KeyValuePair<int, int>(vk, vv);
-
-                    linemap[k] = v;
-                }
-            }
-            catch
-            {
-                linemap = new Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>>();
-            }
-            return linemap;
-        }
-
-        public static Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> ReadMapFileFromString(string text)
-        {
-            Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> linemap;
-            try
-            {
-                linemap = new Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>>();
-
-                string line;
-                int i = 0;
-                while ((line = text.Split(';')[i]) != null)
-                {
-                    if (line == "")
-                        break;
-                    String[] parts = line.Split(',');
-                    int kk = System.Convert.ToInt32(parts[0]);
-                    int kv = System.Convert.ToInt32(parts[1]);
-                    int vk = System.Convert.ToInt32(parts[2]);
-                    int vv = System.Convert.ToInt32(parts[3]);
-
-                    KeyValuePair<int, int> k = new KeyValuePair<int, int>(kk, kv);
-                    KeyValuePair<int, int> v = new KeyValuePair<int, int>(vk, vv);
-
-                    linemap[k] = v;
-                    i++;
-                }
-            }
-            catch
-            {
-                linemap = new Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>>();
-            }
-            return linemap;
-        }
-
-        #endregion
-
-        /// <summary>
-        /// Generates a random string with the given length
-        /// </summary>
-        /// <param name="size">Size of the string</param>
-        /// <param name="lowerCase">If true, generate lowercase string</param>
-        /// <returns>Random string</returns>
-        private string RandomString(int size, bool lowerCase)
-        {
-        	StringBuilder builder = new StringBuilder();
-        	Random random = new Random();
-        	char ch ;
-        	for(int i=0; i<size; i++)
-        	{
-                ch = System.Convert.ToChar(System.Convert.ToInt32(Math.Floor(26 * random.NextDouble() + 65)));
-        		builder.Append(ch);
-        	}
-        	if(lowerCase)
-        		return builder.ToString().ToLower();
-        	return builder.ToString();
         }
         #endregion
     }
