@@ -26,10 +26,11 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             m_compiler = compiler;
         }
 
-        public void Convert(string Script, out string CompiledScript, out string[] Warnings)
+        public void Convert(string Script, out string CompiledScript, out string[] Warnings, out Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> PositionMap)
         {
             Warnings = new List<string>().ToArray();
             CompiledScript = CreateCompilerScript(Script);
+            PositionMap = null;
         }
 
         public string Name

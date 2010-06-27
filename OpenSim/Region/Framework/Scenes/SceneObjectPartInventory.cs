@@ -114,7 +114,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// If this method is called and there are inventory items, then we regard the inventory as having changed.
         /// </summary>
         /// <param name="linkNum">Link number for the part</param>
-        public void ResetInventoryIDs()
+        public void ResetInventoryIDs(bool ChangeScripts)
         {
             lock (Items)
             {
@@ -132,7 +132,7 @@ namespace OpenSim.Region.Framework.Scenes
                     item.ResetIDs(m_part.UUID);
                     lock (m_part.ParentGroup)
                     {
-                        if (m_part.ParentGroup.Scene != null)
+                        if (ChangeScripts && m_part.ParentGroup.Scene != null)
                         {
                             foreach (IScriptModule engine in m_part.ParentGroup.Scene.RequestModuleInterfaces<IScriptModule>())
                             {

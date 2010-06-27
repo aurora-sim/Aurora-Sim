@@ -54,7 +54,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// If this method is called and there are inventory items, then we regard the inventory as having changed.
         /// 
         /// <param name="linkNum">Link number for the part</param>
-        void ResetInventoryIDs();
+        void ResetInventoryIDs(bool ChangeScripts);
 
         /// <summary>
         /// Change every item in this inventory to a new owner.

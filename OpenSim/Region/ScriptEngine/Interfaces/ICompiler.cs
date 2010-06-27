@@ -28,6 +28,8 @@
 using System;
 using System.Collections.Generic;
 using System.Collections;
+using System.Runtime.Remoting;
+using System.Runtime.Remoting.Lifetime;
 using OpenMetaverse;
 using Nini.Config;
 using OpenSim.Framework;
@@ -75,8 +77,10 @@ namespace OpenSim.Region.ScriptEngine.Interfaces
         string[] GetApis();
         void InitApi(string name, IScriptApi data);
 
+        ISponsor Sponsor { get; }
+        void UpdateLease(TimeSpan time);
         int GetStateEventFlags(string state);
-        OpenMetaverse.UUID ExecuteEvent(string state, string FunctionName, object[] args, OpenMetaverse.UUID Start);
+        Guid ExecuteEvent(string state, string FunctionName, object[] args, Guid Start);
         Dictionary<string, Object> GetVars();
         void SetVars(Dictionary<string, Object> vars);
         void ResetVars();

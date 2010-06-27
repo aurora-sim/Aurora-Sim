@@ -47,26 +47,49 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
         private Dictionary<string, MethodInfo> inits = new Dictionary<string, MethodInfo>();
         private ScriptSponsor m_sponser;
 
+        public ISponsor Sponsor
+        {
+            get
+            {
+                return m_sponser;
+            }
+        }
+
         public override Object InitializeLifetimeService()
         {
-            ILease lease = (ILease)base.InitializeLifetimeService();
-            if (lease.CurrentState == LeaseState.Initial)
+            try
             {
-                // Infinite
-                lease.InitialLeaseTime = TimeSpan.FromMinutes(1);
-                lease.RenewOnCallTime = TimeSpan.FromSeconds(10.0);
-                lease.SponsorshipTimeout = TimeSpan.FromMinutes(1.0);
+                /*ILease lease = (ILease)base.InitializeLifetimeService();
+                if (lease.CurrentState == LeaseState.Initial)
+                {
+                    // Infinite
+                    lease.InitialLeaseTime = TimeSpan.FromMinutes(1);
+                    lease.RenewOnCallTime = TimeSpan.FromMinutes(10.0);
+                    lease.SponsorshipTimeout = TimeSpan.FromMinutes(1.0);
+                }
+                return lease;*/
+                return null;
             }
-            return lease;
+            catch (Exception ex)
+            {
+                return null;
+            }
         }
-#if DEBUG
+        public void UpdateLease(TimeSpan time)
+        {
+            ILease lease = (ILease)RemotingServices.GetLifetimeService(this as MarshalByRefObject);
+            if (lease != null)
+                lease.Renew(time);
+        }
+
+        #if DEBUG
         // For tracing GC while debugging
         public static bool GCDummy = false;
         ~ScriptBaseClass()
         {
             GCDummy = true;
         }
-#endif
+        #endif
 
         public ScriptBaseClass()
         {
@@ -93,7 +116,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
             return (int)m_Executor.GetStateEventFlags(state);
         }
 
-        public OpenMetaverse.UUID ExecuteEvent(string state, string FunctionName, object[] args, OpenMetaverse.UUID Start)
+        public Guid ExecuteEvent(string state, string FunctionName, object[] args, Guid Start)
         {
             return m_Executor.ExecuteEvent(state, FunctionName, args, Start);
         }
@@ -115,10 +138,10 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
             if (!inits.ContainsKey(api))
                 return;
 
-            ILease lease = (ILease)RemotingServices.GetLifetimeService(data as MarshalByRefObject);
-            RemotingServices.GetLifetimeService(data as MarshalByRefObject);
-            if(lease != null)
-                lease.Register(m_sponser);
+            //ILease lease = (ILease)RemotingServices.GetLifetimeService(data as MarshalByRefObject);
+            //RemotingServices.GetLifetimeService(data as MarshalByRefObject);
+            //if (lease != null)
+            //    lease.Register(m_sponser);
 
             MethodInfo mi = inits[api];
 
@@ -283,13 +306,5 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
                 return "ScriptBase";
             }
         }
-    }
-
-    /// Interface that can be run over the remote AppDomain boundary.
-    /// Thanks to Rick Strahl for this interface and remote AppDomain loading
-    /// http://www.west-wind.com/presentations/dynamicCode/DynamicCode.htm
-    public interface IRemoteInterface
-    {
-        object Invoke(string lcMethod, object[] Parameters);
     }
 }

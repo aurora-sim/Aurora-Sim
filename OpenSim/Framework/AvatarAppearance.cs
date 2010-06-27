@@ -677,12 +677,17 @@ namespace OpenSim.Framework
             return 0;
         }
 
-        public void DetachAttachment(UUID itemID)
+        public bool DetachAttachment(UUID itemID)
         {
             int attachpoint = GetAttachpoint(itemID);
 
             if (attachpoint > 0)
+            {
                 m_attachments.Remove(attachpoint);
+                return true;
+            }
+            else
+                return false;
         }
 
         public void ClearAttachments()

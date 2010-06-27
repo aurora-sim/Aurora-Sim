@@ -83,7 +83,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public StateSource stateSource;
         public AppDomain AppDomain;
         public Dictionary<string, IScriptApi> Apis = new Dictionary<string, IScriptApi>();
-        public ScriptSponsor ScriptSponsor;
+        //public ScriptSponsor ScriptSponsor;
         public bool TimerQueued = false;
         public bool CollisionInQueue = false;
         public bool TouchInQueue = false;
@@ -128,9 +128,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     SerializeDatabase();
                     //Fire this directly so its not closed before its fired
                     SetEventParams(new DetectParams[0]);
-                    Script.ExecuteEvent(State,
-                                        "state_exit",
-                                        new object[0], UUID.Zero);
+                    EventQueue.ProcessQIS(new QueueItemStruct()
+                    {
+                        ID = this,
+                        CurrentlyAt = Guid.Empty,
+                        functionName = "state_exit",
+                        param = new object[0],
+                        llDetectParams = new DetectParams[0]
+                    });
                 }
             }
             ReleaseControls();
@@ -173,13 +178,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 // Stop long command on script
                 AsyncCommandManager.RemoveScript(m_ScriptEngine, World, part.LocalId, ItemID);
-                ScriptSponsor.Close();
-                ILease lease = (ILease)RemotingServices.GetLifetimeService(Script as ScriptBaseClass);
+                ILease lease = (ILease)RemotingServices.GetLifetimeService(Script as MarshalByRefObject);
                 if(lease != null)
-                    lease.Unregister(ScriptSponsor);
-                Script.Close();
-                Script.Dispose();
-                Script = null;
+                    lease.Unregister(Script.Sponsor);
+                try
+                {
+                    Script.Close();
+                    Script.Dispose();
+                    Script = null;
+                }
+                catch
+                {
+                }
             }
             try
             {
@@ -250,6 +260,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                                  (int)Script.GetStateEventFlags(State));
             //Reset all variables back to their original values.
             Script.ResetVars();
+
             //Fire state_entry
             if (ScriptEngine.NeedsRemoved.Contains(part.UUID))
                 ScriptEngine.NeedsRemoved.Remove(part.UUID);
@@ -493,10 +504,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return;
             }
 
-            ScriptSponsor = new ScriptSponsor();
-            ILease lease = (ILease)RemotingServices.GetLifetimeService(Script as ScriptBaseClass);
+            ILease lease = (ILease)RemotingServices.GetLifetimeService(Script as MarshalByRefObject);
             if(lease != null)
-                lease.Register(ScriptSponsor);
+                lease.Register(Script.Sponsor);
             
             //If its a reupload, an avatar is waiting for the script errors
             if (reupload)

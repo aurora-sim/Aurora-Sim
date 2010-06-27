@@ -1544,7 +1544,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// Duplicates this part.
         /// </summary>
         /// <returns></returns>
-        public SceneObjectPart Copy(uint localID, UUID AgentID, UUID GroupID, int linkNum, bool userExposed)
+        public SceneObjectPart Copy(uint localID, UUID AgentID, UUID GroupID, int linkNum, bool userExposed, bool ChangeScripts)
         {
             SceneObjectPart dupe = (SceneObjectPart)MemberwiseClone();
             dupe.m_shape = m_shape.Copy();
@@ -1580,7 +1580,7 @@ namespace OpenSim.Region.Framework.Scenes
             dupe.LocalId = localID;
             if (userExposed)
             {
-                dupe.ResetIDs(linkNum);
+                dupe.ResetIDs(linkNum, ChangeScripts);
                 dupe.m_inventory.HasInventoryChanged = true;
             }
             else
@@ -2720,12 +2720,12 @@ namespace OpenSim.Region.Framework.Scenes
         /// generating new UUIDs for all the items in the inventory.
         /// </summary>
         /// <param name="linkNum">Link number for the part</param>
-        public void ResetIDs(int linkNum)
+        public void ResetIDs(int linkNum, bool ChangeScripts)
         {
             UUID = UUID.Random();
             LinkNum = linkNum;
             //LocalId = 0;
-            Inventory.ResetInventoryIDs();
+            Inventory.ResetInventoryIDs(ChangeScripts);
         }
 
         /// <summary>

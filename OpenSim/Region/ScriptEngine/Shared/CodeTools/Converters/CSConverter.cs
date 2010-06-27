@@ -26,10 +26,11 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools.Converters
             m_compiler = compiler;
         }
 
-        public void Convert(string Script, out string CompiledScript, out string[] Warnings)
+        public void Convert(string Script, out string CompiledScript, out string[] Warnings, out Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> PositionMap)
         {
             Warnings = new List<string>().ToArray();
             CompiledScript = CreateCompilerScript(Script);
+            PositionMap = null;
         }
 
         public string Name
@@ -41,6 +42,23 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools.Converters
         }
         private string CreateCompilerScript(string compileScript)
         {
+            compileScript = compileScript.Replace("string", 
+                    "OpenSim.Region.ScriptEngine.Shared.LSL_Types.LSLString");
+
+            compileScript = compileScript.Replace("integer", 
+                    "OpenSim.Region.ScriptEngine.Shared.LSL_Types.LSLInteger");
+
+            compileScript = compileScript.Replace("float", 
+                    "OpenSim.Region.ScriptEngine.Shared.LSL_Types.LSLFloat");
+
+            compileScript = compileScript.Replace("list",
+                    "OpenSim.Region.ScriptEngine.Shared.LSL_Types.list");
+
+            compileScript = compileScript.Replace("rotation",
+                    "OpenSim.Region.ScriptEngine.Shared.LSL_Types.Quaternion");
+
+            compileScript = compileScript.Replace("vector",
+                    "OpenSim.Region.ScriptEngine.Shared.LSL_Types.Vector3");
             string compiledScript = "";
             compiledScript = String.Empty +
                 "using OpenSim.Region.ScriptEngine.Shared;\n" +

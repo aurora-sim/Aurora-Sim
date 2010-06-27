@@ -406,8 +406,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
                 try
                 {
-                    ILease lease = (ILease)RemotingServices.GetLifetimeService(script.Script as ScriptBaseClass);
-                    lease.Renew(DateTime.Now.AddMinutes(10) - DateTime.Now);
+                    script.Script.UpdateLease(DateTime.Now.AddMinutes(10) - DateTime.Now);
                 }
                 catch (Exception ex)
                 {
@@ -699,7 +698,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 AddToObjectQueue(id.part.UUID, "state_exit",
                     new DetectParams[0], new object[0] { });
                 id.State = state;
-                int eventFlags = id.Script.GetStateEventFlags(id.State);
+                int eventFlags = (int)id.Script.GetStateEventFlags(id.State);
 
                 id.part.SetScriptEvents(itemID, eventFlags);
                 UpdateScriptInstanceData(id);
@@ -982,11 +981,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             else if (FunctionName == "link_message")
             {
             }
-            else
-            {
-                AuroraDotNetEngine.EventQueue.ProcessQIS(QIS);
-                return true;
-            }
 
             EventQueue.Enqueue(QIS, EventPriority.FirstStart);
             return true;
@@ -1040,11 +1034,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public LUStruct StartScript(SceneObjectPart part, UUID itemID, string Script, int startParam, bool postOnRez, StateSource statesource)
         {
             ScriptData id = null;
-            id = GetScript(part.UUID, itemID);
+            ScriptData findID = GetScript(part.UUID, itemID);
             
             LUStruct ls = new LUStruct();
             //Its a change of the script source, needs to be recompiled and such.
-            if (id != null)
+            if (findID != null)
             {
                 //Ignore prims that have crossed regions, they are already started and working
                 if ((statesource & StateSource.PrimCrossing) != 0)
@@ -1056,7 +1050,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 else
                 {
                     //Restart other scripts
-                    id = new ScriptData(this);
                     ls.Action = LUType.Load;
                 }
             }
@@ -1336,7 +1329,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public object[] param;
         public Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>>
                 LineMap;
-        public OpenMetaverse.UUID CurrentlyAt = OpenMetaverse.UUID.Zero;
+        public Guid CurrentlyAt = Guid.Empty;
     }
     public class StateQueueItem
     {

@@ -26,13 +26,14 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             m_compiler = compiler;
         }
 
-        public void Convert(string Script, out string CompiledScript, out string[] Warnings)
+        public void Convert(string Script, out string CompiledScript, out string[] Warnings, out Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> PositionMap)
         {
             // Its LSL, convert it to C#
-            ICodeConverter LSL_Converter = (ICodeConverter)new CSCodeGenerator();
+            CSCodeGenerator LSL_Converter = new CSCodeGenerator();
             CompiledScript = LSL_Converter.Convert(Script);
             Warnings = LSL_Converter.GetWarnings();
             CompiledScript = CreateCompilerScript(CompiledScript);
+            PositionMap = LSL_Converter.PositionMap;
         }
 
         public string Name
@@ -53,9 +54,10 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                 "using System.Reflection;\n" +
                 "using System.Timers;\n" +
                 "namespace Script\n" +
+                "\n" +
                 "{\n";
 
-            compiledScript += "[Serializable]\n public class ScriptClass : OpenSim.Region.ScriptEngine.Shared.ScriptBase.ScriptBaseClass, IDisposable, OpenSim.Region.ScriptEngine.Shared.ScriptBase.IRemoteInterface\n";
+            compiledScript += "[Serializable]\n public class ScriptClass : OpenSim.Region.ScriptEngine.Shared.ScriptBase.ScriptBaseClass, IDisposable\n";
             compiledScript += "{\n";
             compiledScript +=
                      compileScript;
@@ -102,9 +104,6 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             compiledScript += "}\n";
             compiledScript += "}\n";
 
-            compiledScript += "public object Invoke(string lcMethod,object[] Parameters)\n {\n";
-            compiledScript += "return this.GetType().InvokeMember(lcMethod, BindingFlags.InvokeMethod,null,this,Parameters);\n";
-            compiledScript += "}\n";
             compiledScript += "\n}"; // Close Class
 
             compiledScript += "\n}"; // Close Namespace

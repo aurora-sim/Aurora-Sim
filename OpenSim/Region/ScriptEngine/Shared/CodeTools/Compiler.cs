@@ -27,6 +27,7 @@
 
 using System;
 using System.CodeDom.Compiler;
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection;
@@ -65,12 +66,11 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
         private bool CompileWithDebugInformation;
         public Dictionary<string, IScriptConverter> AllowedCompilers = new Dictionary<string, IScriptConverter>(StringComparer.CurrentCultureIgnoreCase);
         List<IScriptConverter> converters = new List<IScriptConverter>();
+        private Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> PositionMap;
 
         public bool firstStartup = true;
         private string FilePrefix;
         private string ScriptEnginesPath = "ScriptEngines";
-        // mapping between LSL and C# line/column numbers
-        private ICodeConverter LSL_Converter;
 
         private List<string> m_warnings = new List<string>();
 
@@ -199,7 +199,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
 
             CheckLanguageAndConvert(Script, ownerUUID, out converter, out compileScript);
 
-            assembly = CompileFromDotNetText(compileScript, converter, assembly);
+            CompileFromDotNetText(compileScript, converter, assembly);
         }
 
         private void CheckLanguageAndConvert(string Script,UUID ownerID, out IScriptConverter converter, out string compileScript)
@@ -233,7 +233,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             string[] Warnings;
             AllowedCompilers.TryGetValue(language, out converter);
 
-            converter.Convert(Script, out compileScript, out Warnings);
+            converter.Convert(Script, out compileScript, out Warnings, out PositionMap);
 
             // copy converter warnings into our warnings.
             foreach (string warning in Warnings)
@@ -309,7 +309,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
         /// </summary>
         /// <param name="Script">CS script</param>
         /// <returns>Filename to .dll assembly</returns>
-        internal string CompileFromDotNetText(string Script, IScriptConverter converter, string assembly)
+        internal void CompileFromDotNetText(string Script, IScriptConverter converter, string assembly)
         {
             string ext = "." + converter.Name;
 
@@ -403,7 +403,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                         {
                             text = ReplaceTypes(CompErr.ErrorText);
                             text = CleanError(text);
-                            lslPos = FindErrorPosition(CompErr.Line, CompErr.Column, ((CSCodeGenerator)LSL_Converter).PositionMap);
+                            lslPos = FindErrorPosition(CompErr.Line, CompErr.Column, PositionMap);
                             LineN = lslPos.Key - 1;
                             CharN = lslPos.Value - 1;
                         }
@@ -445,52 +445,6 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                     throw new Exception(errtext);
                 }
             }
-
-            //            m_log.DebugFormat("[Compiler] Compiled new assembly "+
-            //                    "for {0}", asset);
-
-            // Because windows likes to perform exclusive locks, we simply
-            // write out a textual representation of the file here
-            //
-            // Read the binary file into a buffer
-            //
-            /*FileInfo fi = new FileInfo(assembly);
-
-            if (fi == null)
-            {
-                errtext = String.Empty;
-                errtext += "No compile error. But not able to start file.";
-                throw new Exception(errtext);
-            }
-
-            Byte[] data = new Byte[fi.Length];
-
-            try
-            {
-                FileStream fs = File.Open(assembly, FileMode.Open, FileAccess.Read);
-                fs.Read(data, 0, data.Length);
-                fs.Close();
-            }
-            catch (Exception)
-            {
-                errtext = String.Empty;
-                errtext += "No compile error. But not able to open file.";
-                throw new Exception(errtext);
-            }
-
-            // Convert to base64
-            //
-            AssemblyText = System.Convert.ToBase64String(data);
-
-            System.Text.ASCIIEncoding enc = new System.Text.ASCIIEncoding();
-
-            Byte[] buf = enc.GetBytes(AssemblyText);
-
-            FileStream sfs = File.Create(assembly + ".text");
-            sfs.Write(buf, 0, buf.Length);
-            sfs.Close();*/
-
-            return assembly;
         }
 
         private class kvpSorter : IComparer<KeyValuePair<int, int>>

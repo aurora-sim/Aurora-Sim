@@ -1322,6 +1322,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             foreach (SYMBOL s in gv.kids)
             {
                 retstr += Indent();
+                retstr += "public ";
                 retstr += GenerateNode(s);
                 retstr += GenerateLine(";");
             }
@@ -1938,11 +1939,13 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             {
                 isEnumerable = true;
             }
-            
-            if (isEnumerable)
+
+            if (isEnumerable && IsParentEnumerable)
             {
+                retstr += "yield return null;\n";
                 retstr += Generate("parts.Add(");
             }
+
             retstr += Generate(String.Format("{0}(", CheckName(fc.Id)), fc);
             retstr += tempString;
             

@@ -170,7 +170,7 @@ namespace OpenSim.Region.Physics.OdePlugin
             }
             else
             {
-                _position = new Vector3(((float)_parent_scene.WorldExtents.X * 0.5f), ((float)_parent_scene.WorldExtents.Y * 0.5f), parent_scene.GetTerrainHeightAtXY(128f, 128f) + 10f);
+                _position = new Vector3(((float)parent_scene.WorldExtents.X * 0.5f), ((float)parent_scene.WorldExtents.Y * 0.5f), parent_scene.GetTerrainHeightAtXY(128f, 128f) + 10f);
                 m_taintPosition.X = _position.X;
                 m_taintPosition.Y = _position.Y;
                 m_taintPosition.Z = _position.Z;
@@ -181,7 +181,7 @@ namespace OpenSim.Region.Physics.OdePlugin
 
             PID_D = pid_d;
             PID_P = pid_p;
-            capsule_radius = .23f;
+            //capsule_radius = .23f;
             CAPSULE_RADIUS = capsule_radius;
             m_tensor = tensor;
             m_density = density;
@@ -197,7 +197,7 @@ namespace OpenSim.Region.Physics.OdePlugin
             {
                 m_colliderarr[i] = false;
             }
-            CAPSULE_LENGTH = (size.Z * 1.15f) - CAPSULE_RADIUS * 3.2f;
+            CAPSULE_LENGTH = (size.Z * 1.15f) - CAPSULE_RADIUS * 2; //* 3.2f;
             //m_log.Info("[SIZE]: " + CAPSULE_LENGTH.ToString());
             m_tainted_CAPSULE_LENGTH = CAPSULE_LENGTH;
 

@@ -50,7 +50,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
         protected IScript m_Script;
 
         protected Dictionary<string, scriptEvents> m_eventFlagsMap = new Dictionary<string, scriptEvents>();
-        protected Dictionary<OpenMetaverse.UUID, IEnumerator> m_enumerators = new Dictionary<OpenMetaverse.UUID, IEnumerator>();
+        protected Dictionary<Guid, IEnumerator> m_enumerators = new Dictionary<Guid, IEnumerator>();
 
         [Flags]
         public enum scriptEvents : int
@@ -138,116 +138,228 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
             return (eventFlags);
         }
 
-        public OpenMetaverse.UUID ExecuteEvent(string state, string FunctionName, object[] args, OpenMetaverse.UUID Start)
+        public object ExecuteRemoteEvent(object[] parameters)
         {
-            // IMPORTANT: Types and MemberInfo-derived objects require a LOT of memory.
-            // Instead use RuntimeTypeHandle, RuntimeFieldHandle and RunTimeHandle (IntPtr) instead!
-            string EventName = state + "_event_" + FunctionName;
+            return null;
+        }
 
-            //#if DEBUG
-            m_log.Debug("ScriptEngine: Script event function name: " + EventName);
-            //#endif
-
-            if (!Events.ContainsKey(EventName))
+        public Guid ExecuteEvent(string state, string FunctionName, object[] args, Guid Start)
+        {
+            try
             {
-                // Not found, create
-                Type type = m_Script.GetType();
-                try
-                {
-                	MethodInfo mi = type.GetMethod(EventName);
-                    Events.Add(EventName, mi);
-                }
-                catch
-                {
-                    if (!Events.ContainsKey(EventName))
-                        // Event name not found, cache it as not found
-                        Events.Add(EventName, null);
-                }
-            }
-			// Get event
-			MethodInfo ev = null;
-			Events.TryGetValue(EventName, out ev);
-			if (ev == null) // No event by that name!
-			{
-                //Attempt to find it just by name
+                // IMPORTANT: Types and MemberInfo-derived objects require a LOT of memory.
+                // Instead use RuntimeTypeHandle, RuntimeFieldHandle and RunTimeHandle (IntPtr) instead!
+                string EventName = state + "_event_" + FunctionName;
 
-                if (!Events.ContainsKey(FunctionName))
+                //#if DEBUG
+                m_log.Debug("ScriptEngine: Script event function name: " + EventName);
+                //#endif
+
+                if (!Events.ContainsKey(EventName))
                 {
                     // Not found, create
                     Type type = m_Script.GetType();
                     try
                     {
-                        MethodInfo mi = type.GetMethod(FunctionName);
-                        Events.Add(FunctionName, mi);
+                        MethodInfo mi = type.GetMethod(EventName);
+                        Events.Add(EventName, mi);
                     }
                     catch
                     {
-                        if (!Events.ContainsKey(FunctionName))
+                        if (!Events.ContainsKey(EventName))
                             // Event name not found, cache it as not found
-                            Events.Add(FunctionName, null);
+                            Events.Add(EventName, null);
                     }
                 }
+                // Get event
+                MethodInfo ev = null;
                 Events.TryGetValue(EventName, out ev);
                 if (ev == null) // No event by that name!
                 {
-                    //m_log.Debug("ScriptEngine Can not find any event named:" + EventName);
-                    return OpenMetaverse.UUID.Zero;
+                    //Attempt to find it just by name
+
+                    if (!Events.ContainsKey(FunctionName))
+                    {
+                        // Not found, create
+                        Type type = m_Script.GetType();
+                        try
+                        {
+                            MethodInfo mi = type.GetMethod(FunctionName);
+                            Events.Add(FunctionName, mi);
+                        }
+                        catch
+                        {
+                            if (!Events.ContainsKey(FunctionName))
+                                // Event name not found, cache it as not found
+                                Events.Add(FunctionName, null);
+                        }
+                    }
+                    Events.TryGetValue(EventName, out ev);
+                    if (ev == null) // No event by that name!
+                    {
+                        //m_log.Debug("ScriptEngine Can not find any event named:" + EventName);
+                        return new Guid();
+                    }
                 }
-			}
-            IEnumerator thread = null;
-            if (Start != OpenMetaverse.UUID.Zero)
-            {
-                m_enumerators.TryGetValue(Start, out thread);
-            }
-            else
-            {
-                FastInvokeHandler fastInvoker = GetMethodInvoker(ev);
-			    thread = (IEnumerator)fastInvoker(m_Script, args);
-            }
-            if (thread != null)
-            {
-                int i = 0;
-                bool running = false;
-                while (i < 5)
+                try
                 {
-                    i++;
-                    try
+
+                    IEnumerator thread = null;
+                    if (Start != Guid.Empty)
                     {
-                        running = thread.MoveNext();
-                        if (!running)
+                        m_enumerators.TryGetValue(Start, out thread);
+                    }
+                    else
+                    {
+                        FastInvokeHandler fastInvoker = GetMethodInvoker(ev);
+                        thread = (IEnumerator)fastInvoker(m_Script, args);
+                    }
+                    if (thread != null)
+                    {
+                        int i = 0;
+                        bool running = false;
+                        try
                         {
-                            if(m_enumerators.ContainsKey(Start))
-                                m_enumerators.Remove(Start);
-                            return OpenMetaverse.UUID.Zero;
+                            while (i < 5)
+                            {
+                                running = thread.MoveNext();
+                                if (!running)
+                                {
+                                    if (m_enumerators.ContainsKey(Start))
+                                        m_enumerators.Remove(Start);
+                                    return Guid.Empty;
+                                }
+                                i++;
+                            }
+                        }
+                        catch (TargetInvocationException tie)
+                        {
+                            // Grab the inner exception and rethrow it, unless the inner
+                            // exception is an EventAbortException as this indicates event
+                            // invocation termination due to a state change.
+                            // DO NOT THROW JUST THE INNER EXCEPTION!
+                            // FriendlyErrors depends on getting the whole exception!
+                            //
+                            if (!(tie.InnerException is EventAbortException))
+                            {
+                                throw;
+                            }
                         }
                     }
-                    catch (TargetInvocationException tie)
+                    else
                     {
-                        // Grab the inner exception and rethrow it, unless the inner
-                        // exception is an EventAbortException as this indicates event
-                        // invocation termination due to a state change.
-                        // DO NOT THROW JUST THE INNER EXCEPTION!
-                        // FriendlyErrors depends on getting the whole exception!
-                        //
-                        if (!(tie.InnerException is EventAbortException))
+                        FastInvokeHandler fastInvoker = GetMethodInvoker(ev);
+                        fastInvoker(m_Script, args);
+                        return Guid.Empty;
+                    }
+                    if (Start == Guid.Empty)
+                    {
+                        Start = System.Guid.NewGuid();
+                        m_enumerators.Add(Start, thread);
+                    }
+                    return Start;
+                }
+                catch (TargetInvocationException ex)
+                {
+                    IEnumerator thread = null;
+                    if (Start != Guid.Empty)
+                    {
+                        m_enumerators.TryGetValue(Start, out thread);
+                    }
+                    else
+                    {
+                        thread = (IEnumerator)ev.Invoke(m_Script, args);
+                    }
+                    int i = 0;
+                    bool running = false;
+                    while (i < i + 10)
+                    {
+                        i++;
+                        try
                         {
-                            throw;
+                            running = thread.MoveNext();
+                            if (!running)
+                            {
+                                if (m_enumerators.ContainsKey(Start))
+                                    m_enumerators.Remove(Start);
+                                return Guid.Empty;
+                            }
+
+                        }
+                        catch (TargetInvocationException tie)
+                        {
+                            // Grab the inner exception and rethrow it, unless the inner
+                            // exception is an EventAbortException as this indicates event
+                            // invocation termination due to a state change.
+                            // DO NOT THROW JUST THE INNER EXCEPTION!
+                            // FriendlyErrors depends on getting the whole exception!
+                            //
+                            if (!(tie.InnerException is EventAbortException))
+                            {
+                                throw;
+                            }
                         }
                     }
+                    if (Start == Guid.Empty)
+                    {
+                        Start = System.Guid.NewGuid();
+                        m_enumerators.Add(Start, thread);
+                    }
+                    return Start;
+                }
+                catch (System.Security.SecurityException ex)
+                {
+                    IEnumerator thread = null;
+                    if (Start != Guid.Empty)
+                    {
+                        m_enumerators.TryGetValue(Start, out thread);
+                    }
+                    else
+                    {
+                        thread = (IEnumerator)ev.Invoke(m_Script, args);
+                    }
+                    int i = 0;
+                    bool running = false;
+                    while (i < i + 10)
+                    {
+                        i++;
+                        try
+                        {
+                            running = thread.MoveNext();
+                            if (!running)
+                            {
+                                if (m_enumerators.ContainsKey(Start))
+                                    m_enumerators.Remove(Start);
+                                return Guid.Empty;
+                            }
+
+                        }
+                        catch (TargetInvocationException tie)
+                        {
+                            // Grab the inner exception and rethrow it, unless the inner
+                            // exception is an EventAbortException as this indicates event
+                            // invocation termination due to a state change.
+                            // DO NOT THROW JUST THE INNER EXCEPTION!
+                            // FriendlyErrors depends on getting the whole exception!
+                            //
+                            if (!(tie.InnerException is EventAbortException))
+                            {
+                                throw;
+                            }
+                        }
+                    }
+                    if (Start == Guid.Empty)
+                    {
+                        Start = System.Guid.NewGuid();
+                        m_enumerators.Add(Start, thread);
+                    }
+                    return Start;
                 }
             }
-            else
+            catch
             {
-                FastInvokeHandler fastInvoker = GetMethodInvoker(ev);
-                fastInvoker(m_Script, args);
-                return OpenMetaverse.UUID.Zero;
+                return Guid.Empty;
             }
-            if (Start == OpenMetaverse.UUID.Zero)
-            {
-                Start = OpenMetaverse.UUID.Random();
-                m_enumerators.Add(Start, thread);
-            }
-            return Start;
         }
 
         #region From http://www.codeproject.com/KB/cs/FastMethodInvoker.aspx Thanks to Luyan for this code
