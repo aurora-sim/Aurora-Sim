@@ -11,6 +11,7 @@
 		<ScriptPlugin id="LS_Api"           type="OpenSim.Region.ScriptEngine.Shared.Api.LS_Api" />
 		<ScriptPlugin id="LSL_Api"           type="OpenSim.Region.ScriptEngine.Shared.Api.LSL_Api" />
 		<ScriptPlugin id="MOD_Api" type="OpenSim.Region.ScriptEngine.Shared.Api.MOD_Api" />
+		<ScriptPlugin id="AA_Api" type="OpenSim.Region.ScriptEngine.Shared.Api.AA_Api" />
 		<ScriptPlugin id="OSSL_Api"           type="OpenSim.Region.ScriptEngine.Shared.Api.OSSL_Api" />
     </Extension>
 </Addin>

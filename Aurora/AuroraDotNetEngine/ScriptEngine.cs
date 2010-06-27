@@ -474,13 +474,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return;
 
             LUStruct itemToQueue = StartScript(part, itemID, script,
-                    startParam, postOnRez, (StateSource)stateSource);
+                    startParam, postOnRez, (StateSource)stateSource, UUID.Zero);
             if(itemToQueue != null)
                 LUQueue.Enqueue(new LUStruct[]{itemToQueue});
         }
 
         public void OnRezScripts(SceneObjectPart part, TaskInventoryItem[] items,
-                int startParam, bool postOnRez, string engine, int stateSource)
+                int startParam, bool postOnRez, string engine, int stateSource, UUID RezzedFrom)
         {
             List<TaskInventoryItem> ItemsToStart = new List<TaskInventoryItem>();
             foreach (TaskInventoryItem item in items)
@@ -565,7 +565,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 string script = Utils.BytesToString(asset.Data);
 
                 LUStruct itemToQueue = StartScript(part, item.ItemID, script,
-                        startParam, postOnRez, (StateSource)stateSource);
+                        startParam, postOnRez, (StateSource)stateSource, RezzedFrom);
                 if (itemToQueue != null)
                     ItemsToQueue.Add(itemToQueue);
             }
@@ -601,6 +601,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 if (p[i] is int)
                     lsl_p[i] = new LSL_Types.LSLInteger((int)p[i]);
+                else if (p[i] is UUID)
+                    lsl_p[i] = new LSL_Types.LSLString((string)p[i]);
                 else if (p[i] is string)
                     lsl_p[i] = new LSL_Types.LSLString((string)p[i]);
                 else if (p[i] is Vector3)
@@ -616,9 +618,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             return PostScriptEvent(itemID, new EventParams(name, lsl_p, new DetectParams[0]));
         }
 
-        public bool PostObjectEvent(UUID itemID, string name, Object[] p)
+        public bool PostObjectEvent(UUID primID, string name, Object[] p)
         {
-            SceneObjectPart part = findPrimsScene(itemID).GetSceneObjectPart(itemID);
+            SceneObjectPart part = findPrimsScene(primID).GetSceneObjectPart(primID);
             if (part == null)
                 return false;
 
@@ -627,6 +629,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 if (p[i] is int)
                     lsl_p[i] = new LSL_Types.LSLInteger((int)p[i]);
+                else if (p[i] is UUID)
+                    lsl_p[i] = new LSL_Types.LSLString((string)p[i]);
                 else if (p[i] is string)
                     lsl_p[i] = new LSL_Types.LSLString((string)p[i]);
                 else if (p[i] is Vector3)
@@ -770,7 +774,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (!id.Disabled)
                 id.Running = true;
 
-            LUStruct item = StartScript(id.part, itemID, id.Source, id.StartParam, true, id.stateSource);
+            LUStruct item = StartScript(id.part, itemID, id.Source, id.StartParam, true, id.stateSource, UUID.Zero);
             if (item != null)
                 LUQueue.Enqueue(new LUStruct[] { item });
         }
@@ -1031,7 +1035,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// </summary>
         /// <param name="itemID"></param>
         /// <param name="localID"></param>
-        public LUStruct StartScript(SceneObjectPart part, UUID itemID, string Script, int startParam, bool postOnRez, StateSource statesource)
+        public LUStruct StartScript(SceneObjectPart part, UUID itemID, string Script, int startParam, bool postOnRez, StateSource statesource, UUID RezzedFrom)
         {
             ScriptData id = null;
             ScriptData findID = GetScript(part.UUID, itemID);
@@ -1067,6 +1071,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             id.Source = Script;
             id.part = part;
             id.World = part.ParentGroup.Scene;
+            id.RezzedFrom = RezzedFrom;
             ScriptProtection.RemovePreviouslyCompiled(id.Source);
             ls.ID = id;
             return ls;

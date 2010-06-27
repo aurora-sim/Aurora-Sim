@@ -46,7 +46,7 @@ namespace OpenSim.Region.ScriptEngine.Interfaces
 
     public interface IScriptProtectionModule
     {
-        bool AllowMacroScripting { get; }
+        bool AllowHTMLLinking { get; }
         ThreatLevel GetThreatLevel();
         void CheckThreatLevel(ThreatLevel level, string function, SceneObjectPart m_host, string API);
         IScriptData TryGetPreviouslyCompiledScript(string source);

@@ -48,23 +48,74 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
 {
     public partial class ScriptBaseClass : MarshalByRefObject
     {
-        public IMOD_Api m_MOD_Functions;
+        public IAA_Api m_AA_Functions;
 
-        public void Dispose()
+        public void ApiTypeAA(IScriptApi api)
         {
-        }
-
-        public void ApiTypeMOD(IScriptApi api)
-        {
-            if (!(api is IMOD_Api))
+            if (!(api is IAA_Api))
                 return;
 
-            m_MOD_Functions = (IMOD_Api)api;
+            m_AA_Functions = (IAA_Api)api;
         }
 
-        public string modSendCommand(string module, string command, string k)
+        public void AASetCloudDensity(LSL_Float density)
         {
-            return m_MOD_Functions.modSendCommand(module, command, k);
+            m_AA_Functions.AASetCloudDensity(density);
+        }
+
+        public void AAUpdateDatabase(LSL_String key, LSL_String value, LSL_String token)
+        {
+            m_AA_Functions.AAUpdateDatabase(key, value, token);
+        }
+
+        public LSL_List AAQueryDatabase(LSL_String key, LSL_String token)
+        {
+            return m_AA_Functions.AAQueryDatabase(key, token);
+        }
+
+        public LSL_String AASerializeXML(LSL_List keys, LSL_List values)
+        {
+            return m_AA_Functions.AASerializeXML(keys, values);
+        }
+
+        public LSL_List AADeserializeXMLKeys(LSL_String xmlFile)
+        {
+            return m_AA_Functions.AADeserializeXMLKeys(xmlFile);
+        }
+
+        public LSL_List AADeserializeXMLValues(LSL_String xmlFile)
+        {
+            return m_AA_Functions.AADeserializeXMLValues(xmlFile);
+        }
+
+        public void AASetConeOfSilence(LSL_Float radius)
+        {
+            m_AA_Functions.AASetConeOfSilence(radius);
+        }
+
+        public void AAJoinCombatTeam(LSL_String team)
+        {
+            m_AA_Functions.AAJoinCombatTeam(team);
+        }
+
+        public void AAJoinCombat()
+        {
+            m_AA_Functions.AAJoinCombat();
+        }
+
+        public void AALeaveCombat()
+        {
+            m_AA_Functions.AALeaveCombat();
+        }
+
+        public LSL_Float AAGetHealth()
+        {
+            return m_AA_Functions.AAGetHealth();
+        }
+
+        public LSL_String AAGetTeam()
+        {
+            return m_AA_Functions.AAGetTeam();
         }
     }
 }

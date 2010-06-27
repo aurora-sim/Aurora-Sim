@@ -92,6 +92,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public int LastControlLevel = 0;
         public int ControlEventsInQueue = 0;
         public bool StartedFromSavedState = false;
+        public UUID RezzedFrom = UUID.Zero; // If rezzed from llRezObject, this is not Zero
 
         public SceneObjectPart part;
 
@@ -329,6 +330,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// </summary>
         public void FireEvents()
         {
+            if (RezzedFrom != UUID.Zero)
+            {
+                //Post the event for the prim that rezzed us
+                m_ScriptEngine.PostObjectEvent(RezzedFrom,"object_rez", new object[] {
+                            part.ParentGroup.RootPart.UUID });
+                RezzedFrom = UUID.Zero;
+            }
             if (StartedFromSavedState)
             {
                 if (PostOnRez)
@@ -380,8 +388,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             #region HTML Reader
 
-            if (ScriptEngine.ScriptProtection.AllowMacroScripting)
+            if (ScriptEngine.ScriptProtection.AllowHTMLLinking)
             {
+                //Read the URL and load it.
                 if (Source.Contains("#IncludeHTML "))
                 {
                     string URL = "";
@@ -395,6 +404,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             else
             {
+                //Remove the line then
                 if (Source.Contains("#IncludeHTML "))
                 {
                     string URL = "";

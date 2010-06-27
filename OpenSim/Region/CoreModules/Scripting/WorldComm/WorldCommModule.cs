@@ -110,11 +110,11 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
             int maxhandles = 64;
             try
             {
-                m_whisperdistance = config.Configs["Chat"].GetInt("whisper_distance", m_whisperdistance);
-                m_saydistance = config.Configs["Chat"].GetInt("say_distance", m_saydistance);
-                m_shoutdistance = config.Configs["Chat"].GetInt("shout_distance", m_shoutdistance);
-                maxlisteners = config.Configs["LL-Functions"].GetInt("max_listens_per_region", maxlisteners);
-                maxhandles = config.Configs["LL-Functions"].GetInt("max_listens_per_script", maxhandles);
+                m_whisperdistance = config.Configs["AuroraChat"].GetInt("whisper_distance", m_whisperdistance);
+                m_saydistance = config.Configs["AuroraChat"].GetInt("say_distance", m_saydistance);
+                m_shoutdistance = config.Configs["AuroraChat"].GetInt("shout_distance", m_shoutdistance);
+                maxlisteners = config.Configs["AuroraChat"].GetInt("max_listens_per_region", maxlisteners);
+                maxhandles = config.Configs["AuroraChat"].GetInt("max_listens_per_script", maxhandles);
             }
             catch (Exception)
             {

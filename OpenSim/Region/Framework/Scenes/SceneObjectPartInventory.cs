@@ -201,7 +201,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// Start all the scripts contained in this prim's inventory
         /// </summary>
-        public void CreateScriptInstances(int startParam, bool postOnRez, string engine, int stateSource)
+        public void CreateScriptInstances(int startParam, bool postOnRez, string engine, int stateSource, UUID RezzedFrom)
         {
             lock (m_items)
             {
@@ -252,9 +252,12 @@ namespace OpenSim.Region.Framework.Scenes
                         }
                     }
                 }
-                m_part.ParentGroup.Scene.EventManager.TriggerRezScripts(
-                                        m_part, LSLItems.ToArray(), startParam, postOnRez, engine, stateSource);
-                m_part.ParentGroup.AddActiveScriptCount(LSLItems.Count);
+                lock (m_items)
+                {
+                    m_part.ParentGroup.Scene.EventManager.TriggerRezScripts(
+                                            m_part, LSLItems.ToArray(), startParam, postOnRez, engine, stateSource, RezzedFrom);
+                    m_part.ParentGroup.AddActiveScriptCount(LSLItems.Count);
+                }
                 m_part.ScheduleFullUpdate();
             }
         }

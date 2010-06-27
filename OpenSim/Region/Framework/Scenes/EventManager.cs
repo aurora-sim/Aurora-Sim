@@ -130,7 +130,7 @@ namespace OpenSim.Region.Framework.Scenes
         public delegate void NewRezScript(SceneObjectPart part, UUID itemID, string script, int startParam, bool postOnRez, string engine, int stateSource);
 
         public event NewRezScripts OnRezScripts;
-        public delegate void NewRezScripts(SceneObjectPart part, TaskInventoryItem[] taskInventoryItem, int startParam, bool postOnRez, string engine, int stateSource);
+        public delegate void NewRezScripts(SceneObjectPart part, TaskInventoryItem[] taskInventoryItem, int startParam, bool postOnRez, string engine, int stateSource, UUID RezzedFrom);
 
         public delegate void RemoveScript(uint localID, UUID itemID);
         public event RemoveScript OnRemoveScript;
@@ -906,7 +906,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void TriggerRezScripts(SceneObjectPart part, TaskInventoryItem[] taskInventoryItem, int startParam, bool postOnRez, string engine, int stateSource)
+        public void TriggerRezScripts(SceneObjectPart part, TaskInventoryItem[] taskInventoryItem, int startParam, bool postOnRez, string engine, int stateSource, UUID RezzedFrom)
         {
             NewRezScripts handlerRezScripts = OnRezScripts;
             if (handlerRezScripts != null)
@@ -915,7 +915,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     try
                     {
-                        d(part, taskInventoryItem, startParam, postOnRez, engine, stateSource);
+                        d(part, taskInventoryItem, startParam, postOnRez, engine, stateSource, RezzedFrom);
                     }
                     catch (Exception e)
                     {

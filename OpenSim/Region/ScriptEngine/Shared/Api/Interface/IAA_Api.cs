@@ -25,46 +25,43 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Runtime.Remoting.Lifetime;
-using System.Threading;
-using System.Reflection;
 using System.Collections;
-using System.Collections.Generic;
-using OpenSim.Framework;
-using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.ScriptEngine.Interfaces;
-using OpenSim.Region.ScriptEngine.Shared.Api.Interfaces;
-using integer = OpenSim.Region.ScriptEngine.Shared.LSL_Types.LSLInteger;
-using vector = OpenSim.Region.ScriptEngine.Shared.LSL_Types.Vector3;
-using rotation = OpenSim.Region.ScriptEngine.Shared.LSL_Types.Quaternion;
+
 using key = OpenSim.Region.ScriptEngine.Shared.LSL_Types.LSLString;
+using rotation = OpenSim.Region.ScriptEngine.Shared.LSL_Types.Quaternion;
+using vector = OpenSim.Region.ScriptEngine.Shared.LSL_Types.Vector3;
 using LSL_List = OpenSim.Region.ScriptEngine.Shared.LSL_Types.list;
 using LSL_String = OpenSim.Region.ScriptEngine.Shared.LSL_Types.LSLString;
-using LSL_Float = OpenSim.Region.ScriptEngine.Shared.LSL_Types.LSLFloat;
 using LSL_Integer = OpenSim.Region.ScriptEngine.Shared.LSL_Types.LSLInteger;
+using LSL_Float = OpenSim.Region.ScriptEngine.Shared.LSL_Types.LSLFloat;
 
-namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
+namespace OpenSim.Region.ScriptEngine.Shared.Api.Interfaces
 {
-    public partial class ScriptBaseClass : MarshalByRefObject
+    public interface IAA_Api
     {
-        public IMOD_Api m_MOD_Functions;
+        void AASetCloudDensity(LSL_Float density);
 
-        public void Dispose()
-        {
-        }
+        void AAUpdateDatabase(LSL_String key, LSL_String value, LSL_String token);
 
-        public void ApiTypeMOD(IScriptApi api)
-        {
-            if (!(api is IMOD_Api))
-                return;
+        LSL_List AAQueryDatabase(LSL_String key, LSL_String token);
 
-            m_MOD_Functions = (IMOD_Api)api;
-        }
+        LSL_Types.list AADeserializeXMLValues(LSL_Types.LSLString xmlFile);
 
-        public string modSendCommand(string module, string command, string k)
-        {
-            return m_MOD_Functions.modSendCommand(module, command, k);
-        }
+        LSL_Types.list AADeserializeXMLKeys(LSL_Types.LSLString xmlFile);
+
+        void AASetConeOfSilence(LSL_Float radius);
+
+        LSL_Types.LSLString AASerializeXML(LSL_Types.list keys, LSL_Types.list values);
+
+        LSL_String AAGetTeam();
+
+        LSL_Float AAGetHealth();
+
+        void AAJoinCombat();
+
+        void AALeaveCombat();
+
+        void AAJoinCombatTeam(LSL_String team);
     }
 }

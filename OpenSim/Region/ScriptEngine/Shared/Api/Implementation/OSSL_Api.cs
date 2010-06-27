@@ -677,11 +677,13 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             ScriptProtection.CheckThreatLevel(ThreatLevel.Severe, "osConsoleCommand", m_host, "OSSL");
 
             m_host.AddScriptLPS(1);
-
-            if (World.Permissions.CanRunConsoleCommand(m_host.OwnerID))
+            if (m_ScriptEngine.Config.GetBoolean("AllowosConsoleCommand", false))
             {
-                MainConsole.Instance.RunCommand(command);
-                return true;
+                if (World.Permissions.CanRunConsoleCommand(m_host.OwnerID))
+                {
+                    MainConsole.Instance.RunCommand(command);
+                    return true;
+                }
             }
             return false;
         }

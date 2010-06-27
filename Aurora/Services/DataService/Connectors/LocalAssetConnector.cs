@@ -82,5 +82,23 @@ namespace Aurora.Services.DataService
                 GD.Insert("assetMediaURL", Values.ToArray());
             }
         }
+
+        public void UpdateLSLData(string token, string key, string value)
+        {
+            List<string> Test = GD.Query(new string[] { "Token", "Key" }, new string[] { token, key }, "LSLGenericData", "*");
+            if (Test.Count == 0)
+            {
+                GD.Insert("LSLGenericData", new string[] { token, key, value });
+            }
+            else
+            {
+                GD.Update("LSLGenericData", new string[] { "Value" }, new string[] { value }, new string[] { "key" }, new string[] { key });
+            }
+        }
+
+        public List<string> FindLSLData(string token, string key)
+        {
+            return GD.Query(new string[] { "Token", "Key" }, new string[] { token, key }, "LSLGenericData", "*");
+        }
     }
 }

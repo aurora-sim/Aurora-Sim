@@ -181,7 +181,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
 
             foreach (SceneObjectGroup sceneObject in sceneObjects)
             {
-                 sceneObject.CreateScriptInstances(0, true, scene.DefaultScriptEngine, 0);
+                 sceneObject.CreateScriptInstances(0, true, scene.DefaultScriptEngine, 0, UUID.Zero);
                  sceneObject.ResumeScripts();
             }
         }

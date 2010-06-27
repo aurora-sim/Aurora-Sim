@@ -10,5 +10,9 @@ namespace Aurora.Framework
 		ObjectMediaURL GetObjectMediaInfo(string objectID, int side);
 
         void UpdateObjectMediaInfo(ObjectMediaURL media, int side, OpenMetaverse.UUID ObjectID);
+
+        void UpdateLSLData(string token, string key, string value);
+
+        List<string> FindLSLData(string token, string key);
     }
 }

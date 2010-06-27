@@ -61,7 +61,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     if (group is SceneObjectGroup)
                     {
-                        ((SceneObjectGroup)group).CreateScriptInstances(0, false, DefaultScriptEngine, 0);
+                        ((SceneObjectGroup)group).CreateScriptInstances(0, false, DefaultScriptEngine, 0, UUID.Zero);
                         ((SceneObjectGroup)group).ResumeScripts();
                     }
                 });
@@ -1815,7 +1815,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns>The SceneObjectGroup rezzed or null if rez was unsuccessful</returns>
         public virtual SceneObjectGroup RezObject(
             SceneObjectPart sourcePart, TaskInventoryItem item,
-            Vector3 pos, Quaternion rot, Vector3 vel, int param)
+            Vector3 pos, Quaternion rot, Vector3 vel, int param, UUID RezzedFrom)
         {
             // Rez object
             if (item != null)
@@ -1899,7 +1899,7 @@ namespace OpenSim.Region.Framework.Scenes
                         group.Velocity = vel;
                         rootPart.ScheduleFullUpdate();
                     }
-                    group.CreateScriptInstances(param, true, DefaultScriptEngine, 2);
+                    group.CreateScriptInstances(param, true, DefaultScriptEngine, 2, RezzedFrom);
                     rootPart.ScheduleFullUpdate();
 
                     if (!Permissions.BypassPermissions())

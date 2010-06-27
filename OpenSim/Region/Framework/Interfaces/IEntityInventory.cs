@@ -71,7 +71,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <summary>
         /// Start all the scripts contained in this entity's inventory
         /// </summary>
-        void CreateScriptInstances(int startParam, bool postOnRez, string engine, int stateSource);
+        void CreateScriptInstances(int startParam, bool postOnRez, string engine, int stateSource, UUID RezzedFrom);
 
         ArrayList GetScriptErrors(UUID itemID, string DefaultScriptEngine);
         void ResumeScripts();

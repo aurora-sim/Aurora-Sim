@@ -262,7 +262,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
                     // Fire after attach, so we don't get messy perms dialogs
                     // 3 == AttachedRez
-                    objatt.CreateScriptInstances(0, true, m_scene.DefaultScriptEngine, 3);
+                    objatt.CreateScriptInstances(0, true, m_scene.DefaultScriptEngine, 3, UUID.Zero);
                     objatt.ResumeScripts();
 
                     // Do this last so that event listeners have access to all the effects of the attachment

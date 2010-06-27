@@ -26,8 +26,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
 		IConfigSource m_source;
         ScriptEngine m_engine;
-        Trust MacroTrustLevel = Trust.Medium;
-        bool allowMacroScripting = true;
+        bool allowHTMLLinking = true;
 
         Dictionary<UUID, List<string>> WantedClassesByItemID = new Dictionary<UUID, List<string>>();
         //First String: ClassName, Second String: Class Source
@@ -50,16 +49,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 		{
 			m_source = source;
             m_engine = engine;
-            EnabledAPIs = new List<string>(m_engine.Config.GetString("AllowedAPIs", "").Split(','));
+            EnabledAPIs = new List<string>(m_engine.Config.GetString("AllowedAPIs", "LSL").Split(','));
             
-            allowMacroScripting = m_engine.Config.GetBoolean("AllowMacroScripting", true);
-            string threat = m_engine.Config.GetString("MacroScriptingTrustLevel", "Full");
-            if (threat == "Medium")
-                MacroTrustLevel = Trust.Medium;
-            if (threat == "Full")
-                MacroTrustLevel = Trust.Full;
-            if (threat == "Low")
-                MacroTrustLevel = Trust.Low;
+            allowHTMLLinking = m_engine.Config.GetBoolean("AllowHTMLLinking", true);
 		}
         
 		#endregion
@@ -181,21 +173,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             throw new Exception(surMessage + msg);
         }
 
-        
-		
 		#endregion
         
-        #region MacroScripting Protection
-        
-        public bool AllowMacroScripting
+        public bool AllowHTMLLinking
         {
             get
             {
-                return allowMacroScripting;
+                return allowHTMLLinking;
             }
         }
-        
-        #endregion
         
         #region Previously Compiled Scripts
         

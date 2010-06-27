@@ -58,7 +58,6 @@ namespace Aurora.Modules
         private Scene m_scene;
         private IConfigSource m_config;
         private IProfileConnector ProfileFrontend = null;
-        private IGenericData GenericData = null;
         private IConfigSource m_gConfig;
         private List<Scene> m_Scenes = new List<Scene>();
         private bool m_SearchEnabled = true;
@@ -120,7 +119,6 @@ namespace Aurora.Modules
 
         public void RegionLoaded(Scene scene)
         {
-            GenericData = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
             DSC = Aurora.DataManager.DataManager.IDirectoryServiceConnector;
             GroupsModule = m_scene.RequestModuleInterface<IGroupsModule>();
         }

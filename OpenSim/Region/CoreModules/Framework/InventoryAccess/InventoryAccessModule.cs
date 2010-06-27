@@ -697,7 +697,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                                     }
 
                                     // Fire on_rez
-                                    group.CreateScriptInstances(0, true, m_Scene.DefaultScriptEngine, 0);
+                                    group.CreateScriptInstances(0, true, m_Scene.DefaultScriptEngine, 0, UUID.Zero);
                                     rootPart.ParentGroup.ResumeScripts();
                                 }
 
@@ -857,7 +857,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                             }
 
                             // Fire on_rez
-                            group.CreateScriptInstances(0, true, m_Scene.DefaultScriptEngine, 0);
+                            group.CreateScriptInstances(0, true, m_Scene.DefaultScriptEngine, 0, UUID.Zero);
                             rootPart.ParentGroup.ResumeScripts();
 
                             rootPart.ScheduleFullUpdate();
