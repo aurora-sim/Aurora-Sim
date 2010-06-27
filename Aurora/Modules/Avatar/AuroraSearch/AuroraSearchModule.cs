@@ -104,7 +104,7 @@ namespace Aurora.Modules
 
         public void AddRegion(Scene scene)
         {
-            ProfileFrontend = DataManager.DataManager.IProfileConnector;
+            ProfileFrontend = DataManager.DataManager.RequestPlugin<IProfileConnector>("IProfileConnector");
 
             if (!m_Scenes.Contains(scene))
                 m_Scenes.Add(scene);
@@ -119,7 +119,7 @@ namespace Aurora.Modules
 
         public void RegionLoaded(Scene scene)
         {
-            DSC = Aurora.DataManager.DataManager.IDirectoryServiceConnector;
+            DSC = Aurora.DataManager.DataManager.RequestPlugin<IDirectoryServiceConnector>("IDirectoryServiceConnector");
             GroupsModule = m_scene.RequestModuleInterface<IGroupsModule>();
         }
 
@@ -535,7 +535,7 @@ namespace Aurora.Modules
             #region Telehub
             if (itemtype == (uint)OpenMetaverse.GridItemType.Telehub)
             {
-                IRegionConnector GF = DataManager.DataManager.IRegionConnector;
+                IRegionConnector GF = DataManager.DataManager.RequestPlugin<IRegionConnector>("IRegionConnector");
                 int tc = Environment.TickCount;
                 Telehub telehub = GF.FindTelehub(GR.RegionID);
                 if (telehub != null)

@@ -11,9 +11,9 @@ namespace Aurora.Services.DataService
 	public class LocalAssetConnector : IAssetConnector
 	{
 		private IGenericData GD = null;
-		public LocalAssetConnector()
-		{
-			GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
+        public LocalAssetConnector(IGenericData GenericData)
+        {
+            GD = GenericData;
 		}
 
 		public ObjectMediaURL GetObjectMediaInfo(string objectID, int side)

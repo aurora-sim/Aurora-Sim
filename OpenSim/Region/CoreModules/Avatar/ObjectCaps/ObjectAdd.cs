@@ -51,7 +51,6 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
         private static readonly ILog m_log =
             LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private Scene m_scene;
-        IAssetConnector AC = null;
         
         #region IRegionModule Members
 
@@ -73,7 +72,6 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
 
         public void RegionLoaded(Scene scene)
         {
-            AC = Aurora.DataManager.DataManager.IAssetConnector;
         }
 
         public Type ReplaceableInterface
@@ -134,7 +132,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
 
             OSD r = OSDParser.DeserializeLLSDXml((string)m_dhttpMethod["requestbody"]);
             OSDMap rm = (OSDMap)r;
-            IAgentConnector AgentFrontend = DataManager.IAgentConnector;
+            IAgentConnector AgentFrontend = DataManager.RequestPlugin<IAgentConnector>("IAgentConnector");
             IAgentInfo IAI = AgentFrontend.GetAgent(agentID);
             IAI.Language = rm["language"].AsString();
             IAI.LanguageIsPublic = int.Parse(rm["language_is_public"].AsString()) == 1;
@@ -170,7 +168,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                 maxLevel = 1;
             if (Level == "A")
                 maxLevel = 2;
-            IAgentConnector data = DataManager.IAgentConnector;
+            IAgentConnector data = DataManager.RequestPlugin<IAgentConnector>("IAgentConnector");
             IAgentInfo agent = data.GetAgent(agentID);
             agent.MaxMaturity = maxLevel;
             data.UpdateAgent(agent);

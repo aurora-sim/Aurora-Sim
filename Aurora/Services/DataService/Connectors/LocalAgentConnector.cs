@@ -1,18 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Text;
 using OpenMetaverse;
 using Aurora.DataManager;
 using Aurora.Framework;
+using log4net;
 
 namespace Aurora.Services.DataService
 {
 	public class LocalAgentConnector : IAgentConnector
 	{
-		private IGenericData GD = null;
-		public LocalAgentConnector()
-		{
-			GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
+		private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
+        private IGenericData GD = null;
+        public LocalAgentConnector(IGenericData GenericData)
+        {
+            GD = GenericData;
 		}
 
 		public IAgentInfo GetAgent(UUID agentID)
@@ -91,8 +95,26 @@ namespace Aurora.Services.DataService
 			values.Add(2);
 			values.Add("en-us");
 			values.Add(true);
-			var GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
 			GD.Insert("agentgeneral", values.ToArray());
 		}
-	}
+
+        public bool CheckMacAndViewer(string Mac, string viewer)
+        {
+            List<string> found = GD.Query("macAddress", Mac, "macban", "*");
+            if (found.Count != 0)
+            {
+                m_log.InfoFormat("Mac '" + Mac + "' is in the ban list");
+                return false;
+            }
+
+            //Viewer Ban Start
+            List<string> clientfound = GD.Query("Client", viewer, "BannedViewers", "*");
+            if (clientfound.Count != 0)
+            {
+                m_log.InfoFormat("Viewer '" + viewer + "' is in the ban list");
+                return false;
+            }
+            return true;
+        }
+    }
 }

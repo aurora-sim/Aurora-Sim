@@ -16,37 +16,22 @@ namespace Aurora.DataManager
 {
     public static class DataManager
     {
-    	#region IGenericData 
-    	
-        public static IGenericData DefaultGenericPlugin = null;
-        public static IGenericData GetDefaultGenericPlugin()
+        private static Dictionary<string, object> Plugins = new Dictionary<string, object>();
+        public static T RequestPlugin<T>(string Type)
         {
-            return DefaultGenericPlugin;
+            if (Plugins.ContainsKey(Type))
+            {
+                object Plugin;
+                Plugins.TryGetValue(Type, out Plugin);
+                return (T)Plugin;
+            }
+            return default(T);
         }
-        public static void SetDefaultGenericDataPlugin(IGenericData Plugin)
+
+        public static void RegisterPlugin(string Name, object Plugin)
         {
-            DefaultGenericPlugin = Plugin;
+            if (!Plugins.ContainsKey(Name))
+                Plugins.Add(Name, Plugin);
         }
-        #endregion
-        
-        #region FrontendConnectors
-
-        public static IProfileConnector IProfileConnector;
-        public static IRegionConnector IRegionConnector;
-        public static IAgentConnector IAgentConnector;
-        public static IScriptDataConnector IScriptDataConnector;
-        public static IEstateConnector IEstateConnector;
-        public static IOfflineMessagesConnector IOfflineMessagesConnector;
-        public static IAbuseReportsConnector IAbuseReportsConnector;
-        public static IDirectoryServiceConnector IDirectoryServiceConnector;
-        public static IAssetConnector IAssetConnector;
-        public static IAvatarArchiverConnector IAvatarArchiverConnector;
-        public static ISimMapDataConnector ISimMapDataConnector;
-        public static IRegionInfoConnector IRegionInfoConnector;
-        public static ICurrencyConnector ICurrencyConnector;
-        public static IMuteListConnector IMuteListConnector;
-        public static IParcelServiceConnector IParcelServiceConnector;
-
-        #endregion
     }
 }

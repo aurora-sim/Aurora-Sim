@@ -13,5 +13,7 @@ namespace Aurora.Framework
         RegionInfo GetRegionInfo(UUID regionID);
         RegionInfo GetRegionInfo(string regionName);
         void UpdateRegionInfo(RegionInfo region, bool Disabled);
+        RegionLightShareData LoadRegionWindlightSettings(UUID regionUUID);
+        void StoreRegionWindlightSettings(RegionLightShareData wl);
 	}
 }

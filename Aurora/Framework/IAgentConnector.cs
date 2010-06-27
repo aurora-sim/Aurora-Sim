@@ -11,5 +11,7 @@ namespace Aurora.Framework
 		IAgentInfo GetAgent(UUID agentID);
 		void UpdateAgent(IAgentInfo agent);
 		void CreateNewAgent(UUID agentID);
+
+        bool CheckMacAndViewer(string Mac, string viewer);
 	}
 }

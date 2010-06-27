@@ -11,9 +11,9 @@ namespace Aurora.Services.DataService
     public class LocalMuteListConnector : IMuteListConnector
     {
         IGenericData GD;
-        public LocalMuteListConnector()
+        public LocalMuteListConnector(IGenericData GenericData)
         {
-            GD = Aurora.DataManager.DataManager.DefaultGenericPlugin;
+            GD = GenericData;
         }
 
         public MuteList[] GetMuteList(UUID AgentID)

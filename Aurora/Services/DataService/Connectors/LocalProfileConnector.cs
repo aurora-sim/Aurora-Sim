@@ -14,9 +14,9 @@ namespace Aurora.Services.DataService
 	{
 		private Dictionary<UUID, IUserProfileInfo> UserProfilesCache = new Dictionary<UUID, IUserProfileInfo>();
 		private IGenericData GD = null;
-		public LocalProfileConnector()
-		{
-			GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
+        public LocalProfileConnector(IGenericData GenericData)
+        {
+            GD = GenericData;
 		}
 
 		public Classified FindClassified(string classifiedID)
@@ -304,7 +304,6 @@ namespace Aurora.Services.DataService
 			values.Add(" ");
 			values.Add(true);
 			values.Add(Util.UnixTimeSinceEpoch().ToString());
-			var GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
 			GD.Insert("profilegeneral", values.ToArray());
 		}
 

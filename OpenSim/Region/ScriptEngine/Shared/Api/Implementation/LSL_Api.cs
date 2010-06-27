@@ -5932,7 +5932,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
-            Aurora.Framework.IAgentConnector AgentFrontend = Aurora.DataManager.DataManager.IAgentConnector;
+            Aurora.Framework.IAgentConnector AgentFrontend = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IAgentConnector>("IAgentConnector");
             Aurora.Framework.IAgentInfo Agent = AgentFrontend.GetAgent(new UUID(id));
             if (Agent.LanguageIsPublic)
             {
@@ -9440,7 +9440,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Integer llClearPrimMedia(LSL_Integer face)
         {
-            Aurora.Framework.IAssetConnector connector = Aurora.DataManager.DataManager.IAssetConnector;
+            Aurora.Framework.IAssetConnector connector = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IAssetConnector>("IAssetConnector");
             connector.UpdateObjectMediaInfo(null, face.value, m_host.UUID);
             return new LSL_Integer((int)PrimMediaUpdate.OK);
         }
@@ -9448,7 +9448,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         public LSL_Integer llSetPrimMediaParams(LSL_Integer face, LSL_List commandList)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            Aurora.Framework.IAssetConnector connector = Aurora.DataManager.DataManager.IAssetConnector;
+            Aurora.Framework.IAssetConnector connector = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IAssetConnector>("IAssetConnector");
             Aurora.Framework.ObjectMediaURL MediaFace = connector.GetObjectMediaInfo(m_host.UUID.ToString(), face.value);
             if (MediaFace == null)
             {
@@ -9663,7 +9663,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             LSL_List list = new LSL_List();
-            Aurora.Framework.IAssetConnector connector = Aurora.DataManager.DataManager.IAssetConnector;
+            Aurora.Framework.IAssetConnector connector = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IAssetConnector>("IAssetConnector");
             Aurora.Framework.ObjectMediaURL MediaFace = connector.GetObjectMediaInfo(m_host.UUID.ToString(), face.value);
             if (MediaFace == null)
             {

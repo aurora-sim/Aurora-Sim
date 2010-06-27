@@ -10,9 +10,9 @@ namespace Aurora.Services.DataService
 	public class LocalCurrencyConnector : ICurrencyConnector
 	{
 		private IGenericData GD = null;
-        public LocalCurrencyConnector()
-		{
-			GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
+        public LocalCurrencyConnector(IGenericData GenericData)
+        {
+            GD = GenericData;
 		}
 
 		public IUserCurrency GetUserCurrency(UUID agentID)

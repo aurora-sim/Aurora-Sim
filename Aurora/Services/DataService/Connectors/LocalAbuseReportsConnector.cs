@@ -13,9 +13,9 @@ namespace Aurora.Services.DataService
 	public class LocalAbuseReportsConnector : IAbuseReportsConnector
 	{
 		private IGenericData GD = null;
-		public LocalAbuseReportsConnector()
+		public LocalAbuseReportsConnector(IGenericData GenericData)
 		{
-			GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
+            GD = GenericData;
             List<string> Results = GD.Query("Method", "AbuseReports", "Passwords", "Password");
             if (Results.Count == 0)
             {

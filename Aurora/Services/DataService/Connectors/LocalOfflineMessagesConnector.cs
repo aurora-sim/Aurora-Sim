@@ -10,9 +10,9 @@ namespace Aurora.Services.DataService
 	public class LocalOfflineMessagesConnector : IOfflineMessagesConnector
 	{
 		private IGenericData GD = null;
-		public LocalOfflineMessagesConnector()
-		{
-			GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
+        public LocalOfflineMessagesConnector(IGenericData GenericData)
+        {
+            GD = GenericData;
 		}
 
 		public OfflineMessage[] GetOfflineMessages(UUID agentID)

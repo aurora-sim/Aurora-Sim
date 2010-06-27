@@ -527,7 +527,7 @@ namespace OpenSim.Region.Framework.Scenes
                     scene.RegionInfo.RegionLocY = uint.Parse(MainConsole.Instance.CmdPrompt("New Region Location X", "1000"));
                     scene.RegionInfo.RegionLocX = uint.Parse(MainConsole.Instance.CmdPrompt("New Region Location Y", "1000"));
 
-                    Aurora.DataManager.DataManager.IRegionInfoConnector.UpdateRegionInfo(scene.RegionInfo, false);
+                    Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>("IRegionInfoConnector").UpdateRegionInfo(scene.RegionInfo, false);
                 }
                 if (error == "Region overlaps another region")
                 {
@@ -535,7 +535,7 @@ namespace OpenSim.Region.Framework.Scenes
                     scene.RegionInfo.RegionLocY = uint.Parse(MainConsole.Instance.CmdPrompt("New Region Location X", "1000"));
                     scene.RegionInfo.RegionLocX = uint.Parse(MainConsole.Instance.CmdPrompt("New Region Location Y", "1000"));
 
-                    Aurora.DataManager.DataManager.IRegionInfoConnector.UpdateRegionInfo(scene.RegionInfo, false);
+                    Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>("IRegionInfoConnector").UpdateRegionInfo(scene.RegionInfo, false);
                 }
                 if (error.Contains("Can't move this region"))
                 {
@@ -548,7 +548,7 @@ namespace OpenSim.Region.Framework.Scenes
                         scene.RegionInfo.RegionLocY = uint.Parse(position[1]);
                         scene.RegionInfo.RegionLocX = uint.Parse(position[2]);
 
-                        Aurora.DataManager.DataManager.IRegionInfoConnector.UpdateRegionInfo(scene.RegionInfo, false);
+                        Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>("IRegionInfoConnector").UpdateRegionInfo(scene.RegionInfo, false);
                     }
                     catch (Exception e)
                     {
@@ -561,7 +561,7 @@ namespace OpenSim.Region.Framework.Scenes
                     m_log.Error("[STARTUP]: Registration of region with grid failed - The region name you specified is already in use. Please change the name.");
                     scene.RegionInfo.RegionName = MainConsole.Instance.CmdPrompt("New Region Name", "");
 
-                    Aurora.DataManager.DataManager.IRegionInfoConnector.UpdateRegionInfo(scene.RegionInfo, false);
+                    Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>("IRegionInfoConnector").UpdateRegionInfo(scene.RegionInfo, false);
                 }
                 if (error == "Region locked out")
                 {

@@ -10,9 +10,9 @@ namespace Aurora.Services.DataService
     public class LocalRegionConnector : IRegionConnector
     {
         private IGenericData GD = null;
-        public LocalRegionConnector()
+        public LocalRegionConnector(IGenericData GenericData)
         {
-            GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
+            GD = GenericData;
         }
 
         /// <summary>

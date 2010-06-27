@@ -33,12 +33,12 @@ namespace OpenSim.Server.Handlers.AuroraData
         public AuroraDataServerPostHandler() :
             base("POST", "/auroradata")
         {
-            ProfileConnector = DataManager.IProfileConnector;
-            GridConnector = DataManager.IRegionConnector;
-            AgentConnector = DataManager.IAgentConnector;
-            EstateConnector = DataManager.IEstateConnector;
-            MuteListConnector = DataManager.IMuteListConnector;
-            OfflineMessagesConnector = DataManager.IOfflineMessagesConnector;
+            ProfileConnector = DataManager.RequestPlugin<IProfileConnector>("IProfileConnector");
+            GridConnector = DataManager.RequestPlugin<IRegionConnector>("IRegionConnector");
+            AgentConnector = DataManager.RequestPlugin<IAgentConnector>("IAgentConnector");
+            EstateConnector = DataManager.RequestPlugin<IEstateConnector>("IEstateConnector");
+            MuteListConnector = DataManager.RequestPlugin<IMuteListConnector>("IMuteListConnector");
+            OfflineMessagesConnector = DataManager.RequestPlugin<IOfflineMessagesConnector>("IOfflineMessagesConnector");
         }
 
         public override byte[] Handle(string path, Stream requestData,

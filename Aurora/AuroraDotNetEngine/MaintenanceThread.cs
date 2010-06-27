@@ -51,7 +51,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(CurrentDomain_AssemblyResolve);
             m_ScriptEngine = Engine;
-            ScriptFrontend = Aurora.DataManager.DataManager.IScriptDataConnector;
+            ScriptFrontend = Aurora.DataManager.DataManager.RequestPlugin<IScriptDataConnector>("IScriptDataConnector");
             for (int i = 0; i < Engine.NumberOfEventQueueThreads; i++)
             {
                 EventQueue eqtc = new EventQueue(m_ScriptEngine, Engine.SleepTime);

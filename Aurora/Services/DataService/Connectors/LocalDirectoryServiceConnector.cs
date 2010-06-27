@@ -13,9 +13,9 @@ namespace Aurora.Services.DataService
     public class LocalParcelServiceConnector : IParcelServiceConnector
     {
         private IGenericData GD = null;
-        public LocalParcelServiceConnector()
+        public LocalParcelServiceConnector(IGenericData GenericData)
         {
-            GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
+            GD = GenericData;
         }
 
         /// <summary>
@@ -342,9 +342,9 @@ namespace Aurora.Services.DataService
     public class LocalDirectoryServiceConnector : IDirectoryServiceConnector
     {
         private IGenericData GD = null;
-        public LocalDirectoryServiceConnector()
+        public LocalDirectoryServiceConnector(IGenericData GenericData)
         {
-            GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
+            GD = GenericData;
         }
 
         /// <summary>

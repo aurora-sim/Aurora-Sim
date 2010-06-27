@@ -10,15 +10,15 @@ namespace Aurora.Services.DataService
 {
 	public class LocalEstateConnector : IEstateConnector
 	{
-		private IGenericData GenericData = null;
-		public LocalEstateConnector()
-		{
-			GenericData = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
+		private IGenericData GD = null;
+        public LocalEstateConnector(IGenericData GenericData)
+        {
+            GD = GenericData;
 		}
 
 		public EstateSettings LoadEstateSettings(UUID regionID, bool create)
 		{
-			List<string> estateID = GenericData.Query("RegionID", regionID, "estate_map", "EstateID");
+			List<string> estateID = GD.Query("RegionID", regionID, "estate_map", "EstateID");
             if (estateID.Count == 0 && !create)
             {
 				return new EstateSettings();
@@ -27,7 +27,7 @@ namespace Aurora.Services.DataService
             {
                 int EstateID = 0;
                 EstateSettings es = new EstateSettings();
-				List<string> QueryResults = GenericData.Query("", "", "estate_map", "EstateID", " ORDER BY EstateID DESC");
+				List<string> QueryResults = GD.Query("", "", "estate_map", "EstateID", " ORDER BY EstateID DESC");
 				if (QueryResults.Count == 0)
                 {
                     EstateID = 99;
@@ -66,9 +66,9 @@ namespace Aurora.Services.DataService
 				Values.Add(es.EstateOwner);
 				Values.Add(Convert.ToInt32(es.DenyMinors));
 				Values.Add(es.EstatePass);
-                GenericData.Insert("estate_settings", Values.ToArray());
+                GD.Insert("estate_settings", Values.ToArray());
 
-				GenericData.Insert("estate_map", new object[] {
+				GD.Insert("estate_map", new object[] {
 					regionID,
 					EstateID
 				});
@@ -87,7 +87,7 @@ namespace Aurora.Services.DataService
 		public OpenSim.Framework.EstateSettings LoadEstateSettings(int estateID)
 		{
             EstateSettings settings = new EstateSettings();
-            List<string> results = GenericData.Query("EstateID", estateID, "estate_settings", "*");
+            List<string> results = GD.Query("EstateID", estateID, "estate_settings", "*");
             if (results.Count == 0)
                 return settings;
             settings.AbuseEmail = results[21];
@@ -127,7 +127,7 @@ namespace Aurora.Services.DataService
 		{
 			es.ClearBans();
 
-			List<string> RetVal = GenericData.Query("EstateID", es.EstateID, "estateban", "bannedUUID");
+			List<string> RetVal = GD.Query("EstateID", es.EstateID, "estateban", "bannedUUID");
             if (RetVal.Count == 0)
                 return;
             foreach (string userID in RetVal)
@@ -148,7 +148,7 @@ namespace Aurora.Services.DataService
 		{
 			List<UUID> uuids = new List<UUID>();
 
-			List<string> RetVal = GenericData.Query("EstateID", EstateID, table, "uuid");
+			List<string> RetVal = GD.Query("EstateID", EstateID, table, "uuid");
             if (RetVal.Count == 0)
                 return uuids.ToArray();
             foreach (string userID in RetVal)
@@ -163,7 +163,7 @@ namespace Aurora.Services.DataService
 
 		private void SaveBanList(EstateSettings es)
 		{
-			GenericData.Delete("estateban", new string[] { "EstateID" }, new object[] { es.EstateID });
+			GD.Delete("estateban", new string[] { "EstateID" }, new object[] { es.EstateID });
 			foreach (EstateBan b in es.EstateBans) {
 				List<object> banList = new List<object>();
 				banList.Add(es.EstateID.ToString());
@@ -171,20 +171,20 @@ namespace Aurora.Services.DataService
 				banList.Add("");
 				banList.Add("");
 				banList.Add("");
-				GenericData.Insert("estateban", banList.ToArray());
+				GD.Insert("estateban", banList.ToArray());
 			}
 		}
 
 		void SaveUUIDList(uint EstateID, string table, UUID[] data)
 		{
-			GenericData.Delete(table, new string[] { "EstateID" }, new object[] { EstateID });
+			GD.Delete(table, new string[] { "EstateID" }, new object[] { EstateID });
 
 			foreach (UUID uuid in data) {
 				List<object> List = new List<object>();
 				List.Add(EstateID);
 				List.Add(uuid);
 
-				GenericData.Insert(table, List.ToArray());
+				GD.Insert(table, List.ToArray());
 			}
 		}
 
@@ -244,7 +244,7 @@ namespace Aurora.Services.DataService
 			SetKeys.Add("DenyMinors");
 			SetKeys.Add("EstatePass");
 
-			GenericData.Update("estate_settings", SetValues.ToArray(), SetKeys.ToArray(), new string[] { "EstateID" }, new object[] { es.EstateID });
+			GD.Update("estate_settings", SetValues.ToArray(), SetKeys.ToArray(), new string[] { "EstateID" }, new object[] { es.EstateID });
 
 			SaveBanList(es);
 			SaveUUIDList(es.EstateID, "estate_managers", es.EstateManagers);
@@ -309,7 +309,7 @@ namespace Aurora.Services.DataService
 			SetKeys.Add("DenyMinors");
 			SetKeys.Add("EstatePass");
 
-			GenericData.Update("estate_settings", SetValues.ToArray(), SetKeys.ToArray(), new string[] { "EstateID" }, new object[] { es.EstateID });
+			GD.Update("estate_settings", SetValues.ToArray(), SetKeys.ToArray(), new string[] { "EstateID" }, new object[] { es.EstateID });
 
 			SaveBanList(es);
 			SaveUUIDList(es.EstateID, "estate_managers", es.EstateManagers);
@@ -320,7 +320,7 @@ namespace Aurora.Services.DataService
 		public List<int> GetEstates(string search)
 		{
 			List<int> result = new List<int>();
-			List<string> RetVal = GenericData.Query("EstateName", search, "estate_settings", "EstateID");
+			List<string> RetVal = GD.Query("EstateName", search, "estate_settings", "EstateID");
             if (RetVal.Count == 0)
                 return result;
             foreach (string val in RetVal)
@@ -334,13 +334,13 @@ namespace Aurora.Services.DataService
 
 		public bool LinkRegion(OpenMetaverse.UUID regionID, int estateID, string password)
 		{
-			List<string> queriedpassword = GenericData.Query("EstateID", estateID, "estate_settings", "EstatePass");
+			List<string> queriedpassword = GD.Query("EstateID", estateID, "estate_settings", "EstatePass");
 			if (queriedpassword.Count == 0)
 				return false;
 			if (Util.Md5Hash(password) != queriedpassword[0])
 				return false;
 
-			GenericData.Insert("estate_map", new object[] {
+			GD.Insert("estate_map", new object[] {
 				regionID,
 				estateID
 			});
@@ -350,7 +350,7 @@ namespace Aurora.Services.DataService
 
 		public List<OpenMetaverse.UUID> GetRegions(int estateID)
 		{
-			List<string> RegionIDs = GenericData.Query("EstateID", estateID, "estate_map", "RegionID");
+			List<string> RegionIDs = GD.Query("EstateID", estateID, "estate_map", "RegionID");
 			List<UUID> regions = new List<UUID>();
 			foreach (string RegionID in RegionIDs)
 				regions.Add(new UUID(RegionID));
@@ -359,17 +359,17 @@ namespace Aurora.Services.DataService
 
 		public bool DeleteEstate(int estateID)
 		{
-			GenericData.Delete("estateban", new string[] { "EstateID" }, new object[] { estateID });
+			GD.Delete("estateban", new string[] { "EstateID" }, new object[] { estateID });
 
-			GenericData.Delete("estate_groups", new string[] { "EstateID" }, new object[] { estateID });
+			GD.Delete("estate_groups", new string[] { "EstateID" }, new object[] { estateID });
 
-			GenericData.Delete("estate_managers", new string[] { "EstateID" }, new object[] { estateID });
+			GD.Delete("estate_managers", new string[] { "EstateID" }, new object[] { estateID });
 
-			GenericData.Delete("estate_map", new string[] { "EstateID" }, new object[] { estateID });
+			GD.Delete("estate_map", new string[] { "EstateID" }, new object[] { estateID });
 
-			GenericData.Delete("estate_settings", new string[] { "EstateID" }, new object[] { estateID });
+			GD.Delete("estate_settings", new string[] { "EstateID" }, new object[] { estateID });
 
-			GenericData.Delete("estate_users", new string[] { "EstateID" }, new object[] { estateID });
+			GD.Delete("estate_users", new string[] { "EstateID" }, new object[] { estateID });
 
 			return true;
 		}

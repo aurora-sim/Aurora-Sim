@@ -103,7 +103,7 @@ namespace Aurora.Modules
 
         public void AddRegion(Scene scene)
         {
-            ProfileFrontend = DataManager.DataManager.IProfileConnector;
+            ProfileFrontend = DataManager.DataManager.RequestPlugin<IProfileConnector>("IProfileConnector");
 
             if (!m_Scenes.Contains(scene))
                 m_Scenes.Add(scene);

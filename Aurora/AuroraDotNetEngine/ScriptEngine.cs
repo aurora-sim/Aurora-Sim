@@ -48,7 +48,7 @@ using OpenSim.Region.ScriptEngine.Shared.ScriptBase;
 using OpenSim.Region.ScriptEngine.Shared.CodeTools;
 using OpenSim.Region.ScriptEngine.Shared.Api;
 using OpenSim.Framework.Console;
-using Amib.Threading;
+using Aurora.Framework;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
@@ -494,7 +494,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         item.Name, item.ItemID, item.AssetID);
                     continue;
                 }
-                string script = Utils.BytesToString(asset.Data);
+                string script = OpenMetaverse.Utils.BytesToString(asset.Data);
 
                 if (script.StartsWith("//MRM:"))
                     return;
@@ -562,7 +562,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         item.Name, item.ItemID, item.AssetID);
                     continue;
                 }
-                string script = Utils.BytesToString(asset.Data);
+                string script = OpenMetaverse.Utils.BytesToString(asset.Data);
 
                 LUStruct itemToQueue = StartScript(part, item.ItemID, script,
                         startParam, postOnRez, (StateSource)stateSource, RezzedFrom);
@@ -602,7 +602,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 if (p[i] is int)
                     lsl_p[i] = new LSL_Types.LSLInteger((int)p[i]);
                 else if (p[i] is UUID)
-                    lsl_p[i] = new LSL_Types.LSLString((string)p[i]);
+                    lsl_p[i] = new LSL_Types.LSLString(UUID.Parse(p[i].ToString()).ToString());
                 else if (p[i] is string)
                     lsl_p[i] = new LSL_Types.LSLString((string)p[i]);
                 else if (p[i] is Vector3)
@@ -630,7 +630,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 if (p[i] is int)
                     lsl_p[i] = new LSL_Types.LSLInteger((int)p[i]);
                 else if (p[i] is UUID)
-                    lsl_p[i] = new LSL_Types.LSLString((string)p[i]);
+                    lsl_p[i] = new LSL_Types.LSLString(UUID.Parse(p[i].ToString()).ToString());
                 else if (p[i] is string)
                     lsl_p[i] = new LSL_Types.LSLString((string)p[i]);
                 else if (p[i] is Vector3)
@@ -1246,7 +1246,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             else
             {
-                string script = Utils.BytesToString(asset.Data);
+                string script = OpenMetaverse.Utils.BytesToString(asset.Data);
                 try
                 {
                     string assembly;
@@ -1274,7 +1274,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             try
             {
-                Aurora.DataManager.DataManager.IScriptDataConnector.DeleteStateSave(olditemID);
+                Aurora.DataManager.DataManager.RequestPlugin<IScriptDataConnector>("IScriptDataConnector").DeleteStateSave(olditemID);
                 if (newPart.ParentGroup.Scene != null)
                 {
                     ScriptData SD = GetScriptByItemID(olditemID);

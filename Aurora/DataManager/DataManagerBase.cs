@@ -29,8 +29,6 @@ namespace Aurora.DataManager
         public abstract void CloseDatabase();
         public abstract bool TableExists(string table);
         public abstract void CreateTable(string table, ColumnDefinition[] columns);
-        public abstract RegionLightShareData LoadRegionWindlightSettings(UUID regionUUID);
-        public abstract bool StoreRegionWindlightSettings(RegionLightShareData wl);
 
         public Version GetAuroraVersion()
         {

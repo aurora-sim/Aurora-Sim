@@ -20,7 +20,7 @@ namespace Aurora.Modules.AbuseReportsGUI
         public Abuse()
         {
             InitializeComponent();
-            AbuseReportsConnector = Aurora.DataManager.DataManager.IAbuseReportsConnector;
+            AbuseReportsConnector = Aurora.DataManager.DataManager.RequestPlugin<IAbuseReportsConnector>("IAbuseReportsConnector");
             Password = Microsoft.VisualBasic.Interaction.InputBox("Password for abuse reports database.","Password Input Required","",0,0);
         }
 

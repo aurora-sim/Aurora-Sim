@@ -27,7 +27,7 @@ namespace Aurora.Modules
 
         public void AddRegion(Scene scene)
         {
-            RegionConnector = DataManager.DataManager.IRegionConnector;
+            RegionConnector = DataManager.DataManager.RequestPlugin<IRegionConnector>("IRegionConnector");
             scene.RegisterModuleInterface<IEstateSettingsModule>(this);
             m_scene = scene;
             scene.EventManager.OnNewClient += EventManager_OnNewClient;
@@ -204,7 +204,7 @@ namespace Aurora.Modules
                 return true;
             
             EstateSettings ES = ((Scene)scene).EstateService.LoadEstateSettings(scene.RegionInfo.RegionID, false);
-            IAgentConnector data = DataManager.DataManager.IAgentConnector;
+            IAgentConnector data = DataManager.DataManager.RequestPlugin<IAgentConnector>("IAgentConnector");
             IAgentInfo agent = data.GetAgent(userID);
             
             if (((Scene)scene).RegionInfo.RegionSettings.Maturity > agent.MaxMaturity)

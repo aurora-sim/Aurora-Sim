@@ -168,6 +168,13 @@ namespace Aurora.Services.DataService
             }
         }
 
+        public bool CheckMacAndViewer(string Mac, string viewer)
+        {
+            //Only local! You should not be calling this!! This method is only called 
+            // from LLLoginHandlers.
+            return false;
+        }
+
         #endregion
     }
 }

@@ -266,9 +266,9 @@ namespace OpenSim.Services.LLLoginService
                     }
                 }
                 IAgentInfo agent = null;
-                
-                IAgentConnector agentData = DataManager.IAgentConnector;
-                IProfileConnector profileData = DataManager.IProfileConnector;
+
+                IAgentConnector agentData = DataManager.RequestPlugin<IAgentConnector>("IAgentConnector");
+                IProfileConnector profileData = DataManager.RequestPlugin<IProfileConnector>("IProfileConnector");
                 //Already tried to find it before this, so its not there at all.
                 string mac = (string)requestData["mac"];
                 if (agentData != null)
@@ -960,7 +960,7 @@ namespace OpenSim.Services.LLLoginService
             UserAccountService = ACS;
             AvatarService = AS;
             InventoryService = IS;
-            ProfileFrontend = DataManager.IProfileConnector;
+            ProfileFrontend = DataManager.RequestPlugin<IProfileConnector>("IProfileConnector");
             MainConsole.Instance.Commands.AddCommand("region", false, "save avatar archive", "save avatar archive <First> <Last> <Filename>", "Saves appearance to an avatar archive archive", HandleSaveAvatarArchive);
             MainConsole.Instance.Commands.AddCommand("region", false, "load avatar archive", "load avatar archive <First> <Last> <Filename>", "Loads appearance from an avatar archive archive", HandleLoadAvatarArchive);
         }
@@ -1000,8 +1000,8 @@ namespace OpenSim.Services.LLLoginService
                 AvatarArchive archive = new AvatarArchive();
                 archive.ArchiveXML = ArchiveXML;
                 archive.Name = ArchiveName;
-                
-                DataManager.IAvatarArchiverConnector.SaveAvatarArchive(archive, Password);
+
+                DataManager.RequestPlugin<IAvatarArchiverConnector>("IAvatarArchiverConnector").SaveAvatarArchive(archive, Password);
 
                 m_log.Debug("[AvatarArchive] Saved archive to database " + cmdparams[5]);
             }
@@ -1100,7 +1100,7 @@ namespace OpenSim.Services.LLLoginService
                 string Password = MainConsole.Instance.CmdPrompt("Password: ");
                 FileName = FileName.Substring(0,FileName.Length-9);
 
-                Aurora.Framework.IAvatarArchiverConnector avarchiver = DataManager.IAvatarArchiverConnector;
+                Aurora.Framework.IAvatarArchiverConnector avarchiver = DataManager.RequestPlugin<IAvatarArchiverConnector>("IAvatarArchiverConnector");
                 AvatarArchive archive = avarchiver.GetAvatarArchive(FileName, Password);
 
                 string[] lines = archive.ArchiveXML.Split('\n');
@@ -1454,7 +1454,7 @@ namespace OpenSim.Services.LLLoginService
             //Update the principle ID to the new user.
             UPI.PrincipalID = UDA.PrincipalID;
 
-            IProfileConnector profileData = DataManager.IProfileConnector;
+            IProfileConnector profileData = DataManager.RequestPlugin<IProfileConnector>("IProfileConnector");
             if (profileData.GetUserProfile(UPI.PrincipalID) == null)
                 profileData.CreateNewProfile(UPI.PrincipalID);
 
@@ -1474,7 +1474,7 @@ namespace OpenSim.Services.LLLoginService
                 return;
             }
             UserAccount account = UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]);
-            IProfileConnector data = DataManager.IProfileConnector;
+            IProfileConnector data = DataManager.RequestPlugin<IProfileConnector>("IProfileConnector");
             IUserProfileInfo profile = data.GetUserProfile(account.PrincipalID);
 
             Dictionary<string, object> result = new Dictionary<string, object>();

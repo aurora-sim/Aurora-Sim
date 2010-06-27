@@ -12,9 +12,9 @@ namespace Aurora.Services.DataService
     public class LocalAvatarArchiverConnector : IAvatarArchiverConnector
 	{
 		private IGenericData GD = null;
-		public LocalAvatarArchiverConnector()
-		{
-			GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
+        public LocalAvatarArchiverConnector(IGenericData GenericData)
+        {
+            GD = GenericData;
 			List<string> Results = GD.Query("Method", "AvatarArchive", "Passwords", "Password");
 			if (Results.Count == 0) 
             {

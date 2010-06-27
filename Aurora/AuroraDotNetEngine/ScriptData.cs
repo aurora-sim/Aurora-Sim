@@ -61,7 +61,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public ScriptData(ScriptEngine engine)
         {
             m_ScriptEngine = engine;
-            ScriptFrontend = Aurora.DataManager.DataManager.IScriptDataConnector;
+            ScriptFrontend = Aurora.DataManager.DataManager.RequestPlugin<IScriptDataConnector>("IScriptDataConnector");
         }
 
         #endregion

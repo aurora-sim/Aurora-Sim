@@ -45,7 +45,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
 
         public void RegionLoaded(Scene scene)
         {
-            AC = Aurora.DataManager.DataManager.IAssetConnector;
+            AC = Aurora.DataManager.DataManager.RequestPlugin<IAssetConnector>("IAssetConnector");
         }
 
         public Type ReplaceableInterface

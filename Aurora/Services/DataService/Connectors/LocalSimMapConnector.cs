@@ -10,9 +10,9 @@ namespace Aurora.Services.DataService
     public class LocalSimMapConnector : ISimMapDataConnector
 	{
 		private IGenericData GD = null;
-		public LocalSimMapConnector()
-		{
-			GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
+        public LocalSimMapConnector(IGenericData GenericData)
+        {
+            GD = GenericData;
 		}
 
 		/// <summary>

@@ -33,6 +33,7 @@ namespace Aurora.Services.DataService
             PluginModule = m_config.GetString("PluginModule", "");
             ConnectionString = m_config.GetString("ConnectionString", "");
             IGenericData ScriptSaveDataConnector = null;
+            IGenericData DataConnector = null;
             if (PluginModule == "MySQL")
             {
                 DataManager.DataSessionProviderConnector.DataSessionProvider = new DataSessionProvider(DataManagerTechnology.MySql, ConnectionString);
@@ -44,7 +45,7 @@ namespace Aurora.Services.DataService
                 migrationManager.DetermineOperation();
                 migrationManager.ExecuteOperation();
 
-                Aurora.DataManager.DataManager.SetDefaultGenericDataPlugin(GenericData);
+                DataConnector = GenericData;
             }
             else if (PluginModule == "MSSQL2008")
             {
@@ -57,7 +58,7 @@ namespace Aurora.Services.DataService
                 migrationManager.DetermineOperation();
                 migrationManager.ExecuteOperation();
 
-                Aurora.DataManager.DataManager.SetDefaultGenericDataPlugin(GenericData);
+                DataConnector = GenericData;
             }
             else if (PluginModule == "MSSQL7")
             {
@@ -70,7 +71,7 @@ namespace Aurora.Services.DataService
                 migrationManager.DetermineOperation();
                 migrationManager.ExecuteOperation();
 
-                Aurora.DataManager.DataManager.SetDefaultGenericDataPlugin(GenericData);
+                DataConnector = GenericData;
             }
             else if (PluginModule == "SQLite")
             {
@@ -93,7 +94,7 @@ namespace Aurora.Services.DataService
                 statesavemigrationManager.DetermineOperation();
                 statesavemigrationManager.ExecuteOperation();
 
-                Aurora.DataManager.DataManager.SetDefaultGenericDataPlugin(GenericData);
+                DataConnector = GenericData;
             }
             IConfig m_ConnectorConfig = source.Configs["AuroraConnectors"];
 
@@ -116,55 +117,55 @@ namespace Aurora.Services.DataService
 
             //Always local connectors.
             if (AbuseReportsConnector == "LocalConnector")
-                DataManager.DataManager.IAbuseReportsConnector = new LocalAbuseReportsConnector();
+                DataManager.DataManager.RegisterPlugin("IAbuseReportsConnector", new LocalAbuseReportsConnector(DataConnector));
             if (AssetConnector == "LocalConnector")
-                DataManager.DataManager.IAssetConnector = new LocalAssetConnector();
+                DataManager.DataManager.RegisterPlugin("IAssetConnector", new LocalAssetConnector(DataConnector));
             if (AvatarArchiverConnector == "LocalConnector")
-                DataManager.DataManager.IAvatarArchiverConnector = new LocalAvatarArchiverConnector();
+                DataManager.DataManager.RegisterPlugin("IAvatarArchiverConnector", new LocalAvatarArchiverConnector(DataConnector));
             if (CurrencyConnector == "LocalConnector")
-                DataManager.DataManager.ICurrencyConnector = new LocalCurrencyConnector();
+                DataManager.DataManager.RegisterPlugin("ICurrencyConnector", new LocalCurrencyConnector(DataConnector));
             if (SimMapDataConnector == "LocalConnector")
-                DataManager.DataManager.ISimMapDataConnector = new LocalSimMapConnector();
+                DataManager.DataManager.RegisterPlugin("ISimMapDataConnector", new LocalSimMapConnector(DataConnector));
             if (ScriptDataConnector == "LocalConnector")
-                DataManager.DataManager.IScriptDataConnector = new LocalScriptDataConnector(ScriptSaveDataConnector);
+                DataManager.DataManager.RegisterPlugin("IScriptDataConnector", new LocalScriptDataConnector(ScriptSaveDataConnector));
             if (RegionInfoConnector == "LocalConnector")
-                DataManager.DataManager.IRegionInfoConnector = new LocalRegionInfoConnector();
+                DataManager.DataManager.RegisterPlugin("IRegionInfoConnector", new LocalRegionInfoConnector(DataConnector));
             if (ParcelConnector == "LocalConnector")
-                DataManager.DataManager.IParcelServiceConnector = new LocalParcelServiceConnector();
+                DataManager.DataManager.RegisterPlugin("IParcelServiceConnector", new LocalParcelServiceConnector(DataConnector));
             //End always local connectors.
 
             if (AgentConnector == "LocalConnector")
-                DataManager.DataManager.IAgentConnector = new LocalAgentConnector();
+                DataManager.DataManager.RegisterPlugin("IAgentConnector", new LocalAgentConnector(DataConnector));
             if (RegionConnector == "LocalConnector")
-                DataManager.DataManager.IRegionConnector = new LocalRegionConnector();
+                DataManager.DataManager.RegisterPlugin("IRegionConnector", new LocalRegionConnector(DataConnector));
             if (ProfileConnector == "LocalConnector")
-                DataManager.DataManager.IProfileConnector = new LocalProfileConnector();
+                DataManager.DataManager.RegisterPlugin("IProfileConnector", new LocalProfileConnector(DataConnector));
             if (EstateConnector == "LocalConnector")
-                DataManager.DataManager.IEstateConnector = new LocalEstateConnector();
+                DataManager.DataManager.RegisterPlugin("IEstateConnector", new LocalEstateConnector(DataConnector));
             if (OfflineMessagesConnector == "LocalConnector")
-                DataManager.DataManager.IOfflineMessagesConnector = new LocalOfflineMessagesConnector();
+                DataManager.DataManager.RegisterPlugin("IOfflineMessagesConnector", new LocalOfflineMessagesConnector(DataConnector));
             if (MuteListConnector == "LocalConnector")
-                DataManager.DataManager.IMuteListConnector = new LocalMuteListConnector();
+                DataManager.DataManager.RegisterPlugin("IMuteListConnector", new LocalMuteListConnector(DataConnector));
 
             //Start remote connectors.
 
             //Connectors that still need a remote connector
             if (DirectoryServiceConnector == "RemoteConnector")
-                DataManager.DataManager.IDirectoryServiceConnector = new LocalDirectoryServiceConnector();
+                DataManager.DataManager.RegisterPlugin("IDirectoryServiceConnector", new LocalDirectoryServiceConnector(DataConnector));
             //End connectors that still need a remote connector
 
             if (EstateConnector == "RemoteConnector")
-                DataManager.DataManager.IEstateConnector = new RemoteEstateConnector(RemoteConnectionString);
+                DataManager.DataManager.RegisterPlugin("IEstateConnector", new RemoteEstateConnector(RemoteConnectionString));
             if (MuteListConnector == "RemoteConnector")
-                DataManager.DataManager.IMuteListConnector = new RemoteMuteListConnector(RemoteConnectionString);
+                DataManager.DataManager.RegisterPlugin("IMuteListConnector", new RemoteMuteListConnector(RemoteConnectionString));
             if (AgentConnector == "RemoteConnector")
-                DataManager.DataManager.IAgentConnector = new RemoteAgentConnector(RemoteConnectionString);
+                DataManager.DataManager.RegisterPlugin("IAgentConnector", new RemoteAgentConnector(RemoteConnectionString));
             if (RegionConnector == "RemoteConnector")
-                DataManager.DataManager.IRegionConnector = new RemoteRegionConnector(RemoteConnectionString);
+                DataManager.DataManager.RegisterPlugin("IRegionConnector", new RemoteRegionConnector(RemoteConnectionString));
             if (ProfileConnector == "RemoteConnector")
-                DataManager.DataManager.IProfileConnector = new RemoteProfileConnector(RemoteConnectionString);
+                DataManager.DataManager.RegisterPlugin("IProfileConnector", new RemoteProfileConnector(RemoteConnectionString));
             if (OfflineMessagesConnector == "RemoteConnector")
-                DataManager.DataManager.IOfflineMessagesConnector = new RemoteOfflineMessagesConnector(RemoteConnectionString);
+                DataManager.DataManager.RegisterPlugin("IOfflineMessagesConnector", new RemoteOfflineMessagesConnector(RemoteConnectionString));
         }
     }
 }

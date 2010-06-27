@@ -28,9 +28,6 @@ namespace Aurora.Framework
         bool Delete(string table, string[] keys, object[] values);
         bool Insert(string table, object[] values, string updateKey, object updateValue);
         string Identifier { get; }
-        //REFACTORING ISSUE
-        RegionLightShareData LoadRegionWindlightSettings(UUID regionUUID);
-        bool StoreRegionWindlightSettings(RegionLightShareData wl);
     }
 
     public interface IDataConnector : IGenericData

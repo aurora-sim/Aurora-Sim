@@ -142,7 +142,7 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         public void AddLandObject(LandData parcel)
         {
-            IDirectoryServiceConnector DSC = Aurora.DataManager.DataManager.IDirectoryServiceConnector;
+            IDirectoryServiceConnector DSC = Aurora.DataManager.DataManager.RequestPlugin<IDirectoryServiceConnector>("IDirectoryServiceConnector");
             ILandObject land = GetLandObject(parcel.LocalID);
             uint x = (uint)parcel.UserLocation.X, y = (uint)parcel.UserLocation.Y;
             findPointInParcel(land, ref x, ref y); // find a suitable spot
@@ -1509,7 +1509,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                 out extLandData.X, out extLandData.Y);
             m_log.DebugFormat("[LAND] got parcelinfo request for regionHandle {0}, x/y {1}/{2}",
                                                                             extLandData.RegionHandle, extLandData.X, extLandData.Y);
-            IDirectoryServiceConnector DSC = Aurora.DataManager.DataManager.IDirectoryServiceConnector;
+            IDirectoryServiceConnector DSC = Aurora.DataManager.DataManager.RequestPlugin<IDirectoryServiceConnector>("IDirectoryServiceConnector");
             AuroraLandData data = DSC.GetParcelInfo(parcelID);
             if (data == null)
             {

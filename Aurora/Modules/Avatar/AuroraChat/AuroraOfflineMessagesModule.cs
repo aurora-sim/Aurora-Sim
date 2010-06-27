@@ -87,7 +87,7 @@ namespace Aurora.Modules
             if (!enabled)
                 return;
 
-            OfflineMessagesConnector = Aurora.DataManager.DataManager.IOfflineMessagesConnector;
+            OfflineMessagesConnector = Aurora.DataManager.DataManager.RequestPlugin<IOfflineMessagesConnector>("IOfflineMessagesConnector");
             if (m_TransferModule == null)
             {
                 m_TransferModule = scene.RequestModuleInterface<IMessageTransferModule>();

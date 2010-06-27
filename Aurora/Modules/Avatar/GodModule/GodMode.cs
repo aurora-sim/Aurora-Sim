@@ -107,7 +107,7 @@ namespace Aurora.Modules
                 ((Scene)client.Scene).RegionInfo.RegionLocX = (uint)RedirectX;
             if (RedirectY != 0)
                 ((Scene)client.Scene).RegionInfo.RegionLocY = (uint)RedirectY;
-            Aurora.DataManager.DataManager.IRegionInfoConnector.UpdateRegionInfo(((Scene)client.Scene).RegionInfo, false);
+            Aurora.DataManager.DataManager.RequestPlugin<IRegionInfoConnector>("IRegionInfoConnector").UpdateRegionInfo(((Scene)client.Scene).RegionInfo, false);
 
             if (((Scene)client.Scene).RegionInfo.EstateSettings.EstateID != EstateID)
             {

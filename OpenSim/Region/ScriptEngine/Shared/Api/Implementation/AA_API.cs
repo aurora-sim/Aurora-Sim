@@ -71,7 +71,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             m_localID = localID;
             m_itemID = itemID;
             ScriptProtection = module;
-            AssetConnector = Aurora.DataManager.DataManager.IAssetConnector;
+            AssetConnector = Aurora.DataManager.DataManager.RequestPlugin<IAssetConnector>("IAssetConnector");
         }
 
         public string Name

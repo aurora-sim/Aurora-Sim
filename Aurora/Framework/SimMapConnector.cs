@@ -20,8 +20,8 @@ namespace Aurora.Framework
         Dictionary<ulong, SimMap> SimHandles = new Dictionary<ulong, SimMap>();
         public SimMapConnector(IGridService GS)
         {
-            EstateConnector = Aurora.DataManager.DataManager.IEstateConnector;
-            SimMapDataConnector = Aurora.DataManager.DataManager.ISimMapDataConnector;
+            EstateConnector = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>("IEstateConnector");
+            SimMapDataConnector = Aurora.DataManager.DataManager.RequestPlugin<ISimMapDataConnector>("ISimMapDataConnector");
         }
 
         public SimMap GetSimMap(UUID regionID, UUID AgentID)

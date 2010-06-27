@@ -119,7 +119,7 @@ namespace Aurora.Modules
 
         public virtual void RegionLoaded(Scene scene)
         {
-            MuteListConnector = Aurora.DataManager.DataManager.IMuteListConnector;
+            MuteListConnector = Aurora.DataManager.DataManager.RequestPlugin<IMuteListConnector>("IMuteListConnector");
         }
 
         public virtual void RemoveRegion(Scene scene)

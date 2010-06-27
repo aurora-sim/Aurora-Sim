@@ -67,7 +67,7 @@ namespace Aurora.Modules.RegionLoader
             region.ObjectCapacity = int.Parse(ObjectCount.Text);
             region.AccessLevel = Util.ConvertMaturityToAccessLevel(uint.Parse(Maturity.Text));
 
-            Aurora.DataManager.DataManager.IRegionInfoConnector.UpdateRegionInfo(region, bool.Parse(Disabled.Text));
+            Aurora.DataManager.DataManager.RequestPlugin<IRegionInfoConnector>("IRegionInfoConnector").UpdateRegionInfo(region, bool.Parse(Disabled.Text));
             IScene scene;
             m_log.Debug("[LOADREGIONS]: Creating Region: " + region.RegionName + ")");
             m_OpenSimBase.SceneManager.CreateRegion(region, true, out scene);
@@ -78,7 +78,7 @@ namespace Aurora.Modules.RegionLoader
 
         private void SearchForRegionByName_Click(object sender, EventArgs e)
         {
-            RegionInfo region = Aurora.DataManager.DataManager.IRegionInfoConnector.GetRegionInfo(RegionToFind.Text);
+            RegionInfo region = Aurora.DataManager.DataManager.RequestPlugin<IRegionInfoConnector>("IRegionInfoConnector").GetRegionInfo(RegionToFind.Text);
             if (region == null)
             {
                 MessageBox.Show("Region was not found!");
@@ -132,7 +132,7 @@ namespace Aurora.Modules.RegionLoader
             region.ObjectCapacity = int.Parse(textBox6.Text);
             region.AccessLevel = Util.ConvertMaturityToAccessLevel(uint.Parse(textBox4.Text));
 
-            Aurora.DataManager.DataManager.IRegionInfoConnector.UpdateRegionInfo(region, bool.Parse(textBox2.Text));
+            Aurora.DataManager.DataManager.RequestPlugin<IRegionInfoConnector>("IRegionInfoConnector").UpdateRegionInfo(region, bool.Parse(textBox2.Text));
             if (OnNewRegion != null)
                 OnNewRegion(region);
         }

@@ -71,7 +71,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             //Grab old region files
             //FindOldRegionFiles(); //Not enabled
 
-            RegionInfo[] infos = Aurora.DataManager.DataManager.IRegionInfoConnector.GetRegionInfos();
+            RegionInfo[] infos = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>("IRegionInfoConnector").GetRegionInfos();
             if (infos.Length == 0)
             {
                 //RegionManager manager = new RegionManager(true, m_openSim);
@@ -140,12 +140,12 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                 }
                 foreach (RegionInfo info in RegionsToConvert)
                 {
-                    Aurora.DataManager.DataManager.IRegionInfoConnector.UpdateRegionInfo(info, false);
+                    Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>("IRegionInfoConnector").UpdateRegionInfo(info, false);
                 }
                 bool foundAll = false;
                 foreach (RegionInfo info in RegionsToConvert)
                 {
-                    if (Aurora.DataManager.DataManager.IRegionInfoConnector.GetRegionInfo(info.RegionID) == null)
+                    if (Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>("IRegionInfoConnector").GetRegionInfo(info.RegionID) == null)
                         foundAll = false;
                 }
                 //Something went really wrong here... so lets not destroy anything
@@ -164,7 +164,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 
         protected void Export(string module, string[] cmdparams)
         {
-            RegionInfo[] infos = Aurora.DataManager.DataManager.IRegionInfoConnector.GetRegionInfos();
+            RegionInfo[] infos = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>("IRegionInfoConnector").GetRegionInfos();
             if (infos.Length != 0)
             {
                 StreamWriter writer = new StreamWriter("Regions/"+cmdparams[3]);

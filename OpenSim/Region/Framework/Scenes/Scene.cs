@@ -143,7 +143,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (m_EstateService == null)
                 {
-                    m_EstateService = Aurora.DataManager.DataManager.IEstateConnector;
+                    m_EstateService = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IEstateConnector>("IEstateConnector");
                 }
                 return m_EstateService;
             }
@@ -634,9 +634,9 @@ namespace OpenSim.Region.Framework.Scenes
 
             //Bind Storage Manager functions to some land manager functions for this scene
             EventManager.OnLandObjectAdded +=
-                new EventManager.LandObjectAdded(Aurora.DataManager.DataManager.IParcelServiceConnector.StoreLandObject);
+                new EventManager.LandObjectAdded(Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IParcelServiceConnector>("IParcelServiceConnector").StoreLandObject);
             EventManager.OnLandObjectRemoved +=
-                new EventManager.LandObjectRemoved(Aurora.DataManager.DataManager.IParcelServiceConnector.RemoveLandObject);
+                new EventManager.LandObjectRemoved(Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IParcelServiceConnector>("IParcelServiceConnector").RemoveLandObject);
 
             m_sceneGraph = new SceneGraph(this, m_regInfo);
 
@@ -2430,15 +2430,15 @@ namespace OpenSim.Region.Framework.Scenes
         public void StoreWindlightProfile(RegionLightShareData wl)
         {
             m_regInfo.WindlightSettings = wl;
-            var GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
-            GD.StoreRegionWindlightSettings(wl);
+            Aurora.Framework.IRegionInfoConnector RegionInfoConnector = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>("IRegionInfoConnector");
+            RegionInfoConnector.StoreRegionWindlightSettings(wl);
             m_eventManager.TriggerOnSaveNewWindlightProfile();
         }
 
         public void LoadWindlightProfile()
         {
-            var GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
-        	m_regInfo.WindlightSettings = GD.LoadRegionWindlightSettings(RegionInfo.RegionID);
+            Aurora.Framework.IRegionInfoConnector RegionInfoConnector = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>("IRegionInfoConnector");
+            m_regInfo.WindlightSettings = RegionInfoConnector.LoadRegionWindlightSettings(RegionInfo.RegionID);
             m_eventManager.TriggerOnSaveNewWindlightProfile();
         }
 
@@ -2611,7 +2611,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="regionID">Unique Identifier of the Region to load parcel data for</param>
         public void loadAllLandObjectsFromStorage(UUID regionID)
         {
-            EventManager.TriggerIncomingLandDataFromStorage(Aurora.DataManager.DataManager.IParcelServiceConnector.LoadLandObjects(regionID));
+            EventManager.TriggerIncomingLandDataFromStorage(Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IParcelServiceConnector>("IParcelServiceConnector").LoadLandObjects(regionID));
         }
 
         #endregion
