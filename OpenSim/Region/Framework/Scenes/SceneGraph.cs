@@ -57,6 +57,9 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Events
 
+        protected internal event PhysicsCrash UnRecoverableError;
+        private PhysicsCrash handlerPhysicsCrash = null;
+
         public event ObjectDuplicateDelegate OnObjectDuplicate;
         public event ObjectCreateDelegate OnObjectCreate;
         public event ObjectDeleteDelegate OnObjectRemove;
@@ -74,6 +77,8 @@ namespace OpenSim.Region.Framework.Scenes
         protected internal EntityManager Entities = new EntityManager();
 //        protected internal Dictionary<UUID, EntityBase> Entities = new Dictionary<UUID, EntityBase>();
         protected internal Dictionary<UUID, ScenePresence> RestorePresences = new Dictionary<UUID, ScenePresence>();
+
+        protected internal BasicQuadTreeNode QuadTree;
 
         protected RegionInfo m_regInfo;
         protected Scene m_parentScene;
@@ -102,6 +107,9 @@ namespace OpenSim.Region.Framework.Scenes
         {
             m_parentScene = parent;
             m_regInfo = regInfo;
+            QuadTree = new BasicQuadTreeNode(null, "/0/", 0, 0, (short)Constants.RegionSize, (short)Constants.RegionSize);
+            QuadTree.Subdivide();
+            QuadTree.Subdivide();
         }
 
         public PhysicsScene PhysicsScene
@@ -109,7 +117,17 @@ namespace OpenSim.Region.Framework.Scenes
             get { return _PhyScene; }
             set
             {
+                // If we're not doing the initial set
+                // Then we've got to remove the previous
+                // event handler
+
+                if (_PhyScene != null)
+                    _PhyScene.OnPhysicsCrash -= physicsBasedCrash;
+
                 _PhyScene = value;
+
+                if (_PhyScene != null)
+                    _PhyScene.OnPhysicsCrash += physicsBasedCrash;
             }
         }
 
@@ -188,6 +206,43 @@ namespace OpenSim.Region.Framework.Scenes
             });
         }
 
+        public void GetCoarseLocations(out List<Vector3> coarseLocations, out List<UUID> avatarUUIDs, uint maxLocations)
+        {
+            coarseLocations = new List<Vector3>();
+            avatarUUIDs = new List<UUID>();
+
+            List<ScenePresence> presences = GetScenePresences();
+            for (int i = 0; i < Math.Min(presences.Count, maxLocations); ++i)
+            {
+                ScenePresence sp = presences[i];
+                // If this presence is a child agent, we don't want its coarse locations
+                if (sp.IsChildAgent)
+                    return;
+
+                if (sp.ParentID != 0)
+                {
+                    // sitting avatar
+                    SceneObjectPart sop = m_parentScene.GetSceneObjectPart(sp.ParentID);
+                    if (sop != null)
+                    {
+                        coarseLocations.Add(sop.AbsolutePosition + sp.AbsolutePosition);
+                        avatarUUIDs.Add(sp.UUID);
+                    }
+                    else
+                    {
+                        // we can't find the parent..  ! arg!
+                        coarseLocations.Add(sp.AbsolutePosition);
+                        avatarUUIDs.Add(sp.UUID);
+                    }
+                }
+                else
+                {
+                    coarseLocations.Add(sp.AbsolutePosition);
+                    avatarUUIDs.Add(sp.UUID);
+                }
+            }
+        }
+
         #endregion
 
         #region Entity Methods
@@ -204,11 +259,15 @@ namespace OpenSim.Region.Framework.Scenes
         /// If true, we won't persist this object until it changes
         /// If false, we'll persist this object immediately
         /// </param>
+        /// <param name="sendClientUpdates">
+        /// If true, we send updates to the client to tell it about this object
+        /// If false, we leave it up to the caller to do this
+        /// </param>
         /// <returns>
         /// true if the object was added, false if an object with the same uuid was already in the scene
         /// </returns>
         protected internal bool AddRestoredSceneObject(
-            SceneObjectGroup sceneObject, bool attachToBackup, bool alreadyPersisted)
+            SceneObjectGroup sceneObject, bool attachToBackup, bool alreadyPersisted, bool sendClientUpdates)
         {
             if (!alreadyPersisted)
             {
@@ -216,9 +275,9 @@ namespace OpenSim.Region.Framework.Scenes
                 sceneObject.HasGroupChanged = true;
             }
 
-            return AddSceneObject(sceneObject, attachToBackup, true);
+            return AddSceneObject(sceneObject, attachToBackup, sendClientUpdates);
         }
-
+                
         /// <summary>
         /// Add a newly created object to the scene.  This will both update the scene, and send information about the
         /// new object to all clients interested in the scene.
@@ -440,7 +499,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (group != null)
             {
                 //group.DetachToGround();
-                m_parentScene.AttachmentsModule.ShowDetachInUserInventory(group.GetFromItemID(), group, remoteClient);
+                m_parentScene.AttachmentsModule.ShowDetachInUserInventory(group.GetFromItemID(), remoteClient);
             }
         }
 
@@ -540,7 +599,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (!Entities.Remove(agentID))
             {
                 m_log.WarnFormat(
-                    "[SCENE] Tried to remove non-existent scene presence with agent ID {0} from scene Entities list",
+                    "[SCENE]: Tried to remove non-existent scene presence with agent ID {0} from scene Entities list",
                     agentID);
             }
 
@@ -548,24 +607,22 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 Dictionary<UUID, ScenePresence> newmap = new Dictionary<UUID, ScenePresence>(m_scenePresenceMap);
                 List<ScenePresence> newlist = new List<ScenePresence>(m_scenePresenceArray);
-
-                // Remember the old presene reference from the dictionary
+                
+                // Remove the presence reference from the dictionary
                 if (newmap.ContainsKey(agentID))
                 {
                     ScenePresence oldref = newmap[agentID];
-                    // Remove the presence reference from the dictionary
-                    if (newmap.Remove(agentID))
-                    {
-                        // Find the index in the list where the old ref was stored and remove the reference
-                        newlist.RemoveAt(newlist.IndexOf(oldref));
-                        // Swap out the dictionary and list with new references
-                        m_scenePresenceMap = newmap;
-                        m_scenePresenceArray = newlist;
-                    }
-                    else
-                    {
-                        m_log.WarnFormat("[SCENE] Tried to remove non-existent scene presence with agent ID {0} from scene ScenePresences list", agentID);
-                    }
+                    newmap.Remove(agentID);
+
+                    // Find the index in the list where the old ref was stored and remove the reference
+                    newlist.RemoveAt(newlist.IndexOf(oldref));
+                    // Swap out the dictionary and list with new references
+                    m_scenePresenceMap = newmap;
+                    m_scenePresenceArray = newlist;
+                }
+                else
+                {
+                    m_log.WarnFormat("[SCENE]: Tried to remove non-existent scene presence with agent ID {0} from scene ScenePresences list", agentID);
                 }
             }
         }
@@ -951,6 +1008,15 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Other Methods
 
+        protected internal void physicsBasedCrash()
+        {
+            handlerPhysicsCrash = UnRecoverableError;
+            if (handlerPhysicsCrash != null)
+            {
+                handlerPhysicsCrash();
+            }
+        }
+
         protected internal UUID ConvertLocalIDToFullID(uint localID)
         {
             SceneObjectGroup group = GetGroupByPrim(localID);
@@ -991,7 +1057,7 @@ namespace OpenSim.Region.Framework.Scenes
         public void ForEachScenePresence(Action<ScenePresence> action)
         {
             // Once all callers have their delegates configured for parallelism, we can unleash this
-            
+            /*
             Action<ScenePresence> protectedAction = new Action<ScenePresence>(delegate(ScenePresence sp)
                 {
                     try
@@ -1005,8 +1071,8 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 });
             Parallel.ForEach<ScenePresence>(GetScenePresences(), protectedAction);
-            
-            /*// For now, perform actions serially
+            */
+            // For now, perform actions serially
             List<ScenePresence> presences = GetScenePresences();
             foreach (ScenePresence sp in presences)
             {
@@ -1019,40 +1085,7 @@ namespace OpenSim.Region.Framework.Scenes
                     m_log.Info("[BUG] in " + m_parentScene.RegionInfo.RegionName + ": " + e.ToString());
                     m_log.Info("[BUG] Stack Trace: " + e.StackTrace);
                 }
-            }*/
-        }
-
-        public bool IsPresenceNear(int meters, Vector3 Position, out Vector3 OtherPosition)
-        {
-            Vector3 FoundPos = Vector3.Zero;
-            Action<ScenePresence> protectedAction = new Action<ScenePresence>(delegate(ScenePresence sp)
-            {
-                if (Util.DistanceLessThan(Position, sp.AbsolutePosition, meters))
-                {
-                    FoundPos = sp.AbsolutePosition;
-                    throw new Exception("FOUND");
-                }
-
-            });
-            try
-            {
-                Parallel.ForEach<ScenePresence>(GetScenePresences(), protectedAction);
             }
-            catch (Exception e)
-            {
-                if (e.Message == "FOUND")
-                {
-                    OtherPosition = FoundPos; 
-                    return true;
-                }
-                else
-                {
-                    m_log.Info("[BUG] in " + m_parentScene.RegionInfo.RegionName + ": " + e.ToString());
-                    m_log.Info("[BUG] Stack Trace: " + e.StackTrace);
-                }
-            }
-            OtherPosition = FoundPos;
-            return false;
         }
         
         #endregion
@@ -1717,6 +1750,28 @@ namespace OpenSim.Region.Framework.Scenes
                     SceneObjectGroup copy = original.Copy(AgentID, GroupID, true);
                     copy.AbsolutePosition = copy.AbsolutePosition + offset;
 
+                    if (copy.OwnerID != AgentID)
+                    {
+                        copy.SetOwnerId(AgentID);
+                        copy.SetRootPartOwner(copy.RootPart, AgentID, GroupID);
+
+                        List<SceneObjectPart> partList =
+                            new List<SceneObjectPart>(copy.Children.Values);
+
+                        if (m_parentScene.Permissions.PropagatePermissions())
+                        {
+                            foreach (SceneObjectPart child in partList)
+                            {
+                                child.Inventory.ChangeInventoryOwner(AgentID);
+                                child.TriggerScriptChangedEvent(Changed.OWNER);
+                                child.ApplyNextOwnerPermissions();
+                            }
+                        }
+
+                        copy.RootPart.ObjectSaleType = 0;
+                        copy.RootPart.SalePrice = 10;
+                    }
+
                     Entities.Add(copy);
 
                     // Since we copy from a source group that is in selected
@@ -1733,7 +1788,7 @@ namespace OpenSim.Region.Framework.Scenes
                         copy.UpdateGroupRotationR(rot);
                     }
 
-                    copy.CreateScriptInstances(0, false, m_parentScene.DefaultScriptEngine, 0, UUID.Zero);
+                    copy.CreateScriptInstances(0, false, m_parentScene.DefaultScriptEngine, 0);
                     copy.HasGroupChanged = true;
                     copy.ScheduleGroupForFullUpdate();
                     copy.ResumeScripts();
