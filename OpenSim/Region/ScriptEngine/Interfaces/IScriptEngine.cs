@@ -49,11 +49,6 @@ namespace OpenSim.Region.ScriptEngine.Interfaces
 
     public interface IScriptEngine
     {
-        /// <summary>
-        /// Queue an event for execution
-        /// </summary>
-        IScriptWorkItem QueueEventHandler(object parms);
-
         List<IScene> Worlds { get; }
 
         IScriptModule ScriptModule { get; }

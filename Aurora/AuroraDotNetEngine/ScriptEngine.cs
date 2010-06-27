@@ -840,20 +840,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         #endregion
 
-        #region xEngine only
-
-        /// <summary>
-        /// Unneeded for DotNet. Only for xEngine.
-        /// </summary>
-        /// <param name="o"></param>
-        /// <returns></returns>
-        public IScriptWorkItem QueueEventHandler(Object o)
-        {
-            return null;
-        }
-
-        #endregion
-
         #region XML Serialization
 
         public string GetXMLState(UUID itemID)

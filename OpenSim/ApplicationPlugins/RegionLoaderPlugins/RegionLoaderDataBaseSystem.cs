@@ -130,7 +130,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                 {
                     foreach (string file in configFiles)
                     {
-                        RegionInfo regionInfo = new RegionInfo("REGION CONFIG #" + (i + 1), file, false, m_configSource);
+                        RegionInfo regionInfo = new RegionInfo("REGION CONFIG #" + (i + 1), file, false, m_configSource, string.Empty);
                         RegionsToConvert.Add(regionInfo);
                         i++;
                     }
