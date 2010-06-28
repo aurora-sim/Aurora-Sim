@@ -152,7 +152,7 @@ namespace OpenSim
 
         private void SetUpConsole()
         {
-            List<ICommandConsole> Consoles = Aurora.Framework.AuroraModuleLoader.LoadPlugins<ICommandConsole>("/OpenSim/Startup", new ConsolePluginInitialiser("Region", ConfigSource, this));
+            List<ICommandConsole> Consoles = Aurora.Framework.AuroraModuleLoader.LoadPlugins<ICommandConsole>("/OpenSim/Console", new ConsolePluginInitialiser("Region", ConfigSource, this));
             m_console = m_applicationRegistry.Get<ICommandConsole>();
 
             ILoggerRepository repository = LogManager.GetRepository();
@@ -238,7 +238,6 @@ namespace OpenSim
             m_log.Warn("========================= STARTING AURORA =========================");
             m_log.Warn("====================================================================");
             m_log.Warn("[AURORASTARTUP]: Version: " + Version + "\n");
-            m_log.Info("[AURORADATA]: Setting up the data service");
 
             SetUpHTTPServer();
 

@@ -7,17 +7,32 @@ using Aurora.DataManager;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
+using Nini.Config;
 
 namespace Aurora.Services.DataService
 {
-	public class LocalProfileConnector : IProfileConnector
+    public class LocalProfileConnector : IProfileConnector, IAuroraDataPlugin
 	{
 		private Dictionary<UUID, IUserProfileInfo> UserProfilesCache = new Dictionary<UUID, IUserProfileInfo>();
-		private IGenericData GD = null;
-        public LocalProfileConnector(IGenericData GenericData)
+        private IGenericData GD = null;
+
+        public void Initialise(IGenericData GenericData, IConfigSource source)
         {
-            GD = GenericData;
-		}
+            if (source.Configs["AuroraConnectors"].GetString("ProfileConnector", "LocalConnector") == "LocalConnector")
+            {
+                GD = GenericData;
+                DataManager.DataManager.RegisterPlugin(Name, this);
+            }
+        }
+
+        public string Name
+        {
+            get { return "IProfileConnector"; }
+        }
+
+        public void Dispose()
+        {
+        }
 
 		public Classified FindClassified(string classifiedID)
 		{

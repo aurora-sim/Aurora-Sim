@@ -6,18 +6,33 @@ using OpenMetaverse;
 using Aurora.DataManager;
 using Aurora.Framework;
 using log4net;
+using Nini.Config;
 
 namespace Aurora.Services.DataService
 {
-	public class LocalAgentConnector : IAgentConnector
+    public class LocalAgentConnector : IAgentConnector, IAuroraDataPlugin
 	{
 		private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private IGenericData GD = null;
-        public LocalAgentConnector(IGenericData GenericData)
+
+        public void Initialise(IGenericData GenericData, IConfigSource source)
         {
-            GD = GenericData;
-		}
+            if (source.Configs["AuroraConnectors"].GetString("AgentConnector", "LocalConnector") == "LocalConnector")
+            {
+                GD = GenericData;
+                DataManager.DataManager.RegisterPlugin(Name, this);
+            }
+        }
+
+        public string Name
+        {
+            get { return "IAgentConnector"; }
+        }
+
+        public void Dispose()
+        {
+        }
 
 		public IAgentInfo GetAgent(UUID agentID)
 		{

@@ -91,5 +91,59 @@ namespace Aurora.Framework
         public int OtherCleanTime;
         public UUID AuthBuyerID;
         public List<ParcelManager.ParcelAccessEntry> AccessEntry;
+
+        public Dictionary<string, object> ToKeyValuePairs()
+        {
+            Dictionary<string, object> KVP = new Dictionary<string, object>();
+            KVP["SnapshotID"] = SnapshotID;
+            KVP["ShowInSearch"] = ShowInSearch;
+            KVP["GroupID"] = GroupID;
+            KVP["OwnerID"] = OwnerID;
+            KVP["Maturity"] = Maturity;
+            KVP["EstateID"] = EstateID;
+            KVP["AuctionID"] = AuctionID;
+            KVP["SalePrice"] = SalePrice;
+            KVP["ForSale"] = ForSale;
+            KVP["InfoUUID"] = InfoUUID;
+            KVP["Dwell"] = Dwell;
+            KVP["Flags"] = Flags;
+            KVP["Description"] = Description;
+            KVP["LandingZ"] = LandingZ;
+            KVP["LandingY"] = LandingY;
+            KVP["LandingX"] = LandingX;
+            KVP["LocalID"] = LocalID;
+            KVP["ParcelID"] = ParcelID;
+            KVP["RegionID"] = RegionID;
+            return KVP;
+        }
+
+        public AuroraLandData()
+        {
+        }
+
+        public AuroraLandData(Dictionary<string, object> KVP)
+        {
+            RegionID = UUID.Parse(KVP["RegionID"].ToString());
+            ParcelID = UUID.Parse(KVP["ParcelID"].ToString());
+            LocalID = int.Parse(KVP["LocalID"].ToString());
+            LandingX = float.Parse(KVP["LandingX"].ToString());
+            LandingY = float.Parse(KVP["LandingY"].ToString());
+            LandingZ = float.Parse(KVP["LandingZ"].ToString());
+            Name = KVP["Name"].ToString();
+            Description = KVP["Description"].ToString();
+            Flags = uint.Parse(KVP["Flags"].ToString());
+            Dwell = int.Parse(KVP["Dwell"].ToString());
+            InfoUUID = UUID.Parse(KVP["InfoUUID"].ToString());
+            ForSale = bool.Parse(KVP["ForSale"].ToString());
+            SalePrice = float.Parse(KVP["SalePrice"].ToString());
+            AuctionID = uint.Parse(KVP["AuctionID"].ToString());
+            Area = int.Parse(KVP["Area"].ToString());
+            EstateID = uint.Parse(KVP["EstateID"].ToString());
+            Maturity = int.Parse(KVP["Maturity"].ToString());
+            OwnerID = UUID.Parse(KVP["OwnerID"].ToString());
+            GroupID = UUID.Parse(KVP["GroupID"].ToString());
+            ShowInSearch = bool.Parse(KVP["ShowInSearch"].ToString());
+            SnapshotID = UUID.Parse(KVP["SnapshotID"].ToString());
+        }
     }
 }

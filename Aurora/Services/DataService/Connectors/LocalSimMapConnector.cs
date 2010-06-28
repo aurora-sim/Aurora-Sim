@@ -4,16 +4,31 @@ using System.Text;
 using OpenMetaverse;
 using Aurora.Framework;
 using Aurora.DataManager;
+using Nini.Config;
 
 namespace Aurora.Services.DataService
 {
-    public class LocalSimMapConnector : ISimMapDataConnector
+    public class LocalSimMapConnector : ISimMapDataConnector, IAuroraDataPlugin
 	{
-		private IGenericData GD = null;
-        public LocalSimMapConnector(IGenericData GenericData)
+        private IGenericData GD = null;
+
+        public void Initialise(IGenericData GenericData, IConfigSource source)
         {
-            GD = GenericData;
-		}
+            if (source.Configs["AuroraConnectors"].GetString("SimMapDataConnector", "LocalConnector") == "LocalConnector")
+            {
+                GD = GenericData;
+                DataManager.DataManager.RegisterPlugin(Name, this);
+            }
+        }
+
+        public string Name
+        {
+            get { return "ISimMapDataConnector"; }
+        }
+
+        public void Dispose()
+        {
+        }
 
 		/// <summary>
 		/// Gets the region's SimMap

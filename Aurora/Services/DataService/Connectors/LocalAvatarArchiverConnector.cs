@@ -4,27 +4,42 @@ using System.Text;
 using Aurora.Framework;
 using OpenSim.Framework;
 using OpenSim.Framework.Console;
+using Nini.Config;
 
 namespace Aurora.Services.DataService
 {
 	//This will always be local, as this is only used by the grid server.
 	//The region server should not be using this class.
-    public class LocalAvatarArchiverConnector : IAvatarArchiverConnector
+    public class LocalAvatarArchiverConnector : IAvatarArchiverConnector, IAuroraDataPlugin
 	{
 		private IGenericData GD = null;
-        public LocalAvatarArchiverConnector(IGenericData GenericData)
+
+        public void Initialise(IGenericData GenericData, IConfigSource source)
         {
-            GD = GenericData;
-			List<string> Results = GD.Query("Method", "AvatarArchive", "Passwords", "Password");
-			if (Results.Count == 0) 
+            if (source.Configs["AuroraConnectors"].GetString("AvatarArchiverConnector", "LocalConnector") == "LocalConnector")
             {
-				string newPass = MainConsole.Instance.CmdPrompt("Password to access Avatar Archive");
-				GD.Insert("Passwords", new object[] {
+                GD = GenericData;
+                List<string> Results = GD.Query("Method", "AvatarArchive", "Passwords", "Password");
+                if (Results.Count == 0)
+                {
+                    string newPass = MainConsole.Instance.CmdPrompt("Password to access Avatar Archive");
+                    GD.Insert("Passwords", new object[] {
 					"AvatarArchive",
 					Util.Md5Hash(newPass)
 				});
-			}
-		}
+                }
+                DataManager.DataManager.RegisterPlugin(Name, this);
+            }
+        }
+
+        public string Name
+        {
+            get { return "IAvatarArchiverConnector"; }
+        }
+
+        public void Dispose()
+        {
+        }
 
 		public AvatarArchive GetAvatarArchive(string Name, string Password)
 		{

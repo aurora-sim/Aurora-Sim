@@ -1,0 +1,33 @@
+<Addin id="Aurora.Services.DataService" version="0.1">
+    <Runtime>
+		<Import assembly="Aurora.Services.DataService.dll"/>
+	</Runtime>
+
+    <Dependencies>
+        <Addin id="OpenSim" version="0.5" />
+    </Dependencies>
+
+	<Extension path = "/Aurora/DataPlugin">
+		<DataPlugin id="LocalAbuseReportsConnector" type="Aurora.Services.DataService.LocalAbuseReportsConnector" />
+		<DataPlugin id="LocalAgentConnector" type="Aurora.Services.DataService.LocalAgentConnector" />
+		<DataPlugin id="LocalAssetConnector" type="Aurora.Services.DataService.LocalAssetConnector" />
+		<DataPlugin id="LocalAvatarArchiverConnector" type="Aurora.Services.DataService.LocalAvatarArchiverConnector" />
+		<DataPlugin id="LocalCurrencyConnector" type="Aurora.Services.DataService.LocalCurrencyConnector" />
+		<DataPlugin id="LocalParcelServiceConnector" type="Aurora.Services.DataService.LocalParcelServiceConnector" />
+		<DataPlugin id="LocalDirectoryServiceConnector" type="Aurora.Services.DataService.LocalDirectoryServiceConnector" />
+		<DataPlugin id="LocalEstateConnector" type="Aurora.Services.DataService.LocalEstateConnector" />
+		<DataPlugin id="LocalMuteListConnector" type="Aurora.Services.DataService.LocalMuteListConnector" />
+		<DataPlugin id="LocalOfflineMessagesConnector" type="Aurora.Services.DataService.LocalOfflineMessagesConnector" />
+		<DataPlugin id="LocalProfileConnector" type="Aurora.Services.DataService.LocalProfileConnector" />
+		<DataPlugin id="LocalRegionConnector" type="Aurora.Services.DataService.LocalRegionConnector" />
+		<DataPlugin id="LocalRegionInfoConnector" type="Aurora.Services.DataService.LocalRegionInfoConnector" />
+		<DataPlugin id="LocalScriptDataConnector" type="Aurora.Services.DataService.LocalScriptDataConnector" />
+		<DataPlugin id="LocalSimMapConnector" type="Aurora.Services.DataService.LocalSimMapConnector" />
+		<DataPlugin id="RemoteAgentConnector" type="Aurora.Services.DataService.RemoteAgentConnector" />
+		<DataPlugin id="RemoteEstateConnector" type="Aurora.Services.DataService.RemoteEstateConnector" />
+		<DataPlugin id="RemoteMuteListConnector" type="Aurora.Services.DataService.RemoteMuteListConnector" />
+		<DataPlugin id="RemoteOfflineMessagesConnector" type="Aurora.Services.DataService.RemoteOfflineMessagesConnector" />
+		<DataPlugin id="RemoteProfileConnector" type="Aurora.Services.DataService.RemoteProfileConnector" />
+		<DataPlugin id="RemoteRegionConnector" type="Aurora.Services.DataService.RemoteRegionConnector" />
+	</Extension>
+</Addin>

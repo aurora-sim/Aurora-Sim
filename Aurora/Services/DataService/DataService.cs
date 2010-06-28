@@ -96,76 +96,26 @@ namespace Aurora.Services.DataService
 
                 DataConnector = GenericData;
             }
-            IConfig m_ConnectorConfig = source.Configs["AuroraConnectors"];
 
-            string AbuseReportsConnector = m_ConnectorConfig.GetString("AbuseReportsConnector", "LocalConnector");
-            string AssetConnector = m_ConnectorConfig.GetString("AssetConnector", "LocalConnector");
-            string AvatarArchiverConnector = m_ConnectorConfig.GetString("AvatarArchiverConnector", "LocalConnector");
-            string CurrencyConnector = m_ConnectorConfig.GetString("CurrencyConnector", "LocalConnector");
-            string SimMapDataConnector = m_ConnectorConfig.GetString("SimMapDataConnector", "LocalConnector");
-            string ScriptDataConnector = m_ConnectorConfig.GetString("ScriptDataConnector", "LocalConnector");
-            string RegionInfoConnector = m_config.GetString("RegionInfoConnector", "LocalConnector");
-            string AgentConnector = m_ConnectorConfig.GetString("AgentConnector", "LocalConnector");
-            string RegionConnector = m_ConnectorConfig.GetString("RegionConnector", "LocalConnector");
-            string ProfileConnector = m_ConnectorConfig.GetString("ProfileConnector", "LocalConnector");
-            string EstateConnector = m_ConnectorConfig.GetString("EstateConnector", "LocalConnector");
-            string OfflineMessagesConnector = m_ConnectorConfig.GetString("OfflineMessagesConnector", "LocalConnector");
-            string DirectoryServiceConnector = m_ConnectorConfig.GetString("DirectoryServiceConnector", "LocalConnector");
-            string MuteListConnector = m_ConnectorConfig.GetString("MuteListConnector", "LocalConnector");
-            string ParcelConnector = m_ConnectorConfig.GetString("ParcelConnector", "LocalConnector");
-            string RemoteConnectionString = m_config.GetString("RemoteServerURI", "");
+            Aurora.Framework.AuroraModuleLoader.LoadPlugins<IAuroraDataPlugin>("/Aurora/DataPlugin", new AuroraDataPluginInitialiser(DataConnector, source));
+            IDirectoryServiceConnector DSC = Aurora.DataManager.DataManager.RequestPlugin<IDirectoryServiceConnector>("IDirectoryServiceConnector");
+        }
+    }
 
-            //Always local connectors.
-            if (AbuseReportsConnector == "LocalConnector")
-                DataManager.DataManager.RegisterPlugin("IAbuseReportsConnector", new LocalAbuseReportsConnector(DataConnector));
-            if (AssetConnector == "LocalConnector")
-                DataManager.DataManager.RegisterPlugin("IAssetConnector", new LocalAssetConnector(DataConnector));
-            if (AvatarArchiverConnector == "LocalConnector")
-                DataManager.DataManager.RegisterPlugin("IAvatarArchiverConnector", new LocalAvatarArchiverConnector(DataConnector));
-            if (CurrencyConnector == "LocalConnector")
-                DataManager.DataManager.RegisterPlugin("ICurrencyConnector", new LocalCurrencyConnector(DataConnector));
-            if (SimMapDataConnector == "LocalConnector")
-                DataManager.DataManager.RegisterPlugin("ISimMapDataConnector", new LocalSimMapConnector(DataConnector));
-            if (ScriptDataConnector == "LocalConnector")
-                DataManager.DataManager.RegisterPlugin("IScriptDataConnector", new LocalScriptDataConnector(ScriptSaveDataConnector));
-            if (RegionInfoConnector == "LocalConnector")
-                DataManager.DataManager.RegisterPlugin("IRegionInfoConnector", new LocalRegionInfoConnector(DataConnector));
-            if (ParcelConnector == "LocalConnector")
-                DataManager.DataManager.RegisterPlugin("IParcelServiceConnector", new LocalParcelServiceConnector(DataConnector));
-            //End always local connectors.
+    public class AuroraDataPluginInitialiser : PluginInitialiserBase
+    {
+        IGenericData GD;
+        IConfigSource m_source;
 
-            if (AgentConnector == "LocalConnector")
-                DataManager.DataManager.RegisterPlugin("IAgentConnector", new LocalAgentConnector(DataConnector));
-            if (RegionConnector == "LocalConnector")
-                DataManager.DataManager.RegisterPlugin("IRegionConnector", new LocalRegionConnector(DataConnector));
-            if (ProfileConnector == "LocalConnector")
-                DataManager.DataManager.RegisterPlugin("IProfileConnector", new LocalProfileConnector(DataConnector));
-            if (EstateConnector == "LocalConnector")
-                DataManager.DataManager.RegisterPlugin("IEstateConnector", new LocalEstateConnector(DataConnector));
-            if (OfflineMessagesConnector == "LocalConnector")
-                DataManager.DataManager.RegisterPlugin("IOfflineMessagesConnector", new LocalOfflineMessagesConnector(DataConnector));
-            if (MuteListConnector == "LocalConnector")
-                DataManager.DataManager.RegisterPlugin("IMuteListConnector", new LocalMuteListConnector(DataConnector));
-
-            //Start remote connectors.
-
-            //Connectors that still need a remote connector
-            if (DirectoryServiceConnector == "RemoteConnector")
-                DataManager.DataManager.RegisterPlugin("IDirectoryServiceConnector", new LocalDirectoryServiceConnector(DataConnector));
-            //End connectors that still need a remote connector
-
-            if (EstateConnector == "RemoteConnector")
-                DataManager.DataManager.RegisterPlugin("IEstateConnector", new RemoteEstateConnector(RemoteConnectionString));
-            if (MuteListConnector == "RemoteConnector")
-                DataManager.DataManager.RegisterPlugin("IMuteListConnector", new RemoteMuteListConnector(RemoteConnectionString));
-            if (AgentConnector == "RemoteConnector")
-                DataManager.DataManager.RegisterPlugin("IAgentConnector", new RemoteAgentConnector(RemoteConnectionString));
-            if (RegionConnector == "RemoteConnector")
-                DataManager.DataManager.RegisterPlugin("IRegionConnector", new RemoteRegionConnector(RemoteConnectionString));
-            if (ProfileConnector == "RemoteConnector")
-                DataManager.DataManager.RegisterPlugin("IProfileConnector", new RemoteProfileConnector(RemoteConnectionString));
-            if (OfflineMessagesConnector == "RemoteConnector")
-                DataManager.DataManager.RegisterPlugin("IOfflineMessagesConnector", new RemoteOfflineMessagesConnector(RemoteConnectionString));
+        public AuroraDataPluginInitialiser(IGenericData GenericData, IConfigSource source)
+        {
+            GD = GenericData;
+            m_source = source;
+        }
+        public override void Initialise(IPlugin plugin)
+        {
+            IAuroraDataPlugin dataplugin = plugin as IAuroraDataPlugin;
+            dataplugin.Initialise(GD, m_source);
         }
     }
 }

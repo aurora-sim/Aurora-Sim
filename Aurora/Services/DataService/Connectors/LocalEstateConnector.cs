@@ -5,16 +5,31 @@ using OpenMetaverse;
 using Aurora.DataManager;
 using Aurora.Framework;
 using OpenSim.Framework;
+using Nini.Config;
 
 namespace Aurora.Services.DataService
 {
-	public class LocalEstateConnector : IEstateConnector
+    public class LocalEstateConnector : IEstateConnector, IAuroraDataPlugin
 	{
-		private IGenericData GD = null;
-        public LocalEstateConnector(IGenericData GenericData)
+        private IGenericData GD = null;
+
+        public void Initialise(IGenericData GenericData, IConfigSource source)
         {
-            GD = GenericData;
-		}
+            if (source.Configs["AuroraConnectors"].GetString("EstateConnector", "LocalConnector") == "LocalConnector")
+            {
+                GD = GenericData;
+                DataManager.DataManager.RegisterPlugin(Name, this);
+            }
+        }
+
+        public string Name
+        {
+            get { return "IEstateConnector"; }
+        }
+
+        public void Dispose()
+        {
+        }
 
 		public EstateSettings LoadEstateSettings(UUID regionID, bool create)
 		{

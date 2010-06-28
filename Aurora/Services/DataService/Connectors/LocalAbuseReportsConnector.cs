@@ -7,22 +7,37 @@ using Aurora.DataManager;
 using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Framework.Console;
+using Nini.Config;
 
 namespace Aurora.Services.DataService
 {
-	public class LocalAbuseReportsConnector : IAbuseReportsConnector
+    public class LocalAbuseReportsConnector : IAbuseReportsConnector, IAuroraDataPlugin
 	{
 		private IGenericData GD = null;
-		public LocalAbuseReportsConnector(IGenericData GenericData)
-		{
-            GD = GenericData;
-            List<string> Results = GD.Query("Method", "AbuseReports", "Passwords", "Password");
-            if (Results.Count == 0)
+
+        public void Initialise(IGenericData GenericData, IConfigSource source)
+        {
+            if(source.Configs["AuroraConnectors"].GetString("AbuseReportsConnector", "LocalConnector") == "LocalConnector")
             {
-                string newPass = MainConsole.Instance.CmdPrompt("Password to access Abuse Reports");
-                GD.Insert("Passwords", new object[] { "AbuseReports", Util.Md5Hash(newPass) });
+                GD = GenericData;
+                List<string> Results = GD.Query("Method", "AbuseReports", "Passwords", "Password");
+                if (Results.Count == 0)
+                {
+                    string newPass = MainConsole.Instance.CmdPrompt("Password to access Abuse Reports");
+                    GD.Insert("Passwords", new object[] { "AbuseReports", Util.Md5Hash(newPass) });
+                }
+                DataManager.DataManager.RegisterPlugin(Name, this);
             }
-		}
+        }
+
+        public string Name
+        {
+            get { return "IAbuseReportsConnector"; }
+        }
+
+        public void Dispose()
+        {
+        }
 
 		public AbuseReport GetAbuseReport(int Number, string Password)
 		{
@@ -105,5 +120,5 @@ namespace Aurora.Services.DataService
                 return true;
             return false;
         }
-	}
+    }
 }

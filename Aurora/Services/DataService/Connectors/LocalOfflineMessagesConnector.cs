@@ -4,16 +4,31 @@ using System.Text;
 using Aurora.DataManager;
 using Aurora.Framework;
 using OpenMetaverse;
+using Nini.Config;
 
 namespace Aurora.Services.DataService
 {
-	public class LocalOfflineMessagesConnector : IOfflineMessagesConnector
+    public class LocalOfflineMessagesConnector : IOfflineMessagesConnector, IAuroraDataPlugin
 	{
-		private IGenericData GD = null;
-        public LocalOfflineMessagesConnector(IGenericData GenericData)
+        private IGenericData GD = null;
+
+        public void Initialise(IGenericData GenericData, IConfigSource source)
         {
-            GD = GenericData;
-		}
+            if (source.Configs["AuroraConnectors"].GetString("OfflineMessagesConnector", "LocalConnector") == "LocalConnector")
+            {
+                GD = GenericData;
+                DataManager.DataManager.RegisterPlugin(Name, this);
+            }
+        }
+
+        public string Name
+        {
+            get { return "IOfflineMessagesConnector"; }
+        }
+
+        public void Dispose()
+        {
+        }
 
 		public OfflineMessage[] GetOfflineMessages(UUID agentID)
 		{

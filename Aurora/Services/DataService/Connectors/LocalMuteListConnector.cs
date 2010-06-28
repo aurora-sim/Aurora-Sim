@@ -5,15 +5,30 @@ using System.Text;
 using Aurora.Framework;
 using Aurora.DataManager;
 using OpenMetaverse;
+using Nini.Config;
 
 namespace Aurora.Services.DataService
 {
-    public class LocalMuteListConnector : IMuteListConnector
+    public class LocalMuteListConnector : IMuteListConnector, IAuroraDataPlugin
     {
         IGenericData GD;
-        public LocalMuteListConnector(IGenericData GenericData)
+
+        public void Initialise(IGenericData GenericData, IConfigSource source)
         {
-            GD = GenericData;
+            if (source.Configs["AuroraConnectors"].GetString("MuteListConnector", "LocalConnector") == "LocalConnector")
+            {
+                GD = GenericData;
+                DataManager.DataManager.RegisterPlugin(Name, this);
+            }
+        }
+
+        public string Name
+        {
+            get { return "IMuteListConnector"; }
+        }
+
+        public void Dispose()
+        {
         }
 
         public MuteList[] GetMuteList(UUID AgentID)

@@ -5,16 +5,31 @@ using System.Text;
 using Aurora.DataManager;
 using Aurora.Framework;
 using OpenMetaverse;
+using Nini.Config;
 
 namespace Aurora.Services.DataService
 {
-	public class LocalAssetConnector : IAssetConnector
+    public class LocalAssetConnector : IAssetConnector, IAuroraDataPlugin
 	{
 		private IGenericData GD = null;
-        public LocalAssetConnector(IGenericData GenericData)
+
+        public void Initialise(IGenericData GenericData, IConfigSource source)
         {
-            GD = GenericData;
-		}
+            if (source.Configs["AuroraConnectors"].GetString("AssetConnector", "LocalConnector") == "LocalConnector")
+            {
+                GD = GenericData;
+                DataManager.DataManager.RegisterPlugin(Name, this);
+            }
+        }
+
+        public string Name
+        {
+            get { return "IAssetConnector"; }
+        }
+
+        public void Dispose()
+        {
+        }
 
 		public ObjectMediaURL GetObjectMediaInfo(string objectID, int side)
 		{

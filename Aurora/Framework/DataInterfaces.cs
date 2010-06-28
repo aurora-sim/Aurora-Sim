@@ -9,27 +9,6 @@ using Nini.Config;
 
 namespace Aurora.Framework
 {
-    public interface IGenericData
-    {
-        /// <summary>
-        /// update table set setRow = setValue WHERE keyRow = keyValue
-        /// </summary>
-        bool Update(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues);
-        /// <summary>
-        /// select wantedValue from table where keyRow = keyValue
-        /// </summary>
-        List<string> Query(string keyRow, object keyValue, string table, string wantedValue);
-        List<string> Query(string whereClause, string table, string wantedValue);
-        List<string> Query(string keyRow, object keyValue, string table, string wantedValue, string Order);
-        List<string> Query(string[] keyRow, object[] keyValue, string table, string wantedValue);
-        IDataReader QueryReader(string keyRow, object keyValue, string table, string wantedValue);
-        bool Insert(string table, object[] values);
-        bool Insert(string table, string[] keys, object[] values);
-        bool Delete(string table, string[] keys, object[] values);
-        bool Insert(string table, object[] values, string updateKey, object updateValue);
-        string Identifier { get; }
-    }
-
     public interface IDataConnector : IGenericData
     {
         void ConnectToDatabase(string connectionString);
@@ -42,7 +21,6 @@ namespace Aurora.Framework
         bool VerifyTableExists(string tableName, ColumnDefinition[] columnDefinitions);
         void EnsureTableExists(string tableName, ColumnDefinition[] columnDefinitions);
         void DropTable(string tableName);
-        string Identifier { get; }
     }
 
     public enum DataManagerTechnology

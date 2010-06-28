@@ -5,17 +5,32 @@ using System.Text;
 using Aurora.DataManager;
 using Aurora.Framework;
 using OpenSim.Framework;
+using Nini.Config;
 using OpenMetaverse;
 
 namespace Aurora.Services.DataService
 {
-	public class LocalRegionInfoConnector : IRegionInfoConnector
+    public class LocalRegionInfoConnector : IRegionInfoConnector, IAuroraDataPlugin
 	{
-		private IGenericData GD = null;
-        public LocalRegionInfoConnector(IGenericData GenericData)
+        private IGenericData GD = null;
+
+        public void Initialise(IGenericData GenericData, IConfigSource source)
         {
-            GD = GenericData;
-		}
+            if (source.Configs["AuroraConnectors"].GetString("RegionInfoConnector", "LocalConnector") == "LocalConnector")
+            {
+                GD = GenericData;
+                DataManager.DataManager.RegisterPlugin(Name, this);
+            }
+        }
+
+        public string Name
+        {
+            get { return "IRegionInfoConnector"; }
+        }
+
+        public void Dispose()
+        {
+        }
 
         public void UpdateRegionInfo(RegionInfo region, bool Disable)
         {

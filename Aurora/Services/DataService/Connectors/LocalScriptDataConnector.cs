@@ -6,16 +6,31 @@ using OpenMetaverse;
 using Aurora.DataManager;
 using Aurora.Framework;
 using OpenSim.Framework;
+using Nini.Config;
 
 namespace Aurora.Services.DataService
 {
-	public class LocalScriptDataConnector : IScriptDataConnector
+    public class LocalScriptDataConnector : IScriptDataConnector, IAuroraDataPlugin
 	{
-		private IGenericData GenericData = null;
-		public LocalScriptDataConnector(IGenericData connector)
-		{
-            GenericData = connector;
-		}
+        private IGenericData GD = null;
+
+        public void Initialise(IGenericData GenericData, IConfigSource source)
+        {
+            if (source.Configs["AuroraConnectors"].GetString("ScriptDataConnector", "LocalConnector") == "LocalConnector")
+            {
+                GD = GenericData;
+                DataManager.DataManager.RegisterPlugin(Name, this);
+            }
+        }
+
+        public string Name
+        {
+            get { return "IScriptDataConnector"; }
+        }
+
+        public void Dispose()
+        {
+        }
 
 		public StateSave GetStateSave(UUID itemID, UUID UserInventoryItemID)
 		{
@@ -25,11 +40,11 @@ namespace Aurora.Services.DataService
                 List<string> StateSaveRetVals = new List<string>();
                 if (UserInventoryItemID != UUID.Zero)
                 {
-                    StateSaveRetVals = GenericData.Query("UserInventoryItemID", UserInventoryItemID.ToString(), "auroradotnetstatesaves", "*");
+                    StateSaveRetVals = GD.Query("UserInventoryItemID", UserInventoryItemID.ToString(), "auroradotnetstatesaves", "*");
                 }
                 else
                 {
-                    StateSaveRetVals = GenericData.Query("ItemID", itemID.ToString(), "auroradotnetstatesaves", "*");
+                    StateSaveRetVals = GD.Query("ItemID", itemID.ToString(), "auroradotnetstatesaves", "*");
                 }
                 if (StateSaveRetVals.Count == 0)
                     return null;
@@ -95,7 +110,7 @@ namespace Aurora.Services.DataService
 			Insert.Add(state.Disabled);
 			Insert.Add(state.UserInventoryID);
 			try {
-				GenericData.Insert("auroraDotNetStateSaves", Insert.ToArray());
+				GD.Insert("auroraDotNetStateSaves", Insert.ToArray());
 			} catch (Exception) {
 				//Needs to be updated then
 				List<string> Keys = new List<string>();
@@ -114,7 +129,7 @@ namespace Aurora.Services.DataService
 				Keys.Add("Disabled");
 				Keys.Add("UserInventoryItemID");
 				try {
-					GenericData.Update("auroraDotNetStateSaves", Insert.ToArray(), Keys.ToArray(), new string[] { "ItemID" }, new object[] { state.ItemID });
+					GD.Update("auroraDotNetStateSaves", Insert.ToArray(), Keys.ToArray(), new string[] { "ItemID" }, new object[] { state.ItemID });
 				} catch (Exception ex) {
 					//Throw this one... Something is very wrong.
 					throw ex;
@@ -124,12 +139,12 @@ namespace Aurora.Services.DataService
 
         public void DeleteStateSave(UUID itemID)
         {
-            GenericData.Delete("auroraDotNetStateSaves", new string[] { "ItemID" }, new object[] { itemID });
+            GD.Delete("auroraDotNetStateSaves", new string[] { "ItemID" }, new object[] { itemID });
         }
 
         public void DeleteStateSave(string assemblyName)
         {
-            GenericData.Delete("auroraDotNetStateSaves", new string[] { "AssemblyName" }, new object[] { assemblyName });
+            GD.Delete("auroraDotNetStateSaves", new string[] { "AssemblyName" }, new object[] { assemblyName });
         }
 	}
 }

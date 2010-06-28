@@ -29,6 +29,7 @@ namespace OpenSim.Server.Handlers.AuroraData
         private IEstateConnector EstateConnector = null;
         private IMuteListConnector MuteListConnector = null;
         private IOfflineMessagesConnector OfflineMessagesConnector = null;
+        private IDirectoryServiceConnector DirectoryServiceConnector = null;
 
         public AuroraDataServerPostHandler() :
             base("POST", "/auroradata")
@@ -39,6 +40,7 @@ namespace OpenSim.Server.Handlers.AuroraData
             EstateConnector = DataManager.RequestPlugin<IEstateConnector>("IEstateConnector");
             MuteListConnector = DataManager.RequestPlugin<IMuteListConnector>("IMuteListConnector");
             OfflineMessagesConnector = DataManager.RequestPlugin<IOfflineMessagesConnector>("IOfflineMessagesConnector");
+            DirectoryServiceConnector = DataManager.RequestPlugin<IDirectoryServiceConnector>("IDirectoryServiceConnector");
         }
 
         public override byte[] Handle(string path, Stream requestData,
@@ -133,6 +135,26 @@ namespace OpenSim.Server.Handlers.AuroraData
                         return AddOfflineMessage(request);
                     case "getofflinemessages":
                         return GetOfflineMessages(request);
+                    case "addlandobject":
+                        return AddLandObject(request);
+                    case "getparcelinfo":
+                        return GetParcelInfo(request);
+                    case "getparcelbyowner":
+                        return GetParcelByOwner(request);
+                    case "findland":
+                        return FindLand(request);
+                    case "findlandforsale":
+                        return FindLandForSale(request);
+                    case "findevents":
+                        return FindEvents(request);
+                    case "findeventsinregion":
+                        return FindEventsInRegion(request);
+                    case "findclassifieds":
+                        return FindClassifieds(request);
+                    case "geteventinfo":
+                        return GetEventInfo(request);
+                    case "findclassifiedsinregion":
+                        return FindClassifiedsInRegion(request);
                 }
                 m_log.DebugFormat("[AuroraDataServerPostHandler]: unknown method {0} request {1}", method.Length, method);
             }
@@ -143,6 +165,186 @@ namespace OpenSim.Server.Handlers.AuroraData
 
             return FailureResult();
 
+        }
+
+        private byte[] GetParcelInfo(Dictionary<string, object> request)
+        {
+            Dictionary<string, object> result = new Dictionary<string, object>();
+
+            UUID INFOUUID = UUID.Parse(request["INFOUUID"].ToString());
+            AuroraLandData land = DirectoryServiceConnector.GetParcelInfo(INFOUUID);
+
+            result.Add("Land", land.ToKeyValuePairs());
+
+            string xmlString = ServerUtils.BuildXmlResponse(result);
+            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
+        }
+
+        private byte[] GetParcelByOwner(Dictionary<string, object> request)
+        {
+            Dictionary<string, object> result = new Dictionary<string, object>();
+
+            UUID OWNERID = UUID.Parse(request["OWNERID"].ToString());
+            AuroraLandData[] lands = DirectoryServiceConnector.GetParcelByOwner(OWNERID);
+
+            int i = 0;
+            foreach (AuroraLandData land in lands)
+            {
+                result.Add(ConvertDecString(i), land.ToKeyValuePairs());
+                i++;
+            }
+
+            string xmlString = ServerUtils.BuildXmlResponse(result);
+            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
+        }
+
+        private byte[] FindLand(Dictionary<string, object> request)
+        {
+            Dictionary<string, object> result = new Dictionary<string, object>();
+
+            string QUERYTEXT = request["QUERYTEXT"].ToString();
+            string CATEGORY = request["CATEGORY"].ToString();
+            int STARTQUERY = int.Parse(request["STARTQUERY"].ToString());
+            DirPlacesReplyData[] lands = DirectoryServiceConnector.FindLand(QUERYTEXT, CATEGORY, STARTQUERY);
+
+            int i = 0;
+            foreach (DirPlacesReplyData land in lands)
+            {
+                result.Add(ConvertDecString(i), land.ToKeyValuePairs());
+                i++;
+            }
+
+            string xmlString = ServerUtils.BuildXmlResponse(result);
+            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
+        }
+
+        private byte[] FindLandForSale(Dictionary<string, object> request)
+        {
+            Dictionary<string, object> result = new Dictionary<string, object>();
+
+            string SEARCHTYPE = request["SEARCHTYPE"].ToString();
+            int PRICE = int.Parse(request["PRICE"].ToString());
+            int AREA = int.Parse(request["AREA"].ToString());
+            int STARTQUERY = int.Parse(request["STARTQUERY"].ToString());
+            DirLandReplyData[] lands = DirectoryServiceConnector.FindLandForSale(SEARCHTYPE, PRICE.ToString(), AREA.ToString(), STARTQUERY);
+
+            int i = 0;
+            foreach (DirLandReplyData land in lands)
+            {
+                result.Add(ConvertDecString(i), land.ToKeyValuePairs());
+                i++;
+            }
+
+            string xmlString = ServerUtils.BuildXmlResponse(result);
+            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
+        }
+
+        private byte[] FindEvents(Dictionary<string, object> request)
+        {
+            Dictionary<string, object> result = new Dictionary<string, object>();
+
+            string QUERYTEXT = request["QUERYTEXT"].ToString();
+            int FLAGS = int.Parse(request["FLAGS"].ToString());
+            int STARTQUERY = int.Parse(request["STARTQUERY"].ToString());
+            DirEventsReplyData[] lands = DirectoryServiceConnector.FindEvents(QUERYTEXT, FLAGS.ToString(), STARTQUERY);
+
+            int i = 0;
+            foreach (DirEventsReplyData land in lands)
+            {
+                result.Add(ConvertDecString(i), land.ToKeyValuePairs());
+                i++;
+            }
+
+            string xmlString = ServerUtils.BuildXmlResponse(result);
+            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
+        }
+
+        private byte[] FindEventsInRegion(Dictionary<string, object> request)
+        {
+            Dictionary<string, object> result = new Dictionary<string, object>();
+
+            string RegionName = request["REGIONNAME"].ToString();
+            DirEventsReplyData[] lands = DirectoryServiceConnector.FindAllEventsInRegion(RegionName);
+
+            int i = 0;
+            foreach (DirEventsReplyData land in lands)
+            {
+                result.Add(ConvertDecString(i), land.ToKeyValuePairs());
+                i++;
+            }
+
+            string xmlString = ServerUtils.BuildXmlResponse(result);
+            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
+        }
+
+        private byte[] FindClassifieds(Dictionary<string, object> request)
+        {
+            Dictionary<string, object> result = new Dictionary<string, object>();
+
+            string QUERYTEXT = request["QUERYTEXT"].ToString();
+            string CATEGORY = request["CATEGORY"].ToString();
+            string QUERYFLAGS = request["QUERYFLAGS"].ToString();
+            int STARTQUERY = int.Parse(request["STARTQUERY"].ToString());
+            DirClassifiedReplyData[] lands = DirectoryServiceConnector.FindClassifieds(QUERYTEXT, CATEGORY, QUERYFLAGS, STARTQUERY);
+
+            int i = 0;
+            foreach (DirClassifiedReplyData land in lands)
+            {
+                result.Add(ConvertDecString(i), land.ToKeyValuePairs());
+                i++;
+            }
+
+            string xmlString = ServerUtils.BuildXmlResponse(result);
+            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
+        }
+
+        private byte[] GetEventInfo(Dictionary<string, object> request)
+        {
+            Dictionary<string, object> result = new Dictionary<string, object>();
+
+            string EVENTID = request["EVENTID"].ToString();
+            EventData eventdata = DirectoryServiceConnector.GetEventInfo(EVENTID);
+
+            result.Add("event", eventdata.ToKeyValuePairs());
+
+            string xmlString = ServerUtils.BuildXmlResponse(result);
+            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
+        }
+
+        private byte[] FindClassifiedsInRegion(Dictionary<string, object> request)
+        {
+            Dictionary<string, object> result = new Dictionary<string, object>();
+
+            string RegionName = request["REGIONNAME"].ToString();
+            Classified[] classifieds = DirectoryServiceConnector.GetClassifiedsInRegion(RegionName);
+
+            int i = 0;
+            foreach (Classified classified in classifieds)
+            {
+                result.Add(ConvertDecString(i), classified.ToKeyValuePairs());
+                i++;
+            }
+
+            string xmlString = ServerUtils.BuildXmlResponse(result);
+            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
         }
 
         private byte[] GetOfflineMessages(Dictionary<string, object> request)
@@ -165,13 +367,23 @@ namespace OpenSim.Server.Handlers.AuroraData
             return encoding.GetBytes(xmlString);
         }
 
+        private byte[] AddLandObject(Dictionary<string, object> request)
+        {
+            Dictionary<string, object> result = new Dictionary<string, object>();
+
+            AuroraLandData land = new AuroraLandData(request);
+            LandData landData = ConvertFromAuroraLandData(land);
+            DirectoryServiceConnector.AddLandObject(landData, land.RegionID, land.ForSale, land.EstateID, land.ShowInSearch, land.InfoUUID);
+
+            return SuccessResult();
+        }
+
         private byte[] AddOfflineMessage(Dictionary<string, object> request)
         {
             Dictionary<string, object> result = new Dictionary<string, object>();
 
-            UUID MUTEID = UUID.Parse(request["MUTEID"].ToString());
-            UUID PRINCIPALID = UUID.Parse(request["PRINCIPALID"].ToString());
-            MuteListConnector.DeleteMute(MUTEID, PRINCIPALID);
+            OfflineMessage message = new OfflineMessage(request);
+            OfflineMessagesConnector.AddOfflineMessage(message);
 
             return SuccessResult();
         }
@@ -767,6 +979,36 @@ namespace OpenSim.Server.Handlers.AuroraData
 
             return retVal;
 
+        }
+
+        private LandData ConvertFromAuroraLandData(AuroraLandData data)
+        {
+            LandData adata = new LandData();
+            adata.Area = data.Area;
+            adata.AuctionID = data.AuctionID;
+            adata.AuthBuyerID = data.AuthBuyerID;
+            adata.Category = data.Category;
+            adata.ClaimDate = data.ClaimDate;
+            adata.ClaimPrice = data.ClaimPrice;
+            adata.Description = data.Description;
+            adata.Dwell = data.Dwell;
+            adata.Flags = data.Flags;
+            adata.GroupID = data.GroupID;
+            adata.LandingType = data.LandingType;
+            Vector3 Pos = new Vector3(data.LandingX, data.LandingY, data.LandingZ);
+            adata.UserLocation = Pos;
+            adata.LocalID = data.LocalID;
+            Vector3 LookAt = new Vector3(data.LookAtX, data.LookAtY, data.LookAtZ);
+            adata.UserLookAt = LookAt;
+            adata.Maturity = data.Maturity;
+            adata.Name = data.Name;
+            adata.OwnerID = data.OwnerID;
+            adata.GlobalID = data.ParcelID;
+            adata.RegionID = data.RegionID;
+            adata.SalePrice = (int)data.SalePrice;
+            adata.SnapshotID = data.SnapshotID;
+            adata.Status = data.Status;
+            return adata;
         }
 
         #endregion

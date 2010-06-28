@@ -17,7 +17,7 @@ using OpenSim.Server.Base;
 
 namespace Aurora.Services.DataService
 {
-    public class RemoteEstateConnector : IEstateConnector
+    public class RemoteEstateConnector : IEstateConnector, IAuroraDataPlugin
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
@@ -25,9 +25,22 @@ namespace Aurora.Services.DataService
 
         private string m_ServerURI = "";
 
-        public RemoteEstateConnector(string serverURI)
+        public void Initialise(IGenericData unneeded, IConfigSource source)
         {
-            m_ServerURI = serverURI;
+            if (source.Configs["AuroraConnectors"].GetString("EstateConnector", "LocalConnector") == "RemoteConnector")
+            {
+                m_ServerURI = source.Configs["AuroraData"].GetString("RemoteServerURI", "");
+                DataManager.DataManager.RegisterPlugin(Name, this);
+            }
+        }
+
+        public string Name
+        {
+            get { return "IEstateConnector"; }
+        }
+
+        public void Dispose()
+        {
         }
 
         public EstateSettings LoadEstateSettings(UUID regionID, bool create)

@@ -17,16 +17,29 @@ using OpenSim.Server.Base;
 
 namespace Aurora.Services.DataService
 {
-    public class RemoteRegionConnector : IRegionConnector
+    public class RemoteRegionConnector : IRegionConnector, IAuroraDataPlugin
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
         private string m_ServerURI = "";
 
-        public RemoteRegionConnector(string serverURI)
+        public void Initialise(IGenericData unneeded, IConfigSource source)
         {
-            m_ServerURI = serverURI;
+            if (source.Configs["AuroraConnectors"].GetString("RegionConnector", "LocalConnector") == "RemoteConnector")
+            {
+                m_ServerURI = source.Configs["AuroraData"].GetString("RemoteServerURI", "");
+                DataManager.DataManager.RegisterPlugin(Name, this);
+            }
+        }
+
+        public string Name
+        {
+            get { return "IRegionConnector"; }
+        }
+
+        public void Dispose()
+        {
         }
 
         #region IGridConnector Members
