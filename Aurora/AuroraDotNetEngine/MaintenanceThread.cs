@@ -49,18 +49,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         
         public MaintenanceThread(ScriptEngine Engine)
         {
-            AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(CurrentDomain_AssemblyResolve);
             m_ScriptEngine = Engine;
             ScriptFrontend = Aurora.DataManager.DataManager.RequestPlugin<IScriptDataConnector>("IScriptDataConnector");
             for (int i = 0; i < Engine.NumberOfEventQueueThreads; i++)
             {
                 EventQueue eqtc = new EventQueue(m_ScriptEngine, Engine.SleepTime);
-                Watchdog.StartThread(eqtc.DoProcessQueue, "EventQueueThread", ThreadPriority.BelowNormal, true);
+                Watchdog.StartThread(eqtc.DoProcessQueue, "EventQueueThread", ThreadPriority.Lowest, true);
             }
             for (int i = 0; i < Engine.NumberOfStartStopThreads; i++)
             {
-                Watchdog.StartThread(StartEndScriptMaintenance, "StartEndScriptMaintenance", ThreadPriority.BelowNormal, true);
+                Watchdog.StartThread(StartEndScriptMaintenance, "StartEndScriptMaintenance", ThreadPriority.Lowest, true);
             }
+            AppDomain.CurrentDomain.AssemblyResolve += OpenSim.Region.ScriptEngine.Shared.AssemblyResolver.OnAssemblyResolve;
         }
 
         #region " Maintenance thread "
@@ -71,7 +71,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 try
                 {
-                    Thread.Sleep(m_ScriptEngine.SleepTime); // Sleep before next pass
+                    Thread.Sleep(m_ScriptEngine.SleepTime * 5); // Sleep before next pass
                     // LOAD / UNLOAD SCRIPTS
                     DoScriptsLoadUnload();
                     // Save states
@@ -155,10 +155,5 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         }
 
         #endregion
-
-        private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
-        {
-            return Assembly.GetExecutingAssembly().FullName == args.Name ? Assembly.GetExecutingAssembly() : null;
-        }
     }
 }

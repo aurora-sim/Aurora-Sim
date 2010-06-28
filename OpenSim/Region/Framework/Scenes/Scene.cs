@@ -1432,14 +1432,12 @@ namespace OpenSim.Region.Framework.Scenes
 
             private void Update()
             {
-                float physicsFPS;
                 int maintc;
 
                 while (!ShouldExit)
                 {
                     TimeSpan SinceLastFrame = DateTime.UtcNow - m_scene.m_lastupdate;
-                    physicsFPS = 0f;
-
+                    
                     maintc = Util.EnvironmentTickCount();
                     int tmpFrameMS = maintc;
                     m_scene.tempOnRezMS = m_scene.eventMS = m_scene.backupMS = m_scene.terrainMS = m_scene.landMS = 0;
@@ -1486,7 +1484,6 @@ namespace OpenSim.Region.Framework.Scenes
 
                             // if (m_frame%m_update_avatars == 0)
                             //   UpdateInWorldTime();
-                            m_scene.StatsReporter.AddPhysicsFPS(physicsFPS);
                             m_scene.StatsReporter.AddTimeDilation(m_scene.TimeDilation);
                             m_scene.StatsReporter.AddFPS(1);
                             m_scene.StatsReporter.SetRootAgents(m_scene.m_sceneGraph.GetRootAgentCount());
@@ -1645,6 +1642,7 @@ namespace OpenSim.Region.Framework.Scenes
                             if (m_scene.SynchronizeScene != null)
                                 m_scene.SynchronizeScene(m_scene);
                         }
+                        m_scene.StatsReporter.AddPhysicsFPS(physicsFPS);
                         CheckExit();
                             
                         m_scene.physicsMS = Util.EnvironmentTickCountSubtract(tmpPhysicsMS);

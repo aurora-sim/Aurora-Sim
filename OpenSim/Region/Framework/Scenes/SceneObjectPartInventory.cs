@@ -215,41 +215,6 @@ namespace OpenSim.Region.Framework.Scenes
                             return;
 
                         m_part.AddFlag(PrimFlags.Scripted);
-
-                        if (!m_part.ParentGroup.Scene.RegionInfo.RegionSettings.DisableScripts)
-                        {
-                            if (stateSource == 1 && // Prim crossing
-                                    m_part.ParentGroup.Scene.m_trustBinaries)
-                            {
-                                lock (m_items)
-                                {
-                                    m_items[item.ItemID].PermsMask = 0;
-                                    m_items[item.ItemID].PermsGranter = UUID.Zero;
-                                }
-                                continue;
-                            }
-
-                            AssetBase asset = m_part.ParentGroup.Scene.AssetService.Get(item.AssetID.ToString());
-                            if (null == asset)
-                            {
-                                m_log.ErrorFormat(
-                                    "[PRIM INVENTORY]: " +
-                                    "Couldn't start script {0}, {1} at {2} in {3} since asset ID {4} could not be found",
-                                    item.Name, item.ItemID, m_part.AbsolutePosition,
-                                    m_part.ParentGroup.Scene.RegionInfo.RegionName, item.AssetID);
-                            }
-                            else
-                            {
-                                if (m_part.ParentGroup.m_savedScriptState != null)
-                                    RestoreSavedScriptState(item.OldItemID, item.ItemID);
-
-                                lock (m_items)
-                                {
-                                    //m_items[item.ItemID].PermsMask = 0;
-                                    //m_items[item.ItemID].PermsGranter = UUID.Zero;
-                                }
-                            }
-                        }
                     }
                 }
                 lock (m_items)

@@ -113,7 +113,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public event ScriptRemoved OnScriptRemoved;
         public event ObjectRemoved OnObjectRemoved;
         private IXmlRpcRouter m_XmlRpcRouter;
-        public static IScriptProtectionModule ScriptProtection;
+        public static ScriptProtectionModule ScriptProtection;
         
         /// <summary>
         /// Removes the script from the event queue so it does not fire anymore events.
@@ -238,7 +238,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             // Create all objects we'll be using
             if(ScriptProtection == null)
-                ScriptProtection = (IScriptProtectionModule)new ScriptProtectionModule(m_ConfigSource, this);
+                ScriptProtection = new ScriptProtectionModule(m_ConfigSource, this);
             
             EventManager = new EventManager(this, true);
             
@@ -862,16 +862,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public bool AddToObjectQueue(UUID partID, string FunctionName, DetectParams[] qParams, params object[] param)
         {
             // Determine all scripts in Object and add to their queue
-            IScriptData[] datas = ScriptProtection.GetScripts(partID);
+            ScriptData[] datas = ScriptProtection.GetScripts(partID);
 
             if (datas == null)
                 //No scripts to post to... so it is firing all the events it needs to
                 return true;
 
-            foreach (IScriptData ID in datas)
+            foreach (ScriptData ID in datas)
             {
                 // Add to each script in that object
-                AddToScriptQueue((ScriptData)ID, FunctionName, qParams, param);
+                AddToScriptQueue(ID, FunctionName, qParams, param);
             }
             return true;
         }
@@ -967,9 +967,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 if (QIS.ID.ChangedInQueue.Contains(changed))
                     return true;
                 QIS.ID.ChangedInQueue.Add(changed);
-            }
-            else if (FunctionName == "link_message")
-            {
             }
 
             EventQueue.Enqueue(QIS, EventPriority.FirstStart);
@@ -1251,7 +1248,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public void SaveStateSave(UUID itemID)
         {
-            IScriptData script = ScriptProtection.GetScript(itemID);
+            ScriptData script = ScriptProtection.GetScript(itemID);
             if(script != null)
                 ((ScriptData)script).SerializeDatabase();
         }

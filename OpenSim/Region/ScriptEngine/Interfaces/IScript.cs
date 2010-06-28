@@ -29,24 +29,27 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Runtime.Remoting;
+using System.Runtime.Remoting.Lifetime;
 using OpenSim.Region.ScriptEngine.Interfaces;
 using OpenSim.Region.ScriptEngine.Shared.ScriptBase;
 
 namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
 {
-    /*public interface IScript
+    public interface IScript : IDisposable
     {
         string[] GetApis();
         void InitApi(string name, IScriptApi data);
 
+        ISponsor Sponsor { get; }
+        void UpdateLease(TimeSpan time);
         int GetStateEventFlags(string state);
-        void ExecuteEvent(string state, string FunctionName, object[] args);
-        Dictionary<string,Object> GetVars();
-        void SetVars(Dictionary<string,Object> vars);
+        Guid ExecuteEvent(string state, string FunctionName, object[] args, Guid Start);
+        Dictionary<string, Object> GetVars();
+        void SetVars(Dictionary<string, Object> vars);
         void ResetVars();
 
         void Close();
-         Executor();
-        string Name { get;}
-    }*/
+        string Name { get; }
+    }
 }

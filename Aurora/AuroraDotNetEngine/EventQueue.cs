@@ -53,7 +53,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public EventQueue(ScriptEngine engine, int sleep)
         {
-        	m_ScriptEngine = engine;
+            m_ScriptEngine = engine;
             SleepTime = sleep;
         }
 
@@ -88,14 +88,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //Disabled or not running scripts dont get events saved.
             if (QIS.ID.Disabled || !QIS.ID.Running || ScriptEngine.NeedsRemoved.Contains(QIS.ID.part.UUID))
                 return;
-
             try
             {
-                QIS.ID.SetEventParams(QIS.llDetectParams);
                 Guid Running = Guid.Empty;
-                Running = new Guid(QIS.ID.Script.ExecuteEvent(QIS.ID.State,
-                    QIS.functionName,
-                    QIS.param, QIS.CurrentlyAt).ToString());
+                lock (QIS.ID.Script)
+                {
+
+                    QIS.ID.SetEventParams(QIS.llDetectParams);
+                    Running = new Guid(QIS.ID.Script.ExecuteEvent(QIS.ID.State,
+                        QIS.functionName,
+                        QIS.param, QIS.CurrentlyAt).ToString());
+                }
                 //Finished with nothing left.
                 if (Running == Guid.Empty)
                 {
@@ -115,7 +118,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     if (QIS.functionName == "changed")
                     {
                         Changed changed = (Changed)(new LSL_Types.LSLInteger(QIS.param[0].ToString()).value);
-                        if(QIS.ID.ChangedInQueue.Contains(changed))
+                        if (QIS.ID.ChangedInQueue.Contains(changed))
                             QIS.ID.ChangedInQueue.Remove(changed);
                     }
                     return;

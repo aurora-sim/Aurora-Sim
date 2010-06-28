@@ -60,14 +60,14 @@ namespace Aurora.Services.DataService
                     }
 
                     else
-                        m_log.DebugFormat("[AuroraRemoteProfileConnector]: LoadEstateSettings {0} received null response",
+                        m_log.DebugFormat("[AuroraRemoteEstateConnector]: LoadEstateSettings {0} received null response",
                             regionID);
 
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.Message);
+                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e.Message);
             }
 
             return ES;
@@ -104,14 +104,14 @@ namespace Aurora.Services.DataService
                     }
 
                     else
-                        m_log.DebugFormat("[AuroraRemoteProfileConnector]: LoadEstateSettings {0} received null response",
+                        m_log.DebugFormat("[AuroraRemoteEstateConnector]: LoadEstateSettings {0} received null response",
                             estateID);
 
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.Message);
+                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e.Message);
             }
 
             return ES;
@@ -143,14 +143,14 @@ namespace Aurora.Services.DataService
                     }
 
                     else
-                        m_log.DebugFormat("[AuroraRemoteProfileConnector]: LoadEstateSettings {0} received null response",
+                        m_log.DebugFormat("[AuroraRemoteEstateConnector]: LoadEstateSettings {0} received null response",
                             es.EstateID);
 
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.Message);
+                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e.Message);
             }
 
             return false;
@@ -172,7 +172,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.Message);
+                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e.Message);
             }
         }
 
@@ -214,13 +214,13 @@ namespace Aurora.Services.DataService
                     }
 
                     else
-                        m_log.DebugFormat("[AuroraRemoteProfileConnector]: GetEstates {0} received null response",
+                        m_log.DebugFormat("[AuroraRemoteEstateConnector]: GetEstates {0} received null response",
                             search);
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.Message);
+                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e.Message);
             }
 
             return Estates;
@@ -254,14 +254,14 @@ namespace Aurora.Services.DataService
                     }
 
                     else
-                        m_log.DebugFormat("[AuroraRemoteProfileConnector]: LinkRegion {0} received null response",
+                        m_log.DebugFormat("[AuroraRemoteEstateConnector]: LinkRegion {0} received null response",
                             regionID);
 
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.Message);
+                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e.Message);
             }
 
             return false;
@@ -304,13 +304,13 @@ namespace Aurora.Services.DataService
                     }
 
                     else
-                        m_log.DebugFormat("[AuroraRemoteProfileConnector]: GetEstates {0} received null response",
+                        m_log.DebugFormat("[AuroraRemoteEstateConnector]: GetEstates {0} received null response",
                             estateID);
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.Message);
+                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e.Message);
             }
 
             return Regions;
@@ -342,14 +342,14 @@ namespace Aurora.Services.DataService
                     }
 
                     else
-                        m_log.DebugFormat("[AuroraRemoteProfileConnector]: DeleteEstate {0} received null response",
+                        m_log.DebugFormat("[AuroraRemoteEstateConnector]: DeleteEstate {0} received null response",
                             estateID);
 
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.Message);
+                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e.Message);
             }
 
             return false;

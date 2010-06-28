@@ -332,7 +332,7 @@ namespace OpenSim.Region.Physics.OdePlugin
                 {
                     d.BodyEnable(Body);
                     if (m_vehicle.Type != Vehicle.TYPE_NONE)
-                        m_vehicle.Enable(Body, _parent_scene);
+                        m_vehicle.Enable(Body, this,_parent_scene);
                 }
 
                 m_disabled = false;
@@ -343,7 +343,7 @@ namespace OpenSim.Region.Physics.OdePlugin
         {
             m_disabled = true;
 
-            m_vehicle.Disable();
+            m_vehicle.Disable(this);
             if (m_isphysical && Body != IntPtr.Zero)
             {
                 d.BodyDisable(Body);
@@ -391,7 +391,7 @@ namespace OpenSim.Region.Physics.OdePlugin
                 }
                 if (m_vehicle.Type != Vehicle.TYPE_NONE)
                 {
-                    m_vehicle.Enable(Body, _parent_scene);
+                    m_vehicle.Enable(Body, this, _parent_scene);
                 }
 
                 _parent_scene.addActivePrim(this);
@@ -754,7 +754,7 @@ namespace OpenSim.Region.Physics.OdePlugin
                 {
                     if (Body != IntPtr.Zero)
                     {
-                        m_vehicle.Disable();
+                        m_vehicle.Disable(this);
                         _parent_scene.remActivePrim(this);
                         m_collisionCategories &= ~CollisionCategories.Body;
                         m_collisionFlags &= ~(CollisionCategories.Wind | CollisionCategories.Land);
@@ -1168,7 +1168,7 @@ namespace OpenSim.Region.Physics.OdePlugin
                                 createAMotor(m_angularlock);
                             }
                             d.BodySetPosition(Body, Position.X, Position.Y, Position.Z);
-                            if (m_vehicle.Type != Vehicle.TYPE_NONE) m_vehicle.Enable(Body, _parent_scene);
+                            if (m_vehicle.Type != Vehicle.TYPE_NONE) m_vehicle.Enable(Body, this, _parent_scene);
                             _parent_scene.addActivePrim(this);
                         }
                     }
@@ -1519,7 +1519,7 @@ Console.WriteLine(" JointCreateFixed");
                         d.BodyEnable(Body);
                         if (m_vehicle.Type != Vehicle.TYPE_NONE)
                         {
-                            m_vehicle.Enable(Body, _parent_scene);
+                            m_vehicle.Enable(Body, this, _parent_scene);
                         }
                     }
                     else

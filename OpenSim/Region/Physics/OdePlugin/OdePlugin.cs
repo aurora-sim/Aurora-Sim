@@ -324,6 +324,7 @@ namespace OpenSim.Region.Physics.OdePlugin
         private ODERayCastRequestManager m_rayCastManager;
         private bool IsLocked = false;
         private List<PhysicsActor> RemoveQueue;
+        private Dictionary<PhysicsActor, bool> ActiveCollisionQueue = new Dictionary<PhysicsActor, bool>();
         
         /// <summary>
         /// Initiailizes the scene
@@ -1661,19 +1662,33 @@ namespace OpenSim.Region.Physics.OdePlugin
 
         public void addCollisionEventReporting(PhysicsActor obj)
         {
-            lock (_collisionEventPrim)
+            if (IsLocked)
             {
-                if (!_collisionEventPrim.Contains(obj))
-                    _collisionEventPrim.Add(obj);
+                ActiveCollisionQueue.Add(obj, true);
+            }
+            else
+            {
+                lock (_collisionEventPrim)
+                {
+                    if (!_collisionEventPrim.Contains(obj))
+                        _collisionEventPrim.Add(obj);
+                }
             }
         }
 
         public void remCollisionEventReporting(PhysicsActor obj)
         {
-            lock (_collisionEventPrim)
+            if (IsLocked)
             {
-                if (!_collisionEventPrim.Contains(obj))
-                    _collisionEventPrim.Remove(obj);
+                ActiveCollisionQueue.Add(obj, false);
+            }
+            else
+            {
+                lock (_collisionEventPrim)
+                {
+                    if (!_collisionEventPrim.Contains(obj))
+                        _collisionEventPrim.Remove(obj);
+                }
             }
         }
 
@@ -3151,7 +3166,25 @@ namespace OpenSim.Region.Physics.OdePlugin
                 }
                 while (RemoveQueue.Count > 0);
             }
-
+            if (ActiveCollisionQueue.Count > 0)
+            {
+                foreach (PhysicsActor actor in ActiveCollisionQueue.Keys)
+                {
+                    if (ActiveCollisionQueue[actor])
+                    {
+                        //add
+                        if (_collisionEventPrim.Contains(actor))
+                            _collisionEventPrim.Add(actor);
+                    }
+                    else
+                    {
+                        //remove
+                        if (!_collisionEventPrim.Contains(actor))
+                            _collisionEventPrim.Remove(actor);
+                    }
+                }
+                ActiveCollisionQueue.Clear();
+            }
             return fps;
         }
 

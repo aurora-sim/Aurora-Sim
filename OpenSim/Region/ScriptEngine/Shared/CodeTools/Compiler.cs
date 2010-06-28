@@ -404,7 +404,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                             text = ReplaceTypes(CompErr.ErrorText);
                             text = CleanError(text);
                             lslPos = FindErrorPosition(CompErr.Line, CompErr.Column, PositionMap);
-                            LineN = lslPos.Key - 1;
+                            LineN = lslPos.Key - 1 - LinesToRemoveOnError;
                             CharN = lslPos.Value - 1;
                         }
                         else
@@ -523,13 +523,15 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
         {
             //Remove these long strings
             message = message.Replace(
-                    "OpenSim.Region.ScriptEngine.Shared.ScriptBase.ScriptBaseClass",
+                    "OpenSim.Region.ScriptEngine.Shared.ScriptBase.ScriptBaseClass.",
+                    "");
+            message = message.Replace(
+                    "OpenSim.Region.ScriptEngine.Shared.LSL_Types.",
                     "");
             if (message.Contains("The best overloaded method match for"))
             {
                 string[] messageSplit = message.Split('\'');
                 string Function = messageSplit[1];
-                Function = Function.Remove(0, 1);
                 string[] FunctionSplit = Function.Split('(');
                 string FunctionName = FunctionSplit[0];
                 string Arguments = FunctionSplit[1].Split(')')[0];

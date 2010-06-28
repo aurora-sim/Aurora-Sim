@@ -2649,7 +2649,6 @@ namespace OpenSim.Region.Framework.Scenes
                 //m_parentGroup.RootPart.m_groupPosition = newpos;
             }
             ScheduleTerseUpdate();
-
             //SendTerseUpdateToAllClients();
         }
 
@@ -2724,8 +2723,8 @@ namespace OpenSim.Region.Framework.Scenes
         {
             UUID = UUID.Random();
             LinkNum = linkNum;
-            //LocalId = 0;
             Inventory.ResetInventoryIDs(ChangeScripts);
+            LocalId = 0;
         }
 
         /// <summary>
@@ -3263,6 +3262,14 @@ namespace OpenSim.Region.Framework.Scenes
             if (PhysActor != null)
             {
                 PhysActor.VehicleRotationParam(param, rotation);
+            }
+        }
+
+        public void SetPhysActorCameraPos(Quaternion CameraRotation)
+        {
+            if (PhysActor != null)
+            {
+                PhysActor.SetCameraPos(CameraRotation);
             }
         }
 

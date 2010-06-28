@@ -65,7 +65,7 @@ namespace Aurora.Services.DataService
                                 agent = new IAgentInfo((Dictionary<string, object>)f);
                             }
                             else
-                                m_log.DebugFormat("[AuroraRemoteProfileConnector]: GetAgent {0} received invalid response type {1}",
+                                m_log.DebugFormat("[AuroraRemoteAgentConnector]: GetAgent {0} received invalid response type {1}",
                                     PrincipalID, f.GetType());
                         }
                         // Success
@@ -73,14 +73,14 @@ namespace Aurora.Services.DataService
                     }
 
                     else
-                        m_log.DebugFormat("[AuroraRemoteProfileConnector]: GetAgent {0} received null response",
+                        m_log.DebugFormat("[AuroraRemoteAgentConnector]: GetAgent {0} received null response",
                             PrincipalID);
 
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.Message);
+                m_log.DebugFormat("[AuroraRemoteAgentConnector]: Exception when contacting server: {0}", e.Message);
             }
 
             return null;
@@ -108,14 +108,14 @@ namespace Aurora.Services.DataService
                     {
                         if (replyData.ContainsKey("result") && (replyData["result"].ToString().ToLower() == "null"))
                         {
-                            m_log.DebugFormat("[AuroraRemoteProfileConnector]: UpdateAgent {0} received null response",
+                            m_log.DebugFormat("[AuroraRemoteAgentConnector]: UpdateAgent {0} received null response",
                                 agent.PrincipalID);
                         }
                     }
 
                     else
                     {
-                        m_log.DebugFormat("[AuroraRemoteProfileConnector]: UpdateAgent {0} received null response",
+                        m_log.DebugFormat("[AuroraRemoteAgentConnector]: UpdateAgent {0} received null response",
                             agent.PrincipalID);
                     }
 
@@ -123,7 +123,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.Message);
+                m_log.DebugFormat("[AuroraRemoteAgentConnector]: Exception when contacting server: {0}", e.Message);
             }
         }
 
@@ -149,14 +149,14 @@ namespace Aurora.Services.DataService
                     {
                         if (replyData.ContainsKey("result") && (replyData["result"].ToString().ToLower() == "null"))
                         {
-                            m_log.DebugFormat("[AuroraRemoteProfileConnector]: CreateNewAgent {0} received null response",
+                            m_log.DebugFormat("[AuroraRemoteAgentConnector]: CreateNewAgent {0} received null response",
                                 PrincipalID);
                         }
                     }
 
                     else
                     {
-                        m_log.DebugFormat("[AuroraRemoteProfileConnector]: CreateNewAgent {0} received null response",
+                        m_log.DebugFormat("[AuroraRemoteAgentConnector]: CreateNewAgent {0} received null response",
                             PrincipalID);
                     }
 
@@ -164,7 +164,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.Message);
+                m_log.DebugFormat("[AuroraRemoteAgentConnector]: Exception when contacting server: {0}", e.Message);
             }
         }
 

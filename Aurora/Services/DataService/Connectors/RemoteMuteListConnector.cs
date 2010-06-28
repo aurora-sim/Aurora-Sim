@@ -65,7 +65,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.Message);
+                m_log.DebugFormat("[AuroraRemoteMuteListConnector]: Exception when contacting server: {0}", e.Message);
             }
             return Mutes.ToArray();
         }
@@ -84,30 +84,10 @@ namespace Aurora.Services.DataService
                 string reply = SynchronousRestFormsRequester.MakeRequest("POST",
                         m_ServerURI + "/auroradata",
                         reqString);
-                if (reply != string.Empty)
-                {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
-
-                    if (replyData != null)
-                    {
-                        if (replyData.ContainsKey("result") && (replyData["result"].ToString().ToLower() == "null"))
-                        {
-                            m_log.DebugFormat("[AuroraRemoteProfileConnector]: UpdateMute {0} received null response",
-                                PrincipalID);
-                        }
-                    }
-
-                    else
-                    {
-                        m_log.DebugFormat("[AuroraRemoteProfileConnector]: UpdateMute {0} received null response",
-                            PrincipalID);
-                    }
-
-                }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.Message);
+                m_log.DebugFormat("[AuroraRemoteMuteListConnector]: Exception when contacting server: {0}", e.Message);
             }
         }
 
@@ -126,30 +106,10 @@ namespace Aurora.Services.DataService
                 string reply = SynchronousRestFormsRequester.MakeRequest("POST",
                         m_ServerURI + "/auroradata",
                         reqString);
-                if (reply != string.Empty)
-                {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
-
-                    if (replyData != null)
-                    {
-                        if (replyData.ContainsKey("result") && (replyData["result"].ToString().ToLower() == "null"))
-                        {
-                            m_log.DebugFormat("[AuroraRemoteProfileConnector]: DeleteMute {0} received null response",
-                                PrincipalID);
-                        }
-                    }
-
-                    else
-                    {
-                        m_log.DebugFormat("[AuroraRemoteProfileConnector]: DeleteMute {0} received null response",
-                            PrincipalID);
-                    }
-
-                }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.Message);
+                m_log.DebugFormat("[AuroraRemoteMuteListConnector]: Exception when contacting server: {0}", e.Message);
             }
         }
 
@@ -176,7 +136,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.Message);
+                m_log.DebugFormat("[AuroraRemoteMuteListConnector]: Exception when contacting server: {0}", e.Message);
             }
             return false;
         }

@@ -170,12 +170,12 @@ namespace Aurora.Modules
                     tb.RegionLocY = client.Scene.RegionInfo.RegionLocY;
                     tb.RegionID = client.Scene.RegionInfo.RegionID.ToString();
                     ScenePresence SP = ((Scene)client.Scene).GetScenePresence(client.AgentId);
-                    tb.TelehubLocX = SP.AbsolutePosition.X;
-                    tb.TelehubLocY = SP.AbsolutePosition.Y;
-                    tb.TelehubLocZ = SP.AbsolutePosition.Z;
-                    tb.TelehubRotX = SP.Rotation.X;
-                    tb.TelehubRotY = SP.Rotation.Y;
-                    tb.TelehubRotZ = SP.Rotation.Z;
+                    tb.TelehubLocX = part.AbsolutePosition.X;
+                    tb.TelehubLocY = part.AbsolutePosition.Y;
+                    tb.TelehubLocZ = part.AbsolutePosition.Z;
+                    tb.TelehubRotX = part.ParentGroup.Rotation.X;
+                    tb.TelehubRotY = part.ParentGroup.Rotation.Y;
+                    tb.TelehubRotZ = part.ParentGroup.Rotation.Z;
                     RegionConnector.AddTelehub(tb);
                 }
                 if (parameter1 == "info ui" || Update)

@@ -308,12 +308,9 @@ namespace OpenSim.Region.Framework.Scenes
                         return;
                     }
                 }
-                lock (m_parts)
+                foreach (SceneObjectPart part in m_parts.Values)
                 {
-                    foreach (SceneObjectPart part in m_parts.Values)
-                    {
-                        part.GroupPosition = val;
-                    }
+                    part.GroupPosition = val;
                 }
 
                 //if (m_rootPart.PhysActor != null)
@@ -1290,10 +1287,6 @@ namespace OpenSim.Region.Framework.Scenes
 //                    part.Inventory.RemoveScriptInstances();
                     Scene.ForEachScenePresence(delegate(ScenePresence avatar)
                     {
-                        if (avatar.ParentID == part.LocalId)
-                        {
-                            avatar.StandUp();
-                        }
                         if (!silent)
                         {
                             part.UpdateFlag = 0;
@@ -1455,7 +1448,7 @@ namespace OpenSim.Region.Framework.Scenes
                                 DetachFromBackup();
                                 m_log.InfoFormat("[SCENE]: Returning object {0} due to parcel auto return", RootPart.UUID.ToString());
                                 m_scene.AddReturn(OwnerID, Name, AbsolutePosition, "parcel auto return");
-                                m_scene.DeRezObject(null, RootPart.LocalId,
+                                m_scene.DeRezObjects(RootPart.OwnerID, new List<uint>(new uint[]{RootPart.LocalId}),
                                     RootPart.GroupID, DeRezAction.Return, UUID.Zero);
 
                                 return;
@@ -1473,7 +1466,7 @@ namespace OpenSim.Region.Framework.Scenes
                         //    "[SCENE]: Storing {0}, {1} in {2}",
                         //    Name, UUID, m_scene.RegionInfo.RegionName);
 
-                        SceneObjectGroup backup_group = Copy(false);
+                        SceneObjectGroup backup_group = Copy(OwnerID, GroupID, false, Scene, false);
                         backup_group.RootPart.Velocity = RootPart.Velocity;
                         backup_group.RootPart.Acceleration = RootPart.Acceleration;
                         backup_group.RootPart.AngularVelocity = RootPart.AngularVelocity;
@@ -1529,11 +1522,13 @@ namespace OpenSim.Region.Framework.Scenes
         /// Duplicates this object, including operations such as physics set up and attaching to the backup event.
         /// </summary>
         /// <returns></returns>
-        public SceneObjectGroup Copy(bool userExposed)
+        public SceneObjectGroup Copy(UUID cAgentID, UUID cGroupID, bool userExposed, Scene scene, bool ChangeScripts)
         {
             SceneObjectGroup dupe = (SceneObjectGroup)MemberwiseClone();
             dupe.m_isBackedUp = false;
             dupe.m_parts = new Dictionary<UUID, SceneObjectPart>();
+
+            SetScene(scene);
 
             // Warning, The following code related to previousAttachmentStatus is needed so that clones of 
             // attachments do not bordercross while they're being duplicated.  This is hacktastic!
@@ -1552,11 +1547,9 @@ namespace OpenSim.Region.Framework.Scenes
             dupe.AbsolutePosition = new Vector3(AbsolutePosition.X, AbsolutePosition.Y, AbsolutePosition.Z);
 
             if (!userExposed)
-            {
                 dupe.RootPart.IsAttachment = previousAttachmentStatus;
-            }
 
-            dupe.CopyRootPart(m_rootPart, OwnerID, GroupID, userExposed);
+            dupe.CopyRootPart(m_rootPart, OwnerID, GroupID, userExposed, ChangeScripts);
             dupe.m_rootPart.LinkNum = m_rootPart.LinkNum;
 
             if (userExposed)
@@ -1579,6 +1572,16 @@ namespace OpenSim.Region.Framework.Scenes
                 dupe.RootPart.DoPhysicsPropertyUpdate(dupe.RootPart.PhysActor.IsPhysical, true);
             }
 
+            // Now we've made a copy that replaces this one, we need to
+            // switch the owner to the person who did the copying
+            // Second Life copies an object and duplicates the first one in it's place
+            // So, we have to make a copy of this one, set it in it's place then set the owner on this one
+            if (userExposed)
+            {
+                SetRootPartOwner(m_rootPart, cAgentID, cGroupID);
+                m_rootPart.ScheduleFullUpdate();
+            }
+            
             List<SceneObjectPart> partList;
 
             lock (m_parts)
@@ -1596,9 +1599,16 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (part.UUID != m_rootPart.UUID)
                 {
-                    SceneObjectPart newPart = dupe.CopyPart(part, OwnerID, GroupID, userExposed);
+                    SceneObjectPart newPart = dupe.CopyPart(part, OwnerID, GroupID, userExposed, ChangeScripts);
 
                     newPart.LinkNum = part.LinkNum;
+                    newPart.SitTargetAvatar = RootPart.SitTargetAvatar;
+
+                    if (userExposed)
+                    {
+                        SetPartOwner(newPart, cAgentID, cGroupID);
+                        newPart.ScheduleFullUpdate();
+                    }
                 }
             }
 
@@ -1620,9 +1630,9 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="part"></param>
         /// <param name="cAgentID"></param>
         /// <param name="cGroupID"></param>
-        public void CopyRootPart(SceneObjectPart part, UUID cAgentID, UUID cGroupID, bool userExposed)
+        public void CopyRootPart(SceneObjectPart part, UUID cAgentID, UUID cGroupID, bool userExposed, bool ChangeScripts)
         {
-            SetRootPart(part.Copy(m_scene.AllocateLocalId(), OwnerID, GroupID, m_parts.Count, userExposed));
+            SetRootPart(part.Copy(m_scene.AllocateLocalId(), OwnerID, GroupID, m_parts.Count, userExposed, ChangeScripts));
         }
 
         public void ScriptSetPhysicsStatus(bool UsePhysics)
@@ -1870,9 +1880,9 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="part"></param>
         /// <param name="cAgentID"></param>
         /// <param name="cGroupID"></param>
-        public SceneObjectPart CopyPart(SceneObjectPart part, UUID cAgentID, UUID cGroupID, bool userExposed)
+        public SceneObjectPart CopyPart(SceneObjectPart part, UUID cAgentID, UUID cGroupID, bool userExposed, bool ChangeScripts)
         {
-            SceneObjectPart newPart = part.Copy(m_scene.AllocateLocalId(), OwnerID, GroupID, m_parts.Count, userExposed);
+            SceneObjectPart newPart = part.Copy(m_scene.AllocateLocalId(), OwnerID, GroupID, m_parts.Count, userExposed, ChangeScripts);
             newPart.SetParent(this);
 
             lock (m_parts)
@@ -1899,7 +1909,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_parts.Clear();
             foreach (SceneObjectPart part in partsList)
             {
-                part.ResetIDs(part.LinkNum); // Don't change link nums
+                part.ResetIDs(part.LinkNum, false); // Don't change link nums
                 m_parts.Add(part.UUID, part);
             }
         }
@@ -1941,27 +1951,34 @@ namespace OpenSim.Region.Framework.Scenes
             //if ((RootPart.Flags & PrimFlags.TemporaryOnRez) != 0)
             //    return;
 
+            bool UsePhysics = ((RootPart.Flags & PrimFlags.Physics) != 0);
+
+            if (UsePhysics && !AbsolutePosition.ApproxEquals(lastPhysGroupPos, 0.02f))
+            {
+                m_rootPart.UpdateFlag = 1;
+                lastPhysGroupPos = AbsolutePosition;
+            }
+
+            if (UsePhysics && !GroupRotation.ApproxEquals(lastPhysGroupRot, 0.1f))
+            {
+                m_rootPart.UpdateFlag = 1;
+                lastPhysGroupRot = GroupRotation;
+            }
+
             lock (m_parts)
             {
-                bool UsePhysics = ((RootPart.Flags & PrimFlags.Physics) != 0);
-
-                if (UsePhysics && !AbsolutePosition.ApproxEquals(lastPhysGroupPos, 0.02f))
-                {
-                    m_rootPart.UpdateFlag = 1;
-                    lastPhysGroupPos = AbsolutePosition;
-                }
-
-                if (UsePhysics && !GroupRotation.ApproxEquals(lastPhysGroupRot, 0.1f))
-                {
-                    m_rootPart.UpdateFlag = 1;
-                    lastPhysGroupRot = GroupRotation;
-                }
-
                 foreach (SceneObjectPart part in m_parts.Values)
                 {
-                    if (!IsSelected)
-                        part.UpdateLookAt();
-                    part.SendScheduledUpdates();
+                    try
+                    {
+                        if (!IsSelected)
+                            part.UpdateLookAt();
+                        part.SendScheduledUpdates();
+                    }
+                    catch (Exception ex)
+                    {
+                        m_log.Error("[InnerScene] : Exception in updating SOG " + ex);
+                    }
                 }
             }
         }
@@ -2216,10 +2233,18 @@ namespace OpenSim.Region.Framework.Scenes
             //    objectGroup.RootPart.SendScheduledUpdates();
             //}
 
-//            m_log.DebugFormat(
-//                "[SCENE OBJECT GROUP]: Linking group with root part {0}, {1} to group with root part {2}, {3}",
-//                objectGroup.RootPart.Name, objectGroup.RootPart.UUID, RootPart.Name, RootPart.UUID);
+            m_log.DebugFormat(
+                "[SCENE OBJECT GROUP]: Linking group with root part {0}, {1} to group with root part {2}, {3}",
+                objectGroup.RootPart.Name, objectGroup.RootPart.UUID, RootPart.Name, RootPart.UUID);
 
+            foreach (SceneObjectPart child in Children.Values)
+            {
+                child.ClearUndoState();
+            }
+            foreach (SceneObjectPart child in objectGroup.Children.Values)
+            {
+                child.ClearUndoState();
+            }
             SceneObjectPart linkPart = objectGroup.m_rootPart;
 
             Vector3 oldGroupPosition = linkPart.GroupPosition;
@@ -2353,6 +2378,12 @@ namespace OpenSim.Region.Framework.Scenes
 //                    linkPart.Name, linkPart.UUID, RootPart.Name, RootPart.UUID);
             
             linkPart.ClearUndoState();
+
+            foreach (SceneObjectPart child in Children.Values)
+            {
+                child.ClearUndoState();
+            }
+            
 
             Quaternion worldRot = linkPart.GetWorldRotation();
 
@@ -2942,9 +2973,9 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     foreach (SceneObjectPart obPart in m_parts.Values)
                     {
-                        obPart.IgnoreUndoUpdate = true;
                         if (obPart.UUID != m_rootPart.UUID)
                         {
+                            obPart.IgnoreUndoUpdate = true;
                             Vector3 currentpos = new Vector3(obPart.OffsetPosition);
                             currentpos.X *= x;
                             currentpos.Y *= y;
@@ -2955,9 +2986,9 @@ namespace OpenSim.Region.Framework.Scenes
                             newSize.Z *= z;
                             obPart.Resize(newSize);
                             obPart.UpdateOffSet(currentpos);
+                            obPart.IgnoreUndoUpdate = false;
+                            obPart.StoreUndoState();
                         }
-                        obPart.IgnoreUndoUpdate = false;
-                        obPart.StoreUndoState();
                     }
                 }
 
@@ -3022,10 +3053,6 @@ namespace OpenSim.Region.Framework.Scenes
         public void UpdateSinglePosition(Vector3 pos, uint localID)
         {
             SceneObjectPart part = GetChildPart(localID);
-            foreach (SceneObjectPart parts in Children.Values)
-            {
-                parts.StoreUndoState();
-            }
             if (part != null)
             {
                 if (part.UUID == m_rootPart.UUID)
@@ -3588,9 +3615,10 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region ISceneObject
         
-        public virtual ISceneObject CloneForNewScene()
+        public virtual ISceneObject CloneForNewScene(IScene scene)
         {
-            SceneObjectGroup sog = Copy(false);
+            Scene s = (Scene)scene;
+            SceneObjectGroup sog = Copy(this.OwnerID, this.GroupID, true, s, true);
             sog.m_isDeleted = false;
             return sog;
         }

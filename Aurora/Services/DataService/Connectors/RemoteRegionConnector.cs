@@ -44,30 +44,10 @@ namespace Aurora.Services.DataService
                 string reply = SynchronousRestFormsRequester.MakeRequest("POST",
                         m_ServerURI + "/auroradata",
                         reqString);
-                if (reply != string.Empty)
-                {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
-
-                    if (replyData != null)
-                    {
-                        if (replyData.ContainsKey("result") && (replyData["result"].ToString().ToLower() == "null"))
-                        {
-                            m_log.DebugFormat("[AuroraRemoteProfileConnector]: RemoveTelehub {0} received null response",
-                                telehub.RegionID);
-                        }
-                    }
-
-                    else
-                    {
-                        m_log.DebugFormat("[AuroraRemoteProfileConnector]: RemoveTelehub {0} received null response",
-                            telehub.RegionID);
-                    }
-
-                }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.Message);
+                m_log.DebugFormat("[AuroraRemoteRegionConnector]: Exception when contacting server: {0}", e.Message);
             }
         }
 
@@ -85,30 +65,10 @@ namespace Aurora.Services.DataService
                 string reply = SynchronousRestFormsRequester.MakeRequest("POST",
                         m_ServerURI + "/auroradata",
                         reqString);
-                if (reply != string.Empty)
-                {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
-
-                    if (replyData != null)
-                    {
-                        if (replyData.ContainsKey("result") && (replyData["result"].ToString().ToLower() == "null"))
-                        {
-                            m_log.DebugFormat("[AuroraRemoteProfileConnector]: RemoveTelehub {0} received null response",
-                                regionID);
-                        }
-                    }
-
-                    else
-                    {
-                        m_log.DebugFormat("[AuroraRemoteProfileConnector]: RemoveTelehub {0} received null response",
-                            regionID);
-                    }
-
-                }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.Message);
+                m_log.DebugFormat("[AuroraRemoteRegionConnector]: Exception when contacting server: {0}", e.Message);
             }
         }
 
@@ -132,16 +92,14 @@ namespace Aurora.Services.DataService
 
                     if (replyData != null)
                     {
-                        if (replyData.ContainsKey("result") && (replyData["result"].ToString().ToLower() == "null"))
+                        if (replyData.Count != 0)
                         {
-                            m_log.DebugFormat("[AuroraRemoteProfileConnector]: RemoveTelehub {0} received null response",
-                                regionID.ToString());
+                            return new Telehub(replyData);
                         }
-                        return new Telehub(replyData);
                     }
                     else
                     {
-                        m_log.DebugFormat("[AuroraRemoteProfileConnector]: RemoveTelehub {0} received null response",
+                        m_log.DebugFormat("[AuroraRemoteRegionConnector]: RemoveTelehub {0} received null response",
                             regionID.ToString());
                     }
                 }
@@ -149,7 +107,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.Message);
+                m_log.DebugFormat("[AuroraRemoteRegionConnector]: Exception when contacting server: {0}", e.Message);
             }
             return null;
         }

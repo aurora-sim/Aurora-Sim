@@ -40,11 +40,8 @@ namespace OpenSim.Region.ScriptEngine.Shared
             if (!(sender is System.AppDomain))
                 return null;
 
-            AppDomain myDomain = (AppDomain)sender;
-            string dirName = myDomain.FriendlyName;
-
             string[] pathList = new string[] {"bin", "ScriptEngines",
-                                              Path.Combine("ScriptEngines", dirName)};
+                                              Path.Combine("ScriptEngines", "Script")};
 
             string assemblyName = args.Name;
             if (assemblyName.IndexOf(",") != -1)

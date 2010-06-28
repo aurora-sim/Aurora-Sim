@@ -902,6 +902,7 @@ namespace Aurora.Modules
                 invString += (mute.MuteType + " " + mute.MuteID + " " + mute.MuteName + " |\n");
                 i++;
             }
+            invString = invString.Remove(invString.Length - 3, 3);
             fileData = OpenMetaverse.Utils.StringToBytes(invString);
             IXfer xfer = client.Scene.RequestModuleInterface<IXfer>();
             if (xfer != null)
@@ -913,6 +914,8 @@ namespace Aurora.Modules
         
         private void OnMuteListUpdate(IClientAPI client, UUID MuteID, string Name, int Flags, UUID AgentID)
         {
+            if (MuteID == UUID.Zero)
+                return;
             MuteList Mute = new MuteList()
             {
                 MuteID = MuteID,

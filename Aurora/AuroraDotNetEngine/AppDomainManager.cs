@@ -151,6 +151,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             AppDomain AD = CreateRestrictedDomain(PermissionLevel, 
                 "ScriptAppDomain_" + AppDomainNameCount,ads);
 
+            AD.AssemblyResolve += OpenSim.Region.ScriptEngine.Shared.AssemblyResolver.OnAssemblyResolve;
+
             //AD.Load(AssemblyName.GetAssemblyName(
             //            "OpenSim.Region.ScriptEngine.Shared.dll"));
             // Return the new AppDomain
