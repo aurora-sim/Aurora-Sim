@@ -98,7 +98,6 @@ namespace Aurora.Services.DataService
             }
 
             Aurora.Framework.AuroraModuleLoader.LoadPlugins<IAuroraDataPlugin>("/Aurora/DataPlugin", new AuroraDataPluginInitialiser(DataConnector, source));
-            IDirectoryServiceConnector DSC = Aurora.DataManager.DataManager.RequestPlugin<IDirectoryServiceConnector>("IDirectoryServiceConnector");
         }
     }
 

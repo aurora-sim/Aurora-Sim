@@ -101,12 +101,14 @@ namespace Aurora.Framework
             KVP["OwnerID"] = OwnerID;
             KVP["Maturity"] = Maturity;
             KVP["EstateID"] = EstateID;
+            KVP["Area"] = Area;
             KVP["AuctionID"] = AuctionID;
             KVP["SalePrice"] = SalePrice;
             KVP["ForSale"] = ForSale;
             KVP["InfoUUID"] = InfoUUID;
             KVP["Dwell"] = Dwell;
             KVP["Flags"] = Flags;
+            KVP["Name"] = Name;
             KVP["Description"] = Description;
             KVP["LandingZ"] = LandingZ;
             KVP["LandingY"] = LandingY;

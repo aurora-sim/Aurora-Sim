@@ -217,8 +217,8 @@ namespace Aurora.Services.DataService
             // 16 - For Sale - Estate
             // 4294967295 - All
             List<DirLandReplyData> Data = new List<DirLandReplyData>();
-            string whereClause = " SalePrice <= '" + price + "' and Area >= '" + area + "' LIMIT " + StartQuery.ToString() + ",50 ";
-            List<string> retVal = GD.Query(whereClause, "searchparcel", "InfoUUID,Name,Auction,SalePrice,Area,Flags");
+            string whereClause = " SalePrice <= '" + price + "' and Area >= '" + area + "' and ForSale = 'True' LIMIT " + StartQuery.ToString() + ",50 ";
+            List<string> retVal = GD.Query(whereClause, "searchparcel", "InfoUUID,Name,Auction,SalePrice,Area");
 
             if (retVal.Count == 0)
                 return Data.ToArray();
@@ -226,7 +226,6 @@ namespace Aurora.Services.DataService
             int DataCount = 0;
             DirLandReplyData replyData = new DirLandReplyData();
             replyData.forSale = true;
-            bool AddToList = true;
             for (int i = 0; i < retVal.Count; i++)
             {
                 if (DataCount == 0)
@@ -239,18 +238,11 @@ namespace Aurora.Services.DataService
                     replyData.salePrice = Convert.ToInt32(retVal[i]);
                 if (DataCount == 4)
                     replyData.actualArea = Convert.ToInt32(retVal[i]);
+                DataCount++;
                 if (DataCount == 5)
                 {
-                    if ((Convert.ToInt32(retVal[i]) & (int)OpenMetaverse.ParcelFlags.ForSale) == 0)
-                        AddToList = false;
-                }
-                DataCount++;
-                if (DataCount == 6)
-                {
                     DataCount = 0;
-                    if (AddToList)
-                        Data.Add(replyData);
-                    AddToList = true;
+                    Data.Add(replyData);
                     replyData = new DirLandReplyData();
                     replyData.forSale = true;
                 }

@@ -24,6 +24,7 @@
 		<DataPlugin id="LocalScriptDataConnector" type="Aurora.Services.DataService.LocalScriptDataConnector" />
 		<DataPlugin id="LocalSimMapConnector" type="Aurora.Services.DataService.LocalSimMapConnector" />
 		<DataPlugin id="RemoteAgentConnector" type="Aurora.Services.DataService.RemoteAgentConnector" />
+		<DataPlugin id="RemoteDirectoryServiceConnector" type="Aurora.Services.DataService.RemoteDirectoryServiceConnector" />
 		<DataPlugin id="RemoteEstateConnector" type="Aurora.Services.DataService.RemoteEstateConnector" />
 		<DataPlugin id="RemoteMuteListConnector" type="Aurora.Services.DataService.RemoteMuteListConnector" />
 		<DataPlugin id="RemoteOfflineMessagesConnector" type="Aurora.Services.DataService.RemoteOfflineMessagesConnector" />
