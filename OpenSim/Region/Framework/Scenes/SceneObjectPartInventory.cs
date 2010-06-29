@@ -31,10 +31,12 @@ using System.IO;
 using System.Collections.Generic;
 using System.Collections;
 using System.Reflection;
+using System.Threading;
 using OpenMetaverse;
 using log4net;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
+using OpenSim.Region.Framework.Scenes.Scripting;
 
 namespace OpenSim.Region.Framework.Scenes
 {
@@ -114,7 +116,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// If this method is called and there are inventory items, then we regard the inventory as having changed.
         /// </summary>
         /// <param name="linkNum">Link number for the part</param>
-        public void ResetInventoryIDs(bool ChangeScripts)
+        public void ResetInventoryIDs()
         {
             lock (Items)
             {
@@ -128,19 +130,8 @@ namespace OpenSim.Region.Framework.Scenes
 
                 foreach (TaskInventoryItem item in items)
                 {
-                    UUID oldItemID = item.ItemID;
                     item.ResetIDs(m_part.UUID);
-                    lock (m_part.ParentGroup)
-                    {
-                        if (ChangeScripts && m_part.ParentGroup.Scene != null)
-                        {
-                            foreach (IScriptModule engine in m_part.ParentGroup.Scene.RequestModuleInterfaces<IScriptModule>())
-                            {
-                                engine.UpdateScriptToNewObject(oldItemID, item, m_part);
-                            }
-                        }
-                        Items.Add(item.ItemID, item);
-                    }
+                    Items.Add(item.ItemID, item);
                 }
             }
         }
@@ -201,33 +192,22 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// Start all the scripts contained in this prim's inventory
         /// </summary>
-        public void CreateScriptInstances(int startParam, bool postOnRez, string engine, int stateSource, UUID RezzedFrom)
+        public void CreateScriptInstances(int startParam, bool postOnRez, string engine, int stateSource)
         {
             lock (m_items)
             {
-                List<TaskInventoryItem> LSLItems = new List<TaskInventoryItem>();
                 foreach (TaskInventoryItem item in Items.Values)
                 {
                     if ((int)InventoryType.LSL == item.InvType)
                     {
-                        LSLItems.Add(item);
-                        if (!m_part.ParentGroup.Scene.Permissions.CanRunScript(item.ItemID, m_part.UUID, item.OwnerID))
-                            return;
-
-                        m_part.AddFlag(PrimFlags.Scripted);
+                        CreateScriptInstance(item, startParam, postOnRez, engine, stateSource);
+                        Thread.Sleep(10); // workaround for Mono cpu utilization > 100% bug
                     }
                 }
-                lock (m_items)
-                {
-                    m_part.ParentGroup.Scene.EventManager.TriggerRezScripts(
-                                            m_part, LSLItems.ToArray(), startParam, postOnRez, engine, stateSource, RezzedFrom);
-                    m_part.ParentGroup.AddActiveScriptCount(LSLItems.Count);
-                }
-                m_part.ScheduleFullUpdate();
             }
         }
 
-        public ArrayList GetScriptErrors(UUID itemID, string DefaultScriptEngine)
+        public ArrayList GetScriptErrors(UUID itemID)
         {
             ArrayList ret = new ArrayList();
 
@@ -238,13 +218,10 @@ namespace OpenSim.Region.Framework.Scenes
             foreach (IScriptModule e in engines)
             {
                 if (e != null)
-                {
-                    if (e.ScriptEngineName == DefaultScriptEngine)
-                    {
-                        ArrayList errors = e.GetScriptErrors(itemID);
-                        foreach (Object line in errors)
-                            ret.Add(line);
-                    }
+                {                    
+                    ArrayList errors = e.GetScriptErrors(itemID);
+                    foreach (Object line in errors)
+                        ret.Add(line);
                 }
             }
 
@@ -282,7 +259,7 @@ namespace OpenSim.Region.Framework.Scenes
             // m_log.InfoFormat(
             //     "[PRIM INVENTORY]: " +
             //     "Starting script {0}, {1} in prim {2}, {3}",
-            //     item.Name, item.ItemID, Name, UUID);
+            //     item.Name, item.ItemID, m_part.Name, m_part.UUID);
 
             if (!m_part.ParentGroup.Scene.Permissions.CanRunScript(item.ItemID, m_part.UUID, item.OwnerID))
                 return;
@@ -301,7 +278,7 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                     
                     m_part.ParentGroup.Scene.EventManager.TriggerRezScript(
-                        m_part, item.ItemID, String.Empty, startParam, postOnRez, engine, stateSource);
+                        m_part.LocalId, item.ItemID, String.Empty, startParam, postOnRez, engine, stateSource);
                     m_part.ParentGroup.AddActiveScriptCount(1);
                     m_part.ScheduleFullUpdate();
                     return;
@@ -318,67 +295,20 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 else
                 {
-                    if (m_part.ParentGroup.m_savedScriptState != null)
-                        RestoreSavedScriptState(item.OldItemID, item.ItemID);
-
                     lock (m_items)
                     {
+                        if (m_part.ParentGroup.m_savedScriptState != null)
+                            RestoreSavedScriptState(item.OldItemID, item.ItemID);
+
                         m_items[item.ItemID].PermsMask = 0;
                         m_items[item.ItemID].PermsGranter = UUID.Zero;
+
+                        string script = Utils.BytesToString(asset.Data);
+                        m_part.ParentGroup.Scene.EventManager.TriggerRezScript(
+                            m_part.LocalId, item.ItemID, script, startParam, postOnRez, engine, stateSource);
+                        m_part.ParentGroup.AddActiveScriptCount(1);
+                        m_part.ScheduleFullUpdate();
                     }
-                
-                    string script = Utils.BytesToString(asset.Data);
-                    m_part.ParentGroup.Scene.EventManager.TriggerRezScript(
-                        m_part, item.ItemID, script, startParam, postOnRez, engine, stateSource);
-                    m_part.ParentGroup.AddActiveScriptCount(1);
-                    m_part.ScheduleFullUpdate();
-                }
-            }
-        }
-
-        /// <summary>
-        /// Updates a script which is in this prim's inventory.
-        /// </summary>
-        /// <param name="item"></param>
-        /// <returns></returns>
-        public void UpdateScriptInstance(UUID itemID, int startParam, bool postOnRez, string engine, int stateSource)
-        {
-            TaskInventoryItem item = m_items[itemID];
-            if (!m_part.ParentGroup.Scene.Permissions.CanRunScript(item.ItemID, m_part.UUID, item.OwnerID))
-                return;
-
-            m_part.AddFlag(PrimFlags.Scripted);
-
-            if (!m_part.ParentGroup.Scene.RegionInfo.RegionSettings.DisableScripts)
-            {
-                AssetBase asset = m_part.ParentGroup.Scene.AssetService.Get(item.AssetID.ToString());
-                if (null == asset)
-                {
-                    m_log.ErrorFormat(
-                        "[PRIM INVENTORY]: " +
-                        "Couldn't start script {0}, {1} at {2} in {3} since asset ID {4} could not be found",
-                        item.Name, item.ItemID, m_part.AbsolutePosition,
-                        m_part.ParentGroup.Scene.RegionInfo.RegionName, item.AssetID);
-                }
-                else
-                {
-                    lock (m_items)
-                    {
-                        m_items[item.ItemID].PermsMask = 0;
-                        m_items[item.ItemID].PermsGranter = UUID.Zero;
-                    }
-
-                    string script = Utils.BytesToString(asset.Data);
-                    IScriptModule[] modules = m_part.ParentGroup.Scene.RequestModuleInterfaces<IScriptModule>();
-                    foreach (IScriptModule module in modules)
-                    {
-                        if (module.ScriptEngineName == engine)
-                        {
-                            module.UpdateScript(m_part.UUID, item.ItemID, script, startParam, postOnRez, stateSource);
-                        }
-                    }
-                    m_part.ParentGroup.AddActiveScriptCount(1);
-                    m_part.ScheduleFullUpdate();
                 }
             }
         }
@@ -426,14 +356,26 @@ namespace OpenSim.Region.Framework.Scenes
 
                     m_part.ParentGroup.m_savedScriptState[oldID] = newDoc.OuterXml;
                 }
+                
                 foreach (IScriptModule e in engines)
                 {
                     if (e != null)
                     {
-                        if (e.SetXMLState(newID, m_part.ParentGroup.m_savedScriptState[oldID]))
-                            break;
+                        // Stop an exception in setting saved state from propogating since this is not fatal.
+                        try
+                        {
+                            if (e.SetXMLState(newID, m_part.ParentGroup.m_savedScriptState[oldID]))
+                                break;
+                        }
+                        catch (Exception ex)
+                        {
+                            m_log.WarnFormat(
+                                "[PRIM INVENTORY]: Could not set script state for old key {0}, new key {1} in prim {2} {3}.  Exception {4}{5}", 
+                                oldID, newID, m_part.Name, m_part.UUID, ex.Message, ex.StackTrace);
+                        }                        
                     }
                 }
+                
                 m_part.ParentGroup.m_savedScriptState.Remove(oldID);
             }
         }
@@ -1091,12 +1033,23 @@ namespace OpenSim.Region.Framework.Scenes
                         {
                             if (e != null)
                             {
-                                string n = e.GetXMLState(item.ItemID);
-                                if (n != String.Empty)
+                                // Stop any exception from the script engine from propogating since setting state
+                                // isn't essential.
+                                try
                                 {
-                                    if (!ret.ContainsKey(item.ItemID))
-                                        ret[item.ItemID] = n;
-                                    break;
+                                    string n = e.GetXMLState(item.ItemID);
+                                    if (n != String.Empty)
+                                    {
+                                        if (!ret.ContainsKey(item.ItemID))
+                                            ret[item.ItemID] = n;
+                                        break;
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    m_log.WarnFormat(
+                                        "[PRIM INVENTORY]: Could not retrieve script state for item {0} {1} in prim {2} {3}.  Exception {4}{5}", 
+                                        item.Name, item.ItemID, m_part.Name, m_part.UUID, ex.Message, ex.StackTrace);
                                 }
                             }
                         }
