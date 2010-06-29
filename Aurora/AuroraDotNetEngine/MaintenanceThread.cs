@@ -73,9 +73,20 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 {
                     Thread.Sleep(m_ScriptEngine.SleepTime * 5); // Sleep before next pass
                     // LOAD / UNLOAD SCRIPTS
-                    DoScriptsLoadUnload();
+                    bool DoneSomething = DoScriptsLoadUnload();
                     // Save states
-                    DoStateQueue();
+                    bool DoneSomethingElse = DoStateQueue();
+                    if (DoneSomething && DoneSomethingElse)
+                    {
+                        //Assist the event queue if it needs it if we have nothing to do.
+                        QueueItemStruct QIS = null;
+                        int i = 0;
+                        while (ScriptEngine.EventQueue.Dequeue(out QIS) && i < 5)
+                        {
+                            EventQueue.ProcessQIS(QIS);
+                            i++;
+                        }
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -88,19 +99,22 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         #region State Queue
 
-        public void DoStateQueue()
+        public bool DoStateQueue()
         {
             StateQueueItem item = null;
+            bool DoneSomething = false;
             if (ScriptEngine.StateQueue.Dequeue(out item))
             {
+                DoneSomething = true;
                 ScriptEngine.StateQueue.Dequeue(out item);
                 if (item == null || item.ID == null)
-                    return;
+                    return true;
                 if (item.Create)
                     item.ID.SerializeDatabase();
                 else
                     RemoveState(item.ID);
             }
+            return DoneSomething;
         }
 
         public void RemoveState(ScriptData ID)
@@ -115,11 +129,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <summary>
         /// Main Loop that starts/stops all scripts in the LUQueue.
         /// </summary>
-        public void DoScriptsLoadUnload()
+        public bool DoScriptsLoadUnload()
         {
             LUStruct[] items;
+            bool DoneSomething = false;
             while (m_ScriptEngine.LUQueue.Dequeue(out items))
             {
+                DoneSomething = true;
                 foreach (LUStruct item in items)
                 {
                     if (item.Action == LUType.Unload)
@@ -152,6 +168,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     item.ID.FireEvents();
                 }
             }
+            return DoneSomething;
         }
 
         #endregion

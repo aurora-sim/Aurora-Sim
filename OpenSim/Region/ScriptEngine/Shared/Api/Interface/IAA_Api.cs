@@ -63,5 +63,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api.Interfaces
         void AALeaveCombat();
 
         void AAJoinCombatTeam(LSL_String team);
+
+        LSL_List AAGetTeamMembers();
     }
 }

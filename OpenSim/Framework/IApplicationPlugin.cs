@@ -95,7 +95,6 @@ namespace Aurora.Framework
         bool Insert(string table, string[] keys, object[] values);
         bool Delete(string table, string[] keys, object[] values);
         bool Insert(string table, object[] values, string updateKey, object updateValue);
-        string Identifier { get; }
     }
 
     public interface IAuroraDataPlugin : IPlugin

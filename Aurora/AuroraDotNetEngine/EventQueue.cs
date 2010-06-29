@@ -91,14 +91,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             try
             {
                 Guid Running = Guid.Empty;
-                lock (QIS.ID.Script)
-                {
-
-                    QIS.ID.SetEventParams(QIS.llDetectParams);
-                    Running = new Guid(QIS.ID.Script.ExecuteEvent(QIS.ID.State,
+                QIS.ID.SetEventParams(QIS.llDetectParams);
+                Running = new Guid(QIS.ID.Script.ExecuteEvent(QIS.ID.State,
                         QIS.functionName,
                         QIS.param, QIS.CurrentlyAt).ToString());
-                }
                 //Finished with nothing left.
                 if (Running == Guid.Empty)
                 {
@@ -118,8 +114,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     if (QIS.functionName == "changed")
                     {
                         Changed changed = (Changed)(new LSL_Types.LSLInteger(QIS.param[0].ToString()).value);
-                        if (QIS.ID.ChangedInQueue.Contains(changed))
-                            QIS.ID.ChangedInQueue.Remove(changed);
+                        lock (QIS.ID.ChangedInQueue)
+                        {
+                            if (QIS.ID.ChangedInQueue.Contains(changed))
+                                QIS.ID.ChangedInQueue.Remove(changed);
+                        }
                     }
                     return;
                 }

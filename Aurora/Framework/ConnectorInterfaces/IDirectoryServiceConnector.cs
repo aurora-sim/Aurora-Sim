@@ -7,15 +7,7 @@ using OpenSim.Framework;
 
 namespace Aurora.Framework
 {
-    public interface IParcelServiceConnector
-    {
-        void StoreLandObject(LandData args);
-        LandData GetLandData(UUID ParcelID);
-        List<LandData> LoadLandObjects(UUID regionUUID);
-        void RemoveLandObject(UUID ParcelID);
-    }
-
-	public interface IDirectoryServiceConnector
+    public interface IDirectoryServiceConnector
 	{
 		void AddLandObject(LandData args, UUID regionID, bool forSale, uint EstateID, bool showInSearch, UUID InfoUUID);
         AuroraLandData GetParcelInfo(UUID ParcelID);

@@ -89,11 +89,12 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
             if (lease.CurrentState == LeaseState.Initial)
             {
-                lease.InitialLeaseTime = TimeSpan.FromMinutes(1);
-                lease.RenewOnCallTime = TimeSpan.FromSeconds(10.0);
-                lease.SponsorshipTimeout = TimeSpan.FromMinutes(1.0);
+                lease.InitialLeaseTime = TimeSpan.FromMinutes(0);
+                //                lease.RenewOnCallTime = TimeSpan.FromSeconds(10.0);
+                //                lease.SponsorshipTimeout = TimeSpan.FromMinutes(1.0);
             }
             return lease;
+
         }
 
         public Scene World
@@ -247,6 +248,23 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                 }
             }
             return "No Team";
+        }
+
+        public LSL_List AAGetTeamMembers()
+        {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "AAGetTeam", m_host, "AA");
+            ScenePresence SP = World.GetScenePresence(m_host.OwnerID);
+            List<UUID> Members = new List<UUID>();
+            if (SP != null)
+            {
+                ICombatPresence CP = SP.RequestModuleInterface<ICombatPresence>();
+                if (CP != null)
+                {
+                    Members = CP.GetTeammates();
+                }
+            }
+            LSL_List members = new LSL_Types.list(Members.ToArray());
+            return members;
         }
     }
 }

@@ -117,5 +117,10 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
         {
             return m_AA_Functions.AAGetTeam();
         }
+
+        public LSL_List AAGetTeamMembers()
+        {
+            return m_AA_Functions.AAGetTeamMembers();
+        }
     }
 }

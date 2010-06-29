@@ -225,8 +225,11 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
                                 running = thread.MoveNext();
                                 if (!running)
                                 {
-                                    if (m_enumerators.ContainsKey(Start))
-                                        m_enumerators.Remove(Start);
+                                    lock (m_enumerators)
+                                    {
+                                        if (m_enumerators.ContainsKey(Start))
+                                            m_enumerators.Remove(Start);
+                                    }
                                     return Guid.Empty;
                                 }
                                 i++;
@@ -280,8 +283,11 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
                             running = thread.MoveNext();
                             if (!running)
                             {
-                                if (m_enumerators.ContainsKey(Start))
-                                    m_enumerators.Remove(Start);
+                                lock (m_enumerators)
+                                {
+                                    if (m_enumerators.ContainsKey(Start))
+                                        m_enumerators.Remove(Start);
+                                }
                                 return Guid.Empty;
                             }
 
@@ -328,8 +334,11 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
                             running = thread.MoveNext();
                             if (!running)
                             {
-                                if (m_enumerators.ContainsKey(Start))
-                                    m_enumerators.Remove(Start);
+                                lock (m_enumerators)
+                                {
+                                    if (m_enumerators.ContainsKey(Start))
+                                        m_enumerators.Remove(Start);
+                                }
                                 return Guid.Empty;
                             }
 

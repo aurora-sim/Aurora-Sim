@@ -59,16 +59,16 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
         {
             try
             {
-                /*ILease lease = (ILease)base.InitializeLifetimeService();
+                ILease lease = (ILease)base.InitializeLifetimeService();
+
                 if (lease.CurrentState == LeaseState.Initial)
                 {
-                    // Infinite
-                    lease.InitialLeaseTime = TimeSpan.FromMinutes(1);
-                    lease.RenewOnCallTime = TimeSpan.FromMinutes(10.0);
-                    lease.SponsorshipTimeout = TimeSpan.FromMinutes(1.0);
+                    lease.InitialLeaseTime = TimeSpan.FromMinutes(0);
+                    //                lease.RenewOnCallTime = TimeSpan.FromSeconds(10.0);
+                    //                lease.SponsorshipTimeout = TimeSpan.FromMinutes(1.0);
                 }
-                return lease;*/
-                return null;
+                return lease;
+
             }
             catch (Exception ex)
             {

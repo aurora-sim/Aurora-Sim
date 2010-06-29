@@ -283,7 +283,7 @@ namespace Aurora.Framework
             return plainText;
         }
 
-        public static string CachedExternalIP = "";
+        private static string CachedExternalIP = "";
         public static string GetExternalIp()
         {
             if (CachedExternalIP == "")

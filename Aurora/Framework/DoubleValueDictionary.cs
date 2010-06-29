@@ -5,6 +5,7 @@ using System.Text;
 
 namespace Aurora.Framework
 {
+    //Fixed version of the LibOMV class
     public class DoubleValueDictionary<TKey, TValue1, TValue2>
     {
         Dictionary<TKey, List<object>> Dictionary = new Dictionary<TKey, List<object>>();

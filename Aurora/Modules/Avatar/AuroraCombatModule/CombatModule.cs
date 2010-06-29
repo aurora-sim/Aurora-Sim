@@ -51,6 +51,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
         private IConfig m_config;
         private float MaximumHealth;
         private bool m_enabled;
+        private Dictionary<string, List<UUID>> Teams = new Dictionary<string, List<UUID>>();
 
         public void Initialise(IConfigSource source)
         {
@@ -83,11 +84,55 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
 
         void EventManager_OnNewPresence(ScenePresence presence)
         {
-            presence.RegisterModuleInterface<ICombatPresence>(new CombatPresence(presence, m_config));
+            presence.RegisterModuleInterface<ICombatPresence>(new CombatPresence(this, presence, m_config));
         }
 
         public void RegionLoaded(Scene scene)
         {
+        }
+
+        public void AddPlayerToTeam(string Team, UUID AgentID)
+        {
+            lock (Teams)
+            {
+                List<UUID> Teammates = new List<UUID>();
+                if (Teams.ContainsKey(Team))
+                {
+                    Teams.TryGetValue(Team, out Teammates);
+                    Teams.Remove(Team);
+                }
+                Teammates.Add(AgentID);
+                Teams.Add(Team, Teammates);
+            }
+        }
+
+        public void RemovePlayerFromTeam(string Team, UUID AgentID)
+        {
+            lock (Teams)
+            {
+                List<UUID> Teammates = new List<UUID>();
+                if (Teams.ContainsKey(Team))
+                {
+                    Teams.TryGetValue(Team, out Teammates);
+                    Teams.Remove(Team);
+                }
+                if (Teammates.Contains(AgentID))
+                    Teammates.Remove(AgentID);
+                Teams.Add(Team, Teammates);
+            }
+        }
+
+        internal List<UUID> GetTeammates(string Team)
+        {
+            lock (Teams)
+            {
+                List<UUID> Teammates = new List<UUID>();
+                if (Teams.ContainsKey(Team))
+                {
+                    Teams.TryGetValue(Team, out Teammates);
+                }
+                return Teammates;
+            }
         }
 
         private class CombatPresence : ICombatPresence
@@ -103,18 +148,25 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
             float DamageToTeamKillers;
             string m_Team;
             bool HasLeftCombat;
+            AuroraCombatModule m_combatModule;
 
             Dictionary<UUID, float> TeamHits = new Dictionary<UUID, float>();
 
             public string Team
             {
                 get { return m_Team; }
-                set { m_Team = value; }
+                set 
+                {
+                    m_combatModule.RemovePlayerFromTeam(m_Team, m_SP.UUID);
+                    m_Team = value;
+                    m_combatModule.AddPlayerToTeam(m_Team, m_SP.UUID);
+                }
             }
 
-            public CombatPresence(ScenePresence SP, IConfig m_config)
+            public CombatPresence(AuroraCombatModule module, ScenePresence SP, IConfig m_config)
             {
                 m_SP = SP;
+                m_combatModule = module;
 
                 FireOnDeadEvent = m_config.GetBoolean("FireDeadEvent", false);
                 AllowTeamKilling = m_config.GetBoolean("AllowTeamKilling", true);
@@ -126,7 +178,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                 MaximumDamageToInflict = m_config.GetFloat("MaximumDamageToInflict", 100);
 
                 HasLeftCombat = false;
-                Team = "";
+                Team = "No Team";
 
                 SP.OnAddPhysics += new ScenePresence.AddPhysics(SP_OnAddPhysics);
                 SP.OnRemovePhysics += new ScenePresence.RemovePhysics(SP_OnRemovePhysics);
@@ -317,12 +369,19 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
 
             public void LeaveCombat()
             {
+                m_combatModule.RemovePlayerFromTeam(m_Team, m_SP.UUID);
                 HasLeftCombat = true;
             }
 
             public void JoinCombat()
             {
                 HasLeftCombat = false;
+                m_combatModule.AddPlayerToTeam(m_Team, m_SP.UUID);
+            }
+
+            public List<UUID> GetTeammates()
+            {
+                return m_combatModule.GetTeammates(m_Team);
             }
         }
 

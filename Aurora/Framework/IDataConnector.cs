@@ -21,6 +21,7 @@ namespace Aurora.Framework
         bool VerifyTableExists(string tableName, ColumnDefinition[] columnDefinitions);
         void EnsureTableExists(string tableName, ColumnDefinition[] columnDefinitions);
         void DropTable(string tableName);
+        string Identifier { get; }
     }
 
     public enum DataManagerTechnology

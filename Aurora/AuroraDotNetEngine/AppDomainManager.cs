@@ -232,6 +232,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             // otherwise return the set that was found
             setIntersection.AddPermission(new System.Net.SocketPermission(PermissionState.Unrestricted));
             setIntersection.AddPermission(new System.Net.WebPermission(PermissionState.Unrestricted));
+            setIntersection.AddPermission(new System.Security.Permissions.SecurityPermission(PermissionState.Unrestricted));
+            
             PolicyStatement permissions = new PolicyStatement(setIntersection);
             policyRoot.AddChild(new UnionCodeGroup(new AllMembershipCondition(), permissions));
 

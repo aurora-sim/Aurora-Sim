@@ -80,8 +80,28 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         //The compiler for all scripts
         public Compiler LSLCompiler;
 
+        public enum LoadPriority : int
+        {
+            FirstStart = 0,
+            Restart = 1,
+            Stop = 2
+        }
+
+        public class ScriptLoadingPrioritizer : OpenSim.Framework.IPriorityConverter<LoadPriority>
+        {
+            public int Convert(LoadPriority priority)
+            {
+                return (int)priority;
+            }
+
+            public int PriorityCount
+            {
+                get { return 3; }
+            }
+        }
+
         //Queue that handles the loading and unloading of scripts
-        public OpenSim.Framework.LockFreeQueue<LUStruct[]> LUQueue = new OpenSim.Framework.LockFreeQueue<LUStruct[]>();
+        public OpenSim.Framework.LimitedPriorityQueue<LUStruct[], LoadPriority> LUQueue = new OpenSim.Framework.LimitedPriorityQueue<LUStruct[], LoadPriority>(new ScriptLoadingPrioritizer());
 
         public MaintenanceThread m_MaintenanceThread;
 
@@ -127,7 +147,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             Continued = 2
         }
 
-        public class Priority : OpenSim.Framework.IPriorityConverter<EventPriority>
+        public class ScriptPrioritizer : OpenSim.Framework.IPriorityConverter<EventPriority>
         {
             public int Convert(EventPriority priority)
             {
@@ -143,7 +163,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <summary>
         /// Queue containing events waiting to be executed.
         /// </summary>
-        public static OpenSim.Framework.LimitedPriorityQueue<QueueItemStruct, EventPriority> EventQueue = new OpenSim.Framework.LimitedPriorityQueue<QueueItemStruct, EventPriority>(new Priority());
+        public static OpenSim.Framework.LimitedPriorityQueue<QueueItemStruct, EventPriority> EventQueue = new OpenSim.Framework.LimitedPriorityQueue<QueueItemStruct, EventPriority>(new ScriptPrioritizer());
 
         /// <summary>
         /// Queue containing scripts that need to have states saved or deleted.
@@ -476,7 +496,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             LUStruct itemToQueue = StartScript(part, itemID, script,
                     startParam, postOnRez, (StateSource)stateSource, UUID.Zero);
             if(itemToQueue != null)
-                LUQueue.Enqueue(new LUStruct[]{itemToQueue});
+                LUQueue.Enqueue(new LUStruct[] { itemToQueue }, LoadPriority.FirstStart);
         }
 
         public void OnRezScripts(SceneObjectPart part, TaskInventoryItem[] items,
@@ -569,7 +589,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 if (itemToQueue != null)
                     ItemsToQueue.Add(itemToQueue);
             }
-            LUQueue.Enqueue(ItemsToQueue.ToArray());
+            LUQueue.Enqueue(ItemsToQueue.ToArray(), LoadPriority.FirstStart);
 
         }
 
@@ -776,7 +796,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             LUStruct item = StartScript(id.part, itemID, id.Source, id.StartParam, true, id.stateSource, UUID.Zero);
             if (item != null)
-                LUQueue.Enqueue(new LUStruct[] { item });
+                LUQueue.Enqueue(new LUStruct[] { item }, LoadPriority.Restart);
         }
 
         public void OnStopScript(uint localID, UUID itemID)
@@ -1087,7 +1107,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     return;
                 }
                 ls.ID = id;
-                LUQueue.Enqueue(new LUStruct[] { ls });
+                LUQueue.Enqueue(new LUStruct[] { ls }, LoadPriority.Restart);
             }
             else
             {
@@ -1113,21 +1133,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     return;
                 }
                 ls.ID = id;
-                LUQueue.Enqueue(new LUStruct[] { ls });
+                LUQueue.Enqueue(new LUStruct[] { ls }, LoadPriority.Restart);
             }
         }
 
         public Scene findPrimsScene(UUID objectID)
         {
-            lock (m_Scenes)
+            foreach (Scene s in m_Scenes)
             {
-                foreach (Scene s in m_Scenes)
+                SceneObjectPart part = s.GetSceneObjectPart(objectID);
+                if (part != null)
                 {
-                    SceneObjectPart part = s.GetSceneObjectPart(objectID);
-                    if (part != null)
-                    {
-                        return s;
-                    }
+                    return s;
                 }
             }
             return null;
@@ -1135,15 +1152,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public Scene findPrimsScene(uint localID)
         {
-            lock (m_Scenes)
+            foreach (Scene s in m_Scenes)
             {
-                foreach (Scene s in m_Scenes)
+                SceneObjectPart part = s.GetSceneObjectPart(localID);
+                if (part != null)
                 {
-                    SceneObjectPart part = s.GetSceneObjectPart(localID);
-                    if (part != null)
-                    {
-                        return s;
-                    }
+                    return s;
                 }
             }
             return null;
@@ -1164,7 +1178,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             ls.ID = data;
             ls.Action = LUType.Unload;
             NeedsRemoved.Add(data.part.UUID);
-            LUQueue.Enqueue(new LUStruct[]{ls});
+            LUQueue.Enqueue(new LUStruct[] { ls }, LoadPriority.Stop);
         }
 
         /// <summary>
