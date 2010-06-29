@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) Contributors, http://opensimulator.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
@@ -62,31 +62,20 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         internal UUID m_itemID;
         internal bool m_LSFunctionsEnabled = false;
         internal IScriptModuleComms m_comms = null;
-        internal IScriptProtectionModule ScriptProtection;
 
-        public void Initialize(IScriptEngine ScriptEngine, SceneObjectPart host, uint localID, UUID itemID, IScriptProtectionModule module)
+        public void Initialize(IScriptEngine ScriptEngine, SceneObjectPart host, uint localID, UUID itemID)
         {
             m_ScriptEngine = ScriptEngine;
             m_host = host;
             m_localID = localID;
             m_itemID = itemID;
-            ScriptProtection = module;
 
             if (m_ScriptEngine.Config.GetBoolean("AllowLightShareFunctions", false))
                 m_LSFunctionsEnabled = true;
 
-            m_comms = World.RequestModuleInterface<IScriptModuleComms>();
+            m_comms = m_ScriptEngine.World.RequestModuleInterface<IScriptModuleComms>();
             if (m_comms == null)
                 m_LSFunctionsEnabled = false;
-        }
-
-        public string Name
-        {
-            get { return "LS"; }
-        }
-
-        public void Dispose()
-        {
         }
 
         public override Object InitializeLifetimeService()
@@ -100,12 +89,11 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                 //                lease.SponsorshipTimeout = TimeSpan.FromMinutes(1.0);
             }
             return lease;
-
         }
 
         public Scene World
         {
-            get { return m_host.ParentGroup.Scene; }
+            get { return m_ScriptEngine.World; }
         }
 
         //
@@ -120,7 +108,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             World.SimChat(Utils.StringToBytes(message),
                           ChatTypeEnum.Shout, ScriptBaseClass.DEBUG_CHANNEL, m_host.ParentGroup.RootPart.AbsolutePosition, m_host.Name, m_host.UUID, true);
 
-            IWorldComm wComm = World.RequestModuleInterface<IWorldComm>();
+            IWorldComm wComm = m_ScriptEngine.World.RequestModuleInterface<IWorldComm>();
             wComm.DeliverMessage(ChatTypeEnum.Shout, ScriptBaseClass.DEBUG_CHANNEL, m_host.Name, m_host.UUID, message);
         }
 
@@ -130,7 +118,12 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         /// <returns>List of windlight parameters</returns>
         public LSL_List lsGetWindlightScene(LSL_List rules)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "lsGetWindlightScene", m_host, "LS"); m_host.AddScriptLPS(1);
+            if (!m_LSFunctionsEnabled)
+            {
+                LSShoutError("LightShare functions are not enabled.");
+                return new LSL_List();
+            }
+            m_host.AddScriptLPS(1);
             RegionLightShareData wl = m_host.ParentGroup.Scene.RegionInfo.WindlightSettings;
 
             LSL_List values = new LSL_List();
@@ -440,7 +433,6 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                 }
                 idx++;
             }
-            wl.regionID = m_host.ParentGroup.Scene.RegionInfo.RegionID;
             return wl;
         }
         /// <summary>
@@ -450,8 +442,11 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         /// <returns>success: true or false</returns>
         public int lsSetWindlightScene(LSL_List rules)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "lsSetWindlightScene", m_host, "LS");
-            
+            if (!m_LSFunctionsEnabled)
+            {
+                LSShoutError("LightShare functions are not enabled.");
+                return 0;
+            }
             if (!World.RegionInfo.EstateSettings.IsEstateManager(m_host.OwnerID) && World.GetScenePresence(m_host.OwnerID).GodLevel < 200)
             {
                 LSShoutError("lsSetWindlightScene can only be used by estate managers or owners.");
@@ -504,5 +499,6 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             }
             return success;
         }
+        
     }
 }
