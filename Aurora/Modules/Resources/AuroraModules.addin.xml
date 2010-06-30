@@ -18,5 +18,9 @@
 	  <RegionModule id="GodModifiers"           type="Aurora.Modules.GodModifiers" />
 	  <RegionModule id="LureModule"           type="Aurora.Modules.LureModule" />
 	  <RegionModule id="EstateSettingsModule"           type="Aurora.Modules.EstateSettingsModule" />
-    </Extension>
-</Addin>
+	</Extension>
+	<Extension path = "/Aurora/ChatPlugins">
+		<ChatPlugins id="CalcChatPlugin"           type="Aurora.Modules.Avatar.AuroraChat.CalcChatPlugin" />
+		<ChatPlugins id="AdminChatPlugin"           type="Aurora.Modules.Avatar.AuroraChat.AdminChatPlugin" />
+	</Extension>
+	</Addin>

@@ -54,6 +54,7 @@ namespace OpenSim.Region.Framework.Interfaces
                                   uint ttl, UUID transactionID, bool fromGroup, byte[] binaryBucket);
         void ChatterBoxSessionAgentListUpdates(UUID sessionID, UUID fromAgent, UUID toAgent, bool canVoiceChat, 
                                                bool isModerator, bool textMute);
+        void ChatterBoxSessionAgentListUpdates(OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage message, UUID toAgent);
         void ParcelProperties(ParcelPropertiesPacket parcelPropertiesPacket, OpenSim.Framework.LandData data, UUID avatarID);
         void GroupMembership(AgentGroupDataUpdatePacket groupUpdate, UUID avatarID);
         void QueryReply(PlacesReplyPacket placesReply, UUID avatarID, string[] RegionTypes);

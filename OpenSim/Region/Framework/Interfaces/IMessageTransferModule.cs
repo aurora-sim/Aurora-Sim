@@ -37,5 +37,7 @@ namespace OpenSim.Region.Framework.Interfaces
         event UndeliveredMessage OnUndeliveredMessage;
 
         void SendInstantMessage(GridInstantMessage im, MessageResultNotification result);
+
+        void SendInstantMessage(GridInstantMessage im);
     }
 }

@@ -30,42 +30,80 @@ using System.Collections.Generic;
 using System.Reflection;
 using Nini.Config;
 using OpenMetaverse;
+using OpenMetaverse.Messages;
 using OpenSim.Framework;
+using OpenSim.Framework.Client;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using log4net;
 using Aurora.DataManager;
 using Aurora.Framework;
+using System.Collections;
+using OpenMetaverse.StructuredData;
+using OpenSim.Framework.Servers;
+using OpenSim.Framework.Servers.HttpServer;
+using Caps = OpenSim.Framework.Capabilities.Caps;
+using Mono.Addins;
 
 namespace Aurora.Modules
 {
-    public class AuroraChatModule : ISharedRegionModule
+    public class AuroraChatModule : ISharedRegionModule, IChatModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private const int DEBUG_CHANNEL = 2147483647;
 
         private bool m_enabled = true;
+        private bool m_useMuteListModule = true;
         private int m_saydistance = 30;
         private int m_shoutdistance = 100;
         private int m_whisperdistance = 10;
-        private bool m_useAuth = true;
-        private bool m_blockChat = false;
-        private List<UUID> m_authList = new List<UUID>();
-        private List<UUID> m_authorizedSpeakers = new List<UUID>();
+
+        public int SayDistance
+        {
+            get { return m_saydistance; }
+            set { m_saydistance = value; }
+        }
+
+        public int ShoutDistance
+        {
+            get { return m_shoutdistance; }
+            set { m_shoutdistance = value; }
+        }
+
+        public int WhisperDistance
+        {
+            get { return m_whisperdistance; }
+            set { m_whisperdistance = value; }
+        }
+
+        public List<Scene> Scenes
+        {
+            get { return m_scenes; }
+        }
+
         private List<Scene> m_scenes = new List<Scene>();
 
-        internal object m_syncy = new object();
         private IMuteListConnector MuteListConnector;
-        private bool m_indicategod;
-        private string m_godPrefix;
-        private bool m_announceNewAgents;
-        private bool m_announceClosedAgents;
-        private bool m_useWelcomeMessage;
-        private string m_welcomeMessage;
-        public Dictionary<UUID, int> RegionAgentCount = new Dictionary<UUID, int>();
-
         internal IConfig m_config;
+
+        private IMessageTransferModule m_TransferModule = null;
+
+        public IConfig Config
+        {
+            get { return m_config; }
+        }
+
+        #region IChatModule
+
+        public Dictionary<string, IChatPlugin> ChatPlugins = new Dictionary<string, IChatPlugin>();
+        public void RegisterChatPlugin(string main, IChatPlugin plugin)
+        {
+            if (!ChatPlugins.ContainsKey(main))
+                ChatPlugins.Add(main, plugin);
+        }
+        
+        #endregion
 
         #region ISharedRegionModule Members
         public virtual void Initialise(IConfigSource config)
@@ -86,57 +124,86 @@ namespace Aurora.Modules
                 return;
             }
 
-            m_announceNewAgents = m_config.GetBoolean("use_Auth", true);
-            m_announceClosedAgents = m_config.GetBoolean("use_Auth", true);
-            m_useAuth = m_config.GetBoolean("use_Auth", true);
-            m_indicategod = m_config.GetBoolean("indicate_god", true);
-            m_godPrefix = m_config.GetString("godPrefix", "");
             m_whisperdistance = m_config.GetInt("whisper_distance", m_whisperdistance);
             m_saydistance = m_config.GetInt("say_distance", m_saydistance);
             m_shoutdistance = m_config.GetInt("shout_distance", m_shoutdistance);
+
+            m_useMuteListModule = (config.Configs["Messaging"].GetString("MuteListModule", "AuroraChatModule") == "AuroraChatModule");
+
+            FindChatPlugins();
+        }
+
+        private void FindChatPlugins()
+        {
+            Aurora.Framework.AuroraModuleLoader.LoadPlugins<IChatPlugin>("/Aurora/ChatPlugins", new AuroraChatPluginInitialiser(this));
+        }
+
+        private class AuroraChatPluginInitialiser : PluginInitialiserBase
+        {
+            IChatModule chatModule;
+            public AuroraChatPluginInitialiser(IChatModule module)
+            {
+                chatModule = module;
+            }
+            public override void Initialise(IPlugin plugin)
+            {
+                IChatPlugin chatPlugin = plugin as IChatPlugin;
+                chatPlugin.Initialize(chatModule);
+            }
         }
 
         public virtual void AddRegion(Scene scene)
         {
             if (!m_enabled) return;
 
-            lock (m_syncy)
+            if (!m_scenes.Contains(scene))
             {
-                m_authList.Add(scene.RegionInfo.EstateSettings.EstateOwner);
-                if (!m_scenes.Contains(scene))
-                {
-                    m_scenes.Add(scene);
-                    scene.EventManager.OnNewClient += OnNewClient;
-                    scene.EventManager.OnClientClosed += OnClientClosed;
-                    scene.EventManager.OnChatFromWorld += OnChatFromWorld;
-                    scene.EventManager.OnChatBroadcast += OnChatBroadcast;
-                }
+                m_scenes.Add(scene);
+                scene.EventManager.OnNewClient += OnNewClient;
+                scene.EventManager.OnClientClosed += OnClientClosed;
+                scene.EventManager.OnChatFromWorld += OnChatFromWorld;
+                scene.EventManager.OnChatBroadcast += OnChatBroadcast;
+                scene.EventManager.OnRegisterCaps += RegisterCaps;
+                scene.EventManager.OnClientConnect += OnClientConnect;
             }
-            RegionAgentCount.Add(scene.RegionInfo.RegionID, 0);
             //m_log.InfoFormat("[CHAT]: Initialized for {0} w:{1} s:{2} S:{3}", scene.RegionInfo.RegionName,
             //                 m_whisperdistance, m_saydistance, m_shoutdistance);
         }
 
         public virtual void RegionLoaded(Scene scene)
         {
-            MuteListConnector = Aurora.DataManager.DataManager.RequestPlugin<IMuteListConnector>("IMuteListConnector");
+            if(m_useMuteListModule)
+                MuteListConnector = Aurora.DataManager.DataManager.RequestPlugin<IMuteListConnector>("IMuteListConnector");
+
+            if (m_TransferModule == null)
+            {
+                m_TransferModule =
+                    scene.RequestModuleInterface<IMessageTransferModule>();
+
+                if (m_TransferModule == null)
+                {
+                    m_log.Error("[CONFERANCE MESSAGE]: No message transfer module, IM will not work!");
+                    scene.EventManager.OnClientConnect -= OnClientConnect;
+
+                    m_scenes.Clear();
+                    m_enabled = false;
+                }
+            }
         }
 
         public virtual void RemoveRegion(Scene scene)
         {
-            RegionAgentCount.Remove(scene.RegionInfo.RegionID);
             if (!m_enabled) return;
 
-            lock (m_syncy)
+            if (m_scenes.Contains(scene))
             {
-                if (m_scenes.Contains(scene))
-                {
-                    scene.EventManager.OnNewClient -= OnNewClient;
-                    scene.EventManager.OnClientClosed -= OnClientClosed;
-                    scene.EventManager.OnChatFromWorld -= OnChatFromWorld;
-                    scene.EventManager.OnChatBroadcast -= OnChatBroadcast;
-                    m_scenes.Remove(scene);
-                }
+                scene.EventManager.OnNewClient -= OnNewClient;
+                scene.EventManager.OnClientClosed -= OnClientClosed;
+                scene.EventManager.OnChatFromWorld -= OnChatFromWorld;
+                scene.EventManager.OnChatBroadcast -= OnChatBroadcast;
+                scene.EventManager.OnRegisterCaps -= RegisterCaps;
+                scene.EventManager.OnClientConnect -= OnClientConnect;
+                m_scenes.Remove(scene);
             }
         }
 
@@ -166,58 +233,18 @@ namespace Aurora.Modules
             client.OnMuteListRequest += OnMuteListRequest;
             client.OnUpdateMuteListEntry += OnMuteListUpdate;
             client.OnRemoveMuteListEntry += OnMuteListRemove;
-            if (!m_blockChat)
-            {
-                if (!m_authorizedSpeakers.Contains(client.AgentId))
-                    m_authorizedSpeakers.Add(client.AgentId);
-            }
-            int AgentCount = 0;
-            RegionAgentCount.TryGetValue(client.Scene.RegionInfo.RegionID, out AgentCount);
-            AgentCount++;
-            RegionAgentCount.Remove(client.Scene.RegionInfo.RegionID);
-            RegionAgentCount.Add(client.Scene.RegionInfo.RegionID, AgentCount);
 
-            if (m_announceNewAgents)
+            foreach (IChatPlugin plugin in ChatPlugins.Values)
             {
-                ((Scene)client.Scene).ForEachScenePresence(delegate(ScenePresence SP)
-                {
-                    if (SP.UUID != client.AgentId && !SP.IsChildAgent)
-                    {
-                        SP.ControllingClient.SendChatMessage(client.Name + " has joined the region. Total Agents: " + AgentCount, 1, SP.AbsolutePosition, "System",
-                                                           UUID.Zero, (byte)ChatSourceType.System, (byte)ChatAudibleLevel.Fully);
-                    }
-                }
-                );
-            }
-
-            if (m_useWelcomeMessage)
-            {
-                ScenePresence SP = ((Scene)client.Scene).GetScenePresence(client.AgentId);
-                client.SendChatMessage(m_welcomeMessage, 1, SP.AbsolutePosition, "System",
-                                               UUID.Zero, (byte)ChatSourceType.System, (byte)ChatAudibleLevel.Fully);
+                plugin.OnNewClient(client);
             }
         }
 
         public virtual void OnClientClosed(UUID clientID, Scene scene)
         {
-            int AgentCount = 0;
-            RegionAgentCount.TryGetValue(scene.RegionInfo.RegionID, out AgentCount);
-            AgentCount--;
-            RegionAgentCount.Remove(scene.RegionInfo.RegionID);
-            RegionAgentCount.Add(scene.RegionInfo.RegionID, AgentCount);
-
-            if (m_announceClosedAgents)
+            foreach (IChatPlugin plugin in ChatPlugins.Values)
             {
-                string leavingAvatar = scene.GetUserName(clientID);
-                scene.ForEachScenePresence(delegate(ScenePresence SP)
-                {
-                    if (SP.UUID != clientID && !SP.IsChildAgent)
-                    {
-                        SP.ControllingClient.SendChatMessage(leavingAvatar + " has left the region. Total Agents: " + AgentCount, 1, SP.AbsolutePosition, "System",
-                                                           UUID.Zero, (byte)ChatSourceType.System, (byte)ChatAudibleLevel.Fully);
-                    }
-                }
-                );
+                plugin.OnClosingClient(clientID, scene);
             }
         }
 
@@ -249,95 +276,21 @@ namespace Aurora.Modules
                 return;
             }
 
-            ScenePresence SP = m_scenes[0].GetScenePresence(c.SenderUUID);
-            //Always allow gods to do what they want
-            if(SP.GodLevel != 0 && !!m_authorizedSpeakers.Contains(c.SenderUUID))
-                m_authorizedSpeakers.Add(c.SenderUUID);
-
-            if (SP.GodLevel != 0 && !!m_authList.Contains(c.SenderUUID))
-                m_authList.Add(c.SenderUUID);
-            
-            if (!m_authorizedSpeakers.Contains(c.SenderUUID))
-                return;
-
-            if (c.Message.StartsWith("Chat."))
+            if (c.Message != "")
             {
-                if (!m_useAuth || m_authList.Contains(c.SenderUUID))
+                foreach (string pluginMain in ChatPlugins.Keys)
                 {
-                    ScenePresence senderSP;
-                    ((Scene)c.Scene).TryGetScenePresence(c.SenderUUID, out senderSP);
-                    string[] message = c.Message.Split('.');
-                    if (message[1] == "SayDistance")
+                    if (pluginMain == "all" || c.Message.StartsWith(pluginMain + "."))
                     {
-                        m_saydistance = Convert.ToInt32(message[2]);
-                        TrySendChatMessage(senderSP, c.Position, new Vector3(scene.RegionInfo.RegionLocX * Constants.RegionSize,
-                                                scene.RegionInfo.RegionLocY * Constants.RegionSize, 0), UUID.Zero, "AuroraChat", ChatTypeEnum.Region, message[1] + " changed.", ChatSourceType.System);
-                    }
-                    if (message[1] == "WhisperDistance")
-                    {
-                        m_whisperdistance = Convert.ToInt32(message[2]);
-                        TrySendChatMessage(senderSP, c.Position, new Vector3(scene.RegionInfo.RegionLocX * Constants.RegionSize,
-                                                scene.RegionInfo.RegionLocY * Constants.RegionSize, 0), UUID.Zero, "AuroraChat", ChatTypeEnum.Region, message[1] + " changed.", ChatSourceType.System);
-                    }
-                    if (message[1] == "ShoutDistance")
-                    {
-                        m_shoutdistance = Convert.ToInt32(message[2]);
-                        TrySendChatMessage(senderSP, c.Position, new Vector3(scene.RegionInfo.RegionLocX * Constants.RegionSize,
-                                                scene.RegionInfo.RegionLocY * Constants.RegionSize, 0), UUID.Zero, "AuroraChat", ChatTypeEnum.Region, message[1] + " changed.", ChatSourceType.System);
-                    }
-                    if (message[1] == "AddToAuth")
-                    {
-                        ScenePresence NewSP;
-                        ((Scene)c.Scene).TryGetAvatarByName(message[2], out NewSP);
-                        m_authList.Add(NewSP.UUID);
-                        TrySendChatMessage(senderSP, c.Position, new Vector3(scene.RegionInfo.RegionLocX * Constants.RegionSize,
-                                                scene.RegionInfo.RegionLocY * Constants.RegionSize, 0), UUID.Zero, "AuroraChat", ChatTypeEnum.Region, message[2] + " added.", ChatSourceType.System);
-                    }
-                    if (message[1] == "RemoveFromAuth")
-                    {
-                        ScenePresence NewSP;
-                        ((Scene)c.Scene).TryGetAvatarByName(message[2], out NewSP);
-                        m_authList.Remove(NewSP.UUID);
-                        TrySendChatMessage(senderSP, c.Position, new Vector3(scene.RegionInfo.RegionLocX * Constants.RegionSize,
-                                                scene.RegionInfo.RegionLocY * Constants.RegionSize, 0), UUID.Zero, "AuroraChat", ChatTypeEnum.Region, message[2] + " added.", ChatSourceType.System);
-                    } 
-                    if (message[1] == "BlockChat")
-                    {
-                        m_blockChat = true;
-                        TrySendChatMessage(senderSP, c.Position, new Vector3(scene.RegionInfo.RegionLocX * Constants.RegionSize,
-                                                scene.RegionInfo.RegionLocY * Constants.RegionSize, 0), UUID.Zero, "AuroraChat", ChatTypeEnum.Region, "Chat blocked.", ChatSourceType.System);
-                    }
-                    if (message[1] == "AllowChat")
-                    {
-                        m_blockChat = false;
-                        TrySendChatMessage(senderSP, c.Position, new Vector3(scene.RegionInfo.RegionLocX * Constants.RegionSize,
-                                                scene.RegionInfo.RegionLocY * Constants.RegionSize, 0), UUID.Zero, "AuroraChat", ChatTypeEnum.Region, "Chat allowed.", ChatSourceType.System);
-                    }
-                    if (message[1] == "RevokeSpeakingRights")
-                    {
-                        ScenePresence NewSP;
-                        ((Scene)c.Scene).TryGetAvatarByName(message[2], out NewSP);
-                        m_authorizedSpeakers.Remove(NewSP.UUID);
-                        TrySendChatMessage(senderSP, c.Position, new Vector3(scene.RegionInfo.RegionLocX * Constants.RegionSize,
-                                                scene.RegionInfo.RegionLocY * Constants.RegionSize, 0), UUID.Zero, "AuroraChat", ChatTypeEnum.Region, message[2] + " - revoked.", ChatSourceType.System);
-                    }
-                    if (message[1] == "GiveSpeakingRights")
-                    {
-                        ScenePresence NewSP;
-                        ((Scene)c.Scene).TryGetAvatarByName(message[2], out NewSP);
-                        m_authorizedSpeakers.Add(NewSP.UUID);
-                        TrySendChatMessage(senderSP, c.Position, new Vector3(scene.RegionInfo.RegionLocX * Constants.RegionSize,
-                                                scene.RegionInfo.RegionLocY * Constants.RegionSize, 0), UUID.Zero, "AuroraChat", ChatTypeEnum.Region, message[2] + " - revoked.", ChatSourceType.System);
+                        IChatPlugin plugin;
+                        ChatPlugins.TryGetValue(pluginMain, out plugin);
+                        if (!plugin.OnNewChatMessageFromWorld(c, out c))
+                            return;
                     }
                 }
             }
-            else
-            {
-                if (SP.GodLevel != 0 && m_indicategod)
-                    c.Message = m_godPrefix + c.Message;
 
-                DeliverChatToAvatars(ChatSourceType.Agent, c);
-            }
+            DeliverChatToAvatars(ChatSourceType.Agent, c);
         }
 
         public virtual void OnChatFromWorld(Object sender, OSChatMessage c)
@@ -797,7 +750,7 @@ namespace Aurora.Modules
             }
         }
 
-        static private Vector3 CenterOfRegion = new Vector3(128, 128, 30);
+        static private Vector3 CenterOfRegion = new Vector3(Constants.RegionSize, Constants.RegionSize, 30);
 
         public virtual void OnChatBroadcast(Object sender, OSChatMessage c)
         {
@@ -852,7 +805,7 @@ namespace Aurora.Modules
         }
 
 
-        protected virtual void TrySendChatMessage(ScenePresence presence, Vector3 fromPos, Vector3 regionPos,
+        public virtual void TrySendChatMessage(ScenePresence presence, Vector3 fromPos, Vector3 regionPos,
                                                   UUID fromAgentID, string fromName, ChatTypeEnum type,
                                                   string message, ChatSourceType src)
         {
@@ -882,6 +835,8 @@ namespace Aurora.Modules
         private Dictionary<UUID, MuteList[]> MuteListCache = new Dictionary<UUID, MuteList[]>();
         private void OnMuteListRequest(IClientAPI client, uint crc)
         {
+            if (!m_useMuteListModule)
+                return;
             //Sends the name of the file being sent by the xfer module DO NOT EDIT!!!
             string filename = "mutes" + client.AgentId.ToString();
             byte[] fileData = new byte[0];
@@ -914,6 +869,8 @@ namespace Aurora.Modules
         
         private void OnMuteListUpdate(IClientAPI client, UUID MuteID, string Name, int Flags, UUID AgentID)
         {
+            if (!m_useMuteListModule)
+                return;
             if (MuteID == UUID.Zero)
                 return;
             MuteList Mute = new MuteList()
@@ -927,8 +884,10 @@ namespace Aurora.Modules
             OnMuteListRequest(client, 0);
         }
 
-        private void OnMuteListRemove(IClientAPI client, UUID MuteID, string Name, UUID AgentID)
+        private void OnMuteListRemove(IClientAPI client, UUID MuteID, string Name, UUID AgentID)    
         {
+            if (!m_useMuteListModule)
+                return;
             //Gets sent if a mute is not selected.
             if (MuteID != UUID.Zero)
             {
@@ -936,6 +895,281 @@ namespace Aurora.Modules
                 MuteListCache.Remove(AgentID);
             }
             OnMuteListRequest(client, 0);
+        }
+
+        private string m_chatSessionRequestPath = "0009/";
+        private Dictionary<UUID, ChatSession> ChatSessions = new Dictionary<UUID, ChatSession>();
+
+        private class ChatSession
+        {
+            public UUID SessionID;
+            public List<ChatSessionMember> Members;
+            public string Name;
+        }
+
+        //Pulled from OpenMetaverse
+        // Summary:
+        //     Struct representing a member of a group chat session and their settings
+        public class ChatSessionMember
+        {
+            // Summary:
+            //     The OpenMetaverse.UUID of the Avatar
+            public UUID AvatarKey;
+            //
+            // Summary:
+            //     True if user has voice chat enabled
+            public bool CanVoiceChat;
+            //
+            // Summary:
+            //     True of Avatar has moderator abilities
+            public bool IsModerator;
+            //
+            // Summary:
+            //     True if a moderator has muted this avatars chat
+            public bool MuteText;
+            //
+            // Summary:
+            //     True if a moderator has muted this avatars voice
+            public bool MuteVoice;
+            //
+            // Summary:
+            //     True if they have been requested to join the session
+            public bool HasBeenAdded;
+        }
+        
+        public void RegisterCaps(UUID agentID, Caps caps)
+        {
+            string capsBase = "/CAPS/" + caps.CapsObjectPath;
+
+            caps.RegisterHandler("ChatSessionRequest",
+                                new RestHTTPHandler("POST", capsBase + m_chatSessionRequestPath,
+                                                      delegate(Hashtable m_dhttpMethod)
+                                                      {
+                                                          return ProcessChatSessionRequest(m_dhttpMethod, agentID);
+                                                      }));
+        }
+
+        private Hashtable ProcessChatSessionRequest(Hashtable mDhttpMethod, UUID Agent)
+        {
+            OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml((string)mDhttpMethod["requestbody"]);
+            string method = rm["method"].AsString();
+
+            UUID sessionid = UUID.Parse(rm["session-id"].AsString());
+
+            ScenePresence SP = findScenePresence(Agent);
+            if (method == "start conference")
+            {
+                OSDArray parameters = (OSDArray)rm["params"];
+                List<ChatSessionMember> ChatSessionMembers = new List<ChatSessionMember>();
+                foreach (OSD param in parameters)
+                {
+                    ChatSessionMembers.Add(new ChatSessionMember()
+                    {
+                        AvatarKey = param.AsUUID(),
+                        CanVoiceChat = false,
+                        IsModerator = false,
+                        MuteText = true,
+                        MuteVoice = true,
+                        HasBeenAdded = false
+                    });
+                }
+                //Add us!
+                ChatSessionMembers.Add(new ChatSessionMember()
+                {
+                    AvatarKey = Agent,
+                    CanVoiceChat = false,
+                    IsModerator = true,
+                    MuteText = true,
+                    MuteVoice = true,
+                    HasBeenAdded = true
+                });
+
+                ChatSessions.Add(sessionid, new ChatSession()
+                {
+                    Members = ChatSessionMembers,
+                    SessionID = sessionid,
+                    Name = SP.Name + " Conference"
+                });
+
+                OpenMetaverse.Messages.Linden.ChatterBoxSessionStartReplyMessage cs = new OpenMetaverse.Messages.Linden.ChatterBoxSessionStartReplyMessage();
+                cs.VoiceEnabled = true;
+                cs.TempSessionID = UUID.Random();
+                cs.Type = 1;
+                cs.Success = true;
+                cs.SessionID = sessionid;
+                cs.SessionName = SP.Name + " Conference";
+                cs.ModeratedVoice = true;
+                Hashtable responsedata = new Hashtable();
+                responsedata["int_response_code"] = 200; //501; //410; //404;
+                responsedata["content_type"] = "text/plain";
+                responsedata["keepalive"] = false;
+                OSDMap map = cs.Serialize();
+                responsedata["str_response_string"] = map.ToString();
+                return responsedata;
+            }
+            else if (method == "accept invitation")
+            {
+                ChatSession session;
+                ChatSessions.TryGetValue(sessionid, out session);
+                ChatSessionMember thismember = new ChatSessionMember() { AvatarKey = UUID.Zero };
+                foreach (ChatSessionMember testmember in session.Members)
+                {
+                    if (testmember.AvatarKey == Agent)
+                        thismember = testmember;
+                }
+                IEventQueue eq = SP.Scene.RequestModuleInterface<IEventQueue>();
+                List<OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock> Us = new List<OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock>();
+                List<OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock> NotUsAgents = new List<OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock>();
+                           
+                foreach (ChatSessionMember sessionMember in session.Members)
+                {
+                    OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock block = new OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock();
+                    block.AgentID = sessionMember.AvatarKey;
+                    block.CanVoiceChat = sessionMember.CanVoiceChat;
+                    block.IsModerator = sessionMember.IsModerator;
+                    block.MuteText = sessionMember.MuteText;
+                    block.MuteVoice = sessionMember.MuteVoice;
+                    block.Transition = "ENTER";
+                    if (sessionMember.AvatarKey == thismember.AvatarKey)
+                        Us.Add(block);
+                    else
+                        NotUsAgents.Add(block);
+                }
+                if (thismember.AvatarKey != UUID.Zero)
+                {
+                    thismember.HasBeenAdded = true;
+                    foreach (ChatSessionMember member in session.Members)
+                    {
+                        if (member.AvatarKey == thismember.AvatarKey)
+                        {
+                            OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage message = new OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage();
+                            message.SessionID = session.SessionID;
+
+                            message.Updates = NotUsAgents.ToArray();
+
+                            eq.ChatterBoxSessionAgentListUpdates(message, member.AvatarKey);
+                        }
+                        else
+                        {
+                            OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage message = new OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage();
+                            message.SessionID = session.SessionID;
+                            
+                            message.Updates = Us.ToArray();
+
+                            eq.ChatterBoxSessionAgentListUpdates(message, member.AvatarKey);
+                        }
+                    }
+                }
+                Hashtable responsedata = new Hashtable();
+                responsedata["int_response_code"] = 200; //501; //410; //404;
+                responsedata["content_type"] = "text/plain";
+                responsedata["keepalive"] = false;
+                responsedata["str_response_string"] = "Accepted";
+                return responsedata;
+            }
+            else
+            {
+                m_log.Warn("ChatSessionRequest : " + method);
+                Hashtable responsedata = new Hashtable();
+                responsedata["int_response_code"] = 200; //501; //410; //404;
+                responsedata["content_type"] = "text/plain";
+                responsedata["keepalive"] = false;
+                responsedata["str_response_string"] = "Accepted";
+                return responsedata;
+            }
+        }
+
+        void OnClientConnect(IClientCore client)
+        {
+            IClientIM clientIM;
+            if (client.TryGet(out clientIM))
+            {
+                clientIM.OnInstantMessage += OnInstantMessage;
+            }
+        }
+
+        public ScenePresence findScenePresence(UUID avID)
+        {
+            foreach (Scene s in m_scenes)
+            {
+                ScenePresence SP = s.GetScenePresence(avID);
+                if (SP != null)
+                {
+                    return SP;
+                }
+            }
+            return null;
+        }
+
+        public void OnInstantMessage(IClientAPI client, GridInstantMessage im)
+        {
+            byte dialog = im.dialog;
+
+            if (dialog != (byte)InstantMessageDialog.SessionSend
+                && dialog != (byte)InstantMessageDialog.SessionDrop)
+            {
+                return;
+            }
+            //We only deal with sessions here
+            if (dialog == (byte)InstantMessageDialog.SessionSend)
+            {
+                ChatSession session;
+                ChatSessions.TryGetValue(UUID.Parse(im.imSessionID.ToString()), out session);
+                List<ChatSessionMember> NewMembers = new List<ChatSessionMember>();
+                IEventQueue eq = client.Scene.RequestModuleInterface<IEventQueue>();
+                foreach (ChatSessionMember member in session.Members)
+                {
+                    if (member.HasBeenAdded)
+                    {
+                        im.toAgentID = member.AvatarKey.Guid;
+                        im.binaryBucket = OpenMetaverse.Utils.StringToBytes(session.Name);
+                        im.RegionID = Guid.Empty;
+                        im.ParentEstateID = 0;
+                        im.timestamp = 0;
+                        m_TransferModule.SendInstantMessage(im);
+                    }
+                    else
+                    {
+                        NewMembers.Add(member);
+                        im.toAgentID = member.AvatarKey.Guid;
+                        eq.ChatterboxInvitation(
+                            session.SessionID
+                            , session.Name
+                            , new UUID(im.fromAgentID)
+                            , im.message
+                            , new UUID(im.toAgentID)
+                            , im.fromAgentName
+                            , im.dialog
+                            , im.timestamp
+                            , im.offline == 1
+                            , (int)im.ParentEstateID
+                            , im.Position
+                            , 1
+                            , new UUID(im.imSessionID)
+                            , false
+                            , OpenMetaverse.Utils.StringToBytes(session.Name)
+                            );
+                    }
+                }
+                for(int i = 0; i < NewMembers.Count; i++)
+                {
+                    NewMembers[i].HasBeenAdded = true;
+                }
+            }
+
+            if (dialog == (byte)InstantMessageDialog.SessionDrop)
+            {
+                ChatSession session;
+                ChatSessions.TryGetValue(UUID.Parse(im.imSessionID.ToString()), out session);
+                ChatSessionMember member = new ChatSessionMember() { AvatarKey = UUID.Zero };
+                foreach (ChatSessionMember testmember in session.Members)
+                {
+                    if (member.AvatarKey == UUID.Parse(im.fromAgentID.ToString()))
+                        member = testmember;
+                }
+                if(member.AvatarKey != UUID.Zero)
+                    session.Members.Remove(member);
+            }
         }
     }
 }

@@ -717,6 +717,13 @@ namespace OpenSim.Region.CoreModules.Framework.EventQueue
             //m_log.InfoFormat("########### eq ChatterBoxSessionAgentListUpdates #############\n{0}", item);
         }
 
+        public void ChatterBoxSessionAgentListUpdates(OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage message, UUID toAgent)
+        {
+            OSD item = message.Serialize();
+            Enqueue(item, toAgent);
+            //m_log.InfoFormat("########### eq ChatterBoxSessionAgentListUpdates #############\n{0}", item);
+        }
+
         public void ParcelProperties(ParcelPropertiesPacket parcelPropertiesPacket, LandData data, UUID avatarID)
         {
             OSD item = EventQueueHelper.ParcelProperties(parcelPropertiesPacket, data);

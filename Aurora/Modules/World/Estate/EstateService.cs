@@ -11,6 +11,7 @@ using Nini.Config;
 using log4net;
 using Aurora.Framework;
 using Aurora.DataManager;
+using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules
 {
@@ -194,35 +195,68 @@ namespace Aurora.Modules
             }
         }
 
+        public enum ProfileFlags : int
+        {
+            NoPaymentInfoOnFile = 2,
+            PaymentInfoOnFile = 4,
+            PaymentInfoInUse = 8,
+            AgentOnline = 16
+        }
+        
         public bool AllowTeleport(IScene scene, UUID userID, Vector3 Position, out Vector3 newPosition)
         {
             newPosition = Position;
             
             //Gods tp freely
             ScenePresence Sp = ((Scene)scene).GetScenePresence(userID);
-            if (Sp.GodLevel != 0)
+            if (Sp != null && Sp.GodLevel != 0)
                 return true;
-            
+
             EstateSettings ES = ((Scene)scene).EstateService.LoadEstateSettings(scene.RegionInfo.RegionID, false);
+            
+            //Estate managers tp freely as well
+            if (new List<UUID>(ES.EstateManagers).Contains(userID) || ES.EstateOwner == userID)
+                return true;
+
+            if (new List<UUID>(ES.EstateAccess).Contains(userID))
+                return true;
+
+            foreach (EstateBan ban in ES.EstateBans)
+            {
+                if(ban.BannedUserID == userID)
+                    return false;
+            }
+
             IAgentConnector data = DataManager.DataManager.RequestPlugin<IAgentConnector>("IAgentConnector");
             IAgentInfo agent = data.GetAgent(userID);
             
             if (((Scene)scene).RegionInfo.RegionSettings.Maturity > agent.MaxMaturity)
                 return false;
 
+            UserAccount account = ((Scene)scene).UserAccountService.GetUserAccount(UUID.Zero, userID);
+            
             if (ES.DenyMinors && (agent.Flags & IAgentFlags.Minor) != 0)
                 return false;
 
+            if (ES.DenyAnonymous && ((account.UserFlags & (int)ProfileFlags.NoPaymentInfoOnFile) == 0))
+                return false;
+
+            if (ES.DenyIdentified && ((account.UserFlags & (int)ProfileFlags.PaymentInfoOnFile) != 0))
+                return false;
+
+            if (ES.DenyTransacted && ((account.UserFlags & (int)ProfileFlags.PaymentInfoInUse) != 0))
+                return false;
+
             if (!ES.PublicAccess)
-            {
-                if (!new List<UUID>(ES.EstateManagers).Contains(userID) || ES.EstateOwner != userID)
-                    return false;
-            }
+                return false;
+
             if (!ES.AllowDirectTeleport)
             {
                 Telehub telehub = RegionConnector.FindTelehub(m_scene.RegionInfo.RegionID);
                 if (telehub != null)
                     newPosition = new Vector3(telehub.TelehubLocX, telehub.TelehubLocY, telehub.TelehubLocZ);
+                else
+                    return false;
             }
             else
             {

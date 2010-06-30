@@ -631,7 +631,7 @@ namespace Aurora.Modules
                 charterMember = OpenMetaverse.Utils.StringToBytes(Profile.MembershipGroup);
             }
             uint membershipGroupINT = 0;
-            if (Profile.MembershipGroup != " " || Profile.MembershipGroup == "")
+            if (Profile.MembershipGroup != "")
                 membershipGroupINT = 4;
 
             uint flags = Convert.ToUInt32(Profile.AllowPublish) + Convert.ToUInt32(Profile.MaturePublish) + membershipGroupINT + (uint)agentOnline + (uint)account.UserFlags;

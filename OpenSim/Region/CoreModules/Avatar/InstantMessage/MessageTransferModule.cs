@@ -128,6 +128,55 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             get { return null; }
         }
 
+        public virtual void SendInstantMessage(GridInstantMessage im)
+        {
+            UUID toAgentID = new UUID(im.toAgentID);
+
+            m_log.DebugFormat("[INSTANT MESSAGE]: Attempting delivery of IM from {0} to {1}", im.fromAgentName, toAgentID.ToString());
+
+            // Try root avatar only first
+            foreach (Scene scene in m_Scenes)
+            {
+                if (scene.Entities.ContainsKey(toAgentID) &&
+                        scene.Entities[toAgentID] is ScenePresence)
+                {
+                    m_log.DebugFormat("[INSTANT MESSAGE]: Looking for {0} in {1}", toAgentID.ToString(), scene.RegionInfo.RegionName);
+                    // Local message
+                    ScenePresence user = (ScenePresence)scene.Entities[toAgentID];
+                    if (!user.IsChildAgent)
+                    {
+                        m_log.DebugFormat("[INSTANT MESSAGE]: Delivering to client");
+                        user.ControllingClient.SendInstantMessage(im);
+
+                        return;
+                    }
+                }
+            }
+
+            // try child avatar second
+            foreach (Scene scene in m_Scenes)
+            {
+                //                m_log.DebugFormat(
+                //                    "[INSTANT MESSAGE]: Looking for child of {0} in {1}", toAgentID, scene.RegionInfo.RegionName);
+
+                if (scene.Entities.ContainsKey(toAgentID) &&
+                        scene.Entities[toAgentID] is ScenePresence)
+                {
+                    // Local message
+                    ScenePresence user = (ScenePresence)scene.Entities[toAgentID];
+
+                    m_log.DebugFormat("[INSTANT MESSAGE]: Delivering to client");
+                    user.ControllingClient.SendInstantMessage(im);
+
+                    return;
+                }
+            }
+            MessageResultNotification result = delegate(bool success) {};
+            SendGridInstantMessageViaXMLRPC(im, result);
+
+            return;
+        }
+
         public virtual void SendInstantMessage(GridInstantMessage im, MessageResultNotification result)
         {
             UUID toAgentID = new UUID(im.toAgentID);
