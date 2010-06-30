@@ -46,6 +46,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private IScriptDataConnector ScriptFrontend;
         private ScriptEngine m_ScriptEngine;
+        private bool InitialStart = true;
+        private bool ScriptsLoaded = false;
         
         public MaintenanceThread(ScriptEngine Engine)
         {
@@ -63,6 +65,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             AppDomain.CurrentDomain.AssemblyResolve += OpenSim.Region.ScriptEngine.Shared.AssemblyResolver.OnAssemblyResolve;
         }
 
+        public void OnScriptsLoadingComplete()
+        {
+            ScriptsLoaded = true;
+        }
+
         #region " Maintenance thread "
 
         public void StartEndScriptMaintenance()
@@ -72,6 +79,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 try
                 {
                     Thread.Sleep(m_ScriptEngine.SleepTime * 5); // Sleep before next pass
+                    if (InitialStart)
+                    {
+                        InitialStart = false;
+                        foreach (OpenSim.Region.Framework.Scenes.Scene scene in m_ScriptEngine.Worlds)
+                        {
+                            // No scripts on region, so won't get triggered later
+                            // by the queue becoming empty so we trigger it here
+                            scene.EventManager.TriggerEmptyScriptCompileQueue(0, String.Empty);
+                        }
+                    }
                     // LOAD / UNLOAD SCRIPTS
                     bool DoneSomething = DoScriptsLoadUnload();
                     // Save states
@@ -87,6 +104,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                             i++;
                         }
                     }
+                    if (ScriptsLoaded)
+                    {
+                        foreach (OpenSim.Region.Framework.Scenes.Scene scene in m_ScriptEngine.Worlds)
+                        {
+                            scene.EventManager.TriggerEmptyScriptCompileQueue(m_ScriptEngine.ScriptFailCount,
+                                                                            m_ScriptEngine.ScriptErrorMessages);
+                        }
+                    }
+                    m_ScriptEngine.ScriptFailCount = 0;
                 }
                 catch (Exception ex)
                 {

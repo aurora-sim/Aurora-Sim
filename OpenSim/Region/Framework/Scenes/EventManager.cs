@@ -86,6 +86,10 @@ namespace OpenSim.Region.Framework.Scenes
 
         public delegate void OnParcelPrimCountUpdateDelegate();
 
+        public event OnScriptLoadingCompleteDelegate OnScriptLoadingComplete;
+
+        public delegate void OnScriptLoadingCompleteDelegate();
+
         public event OnParcelPrimCountUpdateDelegate OnParcelPrimCountUpdate;
 
         public delegate void OnParcelPrimCountAddDelegate(SceneObjectGroup obj);
@@ -690,6 +694,27 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         m_log.ErrorFormat(
                             "[EVENT MANAGER]: Delegate for TriggerParcelPrimCountUpdate failed - continuing.  {0} {1}", 
+                            e.Message, e.StackTrace);
+                    }
+                }
+            }
+        }
+
+        public void TriggerScriptLoadingComplete()
+        {
+            OnScriptLoadingCompleteDelegate handlerScriptLoadingComplete = OnScriptLoadingComplete;
+            if (handlerScriptLoadingComplete != null)
+            {
+                foreach (OnParcelPrimCountUpdateDelegate d in handlerScriptLoadingComplete.GetInvocationList())
+                {
+                    try
+                    {
+                        d();
+                    }
+                    catch (Exception e)
+                    {
+                        m_log.ErrorFormat(
+                            "[EVENT MANAGER]: Delegate for TriggerScriptLoadingComplete failed - continuing.  {0} {1}",
                             e.Message, e.StackTrace);
                     }
                 }

@@ -62,8 +62,44 @@ namespace Aurora.Services.DataService
 			info.width_pixels = Convert.ToInt32(data[16]);
 			info.object_media_version = data[17];
             info.Side = Convert.ToInt32(data[18]);
+            info.FromInventoryObjectUUID = OpenMetaverse.UUID.Parse(data[19]);
 			return info;
 		}
+
+        public ObjectMediaURL GetObjectMediaInfoByInventoryID(string inventoryID, int side)
+        {
+            ObjectMediaURL info = new ObjectMediaURL();
+			List<string> data = GD.Query(new string[] {
+				"fromInventoryObjectUUID",
+				"side"
+			}, new string[] {
+				inventoryID,
+				side.ToString()
+			}, "assetMediaURL", "*");
+			if (data.Count == 0)
+				return null;
+            info.ObjectID = OpenMetaverse.UUID.Parse(data[0]);
+            info.OwnerID = OpenMetaverse.UUID.Parse(data[1]);
+            info.alt_image_enable = bool.Parse(data[2]);
+            info.auto_loop = bool.Parse(data[3]);
+            info.auto_play = bool.Parse(data[4]);
+            info.auto_scale = bool.Parse(data[5]);
+            info.auto_zoom = bool.Parse(data[6]);
+			info.controls = Convert.ToInt32(data[7]);
+			info.current_url = data[8];
+			info.first_click_interact = bool.Parse(data[9]);
+			info.height_pixels = Convert.ToInt32(data[10]);
+			info.home_url = data[11];
+			info.perms_control = Convert.ToInt32(data[12]);
+			info.perms_interact = Convert.ToInt32(data[13]);
+			info.whitelist = data[14];
+			info.whitelist_enable = bool.Parse(data[15]);
+			info.width_pixels = Convert.ToInt32(data[16]);
+			info.object_media_version = data[17];
+            info.Side = Convert.ToInt32(data[18]);
+            info.FromInventoryObjectUUID = OpenMetaverse.UUID.Parse(data[19]);
+			return info;
+        }
 
         public void UpdateObjectMediaInfo(ObjectMediaURL media, int side, UUID ObjectID)
         {
@@ -94,6 +130,7 @@ namespace Aurora.Services.DataService
                 Values.Add(media.width_pixels);
                 Values.Add(media.object_media_version);
                 Values.Add(media.Side);
+                Values.Add(media.FromInventoryObjectUUID);
                 GD.Insert("assetMediaURL", Values.ToArray());
             }
         }

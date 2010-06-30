@@ -35,6 +35,10 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
         public void AddRegion(Scene scene)
         {
             m_scene = scene;
+            m_scene.SceneGraph.OnObjectDuplicate += SceneGraph_OnObjectDuplicate;
+            m_scene.SceneGraph.OnObjectCreate += SceneGraph_OnObjectCreate;
+            m_scene.SceneGraph.OnObjectRemove += SceneGraph_OnObjectRemove;
+            m_scene.EventManager.OnObjectBeingRemovedFromScene += EventManager_OnObjectBeingRemovedFromScene;
             m_scene.EventManager.OnRegisterCaps += RegisterCaps;
         }
 
@@ -76,6 +80,71 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                                                       }));
         }
 
+        void SceneGraph_OnObjectCreate(EntityBase newObject)
+        {
+            SceneObjectPart part = m_scene.GetSceneObjectPart(newObject.UUID);
+            if (part.FromItemID != UUID.Zero)
+            {
+                for (int i = 0; i < 6; i++)
+                {
+                    ObjectMediaURL media = AC.GetObjectMediaInfoByInventoryID(part.FromItemID.ToString(), i);
+                    if (media != null)
+                    {
+                        part.CurrentMediaVersion = media.object_media_version;
+                        AC.UpdateObjectMediaInfo(media, i, newObject.UUID);
+                    }
+                }
+            }
+            part.ScheduleFullUpdate();
+        }
+
+        void EventManager_OnObjectBeingRemovedFromScene(SceneObjectGroup obj)
+        {
+            foreach (SceneObjectPart part in obj.Children.Values)
+            {
+                for (int i = 0; i < 6; i++)
+                {
+                    ObjectMediaURL media = AC.GetObjectMediaInfo(part.UUID.ToString(), i);
+                    if (media != null)
+                    {
+                        media.FromInventoryObjectUUID = part.FromItemID;
+                        AC.UpdateObjectMediaInfo(media, i, part.UUID);
+                    }
+                }
+            }
+        }
+
+        void SceneGraph_OnObjectRemove(EntityBase prim)
+        {
+            SceneObjectPart part = m_scene.GetSceneObjectPart(prim.UUID);
+            for (int i = 0; i < 6; i++)
+            {
+                ObjectMediaURL media = AC.GetObjectMediaInfo(prim.UUID.ToString(), i);
+                if (media != null)
+                {
+                    media.FromInventoryObjectUUID = part.FromItemID;
+                    AC.UpdateObjectMediaInfo(media, i, part.UUID);
+                }
+            }
+        }
+
+        void SceneGraph_OnObjectDuplicate(EntityBase original, EntityBase clone)
+        {
+            SceneObjectPart part = m_scene.GetSceneObjectPart(clone.UUID);
+            for (int i = 0; i < 6; i++)
+            {
+                ObjectMediaURL media = AC.GetObjectMediaInfo(original.UUID.ToString(), i);
+                if (media != null)
+                {
+                    part.CurrentMediaVersion = media.object_media_version;
+                    media.OwnerID = part.OwnerID;
+                    media.ObjectID = part.UUID;
+                    AC.UpdateObjectMediaInfo(media, i, clone.UUID);
+                }
+            }
+            part.ScheduleFullUpdate();
+        }
+
         private Hashtable ProcessObjectMediaNavigate(Hashtable mDhttpMethod, UUID capuuid)
         {
             OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml((string)mDhttpMethod["requestbody"]);
@@ -94,6 +163,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                 media.Side = int.Parse(currentSide);
                 media.OwnerID = part.OwnerID;
                 media.ObjectID = part.UUID;
+                media.FromInventoryObjectUUID = part.FromItemID;
                 media.object_media_version = "x-mv:0000000001/00000000-0000-0000-0000-000000000000";
             }
             media.current_url = currentURL;
@@ -261,6 +331,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                                 info = new ObjectMediaURL();
 
                             info.ObjectID = new UUID(rm["object_id"].ToString());
+                            info.FromInventoryObjectUUID = part.ParentGroup.GetFromItemID();
                             info.OwnerID = new UUID(part.OwnerID.ToString());
                             info.Side = side;
                             info.alt_image_enable = map["alt_image_enable"].AsInteger() == 1;

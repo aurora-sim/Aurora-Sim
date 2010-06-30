@@ -194,6 +194,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public bool FirstStartup = true;
 
+        /// <summary>
+        /// Number of scripts that have failed in this run of the Maintenance Thread
+        /// </summary>
+        public int ScriptFailCount = 0;
+
+        /// <summary>
+        /// Errors of scripts that have failed in this run of the Maintenance Thread
+        /// </summary>
+        public string ScriptErrorMessages = "";
+
         #endregion
 
         #region Constructor and Shutdown
@@ -268,9 +278,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             if(AppDomainManager == null)
                 AppDomainManager = new AppDomainManager(this);
-            
-            if(m_MaintenanceThread == null)
+
+            if (m_MaintenanceThread == null)
+            {
                 m_MaintenanceThread = new MaintenanceThread(this);
+                scene.EventManager.OnScriptLoadingComplete += m_MaintenanceThread.OnScriptsLoadingComplete;
+            }
 
             
             scene.StackModuleInterface<IScriptModule>(this);

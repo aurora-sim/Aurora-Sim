@@ -10,6 +10,7 @@ namespace Aurora.Framework
     {
         public int Side;
         public UUID ObjectID;
+        public UUID FromInventoryObjectUUID;
         public UUID OwnerID;
         public bool alt_image_enable = false;
         public bool auto_loop = false;

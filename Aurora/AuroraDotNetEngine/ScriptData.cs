@@ -317,7 +317,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             World.SimChat(OpenMetaverse.Utils.StringToBytes(inworldtext), ChatTypeEnum.DebugChannel, 2147483647, part.AbsolutePosition, part.Name, part.UUID, false);
 
-            //throw e;
+            m_ScriptEngine.ScriptFailCount++;
+            m_ScriptEngine.ScriptErrorMessages += inworldtext;
         }
 
         #endregion

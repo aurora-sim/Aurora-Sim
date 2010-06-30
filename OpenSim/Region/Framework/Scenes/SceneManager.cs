@@ -500,6 +500,7 @@ namespace OpenSim.Region.Framework.Scenes
             // We need to do this after we've initialized the
             // scripting engines.
             scene.CreateScriptInstances();
+            scene.EventManager.TriggerScriptLoadingComplete();
 
             scene.loadAllLandObjectsFromStorage(regionInfo.RegionID);
             scene.EventManager.TriggerParcelPrimCountUpdate();

@@ -97,6 +97,7 @@ namespace Aurora.Modules
         #region IChatModule
 
         public Dictionary<string, IChatPlugin> ChatPlugins = new Dictionary<string, IChatPlugin>();
+        public List<IChatPlugin> AllChatPlugins = new List<IChatPlugin>();
         public void RegisterChatPlugin(string main, IChatPlugin plugin)
         {
             if (!ChatPlugins.ContainsKey(main))
@@ -135,7 +136,7 @@ namespace Aurora.Modules
 
         private void FindChatPlugins()
         {
-            Aurora.Framework.AuroraModuleLoader.LoadPlugins<IChatPlugin>("/Aurora/ChatPlugins", new AuroraChatPluginInitialiser(this));
+            AllChatPlugins = Aurora.Framework.AuroraModuleLoader.LoadPlugins<IChatPlugin>("/Aurora/ChatPlugins", new AuroraChatPluginInitialiser(this));
         }
 
         private class AuroraChatPluginInitialiser : PluginInitialiserBase
@@ -234,7 +235,7 @@ namespace Aurora.Modules
             client.OnUpdateMuteListEntry += OnMuteListUpdate;
             client.OnRemoveMuteListEntry += OnMuteListRemove;
 
-            foreach (IChatPlugin plugin in ChatPlugins.Values)
+            foreach (IChatPlugin plugin in AllChatPlugins)
             {
                 plugin.OnNewClient(client);
             }
@@ -242,7 +243,7 @@ namespace Aurora.Modules
 
         public virtual void OnClientClosed(UUID clientID, Scene scene)
         {
-            foreach (IChatPlugin plugin in ChatPlugins.Values)
+            foreach (IChatPlugin plugin in AllChatPlugins)
             {
                 plugin.OnClosingClient(clientID, scene);
             }
