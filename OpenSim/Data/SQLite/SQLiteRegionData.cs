@@ -1861,7 +1861,16 @@ namespace OpenSim.Data.SQLite
             s.ExtraParams = (byte[]) row["ExtraParams"];
             
             if (!(row["Media"] is System.DBNull))
-                s.MediaRaw = (string)row["Media"];
+            {
+                string rawMeArray = (string)row["Media"];
+                OSDArray osdMeArray = (OSDArray)OSDParser.DeserializeLLSDXml(rawMeArray);
+                
+                List<MediaEntry> mediaEntries = new List<MediaEntry>();
+                foreach (OSD osdMe in osdMeArray)
+                    mediaEntries.Add(MediaEntry.FromOSD(osdMe));
+                
+                s.Media = mediaEntries;
+            }
                         
             return s;
         }
@@ -1906,7 +1915,12 @@ namespace OpenSim.Data.SQLite
 
             row["Texture"] = s.TextureEntry;
             row["ExtraParams"] = s.ExtraParams;
-            row["Media"] = s.MediaRaw;
+            
+            OSDArray meArray = new OSDArray();
+            foreach (MediaEntry me in s.Media)
+                meArray.Add(me.GetOSD());
+            
+            row["Media"] = OSDParser.SerializeLLSDXmlString(meArray);
         }
 
         /// <summary>
