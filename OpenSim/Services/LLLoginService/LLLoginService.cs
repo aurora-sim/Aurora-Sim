@@ -28,7 +28,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Net;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -45,8 +44,6 @@ using OpenSim.Services.Interfaces;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 using FriendInfo = OpenSim.Services.Interfaces.FriendInfo;
 using OpenSim.Services.Connectors.Hypergrid;
-using Aurora.DataManager;
-using Aurora.Framework;
 
 namespace OpenSim.Services.LLLoginService
 {
@@ -76,30 +73,12 @@ namespace OpenSim.Services.LLLoginService
         protected int m_MinLoginLevel;
         protected string m_GatekeeperURL;
         protected bool m_AllowRemoteSetLoginLevel;
+        protected string m_MapTileURL;
 
         IConfig m_LoginServerConfig;
-        IConfigSource m_config;
-        IConfig m_AuroraLoginConfig;
-        bool m_AllowAnonymousLogin = false;
-        bool m_AuthenticateUsers = true;
-        bool m_UseTOS = false;
-        string m_TOSLocation = "";
-        string m_DefaultUserAvatarArchive = "";
-        string m_DefaultHomeRegion = "";
 
         public LLLoginService(IConfigSource config, ISimulationService simService, ILibraryService libraryService)
         {
-            m_config = config;
-            m_AuroraLoginConfig = config.Configs["AuroraLoginService"];
-            if (m_AuroraLoginConfig != null)
-            {
-                m_UseTOS = m_AuroraLoginConfig.GetBoolean("UseTermsOfServiceOnFirstLogin", false);
-                m_DefaultHomeRegion = m_AuroraLoginConfig.GetString("DefaultHomeRegion", "");
-                m_DefaultUserAvatarArchive = m_AuroraLoginConfig.GetString("DefaultAvatarArchiveForNewUser", "");
-                m_AllowAnonymousLogin = m_AuroraLoginConfig.GetBoolean("AllowAnonymousLogin", false);
-                m_AuthenticateUsers = m_AuroraLoginConfig.GetBoolean("AuthenticateUsers", true);
-                m_TOSLocation = m_AuroraLoginConfig.GetString("FileNameOfTOS", "");
-            }
             m_LoginServerConfig = config.Configs["LoginService"];
             if (m_LoginServerConfig == null)
                 throw new Exception(String.Format("No section LoginService in config file"));
@@ -122,6 +101,7 @@ namespace OpenSim.Services.LLLoginService
             m_AllowRemoteSetLoginLevel = m_LoginServerConfig.GetBoolean("AllowRemoteSetLoginLevel", false);
             m_MinLoginLevel = m_LoginServerConfig.GetInt("MinLoginLevel", 0);
             m_GatekeeperURL = m_LoginServerConfig.GetString("GatekeeperURI", string.Empty);
+            m_MapTileURL = m_LoginServerConfig.GetString("MapTileURL", string.Empty);
 
             // These are required; the others aren't
             if (accountService == string.Empty || authService == string.Empty)
@@ -168,15 +148,12 @@ namespace OpenSim.Services.LLLoginService
                 Initialized = true;
                 RegisterCommands();
             }
-            //Start the grid profile archiver.
-            new GridAvatarProfileArchiver(m_UserAccountService);
 
             m_log.DebugFormat("[LLOGIN SERVICE]: Starting...");
 
         }
 
-        public LLLoginService(IConfigSource config)
-            : this(config, null, null)
+        public LLLoginService(IConfigSource config) : this(config, null, null)
         {
         }
 
@@ -229,11 +206,13 @@ namespace OpenSim.Services.LLLoginService
             return response;
         }
 
-        public LoginResponse Login(string firstName, string lastName, string passwd, string startLocation, UUID scopeID, string clientVersion, IPEndPoint clientIP, Hashtable requestData)
+        public LoginResponse Login(string firstName, string lastName, string passwd, string startLocation, UUID scopeID, string clientVersion, IPEndPoint clientIP)
         {
             bool success = false;
             UUID session = UUID.Random();
 
+            m_log.InfoFormat("[LLOGIN SERVICE]: Login request for {0} {1} from {2} with user agent {3} starting in {4}", 
+                firstName, lastName, clientIP.Address.ToString(), clientVersion, startLocation);
             try
             {
                 //
@@ -242,120 +221,44 @@ namespace OpenSim.Services.LLLoginService
                 UserAccount account = m_UserAccountService.GetUserAccount(scopeID, firstName, lastName);
                 if (account == null)
                 {
-                    if (!m_AllowAnonymousLogin)
+                    m_log.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: user not found");
+                    return LLFailedLoginResponse.UserProblem;
+                }
+
+                if (account.UserLevel < m_MinLoginLevel)
+                {
+                    m_log.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: login is blocked for user level {0}", account.UserLevel);
+                    return LLFailedLoginResponse.LoginBlockedProblem;
+                }
+
+                // If a scope id is requested, check that the account is in
+                // that scope, or unscoped.
+                //
+                if (scopeID != UUID.Zero)
+                {
+                    if (account.ScopeID != scopeID && account.ScopeID != UUID.Zero)
                     {
                         m_log.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: user not found");
-                        return LLFailedLoginResponse.UserProblem;
-                    }
-                    else
-                    {
-                        account = new UserAccount();
-                        account.Created = Util.UnixTimeSinceEpoch();
-                        account.Email = "";
-                        account.FirstName = firstName;
-                        account.LastName = lastName;
-                        account.PrincipalID = new UUID(new Guid().ToString());
-                        account.ScopeID = UUID.Zero;
-                        account.ServiceURLs = new Dictionary<string, object>();
-                        account.UserFlags = 0;
-                        account.UserLevel = 0;
-                        account.UserTitle = "";
-                        m_UserAccountService.StoreUserAccount(account);
-                        m_AuthenticationService.SetPasswordHashed(account.PrincipalID, passwd);
-                        m_InventoryService.CreateUserInventory(account.PrincipalID);
-                    }
-                }
-                IAgentInfo agent = null;
-
-                IAgentConnector agentData = DataManager.RequestPlugin<IAgentConnector>("IAgentConnector");
-                IProfileConnector profileData = DataManager.RequestPlugin<IProfileConnector>("IProfileConnector");
-                //Already tried to find it before this, so its not there at all.
-                string mac = (string)requestData["mac"];
-                if (agentData != null)
-                {
-                    agent = agentData.GetAgent(account.PrincipalID);
-                    if (agent == null)
-                    {
-                        agentData.CreateNewAgent(account.PrincipalID);
-                        agent = agentData.GetAgent(account.PrincipalID);
-                    }
-                    //Update the agent
-                    agent.IP = clientIP.Address.ToString();
-                    agent.Mac = mac;
-                    bool AcceptedNewTOS = false;
-                    //This gets if the viewer has accepted the new TOS
-                    if(requestData.ContainsKey("agree_to_tos"))
-                    {
-                        if (requestData["agree_to_tos"].ToString() == "0")
-                            AcceptedNewTOS = false;
-                        else if (requestData["agree_to_tos"].ToString() == "1")
-                            AcceptedNewTOS = true;
-                        else
-                            AcceptedNewTOS = bool.Parse(requestData["agree_to_tos"].ToString());
-                    }
-                    if (!AcceptedNewTOS && !agent.AcceptTOS && m_UseTOS)
-                    {
-                        StreamReader reader = new StreamReader(Path.Combine(Environment.CurrentDirectory, m_TOSLocation));
-                        string TOS = reader.ReadToEnd();
-                        reader.Close();
-                        reader.Dispose();
-                        return new LLFailedLoginResponse("removeme"+"tos", TOS, "false");
-                    }
-                    agent.AcceptTOS = true;
-                    agentData.UpdateAgent(agent);
-                    if ((agent.Flags & IAgentFlags.PermBan) != 0 || (agent.Flags & IAgentFlags.TempBan) != 0)
-                    {
-                        m_log.Info("[LLOGIN SERVICE]: Login failed, reason: user is banned.");
-                        return LLFailedLoginResponse.UserProblem;
-                    }
-
-                    if (account.UserLevel < m_MinLoginLevel)
-                    {
-                        m_log.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: login is blocked for user level {0}", account.UserLevel);
-                        return LLFailedLoginResponse.LoginBlockedProblem;
-                    }
-                }
-                if (profileData != null)
-                {
-                    IUserProfileInfo UPI = profileData.GetUserProfile(account.PrincipalID);
-                    if (UPI == null)
-                    {
-                        profileData.CreateNewProfile(account.PrincipalID);
-                        UPI = profileData.GetUserProfile(account.PrincipalID);
-                        UPI.AArchiveName = m_DefaultUserAvatarArchive;
-                        profileData.UpdateUserProfile(UPI);
-                    }
-                    if (UPI.IsNewUser && UPI.AArchiveName != "" && UPI.AArchiveName != " ")
-                    {
-                        GridAvatarArchiver archiver = new GridAvatarArchiver(m_UserAccountService, m_AvatarService, m_InventoryService);
-                        archiver.LoadAvatarArchive(UPI.AArchiveName, account.FirstName, account.LastName);
-                    }
-                    if (UPI.IsNewUser)
-                    {
-                        UPI.IsNewUser = false;
-                        profileData.UpdateUserProfile(UPI);
-                    }
-                }
-                UUID secureSession = UUID.Zero;
-                if (m_AuthenticateUsers)
-                {
-                    //
-                    // Authenticate this user
-                    //
-                    if (!passwd.StartsWith("$1$"))
-                        passwd = "$1$" + Util.Md5Hash(passwd);
-                    passwd = passwd.Remove(0, 3); //remove $1$
-                    string token = m_AuthenticationService.Authenticate(account.PrincipalID, passwd, 30);
-                    if ((token == string.Empty) || (token != string.Empty && !UUID.TryParse(token, out secureSession)))
-                    {
-                        m_log.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: authentication failed");
                         return LLFailedLoginResponse.UserProblem;
                     }
                 }
                 else
                 {
-                    string token = m_AuthenticationService.GetToken(account.PrincipalID, 30);
-                    UUID.TryParse(token, out secureSession);
+                    scopeID = account.ScopeID;
+                }
+
+                //
+                // Authenticate this user
+                //
+                if (!passwd.StartsWith("$1$"))
+                    passwd = "$1$" + Util.Md5Hash(passwd);
+                passwd = passwd.Remove(0, 3); //remove $1$
+                string token = m_AuthenticationService.Authenticate(account.PrincipalID, passwd, 30);
+                UUID secureSession = UUID.Zero;
+                if ((token == string.Empty) || (token != string.Empty && !UUID.TryParse(token, out secureSession)))
+                {
+                    m_log.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: authentication failed");
+                    return LLFailedLoginResponse.UserProblem;
                 }
 
                 //
@@ -399,15 +302,13 @@ namespace OpenSim.Services.LLLoginService
                 {
                     home = m_GridService.GetRegionByUUID(scopeID, guinfo.HomeRegionID);
                 }
-                bool GridUserInfoFound = true;
                 if (guinfo == null)
                 {
-                    GridUserInfoFound = false;
                     // something went wrong, make something up, so that we don't have to test this anywhere else
                     guinfo = new GridUserInfo();
-                    guinfo.LastPosition = guinfo.HomePosition = new Vector3(128, 128, 30);
+                    guinfo.LastPosition = guinfo.HomePosition = new Vector3(128, 128, 30);               
                 }
-
+                
                 //
                 // Find the destination region/grid
                 //
@@ -421,28 +322,6 @@ namespace OpenSim.Services.LLLoginService
                     m_PresenceService.LogoutAgent(session);
                     m_log.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: destination not found");
                     return LLFailedLoginResponse.GridProblem;
-                }
-                if (!GridUserInfoFound)
-                {
-                    List<GridRegion> DefaultRegions = m_GridService.GetDefaultRegions(UUID.Zero);
-                    GridRegion DefaultRegion = null;
-                    if (DefaultRegions.Count == 0)
-                        DefaultRegion = destination;
-                    else
-                        DefaultRegion = DefaultRegions[0];
-
-                    if (m_DefaultHomeRegion != "")
-                    {
-                        GridRegion newHomeRegion = m_GridService.GetRegionByName(UUID.Zero, m_DefaultHomeRegion);
-                        if (newHomeRegion == null)
-                            guinfo.HomeRegionID = DefaultRegion.RegionID;
-                        else
-                            guinfo.HomeRegionID = newHomeRegion.RegionID;
-                    }
-                    else
-                        guinfo.HomeRegionID = DefaultRegion.RegionID;
-
-                    guinfo.HomeLookAt = new Vector3(0, 0, 0);
                 }
 
                 //
@@ -467,13 +346,6 @@ namespace OpenSim.Services.LLLoginService
                     return LLFailedLoginResponse.AuthorizationProblem;
 
                 }
-
-                aCircuit.Mac = mac;
-                string id0 = (string)requestData["id0"];
-                aCircuit.IO = id0;
-                string platform = (string)requestData["platform"];
-                aCircuit.Platform = platform;
-
                 // Get Friends list 
                 FriendInfo[] friendsList = new FriendInfo[0];
                 if (m_FriendsService != null)
@@ -485,18 +357,8 @@ namespace OpenSim.Services.LLLoginService
                 //
                 // Finally, fill out the response and return it
                 //
-                string adult = "A";
-                if (agent != null)
-                {
-                    if (agent.MaxMaturity == 0)
-                        adult = "P";
-                    if (agent.MaxMaturity == 1)
-                        adult = "M";
-                    if (agent.MaxMaturity == 2)
-                        adult = "A";
-                }
                 LLLoginResponse response = new LLLoginResponse(account, aCircuit, guinfo, destination, inventorySkel, friendsList, m_LibraryService,
-                    where, startLocation, position, lookAt, gestures, m_WelcomeMessage, home, clientIP, "A", adult);
+                    where, startLocation, position, lookAt, gestures, m_WelcomeMessage, home, clientIP, m_MapTileURL);
 
                 m_log.DebugFormat("[LLOGIN SERVICE]: All clear. Sending login response to client.");
                 return response;
@@ -537,7 +399,7 @@ namespace OpenSim.Services.LLLoginService
                     m_log.WarnFormat(
                         "[LLOGIN SERVICE]: User {0} {1} tried to login to a 'home' start location but they have none set",
                         account.FirstName, account.LastName);
-
+                    
                     tryDefaults = true;
                 }
                 else
@@ -547,7 +409,7 @@ namespace OpenSim.Services.LLLoginService
                     position = pinfo.HomePosition;
                     lookAt = pinfo.HomeLookAt;
                 }
-
+                
                 if (tryDefaults)
                 {
                     List<GridRegion> defaults = m_GridService.GetDefaultRegions(scopeID);
@@ -606,7 +468,7 @@ namespace OpenSim.Services.LLLoginService
                     position = pinfo.LastPosition;
                     lookAt = pinfo.LastLookAt;
                 }
-
+                
                 return region;
             }
             else
@@ -639,7 +501,7 @@ namespace OpenSim.Services.LLLoginService
                                 regions = m_GridService.GetDefaultRegions(scopeID);
                                 if (regions != null && regions.Count > 0)
                                 {
-                                    where = "safe";
+                                    where = "safe"; 
                                     return regions[0];
                                 }
                                 else
@@ -664,10 +526,10 @@ namespace OpenSim.Services.LLLoginService
                                 return null;
                             }
                             // Valid specification of a remote grid
-
+                            
                             regionName = parts[0];
                             string domainLocator = parts[1];
-                            parts = domainLocator.Split(new char[] { ':' });
+                            parts = domainLocator.Split(new char[] {':'});
                             string domainName = parts[0];
                             uint port = 0;
                             if (parts.Length > 1)
@@ -682,7 +544,7 @@ namespace OpenSim.Services.LLLoginService
                         List<GridRegion> defaults = m_GridService.GetDefaultRegions(scopeID);
                         if (defaults != null && defaults.Count > 0)
                         {
-                            where = "safe";
+                            where = "safe"; 
                             return defaults[0];
                         }
                         else
@@ -735,7 +597,7 @@ namespace OpenSim.Services.LLLoginService
         }
 
         protected AgentCircuitData LaunchAgentAtGrid(GridRegion gatekeeper, GridRegion destination, UserAccount account, AvatarData avatar,
-            UUID session, UUID secureSession, Vector3 position, string currentWhere, string viewer, IPEndPoint IP, out string where, out string reason)
+            UUID session, UUID secureSession, Vector3 position, string currentWhere, string viewer, IPEndPoint clientIP, out string where, out string reason)
         {
             where = currentWhere;
             ISimulationService simConnector = null;
@@ -775,7 +637,7 @@ namespace OpenSim.Services.LLLoginService
             if (m_UserAgentService == null && simConnector != null)
             {
                 circuitCode = (uint)Util.RandomClass.Next(); ;
-                aCircuit = MakeAgent(destination, account, avatar, session, secureSession, circuitCode, position, viewer, IP);
+                aCircuit = MakeAgent(destination, account, avatar, session, secureSession, circuitCode, position, viewer);
                 success = LaunchAgentDirectly(simConnector, destination, aCircuit, out reason);
                 if (!success && m_GridService != null)
                 {
@@ -800,8 +662,8 @@ namespace OpenSim.Services.LLLoginService
             if (m_UserAgentService != null)
             {
                 circuitCode = (uint)Util.RandomClass.Next(); ;
-                aCircuit = MakeAgent(destination, account, avatar, session, secureSession, circuitCode, position, viewer, IP);
-                success = LaunchAgentIndirectly(gatekeeper, destination, aCircuit, IP, out reason);
+                aCircuit = MakeAgent(destination, account, avatar, session, secureSession, circuitCode, position, viewer);
+                success = LaunchAgentIndirectly(gatekeeper, destination, aCircuit, clientIP, out reason);
                 if (!success && m_GridService != null)
                 {
                     // Try the fallback regions
@@ -810,7 +672,7 @@ namespace OpenSim.Services.LLLoginService
                     {
                         foreach (GridRegion r in fallbacks)
                         {
-                            success = LaunchAgentIndirectly(gatekeeper, r, aCircuit, IP, out reason);
+                            success = LaunchAgentIndirectly(gatekeeper, r, aCircuit, clientIP, out reason);
                             if (success)
                             {
                                 where = "safe";
@@ -828,8 +690,8 @@ namespace OpenSim.Services.LLLoginService
                 return null;
         }
 
-        private AgentCircuitData MakeAgent(GridRegion region, UserAccount account,
-            AvatarData avatar, UUID session, UUID secureSession, uint circuit, Vector3 position, string viewer, IPEndPoint IP)
+        private AgentCircuitData MakeAgent(GridRegion region, UserAccount account, 
+            AvatarData avatar, UUID session, UUID secureSession, uint circuit, Vector3 position, string viewer)
         {
             AgentCircuitData aCircuit = new AgentCircuitData();
 
@@ -850,7 +712,6 @@ namespace OpenSim.Services.LLLoginService
             aCircuit.SecureSessionID = secureSession;
             aCircuit.SessionID = session;
             aCircuit.startpos = position;
-            aCircuit.IP = IP.Address.ToString();
             aCircuit.Viewer = viewer;
             SetServiceURLs(aCircuit, account);
 
@@ -946,552 +807,5 @@ namespace OpenSim.Services.LLLoginService
         }
     }
 
-        #endregion
-
-    public class GridAvatarArchiver : IAvatarAppearanceArchiver
-    {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private IProfileConnector ProfileFrontend;
-        private IUserAccountService UserAccountService;
-        private IAvatarService AvatarService;
-        private IInventoryService InventoryService;
-        public GridAvatarArchiver(IUserAccountService ACS, IAvatarService AS, IInventoryService IS)
-        {
-            UserAccountService = ACS;
-            AvatarService = AS;
-            InventoryService = IS;
-            ProfileFrontend = DataManager.RequestPlugin<IProfileConnector>("IProfileConnector");
-            MainConsole.Instance.Commands.AddCommand("region", false, "save avatar archive", "save avatar archive <First> <Last> <Filename>", "Saves appearance to an avatar archive archive", HandleSaveAvatarArchive);
-            MainConsole.Instance.Commands.AddCommand("region", false, "load avatar archive", "load avatar archive <First> <Last> <Filename>", "Loads appearance from an avatar archive archive", HandleLoadAvatarArchive);
-        }
-        #region Console Commands
-
-        protected void HandleLoadAvatarArchive(string module, string[] cmdparams)
-        {
-            if (cmdparams.Length != 6)
-            {
-                m_log.Debug("[AvatarArchive] Not enough parameters!");
-                return;
-            }
-            UserAccount account = UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]);
-            LoadAvatarArchive(cmdparams[5], cmdparams[3], cmdparams[4]);
-        }
-
-        protected void HandleSaveAvatarArchive(string module, string[] cmdparams)
-        {
-            if (cmdparams.Length != 6)
-            {
-                m_log.Debug("[AvatarArchive] Not enough parameters!");
-            }
-            UserAccount account = UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]);
-            if (account == null)
-            {
-                m_log.Error("[AvatarArchive] User not found!");
-                return;
-            }
-            AvatarData avatarData = AvatarService.GetAvatar(account.PrincipalID);
-            AvatarAppearance appearance = avatarData.ToAvatarAppearance(account.PrincipalID);
-            if (cmdparams[5].EndsWith(".database"))
-            {
-                string Password = MainConsole.Instance.CmdPrompt("Password: ");
-                string ArchiveName = cmdparams[5].Substring(0, cmdparams[5].Length - 9);
-                string ArchiveXML = MakeXMLFormat(appearance);
-                
-                AvatarArchive archive = new AvatarArchive();
-                archive.ArchiveXML = ArchiveXML;
-                archive.Name = ArchiveName;
-
-                DataManager.RequestPlugin<IAvatarArchiverConnector>("IAvatarArchiverConnector").SaveAvatarArchive(archive, Password);
-
-                m_log.Debug("[AvatarArchive] Saved archive to database " + cmdparams[5]);
-            }
-            else
-            {
-                StreamWriter writer = new StreamWriter(cmdparams[5]);
-                writer.Write(MakeXMLFormat(appearance));
-                writer.Close();
-                writer.Dispose();
-                m_log.Debug("[AvatarArchive] Saved archive to " + cmdparams[5]);
-            }
-        }
-
-        private string MakeXMLFormat(AvatarAppearance appearance)
-        {
-            string ArchiveXML = "";
-
-            ArchiveXML += "<avatar>\n";
-            ArchiveXML += "<" + appearance.AvatarHeight + ">\n";
-            ArchiveXML += "<" + appearance.BodyAsset + ">\n";
-            ArchiveXML += "<" + appearance.BodyItem + ">\n";
-            ArchiveXML += "<" + appearance.EyesAsset + ">\n";
-            ArchiveXML += "<" + appearance.EyesItem + ">\n";
-            ArchiveXML += "<" + appearance.GlovesAsset + ">\n";
-            ArchiveXML += "<" + appearance.GlovesItem + ">\n";
-            ArchiveXML += "<" + appearance.HairAsset + ">\n";
-            ArchiveXML += "<" + appearance.HairItem + ">\n";
-            ArchiveXML += "<" + appearance.HipOffset + ">\n";
-            ArchiveXML += "<" + appearance.JacketAsset + ">\n";
-            ArchiveXML += "<" + appearance.JacketItem + ">\n";
-            ArchiveXML += "<" + appearance.Owner + ">\n";
-            ArchiveXML += "<" + appearance.PantsAsset + ">\n";
-            ArchiveXML += "<" + appearance.PantsItem + ">\n";
-            ArchiveXML += "<" + appearance.Serial + ">\n";
-            ArchiveXML += "<" + appearance.ShirtAsset + ">\n";
-            ArchiveXML += "<" + appearance.ShirtItem + ">\n";
-            ArchiveXML += "<" + appearance.ShoesAsset + ">\n";
-            ArchiveXML += "<" + appearance.ShoesItem + ">\n";
-            ArchiveXML += "<" + appearance.SkinAsset + ">\n";
-            ArchiveXML += "<" + appearance.SkinItem + ">\n";
-            ArchiveXML += "<" + appearance.SkirtAsset + ">\n";
-            ArchiveXML += "<" + appearance.SkirtItem + ">\n";
-            ArchiveXML += "<" + appearance.SocksAsset + ">\n";
-            ArchiveXML += "<" + appearance.SocksItem + ">\n";
-            ArchiveXML += "<" + appearance.UnderPantsAsset + ">\n";
-            ArchiveXML += "<" + appearance.UnderPantsItem + ">\n";
-            ArchiveXML += "<" + appearance.UnderShirtAsset + ">\n";
-            ArchiveXML += "<" + appearance.UnderShirtItem + ">\n";
-            ArchiveXML += "<VisualParams>\n";
-            foreach (Byte Byte in appearance.VisualParams)
-            {
-                ArchiveXML += "</VP" + Convert.ToString(Byte) + ">\n";
-            }
-            ArchiveXML += "</VisualParams>\n";
-            ArchiveXML += "<wearables>\n";
-            foreach (AvatarWearable wear in appearance.Wearables)
-            {
-                ArchiveXML += "<WA" + wear.AssetID + ">\n";
-                ArchiveXML += "<WI" + wear.ItemID + ">\n";
-            }
-            ArchiveXML += "</wearables>\n";
-            ArchiveXML += "<TEXTURE" + appearance.Texture.ToString().Replace("\n", "") + "TEXTURE>\n";
-            ArchiveXML += "</avatar>";
-            Hashtable attachments = appearance.GetAttachments();
-            ArchiveXML += "<attachments>\n";
-            if (attachments != null)
-            {
-                foreach (DictionaryEntry element in attachments)
-                {
-                    Hashtable attachInfo = (Hashtable)element.Value;
-                    ArchiveXML += "<AI" + attachInfo["item"] + ">\n";
-                    ArchiveXML += "<AA" + attachInfo["asset"] + ">\n";
-                    ArchiveXML += "<AP" + (int)element.Key + ">\n";
-                }
-            }
-            ArchiveXML += "</attachments>";
-            return ArchiveXML;
-        }
-
-        #endregion
-
-        public void LoadAvatarArchive(string FileName, string First, string Last)
-        {
-            List<string> file = new List<string>();
-            UserAccount account = UserAccountService.GetUserAccount(UUID.Zero, First, Last);
-            if (account == null)
-            {
-                m_log.Error("[AvatarArchive] User not found!");
-                return;
-            }
-
-            if (FileName.EndsWith(".database"))
-            {
-                m_log.Debug("[AvatarArchive] Loading archive from the database " + FileName);
-                
-                string Password = MainConsole.Instance.CmdPrompt("Password: ");
-                FileName = FileName.Substring(0,FileName.Length-9);
-
-                Aurora.Framework.IAvatarArchiverConnector avarchiver = DataManager.RequestPlugin<IAvatarArchiverConnector>("IAvatarArchiverConnector");
-                AvatarArchive archive = avarchiver.GetAvatarArchive(FileName, Password);
-
-                string[] lines = archive.ArchiveXML.Split('\n');
-                file = new List<string>(lines);
-            }
-            else
-            {
-                m_log.Debug("[AvatarArchive] Loading archive from " + FileName);
-                StreamReader reader = new StreamReader(FileName);
-                string line = reader.ReadToEnd();
-                string[] lines = line.Split('\n');
-                file = new List<string>(lines);
-                reader.Close();
-                reader.Dispose();
-            }
-
-            List<UUID> AttachmentUUIDs = new List<UUID>();
-            AvatarAppearance appearance = ConvertXMLToAvatarAppearance(file, out AttachmentUUIDs);
-            appearance.Owner = account.PrincipalID;
-            List<InventoryItemBase> items = new List<InventoryItemBase>();
-            
-            #region Appearance setup
-            if (appearance.BodyItem != UUID.Zero)
-            {
-                InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.BodyItem));
-                items.Add(GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.BodyItem));
-            }
-
-            if (appearance.EyesItem != UUID.Zero)
-            {
-                InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.EyesItem));
-                items.Add(GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.EyesItem));
-            }
-
-            if (appearance.GlovesItem != UUID.Zero)
-            {
-                InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.GlovesItem));
-                items.Add(GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.GlovesItem));
-            }
-
-            if (appearance.HairItem != UUID.Zero)
-            {
-                InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.HairItem));
-                items.Add(GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.HairItem));
-            }
-
-            if (appearance.JacketItem != UUID.Zero)
-            {
-                InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.JacketItem));
-                items.Add(GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.JacketItem));
-            }
-
-            if (appearance.PantsItem != UUID.Zero)
-            {
-                InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.PantsItem));
-                items.Add(GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.PantsItem));
-            }
-
-            if (appearance.ShirtItem != UUID.Zero)
-            {
-                InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.ShirtItem));
-                items.Add(GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.ShirtItem));
-            }
-
-            if (appearance.ShoesItem != UUID.Zero)
-            {
-                InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.ShoesItem));
-                items.Add(GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.ShoesItem));
-            }
-
-            if (appearance.SkinItem != UUID.Zero)
-            {
-                InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.SkinItem));
-                items.Add(GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.SkinItem));
-            }
-
-            if (appearance.SkirtItem != UUID.Zero)
-            {
-                InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.SkirtItem));
-                items.Add(GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.SkirtItem));
-            }
-
-            if (appearance.SocksItem != UUID.Zero)
-            {
-                InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.SocksItem));
-                items.Add(GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.SocksItem));
-            }
-
-            if (appearance.UnderPantsItem != UUID.Zero)
-            {
-                InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.UnderPantsItem));
-                items.Add(GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.UnderPantsItem));
-            }
-
-            if (appearance.UnderShirtItem != UUID.Zero)
-            {
-                InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.UnderShirtItem));
-                items.Add(GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.UnderShirtItem));
-            }
-
-            foreach (UUID uuid in AttachmentUUIDs)
-            {
-                InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(uuid));
-                items.Add(GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, uuid));
-            }
-
-            #endregion
-            appearance.Owner = account.PrincipalID;
-            AvatarData adata = new AvatarData(appearance);
-            AvatarService.SetAvatar(account.PrincipalID, adata);
-            m_log.Debug("[AvatarArchive] Loaded archive from " + FileName);
-        }
-
-        private AvatarAppearance ConvertXMLToAvatarAppearance(List<string> file, out List<UUID> Attachment)
-        {
-            AvatarAppearance appearance = new AvatarAppearance();
-            List<string> newFile = new List<string>();
-            foreach (string line in file)
-            {
-                string newLine = line.TrimStart('<');
-                newFile.Add(newLine.TrimEnd('>'));
-            }
-            appearance.AvatarHeight = Convert.ToInt32(newFile[1]);
-            appearance.BodyAsset = new UUID(newFile[2]);
-            appearance.BodyItem = new UUID(newFile[3]);
-            appearance.EyesAsset = new UUID(newFile[4]);
-            appearance.EyesItem = new UUID(newFile[5]);
-            appearance.GlovesAsset = new UUID(newFile[6]);
-            appearance.GlovesItem = new UUID(newFile[7]);
-            appearance.HairAsset = new UUID(newFile[8]);
-            appearance.HairItem = new UUID(newFile[9]);
-            //Skip Hip Offset
-            appearance.JacketAsset = new UUID(newFile[11]);
-            appearance.JacketItem = new UUID(newFile[12]);
-            appearance.Owner = new UUID(newFile[13]);
-            appearance.PantsAsset = new UUID(newFile[14]);
-            appearance.PantsItem = new UUID(newFile[15]);
-            appearance.Serial = Convert.ToInt32(newFile[16]);
-            appearance.ShirtAsset = new UUID(newFile[17]);
-            appearance.ShirtItem = new UUID(newFile[18]);
-            appearance.ShoesAsset = new UUID(newFile[19]);
-            appearance.ShoesItem = new UUID(newFile[20]);
-            appearance.SkinAsset = new UUID(newFile[21]);
-            appearance.SkinItem = new UUID(newFile[22]);
-            appearance.SkirtAsset = new UUID(newFile[23]);
-            appearance.SkirtItem = new UUID(newFile[24]);
-            appearance.SocksAsset = new UUID(newFile[25]);
-            appearance.SocksItem = new UUID(newFile[26]);
-            //appearance.Texture = new Primitive.TextureEntry(newFile[27],);
-            appearance.UnderPantsAsset = new UUID(newFile[27]);
-            appearance.UnderPantsItem = new UUID(newFile[28]);
-            appearance.UnderShirtAsset = new UUID(newFile[29]);
-            appearance.UnderShirtItem = new UUID(newFile[30]);
-            Byte[] bytes = new byte[218];
-            int i = 0;
-            while (i <= 30)
-            {
-                newFile.RemoveAt(0);
-                i++;
-            }
-            i = 0;
-            if (newFile[0] == "VisualParams")
-            {
-                foreach (string partLine in newFile)
-                {
-                    if (partLine.StartsWith("/VP"))
-                    {
-                        string newpartLine = "";
-                        newpartLine = partLine.Replace("/VP", "");
-                        bytes[i] = Convert.ToByte(newpartLine);
-                        i++;
-                    }
-                }
-            }
-            appearance.VisualParams = bytes;
-            List<string> WearableAsset = new List<string>();
-            List<string> WearableItem = new List<string>();
-            List<string> AttachmentAsset = new List<string>();
-            List<string> AttachmentItem = new List<string>();
-            List<string> AttachmentPoint = new List<string>();
-            string texture = "";
-            Attachment = new List<UUID>();
-            foreach (string partLine in newFile)
-            {
-                if (partLine.StartsWith("WA"))
-                {
-                    string newpartLine = "";
-                    newpartLine = partLine.Replace("WA", "");
-                    WearableAsset.Add(newpartLine);
-                }
-                if (partLine.StartsWith("WI"))
-                {
-                    string newpartLine = "";
-                    newpartLine = partLine.Replace("WI", "");
-                    WearableItem.Add(newpartLine);
-                }
-                if (partLine.StartsWith("TEXTURE"))
-                {
-                    string newpartLine = "";
-                    newpartLine = partLine.Replace("TEXTURE", "");
-                    texture = newpartLine;
-                }
-                if (partLine.StartsWith("AI"))
-                {
-                    string newpartLine = "";
-                    newpartLine = partLine.Replace("AI", "");
-                    AttachmentItem.Add(newpartLine);
-                    Attachment.Add(new UUID(newpartLine));
-                }
-                if (partLine.StartsWith("AA"))
-                {
-                    string newpartLine = "";
-                    newpartLine = partLine.Replace("AA", "");
-                    AttachmentAsset.Add(newpartLine);
-                }
-                if (partLine.StartsWith("AP"))
-                {
-                    string newpartLine = "";
-                    newpartLine = partLine.Replace("AP", "");
-                    AttachmentPoint.Add(newpartLine);
-                }
-            }
-            //byte[] textureBytes = Utils.StringToBytes(texture);
-            //appearance.Texture = new Primitive.TextureEntry(textureBytes, 0, textureBytes.Length);
-            AvatarWearable[] wearables = new AvatarWearable[13];
-            i = 0;
-            foreach (string asset in WearableAsset)
-            {
-                AvatarWearable wearable = new AvatarWearable(new UUID(asset), new UUID(WearableItem[i]));
-                wearables[i] = wearable;
-                i++;
-            }
-            i = 0;
-            foreach (string asset in AttachmentAsset)
-            {
-                appearance.SetAttachment(Convert.ToInt32(AttachmentPoint[i]), new UUID(AttachmentItem[i]), new UUID(asset));
-                i++;
-            }
-            return appearance;
-        }
-
-        private InventoryItemBase GiveInventoryItem(UUID senderId, UUID recipient, UUID itemId)
-        {
-            InventoryItemBase item = new InventoryItemBase(itemId, senderId);
-            item = InventoryService.GetItem(item);
-
-
-            InventoryItemBase itemCopy = new InventoryItemBase();
-            itemCopy.Owner = recipient;
-            itemCopy.CreatorId = item.CreatorId;
-            itemCopy.ID = UUID.Random();
-            itemCopy.AssetID = item.AssetID;
-            itemCopy.Description = item.Description;
-            itemCopy.Name = item.Name;
-            itemCopy.AssetType = item.AssetType;
-            itemCopy.InvType = item.InvType;
-            itemCopy.Folder = UUID.Zero;
-
-            if (itemCopy.Folder == UUID.Zero)
-            {
-                InventoryFolderBase folder = InventoryService.GetFolderForType(recipient, (AssetType)itemCopy.AssetType);
-
-                if (folder != null)
-                {
-                    itemCopy.Folder = folder.ID;
-                }
-                else
-                {
-                    InventoryFolderBase root = InventoryService.GetRootFolder(recipient);
-
-                    if (root != null)
-                        itemCopy.Folder = root.ID;
-                    else
-                        return null; // No destination
-                }
-            }
-
-            itemCopy.GroupID = UUID.Zero;
-            itemCopy.GroupOwned = false;
-            itemCopy.Flags = item.Flags;
-            itemCopy.SalePrice = item.SalePrice;
-            itemCopy.SaleType = item.SaleType;
-
-            InventoryService.AddItem(itemCopy);
-
-            return itemCopy;
-        }
-    }
-
-    public class GridAvatarProfileArchiver
-    {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private IUserAccountService UserAccountService;
-        public GridAvatarProfileArchiver(IUserAccountService UAS)
-        {
-            UserAccountService = UAS;
-            MainConsole.Instance.Commands.AddCommand("region", false, "save avatar profile",
-                                          "save avatar profile <First> <Last> <Filename>",
-                                          "Saves profile and avatar data to an archive", HandleSaveAvatarProfile);
-            MainConsole.Instance.Commands.AddCommand("region", false, "load avatar profile",
-                                          "load avatar profile <First> <Last> <Filename>",
-                                          "Loads profile and avatar data from an archive", HandleLoadAvatarProfile);
-        }
-
-        protected void HandleLoadAvatarProfile(string module, string[] cmdparams)
-        {
-            if (cmdparams.Length != 6)
-            {
-                m_log.Debug("[AvatarProfileArchiver] Not enough parameters!");
-                return;
-            }
-            StreamReader reader = new StreamReader(cmdparams[5]);
-
-            string document = reader.ReadToEnd();
-            string[] lines = document.Split('\n');
-            List<string> file = new List<string>(lines);
-            Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(file[1]);
-            
-            Dictionary<string, object> results = replyData["result"] as Dictionary<string, object>;
-            UserAccount UDA = new UserAccount();
-            UDA.FirstName = cmdparams[3];
-            UDA.LastName = cmdparams[4];
-            UDA.PrincipalID = UUID.Random();
-            UDA.ScopeID = UUID.Zero;
-            UDA.UserFlags = int.Parse(results["UserFlags"].ToString());
-            UDA.UserLevel = 0; //For security... Don't want everyone loading full god mode.
-            UDA.UserTitle = results["UserTitle"].ToString();
-            UDA.Email = results["Email"].ToString();
-            UDA.Created = int.Parse(results["Created"].ToString());
-            if (results.ContainsKey("ServiceURLs") && results["ServiceURLs"] != null)
-            {
-                UDA.ServiceURLs = new Dictionary<string, object>();
-                string str = results["ServiceURLs"].ToString();
-                if (str != string.Empty)
-                {
-                    string[] parts = str.Split(new char[] { ';' });
-                    Dictionary<string, object> dic = new Dictionary<string, object>();
-                    foreach (string s in parts)
-                    {
-                        string[] parts2 = s.Split(new char[] { '*' });
-                        if (parts2.Length == 2)
-                            UDA.ServiceURLs[parts2[0]] = parts2[1];
-                    }
-                }
-            }
-            UserAccountService.StoreUserAccount(UDA);
-
-            
-            replyData = ServerUtils.ParseXmlResponse(file[2]);
-            IUserProfileInfo UPI = new IUserProfileInfo(replyData["result"] as Dictionary<string, object>);
-            //Update the principle ID to the new user.
-            UPI.PrincipalID = UDA.PrincipalID;
-
-            IProfileConnector profileData = DataManager.RequestPlugin<IProfileConnector>("IProfileConnector");
-            if (profileData.GetUserProfile(UPI.PrincipalID) == null)
-                profileData.CreateNewProfile(UPI.PrincipalID);
-
-            profileData.UpdateUserProfile(UPI);
-
-            
-            reader.Close();
-            reader.Dispose();
-
-            m_log.Debug("[AvatarProfileArchiver] Loaded Avatar Profile from " + cmdparams[5]);
-        }
-        protected void HandleSaveAvatarProfile(string module, string[] cmdparams)
-        {
-            if (cmdparams.Length != 6)
-            {
-                m_log.Debug("[AvatarProfileArchiver] Not enough parameters!");
-                return;
-            }
-            UserAccount account = UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]);
-            IProfileConnector data = DataManager.RequestPlugin<IProfileConnector>("IProfileConnector");
-            IUserProfileInfo profile = data.GetUserProfile(account.PrincipalID);
-
-            Dictionary<string, object> result = new Dictionary<string, object>();
-            result["result"] = profile.ToKeyValuePairs();
-            string UPIxmlString = ServerUtils.BuildXmlResponse(result);
-
-            result["result"] = account.ToKeyValuePairs();
-            string UDAxmlString = ServerUtils.BuildXmlResponse(result);
-
-            StreamWriter writer = new StreamWriter(cmdparams[5]);
-            writer.Write("<profile>\n");
-            writer.Write(UDAxmlString + "\n");
-            writer.Write(UPIxmlString + "\n");
-            writer.Write("</profile>\n");
-            m_log.Debug("[AvatarProfileArchiver] Saved Avatar Profile to " + cmdparams[5]);
-            writer.Close();
-            writer.Dispose();
-        }
-    }
+    #endregion
 }
