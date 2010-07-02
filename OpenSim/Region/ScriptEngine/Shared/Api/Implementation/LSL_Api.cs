@@ -3421,7 +3421,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                 msg.message = message.Substring(0, 1024);
             else
                 msg.message = message;
-            msg.dialog = (byte)19; // messgage from script ??? // dialog;
+            
+            msg.dialog = (byte)InstantMessageDialog.MessageFromObject;
             msg.fromGroup = false;// fromGroup;
             msg.offline = (byte)0; //offline;
             msg.ParentEstateID = 0; //ParentEstateID;
@@ -3536,15 +3537,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
-            try
-            {
-                m_ScriptEngine.SetMinEventDelay(m_itemID, delay);
-            }
-            catch (NotImplementedException)
-            {
-                // Currently not implemented in DotNetEngine only XEngine WRONG! Implemented in Aurora.DotNetEngine
-                NotImplemented("llMinEventDelay in some other engine than DotNetEngine");
-            }
+            m_ScriptEngine.SetMinEventDelay(m_itemID, delay);
         }
 
         /// <summary>
@@ -4410,7 +4403,6 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             switch (data)
             {
             case 1: // DATA_ONLINE (0|1)
-                // TODO: implement fetching of this information
                 if (pinfo != null)
                     reply = "1";
                 else 
@@ -4566,7 +4558,6 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
-            // TODO: Parameter check logic required.
             UUID soundId = UUID.Zero;
             if (!UUID.TryParse(impact_sound, out soundId))
             {
@@ -4582,8 +4573,11 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                     }
                 }
             }
-            m_host.CollisionSound = soundId;
-            m_host.CollisionSoundVolume = (float)impact_volume;
+            if (soundId != UUID.Zero)
+            {
+                m_host.CollisionSound = soundId;
+                m_host.CollisionSoundVolume = (float)impact_volume;
+            }
         }
 
         public void llCollisionSprite(string impact_sprite)
@@ -5941,7 +5935,11 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             Aurora.Framework.IAgentConnector AgentFrontend = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IAgentConnector>("IAgentConnector");
+            if (AgentFrontend == null)
+                return "en-us";
             Aurora.Framework.IAgentInfo Agent = AgentFrontend.GetAgent(new UUID(id));
+            if (Agent == null)
+                return "en-us";
             if (Agent.LanguageIsPublic)
             {
                 return Agent.Language;
@@ -8034,7 +8032,10 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             while (idx < rules.Length)
             {
                 int code=(int)rules.GetLSLIntegerItem(idx++);
-                int remain=rules.Length-idx;
+                int remain = rules.Length - idx;
+                Primitive.TextureEntry tex = part.Shape.Textures;
+                int face = (int)rules.GetLSLIntegerItem(idx++);
+                Primitive.TextureEntryFace texFace = tex.GetFace((uint)face);
 
                 switch (code)
                 {
@@ -8166,8 +8167,6 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                         if (remain < 1)
                             return res;
 
-                        int face = (int)rules.GetLSLIntegerItem(idx++);
-                        Primitive.TextureEntry tex = part.Shape.Textures;
                         if (face == ScriptBaseClass.ALL_SIDES)
                         {
                             for (face = 0 ; face < GetNumberOfSides(part); face++)
@@ -8206,7 +8205,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                         if (remain < 1)
                             return res;
 
-                        face=(int)rules.GetLSLIntegerItem(idx++);
+                        face = (int)rules.GetLSLIntegerItem(idx++);
 
                         tex = part.Shape.Textures;
                         Color4 texcolor;
@@ -8232,22 +8231,39 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                         break;
 
                     case (int)ScriptBaseClass.PRIM_BUMP_SHINY:
-                        // TODO--------------
                         if (remain < 1)
                             return res;
 
-                        face=(int)rules.GetLSLIntegerItem(idx++);
+                        face = (int)rules.GetLSLIntegerItem(idx++);
+                        texFace = tex.GetFace((uint)face);
 
-                        res.Add(new LSL_Integer(0));
-                        res.Add(new LSL_Integer(0));
+                        if (texFace != null)
+                        {
+                            res.Add(new LSL_Integer(((int)texFace.Shiny)));
+                            res.Add(new LSL_Integer(((int)texFace.Bump)));
+                        }
+                        else
+                        {
+                            res.Add(new LSL_Integer(0));
+                            res.Add(new LSL_Integer(0));
+                        }
                         break;
 
                     case (int)ScriptBaseClass.PRIM_FULLBRIGHT:
-                        // TODO--------------
                         if (remain < 1)
                             return res;
 
-                        face=(int)rules.GetLSLIntegerItem(idx++);
+                        face = (int)rules.GetLSLIntegerItem(idx++);
+                        texFace = tex.GetFace((uint)face);
+
+                        if (texFace != null)
+                        {
+                            res.Add(new LSL_Integer((texFace.Fullbright == true ? 1 : 0)));
+                        }
+                        else
+                        {
+                            res.Add(new LSL_Integer(0));
+                        }
 
                         res.Add(new LSL_Integer(0));
                         break;
@@ -8270,14 +8286,22 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                         break;
 
                     case (int)ScriptBaseClass.PRIM_TEXGEN:
-                        // TODO--------------
-                        // (PRIM_TEXGEN_DEFAULT, PRIM_TEXGEN_PLANAR)
                         if (remain < 1)
                             return res;
 
-                        face=(int)rules.GetLSLIntegerItem(idx++);
-
-                        res.Add(new LSL_Integer(0));
+                        face = (int)rules.GetLSLIntegerItem(idx++);
+                        texFace = tex.GetFace((uint)face);
+                        if (texFace != null)
+                        {
+                            //Has to be this way as the LSL numbers are not the same
+                            // as the libomv numbers
+                            if (texFace.TexMapType == MappingType.Default)
+                                res.Add(new LSL_Integer(0));
+                            if (texFace.TexMapType == MappingType.Planar)
+                                res.Add(new LSL_Integer(1));
+                        }
+                        else
+                            res.Add(new LSL_Integer(0));
                         break;
 
                     case (int)ScriptBaseClass.PRIM_POINT_LIGHT:
@@ -8296,13 +8320,17 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                         break;
 
                     case (int)ScriptBaseClass.PRIM_GLOW:
-                        // TODO--------------
                         if (remain < 1)
                             return res;
 
-                        face=(int)rules.GetLSLIntegerItem(idx++);
-
-                        res.Add(new LSL_Float(0));
+                        face = (int)rules.GetLSLIntegerItem(idx++);
+                        texFace = tex.GetFace((uint)face);
+                        if (texFace != null)
+                        {
+                            res.Add(new LSL_Integer(texFace.Glow));
+                        }
+                        else
+                            res.Add(new LSL_Integer(0));
                         break;
                     case (int)ScriptBaseClass.PRIM_TEXT:
                         Color4 textColor = part.GetTextColor();
@@ -9862,7 +9890,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         public void llRefreshPrimURL()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            ShoutError("llRefreshPrimURL - not yet supported");
+            Deprecated("llRefreshPrimURL");
             ScriptSleep(20000);
         }
 

@@ -764,14 +764,30 @@ namespace Aurora.Modules
                 List<ExtendedAuroraLandData> parcels = new List<ExtendedAuroraLandData>();
                 foreach (AuroraLandData land in LandData)
                 {
-                    SimMap map = m_scene.SimMapConnector.GetSimMap(land.RegionID, client.AgentId)[0];
-                    ExtendedAuroraLandData parcel = new ExtendedAuroraLandData();
-                    parcel.ConvertFrom(land);
-                    parcel.RegionType = map.RegionType;
-                    parcel.RegionName = map.RegionName;
-                    parcel.GlobalPosX = map.RegionLocX + land.LandingX;
-                    parcel.GlobalPosY = map.RegionLocY + land.LandingY;
-                    parcels.Add(parcel);
+                    List<SimMap> map = m_scene.SimMapConnector.GetSimMap(land.RegionID, client.AgentId);
+                    if (map.Count != 0)
+                    {
+                        ExtendedAuroraLandData parcel = new ExtendedAuroraLandData();
+                        parcel.ConvertFrom(land);
+                        parcel.RegionType = map[0].RegionType;
+                        parcel.RegionName = map[0].RegionName;
+                        parcel.GlobalPosX = map[0].RegionLocX + land.LandingX;
+                        parcel.GlobalPosY = map[0].RegionLocY + land.LandingY;
+                        parcels.Add(parcel);
+                    }
+                    else
+                    {
+                        OpenSim.Services.Interfaces.GridRegion region = m_scene.GridService.GetRegionByUUID(UUID.Zero, land.RegionID);
+                        if (region == null)
+                            continue;
+                        ExtendedAuroraLandData parcel = new ExtendedAuroraLandData();
+                        parcel.ConvertFrom(land);
+                        parcel.RegionType = region.RegionType;
+                        parcel.RegionName = region.RegionName;
+                        parcel.GlobalPosX = region.RegionLocX + land.LandingX;
+                        parcel.GlobalPosY = region.RegionLocY + land.LandingY;
+                        parcels.Add(parcel);
+                    }
                 }
                 
                 client.SendPlacesQuery(parcels.ToArray(), QueryID, TransactionID);

@@ -51,6 +51,10 @@ namespace OpenSim.Framework
                                    UUID RayTargetID, byte BypassRayCast, bool RayEndIsIntersection,
                                    bool RezSelected, bool RemoveItem, UUID fromTaskID);
 
+    public delegate void RezObjectFromNotecard(IClientAPI remoteClient, UUID itemID, Vector3 RayEnd, Vector3 RayStart,
+                                   UUID RayTargetID, byte BypassRayCast, bool RayEndIsIntersection,
+                                   bool RezSelected, bool RemoveItem, UUID fromTaskID, UUID NotecardItemID, UUID ObjectID);
+
     public delegate UUID RezSingleAttachmentFromInv(IClientAPI remoteClient, UUID itemID, uint AttachmentPt);
 
     public delegate void RezMultipleAttachmentsFromInv(IClientAPI remoteClient, RezMultipleAttachmentsFromInvPacket.HeaderDataBlock header,
@@ -787,6 +791,7 @@ namespace OpenSim.Framework
         event TextureRequest OnRequestTexture;
         // [Obsolete("LLClientView Specific - Remove bitbuckets. Adam, can you be more specific here..  as I don't see any bit buckets.")]
         event RezObject OnRezObject;
+        event RezObjectFromNotecard OnRezObjectFromNotecard;
         // [Obsolete("LLClientView Specific - Replace with more suitable arguments.")]
         event ModifyTerrain OnModifyTerrain;
         event BakeTerrain OnBakeTerrain;

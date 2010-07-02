@@ -165,6 +165,7 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         public event ChatMessage OnChatFromClient;
         public event TextureRequest OnRequestTexture;
         public event RezObject OnRezObject;
+        public event RezObjectFromNotecard OnRezObjectFromNotecard;
         public event ModifyTerrain OnModifyTerrain;
         public event SetAppearance OnSetAppearance;
         public event AvatarNowWearing OnAvatarNowWearing;

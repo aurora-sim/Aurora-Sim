@@ -164,6 +164,10 @@ namespace Aurora.Modules
                 client.OnClassifiedGodDelete += GodClassifiedDelete;
                 client.OnUserInfoRequest += UserPreferencesRequest;
                 client.OnUpdateUserInfo += UpdateUserPreferences;
+                //Track agents
+                client.OnTrackAgent += client_OnTrackAgent;
+                client.OnFindAgent += client_OnTrackAgent;
+
                 // Notes
                 client.AddGenericPacketHandler("avatarnotesrequest", HandleAvatarNotesRequest);
                 client.OnAvatarNotesUpdate += AvatarNotesUpdate;
@@ -655,6 +659,50 @@ namespace Aurora.Modules
             UPI.Visible = visible;
             UPI.IMViaEmail = imViaEmail;
             ProfileFrontend.UpdateUserProfile(UPI);
+        }
+
+        public void client_OnTrackAgent(IClientAPI client, UUID hunter, UUID target)
+        {
+            bool isFriend = IsFriendOfUser(target, hunter);
+            if (isFriend)
+            {
+                OpenSim.Services.Interfaces.FriendInfo[] friendList = m_FriendsService.GetFriends(target);
+                bool CanFind = false;
+                foreach (OpenSim.Services.Interfaces.FriendInfo item in friendList)
+                {
+                    if (item.PrincipalID == hunter)
+                    {
+                        CanFind = (item.MyFlags & (int)OpenMetaverse.FriendRights.CanSeeOnMap) == 1;
+                    }
+                }
+                if (!CanFind)
+                    return;
+                OpenSim.Services.Interfaces.PresenceInfo[] Infos = m_scene.PresenceService.GetAgents(new string[] { target.ToString() });
+                OpenSim.Services.Interfaces.GridUserInfo GUI = m_scene.GridUserService.GetGridUserInfo(target.ToString());
+                if (Infos.Length != 0 && Infos[0] != null)
+                {
+                    if (GUI != null)
+                    {
+                        OpenSim.Services.Interfaces.GridRegion region = m_scene.GridService.GetRegionByUUID(UUID.Zero, Infos[0].RegionID);
+                        client.SendScriptTeleportRequest(client.Name, region.RegionName,
+                                                                           GUI.LastPosition,
+                                                                           GUI.LastLookAt);
+                    }
+                }
+            }
+        }
+
+        public ScenePresence findScenePresence(UUID avID)
+        {
+            foreach (Scene s in m_Scenes)
+            {
+                ScenePresence SP = s.GetScenePresence(avID);
+                if (SP != null)
+                {
+                    return SP;
+                }
+            }
+            return null;
         }
         #endregion
     }

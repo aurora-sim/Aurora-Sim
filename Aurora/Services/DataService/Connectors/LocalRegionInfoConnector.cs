@@ -401,6 +401,7 @@ namespace Aurora.Services.DataService
             Values.Add(wl.fresnelOffset);
             Values.Add(wl.refractScaleAbove);
             Values.Add(wl.refractScaleBelow);
+            Values.Add(wl.blurMultiplier);
             Values.Add(wl.bigWaveDirection.X);
             Values.Add(wl.bigWaveDirection.Y);
             Values.Add(wl.littleWaveDirection.X);
@@ -415,6 +416,7 @@ namespace Aurora.Services.DataService
             Values.Add(wl.blueDensity.Y);
             Values.Add(wl.blueDensity.Z);
             Values.Add(wl.blueDensity.W);
+            Values.Add(wl.hazeDensity);
             Values.Add(wl.densityMultiplier);
             Values.Add(wl.distanceMultiplier);
             Values.Add(wl.maxAltitude);

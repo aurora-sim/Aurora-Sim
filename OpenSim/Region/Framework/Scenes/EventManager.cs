@@ -705,7 +705,7 @@ namespace OpenSim.Region.Framework.Scenes
             OnScriptLoadingCompleteDelegate handlerScriptLoadingComplete = OnScriptLoadingComplete;
             if (handlerScriptLoadingComplete != null)
             {
-                foreach (OnParcelPrimCountUpdateDelegate d in handlerScriptLoadingComplete.GetInvocationList())
+                foreach (OnScriptLoadingCompleteDelegate d in handlerScriptLoadingComplete.GetInvocationList())
                 {
                     try
                     {

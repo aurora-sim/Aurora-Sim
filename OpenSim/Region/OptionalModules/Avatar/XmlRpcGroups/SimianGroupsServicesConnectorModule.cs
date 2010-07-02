@@ -661,7 +661,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             }
         }
 
-        public List<DirGroupsReplyData> FindGroups(UUID requestingAgentID, string search)
+        public List<DirGroupsReplyData> FindGroups(UUID requestingAgentID, string search, int queryStart)
         {
             if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
 

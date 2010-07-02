@@ -609,11 +609,11 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             {
                 if (parameter1 == "bake")
                 {
-                    InterfaceBakeTerrain(null);
+                    UpdateRevertMap();
                 }
                 if (parameter1 == "revert")
                 {
-                    UpdateRevertMap();
+                    InterfaceRevertTerrain(null);
                 }
                 if (parameter1 == "swap")
                 {

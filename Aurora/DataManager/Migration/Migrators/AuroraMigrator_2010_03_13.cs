@@ -394,6 +394,14 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("AgentID", ColumnTypes.String50, true),
                 ColDef("TMStamp", ColumnTypes.String50)));
 
+            AddSchema("osgroupmembership", ColDefs(
+                ColDef("GroupID", ColumnTypes.String50, true),
+                ColDef("RoleID", ColumnTypes.String50, true),
+                ColDef("SelectedRoleID", ColumnTypes.String50),
+                ColDef("Contribution", ColumnTypes.String45),
+                ColDef("ListInProfile", ColumnTypes.String45),
+                ColDef("AcceptNotices", ColumnTypes.String45)));
+
             AddSchema("osgroupnotice", ColDefs(ColDef("GroupID", ColumnTypes.String50, true),
                 ColDef("NoticeID", ColumnTypes.String50, true),
                 ColDef("Timestamp", ColumnTypes.String50, true),

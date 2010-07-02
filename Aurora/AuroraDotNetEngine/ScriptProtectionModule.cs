@@ -246,20 +246,23 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         
         public void AddNewScript(ScriptData Data)
         {
-        	ScriptData ID = (ScriptData)Data;
-            if (ScriptsItems.ContainsKey(ID.ItemID))
-                ScriptsItems.Remove(ID.ItemID);
-        	ScriptsItems.Add(ID.ItemID, ID.part.UUID);
-        	Dictionary<UUID, ScriptData> Instances = new Dictionary<UUID, ScriptData>();
-            if (Scripts.ContainsKey(ID.part.UUID))
-        	{
-                Scripts.TryGetValue(ID.part.UUID, out Instances);
-                Scripts.Remove(ID.part.UUID);
-        	}
-            if (Instances.ContainsKey(ID.ItemID))
-                Instances.Remove(ID.ItemID);
-        	Instances.Add(ID.ItemID,ID);
-            Scripts.Add(ID.part.UUID, Instances);
+            lock (Scripts)
+            {
+                ScriptData ID = (ScriptData)Data;
+                if (ScriptsItems.ContainsKey(ID.ItemID))
+                    ScriptsItems.Remove(ID.ItemID);
+                ScriptsItems.Add(ID.ItemID, ID.part.UUID);
+                Dictionary<UUID, ScriptData> Instances = new Dictionary<UUID, ScriptData>();
+                if (Scripts.ContainsKey(ID.part.UUID))
+                {
+                    Scripts.TryGetValue(ID.part.UUID, out Instances);
+                    Scripts.Remove(ID.part.UUID);
+                }
+                if (Instances.ContainsKey(ID.ItemID))
+                    Instances.Remove(ID.ItemID);
+                Instances.Add(ID.ItemID, ID);
+                Scripts.Add(ID.part.UUID, Instances);
+            }
         }
         
         public ScriptData[] GetAllScripts()

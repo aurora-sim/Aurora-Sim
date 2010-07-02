@@ -37,7 +37,7 @@ namespace OpenSim.Framework
         UUID CreateGroup(UUID RequestingAgentID, string name, string charter, bool showInList, UUID insigniaID, int membershipFee, bool openEnrollment, bool allowPublish, bool maturePublish, UUID founderID);
         void UpdateGroup(UUID RequestingAgentID, UUID groupID, string charter, bool showInList, UUID insigniaID, int membershipFee, bool openEnrollment, bool allowPublish, bool maturePublish);
         GroupRecord GetGroupRecord(UUID RequestingAgentID, UUID GroupID, string GroupName);
-        List<DirGroupsReplyData> FindGroups(UUID RequestingAgentID, string search);
+        List<DirGroupsReplyData> FindGroups(UUID RequestingAgentID, string search, int queryStart);
         List<GroupMembersData> GetGroupMembers(UUID RequestingAgentID, UUID GroupID);
 
         void AddGroupRole(UUID RequestingAgentID, UUID groupID, UUID roleID, string name, string description, string title, ulong powers);
