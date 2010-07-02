@@ -81,16 +81,9 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         #region INonSharedRegionModule Members
         public virtual void Initialise (IConfigSource config)
         {
-            if (config.Configs["MapModule"] != null)
-            {
-                if (config.Configs["MapModule"].GetString(
-                        "WorldMapModule", "WorldMapModule") !=
-                        "WorldMapModule")
-                {
-                    m_Enabled = false;
-                    return;
-                }
-            }
+            IConfig startupConfig = config.Configs["Startup"];
+            if (startupConfig.GetString("WorldMapModule", "WorldMap") == "WorldMap")
+                m_Enabled = true;
         }
 
         public virtual void AddRegion (Scene scene)
@@ -154,7 +147,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
             string regionimage = "regionImage" + m_scene.RegionInfo.RegionID.ToString();
             regionimage = regionimage.Replace("-", "");
-            //m_log.Info("[WORLD MAP]: JPEG Map location: http://" + m_scene.RegionInfo.ExternalEndPoint.Address.ToString() + ":" + m_scene.RegionInfo.HttpPort.ToString() + "/index.php?method=" + regionimage);
+            m_log.Info("[WORLD MAP]: JPEG Map location: http://" + m_scene.RegionInfo.ExternalEndPoint.Address.ToString() + ":" + m_scene.RegionInfo.HttpPort.ToString() + "/index.php?method=" + regionimage);
 
             MainServer.Instance.AddHTTPHandler(regionimage, OnHTTPGetMapImage);
             MainServer.Instance.AddLLSDHandler(
@@ -812,7 +805,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                     imgstream = new MemoryStream();
 
                     // non-async because we know we have the asset immediately.
-                    AssetBase mapasset = m_scene.AssetService.Get(m_scene.RegionInfo.lastMapUUID.ToString());
+                    AssetBase mapasset = m_scene.AssetService.Get(m_scene.RegionInfo.RegionSettings.TerrainImageID.ToString());
 
                     // Decode image to System.Drawing.Image
                     if (OpenJPEG.DecodeToImage(mapasset.Data, out managedImage, out image))
@@ -1007,8 +1000,32 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             return responsemap;
         }
 
-        public void RegenerateMaptile(string ID, byte[] data)
+        public void RegenerateMaptile(byte[] data)
         {
+            UUID lastMapRegionUUID = m_scene.RegionInfo.RegionSettings.TerrainImageID;
+
+            m_log.Debug("[MAPTILE]: STORING MAPTILE IMAGE");
+
+            m_scene.RegionInfo.RegionSettings.TerrainImageID = UUID.Random();
+
+            AssetBase asset = new AssetBase(
+                m_scene.RegionInfo.RegionSettings.TerrainImageID,
+                "terrainImage_" + m_scene.RegionInfo.RegionID.ToString(),
+                (sbyte)AssetType.Texture,
+                m_scene.RegionInfo.RegionID.ToString());
+            asset.Data = data;
+            asset.Description = m_scene.RegionInfo.RegionName;
+            asset.Temporary = false;
+            asset.Flags = AssetFlags.Maptile;
+
+            // Store the new one
+            m_log.DebugFormat("[WORLDMAP]: Storing map tile {0}", asset.ID);
+            m_scene.AssetService.Store(asset);
+            m_scene.RegionInfo.RegionSettings.Save();
+            
+            // Delete the old one
+            m_log.DebugFormat("[WORLDMAP]: Deleting old map tile {0}", lastMapRegionUUID);
+            m_scene.AssetService.Delete(lastMapRegionUUID.ToString());
         }
 
         private void MakeRootAgent(ScenePresence avatar)
