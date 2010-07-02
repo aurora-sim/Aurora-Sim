@@ -274,8 +274,10 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
         public const int CHANGED_ALLOWED_DROP = 64;
         public const int CHANGED_OWNER = 128;
         public const int CHANGED_REGION_RESTART = 256;
+        public const int CHANGED_REGION_START = 256;
         public const int CHANGED_REGION = 512;
         public const int CHANGED_TELEPORT = 1024;
+        public const int CHANGED_MEDIA = 2048;
         public const int CHANGED_ANIMATION = 16384;
         public const int TYPE_INVALID = 0;
         public const int TYPE_INTEGER = 1;

@@ -950,6 +950,7 @@ namespace OpenSim.Region.Framework.Scenes
                     presence.Animator.SendAnimPackToClient(ControllingClient);
             });
 
+            SendScriptEventToAttachments("changed", new Object[] { Changed.TELEPORT });
             m_scene.EventManager.TriggerOnMakeRootAgent(this);
         }
 
@@ -977,7 +978,8 @@ namespace OpenSim.Region.Framework.Scenes
             RemoveFromPhysicalScene();
 
             // FIXME: Set m_rootRegionHandle to the region handle of the scene this agent is moving into
-            
+
+            SendScriptEventToAttachments("changed", new Object[] { Changed.TELEPORT });
             m_scene.EventManager.TriggerOnMakeChildAgent(this);
         }
 
@@ -1017,6 +1019,7 @@ namespace OpenSim.Region.Framework.Scenes
                     SetHeight(m_appearance.AvatarHeight);
             }
 
+            SendScriptEventToAttachments("changed", new Object[] { Changed.TELEPORT });
             SendTerseUpdateToAllClients();
         }
 
@@ -1035,6 +1038,7 @@ namespace OpenSim.Region.Framework.Scenes
                     SetHeight(m_appearance.AvatarHeight);
             }
 
+            SendScriptEventToAttachments("changed", new Object[] { Changed.TELEPORT });
             SendTerseUpdateToAllClients();
         }
 

@@ -44,7 +44,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
         ISponsor Sponsor { get; }
         void UpdateLease(TimeSpan time);
         int GetStateEventFlags(string state);
-        Guid ExecuteEvent(string state, string FunctionName, object[] args, Guid Start);
+        Guid ExecuteEvent(string state, string FunctionName, object[] args, Guid Start, out Exception ex);
         Dictionary<string, Object> GetVars();
         void SetVars(Dictionary<string, Object> vars);
         void ResetVars();

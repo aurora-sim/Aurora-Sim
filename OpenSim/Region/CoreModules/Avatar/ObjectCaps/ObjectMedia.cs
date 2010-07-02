@@ -184,6 +184,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
             Version = "x-mv:000000000" + version + "/00000000-0000-0000-0000-000000000000";
             part.CurrentMediaVersion = Version;
 
+            part.TriggerScriptChangedEvent(Changed.MEDIA);
             part.SendFullUpdateToAllClients();
 
             //Send back data
@@ -387,6 +388,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                         part.CurrentMediaVersion = Version;
                     }
 
+                    part.TriggerScriptChangedEvent(Changed.MEDIA);
                     part.SendFullUpdateToAllClients();
                 }
                 #endregion

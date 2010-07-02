@@ -91,10 +91,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             try
             {
                 Guid Running = Guid.Empty;
+                Exception ex;
                 QIS.ID.SetEventParams(QIS.llDetectParams);
                 Running = new Guid(QIS.ID.Script.ExecuteEvent(QIS.ID.State,
-                        QIS.functionName,
-                        QIS.param, QIS.CurrentlyAt).ToString());
+                            QIS.functionName,
+                            QIS.param, QIS.CurrentlyAt, out ex).ToString());
+                if (ex != null)
+                    throw ex;
                 //Finished with nothing left.
                 if (Running == Guid.Empty)
                 {

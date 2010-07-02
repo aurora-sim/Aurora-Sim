@@ -2183,7 +2183,10 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "osSetSpeed", m_host, "OSSL");
             m_host.AddScriptLPS(1);
             ScenePresence avatar = World.GetScenePresence(new UUID(UUID));
-            avatar.SpeedModifier = SpeedModifier;
+            if (avatar != null)
+            {
+                avatar.SpeedModifier = SpeedModifier;
+            }
         }
         
         public void osKickAvatar(string FirstName,string SurName,string alert)

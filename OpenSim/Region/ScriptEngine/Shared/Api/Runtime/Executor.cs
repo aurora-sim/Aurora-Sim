@@ -138,22 +138,20 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
             return (eventFlags);
         }
 
-        public object ExecuteRemoteEvent(object[] parameters)
+        public Guid ExecuteEvent(string state, string FunctionName, object[] args, Guid Start, out Exception ex)
         {
-            return null;
-        }
-
-        public Guid ExecuteEvent(string state, string FunctionName, object[] args, Guid Start)
-        {
+            ex = null;
             try
             {
                 // IMPORTANT: Types and MemberInfo-derived objects require a LOT of memory.
                 // Instead use RuntimeTypeHandle, RuntimeFieldHandle and RunTimeHandle (IntPtr) instead!
                 string EventName = state + "_event_" + FunctionName;
 
-                //#if DEBUG
+                #if DEBUG
                 m_log.Debug("ScriptEngine: Script event function name: " + EventName);
-                //#endif
+                #endif
+
+                #region Find Event
 
                 if (!Events.ContainsKey(EventName))
                 {
@@ -201,9 +199,10 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
                         return new Guid();
                     }
                 }
+                #endregion
+
                 try
                 {
-
                     IEnumerator thread = null;
                     if (Start != Guid.Empty)
                     {
@@ -245,7 +244,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
                             //
                             if (!(tie.InnerException is EventAbortException))
                             {
-                                throw;
+                                ex = tie;
+                                return Guid.Empty;
                             }
                         }
                     }
@@ -262,113 +262,75 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
                     }
                     return Start;
                 }
-                catch (TargetInvocationException ex)
+                catch (TargetInvocationException)
                 {
-                    IEnumerator thread = null;
-                    if (Start != Guid.Empty)
-                    {
-                        m_enumerators.TryGetValue(Start, out thread);
-                    }
-                    else
-                    {
-                        thread = (IEnumerator)ev.Invoke(m_Script, args);
-                    }
-                    int i = 0;
-                    bool running = false;
-                    while (i < i + 10)
-                    {
-                        i++;
-                        try
-                        {
-                            running = thread.MoveNext();
-                            if (!running)
-                            {
-                                lock (m_enumerators)
-                                {
-                                    if (m_enumerators.ContainsKey(Start))
-                                        m_enumerators.Remove(Start);
-                                }
-                                return Guid.Empty;
-                            }
-
-                        }
-                        catch (TargetInvocationException tie)
-                        {
-                            // Grab the inner exception and rethrow it, unless the inner
-                            // exception is an EventAbortException as this indicates event
-                            // invocation termination due to a state change.
-                            // DO NOT THROW JUST THE INNER EXCEPTION!
-                            // FriendlyErrors depends on getting the whole exception!
-                            //
-                            if (!(tie.InnerException is EventAbortException))
-                            {
-                                throw;
-                            }
-                        }
-                    }
-                    if (Start == Guid.Empty)
-                    {
-                        Start = System.Guid.NewGuid();
-                        m_enumerators.Add(Start, thread);
-                    }
-                    return Start;
+                    if (ex == null)
+                        return FireAsEnumerator(Start, ev, args);
                 }
-                catch (System.Security.SecurityException ex)
+                catch (System.Security.SecurityException)
                 {
-                    IEnumerator thread = null;
-                    if (Start != Guid.Empty)
-                    {
-                        m_enumerators.TryGetValue(Start, out thread);
-                    }
-                    else
-                    {
-                        thread = (IEnumerator)ev.Invoke(m_Script, args);
-                    }
-                    int i = 0;
-                    bool running = false;
-                    while (i < i + 10)
-                    {
-                        i++;
-                        try
-                        {
-                            running = thread.MoveNext();
-                            if (!running)
-                            {
-                                lock (m_enumerators)
-                                {
-                                    if (m_enumerators.ContainsKey(Start))
-                                        m_enumerators.Remove(Start);
-                                }
-                                return Guid.Empty;
-                            }
-
-                        }
-                        catch (TargetInvocationException tie)
-                        {
-                            // Grab the inner exception and rethrow it, unless the inner
-                            // exception is an EventAbortException as this indicates event
-                            // invocation termination due to a state change.
-                            // DO NOT THROW JUST THE INNER EXCEPTION!
-                            // FriendlyErrors depends on getting the whole exception!
-                            //
-                            if (!(tie.InnerException is EventAbortException))
-                            {
-                                throw;
-                            }
-                        }
-                    }
-                    if (Start == Guid.Empty)
-                    {
-                        Start = System.Guid.NewGuid();
-                        m_enumerators.Add(Start, thread);
-                    }
-                    return Start;
+                    if (ex == null)
+                        return FireAsEnumerator(Start, ev, args);
                 }
             }
-            catch
+            catch(Exception exception)
             {
-                return Guid.Empty;
+                if (ex == null)
+                    ex = exception;
             }
+            return Guid.Empty;
+        }
+
+        public Guid FireAsEnumerator(Guid Start, MethodInfo ev, object[] args)
+        {
+            IEnumerator thread = null;
+            if (Start != Guid.Empty)
+            {
+                m_enumerators.TryGetValue(Start, out thread);
+            }
+            else
+            {
+                thread = (IEnumerator)ev.Invoke(m_Script, args);
+            }
+            int i = 0;
+            bool running = false;
+            while (i < i + 10)
+            {
+                i++;
+                try
+                {
+                    running = thread.MoveNext();
+                    if (!running)
+                    {
+                        lock (m_enumerators)
+                        {
+                            if (m_enumerators.ContainsKey(Start))
+                                m_enumerators.Remove(Start);
+                        }
+                        return Guid.Empty;
+                    }
+
+                }
+                catch (TargetInvocationException tie)
+                {
+                    // Grab the inner exception and rethrow it, unless the inner
+                    // exception is an EventAbortException as this indicates event
+                    // invocation termination due to a state change.
+                    // DO NOT THROW JUST THE INNER EXCEPTION!
+                    // FriendlyErrors depends on getting the whole exception!
+                    //
+                    if (!(tie.InnerException is EventAbortException))
+                    {
+                        throw;
+                    }
+                }
+            }
+            if (Start == Guid.Empty)
+            {
+                Start = System.Guid.NewGuid();
+                m_enumerators.Add(Start, thread);
+            }
+            return Start;
         }
 
         #region From http://www.codeproject.com/KB/cs/FastMethodInvoker.aspx Thanks to Luyan for this code

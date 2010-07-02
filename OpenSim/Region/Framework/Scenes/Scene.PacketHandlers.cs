@@ -276,6 +276,8 @@ namespace OpenSim.Region.Framework.Scenes
                     SceneObjectGroup obj = ent as SceneObjectGroup;
                     if (obj != null)
                     {
+                        if (obj.RootPart.BlockGrab)
+                            return;
                         // Is this prim part of the group
                         if (obj.HasChildPrim(localID))
                         {
@@ -320,6 +322,8 @@ namespace OpenSim.Region.Framework.Scenes
                     SceneObjectGroup obj = ent as SceneObjectGroup;
                     if (obj != null)
                     {
+                        if (obj.RootPart.BlockGrab)
+                            return;
                         // Is this prim part of the group
                         if (obj.HasChildPrim(objectID))
                         {
@@ -359,6 +363,8 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     SceneObjectGroup obj = ent as SceneObjectGroup;
 
+                    if (obj.RootPart.BlockGrab)
+                        return;
                     // Is this prim part of the group
                     if (obj.HasChildPrim(localID))
                     {

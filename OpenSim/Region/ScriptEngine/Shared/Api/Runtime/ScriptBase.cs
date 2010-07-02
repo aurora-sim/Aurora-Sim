@@ -63,18 +63,20 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
 
                 if (lease.CurrentState == LeaseState.Initial)
                 {
+                    // Infinite : lease.InitialLeaseTime = TimeSpan.FromMinutes(0);
                     lease.InitialLeaseTime = TimeSpan.FromMinutes(0);
-                    //                lease.RenewOnCallTime = TimeSpan.FromSeconds(10.0);
-                    //                lease.SponsorshipTimeout = TimeSpan.FromMinutes(1.0);
+                    //lease.InitialLeaseTime = TimeSpan.FromMinutes(0);
+                    //lease.RenewOnCallTime = TimeSpan.FromMinutes(10.0);
+                    //lease.SponsorshipTimeout = TimeSpan.FromMinutes(1.0);
                 }
                 return lease;
-
             }
             catch (Exception ex)
             {
                 return null;
             }
         }
+
         public void UpdateLease(TimeSpan time)
         {
             ILease lease = (ILease)RemotingServices.GetLifetimeService(this as MarshalByRefObject);
@@ -116,9 +118,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
             return (int)m_Executor.GetStateEventFlags(state);
         }
 
-        public Guid ExecuteEvent(string state, string FunctionName, object[] args, Guid Start)
+        public Guid ExecuteEvent(string state, string FunctionName, object[] args, Guid Start, out Exception ex)
         {
-            return m_Executor.ExecuteEvent(state, FunctionName, args, Start);
+            return m_Executor.ExecuteEvent(state, FunctionName, args, Start, out ex);
         }
 
         public string[] GetApis()
@@ -138,10 +140,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
             if (!inits.ContainsKey(api))
                 return;
 
-            //ILease lease = (ILease)RemotingServices.GetLifetimeService(data as MarshalByRefObject);
-            //RemotingServices.GetLifetimeService(data as MarshalByRefObject);
-            //if (lease != null)
-            //    lease.Register(m_sponser);
+            ILease lease = (ILease)RemotingServices.GetLifetimeService(data as MarshalByRefObject);
+            if (lease != null)
+                lease.Register(m_sponser);
 
             MethodInfo mi = inits[api];
 
