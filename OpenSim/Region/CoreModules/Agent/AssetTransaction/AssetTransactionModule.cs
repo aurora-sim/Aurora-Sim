@@ -34,12 +34,10 @@ using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
-using Mono.Addins;
 
 namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
 {
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
-    public class AssetTransactionModule : ISharedRegionModule, IAgentAssetTransactions
+    public class AssetTransactionModule : IRegionModule, IAgentAssetTransactions
     {
 //        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         
@@ -67,11 +65,7 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
 
         #region IRegionModule Members
 
-        public void Initialise(IConfigSource config)
-        {
-        }
-
-        public void AddRegion(Scene scene)
+        public void Initialise(Scene scene, IConfigSource config)
         {
             if (!RegisteredScenes.ContainsKey(scene.RegionInfo.RegionID))
             {
@@ -87,21 +81,6 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
             //
             if (m_scene == null)
                 m_scene = scene;
-        }
-
-        public void RemoveRegion(Scene scene)
-        {
-
-        }
-
-        public void RegionLoaded(Scene scene)
-        {
-
-        }
-
-        public Type ReplaceableInterface
-        {
-            get { return null; }
         }
 
         public void PostInitialise()
@@ -264,7 +243,7 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
 
                 if (mm != null)
                 {
-                    if (!mm.UploadCovered(remoteClient))
+                    if (!mm.UploadCovered(remoteClient, mm.UploadCharge))
                     {
                         remoteClient.SendAgentAlertMessage("Unable to upload asset. Insufficient funds.", false);
                         return;
