@@ -197,11 +197,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                 m_assMapper.Post(item.AssetID, receiver, userAssetServer);
         }
 
- 
-
-        #endregion
-
-        public bool IsForeignUser(UUID userID, out string assetServerURL)
+        public override bool IsForeignUser(UUID userID, out string assetServerURL)
         {
             assetServerURL = string.Empty;
             UserAccount account = null;
@@ -224,6 +220,8 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
 
             return false;
         }
+
+        #endregion
 
         protected override InventoryItemBase GetItem(UUID agentID, UUID itemID)
         {
