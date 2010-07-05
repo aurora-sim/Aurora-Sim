@@ -187,28 +187,37 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         
         public void AddPreviouslyCompiled(string source, ScriptData ID)
         {
-        	if(!PreviouslyCompiled.ContainsKey(source))
-        	{
-        		PreviouslyCompiled.Add(source, (ScriptData)ID);
-        	}
+            lock (PreviouslyCompiled)
+            {
+                if (!PreviouslyCompiled.ContainsKey(source))
+                {
+                    PreviouslyCompiled.Add(source, ID);
+                }
+            }
         }
 
         public void RemovePreviouslyCompiled(string source)
         {
-            if (PreviouslyCompiled.ContainsKey(source))
+            lock (PreviouslyCompiled)
             {
-                PreviouslyCompiled.Remove(source);
+                if (PreviouslyCompiled.ContainsKey(source))
+                {
+                    PreviouslyCompiled.Remove(source);
+                }
             }
         }
         
         public ScriptData TryGetPreviouslyCompiledScript(string source)
         {
-        	ScriptData ID = null;
-        	PreviouslyCompiled.TryGetValue(source, out ID);
-            //Just as a check...
-            if (ID == null)
-                return null;
-        	return (ScriptData)ID;
+            lock (PreviouslyCompiled)
+            {
+                ScriptData ID = null;
+                PreviouslyCompiled.TryGetValue(source, out ID);
+                //Just as a check...
+                if (ID == null)
+                    return null;
+                return ID;
+            }
         }
         
         public Dictionary<UUID, UUID> ScriptsItems = new Dictionary<UUID, UUID>();
@@ -239,7 +248,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         	List<ScriptData> RetVal = new List<ScriptData>();
         	foreach(ScriptData ID in Instances.Values)
         	{
-        		RetVal.Add((ScriptData)ID);
+        		RetVal.Add(ID);
         	}
         	return RetVal.ToArray();
         }
@@ -248,7 +257,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             lock (Scripts)
             {
-                ScriptData ID = (ScriptData)Data;
+                ScriptData ID = Data;
                 if (ScriptsItems.ContainsKey(ID.ItemID))
                     ScriptsItems.Remove(ID.ItemID);
                 ScriptsItems.Add(ID.ItemID, ID.part.UUID);
@@ -280,7 +289,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         
         public void RemoveScript(ScriptData Data)
         {
-        	ScriptData ID = (ScriptData)Data;
+        	ScriptData ID = Data;
         	ScriptsItems.Remove(ID.ItemID);
         	Dictionary<UUID, ScriptData> Instances = new Dictionary<UUID, ScriptData>();
             if (Scripts.ContainsKey(ID.part.UUID))

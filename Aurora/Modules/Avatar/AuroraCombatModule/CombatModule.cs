@@ -186,12 +186,14 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
 
             void SP_OnRemovePhysics()
             {
-                m_SP.PhysicsActor.OnCollisionUpdate -= PhysicsActor_OnCollisionUpdate;
+                if(m_SP.PhysicsActor != null)
+                    m_SP.PhysicsActor.OnCollisionUpdate -= PhysicsActor_OnCollisionUpdate;
             }
 
             void SP_OnAddPhysics()
             {
-                m_SP.PhysicsActor.OnCollisionUpdate += PhysicsActor_OnCollisionUpdate;
+                if (m_SP.PhysicsActor != null)
+                    m_SP.PhysicsActor.OnCollisionUpdate += PhysicsActor_OnCollisionUpdate;
             }
 
             void PhysicsActor_OnCollisionUpdate(EventArgs e)

@@ -858,7 +858,8 @@ namespace Aurora.Modules
                 invString += (mute.MuteType + " " + mute.MuteID + " " + mute.MuteName + " |\n");
                 i++;
             }
-            invString = invString.Remove(invString.Length - 3, 3);
+            if(invString != "")
+                invString = invString.Remove(invString.Length - 3, 3);
             fileData = OpenMetaverse.Utils.StringToBytes(invString);
             IXfer xfer = client.Scene.RequestModuleInterface<IXfer>();
             if (xfer != null)

@@ -1569,7 +1569,7 @@ Console.WriteLine(" JointCreateFixed");
                 if (m_vehicle.Type != Vehicle.TYPE_NONE)
                 {
                     // 'VEHICLES' are dealt with in ODEDynamics.cs
-                    m_vehicle.Step(timestep, _parent_scene);
+                    m_vehicle.Step(Body, timestep, _parent_scene);
                 }
                 else
                 {

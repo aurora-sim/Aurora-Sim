@@ -520,6 +520,8 @@ namespace Aurora.DataManager.MSSQL
                     return "image";
                 case ColumnTypes.Date:
                     return "DATE";
+                case ColumnTypes.Text:
+                    return "TEXT";
                 default:
                     throw new DataManagerException("Unknown column type.");
             }
@@ -596,8 +598,6 @@ namespace Aurora.DataManager.MSSQL
                     return ColumnTypes.Integer;
                 case "integer":
                     return ColumnTypes.Integer;
-                case "text":
-                    return ColumnTypes.String;
                 case "varchar(1)":
                     return ColumnTypes.String1;
                 case "varchar(2)":
@@ -616,6 +616,8 @@ namespace Aurora.DataManager.MSSQL
                     return ColumnTypes.Date;
                 case "varchar(8196)":
                     return ColumnTypes.String8196;
+                case "text":
+                    return ColumnTypes.Text;
                 case "image":
                     return ColumnTypes.Blob;
                 default:

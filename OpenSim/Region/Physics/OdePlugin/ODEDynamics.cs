@@ -605,16 +605,15 @@ namespace OpenSim.Region.Physics.OdePlugin
         internal void Enable(IntPtr pBody, OdePrim parent, OdeScene pParentScene)
         {
             parent.ThrottleUpdates = false;
+            m_body = pBody;
             if (pBody == IntPtr.Zero || m_type == Vehicle.TYPE_NONE)
                 return;
 
             d.Mass mass;
             d.BodyGetMass(pBody, out mass);
-
+            
             Mass = mass.mass;
             Mass *= 2;
-
-            m_body = pBody;
         }
 
         internal void Disable(OdePrim parent)
@@ -626,9 +625,10 @@ namespace OpenSim.Region.Physics.OdePlugin
             m_angularMotorDirection = Vector3.Zero;
         }
 
-        internal void Step(float pTimestep,  OdeScene pParentScene)
+        internal void Step(IntPtr pBody, float pTimestep, OdeScene pParentScene)
         {
-            if (m_body == IntPtr.Zero || m_type == Vehicle.TYPE_NONE)
+            m_body = pBody;
+            if (pBody == IntPtr.Zero || m_type == Vehicle.TYPE_NONE)
                 return;
             if (!d.BodyIsEnabled(Body))
                 d.BodyEnable(Body);
@@ -655,12 +655,12 @@ namespace OpenSim.Region.Physics.OdePlugin
             if (!m_linearMotorDirection.ApproxEquals(Vector3.Zero, 0.01f))  // requested m_linearMotorDirection is significant
             {
                 // add drive to body
-                Vector3 addAmount = m_linearMotorDirection / (m_linearMotorTimescale / pTimestep);
+                Vector3 addAmount = m_linearMotorDirection / (pTimestep / m_linearMotorTimescale);
                 m_lastLinearVelocityVector += addAmount;
 
                 // decay applied velocity
                 Vector3 decayAmount = m_lastLinearVelocityVector / (pTimestep / m_linearMotorDecayTimescale);
-                m_lastLinearVelocityVector += decayAmount;
+                m_lastLinearVelocityVector -= decayAmount;
                 //m_lastLinearVelocityVector = m_lastLinearVelocityVector / (pTimestep / m_linearMotorDecayTimescale);
 
                 // This will work temporarily, but we really need to compare speed on an axis
@@ -679,7 +679,6 @@ namespace OpenSim.Region.Physics.OdePlugin
                     m_lastLinearVelocityVector = Vector3.Zero;
             }
             m_linearMotorDirection = Vector3.Zero;
-
             // convert requested object velocity to world-referenced vector
             m_dir = m_lastLinearVelocityVector;
             d.Quaternion rot = d.BodyGetQuaternion(Body);
@@ -788,7 +787,7 @@ namespace OpenSim.Region.Physics.OdePlugin
             }
 
             // Apply velocity
-            d.BodySetLinearVel(Body, m_dir.X, m_dir.Y, m_dir.Z);
+            //d.BodySetLinearVel(Body, m_dir.X, m_dir.Y, m_dir.Z);
 
             // KF: So far I have found no good method to combine a script-requested
             // .Z velocity and gravity. Therefore only 0g will used script-requested
@@ -814,9 +813,19 @@ namespace OpenSim.Region.Physics.OdePlugin
                 }
                 m_forcelist = new List<Vector3>();
             }
-            d.BodyAddForce(Body, _pParentScene.gravityx + TaintedForce.X,
-                _pParentScene.gravityy + TaintedForce.Y,
-                (_pParentScene.gravityz * Mass * (1f - m_VehicleBuoyancy)) + TaintedForce.Z);
+
+            if (Mass == 0)
+            {
+                d.Mass mass;
+                d.BodyGetMass(m_body, out mass);
+
+                Mass = mass.mass;
+                Mass *= 2;
+            }
+
+            d.BodySetForce(Body, _pParentScene.gravityx + TaintedForce.X + (m_dir.X * 10000),
+                _pParentScene.gravityy + TaintedForce.Y + (m_dir.Y * 10000),
+                (_pParentScene.gravityz * Mass * (1f - m_VehicleBuoyancy)) + TaintedForce.Z + (m_dir.Z * 10000));
             
             d.Vector3 OldPos = d.BodyGetPosition(Body);
             //Check for changes and only set it once
@@ -870,7 +879,7 @@ namespace OpenSim.Region.Physics.OdePlugin
             }
             else
             {
-                m_angularMotorVelocity -= m_angularMotorVelocity / (m_angularMotorDecayTimescale / pTimestep);
+                m_angularMotorVelocity -= m_angularMotorVelocity / (pTimestep / m_angularMotorDecayTimescale);
             }
             d.Quaternion rot = d.BodyGetQuaternion(Body);
 
@@ -1005,8 +1014,8 @@ namespace OpenSim.Region.Physics.OdePlugin
 
             Vector3 decayamount = Vector3.One / (m_angularFrictionTimescale / pTimestep);
             m_lastAngularVelocity -= m_lastAngularVelocity * decayamount;
-
             // Apply to the body
+            //d.BodyAddTorque(Body, m_lastAngularVelocity.X, m_lastAngularVelocity.Y, m_lastAngularVelocity.Z);
             d.BodySetAngularVel (Body, m_lastAngularVelocity.X, m_lastAngularVelocity.Y, m_lastAngularVelocity.Z);
             m_previousRotation = d.BodyGetQuaternion(Body);
         } //end MoveAngular

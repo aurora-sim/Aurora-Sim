@@ -382,7 +382,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         {
             m_plugineffects = new Dictionary<string, ITerrainEffect>();
             // Load the files in the Terrain/ dir
-            string[] files = Directory.GetFiles("Terrain");
+            string[] files = Directory.GetFiles("Terrain", "*.dll");
             foreach (string file in files)
             {
                 //m_log.Info("Loading effects in " + file);

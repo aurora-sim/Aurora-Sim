@@ -39,15 +39,13 @@ using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
 {
-    public class InventoryTransferModule : IInventoryTransferModule, ISharedRegionModule
+    public class InventoryTransferModule : ISharedRegionModule
     {
         private static readonly ILog m_log
             = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
         private List<Scene> m_Scenelist = new List<Scene>();
-        private Dictionary<UUID, Scene> m_AgentRegions =
-                new Dictionary<UUID, Scene>();
 
         private IMessageTransferModule m_TransferModule = null;
         private bool m_Enabled = true;
@@ -77,7 +75,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
 
             m_Scenelist.Add(scene);
 
-            scene.RegisterModuleInterface<IInventoryTransferModule>(this);
+            scene.RegisterModuleInterface<InventoryTransferModule>(this);
 
             scene.EventManager.OnNewClient += OnNewClient;
             scene.EventManager.OnClientClosed += ClientLoggedOut;
@@ -346,73 +344,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
             }
         }
 
-        public void SetRootAgentScene(UUID agentID, Scene scene)
-        {
-            m_AgentRegions[agentID] = scene;
-        }
-
-        public bool NeedSceneCacheClear(UUID agentID, Scene scene)
-        {
-            if (!m_AgentRegions.ContainsKey(agentID))
-            {
-                // Since we can get here two ways, we need to scan
-                // the scenes here. This is somewhat more expensive
-                // but helps avoid a nasty bug
-                //
-
-                foreach (Scene s in m_Scenelist)
-                {
-                    ScenePresence presence;
-
-                    if (s.TryGetScenePresence(agentID, out presence))
-                    {
-                        // If the agent is in this scene, then we
-                        // are being called twice in a single
-                        // teleport. This is wasteful of cycles
-                        // but harmless due to this 2nd level check
-                        //
-                        // If the agent is found in another scene
-                        // then the list wasn't current
-                        //
-                        // If the agent is totally unknown, then what
-                        // are we even doing here??
-                        //
-                        if (s == scene)
-                        {
-                            //m_log.Debug("[INVTRANSFERMOD]: s == scene. Returning true in " + scene.RegionInfo.RegionName);
-                            return true;
-                        }
-                        else
-                        {
-                            //m_log.Debug("[INVTRANSFERMOD]: s != scene. Returning false in " + scene.RegionInfo.RegionName);
-                            return false;
-                        }
-                    }
-                }
-                //m_log.Debug("[INVTRANSFERMOD]: agent not in scene. Returning true in " + scene.RegionInfo.RegionName);
-                return true;
-            }
-
-            // The agent is left in current Scene, so we must be
-            // going to another instance
-            //
-            if (m_AgentRegions[agentID] == scene)
-            {
-                //m_log.Debug("[INVTRANSFERMOD]: m_AgentRegions[agentID] == scene. Returning true in " + scene.RegionInfo.RegionName);
-                m_AgentRegions.Remove(agentID);
-                return true;
-            }
-
-            // Another region has claimed the agent
-            //
-            //m_log.Debug("[INVTRANSFERMOD]: last resort. Returning false in " + scene.RegionInfo.RegionName);
-            return false;
-        }
-
         public void ClientLoggedOut(UUID agentID, Scene scene)
         {
-            if (m_AgentRegions.ContainsKey(agentID))
-                m_AgentRegions.Remove(agentID);
         }
 
         /// <summary>

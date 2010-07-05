@@ -261,6 +261,9 @@ namespace OpenSim.Framework
     public delegate void UpdateInventoryItem(
         IClientAPI remoteClient, UUID transactionID, UUID itemID, InventoryItemBase itemUpd);
 
+    public delegate void ChangeInventoryItemFlags(
+        IClientAPI remoteClient, UUID itemID, uint flags);
+
     public delegate void CopyInventoryItem(
         IClientAPI remoteClient, uint callbackID, UUID oldAgentID, UUID oldItemID, UUID newFolderID,
         string newName);
@@ -502,6 +505,7 @@ namespace OpenSim.Framework
     public delegate void SimWideDeletesDelegate(IClientAPI client,UUID agentID, int flags, UUID targetID);
     
     public delegate void SendPostcard(IClientAPI client);
+    public delegate void TeleportCancel(IClientAPI client);
 
     #endregion
 
@@ -1041,6 +1045,9 @@ namespace OpenSim.Framework
         event MuteListEntryRemove OnRemoveMuteListEntry;
         event GodlikeMessage onGodlikeMessage;
         event GodUpdateRegionInfoUpdate OnGodUpdateRegionInfoUpdate;
+
+        event ChangeInventoryItemFlags OnChangeInventoryItemFlags;
+        event TeleportCancel OnTeleportCancel;
         
         /// <summary>
         /// Set the debug level at which packet output should be printed to console.
@@ -1422,5 +1429,7 @@ namespace OpenSim.Framework
         void FireUpdateParcel(LandUpdateArgs args, int LocalID);
 
         void SendTelehubInfo(Vector3 pos, Quaternion rot);
+
+        void StopFlying(ISceneEntity presence);
     }
 }

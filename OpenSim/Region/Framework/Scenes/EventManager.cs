@@ -109,10 +109,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         public delegate void OnPermissionErrorDelegate(UUID user, string reason);
 
-        public delegate void OnSetRootAgentSceneDelegate(UUID agentID, Scene scene);
-
-        public event OnSetRootAgentSceneDelegate OnSetRootAgentScene;
-
         /// <summary>
         /// Fired when an object is touched/grabbed.
         /// </summary>
@@ -1986,27 +1982,6 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         m_log.ErrorFormat(
                             "[EVENT MANAGER]: Delegate for TriggerScriptLandCollidingEnd failed - continuing.  {0} {1}", 
-                            e.Message, e.StackTrace);
-                    }
-                }
-            }
-        }
-
-        public void TriggerSetRootAgentScene(UUID agentID, Scene scene)
-        {
-            OnSetRootAgentSceneDelegate handlerSetRootAgentScene = OnSetRootAgentScene;
-            if (handlerSetRootAgentScene != null)
-            {
-                foreach (OnSetRootAgentSceneDelegate d in handlerSetRootAgentScene.GetInvocationList())
-                {
-                    try
-                    {
-                        d(agentID, scene);
-                    }
-                    catch (Exception e)
-                    {
-                        m_log.ErrorFormat(
-                            "[EVENT MANAGER]: Delegate for TriggerSetRootAgentScene failed - continuing.  {0} {1}", 
                             e.Message, e.StackTrace);
                     }
                 }

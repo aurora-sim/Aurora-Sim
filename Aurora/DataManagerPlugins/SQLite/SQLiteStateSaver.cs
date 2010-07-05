@@ -487,6 +487,8 @@ namespace Aurora.DataManager.SQLite
                     return "VARCHAR(8196)";
                 case ColumnTypes.Blob:
                     return "blob";
+                case ColumnTypes.Text:
+                    return "TEXT";
                 case ColumnTypes.Date:
                     return "DATE";
                 default:
@@ -524,8 +526,6 @@ namespace Aurora.DataManager.SQLite
             {
                 case "integer":
                     return ColumnTypes.Integer;
-                case "text":
-                    return ColumnTypes.String;
                 case "varchar(1)":
                     return ColumnTypes.String1;
                 case "varchar(2)":
@@ -542,6 +542,8 @@ namespace Aurora.DataManager.SQLite
                     return ColumnTypes.String1024;
                 case "date":
                     return ColumnTypes.Date;
+                case "text":
+                    return ColumnTypes.Text;
                 case "varchar(8196)":
                     return ColumnTypes.String8196;
                 case "blob":

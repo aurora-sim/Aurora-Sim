@@ -521,6 +521,8 @@ namespace Aurora.DataManager.MySQL
                     return "VARCHAR(1024)";
                 case ColumnTypes.String8196:
                     return "VARCHAR(8196)";
+                case ColumnTypes.Text:
+                    return "TEXT";
                 case ColumnTypes.Blob:
                     return "blob";
                 case ColumnTypes.Date:
@@ -601,8 +603,6 @@ namespace Aurora.DataManager.MySQL
                     return ColumnTypes.Integer;
                 case "integer":
                     return ColumnTypes.Integer;
-                case "text":
-                    return ColumnTypes.String;
                 case "varchar(1)":
                     return ColumnTypes.String1;
                 case "varchar(2)":
@@ -621,6 +621,8 @@ namespace Aurora.DataManager.MySQL
                     return ColumnTypes.Date;
                 case "varchar(8196)":
                     return ColumnTypes.String8196;
+                case "text":
+                    return ColumnTypes.Text;
                 case "blob":
                     return ColumnTypes.Blob;
                 default:

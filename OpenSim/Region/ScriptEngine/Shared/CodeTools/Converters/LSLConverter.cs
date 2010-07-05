@@ -57,7 +57,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                 "\n" +
                 "{\n";
 
-            compiledScript += "[Serializable]\n public class ScriptClass : OpenSim.Region.ScriptEngine.Shared.ScriptBase.ScriptBaseClass, IDisposable\n";
+            compiledScript += "[Serializable]\n public class ScriptClass : OpenSim.Region.ScriptEngine.Shared.ScriptBase.ScriptBaseClass\n";
             compiledScript += "{\n";
             compiledScript +=
                      compileScript;
@@ -71,11 +71,6 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             compiledScript += "aTimer.Start();\n";
             compiledScript += "}\n";
             compiledScript += "~ScriptClass()\n{\n";
-            compiledScript += "aTimer.Stop();\n";
-            compiledScript += "aTimer.Dispose();\n";
-            compiledScript += "}\n";
-            compiledScript += "public void Dispose()\n";
-            compiledScript += "{\n";
             compiledScript += "aTimer.Stop();\n";
             compiledScript += "aTimer.Dispose();\n";
             compiledScript += "}\n";
@@ -94,7 +89,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             compiledScript += "{\n";
             compiledScript += "running = parts[i % parts.Count].MoveNext();\n";
             compiledScript += "}\n";
-            compiledScript += "catch (Exception ex)\n";
+            compiledScript += "catch\n";
             compiledScript += "{\n";
             compiledScript += "}\n";
             compiledScript += "if (!running)\n { \n";

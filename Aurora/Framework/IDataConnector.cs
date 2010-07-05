@@ -45,7 +45,8 @@ namespace Aurora.Framework
         String2,
         String1,
         String100,
-        Blob
+        Blob,
+        Text
     }
     public class ColumnDefinition
     {

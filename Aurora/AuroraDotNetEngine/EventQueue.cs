@@ -80,7 +80,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public static void ProcessQIS(QueueItemStruct QIS)
         {
             //Suspended scripts get readded
-            if (QIS.ID.Suspended)
+            if (QIS.ID.Suspended || QIS.ID.Script == null || QIS.ID.Loading)
             {
                 ScriptEngine.EventQueue.Enqueue(QIS, ScriptEngine.EventPriority.Suspended);
                 return;

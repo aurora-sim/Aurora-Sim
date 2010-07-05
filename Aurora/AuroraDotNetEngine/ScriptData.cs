@@ -103,8 +103,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public UUID UserInventoryItemID;
         public bool PostOnRez;
         public TaskInventoryItem InventoryItem;
-        public ScenePresence presence;
-        public DetectParams[] LastDetectParams;
+        public ScenePresence presence = null;
+        public DetectParams[] LastDetectParams = null;
         public Object[] PluginData = new Object[0];
         private StateSave LastStateSave = null;
         private IScriptDataConnector ScriptFrontend;
@@ -436,7 +436,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 LastStateSave = null;
 
                 //Try to find a previously compiled script in this instance
-                ScriptData PreviouslyCompiledID = (ScriptData)ScriptEngine.ScriptProtection.TryGetPreviouslyCompiledScript(Source);
+                ScriptData PreviouslyCompiledID = ScriptEngine.ScriptProtection.TryGetPreviouslyCompiledScript(Source);
                 if (reupload)
                 {
                     //Close the previous script
@@ -605,7 +605,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 Script.SetVars(vars);
 
             PluginData = (object[])LastStateSave.Plugins;
-            if (LastStateSave.Permissions != "")
+            if (LastStateSave.Permissions != " " && LastStateSave.Permissions != "")
             {
                 InventoryItem.PermsMask = int.Parse(LastStateSave.Permissions.Split(',')[0], NumberStyles.Integer, Culture.NumberFormatInfo);
                 InventoryItem.PermsGranter = new UUID(LastStateSave.Permissions.Split(',')[1]);
@@ -620,127 +620,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             UserInventoryItemID = LastStateSave.UserInventoryID;
             // Add it to our script memstruct
             m_ScriptEngine.UpdateScriptInstanceData(this);
-
-            if (LastStateSave.Queue != "")
-            {
-                #region Queue
-                XmlDocument doc = new XmlDocument();
-                doc.LoadXml(LastStateSave.Queue);
-                XmlNode mainNode = doc.FirstChild;
-                XmlNodeList itemL = mainNode.ChildNodes;
-                foreach (XmlNode item in itemL)
-                {
-                    List<Object> parms = new List<Object>();
-                    List<DetectParams> detected =
-                            new List<DetectParams>();
-
-                    string eventName =
-                            item.Attributes.GetNamedItem("event").Value;
-                    XmlNodeList eventL = item.ChildNodes;
-                    foreach (XmlNode evt in eventL)
-                    {
-                        switch (evt.Name)
-                        {
-                            case "Params":
-                                XmlNodeList prms = evt.ChildNodes;
-                                foreach (XmlNode pm in prms)
-                                    parms.Add(ReadTypedValue(pm));
-
-                                break;
-                            case "Detected":
-                                XmlNodeList detL = evt.ChildNodes;
-                                foreach (XmlNode det in detL)
-                                {
-                                    string vect =
-                                            det.Attributes.GetNamedItem(
-                                            "pos").Value;
-                                    LSL_Types.Vector3 v =
-                                            new LSL_Types.Vector3(vect);
-
-                                    int d_linkNum = 0;
-                                    UUID d_group = UUID.Zero;
-                                    string d_name = String.Empty;
-                                    UUID d_owner = UUID.Zero;
-                                    LSL_Types.Vector3 d_position =
-                                        new LSL_Types.Vector3();
-                                    LSL_Types.Quaternion d_rotation =
-                                        new LSL_Types.Quaternion();
-                                    int d_type = 0;
-                                    LSL_Types.Vector3 d_velocity =
-                                        new LSL_Types.Vector3();
-
-                                    try
-                                    {
-                                        string tmp;
-
-                                        tmp = det.Attributes.GetNamedItem(
-                                                "linkNum").Value;
-                                        int.TryParse(tmp, out d_linkNum);
-
-                                        tmp = det.Attributes.GetNamedItem(
-                                                "group").Value;
-                                        UUID.TryParse(tmp, out d_group);
-
-                                        d_name = det.Attributes.GetNamedItem(
-                                                "name").Value;
-
-                                        tmp = det.Attributes.GetNamedItem(
-                                                "owner").Value;
-                                        UUID.TryParse(tmp, out d_owner);
-
-                                        tmp = det.Attributes.GetNamedItem(
-                                                "position").Value;
-                                        d_position =
-                                            new LSL_Types.Vector3(tmp);
-
-                                        tmp = det.Attributes.GetNamedItem(
-                                                "rotation").Value;
-                                        d_rotation =
-                                            new LSL_Types.Quaternion(tmp);
-
-                                        tmp = det.Attributes.GetNamedItem(
-                                                "type").Value;
-                                        int.TryParse(tmp, out d_type);
-
-                                        tmp = det.Attributes.GetNamedItem(
-                                                "velocity").Value;
-                                        d_velocity =
-                                            new LSL_Types.Vector3(tmp);
-
-                                    }
-                                    catch (Exception) // Old version XML
-                                    {
-                                    }
-
-                                    UUID uuid = new UUID();
-                                    UUID.TryParse(det.InnerText,
-                                            out uuid);
-
-                                    DetectParams d = new DetectParams();
-                                    d.Key = uuid;
-                                    d.OffsetPos = v;
-                                    d.LinkNum = d_linkNum;
-                                    d.Group = d_group;
-                                    d.Name = d_name;
-                                    d.Owner = d_owner;
-                                    d.Position = d_position;
-                                    d.Rotation = d_rotation;
-                                    d.Type = d_type;
-                                    d.Velocity = d_velocity;
-
-                                    detected.Add(d);
-                                }
-                                break;
-                        }
-                    }
-                    EventParams ep = new EventParams(
-                            eventName, parms.ToArray(),
-                            detected.ToArray());
-
-                    m_ScriptEngine.PostScriptEvent(ItemID, ep);
-                }
-                #endregion
-            }
         }
 
         /// <summary>
@@ -770,108 +649,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             foreach (object plugin in Plugins)
                 plugins += plugin + ",";
             Insert.Plugins = plugins;
-
-            //Queue
-            #region Queue
-            /*
-            XmlDocument xmldoc = new XmlDocument();
-            XmlNode mainNode = xmldoc.CreateElement("", "Item", "");
-            XmlElement queue = xmldoc.CreateElement("", "Queue", "");
-
-            OpenSim.Framework.LocklessQueue<QueueItemStruct> tempQueue = new OpenSim.Framework.LocklessQueue<QueueItemStruct>();
-            tempQueue = ScriptEngine.EventQueue;
-            
-            int count = tempQueue.Count;
-            int i = 0;
-            while (i < count)
-            {
-                QueueItemStruct QIS = null;
-                tempQueue.Dequeue(out QIS);
-                if(QIS == null)
-                    continue;
-                if (QIS.ID.ItemID == ItemID)
-                {
-                    EventParams ep = new EventParams(QIS.functionName, QIS.param, QIS.llDetectParams);
-                    count--;
-
-                    XmlElement item = xmldoc.CreateElement("", "Item", "");
-                    XmlAttribute itemEvent = xmldoc.CreateAttribute("", "event",
-                                                                    "");
-                    itemEvent.Value = ep.EventName;
-                    item.Attributes.Append(itemEvent);
-
-                    XmlElement parms = xmldoc.CreateElement("", "Params", "");
-
-                    foreach (Object o in ep.Params)
-                        WriteTypedValue(xmldoc, parms, "Param", String.Empty, o);
-
-                    item.AppendChild(parms);
-
-                    XmlElement detect = xmldoc.CreateElement("", "Detected", "");
-
-                    foreach (DetectParams det in ep.DetectParams)
-                    {
-                        XmlElement objectElem = xmldoc.CreateElement("", "Object",
-                                                                     "");
-                        XmlAttribute pos = xmldoc.CreateAttribute("", "pos", "");
-                        pos.Value = det.OffsetPos.ToString();
-                        objectElem.Attributes.Append(pos);
-
-                        XmlAttribute d_linkNum = xmldoc.CreateAttribute("",
-                                "linkNum", "");
-                        d_linkNum.Value = det.LinkNum.ToString();
-                        objectElem.Attributes.Append(d_linkNum);
-
-                        XmlAttribute d_group = xmldoc.CreateAttribute("",
-                                "group", "");
-                        d_group.Value = det.Group.ToString();
-                        objectElem.Attributes.Append(d_group);
-
-                        XmlAttribute d_name = xmldoc.CreateAttribute("",
-                                "name", "");
-                        d_name.Value = det.Name.ToString();
-                        objectElem.Attributes.Append(d_name);
-
-                        XmlAttribute d_owner = xmldoc.CreateAttribute("",
-                                "owner", "");
-                        d_owner.Value = det.Owner.ToString();
-                        objectElem.Attributes.Append(d_owner);
-
-                        XmlAttribute d_position = xmldoc.CreateAttribute("",
-                                "position", "");
-                        d_position.Value = det.Position.ToString();
-                        objectElem.Attributes.Append(d_position);
-
-                        XmlAttribute d_rotation = xmldoc.CreateAttribute("",
-                                "rotation", "");
-                        d_rotation.Value = det.Rotation.ToString();
-                        objectElem.Attributes.Append(d_rotation);
-
-                        XmlAttribute d_type = xmldoc.CreateAttribute("",
-                                "type", "");
-                        d_type.Value = det.Type.ToString();
-                        objectElem.Attributes.Append(d_type);
-
-                        XmlAttribute d_velocity = xmldoc.CreateAttribute("",
-                                "velocity", "");
-                        d_velocity.Value = det.Velocity.ToString();
-                        objectElem.Attributes.Append(d_velocity);
-
-                        objectElem.AppendChild(
-                            xmldoc.CreateTextNode(det.Key.ToString()));
-
-                        detect.AppendChild(objectElem);
-                    }
-
-                    item.AppendChild(detect);
-                    queue.AppendChild(item);
-                }
-                i++;
-            }
-            mainNode.AppendChild(queue);*/
-            Insert.Queue = "";//mainNode.InnerXml;
-
-            #endregion
 
             //perms
             string perms = "";

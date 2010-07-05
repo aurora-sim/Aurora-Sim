@@ -1942,7 +1942,6 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
 
             if (isEnumerable && IsParentEnumerable)
             {
-                retstr += "yield return null;\n";
                 retstr += Generate("parts.Add(");
             }
 

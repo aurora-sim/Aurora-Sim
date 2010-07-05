@@ -52,21 +52,24 @@ namespace Aurora.Services.DataService
                 StateSave.State = StateSaveRetVals[0];
                 StateSave.ItemID = new UUID(StateSaveRetVals[1]);
                 StateSave.Source = StateSaveRetVals[2];
-                StateSave.Running = bool.Parse(StateSaveRetVals[4]);
+                StateSave.Running = int.Parse(StateSaveRetVals[3]) == 1;
 
-                string varsmap = StateSaveRetVals[5];
-
-                foreach (string var in varsmap.Split(';'))
+                string varsmap = StateSaveRetVals[4];
+                if (varsmap != " " && varsmap != "")
                 {
-                    if (var == "")
-                        continue;
-                    string value = var.Split(',')[1].Replace("\n", "");
-                    vars.Add(var.Split(',')[0], (object)value);
+                    varsmap = varsmap.Replace('\n', ';');
+                    foreach (string var in varsmap.Split(';'))
+                    {
+                        if (var == "")
+                            continue;
+                        string value = var.Split(',')[1].Replace("\n", "");
+                        vars.Add(var.Split(',')[0], (object)value);
+                    }
                 }
                 StateSave.Variables = vars;
 
                 List<object> plugins = new List<object>();
-                object[] pluginsSaved = StateSaveRetVals[6].Split(',');
+                object[] pluginsSaved = StateSaveRetVals[5].Split(',');
                 if (pluginsSaved.Length != 1)
                 {
                     foreach (object plugin in pluginsSaved)
@@ -77,14 +80,13 @@ namespace Aurora.Services.DataService
                     }
                 }
                 StateSave.Plugins = plugins.ToArray();
-                StateSave.Permissions = StateSaveRetVals[9];
+                StateSave.Permissions = StateSaveRetVals[6];
                 double minEventDelay = 0.0;
-                double.TryParse(StateSaveRetVals[10], NumberStyles.Float, Culture.NumberFormatInfo, out minEventDelay);
+                double.TryParse(StateSaveRetVals[7], NumberStyles.Float, Culture.NumberFormatInfo, out minEventDelay);
                 StateSave.MinEventDelay = (long)minEventDelay;
-                StateSave.AssemblyName = StateSaveRetVals[11];
-                StateSave.Disabled = Convert.ToBoolean(StateSaveRetVals[12]);
-                StateSave.UserInventoryID = UUID.Parse(StateSaveRetVals[13]);
-                StateSave.Queue = StateSaveRetVals[8];
+                StateSave.AssemblyName = StateSaveRetVals[8];
+                StateSave.Disabled = int.Parse(StateSaveRetVals[9]) == 1;
+                StateSave.UserInventoryID = UUID.Parse(StateSaveRetVals[10]);
 
                 return StateSave;
             }
@@ -96,45 +98,42 @@ namespace Aurora.Services.DataService
 
 		public void SaveStateSave(StateSave state)
 		{
-			List<object> Insert = new List<object>();
-			Insert.Add(state.State);
-			Insert.Add(state.ItemID);
-			Insert.Add(state.Source);
-			Insert.Add(state.Running);
-			Insert.Add(state.Variables);
-			Insert.Add(state.Plugins);
-			Insert.Add(state.Queue);
-			Insert.Add(state.Permissions);
-			Insert.Add(state.MinEventDelay);
-			Insert.Add(state.AssemblyName);
-			Insert.Add(state.Disabled);
-			Insert.Add(state.UserInventoryID);
-			try {
-				GD.Insert("auroraDotNetStateSaves", Insert.ToArray());
-			} catch (Exception) {
-				//Needs to be updated then
-				List<string> Keys = new List<string>();
-				Keys.Add("State");
-				Keys.Add("ItemID");
-				Keys.Add("Source");
-				Keys.Add("LineMap");
-				Keys.Add("Running");
-				Keys.Add("Variables");
-				Keys.Add("Plugins");
-				Keys.Add("ClassID");
-				Keys.Add("Queue");
-				Keys.Add("Permissions");
-				Keys.Add("MinEventDelay");
-				Keys.Add("AssemblyName");
-				Keys.Add("Disabled");
-				Keys.Add("UserInventoryItemID");
-				try {
-					GD.Update("auroraDotNetStateSaves", Insert.ToArray(), Keys.ToArray(), new string[] { "ItemID" }, new object[] { state.ItemID });
-				} catch (Exception ex) {
-					//Throw this one... Something is very wrong.
-					throw ex;
-				}
-			}
+            List<string> Keys = new List<string>();
+            Keys.Add("State");
+            Keys.Add("ItemID");
+            Keys.Add("Source");
+            Keys.Add("Running");
+            Keys.Add("Variables");
+            Keys.Add("Plugins");
+            Keys.Add("Permissions");
+            Keys.Add("MinEventDelay");
+            Keys.Add("AssemblyName");
+            Keys.Add("Disabled");
+            Keys.Add("UserInventoryItemID");
+
+            List<object> Insert = new List<object>();
+            Insert.Add(state.State);
+            Insert.Add(state.ItemID);
+            Insert.Add(state.Source);
+            Insert.Add(state.Running ? 1 : 0);
+            Insert.Add(state.Variables);
+            Insert.Add(state.Plugins);
+            Insert.Add(state.Permissions);
+            Insert.Add(state.MinEventDelay);
+            Insert.Add(state.AssemblyName);
+            Insert.Add(state.Disabled ? 1 : 0);
+            Insert.Add(state.UserInventoryID);
+            
+            List<string> QueryResults = GD.Query("ItemID", state.ItemID, "auroradotnetstatesaves", "*");
+            if (QueryResults.Count == 0)
+            {
+                GD.Insert("auroraDotNetStateSaves", Keys.ToArray(), Insert.ToArray());
+            }
+            else
+            {
+                //Needs to be updated then
+                GD.Update("auroraDotNetStateSaves", Insert.ToArray(), Keys.ToArray(), new string[] { "ItemID" }, new object[] { state.ItemID });
+            }
 		}
 
         public void DeleteStateSave(UUID itemID)

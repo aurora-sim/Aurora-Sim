@@ -1211,5 +1211,13 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         }
 
         #endregion
+
+        #region IClientAPI Members
+
+
+        public event ChangeInventoryItemFlags OnChangeInventoryItemFlags;
+        public event TeleportCancel OnTeleportCancel;
+
+        #endregion
     }
 }

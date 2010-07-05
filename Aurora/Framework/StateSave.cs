@@ -14,7 +14,6 @@ namespace Aurora.Framework
         public bool Disabled;
         public object Variables;
         public object Plugins;
-        public string Queue;
         public string Permissions;
         public double MinEventDelay;
         public string AssemblyName;

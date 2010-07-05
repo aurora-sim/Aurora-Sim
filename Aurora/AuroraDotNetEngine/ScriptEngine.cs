@@ -789,7 +789,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public void OnScriptReset(uint localID, UUID itemID)
         {
-            ScriptData ID = (ScriptData)ScriptProtection.GetScript(itemID);
+            ScriptData ID = ScriptProtection.GetScript(itemID);
             if (ID == null)
                 return;
 
@@ -801,7 +801,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public void OnStartScript(uint localID, UUID itemID)
         {
-            ScriptData id = (ScriptData)ScriptProtection.GetScript(itemID);
+            ScriptData id = ScriptProtection.GetScript(itemID);
             if (id == null)
                 return;        
 
@@ -815,7 +815,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public void OnStopScript(uint localID, UUID itemID)
         {
-            ScriptData ID = (ScriptData)ScriptProtection.GetScript(itemID);
+            ScriptData ID = ScriptProtection.GetScript(itemID);
             if (ID == null)
                 return;        
             
@@ -1222,7 +1222,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <returns></returns>
         public ScriptData GetScriptByItemID(UUID itemID)
         {
-            return (ScriptData)ScriptProtection.GetScript(itemID);
+            return ScriptProtection.GetScript(itemID);
         }
 
         /// <summary>
@@ -1233,7 +1233,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <returns></returns>
         public ScriptData GetScript(UUID primID, UUID itemID)
         {
-            return (ScriptData)ScriptProtection.GetScript(primID, itemID);
+            return ScriptProtection.GetScript(primID, itemID);
         }
 
         /// <summary>
@@ -1285,7 +1285,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             ScriptData script = ScriptProtection.GetScript(itemID);
             if(script != null)
-                ((ScriptData)script).SerializeDatabase();
+                script.SerializeDatabase();
         }
 
         public void UpdateScriptToNewObject(UUID olditemID, TaskInventoryItem newItem, SceneObjectPart newPart)

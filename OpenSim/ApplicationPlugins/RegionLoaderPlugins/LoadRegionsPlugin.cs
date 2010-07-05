@@ -82,7 +82,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
         public void PostInitialise()
         {
             RegionLoaderPluginInitialiser RegionLoaderPluginInitialiser = new RegionLoaderPluginInitialiser();
-            List<IRegionLoader> regionLoaders = Aurora.Framework.AuroraModuleLoader.LoadPlugins<IRegionLoader>("/OpenSim/Startup", RegionLoaderPluginInitialiser);
+            List<IRegionLoader> regionLoaders = Aurora.Framework.AuroraModuleLoader.LoadPlugins<IRegionLoader>("/OpenSim/RegionLoader", RegionLoaderPluginInitialiser);
             foreach (IRegionLoader loader in regionLoaders)
             {
                 loader.Initialise(m_openSim.ConfigSource, this, m_openSim);
