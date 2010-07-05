@@ -52,8 +52,6 @@ namespace OpenSim.Services.GridService
         protected IConfigSource m_config;
         protected HypergridLinker m_HypergridLinker;
 
-        private GridCache m_GridCache;
-
         protected IAuthenticationService m_AuthenticationService = null;
         protected bool m_AllowDuplicateNames = false;
         protected bool m_AllowHypergridMapSearch = false;
@@ -61,15 +59,14 @@ namespace OpenSim.Services.GridService
         public GridService(IConfigSource config)
             : base(config)
         {
-            m_GridCache = new GridCache();
-            //m_log.DebugFormat("[GRID SERVICE]: Starting...");
+            m_log.DebugFormat("[GRID SERVICE]: Starting...");
 
             m_config = config;
             IConfig gridConfig = config.Configs["GridService"];
             if (gridConfig != null)
             {
                 m_DeleteOnUnregister = gridConfig.GetBoolean("DeleteOnUnregister", true);
-
+                
                 string authService = gridConfig.GetString("AuthenticationService", String.Empty);
 
                 if (authService != String.Empty)
@@ -80,7 +77,7 @@ namespace OpenSim.Services.GridService
                 m_AllowDuplicateNames = gridConfig.GetBoolean("AllowDuplicateNames", m_AllowDuplicateNames);
                 m_AllowHypergridMapSearch = gridConfig.GetBoolean("AllowHypergridMapSearch", m_AllowHypergridMapSearch);
             }
-
+            
             if (m_RootInstance == null)
             {
                 m_RootInstance = this;
@@ -127,7 +124,7 @@ namespace OpenSim.Services.GridService
                 {
                     // Regions reserved for the null key cannot be taken.
                     if ((string)region.Data["PrincipalID"] == UUID.Zero.ToString())
-                        return "Region location is reserved";
+                        return "Region location us reserved";
 
                     // Treat it as an auth request
                     //
@@ -151,15 +148,15 @@ namespace OpenSim.Services.GridService
 
             if ((region != null) && (region.RegionID != regionInfos.RegionID))
             {
-                m_log.WarnFormat("[GRID SERVICE]: Region {0} tried to register in coordinates {1}, {2} which are already in use in scope {3}.",
+                m_log.WarnFormat("[GRID SERVICE]: Region {0} tried to register in coordinates {1}, {2} which are already in use in scope {3}.", 
                     regionInfos.RegionID, regionInfos.RegionLocX, regionInfos.RegionLocY, scopeID);
                 return "Region overlaps another region";
             }
-            if ((region != null) && (region.RegionID == regionInfos.RegionID) &&
+            if ((region != null) && (region.RegionID == regionInfos.RegionID) && 
                 ((region.posX != regionInfos.RegionLocX) || (region.posY != regionInfos.RegionLocY)))
             {
                 if ((Convert.ToInt32(region.Data["flags"]) & (int)OpenSim.Data.RegionFlags.NoMove) != 0)
-                    return "Can't move this region," +region.posX + "," + region.posY;
+                    return "Can't move this region";
 
                 // Region reregistering in other coordinates. Delete the old entry
                 m_log.DebugFormat("[GRID SERVICE]: Region {0} ({1}) was previously registered at {2}-{3}. Deleting old entry.",
@@ -184,7 +181,7 @@ namespace OpenSim.Services.GridService
                     {
                         if (d.RegionID != regionInfos.RegionID)
                         {
-                            m_log.WarnFormat("[GRID SERVICE]: Region {0} tried to register duplicate name with ID {1}.",
+                            m_log.WarnFormat("[GRID SERVICE]: Region {0} tried to register duplicate name with ID {1}.", 
                                 regionInfos.RegionName, regionInfos.RegionID);
                             return "Duplicate region name";
                         }
@@ -195,7 +192,7 @@ namespace OpenSim.Services.GridService
             // Everything is ok, let's register
             RegionData rdata = RegionInfo2RegionData(regionInfos);
             rdata.ScopeID = scopeID;
-
+            
             if (region != null)
             {
                 int oldFlags = Convert.ToInt32(region.Data["flags"]);
@@ -233,9 +230,8 @@ namespace OpenSim.Services.GridService
                 m_log.DebugFormat("[GRID SERVICE]: Database exception: {0}", e);
             }
 
-            m_GridCache.AddRegion(regionInfos);
-            //m_log.DebugFormat("[GRID SERVICE]: Region {0} ({1}) registered successfully at {2}-{3}",
-            //    regionInfos.RegionName, regionInfos.RegionID, regionInfos.RegionLocX, regionInfos.RegionLocY);
+            m_log.DebugFormat("[GRID SERVICE]: Region {0} ({1}) registered successfully at {2}-{3}", 
+                regionInfos.RegionName, regionInfos.RegionID, regionInfos.RegionLocX, regionInfos.RegionLocY);
 
             return String.Empty;
         }
@@ -267,7 +263,6 @@ namespace OpenSim.Services.GridService
 
             }
 
-            m_GridCache.RemoveRegion(regionID);
             return m_Database.Delete(regionID);
         }
 
@@ -278,23 +273,24 @@ namespace OpenSim.Services.GridService
             if (region != null)
             {
                 // Not really? Maybe?
-                List<RegionData> rdatas = m_Database.Get(region.posX - (int)Constants.RegionSize, region.posY - (int)Constants.RegionSize,
-                    region.posX + (int)Constants.RegionSize, region.posY + (int)Constants.RegionSize, scopeID);
+                List<RegionData> rdatas = m_Database.Get(region.posX - (int)Constants.RegionSize - 1, region.posY - (int)Constants.RegionSize - 1, 
+                    region.posX + (int)Constants.RegionSize + 1, region.posY + (int)Constants.RegionSize + 1, scopeID);
 
                 foreach (RegionData rdata in rdatas)
                     if (rdata.RegionID != regionID)
-                        rinfos.Add(RegionData2RegionInfo(rdata));
+                    {
+                        int flags = Convert.ToInt32(rdata.Data["flags"]);
+                        if ((flags & (int)Data.RegionFlags.Hyperlink) == 0) // no hyperlinks as neighbours
+                            rinfos.Add(RegionData2RegionInfo(rdata));
+                    }
 
             }
-            m_GridCache.AddRegions(rinfos);
+            m_log.DebugFormat("[GRID SERVICE]: region {0} has {1} neighours", region.RegionName, rinfos.Count);
             return rinfos;
         }
 
         public GridRegion GetRegionByUUID(UUID scopeID, UUID regionID)
         {
-            GridRegion rinfo = m_GridCache.GetRegionByUUID(regionID);
-            if (rinfo != null)
-                return rinfo;
             RegionData rdata = m_Database.Get(regionID, scopeID);
             if (rdata != null)
                 return RegionData2RegionInfo(rdata);
@@ -304,15 +300,6 @@ namespace OpenSim.Services.GridService
 
         public GridRegion GetRegionByPosition(UUID scopeID, int x, int y)
         {
-            bool found;
-            GridRegion rinfo = m_GridCache.GetRegionByPosition(x, y, out found);
-            if (found)
-            {
-                if (rinfo != null)
-                    return rinfo;
-                else
-                    return null;
-            }
             int snapX = (int)(x / Constants.RegionSize) * (int)Constants.RegionSize;
             int snapY = (int)(y / Constants.RegionSize) * (int)Constants.RegionSize;
             RegionData rdata = m_Database.Get(snapX, snapY, scopeID);
@@ -324,15 +311,6 @@ namespace OpenSim.Services.GridService
 
         public GridRegion GetRegionByName(UUID scopeID, string regionName)
         {
-            bool found;
-            List<GridRegion> rinfo = m_GridCache.GetRegionByName(regionName, out found);
-            if (found)
-            {
-                if (rinfo.Count != 0)
-                    return rinfo[0];
-                else
-                    return null;
-            }
             List<RegionData> rdatas = m_Database.Get(regionName + "%", scopeID);
             if ((rdatas != null) && (rdatas.Count > 0))
                 return RegionData2RegionInfo(rdatas[0]); // get the first
@@ -344,28 +322,14 @@ namespace OpenSim.Services.GridService
         {
             m_log.DebugFormat("[GRID SERVICE]: GetRegionsByName {0}", name);
 
-            bool found;
-            List<GridRegion> rinfo = m_GridCache.GetRegionByName(name, out found);
-            int count = 0;
-            List<GridRegion> rinfos = new List<GridRegion>();
-            if (found)
-            {
-                if (rinfo.Count != 0)
-                {
-                    foreach (GridRegion rdata in rinfo)
-                    {
-                        if (count++ < maxNumber)
-                            rinfos.Add(rdata);
-                    }
-                }
-                else
-                    return null;
-            }
             List<RegionData> rdatas = m_Database.Get("%" + name + "%", scopeID);
 
+            int count = 0;
+            List<GridRegion> rinfos = new List<GridRegion>();
 
             if (rdatas != null)
             {
+                m_log.DebugFormat("[GRID SERVICE]: Found {0} regions", rdatas.Count);
                 foreach (RegionData rdata in rdatas)
                 {
                     if (count++ < maxNumber)
@@ -373,7 +337,7 @@ namespace OpenSim.Services.GridService
                 }
             }
 
-            if (m_AllowHypergridMapSearch && (rdatas == null || (rdatas != null && rdatas.Count == 0) && name.Contains(".")))
+            if (m_AllowHypergridMapSearch && (rdatas == null || (rdatas != null && rdatas.Count == 0)) && name.Contains("."))
             {
                 GridRegion r = m_HypergridLinker.LinkRegion(scopeID, name);
                 if (r != null)
@@ -424,11 +388,10 @@ namespace OpenSim.Services.GridService
             rinfo.RegionName = rdata.RegionName;
             rinfo.ScopeID = rdata.ScopeID;
 
-            m_GridCache.AddRegion(rinfo);
             return rinfo;
         }
 
-        #endregion
+        #endregion 
 
         public List<GridRegion> GetDefaultRegions(UUID scopeID)
         {
@@ -490,17 +453,17 @@ namespace OpenSim.Services.GridService
                 return;
             }
 
+            MainConsole.Instance.Output("Region Name          Region UUID");
+            MainConsole.Instance.Output("Location             URI");
+            MainConsole.Instance.Output("Owner ID                                Flags");
+            MainConsole.Instance.Output("-------------------------------------------------------------------------------");
             foreach (RegionData r in regions)
             {
-                MainConsole.Instance.Output("-------------------------------------------------------------------------------");
                 OpenSim.Data.RegionFlags flags = (OpenSim.Data.RegionFlags)Convert.ToInt32(r.Data["flags"]);
-                MainConsole.Instance.Output("Region Name: " + r.RegionName);
-                MainConsole.Instance.Output("Region UUID: " + r.RegionID);
-                MainConsole.Instance.Output("Region Location: " + String.Format("{0},{1}", r.posX, r.posY));
-                MainConsole.Instance.Output("Region URI: " + "http://" + r.Data["serverIP"].ToString() + ":" + r.Data["serverPort"].ToString());
-                MainConsole.Instance.Output("Region Owner: " + r.Data["owner_uuid"].ToString());
-                MainConsole.Instance.Output("Region Flags: " + flags);
-                MainConsole.Instance.Output("-------------------------------------------------------------------------------");
+                MainConsole.Instance.Output(String.Format("{0,-20} {1}\n{2,-20} {3}\n{4,-39} {5}\n\n",
+                        r.RegionName, r.RegionID,
+                        String.Format("{0},{1}", r.posX, r.posY), "http://" + r.Data["serverIP"].ToString() + ":" + r.Data["serverPort"].ToString(),
+                        r.Data["owner_uuid"].ToString(), flags.ToString()));
             }
             return;
         }
@@ -509,7 +472,7 @@ namespace OpenSim.Services.GridService
         {
             OpenSim.Data.RegionFlags f = (OpenSim.Data.RegionFlags)prev;
 
-            string[] parts = flags.Split(new char[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            string[] parts = flags.Split(new char[] {',', ' '}, StringSplitOptions.RemoveEmptyEntries);
 
             foreach (string p in parts)
             {
@@ -567,187 +530,6 @@ namespace OpenSim.Services.GridService
                 MainConsole.Instance.Output(String.Format("Set region {0} to {1}", r.RegionName, f));
                 m_Database.Store(r);
             }
-        }
-
-        #region IGridService Members
-
-
-        public GridRegion IncomingNewRegion(GridRegion region)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void ClosingRegion(GridRegion region)
-        {
-            throw new NotImplementedException();
-        }
-
-        #endregion
-    }
-    public class GridCache
-    {
-        private class GridRegionCache
-        {
-            public GridRegion region;
-            public int locX;
-            public int locY;
-            public DateTime LastUpdated;
-            public bool IsNull = false;
-        }
-
-        private List<GridRegionCache> cache = new List<GridRegionCache>();
-        public void AddRegion(GridRegion regionInfo)
-        {
-            if (regionInfo == null)
-                return;
-            GridRegionCache newcache = new GridRegionCache();
-            newcache.LastUpdated = DateTime.UtcNow;
-            newcache.locX = regionInfo.RegionLocX;
-            newcache.locY = regionInfo.RegionLocY;
-            newcache.region = regionInfo;
-            bool found = false;
-            for (int i = 0; i < cache.Count; i++)
-            {
-                if (cache[i].region == null)
-                {
-                    if (cache[i].locX == newcache.region.RegionLocX && cache[i].locY == newcache.region.RegionLocY)
-                    {
-                        found = true;
-                        cache[i] = newcache;
-                    }
-                }
-                else
-                {
-                    if (cache[i].region.RegionID == regionInfo.RegionID)
-                    {
-                        found = true;
-                        cache[i] = newcache;
-                    }
-                }
-            }
-            if (!found)
-                cache.Add(newcache);
-        }
-
-        public void RemoveRegion(UUID regionID)
-        {
-            for (int i = 0; i < cache.Count; i++)
-            {
-                if (cache[i].region.RegionID == regionID)
-                {
-                    cache.Remove(cache[i]);
-                    return;
-                }
-            }
-        }
-
-        public void AddRegions(List<GridRegion> rinfo)
-        {
-            foreach (GridRegion region in rinfo)
-            {
-                AddRegion(region);
-            }
-        }
-
-        public GridRegion GetRegionByPosition(int x, int y, out bool found)
-        {
-            found = false;
-            for (int i = 0; i < cache.Count; i++)
-            {
-                if (cache[i].locX == x)
-                {
-                    if (cache[i].locY == y)
-                    {
-                        found = true;
-                        return cache[i].region;
-                    }
-                }
-            }
-            return null;
-        }
-
-        internal GridRegion GetRegionByUUID(UUID regionID)
-        {
-            for (int i = 0; i < cache.Count; i++)
-            {
-                if (cache[i].region == null)
-                    continue;
-                if (cache[i].region.RegionID == regionID)
-                {
-                    return cache[i].region;
-                }
-            }
-            return null;
-        }
-
-        internal void AddRegion(GridRegion regionInfo, int x, int y)
-        {
-            GridRegionCache newcache = new GridRegionCache();
-            newcache.LastUpdated = DateTime.UtcNow;
-            newcache.locX = x;
-            newcache.locY = y;
-            newcache.region = regionInfo;
-            bool found = false;
-            for (int i = 0; i < cache.Count; i++)
-            {
-                if (regionInfo != null)
-                {
-                    if (cache[i].region == null)
-                    {
-                        if (cache[i].locX == x && cache[i].locY == y)
-                        {
-                            found = true;
-                            TimeSpan ts = cache[i].LastUpdated - DateTime.UtcNow;
-                            if (ts.Hours > 1)
-                            {
-                                cache[i] = newcache;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        if (cache[i].region.RegionID == regionInfo.RegionID)
-                        {
-                            found = true;
-                            TimeSpan ts = cache[i].LastUpdated - DateTime.UtcNow;
-                            if (ts.Hours > 1)
-                            {
-                                cache[i] = newcache;
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    if (cache[i].locX == x && cache[i].locY == y)
-                    {
-                        found = true;
-                        TimeSpan ts = cache[i].LastUpdated - DateTime.UtcNow;
-                        if (ts.Hours > 1)
-                        {
-                            cache[i] = newcache;
-                        }
-                    }
-                }
-            }
-            if (!found)
-                cache.Add(newcache);
-        }
-
-        internal List<GridRegion> GetRegionByName(string regionName, out bool found)
-        {
-            found = false;
-            List<GridRegion> regions = new List<GridRegion>();
-            for (int i = 0; i < cache.Count; i++)
-            {
-                if (cache[i].region == null)
-                    continue;
-                if (cache[i].region.RegionName == regionName)
-                {
-                    regions.Add(cache[i].region);
-                }
-            }
-            return regions;
         }
     }
 }
