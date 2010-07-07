@@ -149,8 +149,8 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
         /// <returns></returns>
         public static void ToOriginalXmlFormat(SceneObjectGroup sceneObject, XmlTextWriter writer)
         {
-            //m_log.DebugFormat("[SERIALIZER]: Starting serialization of {0}", Name);
-            //int time = System.Environment.TickCount;
+            m_log.DebugFormat("[SERIALIZER]: Starting serialization of {0}", sceneObject.Name);
+            int time = System.Environment.TickCount;
 
             writer.WriteStartElement(String.Empty, "SceneObjectGroup", String.Empty);
             writer.WriteStartElement(String.Empty, "RootPart", String.Empty);
@@ -175,7 +175,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             sceneObject.SaveScriptedState(writer);
             writer.WriteEndElement(); // SceneObjectGroup
 
-            //m_log.DebugFormat("[SERIALIZER]: Finished serialization of SOG {0}, {1}ms", Name, System.Environment.TickCount - time);
+            m_log.DebugFormat("[SERIALIZER]: Finished serialization of SOG {0}, {1}ms", sceneObject.Name, System.Environment.TickCount - time);
         }
 
         protected static void ToOriginalXmlFormat(SceneObjectPart part, XmlTextWriter writer)
@@ -274,8 +274,8 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
         /// <returns></returns>
         public static void ToXml2Format(SceneObjectGroup sceneObject, XmlTextWriter writer)
         {
-            //m_log.DebugFormat("[SERIALIZER]: Starting serialization of SOG {0} to XML2", Name);
-            //int time = System.Environment.TickCount;
+            m_log.DebugFormat("[SERIALIZER]: Starting serialization of SOG {0} to XML2", sceneObject.Name);
+            int time = System.Environment.TickCount;
 
             writer.WriteStartElement(String.Empty, "SceneObjectGroup", String.Empty);
             sceneObject.RootPart.ToXml(writer);
@@ -296,7 +296,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             sceneObject.SaveScriptedState(writer);
             writer.WriteEndElement(); // End of SceneObjectGroup
 
-            //m_log.DebugFormat("[SERIALIZER]: Finished serialization of SOG {0} to XML2, {1}ms", Name, System.Environment.TickCount - time);
+            m_log.DebugFormat("[SERIALIZER]: Finished serialization of SOG {0} to XML2, {1}ms", sceneObject.Name, System.Environment.TickCount - time);
         }
     }
 }

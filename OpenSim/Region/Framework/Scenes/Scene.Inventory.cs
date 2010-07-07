@@ -1571,11 +1571,6 @@ namespace OpenSim.Region.Framework.Scenes
                 deleteIDs.Add(localID);
                 deleteGroups.Add(grp);
 
-                // Force a database backup/update on this SceneObjectGroup
-                // So that we know the database is upto date,
-                // for when deleting the object from it
-                ForceSceneObjectBackup(grp);
-
                 ScenePresence SP = GetScenePresence(AgentId);
 
                 if (SP == null)
@@ -1649,17 +1644,17 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
 
-            if (permissionToTake)
-            {
+            //if (permissionToTake)
+            //{
                 m_asyncSceneObjectDeleter.DeleteToInventory(
                         action, destinationID, deleteGroups, AgentId,
-                        permissionToDelete);
-            }
-            else if (permissionToDelete)
-            {
-                foreach (SceneObjectGroup g in deleteGroups)
-                    DeleteSceneObject(g, false, true);
-            }
+                        permissionToDelete, permissionToTake);
+            //}
+            //else if (permissionToDelete)
+            //{
+            //    foreach (SceneObjectGroup g in deleteGroups)
+            //        DeleteSceneObject(g, false, true);
+            //}
         }
 
         public void UpdateKnownItem(IClientAPI remoteClient, SceneObjectGroup grp, UUID itemID, UUID agentID)

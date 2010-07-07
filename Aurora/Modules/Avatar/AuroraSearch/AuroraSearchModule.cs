@@ -255,7 +255,7 @@ namespace Aurora.Modules
         public void DirPopularQuery(IClientAPI remoteClient, UUID queryID, uint queryFlags)
         {
             /// <summary>
-            /// Decapriated.
+            /// Deprecated.
             /// </summary>
         }
 

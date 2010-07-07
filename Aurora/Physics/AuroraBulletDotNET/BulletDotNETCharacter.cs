@@ -1204,7 +1204,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             }
         }
 
-        public override void SetCameraPos(Quaternion CameraRotation)
+        public override void SetCameraPos(Vector3 CameraRotation)
         {
         }
     }

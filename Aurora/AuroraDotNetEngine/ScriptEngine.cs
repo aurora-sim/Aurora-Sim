@@ -139,7 +139,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <summary>
         /// Removes the script from the event queue so it does not fire anymore events.
         /// </summary>
-        public static List<UUID> NeedsRemoved = new List<UUID>();
+        public static Dictionary<UUID, int> NeedsRemoved = new Dictionary<UUID, int>();
 
         public enum EventPriority : int
         {
@@ -618,14 +618,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (part == null)
                 return false;
             return AddToObjectQueue(part.UUID, p.EventName,
-                    p.DetectParams, p.Params);
+                    p.DetectParams, -1, p.Params);
         }
 
         public bool PostScriptEvent(UUID itemID, EventParams p)
         {
             ScriptData ID = GetScriptByItemID(itemID);
+            if (ID == null)
+                return false;
             return AddToScriptQueue(ID,
-                    p.EventName, p.DetectParams, p.Params);
+                    p.EventName, p.DetectParams, ID.VersionID, p.Params);
         }
 
         public bool PostScriptEvent(UUID itemID, string name, Object[] p)
@@ -734,7 +736,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (id.State != state)
             {
                 AddToObjectQueue(id.part.UUID, "state_exit",
-                    new DetectParams[0], new object[0] { });
+                    new DetectParams[0], id.VersionID, new object[0] { });
                 id.State = state;
                 int eventFlags = (int)id.Script.GetStateEventFlags(id.State);
 
@@ -742,7 +744,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 UpdateScriptInstanceData(id);
 
                 AddToObjectQueue(id.part.UUID, "state_entry",
-                    new DetectParams[0], new object[0] { });
+                    new DetectParams[0], id.VersionID, new object[0] { });
             }
         }
 
@@ -900,7 +902,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <param name="localID">Region object ID</param>
         /// <param name="FunctionName">Name of the function, will be state + "_event_" + FunctionName</param>
         /// <param name="param">Array of parameters to match event mask</param>
-        public bool AddToObjectQueue(UUID partID, string FunctionName, DetectParams[] qParams, params object[] param)
+        public bool AddToObjectQueue(UUID partID, string FunctionName, DetectParams[] qParams, int VersionID, params object[] param)
         {
             // Determine all scripts in Object and add to their queue
             ScriptData[] datas = ScriptProtection.GetScripts(partID);
@@ -911,8 +913,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             foreach (ScriptData ID in datas)
             {
+                if (VersionID == -1)
+                    VersionID = ID.VersionID;
                 // Add to each script in that object
-                AddToScriptQueue(ID, FunctionName, qParams, param);
+                AddToScriptQueue(ID, FunctionName, qParams, VersionID, param);
             }
             return true;
         }
@@ -925,7 +929,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <param name="qParams"></param>
         /// <param name="param"></param>
         /// <returns></returns>
-        public bool AddToScriptQueue(ScriptData ID, string FunctionName, DetectParams[] qParams, params object[] param)
+        public bool AddToScriptQueue(ScriptData ID, string FunctionName, DetectParams[] qParams, int VersionID, params object[] param)
         {
             #region Should be fired checks
 
@@ -933,8 +937,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return false;
 
             //Disabled or not running scripts dont get events fired as well as events that should be removed
-            if (ID.Disabled || !ID.Running || NeedsRemoved.Contains(ID.part.UUID))
+            if (ID.Disabled || !ID.Running)
                 return true;
+
+            if (NeedsRemoved.ContainsKey(ID.ItemID))
+            {
+                int Version = 0;
+                NeedsRemoved.TryGetValue(ID.ItemID, out Version);
+                if (Version >= VersionID)
+                    return true;
+            }
 
             if (!ID.World.PipeEventsForScript(
                 ID.part.LocalId))
@@ -948,6 +960,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             QIS.functionName = FunctionName;
             QIS.llDetectParams = qParams;
             QIS.param = param;
+            QIS.VersionID = VersionID;
 
             if (FunctionName == "timer")
             {
@@ -1072,7 +1085,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 if ((statesource & StateSource.PrimCrossing) != 0)
                 {
                     //Post the changed event though
-                    AddToScriptQueue(id, "changed", new DetectParams[0], new Object[] { new LSL_Types.LSLInteger(512) });
+                    AddToScriptQueue(id, "changed", new DetectParams[0], id.VersionID, new Object[] { new LSL_Types.LSLInteger(512) });
                     return null;
                 }
                 else
@@ -1198,7 +1211,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             ScriptProtection.RemovePreviouslyCompiled(data.Source);      
             ls.ID = data;
             ls.Action = LUType.Unload;
-            NeedsRemoved.Add(data.part.UUID);
+            if (NeedsRemoved.ContainsKey(data.ItemID))
+                NeedsRemoved.Remove(data.ItemID);
+            NeedsRemoved.Add(data.ItemID, data.VersionID);
             LUQueue.Enqueue(new LUStruct[] { ls }, LoadPriority.Stop);
         }
 
@@ -1350,9 +1365,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public string functionName;
         public DetectParams[] llDetectParams;
         public object[] param;
-        public Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>>
-                LineMap;
         public Guid CurrentlyAt = Guid.Empty;
+        public int VersionID = 0;
     }
     public class StateQueueItem
     {

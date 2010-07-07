@@ -393,6 +393,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
             {
                 ILandObject obj = avatar.Scene.LandChannel.GetLandObject(avatar.AbsolutePosition.X, avatar.AbsolutePosition.Y);
 
+                if(obj == null)
+                    return;
                 if ((obj.LandData.Flags & (uint)ParcelFlags.AllowDamage) != 0)
                 {
                     avatar.Health = MaximumHealth;

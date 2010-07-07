@@ -162,6 +162,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             while (m_ScriptEngine.LUQueue.Dequeue(out items))
             {
                 DoneSomething = true;
+                List<LUStruct> NeedsFired = new List<LUStruct>();
                 foreach (LUStruct item in items)
                 {
                     if (item.Action == LUType.Unload)
@@ -177,6 +178,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         try
                         {
                             item.ID.Start(false);
+                            NeedsFired.Add(item);
                         }
                         catch (Exception ex) { m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: LEAKED COMPILE ERROR: " + ex); }
                     }
@@ -185,11 +187,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         try
                         {
                             item.ID.Start(true);
+                            NeedsFired.Add(item);
                         }
                         catch (Exception ex) { m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: LEAKED COMPILE ERROR: " + ex); }
                     }
                 }
-                foreach (LUStruct item in items)
+                foreach (LUStruct item in NeedsFired)
                 {
                     item.ID.FireEvents();
                 }

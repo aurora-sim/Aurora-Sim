@@ -188,6 +188,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
         private bool forceenable = false;
 
         private btGeneric6DofConstraint m_aMotor;
+        private Vector3 m_axislock;
 
         public btRigidBody Body;
 
@@ -1467,9 +1468,6 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
         }
         #endregion
 
-
-
-
         internal void Move(float timestep)
         {
             //TODO:
@@ -2167,11 +2165,11 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             ((btGImpactMeshShape)prim_geom).setLocalScaling(new btVector3(1, 1, 1));
             ((btGImpactMeshShape)prim_geom).updateBound();
             _parent_scene.SetUsingGImpact();
-            //if (oldMesh != null)
-            //{
-            //    oldMesh.releasePinned();
-            //    oldMesh = null;
-            //}
+            if (oldMesh != null)
+            {
+                oldMesh.releasePinned();
+                oldMesh = null;
+            }
 
         }
 
@@ -2190,7 +2188,13 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
                 prim_geom.Dispose();
                 prim_geom = null;
             }*/
-            prim_geom = shape;
+            if (shape != null)
+            {
+                prim_geom = shape;
+                //CreateGeom(IntPtr.Zero, null);
+            }
+            else
+                prim_geom = shape;
 
             //Body.set
         }
@@ -2835,7 +2839,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
                 AxisLockAngleHigh.Dispose();
 
 
-
+            m_axislock = axislock;
             m_aMotor = new btGeneric6DofConstraint(Body, _parent_scene.TerrainBody, _parent_scene.TransZero,
                                                    _parent_scene.TransZero, false);
 
@@ -2861,7 +2865,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             }
         }
 
-        public override void SetCameraPos(Quaternion CameraRotation)
+        public override void SetCameraPos(Vector3 CameraRotation)
         {
         }
     }

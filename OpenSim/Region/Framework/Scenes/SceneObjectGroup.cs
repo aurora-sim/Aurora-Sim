@@ -1276,15 +1276,6 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 foreach (SceneObjectPart part in m_parts.Values)
                 {
-                    if (part.SitTargetAvatar != UUID.Zero)
-                    {
-                        ScenePresence SP = Scene.GetScenePresence(part.SitTargetAvatar);
-                        if (SP != null)
-                        {
-                            SP.StandUp();
-                        }
-                    }
-//                    part.Inventory.RemoveScriptInstances();
                     Scene.ForEachScenePresence(delegate(ScenePresence avatar)
                     {
                         if (!silent)
@@ -2119,16 +2110,34 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="linknum"></param>
         /// <returns>null if no child part with that linknum or child part</returns>
-        public SceneObjectPart GetLinkNumPart(int linknum)
+        public ISceneEntity GetLinkNumPart(int linknum)
         {
-            lock (m_parts)
+            if (linknum <= m_parts.Count)
             {
-                foreach (SceneObjectPart part in m_parts.Values)
+                if (m_parts.Count == 1)
+                    return RootPart;
+                lock (m_parts)
                 {
-                    if (part.LinkNum == linknum)
+                    foreach (SceneObjectPart part in m_parts.Values)
                     {
-                        return part;
+                        if (part.LinkNum == linknum)
+                        {
+                            return part;
+                        }
                     }
+                }
+            }
+            //Check sitting avatars
+            lock (RootPart.SitTargetAvatar)
+            {
+                int count = m_parts.Count + 1;
+                foreach (UUID agentID in RootPart.SitTargetAvatar)
+                {
+                    if (count == linknum)
+                    {
+                        return m_scene.GetScenePresence(agentID);
+                    }
+                    count++;
                 }
             }
 
@@ -3595,10 +3604,20 @@ namespace OpenSim.Region.Framework.Scenes
         {
             foreach (SceneObjectPart part in Children.Values)
             {
-                part.SitTargetAvatar = agentID;
+                if(!part.SitTargetAvatar.Contains(agentID))
+                    part.SitTargetAvatar.Add(agentID);
             }
         }
-        
+
+        public void TriggerRemoveSitAvatarUUID(UUID agentID)
+        {
+            foreach (SceneObjectPart part in Children.Values)
+            {
+                if (part.SitTargetAvatar.Contains(agentID))
+                    part.SitTargetAvatar.Remove(agentID);
+            }
+        }
+
         public override string ToString()
         {
             return String.Format("{0} {1} ({2})", Name, UUID, AbsolutePosition);

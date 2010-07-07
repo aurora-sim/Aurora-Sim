@@ -83,6 +83,14 @@ namespace OpenSim.Region.Framework.Scenes
         protected List<RegionInfo> m_regionRestartNotifyList = new List<RegionInfo>();
         protected List<RegionInfo> m_neighbours = new List<RegionInfo>();
 
+        protected Queue<RemoveDataObject> m_needsDeleted = new Queue<RemoveDataObject>();
+
+        protected class RemoveDataObject
+        {
+            public UUID ID;
+            public UUID RegionID;
+        }
+
         private volatile int m_bordersLocked = 0;
         private bool RunScriptsInAttachments = false;
         public bool BordersLocked
@@ -1514,6 +1522,15 @@ namespace OpenSim.Region.Framework.Scenes
                                 m_scene.landMS = Util.EnvironmentTickCountSubtract(ldMS);
                             }
                             CheckExit();
+
+                            if (m_scene.m_needsDeleted.Count != 0)
+                            {
+                                while (m_scene.m_needsDeleted.Count != 0)
+                                {
+                                    RemoveDataObject RDO = m_scene.m_needsDeleted.Dequeue();
+                                    m_scene.DataStore.RemoveObject(RDO.ID, RDO.RegionID);
+                                }
+                            }
                             
                             m_scene.frameMS = Util.EnvironmentTickCountSubtract(tmpFrameMS);
                             m_scene.otherMS = m_scene.tempOnRezMS + m_scene.eventMS + m_scene.backupMS + m_scene.terrainMS + m_scene.landMS;
@@ -2961,17 +2978,21 @@ namespace OpenSim.Region.Framework.Scenes
         public void DeleteSceneObject(SceneObjectGroup group, bool silent, bool DeleteScripts)
         {
 //            m_log.DebugFormat("[SCENE]: Deleting scene object {0} {1}", group.Name, group.UUID);
-            
+
             //SceneObjectPart rootPart = group.GetChildPart(group.UUID);
 
             // Serialise calls to RemoveScriptInstances to avoid
             // deadlocking on m_parts inside SceneObjectGroup
-            if (group.RootPart.SitTargetAvatar != UUID.Zero)
+            if (group.RootPart.SitTargetAvatar.Count != 0)
             {
-                ScenePresence SP = GetScenePresence(group.RootPart.ParentUUID);
-                if(SP != null)
-                    SP.StandUp();
+                foreach (UUID avID in group.RootPart.SitTargetAvatar)
+                {
+                    ScenePresence SP = GetScenePresence(avID);
+                    if (SP != null)
+                        SP.StandUp();
+                }
             }
+
             if (DeleteScripts)
             {
                 lock (m_deleting_scene_object)
@@ -2979,7 +3000,6 @@ namespace OpenSim.Region.Framework.Scenes
                     group.RemoveScriptInstances(true);
                 }
             }
-
             foreach (SceneObjectPart part in group.Children.Values)
             {
                 if (part.IsJoint() && ((part.ObjectFlags&(uint)PrimFlags.Physics) != 0))
@@ -3001,7 +3021,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             group.DeleteGroup(silent);
 
-//            m_log.DebugFormat("[SCENE]: Exit DeleteSceneObject() for {0} {1}", group.Name, group.UUID);
+            //m_log.DebugFormat("[SCENE]: Exit DeleteSceneObject() for {0} {1}", group.Name, group.UUID);
         }
 
         /// <summary>
@@ -3013,14 +3033,18 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="softDelete">If true, only deletes from scene, but keeps object in database.</param>
         public bool UnlinkSceneObject(UUID uuid, bool softDelete)
         {
+            DateTime StartTime = DateTime.Now.ToUniversalTime();
+
             if (m_sceneGraph.DeleteSceneObject(uuid, softDelete))
             {
                 if (!softDelete)
                 {
-                    DataStore.RemoveObject(uuid,
-                                                            m_regInfo.RegionID);
+                    m_needsDeleted.Enqueue(new RemoveDataObject()
+                    {
+                        ID = uuid,
+                        RegionID = m_regInfo.RegionID
+                    });
                 }
-
                 return true;
             }
 
@@ -3288,15 +3312,18 @@ namespace OpenSim.Region.Framework.Scenes
 
             TriggerChangedTeleport(newObject);
 
-            if (newObject.RootPart.SitTargetAvatar != UUID.Zero)
+            if (newObject.RootPart.SitTargetAvatar.Count != 0)
             {
-                ScenePresence SP = GetScenePresence(newObject.RootPart.SitTargetAvatar);
-                while (SP == null)
+                foreach (UUID avID in newObject.RootPart.SitTargetAvatar)
                 {
-                    Thread.Sleep(20);
+                    ScenePresence SP = GetScenePresence(avID);
+                    while (SP == null)
+                    {
+                        Thread.Sleep(20);
+                    }
+                    SP.AbsolutePosition = newObject.AbsolutePosition;
+                    SP.CrossSittingAgent(SP.ControllingClient, newObject.RootPart.UUID);
                 }
-                SP.AbsolutePosition = newObject.AbsolutePosition;
-                SP.CrossSittingAgent(SP.ControllingClient, newObject.RootPart.UUID);
             }
             
             return true;
@@ -3335,15 +3362,18 @@ namespace OpenSim.Region.Framework.Scenes
 
             TriggerChangedTeleport(newObject);
 
-            if (newObject.RootPart.SitTargetAvatar != UUID.Zero)
+            if (newObject.RootPart.SitTargetAvatar.Count != 0)
             {
-                ScenePresence SP = GetScenePresence(newObject.RootPart.SitTargetAvatar);
-                while (SP == null)
+                foreach (UUID avID in newObject.RootPart.SitTargetAvatar)
                 {
-                    Thread.Sleep(20);
+                    ScenePresence SP = GetScenePresence(avID);
+                    while (SP == null)
+                    {
+                        Thread.Sleep(20);
+                    }
+                    SP.AbsolutePosition = newObject.AbsolutePosition;
+                    SP.CrossSittingAgent(SP.ControllingClient, newObject.RootPart.UUID);
                 }
-                SP.AbsolutePosition = newObject.AbsolutePosition;
-                SP.CrossSittingAgent(SP.ControllingClient, newObject.RootPart.UUID);
             }
 
             return true;
@@ -5551,7 +5581,11 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void DeleteFromStorage(UUID uuid)
         {
-            DataStore.RemoveObject(uuid, m_regInfo.RegionID);
+            m_needsDeleted.Enqueue(new RemoveDataObject()
+            {
+                ID = uuid,
+                RegionID = m_regInfo.RegionID
+            });
         }
 
         // This callback allows the PhysicsScene to call back to its caller (the SceneGraph) and

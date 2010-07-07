@@ -412,7 +412,7 @@ namespace OpenSim.Region.Framework.Scenes
         private uint _category;
         private Int32 _creationDate;
         private uint _parentID = 0;
-        private UUID m_sitTargetAvatar = UUID.Zero;
+        private List<UUID> m_sitTargetAvatar = new List<UUID>();
         private uint _baseMask = (uint)PermissionMask.All;
         private uint _ownerMask = (uint)PermissionMask.All;
         private uint _groupMask = (uint)PermissionMask.None;
@@ -686,14 +686,17 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 
                 // TODO if we decide to do sitting in a more SL compatible way (multiple avatars per prim), this has to be fixed, too
-                if (m_sitTargetAvatar != UUID.Zero)
+                if (m_sitTargetAvatar.Count != 0)
                 {
-                    if (m_parentGroup != null) // TODO can there be a SOP without a SOG?
+                    foreach (UUID avID in m_sitTargetAvatar)
                     {
-                        ScenePresence avatar;
-                        if (m_parentGroup.Scene.TryGetScenePresence(m_sitTargetAvatar, out avatar))
+                        if (m_parentGroup != null) // TODO can there be a SOP without a SOG?
                         {
-                            avatar.ParentPosition = GetWorldPosition();
+                            ScenePresence avatar;
+                            if (m_parentGroup.Scene.TryGetScenePresence(avID, out avatar))
+                            {
+                                avatar.ParentPosition = GetWorldPosition();
+                            }
                         }
                     }
                 }
@@ -1153,7 +1156,7 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         [XmlIgnore]
-        public UUID SitTargetAvatar
+        public List<UUID> SitTargetAvatar
         {
             get { return m_sitTargetAvatar; }
             set { m_sitTargetAvatar = value; }
@@ -1605,17 +1608,19 @@ namespace OpenSim.Region.Framework.Scenes
                 }
 
                 PrimitiveBaseShape pbs = dupe.Shape;
+                if (dupe.PhysActor != null)
+                {
+                    dupe.PhysActor = ParentGroup.Scene.PhysicsScene.AddPrimShape(
+                        dupe.Name,
+                        pbs,
+                        dupe.AbsolutePosition,
+                        dupe.Scale,
+                        dupe.RotationOffset,
+                        dupe.PhysActor.IsPhysical);
 
-                dupe.PhysActor = ParentGroup.Scene.PhysicsScene.AddPrimShape(
-                    dupe.Name,
-                    pbs,
-                    dupe.AbsolutePosition,
-                    dupe.Scale,
-                    dupe.RotationOffset,
-                    dupe.PhysActor.IsPhysical);
-
-                dupe.PhysActor.LocalID = dupe.LocalId;
-                dupe.DoPhysicsPropertyUpdate(dupe.PhysActor.IsPhysical, true);
+                    dupe.PhysActor.LocalID = dupe.LocalId;
+                    dupe.DoPhysicsPropertyUpdate(dupe.PhysActor.IsPhysical, true);
+                }
             }
 
             return dupe;
@@ -1831,7 +1836,7 @@ namespace OpenSim.Region.Framework.Scenes
             return part;
         }
 
-        public UUID GetAvatarOnSitTarget()
+        public List<UUID> GetAvatarOnSitTarget()
         {
             return m_sitTargetAvatar;
         }
@@ -3177,6 +3182,15 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        public void RemoveAvatarOnSitTarget(UUID avatarID)
+        {
+            if (ParentGroup != null)
+            {
+                ParentGroup.TriggerRemoveSitAvatarUUID(avatarID);
+                ParentGroup.TriggerScriptChangedEvent(Changed.LINK);
+            }
+        }
+
         public void SetAxisRotation(int axis, int rotate)
         {
             if (m_parentGroup != null)
@@ -3265,7 +3279,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void SetPhysActorCameraPos(Quaternion CameraRotation)
+        public void SetPhysActorCameraPos(Vector3 CameraRotation)
         {
             if (PhysActor != null)
             {
@@ -4031,6 +4045,63 @@ namespace OpenSim.Region.Framework.Scenes
         public void ToXml(XmlWriter xmlWriter)
         {
             serializer.Serialize(xmlWriter, this);
+        }
+
+        public string ToLLSD()
+        {
+            OpenMetaverse.StructuredData.OSDMap map = new OpenMetaverse.StructuredData.OSDMap();
+            map.Add("CurrentMediaVersion", OpenMetaverse.StructuredData.OSDString.FromString(CurrentMediaVersion));
+            map.Add("CreatorID", OpenMetaverse.StructuredData.OSDString.FromUUID(CreatorID));
+            map.Add("FolderID", OpenMetaverse.StructuredData.OSDString.FromUUID(FolderID));
+            map.Add("InventorySerial", OpenMetaverse.StructuredData.OSDString.FromUInteger(InventorySerial));
+            //map.Add("TaskInventory", OpenMetaverse.StructuredData.OSDString.FromString(TaskInventory));
+            map.Add("ObjectFlags", OpenMetaverse.StructuredData.OSDString.FromUInteger(ObjectFlags));
+            map.Add("UUID", OpenMetaverse.StructuredData.OSDString.FromUUID(UUID));
+            map.Add("LocalId", OpenMetaverse.StructuredData.OSDString.FromUInteger(LocalId));
+            map.Add("Name", OpenMetaverse.StructuredData.OSDString.FromString(Name));
+            map.Add("Material", OpenMetaverse.StructuredData.OSDString.FromBinary(Material));
+            map.Add("PassTouches", OpenMetaverse.StructuredData.OSDString.FromBoolean(PassTouches));
+            map.Add("RegionHandle", OpenMetaverse.StructuredData.OSDString.FromULong(RegionHandle));
+            map.Add("ScriptAccessPin", OpenMetaverse.StructuredData.OSDString.FromInteger(ScriptAccessPin));
+            map.Add("GroupPosition", OpenMetaverse.StructuredData.OSDString.FromVector3(GroupPosition));
+            map.Add("OffsetPosition", OpenMetaverse.StructuredData.OSDString.FromVector3(OffsetPosition));
+            map.Add("RotationOffset", OpenMetaverse.StructuredData.OSDString.FromQuaternion(RotationOffset));
+            map.Add("Velocity", OpenMetaverse.StructuredData.OSDString.FromVector3(Velocity));
+            map.Add("AngularVelocity", OpenMetaverse.StructuredData.OSDString.FromVector3(AngularVelocity));
+            map.Add("Acceleration", OpenMetaverse.StructuredData.OSDString.FromVector3(Acceleration));
+            map.Add("Description", OpenMetaverse.StructuredData.OSDString.FromString(Description));
+            //map.Add("Color", OpenMetaverse.StructuredData.OSDString.FromColor4(Color));
+            map.Add("Text", OpenMetaverse.StructuredData.OSDString.FromString(Text));
+            map.Add("SitName", OpenMetaverse.StructuredData.OSDString.FromString(SitName));
+            map.Add("TouchName", OpenMetaverse.StructuredData.OSDString.FromString(TouchName));
+            map.Add("LinkNum", OpenMetaverse.StructuredData.OSDString.FromInteger(LinkNum));
+            map.Add("ClickAction", OpenMetaverse.StructuredData.OSDString.FromBinary(ClickAction));
+            //map.Add("Shape", OpenMetaverse.StructuredData.OSDString.FromString(Shape));
+            map.Add("Scale", OpenMetaverse.StructuredData.OSDString.FromVector3(Scale));
+            map.Add("UpdateFlag", OpenMetaverse.StructuredData.OSDString.FromBinary(UpdateFlag));
+            map.Add("SitTargetOrientation", OpenMetaverse.StructuredData.OSDString.FromQuaternion(SitTargetOrientation));
+            map.Add("SitTargetPosition", OpenMetaverse.StructuredData.OSDString.FromVector3(SitTargetPosition));
+            map.Add("SitTargetPositionLL", OpenMetaverse.StructuredData.OSDString.FromVector3(SitTargetPositionLL));
+            map.Add("SitTargetOrientationLL", OpenMetaverse.StructuredData.OSDString.FromQuaternion(SitTargetOrientationLL));
+            map.Add("ParentID", OpenMetaverse.StructuredData.OSDString.FromUInteger(ParentID));
+            map.Add("CreationDate", OpenMetaverse.StructuredData.OSDString.FromInteger(CreationDate));
+            map.Add("Category", OpenMetaverse.StructuredData.OSDString.FromUInteger(Category));
+            map.Add("SalePrice", OpenMetaverse.StructuredData.OSDString.FromInteger(SalePrice));
+            map.Add("ObjectSaleType", OpenMetaverse.StructuredData.OSDString.FromInteger(ObjectSaleType));
+            map.Add("OwnershipCost", OpenMetaverse.StructuredData.OSDString.FromInteger(OwnershipCost));
+            map.Add("GroupID", OpenMetaverse.StructuredData.OSDString.FromUUID(GroupID));
+            map.Add("OwnerID", OpenMetaverse.StructuredData.OSDString.FromUUID(OwnerID));
+            map.Add("LastOwnerID", OpenMetaverse.StructuredData.OSDString.FromUUID(LastOwnerID));
+            map.Add("BaseMask", OpenMetaverse.StructuredData.OSDString.FromUInteger(BaseMask));
+            map.Add("OwnerMask", OpenMetaverse.StructuredData.OSDString.FromUInteger(OwnerMask));
+            map.Add("GroupMask", OpenMetaverse.StructuredData.OSDString.FromUInteger(GroupMask));
+            map.Add("EveryoneMask", OpenMetaverse.StructuredData.OSDString.FromUInteger(EveryoneMask));
+            map.Add("NextOwnerMask", OpenMetaverse.StructuredData.OSDString.FromUInteger(NextOwnerMask));
+            map.Add("Flags", OpenMetaverse.StructuredData.OSDString.FromInteger((int)Flags));
+            map.Add("CollisionSound", OpenMetaverse.StructuredData.OSDString.FromUUID(CollisionSound));
+            map.Add("CollisionSprite", OpenMetaverse.StructuredData.OSDString.FromUUID(CollisionSprite));
+            map.Add("CollisionSoundVolume", OpenMetaverse.StructuredData.OSDString.FromUInteger((uint)CollisionSoundVolume));
+            return OpenMetaverse.StructuredData.OSDParser.SerializeJsonString(map);
         }
 
         public void TriggerScriptChangedEvent(Changed val)

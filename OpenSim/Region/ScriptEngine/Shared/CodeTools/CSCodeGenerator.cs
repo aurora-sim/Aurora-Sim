@@ -1467,6 +1467,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
         private string GenerateStatement(Statement s)
         {
             string retstr = String.Empty;
+            string FunctionCalls = "";
             bool printSemicolon = true;
 
             retstr += Indent();
@@ -1479,14 +1480,69 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                 // If we encounter a lone Ident, we skip it, since that's a C#
                 // (MONO) error.
                 if (!(s.kids.Top is IdentExpression && 1 == s.kids.Count))
+                {
                     foreach (SYMBOL kid in s.kids)
-                        retstr += GenerateNode(kid);
+                    {
+                        if (kid is Assignment)
+                        {
+                            Assignment a = kid as Assignment;
+                            List<string> identifiers = new List<string>();
+                            checkForMultipleAssignments(identifiers, a);
+
+                            retstr += GenerateNode((SYMBOL)a.kids.Pop());
+                            retstr += Generate(String.Format(" {0} ", a.AssignmentType), a);
+                            foreach (SYMBOL akid in a.kids)
+                            {
+                                if (akid is BinaryExpression)
+                                {
+                                    BinaryExpression be = akid as BinaryExpression;
+                                    if (be.ExpressionSymbol.Equals("&&") || be.ExpressionSymbol.Equals("||"))
+                                    {
+                                        // special case handling for logical and/or, see Mantis 3174
+                                        retstr += "((bool)(";
+                                        retstr += GenerateNode((SYMBOL)be.kids.Pop());
+                                        retstr += "))";
+                                        retstr += Generate(String.Format(" {0} ", be.ExpressionSymbol.Substring(0, 1)), be);
+                                        retstr += "((bool)(";
+                                        foreach (SYMBOL bkid in be.kids)
+                                            retstr += GenerateNode(bkid);
+                                        retstr += "))";
+                                    }
+                                    else
+                                    {
+                                        retstr += GenerateNode((SYMBOL)be.kids.Pop());
+                                        retstr += Generate(String.Format(" {0} ", be.ExpressionSymbol), be);
+                                        foreach (SYMBOL kidb in be.kids)
+                                        {
+                                            if (kidb is FunctionCallExpression)
+                                            {
+                                                FunctionCalls += "object test = " + GenerateNode(kidb) + ";";
+                                                retstr += "test";
+                                            }
+                                            else
+                                                retstr += GenerateNode(kidb);
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    retstr += GenerateNode(akid);
+                                }
+                            }
+
+                        }
+                        else
+                        {
+                            retstr += GenerateNode(kid);
+                        }
+                    }
+                }
             }
 
             if (printSemicolon)
                 retstr += GenerateLine(";");
 
-            return retstr;
+            return FunctionCalls + retstr;
         }
 
         /// <summary>
@@ -1915,8 +1971,62 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             
             bool isEnumerable = false;
             string tempString = "";
+            string FunctionCalls = "";
             foreach (SYMBOL kid in fc.kids)
-                tempString += GenerateNode(kid);
+            {
+                if (kid is ArgumentList)
+                {
+                    ArgumentList al = kid as ArgumentList;
+                    int comma = al.kids.Count - 1;  // tells us whether to print a comma
+
+                    foreach (SYMBOL s in al.kids)
+                    {
+                        if (s is BinaryExpression)
+                        {
+                            BinaryExpression be = s as BinaryExpression;
+                            //FunctionCalls += GenerateNode(s);
+                            if (be.ExpressionSymbol.Equals("&&") || be.ExpressionSymbol.Equals("||"))
+                            {
+                                // special case handling for logical and/or, see Mantis 3174
+                                tempString += "((bool)(";
+                                tempString += GenerateNode((SYMBOL)be.kids.Pop());
+                                tempString += "))";
+                                tempString += Generate(String.Format(" {0} ", be.ExpressionSymbol.Substring(0, 1)), be);
+                                tempString += "((bool)(";
+                                foreach (SYMBOL kidb in be.kids)
+                                    retstr += GenerateNode(kidb);
+                                tempString += "))";
+                            }
+                            else
+                            {
+                                tempString += GenerateNode((SYMBOL)be.kids.Pop());
+                                tempString += Generate(String.Format(" {0} ", be.ExpressionSymbol), be);
+                                foreach (SYMBOL kidb in be.kids)
+                                {
+                                    if (kidb is FunctionCallExpression)
+                                    {
+                                        FunctionCalls += "object test = " + GenerateNode(kidb) + ";";
+                                        tempString += "test";
+                                    }
+                                    else
+                                        tempString += GenerateNode(kidb);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            tempString += GenerateNode(s);
+                            if (0 < comma--)
+                                tempString += Generate(", ");
+                        }
+                    }
+                    //FunctionCalls += GenerateNode(kid);
+                }
+                else
+                {
+                    tempString += GenerateNode(kid);
+                }
+            }
 
             string TempStringForEnum = "";
             TempStringForEnum = OriginalScript.Remove(0, fc.pos);
@@ -1931,16 +2041,18 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             {
                 isEnumerable = true;
             }
-            else if (TestOriginal.Contains(TestScript))
+            /*else if (TestOriginal.Contains(TestScript))
             {
                  isEnumerable = true;
-            }
+            }*/
             else if (script.Contains("IEnumerator " + fc.Id))
             {
                 isEnumerable = true;
             }
 
-            if (isEnumerable && IsParentEnumerable)
+
+
+            if (isEnumerable)
             {
                 retstr += Generate("parts.Add(");
             }
@@ -1953,7 +2065,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             {
                 retstr += Generate(")");
             }
-            return retstr;
+
+            return FunctionCalls + retstr;
         }
 
         /// <summary>

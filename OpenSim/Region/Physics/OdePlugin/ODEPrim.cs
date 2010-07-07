@@ -2367,6 +2367,11 @@ Console.WriteLine(" JointCreateFixed");
             m_vehicle.ProcessVehicleFlags(param, remove);
         }
 
+        public override void SetCameraPos(Vector3 CameraRotation)
+        {
+            m_vehicle.ProcessSetCameraPos(CameraRotation);
+        }
+
         public override void SetVolumeDetect(int param)
         {
             lock (_parent_scene.OdeLock)

@@ -85,8 +85,23 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 ScriptEngine.EventQueue.Enqueue(QIS, ScriptEngine.EventPriority.Suspended);
                 return;
             }
+
+            if (ScriptEngine.NeedsRemoved.ContainsKey(QIS.ID.ItemID))
+            {
+                int Version = 0;
+                ScriptEngine.NeedsRemoved.TryGetValue(QIS.ID.ItemID, out Version);
+                if (QIS.functionName == "state_entry" || QIS.functionName == "on_rez")
+                {
+                }
+                if (Version >= QIS.VersionID)
+                    return;
+            }
+            if (QIS.functionName == "state_entry" || QIS.functionName == "on_rez")
+            {
+            }
+                
             //Disabled or not running scripts dont get events saved.
-            if (QIS.ID.Disabled || !QIS.ID.Running || ScriptEngine.NeedsRemoved.Contains(QIS.ID.part.UUID))
+            if (QIS.ID.Disabled || !QIS.ID.Running)
                 return;
             try
             {

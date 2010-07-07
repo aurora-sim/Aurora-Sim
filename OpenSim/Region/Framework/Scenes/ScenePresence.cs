@@ -1373,10 +1373,6 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (m_allowMovement && !SitGround)
             {
-                // Disallow movement while sitting on the ground, or weird things happen if you try to move in mouselook.
-                // --mirceakitsune (Mantis #0004628)
-                if (SitGround)
-                    return;
                 if (agentData.UseClientAgentPosition)
                 {
                     m_moveToPositionInProgress = (agentData.ClientAgentPosition - AbsolutePosition).Length() > 0.2f;
@@ -1723,8 +1719,8 @@ namespace OpenSim.Region.Framework.Scenes
 
                     }
                     // Reset sit target.
-                    if (part.GetAvatarOnSitTarget() == UUID)
-                        part.SetAvatarOnSitTarget(UUID.Zero);
+                    if (part.GetAvatarOnSitTarget().Contains(UUID))
+                        part.RemoveAvatarOnSitTarget(UUID);
 
                     m_parentPosition = part.GetWorldPosition();
                     m_parentPosition.Z += part.Scale.Z / 2;
@@ -1777,14 +1773,15 @@ namespace OpenSim.Region.Framework.Scenes
                 // Is a sit target available?
                 Vector3 avSitOffSet = part.SitTargetPosition;
                 Quaternion avSitOrientation = part.SitTargetOrientation;
-                UUID avOnTargetAlready = part.GetAvatarOnSitTarget();
+                /*UUID avOnTargetAlready = part.GetAvatarOnSitTarget();
 
-                bool SitTargetUnOccupied = (!(avOnTargetAlready != UUID.Zero));
+                bool SitTargetUnOccupied = (!(avOnTargetAlready != UUID.Zero));*/
+                // Needs to be worked on (points up)
                 bool SitTargetisSet =
                     (!(avSitOffSet.X == 0f && avSitOffSet.Y == 0f && avSitOffSet.Z == 0f && avSitOrientation.W == 1f &&
                        avSitOrientation.X == 0f && avSitOrientation.Y == 0f && avSitOrientation.Z == 0f));
 
-                if (SitTargetisSet && SitTargetUnOccupied)
+                if (SitTargetisSet/* && SitTargetUnOccupied*/)
                 {
                     //switch the target to this prim
                     return part;
@@ -1817,17 +1814,6 @@ namespace OpenSim.Region.Framework.Scenes
 
             Vector3 avSitOffSet = part.SitTargetPosition;
             Quaternion avSitOrientation = part.SitTargetOrientation;
-            UUID avOnTargetAlready = part.GetAvatarOnSitTarget();
-
-            bool SitTargetUnOccupied = (!(avOnTargetAlready != UUID.Zero));
-            bool SitTargetisSet =
-                (!(avSitOffSet.X == 0f && avSitOffSet.Y == 0f && avSitOffSet.Z == 0f &&
-                   (
-                       avSitOrientation.X == 0f && avSitOrientation.Y == 0f && avSitOrientation.Z == 0f && avSitOrientation.W == 1f // Valid Zero Rotation quaternion
-                       || avSitOrientation.X == 0f && avSitOrientation.Y == 0f && avSitOrientation.Z == 1f && avSitOrientation.W == 0f // W-Z Mapping was invalid at one point
-                       || avSitOrientation.X == 0f && avSitOrientation.Y == 0f && avSitOrientation.Z == 0f && avSitOrientation.W == 0f // Invalid Quaternion
-                   )
-                   ));
 
             cameraAtOffset = part.GetCameraAtOffset();
             cameraEyeOffset = part.GetCameraEyeOffset();
@@ -1971,7 +1957,9 @@ namespace OpenSim.Region.Framework.Scenes
                 Vector3 avSitOffSet = part.SitTargetPosition;
                 Quaternion avSitOrientation = part.SitTargetOrientation;
                 bool SitTargetUnOccupied = true;
-                if (part.GetAvatarOnSitTarget() != UUID.Zero)
+                bool UseSitTarget = false;
+                // TODO: Needs work! (points up)
+                /*if (part.GetAvatarOnSitTarget().Count != 0)
                 {
                     ScenePresence Sp = m_scene.GetScenePresence(part.GetAvatarOnSitTarget());
                     if (Sp != null)
@@ -1979,7 +1967,7 @@ namespace OpenSim.Region.Framework.Scenes
                         if (Sp.SittingOnUUID == part.UUID)
                             SitTargetUnOccupied = false;
                     }
-                }
+                }*/
 
                 bool SitTargetisSet =
                     (!(avSitOffSet.X == 0f && avSitOffSet.Y == 0f && avSitOffSet.Z == 0f &&
@@ -1990,14 +1978,18 @@ namespace OpenSim.Region.Framework.Scenes
                        )
                        ));
 
+                m_requestedSitTargetUUID = part.UUID;
+                m_requestedSitTargetID = part.LocalId;
+                part.SetAvatarOnSitTarget(UUID);
+
                 if (SitTargetisSet && SitTargetUnOccupied)
                 {
-                    m_requestedSitTargetUUID = part.ParentGroup.RootPart.UUID;
                     m_requestedSitTargetID = part.ParentGroup.RootPart.LocalId;
-                    part.SetAvatarOnSitTarget(UUID);
+                    m_requestedSitTargetUUID = part.ParentGroup.RootPart.UUID;
                     offset = new Vector3(avSitOffSet.X, avSitOffSet.Y, avSitOffSet.Z);
                     sitOrientation = avSitOrientation;
                     autopilot = false;
+                    UseSitTarget = true;
                 }
 
                 pos = part.AbsolutePosition;// +offset;
@@ -2044,19 +2036,18 @@ namespace OpenSim.Region.Framework.Scenes
                 cameraAtOffset = part.GetCameraAtOffset();
                 cameraEyeOffset = part.GetCameraEyeOffset();
                 forceMouselook = part.GetForceMouselook();
-            }
 
-            ControllingClient.SendSitResponse(targetID, offset, sitOrientation, autopilot, cameraAtOffset, cameraEyeOffset, forceMouselook);
-            m_requestedSitTargetUUID = targetID;
-            // This calls HandleAgentSit twice, once from here, and the client calls
-            // HandleAgentSit itself after it gets to the location
-            // It doesn't get to the location until we've moved them there though
-            // which happens in HandleAgentSit :P
-            m_autopilotMoving = autopilot;
-            m_autoPilotTarget = pos;
-            m_sitAtAutoTarget = autopilot;
-            if (!autopilot)
-                HandleAgentSit(remoteClient, UUID);
+                ControllingClient.SendSitResponse(targetID, offset, sitOrientation, autopilot, cameraAtOffset, cameraEyeOffset, forceMouselook);
+                // This calls HandleAgentSit twice, once from here, and the client calls
+                // HandleAgentSit itself after it gets to the location
+                // It doesn't get to the location until we've moved them there though
+                // which happens in HandleAgentSit :P
+                m_autopilotMoving = autopilot;
+                m_autoPilotTarget = pos;
+                m_sitAtAutoTarget = autopilot;
+                if (!autopilot)
+                    HandleAgentSit(remoteClient, UUID, UseSitTarget);
+            }
 
         }
 
@@ -2331,15 +2322,27 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (!String.IsNullOrEmpty(m_nextSitAnimation))
             {
-                HandleAgentSit(remoteClient, agentID, m_nextSitAnimation);
+                HandleAgentSit(remoteClient, agentID, m_nextSitAnimation, false);
             }
             else
             {
-                HandleAgentSit(remoteClient, agentID, "SIT");
+                HandleAgentSit(remoteClient, agentID, "SIT", false);
+            }
+        }
+
+        public void HandleAgentSit(IClientAPI remoteClient, UUID agentID, bool UseSitTarget)
+        {
+            if (!String.IsNullOrEmpty(m_nextSitAnimation))
+            {
+                HandleAgentSit(remoteClient, agentID, m_nextSitAnimation, UseSitTarget);
+            }
+            else
+            {
+                HandleAgentSit(remoteClient, agentID, "SIT", UseSitTarget);
             }
         }
         
-        public void HandleAgentSit(IClientAPI remoteClient, UUID agentID, string sitAnimation)
+        public void HandleAgentSit(IClientAPI remoteClient, UUID agentID, string sitAnimation, bool UseSitTarget)
         {
             SceneObjectPart part = m_scene.GetSceneObjectPart(m_requestedSitTargetID);
 
@@ -2347,7 +2350,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (part != null)
                 {
-                    if (part.GetAvatarOnSitTarget() == UUID)
+                    if (UseSitTarget)
                     {
                         Vector3 sitTargetPos = part.SitTargetPosition;
                         Quaternion sitTargetOrient = part.SitTargetOrientation;
@@ -2556,7 +2559,10 @@ namespace OpenSim.Region.Framework.Scenes
                     SceneObjectPart part = Scene.GetSceneObjectPart(m_parentID);
                     if (part != null)
                     {
-                        part.SetPhysActorCameraPos(CameraRotation);
+                        if ((m_AgentControlFlags & AgentManager.ControlFlags.AGENT_CONTROL_MOUSELOOK) == AgentManager.ControlFlags.AGENT_CONTROL_MOUSELOOK)
+                            part.SetPhysActorCameraPos(Lookat);
+                        else
+                            part.SetPhysActorCameraPos(Vector3.Zero);
                     }
                 }
             }

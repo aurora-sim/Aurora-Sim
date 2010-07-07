@@ -1594,10 +1594,13 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             
             if (destination != null)
             {
-                if (grp.RootPart.SitTargetAvatar != UUID.Zero)
+                if (grp.RootPart.SitTargetAvatar.Count != 0)
                 {
-                    ScenePresence SP = grp.Scene.GetScenePresence(grp.RootPart.SitTargetAvatar);
-                    CrossAgentSittingToNewRegionAsync(SP, destination, grp);
+                    foreach (UUID avID in grp.RootPart.SitTargetAvatar)
+                    {
+                        ScenePresence SP = grp.Scene.GetScenePresence(avID);
+                        CrossAgentSittingToNewRegionAsync(SP, destination, grp);
+                    }
                 }
 
                 if (m_aScene.SimulationService != null)
@@ -1610,7 +1613,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     {
                         foreach (SceneObjectPart part in grp.Children.Values)
                         {
-                            part.SitTargetAvatar = UUID.Zero;
+                            part.SitTargetAvatar.Clear();
                         }
                         grp.Scene.DeleteSceneObject(grp, silent, false);
                     }

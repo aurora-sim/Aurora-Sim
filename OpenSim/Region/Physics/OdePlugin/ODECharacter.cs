@@ -1260,6 +1260,9 @@ namespace OpenSim.Region.Physics.OdePlugin
 
         public override float APIDDamping{ set { return; } }
 
+        public override void SetCameraPos(Vector3 CameraRotation)
+        {
+        }
 
         public override void SubscribeEvents(int ms)
         {

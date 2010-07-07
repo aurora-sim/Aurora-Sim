@@ -856,13 +856,23 @@ namespace OpenSim.Region.Physics.OdePlugin
             d.Vector3 angularVelocity = d.BodyGetAngularVel(Body);
             if ((m_flags & VehicleFlag.MOUSELOOK_STEER) == VehicleFlag.MOUSELOOK_STEER)
             {
-                if (m_lastCameraRotation != Quaternion.Identity)
+                if (m_userLookAt != Vector3.Zero)
                 {
-                    if (m_angularMotorDirection == Vector3.Zero)
-                    {
-                        m_angularMotorDirection = Vector3.One;
-                    }
-                    //m_angularMotorDirection *= m_lastCameraRotation;
+                    /*m_lastCameraRotation = llRotBetween(new Vector3(d.BodyGetPosition(m_body).X, d.BodyGetPosition(m_body).Y, d.BodyGetPosition(m_body).Z), m_userLookAt);
+                    m_lastCameraRotation *= 10;
+                    Vector3 move = ToEuler(m_lastCameraRotation);
+                    //move.Z *= (-1);
+                    //move *= new Quaternion(d.BodyGetQuaternion(Body).X, d.BodyGetQuaternion(Body).Y, d.BodyGetQuaternion(Body).Z, d.BodyGetQuaternion(Body).W);
+                    move.Z *= (float)(-2 * Math.PI);
+                    move.Y = 0;
+                    move.X = 0;
+                    m_angularMotorVelocity += move / pTimestep;*/
+                    m_userLookAt.Z = m_userLookAt.X * 10;
+                    m_userLookAt.X = 0;
+                    m_userLookAt.Y = 0;
+                    m_angularMotorVelocity += m_userLookAt;
+                    Console.WriteLine(m_userLookAt.Z);
+                    //Console.WriteLine(move.Z);
                 }
             }
 
@@ -1018,7 +1028,38 @@ namespace OpenSim.Region.Physics.OdePlugin
             //d.BodyAddTorque(Body, m_lastAngularVelocity.X, m_lastAngularVelocity.Y, m_lastAngularVelocity.Z);
             d.BodySetAngularVel (Body, m_lastAngularVelocity.X, m_lastAngularVelocity.Y, m_lastAngularVelocity.Z);
             m_previousRotation = d.BodyGetQuaternion(Body);
-        } //end MoveAngular
+        }
+
+        private Vector3 ToEuler(Quaternion m_lastCameraRotation)
+        {
+            Quaternion t = new Quaternion(m_lastCameraRotation.X * m_lastCameraRotation.X, m_lastCameraRotation.Y * m_lastCameraRotation.Y, m_lastCameraRotation.Z * m_lastCameraRotation.Z, m_lastCameraRotation.W * m_lastCameraRotation.W);
+            double m = (m_lastCameraRotation.X + m_lastCameraRotation.Y + m_lastCameraRotation.Z + m_lastCameraRotation.W);
+            if (m == 0) return Vector3.Zero;
+            double n = 2 * (m_lastCameraRotation.Y * m_lastCameraRotation.W + m_lastCameraRotation.X * m_lastCameraRotation.Y);
+            double p = m * m - n * n;
+            if (p > 0)
+                return new Vector3((float)NormalizeAngle(Math.Atan2(2.0 * (m_lastCameraRotation.X * m_lastCameraRotation.W - m_lastCameraRotation.Y * m_lastCameraRotation.Z), (-t.X - t.Y + t.Z + t.W))),
+                                             (float)NormalizeAngle(Math.Atan2(n, Math.Sqrt(p))),
+                                             (float)NormalizeAngle(Math.Atan2(2.0 * (m_lastCameraRotation.Z * m_lastCameraRotation.W - m_lastCameraRotation.X * m_lastCameraRotation.Y), (t.X - t.Y - t.Z + t.W))));
+            else if (n > 0)
+                return new Vector3(0, (float)(Math.PI * 0.5), (float)NormalizeAngle(Math.Atan2((m_lastCameraRotation.Z * m_lastCameraRotation.W + m_lastCameraRotation.X * m_lastCameraRotation.Y), 0.5 - t.X - t.Z)));
+            else
+                return new Vector3(0, (float)(-Math.PI * 0.5), (float)NormalizeAngle(Math.Atan2((m_lastCameraRotation.Z * m_lastCameraRotation.W + m_lastCameraRotation.X * m_lastCameraRotation.Y), 0.5 - t.X - t.Z)));
+        }
+
+        protected double NormalizeAngle(double angle)
+        {
+            if (angle > -Math.PI && angle < Math.PI)
+                return angle;
+
+            int numPis = (int)(Math.PI / angle);
+            double remainder = angle - Math.PI * numPis;
+            if (numPis % 2 == 1)
+                return Math.PI - angle;
+            return remainder;
+        }
+        
+        //end MoveAngular
 
         internal void LimitRotation(float timestep)
         {
@@ -1051,16 +1092,95 @@ namespace OpenSim.Region.Physics.OdePlugin
 
         private List<Vector3> m_forcelist = new List<Vector3>();
         Quaternion m_lastCameraRotation = Quaternion.Identity;
-        internal void ProcessSetCameraPos(Quaternion CameraRotation)
+        private Vector3 m_userLookAt = Vector3.Zero;
+        internal void ProcessSetCameraPos(Vector3 CameraRotation)
         {
             //m_referenceFrame -= m_lastCameraRotation;
             //m_referenceFrame += CameraRotation;
-            m_lastCameraRotation = CameraRotation;
+            m_userLookAt = CameraRotation;
         }
 
         internal void ProcessForceTaint(List<Vector3> forcelist)
         {
             m_forcelist = forcelist;
+        }
+
+        public Quaternion llRotBetween(Vector3 a, Vector3 b)
+        {
+            Quaternion rotBetween;
+            // Check for zero vectors. If either is zero, return zero rotation. Otherwise,
+            // continue calculation.
+            if (a == Vector3.Zero || b == Vector3.Zero)
+            {
+                rotBetween = Quaternion.Identity;
+            }
+            else
+            {
+                a.Normalize();
+                b.Normalize();
+                double dotProduct = (a.X * b.X) + (a.Y * b.Y) + (a.Z * b.Z);
+                // There are two degenerate cases possible. These are for vectors 180 or
+                // 0 degrees apart. These have to be detected and handled individually.
+                //
+                // Check for vectors 180 degrees apart.
+                // A dot product of -1 would mean the angle between vectors is 180 degrees.
+                if (dotProduct < -0.9999999f)
+                {
+                    // First assume X axis is orthogonal to the vectors.
+                    Vector3 orthoVector = new Vector3(1.0f, 0.0f, 0.0f);
+                    orthoVector = orthoVector - a * (a.X / (a.X * a.X) + (a.Y * a.Y) + (a.Z * a.Z));
+                    // Check for near zero vector. A very small non-zero number here will create
+                    // a rotation in an undesired direction.
+                    if (Math.Sqrt(orthoVector.X * orthoVector.X + orthoVector.Y * orthoVector.Y + orthoVector.Z * orthoVector.Z) > 0.0001)
+                    {
+                        rotBetween = new Quaternion(orthoVector.X, orthoVector.Y, orthoVector.Z, 0.0f);
+                    }
+                    // If the magnitude of the vector was near zero, then assume the X axis is not
+                    // orthogonal and use the Z axis instead.
+                    else
+                    {
+                        // Set 180 z rotation.
+                        rotBetween = new Quaternion(0.0f, 0.0f, 1.0f, 0.0f);
+                    }
+                }
+                // Check for parallel vectors.
+                // A dot product of 1 would mean the angle between vectors is 0 degrees.
+                else if (dotProduct > 0.9999999f)
+                {
+                    // Set zero rotation.
+                    rotBetween = new Quaternion(0.0f, 0.0f, 0.0f, 1.0f);
+                }
+                else
+                {
+                    // All special checks have been performed so get the axis of rotation.
+                    Vector3 crossProduct = new Vector3
+                    (
+                    a.Y * b.Z - a.Z * b.Y,
+                    a.Z * b.X - a.X * b.Z,
+                    a.X * b.Y - a.Y * b.X
+                    );
+                    // Quarternion s value is the length of the unit vector + dot product.
+                    double qs = 1.0 + dotProduct;
+                    rotBetween = new Quaternion(crossProduct.X, crossProduct.Y, crossProduct.Z, (float)qs);
+                    // Normalize the rotation.
+                    double mag = Math.Sqrt(rotBetween.X * rotBetween.X + rotBetween.Y * rotBetween.Y + rotBetween.Z * rotBetween.Z + rotBetween.W * rotBetween.W);
+                    // We shouldn't have to worry about a divide by zero here. The qs value will be
+                    // non-zero because we already know if we're here, then the dotProduct is not -1 so
+                    // qs will not be zero. Also, we've already handled the input vectors being zero so the
+                    // crossProduct vector should also not be zero.
+                    rotBetween.X = (float)(rotBetween.X / mag);
+                    rotBetween.Y = (float)(rotBetween.Y / mag);
+                    rotBetween.Z = (float)(rotBetween.Z / mag);
+                    rotBetween.W = (float)(rotBetween.W / mag);
+                    // Check for undefined values and set zero rotation if any found. This code might not actually be required
+                    // any longer since zero vectors are checked for at the top.
+                    if (Double.IsNaN(rotBetween.X) || Double.IsNaN(rotBetween.Y) || Double.IsNaN(rotBetween.Y) || Double.IsNaN(rotBetween.W))
+                    {
+                        rotBetween = new Quaternion(0.0f, 0.0f, 0.0f, 1.0f);
+                    }
+                }
+            }
+            return rotBetween;
         }
     }
 }

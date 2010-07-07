@@ -92,6 +92,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public int ControlEventsInQueue = 0;
         public bool StartedFromSavedState = false;
         public UUID RezzedFrom = UUID.Zero; // If rezzed from llRezObject, this is not Zero
+        public int VersionID = 0;
 
         public SceneObjectPart part;
 
@@ -119,6 +120,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <returns></returns>
         public void CloseAndDispose(bool Silent)
         {
+            if (ScriptEngine.NeedsRemoved.ContainsKey(ItemID))
+                ScriptEngine.NeedsRemoved.Remove(ItemID);
+
             if (!Silent)
             {
                 if (Script != null)
@@ -134,10 +138,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         CurrentlyAt = Guid.Empty,
                         functionName = "state_exit",
                         param = new object[0],
-                        llDetectParams = new DetectParams[0]
+                        llDetectParams = new DetectParams[0],
+                        VersionID = VersionID
                     });
                 }
             }
+            VersionID++;
+            ScriptEngine.NeedsRemoved.Add(ItemID, VersionID);
             ReleaseControls();
             // Tell script not to accept new requests
             //These are fine to set as the state wont be saved again
@@ -147,7 +154,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             // Remove from internal structure
             ScriptEngine.ScriptProtection.RemoveScript(this);
 
-            ScriptEngine.NeedsRemoved.Remove(part.UUID);
+            //ScriptEngine.NeedsRemoved.Add(ItemID, VersionID);
+
             if (m_ScriptEngine.Errors.ContainsKey(ItemID))
                 m_ScriptEngine.Errors.Remove(ItemID);
             
@@ -250,9 +258,20 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //Release controls over people.
             ReleaseControls();
             //Must be posted immediately, otherwise the next line will delete it.
-            m_ScriptEngine.AddToObjectQueue(part.UUID, "state_exit", new DetectParams[0], new object[0] { });
-            //Remove items from the queue.
-            ScriptEngine.NeedsRemoved.Remove(part.UUID);
+            EventQueue.ProcessQIS(new QueueItemStruct()
+            {
+                ID = this,
+                CurrentlyAt = Guid.Empty,
+                functionName = "state_exit",
+                llDetectParams = new DetectParams[0],
+                param = new object[0],
+                VersionID = VersionID
+            });
+            //Remove other items from the queue.
+            if (ScriptEngine.NeedsRemoved.ContainsKey(ItemID))
+                ScriptEngine.NeedsRemoved.Remove(ItemID);
+            ScriptEngine.NeedsRemoved.Add(ItemID, VersionID);
+            VersionID++;
             //Reset the state to default
             State = "default";
             //Tell the SOP about the change.
@@ -262,9 +281,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             Script.ResetVars();
 
             //Fire state_entry
-            if (ScriptEngine.NeedsRemoved.Contains(part.UUID))
-                ScriptEngine.NeedsRemoved.Remove(part.UUID);
-            m_ScriptEngine.AddToScriptQueue(this, "state_entry", new DetectParams[0], new object[] { });
+            m_ScriptEngine.AddToScriptQueue(this, "state_entry", new DetectParams[0], VersionID, new object[] { });
             m_log.InfoFormat("[{0}]: Reset Script {1}", m_ScriptEngine.ScriptEngineName, ItemID);
         }
         #endregion
@@ -340,24 +357,24 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (StartedFromSavedState)
             {
                 if (PostOnRez)
-                    m_ScriptEngine.AddToScriptQueue(this, "on_rez", new DetectParams[0], new object[] { new LSL_Types.LSLInteger(StartParam) });
+                    m_ScriptEngine.AddToScriptQueue(this, "on_rez", new DetectParams[0], VersionID, new object[] { new LSL_Types.LSLInteger(StartParam) });
 
                 if (stateSource == StateSource.AttachedRez)
-                    m_ScriptEngine.AddToScriptQueue(this, "attach", new DetectParams[0], new object[] { new LSL_Types.LSLString(part.AttachedAvatar.ToString()) });
+                    m_ScriptEngine.AddToScriptQueue(this, "attach", new DetectParams[0], VersionID, new object[] { new LSL_Types.LSLString(part.AttachedAvatar.ToString()) });
                 else if (stateSource == StateSource.NewRez)
-                    m_ScriptEngine.AddToScriptQueue(this, "changed", new DetectParams[0], new Object[] { new LSL_Types.LSLInteger(256) });
+                    m_ScriptEngine.AddToScriptQueue(this, "changed", new DetectParams[0], VersionID, new Object[] { new LSL_Types.LSLInteger(256) });
                 else if (stateSource == StateSource.PrimCrossing)
                     // CHANGED_REGION
-                    m_ScriptEngine.AddToScriptQueue(this, "changed", new DetectParams[0], new Object[] { new LSL_Types.LSLInteger(512) });
+                    m_ScriptEngine.AddToScriptQueue(this, "changed", new DetectParams[0], VersionID, new Object[] { new LSL_Types.LSLInteger(512) });
             }
             else
             {
-                m_ScriptEngine.AddToScriptQueue(this, "state_entry", new DetectParams[0], new object[] { });
                 if (PostOnRez)
-                    m_ScriptEngine.AddToScriptQueue(this, "on_rez", new DetectParams[0], new object[] { new LSL_Types.LSLInteger(StartParam) });
+                    m_ScriptEngine.AddToScriptQueue(this, "on_rez", new DetectParams[0], VersionID, new object[] { new LSL_Types.LSLInteger(StartParam) });
 
                 if (stateSource == StateSource.AttachedRez)
-                    m_ScriptEngine.AddToScriptQueue(this, "attach", new DetectParams[0], new object[] { new LSL_Types.LSLString(part.AttachedAvatar.ToString()) });
+                    m_ScriptEngine.AddToScriptQueue(this, "attach", new DetectParams[0], VersionID, new object[] { new LSL_Types.LSLString(part.AttachedAvatar.ToString()) });
+                m_ScriptEngine.AddToScriptQueue(this, "state_entry", new DetectParams[0], VersionID, new object[0]);
             }
         }
 
@@ -368,8 +385,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public void Start(bool reupload)
         {
             //Clear out the removing of events for this script.
-            if (ScriptEngine.NeedsRemoved.Contains(part.UUID))
-                ScriptEngine.NeedsRemoved.Remove(part.UUID);
+            VersionID++;
 
             //Remove any script errors that might be waiting.
             if (m_ScriptEngine.Errors.ContainsKey(ItemID))
@@ -445,9 +461,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
                     Running = true;
                     Disabled = false;
-                    //Clear out the removing of events for this script.
-                    if (ScriptEngine.NeedsRemoved.Contains(part.UUID))
-                        ScriptEngine.NeedsRemoved.Remove(part.UUID);
+                    VersionID++;
                 }
                 if (PreviouslyCompiledID != null)
                 {
@@ -503,7 +517,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             catch (System.IO.FileNotFoundException) // Not valid!!!
             {
-                m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: FILE NOT FOUND EXCEPTION THROWN IN APP DOMAIN CREATION!!!");
+                m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: FILE NOT FOUND EXCEPTION THROWN IN APP DOMAIN CREATION!!! " + AssemblyName);
                 ScriptEngine.ScriptProtection.RemovePreviouslyCompiled(Source);
                 ScriptFrontend.DeleteStateSave(AssemblyName);
                 return;
@@ -607,8 +621,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             PluginData = (object[])LastStateSave.Plugins;
             if (LastStateSave.Permissions != " " && LastStateSave.Permissions != "")
             {
-                InventoryItem.PermsMask = int.Parse(LastStateSave.Permissions.Split(',')[0], NumberStyles.Integer, Culture.NumberFormatInfo);
-                InventoryItem.PermsGranter = new UUID(LastStateSave.Permissions.Split(',')[1]);
+                InventoryItem.PermsGranter = new UUID(LastStateSave.Permissions.Split(',')[0]);
+                InventoryItem.PermsMask = int.Parse(LastStateSave.Permissions.Split(',')[1], NumberStyles.Integer, Culture.NumberFormatInfo);
                 //m_ScriptEngine.PostScriptEvent(ItemID, new EventParams(
                 //            "run_time_permissions", new Object[] {
                 //            new LSL_Types.LSLInteger(InventoryItem.PermsMask) },

@@ -6349,6 +6349,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
             #endregion
 
+            Util.FireAndForget(LinkObjects, Pack);
+            return true;
+        }
+
+        private void LinkObjects(object Pack)
+        {
+            ObjectLinkPacket link = (ObjectLinkPacket)Pack;
             uint parentprimid = 0;
             List<uint> childrenprims = new List<uint>();
             if (link.ObjectData.Length > 1)
@@ -6365,7 +6372,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             {
                 handlerLinkObjects(this, parentprimid, childrenprims);
             }
-            return true;
         }
 
         private bool HandleObjectDelink(IClientAPI sender, Packet Pack)
@@ -6381,6 +6387,14 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
             #endregion
 
+            Util.FireAndForget(DelinkObjects, Pack);
+            return true;
+        }
+
+        private void DelinkObjects(object Pack)
+        {
+            ObjectDelinkPacket delink = (ObjectDelinkPacket)Pack;
+
             // It appears the prim at index 0 is not always the root prim (for
             // instance, when one prim of a link set has been edited independently
             // of the others).  Therefore, we'll pass all the ids onto the delink
@@ -6395,8 +6409,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             {
                 handlerDelinkObjects(prims, this);
             }
-
-            return true;
         }
 
         private bool HandleObjectAdd(IClientAPI sender, Packet Pack)

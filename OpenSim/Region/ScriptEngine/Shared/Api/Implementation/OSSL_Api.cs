@@ -150,6 +150,15 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             ScriptProtection = module;
         }
 
+        public string Name
+        {
+            get { return "OSSL"; }
+        }
+
+        public void Dispose()
+        {
+        }
+
         public override Object InitializeLifetimeService()
         {
             ILease lease = (ILease)base.InitializeLifetimeService();
@@ -196,120 +205,6 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
             IWorldComm wComm = World.RequestModuleInterface<IWorldComm>();
             wComm.DeliverMessage(ChatTypeEnum.Shout, ScriptBaseClass.DEBUG_CHANNEL, m_host.Name, m_host.UUID, message);
-        }
-
-        public void CheckThreatLevel(ThreatLevel level, string function)
-        {
-            if (!m_OSFunctionsEnabled)
-                OSSLError(String.Format("{0} permission denied.  All OS functions are disabled.", function)); // throws
-
-            if (!m_FunctionPerms.ContainsKey(function))
-            {
-                FunctionPerms perms = new FunctionPerms();
-                m_FunctionPerms[function] = perms;
-
-                string ownerPerm = m_ScriptEngine.Config.GetString("Allow_" + function, "");
-                string creatorPerm = m_ScriptEngine.Config.GetString("Creators_" + function, "");
-                if (ownerPerm == "" && creatorPerm == "")
-                {
-                    // Default behavior
-                    perms.AllowedOwners = null;
-                    perms.AllowedCreators = null;
-                }
-                else
-                {
-                    bool allowed;
-
-                    if (bool.TryParse(ownerPerm, out allowed))
-                    {
-                        // Boolean given
-                        if (allowed)
-                        {
-                            // Allow globally
-                            perms.AllowedOwners.Add(UUID.Zero);
-                        }
-                    }
-                    else
-                    {
-                        string[] ids = ownerPerm.Split(new char[] {','});
-                        foreach (string id in ids)
-                        {
-                            string current = id.Trim();
-                            UUID uuid;
-
-                            if (UUID.TryParse(current, out uuid))
-                            {
-                                if (uuid != UUID.Zero)
-                                    perms.AllowedOwners.Add(uuid);
-                            }
-                        }
-
-                        ids = creatorPerm.Split(new char[] {','});
-                        foreach (string id in ids)
-                        {
-                            string current = id.Trim();
-                            UUID uuid;
-
-                            if (UUID.TryParse(current, out uuid))
-                            {
-                                if (uuid != UUID.Zero)
-                                    perms.AllowedCreators.Add(uuid);
-                            }
-                        }
-                    }
-                }
-            }
-
-            // If the list is null, then the value was true / undefined
-            // Threat level governs permissions in this case
-            //
-            // If the list is non-null, then it is a list of UUIDs allowed
-            // to use that particular function. False causes an empty
-            // list and therefore means "no one"
-            //
-            // To allow use by anyone, the list contains UUID.Zero
-            //
-            if (m_FunctionPerms[function].AllowedOwners == null)
-            {
-                // Allow / disallow by threat level
-                if (level > m_MaxThreatLevel)
-                    OSSLError(
-                        String.Format(
-                            "{0} permission denied.  Allowed threat level is {1} but function threat level is {2}.",
-                            function, m_MaxThreatLevel, level));
-            }
-            else
-            {
-                if (!m_FunctionPerms[function].AllowedOwners.Contains(UUID.Zero))
-                {
-                    // Not anyone. Do detailed checks
-                    if (m_FunctionPerms[function].AllowedOwners.Contains(m_host.OwnerID))
-                    {
-                        // prim owner is in the list of allowed owners
-                        return;
-                    }
-
-                    TaskInventoryItem ti = m_host.Inventory.GetInventoryItem(m_itemID);
-                    if (ti == null)
-                    {
-                        OSSLError(
-                            String.Format("{0} permission error. Can't find script in prim inventory.",
-                            function));
-                    }
-                    if (!m_FunctionPerms[function].AllowedCreators.Contains(ti.CreatorID))
-                        OSSLError(
-                            String.Format("{0} permission denied. Script creator is not in the list of users allowed to execute this function and prim owner also has no permission.",
-                            function));
-                    if (ti.CreatorID != ti.OwnerID)
-                    {
-                        if ((ti.CurrentPermissions & (uint)PermissionMask.Modify) != 0)
-                            OSSLError(
-                                String.Format("{0} permission denied. Script permissions error.",
-                                function));
-
-                    }
-                }
-            }
         }
 
         protected void ScriptSleep(int delay)
@@ -2044,7 +1939,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             InitLSL();
             LSL_List retVal = new LSL_List();
             //Assign requested part directly
-            SceneObjectPart part = m_host.ParentGroup.GetLinkNumPart(linknumber);
+            SceneObjectPart part = m_host.ParentGroup.GetLinkNumPart(linknumber) as SceneObjectPart;
 
             //Check to see if the requested part exists (NOT null) and if so, get it's rules
             if (part != null) retVal = ((LSL_Api)m_LSL_Api).GetLinkPrimitiveParams(part, rules);
@@ -2265,7 +2160,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_List osGetPrimitiveParams(LSL_Key prim, LSL_List rules)
         {
-            CheckThreatLevel(ThreatLevel.High, "osGetPrimitiveParams");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osGetPrimitiveParams", m_host, "OSSL");
             m_host.AddScriptLPS(1);
             
             return m_LSL_Api.GetLinkPrimitiveParamsEx(prim, rules);
@@ -2273,10 +2168,52 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void osSetPrimitiveParams(LSL_Key prim, LSL_List rules)
         {
-            CheckThreatLevel(ThreatLevel.High, "osGetPrimitiveParams");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osSetPrimitiveParams", m_host, "OSSL");
             m_host.AddScriptLPS(1);
             
             m_LSL_Api.SetPrimitiveParamsEx(prim, rules);
+        }
+
+        /// <summary>
+        /// Like osGetAgents but returns enough info for a radar
+        /// </summary>
+        /// <returns>Strided list of the UUID, position and name of each avatar in the region</returns>
+        public LSL_List osGetAvatarList()
+        {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osGetAvatarList", m_host, "OSSL");
+            
+            LSL_List result = new LSL_List();
+            World.ForEachScenePresence(delegate (ScenePresence avatar)
+            {
+                if (avatar != null && avatar.UUID != m_host.OwnerID)
+                {
+                    if (avatar.IsChildAgent == false)
+                    {
+                        result.Add(avatar.UUID);
+                        result.Add(avatar.AbsolutePosition);
+                        result.Add(avatar.Name);
+                    }
+                }
+            });
+            return result;
+        }
+
+        public LSL_Integer osAddAgentToGroup(LSL_Key AgentID, LSL_Key GroupID, LSL_Key RequestedRoleID)
+        {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "osAddAgentToGroup", m_host, "OSSL");
+            m_host.AddScriptLPS(1);
+
+            IGroupsServicesConnector m_groupData = World.RequestModuleInterface<IGroupsServicesConnector>();
+
+            // No groups module, no functionality
+            if (m_groupData == null)
+            {
+                OSSLShoutError("No Groups Module found for osAddAgentToGroup.");
+                return 0;
+            }
+
+            m_groupData.AddAgentToGroup(UUID.Parse(AgentID.m_string), m_host.OwnerID, UUID.Parse(GroupID.m_string), UUID.Parse(RequestedRoleID.m_string));
+            return 1;
         }
     }
 }

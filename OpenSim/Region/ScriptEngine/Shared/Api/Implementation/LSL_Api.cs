@@ -276,11 +276,15 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             default:
                 if (linkType < 0 || m_host.ParentGroup ==  null)
                     return new List<SceneObjectPart>();
-                SceneObjectPart target = m_host.ParentGroup.GetLinkNumPart(linkType);
-                if (target == null)
-                    return new List<SceneObjectPart>();
-                ret = new List<SceneObjectPart>();
-                ret.Add(target);
+                ISceneEntity target = m_host.ParentGroup.GetLinkNumPart(linkType);
+                if (target is SceneObjectPart)
+                {
+                    if (target == null)
+                        return new List<SceneObjectPart>();
+                    ret = new List<SceneObjectPart>();
+                    ret.Add(target as SceneObjectPart);
+                }
+                    //No allowing scene presences to be found here
                 return ret;
 
             }
@@ -906,17 +910,12 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             // try avatar username surname
             UserAccount account = World.UserAccountService.GetUserAccount(World.RegionInfo.ScopeID, objecUUID);
             if (account != null)
-            {
-                string avatarname = account.Name;
-                return avatarname;
-            }
+                return account.Name;
+
             // try an scene object
             SceneObjectPart SOP = World.GetSceneObjectPart(objecUUID);
             if (SOP != null)
-            {
-                string objectname = SOP.Name;
-                return objectname;
-            }
+                return SOP.Name;
 
             EntityBase SensedObject;
             World.Entities.TryGetValue(objecUUID, out SensedObject);
@@ -3807,7 +3806,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                     return;
                 }
             }
-            else if (m_host.SitTargetAvatar == agentID) // Sitting avatar
+            else if (m_host.SitTargetAvatar.Contains(agentID)) // Sitting avatar
             {
                 // When agent is sitting, certain permissions are implicit if requested from sitting agent
                 int implicitPerms = ScriptBaseClass.PERMISSION_TRIGGER_ANIMATION |
@@ -3836,7 +3835,13 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
             if (presence != null)
             {
-                string ownerName = resolveName(m_host.ParentGroup.RootPart.OwnerID);
+                string ownerName = "";
+                ScenePresence ownerPresence = World.GetScenePresence(m_host.ParentGroup.RootPart.OwnerID);
+                if (ownerPresence == null)
+                    ownerName = resolveName(m_host.OwnerID);
+                else
+                    ownerName = ownerPresence.Name;
+
                 if (ownerName == String.Empty)
                     ownerName = "(hippos)";
 
@@ -4059,7 +4064,13 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                     }
                     break;
                 default:
-                    childPrim = parentPrim.GetLinkNumPart(linknum);
+                    ISceneEntity target = m_host.ParentGroup.GetLinkNumPart(linknum);
+                    if (target is SceneObjectPart)
+                    {
+                        childPrim = target as SceneObjectPart;
+                    }
+                    else
+                        break;
                     if (childPrim.UUID == m_host.UUID)
                         childPrim = null;
                     break;
@@ -4127,10 +4138,10 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
-            SceneObjectPart part = m_host.ParentGroup.GetLinkNumPart(linknum);
-            if (part != null)
+            ISceneEntity target = m_host.ParentGroup.GetLinkNumPart(linknum);
+            if (target != null)
             {
-                return part.UUID.ToString();
+                return target.UUID.ToString();
             }
             else
             {
@@ -4179,29 +4190,49 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             // Single prim
             if (m_host.LinkNum == 0)
             {
-                if (linknum == 0)
+                if (linknum == 1)
                     return m_host.Name;
                 else
-                    return UUID.Zero.ToString();
+                {
+                    ISceneEntity entity = m_host.ParentGroup.GetLinkNumPart(linknum);
+                    if (entity != null)
+                        return ((ScenePresence)entity).Name;
+                    else
+                        return UUID.Zero.ToString();
+                }
             }
             // Link set
-            SceneObjectPart part = null;
+            ISceneEntity part = null;
             if (m_host.LinkNum == 1) // this is the Root prim
             {
                 if (linknum < 0)
+                {
                     part = m_host.ParentGroup.GetLinkNumPart(2);
+                }
                 else
+                {
                     part = m_host.ParentGroup.GetLinkNumPart(linknum);
+                }
             }
             else // this is a child prim
             {
                 if (linknum < 2)
+                {
                     part = m_host.ParentGroup.GetLinkNumPart(1);
+                }
                 else
+                {
                     part = m_host.ParentGroup.GetLinkNumPart(linknum);
+                }
             }
             if (part != null)
-                return part.Name;
+            {
+                if (part is SceneObjectPart)
+                    return ((SceneObjectPart)part).Name;
+                else if (part is ScenePresence)
+                    return ((ScenePresence)part).Name;
+                return UUID.Zero.ToString();
+            }
             else
                 return UUID.Zero.ToString();
         }
@@ -4556,7 +4587,6 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llCollisionSound(string impact_sound, double impact_volume)
         {
-
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             UUID soundId = UUID.Zero;
@@ -6690,7 +6720,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                     bucket);
 
             if (m_TransferModule != null)
-                m_TransferModule.SendInstantMessage(msg, delegate(bool success) {});
+                m_TransferModule.SendInstantMessage(msg);
         }
 
         public void llSetVehicleType(int type)
@@ -7916,12 +7946,13 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         public LSL_Integer llGetNumberOfPrims()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            int avatarCount = 0;
-            World.ForEachScenePresence(delegate(ScenePresence presence)
+            int avatarCount = m_host.SitTargetAvatar.Count;
+            
+            /*World.ForEachScenePresence(delegate(ScenePresence presence)
             {
                 if (!presence.IsChildAgent && presence.ParentID != UUID.Zero && m_host.ParentGroup.HasChildPrim(presence.ParentID))
                         avatarCount++;
-            });
+            });*/
 
             return m_host.ParentGroup.PrimCount + avatarCount;
         }
