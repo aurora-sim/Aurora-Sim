@@ -2841,9 +2841,13 @@ namespace OpenSim.Region.Framework.Scenes
             if (Permissions.CanRezObject(1, ownerID, pos))
             {
                 // rez ON the ground, not IN the ground
-               // pos.Z += 0.25F; The rez point should now be correct so that its not in the ground
+                // pos.Z += 0.25F; The rez point should now be correct so that its not in the ground
 
                 AddNewPrim(ownerID, groupID, pos, rot, shape);
+            }
+            else
+            {
+                GetScenePresence(ownerID).ControllingClient.SendAlertMessage("You do not have permission to rez objects here.");
             }
         }
 

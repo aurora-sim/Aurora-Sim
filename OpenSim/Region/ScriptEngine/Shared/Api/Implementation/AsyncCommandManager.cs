@@ -213,7 +213,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                     m_SensorRepeat[s].CheckSenseRepeaterEvents();
 
                     // Check dataserver
-                    m_Dataserver[s].ExpireRequests();
+                    m_Dataserver[s].CheckAndExpireRequests();
                 }
             }
         }

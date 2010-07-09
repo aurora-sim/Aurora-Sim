@@ -43,7 +43,7 @@ using OpenMetaverse;
 
 namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
 {
-    public class Compiler : ICompiler
+    public class Compiler
     {
         #region Declares
 
@@ -74,7 +74,14 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
 
         private List<string> m_warnings = new List<string>();
 
-        private static UInt64 scriptCompileCounter = 0;                                     // And a counter
+        private List<string> m_errors = new List<string>();
+
+        private static UInt64 scriptCompileCounter = 0; // And a counter
+
+        public UInt64 ScriptCompileCounter
+        {
+            get { return scriptCompileCounter; }
+        }
 
         public IScriptEngine m_scriptEngine;
 
@@ -96,7 +103,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             
             MakeFilePrefixSafe();
             //Set up the compilers
-            MapCompilers();
+            SetupCompilers();
             //Find the default compiler
             FindDefaultCompiler();
         }
@@ -152,6 +159,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
 
             // We now have an allow-list, a mapping list, and a default language
         }
+
         public class ScriptConverterInitialiser : OpenSim.Framework.PluginInitialiserBase
         {
             Compiler m_compiler;
@@ -167,7 +175,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             }
         }
 
-        public void MapCompilers()
+        public void SetupCompilers()
         {
             converters = Aurora.Framework.AuroraModuleLoader.LoadPlugins<IScriptConverter>("/OpenSim/ScriptConverter", new ScriptConverterInitialiser(this));
         }
@@ -177,18 +185,17 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
         #region Compile script
 
         /// <summary>
-        /// Converts script from LSL to CS and calls CompileFromCSText
+        /// Converts script (if needed) and compiles
         /// </summary>
         /// <param name="Script">LSL script</param>
         /// <returns>Filename to .dll assembly</returns>
         public void PerformScriptCompile(string Script, UUID itemID, UUID ownerUUID, out string assembly)
         {
             if (Script == String.Empty)
-            {
                 throw new Exception("No script text present");
-            }
-        	
+
             m_warnings.Clear();
+            m_errors.Clear();
 
             assembly = CheckDirectories(Path.Combine("ScriptEngines", Path.Combine(
                         "Script",
@@ -202,7 +209,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             CompileFromDotNetText(compileScript, converter, assembly);
         }
 
-        private void CheckLanguageAndConvert(string Script,UUID ownerID, out IScriptConverter converter, out string compileScript)
+        private void CheckLanguageAndConvert(string Script, UUID ownerID, out IScriptConverter converter, out string compileScript)
         {
             string language = DefaultCompileLanguage;
 
@@ -242,6 +249,26 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             }
         }
 
+        public void RecreateDirectory()
+        {
+            if (Directory.Exists(ScriptEnginesPath))
+            {
+                try
+                {
+                    Directory.Delete(ScriptEnginesPath, true);
+                }
+                catch (Exception) { }
+            }
+            if (!Directory.Exists(ScriptEnginesPath))
+            {
+                try
+                {
+                    Directory.CreateDirectory(ScriptEnginesPath);
+                }
+                catch (Exception) { }
+            }
+        }
+        
         private string CheckDirectories(string assembly)
         {
             if (!Directory.Exists(ScriptEnginesPath))
@@ -304,6 +331,19 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             }
         }
 
+        public string[] GetErrors()
+        {
+            return m_errors.ToArray();
+        }
+
+        private void AddError(string error)
+        {
+            if (!m_errors.Contains(error))
+            {
+                m_errors.Add(error);
+            }
+        }
+
         /// <summary>
         /// Compile .NET script to .Net assembly (.dll)
         /// </summary>
@@ -342,7 +382,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                 {
                     m_log.Error("[Compiler]: Exception while " +
                                 "trying to write script source to file \"" +
-                                srcFileName + "\": " + ex.ToString());
+                                srcFileName + "\": " + ex.Message.ToString());
                 }
             }
 
@@ -374,14 +414,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
 
             CompilerResults results = converter.Compile(parameters, Script);
 
-            // Check result
-            // Go through errors
-
             //
             // WARNINGS AND ERRORS
             //
-            bool hadErrors = false;
-            string errtext = String.Empty;
 
             if (results.Errors.Count > 0)
             {
@@ -392,6 +427,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                     KeyValuePair<int, int> lslPos;
 
                     // Show 5 errors max, but check entire list for errors
+
+                    string errtext = String.Empty;
 
                     if (severity == "Error")
                     {
@@ -417,15 +454,39 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                         // countingn lines and columns at 0, so we subtract 1.
                         errtext += String.Format("({0},{1}): {3}: {2}\n",
                                 LineN, CharN, text, severity);
-                        hadErrors = true;
+                        AddError(errtext);
+                    }
+                    else
+                    {
+                        string text = CompErr.ErrorText;
+                        int LineN = 0;
+                        int CharN = 0;
+                        // Use LSL type names
+                        if (converter.Name == "lsl")
+                        {
+                            text = ReplaceTypes(CompErr.ErrorText);
+                            text = CleanError(text);
+                            lslPos = FindErrorPosition(CompErr.Line, CompErr.Column, PositionMap);
+                            LineN = lslPos.Key - 1 - LinesToRemoveOnError;
+                            CharN = lslPos.Value - 1;
+                        }
+                        else
+                        {
+                            LineN = CompErr.Line;
+                            CharN = CompErr.Column;
+                        }
+
+                        // The Second Life viewer's script editor begins
+                        // countingn lines and columns at 0, so we subtract 1.
+                        errtext += String.Format("({0},{1}): {3}: {2}\n",
+                                LineN, CharN, text, severity);
+                        AddWarning(errtext);
                     }
                 }
             }
 
-            if (hadErrors)
-            {
-                throw new Exception(errtext);
-            }
+            if (m_errors.Count != 0) // Quit early then
+                return;
 
             //  On today's highly asynchronous systems, the result of
             //  the compile may not be immediately apparent. Wait a 
@@ -440,9 +501,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                 // One final chance...
                 if (!File.Exists(assembly))
                 {
-                    errtext = String.Empty;
-                    errtext += "No compile error. But not able to locate compiled file.";
-                    throw new Exception(errtext);
+                    throw new Exception("No compile error. But not able to locate compiled file.");
                 }
             }
         }

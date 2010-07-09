@@ -36,12 +36,6 @@ using OpenSim.Region.ScriptEngine.Shared;
 
 namespace OpenSim.Region.ScriptEngine.Interfaces
 {
-    public interface ICompiler
-    {
-        void PerformScriptCompile(string Script, UUID itemID, UUID ownerUUID, out string assembly);
-        string[] GetWarnings();
-    }
-
     public interface IScriptProtectionModule
     {
         bool AllowHTMLLinking { get; }

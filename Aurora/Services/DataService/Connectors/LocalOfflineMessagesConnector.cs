@@ -5,6 +5,9 @@ using Aurora.DataManager;
 using Aurora.Framework;
 using OpenMetaverse;
 using Nini.Config;
+using OpenSim.Framework;
+using System.Xml;
+using System.Xml.Serialization;
 
 namespace Aurora.Services.DataService
 {
@@ -30,41 +33,52 @@ namespace Aurora.Services.DataService
         {
         }
 
-		public OfflineMessage[] GetOfflineMessages(UUID agentID)
+        public GridInstantMessage[] GetOfflineMessages(UUID agentID)
 		{
-			List<OfflineMessage> messages = new List<OfflineMessage>();
-			List<string> Messages = GD.Query("ToUUID", agentID, "offlinemessages", "*");
+            List<GridInstantMessage> messages = new List<GridInstantMessage>();
+            List<string> Messages = GD.Query("ToUUID", agentID, "offlinemessages", "Message");
 			GD.Delete("offlinemessages", new string[] { "ToUUID" }, new object[] { agentID });
             if (Messages.Count == 0)
                 return messages.ToArray();
-            int i = 0;
-			OfflineMessage Message = new OfflineMessage();
-            foreach (string part in Messages) {
-				if (i == 0)
-					Message.FromUUID = new UUID(part);
-				if (i == 1)
-					Message.FromName = part;
-				if (i == 2)
-					Message.ToUUID = new UUID(part);
-				if (i == 3)
-					Message.Message = part;
-				i++;
-				if (i == 4) {
-					i = 0;
-					messages.Add(Message);
-					Message = new OfflineMessage();
-				}
-			}
+            GridInstantMessage Message = new GridInstantMessage();
+            foreach (string part in Messages)
+            {
+                byte[] byteArray = new byte[part.Length];
+                System.Text.ASCIIEncoding encoding = new
+                System.Text.ASCIIEncoding();
+                byteArray = encoding.GetBytes(part);
+
+                // Load the memory stream
+                System.IO.MemoryStream memoryStream = new System.IO.MemoryStream(byteArray);
+                memoryStream.Seek(0, System.IO.SeekOrigin.Begin);
+
+                XmlSerializer deserializer = new XmlSerializer(typeof(GridInstantMessage));
+                Message = (GridInstantMessage)deserializer.Deserialize(memoryStream);
+                messages.Add(Message);
+                Message = new GridInstantMessage();
+            }
 			return messages.ToArray();
 		}
 
-		public void AddOfflineMessage(OfflineMessage message)
+		public void AddOfflineMessage(GridInstantMessage message)
 		{
+            System.IO.MemoryStream buffer = new System.IO.MemoryStream();
+
+            XmlWriterSettings settings = new XmlWriterSettings();
+            settings.Encoding = Encoding.UTF8;
+
+            using (XmlWriter writer = XmlWriter.Create(buffer, settings))
+            {
+                XmlSerializer serializer = new XmlSerializer(typeof(GridInstantMessage));
+                serializer.Serialize(writer, message);
+                writer.Flush();
+            }
+            byte[] bytes = buffer.ToArray();
+            string array = OpenMetaverse.Utils.BytesToString(bytes);
+            array = array.Remove(0, 1); //Theres a space in front of it for some reason
 			GD.Insert("offlinemessages", new object[] {
-				message.FromUUID,
-				message.FromName,
-				message.ToUUID,
-				message.Message
+				message.toAgentID,
+                array
 			});
 		}
 	}

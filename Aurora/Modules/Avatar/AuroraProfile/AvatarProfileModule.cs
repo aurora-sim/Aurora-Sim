@@ -208,7 +208,7 @@ namespace Aurora.Modules
                 }
             }
             ScenePresence sp = m_scene.GetScenePresence(friend);
-            if (sp.GodLevel != 0)
+            if (sp != null && sp.GodLevel != 0)
                 return true;
             return false;
         }

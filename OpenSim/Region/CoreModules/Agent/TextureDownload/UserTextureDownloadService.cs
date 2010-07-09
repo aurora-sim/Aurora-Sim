@@ -106,47 +106,47 @@ namespace OpenSim.Region.CoreModules.Agent.TextureDownload
         public void HandleTextureRequest(TextureRequestArgs e)
         {
 
-            //TextureSender.TextureSender textureSender;
+           /* TextureSender.TextureSender textureSender;
 
             //TODO: should be working out the data size/ number of packets to be sent for each discard level
-            //if ((e.DiscardLevel >= 0) || (e.Priority != 0))
-            //{
-                //lock (m_textureSenders)
-                //{
-                    //if (m_textureSenders.TryGetValue(e.RequestedAssetID, out textureSender))
-                    //{
+            if ((e.DiscardLevel >= 0) || (e.Priority != 0))
+            {
+                lock (m_textureSenders)
+                {
+                    if (m_textureSenders.TryGetValue(e.RequestedAssetID, out textureSender))
+                    {
                         // If we've received new non UUID information for this request and it hasn't dispatched
                         // yet, then update the request accordingly.
-                     //   textureSender.UpdateRequest(e.DiscardLevel, e.PacketNumber);
-                    //}
-                    //else
-                    //{
-                        //                        m_log.DebugFormat("[TEXTURE]: Received a request for texture {0}", e.RequestedAssetID);
+                        textureSender.UpdateRequest(e.DiscardLevel, e.PacketNumber);
+                    }
+                    else
+                    {
+                                                m_log.DebugFormat("[TEXTURE]: Received a request for texture {0}", e.RequestedAssetID);
 
-                        //if (!foundTextureLimitStrategy.AllowRequest(e.RequestedAssetID))
-                        //{
-                            //                            m_log.DebugFormat(
-                            //                                "[TEXTURE]: Refusing request for {0} from client {1}",
-                            //                                e.RequestedAssetID, m_client.AgentId);
+                        if (!foundTextureLimitStrategy.AllowRequest(e.RequestedAssetID))
+                        {
+                                                        m_log.DebugFormat(
+                                                            "[TEXTURE]: Refusing request for {0} from client {1}",
+                                                            e.RequestedAssetID, m_client.AgentId);
 
-                            //return;
-                        //}
-                        //else if (!missingTextureLimitStrategy.AllowRequest(e.RequestedAssetID))
-                        //{
-                        //    if (missingTextureLimitStrategy.IsFirstRefusal(e.RequestedAssetID))
-                        //    {
-                         //       if (StatsManager.SimExtraStats != null)
-                         //           StatsManager.SimExtraStats.AddBlockedMissingTextureRequest();
+                            return;
+                        }
+                        else if (!missingTextureLimitStrategy.AllowRequest(e.RequestedAssetID))
+                        {
+                            if (missingTextureLimitStrategy.IsFirstRefusal(e.RequestedAssetID))
+                            {
+                                if (StatsManager.SimExtraStats != null)
+                                    StatsManager.SimExtraStats.AddBlockedMissingTextureRequest();
 
-                                // Commenting out this message for now as it causes too much noise with other
+                                 //Commenting out this message for now as it causes too much noise with other
                                 // debug messages.
-                                //                                m_log.DebugFormat(
-                                //                                    "[TEXTURE]: Dropping requests for notified missing texture {0} for client {1} since we have received more than {2} requests",
-                                //                                    e.RequestedAssetID, m_client.AgentId, MAX_ALLOWED_TEXTURE_REQUESTS);
-                         //   }
+                                                                m_log.DebugFormat(
+                                                                    "[TEXTURE]: Dropping requests for notified missing texture {0} for client {1} since we have received more than {2} requests",
+                                                                    e.RequestedAssetID, m_client.AgentId, MAX_ALLOWED_TEXTURE_REQUESTS);
+                            }
 
-                        //    return;
-                        //}
+                            return;
+                        }*/
 
                 m_scene.StatsReporter.AddPendingDownloads(1);
 

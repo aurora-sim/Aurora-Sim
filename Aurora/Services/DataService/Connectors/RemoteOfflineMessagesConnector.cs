@@ -45,7 +45,7 @@ namespace Aurora.Services.DataService
 
         #region IOfflineMessagesConnector Members
 
-        public OfflineMessage[] GetOfflineMessages(UUID PrincipalID)
+        public GridInstantMessage[] GetOfflineMessages(UUID PrincipalID)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
 
@@ -53,7 +53,7 @@ namespace Aurora.Services.DataService
             sendData["METHOD"] = "getofflinemessages";
 
             string reqString = ServerUtils.BuildQueryString(sendData);
-            List<OfflineMessage> Messages = new List<OfflineMessage>();
+            List<GridInstantMessage> Messages = new List<GridInstantMessage>();
             try
             {
                 string reply = SynchronousRestFormsRequester.MakeRequest("POST",
@@ -69,7 +69,7 @@ namespace Aurora.Services.DataService
                         if (value.Value is Dictionary<string, object>)
                         {
                             Dictionary<string, object> valuevalue = value.Value as Dictionary<string, object>;
-                            OfflineMessage message = new OfflineMessage(valuevalue);
+                            GridInstantMessage message = new GridInstantMessage(valuevalue);
                             Messages.Add(message);
                         }
                     }
@@ -83,7 +83,7 @@ namespace Aurora.Services.DataService
             return Messages.ToArray();
         }
 
-        public void AddOfflineMessage(OfflineMessage message)
+        public void AddOfflineMessage(GridInstantMessage message)
         {
             Dictionary<string, object> sendData = message.ToKeyValuePairs();
 

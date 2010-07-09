@@ -28,6 +28,8 @@
 using System;
 using System.IO;
 using System.Collections.Generic;
+using System.Collections;
+using System.Text;
 using Tools;
 
 namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
@@ -113,7 +115,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             return false;
         }
     }
-    public class CSCodeGenerator : ICodeConverter
+    public class CSCodeGenerator
     {
         private SYMBOL m_astRoot = null;
         private Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> m_positionMap;
@@ -124,6 +126,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
         private List<string> m_warnings = new List<string>();
         private bool IsParentEnumerable = false;
         private bool IsInLoop = false;
+        private string script = "";
+        private string OriginalScript = "";
 
         /// <summary>
         /// Creates an 'empty' CSCodeGenerator instance.
@@ -168,6 +172,69 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             m_warnings.Clear();
         }
 
+        private string CreateCompilerScript(string compileScript)
+        {
+            string compiledScript = "";
+            compiledScript = String.Empty +
+                "using OpenSim.Region.ScriptEngine.Shared;\n" +
+                "using System;\n" +
+                "using System.Collections.Generic;\n" +
+                "using System.Collections;\n" +
+                "using System.Reflection;\n" +
+                "using System.Timers;\n" +
+                "namespace Script\n" +
+                "\n" +
+                "{\n";
+
+            compiledScript += "[Serializable]\n public class ScriptClass : OpenSim.Region.ScriptEngine.Shared.ScriptBase.ScriptBaseClass\n";
+            compiledScript += "{\n";
+
+            compiledScript += compileScript;
+
+
+            compiledScript += "List<IEnumerator> parts = new List<IEnumerator>();\n";
+            compiledScript += "System.Timers.Timer aTimer = new System.Timers.Timer(250);\n";
+            compiledScript += "public ScriptClass()\n{\n";
+            compiledScript += "aTimer.Elapsed += new System.Timers.ElapsedEventHandler(Timer);\n";
+            compiledScript += "aTimer.Enabled = true;\n";
+            compiledScript += "aTimer.Start();\n";
+            compiledScript += "}\n";
+            compiledScript += "~ScriptClass()\n{\n";
+            compiledScript += "aTimer.Stop();\n";
+            compiledScript += "aTimer.Dispose();\n";
+            compiledScript += "}\n";
+
+            compiledScript += "public void Timer(object source, System.Timers.ElapsedEventArgs e)\n{\n";
+            compiledScript += "lock (parts)\n";
+            compiledScript += "{\n";
+            compiledScript += "int i = 0;\n";
+            compiledScript += "if(parts.Count == 0)\n";
+            compiledScript += "return;";
+            compiledScript += "while (parts.Count > 0 && i < 1000)\n";
+            compiledScript += "{\n";
+            compiledScript += "i++;\n";
+            compiledScript += "bool running = false;\n";
+            compiledScript += "try\n";
+            compiledScript += "{\n";
+            compiledScript += "running = parts[i % parts.Count].MoveNext();\n";
+            compiledScript += "}\n";
+            compiledScript += "catch\n";
+            compiledScript += "{\n";
+            compiledScript += "}\n";
+            compiledScript += "if (!running)\n { \n";
+            compiledScript += "parts.Remove(parts[i % parts.Count]);\n } \n";
+            compiledScript += "else\n { } \n";
+            compiledScript += "}\n";
+            compiledScript += "}\n";
+            compiledScript += "}\n";
+
+            compiledScript += "\n}"; // Close Class
+
+            compiledScript += "\n}"; // Close Namespace
+
+            return compiledScript;
+        }
+
         /// <summary>
         /// Generate the code from the AST we have.
         /// </summary>
@@ -177,6 +244,21 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
         {
             ResetCounters();
             Parser p = new LSLSyntax(new yyLSLSyntax(), new ErrorHandler(true));
+
+            try
+            {
+                /*script = CheckForInlineVectors(script);
+
+                script = CheckFloatExponent(script);
+
+                script = CheckForIncorrectFieldinitializer(script);*/
+            }
+            catch (Exception ex)
+            {
+                string message = "Syntax error before conversion - " + ex.Message;
+                    
+                throw new Exception(message);
+            }
 
             LSL2CSCodeTransformer codeTransformer;
             try
@@ -209,17 +291,6 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             OriginalScript = script;
             string retstr = String.Empty;
 
-            // standard preamble
-            //retstr = GenerateLine("using OpenSim.Region.ScriptEngine.Common;");
-            //retstr += GenerateLine("using System.Collections.Generic;");
-            //retstr += GenerateLine("");
-            //retstr += GenerateLine("namespace SecondLife");
-            //retstr += GenerateLine("{");
-            m_braceCount++;
-            //retstr += GenerateIndentedLine("public class Script : OpenSim.Region.ScriptEngine.Common");
-            //retstr += GenerateIndentedLine("{");
-            m_braceCount++;
-
             // line number
             m_CSharpLine += 3;
 
@@ -227,20 +298,238 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             retstr += GenerateLine();
             foreach (SYMBOL s in m_astRoot.kids)
                 retstr += GenerateNode(s);
-            script = "";
-            // close braces!
-            m_braceCount--;
-            //retstr += GenerateIndentedLine("}");
-            m_braceCount--;
-            //retstr += GenerateLine("}");
 
-            // Removes all carriage return characters which may be generated in Windows platform. Is there
-            // cleaner way of doing this?
+            // Removes all carriage return characters which may be generated in Windows platform. 
+            //Is there a cleaner way of doing this?
             retstr=retstr.Replace("\r", "");
 
             CheckEventCasts(retstr);
-
+            retstr = CreateCompilerScript(retstr);
             return retstr;
+        }
+
+        private string CheckForIncorrectFieldinitializer(string script)
+        {
+            string[] BeforeDefault = script.Split(new string[]{"default"},StringSplitOptions.None);
+            string[] LinesBeforeDefault = BeforeDefault[0].Split('\n');
+
+            List<string> VariableLines = new List<string>();
+            List<string> Variables = new List<string>();
+            int IsInsideFunction = 0;
+            foreach (string line in LinesBeforeDefault)
+            {
+                if (line == "")
+                    continue;
+                else if (line.Contains("//")) // No checking comments either
+                    continue;
+                else if (line.Contains("{")) // No checking inside of functions
+                {
+                    IsInsideFunction++;
+                    continue;
+                }
+                else if (line.Contains("(")) // No checking inside of functions or function calls
+                {
+                    IsInsideFunction++;
+                    continue;
+                }
+                else if (line.Contains(")")) 
+                {
+                    IsInsideFunction--;
+                    continue;
+                }
+                else if (line.Contains("}"))
+                {
+                    IsInsideFunction--;
+                    continue;
+                }
+                else if (IsInsideFunction != 0)
+                    continue;
+                else
+                {
+                    if (line.StartsWith("integer") || line.StartsWith("float")
+                        || line.StartsWith("rotation") || line.StartsWith("vector")
+                        || line.StartsWith("list") || line.StartsWith("string")
+                        || line.StartsWith("key"))
+                    {
+                        VariableLines.Add(line);
+                        string[] EqualSplit = line.Split('=');
+                        Variables.Add(EqualSplit[0].Split(' ')[1]);
+                    }
+                }
+            }
+            List<string> NewLines = new List<string>();
+            foreach (string line in VariableLines)
+            {
+                string NewLine = line;
+                #region Find the variable
+
+                string[] keys = line.Split('=');
+                if (keys.Length != 1)
+                {
+                    string key = keys[0];
+                    key = key.Split(' ')[1];
+
+                #endregion
+                    #region Find the Value
+
+                    string EqualSplit = line.Split('=')[1];
+                    EqualSplit = EqualSplit.Split(';')[0];
+
+                    #endregion
+                    int i = 0;
+                    foreach (string variable in Variables)
+                    {
+                        if (EqualSplit == variable)
+                        {
+                            string VarNewLine = VariableLines[i];
+
+                            // Rebuild the line so that it does not error out
+                            // using the line it references, but with the new variable
+                            string[] LineParts = VarNewLine.Split('=');
+                            string[] SplitLineParts = LineParts[0].Split(' ');
+                            SplitLineParts[1] = key;
+                            string tempSplit = "";
+                            foreach (string LinePart in SplitLineParts)
+                            {
+                                tempSplit += LinePart + " ";
+                            }
+                            tempSplit = tempSplit.Remove(tempSplit.Length - 1, 1);
+                            LineParts[0] = tempSplit;
+                            NewLine = "";
+                            foreach (string LinePart in LineParts)
+                            {
+                                NewLine += LinePart + "=";
+                            }
+                            NewLine = NewLine.Remove(NewLine.Length - 1, 1);
+                        }
+                        i++;
+                    }
+                }
+                NewLines.Add(NewLine);
+            }
+            string NewLinesOfDefault = "";
+            foreach (string newLine in NewLines)
+            {
+                NewLinesOfDefault += newLine + "\n";
+            }
+            script = "";
+            LinesBeforeDefault[0] = NewLinesOfDefault;
+            foreach (string newLine in BeforeDefault)
+            {
+                script += newLine + "default";
+            }
+            script = script.Remove(script.Length - 7, 7);
+
+            return script;
+        }
+
+        private string CheckFloatExponent(string script)
+        {
+            string[] SplitScript = script.Split('\n');
+            List<string> ReconstructableScript = new List<string>();
+            foreach (string line in SplitScript)
+            {
+                string AddLine = line;
+                if (AddLine.Contains("float"))
+                {
+                    if (line.Contains("e")) // Looking for exponents
+                    {
+                        //Should have this - float *** = 151e9;
+                        string[] SplitBeforeE = AddLine.Split('='); // Split at the e so we can look at the syntax
+                        if (SplitBeforeE.Length != 1)
+                        {
+                            string[] SplitBeforeESpace = SplitBeforeE[1].Split(';');
+                            //Should have something like this now - 151
+                            if (SplitBeforeESpace[0].Contains("e"))
+                            {
+                                if (!SplitBeforeESpace[0].Contains("."))
+                                {
+                                    //Needs one then
+                                    string[] Split = SplitBeforeESpace[0].Split('e'); // Split at the e so we can look at the syntax
+                                    Split[0] += ".";
+                                    AddLine = "";
+                                    string TempString = "";
+                                    foreach (string tempLine in Split)
+                                    {
+                                        TempString += tempLine + "e";
+                                    }
+                                    TempString = TempString.Remove(TempString.Length - 1, 1);
+                                    SplitBeforeESpace[0] = TempString;
+                                    TempString = "";
+                                    foreach (string tempLine in SplitBeforeESpace)
+                                    {
+                                        TempString += tempLine + ";";
+                                    }
+                                    //Remove the last ;
+                                    TempString = TempString.Remove(TempString.Length - 1, 1);
+                                    SplitBeforeE[1] = TempString;
+                                    foreach (string tempLine in SplitBeforeE)
+                                    {
+                                        AddLine += tempLine + "=";
+                                    }
+                                    //Remove the last e
+                                    AddLine = AddLine.Remove(AddLine.Length - 1, 1);
+                                }
+                            }
+                        }
+                    }
+                }
+                ReconstructableScript.Add(AddLine);
+            }
+            string RetVal = "";
+            foreach (string line in ReconstructableScript)
+            {
+                RetVal += line + "\n";
+            }
+            return RetVal;
+        }
+
+        private string CheckForInlineVectors(string script)
+        {
+            string[] SplitScript = script.Split('\n');
+            List<string> ReconstructableScript = new List<string>();
+            foreach (string line in SplitScript)
+            {
+                string AddLine = line;
+                if (AddLine.Contains("<"))
+                {
+                    if (AddLine.Contains("\"")) // if it contains ", we need to be more careful
+                    {
+                        string[] SplitByParLine = AddLine.Split('\"');
+                        int lineNumber = 0;
+                        List<string> ReconstructableLine = new List<string>();
+                        foreach (string parline in SplitByParLine)
+                        {
+                            string AddInsideLine = parline;
+                            //throw out all odd numbered lines as they are inside ""
+                            if(lineNumber % 2 != 1)
+                            {
+                                AddInsideLine = AddInsideLine.Replace("<", "(<");
+                                AddInsideLine = AddInsideLine.Replace(">", ">)");
+                            }
+                            ReconstructableLine.Add(AddInsideLine);
+                            lineNumber++;
+                        }
+                        AddLine = "";
+                        foreach (string insideline in ReconstructableLine)
+                        {
+                            AddLine += insideline;
+                        }
+                    }
+                    else
+                    {
+                        AddLine = AddLine.Replace("<", "(<");
+                        AddLine = AddLine.Replace(">", ">)");
+                    }
+                }
+                ReconstructableScript.Add(AddLine);
+            }
+            string RetVal = "";
+            foreach (string line in ReconstructableScript)
+            {
+                RetVal += line + "\n";
+            }
+            return RetVal;
         }
 
         /// <summary>
@@ -250,10 +539,21 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
         /// <param name="script"></param>
         private void CheckEventCasts(string script)
         {
-            if (script.Contains("default_event_state_entry("))
+            CheckEvent(script, "default");
+            string[] States = script.Split(new string[] { "state" }, StringSplitOptions.RemoveEmptyEntries);
+            foreach (string state in States)
             {
-                string Valid = "default_event_state_entry()";
-                int charNum = script.IndexOf("default_event_state_entry(");
+                string stateName = state.Split(' ')[0];
+                CheckEvent(script, stateName);
+            }
+        }
+
+        private void CheckEvent(string script, string state)
+        {
+            if (script.Contains(state + "_event_state_entry("))
+            {
+                string Valid = state + "_event_state_entry()";
+                int charNum = script.IndexOf(state + "_event_state_entry(");
                 string splitScript = script.Remove(0, charNum);
                 charNum = splitScript.IndexOf('\n');
                 splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
@@ -262,10 +562,10 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                     FindLineNumbers("state_entry", "Too many arguments");
                 }
             }
-            if (script.Contains("default_event_touch_start("))
+            if (script.Contains(state + "_event_touch_start("))
             {
                 //Valid : default_event_touch_start(LSL_Types.LSLInteger number)
-                int charNum = script.IndexOf("default_event_touch_start(");
+                int charNum = script.IndexOf(state + "_event_touch_start(");
                 string splitScript = script.Remove(0, charNum);
                 charNum = splitScript.IndexOf('\n');
                 splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
@@ -290,10 +590,10 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                     FindLineNumbers("touch_start", "Too many arguments");
                 }
             }
-            if (script.Contains("default_event_at_rot_target("))
+            if (script.Contains(state + "_event_at_rot_target("))
             {
                 //Valid : default_event_at_rot_target(LSL_Types.LSLInteger tnum, LSL_Types.Quaternion targetrot, LSL_Types.Quaternion ourrot)
-                int charNum = script.IndexOf("default_event_at_rot_target(");
+                int charNum = script.IndexOf(state + "_event_at_rot_target(");
                 string splitScript = script.Remove(0, charNum);
                 charNum = splitScript.IndexOf('\n');
                 splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
@@ -319,10 +619,10 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                     FindLineNumbers("at_rot_target", "Too many arguments");
                 }
             }
-            if (script.Contains("default_event_at_target("))
+            if (script.Contains(state + "_event_at_target("))
             {
                 //Valid : default_event_at_rot_target(LSL_Types.LSLInteger tnum, LSL_Types.Quaternion targetrot, LSL_Types.Quaternion ourrot)
-                int charNum = script.IndexOf("default_event_at_target(");
+                int charNum = script.IndexOf(state + "_event_at_target(");
                 string splitScript = script.Remove(0, charNum);
                 charNum = splitScript.IndexOf('\n');
                 splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
@@ -348,9 +648,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                     FindLineNumbers("at_target", "Too many arguments");
                 }
             }
-            if (script.Contains("default_event_not_at_target("))
+            if (script.Contains(state + "_event_not_at_target("))
             {
-                int charNum = script.IndexOf("default_event_not_at_target(");
+                int charNum = script.IndexOf(state + "_event_not_at_target(");
                 string splitScript = script.Remove(0, charNum);
                 charNum = splitScript.IndexOf('\n');
                 splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
@@ -360,15 +660,15 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
 
                 string[] AllArguments = arguments.Split(',');
 
-                string Valid = "default_event_not_at_target()";
+                string Valid = state + "_event_not_at_target()";
                 if (splitScript != Valid)
                 {
                     FindLineNumbers("not_at_target", "Too many arguments");
                 }
             }
-            if (script.Contains("default_event_attach("))
+            if (script.Contains(state + "_event_attach("))
             {
-                int charNum = script.IndexOf("default_event_attach(");
+                int charNum = script.IndexOf(state + "_event_attach(");
                 string splitScript = script.Remove(0, charNum);
                 charNum = splitScript.IndexOf('\n');
                 splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
@@ -393,9 +693,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                     FindLineNumbers("attach", "Too many arguments");
                 }
             }
-            if (script.Contains("default_event_changed("))
+            if (script.Contains(state + "_event_changed("))
             {
-                int charNum = script.IndexOf("default_event_changed(");
+                int charNum = script.IndexOf(state + "_event_changed(");
                 string splitScript = script.Remove(0, charNum);
                 charNum = splitScript.IndexOf('\n');
                 splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
@@ -420,9 +720,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                     FindLineNumbers("changed", "Too many arguments");
                 }
             }
-            if (script.Contains("default_event_collision("))
+            if (script.Contains(state + "_event_collision("))
             {
-                int charNum = script.IndexOf("default_event_collision(");
+                int charNum = script.IndexOf(state + "_event_collision(");
                 string splitScript = script.Remove(0, charNum);
                 charNum = splitScript.IndexOf('\n');
                 splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
@@ -447,9 +747,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                     FindLineNumbers("collision", "Too many arguments");
                 }
             }
-            if (script.Contains("default_event_collision_end("))
+            if (script.Contains(state + "_event_collision_end("))
             {
-                int charNum = script.IndexOf("default_event_collision_end(");
+                int charNum = script.IndexOf(state + "_event_collision_end(");
                 string splitScript = script.Remove(0, charNum);
                 charNum = splitScript.IndexOf('\n');
                 splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
@@ -474,9 +774,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                     FindLineNumbers("collision_end", "Too many arguments");
                 }
             }
-            if (script.Contains("default_event_collision_start("))
+            if (script.Contains(state + "_event_collision_start("))
             {
-                int charNum = script.IndexOf("default_event_collision_start(");
+                int charNum = script.IndexOf(state + "_event_collision_start(");
                 string splitScript = script.Remove(0, charNum);
                 charNum = splitScript.IndexOf('\n');
                 splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
@@ -501,9 +801,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                     FindLineNumbers("collision_start", "Too many arguments");
                 }
             }
-            if (script.Contains("default_event_run_time_permissions("))
+            if (script.Contains(state + "_event_run_time_permissions("))
             {
-                int charNum = script.IndexOf("default_event_run_time_permissions(");
+                int charNum = script.IndexOf(state + "_event_run_time_permissions(");
                 string splitScript = script.Remove(0, charNum);
                 charNum = splitScript.IndexOf('\n');
                 splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
@@ -528,9 +828,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                     FindLineNumbers("run_time_permissions", "Too many arguments");
                 }
             }
-            if (script.Contains("default_event_control("))
+            if (script.Contains(state + "_event_control("))
             {
-                int charNum = script.IndexOf("default_event_control(");
+                int charNum = script.IndexOf(state + "_event_control(");
                 string splitScript = script.Remove(0, charNum);
                 charNum = splitScript.IndexOf('\n');
                 splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
@@ -556,9 +856,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                     FindLineNumbers("control", "Too many arguments");
                 }
             }
-            if (script.Contains("default_event_dataserver("))
+            if (script.Contains(state + "_event_dataserver("))
             {
-                int charNum = script.IndexOf("default_event_dataserver(");
+                int charNum = script.IndexOf(state + "_event_dataserver(");
                 string splitScript = script.Remove(0, charNum);
                 charNum = splitScript.IndexOf('\n');
                 splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
@@ -581,9 +881,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                     FindLineNumbers("dataserver", "Too many arguments");
                 }
             }
-            if (script.Contains("default_event_timer("))
+            if (script.Contains(state + "_event_timer("))
             {
-                int charNum = script.IndexOf("default_event_timer(");
+                int charNum = script.IndexOf(state + "_event_timer(");
                 string splitScript = script.Remove(0, charNum);
                 charNum = splitScript.IndexOf('\n');
                 splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
@@ -593,15 +893,15 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
 
                 string[] AllArguments = arguments.Split(',');
 
-                string Valid = "default_event_timer()";
+                string Valid = state + "_event_timer()";
                 if (splitScript != Valid)
                 {
                     FindLineNumbers("timer", "Too many arguments");
                 }
             }
-            if (script.Contains("default_event_email("))
+            if (script.Contains(state + "_event_email("))
             {
-                int charNum = script.IndexOf("default_event_email(");
+                int charNum = script.IndexOf(state + "_event_email(");
                 string splitScript = script.Remove(0, charNum);
                 charNum = splitScript.IndexOf('\n');
                 splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
@@ -627,9 +927,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                     FindLineNumbers("email", "Too many arguments");
                 }
             }
-            if (script.Contains("default_event_http_request("))
+            if (script.Contains(state + "_event_http_request("))
             {
-                int charNum = script.IndexOf("default_event_http_request(");
+                int charNum = script.IndexOf(state + "_event_http_request(");
                 string splitScript = script.Remove(0, charNum);
                 charNum = splitScript.IndexOf('\n');
                 splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
@@ -652,9 +952,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                     FindLineNumbers("http_request", "Too many arguments");
                 }
             }
-            if (script.Contains("default_event_http_response("))
+            if (script.Contains(state + "_event_http_response("))
             {
-                int charNum = script.IndexOf("default_event_http_response(");
+                int charNum = script.IndexOf(state + "_event_http_response(");
                 string splitScript = script.Remove(0, charNum);
                 charNum = splitScript.IndexOf('\n');
                 splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
@@ -683,9 +983,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                     FindLineNumbers("http_response", "Too many arguments");
                 }
             }
-            if (script.Contains("default_event_land_collision_end("))
+            if (script.Contains(state + "_event_land_collision_end("))
             {
-                int charNum = script.IndexOf("default_event_land_collision_end(");
+                int charNum = script.IndexOf(state + "_event_land_collision_end(");
                 string splitScript = script.Remove(0, charNum);
                 charNum = splitScript.IndexOf('\n');
                 splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
@@ -708,9 +1008,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                     FindLineNumbers("land_collision_end", "Too many arguments");
                 }
             }
-            if (script.Contains("default_event_land_collision_start("))
+            if (script.Contains(state + "_event_land_collision_start("))
             {
-                int charNum = script.IndexOf("default_event_land_collision_start(");
+                int charNum = script.IndexOf(state + "_event_land_collision_start(");
                 string splitScript = script.Remove(0, charNum);
                 charNum = splitScript.IndexOf('\n');
                 splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
@@ -733,9 +1033,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                     FindLineNumbers("land_collision_start", "Too many arguments");
                 }
             }
-            if (script.Contains("default_event_link_message("))
+            if (script.Contains(state + "_event_link_message("))
             {
-                int charNum = script.IndexOf("default_event_link_message(");
+                int charNum = script.IndexOf(state + "_event_link_message(");
                 string splitScript = script.Remove(0, charNum);
                 charNum = splitScript.IndexOf('\n');
                 splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
@@ -761,9 +1061,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                     FindLineNumbers("link_message", "Too many arguments");
                 }
             }
-            if (script.Contains("default_event_listen("))
+            if (script.Contains(state + "_event_listen("))
             {
-                int charNum = script.IndexOf("default_event_listen(");
+                int charNum = script.IndexOf(state + "_event_listen(");
                 string splitScript = script.Remove(0, charNum);
                 charNum = splitScript.IndexOf('\n');
                 splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
@@ -779,7 +1079,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                     if (i == 0)
                         if (!argument.Contains("LSL_Types.LSLInteger"))
                             FindLineNumbers("listen", "Invalid argument");
-                    if (i ==1 || i == 2 || i == 3)
+                    if (i == 1 || i == 2 || i == 3)
                         if (!argument.Contains("LSL_Types.LSLString"))
                             FindLineNumbers("listen", "Invalid argument");
                     i++;
@@ -789,9 +1089,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                     FindLineNumbers("listen", "Too many arguments");
                 }
             }
-            if (script.Contains("default_event_on_rez("))
+            if (script.Contains(state + "_event_on_rez("))
             {
-                int charNum = script.IndexOf("default_event_on_rez(");
+                int charNum = script.IndexOf(state + "_event_on_rez(");
                 string splitScript = script.Remove(0, charNum);
                 charNum = splitScript.IndexOf('\n');
                 splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
@@ -814,9 +1114,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                     FindLineNumbers("on_rez", "Too many arguments");
                 }
             }
-            if (script.Contains("default_event_money("))
+            if (script.Contains(state + "_event_money("))
             {
-                int charNum = script.IndexOf("default_event_money(");
+                int charNum = script.IndexOf(state + "_event_money(");
                 string splitScript = script.Remove(0, charNum);
                 charNum = splitScript.IndexOf('\n');
                 splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
@@ -842,9 +1142,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                     FindLineNumbers("money", "Too many arguments");
                 }
             }
-            if (script.Contains("default_event_moving_end("))
+            if (script.Contains(state + "_event_moving_end("))
             {
-                int charNum = script.IndexOf("default_event_moving_end(");
+                int charNum = script.IndexOf(state + "_event_moving_end(");
                 string splitScript = script.Remove(0, charNum);
                 charNum = splitScript.IndexOf('\n');
                 splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
@@ -854,15 +1154,15 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
 
                 string[] AllArguments = arguments.Split(',');
 
-                string Valid = "default_event_moving_end()";
+                string Valid = state + "_event_moving_end()";
                 if (splitScript != Valid)
                 {
                     FindLineNumbers("moving_end", "Too many arguments");
                 }
             }
-            if (script.Contains("default_event_moving_start("))
+            if (script.Contains(state + "_event_moving_start("))
             {
-                int charNum = script.IndexOf("default_event_moving_start(");
+                int charNum = script.IndexOf(state + "_event_moving_start(");
                 string splitScript = script.Remove(0, charNum);
                 charNum = splitScript.IndexOf('\n');
                 splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
@@ -872,15 +1172,15 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
 
                 string[] AllArguments = arguments.Split(',');
 
-                string Valid = "default_event_moving_start()";
+                string Valid = state + "_event_moving_start()";
                 if (splitScript != Valid)
                 {
                     FindLineNumbers("moving_start", "Too many arguments");
                 }
             }
-            if (script.Contains("default_event_no_sensor("))
+            if (script.Contains(state + "_event_no_sensor("))
             {
-                int charNum = script.IndexOf("default_event_no_sensor(");
+                int charNum = script.IndexOf(state + "_event_no_sensor(");
                 string splitScript = script.Remove(0, charNum);
                 charNum = splitScript.IndexOf('\n');
                 splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
@@ -890,15 +1190,15 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
 
                 string[] AllArguments = arguments.Split(',');
 
-                string Valid = "default_event_no_sensor()";
+                string Valid = state + "_event_no_sensor()";
                 if (splitScript != Valid)
                 {
                     FindLineNumbers("no_sensor", "Too many arguments");
                 }
             }
-            if (script.Contains("default_event_not_at_rot_target("))
+            if (script.Contains(state + "_event_not_at_rot_target("))
             {
-                int charNum = script.IndexOf("default_event_not_at_rot_target(");
+                int charNum = script.IndexOf(state + "_event_not_at_rot_target(");
                 string splitScript = script.Remove(0, charNum);
                 charNum = splitScript.IndexOf('\n');
                 splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
@@ -908,15 +1208,15 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
 
                 string[] AllArguments = arguments.Split(',');
 
-                string Valid = "default_event_not_at_rot_target()";
+                string Valid = state + "_event_not_at_rot_target()";
                 if (splitScript != Valid)
                 {
                     FindLineNumbers("not_at_rot_target", "Too many arguments");
                 }
             }
-            if (script.Contains("default_event_object_rez("))
+            if (script.Contains(state + "_event_object_rez("))
             {
-                int charNum = script.IndexOf("default_event_object_rez(");
+                int charNum = script.IndexOf(state + "_event_object_rez(");
                 string splitScript = script.Remove(0, charNum);
                 charNum = splitScript.IndexOf('\n');
                 splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
@@ -939,9 +1239,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                     FindLineNumbers("object_rez", "Too many arguments");
                 }
             }
-            if (script.Contains("default_event_remote_data("))
+            if (script.Contains(state + "_event_remote_data("))
             {
-                int charNum = script.IndexOf("default_event_remote_data(");
+                int charNum = script.IndexOf(state + "_event_remote_data(");
                 string splitScript = script.Remove(0, charNum);
                 charNum = splitScript.IndexOf('\n');
                 splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
@@ -967,9 +1267,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                     FindLineNumbers("remote_data", "Too many arguments");
                 }
             }
-            if (script.Contains("default_event_sensor("))
+            if (script.Contains(state + "_event_sensor("))
             {
-                int charNum = script.IndexOf("default_event_sensor(");
+                int charNum = script.IndexOf(state + "_event_sensor(");
                 string splitScript = script.Remove(0, charNum);
                 charNum = splitScript.IndexOf('\n');
                 splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
@@ -992,9 +1292,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                     FindLineNumbers("sensor", "Too many arguments");
                 }
             }
-            if (script.Contains("default_event_state_exit("))
+            if (script.Contains(state + "_event_state_exit("))
             {
-                int charNum = script.IndexOf("default_event_state_exit(");
+                int charNum = script.IndexOf(state + "_event_state_exit(");
                 string splitScript = script.Remove(0, charNum);
                 charNum = splitScript.IndexOf('\n');
                 splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
@@ -1004,15 +1304,15 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
 
                 string[] AllArguments = arguments.Split(',');
 
-                string Valid = "default_event_state_exit()";
+                string Valid = state + "_event_state_exit()";
                 if (splitScript != Valid)
                 {
                     FindLineNumbers("state_exit", "Too many arguments");
                 }
             }
-            if (script.Contains("default_event_touch("))
+            if (script.Contains(state + "_event_touch("))
             {
-                int charNum = script.IndexOf("default_event_touch(");
+                int charNum = script.IndexOf(state + "_event_touch(");
                 string splitScript = script.Remove(0, charNum);
                 charNum = splitScript.IndexOf('\n');
                 splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
@@ -1035,9 +1335,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                     FindLineNumbers("touch", "Too many arguments");
                 }
             }
-            if (script.Contains("default_event_touch_end("))
+            if (script.Contains(state + "_event_touch_end("))
             {
-                int charNum = script.IndexOf("default_event_touch_end(");
+                int charNum = script.IndexOf(state + "_event_touch_end(");
                 string splitScript = script.Remove(0, charNum);
                 charNum = splitScript.IndexOf('\n');
                 splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
@@ -1100,8 +1400,6 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             }
         }
 
-        private string script = "";
-        private string OriginalScript = "";
         /// <summary>
         /// Recursively called to generate each type of node. Will generate this
         /// node, then all it's children.
@@ -1434,7 +1732,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
 
             // opening brace
             retstr += GenerateIndentedLine("{");
-            if (IsParentEnumerable || IsInLoop)
+            if (IsParentEnumerable)
                 retstr += GenerateLine("yield return null;");
             m_braceCount++;
 
@@ -1516,8 +1814,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                                         {
                                             if (kidb is FunctionCallExpression)
                                             {
-                                                FunctionCalls += "object test = " + GenerateNode(kidb) + ";";
-                                                retstr += "test";
+                                                string randomNewFunctionName = RandomString(10, true);
+                                                FunctionCalls += "object" + randomNewFunctionName + " = " + GenerateNode(kidb) + ";";
+                                                retstr += randomNewFunctionName;
                                             }
                                             else
                                                 retstr += GenerateNode(kidb);
@@ -2016,9 +2315,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                         else
                         {
                             tempString += GenerateNode(s);
-                            if (0 < comma--)
-                                tempString += Generate(", ");
                         }
+                        if (0 < comma--)
+                            tempString += Generate(", ");
                     }
                     //FunctionCalls += GenerateNode(kid);
                 }
@@ -2319,6 +2618,28 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
                 return "@" + s;
             else
                 return s;
+        }
+
+        /// From http://www.c-sharpcorner.com/UploadFile/mahesh/RandomNumber11232005010428AM/RandomNumber.aspx
+        /// <summary>
+        /// Generates a random string with the given length
+        /// </summary>
+        /// <param name="size">Size of the string</param>
+        /// <param name="lowerCase">If true, generate lowercase string</param>
+        /// <returns>Random string</returns>
+        private string RandomString(int size, bool lowerCase)
+        {
+            StringBuilder builder = new StringBuilder();
+            Random random = new Random();
+            char ch;
+            for (int i = 0; i < size; i++)
+            {
+                ch = System.Convert.ToChar(System.Convert.ToInt32(Math.Floor(26 * random.NextDouble() + 65)));
+                builder.Append(ch);
+            }
+            if (lowerCase)
+                return builder.ToString().ToLower();
+            return builder.ToString();
         }
     }
 }

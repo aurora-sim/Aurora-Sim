@@ -32,7 +32,6 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
             CSCodeGenerator LSL_Converter = new CSCodeGenerator();
             CompiledScript = LSL_Converter.Convert(Script);
             Warnings = LSL_Converter.GetWarnings();
-            CompiledScript = CreateCompilerScript(CompiledScript);
             PositionMap = LSL_Converter.PositionMap;
         }
 
@@ -40,70 +39,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.CodeTools
         {
             get { return "lsl"; }
         }
+
         public void Dispose()
         {
-        }
-        private string CreateCompilerScript(string compileScript)
-        {
-            string compiledScript = "";
-            compiledScript = String.Empty +
-                "using OpenSim.Region.ScriptEngine.Shared;\n" +
-                "using System;\n" +
-                "using System.Collections.Generic;\n" +
-                "using System.Collections;\n" +
-                "using System.Reflection;\n" +
-                "using System.Timers;\n" +
-                "namespace Script\n" +
-                "\n" +
-                "{\n";
-
-            compiledScript += "[Serializable]\n public class ScriptClass : OpenSim.Region.ScriptEngine.Shared.ScriptBase.ScriptBaseClass\n";
-            compiledScript += "{\n";
-            compiledScript +=
-                     compileScript;
-
-
-            compiledScript += "List<IEnumerator> parts = new List<IEnumerator>();\n";
-            compiledScript += "System.Timers.Timer aTimer = new System.Timers.Timer(250);\n";
-            compiledScript += "public ScriptClass()\n{\n";
-            compiledScript += "aTimer.Elapsed += new System.Timers.ElapsedEventHandler(Timer);\n";
-            compiledScript += "aTimer.Enabled = true;\n";
-            compiledScript += "aTimer.Start();\n";
-            compiledScript += "}\n";
-            compiledScript += "~ScriptClass()\n{\n";
-            compiledScript += "aTimer.Stop();\n";
-            compiledScript += "aTimer.Dispose();\n";
-            compiledScript += "}\n";
-
-            compiledScript += "public void Timer(object source, System.Timers.ElapsedEventArgs e)\n{\n";
-            compiledScript += "lock (parts)\n";
-            compiledScript += "{\n";
-            compiledScript += "int i = 0;\n";
-            compiledScript += "if(parts.Count == 0)\n";
-            compiledScript += "return;";
-            compiledScript += "while (parts.Count > 0 && i < 1000)\n";
-            compiledScript += "{\n";
-            compiledScript += "i++;\n";
-            compiledScript += "bool running = false;\n";
-            compiledScript += "try\n";
-            compiledScript += "{\n";
-            compiledScript += "running = parts[i % parts.Count].MoveNext();\n";
-            compiledScript += "}\n";
-            compiledScript += "catch\n";
-            compiledScript += "{\n";
-            compiledScript += "}\n";
-            compiledScript += "if (!running)\n { \n";
-            compiledScript += "parts.Remove(parts[i % parts.Count]);\n } \n";
-            compiledScript += "else\n { } \n";
-            compiledScript += "}\n";
-            compiledScript += "}\n";
-            compiledScript += "}\n";
-
-            compiledScript += "\n}"; // Close Class
-
-            compiledScript += "\n}"; // Close Namespace
-
-            return compiledScript;
         }
 
         public CompilerResults Compile(CompilerParameters parameters, string Script)

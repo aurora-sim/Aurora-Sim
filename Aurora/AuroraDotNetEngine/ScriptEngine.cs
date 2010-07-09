@@ -79,7 +79,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public AppDomainManager AppDomainManager;
 
         //The compiler for all scripts
-        public Compiler LSLCompiler;
+        public Compiler Compiler;
 
         public enum LoadPriority : int
         {
@@ -110,6 +110,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public IConfig ScriptConfigSource;
         private bool m_enabled = false;
         public bool DisplayErrorsOnConsole = false;
+        public bool ShowWarnings = false;
 
         public IConfig Config
         {
@@ -236,6 +237,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             NumberOfEventQueueThreads = ScriptConfigSource.GetInt("NumberOfEventQueueThreads", 5);
             NumberOfStartStopThreads = ScriptConfigSource.GetInt("NumberOfStartStopThreads", 1);
             SleepTime = ScriptConfigSource.GetInt("SleepTime", 50);
+            ShowWarnings = ScriptConfigSource.GetBoolean("ShowWarnings", false);
             DisplayErrorsOnConsole = ScriptConfigSource.GetBoolean("DisplayErrorsOnConsole", false);
         }
 
@@ -255,11 +257,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             //Register the console commands
             if (FirstStartup)
-            {
-                scene.AddCommand(this, "DotNet restart all scripts", "DotNet restart all scripts", "Restarts all scripts in the sim", RestartAllScripts);
-                scene.AddCommand(this, "DotNet stop all scripts", "DotNet stop all scripts", "Stops all scripts in the sim", StopAllScripts);
-                scene.AddCommand(this, "DotNet start all scripts", "DotNet start all scripts", "Restarts all scripts in the sim", StartAllScripts);
-            }
+                scene.AddCommand(this, "ADNE", "ADNE", "Subcommands for Aurora DotNet Engine", AuroraDotNetConsoleCommands);
+            
             FirstStartup = false;
 
             ScriptConfigSource = ConfigSource.Configs[ScriptEngineName];
@@ -274,8 +273,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             EventManager = new EventManager(this, true);
             
             // We need to start it
-            if (LSLCompiler == null)
-                LSLCompiler = new Compiler(this);
+            if (Compiler == null)
+                Compiler = new Compiler(this);
 
             if(AppDomainManager == null)
                 AppDomainManager = new AppDomainManager(this);
@@ -356,61 +355,59 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         #region Console Commands
 
-        protected void RestartAllScripts(string module, string[] cmdparams)
+        protected void AuroraDotNetConsoleCommands(string module, string[] cmdparams)
         {
-            string go = MainConsole.Instance.CmdPrompt("Are you sure you want to restart all scripts? (This also wipes the script state saves database, which could cause loss of information in your scripts)", "no");
-            if (go == "yes" || go == "Yes")
+            if (cmdparams[1] == "restart")
             {
-                foreach (ScriptData ID in ScriptProtection.GetAllScripts())
+                string go = MainConsole.Instance.CmdPrompt("Are you sure you want to restart all scripts? (This also wipes the script state saves database, which could cause loss of information in your scripts)", "no");
+                if (go == "yes" || go == "Yes")
                 {
-                    try
+                    //Delete all assemblies
+                    Compiler.RecreateDirectory();
+                    foreach (ScriptData ID in ScriptProtection.GetAllScripts())
                     {
-                        ScriptProtection.RemovePreviouslyCompiled(ID.Source);
-                        ID.Start(false);
-                    }
-                    catch (Exception)
-                    {
+                        try
+                        {
+                            //Remove the state save, remove the previously compiled referance
+                            Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IScriptDataConnector>("IScriptDataConnector").DeleteStateSave(ID.ItemID);
+                            ScriptProtection.RemovePreviouslyCompiled(ID.Source);
+                            ID.Start(false);
+                        }
+                        catch (Exception) { }
                     }
                 }
-            }
-            else
-            {
-                m_log.Info("Not restarting all scripts");
-            }
-        }
-
-        protected void StartAllScripts(string module, string[] cmdparams)
-        {
-            string go = MainConsole.Instance.CmdPrompt("Are you sure you want to restart all scripts?", "no");
-            if (go == "yes" || go == "Yes")
-            {
-                foreach (ScriptData ID in ScriptProtection.GetAllScripts())
+                else
                 {
-                    try
-                    {
-                        ID.Start(true);
-                    }
-                    catch (Exception)
-                    {
-                    }
+                    m_log.Debug("Not restarting all scripts");
                 }
             }
-            else
+            if (cmdparams[1] == "stop")
             {
-                m_log.Info("Not restarting all scripts");
+                string go = MainConsole.Instance.CmdPrompt("Are you sure you want to stop all scripts?", "no");
+                if (go.Contains("yes") || go.Contains("Yes"))
+                {
+                    StopAllScripts();
+                }
+                else
+                {
+                    m_log.Debug("Not restarting all scripts");
+                }
             }
-        }
-
-        protected void StopAllScripts(string module, string[] cmdparams)
-        {
-            string go = MainConsole.Instance.CmdPrompt("Are you sure you want to stop all scripts?", "no");
-            if (go.Contains("yes") || go.Contains("Yes"))
+            if (cmdparams[1] == "stats")
             {
-                StopAllScripts();
+                m_log.Info("Aurora DotNet Script Engine Stats:"
+                    + "\nNumber of scripts compiled: " + Compiler.ScriptCompileCounter
+                    + "\nMax allowed threat level: " + ScriptProtection.GetThreatLevel().ToString()
+                    + "\nNumber of scripts running now: " + ScriptProtection.GetAllScripts().Length
+                    + "\nNumber of app domains: " + AppDomainManager.NumberOfAppDomains
+                    + "\nPermission level of app domains: " + AppDomainManager.PermissionLevel);
             }
-            else
+            if (cmdparams[1] == "help")
             {
-                m_log.Info("Not restarting all scripts");
+                m_log.Info("Aurora DotNet Commands : \n" +
+                    " ADNE restart - Restarts all scripts \n" +
+                    " ADNE stop - Stops all scripts \n" +
+                    " ADNE stats - Tells stats about the script engine");
             }
         }
 
@@ -1283,7 +1280,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 try
                 {
                     string assembly;
-                    LSLCompiler.PerformScriptCompile(script, itemID, UUID.Zero, out assembly);
+                    Compiler.PerformScriptCompile(script, itemID, UUID.Zero, out assembly);
                 }
                 catch (Exception e)
                 {

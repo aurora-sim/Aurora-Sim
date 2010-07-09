@@ -158,28 +158,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             if (m_ScriptEngine.Errors.ContainsKey(ItemID))
                 m_ScriptEngine.Errors.Remove(ItemID);
-            
+
             #region Clean out script parts
-            /* 
-            part.RemoveParticleSystem();
-            part.SetText("");
-            Primitive.TextureAnimation tani= new Primitive.TextureAnimation();
-            tani.Flags = Primitive.TextureAnimMode.ANIM_OFF;
-            tani.Face = 255;
-            tani.Length = 0;
-            tani.Rate = 0;
-            tani.SizeX = 0;
-            tani.SizeY = 0;
-            tani.Start = 0;
-            part.AddTextureAnimation(tani);
-            part.AngularVelocity = Vector3.Zero;
-
-
-            part.ScheduleTerseUpdate();
-            part.SendTerseUpdateToAllClients();
-            part.ParentGroup.HasGroupChanged = true;
-            part.ParentGroup.ScheduleGroupForFullUpdate();
-            */
+            part.AngularVelocity = Vector3.Zero; // Removed in SL
+            part.ScheduleFullUpdate(); // Send changes to client.
             #endregion
 
             if (Script != null)
@@ -312,23 +294,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
         }
 
-        public void ShowError(Exception e, string stage, bool postScriptCAPSError)
+        public void DisplayUserNotification(string message, string stage, bool postScriptCAPSError, bool IsError)
         {
             if (presence != null && (!PostOnRez))
                 presence.ControllingClient.SendAgentAlertMessage("Script saved with errors, check debug window!", false);
 
             if (postScriptCAPSError)
-                m_ScriptEngine.Errors[ItemID] = new String[] { e.Message.ToString() };
+                m_ScriptEngine.Errors[ItemID] = new String[] { message };
 
             // DISPLAY ERROR ON CONSOLE
             if (m_ScriptEngine.DisplayErrorsOnConsole)
             {
-                string consoletext = "Error " + stage + " script:\n" + e.Message.ToString() + " itemID: " + ItemID + ", CompiledFile: " + AssemblyName;
+                string consoletext = IsError ? "Error " : "Warning ";
+                consoletext += stage + " script:\n" + message + " itemID: " + ItemID + ", CompiledFile: " + AssemblyName;
                 m_log.Error(consoletext);
             }
 
             // DISPLAY ERROR INWORLD
-            string inworldtext = "Error " + stage + " script: " + e.Message.ToString();
+            string inworldtext = IsError ? "Error " : "Warning ";
+            inworldtext += stage + " script: " + message;
             if (inworldtext.Length > 1100)
                 inworldtext = inworldtext.Substring(0, 1099);
 
@@ -471,32 +455,51 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 {
                     try
                     {
-                        m_ScriptEngine.LSLCompiler.PerformScriptCompile(Source, ItemID, part.OwnerID, out AssemblyName);
+                        m_ScriptEngine.Compiler.PerformScriptCompile(Source, ItemID, part.OwnerID, out AssemblyName);
+                        #region Errors and Warnings
+
+                        #region Errors
+
+                        string[] compileerrors = m_ScriptEngine.Compiler.GetErrors();
+
+                        if (compileerrors != null && compileerrors.Length != 0)
+                        {
+                            string error = string.Empty;
+                            foreach(string compileerror in compileerrors)
+                            {
+                                error += compileerror;
+                            }
+                            DisplayUserNotification(error, "compiling", reupload, true);
+                            return;
+                        }
+
+                        #endregion
+
                         #region Warnings
 
-                        string[] compilewarnings = m_ScriptEngine.LSLCompiler.GetWarnings();
-
-                        if (compilewarnings != null && compilewarnings.Length != 0)
+                        if (m_ScriptEngine.ShowWarnings)
                         {
-                            if (presence != null && (!PostOnRez))
-                                presence.ControllingClient.SendAgentAlertMessage("Script saved with warnings, check debug window!", false);
+                            string[] compilewarnings = m_ScriptEngine.Compiler.GetWarnings();
 
-                            foreach (string warning in compilewarnings)
+                            if (compilewarnings != null && compilewarnings.Length != 0)
                             {
-                                // DISPLAY WARNING INWORLD
-                                string text = "Warning:\n" + warning;
-                                if (text.Length > 1100)
-                                    text = text.Substring(0, 1099);
-
-                                World.SimChat(OpenMetaverse.Utils.StringToBytes(text), ChatTypeEnum.DebugChannel, 2147483647, part.AbsolutePosition, part.Name, part.UUID, false);
+                                string error = string.Empty;
+                                foreach(string compileerror in compileerrors)
+                                {
+                                    error += compileerror;
+                                }
+                                DisplayUserNotification(error, "compiling", reupload, false);
+                                return;
                             }
                         }
+
+                        #endregion
 
                         #endregion
                     }
                     catch (Exception ex)
                     {
-                        ShowError(ex, "compiling", reupload);
+                        DisplayUserNotification(ex.Message, "compiling", reupload, true);
                         return;
                     }
                 }
@@ -517,14 +520,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             catch (System.IO.FileNotFoundException) // Not valid!!!
             {
-                m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: FILE NOT FOUND EXCEPTION THROWN IN APP DOMAIN CREATION!!! " + AssemblyName);
+                m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: File not found in app domain creation. Corrupt state save! " + AssemblyName);
                 ScriptEngine.ScriptProtection.RemovePreviouslyCompiled(Source);
                 ScriptFrontend.DeleteStateSave(AssemblyName);
+                Start(reupload); // Lets restart the script if this happens
                 return;
             }
             catch (Exception ex)
             {
-                ShowError(ex, "compiling", reupload);
+                DisplayUserNotification(ex.Message, "app domain creation", reupload, true);
                 return;
             }
 

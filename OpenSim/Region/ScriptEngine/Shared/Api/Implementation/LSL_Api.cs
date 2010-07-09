@@ -92,13 +92,15 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         protected int m_scriptConsoleChannel = 0;
         protected bool m_scriptConsoleChannelEnabled = false;
         protected IUrlModule m_UrlModule = null;
-
-        public void Initialize(IScriptEngine ScriptEngine, SceneObjectPart host, uint localID, UUID itemID)
+		internal IScriptProtectionModule ScriptProtection;
+        
+        public void Initialize(IScriptEngine ScriptEngine, SceneObjectPart host, uint localID, UUID itemID, IScriptProtectionModule module)
         {
             m_ScriptEngine = ScriptEngine;
             m_host = host;
             m_localID = localID;
             m_itemID = itemID;
+            ScriptProtection = module;
 
             m_ScriptDelayFactor =
                 m_ScriptEngine.Config.GetFloat("ScriptDelayFactor", 1.0f);
@@ -114,15 +116,24 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                 m_notecardLineReadCharsMax = 65535;
 
             m_TransferModule =
-                    m_ScriptEngine.World.RequestModuleInterface<IMessageTransferModule>();
-            m_UrlModule = m_ScriptEngine.World.RequestModuleInterface<IUrlModule>();
+                    World.RequestModuleInterface<IMessageTransferModule>();
+            m_UrlModule = World.RequestModuleInterface<IUrlModule>();
             if (m_UrlModule != null)
             {
                 m_ScriptEngine.OnScriptRemoved += m_UrlModule.ScriptRemoved;
                 m_ScriptEngine.OnObjectRemoved += m_UrlModule.ObjectRemoved;
             }
 
-            AsyncCommands = new AsyncCommandManager(ScriptEngine);
+            AsyncCommands = new AsyncCommandManager(ScriptEngine, m_host.ParentGroup.Scene);
+        }
+
+        public string Name
+        {
+            get { return "LSL"; }
+        }
+
+        public void Dispose()
+        {
         }
 
         public override Object InitializeLifetimeService()
@@ -132,10 +143,11 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             if (lease.CurrentState == LeaseState.Initial)
             {
                 lease.InitialLeaseTime = TimeSpan.FromMinutes(0);
-//                lease.RenewOnCallTime = TimeSpan.FromSeconds(10.0);
-//                lease.SponsorshipTimeout = TimeSpan.FromMinutes(1.0);
+                //                lease.RenewOnCallTime = TimeSpan.FromSeconds(10.0);
+                //                lease.SponsorshipTimeout = TimeSpan.FromMinutes(1.0);
             }
             return lease;
+
         }
 
         protected virtual void ScriptSleep(int delay)
@@ -148,12 +160,13 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public Scene World
         {
-            get { return m_ScriptEngine.World; }
+            get { return m_host.ParentGroup.Scene; }
         }
 
         public void state(string newState)
         {
             m_ScriptEngine.SetState(m_itemID, newState);
+            throw new EventAbortException();
         }
 
         /// <summary>
@@ -162,12 +175,15 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         /// </summary>
         public void llResetScript()
         {
+        	ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             m_ScriptEngine.ApiResetScript(m_itemID);
+            throw new EventAbortException();
         }
 
         public void llResetOtherScript(string name)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             UUID item;
 
             m_host.AddScriptLPS(1);
@@ -180,6 +196,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Integer llGetScriptState(string name)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             UUID item;
 
             m_host.AddScriptLPS(1);
@@ -199,6 +216,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llSetScriptState(string name, int run)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             UUID item;
 
             m_host.AddScriptLPS(1);
@@ -259,12 +277,84 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             default:
                 if (linkType < 0 || m_host.ParentGroup ==  null)
                     return new List<SceneObjectPart>();
-                SceneObjectPart target = m_host.ParentGroup.GetLinkNumPart(linkType);
-                if (target == null)
-                    return new List<SceneObjectPart>();
-                ret = new List<SceneObjectPart>();
-                ret.Add(target);
+                ISceneEntity target = m_host.ParentGroup.GetLinkNumPart(linkType);
+                if (target is SceneObjectPart)
+                {
+                    if (target == null)
+                        return new List<SceneObjectPart>();
+                    ret = new List<SceneObjectPart>();
+                    ret.Add(target as SceneObjectPart);
+                }
+                    //No allowing scene presences to be found here
                 return ret;
+
+            }
+        }
+
+        public List<ISceneEntity> GetLinkPartsAndEntities(int linkType)
+        {
+            List<ISceneEntity> ret = new List<ISceneEntity>();
+            ret.Add(m_host);
+
+            switch (linkType)
+            {
+                case ScriptBaseClass.LINK_SET:
+                    if (m_host.ParentGroup != null)
+                    {
+                        List < SceneObjectPart > parts = new List<SceneObjectPart>(m_host.ParentGroup.Children.Values);
+                        return parts.ConvertAll<ISceneEntity>(new Converter<SceneObjectPart,ISceneEntity>(delegate(SceneObjectPart part)
+                            {
+                                return (ISceneEntity)part;
+                            }));
+                    }
+                    return ret;
+
+                case ScriptBaseClass.LINK_ROOT:
+                    if (m_host.ParentGroup != null)
+                    {
+                        ret = new List<ISceneEntity>();
+                        ret.Add(m_host.ParentGroup.RootPart);
+                        return ret;
+                    }
+                    return ret;
+
+                case ScriptBaseClass.LINK_ALL_OTHERS:
+                    if (m_host.ParentGroup == null)
+                        return new List<ISceneEntity>();
+                    List < SceneObjectPart > sceneobjectparts = new List<SceneObjectPart>(m_host.ParentGroup.Children.Values);
+                    ret = sceneobjectparts.ConvertAll<ISceneEntity>(new Converter<SceneObjectPart, ISceneEntity>(delegate(SceneObjectPart part)
+                            {
+                                return (ISceneEntity)part;
+                            }));
+                    if (ret.Contains(m_host))
+                        ret.Remove(m_host);
+                    return ret;
+
+                case ScriptBaseClass.LINK_ALL_CHILDREN:
+                    if (m_host.ParentGroup == null)
+                        return new List<ISceneEntity>();
+                    List<SceneObjectPart> children = new List<SceneObjectPart>(m_host.ParentGroup.Children.Values);
+                    ret = children.ConvertAll<ISceneEntity>(new Converter<SceneObjectPart, ISceneEntity>(delegate(SceneObjectPart part)
+                    {
+                        return (ISceneEntity)part;
+                    }));
+                    if (ret.Contains(m_host.ParentGroup.RootPart))
+                        ret.Remove(m_host.ParentGroup.RootPart);
+                    return ret;
+
+                case ScriptBaseClass.LINK_THIS:
+                    return ret;
+
+                default:
+                    if (linkType < 0 || m_host.ParentGroup == null)
+                        return new List<ISceneEntity>();
+                    ISceneEntity target = m_host.ParentGroup.GetLinkNumPart(linkType);
+                    if (target == null)
+                        return new List<ISceneEntity>();
+                    ret = new List<ISceneEntity>();
+                    ret.Add(target);
+                    
+                    return ret;
 
             }
         }
@@ -363,42 +453,49 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         //These are the implementations of the various ll-functions used by the LSL scripts.
         public LSL_Float llSin(double f)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             return (double)Math.Sin(f);
         }
 
         public LSL_Float llCos(double f)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             return (double)Math.Cos(f);
         }
 
         public LSL_Float llTan(double f)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             return (double)Math.Tan(f);
         }
 
         public LSL_Float llAtan2(double x, double y)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             return (double)Math.Atan2(x, y);
         }
 
         public LSL_Float llSqrt(double f)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             return (double)Math.Sqrt(f);
         }
 
         public LSL_Float llPow(double fbase, double fexponent)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             return (double)Math.Pow(fbase, fexponent);
         }
 
         public LSL_Integer llAbs(int i)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             // changed to replicate LSL behaviour whereby minimum int value is returned untouched.
             m_host.AddScriptLPS(1);
             if (i == Int32.MinValue)
@@ -409,12 +506,14 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Float llFabs(double f)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             return (double)Math.Abs(f);
         }
 
         public LSL_Float llFrand(double mag)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             lock (Util.RandomClass)
             {
@@ -424,12 +523,14 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Integer llFloor(double f)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             return (int)Math.Floor(f);
         }
 
         public LSL_Integer llCeil(double f)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             return (int)Math.Ceiling(f);
         }
@@ -437,6 +538,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         // Xantor 01/May/2008 fixed midpointrounding (2.5 becomes 3.0 instead of 2.0, default = ToEven)
         public LSL_Integer llRound(double f)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             return (int)Math.Round(f, MidpointRounding.AwayFromZero);
         }
@@ -444,18 +546,26 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         //This next group are vector operations involving squaring and square root. ckrinke
         public LSL_Float llVecMag(LSL_Vector v)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             return LSL_Vector.Mag(v);
         }
 
         public LSL_Vector llVecNorm(LSL_Vector v)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
-            return LSL_Vector.Norm(v);
+            double mag = LSL_Vector.Mag(v);
+            LSL_Vector nor = new LSL_Vector();
+            nor.x = v.x / mag;
+            nor.y = v.y / mag;
+            nor.z = v.z / mag;
+            return nor;
         }
 
         public LSL_Float llVecDist(LSL_Vector a, LSL_Vector b)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             double dx = a.x - b.x;
             double dy = a.y - b.y;
@@ -484,6 +594,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Vector llRot2Euler(LSL_Rotation r)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             //This implementation is from http://lslwiki.net/lslwiki/wakka.php?wakka=LibraryRotationFunctions. ckrinke
             LSL_Rotation t = new LSL_Rotation(r.x * r.x, r.y * r.y, r.z * r.z, r.s * r.s);
@@ -548,6 +659,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Rotation llEuler2Rot(LSL_Vector v)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             double x,y,z,s;
@@ -569,6 +681,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Rotation llAxes2Rot(LSL_Vector fwd, LSL_Vector left, LSL_Vector up)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             double s;
             double tr = fwd.x + left.y + up.z + 1.0;
@@ -624,6 +737,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Vector llRot2Fwd(LSL_Rotation r)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             double x, y, z, m;
@@ -649,6 +763,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Vector llRot2Left(LSL_Rotation r)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             double x, y, z, m;
@@ -674,6 +789,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Vector llRot2Up(LSL_Rotation r)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             double x, y, z, m;
 
@@ -698,6 +814,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Rotation llRotBetween(LSL_Vector a, LSL_Vector b)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             //A and B should both be normalized
             m_host.AddScriptLPS(1);
             LSL_Rotation rotBetween;
@@ -773,6 +890,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llWhisper(int channelID, string text)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             if (text.Length > 1023)
@@ -781,13 +899,14 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             World.SimChat(Utils.StringToBytes(text),
                           ChatTypeEnum.Whisper, channelID, m_host.ParentGroup.RootPart.AbsolutePosition, m_host.Name, m_host.UUID, false);
 
-            IWorldComm wComm = m_ScriptEngine.World.RequestModuleInterface<IWorldComm>();
+            IWorldComm wComm = World.RequestModuleInterface<IWorldComm>();
             if (wComm != null)
                 wComm.DeliverMessage(ChatTypeEnum.Whisper, channelID, m_host.Name, m_host.UUID, text);
         }
 
         public void llSay(int channelID, string text)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             if (m_scriptConsoleChannelEnabled && (channelID == m_scriptConsoleChannel))
@@ -802,7 +921,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                 World.SimChat(Utils.StringToBytes(text),
                               ChatTypeEnum.Say, channelID, m_host.ParentGroup.RootPart.AbsolutePosition, m_host.Name, m_host.UUID, false);
 
-                IWorldComm wComm = m_ScriptEngine.World.RequestModuleInterface<IWorldComm>();
+                IWorldComm wComm = World.RequestModuleInterface<IWorldComm>();
                 if (wComm != null)
                     wComm.DeliverMessage(ChatTypeEnum.Say, channelID, m_host.Name, m_host.UUID, text);
             }
@@ -810,6 +929,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llShout(int channelID, string text)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             if (text.Length > 1023)
@@ -818,17 +938,25 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             World.SimChat(Utils.StringToBytes(text),
                           ChatTypeEnum.Shout, channelID, m_host.ParentGroup.RootPart.AbsolutePosition, m_host.Name, m_host.UUID, true);
 
-            IWorldComm wComm = m_ScriptEngine.World.RequestModuleInterface<IWorldComm>();
+            IWorldComm wComm = World.RequestModuleInterface<IWorldComm>();
             if (wComm != null)
                 wComm.DeliverMessage(ChatTypeEnum.Shout, channelID, m_host.Name, m_host.UUID, text);
         }
 
         public void llRegionSay(int channelID, string text)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             if (channelID == 0)
             {
-                LSLError("Cannot use llRegionSay() on channel 0");
-                return;
+                ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "LSL", m_host, "LSL");
+            	if (text.Length > 1023)
+                text = text.Substring(0, 1023);
+
+            	m_host.AddScriptLPS(1);
+
+            	IWorldComm wComm1 = World.RequestModuleInterface<IWorldComm>();
+            	if (wComm1 != null)
+                	wComm1.DeliverMessage(ChatTypeEnum.Region, channelID, m_host.Name, m_host.UUID, text);
             }
 
             if (text.Length > 1023)
@@ -836,17 +964,18 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
             m_host.AddScriptLPS(1);
 
-            IWorldComm wComm = m_ScriptEngine.World.RequestModuleInterface<IWorldComm>();
+            IWorldComm wComm = World.RequestModuleInterface<IWorldComm>();
             if (wComm != null)
                 wComm.DeliverMessage(ChatTypeEnum.Region, channelID, m_host.Name, m_host.UUID, text);
         }
 
         public LSL_Integer llListen(int channelID, string name, string ID, string msg)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             UUID keyID;
             UUID.TryParse(ID, out keyID);
-            IWorldComm wComm = m_ScriptEngine.World.RequestModuleInterface<IWorldComm>();
+            IWorldComm wComm = World.RequestModuleInterface<IWorldComm>();
             if (wComm != null)
                 return wComm.Listen(m_localID, m_itemID, m_host.UUID, channelID, name, keyID, msg);
             else
@@ -855,22 +984,25 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llListenControl(int number, int active)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
-            IWorldComm wComm = m_ScriptEngine.World.RequestModuleInterface<IWorldComm>();
+            IWorldComm wComm = World.RequestModuleInterface<IWorldComm>();
             if (wComm != null)
                 wComm.ListenControl(m_itemID, number, active);
         }
 
         public void llListenRemove(int number)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
-            IWorldComm wComm = m_ScriptEngine.World.RequestModuleInterface<IWorldComm>();
+            IWorldComm wComm = World.RequestModuleInterface<IWorldComm>();
             if (wComm != null)
                 wComm.ListenRemove(m_itemID, number);
         }
 
         public void llSensor(string name, string id, int type, double range, double arc)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             UUID keyID = UUID.Zero;
             UUID.TryParse(id, out keyID);
@@ -880,6 +1012,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llSensorRepeat(string name, string id, int type, double range, double arc, double rate)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             UUID keyID = UUID.Zero;
             UUID.TryParse(id, out keyID);
@@ -889,6 +1022,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llSensorRemove()
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             AsyncCommands.SensorRepeatPlugin.UnSetSenseRepeaterEvents(m_localID, m_itemID);
         }
@@ -898,17 +1032,12 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             // try avatar username surname
             UserAccount account = World.UserAccountService.GetUserAccount(World.RegionInfo.ScopeID, objecUUID);
             if (account != null)
-            {
-                string avatarname = account.Name;
-                return avatarname;
-            }
+                return account.Name;
+
             // try an scene object
             SceneObjectPart SOP = World.GetSceneObjectPart(objecUUID);
             if (SOP != null)
-            {
-                string objectname = SOP.Name;
-                return objectname;
-            }
+                return SOP.Name;
 
             EntityBase SensedObject;
             World.Entities.TryGetValue(objecUUID, out SensedObject);
@@ -930,6 +1059,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_String llDetectedName(int number)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             DetectParams detectedParams = m_ScriptEngine.GetDetectParams(m_itemID, number);
             if (detectedParams == null)
@@ -939,6 +1069,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_String llDetectedKey(int number)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             DetectParams detectedParams = m_ScriptEngine.GetDetectParams(m_itemID, number);
             if (detectedParams == null)
@@ -948,6 +1079,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_String llDetectedOwner(int number)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             DetectParams detectedParams = m_ScriptEngine.GetDetectParams(m_itemID, number);
             if (detectedParams == null)
@@ -957,6 +1089,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Integer llDetectedType(int number)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             DetectParams detectedParams = m_ScriptEngine.GetDetectParams(m_itemID, number);
             if (detectedParams == null)
@@ -966,6 +1099,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Vector llDetectedPos(int number)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             DetectParams detectedParams = m_ScriptEngine.GetDetectParams(m_itemID, number);
             if (detectedParams == null)
@@ -975,6 +1109,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Vector llDetectedVel(int number)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             DetectParams detectedParams = m_ScriptEngine.GetDetectParams(m_itemID, number);
             if (detectedParams == null)
@@ -984,6 +1119,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Vector llDetectedGrab(int number)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             DetectParams parms = m_ScriptEngine.GetDetectParams(m_itemID, number);
             if (parms == null)
@@ -994,6 +1130,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Rotation llDetectedRot(int number)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             DetectParams detectedParams = m_ScriptEngine.GetDetectParams(m_itemID, number);
             if (detectedParams == null)
@@ -1003,6 +1140,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Integer llDetectedGroup(int number)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             DetectParams detectedParams = m_ScriptEngine.GetDetectParams(m_itemID, number);
             if (detectedParams == null)
@@ -1014,6 +1152,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Integer llDetectedLinkNumber(int number)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             DetectParams parms = m_ScriptEngine.GetDetectParams(m_itemID, number);
             if (parms == null)
@@ -1027,6 +1166,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         /// </summary>
         public LSL_Vector llDetectedTouchBinormal(int index)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             DetectParams detectedParams = m_ScriptEngine.GetDetectParams(m_itemID, index);
             if (detectedParams == null)
@@ -1039,6 +1179,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         /// </summary>
         public LSL_Integer llDetectedTouchFace(int index)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             DetectParams detectedParams = m_ScriptEngine.GetDetectParams(m_itemID, index);
             if (detectedParams == null)
@@ -1051,6 +1192,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         /// </summary>
         public LSL_Vector llDetectedTouchNormal(int index)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             DetectParams detectedParams = m_ScriptEngine.GetDetectParams(m_itemID, index);
             if (detectedParams == null)
@@ -1063,6 +1205,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         /// </summary>
         public LSL_Vector llDetectedTouchPos(int index)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             DetectParams detectedParams = m_ScriptEngine.GetDetectParams(m_itemID, index);
             if (detectedParams == null)
@@ -1075,6 +1218,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         /// </summary>
         public LSL_Vector llDetectedTouchST(int index)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             DetectParams detectedParams = m_ScriptEngine.GetDetectParams(m_itemID, index);
             if (detectedParams == null)
@@ -1087,6 +1231,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         /// </summary>
         public LSL_Vector llDetectedTouchUV(int index)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             DetectParams detectedParams = m_ScriptEngine.GetDetectParams(m_itemID, index);
             if (detectedParams == null)
@@ -1096,12 +1241,14 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public virtual void llDie()
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             throw new SelfDeleteException();
         }
 
         public LSL_Float llGround(LSL_Vector offset)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             Vector3 pos = m_host.GetWorldPosition() + new Vector3((float)offset.x,
                                                                   (float)offset.y,
@@ -1134,6 +1281,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Float llCloud(LSL_Vector offset)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             float cloudCover = 0f;
             ICloudModule module = World.RequestModuleInterface<ICloudModule>();
@@ -1151,6 +1299,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Vector llWind(LSL_Vector offset)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             LSL_Vector wind = new LSL_Vector(0, 0, 0);
             IWindModule module = World.RequestModuleInterface<IWindModule>();
@@ -1170,6 +1319,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llSetStatus(int status, int value)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             int statusrotationaxis = 0;
@@ -1267,6 +1417,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Integer llGetStatus(int status)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             // m_log.Debug(m_host.ToString() + " status is " + m_host.GetEffectiveObjectFlags().ToString());
             switch (status)
@@ -1339,6 +1490,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llSetScale(LSL_Vector scale)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             SetScale(m_host, scale);
         }
@@ -1377,17 +1529,19 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             tmp.Y = (float)scale.y;
             tmp.Z = (float)scale.z;
             part.Scale = tmp;
-            part.SendFullUpdateToAllClients();
+            part.ScheduleFullUpdate();
         }
 
         public LSL_Vector llGetScale()
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             return new LSL_Vector(m_host.Scale.X, m_host.Scale.Y, m_host.Scale.Z);
         }
 
         public void llSetClickAction(int action)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             m_host.ClickAction = (byte)action;
             if (m_host.ParentGroup != null) m_host.ParentGroup.HasGroupChanged = true;
@@ -1397,6 +1551,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llSetColor(LSL_Vector color, int face)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             if (face == ScriptBaseClass.ALL_SIDES)
@@ -1537,6 +1692,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Float llGetAlpha(int face)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             return GetAlpha(m_host, face);
@@ -1562,6 +1718,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llSetAlpha(double alpha, int face)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             SetAlpha(m_host, alpha, face);
@@ -1569,6 +1726,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llSetLinkAlpha(int linknumber, double alpha, int face)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             List<SceneObjectPart> parts = GetLinkParts(linknumber);
@@ -1683,6 +1841,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Vector llGetColor(int face)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             return GetColor(m_host, face);
         }
@@ -1726,6 +1885,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llSetTexture(string texture, int face)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             SetTexture(m_host, texture, face);
             ScriptSleep(200);
@@ -1733,6 +1893,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llSetLinkTexture(int linknumber, string texture, int face)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             List<SceneObjectPart> parts = GetLinkParts(linknumber);
@@ -1782,6 +1943,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llScaleTexture(double u, double v, int face)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             ScaleTexture(m_host, u, v, face);
@@ -1819,6 +1981,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llOffsetTexture(double u, double v, int face)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             OffsetTexture(m_host, u, v, face);
             ScriptSleep(200);
@@ -1855,6 +2018,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llRotateTexture(double rotation, int face)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             RotateTexture(m_host, rotation, face);
             ScriptSleep(200);
@@ -1888,6 +2052,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_String llGetTexture(int face)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             return GetTexture(m_host, face);
         }
@@ -1903,7 +2068,12 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             {
                 Primitive.TextureEntryFace texface;
                 texface = tex.GetFace((uint)face);
-                return texface.TextureID.ToString();
+                TaskInventoryItem item = null;
+                m_host.TaskInventory.TryGetValue(texface.TextureID, out item);
+                if (item != null)
+                    return item.Name.ToString();
+                else
+                    return texface.TextureID.ToString();
             }
             else
             {
@@ -1913,6 +2083,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llSetPos(LSL_Vector pos)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             SetPos(m_host, pos);
@@ -1938,17 +2109,28 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             float ground = World.GetGroundHeight((float)targetPos.x, (float)targetPos.y);
             bool disable_underground_movement = m_ScriptEngine.Config.GetBoolean("DisableUndergroundMovement", true);
 
-            if (part.ParentGroup.RootPart == part)
+            if (part.ParentGroup == null)
             {
                 if ((targetPos.z < ground) && disable_underground_movement)
                     targetPos.z = ground;
+                    LSL_Vector real_vec = SetPosAdjust(currentPos, targetPos);
+                    part.UpdateOffSet(new Vector3((float)real_vec.x, (float)real_vec.y, (float)real_vec.z));
+            }
+            else if (part.ParentGroup.RootPart == part)
+            {
                 SceneObjectGroup parent = part.ParentGroup;
+                if (!part.IsAttachment)
+                {
+                    if ((targetPos.z < ground) && disable_underground_movement)
+                        targetPos.z = ground;
+                }
                 LSL_Vector real_vec = SetPosAdjust(currentPos, targetPos);
                 parent.UpdateGroupPosition(new Vector3((float)real_vec.x, (float)real_vec.y, (float)real_vec.z));
             }
             else
             {
-                if (llVecDist(new LSL_Vector(0,0,0), targetPos) <= 10.0f)
+                //it's late... i think this is right ?
+                if (llVecDist(new LSL_Vector(0, 0, 0), targetPos) <= m_ScriptDistanceFactor * 10.0f)
                 {
                     part.OffsetPosition = new Vector3((float)targetPos.x, (float)targetPos.y, (float)targetPos.z);
                     SceneObjectGroup parent = part.ParentGroup;
@@ -1960,6 +2142,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Vector llGetPos()
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             Vector3 pos = m_host.GetWorldPosition();
             return new LSL_Vector(pos.X, pos.Y, pos.Z);
@@ -1967,6 +2150,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Vector llGetLocalPos()
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             if (m_host.ParentID != 0)
             {
@@ -1984,6 +2168,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llSetRot(LSL_Rotation rot)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             // try to let this work as in SL...
@@ -2011,6 +2196,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llSetLocalRot(LSL_Rotation rot)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             SetRot(m_host, Rot2Quaternion(rot));
             ScriptSleep(200);
@@ -2042,6 +2228,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         /// </summary>
         public LSL_Rotation llGetRot()
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             // unlinked or root prim then use llRootRotation
             // see llRootRotaion for references.
             if (m_host.LinkNum == 0 || m_host.LinkNum == 1)
@@ -2081,12 +2268,14 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Rotation llGetLocalRot()
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             return new LSL_Rotation(m_host.RotationOffset.X, m_host.RotationOffset.Y, m_host.RotationOffset.Z, m_host.RotationOffset.W);
         }
 
         public void llSetForce(LSL_Vector force, int local)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             if (m_host.ParentGroup != null)
@@ -2103,6 +2292,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Vector llGetForce()
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             LSL_Vector force = new LSL_Vector(0.0, 0.0, 0.0);
 
             m_host.AddScriptLPS(1);
@@ -2123,42 +2313,49 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Integer llTarget(LSL_Vector position, double range)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             return m_host.registerTargetWaypoint(new Vector3((float)position.x, (float)position.y, (float)position.z), (float)range);
         }
 
         public void llTargetRemove(int number)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             m_host.unregisterTargetWaypoint(number);
         }
 
         public LSL_Integer llRotTarget(LSL_Rotation rot, double error)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             return m_host.registerRotTargetWaypoint(new Quaternion((float)rot.x, (float)rot.y, (float)rot.z, (float)rot.s), (float)error);
         }
 
         public void llRotTargetRemove(int number)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             m_host.unregisterRotTargetWaypoint(number);
         }
 
         public void llMoveToTarget(LSL_Vector target, double tau)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             m_host.MoveToTarget(new Vector3((float)target.x, (float)target.y, (float)target.z), (float)tau);
         }
 
         public void llStopMoveToTarget()
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             m_host.StopMoveToTarget();
         }
 
         public void llApplyImpulse(LSL_Vector force, int local)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             //No energy force yet
             Vector3 v = new Vector3((float)force.x, (float)force.y, (float)force.z);
@@ -2172,18 +2369,21 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llApplyRotationalImpulse(LSL_Vector force, int local)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             m_host.ApplyAngularImpulse(new Vector3((float)force.x, (float)force.y, (float)force.z), local != 0);
         }
 
         public void llSetTorque(LSL_Vector torque, int local)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             m_host.SetAngularImpulse(new Vector3((float)torque.x, (float)torque.y, (float)torque.z), local != 0);
         }
 
         public LSL_Vector llGetTorque()
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             Vector3 torque = m_host.GetTorque();
             return new LSL_Vector(torque.X,torque.Y,torque.Z);
@@ -2191,6 +2391,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llSetForceAndTorque(LSL_Vector force, LSL_Vector torque, int local)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             llSetForce(force, local);
             llSetTorque(torque, local);
@@ -2198,36 +2399,42 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Vector llGetVel()
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             return new LSL_Vector(m_host.Velocity.X, m_host.Velocity.Y, m_host.Velocity.Z);
         }
 
         public LSL_Vector llGetAccel()
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             return new LSL_Vector(m_host.Acceleration.X, m_host.Acceleration.Y, m_host.Acceleration.Z);
         }
 
         public LSL_Vector llGetOmega()
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             return new LSL_Vector(m_host.AngularVelocity.X, m_host.AngularVelocity.Y, m_host.AngularVelocity.Z);
         }
 
         public LSL_Float llGetTimeOfDay()
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             return (double)((DateTime.Now.TimeOfDay.TotalMilliseconds / 1000) % (3600 * 4));
         }
 
         public LSL_Float llGetWallclock()
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             return DateTime.Now.TimeOfDay.TotalSeconds;
         }
 
         public LSL_Float llGetTime()
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             TimeSpan ScriptTime = DateTime.Now - m_timer;
             return (double)(ScriptTime.TotalMilliseconds / 1000);
@@ -2235,12 +2442,14 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llResetTime()
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             m_timer = DateTime.Now;
         }
 
         public LSL_Float llGetAndResetTime()
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             TimeSpan ScriptTime = DateTime.Now - m_timer;
             m_timer = DateTime.Now;
@@ -2249,6 +2458,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llSound(string sound, double volume, int queue, int loop)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             // This function has been deprecated
             // see http://www.lslwiki.net/lslwiki/wakka.php?wakka=llSound
@@ -2259,6 +2469,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         // 20080530 Updated to remove code duplication
         public void llPlaySound(string sound, double volume)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             // send the sound, once, to all clients in range
@@ -2275,6 +2486,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         // 20080530 Stop sound if there is one, otherwise volume only changes don't work
         public void llLoopSound(string sound, double volume)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             if (m_host.Sound != UUID.Zero)
@@ -2282,15 +2494,16 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
             m_host.Sound = KeyOrName(sound);
             m_host.SoundGain = volume;
-            m_host.SoundFlags = 1;      // looping
+            m_host.SoundFlags = (int)SoundFlags.Loop;      // looping
             m_host.SoundRadius = 20;    // Magic number, 20 seems reasonable. Make configurable?
 
             m_host.ScheduleFullUpdate();
-            m_host.SendFullUpdateToAllClients();
+            //m_host.SendFullUpdateToAllClients();
         }
 
         public void llLoopSoundMaster(string sound, double volume)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             m_host.ParentGroup.LoopSoundMasterPrim = m_host;
             lock (m_host.ParentGroup.LoopSoundSlavePrims)
@@ -2306,7 +2519,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                     prim.SoundRadius = 20;    // Magic number, 20 seems reasonable. Make configurable?
 
                     prim.ScheduleFullUpdate();
-                    prim.SendFullUpdateToAllClients();
+                    //prim.SendFullUpdateToAllClients();
                 }
             }
             if (m_host.Sound != UUID.Zero)
@@ -2318,11 +2531,12 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             m_host.SoundRadius = 20;    // Magic number, 20 seems reasonable. Make configurable?
 
             m_host.ScheduleFullUpdate();
-            m_host.SendFullUpdateToAllClients();
+            //m_host.SendFullUpdateToAllClients();
         }
 
         public void llLoopSoundSlave(string sound, double volume)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             lock (m_host.ParentGroup.LoopSoundSlavePrims)
             {
@@ -2332,6 +2546,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llPlaySoundSlave(string sound, double volume)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             // send the sound, once, to all clients in range
@@ -2340,6 +2555,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llTriggerSound(string sound, double volume)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             // send the sound, once, to all clients in range
             m_host.SendSound(KeyOrName(sound).ToString(), volume, true, 0, 0, false, false);
@@ -2348,6 +2564,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         // Xantor 20080528: Clear prim data of sound instead
         public void llStopSound()
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             if (m_host.ParentGroup.LoopSoundSlavePrims.Contains(m_host))
             {
@@ -2360,7 +2577,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                         part.SoundFlags = 0;
                         part.SoundRadius = 0;
                         part.ScheduleFullUpdate();
-                        part.SendFullUpdateToAllClients();
+                        //part.SendFullUpdateToAllClients();
                     }
                     m_host.ParentGroup.LoopSoundMasterPrim = null;
                     m_host.ParentGroup.LoopSoundSlavePrims.Clear();
@@ -2372,7 +2589,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                     m_host.SoundFlags = 0;
                     m_host.SoundRadius = 0;
                     m_host.ScheduleFullUpdate();
-                    m_host.SendFullUpdateToAllClients();
+                    //m_host.SendFullUpdateToAllClients();
                 }
             }
             else
@@ -2382,12 +2599,13 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                 m_host.SoundFlags = 0;
                 m_host.SoundRadius = 0;
                 m_host.ScheduleFullUpdate();
-                m_host.SendFullUpdateToAllClients();
+                //m_host.SendFullUpdateToAllClients();
             }
         }
 
         public void llPreloadSound(string sound)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             m_host.PreloadSound(sound);
             ScriptSleep(1000);
@@ -2403,6 +2621,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         public LSL_String llGetSubString(string src, int start, int end)
         {
 
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             // Normalize indices (if negative).
@@ -2499,6 +2718,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         public LSL_String llDeleteSubString(string src, int start, int end)
         {
 
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             // Normalize indices (if negative).
@@ -2582,6 +2802,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         public LSL_String llInsertString(string dest, int index, string src)
         {
 
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             // Normalize indices (if negative).
@@ -2619,18 +2840,21 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_String llToUpper(string src)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             return src.ToUpper();
         }
 
         public LSL_String llToLower(string src)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             return src.ToLower();
         }
 
         public LSL_Integer llGiveMoney(string destination, int amount)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             UUID invItemID=InventorySelf();
             if (invItemID == UUID.Zero)
                 return 0;
@@ -2680,96 +2904,364 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llMakeExplosion(int particles, double scale, double vel, double lifetime, double arc, string texture, LSL_Vector offset)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
-            Deprecated("llMakeExplosion");
+
+            /*llParticleSystem([
+        PSYS_PART_FLAGS,            PSYS_PART_INTERP_COLOR_MASK | PSYS_PART_INTERP_SCALE_MASK | PSYS_PART_EMISSIVE_MASK | PSYS_PART_WIND_MASK,
+        PSYS_SRC_PATTERN,           PSYS_SRC_PATTERN_ANGLE_CONE,
+        PSYS_PART_START_COLOR,      <1.0, 1.0, 1.0>,
+        PSYS_PART_END_COLOR,        <1.0, 1.0, 1.0>,
+        PSYS_PART_START_ALPHA,      0.50,
+        PSYS_PART_END_ALPHA,        0.25,
+        PSYS_PART_START_SCALE,      <particle_scale, particle_scale, 0.0>,
+        PSYS_PART_END_SCALE,        <particle_scale * 2 + particle_lifetime, particle_scale * 2 + particle_lifetime, 0.0>,
+        PSYS_PART_MAX_AGE,          particle_lifetime,
+        PSYS_SRC_ACCEL,             <0.0, 0.0, 0.0>,
+        PSYS_SRC_TEXTURE,           source_texture_id,
+        PSYS_SRC_BURST_RATE,        1.0,
+        PSYS_SRC_ANGLE_BEGIN,       0.0,
+        PSYS_SRC_ANGLE_END,         source_cone * PI,
+        PSYS_SRC_BURST_PART_COUNT,  particle_count / 2,
+        PSYS_SRC_BURST_RADIUS,      0.0,
+        PSYS_SRC_BURST_SPEED_MIN,   particle_speed / 3,
+        PSYS_SRC_BURST_SPEED_MAX,   particle_speed * 2/3,
+        PSYS_SRC_MAX_AGE,           particle_lifetime / 2,
+        PSYS_SRC_OMEGA,             <0.0, 0.0, 0.0>
+        ]);*/
+
+            List<object> list = new List<object>();
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_FLAGS);
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_INTERP_COLOR_MASK | ScriptBase.ScriptBaseClass.PSYS_PART_INTERP_SCALE_MASK | ScriptBase.ScriptBaseClass.PSYS_PART_EMISSIVE_MASK | ScriptBase.ScriptBaseClass.PSYS_PART_WIND_MASK);
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_PATTERN);
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_PATTERN_ANGLE_CONE);
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_START_COLOR);
+            list.Add(new LSL_Vector(1, 1, 1));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_END_COLOR);
+            list.Add(new LSL_Vector(1, 1, 1));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_START_ALPHA);
+            list.Add(new LSL_Float(0.50));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_END_ALPHA);
+            list.Add(new LSL_Float(0.25));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_START_SCALE);
+            list.Add(new LSL_Vector(scale, scale, 0));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_END_SCALE);
+            list.Add(new LSL_Vector(scale * 2 + lifetime, scale * 2 + lifetime, 0));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_MAX_AGE);
+            list.Add(new LSL_Float(lifetime));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_ACCEL);
+            list.Add(new LSL_Vector(0, 0, 0));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_TEXTURE);
+            list.Add(new LSL_String(texture));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_BURST_RATE);
+            list.Add(new LSL_Float(1));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_ANGLE_BEGIN);
+            list.Add(new LSL_Float(0.0));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_ANGLE_END);
+            list.Add(new LSL_Float(arc * Math.PI));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_BURST_PART_COUNT);
+            list.Add(new LSL_Float(particles / 2));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_BURST_RADIUS);
+            list.Add(new LSL_Float(0.0));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_BURST_SPEED_MIN);
+            list.Add(new LSL_Float(vel / 3));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_BURST_SPEED_MAX);
+            list.Add(new LSL_Float(vel * 2 / 3));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_MAX_AGE);
+            list.Add(new LSL_Float(lifetime / 2));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_OMEGA);
+            list.Add(new LSL_Vector(0, 0, 0));
+
+            llParticleSystem(new LSL_Types.list(list.ToArray()));
+
             ScriptSleep(100);
         }
 
         public void llMakeFountain(int particles, double scale, double vel, double lifetime, double arc, int bounce, string texture, LSL_Vector offset, double bounce_offset)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
-            Deprecated("llMakeFountain");
+
+            /*llParticleSystem([
+        PSYS_PART_FLAGS,            PSYS_PART_INTERP_COLOR_MASK | PSYS_PART_INTERP_SCALE_MASK | PSYS_PART_WIND_MASK | PSYS_PART_BOUNCE_MASK | PSYS_PART_EMISSIVE_MASK,
+        PSYS_SRC_PATTERN,           PSYS_SRC_PATTERN_ANGLE_CONE,
+        PSYS_PART_START_COLOR,      <1.0, 1.0, 1.0>,
+        PSYS_PART_END_COLOR,        <1.0, 1.0, 1.0>,
+        PSYS_PART_START_ALPHA,      0.50,
+        PSYS_PART_END_ALPHA,        0.25,
+        PSYS_PART_START_SCALE,      <particle_scale/1.5, particle_scale/1.5, 0.0>,
+        PSYS_PART_END_SCALE,        <0.0, 0.0, 0.0>,
+        PSYS_PART_MAX_AGE,          3.0,
+        PSYS_SRC_ACCEL,             <1.0, 0.0, -4>,
+        PSYS_SRC_TEXTURE,           source_texture_id,
+        PSYS_SRC_BURST_RATE,        5/particle_count,
+        PSYS_SRC_ANGLE_BEGIN,       0.0,
+        PSYS_SRC_ANGLE_END,         source_cone*PI,
+        PSYS_SRC_BURST_PART_COUNT,  1,
+        PSYS_SRC_BURST_RADIUS,      0.0,
+        PSYS_SRC_BURST_SPEED_MIN,   particle_speed,
+        PSYS_SRC_BURST_SPEED_MAX,   particle_speed,
+        PSYS_SRC_MAX_AGE,           particle_lifetime/2,
+        PSYS_SRC_OMEGA,             <0.0, 0.0, 0.0>
+    ]);*/
+
+            List<object> list = new List<object>();
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_FLAGS);
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_INTERP_COLOR_MASK | ScriptBase.ScriptBaseClass.PSYS_PART_INTERP_SCALE_MASK | ScriptBase.ScriptBaseClass.PSYS_PART_WIND_MASK | ScriptBase.ScriptBaseClass.PSYS_PART_BOUNCE_MASK | ScriptBase.ScriptBaseClass.PSYS_PART_EMISSIVE_MASK);
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_PATTERN);
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_PATTERN_ANGLE_CONE);
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_START_COLOR);
+            list.Add(new LSL_Vector(1, 1, 1));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_END_COLOR);
+            list.Add(new LSL_Vector(1, 1, 1));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_START_ALPHA);
+            list.Add(new LSL_Float(0.50));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_END_ALPHA);
+            list.Add(new LSL_Float(0.25));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_START_SCALE);
+            list.Add(new LSL_Vector(scale / 1.5, scale / 1.5, 0));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_END_SCALE);
+            list.Add(new LSL_Vector(0, 0, 0));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_MAX_AGE);
+            list.Add(new LSL_Float(3));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_ACCEL);
+            list.Add(new LSL_Vector(1, 0, -4));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_TEXTURE);
+            list.Add(new LSL_String(texture));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_BURST_RATE);
+            list.Add(new LSL_Float(5 / particles));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_ANGLE_BEGIN);
+            list.Add(new LSL_Float(0.0));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_ANGLE_END);
+            list.Add(new LSL_Float(arc * Math.PI));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_BURST_PART_COUNT);
+            list.Add(new LSL_Float(1));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_BURST_RADIUS);
+            list.Add(new LSL_Float(0.0));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_BURST_SPEED_MIN);
+            list.Add(new LSL_Float(vel));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_BURST_SPEED_MAX);
+            list.Add(new LSL_Float(vel));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_MAX_AGE);
+            list.Add(new LSL_Float(lifetime / 2));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_OMEGA);
+            list.Add(new LSL_Vector(0, 0, 0));
+
+            llParticleSystem(new LSL_Types.list(list.ToArray()));
+
             ScriptSleep(100);
         }
 
         public void llMakeSmoke(int particles, double scale, double vel, double lifetime, double arc, string texture, LSL_Vector offset)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
-            Deprecated("llMakeSmoke");
+            /*llParticleSystem([
+       PSYS_PART_FLAGS,            PSYS_PART_INTERP_COLOR_MASK | PSYS_PART_INTERP_SCALE_MASK | PSYS_PART_EMISSIVE_MASK | PSYS_PART_WIND_MASK,
+       PSYS_SRC_PATTERN,           PSYS_SRC_PATTERN_ANGLE_CONE,
+       PSYS_PART_START_COLOR,      <1.0, 1.0, 1.0>,
+       PSYS_PART_END_COLOR,        <1.0, 1.0, 1.0>,
+       PSYS_PART_START_ALPHA,      1.00,
+       PSYS_PART_END_ALPHA,        0.05,
+       PSYS_PART_START_SCALE,      <particle_scale, particle_scale, 0.0>,
+       PSYS_PART_END_SCALE,        <10, 10, 0.0>,
+       PSYS_PART_MAX_AGE,          3.0,
+       PSYS_SRC_ACCEL,             <0.0, 0.0, 0.0>,
+       PSYS_SRC_TEXTURE,           source_texture_id,
+       PSYS_SRC_BURST_RATE,        10.0 / particle_count,
+       PSYS_SRC_ANGLE_BEGIN,       0.0,
+       PSYS_SRC_ANGLE_END,         source_cone * PI,
+       PSYS_SRC_BURST_PART_COUNT,  1,
+       PSYS_SRC_BURST_RADIUS,      0.0,
+       PSYS_SRC_BURST_SPEED_MIN,   particle_speed,
+       PSYS_SRC_BURST_SPEED_MAX,   particle_speed,
+       PSYS_SRC_MAX_AGE,           particle_lifetime / 2,
+       PSYS_SRC_OMEGA,             <0.0, 0.0, 0.0>
+       ]);*/
+            List<object> list = new List<object>();
+            list.Add(OpenSim.Region.ScriptEngine.Shared.ScriptBase.ScriptBaseClass.PSYS_PART_FLAGS);
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_INTERP_COLOR_MASK | ScriptBase.ScriptBaseClass.PSYS_PART_INTERP_SCALE_MASK | ScriptBase.ScriptBaseClass.PSYS_PART_EMISSIVE_MASK | ScriptBase.ScriptBaseClass.PSYS_PART_WIND_MASK);
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_PATTERN);
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_PATTERN_ANGLE_CONE);
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_START_COLOR);
+            list.Add(new LSL_Vector(1, 1, 1));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_END_COLOR);
+            list.Add(new LSL_Vector(1, 1, 1));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_START_ALPHA);
+            list.Add(new LSL_Float(1));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_END_ALPHA);
+            list.Add(new LSL_Float(0.05));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_START_SCALE);
+            list.Add(new LSL_Vector(scale, scale, 0));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_END_SCALE);
+            list.Add(new LSL_Vector(10, 10, 0));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_MAX_AGE);
+            list.Add(new LSL_Float(3));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_ACCEL);
+            list.Add(new LSL_Vector(0, 0, 0));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_TEXTURE);
+            list.Add(new LSL_String(texture));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_BURST_RATE);
+            list.Add(new LSL_Float(10 / particles));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_ANGLE_BEGIN);
+            list.Add(new LSL_Float(0.0));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_ANGLE_END);
+            list.Add(new LSL_Float(arc * Math.PI));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_BURST_PART_COUNT);
+            list.Add(new LSL_Float(1));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_BURST_RADIUS);
+            list.Add(new LSL_Float(0.0));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_BURST_SPEED_MIN);
+            list.Add(new LSL_Float(vel));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_BURST_SPEED_MAX);
+            list.Add(new LSL_Float(vel));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_MAX_AGE);
+            list.Add(new LSL_Float(lifetime / 2));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_OMEGA);
+            list.Add(new LSL_Vector(0, 0, 0));
+
+            llParticleSystem(new LSL_Types.list(list.ToArray()));
             ScriptSleep(100);
         }
 
         public void llMakeFire(int particles, double scale, double vel, double lifetime, double arc, string texture, LSL_Vector offset)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
-            Deprecated("llMakeFire");
+
+            /*llParticleSystem([
+        PSYS_PART_FLAGS,            PSYS_PART_INTERP_COLOR_MASK | PSYS_PART_INTERP_SCALE_MASK | PSYS_PART_EMISSIVE_MASK | PSYS_PART_WIND_MASK,
+        PSYS_SRC_PATTERN,           PSYS_SRC_PATTERN_ANGLE_CONE,
+        PSYS_PART_START_COLOR,      <1.0, 1.0, 1.0>,
+        PSYS_PART_END_COLOR,        <1.0, 1.0, 1.0>,
+        PSYS_PART_START_ALPHA,      0.50,
+        PSYS_PART_END_ALPHA,        0.10,
+        PSYS_PART_START_SCALE,      <particle_scale/2, particle_scale/2, 0.0>,
+        PSYS_PART_END_SCALE,        <particle_scale, particle_scale, 0.0>,
+        PSYS_PART_MAX_AGE,          0.5,
+        PSYS_SRC_ACCEL,             <0.0, 0.0, 0.0>,
+        PSYS_SRC_TEXTURE,           source_texture_id,
+        PSYS_SRC_BURST_RATE,        5 / particle_count,
+        PSYS_SRC_ANGLE_BEGIN,       0.0,
+        PSYS_SRC_ANGLE_END,         source_cone * PI,
+        PSYS_SRC_BURST_PART_COUNT,  1,
+        PSYS_SRC_BURST_RADIUS,      0.0,
+        PSYS_SRC_BURST_SPEED_MIN,   particle_speed,
+        PSYS_SRC_BURST_SPEED_MAX,   particle_speed,
+        PSYS_SRC_MAX_AGE,           particle_lifetime / 2,
+        PSYS_SRC_OMEGA,             <0.0, 0.0, 0.0>
+        ]);*/
+
+            List<object> list = new List<object>();
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_FLAGS);
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_INTERP_COLOR_MASK | ScriptBase.ScriptBaseClass.PSYS_PART_INTERP_SCALE_MASK | ScriptBase.ScriptBaseClass.PSYS_PART_EMISSIVE_MASK | ScriptBase.ScriptBaseClass.PSYS_PART_WIND_MASK);
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_PATTERN);
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_PATTERN_ANGLE_CONE);
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_START_COLOR);
+            list.Add(new LSL_Vector(1, 1, 1));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_END_COLOR);
+            list.Add(new LSL_Vector(1, 1, 1));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_START_ALPHA);
+            list.Add(new LSL_Float(0.50));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_END_ALPHA);
+            list.Add(new LSL_Float(0.10));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_START_SCALE);
+            list.Add(new LSL_Vector(scale / 2, scale / 2, 0));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_END_SCALE);
+            list.Add(new LSL_Vector(scale, scale, 0));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_PART_MAX_AGE);
+            list.Add(new LSL_Float(0.50));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_ACCEL);
+            list.Add(new LSL_Vector(0, 0, 0));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_TEXTURE);
+            list.Add(new LSL_String(texture));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_BURST_RATE);
+            list.Add(new LSL_Float(5 / particles));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_ANGLE_BEGIN);
+            list.Add(new LSL_Float(0.0));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_ANGLE_END);
+            list.Add(new LSL_Float(arc * Math.PI));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_BURST_PART_COUNT);
+            list.Add(new LSL_Float(1));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_BURST_RADIUS);
+            list.Add(new LSL_Float(0.0));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_BURST_SPEED_MIN);
+            list.Add(new LSL_Float(vel));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_BURST_SPEED_MAX);
+            list.Add(new LSL_Float(vel));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_MAX_AGE);
+            list.Add(new LSL_Float(lifetime / 2));
+            list.Add(ScriptBase.ScriptBaseClass.PSYS_SRC_OMEGA);
+            list.Add(new LSL_Vector(0, 0, 0));
+
+            llParticleSystem(new LSL_Types.list(list.ToArray()));
             ScriptSleep(100);
         }
 
         public void llRezAtRoot(string inventory, LSL_Vector pos, LSL_Vector vel, LSL_Rotation rot, int param)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
-
-            if (Double.IsNaN(rot.x) || Double.IsNaN(rot.y) || Double.IsNaN(rot.z) || Double.IsNaN(rot.s))
-                return;
-            float dist = (float)llVecDist(llGetPos(), pos);
-
-            if (dist > m_ScriptDistanceFactor * 10.0f)
-                return;
-
-            TaskInventoryDictionary partInventory = (TaskInventoryDictionary)m_host.TaskInventory.Clone();
-
-            foreach (KeyValuePair<UUID, TaskInventoryItem> inv in partInventory)
+            if (m_ScriptEngine.Config.GetBoolean("AllowllRezObject", true))
             {
-                if (inv.Value.Name == inventory)
+
+                if (Double.IsNaN(rot.x) || Double.IsNaN(rot.y) || Double.IsNaN(rot.z) || Double.IsNaN(rot.s))
+                    return;
+                float dist = (float)llVecDist(llGetPos(), pos);
+
+                if (dist > m_ScriptDistanceFactor * 10.0f)
+                    return;
+
+                TaskInventoryDictionary partInventory = (TaskInventoryDictionary)m_host.TaskInventory.Clone();
+
+                foreach (KeyValuePair<UUID, TaskInventoryItem> inv in partInventory)
                 {
-                    // make sure we're an object.
-                    if (inv.Value.InvType != (int)InventoryType.Object)
+                    if (inv.Value.Name == inventory)
                     {
-                        llSay(0, "Unable to create requested object. Object is missing from database.");
+                        // make sure we're an object.
+                        if (inv.Value.InvType != (int)InventoryType.Object)
+                        {
+                            llSay(0, "Unable to create requested object. Object is missing from database.");
+                            return;
+                        }
+
+                        Vector3 llpos = new Vector3((float)pos.x, (float)pos.y, (float)pos.z);
+                        Vector3 llvel = new Vector3((float)vel.x, (float)vel.y, (float)vel.z);
+
+                        // need the magnitude later
+                        float velmag = (float)Util.GetMagnitude(llvel);
+
+                        SceneObjectGroup new_group = World.RezObject(m_host, inv.Value, llpos, Rot2Quaternion(rot), llvel, param, m_host.UUID);
+
+                        // If either of these are null, then there was an unknown error.
+                        if (new_group == null)
+                            continue;
+                        if (new_group.RootPart == null)
+                            continue;
+
+                        // objects rezzed with this method are die_at_edge by default.
+                        new_group.RootPart.SetDieAtEdge(true);
+
+                        new_group.ResumeScripts();
+
+                        //Object_rez should be dealt with by the script engine, especially in an async script engine...
+
+                        float groupmass = new_group.GetMass();
+
+                        if (new_group.RootPart.PhysActor != null && new_group.RootPart.PhysActor.IsPhysical && llvel != Vector3.Zero)
+                        {
+                            //Recoil.
+                            llApplyImpulse(new LSL_Vector(llvel.X * groupmass, llvel.Y * groupmass, llvel.Z * groupmass), 0);
+                        }
+                        // Variable script delay? (see (http://wiki.secondlife.com/wiki/LSL_Delay)
+                        ScriptSleep((int)((groupmass * velmag) / 10));
+                        ScriptSleep(100);
                         return;
                     }
-
-                    Vector3 llpos = new Vector3((float)pos.x, (float)pos.y, (float)pos.z);
-                    Vector3 llvel = new Vector3((float)vel.x, (float)vel.y, (float)vel.z);
-
-                    // need the magnitude later
-                    float velmag = (float)Util.GetMagnitude(llvel);
-
-                    SceneObjectGroup new_group = World.RezObject(m_host, inv.Value, llpos, Rot2Quaternion(rot), llvel, param);
-
-                    // If either of these are null, then there was an unknown error.
-                    if (new_group == null)
-                        continue;
-                    if (new_group.RootPart == null)
-                        continue;
-
-                    // objects rezzed with this method are die_at_edge by default.
-                    new_group.RootPart.SetDieAtEdge(true);
-
-                    new_group.ResumeScripts();
-
-                    m_ScriptEngine.PostObjectEvent(m_host.LocalId, new EventParams(
-                            "object_rez", new Object[] {
-                            new LSL_String(
-                            new_group.RootPart.UUID.ToString()) },
-                            new DetectParams[0]));
-
-                    float groupmass = new_group.GetMass();
-
-                    if (new_group.RootPart.PhysActor != null && new_group.RootPart.PhysActor.IsPhysical && llvel != Vector3.Zero)
-                    {
-                        //Recoil.
-                        llApplyImpulse(new LSL_Vector(llvel.X * groupmass, llvel.Y * groupmass, llvel.Z * groupmass), 0);
-                    }
-                    // Variable script delay? (see (http://wiki.secondlife.com/wiki/LSL_Delay)
-                    ScriptSleep((int)((groupmass * velmag) / 10));
-                    ScriptSleep(100);
-                    return;
                 }
-            }
 
-            llSay(0, "Could not find object " + inventory);
+                llSay(0, "Could not find object " + inventory);
+            }
         }
 
         public void llRezObject(string inventory, LSL_Vector pos, LSL_Vector vel, LSL_Rotation rot, int param)
@@ -2779,6 +3271,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llLookAt(LSL_Vector target, double strength, double damping)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             // Determine where we are looking from
             LSL_Vector from = llGetPos();
@@ -2806,6 +3299,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llStopLookAt()
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 //            NotImplemented("llStopLookAt");
             m_host.StopLookAt();
@@ -2813,6 +3307,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llSetTimerEvent(double sec)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             if (sec != 0.0 && sec < m_MinTimerInterval)
                 sec = m_MinTimerInterval;
             m_host.AddScriptLPS(1);
@@ -2822,18 +3317,21 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public virtual void llSleep(double sec)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
-            Thread.Sleep((int)(sec * 1000));
+            ScriptSleep((int)(sec * 1000));
         }
 
         public LSL_Float llGetMass()
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             return m_host.GetMass();
         }
 
         public void llCollisionFilter(string name, string id, int accept)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             m_host.CollisionFilter.Clear();
             if (id != null)
@@ -2848,6 +3346,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llTakeControls(int controls, int accept, int pass_on)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             TaskInventoryItem item;
 
             lock (m_host.TaskInventory)
@@ -2876,6 +3375,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llReleaseControls()
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             TaskInventoryItem item;
 
             lock (m_host.TaskInventory)
@@ -2907,6 +3407,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llReleaseURL(string url)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             if (m_UrlModule != null)
                 m_UrlModule.ReleaseURL(url);
@@ -2914,9 +3415,10 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llAttachToAvatar(int attachment)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
-            if (m_host.ParentGroup.RootPart.AttachmentPoint == 0)
+            if (m_host.ParentGroup.RootPart.AttachmentPoint != 0)
                 return;
 
             TaskInventoryItem item;
@@ -2938,7 +3440,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
                 ScenePresence presence = World.GetScenePresence(m_host.OwnerID);
 
-                IAttachmentsModule attachmentsModule = m_ScriptEngine.World.AttachmentsModule;
+                IAttachmentsModule attachmentsModule = World.AttachmentsModule;
                 if (attachmentsModule != null)
                     attachmentsModule.AttachObject(
                         presence.ControllingClient, grp.LocalId, 
@@ -2948,6 +3450,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llDetachFromAvatar()
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             if (m_host.ParentGroup.RootPart.AttachmentPoint == 0)
@@ -2973,26 +3476,29 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
                 ScenePresence presence = World.GetScenePresence(m_host.OwnerID);
 
-                IAttachmentsModule attachmentsModule = m_ScriptEngine.World.AttachmentsModule;
+                IAttachmentsModule attachmentsModule = World.AttachmentsModule;
                 if (attachmentsModule != null)
-                    attachmentsModule.ShowDetachInUserInventory(itemID, presence.ControllingClient);
+                    attachmentsModule.ShowDetachInUserInventory(itemID, grp, presence.ControllingClient);
             }
         }
 
         public void llTakeCamera(string avatar)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             Deprecated("llTakeCamera");
         }
 
         public void llReleaseCamera(string avatar)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             Deprecated("llReleaseCamera");
         }
 
         public LSL_String llGetOwner()
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             return m_host.OwnerID.ToString();
@@ -3000,6 +3506,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llInstantMessage(string user, string message)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             // We may be able to use ClientView.SendInstantMessage here, but we need a client instance.
@@ -3007,41 +3514,28 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             // but I don't think we have a list of scenes available from here.
             // (We also don't want to duplicate the code in OnInstantMessage if we can avoid it.)
 
-            // user is a UUID
-
-            // TODO: figure out values for client, fromSession, and imSessionID
-            // client.SendInstantMessage(m_host.UUID, fromSession, message, user, imSessionID, m_host.Name, AgentManager.InstantMessageDialog.MessageFromAgent, (uint)Util.UnixTimeSinceEpoch());
             UUID friendTransactionID = UUID.Random();
 
-            //m_pendingFriendRequests.Add(friendTransactionID, fromAgentID);
-
             GridInstantMessage msg = new GridInstantMessage();
-            msg.fromAgentID = new Guid(m_host.UUID.ToString()); // fromAgentID.Guid;
-            msg.toAgentID = new Guid(user); // toAgentID.Guid;
+            msg.fromAgentID = new Guid(m_host.UUID.ToString());
+            msg.toAgentID = new Guid(user); 
             msg.imSessionID = new Guid(friendTransactionID.ToString()); // This is the item we're mucking with here
-//            m_log.Debug("[Scripting IM]: From:" + msg.fromAgentID.ToString() + " To: " + msg.toAgentID.ToString() + " Session:" + msg.imSessionID.ToString() + " Message:" + message);
-//            m_log.Debug("[Scripting IM]: Filling Session: " + msg.imSessionID.ToString());
-            msg.timestamp = (uint)Util.UnixTimeSinceEpoch();// timestamp;
-            //if (client != null)
-            //{
-                msg.fromAgentName = m_host.Name;//client.FirstName + " " + client.LastName;// fromAgentName;
-            //}
-            //else
-            //{
-            //    msg.fromAgentName = "(hippos)";// Added for posterity.  This means that we can't figure out who sent it
-            //}
+            msg.timestamp = (uint)Util.UnixTimeSinceEpoch();
+            msg.fromAgentName = m_host.Name;
+            
             // Cap the message length at 1024.
             if (message != null && message.Length > 1024)
                 msg.message = message.Substring(0, 1024);
             else
                 msg.message = message;
-            msg.dialog = (byte)19; // messgage from script ??? // dialog;
-            msg.fromGroup = false;// fromGroup;
-            msg.offline = (byte)0; //offline;
-            msg.ParentEstateID = 0; //ParentEstateID;
-            msg.Position = Vector3.Zero;// new Vector3(m_host.AbsolutePosition);
-            msg.RegionID = World.RegionInfo.RegionID.Guid;//RegionID.Guid;
-            msg.binaryBucket = new byte[0];// binaryBucket;
+            
+            msg.dialog = (byte)InstantMessageDialog.MessageFromObject;
+            msg.fromGroup = false;
+            msg.offline = (byte)0; 
+            msg.ParentEstateID = 0;
+            msg.Position = Vector3.Zero;
+            msg.RegionID = World.RegionInfo.RegionID.Guid;
+            msg.binaryBucket = new byte[0];
 
             if (m_TransferModule != null)
             {
@@ -3052,8 +3546,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llEmail(string address, string subject, string message)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "llEmail", m_host, "LSL");
             m_host.AddScriptLPS(1);
-            IEmailModule emailModule = m_ScriptEngine.World.RequestModuleInterface<IEmailModule>();
+            IEmailModule emailModule = World.RequestModuleInterface<IEmailModule>();
             if (emailModule == null)
             {
                 ShoutError("llEmail: email module not configured");
@@ -3066,8 +3561,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llGetNextEmail(string address, string subject)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
-            IEmailModule emailModule = m_ScriptEngine.World.RequestModuleInterface<IEmailModule>();
+            IEmailModule emailModule = World.RequestModuleInterface<IEmailModule>();
             if (emailModule == null)
             {
                 ShoutError("llGetNextEmail: email module not configured");
@@ -3094,12 +3590,14 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_String llGetKey()
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             return m_host.UUID.ToString();
         }
 
         public void llSetBuoyancy(double buoyancy)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             if (m_host.ParentGroup != null)
             {
@@ -3118,6 +3616,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         /// <param name="tau">Number of seconds over which to reach target</param>
         public void llSetHoverHeight(double height, int water, double tau)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             if (m_host.PhysActor != null)
             {
@@ -3133,6 +3632,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llStopHover()
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             if (m_host.PhysActor != null)
             {
@@ -3142,16 +3642,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llMinEventDelay(double delay)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
-            try
-            {
-                m_ScriptEngine.SetMinEventDelay(m_itemID, delay);
-            }
-            catch (NotImplementedException)
-            {
-                // Currently not implemented in DotNetEngine only XEngine
-                NotImplemented("llMinEventDelay in DotNetEngine");
-            }
+            m_ScriptEngine.SetMinEventDelay(m_itemID, delay);
         }
 
         /// <summary>
@@ -3160,11 +3653,13 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         /// </summary>
         public void llSoundPreload(string sound)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
         }
 
         public void llRotLookAt(LSL_Rotation target, double strength, double damping)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             Quaternion rot = new Quaternion((float)target.x, (float)target.y, (float)target.z, (float)target.s);
             m_host.RotLookAt(rot, (float)strength, (float)damping);
@@ -3172,6 +3667,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Integer llStringLength(string str)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             if (str.Length > 0)
             {
@@ -3185,6 +3681,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llStartAnimation(string anim)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             UUID invItemID = InventorySelf();
@@ -3222,6 +3719,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llStopAnimation(string anim)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             UUID invItemID=InventorySelf();
@@ -3264,6 +3762,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llPointAt(LSL_Vector pos)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             ScenePresence Owner = World.GetScenePresence(m_host.UUID);
             LSL_Rotation rot = llEuler2Rot(pos);
@@ -3273,6 +3772,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llStopPointAt()
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             ScenePresence Owner = m_host.ParentGroup.Scene.GetScenePresence(m_host.OwnerID);
             Owner.Rotation = Owner.PreviousRotation;
@@ -3280,27 +3780,78 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llTargetOmega(LSL_Vector axis, double spinrate, double gain)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             m_host.AngularVelocity = new Vector3((float)(axis.x * spinrate), (float)(axis.y * spinrate), (float)(axis.z * spinrate));
             m_host.ScheduleTerseUpdate();
-            m_host.SendTerseUpdateToAllClients();
+            //m_host.SendTerseUpdateToAllClients();
             m_host.ParentGroup.HasGroupChanged = true;
         }
 
         public LSL_Integer llGetStartParameter()
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             return m_ScriptEngine.GetStartParameter(m_itemID);
         }
 
         public void llGodLikeRezObject(string inventory, LSL_Vector pos)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
-            NotImplemented("llGodLikeRezObject");
+            if (m_ScriptEngine.Config.GetBoolean("AllowGodFunctions", false))
+            {
+                if (World.Permissions.CanRunConsoleCommand(m_host.OwnerID))
+                {
+                    AssetBase asset = World.AssetService.Get(inventory);
+                    SceneObjectGroup group
+                                        = OpenSim.Region.Framework.Scenes.Serialization.SceneObjectSerializer.FromOriginalXmlFormat(UUID.Zero, Utils.BytesToString(asset.Data));
+                    group.ResetIDs();
+
+                    group.OwnerID = m_host.OwnerID;
+
+                    group.RootPart.AddFlag(PrimFlags.CreateSelected);
+                    // If we're rezzing an attachment then don't ask AddNewSceneObject() to update the client since
+                    // we'll be doing that later on.  Scheduling more than one full update during the attachment
+                    // process causes some clients to fail to display the attachment properly.
+                    World.AddNewSceneObject(group, true, false);
+
+                    //  m_log.InfoFormat("ray end point for inventory rezz is {0} {1} {2} ", RayEnd.X, RayEnd.Y, RayEnd.Z);
+                    // if attachment we set it's asset id so object updates can reflect that
+                    // if not, we set it's position in world.
+                    group.AbsolutePosition = new Vector3((float)pos.x, (float)pos.y, (float)pos.z);
+                    group.ScheduleGroupForFullUpdate();
+
+                    SceneObjectPart rootPart = null;
+                    try
+                    {
+                        rootPart = group.GetChildPart(group.UUID);
+                    }
+                    catch (NullReferenceException)
+                    {
+
+                    }
+
+                    List<SceneObjectPart> partList = new List<SceneObjectPart>(group.Children.Values);
+                    ScenePresence SP = World.GetScenePresence(m_host.OwnerID);
+                    if (SP != null)
+                        group.SetGroup(m_host.GroupID, SP.ControllingClient);
+
+                    if (group.RootPart.Shape.PCode == (byte)PCode.Prim)
+                    {
+                        group.ClearPartAttachmentData();
+                    }
+
+                    // Fire on_rez
+                    group.CreateScriptInstances(0, true, World.DefaultScriptEngine, 0, UUID.Zero);
+                    rootPart.ParentGroup.ResumeScripts();
+                }
+            }
         }
 
         public void llRequestPermissions(string agent, int perm)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             UUID agentID = new UUID();
 
             if (!UUID.TryParse(agent, out agentID))
@@ -3344,7 +3895,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                 int implicitPerms = ScriptBaseClass.PERMISSION_TAKE_CONTROLS |
                         ScriptBaseClass.PERMISSION_TRIGGER_ANIMATION |
                         ScriptBaseClass.PERMISSION_CONTROL_CAMERA |
-                        ScriptBaseClass.PERMISSION_ATTACH;
+                        ScriptBaseClass.PERMISSION_ATTACH |
+                        ScriptBaseClass.PERMISSION_TRACK_CAMERA;
 
                 if ((perm & (~implicitPerms)) == 0) // Requested only implicit perms
                 {
@@ -3362,7 +3914,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                     return;
                 }
             }
-            else if (m_host.SitTargetAvatar == agentID) // Sitting avatar
+            else if (m_host.SitTargetAvatar.Contains(agentID)) // Sitting avatar
             {
                 // When agent is sitting, certain permissions are implicit if requested from sitting agent
                 int implicitPerms = ScriptBaseClass.PERMISSION_TRIGGER_ANIMATION |
@@ -3391,7 +3943,13 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
             if (presence != null)
             {
-                string ownerName = resolveName(m_host.ParentGroup.RootPart.OwnerID);
+                string ownerName = "";
+                ScenePresence ownerPresence = World.GetScenePresence(m_host.ParentGroup.RootPart.OwnerID);
+                if (ownerPresence == null)
+                    ownerName = resolveName(m_host.OwnerID);
+                else
+                    ownerName = ownerPresence.Name;
+
                 if (ownerName == String.Empty)
                     ownerName = "(hippos)";
 
@@ -3449,6 +4007,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_String llGetPermissionsKey()
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             lock (m_host.TaskInventory)
@@ -3488,6 +4047,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Integer llGetLinkNumber()
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             if (m_host.ParentGroup.Children.Count > 1)
@@ -3502,6 +4062,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llSetLinkColor(int linknumber, LSL_Vector color, int face)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
+            m_host.AddScriptLPS(1);
             List<SceneObjectPart> parts = GetLinkParts(linknumber);
 
             foreach (SceneObjectPart part in parts)
@@ -3510,6 +4072,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llCreateLink(string target, int parent)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             UUID invItemID = InventorySelf();
 
@@ -3568,6 +4131,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llBreakLink(int linknum)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             UUID invItemID = InventorySelf();
 
@@ -3608,7 +4172,13 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                     }
                     break;
                 default:
-                    childPrim = parentPrim.GetLinkNumPart(linknum);
+                    ISceneEntity target = m_host.ParentGroup.GetLinkNumPart(linknum);
+                    if (target is SceneObjectPart)
+                    {
+                        childPrim = target as SceneObjectPart;
+                    }
+                    else
+                        break;
                     if (childPrim.UUID == m_host.UUID)
                         childPrim = null;
                     break;
@@ -3654,6 +4224,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llBreakAllLinks()
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             SceneObjectGroup parentPrim = m_host.ParentGroup;
             if (parentPrim.RootPart.AttachmentPoint != 0)
@@ -3673,11 +4244,12 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_String llGetLinkKey(int linknum)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
-            SceneObjectPart part = m_host.ParentGroup.GetLinkNumPart(linknum);
-            if (part != null)
+            ISceneEntity target = m_host.ParentGroup.GetLinkNumPart(linknum);
+            if (target != null)
             {
-                return part.UUID.ToString();
+                return target.UUID.ToString();
             }
             else
             {
@@ -3716,6 +4288,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         /// </summary>
         public LSL_String llGetLinkName(int linknum)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             // simplest case, this prims link number
@@ -3725,35 +4298,56 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             // Single prim
             if (m_host.LinkNum == 0)
             {
-                if (linknum == 0)
+                if (linknum == 1)
                     return m_host.Name;
                 else
-                    return UUID.Zero.ToString();
+                {
+                    ISceneEntity entity = m_host.ParentGroup.GetLinkNumPart(linknum);
+                    if (entity != null)
+                        return ((ScenePresence)entity).Name;
+                    else
+                        return UUID.Zero.ToString();
+                }
             }
             // Link set
-            SceneObjectPart part = null;
+            ISceneEntity part = null;
             if (m_host.LinkNum == 1) // this is the Root prim
             {
                 if (linknum < 0)
+                {
                     part = m_host.ParentGroup.GetLinkNumPart(2);
+                }
                 else
+                {
                     part = m_host.ParentGroup.GetLinkNumPart(linknum);
+                }
             }
             else // this is a child prim
             {
                 if (linknum < 2)
+                {
                     part = m_host.ParentGroup.GetLinkNumPart(1);
+                }
                 else
+                {
                     part = m_host.ParentGroup.GetLinkNumPart(linknum);
+                }
             }
             if (part != null)
-                return part.Name;
+            {
+                if (part is SceneObjectPart)
+                    return ((SceneObjectPart)part).Name;
+                else if (part is ScenePresence)
+                    return ((ScenePresence)part).Name;
+                return UUID.Zero.ToString();
+            }
             else
                 return UUID.Zero.ToString();
         }
 
         public LSL_Integer llGetInventoryNumber(int type)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             int count = 0;
 
@@ -3773,6 +4367,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_String llGetInventoryName(int type, int number)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             ArrayList keys = new ArrayList();
 
@@ -3801,6 +4396,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Float llGetEnergy()
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             // TODO: figure out real energy value
             return 1.0f;
@@ -3808,6 +4404,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llGiveInventory(string destination, string inventory)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             bool found = false;
             UUID destId = UUID.Zero;
@@ -3882,6 +4479,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llRemoveInventory(string name)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             lock (m_host.TaskInventory)
@@ -3902,23 +4500,26 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llSetText(string text, LSL_Vector color, double alpha)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             Vector3 av3 = new Vector3(Util.Clip((float)color.x, 0.0f, 1.0f),
                                       Util.Clip((float)color.y, 0.0f, 1.0f),
                                       Util.Clip((float)color.z, 0.0f, 1.0f));
             m_host.SetText(text, av3, Util.Clip((float)alpha, 0.0f, 1.0f));
-            m_host.ParentGroup.HasGroupChanged = true;
-            m_host.ParentGroup.ScheduleGroupForFullUpdate();
+            //m_host.ParentGroup.HasGroupChanged = true;
+            //m_host.ParentGroup.ScheduleGroupForFullUpdate();
         }
 
         public LSL_Float llWater(LSL_Vector offset)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             return World.RegionInfo.RegionSettings.WaterHeight;
         }
 
         public void llPassTouches(int pass)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             if (pass != 0)
                 m_host.PassTouches = true;
@@ -3928,26 +4529,20 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_String llRequestAgentData(string id, int data)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             UUID uuid = (UUID)id;
 
             UserAccount account = World.UserAccountService.GetUserAccount(World.RegionInfo.ScopeID, uuid);
 
-            PresenceInfo pinfo = null;
-            PresenceInfo[] pinfos = World.PresenceService.GetAgents(new string[] { uuid.ToString() });
-            if (pinfos != null && pinfos.Length > 0)
-                pinfo = pinfos[0];
-
-            if (pinfo == null)
-                return UUID.Zero.ToString();
+            GridUserInfo pinfo = World.GridUserService.GetGridUserInfo(id);
 
             string reply = String.Empty;
 
             switch (data)
             {
             case 1: // DATA_ONLINE (0|1)
-                // TODO: implement fetching of this information
                 if (pinfo != null)
                     reply = "1";
                 else 
@@ -3978,7 +4573,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                                              m_itemID, rq.ToString());
 
             AsyncCommands.
-            DataserverPlugin.DataserverReply(rq.ToString(), reply);
+            DataserverPlugin.AddReply(rq.ToString(), reply, 100);
 
             ScriptSleep(100);
             return tid.ToString();
@@ -3986,6 +4581,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_String llRequestInventoryData(string name)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             TaskInventoryDictionary itemDictionary = (TaskInventoryDictionary)m_host.TaskInventory.Clone();
@@ -4014,8 +4610,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
                             string reply = region.ToString();
                             AsyncCommands.
-                                DataserverPlugin.DataserverReply(i.ToString(),
-                                                             reply);
+                                DataserverPlugin.AddReply(i.ToString(),
+                                                             reply, 1000);
                         });
 
                     ScriptSleep(1000);
@@ -4028,12 +4624,14 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llSetDamage(double damage)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             m_host.ParentGroup.Damage = (float)damage;
         }
 
         public void llTeleportAgentHome(string agent)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             UUID agentId = new UUID();
             if (UUID.TryParse(agent, out agentId))
@@ -4060,6 +4658,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             if (dm == null)
                 return;
 
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             UUID av = new UUID();
             if (!UUID.TryParse(agent,out av))
@@ -4085,8 +4684,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llModifyLand(int action, int brush)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
-            ITerrainModule tm = m_ScriptEngine.World.RequestModuleInterface<ITerrainModule>();
+            ITerrainModule tm = World.RequestModuleInterface<ITerrainModule>();
             if (tm != null)
             {
                 tm.ModifyTerrain(m_host.OwnerID, m_host.AbsolutePosition, (byte) brush, (byte) action, m_host.OwnerID);
@@ -4095,9 +4695,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llCollisionSound(string impact_sound, double impact_volume)
         {
-
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
-            // TODO: Parameter check logic required.
             UUID soundId = UUID.Zero;
             if (!UUID.TryParse(impact_sound, out soundId))
             {
@@ -4113,19 +4712,25 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                     }
                 }
             }
-            m_host.CollisionSound = soundId;
-            m_host.CollisionSoundVolume = (float)impact_volume;
+            if (soundId != UUID.Zero)
+            {
+                m_host.CollisionSound = soundId;
+                m_host.CollisionSoundVolume = (float)impact_volume;
+            }
         }
 
         public void llCollisionSprite(string impact_sprite)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
-            NotImplemented("llCollisionSprite");
+            // Since this is broken in SL, we can do this however we want, until they fix it.
+            m_host.CollisionSprite = UUID.Parse(impact_sprite);
         }
 
         public LSL_String llGetAnimation(string id)
         {
             // This should only return a value if the avatar is in the same region
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             UUID avatar = (UUID)id;
             ScenePresence presence = World.GetScenePresence(avatar);
@@ -4150,6 +4755,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llMessageLinked(int linknumber, int num, string msg, string id)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             List<SceneObjectPart> parts = GetLinkParts(linknumber);
@@ -4183,6 +4789,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llPushObject(string target, LSL_Vector impulse, LSL_Vector ang_impulse, int local)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             bool pushrestricted = World.RegionInfo.RegionSettings.RestrictPushing;
             bool pushAllowed = false;
@@ -4214,7 +4821,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
                 // Find pushee position
                 // Pushee Linked?
-                if (pusheeav.ParentID != 0)
+                if (pusheeav.ParentID != UUID.Zero)
                 {
                     SceneObjectPart parentobj = World.GetSceneObjectPart(pusheeav.ParentID);
                     if (parentobj != null)
@@ -4354,6 +4961,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llPassCollisions(int pass)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             if (pass == 0)
             {
@@ -4369,6 +4977,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         {
             string result = String.Empty;
 
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             lock (m_host.TaskInventory)
@@ -4388,6 +4997,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Integer llGetNumberOfSides()
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             return GetNumberOfSides(m_host);
@@ -4435,6 +5045,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         // q = cos(a/2) + i (x * sin(a/2)) + j (y * sin(a/2)) + k (z * sin(a/2))
         public LSL_Rotation llAxisAngle2Rot(LSL_Vector axis, double angle)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             double x, y, z, s, t;
@@ -4453,6 +5064,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         // converts a Quaternion to X,Y,Z axis rotations
         public LSL_Vector llRot2Axis(LSL_Rotation rot)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             double x,y,z;
 
@@ -4489,6 +5101,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         // Returns the angle of a quaternion (see llRot2Axis for the axis)
         public LSL_Float llRot2Angle(LSL_Rotation rot)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             if (rot.s > 1) // normalization needed
@@ -4509,12 +5122,14 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Float llAcos(double val)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             return (double)Math.Acos(val);
         }
 
         public LSL_Float llAsin(double val)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             return (double)Math.Asin(val);
         }
@@ -4522,6 +5137,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         // Xantor 30/apr/2008
         public LSL_Float llAngleBetween(LSL_Rotation a, LSL_Rotation b)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             double angle = Math.Acos(a.x * b.x + a.y * b.y + a.z * b.z + a.s * b.s) * 2;
@@ -4532,6 +5148,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_String llGetInventoryKey(string name)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             lock (m_host.TaskInventory)
@@ -4557,6 +5174,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llAllowInventoryDrop(int add)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             if (add != 0)
@@ -4570,6 +5188,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Vector llGetSunDirection()
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             LSL_Vector SunDoubleVector3;
@@ -4587,6 +5206,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Vector llGetTextureOffset(int face)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             return GetTextureOffset(m_host, face);
         }
@@ -4614,6 +5234,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Vector llGetTextureScale(int side)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             Primitive.TextureEntry tex = m_host.Shape.Textures;
             LSL_Vector scale;
@@ -4629,6 +5250,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Float llGetTextureRot(int face)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             return GetTextureRot(m_host, face);
         }
@@ -4652,12 +5274,14 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Integer llSubStringIndex(string source, string pattern)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             return source.IndexOf(pattern);
         }
 
         public LSL_String llGetOwnerKey(string id)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             UUID key = new UUID();
             if (UUID.TryParse(id, out key))
@@ -4683,6 +5307,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Vector llGetCenterOfMass()
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             Vector3 center = m_host.GetGeometricCenter();
             return new LSL_Vector(center.X,center.Y,center.Z);
@@ -4690,6 +5315,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_List llListSort(LSL_List src, int stride, int ascending)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             if (stride <= 0)
@@ -4701,6 +5327,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Integer llGetListLength(LSL_List src)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             if (src == null)
@@ -4715,6 +5342,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Integer llList2Integer(LSL_List src, int index)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             if (index < 0)
             {
@@ -4740,6 +5368,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Float llList2Float(LSL_List src, int index)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             if (index < 0)
             {
@@ -4767,6 +5396,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_String llList2String(LSL_List src, int index)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             if (index < 0)
             {
@@ -4781,6 +5411,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_String llList2Key(LSL_List src, int index)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             if (index < 0)
             {
@@ -4795,6 +5426,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Vector llList2Vector(LSL_List src, int index)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             if (index < 0)
             {
@@ -4816,6 +5448,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Rotation llList2Rot(LSL_List src, int index)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             if (index < 0)
             {
@@ -4837,6 +5470,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_List llList2List(LSL_List src, int start, int end)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             return src.GetSublist(start, end);
         }
@@ -4848,6 +5482,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Integer llGetListEntryType(LSL_List src, int index)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             if (index < 0)
             {
@@ -4897,6 +5532,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             string ret = String.Empty;
             int    x   = 0;
 
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             if (src.Data.Length > 0)
@@ -4927,6 +5563,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             int start  = 0;
             int length = 0;
 
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             for (int i = 0; i < src.Length; i++)
@@ -4984,6 +5621,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             int   chunkk;
             int[] chunks;
 
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             if (stride <= 0)
@@ -5054,6 +5692,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             int[] ei = new int[2];
             bool twopass = false;
 
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             //  First step is always to deal with negative indices
@@ -5135,12 +5774,14 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Integer llGetRegionAgentCount()
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             return new LSL_Integer(World.GetRootAgentCount());
         }
 
         public LSL_Vector llGetRegionCorner()
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             return new LSL_Vector(World.RegionInfo.RegionLocX * Constants.RegionSize, World.RegionInfo.RegionLocY * Constants.RegionSize, 0);
         }
@@ -5153,7 +5794,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_List llListInsertList(LSL_List dest, LSL_List src, int index)
         {
-
+			ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
+            
             LSL_List pref = null;
             LSL_List suff = null;
 
@@ -5207,6 +5849,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             int index  = -1;
             int length = src.Length - test.Length + 1;
 
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             // If either list is empty, do not match
@@ -5236,18 +5879,21 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_String llGetObjectName()
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             return m_host.Name!=null?m_host.Name:String.Empty;
         }
 
         public void llSetObjectName(string name)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             m_host.Name = name!=null?name:String.Empty;
         }
 
         public LSL_String llGetDate()
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             DateTime date = DateTime.Now.ToUniversalTime();
             string result = date.ToString("yyyy-MM-dd");
@@ -5256,6 +5902,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Integer llEdgeOfWorld(LSL_Vector pos, LSL_Vector dir)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             // edge will be used to pass the Region Coordinates offset
@@ -5320,12 +5967,11 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         }
 
         /// <summary>
-        /// Not fully implemented yet. Still to do:-
-        /// AGENT_BUSY
-        /// Remove as they are done
+        /// Fully implemented
         /// </summary>
         public LSL_Integer llGetAgentInfo(string id)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             UUID key = new UUID();
@@ -5380,6 +6026,11 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                 flags |= ScriptBaseClass.AGENT_TYPING;
             }
 
+            if (agent.IsBusy)
+            {
+                flags |= ScriptBaseClass.AGENT_BUSY;
+            }
+
             string agentMovementAnimation = agent.Animator.GetMovementAnimation();
 
             if (agentMovementAnimation == "CROUCH")
@@ -5406,7 +6057,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                     flags |= ScriptBaseClass.AGENT_IN_AIR;
             }
 
-             if (agent.ParentID != 0)
+            if (agent.ParentID != UUID.Zero)
              {
                  flags |= ScriptBaseClass.AGENT_ON_OBJECT;
                  flags |= ScriptBaseClass.AGENT_SITTING;
@@ -5423,16 +6074,25 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_String llGetAgentLanguage(string id)
         {
-            // This should only return a value if the avatar is in the same region
-            //ckrinke 1-30-09 : This needs to parse the XMLRPC language field supplied
-            //by the client at login. Currently returning only en-us until our I18N
-            //effort gains momentum
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
-            return "en-us";
+            Aurora.Framework.IAgentConnector AgentFrontend = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IAgentConnector>("IAgentConnector");
+            if (AgentFrontend == null)
+                return "en-us";
+            Aurora.Framework.IAgentInfo Agent = AgentFrontend.GetAgent(new UUID(id));
+            if (Agent == null)
+                return "en-us";
+            if (Agent.LanguageIsPublic)
+            {
+                return Agent.Language;
+            }
+            else
+                return "en-us";
         }
 
         public void llAdjustSoundVolume(double volume)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             m_host.AdjustSoundGain(volume);
             ScriptSleep(100);
@@ -5440,18 +6100,21 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llSetSoundQueueing(int queue)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
-            NotImplemented("llSetSoundQueueing");
+            m_host.SetSoundQueueing(queue);
         }
 
         public void llSetSoundRadius(double radius)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             m_host.SoundRadius = radius;
         }
 
         public LSL_String llKey2Name(string id)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
             UUID key = new UUID();
             if (UUID.TryParse(id,out key))
@@ -5476,6 +6139,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llSetTextureAnim(int mode, int face, int sizex, int sizey, double start, double length, double rate)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.AddScriptLPS(1);
 
             SetTextureAnim(m_host, mode, face, sizex, sizey, start, length, rate);
@@ -5518,7 +6182,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         public void llTriggerSoundLimited(string sound, double volume, LSL_Vector top_north_east,
                                           LSL_Vector bottom_south_west)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             float radius1 = (float)llVecDist(llGetPos(), top_north_east);
             float radius2 = (float)llVecDist(llGetPos(), bottom_south_west);
             float radius = Math.Abs(radius1 - radius2);
@@ -5527,7 +6191,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llEjectFromLand(string pest)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             UUID agentId = new UUID();
             if (UUID.TryParse(pest, out agentId))
             {
@@ -5545,7 +6209,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_List llParseString2List(string str, LSL_List separators, LSL_List in_spacers)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             LSL_List ret = new LSL_List();
             LSL_List spacers = new LSL_List();
             if (in_spacers.Length > 0 && separators.Length > 0)
@@ -5617,7 +6281,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Integer llOverMyLand(string id)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             UUID key = new UUID();
             if (UUID.TryParse(id, out key))
             {
@@ -5645,7 +6309,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_String llGetLandOwnerAt(LSL_Vector pos)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             ILandObject land = World.LandChannel.GetLandObject((float)pos.x, (float)pos.y);
             if (land == null)
                 return UUID.Zero.ToString();
@@ -5659,7 +6323,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         /// </summary>
         public LSL_Vector llGetAgentSize(string id)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             ScenePresence avatar = World.GetScenePresence((UUID)id);
             LSL_Vector agentSize;
             if (avatar == null || avatar.IsChildAgent) // Fail if not in the same region
@@ -5675,7 +6339,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Integer llSameGroup(string agent)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             UUID agentId = new UUID();
             if (!UUID.TryParse(agent, out agentId))
                 return new LSL_Integer(0);
@@ -5691,7 +6355,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llUnSit(string id)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
             UUID key = new UUID();
             if (UUID.TryParse(id, out key))
@@ -5734,7 +6398,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Vector llGroundSlope(LSL_Vector offset)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             //Get the slope normal.  This gives us the equation of the plane tangent to the slope.
             LSL_Vector vsn = llGroundNormal(offset);
 
@@ -5752,7 +6416,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Vector llGroundNormal(LSL_Vector offset)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             Vector3 pos = m_host.GetWorldPosition() + new Vector3((float)offset.x,
                                                                 (float)offset.y,
                                                                 (float)offset.z);
@@ -5804,27 +6468,27 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Vector llGroundContour(LSL_Vector offset)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             LSL_Vector x = llGroundSlope(offset);
             return new LSL_Vector(-x.y, x.x, 0.0);
         }
 
         public LSL_Integer llGetAttached()
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             return m_host.ParentGroup.RootPart.AttachmentPoint;
         }
 
         public LSL_Integer llGetFreeMemory()
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             // Make scripts designed for LSO happy
             return 16384;
         }
 
         public LSL_Integer llGetFreeURLs()
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             if (m_UrlModule != null)
                 return new LSL_Integer(m_UrlModule.GetFreeUrls());
             return new LSL_Integer(0);
@@ -5833,13 +6497,13 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_String llGetRegionName()
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             return World.RegionInfo.RegionName;
         }
 
         public LSL_Float llGetRegionTimeDilation()
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             return (double)World.TimeDilation;
         }
 
@@ -5848,7 +6512,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         /// </summary>
         public LSL_Float llGetRegionFPS()
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             return World.SimulatorFPS;
         }
         
@@ -5874,6 +6538,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             PSYS_PART_MAX_AGE = 7,
             PSYS_SRC_ACCEL = 8,
             PSYS_SRC_PATTERN = 9,
+            PSYS_SRC_INNERANGLE = 10,
+            PSYS_SRC_OUTERANGLE = 11,
             PSYS_SRC_TEXTURE = 12,
             PSYS_SRC_BURST_RATE = 13,
             PSYS_SRC_BURST_PART_COUNT = 15,
@@ -5909,12 +6575,13 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             ps.BurstSpeedMax = 1.0f;
             ps.BurstRate = 0.1f;
             ps.PartMaxAge = 10.0f;
+            ps.BurstPartCount = 10;
             return ps;
         }
 
         public void llLinkParticleSystem(int linknumber, LSL_List rules)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
             List<SceneObjectPart> parts = GetLinkParts(linknumber);
 
@@ -5926,13 +6593,12 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llParticleSystem(LSL_List rules)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             SetParticleSystem(m_host, rules);
         }
 
-        private void SetParticleSystem(SceneObjectPart part, LSL_List rules) {
-
-       
+        private void SetParticleSystem(SceneObjectPart part, LSL_List rules) 
+        {
             if (rules.Length == 0)
             {
                 part.RemoveParticleSystem();
@@ -6006,6 +6672,22 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                             prules.Pattern = (Primitive.ParticleSystem.SourcePattern)tmpi;
                             break;
 
+                        // PSYS_SRC_INNERANGLE and PSYS_SRC_ANGLE_BEGIN use the same variables. The
+                        // PSYS_SRC_OUTERANGLE and PSYS_SRC_ANGLE_END also use the same variable. The
+                        // client tells the difference between the two by looking at the 0x02 bit in
+                        // the PartFlags variable.
+                        case (int)ScriptBaseClass.PSYS_SRC_INNERANGLE:
+                            tempf = (float)rules.GetLSLFloatItem(i + 1);
+                            prules.InnerAngle = (float)tempf;
+                            prules.PartFlags &= 0xFFFFFFFD; // Make sure new angle format is off.
+                            break;
+
+                        case (int)ScriptBaseClass.PSYS_SRC_OUTERANGLE:
+                            tempf = (float)rules.GetLSLFloatItem(i + 1);
+                            prules.OuterAngle = (float)tempf;
+                            prules.PartFlags &= 0xFFFFFFFD; // Make sure new angle format is off.
+                             break;
+
                         case (int)ScriptBaseClass.PSYS_SRC_TEXTURE:
                             prules.Texture = KeyOrName(rules.GetLSLStringItem(i + 1));
                             break;
@@ -6062,11 +6744,13 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                         case (int)ScriptBaseClass.PSYS_SRC_ANGLE_BEGIN:
                             tempf = (float)rules.GetLSLFloatItem(i + 1);
                             prules.InnerAngle = (float)tempf;
+                            prules.PartFlags |= 0x02; // Set new angle format.
                             break;
 
                         case (int)ScriptBaseClass.PSYS_SRC_ANGLE_END:
                             tempf = (float)rules.GetLSLFloatItem(i + 1);
                             prules.OuterAngle = (float)tempf;
+                            prules.PartFlags |= 0x02; // Set new angle format.
                             break;
                     }
 
@@ -6081,7 +6765,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llGroundRepel(double height, int water, double tau)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             if (m_host.PhysActor != null)
             {
                 float ground = (float)llGround(new LSL_Types.Vector3(0, 0, 0));
@@ -6120,7 +6804,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llGiveInventoryList(string destination, string category, LSL_List inventory)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
             UUID destID;
             if (!UUID.TryParse(destination, out destID))
@@ -6146,7 +6830,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             if (itemList.Count == 0)
                 return;
 
-            UUID folderID = m_ScriptEngine.World.MoveTaskInventoryItems(destID, category, m_host, itemList);
+            UUID folderID = World.MoveTaskInventoryItems(destID, category, m_host, itemList);
 
             if (folderID == UUID.Zero)
                 return;
@@ -6167,12 +6851,12 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                     bucket);
 
             if (m_TransferModule != null)
-                m_TransferModule.SendInstantMessage(msg, delegate(bool success) {});
+                m_TransferModule.SendInstantMessage(msg);
         }
 
         public void llSetVehicleType(int type)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             if (m_host.ParentGroup != null)
             {
                 if (!m_host.ParentGroup.IsDeleted)
@@ -6186,7 +6870,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         //CFK 9/28: so these are not complete yet.
         public void llSetVehicleFloatParam(int param, LSL_Float value)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
             if (m_host.ParentGroup != null)
             {
@@ -6201,7 +6885,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         //CFK 9/28: so these are not complete yet.
         public void llSetVehicleVectorParam(int param, LSL_Vector vec)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             if (m_host.ParentGroup != null)
             {
                 if (!m_host.ParentGroup.IsDeleted)
@@ -6216,7 +6900,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         //CFK 9/28: so these are not complete yet.
         public void llSetVehicleRotationParam(int param, LSL_Rotation rot)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             if (m_host.ParentGroup != null)
             {
                 if (!m_host.ParentGroup.IsDeleted)
@@ -6229,7 +6913,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llSetVehicleFlags(int flags)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             if (m_host.ParentGroup != null)
             {
                 if (!m_host.ParentGroup.IsDeleted)
@@ -6241,7 +6925,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llRemoveVehicleFlags(int flags)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             if (m_host.ParentGroup != null)
             {
                 if (!m_host.ParentGroup.IsDeleted)
@@ -6253,7 +6937,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llSitTarget(LSL_Vector offset, LSL_Rotation rot)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             // LSL quaternions can normalize to 0, normal Quaternions can't.
             if (rot.s == 0 && rot.x == 0 && rot.y == 0 && rot.z == 0)
                 rot.z = 1; // ZERO_ROTATION = 0,0,0,1
@@ -6265,13 +6949,13 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_String llAvatarOnSitTarget()
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             return m_host.GetAvatarOnSitTarget().ToString();
         }
 
         public void llAddToLandPassList(string avatar, double hours)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             UUID key;
             LandData land = World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData;
             if (land.OwnerID == m_host.OwnerID)
@@ -6290,31 +6974,31 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llSetTouchText(string text)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.TouchName = text;
         }
 
         public void llSetSitText(string text)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.SitName = text;
         }
 
         public void llSetCameraEyeOffset(LSL_Vector offset)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.SetCameraEyeOffset(new Vector3((float)offset.x, (float)offset.y, (float)offset.z));
         }
 
         public void llSetCameraAtOffset(LSL_Vector offset)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.SetCameraAtOffset(new Vector3((float)offset.x, (float)offset.y, (float)offset.z));
         }
 
         public LSL_String llDumpList2String(LSL_List src, string seperator)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             if (src.Length == 0)
             {
                 return String.Empty;
@@ -6330,7 +7014,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Integer llScriptDanger(LSL_Vector pos)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             bool result = World.ScriptDanger(m_host.LocalId, new Vector3((float)pos.x, (float)pos.y, (float)pos.z));
             if (result)
             {
@@ -6350,7 +7034,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             if (dm == null)
                 return;
 
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             UUID av = new UUID();
             if (!UUID.TryParse(avatar,out av))
             {
@@ -6392,7 +7076,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llVolumeDetect(int detect)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             if (m_host.ParentGroup != null)
             {
                 if (!m_host.ParentGroup.IsDeleted)
@@ -6409,7 +7093,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llRemoteLoadScript(string target, string name, int running, int start_param)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             // Report an error as it does in SL
             ShoutError("Deprecated. Please use llRemoteLoadScriptPin instead.");
             ScriptSleep(3000);
@@ -6417,13 +7101,13 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llSetRemoteScriptAccessPin(int pin)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.ScriptAccessPin = pin;
         }
 
         public void llRemoteLoadScriptPin(string target, string name, int pin, int running, int start_param)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             bool found = false;
             UUID destId = UUID.Zero;
             UUID srcId = UUID.Zero;
@@ -6472,15 +7156,15 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llOpenRemoteDataChannel()
         {
-            m_host.AddScriptLPS(1);
-            IXMLRPC xmlrpcMod = m_ScriptEngine.World.RequestModuleInterface<IXMLRPC>();
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
+            IXMLRPC xmlrpcMod = World.RequestModuleInterface<IXMLRPC>();
             if (xmlrpcMod.IsEnabled())
             {
                 UUID channelID = xmlrpcMod.OpenXMLRPCChannel(m_localID, m_itemID, UUID.Zero);
-                IXmlRpcRouter xmlRpcRouter = m_ScriptEngine.World.RequestModuleInterface<IXmlRpcRouter>();
+                IXmlRpcRouter xmlRpcRouter = World.RequestModuleInterface<IXmlRpcRouter>();
                 if (xmlRpcRouter != null)
                 {
-                    string ExternalHostName = m_ScriptEngine.World.RegionInfo.ExternalHostName;
+                    string ExternalHostName = World.RegionInfo.ExternalHostName;
                     
                     xmlRpcRouter.RegisterNewReceiver(m_ScriptEngine.ScriptModule, channelID, m_host.UUID, 
                                                      m_itemID, String.Format("http://{0}:{1}/", ExternalHostName, 
@@ -6503,37 +7187,37 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_String llSendRemoteData(string channel, string dest, int idata, string sdata)
         {
-            m_host.AddScriptLPS(1);
-            IXMLRPC xmlrpcMod = m_ScriptEngine.World.RequestModuleInterface<IXMLRPC>();
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
+            IXMLRPC xmlrpcMod = World.RequestModuleInterface<IXMLRPC>();
             ScriptSleep(3000);
             return (xmlrpcMod.SendRemoteData(m_localID, m_itemID, channel, dest, idata, sdata)).ToString();
         }
 
         public void llRemoteDataReply(string channel, string message_id, string sdata, int idata)
         {
-            m_host.AddScriptLPS(1);
-            IXMLRPC xmlrpcMod = m_ScriptEngine.World.RequestModuleInterface<IXMLRPC>();
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
+            IXMLRPC xmlrpcMod = World.RequestModuleInterface<IXMLRPC>();
             xmlrpcMod.RemoteDataReply(channel, message_id, sdata, idata);
             ScriptSleep(3000);
         }
 
         public void llCloseRemoteDataChannel(string channel)
         {
-            m_host.AddScriptLPS(1);
-            IXMLRPC xmlrpcMod = m_ScriptEngine.World.RequestModuleInterface<IXMLRPC>();
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
+            IXMLRPC xmlrpcMod = World.RequestModuleInterface<IXMLRPC>();
             xmlrpcMod.CloseXMLRPCChannel((UUID)channel);
             ScriptSleep(1000);
         }
 
         public LSL_String llMD5String(string src, int nonce)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             return Util.Md5Hash(String.Format("{0}:{1}", src, nonce.ToString()));
         }
 
         public LSL_String llSHA1String(string src)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             return Util.SHA1Hash(src).ToLower();
         }
 
@@ -6866,17 +7550,17 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llSetPrimitiveParams(LSL_List rules)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             SetPrimParams(m_host, rules);
         }
 
         public void llSetLinkPrimitiveParams(int linknumber, LSL_List rules)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
-            List<SceneObjectPart> parts = GetLinkParts(linknumber);
+            List<ISceneEntity> parts = GetLinkPartsAndEntities(linknumber);
 
-            foreach (SceneObjectPart part in parts)
+            foreach (ISceneEntity part in parts)
                 SetPrimParams(part, rules);
         }
 
@@ -6885,7 +7569,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             llSetLinkPrimitiveParams(linknumber, rules);
         }
 
-        protected void SetPrimParams(SceneObjectPart part, LSL_List rules)
+        protected void SetPrimParams(ISceneEntity part, LSL_List rules)
         {
             int idx = 0;
 
@@ -6905,38 +7589,48 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                             return;
 
                         v=rules.GetVector3Item(idx++);
-                        SetPos(part, v);
-
+                        if (part is SceneObjectPart)
+                            SetPos(part as SceneObjectPart, v);
+                        else if (part is ScenePresence)
+                        {
+                            (part as ScenePresence).OffsetPosition = new Vector3((float)v.x, (float)v.y, (float)v.z);
+                            (part as ScenePresence).SendTerseUpdateToAllClients();
+                        }
                         break;
                     case (int)ScriptBaseClass.PRIM_SIZE:
                         if (remain < 1)
                             return;
 
+                        
                         v=rules.GetVector3Item(idx++);
-                        SetScale(part, v);
+                        if (part is SceneObjectPart)
+                            SetScale(part as SceneObjectPart, v);
 
                         break;
                     case (int)ScriptBaseClass.PRIM_ROTATION:
                         if (remain < 1)
                             return;
 
+                        if (part is SceneObjectPart){}
+                        else return;
+
                         LSL_Rotation q = rules.GetQuaternionItem(idx++);
                         // try to let this work as in SL...
-                        if (part.ParentID == 0)
+                        if ((part as SceneObjectPart).ParentID == 0)
                         {
                             // special case: If we are root, rotate complete SOG to new rotation
-                            SetRot(part, Rot2Quaternion(q));
+                            SetRot(part as SceneObjectPart, Rot2Quaternion(q));
                         }
                         else
                         {
                             // we are a child. The rotation values will be set to the one of root modified by rot, as in SL. Don't ask.
-                            SceneObjectGroup group = part.ParentGroup;
+                            SceneObjectGroup group = (part as SceneObjectPart).ParentGroup;
                             if (group != null) // a bit paranoid, maybe
                             {
                                 SceneObjectPart rootPart = group.RootPart;
                                 if (rootPart != null) // again, better safe than sorry
                                 {
-                                    SetRot(part, rootPart.RotationOffset * Rot2Quaternion(q));
+                                    SetRot((part as SceneObjectPart), rootPart.RotationOffset * Rot2Quaternion(q));
                                 }
                             }
                         }
@@ -6945,6 +7639,10 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
                     case (int)ScriptBaseClass.PRIM_TYPE:
                         if (remain < 3)
+                            return;
+
+                        if (part is SceneObjectPart) { }
+                        else
                             return;
 
                         code = (int)rules.GetLSLIntegerItem(idx++);
@@ -6973,8 +7671,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                                 taper_b = rules.GetVector3Item(idx++);
                                 topshear = rules.GetVector3Item(idx++);
 
-                                part.Shape.PathCurve = (byte)Extrusion.Straight;
-                                SetPrimitiveShapeParams(part, face, v, hollow, twist, taper_b, topshear, 1);
+                                (part as SceneObjectPart).Shape.PathCurve = (byte)Extrusion.Straight;
+                                SetPrimitiveShapeParams((part as SceneObjectPart), face, v, hollow, twist, taper_b, topshear, 1);
                                 break;
 
                             case (int)ScriptBaseClass.PRIM_TYPE_CYLINDER:
@@ -6987,9 +7685,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                                 twist = rules.GetVector3Item(idx++);
                                 taper_b = rules.GetVector3Item(idx++);
                                 topshear = rules.GetVector3Item(idx++);
-                                part.Shape.ProfileShape = ProfileShape.Circle;
-                                part.Shape.PathCurve = (byte)Extrusion.Straight;
-                                SetPrimitiveShapeParams(part, face, v, hollow, twist, taper_b, topshear, 0);
+                                (part as SceneObjectPart).Shape.ProfileShape = ProfileShape.Circle;
+                                (part as SceneObjectPart).Shape.PathCurve = (byte)Extrusion.Straight;
+                                SetPrimitiveShapeParams((part as SceneObjectPart), face, v, hollow, twist, taper_b, topshear, 0);
                                 break;
 
                             case (int)ScriptBaseClass.PRIM_TYPE_PRISM:
@@ -7002,8 +7700,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                                 twist = rules.GetVector3Item(idx++);
                                 taper_b = rules.GetVector3Item(idx++);
                                 topshear = rules.GetVector3Item(idx++);
-                                part.Shape.PathCurve = (byte)Extrusion.Straight;
-                                SetPrimitiveShapeParams(part, face, v, hollow, twist, taper_b, topshear, 3);
+                                (part as SceneObjectPart).Shape.PathCurve = (byte)Extrusion.Straight;
+                                SetPrimitiveShapeParams((part as SceneObjectPart), face, v, hollow, twist, taper_b, topshear, 3);
                                 break;
 
                             case (int)ScriptBaseClass.PRIM_TYPE_SPHERE:
@@ -7015,8 +7713,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                                 hollow = (float)rules.GetLSLFloatItem(idx++);
                                 twist = rules.GetVector3Item(idx++);
                                 taper_b = rules.GetVector3Item(idx++); // dimple
-                                part.Shape.PathCurve = (byte)Extrusion.Curve1;
-                                SetPrimitiveShapeParams(part, face, v, hollow, twist, taper_b, 5);
+                                (part as SceneObjectPart).Shape.PathCurve = (byte)Extrusion.Curve1;
+                                SetPrimitiveShapeParams((part as SceneObjectPart), face, v, hollow, twist, taper_b, 5);
                                 break;
 
                             case (int)ScriptBaseClass.PRIM_TYPE_TORUS:
@@ -7034,8 +7732,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                                 revolutions = (float)rules.GetLSLFloatItem(idx++);
                                 radiusoffset = (float)rules.GetLSLFloatItem(idx++);
                                 skew = (float)rules.GetLSLFloatItem(idx++);
-                                part.Shape.PathCurve = (byte)Extrusion.Curve1;
-                                SetPrimitiveShapeParams(part, face, v, hollow, twist, holesize, topshear, profilecut, taper_b, 
+                                (part as SceneObjectPart).Shape.PathCurve = (byte)Extrusion.Curve1;
+                                SetPrimitiveShapeParams((part as SceneObjectPart), face, v, hollow, twist, holesize, topshear, profilecut, taper_b, 
                                                         revolutions, radiusoffset, skew, 0);
                                 break;
 
@@ -7054,8 +7752,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                                 revolutions = (float)rules.GetLSLFloatItem(idx++);
                                 radiusoffset = (float)rules.GetLSLFloatItem(idx++);
                                 skew = (float)rules.GetLSLFloatItem(idx++);
-                                part.Shape.PathCurve = (byte)Extrusion.Curve1;
-                                SetPrimitiveShapeParams(part, face, v, hollow, twist, holesize, topshear, profilecut, taper_b, 
+                                (part as SceneObjectPart).Shape.PathCurve = (byte)Extrusion.Curve1;
+                                SetPrimitiveShapeParams((part as SceneObjectPart), face, v, hollow, twist, holesize, topshear, profilecut, taper_b, 
                                                         revolutions, radiusoffset, skew, 1);
                                 break;
 
@@ -7074,8 +7772,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                                 revolutions = (float)rules.GetLSLFloatItem(idx++);
                                 radiusoffset = (float)rules.GetLSLFloatItem(idx++);
                                 skew = (float)rules.GetLSLFloatItem(idx++);
-                                part.Shape.PathCurve = (byte)Extrusion.Curve1;
-                                SetPrimitiveShapeParams(part, face, v, hollow, twist, holesize, topshear, profilecut, taper_b, 
+                                (part as SceneObjectPart).Shape.PathCurve = (byte)Extrusion.Curve1;
+                                SetPrimitiveShapeParams((part as SceneObjectPart), face, v, hollow, twist, holesize, topshear, profilecut, taper_b, 
                                                         revolutions, radiusoffset, skew, 3);
                                 break;
 
@@ -7085,8 +7783,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
                                 string map = rules.Data[idx++].ToString();
                                 face = (int)rules.GetLSLIntegerItem(idx++); // type
-                                part.Shape.PathCurve = (byte)Extrusion.Curve1;
-                                SetPrimitiveShapeParams(part, map, face);
+                                (part as SceneObjectPart).Shape.PathCurve = (byte)Extrusion.Curve1;
+                                SetPrimitiveShapeParams((part as SceneObjectPart), map, face);
                                 break;
                         }
 
@@ -7095,37 +7793,43 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                     case (int)ScriptBaseClass.PRIM_TEXTURE:
                         if (remain < 5)
                             return;
-
+                        if (part is SceneObjectPart) { }
+                        else
+                            return;
                         face=(int)rules.GetLSLIntegerItem(idx++);
                         string tex=rules.Data[idx++].ToString();
                         LSL_Vector repeats=rules.GetVector3Item(idx++);
                         LSL_Vector offsets=rules.GetVector3Item(idx++);
                         double rotation=(double)rules.GetLSLFloatItem(idx++);
 
-                        SetTexture(part, tex, face);
-                        ScaleTexture(part, repeats.x, repeats.y, face);
-                        OffsetTexture(part, offsets.x, offsets.y, face);
-                        RotateTexture(part, rotation, face);
+                        SetTexture((part as SceneObjectPart), tex, face);
+                        ScaleTexture((part as SceneObjectPart), repeats.x, repeats.y, face);
+                        OffsetTexture((part as SceneObjectPart), offsets.x, offsets.y, face);
+                        RotateTexture((part as SceneObjectPart), rotation, face);
 
                         break;
 
                     case (int)ScriptBaseClass.PRIM_COLOR:
                         if (remain < 3)
                             return;
-
+                        if (part is SceneObjectPart) { }
+                        else
+                            return;
                         face=(int)rules.GetLSLIntegerItem(idx++);
                         LSL_Vector color=rules.GetVector3Item(idx++);
                         double alpha=(double)rules.GetLSLFloatItem(idx++);
 
-                        part.SetFaceColor(new Vector3((float)color.x, (float)color.y, (float)color.z), face);
-                        SetAlpha(part, alpha, face);
+                        (part as SceneObjectPart).SetFaceColor(new Vector3((float)color.x, (float)color.y, (float)color.z), face);
+                        SetAlpha((part as SceneObjectPart), alpha, face);
 
                         break;
                     
                     case (int)ScriptBaseClass.PRIM_FLEXIBLE:
                         if (remain < 7)
                             return;
-
+                        if (part is SceneObjectPart) { }
+                        else
+                            return;
                         bool flexi = rules.GetLSLIntegerItem(idx++);
                         int softness = rules.GetLSLIntegerItem(idx++);
                         float gravity = (float)rules.GetLSLFloatItem(idx++);
@@ -7134,12 +7838,15 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                         float tension = (float)rules.GetLSLFloatItem(idx++);
                         LSL_Vector force = rules.GetVector3Item(idx++);
 
-                        SetFlexi(part, flexi, softness, gravity, friction, wind, tension, force);
+                        SetFlexi((part as SceneObjectPart), flexi, softness, gravity, friction, wind, tension, force);
 
                         break;
                     
                     case (int)ScriptBaseClass.PRIM_POINT_LIGHT:
                         if (remain < 5)
+                            return;
+                        if (part is SceneObjectPart) { }
+                        else
                             return;
                         bool light = rules.GetLSLIntegerItem(idx++);
                         LSL_Vector lightcolor = rules.GetVector3Item(idx++);
@@ -7147,53 +7854,67 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                         float radius = (float)rules.GetLSLFloatItem(idx++);
                         float falloff = (float)rules.GetLSLFloatItem(idx++);
 
-                        SetPointLight(part, light, lightcolor, intensity, radius, falloff);
+                        SetPointLight((part as SceneObjectPart), light, lightcolor, intensity, radius, falloff);
 
                         break;
                     
                     case (int)ScriptBaseClass.PRIM_GLOW:
                         if (remain < 2)
                             return;
+                        if (part is SceneObjectPart) { }
+                        else
+                            return;
                         face = rules.GetLSLIntegerItem(idx++);
                         float glow = (float)rules.GetLSLFloatItem(idx++);
 
-                        SetGlow(part, face, glow);
+                        SetGlow((part as SceneObjectPart), face, glow);
 
                         break;
                     
                     case (int)ScriptBaseClass.PRIM_BUMP_SHINY:
                         if (remain < 3)
                             return;
+                        if (part is SceneObjectPart) { }
+                        else
+                            return;
                         face = (int)rules.GetLSLIntegerItem(idx++);
                         int shiny = (int)rules.GetLSLIntegerItem(idx++);
                         Bumpiness bump = (Bumpiness)Convert.ToByte((int)rules.GetLSLIntegerItem(idx++));
 
-                        SetShiny(part, face, shiny, bump);
+                        SetShiny((part as SceneObjectPart), face, shiny, bump);
 
                         break;
                     
                      case (int)ScriptBaseClass.PRIM_FULLBRIGHT:
                          if (remain < 2)
                              return;
+                         if (part is SceneObjectPart) { }
+                         else
+                             return;
                          face = rules.GetLSLIntegerItem(idx++);
                          bool st = rules.GetLSLIntegerItem(idx++);
-                         SetFullBright(part, face , st);
+                         SetFullBright((part as SceneObjectPart), face, st);
                          break;
                     
                      case (int)ScriptBaseClass.PRIM_MATERIAL:
                          if (remain < 1)
                              return;
+                         if (part is SceneObjectPart) { }
+                         else
+                             return;
                          int mat = rules.GetLSLIntegerItem(idx++);
                          if (mat < 0 || mat > 7)
                              return;
 
-                         part.Material = Convert.ToByte(mat);
+                         (part as SceneObjectPart).Material = Convert.ToByte(mat);
                          break;
                     
                      case (int)ScriptBaseClass.PRIM_PHANTOM:
                         if (remain < 1)
                              return;
-
+                        if (part is SceneObjectPart) { }
+                        else
+                            return;
                          string ph = rules.Data[idx++].ToString();
                          bool phantom;
 
@@ -7202,12 +7923,15 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                          else
                              phantom = false;
 
-                         part.ScriptSetPhantomStatus(phantom);
+                         (part as SceneObjectPart).ScriptSetPhantomStatus(phantom);
                          break;
                     
                      case (int)ScriptBaseClass.PRIM_PHYSICS:
                         if (remain < 1)
                              return;
+                        if (part is SceneObjectPart) { }
+                        else
+                            return;
                          string phy = rules.Data[idx++].ToString();
                          bool physics;
 
@@ -7216,11 +7940,14 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                          else
                              physics = false;
 
-                         part.ScriptSetPhysicsStatus(physics);
+                         (part as SceneObjectPart).ScriptSetPhysicsStatus(physics);
                          break;
                     
                     case (int)ScriptBaseClass.PRIM_TEMP_ON_REZ:
                         if (remain < 1)
+                            return;
+                        if (part is SceneObjectPart) { }
+                        else
                             return;
                         string temp = rules.Data[idx++].ToString();
                         bool tempOnRez;
@@ -7230,16 +7957,19 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                         else
                             tempOnRez = false;
 
-                        part.ScriptSetTemporaryStatus(tempOnRez);
+                        (part as SceneObjectPart).ScriptSetTemporaryStatus(tempOnRez);
                         break;
 
                     case (int)ScriptBaseClass.PRIM_TEXGEN:
                         if (remain < 2)
                             return;
+                        if (part is SceneObjectPart) { }
+                        else
+                            return;
                             //face,type
                         face = rules.GetLSLIntegerItem(idx++);
                         int style = rules.GetLSLIntegerItem(idx++);
-                        SetTexGen(part, face, style);
+                        SetTexGen((part as SceneObjectPart), face, style);
                         break;
                     case (int)ScriptBaseClass.PRIM_TEXT:
                         if (remain < 3)
@@ -7250,7 +7980,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                         Vector3 av3 = new Vector3(Util.Clip((float)primTextColor.x, 0.0f, 1.0f),
                                       Util.Clip((float)primTextColor.y, 0.0f, 1.0f),
                                       Util.Clip((float)primTextColor.z, 0.0f, 1.0f));
-                        part.SetText(primText, av3, Util.Clip((float)primTextAlpha, 0.0f, 1.0f));
+                        (part as SceneObjectPart).SetText(primText, av3, Util.Clip((float)primTextAlpha, 0.0f, 1.0f));
 
                         break;
                 }
@@ -7259,7 +7989,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_String llStringToBase64(string str)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             try
             {
                 byte[] encData_byte = new byte[str.Length];
@@ -7275,7 +8005,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_String llBase64ToString(string str)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             try
             {
                 return Util.Base64ToString(str);
@@ -7288,7 +8018,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_String llXorBase64Strings(string str1, string str2)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             Deprecated("llXorBase64Strings");
             ScriptSleep(300);
             return String.Empty;
@@ -7296,25 +8026,25 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llRemoteDataSetRegion()
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             Deprecated("llRemoteDataSetRegion");
         }
 
         public LSL_Float llLog10(double val)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             return (double)Math.Log10(val);
         }
 
         public LSL_Float llLog(double val)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             return (double)Math.Log(val);
         }
 
         public LSL_List llGetAnimationList(string id)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
             LSL_List l = new LSL_List();
             ScenePresence av = World.GetScenePresence((UUID)id);
@@ -7329,7 +8059,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llSetParcelMusicURL(string url)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
             ILandObject land = World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y);
 
@@ -7343,7 +8073,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Vector llGetRootPosition()
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             return new LSL_Vector(m_host.ParentGroup.AbsolutePosition.X, m_host.ParentGroup.AbsolutePosition.Y, 
                                   m_host.ParentGroup.AbsolutePosition.Z);
         }
@@ -7359,7 +8089,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         /// </summary>
         public LSL_Rotation llGetRootRotation()
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             Quaternion q;
             if (m_host.ParentGroup.RootPart.AttachmentPoint != 0)
             {
@@ -7384,31 +8114,32 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llSetObjectDesc(string desc)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.Description = desc!=null?desc:String.Empty;
         }
 
         public LSL_String llGetCreator()
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             return m_host.CreatorID.ToString();
         }
 
         public LSL_String llGetTimestamp()
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             return DateTime.Now.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffffffZ");
         }
 
         public LSL_Integer llGetNumberOfPrims()
         {
-            m_host.AddScriptLPS(1);
-            int avatarCount = 0;
-            World.ForEachScenePresence(delegate(ScenePresence presence)
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
+            int avatarCount = m_host.SitTargetAvatar.Count;
+            
+            /*World.ForEachScenePresence(delegate(ScenePresence presence)
             {
-                if (!presence.IsChildAgent && presence.ParentID != 0 && m_host.ParentGroup.HasChildPrim(presence.ParentID))
+                if (!presence.IsChildAgent && presence.ParentID != UUID.Zero && m_host.ParentGroup.HasChildPrim(presence.ParentID))
                         avatarCount++;
-            });
+            });*/
 
             return m_host.ParentGroup.PrimCount + avatarCount;
         }
@@ -7422,7 +8153,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         /// </summary>
         public LSL_List llGetBoundingBox(string obj)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             UUID objID = UUID.Zero;
             LSL_List result = new LSL_List();
             if (!UUID.TryParse(obj, out objID))
@@ -7434,7 +8165,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             ScenePresence presence = World.GetScenePresence(objID);
             if (presence != null)
             {
-                if (presence.ParentID == 0) // not sat on an object
+                if (presence.ParentID == UUID.Zero) // not sat on an object
                 {
                     LSL_Vector lower;
                     LSL_Vector upper;
@@ -7492,13 +8223,13 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_List llGetPrimitiveParams(LSL_List rules)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             return GetLinkPrimitiveParams(m_host, rules);
         }
 
         public LSL_List llGetLinkPrimitiveParams(int linknumber, LSL_List rules)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
             List<SceneObjectPart> parts = GetLinkParts(linknumber);
 
@@ -7520,7 +8251,10 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             while (idx < rules.Length)
             {
                 int code=(int)rules.GetLSLIntegerItem(idx++);
-                int remain=rules.Length-idx;
+                int remain = rules.Length - idx;
+                Primitive.TextureEntry tex = part.Shape.Textures;
+                int face = (int)rules.GetLSLIntegerItem(idx++);
+                Primitive.TextureEntryFace texFace = tex.GetFace((uint)face);
 
                 switch (code)
                 {
@@ -7652,8 +8386,6 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                         if (remain < 1)
                             return res;
 
-                        int face = (int)rules.GetLSLIntegerItem(idx++);
-                        Primitive.TextureEntry tex = part.Shape.Textures;
                         if (face == ScriptBaseClass.ALL_SIDES)
                         {
                             for (face = 0 ; face < GetNumberOfSides(part); face++)
@@ -7692,7 +8424,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                         if (remain < 1)
                             return res;
 
-                        face=(int)rules.GetLSLIntegerItem(idx++);
+                        face = (int)rules.GetLSLIntegerItem(idx++);
 
                         tex = part.Shape.Textures;
                         Color4 texcolor;
@@ -7718,22 +8450,39 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                         break;
 
                     case (int)ScriptBaseClass.PRIM_BUMP_SHINY:
-                        // TODO--------------
                         if (remain < 1)
                             return res;
 
-                        face=(int)rules.GetLSLIntegerItem(idx++);
+                        face = (int)rules.GetLSLIntegerItem(idx++);
+                        texFace = tex.GetFace((uint)face);
 
-                        res.Add(new LSL_Integer(0));
-                        res.Add(new LSL_Integer(0));
+                        if (texFace != null)
+                        {
+                            res.Add(new LSL_Integer(((int)texFace.Shiny)));
+                            res.Add(new LSL_Integer(((int)texFace.Bump)));
+                        }
+                        else
+                        {
+                            res.Add(new LSL_Integer(0));
+                            res.Add(new LSL_Integer(0));
+                        }
                         break;
 
                     case (int)ScriptBaseClass.PRIM_FULLBRIGHT:
-                        // TODO--------------
                         if (remain < 1)
                             return res;
 
-                        face=(int)rules.GetLSLIntegerItem(idx++);
+                        face = (int)rules.GetLSLIntegerItem(idx++);
+                        texFace = tex.GetFace((uint)face);
+
+                        if (texFace != null)
+                        {
+                            res.Add(new LSL_Integer((texFace.Fullbright == true ? 1 : 0)));
+                        }
+                        else
+                        {
+                            res.Add(new LSL_Integer(0));
+                        }
 
                         res.Add(new LSL_Integer(0));
                         break;
@@ -7756,14 +8505,22 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                         break;
 
                     case (int)ScriptBaseClass.PRIM_TEXGEN:
-                        // TODO--------------
-                        // (PRIM_TEXGEN_DEFAULT, PRIM_TEXGEN_PLANAR)
                         if (remain < 1)
                             return res;
 
-                        face=(int)rules.GetLSLIntegerItem(idx++);
-
-                        res.Add(new LSL_Integer(0));
+                        face = (int)rules.GetLSLIntegerItem(idx++);
+                        texFace = tex.GetFace((uint)face);
+                        if (texFace != null)
+                        {
+                            //Has to be this way as the LSL numbers are not the same
+                            // as the libomv numbers
+                            if (texFace.TexMapType == MappingType.Default)
+                                res.Add(new LSL_Integer(0));
+                            if (texFace.TexMapType == MappingType.Planar)
+                                res.Add(new LSL_Integer(1));
+                        }
+                        else
+                            res.Add(new LSL_Integer(0));
                         break;
 
                     case (int)ScriptBaseClass.PRIM_POINT_LIGHT:
@@ -7782,13 +8539,17 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                         break;
 
                     case (int)ScriptBaseClass.PRIM_GLOW:
-                        // TODO--------------
                         if (remain < 1)
                             return res;
 
-                        face=(int)rules.GetLSLIntegerItem(idx++);
-
-                        res.Add(new LSL_Float(0));
+                        face = (int)rules.GetLSLIntegerItem(idx++);
+                        texFace = tex.GetFace((uint)face);
+                        if (texFace != null)
+                        {
+                            res.Add(new LSL_Integer(texFace.Glow));
+                        }
+                        else
+                            res.Add(new LSL_Integer(0));
                         break;
                     case (int)ScriptBaseClass.PRIM_TEXT:
                         Color4 textColor = part.GetTextColor();
@@ -7936,7 +8697,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
             char[] imdt = new char[8];
 
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
             // Manually unroll the loop
 
@@ -7998,7 +8759,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             int number = 0;
             int digit;
 
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
             //    Require a well-fromed base64 string
 
@@ -8055,13 +8816,13 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Float llGetGMTclock()
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             return DateTime.UtcNow.TimeOfDay.TotalSeconds;
         }
 
         public LSL_String llGetHTTPHeader(LSL_Key request_id, string header)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
              
            if (m_UrlModule != null)
                return m_UrlModule.GetHttpHeader(new UUID(request_id), header);
@@ -8071,7 +8832,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_String llGetSimulatorHostname()
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             return System.Environment.MachineName;
         }
 
@@ -8143,7 +8904,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
             LSL_List tokens = new LSL_List();
 
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
             //    All entries are initially valid
 
@@ -8253,7 +9014,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Integer llGetObjectPermMask(int mask)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
             int permmask = 0;
 
@@ -8287,7 +9048,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llSetObjectPermMask(int mask, int value)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
             if (m_ScriptEngine.Config.GetBoolean("AllowGodFunctions", false))
             {
@@ -8323,7 +9084,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Integer llGetInventoryPermMask(string item, int mask)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
             lock (m_host.TaskInventory)
             {
@@ -8353,7 +9114,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llSetInventoryPermMask(string item, int mask, int value)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             if (m_ScriptEngine.Config.GetBoolean("AllowGodFunctions", false))
             {
                 if (World.Permissions.CanRunConsoleCommand(m_host.OwnerID))
@@ -8391,7 +9152,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_String llGetInventoryCreator(string item)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
             lock (m_host.TaskInventory)
             {
@@ -8411,17 +9172,17 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llOwnerSay(string msg)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
             World.SimChatBroadcast(Utils.StringToBytes(msg), ChatTypeEnum.Owner, 0,
                                    m_host.AbsolutePosition, m_host.Name, m_host.UUID, false);
-//            IWorldComm wComm = m_ScriptEngine.World.RequestModuleInterface<IWorldComm>();
+//            IWorldComm wComm = World.RequestModuleInterface<IWorldComm>();
 //            wComm.DeliverMessage(ChatTypeEnum.Owner, 0, m_host.Name, m_host.UUID, msg);
         }
 
         public LSL_String llRequestSecureURL()
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             if (m_UrlModule != null)
                 return m_UrlModule.RequestSecureURL(m_ScriptEngine.ScriptModule, m_host, m_itemID).ToString();
             return UUID.Zero.ToString();
@@ -8433,11 +9194,11 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
             try
             {
-                m_host.AddScriptLPS(1);
+                ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
                 string reply = String.Empty;
 
-                GridRegion info = m_ScriptEngine.World.GridService.GetRegionByName(m_ScriptEngine.World.RegionInfo.ScopeID, simulator);
+                GridRegion info = World.GridService.GetRegionByName(World.RegionInfo.ScopeID, simulator);
 
                 switch (data)
                 {
@@ -8475,8 +9236,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                             reply = "UNKNOWN";
                         break;
                     case 128:
-                        if (ossl != null)
-                            ossl.CheckThreatLevel(ThreatLevel.High, "llRequestSimulatorData");
+                        ScriptProtection.CheckThreatLevel(ThreatLevel.High, "llRequestSimulatorData", m_host, "LSL");
                         reply = "OpenSim";
                         break;
                     default:
@@ -8489,7 +9249,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                     DataserverPlugin.RegisterRequest(m_localID, m_itemID, rq.ToString());
 
                 AsyncCommands.
-                    DataserverPlugin.DataserverReply(rq.ToString(), reply);
+                    DataserverPlugin.AddReply(rq.ToString(), reply, 1000);
 
                 ScriptSleep(1000);
                 return tid.ToString();
@@ -8502,7 +9262,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         }
         public LSL_String llRequestURL()
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
             if (m_UrlModule != null)
                 return m_UrlModule.RequestURL(m_ScriptEngine.ScriptModule, m_host, m_itemID).ToString();
@@ -8511,13 +9271,13 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llForceMouselook(int mouselook)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             m_host.SetForceMouselook(mouselook != 0);
         }
 
         public LSL_Float llGetObjectMass(string id)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             UUID key = new UUID();
             if (UUID.TryParse(id, out key))
             {
@@ -8560,7 +9320,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         {
             LSL_List pref = null;
 
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
             // Note that although we have normalized, both
             // indices could still be negative.
@@ -8628,7 +9388,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llLoadURL(string avatar_id, string message, string url)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
             IDialogModule dm = World.RequestModuleInterface<IDialogModule>();
             if (null != dm)
@@ -8643,7 +9403,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             // TODO: Not implemented yet (missing in libomv?):
             //  PARCEL_MEDIA_COMMAND_LOOP_SET    float loop      Use this to get or set the parcel's media loop duration. (1.19.1 RC0 or later)
 
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
             // according to the docs, this command only works if script owner and land owner are the same
             // lets add estate owners and gods, too, and use the generic permission check.
@@ -8657,11 +9417,11 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             string url = landData.MediaURL;
             string texture = landData.MediaID.ToString();
             bool autoAlign = landData.MediaAutoScale != 0;
-            string mediaType = ""; // TODO these have to be added as soon as LandData supports it
-            string description = "";
-            int width = 0;
-            int height = 0;
-
+            string mediaType = landData.MediaType;
+            string description = landData.MediaDescription;
+            int width = landData.MediaSize[0];
+            int height = landData.MediaSize[1];
+            
             ParcelMediaCommandEnum? commandToSend = null;
             float time = 0.0f; // default is from start
 
@@ -8693,6 +9453,11 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                         loop = 1;
                         commandToSend = command;
                         update = true; //need to send the media update packet to set looping
+                        break;
+
+                    case ParcelMediaCommandEnum.LoopSet:
+                        ShoutError("PARCEL_MEDIA_COMMAND_LOOP_SET is not currently supported.");
+                        return;
                         break;
 
                     case ParcelMediaCommandEnum.Play:
@@ -8784,7 +9549,6 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                             ++i;
                         }
                         break;
-
                     case ParcelMediaCommandEnum.Size:
                         if ((i + 2) < commandList.Length)
                         {
@@ -8823,6 +9587,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                     landData.MediaSize[0] = width;
                     landData.MediaSize[1] = height;
                     landData.MediaType = mediaType;
+                    landData.MediaDescription = description;
+                    landData.MediaLoop = loop;
 
                     // do that one last, it will cause a ParcelPropertiesUpdate
                     landObject.SetMediaUrl(url);
@@ -8865,7 +9631,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                     {
                         if (!sp.IsChildAgent)
                         {
-                            sp.ControllingClient.SendParcelMediaCommand(0x4, // TODO what is this?
+                            sp.ControllingClient.SendParcelMediaCommand(0x4, // TODO what is this? ParcelFlags enum
                                                                            (ParcelMediaCommandEnum)commandToSend,
                                                                            time);
                         }
@@ -8873,7 +9639,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                 }
                 else if (!presence.IsChildAgent)
                 {
-                    presence.ControllingClient.SendParcelMediaCommand(0x4, // TODO what is this?
+                    presence.ControllingClient.SendParcelMediaCommand(0x4, // TODO what is this? ParcelFlags enum
                                                                       (ParcelMediaCommandEnum)commandToSend,
                                                                       time);
                 }
@@ -8883,10 +9649,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_List llParcelMediaQuery(LSL_List aList)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             LSL_List list = new LSL_List();
-            //TO DO: make the implementation for the missing commands
-            //PARCEL_MEDIA_COMMAND_LOOP_SET    float loop      Use this to get or set the parcel's media loop duration. (1.19.1 RC0 or later)
             for (int i = 0; i < aList.Data.Length; i++)
             {
 
@@ -8898,13 +9662,20 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                             list.Add(new LSL_String(World.GetLandData(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).MediaURL));
                             break;
                         case ParcelMediaCommandEnum.Desc:
-                            list.Add(new LSL_String(World.GetLandData(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).Description));
+                            list.Add(new LSL_String(World.GetLandData(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).MediaDescription));
                             break;
                         case ParcelMediaCommandEnum.Texture:
                             list.Add(new LSL_String(World.GetLandData(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).MediaID.ToString()));
                             break;
                         case ParcelMediaCommandEnum.Type:
                             list.Add(new LSL_String(World.GetLandData(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).MediaType));
+                            break;
+                        case ParcelMediaCommandEnum.Loop:
+                            list.Add(new LSL_Integer(World.GetLandData(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).MediaLoop));
+                            break;
+                        case ParcelMediaCommandEnum.LoopSet:
+                            ShoutError("PARCEL_MEDIA_COMMAND_LOOP_SET is not supported at this time.");
+                            list.Add(new LSL_Integer(0));
                             break;
                         case ParcelMediaCommandEnum.Size:
                             list.Add(new LSL_String(World.GetLandData(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).MediaSize[0]));
@@ -8922,9 +9693,343 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             return list;
         }
 
+        public LSL_Integer llClearPrimMedia(LSL_Integer face)
+        {
+            if (face == ScriptBaseClass.ALL_SIDES)
+            {
+                for (uint i = 0; i < m_host.GetNumberOfSides(); i++)
+                {
+                    face = new LSL_Types.LSLInteger(i);
+                    ClearPrimMedia(face);
+                }
+            }
+            else
+            {
+                ClearPrimMedia(face);
+            }
+            return new LSL_Integer((int)PrimMediaUpdate.OK);
+        }
+
+        private void ClearPrimMedia(LSL_Integer face)
+        {
+            m_host.TriggerScriptChangedEvent(Changed.MEDIA);
+            Aurora.Framework.IAssetConnector connector = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IAssetConnector>("IAssetConnector");
+            connector.UpdateObjectMediaInfo(null, face.value, m_host.UUID);
+        }
+
+        public LSL_Integer llSetPrimMediaParams(LSL_Integer face, LSL_List commandList)
+        {
+            if (face == ScriptBaseClass.ALL_SIDES)
+            {
+                for (uint i = 0; i < m_host.GetNumberOfSides(); i++)
+                {
+                    face = i;
+                    LSL_Integer status = SetPrimMedia(face, commandList);
+                    if (status != (int)PrimMediaUpdate.OK)
+                        return status;
+                }
+            }
+            else
+            {
+                LSL_Integer status = SetPrimMedia(face, commandList);
+                if(status != (int)PrimMediaUpdate.OK)
+                    return status;
+            }
+            string Version = m_host.CurrentMediaVersion.Remove(0, 14);
+            Version = Version.Remove(1, Version.Length - 1);
+            int version = int.Parse(Version);
+            version++;
+            Version = "x-mv:000000000" + version + "/00000000-0000-0000-0000-000000000000";
+            m_host.CurrentMediaVersion = Version;
+
+            m_host.SendFullUpdateToAllClients();
+
+            return new LSL_Integer((int)PrimMediaUpdate.OK);
+        }
+
+        private LSL_Integer SetPrimMedia(LSL_Integer face, LSL_List commandList)
+        {
+            m_host.TriggerScriptChangedEvent(Changed.MEDIA);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
+            Aurora.Framework.IAssetConnector connector = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IAssetConnector>("IAssetConnector");
+            Aurora.Framework.ObjectMediaURL MediaFace = connector.GetObjectMediaInfo(m_host.UUID.ToString(), face.value);
+            if (MediaFace == null)
+            {
+                MediaFace = new Aurora.Framework.ObjectMediaURL();
+                MediaFace.ObjectID = m_host.UUID;
+                MediaFace.FromInventoryObjectUUID = m_host.FromItemID;
+                MediaFace.OwnerID = m_host.OwnerID;
+                MediaFace.Side = face.value;
+                MediaFace.object_media_version = "x-mv:0000000001/00000000-0000-0000-0000-000000000000";
+            }
+            for (int i = 0; i < commandList.Data.Length; i += 2)
+            {
+                PrimMediaCommandEnum command = (PrimMediaCommandEnum)commandList.Data[i];
+                switch (command)
+                {
+                    case PrimMediaCommandEnum.AltImageEnable:
+                        if ((i + 1) < commandList.Length)
+                        {
+                            if (commandList.Data[i + 1] is LSL_Integer)
+                            {
+                                MediaFace.alt_image_enable = ((LSL_Integer)commandList.Data[i + 1]).value == 1;
+                            }
+                            else
+                                return new LSL_Integer((int)PrimMediaUpdate.TYPE_MISMATCH);
+                        }
+                        break;
+
+                    case PrimMediaCommandEnum.AutoLoop:
+                        if ((i + 1) < commandList.Length)
+                        {
+                            if (commandList.Data[i + 1] is LSL_Integer)
+                            {
+                                MediaFace.auto_loop = ((LSL_Integer)commandList.Data[i + 1]).value == 1;
+                            }
+                            else
+                                return new LSL_Integer((int)PrimMediaUpdate.TYPE_MISMATCH);
+                        }
+                        break;
+                    case PrimMediaCommandEnum.AutoPlay:
+                        if ((i + 1) < commandList.Length)
+                        {
+                            if (commandList.Data[i + 1] is LSL_Integer)
+                            {
+                                MediaFace.auto_play = ((LSL_Integer)commandList.Data[i + 1]).value == 1;
+                            }
+                            else
+                                return new LSL_Integer((int)PrimMediaUpdate.TYPE_MISMATCH);
+                        }
+                        break;
+                    case PrimMediaCommandEnum.AutoScale:
+                        if ((i + 1) < commandList.Length)
+                        {
+                            if (commandList.Data[i + 1] is LSL_Integer)
+                            {
+                                MediaFace.auto_scale = ((LSL_Integer)commandList.Data[i + 1]).value == 1;
+                            }
+                            else
+                                return new LSL_Integer((int)PrimMediaUpdate.TYPE_MISMATCH);
+                        }
+                        break;
+                    case PrimMediaCommandEnum.AutoZoom:
+                        if ((i + 1) < commandList.Length)
+                        {
+                            if (commandList.Data[i + 1] is LSL_Integer)
+                            {
+                                MediaFace.auto_zoom = ((LSL_Integer)commandList.Data[i + 1]).value == 1;
+                            }
+                            else
+                                return new LSL_Integer((int)PrimMediaUpdate.TYPE_MISMATCH);
+                        }
+                        break;
+                    case PrimMediaCommandEnum.Controls:
+                        if ((i + 1) < commandList.Length)
+                        {
+                            if (commandList.Data[i + 1] is LSL_Integer)
+                            {
+                                MediaFace.controls = ((LSL_Integer)commandList.Data[i + 1]).value;
+                            }
+                            else
+                                return new LSL_Integer((int)PrimMediaUpdate.TYPE_MISMATCH);
+                        }
+                        break;
+                    case PrimMediaCommandEnum.CurrentURL:
+                        if ((i + 1) < commandList.Length)
+                        {
+                            if (commandList.Data[i + 1] is LSL_String)
+                            {
+                                MediaFace.current_url = ((LSL_String)commandList.Data[i + 1]).m_string;
+                            }
+                            else
+                                return new LSL_Integer((int)PrimMediaUpdate.TYPE_MISMATCH);
+                        }
+                        break;
+                    case PrimMediaCommandEnum.FirstClickInteract:
+                        if ((i + 1) < commandList.Length)
+                        {
+                            if (commandList.Data[i + 1] is LSL_Integer)
+                            {
+                                MediaFace.first_click_interact = ((LSL_Integer)commandList.Data[i + 1]).value == 1;
+                            }
+                            else
+                                return new LSL_Integer((int)PrimMediaUpdate.TYPE_MISMATCH);
+                        }
+                        break;
+                    case PrimMediaCommandEnum.HeightPixels:
+                        if ((i + 1) < commandList.Length)
+                        {
+                            if (commandList.Data[i + 1] is LSL_Integer)
+                            {
+                                MediaFace.height_pixels = ((LSL_Integer)commandList.Data[i + 1]).value;
+                            }
+                            else
+                                return new LSL_Integer((int)PrimMediaUpdate.TYPE_MISMATCH);
+                        }
+                        break;
+                    case PrimMediaCommandEnum.HomeURL:
+                        if ((i + 1) < commandList.Length)
+                        {
+                            if (commandList.Data[i + 1] is LSL_String)
+                            {
+                                MediaFace.home_url = ((LSL_String)commandList.Data[i + 1]).m_string;
+                            }
+                            else
+                                return new LSL_Integer((int)PrimMediaUpdate.TYPE_MISMATCH);
+                        }
+                        break;
+                    case PrimMediaCommandEnum.PermsControl:
+                        if ((i + 1) < commandList.Length)
+                        {
+                            if (commandList.Data[i + 1] is LSL_Integer)
+                            {
+                                MediaFace.perms_control = ((LSL_Integer)commandList.Data[i + 1]).value;
+                            }
+                            else
+                                return new LSL_Integer((int)PrimMediaUpdate.TYPE_MISMATCH);
+                        }
+                        break;
+                    case PrimMediaCommandEnum.PermsInteract:
+                        if ((i + 1) < commandList.Length)
+                        {
+                            if (commandList.Data[i + 1] is LSL_Integer)
+                            {
+                                MediaFace.perms_interact = ((LSL_Integer)commandList.Data[i + 1]).value;
+                            }
+                            else
+                                return new LSL_Integer((int)PrimMediaUpdate.TYPE_MISMATCH);
+                        }
+                        break;
+                    case PrimMediaCommandEnum.Whitelist:
+                        if ((i + 1) < commandList.Length)
+                        {
+                            if (commandList.Data[i + 1] is LSL_String)
+                            {
+                                MediaFace.whitelist = ((LSL_String)commandList.Data[i + 1]).m_string;
+                            }
+                            else
+                                return new LSL_Integer((int)PrimMediaUpdate.TYPE_MISMATCH);
+                        }
+                        break;
+                    case PrimMediaCommandEnum.WhitelistEnable:
+                        if ((i + 1) < commandList.Length)
+                        {
+                            if (commandList.Data[i + 1] is LSL_Integer)
+                            {
+                                MediaFace.whitelist_enable = ((LSL_Integer)commandList.Data[i + 1]).value == 1;
+                            }
+                            else
+                                return new LSL_Integer((int)PrimMediaUpdate.TYPE_MISMATCH);
+                        }
+                        break;
+                    case PrimMediaCommandEnum.WidthPixels:
+                        if ((i + 1) < commandList.Length)
+                        {
+                            if (commandList.Data[i + 1] is LSL_Integer)
+                            {
+                                MediaFace.width_pixels = ((LSL_Integer)commandList.Data[i + 1]).value;
+                            }
+                            else
+                                return new LSL_Integer((int)PrimMediaUpdate.TYPE_MISMATCH);
+                        }
+                        break;
+                    default:
+                        PrimMediaCommandEnum mediaCommandEnum = PrimMediaCommandEnum.WidthPixels;
+                        NotImplemented("llSetPrimMediaParams parameter do not supported yet: " + Enum.Parse(mediaCommandEnum.GetType(), commandList.Data[i].ToString()).ToString());
+                        break;
+                }//end switch
+            }//end for
+
+            connector.UpdateObjectMediaInfo(MediaFace, MediaFace.Side, m_host.UUID);
+            Primitive.TextureEntry textures = m_host.Shape.Textures;
+            if (textures.FaceTextures[face.value] == null)
+            {
+                Primitive.TextureEntryFace texface = m_host.Shape.Textures.CreateFace((uint)face.value);
+                textures.FaceTextures[face.value] = texface;
+            }
+            textures.FaceTextures[face.value].MediaFlags = true;
+            m_host.Shape.Textures = textures;
+            return new LSL_Integer((int)PrimMediaUpdate.OK);
+        }
+
+        public LSL_List llGetPrimMediaParams(LSL_Integer face, LSL_List aList)
+        {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
+            LSL_List list = new LSL_List();
+            Aurora.Framework.IAssetConnector connector = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IAssetConnector>("IAssetConnector");
+            Aurora.Framework.ObjectMediaURL MediaFace = connector.GetObjectMediaInfo(m_host.UUID.ToString(), face.value);
+            if (MediaFace == null)
+            {
+                //Fail silently..
+                return new LSL_Integer((int)PrimMediaUpdate.OK);
+            }
+            
+            for (int i = 0; i < aList.Data.Length; i++)
+            {
+                if (aList.Data[i] != null)
+                {
+                    switch ((PrimMediaCommandEnum)aList.Data[i])
+                    {
+                        case PrimMediaCommandEnum.AltImageEnable:
+                            list.Add(new LSL_String(MediaFace.alt_image_enable));
+                            break;
+                        case PrimMediaCommandEnum.AutoLoop:
+                            list.Add(new LSL_String(MediaFace.auto_loop));
+                            break;
+                        case PrimMediaCommandEnum.AutoPlay:
+                            list.Add(new LSL_String(MediaFace.auto_play));
+                            break;
+                        case PrimMediaCommandEnum.AutoScale:
+                            list.Add(new LSL_String(MediaFace.auto_scale));
+                            break;
+                        case PrimMediaCommandEnum.AutoZoom:
+                            list.Add(new LSL_String(MediaFace.auto_zoom));
+                            break;
+                        case PrimMediaCommandEnum.Controls:
+                            list.Add(new LSL_String(MediaFace.controls));
+                            break;
+                        case PrimMediaCommandEnum.CurrentURL:
+                            list.Add(new LSL_String(MediaFace.current_url));
+                            break;
+                        case PrimMediaCommandEnum.FirstClickInteract:
+                            list.Add(new LSL_String(MediaFace.first_click_interact));
+                            break;
+                        case PrimMediaCommandEnum.HeightPixels:
+                            list.Add(new LSL_String(MediaFace.height_pixels));
+                            break;
+                        case PrimMediaCommandEnum.HomeURL:
+                            list.Add(new LSL_String(MediaFace.home_url));
+                            break;
+                        case PrimMediaCommandEnum.PermsControl:
+                            list.Add(new LSL_String(MediaFace.perms_control));
+                            break;
+                        case PrimMediaCommandEnum.PermsInteract:
+                            list.Add(new LSL_String(MediaFace.perms_interact));
+                            break;
+                        case PrimMediaCommandEnum.Whitelist:
+                            list.Add(new LSL_String(MediaFace.whitelist));
+                            break;
+                        case PrimMediaCommandEnum.WhitelistEnable:
+                            list.Add(new LSL_String(MediaFace.whitelist_enable));
+                            break;
+                        case PrimMediaCommandEnum.WidthPixels:
+                            list.Add(new LSL_String(MediaFace.width_pixels));
+                            break;
+                        default:
+                            PrimMediaCommandEnum mediaCommandEnum = PrimMediaCommandEnum.WidthPixels;
+                            NotImplemented("llGetPrimMediaParams parameter do not supported yet: " + Enum.Parse(mediaCommandEnum.GetType(), aList.Data[i].ToString()).ToString());
+                            break;
+                    }
+
+                }
+            }
+            ScriptSleep(2000);
+            return list;
+        }
+
         public LSL_Integer llModPow(int a, int b, int c)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             Int64 tmp = 0;
             Math.DivRem(Convert.ToInt64(Math.Pow(a, b)), c, out tmp);
             ScriptSleep(1000);
@@ -8933,7 +10038,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Integer llGetInventoryType(string name)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
             lock (m_host.TaskInventory)
             {
@@ -8951,7 +10056,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llSetPayPrice(int price, LSL_List quick_pay_buttons)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
             if (quick_pay_buttons.Data.Length < 4)
             {
@@ -8969,7 +10074,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Vector llGetCameraPos()
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             UUID invItemID = InventorySelf();
 
             if (invItemID == UUID.Zero)
@@ -8998,7 +10103,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Rotation llGetCameraRot()
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             UUID invItemID = InventorySelf();
             if (invItemID == UUID.Zero)
                 return new LSL_Rotation();
@@ -9030,7 +10135,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         /// </summary>
         public void llSetPrimURL(string url)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             ScriptSleep(2000);
         }
 
@@ -9040,14 +10145,14 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         /// </summary>
         public void llRefreshPrimURL()
         {
-            m_host.AddScriptLPS(1);
-            ShoutError("llRefreshPrimURL - not yet supported");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
+            Deprecated("llRefreshPrimURL");
             ScriptSleep(20000);
         }
 
         public LSL_String llEscapeURL(string url)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             try
             {
                 return Uri.EscapeDataString(url);
@@ -9060,7 +10165,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_String llUnescapeURL(string url)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             try
             {
                 return Uri.UnescapeDataString(url);
@@ -9073,7 +10178,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llMapDestination(string simname, LSL_Vector pos, LSL_Vector lookAt)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             DetectParams detectedParams = m_ScriptEngine.GetDetectParams(m_itemID, 0);
             if (detectedParams == null) return; // only works on the first detected avatar
 
@@ -9089,7 +10194,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llAddToLandBanList(string avatar, double hours)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             UUID key;
             LandData land = World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData;
             if (land.OwnerID == m_host.OwnerID)
@@ -9108,7 +10213,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llRemoveFromLandPassList(string avatar)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             UUID key;
             LandData land = World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData;
             if (land.OwnerID == m_host.OwnerID)
@@ -9130,7 +10235,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llRemoveFromLandBanList(string avatar)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             UUID key;
             LandData land = World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData;
             if (land.OwnerID == m_host.OwnerID)
@@ -9152,7 +10257,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llSetCameraParams(LSL_List rules)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
             // our key in the object we are in
             UUID invItemID = InventorySelf();
@@ -9208,7 +10313,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llClearCameraParams()
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
             // our key in the object we are in
             UUID invItemID=InventorySelf();
@@ -9237,7 +10342,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Float llListStatistics(int operation, LSL_List src)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             LSL_List nums = LSL_List.ToDoubleList(src);
             switch (operation)
             {
@@ -9270,19 +10375,19 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Integer llGetUnixTime()
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             return Util.UnixTimeSinceEpoch();
         }
 
         public LSL_Integer llGetParcelFlags(LSL_Vector pos)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             return (int)World.LandChannel.GetLandObject((float)pos.x, (float)pos.y).LandData.Flags;
         }
 
         public LSL_Integer llGetRegionFlags()
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             IEstateModule estate = World.RequestModuleInterface<IEstateModule>();
             if (estate == null)
                 return 67108864;
@@ -9291,7 +10396,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_String llXorBase64StringsCorrect(string str1, string str2)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             string ret = String.Empty;
             string src1 = llBase64ToString(str1);
             string src2 = llBase64ToString(str2);
@@ -9314,9 +10419,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             // parameter flags support are implemented in ScriptsHttpRequests.cs
             //   in StartHttpRequest
 
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             IHttpRequestModule httpScriptMod =
-                m_ScriptEngine.World.RequestModuleInterface<IHttpRequestModule>();
+                World.RequestModuleInterface<IHttpRequestModule>();
             List<string> param = new List<string>();
             foreach (object o in parameters.Data)
             {
@@ -9341,8 +10446,6 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             IConfigSource config = m_ScriptEngine.ConfigSource;
             if (config.Configs["Network"] != null)
             {
-                shard = config.Configs["Network"].GetString(
-                    "user_server_url", "http://127.0.0.1:" + ConfigSettings.DefaultUserServerHttpPort.ToString());
                 shard = config.Configs["Network"].GetString("shard", shard);
             }
 
@@ -9380,7 +10483,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             if (reqID != UUID.Zero)
                 return reqID.ToString();
             else
-                return null;
+                return new LSL_String();
         }
 
 
@@ -9389,7 +10492,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             // Partial implementation: support for parameter flags needed
             //   see http://wiki.secondlife.com/wiki/llHTTPResponse
 
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
             if (m_UrlModule != null)
                 m_UrlModule.HttpResponse(new UUID(id), status,body);
@@ -9397,7 +10500,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llResetLandBanList()
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             LandData land = World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData;
             if (land.OwnerID == m_host.OwnerID)
             {
@@ -9414,7 +10517,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void llResetLandPassList()
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             LandData land = World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData;
             if (land.OwnerID == m_host.OwnerID)
             {
@@ -9431,7 +10534,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Integer llGetParcelPrimCount(LSL_Vector pos, int category, int sim_wide)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
             LandData land = World.GetLandData((float)pos.x, (float)pos.y);
 
@@ -9494,7 +10597,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_List llGetParcelPrimOwners(LSL_Vector pos)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             LandObject land = (LandObject)World.LandChannel.GetLandObject((float)pos.x, (float)pos.y);
             LSL_List ret = new LSL_List();
             if (land != null)
@@ -9511,7 +10614,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Integer llGetObjectPrimCount(string object_id)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             SceneObjectPart part = World.GetSceneObjectPart(new UUID(object_id));
             if (part == null)
             {
@@ -9525,7 +10628,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Integer llGetParcelMaxPrims(LSL_Vector pos, int sim_wide)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             // Alondria: This currently just is utilizing the normal grid's 0.22 prims/m2 calculation
             // Which probably will be irrelevent in OpenSim....
             LandData land = World.GetLandData((float)pos.x, (float)pos.y);
@@ -9555,7 +10658,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_List llGetParcelDetails(LSL_Vector pos, LSL_List param)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             LandData land = World.GetLandData((float)pos.x, (float)pos.y);
             if (land == null)
             {
@@ -9591,7 +10694,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_String llStringTrim(string src, int type)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
+        	ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             if (type == (int)ScriptBaseClass.STRING_TRIM_HEAD) { return src.TrimStart(); }
             if (type == (int)ScriptBaseClass.STRING_TRIM_TAIL) { return src.TrimEnd(); }
             if (type == (int)ScriptBaseClass.STRING_TRIM) { return src.Trim(); }
@@ -9600,7 +10704,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_List llGetObjectDetails(string id, LSL_List args)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             LSL_List ret = new LSL_List();
             UUID key = new UUID();
             if (UUID.TryParse(id, out key))
@@ -9729,7 +10833,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_String llGetNumberOfNotecardLines(string name)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
             TaskInventoryDictionary itemsDictionary = (TaskInventoryDictionary)m_host.TaskInventory.Clone();
 
@@ -9761,8 +10865,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             if (NotecardCache.IsCached(assetID))
             {
                 AsyncCommands.
-                DataserverPlugin.DataserverReply(assetID.ToString(),
-                NotecardCache.GetLines(assetID).ToString());
+                DataserverPlugin.AddReply(assetID.ToString(),
+                NotecardCache.GetLines(assetID).ToString(), 100);
                 ScriptSleep(100);
                 return tid.ToString();
             }
@@ -9781,8 +10885,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                 //m_log.Debug(data);
                 NotecardCache.Cache(id, data);
                 AsyncCommands.
-                        DataserverPlugin.DataserverReply(id.ToString(),
-                        NotecardCache.GetLines(id).ToString());
+                        DataserverPlugin.AddReply(id.ToString(),
+                        NotecardCache.GetLines(id).ToString(), 100);
             });
 
             ScriptSleep(100);
@@ -9791,7 +10895,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_String llGetNotecardLine(string name, int line)
         {
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
             TaskInventoryDictionary itemsDictionary = (TaskInventoryDictionary)m_host.TaskInventory.Clone();
 
@@ -9822,8 +10926,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
             if (NotecardCache.IsCached(assetID))
             {
-                AsyncCommands.DataserverPlugin.DataserverReply(assetID.ToString(),
-                                                               NotecardCache.GetLine(assetID, line, m_notecardLineReadCharsMax));
+                AsyncCommands.DataserverPlugin.AddReply(assetID.ToString(),
+                                                               NotecardCache.GetLine(assetID, line, m_notecardLineReadCharsMax), 100);
                 ScriptSleep(100);
                 return tid.ToString();
             }
@@ -9841,8 +10945,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                              string data = enc.GetString(a.Data);
                              //m_log.Debug(data);
                              NotecardCache.Cache(id, data);
-                             AsyncCommands.DataserverPlugin.DataserverReply(id.ToString(),
-                                                                            NotecardCache.GetLine(id, line, m_notecardLineReadCharsMax));
+                             AsyncCommands.DataserverPlugin.AddReply(id.ToString(),
+                                                                            NotecardCache.GetLine(id, line, m_notecardLineReadCharsMax), 100);
                          });
 
             ScriptSleep(100);

@@ -700,6 +700,8 @@ namespace Aurora.Modules
                     fromPos = avatar.AbsolutePosition;
                     fromName = avatar.Name;
                     fromID = c.Sender.AgentId;
+                    //Always send this so it fires on typing start and end
+                    avatar.SendScriptEventToAttachments("changed", new object[] { Changed.STATE });
 
                     break;
 
@@ -720,32 +722,42 @@ namespace Aurora.Modules
                 s.ForEachScenePresence(
                     delegate(ScenePresence presence)
                     {
-                        bool IsMuted = false;
-                        if (IsMutedCache.ContainsKey(presence.UUID))
+                        // don't send stuff to child agents
+                        if (!presence.IsChildAgent)
                         {
-                            Dictionary<UUID, bool> cache;
-                            IsMutedCache.TryGetValue(presence.UUID, out cache);
-                            if (cache.ContainsKey(fromID))
+                            bool IsMuted = false;
+                            if (message != "" && m_useMuteListModule)
                             {
-                                cache.TryGetValue(fromID, out IsMuted);
+                                lock (IsMutedCache)
+                                {
+                                    if (IsMutedCache.ContainsKey(presence.UUID))
+                                    {
+                                        Dictionary<UUID, bool> cache;
+                                        IsMutedCache.TryGetValue(presence.UUID, out cache);
+                                        if (cache.ContainsKey(fromID))
+                                        {
+                                            cache.TryGetValue(fromID, out IsMuted);
+                                        }
+                                        else
+                                        {
+                                            IsMuted = MuteListConnector.IsMuted(presence.UUID, fromID);
+                                            cache.Add(fromID, IsMuted);
+                                            IsMutedCache.Remove(presence.UUID);
+                                            IsMutedCache.Add(presence.UUID, cache);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        Dictionary<UUID, bool> cache = new Dictionary<UUID, bool>();
+                                        IsMuted = MuteListConnector.IsMuted(presence.UUID, fromID);
+                                        cache.Add(fromID, IsMuted);
+                                        IsMutedCache.Add(presence.UUID, cache);
+                                    }
+                                }
                             }
-                            else
-                            {
-                                IsMuted = MuteListConnector.IsMuted(presence.UUID, fromID);
-                                cache.Add(fromID, IsMuted);
-                                IsMutedCache.Remove(presence.UUID);
-                                IsMutedCache.Add(presence.UUID, cache);
-                            }
+                            if (!IsMuted)
+                                TrySendChatMessage(presence, fromPos, regionPos, fromID, fromName, c.Type, message, sourceType);
                         }
-                        else
-                        {
-                            Dictionary<UUID, bool> cache = new Dictionary<UUID, bool>();
-                            IsMuted = MuteListConnector.IsMuted(presence.UUID, fromID);
-                            cache.Add(fromID, IsMuted);
-                            IsMutedCache.Add(presence.UUID, cache);
-                        }
-                        if(!IsMuted)
-                            TrySendChatMessage(presence, fromPos, regionPos, fromID, fromName, c.Type, message, sourceType);
                     }
                 );
             }
@@ -902,7 +914,7 @@ namespace Aurora.Modules
         private string m_chatSessionRequestPath = "0009/";
         private Dictionary<UUID, ChatSession> ChatSessions = new Dictionary<UUID, ChatSession>();
 
-        private class ChatSession
+        public class ChatSession
         {
             public UUID SessionID;
             public List<ChatSessionMember> Members;
@@ -959,39 +971,46 @@ namespace Aurora.Modules
             UUID sessionid = UUID.Parse(rm["session-id"].AsString());
 
             ScenePresence SP = findScenePresence(Agent);
+            IEventQueue eq = SP.Scene.RequestModuleInterface<IEventQueue>();
+
             if (method == "start conference")
             {
-                OSDArray parameters = (OSDArray)rm["params"];
-                List<ChatSessionMember> ChatSessionMembers = new List<ChatSessionMember>();
-                foreach (OSD param in parameters)
+                //Create the session.
+                CreateSession(new ChatSession()
                 {
-                    ChatSessionMembers.Add(new ChatSessionMember()
-                    {
-                        AvatarKey = param.AsUUID(),
-                        CanVoiceChat = false,
-                        IsModerator = false,
-                        MuteText = true,
-                        MuteVoice = true,
-                        HasBeenAdded = false
-                    });
-                }
-                //Add us!
-                ChatSessionMembers.Add(new ChatSessionMember()
-                {
-                    AvatarKey = Agent,
-                    CanVoiceChat = false,
-                    IsModerator = true,
-                    MuteText = true,
-                    MuteVoice = true,
-                    HasBeenAdded = true
-                });
-
-                ChatSessions.Add(sessionid, new ChatSession()
-                {
-                    Members = ChatSessionMembers,
+                    Members = new List<ChatSessionMember>(),
                     SessionID = sessionid,
                     Name = SP.Name + " Conference"
                 });
+
+                OSDArray parameters = (OSDArray)rm["params"];
+                //Add other invited members.
+                foreach (OSD param in parameters)
+                {
+                    AddDefaultPermsMemberToSession(param.AsUUID(), sessionid);
+                }
+
+                //Add us to the session!
+                AddMemberToGroup(new ChatSessionMember()
+                {
+                    AvatarKey = Agent,
+                    CanVoiceChat = true,
+                    IsModerator = true,
+                    MuteText = false,
+                    MuteVoice = false,
+                    HasBeenAdded = true
+                }, sessionid);
+
+
+                //Inform us about our room
+                OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock block = new OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock();
+                block.AgentID = Agent;
+                block.CanVoiceChat = true;
+                block.IsModerator = true;
+                block.MuteText = false;
+                block.MuteVoice = false;
+                block.Transition = "ENTER";
+                eq.ChatterBoxSessionAgentListUpdates(sessionid, new OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock[] { block }, Agent, "ENTER");
 
                 OpenMetaverse.Messages.Linden.ChatterBoxSessionStartReplyMessage cs = new OpenMetaverse.Messages.Linden.ChatterBoxSessionStartReplyMessage();
                 cs.VoiceEnabled = true;
@@ -1001,6 +1020,7 @@ namespace Aurora.Modules
                 cs.SessionID = sessionid;
                 cs.SessionName = SP.Name + " Conference";
                 cs.ModeratedVoice = true;
+
                 Hashtable responsedata = new Hashtable();
                 responsedata["int_response_code"] = 200; //501; //410; //404;
                 responsedata["content_type"] = "text/plain";
@@ -1011,18 +1031,11 @@ namespace Aurora.Modules
             }
             else if (method == "accept invitation")
             {
-                ChatSession session;
-                ChatSessions.TryGetValue(sessionid, out session);
-                ChatSessionMember thismember = new ChatSessionMember() { AvatarKey = UUID.Zero };
-                foreach (ChatSessionMember testmember in session.Members)
-                {
-                    if (testmember.AvatarKey == Agent)
-                        thismember = testmember;
-                }
-                IEventQueue eq = SP.Scene.RequestModuleInterface<IEventQueue>();
                 List<OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock> Us = new List<OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock>();
                 List<OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock> NotUsAgents = new List<OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock>();
-                           
+
+                ChatSession session = GetSession(sessionid);
+                ChatSessionMember thismember = FindMember(sessionid, Agent);
                 foreach (ChatSessionMember sessionMember in session.Members)
                 {
                     OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock block = new OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock();
@@ -1035,34 +1048,64 @@ namespace Aurora.Modules
                     if (sessionMember.AvatarKey == thismember.AvatarKey)
                         Us.Add(block);
                     else
-                        NotUsAgents.Add(block);
-                }
-                if (thismember.AvatarKey != UUID.Zero)
-                {
-                    thismember.HasBeenAdded = true;
-                    foreach (ChatSessionMember member in session.Members)
                     {
-                        if (member.AvatarKey == thismember.AvatarKey)
-                        {
-                            OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage message = new OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage();
-                            message.SessionID = session.SessionID;
-
-                            message.Updates = NotUsAgents.ToArray();
-
-                            eq.ChatterBoxSessionAgentListUpdates(message, member.AvatarKey);
-                        }
-                        else
-                        {
-                            OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage message = new OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage();
-                            message.SessionID = session.SessionID;
-                            
-                            message.Updates = Us.ToArray();
-
-                            eq.ChatterBoxSessionAgentListUpdates(message, member.AvatarKey);
-                        }
+                        if(sessionMember.HasBeenAdded) // Don't add not joined yet agents. They don't watn to be here.
+                            NotUsAgents.Add(block);
+                    }
+                }
+                thismember.HasBeenAdded = true;
+                foreach (ChatSessionMember member in session.Members)
+                {
+                    if (member.AvatarKey == thismember.AvatarKey)
+                    {
+                        eq.ChatterBoxSessionAgentListUpdates(session.SessionID, NotUsAgents.ToArray(), member.AvatarKey, "ENTER");
+                    }
+                    else
+                    {
+                        eq.ChatterBoxSessionAgentListUpdates(session.SessionID, Us.ToArray(), member.AvatarKey, "ENTER");
                     }
                 }
                 Hashtable responsedata = new Hashtable();
+                responsedata["int_response_code"] = 200; //501; //410; //404;
+                responsedata["content_type"] = "text/plain";
+                responsedata["keepalive"] = false;
+                responsedata["str_response_string"] = "Accepted";
+                return responsedata;
+            }
+            else if (method == "mute update")
+            {
+                //Check if the user is a moderator
+                Hashtable responsedata = new Hashtable();
+                if (!CheckModeratorPermission(Agent, sessionid))
+                {
+                    responsedata["int_response_code"] = 200; //501; //410; //404;
+                    responsedata["content_type"] = "text/plain";
+                    responsedata["keepalive"] = false;
+                    responsedata["str_response_string"] = "Accepted";
+                    return responsedata;
+                }
+
+                OSDMap parameters = (OSDMap)rm["params"];
+                UUID AgentID = parameters["agent_id"].AsUUID();
+                OSDMap muteInfoMap = (OSDMap)parameters["mute_info"];
+
+                ChatSessionMember thismember = FindMember(sessionid, Agent);
+                if (muteInfoMap.ContainsKey("text"))
+                    thismember.MuteText = muteInfoMap["text"].AsBoolean();
+                if (muteInfoMap.ContainsKey("voice"))
+                    thismember.MuteVoice = muteInfoMap["voice"].AsBoolean();
+
+                OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock block = new OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock();
+                block.AgentID = thismember.AvatarKey;
+                block.CanVoiceChat = thismember.CanVoiceChat;
+                block.IsModerator = thismember.IsModerator;
+                block.MuteText = thismember.MuteText;
+                block.MuteVoice = thismember.MuteVoice;
+                block.Transition = "ENTER";
+
+                // Send an update to the affected user
+                eq.ChatterBoxSessionAgentListUpdates(sessionid, new OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock[] { block }, AgentID, "");
+                
                 responsedata["int_response_code"] = 200; //501; //410; //404;
                 responsedata["content_type"] = "text/plain";
                 responsedata["keepalive"] = false;
@@ -1106,72 +1149,151 @@ namespace Aurora.Modules
         public void OnInstantMessage(IClientAPI client, GridInstantMessage im)
         {
             byte dialog = im.dialog;
-
-            if (dialog != (byte)InstantMessageDialog.SessionSend
-                && dialog != (byte)InstantMessageDialog.SessionDrop)
-            {
-                return;
-            }
-            //We only deal with sessions here
+            //We only deal with friend IM sessions here, groups module handles group IM sessions
             if (dialog == (byte)InstantMessageDialog.SessionSend)
-            {
-                ChatSession session;
-                ChatSessions.TryGetValue(UUID.Parse(im.imSessionID.ToString()), out session);
-                List<ChatSessionMember> NewMembers = new List<ChatSessionMember>();
-                IEventQueue eq = client.Scene.RequestModuleInterface<IEventQueue>();
-                foreach (ChatSessionMember member in session.Members)
-                {
-                    if (member.HasBeenAdded)
-                    {
-                        im.toAgentID = member.AvatarKey.Guid;
-                        im.binaryBucket = OpenMetaverse.Utils.StringToBytes(session.Name);
-                        im.RegionID = Guid.Empty;
-                        im.ParentEstateID = 0;
-                        im.timestamp = 0;
-                        m_TransferModule.SendInstantMessage(im);
-                    }
-                    else
-                    {
-                        NewMembers.Add(member);
-                        im.toAgentID = member.AvatarKey.Guid;
-                        eq.ChatterboxInvitation(
-                            session.SessionID
-                            , session.Name
-                            , new UUID(im.fromAgentID)
-                            , im.message
-                            , new UUID(im.toAgentID)
-                            , im.fromAgentName
-                            , im.dialog
-                            , im.timestamp
-                            , im.offline == 1
-                            , (int)im.ParentEstateID
-                            , im.Position
-                            , 1
-                            , new UUID(im.imSessionID)
-                            , false
-                            , OpenMetaverse.Utils.StringToBytes(session.Name)
-                            );
-                    }
-                }
-                for(int i = 0; i < NewMembers.Count; i++)
-                {
-                    NewMembers[i].HasBeenAdded = true;
-                }
-            }
+                SendChatToSession(client, im);
 
             if (dialog == (byte)InstantMessageDialog.SessionDrop)
+                DropMemberFromSession(client, im);
+        }
+
+        private ChatSessionMember FindMember(UUID sessionid, UUID Agent)
+        {
+            ChatSession session;
+            ChatSessions.TryGetValue(sessionid, out session);
+            ChatSessionMember thismember = new ChatSessionMember() { AvatarKey = UUID.Zero };
+            foreach (ChatSessionMember testmember in session.Members)
             {
-                ChatSession session;
-                ChatSessions.TryGetValue(UUID.Parse(im.imSessionID.ToString()), out session);
-                ChatSessionMember member = new ChatSessionMember() { AvatarKey = UUID.Zero };
-                foreach (ChatSessionMember testmember in session.Members)
-                {
-                    if (member.AvatarKey == UUID.Parse(im.fromAgentID.ToString()))
-                        member = testmember;
-                }
-                if(member.AvatarKey != UUID.Zero)
-                    session.Members.Remove(member);
+                if (testmember.AvatarKey == Agent)
+                    thismember = testmember;
             }
+            return thismember;
+        }
+
+        public bool CheckModeratorPermission(UUID Agent, UUID sessionid)
+        {
+            ChatSession session;
+            ChatSessions.TryGetValue(sessionid, out session);
+            ChatSessionMember thismember = new ChatSessionMember() { AvatarKey = UUID.Zero };
+            foreach (ChatSessionMember testmember in session.Members)
+            {
+                if (testmember.AvatarKey == Agent)
+                    thismember = testmember;
+            }
+            if (thismember == null)
+                return false;
+            return thismember.IsModerator;
+        }
+
+        public void DropMemberFromSession(IClientAPI client, GridInstantMessage im)
+        {
+            ChatSession session;
+            ChatSessions.TryGetValue(UUID.Parse(im.imSessionID.ToString()), out session);
+            if (session == null)
+                return;
+            ChatSessionMember member = new ChatSessionMember() { AvatarKey = UUID.Zero };
+            foreach (ChatSessionMember testmember in session.Members)
+            {
+                if (member.AvatarKey == UUID.Parse(im.fromAgentID.ToString()))
+                    member = testmember;
+            }
+
+            if (member.AvatarKey != UUID.Zero)
+                session.Members.Remove(member);
+
+            if (session.Members.Count == 0)
+            {
+                ChatSessions.Remove(session.SessionID);
+                return;
+            }
+
+            OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock block = new OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock();
+            block.AgentID = member.AvatarKey;
+            block.CanVoiceChat = member.CanVoiceChat;
+            block.IsModerator = member.IsModerator;
+            block.MuteText = member.MuteText;
+            block.MuteVoice = member.MuteVoice;
+            block.Transition = "LEAVE";
+            IEventQueue eq = client.Scene.RequestModuleInterface<IEventQueue>();
+            foreach (ChatSessionMember sessionMember in session.Members)
+            {
+                eq.ChatterBoxSessionAgentListUpdates(session.SessionID, new OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock[] { block }, sessionMember.AvatarKey, "LEAVE");
+            }
+        }
+
+        public void SendChatToSession(IClientAPI client, GridInstantMessage im)
+        {
+            ChatSession session;
+            ChatSessions.TryGetValue(UUID.Parse(im.imSessionID.ToString()), out session);
+            IEventQueue eq = client.Scene.RequestModuleInterface<IEventQueue>();
+            foreach (ChatSessionMember member in session.Members)
+            {
+                if (member.HasBeenAdded)
+                {
+                    im.toAgentID = member.AvatarKey.Guid;
+                    im.binaryBucket = OpenMetaverse.Utils.StringToBytes(session.Name);
+                    im.RegionID = Guid.Empty;
+                    im.ParentEstateID = 0;
+                    im.timestamp = 0;
+                    m_TransferModule.SendInstantMessage(im);
+                }
+                else
+                {
+                    im.toAgentID = member.AvatarKey.Guid;
+                    eq.ChatterboxInvitation(
+                        session.SessionID
+                        , session.Name
+                        , new UUID(im.fromAgentID)
+                        , im.message
+                        , new UUID(im.toAgentID)
+                        , im.fromAgentName
+                        , im.dialog
+                        , im.timestamp
+                        , im.offline == 1
+                        , (int)im.ParentEstateID
+                        , im.Position
+                        , 1
+                        , new UUID(im.imSessionID)
+                        , false
+                        , OpenMetaverse.Utils.StringToBytes(session.Name)
+                        );
+                }
+            }
+        }
+
+        public void AddMemberToGroup(ChatSessionMember member, UUID SessionID)
+        {
+            ChatSession session;
+            ChatSessions.TryGetValue(SessionID, out session);
+            session.Members.Add(member);
+        }
+
+        public void CreateSession(ChatSession session)
+        {
+            ChatSessions.Add(session.SessionID, session);
+        }
+
+        public ChatSession GetSession(UUID SessionID)
+        {
+            ChatSession session;
+            ChatSessions.TryGetValue(SessionID, out session);
+            return session;
+        }
+
+        private void AddDefaultPermsMemberToSession(UUID AgentID, UUID SessionID)
+        {
+            ChatSession session;
+            ChatSessions.TryGetValue(SessionID, out session);
+            ChatSessionMember member = new ChatSessionMember()
+            {
+                AvatarKey = AgentID,
+                CanVoiceChat = true,
+                IsModerator = false,
+                MuteText = false,
+                MuteVoice = false,
+                HasBeenAdded = false
+            };
+            session.Members.Add(member);
         }
     }
 }

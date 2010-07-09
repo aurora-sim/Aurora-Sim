@@ -55,6 +55,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api.Plugins
             public string handle;
 
             public DateTime startTime;
+            public DateTime IsCompleteAt;
+            public string Reply;
         }
 
         public UUID RegisterRequest(uint localID, UUID itemID,
@@ -74,6 +76,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api.Plugins
                 ds.handle = identifier;
 
                 ds.startTime = DateTime.Now;
+                ds.IsCompleteAt = DateTime.Now.AddHours(1);
+                ds.Reply = "";
 
                 DataserverRequests[identifier] = ds;
 
@@ -81,7 +85,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api.Plugins
             }
         }
 
-        public void DataserverReply(string identifier, string reply)
+        private void DataserverReply(string identifier, string reply)
         {
             DataserverRequest ds;
 
@@ -113,16 +117,28 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api.Plugins
             }
         }
 
-        public void ExpireRequests()
+        public void CheckAndExpireRequests()
         {
             lock (DataserverRequests)
             {
                 foreach (DataserverRequest ds in new List<DataserverRequest>(DataserverRequests.Values))
                 {
+                    if (ds.IsCompleteAt < DateTime.Now)
+                        DataserverReply(ds.handle, ds.Reply);
+
                     if (ds.startTime > DateTime.Now.AddSeconds(30))
                         DataserverRequests.Remove(ds.handle);
                 }
             }
+        }
+
+        internal void AddReply(string handle, string reply, int millisecondsToWait)
+        {
+            DataserverRequest request = null;
+            DataserverRequests.TryGetValue(handle, out request);
+            //Wait for the value to be returned in LSL_Api
+            request.IsCompleteAt = DateTime.Now.AddSeconds(millisecondsToWait / 1000 + 0.1);
+            request.Reply = reply;
         }
     }
 }

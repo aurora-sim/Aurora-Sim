@@ -1338,8 +1338,6 @@ namespace OpenSim.Region.Framework.Scenes
                             return;
 
                         part.ParentGroup.AddInventoryItem(remoteClient, localID, item, copyID);
-                        // TODO: switch to posting on_rez here when scripts
-                        // have state in inventory
                         part.Inventory.CreateScriptInstance(copyID, 0, false, DefaultScriptEngine, 0);
 
                         //                        m_log.InfoFormat("[PRIMINVENTORY]: " +

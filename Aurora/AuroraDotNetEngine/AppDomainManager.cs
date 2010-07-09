@@ -58,7 +58,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         private bool loadAllScriptsIntoCurrentDomain = false;
 
-        private string PermissionLevel = "Internet";
+        private string m_PermissionLevel = "Internet";
+
+        public string PermissionLevel
+        {
+            get { return m_PermissionLevel; }
+        }
+
+        public int NumberOfAppDomains
+        {
+            get { return appDomains.Count; }
+        }
 
         // Internal list of all AppDomains
         private List<AppDomainStructure> appDomains =
@@ -95,7 +105,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             maxScriptsPerAppDomain = m_scriptEngine.ScriptConfigSource.GetInt(
                     "ScriptsPerAppDomain", 1);
-            PermissionLevel = m_scriptEngine.ScriptConfigSource.GetString(
+            m_PermissionLevel = m_scriptEngine.ScriptConfigSource.GetString(
                     "AppDomainPermissions", "Internet");
             loadAllScriptsIntoCurrentDomain = m_scriptEngine.ScriptConfigSource.GetBoolean("LoadAllScriptsIntoCurrentAppDomain ", false);
         }
@@ -148,7 +158,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             ads.ShadowCopyFiles = "false"; // Disable shadowing
             ads.ConfigurationFile = AppDomain.CurrentDomain.SetupInformation.ConfigurationFile;
 
-            AppDomain AD = CreateRestrictedDomain(PermissionLevel, 
+            AppDomain AD = CreateRestrictedDomain(m_PermissionLevel, 
                 "ScriptAppDomain_" + AppDomainNameCount,ads);
 
             AD.AssemblyResolve += OpenSim.Region.ScriptEngine.Shared.AssemblyResolver.OnAssemblyResolve;

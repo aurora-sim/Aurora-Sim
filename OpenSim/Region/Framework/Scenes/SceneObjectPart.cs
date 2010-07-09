@@ -58,7 +58,9 @@ namespace OpenSim.Region.Framework.Scenes
         REGION_RESTART = 256,
         REGION = 512,
         TELEPORT = 1024,
-        MEDIA = 2048
+        MEDIA = 2048,
+        ANIMATION = 16384,
+        STATE = 32768
     }
 
     // I don't really know where to put this except here.
@@ -569,7 +571,9 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_scriptAccessPin; }
             set { m_scriptAccessPin = (int)value; }
         }
+
         private SceneObjectPart m_PlaySoundMasterPrim = null;
+        [XmlIgnore]
         public SceneObjectPart PlaySoundMasterPrim
         {
             get { return m_PlaySoundMasterPrim; }
@@ -577,6 +581,7 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         private List<SceneObjectPart> m_PlaySoundSlavePrims = new List<SceneObjectPart>();
+        [XmlIgnore]
         public List<SceneObjectPart> PlaySoundSlavePrims
         {
             get { return m_PlaySoundSlavePrims; }
@@ -584,6 +589,7 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         private SceneObjectPart m_LoopSoundMasterPrim = null;
+        [XmlIgnore]
         public SceneObjectPart LoopSoundMasterPrim
         {
             get { return m_LoopSoundMasterPrim; }
@@ -591,13 +597,13 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         private List<SceneObjectPart> m_LoopSoundSlavePrims = new List<SceneObjectPart>();
+        [XmlIgnore]
         public List<SceneObjectPart> LoopSoundSlavePrims
         {
             get { return m_LoopSoundSlavePrims; }
             set { m_LoopSoundSlavePrims = value; }
         }
 
-        [XmlIgnore]
         public Byte[] TextureAnimation
         {
             get { return m_TextureAnimation; }
@@ -685,12 +691,11 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
                 
-                // TODO if we decide to do sitting in a more SL compatible way (multiple avatars per prim), this has to be fixed, too
                 if (m_sitTargetAvatar.Count != 0)
                 {
                     foreach (UUID avID in m_sitTargetAvatar)
                     {
-                        if (m_parentGroup != null) // TODO can there be a SOP without a SOG?
+                        if (m_parentGroup != null)
                         {
                             ScenePresence avatar;
                             if (m_parentGroup.Scene.TryGetScenePresence(avID, out avatar))
@@ -865,10 +870,46 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
         }
+        #region Only used for serialization as Color cannot be serialized
+        public int ColorA
+        {
+            get { return m_color.A; }
+            set
+            {
+                m_color = System.Drawing.Color.FromArgb(value, m_color.R, m_color.G, m_color.B);
+            }
+        }
+        public int ColorR
+        {
+            get { return m_color.R; }
+            set
+            {
+                m_color = System.Drawing.Color.FromArgb(m_color.A, value, m_color.G, m_color.B);
+            }
+        }
+        public int ColorG
+        {
+            get { return m_color.G; }
+            set
+            {
+                m_color = System.Drawing.Color.FromArgb(m_color.A, m_color.R, value, m_color.B);
+            }
+        }
+        public int ColorB
+        {
+            get { return m_color.B; }
+            set
+            {
+                m_color = System.Drawing.Color.FromArgb(m_color.A, m_color.R, m_color.G, value);
+            }
+        }
+
+        #endregion
 
         /// <value>
         /// Text color.
         /// </value>
+        [XmlIgnore]
         public Color Color
         {
             get { return m_color; }

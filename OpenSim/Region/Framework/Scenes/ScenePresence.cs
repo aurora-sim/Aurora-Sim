@@ -665,11 +665,25 @@ namespace OpenSim.Region.Framework.Scenes
         private bool m_inTransit;
         private bool m_mouseLook;
         private bool m_leftButtonDown;
+        private bool m_isAway = false;
+        private bool m_isBusy = false;
 
         public bool IsInTransit
         {
             get { return m_inTransit; }
             set { m_inTransit = value; }
+        }
+
+        public bool IsAway
+        {
+            get { return m_isAway; }
+            set { m_isAway = value; }
+        }
+
+        public bool IsBusy
+        {
+            get { return m_isBusy; }
+            set { m_isBusy = value; }
         }
 
         public float SpeedModifier
@@ -1317,7 +1331,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             m_mouseLook = (flags & AgentManager.ControlFlags.AGENT_CONTROL_MOUSELOOK) != 0;
             m_leftButtonDown = (flags & AgentManager.ControlFlags.AGENT_CONTROL_LBUTTON_DOWN) != 0;
-
+            m_isAway = (flags & AgentManager.ControlFlags.AGENT_CONTROL_AWAY) != 0;
             #endregion Inputs
 
             if ((flags & AgentManager.ControlFlags.AGENT_CONTROL_STAND_UP) != 0)
@@ -1958,16 +1972,6 @@ namespace OpenSim.Region.Framework.Scenes
                 Quaternion avSitOrientation = part.SitTargetOrientation;
                 bool SitTargetUnOccupied = true;
                 bool UseSitTarget = false;
-                // TODO: Needs work! (points up)
-                /*if (part.GetAvatarOnSitTarget().Count != 0)
-                {
-                    ScenePresence Sp = m_scene.GetScenePresence(part.GetAvatarOnSitTarget());
-                    if (Sp != null)
-                    {
-                        if (Sp.SittingOnUUID == part.UUID)
-                            SitTargetUnOccupied = false;
-                    }
-                }*/
 
                 bool SitTargetisSet =
                     (!(avSitOffSet.X == 0f && avSitOffSet.Y == 0f && avSitOffSet.Z == 0f &&
@@ -2414,11 +2418,15 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void HandleStartAnim(IClientAPI remoteClient, UUID animID)
         {
+            if (animID == Animations.BUSY)
+                m_isBusy = true;
             Animator.AddAnimation(animID, UUID.Zero);
         }
 
         public void HandleStopAnim(IClientAPI remoteClient, UUID animID)
         {
+            if (animID == Animations.BUSY)
+                m_isBusy = false;
             Animator.RemoveAnimation(animID);
         }
 
@@ -2593,7 +2601,7 @@ namespace OpenSim.Region.Framework.Scenes
             effect.Color = EffectColor;
             effect.Duration = 0.9f;
             effect.ID = UUID.Random(); //This seems to be what is passed by SL when its send from the server
-            effect.Type = 7; //Beam; couldn't find a enum for this
+            effect.Type = (int)EffectType.Beam;
             byte[] part = new byte[56];
             UUID.ToBytes(part, 0);
             SOP.UUID.ToBytes(part, 16);
@@ -3690,16 +3698,12 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     foreach (SceneObjectGroup grp in m_attachments)
                     {
-                        // 16384 is CHANGED_ANIMATION
-                        //
-                        // Send this to all attachment root prims
-                        //
                         foreach (IScriptModule m in m_scriptEngines)
                         {
                             if (m == null) // No script engine loaded
                                 continue;
 
-                            m.PostObjectEvent(grp.RootPart.UUID, "changed", new Object[] { 16384 });
+                            m.PostObjectEvent(grp.RootPart.UUID, eventName, args);
                         }
                     }
                 }

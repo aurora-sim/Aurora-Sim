@@ -168,16 +168,10 @@ namespace Aurora.Modules
         {
             m_log.DebugFormat("[OFFLINE MESSAGING] Retrieving stored messages for {0}", client.AgentId);
 
-            OfflineMessage[] msglist = OfflineMessagesConnector.GetOfflineMessages(client.AgentId);
+            GridInstantMessage[] msglist = OfflineMessagesConnector.GetOfflineMessages(client.AgentId);
 
-            foreach (OfflineMessage IMtext in msglist)
+            foreach (GridInstantMessage IM in msglist)
             {
-                GridInstantMessage IM = new GridInstantMessage(
-                                    null, new UUID(IMtext.FromUUID), IMtext.FromName,
-                                    new UUID(IMtext.ToUUID),
-                                    (byte)InstantMessageDialog.BusyAutoResponse,
-                                    IMtext.Message, true,
-                                    new Vector3());
 
                 // client.SendInstantMessage(im);
 
@@ -198,12 +192,7 @@ namespace Aurora.Modules
             if ((im.offline != 0)
                 && (!im.fromGroup || (im.fromGroup && m_ForwardOfflineGroupMessages)))
             {
-                OfflineMessage message = new OfflineMessage();
-                message.FromName = im.fromAgentName;
-                message.FromUUID = new UUID(im.fromAgentID);
-                message.Message = im.message;
-                message.ToUUID = new UUID(im.toAgentID);
-                OfflineMessagesConnector.AddOfflineMessage(message);
+                OfflineMessagesConnector.AddOfflineMessage(im);
 
                 if (im.dialog == (byte)InstantMessageDialog.MessageFromAgent)
                 {
@@ -217,6 +206,44 @@ namespace Aurora.Modules
                             (byte)InstantMessageDialog.MessageFromAgent,
                             "User is not logged in. Message saved.",
                             false, new Vector3()));
+                }
+
+                if (im.dialog == (byte)InstantMessageDialog.InventoryOffered)
+                {
+                    OfflineMessagesConnector.AddOfflineMessage(im);
+                    IClientAPI client = FindClient(new UUID(im.fromAgentID));
+                    if (client == null)
+                        return;
+
+                    client.SendAlertMessage("User is not online. Inventory has been saved");
+                }
+            }
+            else if (im.offline == 0)
+            {
+                OfflineMessagesConnector.AddOfflineMessage(im);
+
+                if (im.dialog == (byte)InstantMessageDialog.MessageFromAgent)
+                {
+                    IClientAPI client = FindClient(new UUID(im.fromAgentID));
+                    if (client == null)
+                        return;
+
+                    client.SendInstantMessage(new GridInstantMessage(
+                            null, new UUID(im.toAgentID),
+                            "System", new UUID(im.fromAgentID),
+                            (byte)InstantMessageDialog.MessageFromAgent,
+                            "User is not able to be found. Message saved.",
+                            false, new Vector3()));
+                }
+
+                if (im.dialog == (byte)InstantMessageDialog.InventoryOffered)
+                {
+                    OfflineMessagesConnector.AddOfflineMessage(im);
+                    IClientAPI client = FindClient(new UUID(im.fromAgentID));
+                    if (client == null)
+                        return;
+
+                    client.SendAlertMessage("User not able to be found. Inventory has been saved");
                 }
             }
         }

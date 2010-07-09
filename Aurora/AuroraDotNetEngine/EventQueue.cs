@@ -160,7 +160,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             catch (Exception ex)
             {
-                QIS.ID.ShowError(ex, "executing", false);
+                QIS.ID.DisplayUserNotification(ex.Message, "executing", false, true);
             }
         }
     }

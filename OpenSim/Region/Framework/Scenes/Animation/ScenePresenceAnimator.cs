@@ -58,6 +58,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
         private int m_animTickFall;
         private int m_animTickJump;
         private int m_timesBeforeSlowFlyIsOff = 0;
+        private int m_animTickStandup = 0;
         
         /// <value>
         /// The scene presence that this animator applies to
@@ -131,8 +132,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                 if (m_animations.TrySetDefaultAnimation(
                     anim, m_scenePresence.ControllingClient.NextAnimationSequenceNumber, m_scenePresence.UUID))
                 {
-                    // 16384 is CHANGED_ANIMATION
-                    m_scenePresence.SendScriptEventToAttachments("changed", new Object[] { 16384 });
+                    m_scenePresence.SendScriptEventToAttachments("changed", new Object[] { Changed.ANIMATION });
                     SendAnimPack();
                 }
             }
@@ -145,8 +145,10 @@ namespace OpenSim.Region.Framework.Scenes.Animation
         {
             const float FALL_DELAY = 0.33f;
             const float PREJUMP_DELAY = 0.25f;
-            const float SOFTLAND_FORCE = -0.4f;
+            const float SOFTLAND_FORCE = 8f;
+            const float LAND_FORCE = 15f;
             const float SLOWFLY_DELAY = 25f;
+            const float STANDUP_TIME = 2f;
 
             #region Inputs
             if (m_scenePresence.SitGround)
@@ -200,6 +202,20 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             #endregion Inputs
 
             #region Flying
+
+            float standupElapsed = (float)(Environment.TickCount - m_animTickStandup) / 1000f;
+            if (standupElapsed < STANDUP_TIME)
+            {
+                // Falling long enough to trigger the animation
+                return "STANDUP";
+            }
+            else
+                if (m_animTickStandup != 0)
+                {
+                    m_animTickStandup = 0;
+                    return "BRUSH";
+                }
+
             if (actor != null && actor.Flying)
             {
                 m_animTickFall = 0;
@@ -313,13 +329,27 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             m_animTickJump = 0;
             if (m_movementAnimation == "FALLDOWN")
             {
-                m_animTickFall = Environment.TickCount;
-
                 //This is an experimentally found variable, but it makes soft landings look good.
                 // -- Revolution
-                if (actor.Velocity.Z < SOFTLAND_FORCE)
+                float DotProduct = (actor.Velocity.X * actor.Velocity.X) + (actor.Velocity.Y + actor.Velocity.Y) + (actor.Velocity.Z * actor.Velocity.Z);
+                DotProduct = (float)Math.Sqrt((double)DotProduct);
+                if (DotProduct < SOFTLAND_FORCE)
+                {
+                    m_animTickFall = Environment.TickCount;
+
+                    return "SOFT_LAND";
+                }
+                else if (Math.Abs(actor.Velocity.Z) < LAND_FORCE)
+                {
+                    m_animTickFall = Environment.TickCount;
+
                     return "LAND";
-                return "SOFT_LAND";
+                }
+                else
+                {
+                    m_animTickStandup = Environment.TickCount;
+                    return "STANDUP";
+                }
             }
             else if (m_movementAnimation == "LAND")
             {

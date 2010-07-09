@@ -90,5 +90,39 @@ namespace OpenSim.Framework
                 _fromAgentID ^ _toAgentID, _offline, _position, new byte[0])
         {
         }
+        public GridInstantMessage(System.Collections.Generic.Dictionary<string, object> RetVal)
+        {
+            fromAgentID = UUID.Parse(RetVal["fromAgentID"].ToString()).Guid;
+            fromAgentName = RetVal["fromAgentName"].ToString();
+            toAgentID = UUID.Parse(RetVal["toAgentID"].ToString()).Guid;
+            dialog = byte.Parse(RetVal["dialog"].ToString());
+            fromGroup = bool.Parse(RetVal["fromGroup"].ToString());
+            message = RetVal["message"].ToString();
+            offline = byte.Parse(RetVal["offline"].ToString());
+            Position = Vector3.Parse(RetVal["Position"].ToString());
+            binaryBucket = Utils.StringToBytes(RetVal["binaryBucket"].ToString());
+            ParentEstateID = uint.Parse(RetVal["ParentEstateID"].ToString());
+            RegionID = UUID.Parse(RetVal["RegionID"].ToString()).Guid;
+            timestamp = uint.Parse(RetVal["timestamp"].ToString());
+        }
+
+        public System.Collections.Generic.Dictionary<string, object> ToKeyValuePairs()
+        {
+            System.Collections.Generic.Dictionary<string, object> RetVal = new System.Collections.Generic.Dictionary<string, object>();
+            RetVal.Add("fromAgentID", fromAgentID);
+            RetVal.Add("fromAgentName", fromAgentName);
+            RetVal.Add("toAgentID", toAgentID);
+            RetVal.Add("dialog", dialog);
+            RetVal.Add("fromGroup", fromGroup);
+            RetVal.Add("message", message);
+            RetVal.Add("imSessionID", imSessionID);
+            RetVal.Add("offline", offline);
+            RetVal.Add("Position", Position);
+            RetVal.Add("binaryBucket", binaryBucket);
+            RetVal.Add("ParentEstateID", ParentEstateID);
+            RetVal.Add("RegionID", RegionID);
+            RetVal.Add("timestamp", timestamp);
+            return RetVal;
+        }
     }
 }

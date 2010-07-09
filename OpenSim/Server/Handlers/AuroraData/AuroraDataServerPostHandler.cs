@@ -352,10 +352,10 @@ namespace OpenSim.Server.Handlers.AuroraData
             Dictionary<string, object> result = new Dictionary<string, object>();
 
             UUID PRINCIPALID = UUID.Parse(request["PRINCIPALID"].ToString());
-            OfflineMessage[] Messages = OfflineMessagesConnector.GetOfflineMessages(PRINCIPALID);
+            GridInstantMessage[] Messages = OfflineMessagesConnector.GetOfflineMessages(PRINCIPALID);
 
             int i = 0;
-            foreach (OfflineMessage Message in Messages)
+            foreach (GridInstantMessage Message in Messages)
             {
                 result.Add(ConvertDecString(i), Message.ToKeyValuePairs());
                 i++;
@@ -382,7 +382,7 @@ namespace OpenSim.Server.Handlers.AuroraData
         {
             Dictionary<string, object> result = new Dictionary<string, object>();
 
-            OfflineMessage message = new OfflineMessage(request);
+            GridInstantMessage message = new GridInstantMessage(request);
             OfflineMessagesConnector.AddOfflineMessage(message);
 
             return SuccessResult();

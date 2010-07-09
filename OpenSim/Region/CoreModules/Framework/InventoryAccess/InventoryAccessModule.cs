@@ -599,6 +599,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                             //
                             if (((item.CurrentPermissions & (uint)PermissionMask.Copy) == 0) && (!attachment))
                                 remoteClient.SendBulkUpdateInventory(item);
+                            remoteClient.SendAlertMessage("You do not have permission to rez objects here.");
                             return null;
                         }
 

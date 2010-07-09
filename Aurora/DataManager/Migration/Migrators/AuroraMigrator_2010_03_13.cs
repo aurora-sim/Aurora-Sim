@@ -198,8 +198,6 @@ namespace Aurora.DataManager.Migration.Migrators
                 ));
 
             AddSchema("offlinemessages", ColDefs(
-                ColDef("FromUUID", ColumnTypes.String50),
-                ColDef("FromName", ColumnTypes.String50),
                 ColDef("ToUUID", ColumnTypes.String50),
                 ColDef("Message", ColumnTypes.String1024)
                 ));
