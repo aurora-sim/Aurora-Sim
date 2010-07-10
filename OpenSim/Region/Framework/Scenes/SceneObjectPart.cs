@@ -38,6 +38,7 @@ using OpenMetaverse;
 using OpenMetaverse.Packets;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
+using OpenSim.Region.Framework.Scenes.Scripting;
 using OpenSim.Region.Physics.Manager;
 
 namespace OpenSim.Region.Framework.Scenes
@@ -57,10 +58,7 @@ namespace OpenSim.Region.Framework.Scenes
         OWNER = 128,
         REGION_RESTART = 256,
         REGION = 512,
-        TELEPORT = 1024,
-        MEDIA = 2048,
-        ANIMATION = 16384,
-        STATE = 32768
+        TELEPORT = 1024
     }
 
     // I don't really know where to put this except here.
@@ -106,7 +104,7 @@ namespace OpenSim.Region.Framework.Scenes
 
     #endregion Enumerations
 
-    public class SceneObjectPart : ISceneEntity
+    public class SceneObjectPart : IScriptHost, ISceneEntity
     {
         /// <value>
         /// Denote all sides of the prim
@@ -147,9 +145,6 @@ namespace OpenSim.Region.Framework.Scenes
         [XmlIgnore]
         public Vector3 StatusSandboxPos;
 
-        [XmlIgnore]
-        public int m_UseSoundQueue = 0;
-
         // TODO: This needs to be persisted in next XML version update!
         [XmlIgnore]
         public readonly int[] PayPrice = {-2,-2,-2,-2,-2};
@@ -183,6 +178,9 @@ namespace OpenSim.Region.Framework.Scenes
 
         [XmlIgnore]
         public UUID FromItemID;
+
+        [XmlIgnore]
+        public UUID FromFolderID;
 
         [XmlIgnore]
         public int STATUS_ROTATE_X;
@@ -331,7 +329,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         // TODO: Collision sound should have default.
         private UUID m_collisionSound;
-        private UUID m_collisionSprite;
         private float m_collisionSoundVolume;
 
         #endregion Fields
@@ -414,7 +411,7 @@ namespace OpenSim.Region.Framework.Scenes
         private uint _category;
         private Int32 _creationDate;
         private uint _parentID = 0;
-        private List<UUID> m_sitTargetAvatar = new List<UUID>();
+        private UUID m_sitTargetAvatar = UUID.Zero;
         private uint _baseMask = (uint)PermissionMask.All;
         private uint _ownerMask = (uint)PermissionMask.All;
         private uint _groupMask = (uint)PermissionMask.None;
@@ -424,12 +421,6 @@ namespace OpenSim.Region.Framework.Scenes
         private DateTime m_expires;
         private DateTime m_rezzed;
         private bool m_createSelected = false;
-        private string m_currentMediaVersion = "x-mv:0000000001/00000000-0000-0000-0000-000000000000";
-        public string CurrentMediaVersion
-        {
-            get { return m_currentMediaVersion; }
-            set { m_currentMediaVersion = value; }
-        }
 
         public UUID CreatorID 
         {
@@ -571,9 +562,7 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_scriptAccessPin; }
             set { m_scriptAccessPin = (int)value; }
         }
-
         private SceneObjectPart m_PlaySoundMasterPrim = null;
-        [XmlIgnore]
         public SceneObjectPart PlaySoundMasterPrim
         {
             get { return m_PlaySoundMasterPrim; }
@@ -581,7 +570,6 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         private List<SceneObjectPart> m_PlaySoundSlavePrims = new List<SceneObjectPart>();
-        [XmlIgnore]
         public List<SceneObjectPart> PlaySoundSlavePrims
         {
             get { return m_PlaySoundSlavePrims; }
@@ -589,7 +577,6 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         private SceneObjectPart m_LoopSoundMasterPrim = null;
-        [XmlIgnore]
         public SceneObjectPart LoopSoundMasterPrim
         {
             get { return m_LoopSoundMasterPrim; }
@@ -597,13 +584,13 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         private List<SceneObjectPart> m_LoopSoundSlavePrims = new List<SceneObjectPart>();
-        [XmlIgnore]
         public List<SceneObjectPart> LoopSoundSlavePrims
         {
             get { return m_LoopSoundSlavePrims; }
             set { m_LoopSoundSlavePrims = value; }
         }
 
+        [XmlIgnore]
         public Byte[] TextureAnimation
         {
             get { return m_TextureAnimation; }
@@ -691,17 +678,15 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
                 
-                if (m_sitTargetAvatar.Count != 0)
+                // TODO if we decide to do sitting in a more SL compatible way (multiple avatars per prim), this has to be fixed, too
+                if (m_sitTargetAvatar != UUID.Zero)
                 {
-                    foreach (UUID avID in m_sitTargetAvatar)
+                    if (m_parentGroup != null) // TODO can there be a SOP without a SOG?
                     {
-                        if (m_parentGroup != null)
+                        ScenePresence avatar;
+                        if (m_parentGroup.Scene.TryGetScenePresence(m_sitTargetAvatar, out avatar))
                         {
-                            ScenePresence avatar;
-                            if (m_parentGroup.Scene.TryGetScenePresence(avID, out avatar))
-                            {
-                                avatar.ParentPosition = GetWorldPosition();
-                            }
+                            avatar.ParentPosition = GetWorldPosition();
                         }
                     }
                 }
@@ -870,46 +855,10 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
         }
-        #region Only used for serialization as Color cannot be serialized
-        public int ColorA
-        {
-            get { return m_color.A; }
-            set
-            {
-                m_color = System.Drawing.Color.FromArgb(value, m_color.R, m_color.G, m_color.B);
-            }
-        }
-        public int ColorR
-        {
-            get { return m_color.R; }
-            set
-            {
-                m_color = System.Drawing.Color.FromArgb(m_color.A, value, m_color.G, m_color.B);
-            }
-        }
-        public int ColorG
-        {
-            get { return m_color.G; }
-            set
-            {
-                m_color = System.Drawing.Color.FromArgb(m_color.A, m_color.R, value, m_color.B);
-            }
-        }
-        public int ColorB
-        {
-            get { return m_color.B; }
-            set
-            {
-                m_color = System.Drawing.Color.FromArgb(m_color.A, m_color.R, m_color.G, value);
-            }
-        }
-
-        #endregion
 
         /// <value>
         /// Text color.
         /// </value>
-        [XmlIgnore]
         public Color Color
         {
             get { return m_color; }
@@ -989,35 +938,31 @@ namespace OpenSim.Region.Framework.Scenes
                     TriggerScriptChangedEvent(Changed.SHAPE);
             }
         }
-
+        
         public Vector3 Scale
         {
             get { return m_shape.Scale; }
             set
             {
+                StoreUndoState();
                 if (m_shape != null)
                 {
-                    if (m_shape.Scale != value)
+                    m_shape.Scale = value;
+
+                    PhysicsActor actor = PhysActor;
+                    if (actor != null && m_parentGroup != null)
                     {
-                        StoreUndoState();
-
-                        m_shape.Scale = value;
-
-                        PhysicsActor actor = PhysActor;
-                        if (actor != null && m_parentGroup != null)
+                        if (m_parentGroup.Scene != null)
                         {
-                            if (m_parentGroup.Scene != null)
+                            if (m_parentGroup.Scene.PhysicsScene != null)
                             {
-                                if (m_parentGroup.Scene.PhysicsScene != null)
-                                {
-                                    actor.Size = m_shape.Scale;
-                                    m_parentGroup.Scene.PhysicsScene.AddPhysicsActorTaint(actor);
-                                }
+                                actor.Size = m_shape.Scale;
+                                m_parentGroup.Scene.PhysicsScene.AddPhysicsActorTaint(actor);
                             }
                         }
-                        TriggerScriptChangedEvent(Changed.SCALE);
                     }
                 }
+                TriggerScriptChangedEvent(Changed.SCALE);
             }
         }
         public byte UpdateFlag
@@ -1197,7 +1142,7 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         [XmlIgnore]
-        public List<UUID> SitTargetAvatar
+        public UUID SitTargetAvatar
         {
             get { return m_sitTargetAvatar; }
             set { m_sitTargetAvatar = value; }
@@ -1245,15 +1190,6 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 m_collisionSound = value;
                 aggregateScriptEvents();
-            }
-        }
-
-        public UUID CollisionSprite
-        {
-            get { return m_collisionSprite; }
-            set
-            {
-                m_collisionSprite = value;
             }
         }
 
@@ -1554,6 +1490,10 @@ namespace OpenSim.Region.Framework.Scenes
                         DoPhysicsPropertyUpdate(RigidBody, true);
                         PhysActor.SetVolumeDetect(VolumeDetectActive ? 1 : 0);
                     }
+                    else
+                    {
+                        m_log.DebugFormat("[SPEW]: physics actor is null for {0} with parent {1}", UUID, this.ParentGroup.UUID);
+                    }
                 }
             }
         }
@@ -1588,7 +1528,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// Duplicates this part.
         /// </summary>
         /// <returns></returns>
-        public SceneObjectPart Copy(uint localID, UUID AgentID, UUID GroupID, int linkNum, bool userExposed, bool ChangeScripts)
+        public SceneObjectPart Copy(uint localID, UUID AgentID, UUID GroupID, int linkNum, bool userExposed)
         {
             SceneObjectPart dupe = (SceneObjectPart)MemberwiseClone();
             dupe.m_shape = m_shape.Copy();
@@ -1620,11 +1560,9 @@ namespace OpenSim.Region.Framework.Scenes
             dupe.m_inventory = new SceneObjectPartInventory(dupe);
             dupe.m_inventory.Items = (TaskInventoryDictionary)m_inventory.Items.Clone();
 
-            // Move afterwards ResetIDs as it clears the localID
-            dupe.LocalId = localID;
             if (userExposed)
             {
-                dupe.ResetIDs(linkNum, ChangeScripts);
+                dupe.ResetIDs(linkNum);
                 dupe.m_inventory.HasInventoryChanged = true;
             }
             else
@@ -1647,23 +1585,11 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     m_parentGroup.Scene.AssetService.Get(dupe.m_shape.SculptTexture.ToString(), dupe, AssetReceived); 
                 }
-
-                PrimitiveBaseShape pbs = dupe.Shape;
-                if (dupe.PhysActor != null)
-                {
-                    dupe.PhysActor = ParentGroup.Scene.PhysicsScene.AddPrimShape(
-                        dupe.Name,
-                        pbs,
-                        dupe.AbsolutePosition,
-                        dupe.Scale,
-                        dupe.RotationOffset,
-                        dupe.PhysActor.IsPhysical);
-
-                    dupe.PhysActor.LocalID = dupe.LocalId;
-                    dupe.DoPhysicsPropertyUpdate(dupe.PhysActor.IsPhysical, true);
-                }
+                
+                bool UsePhysics = ((dupe.ObjectFlags & (uint)PrimFlags.Physics) != 0);
+                dupe.DoPhysicsPropertyUpdate(UsePhysics, true);
             }
-
+            
             return dupe;
         }
 
@@ -1877,7 +1803,7 @@ namespace OpenSim.Region.Framework.Scenes
             return part;
         }
 
-        public List<UUID> GetAvatarOnSitTarget()
+        public UUID GetAvatarOnSitTarget()
         {
             return m_sitTargetAvatar;
         }
@@ -2160,11 +2086,6 @@ namespace OpenSim.Region.Framework.Scenes
             if (startedColliders.Count > 0 && CollisionSound != UUID.Zero && CollisionSoundVolume > 0.0f)
             {
                 SendSound(CollisionSound.ToString(), CollisionSoundVolume, true, (byte)0, 0, false, false);
-            }
-            if (CollisionSprite != UUID.Zero && CollisionSoundVolume > 0.0f)
-            {
-                // TODO: make a sprite!
-
             }
 
             if ((m_parentGroup.RootPart.ScriptEvents & scriptEvents.collision_start) != 0)
@@ -2695,6 +2616,7 @@ namespace OpenSim.Region.Framework.Scenes
                 //m_parentGroup.RootPart.m_groupPosition = newpos;
             }
             ScheduleTerseUpdate();
+
             //SendTerseUpdateToAllClients();
         }
 
@@ -2765,12 +2687,12 @@ namespace OpenSim.Region.Framework.Scenes
         /// generating new UUIDs for all the items in the inventory.
         /// </summary>
         /// <param name="linkNum">Link number for the part</param>
-        public void ResetIDs(int linkNum, bool ChangeScripts)
+        public void ResetIDs(int linkNum)
         {
             UUID = UUID.Random();
             LinkNum = linkNum;
-            Inventory.ResetInventoryIDs(ChangeScripts);
             LocalId = 0;
+            Inventory.ResetInventoryIDs();
         }
 
         /// <summary>
@@ -2779,7 +2701,8 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="scale"></param>
         public void Resize(Vector3 scale)
         {
-            Scale = scale;
+            StoreUndoState();
+            m_shape.Scale = scale;
 
             ParentGroup.HasGroupChanged = true;
             ScheduleFullUpdate();
@@ -3216,20 +3139,9 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void SetAvatarOnSitTarget(UUID avatarID)
         {
+            m_sitTargetAvatar = avatarID;
             if (ParentGroup != null)
-            {
-                ParentGroup.TriggerSetSitAvatarUUID(avatarID);
                 ParentGroup.TriggerScriptChangedEvent(Changed.LINK);
-            }
-        }
-
-        public void RemoveAvatarOnSitTarget(UUID avatarID)
-        {
-            if (ParentGroup != null)
-            {
-                ParentGroup.TriggerRemoveSitAvatarUUID(avatarID);
-                ParentGroup.TriggerScriptChangedEvent(Changed.LINK);
-            }
         }
 
         public void SetAxisRotation(int axis, int rotate)
@@ -3317,14 +3229,6 @@ namespace OpenSim.Region.Framework.Scenes
             if (PhysActor != null)
             {
                 PhysActor.VehicleRotationParam(param, rotation);
-            }
-        }
-
-        public void SetPhysActorCameraPos(Vector3 CameraRotation)
-        {
-            if (PhysActor != null)
-            {
-                PhysActor.SetCameraPos(CameraRotation);
             }
         }
 
@@ -3593,9 +3497,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="alpha"></param>
         public void SetText(string text, Vector3 color, double alpha)
         {
-            //No triggering Changed_Color, so not using Color
-            //Color = ...
-            m_color = Color.FromArgb((int)(alpha * 0xff),
+            Color = Color.FromArgb((int) (alpha*0xff),
                                    (int) (color.X*0xff),
                                    (int) (color.Y*0xff),
                                    (int) (color.Z*0xff));
@@ -4088,63 +3990,6 @@ namespace OpenSim.Region.Framework.Scenes
             serializer.Serialize(xmlWriter, this);
         }
 
-        public string ToLLSD()
-        {
-            OpenMetaverse.StructuredData.OSDMap map = new OpenMetaverse.StructuredData.OSDMap();
-            map.Add("CurrentMediaVersion", OpenMetaverse.StructuredData.OSDString.FromString(CurrentMediaVersion));
-            map.Add("CreatorID", OpenMetaverse.StructuredData.OSDString.FromUUID(CreatorID));
-            map.Add("FolderID", OpenMetaverse.StructuredData.OSDString.FromUUID(FolderID));
-            map.Add("InventorySerial", OpenMetaverse.StructuredData.OSDString.FromUInteger(InventorySerial));
-            //map.Add("TaskInventory", OpenMetaverse.StructuredData.OSDString.FromString(TaskInventory));
-            map.Add("ObjectFlags", OpenMetaverse.StructuredData.OSDString.FromUInteger(ObjectFlags));
-            map.Add("UUID", OpenMetaverse.StructuredData.OSDString.FromUUID(UUID));
-            map.Add("LocalId", OpenMetaverse.StructuredData.OSDString.FromUInteger(LocalId));
-            map.Add("Name", OpenMetaverse.StructuredData.OSDString.FromString(Name));
-            map.Add("Material", OpenMetaverse.StructuredData.OSDString.FromBinary(Material));
-            map.Add("PassTouches", OpenMetaverse.StructuredData.OSDString.FromBoolean(PassTouches));
-            map.Add("RegionHandle", OpenMetaverse.StructuredData.OSDString.FromULong(RegionHandle));
-            map.Add("ScriptAccessPin", OpenMetaverse.StructuredData.OSDString.FromInteger(ScriptAccessPin));
-            map.Add("GroupPosition", OpenMetaverse.StructuredData.OSDString.FromVector3(GroupPosition));
-            map.Add("OffsetPosition", OpenMetaverse.StructuredData.OSDString.FromVector3(OffsetPosition));
-            map.Add("RotationOffset", OpenMetaverse.StructuredData.OSDString.FromQuaternion(RotationOffset));
-            map.Add("Velocity", OpenMetaverse.StructuredData.OSDString.FromVector3(Velocity));
-            map.Add("AngularVelocity", OpenMetaverse.StructuredData.OSDString.FromVector3(AngularVelocity));
-            map.Add("Acceleration", OpenMetaverse.StructuredData.OSDString.FromVector3(Acceleration));
-            map.Add("Description", OpenMetaverse.StructuredData.OSDString.FromString(Description));
-            //map.Add("Color", OpenMetaverse.StructuredData.OSDString.FromColor4(Color));
-            map.Add("Text", OpenMetaverse.StructuredData.OSDString.FromString(Text));
-            map.Add("SitName", OpenMetaverse.StructuredData.OSDString.FromString(SitName));
-            map.Add("TouchName", OpenMetaverse.StructuredData.OSDString.FromString(TouchName));
-            map.Add("LinkNum", OpenMetaverse.StructuredData.OSDString.FromInteger(LinkNum));
-            map.Add("ClickAction", OpenMetaverse.StructuredData.OSDString.FromBinary(ClickAction));
-            //map.Add("Shape", OpenMetaverse.StructuredData.OSDString.FromString(Shape));
-            map.Add("Scale", OpenMetaverse.StructuredData.OSDString.FromVector3(Scale));
-            map.Add("UpdateFlag", OpenMetaverse.StructuredData.OSDString.FromBinary(UpdateFlag));
-            map.Add("SitTargetOrientation", OpenMetaverse.StructuredData.OSDString.FromQuaternion(SitTargetOrientation));
-            map.Add("SitTargetPosition", OpenMetaverse.StructuredData.OSDString.FromVector3(SitTargetPosition));
-            map.Add("SitTargetPositionLL", OpenMetaverse.StructuredData.OSDString.FromVector3(SitTargetPositionLL));
-            map.Add("SitTargetOrientationLL", OpenMetaverse.StructuredData.OSDString.FromQuaternion(SitTargetOrientationLL));
-            map.Add("ParentID", OpenMetaverse.StructuredData.OSDString.FromUInteger(ParentID));
-            map.Add("CreationDate", OpenMetaverse.StructuredData.OSDString.FromInteger(CreationDate));
-            map.Add("Category", OpenMetaverse.StructuredData.OSDString.FromUInteger(Category));
-            map.Add("SalePrice", OpenMetaverse.StructuredData.OSDString.FromInteger(SalePrice));
-            map.Add("ObjectSaleType", OpenMetaverse.StructuredData.OSDString.FromInteger(ObjectSaleType));
-            map.Add("OwnershipCost", OpenMetaverse.StructuredData.OSDString.FromInteger(OwnershipCost));
-            map.Add("GroupID", OpenMetaverse.StructuredData.OSDString.FromUUID(GroupID));
-            map.Add("OwnerID", OpenMetaverse.StructuredData.OSDString.FromUUID(OwnerID));
-            map.Add("LastOwnerID", OpenMetaverse.StructuredData.OSDString.FromUUID(LastOwnerID));
-            map.Add("BaseMask", OpenMetaverse.StructuredData.OSDString.FromUInteger(BaseMask));
-            map.Add("OwnerMask", OpenMetaverse.StructuredData.OSDString.FromUInteger(OwnerMask));
-            map.Add("GroupMask", OpenMetaverse.StructuredData.OSDString.FromUInteger(GroupMask));
-            map.Add("EveryoneMask", OpenMetaverse.StructuredData.OSDString.FromUInteger(EveryoneMask));
-            map.Add("NextOwnerMask", OpenMetaverse.StructuredData.OSDString.FromUInteger(NextOwnerMask));
-            map.Add("Flags", OpenMetaverse.StructuredData.OSDString.FromInteger((int)Flags));
-            map.Add("CollisionSound", OpenMetaverse.StructuredData.OSDString.FromUUID(CollisionSound));
-            map.Add("CollisionSprite", OpenMetaverse.StructuredData.OSDString.FromUUID(CollisionSprite));
-            map.Add("CollisionSoundVolume", OpenMetaverse.StructuredData.OSDString.FromUInteger((uint)CollisionSoundVolume));
-            return OpenMetaverse.StructuredData.OSDParser.SerializeJsonString(map);
-        }
-
         public void TriggerScriptChangedEvent(Changed val)
         {
             if (m_parentGroup != null && m_parentGroup.Scene != null)
@@ -4575,7 +4420,6 @@ namespace OpenSim.Region.Framework.Scenes
             m_shape.PathTaperY = shapeBlock.PathTaperY;
             m_shape.PathTwist = shapeBlock.PathTwist;
             m_shape.PathTwistBegin = shapeBlock.PathTwistBegin;
-            Shape = m_shape;
             if (PhysActor != null)
             {
                 PhysActor.Shape = m_shape;
@@ -4632,36 +4476,8 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="textureEntry"></param>
         public void UpdateTextureEntry(byte[] textureEntry)
         {
-            Primitive.TextureEntry oldEntry = m_shape.Textures;
             m_shape.TextureEntry = textureEntry;
-            if (m_shape.Textures.DefaultTexture.RGBA.A != oldEntry.DefaultTexture.RGBA.A ||
-                m_shape.Textures.DefaultTexture.RGBA.R != oldEntry.DefaultTexture.RGBA.R ||
-                m_shape.Textures.DefaultTexture.RGBA.G != oldEntry.DefaultTexture.RGBA.G ||
-                m_shape.Textures.DefaultTexture.RGBA.B != oldEntry.DefaultTexture.RGBA.B)
-            {
-                TriggerScriptChangedEvent(Changed.COLOR);
-            }
-            else
-            {
-                for (int i = 0; i < 6; i++)
-                {
-                    if (m_shape.Textures.FaceTextures[i] != null &&
-                        oldEntry.FaceTextures[i] != null)
-                    {
-                        if (m_shape.Textures.FaceTextures[i].RGBA.A != oldEntry.FaceTextures[i].RGBA.A ||
-                            m_shape.Textures.FaceTextures[i].RGBA.R != oldEntry.FaceTextures[i].RGBA.R ||
-                            m_shape.Textures.FaceTextures[i].RGBA.G != oldEntry.FaceTextures[i].RGBA.G ||
-                            m_shape.Textures.FaceTextures[i].RGBA.B != oldEntry.FaceTextures[i].RGBA.B)
-                        {
-                            TriggerScriptChangedEvent(Changed.COLOR);
-                        }
-                        if (m_shape.Textures.FaceTextures[i].TextureID != oldEntry.FaceTextures[i].TextureID)
-                        {
-                            TriggerScriptChangedEvent(Changed.TEXTURE);
-                        }
-                    }
-                }
-            }
+            TriggerScriptChangedEvent(Changed.TEXTURE);
 
             ParentGroup.HasGroupChanged = true;
             //This is madness..
@@ -4738,6 +4554,15 @@ namespace OpenSim.Region.Framework.Scenes
                 ScheduleFullUpdate();
                 return;
             }
+
+            //if ((GetEffectiveObjectFlags() & (uint)PrimFlags.Scripted) != 0)
+            //{
+            //    m_parentGroup.Scene.EventManager.OnScriptTimerEvent += handleTimerAccounting;
+            //}
+            //else
+            //{
+            //    m_parentGroup.Scene.EventManager.OnScriptTimerEvent -= handleTimerAccounting;
+            //}
 
             LocalFlags=(PrimFlags)objectflagupdate;
 
@@ -4862,7 +4687,6 @@ namespace OpenSim.Region.Framework.Scenes
 
             Inventory.ApplyNextOwnerPermissions();
         }
-
         public void UpdateLookAt()
         {
             try
@@ -4899,24 +4723,6 @@ namespace OpenSim.Region.Framework.Scenes
         {
             Color color = Color;
             return new Color4(color.R, color.G, color.B, (byte)(0xFF - color.A));
-        }
-
-        public void SetSoundQueueing(int queue)
-        {
-            m_UseSoundQueue = queue;
-        }
-
-        public void SetConeOfSilence(double radius)
-        {
-            ISoundModule module = m_parentGroup.Scene.RequestModuleInterface<ISoundModule>();
-            //TODO: Save this property!
-            if (module != null)
-            {
-                if (radius != 0)
-                    module.AddConeOfSilence(UUID, AbsolutePosition, radius);
-                else
-                    module.RemoveConeOfSilence(UUID);
-            }
         }
     }
 }
