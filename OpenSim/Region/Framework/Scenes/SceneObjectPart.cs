@@ -180,9 +180,6 @@ namespace OpenSim.Region.Framework.Scenes
         public UUID FromItemID;
 
         [XmlIgnore]
-        public UUID FromFolderID;
-
-        [XmlIgnore]
         public int STATUS_ROTATE_X;
 
         [XmlIgnore]
@@ -320,6 +317,11 @@ namespace OpenSim.Region.Framework.Scenes
         protected Vector3 m_lastAcceleration;
         protected Vector3 m_lastAngularVelocity;
         protected int m_lastTerseSent;
+        
+        /// <summary>
+        /// Stores media texture data
+        /// </summary>
+        protected string m_mediaUrl;
 
         // TODO: Those have to be changed into persistent properties at some later point,
         // or sit-camera on vehicles will break on sim-crossing.
@@ -965,10 +967,31 @@ namespace OpenSim.Region.Framework.Scenes
                 TriggerScriptChangedEvent(Changed.SCALE);
             }
         }
+        
         public byte UpdateFlag
         {
             get { return m_updateFlag; }
             set { m_updateFlag = value; }
+        }
+        
+        /// <summary>
+        /// Used for media on a prim.
+        /// </summary>
+        /// Do not change this value directly - always do it through an IMoapModule.
+        public string MediaUrl 
+        { 
+            get
+            {
+                return m_mediaUrl; 
+            }
+            
+            set               
+            {   
+                m_mediaUrl = value;
+                
+                if (ParentGroup != null)
+                    ParentGroup.HasGroupChanged = true;        
+            }
         }
 
         [XmlIgnore]
@@ -976,7 +999,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get { return m_createSelected; }
             set { m_createSelected = value; }
-        }
+        }                
 
         #endregion
 
@@ -4140,10 +4163,6 @@ namespace OpenSim.Region.Framework.Scenes
                     case 16:
                         _nextOwnerMask = ApplyMask(_nextOwnerMask, set, mask) &
                                 baseMask;
-                        // Prevent the client from creating no mod, no copy
-                        // objects
-                        if ((_nextOwnerMask & (uint)PermissionMask.Copy) == 0)
-                            _nextOwnerMask |= (uint)PermissionMask.Transfer;
                         break;
                 }
                 SendFullUpdateToAllClients();
