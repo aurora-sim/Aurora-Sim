@@ -39,29 +39,9 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <summary>
         /// Get the media entry for a given prim face.
         /// </summary>
-        /// A copy of the media entry is returned rather than the original, so this can be altered at will without
-        /// affecting the original settings.
         /// <param name="part"></param>
         /// <param name="face"></param>
         /// <returns></returns>
-        MediaEntry GetMediaEntry(SceneObjectPart part, int face);
-        
-        /// <summary>
-        /// Set the media entry for a given prim face.
-        /// </summary>
-        /// <param name="SceneObjectPart"></param>
-        /// <param name="face"></param>
-        /// <param name="me"></param>
-        void SetMediaEntry(SceneObjectPart part, int face, MediaEntry me);
-        
-        /// <summary>
-        /// Clear the media entry for a given prim face.
-        /// </summary>
-        /// 
-        /// This is the equivalent of setting a media entry of null
-        /// 
-        /// <param name="part"></param>
-        /// <param name="face">/param>
-        void ClearMediaEntry(SceneObjectPart part, int face);
-    }        
+        MediaEntry GetMediaEntry(SceneObjectPart part, int face);        
+    }
 }
