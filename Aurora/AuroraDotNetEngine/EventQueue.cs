@@ -37,12 +37,51 @@ using OpenMetaverse;
 using log4net;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Scenes;
-using OpenSim.Region.ScriptEngine.Shared;
-using OpenSim.Region.ScriptEngine.Shared.CodeTools;
+using Aurora.ScriptEngine.AuroraDotNetEngine.Plugins;
+using Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools;
+using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
+using Aurora.ScriptEngine.AuroraDotNetEngine.APIs;
+using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
 using Amib.Threading;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
+    public class PerformanceQueue
+    {
+        Queue FirstStartQueue = new Queue(10000);
+        Queue ContinuedQueue = new Queue(10000);
+        public bool GetNext(out object Item)
+        {
+            Item = null;
+            if (FirstStartQueue.Count != 0)
+            {
+                lock (FirstStartQueue)
+                    Item = FirstStartQueue.Dequeue();
+                return true;
+            }
+            if (ContinuedQueue.Count != 0)
+            {
+                lock (ContinuedQueue)
+                    Item = ContinuedQueue.Dequeue();
+                return true;
+            }
+            return false;
+        }
+
+        public void Add(object item, EventPriority priority)
+        {
+            if (priority == EventPriority.FirstStart)
+                lock (FirstStartQueue)
+                    FirstStartQueue.Enqueue(item);
+            else if (priority == EventPriority.Suspended)
+                lock (ContinuedQueue)
+                    ContinuedQueue.Enqueue(item);
+            else if (priority == EventPriority.Continued)
+                lock (ContinuedQueue)
+                    ContinuedQueue.Enqueue(item);
+        }
+    }
+
     public class EventQueue
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -57,111 +96,29 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             SleepTime = sleep;
         }
 
-        public void DoProcessQueue()
+        /*public void DoProcessQueue()
         {
             while (true)
             {
                 try
                 {
-                    Thread.Sleep(SleepTime);
-                    QueueItemStruct QIS = null;
-                    while (ScriptEngine.EventQueue.Dequeue(out QIS))
-                    {
-                        ProcessQIS(QIS);
-                    }
+                    Thread.Sleep(2);
+                    object QIS = null;
+                    //Check timers, etc
+                    m_ScriptEngine.DoOneCmdHandlerPass();
+                    //while (ScriptEngine.EventQueue.Dequeue(out QIS))
+                    if(ScriptEngine.EventPerformanceTestQueue.GetNext(out QIS))
+                        ProcessQIS(QIS as QueueItemStruct);
                 }
                 catch (Exception ex)
                 {
+                    if (ex is InvalidOperationException)
+                        continue;
                     m_log.WarnFormat("[{0}]: Handled exception stage 2 in the Event Queue: " + ex.Message, m_ScriptEngine.ScriptEngineName);
                 }
             }
-        }
+        }*/
 
-        public static void ProcessQIS(QueueItemStruct QIS)
-        {
-            //Suspended scripts get readded
-            if (QIS.ID.Suspended || QIS.ID.Script == null || QIS.ID.Loading)
-            {
-                ScriptEngine.EventQueue.Enqueue(QIS, ScriptEngine.EventPriority.Suspended);
-                return;
-            }
-
-            if (ScriptEngine.NeedsRemoved.ContainsKey(QIS.ID.ItemID))
-            {
-                int Version = 0;
-                ScriptEngine.NeedsRemoved.TryGetValue(QIS.ID.ItemID, out Version);
-                if (QIS.functionName == "state_entry" || QIS.functionName == "on_rez")
-                {
-                }
-                if (Version >= QIS.VersionID)
-                    return;
-            }
-            if (QIS.functionName == "state_entry" || QIS.functionName == "on_rez")
-            {
-            }
-                
-            //Disabled or not running scripts dont get events saved.
-            if (QIS.ID.Disabled || !QIS.ID.Running)
-                return;
-            try
-            {
-                Guid Running = Guid.Empty;
-                Exception ex;
-                QIS.ID.SetEventParams(QIS.llDetectParams);
-                Running = new Guid(QIS.ID.Script.ExecuteEvent(QIS.ID.State,
-                            QIS.functionName,
-                            QIS.param, QIS.CurrentlyAt, out ex).ToString());
-                if (ex != null)
-                    throw ex;
-                //Finished with nothing left.
-                if (Running == Guid.Empty)
-                {
-                    if (QIS.functionName == "timer")
-                        QIS.ID.TimerQueued = false;
-                    if (QIS.functionName == "control")
-                    {
-                        if (QIS.ID.ControlEventsInQueue > 0)
-                            QIS.ID.ControlEventsInQueue--;
-                    }
-                    if (QIS.functionName == "collision")
-                        QIS.ID.CollisionInQueue = false;
-                    if (QIS.functionName == "touch")
-                        QIS.ID.TouchInQueue = false;
-                    if (QIS.functionName == "land_collision")
-                        QIS.ID.LandCollisionInQueue = false;
-                    if (QIS.functionName == "changed")
-                    {
-                        Changed changed = (Changed)(new LSL_Types.LSLInteger(QIS.param[0].ToString()).value);
-                        lock (QIS.ID.ChangedInQueue)
-                        {
-                            if (QIS.ID.ChangedInQueue.Contains(changed))
-                                QIS.ID.ChangedInQueue.Remove(changed);
-                        }
-                    }
-                    return;
-                }
-                else
-                {
-                    //Did not finish so requeue it
-                    QIS.CurrentlyAt = Running;
-                    ScriptEngine.EventQueue.Enqueue(QIS, ScriptEngine.EventPriority.Continued);
-                }
-            }
-            catch (SelfDeleteException) // Must delete SOG
-            {
-                if (QIS.ID.part != null && QIS.ID.part.ParentGroup != null)
-                    m_ScriptEngine.findPrimsScene(QIS.ID.part.UUID).DeleteSceneObject(
-                        QIS.ID.part.ParentGroup, false, true);
-            }
-            catch (ScriptDeleteException) // Must delete item
-            {
-                if (QIS.ID.part != null && QIS.ID.part.ParentGroup != null)
-                    QIS.ID.part.Inventory.RemoveInventoryItem(QIS.ID.ItemID);
-            }
-            catch (Exception ex)
-            {
-                QIS.ID.DisplayUserNotification(ex.Message, "executing", false, true);
-            }
-        }
+        
     }
 }

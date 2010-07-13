@@ -733,6 +733,11 @@ namespace OpenSim.Region.Framework.Scenes
             return m_scenePresenceArray;
         }
 
+        public List<ScenePresence> ScenePresences
+        {
+            get { return m_scenePresenceArray; }
+        }
+
         /// <summary>
         /// Request a scene presence by UUID. Fast, indexed lookup.
         /// </summary>
@@ -1034,7 +1039,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             // Once all callers have their delegates configured for parallelism, we can unleash this
             
-            Action<ScenePresence> protectedAction = new Action<ScenePresence>(delegate(ScenePresence sp)
+            /*Action<ScenePresence> protectedAction = new Action<ScenePresence>(delegate(ScenePresence sp)
                 {
                     try
                     {
@@ -1047,8 +1052,8 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 });
             Parallel.ForEach<ScenePresence>(GetScenePresences(), protectedAction);
-            
-            /*// For now, perform actions serially
+            */
+            // For now, perform actions serially
             List<ScenePresence> presences = GetScenePresences();
             foreach (ScenePresence sp in presences)
             {
@@ -1061,7 +1066,7 @@ namespace OpenSim.Region.Framework.Scenes
                     m_log.Info("[BUG] in " + m_parentScene.RegionInfo.RegionName + ": " + e.ToString());
                     m_log.Info("[BUG] Stack Trace: " + e.StackTrace);
                 }
-            }*/
+            }
         }
 
         public bool IsPresenceNear(int meters, Vector3 Position, out Vector3 OtherPosition)

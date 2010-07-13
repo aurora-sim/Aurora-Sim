@@ -316,6 +316,8 @@ namespace OpenSim
                 }
             }
 
+            Console.ReadLine();
+
             _IsHandlingException = false;
         }
     }

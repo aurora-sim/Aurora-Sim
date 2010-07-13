@@ -25,36 +25,47 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.Xml.Serialization;
+using System;
+using System.Runtime.Remoting.Lifetime;
+using System.Threading;
+using System.Reflection;
+using System.Collections;
+using System.Collections.Generic;
+using OpenSim.Framework;
+using OpenSim.Region.Framework.Interfaces;
+using integer = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLInteger;
+using vector = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Vector3;
+using rotation = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Quaternion;
+using key = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString;
+using LSL_List = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.list;
+using LSL_String = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString;
+using LSL_Float = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLFloat;
+using LSL_Integer = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLInteger;
+using Aurora.ScriptEngine.AuroraDotNetEngine;
+using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
+using Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools;
 
-namespace OpenSim.Framework.Communications.XMPP
+namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
 {
-    /// <summary>
-    /// An IQ needs to have one of the follow types set.
-    /// </summary>
-    public enum XmppIqType
+    public partial class ScriptBaseClass : MarshalByRefObject
     {
-        [XmlEnum("set")] set,
-        [XmlEnum("get")] get,
-        [XmlEnum("result")] result,
-        [XmlEnum("error")] error,
-    }
+        public IMOD_Api m_MOD_Functions;
 
-    /// <summary>
-    /// XmppIqStanza needs to be subclassed as the query content is
-    /// specific to the query type.
-    /// </summary>
-    [XmlRoot("iq")]
-    public abstract class XmppIqStanza: XmppStanza
-    {
-        /// <summary>
-        /// IQ type: one of set, get, result, error
-        /// </summary>
-        [XmlAttribute("type")]
-        public XmppIqType Type;
-
-        public XmppIqStanza(): base()
+        public void Dispose()
         {
+        }
+
+        public void ApiTypeMOD(IScriptApi api)
+        {
+            if (!(api is IMOD_Api))
+                return;
+
+            m_MOD_Functions = (IMOD_Api)api;
+        }
+
+        public string modSendCommand(string module, string command, string k)
+        {
+            return m_MOD_Functions.modSendCommand(module, command, k);
         }
     }
 }

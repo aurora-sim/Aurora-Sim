@@ -144,6 +144,7 @@ namespace OpenSim.Services.LLLoginService
         private ArrayList inventoryLibRoot;
         private ArrayList inventoryLibrary;
         private ArrayList activeGestures;
+        private ArrayList tutorial = new ArrayList();
 
         private UserInfo userProfile;
 
@@ -183,6 +184,8 @@ namespace OpenSim.Services.LLLoginService
         private string home;
         private string seedCapability;
         private string lookAt;
+        private string tutorialURL;
+        private string udpBlackList;
 
         private BuddyList m_buddyList = null;
 
@@ -221,7 +224,7 @@ namespace OpenSim.Services.LLLoginService
         public LLLoginResponse(UserAccount account, AgentCircuitData aCircuit, GridUserInfo pinfo,
             GridRegion destination, List<InventoryFolderBase> invSkel, FriendInfo[] friendsList, ILibraryService libService,
             string where, string startlocation, Vector3 position, Vector3 lookAt, List<InventoryItemBase> gestures, string message,
-            GridRegion home, IPEndPoint clientIP, string mapTileURL)
+            GridRegion home, IPEndPoint clientIP, string AdultMax, string AdultRating, string mapTileURL, string AllowFL, string TutorialURL)
             : this()
         {
             FillOutInventoryData(invSkel, libService);
@@ -237,7 +240,11 @@ namespace OpenSim.Services.LLLoginService
             Message = message;
             BuddList = ConvertFriendListItem(friendsList);
             StartLocation = where;
-            MapTileURL = mapTileURL;
+            AgentAccessMax = AdultMax;
+            AgentAccess = AdultRating;
+			MapTileURL = mapTileURL;
+            allowFirstLife = AllowFL;
+            tutorialURL = TutorialURL;
 
             FillOutHomeData(pinfo, home);
             LookAt = String.Format("[r{0},r{1},r{2}]", lookAt.X, lookAt.Y, lookAt.Z);
@@ -377,6 +384,7 @@ namespace OpenSim.Services.LLLoginService
             agentAccessMax = "A";
             startLocation = "last";
             allowFirstLife = "Y";
+            udpBlackList = "EnableSimulator,TeleportFinish,CrossedRegion,OpenCircuit";
 
             ErrorMessage = "You have entered an invalid name/password combination.  Check Caps/lock.";
             ErrorReason = "key";
@@ -391,15 +399,27 @@ namespace OpenSim.Services.LLLoginService
             RegionY = (uint) 254976;
 
             // Classifieds;
-            AddClassifiedCategory((Int32) 1, "Shopping");
-            AddClassifiedCategory((Int32) 2, "Land Rental");
-            AddClassifiedCategory((Int32) 3, "Property Rental");
-            AddClassifiedCategory((Int32) 4, "Special Attraction");
-            AddClassifiedCategory((Int32) 5, "New Products");
-            AddClassifiedCategory((Int32) 6, "Employment");
-            AddClassifiedCategory((Int32) 7, "Wanted");
-            AddClassifiedCategory((Int32) 8, "Service");
-            AddClassifiedCategory((Int32) 9, "Personal");
+            AddClassifiedCategory((Int32)DirectoryManager.ClassifiedCategories.Shopping, "Shopping");
+            AddClassifiedCategory((Int32)DirectoryManager.ClassifiedCategories.LandRental, "Land Rental");
+            AddClassifiedCategory((Int32)DirectoryManager.ClassifiedCategories.PropertyRental, "Property Rental");
+            AddClassifiedCategory((Int32)DirectoryManager.ClassifiedCategories.SpecialAttraction, "Special Attraction");
+            AddClassifiedCategory((Int32)DirectoryManager.ClassifiedCategories.NewProducts, "New Products");
+            AddClassifiedCategory((Int32)DirectoryManager.ClassifiedCategories.Employment, "Employment");
+            AddClassifiedCategory((Int32)DirectoryManager.ClassifiedCategories.Wanted, "Wanted");
+            AddClassifiedCategory((Int32)DirectoryManager.ClassifiedCategories.Service, "Service");
+            AddClassifiedCategory((Int32)DirectoryManager.ClassifiedCategories.Personal, "Personal");
+
+            SetEventCategories((Int32)DirectoryManager.EventCategories.Discussion, "Discussion");
+            SetEventCategories((Int32)DirectoryManager.EventCategories.Sports, "Sports");
+            SetEventCategories((Int32)DirectoryManager.EventCategories.LiveMusic, "Live Music");
+            SetEventCategories((Int32)DirectoryManager.EventCategories.Commercial, "Commercial");
+            SetEventCategories((Int32)DirectoryManager.EventCategories.Nightlife, "Nightlife/Entertainment");
+            SetEventCategories((Int32)DirectoryManager.EventCategories.Games, "Games/Contests");
+            SetEventCategories((Int32)DirectoryManager.EventCategories.Pageants, "Pageants");
+            SetEventCategories((Int32)DirectoryManager.EventCategories.Education, "Education");
+            SetEventCategories((Int32)DirectoryManager.EventCategories.Arts, "Arts and Culture");
+            SetEventCategories((Int32)DirectoryManager.EventCategories.Charity, "Charity/Support Groups");
+            SetEventCategories((Int32)DirectoryManager.EventCategories.Miscellaneous, "Miscellaneous");
 
             SessionID = UUID.Random();
             SecureSessionID = UUID.Random();
@@ -409,6 +429,16 @@ namespace OpenSim.Services.LLLoginService
             InitialOutfitHash["folder_name"] = "Nightclub Female";
             InitialOutfitHash["gender"] = "female";
             initialOutfit.Add(InitialOutfitHash);
+
+            Hashtable TutorialHash = new Hashtable();
+            TutorialHash["tutorial_url"] = tutorialURL;
+
+            if (tutorialURL != "")
+                TutorialHash["use_tutorial"] = "Y";
+            else
+                TutorialHash["use_tutorial"] = "";
+            tutorial.Add(TutorialHash);
+
             mapTileURL = String.Empty;
         }
 
@@ -430,9 +460,9 @@ namespace OpenSim.Services.LLLoginService
                 responseData["last_name"] = Lastname;
                 responseData["agent_access"] = agentAccess;
                 responseData["agent_access_max"] = agentAccessMax;
+                responseData["udp_blacklist"] = udpBlackList;
 
                 globalTextures.Add(globalTexturesHash);
-                // this.eventCategories.Add(this.eventCategoriesHash);
 
                 AddToUIConfig("allow_first_life", allowFirstLife);
                 uiConfig.Add(uiConfigHash);
@@ -465,6 +495,7 @@ namespace OpenSim.Services.LLLoginService
                 responseData["gestures"] = activeGestures;
                 responseData["inventory-lib-owner"] = inventoryLibraryOwner;
                 responseData["initial-outfit"] = initialOutfit;
+                responseData["tutorial_setting"] = tutorial;
                 responseData["start_location"] = startLocation;
                 responseData["seed_capability"] = seedCapability;
                 responseData["home"] = home;
@@ -563,7 +594,9 @@ namespace OpenSim.Services.LLLoginService
                 map["gestures"] = ArrayListToOSDArray(activeGestures);
 
                 map["initial-outfit"] = ArrayListToOSDArray(initialOutfit);
+                map["tutorial_setting"] = ArrayListToOSDArray(tutorial);
                 map["start_location"] = OSD.FromString(startLocation);
+                map["udp_blacklist"] = OSD.FromString(udpBlackList);
 
                 map["seed_capability"] = OSD.FromString(seedCapability);
                 map["home"] = OSD.FromString(home);
@@ -614,10 +647,12 @@ namespace OpenSim.Services.LLLoginService
             return array;
         }
 
-        public void SetEventCategories(string category, string value)
+        public void SetEventCategories(Int32 value, string categoryName)
         {
-            //  this.eventCategoriesHash[category] = value;
-            //TODO
+            Hashtable hash = new Hashtable();
+            hash["category_name"] = categoryName;
+            hash["category_id"] = value;
+            eventCategories.Add(hash);
         }
 
         public void AddToUIConfig(string itemName, string item)
@@ -631,7 +666,6 @@ namespace OpenSim.Services.LLLoginService
             hash["category_name"] = categoryName;
             hash["category_id"] = ID;
             classifiedCategories.Add(hash);
-            // this.classifiedCategoriesHash.Clear();
         }
 
 
@@ -658,7 +692,7 @@ namespace OpenSim.Services.LLLoginService
             Hashtable TempHash;
             foreach (InventoryFolderBase InvFolder in folders)
             {
-                if (InvFolder.ParentID == UUID.Zero && InvFolder.Name == "My Inventory")
+                if (InvFolder.ParentID == UUID.Zero)
                 {
                     rootID = InvFolder.ID;
                 }

@@ -79,5 +79,11 @@ namespace OpenSim.Region.ScriptEngine.Interfaces
         IConfigSource ConfigSource { get; }
         string ScriptEngineName { get; }
         IScriptApi GetApi(UUID itemID, string name);
+        XmlRequest XmlRequestPlugin { get; }
+        SensorRepeat SensorRepeatPlugin { get; }
+        Listener ListenerPlugin { get; }
+        HttpRequest HttpRequestPlugin { get; }
+        Timer TimerPlugin { get; }
+        Dataserver DataserverPlugin { get; }
     }
 }

@@ -998,7 +998,7 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         {
         }
 
-        public void SendParcelInfo (RegionInfo info, LandData land, UUID parcelID, uint x, uint y)
+        public void SendParcelInfo (LandData land, UUID parcelID, uint x, uint y, string simname)
         {
         }
 

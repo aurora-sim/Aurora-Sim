@@ -166,7 +166,8 @@ namespace OpenSim.Framework
                     filter = filters[ext];
 
                 List<T> loadedPlugins = new List<T>();
-                foreach (TypeExtensionNode node in AddinManager.GetExtensionNodes(ext))
+                ExtensionNodeList list = AddinManager.GetExtensionNodes(ext);
+                foreach (TypeExtensionNode node in list)
                 {
                     //log.Info("[PLUGINS]: Trying plugin " + node.Path);
 

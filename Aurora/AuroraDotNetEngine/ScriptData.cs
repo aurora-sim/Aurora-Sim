@@ -39,16 +39,13 @@ using log4net;
 using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Scenes;
-using OpenSim.Region.ScriptEngine.Interfaces;
-using OpenSim.Region.ScriptEngine.Shared;
-using OpenSim.Region.ScriptEngine.Shared.Api;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
-using OpenSim.Region.ScriptEngine.Shared.Api.Runtime;
-using OpenSim.Region.ScriptEngine.Shared.ScriptBase;
-using OpenSim.Region.ScriptEngine.Shared.CodeTools;
 using Aurora.Framework;
+using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
+using Aurora.ScriptEngine.AuroraDotNetEngine.Plugins;
+using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
@@ -120,8 +117,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <returns></returns>
         public void CloseAndDispose(bool Silent)
         {
-            if (ScriptEngine.NeedsRemoved.ContainsKey(ItemID))
-                ScriptEngine.NeedsRemoved.Remove(ItemID);
+            ScriptEngine.NeedsRemoved.Remove(ItemID);
 
             if (!Silent)
             {
@@ -132,7 +128,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     SerializeDatabase();
                     //Fire this directly so its not closed before its fired
                     SetEventParams(new DetectParams[0]);
-                    EventQueue.ProcessQIS(new QueueItemStruct()
+                    m_ScriptEngine.m_MaintenanceThread.ProcessQIS(new QueueItemStruct()
                     {
                         ID = this,
                         CurrentlyAt = Guid.Empty,
@@ -144,7 +140,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 }
             }
             VersionID++;
-            ScriptEngine.NeedsRemoved.Add(ItemID, VersionID);
+            ScriptEngine.NeedsRemoved[ItemID] = VersionID;
             ReleaseControls();
             // Tell script not to accept new requests
             //These are fine to set as the state wont be saved again
@@ -167,7 +163,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (Script != null)
             {
                 // Stop long command on script
-                AsyncCommandManager.RemoveScript(m_ScriptEngine, World, part.LocalId, ItemID);
+                m_ScriptEngine.RemoveScript(m_ScriptEngine, World, part.UUID, ItemID);
                 ILease lease = (ILease)RemotingServices.GetLifetimeService(Script as MarshalByRefObject);
                 if(lease != null)
                     lease.Unregister(Script.Sponsor);
@@ -240,7 +236,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //Release controls over people.
             ReleaseControls();
             //Must be posted immediately, otherwise the next line will delete it.
-            EventQueue.ProcessQIS(new QueueItemStruct()
+            m_ScriptEngine.m_MaintenanceThread.ProcessQIS(new QueueItemStruct()
             {
                 ID = this,
                 CurrentlyAt = Guid.Empty,
@@ -250,20 +246,20 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 VersionID = VersionID
             });
             //Remove other items from the queue.
-            if (ScriptEngine.NeedsRemoved.ContainsKey(ItemID))
-                ScriptEngine.NeedsRemoved.Remove(ItemID);
-            ScriptEngine.NeedsRemoved.Add(ItemID, VersionID);
+            ScriptEngine.NeedsRemoved[ItemID] = VersionID;
             VersionID++;
+            //Reset all variables back to their original values.
+            Script.ResetVars();
             //Reset the state to default
             State = "default";
             //Tell the SOP about the change.
             part.SetScriptEvents(ItemID,
                                  (int)Script.GetStateEventFlags(State));
-            //Reset all variables back to their original values.
-            Script.ResetVars();
-
+            
             //Fire state_entry
-            m_ScriptEngine.AddToScriptQueue(this, "state_entry", new DetectParams[0], VersionID, new object[] { });
+            m_ScriptEngine.AddToScriptQueue(this, "state_entry", new DetectParams[0], VersionID, EventPriority.FirstStart, new object[] { });
+
+            m_ScriptEngine.AddToStateSaverQueue(this, true);
             m_log.InfoFormat("[{0}]: Reset Script {1}", m_ScriptEngine.ScriptEngineName, ItemID);
         }
         #endregion
@@ -334,31 +330,31 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (RezzedFrom != UUID.Zero)
             {
                 //Post the event for the prim that rezzed us
-                m_ScriptEngine.PostObjectEvent(RezzedFrom,"object_rez", new object[] {
-                            part.ParentGroup.RootPart.UUID });
+                m_ScriptEngine.PostObjectEvent(RezzedFrom, new EventParams("object_rez", new object[] {
+                            part.ParentGroup.RootPart.UUID },new DetectParams[0]));
                 RezzedFrom = UUID.Zero;
             }
             if (StartedFromSavedState)
             {
                 if (PostOnRez)
-                    m_ScriptEngine.AddToScriptQueue(this, "on_rez", new DetectParams[0], VersionID, new object[] { new LSL_Types.LSLInteger(StartParam) });
+                    m_ScriptEngine.AddToScriptQueue(this, "on_rez", new DetectParams[0], VersionID, EventPriority.FirstStart, new object[] { new LSL_Types.LSLInteger(StartParam) });
 
                 if (stateSource == StateSource.AttachedRez)
-                    m_ScriptEngine.AddToScriptQueue(this, "attach", new DetectParams[0], VersionID, new object[] { new LSL_Types.LSLString(part.AttachedAvatar.ToString()) });
+                    m_ScriptEngine.AddToScriptQueue(this, "attach", new DetectParams[0], VersionID, EventPriority.FirstStart, new object[] { new LSL_Types.LSLString(part.AttachedAvatar.ToString()) });
                 else if (stateSource == StateSource.NewRez)
-                    m_ScriptEngine.AddToScriptQueue(this, "changed", new DetectParams[0], VersionID, new Object[] { new LSL_Types.LSLInteger(256) });
+                    m_ScriptEngine.AddToScriptQueue(this, "changed", new DetectParams[0], VersionID, EventPriority.FirstStart, new Object[] { new LSL_Types.LSLInteger(256) });
                 else if (stateSource == StateSource.PrimCrossing)
                     // CHANGED_REGION
-                    m_ScriptEngine.AddToScriptQueue(this, "changed", new DetectParams[0], VersionID, new Object[] { new LSL_Types.LSLInteger(512) });
+                    m_ScriptEngine.AddToScriptQueue(this, "changed", new DetectParams[0], VersionID, EventPriority.FirstStart, new Object[] { new LSL_Types.LSLInteger(512) });
             }
             else
             {
                 if (PostOnRez)
-                    m_ScriptEngine.AddToScriptQueue(this, "on_rez", new DetectParams[0], VersionID, new object[] { new LSL_Types.LSLInteger(StartParam) });
+                    m_ScriptEngine.AddToScriptQueue(this, "on_rez", new DetectParams[0], VersionID, EventPriority.FirstStart, new object[] { new LSL_Types.LSLInteger(StartParam) });
 
                 if (stateSource == StateSource.AttachedRez)
-                    m_ScriptEngine.AddToScriptQueue(this, "attach", new DetectParams[0], VersionID, new object[] { new LSL_Types.LSLString(part.AttachedAvatar.ToString()) });
-                m_ScriptEngine.AddToScriptQueue(this, "state_entry", new DetectParams[0], VersionID, new object[0]);
+                    m_ScriptEngine.AddToScriptQueue(this, "attach", new DetectParams[0], VersionID, EventPriority.FirstStart, new object[] { new LSL_Types.LSLString(part.AttachedAvatar.ToString()) });
+                m_ScriptEngine.AddToScriptQueue(this, "state_entry", new DetectParams[0], VersionID, EventPriority.FirstStart, new object[0]);
             }
         }
 
@@ -558,8 +554,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 DeserializeDatabase();
 
-                AsyncCommandManager.CreateFromData(m_ScriptEngine, part.ParentGroup.Scene,
-                    part.LocalId, ItemID, part.UUID,
+                m_ScriptEngine.CreateFromData(m_ScriptEngine, part.ParentGroup.Scene,
+                    part.UUID, ItemID, part.UUID,
                     PluginData);
 
                 // we get new rez events on sim restart, too
@@ -662,7 +658,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             Insert.Variables = varsmap;
             //Plugins
-            object[] Plugins = AsyncCommandManager.GetSerializationData(m_ScriptEngine, part.ParentGroup.Scene, ItemID);
+            object[] Plugins = m_ScriptEngine.GetSerializationData(m_ScriptEngine, part.ParentGroup.Scene, ItemID, part.UUID);
             string plugins = "";
             foreach (object plugin in Plugins)
                 plugins += plugin + ",";
@@ -693,115 +689,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             Insert.UserInventoryID = UserInventoryItemID;
             ScriptFrontend.SaveStateSave(Insert);
         }
-
-        #region Helpers
-
-        private LSL_Types.list ReadList(XmlNode parent)
-        {
-            List<Object> olist = new List<Object>();
-
-            XmlNodeList itemL = parent.ChildNodes;
-            foreach (XmlNode item in itemL)
-                olist.Add(ReadTypedValue(item));
-
-            return new LSL_Types.list(olist.ToArray());
-        }
-
-        private object ReadTypedValue(XmlNode tag, out string name)
-        {
-            name = tag.Attributes.GetNamedItem("name").Value;
-
-            return ReadTypedValue(tag);
-        }
-
-        private object ReadTypedValue(XmlNode tag)
-        {
-            Object varValue;
-            string assembly;
-
-            string itemType = tag.Attributes.GetNamedItem("type").Value;
-
-            if (itemType == "list")
-                return ReadList(tag);
-
-            if (itemType == "OpenMetaverse.UUID")
-            {
-                UUID val = new UUID();
-                UUID.TryParse(tag.InnerText, out val);
-
-                return val;
-            }
-
-            Type itemT = Type.GetType(itemType);
-            if (itemT == null)
-            {
-                Object[] args =
-                    new Object[] { tag.InnerText };
-
-                assembly = itemType + ", OpenSim.Region.ScriptEngine.Shared";
-                itemT = Type.GetType(assembly);
-                if (itemT == null)
-                    return null;
-
-                varValue = Activator.CreateInstance(itemT, args);
-
-                if (varValue == null)
-                    return null;
-            }
-            else
-            {
-                varValue = Convert.ChangeType(tag.InnerText, itemT);
-            }
-            return varValue;
-        }
-
-        private void DumpList(XmlDocument doc, XmlNode parent,
-                LSL_Types.list l)
-        {
-            foreach (Object o in l.Data)
-                WriteTypedValue(doc, parent, "ListItem", "", o);
-        }
-
-        private void WriteTypedValue(XmlDocument doc, XmlNode parent,
-                string tag, string name, object value)
-        {
-            Type t = value.GetType();
-            XmlAttribute typ = doc.CreateAttribute("", "type", "");
-            XmlNode n = doc.CreateElement("", tag, "");
-
-            if (value is LSL_Types.list)
-            {
-                typ.Value = "list";
-                n.Attributes.Append(typ);
-
-                DumpList(doc, n, (LSL_Types.list)value);
-
-                if (name != String.Empty)
-                {
-                    XmlAttribute nam = doc.CreateAttribute("", "name", "");
-                    nam.Value = name;
-                    n.Attributes.Append(nam);
-                }
-
-                parent.AppendChild(n);
-                return;
-            }
-
-            n.AppendChild(doc.CreateTextNode(value.ToString()));
-
-            typ.Value = t.ToString();
-            n.Attributes.Append(typ);
-            if (name != String.Empty)
-            {
-                XmlAttribute nam = doc.CreateAttribute("", "name", "");
-                nam.Value = name;
-                n.Attributes.Append(nam);
-            }
-
-            parent.AppendChild(n);
-        }
-
-        #endregion
 
         #endregion
 

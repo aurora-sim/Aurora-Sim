@@ -705,8 +705,8 @@ namespace OpenSim.Region.CoreModules.World.Land
             
             try
             {
-                x = Convert.ToInt32(Math.Floor(Convert.ToDouble(x_float) / 4.0));
-                y = Convert.ToInt32(Math.Floor(Convert.ToDouble(y_float) / 4.0));
+                x = (int)(x_float / 4);
+                y = (int)(y_float / 4);
             }
             catch (OverflowException)
             {
@@ -723,9 +723,9 @@ namespace OpenSim.Region.CoreModules.World.Land
                 // Corner case. If an autoreturn happens during sim startup
                 // we will come here with the list uninitialized
                 //
-                if (m_landList.ContainsKey(m_landIDList[x, y]))
-                    return m_landList[m_landIDList[x, y]];
-                return null;
+                ILandObject LO;
+                m_landList.TryGetValue(m_landIDList[x, y], out LO);
+                return LO;
             }
         }
 
@@ -1535,12 +1535,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                 // we need to transfer the fake parcelID, not the one in landData, so the viewer can match it to the landmark.
                 m_log.DebugFormat("[LAND] got parcelinfo for parcel {0} in region {1}; sending...",
                                   extLandData.LandData.Name, extLandData.RegionHandle);
-                // HACK for now
-                RegionInfo r = new RegionInfo();
-                r.RegionName = info.RegionName;
-                r.RegionLocX = (uint)info.RegionLocX;
-                r.RegionLocY = (uint)info.RegionLocY;
-                remoteClient.SendParcelInfo(r, extLandData.LandData, parcelID, extLandData.X, extLandData.Y);
+                remoteClient.SendParcelInfo(extLandData.LandData, parcelID, (uint)(info.RegionLocX * Constants.RegionSize + extLandData.X), (uint)(info.RegionLocY * Constants.RegionSize + extLandData.Y), info.RegionName);
             }
             else
                 m_log.Debug("[LAND] got no parcelinfo; not sending");

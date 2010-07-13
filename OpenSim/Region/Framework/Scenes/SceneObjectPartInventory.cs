@@ -36,7 +36,6 @@ using OpenMetaverse;
 using log4net;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes.Scripting;
 
 namespace OpenSim.Region.Framework.Scenes
 {
@@ -116,7 +115,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// If this method is called and there are inventory items, then we regard the inventory as having changed.
         /// </summary>
         /// <param name="linkNum">Link number for the part</param>
-        public void ResetInventoryIDs()
+        public void ResetInventoryIDs(bool ChangeScripts)
         {
             lock (Items)
             {
@@ -130,8 +129,19 @@ namespace OpenSim.Region.Framework.Scenes
 
                 foreach (TaskInventoryItem item in items)
                 {
+                    UUID oldItemID = item.ItemID;
                     item.ResetIDs(m_part.UUID);
-                    Items.Add(item.ItemID, item);
+                    lock (m_part.ParentGroup)
+                    {
+                        if (ChangeScripts && m_part.ParentGroup.Scene != null)
+                        {
+                            foreach (IScriptModule engine in m_part.ParentGroup.Scene.RequestModuleInterfaces<IScriptModule>())
+                            {
+                                engine.UpdateScriptToNewObject(oldItemID, item, m_part);
+                            }
+                        }
+                        Items.Add(item.ItemID, item);
+                    }
                 }
             }
         }
@@ -192,22 +202,36 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// Start all the scripts contained in this prim's inventory
         /// </summary>
-        public void CreateScriptInstances(int startParam, bool postOnRez, string engine, int stateSource)
+        public void CreateScriptInstances(int startParam, bool postOnRez, string engine, int stateSource, UUID RezzedFrom)
         {
             lock (m_items)
             {
+                List<TaskInventoryItem> LSLItems = new List<TaskInventoryItem>();
                 foreach (TaskInventoryItem item in Items.Values)
                 {
                     if ((int)InventoryType.LSL == item.InvType)
                     {
-                        CreateScriptInstance(item, startParam, postOnRez, engine, stateSource);
+                        LSLItems.Add(item);
+                        if (!m_part.ParentGroup.Scene.Permissions.CanRunScript(item.ItemID, m_part.UUID, item.OwnerID))
+                            return;
+
+                        m_part.AddFlag(PrimFlags.Scripted);
                         Thread.Sleep(10); // workaround for Mono cpu utilization > 100% bug
                     }
                 }
+                lock (m_items)
+                {
+                    if (LSLItems.Count == 0)
+                        return;
+                    m_part.ParentGroup.Scene.EventManager.TriggerRezScripts(
+                                            m_part, LSLItems.ToArray(), startParam, postOnRez, engine, stateSource, RezzedFrom);
+                    m_part.ParentGroup.AddActiveScriptCount(LSLItems.Count);
+                }
+                m_part.ScheduleFullUpdate();
             }
         }
 
-        public ArrayList GetScriptErrors(UUID itemID)
+        public ArrayList GetScriptErrors(UUID itemID, string DefaultScriptEngine)
         {
             ArrayList ret = new ArrayList();
 
@@ -219,9 +243,12 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (e != null)
                 {
-                    ArrayList errors = e.GetScriptErrors(itemID);
-                    foreach (Object line in errors)
-                        ret.Add(line);
+                    if (e.ScriptEngineName == DefaultScriptEngine)
+                    {
+                        ArrayList errors = e.GetScriptErrors(itemID);
+                        foreach (Object line in errors)
+                            ret.Add(line);
+                    }
                 }
             }
 
@@ -278,7 +305,7 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                     
                     m_part.ParentGroup.Scene.EventManager.TriggerRezScript(
-                        m_part.LocalId, item.ItemID, String.Empty, startParam, postOnRez, engine, stateSource);
+                        m_part, item.ItemID, String.Empty, startParam, postOnRez, engine, stateSource);
                     m_part.ParentGroup.AddActiveScriptCount(1);
                     m_part.ScheduleFullUpdate();
                     return;
@@ -295,20 +322,67 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 else
                 {
+                    if (m_part.ParentGroup.m_savedScriptState != null)
+                        RestoreSavedScriptState(item.OldItemID, item.ItemID);
+
                     lock (m_items)
                     {
-                        if (m_part.ParentGroup.m_savedScriptState != null)
-                            RestoreSavedScriptState(item.OldItemID, item.ItemID);
-
                         m_items[item.ItemID].PermsMask = 0;
                         m_items[item.ItemID].PermsGranter = UUID.Zero;
-
-                        string script = Utils.BytesToString(asset.Data);
-                        m_part.ParentGroup.Scene.EventManager.TriggerRezScript(
-                            m_part.LocalId, item.ItemID, script, startParam, postOnRez, engine, stateSource);
-                        m_part.ParentGroup.AddActiveScriptCount(1);
-                        m_part.ScheduleFullUpdate();
                     }
+                
+                    string script = Utils.BytesToString(asset.Data);
+                    m_part.ParentGroup.Scene.EventManager.TriggerRezScript(
+                        m_part, item.ItemID, script, startParam, postOnRez, engine, stateSource);
+                    m_part.ParentGroup.AddActiveScriptCount(1);
+                    m_part.ScheduleFullUpdate();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Updates a script which is in this prim's inventory.
+        /// </summary>
+        /// <param name="item"></param>
+        /// <returns></returns>
+        public void UpdateScriptInstance(UUID itemID, int startParam, bool postOnRez, string engine, int stateSource)
+        {
+            TaskInventoryItem item = m_items[itemID];
+            if (!m_part.ParentGroup.Scene.Permissions.CanRunScript(item.ItemID, m_part.UUID, item.OwnerID))
+                return;
+
+            m_part.AddFlag(PrimFlags.Scripted);
+
+            if (!m_part.ParentGroup.Scene.RegionInfo.RegionSettings.DisableScripts)
+            {
+                AssetBase asset = m_part.ParentGroup.Scene.AssetService.Get(item.AssetID.ToString());
+                if (null == asset)
+                {
+                    m_log.ErrorFormat(
+                        "[PRIM INVENTORY]: " +
+                        "Couldn't start script {0}, {1} at {2} in {3} since asset ID {4} could not be found",
+                        item.Name, item.ItemID, m_part.AbsolutePosition,
+                        m_part.ParentGroup.Scene.RegionInfo.RegionName, item.AssetID);
+                }
+                else
+                {
+                    lock (m_items)
+                    {
+                        m_items[item.ItemID].PermsMask = 0;
+                        m_items[item.ItemID].PermsGranter = UUID.Zero;
+                    }
+
+                    string script = Utils.BytesToString(asset.Data);
+                    IScriptModule[] modules = m_part.ParentGroup.Scene.RequestModuleInterfaces<IScriptModule>();
+                    foreach (IScriptModule module in modules)
+                    {
+                        if (module.ScriptEngineName == engine)
+                        {
+                            module.UpdateScript(m_part.UUID, item.ItemID, script, startParam, postOnRez, stateSource);
+                        }
+                    }
+                    m_part.ParentGroup.AddActiveScriptCount(1);
+                    m_part.ScheduleFullUpdate();
                 }
             }
         }
@@ -952,6 +1026,7 @@ namespace OpenSim.Region.Framework.Scenes
                             item.CurrentPermissions &= ~(uint)PermissionMask.Transfer;
                         if ((item.CurrentPermissions & ((uint)PermissionMask.Modify >> 13)) == 0)
                             item.CurrentPermissions &= ~(uint)PermissionMask.Modify;
+                        item.CurrentPermissions |= 8;
                     }
                     item.CurrentPermissions &= item.NextPermissions;
                     item.BasePermissions &= item.NextPermissions;
@@ -1053,7 +1128,7 @@ namespace OpenSim.Region.Framework.Scenes
                             if (engine != null)
                             {
                                 if (item.OwnerChanged)
-                                    engine.PostScriptEvent(item.ItemID, "changed", new Object[] { (int)Changed.OWNER });
+                                    engine.PostScriptEvent(item.ItemID, m_part.UUID, "changed", new Object[] { (int)Changed.OWNER });
                                 item.OwnerChanged = false;
                                 engine.ResumeScript(item.ItemID);
                             }

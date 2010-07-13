@@ -51,7 +51,6 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 
         #region IApplicationPlugin Members
 
-        // TODO: required by IPlugin, but likely not at all right
         private string m_name = "LoadRegionsPlugin";
         public string Name
         {

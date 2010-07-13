@@ -3665,5 +3665,532 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         #endregion
+
+        private readonly List<uint> m_lastColliders = new List<uint>();
+
+        public void FireAttachmentCollisionEvents(EventArgs e)
+        {
+            CollisionEventUpdate a = (CollisionEventUpdate)e;
+            Dictionary<uint, ContactPoint> collissionswith = a.m_objCollisionList;
+            List<uint> thisHitColliders = new List<uint>();
+            List<uint> endedColliders = new List<uint>();
+            List<uint> startedColliders = new List<uint>();
+
+            // calculate things that started colliding this time
+            // and build up list of colliders this time
+            foreach (uint localid in collissionswith.Keys)
+            {
+                thisHitColliders.Add(localid);
+                if (!m_lastColliders.Contains(localid))
+                {
+                    startedColliders.Add(localid);
+                }
+                //m_log.Debug("[OBJECT]: Collided with:" + localid.ToString() + " at depth of: " + collissionswith[localid].ToString());
+            }
+
+            // calculate things that ended colliding
+            foreach (uint localID in m_lastColliders)
+            {
+                if (!thisHitColliders.Contains(localID))
+                {
+                    endedColliders.Add(localID);
+                }
+            }
+
+            //add the items that started colliding this time to the last colliders list.
+            foreach (uint localID in startedColliders)
+            {
+                m_lastColliders.Add(localID);
+            }
+            // remove things that ended colliding from the last colliders list
+            foreach (uint localID in endedColliders)
+            {
+                m_lastColliders.Remove(localID);
+            }
+
+            if (IsDeleted)
+                return;
+
+            // play the sound.
+            if (startedColliders.Count > 0 && RootPart.CollisionSound != UUID.Zero && RootPart.CollisionSoundVolume > 0.0f)
+            {
+                RootPart.SendSound(RootPart.CollisionSound.ToString(), RootPart.CollisionSoundVolume, true, (byte)0, 0, false, false);
+            }
+            if (RootPart.CollisionSprite != UUID.Zero && RootPart.CollisionSoundVolume > 0.0f) // The collision volume isn't a mistake, its an SL feature/bug
+            {
+                // TODO: make a sprite!
+
+            }
+
+            if ((RootPart.ScriptEvents & scriptEvents.collision_start) != 0)
+            {
+                // do event notification
+                if (startedColliders.Count > 0)
+                {
+                    ColliderArgs StartCollidingMessage = new ColliderArgs();
+                    List<DetectedObject> colliding = new List<DetectedObject>();
+                    foreach (uint localId in startedColliders)
+                    {
+                        if (localId == 0)
+                            continue;
+                        
+                        if (Scene == null)
+                            return;
+
+                        SceneObjectPart obj = Scene.GetSceneObjectPart(localId);
+                        string data = "";
+                        if (obj != null)
+                        {
+                            if (RootPart.CollisionFilter.ContainsValue(obj.UUID.ToString()) || RootPart.CollisionFilter.ContainsValue(obj.Name))
+                            {
+                                bool found = RootPart.CollisionFilter.TryGetValue(1, out data);
+                                //If it is 1, it is to accept ONLY collisions from this object
+                                if (found)
+                                {
+                                    DetectedObject detobj = new DetectedObject();
+                                    detobj.keyUUID = obj.UUID;
+                                    detobj.nameStr = obj.Name;
+                                    detobj.ownerUUID = obj.OwnerID;
+                                    detobj.posVector = obj.AbsolutePosition;
+                                    detobj.rotQuat = obj.GetWorldRotation();
+                                    detobj.velVector = obj.Velocity;
+                                    detobj.colliderType = 0;
+                                    detobj.groupUUID = obj.GroupID;
+                                    colliding.Add(detobj);
+                                }
+                                //If it is 0, it is to not accept collisions from this object
+                                else
+                                {
+                                }
+                            }
+                            else
+                            {
+                                bool found = RootPart.CollisionFilter.TryGetValue(1, out data);
+                                //If it is 1, it is to accept ONLY collisions from this object, so this other object will not work
+                                if (!found)
+                                {
+                                    DetectedObject detobj = new DetectedObject();
+                                    detobj.keyUUID = obj.UUID;
+                                    detobj.nameStr = obj.Name;
+                                    detobj.ownerUUID = obj.OwnerID;
+                                    detobj.posVector = obj.AbsolutePosition;
+                                    detobj.rotQuat = obj.GetWorldRotation();
+                                    detobj.velVector = obj.Velocity;
+                                    detobj.colliderType = 0;
+                                    detobj.groupUUID = obj.GroupID;
+                                    colliding.Add(detobj);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            ScenePresence av = Scene.GetScenePresence(localId);
+                            if (av.LocalId == localId)
+                            {
+                                if (RootPart.CollisionFilter.ContainsValue(av.UUID.ToString()) || RootPart.CollisionFilter.ContainsValue(av.Name))
+                                {
+                                    bool found = RootPart.CollisionFilter.TryGetValue(1, out data);
+                                    //If it is 1, it is to accept ONLY collisions from this avatar
+                                    if (found)
+                                    {
+                                        DetectedObject detobj = new DetectedObject();
+                                        detobj.keyUUID = av.UUID;
+                                        detobj.nameStr = av.ControllingClient.Name;
+                                        detobj.ownerUUID = av.UUID;
+                                        detobj.posVector = av.AbsolutePosition;
+                                        detobj.rotQuat = av.Rotation;
+                                        detobj.velVector = av.Velocity;
+                                        detobj.colliderType = 0;
+                                        detobj.groupUUID = av.ControllingClient.ActiveGroupId;
+                                        colliding.Add(detobj);
+                                    }
+                                    //If it is 0, it is to not accept collisions from this avatar
+                                    else
+                                    {
+                                    }
+                                }
+                                else
+                                {
+                                    bool found = RootPart.CollisionFilter.TryGetValue(1, out data);
+                                    //If it is 1, it is to accept ONLY collisions from this avatar, so this other avatar will not work
+                                    if (!found)
+                                    {
+                                        DetectedObject detobj = new DetectedObject();
+                                        detobj.keyUUID = av.UUID;
+                                        detobj.nameStr = av.ControllingClient.Name;
+                                        detobj.ownerUUID = av.UUID;
+                                        detobj.posVector = av.AbsolutePosition;
+                                        detobj.rotQuat = av.Rotation;
+                                        detobj.velVector = av.Velocity;
+                                        detobj.colliderType = 0;
+                                        detobj.groupUUID = av.ControllingClient.ActiveGroupId;
+                                        colliding.Add(detobj);
+                                    }
+                                }
+
+                            }
+                        }
+                    }
+                    if (colliding.Count > 0)
+                    {
+                        StartCollidingMessage.Colliders = colliding;
+                        // always running this check because if the user deletes the object it would return a null reference.
+                        
+                        if (Scene == null)
+                            return;
+                        if (PassCollision == true)
+                        {
+                            //TODO: Add pass to root prim!
+                        }
+                        Scene.EventManager.TriggerScriptCollidingStart(LocalId, StartCollidingMessage);
+                    }
+                }
+            }
+
+            if ((RootPart.ScriptEvents & scriptEvents.collision) != 0)
+            {
+                if (m_lastColliders.Count > 0)
+                {
+                    ColliderArgs CollidingMessage = new ColliderArgs();
+                    List<DetectedObject> colliding = new List<DetectedObject>();
+                    foreach (uint localId in m_lastColliders)
+                    {
+                        // always running this check because if the user deletes the object it would return a null reference.
+                        if (localId == 0)
+                            continue;
+
+                        if (Scene == null)
+                            return;
+
+                        SceneObjectPart obj = Scene.GetSceneObjectPart(localId);
+                        string data = "";
+                        if (obj != null)
+                        {
+                            if (RootPart.CollisionFilter.ContainsValue(obj.UUID.ToString()) || RootPart.CollisionFilter.ContainsValue(obj.Name))
+                            {
+                                bool found = RootPart.CollisionFilter.TryGetValue(1, out data);
+                                //If it is 1, it is to accept ONLY collisions from this object
+                                if (found)
+                                {
+                                    DetectedObject detobj = new DetectedObject();
+                                    detobj.keyUUID = obj.UUID;
+                                    detobj.nameStr = obj.Name;
+                                    detobj.ownerUUID = obj.OwnerID;
+                                    detobj.posVector = obj.AbsolutePosition;
+                                    detobj.rotQuat = obj.GetWorldRotation();
+                                    detobj.velVector = obj.Velocity;
+                                    detobj.colliderType = 0;
+                                    detobj.groupUUID = obj.GroupID;
+                                    colliding.Add(detobj);
+                                }
+                                //If it is 0, it is to not accept collisions from this object
+                                else
+                                {
+                                }
+                            }
+                            else
+                            {
+                                bool found = RootPart.CollisionFilter.TryGetValue(1, out data);
+                                //If it is 1, it is to accept ONLY collisions from this object, so this other object will not work
+                                if (!found)
+                                {
+                                    DetectedObject detobj = new DetectedObject();
+                                    detobj.keyUUID = obj.UUID;
+                                    detobj.nameStr = obj.Name;
+                                    detobj.ownerUUID = obj.OwnerID;
+                                    detobj.posVector = obj.AbsolutePosition;
+                                    detobj.rotQuat = obj.GetWorldRotation();
+                                    detobj.velVector = obj.Velocity;
+                                    detobj.colliderType = 0;
+                                    detobj.groupUUID = obj.GroupID;
+                                    colliding.Add(detobj);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            ScenePresence av = Scene.GetScenePresence(localId);
+                            if (av.LocalId == localId)
+                            {
+                                if (RootPart.CollisionFilter.ContainsValue(av.UUID.ToString()) || RootPart.CollisionFilter.ContainsValue(av.Name))
+                                {
+                                    bool found = RootPart.CollisionFilter.TryGetValue(1, out data);
+                                    //If it is 1, it is to accept ONLY collisions from this avatar
+                                    if (found)
+                                    {
+                                        DetectedObject detobj = new DetectedObject();
+                                        detobj.keyUUID = av.UUID;
+                                        detobj.nameStr = av.ControllingClient.Name;
+                                        detobj.ownerUUID = av.UUID;
+                                        detobj.posVector = av.AbsolutePosition;
+                                        detobj.rotQuat = av.Rotation;
+                                        detobj.velVector = av.Velocity;
+                                        detobj.colliderType = 0;
+                                        detobj.groupUUID = av.ControllingClient.ActiveGroupId;
+                                        colliding.Add(detobj);
+                                    }
+                                    //If it is 0, it is to not accept collisions from this avatar
+                                    else
+                                    {
+                                    }
+                                }
+                                else
+                                {
+                                    bool found = RootPart.CollisionFilter.TryGetValue(1, out data);
+                                    //If it is 1, it is to accept ONLY collisions from this avatar, so this other avatar will not work
+                                    if (!found)
+                                    {
+                                        DetectedObject detobj = new DetectedObject();
+                                        detobj.keyUUID = av.UUID;
+                                        detobj.nameStr = av.ControllingClient.Name;
+                                        detobj.ownerUUID = av.UUID;
+                                        detobj.posVector = av.AbsolutePosition;
+                                        detobj.rotQuat = av.Rotation;
+                                        detobj.velVector = av.Velocity;
+                                        detobj.colliderType = 0;
+                                        detobj.groupUUID = av.ControllingClient.ActiveGroupId;
+                                        colliding.Add(detobj);
+                                    }
+                                }
+
+                            }
+                        }
+                    }
+                    if (colliding.Count > 0)
+                    {
+                        CollidingMessage.Colliders = colliding;
+                        
+                        if (Scene == null)
+                            return;
+
+                        Scene.EventManager.TriggerScriptColliding(LocalId, CollidingMessage);
+                    }
+                }
+            }
+
+            if ((RootPart.ScriptEvents & scriptEvents.collision_end) != 0)
+            {
+                if (endedColliders.Count > 0)
+                {
+                    ColliderArgs EndCollidingMessage = new ColliderArgs();
+                    List<DetectedObject> colliding = new List<DetectedObject>();
+                    foreach (uint localId in endedColliders)
+                    {
+                        if (localId == 0)
+                            continue;
+
+                        // always running this check because if the user deletes the object it would return a null reference.
+                        if (Scene == null)
+                            return;
+                        SceneObjectPart obj = Scene.GetSceneObjectPart(localId);
+                        string data = "";
+                        if (obj != null)
+                        {
+                            if (RootPart.CollisionFilter.ContainsValue(obj.UUID.ToString()) || RootPart.CollisionFilter.ContainsValue(obj.Name))
+                            {
+                                bool found = RootPart.CollisionFilter.TryGetValue(1, out data);
+                                //If it is 1, it is to accept ONLY collisions from this object
+                                if (found)
+                                {
+                                    DetectedObject detobj = new DetectedObject();
+                                    detobj.keyUUID = obj.UUID;
+                                    detobj.nameStr = obj.Name;
+                                    detobj.ownerUUID = obj.OwnerID;
+                                    detobj.posVector = obj.AbsolutePosition;
+                                    detobj.rotQuat = obj.GetWorldRotation();
+                                    detobj.velVector = obj.Velocity;
+                                    detobj.colliderType = 0;
+                                    detobj.groupUUID = obj.GroupID;
+                                    colliding.Add(detobj);
+                                }
+                                //If it is 0, it is to not accept collisions from this object
+                                else
+                                {
+                                }
+                            }
+                            else
+                            {
+                                bool found = RootPart.CollisionFilter.TryGetValue(1, out data);
+                                //If it is 1, it is to accept ONLY collisions from this object, so this other object will not work
+                                if (!found)
+                                {
+                                    DetectedObject detobj = new DetectedObject();
+                                    detobj.keyUUID = obj.UUID;
+                                    detobj.nameStr = obj.Name;
+                                    detobj.ownerUUID = obj.OwnerID;
+                                    detobj.posVector = obj.AbsolutePosition;
+                                    detobj.rotQuat = obj.GetWorldRotation();
+                                    detobj.velVector = obj.Velocity;
+                                    detobj.colliderType = 0;
+                                    detobj.groupUUID = obj.GroupID;
+                                    colliding.Add(detobj);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            ScenePresence av = Scene.GetScenePresence(localId);
+                            if (av.LocalId == localId)
+                            {
+                                if (RootPart.CollisionFilter.ContainsValue(av.UUID.ToString()) || RootPart.CollisionFilter.ContainsValue(av.Name))
+                                {
+                                    bool found = RootPart.CollisionFilter.TryGetValue(1, out data);
+                                    //If it is 1, it is to accept ONLY collisions from this avatar
+                                    if (found)
+                                    {
+                                        DetectedObject detobj = new DetectedObject();
+                                        detobj.keyUUID = av.UUID;
+                                        detobj.nameStr = av.ControllingClient.Name;
+                                        detobj.ownerUUID = av.UUID;
+                                        detobj.posVector = av.AbsolutePosition;
+                                        detobj.rotQuat = av.Rotation;
+                                        detobj.velVector = av.Velocity;
+                                        detobj.colliderType = 0;
+                                        detobj.groupUUID = av.ControllingClient.ActiveGroupId;
+                                        colliding.Add(detobj);
+                                    }
+                                    //If it is 0, it is to not accept collisions from this avatar
+                                    else
+                                    {
+                                    }
+                                }
+                                else
+                                {
+                                    bool found = RootPart.CollisionFilter.TryGetValue(1, out data);
+                                    //If it is 1, it is to accept ONLY collisions from this avatar, so this other avatar will not work
+                                    if (!found)
+                                    {
+                                        DetectedObject detobj = new DetectedObject();
+                                        detobj.keyUUID = av.UUID;
+                                        detobj.nameStr = av.ControllingClient.Name;
+                                        detobj.ownerUUID = av.UUID;
+                                        detobj.posVector = av.AbsolutePosition;
+                                        detobj.rotQuat = av.Rotation;
+                                        detobj.velVector = av.Velocity;
+                                        detobj.colliderType = 0;
+                                        detobj.groupUUID = av.ControllingClient.ActiveGroupId;
+                                        colliding.Add(detobj);
+                                    }
+                                }
+
+                            }
+                        }
+                    }
+
+                    if (colliding.Count > 0)
+                    {
+                        EndCollidingMessage.Colliders = colliding;
+                        if (Scene == null)
+                            return;
+
+                        Scene.EventManager.TriggerScriptCollidingEnd(LocalId, EndCollidingMessage);
+                    }
+                }
+            }
+            if ((RootPart.ScriptEvents & scriptEvents.land_collision_start) != 0)
+            {
+                if (startedColliders.Count > 0)
+                {
+                    ColliderArgs LandStartCollidingMessage = new ColliderArgs();
+                    List<DetectedObject> colliding = new List<DetectedObject>();
+                    foreach (uint localId in startedColliders)
+                    {
+                        if (localId == 0)
+                        {
+                            //Hope that all is left is ground!
+                            DetectedObject detobj = new DetectedObject();
+                            detobj.keyUUID = UUID.Zero;
+                            detobj.nameStr = "";
+                            detobj.ownerUUID = UUID.Zero;
+                            detobj.posVector = RootPart.AbsolutePosition;
+                            detobj.rotQuat = Quaternion.Identity;
+                            detobj.velVector = Vector3.Zero;
+                            detobj.colliderType = 0;
+                            detobj.groupUUID = UUID.Zero;
+                            colliding.Add(detobj);
+                        }
+                    }
+
+                    if (colliding.Count > 0)
+                    {
+                        LandStartCollidingMessage.Colliders = colliding;
+                        if (Scene == null)
+                            return;
+
+                        Scene.EventManager.TriggerScriptLandCollidingStart(LocalId, LandStartCollidingMessage);
+                    }
+                }
+            }
+            if ((RootPart.ScriptEvents & scriptEvents.land_collision) != 0)
+            {
+                if (m_lastColliders.Count > 0)
+                {
+                    ColliderArgs LandCollidingMessage = new ColliderArgs();
+                    List<DetectedObject> colliding = new List<DetectedObject>();
+                    foreach (uint localId in startedColliders)
+                    {
+                        if (localId == 0)
+                        {
+                            //Hope that all is left is ground!
+                            DetectedObject detobj = new DetectedObject();
+                            detobj.keyUUID = UUID.Zero;
+                            detobj.nameStr = "";
+                            detobj.ownerUUID = UUID.Zero;
+                            detobj.posVector = RootPart.AbsolutePosition;
+                            detobj.rotQuat = Quaternion.Identity;
+                            detobj.velVector = Vector3.Zero;
+                            detobj.colliderType = 0;
+                            detobj.groupUUID = UUID.Zero;
+                            colliding.Add(detobj);
+                        }
+                    }
+
+                    if (colliding.Count > 0)
+                    {
+                        LandCollidingMessage.Colliders = colliding;
+                        if (Scene == null)
+                            return;
+
+                        Scene.EventManager.TriggerScriptLandColliding(LocalId, LandCollidingMessage);
+                    }
+                }
+            }
+            if ((RootPart.ScriptEvents & scriptEvents.land_collision_end) != 0)
+            {
+                if (endedColliders.Count > 0)
+                {
+                    ColliderArgs LandEndCollidingMessage = new ColliderArgs();
+                    List<DetectedObject> colliding = new List<DetectedObject>();
+                    foreach (uint localId in startedColliders)
+                    {
+                        if (localId == 0)
+                        {
+                            //Hope that all is left is ground!
+                            DetectedObject detobj = new DetectedObject();
+                            detobj.keyUUID = UUID.Zero;
+                            detobj.nameStr = "";
+                            detobj.ownerUUID = UUID.Zero;
+                            detobj.posVector = RootPart.AbsolutePosition;
+                            detobj.rotQuat = Quaternion.Identity;
+                            detobj.velVector = Vector3.Zero;
+                            detobj.colliderType = 0;
+                            detobj.groupUUID = UUID.Zero;
+                            colliding.Add(detobj);
+                        }
+                    }
+
+                    if (colliding.Count > 0)
+                    {
+                        LandEndCollidingMessage.Colliders = colliding;
+                        // always running this check because if the user deletes the object it would return a null reference.
+
+                        if (Scene == null)
+                            return;
+
+                        Scene.EventManager.TriggerScriptLandCollidingEnd(LocalId, LandEndCollidingMessage);
+                    }
+                }
+            }
+        }
     }
 }

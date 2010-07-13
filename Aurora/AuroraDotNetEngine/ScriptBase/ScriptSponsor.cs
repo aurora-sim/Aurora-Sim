@@ -25,45 +25,36 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.Xml.Serialization;
+using System;
+using System.Collections.Generic;
+using System.Runtime.Remoting.Lifetime;
+using System.Text;
+using Aurora.ScriptEngine.AuroraDotNetEngine;
+using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
+using Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools;
 
-namespace OpenSim.Framework.Communications.XMPP
+namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
 {
-    /// <summary>
-    /// Message types.
-    /// </summary>
-    public enum XmppPresenceType
+    public class ScriptSponsor : MarshalByRefObject, ISponsor
     {
-        [XmlEnum("unavailable")]  unavailable,
-        [XmlEnum("subscribe")]    subscribe,
-        [XmlEnum("subscribed")]   subscribed,
-        [XmlEnum("unsubscribe")]  unsubscribe,
-        [XmlEnum("unsubscribed")] unsubscribed,
-        [XmlEnum("probe")]        probe,
-        [XmlEnum("error")]        error,
-    }
+        private bool m_closed = false;
 
-
-    [XmlRoot("message")]
-    public class XmppPresenceStanza: XmppStanza
-    {
-        /// <summary>
-        /// IQ type: one of set, get, result, error
-        /// </summary>
-        [XmlAttribute("type")]
-        public XmppPresenceType PresenceType;
-
-        // [XmlAttribute("error")]
-        // public XmppError Error;
-
-        public XmppPresenceStanza() : base()
+        public TimeSpan Renewal(ILease lease)
         {
+            if (!m_closed)
+                return lease.InitialLeaseTime;
+            return TimeSpan.FromTicks(0);
         }
 
-        public XmppPresenceStanza(string fromJid, string toJid, XmppPresenceType pType) :
-            base(fromJid, toJid)
+        public void Close() { m_closed = true; }
+
+#if DEBUG
+        // For tracing GC while debugging
+        public static bool GCDummy = false;
+        ~ScriptSponsor()
         {
-            PresenceType = pType;
+            GCDummy = true;
         }
+#endif
     }
 }

@@ -92,14 +92,14 @@ namespace OpenSim.Region.OptionalModules.Scripting.ScriptModuleComms
             c(script, id, module, command, k);
         }
 
-        public void DispatchReply(UUID script, int code, string text, string k)
+        public void DispatchReply(UUID script, UUID primID, int code, string text, string k)
         {
             if (m_scriptModule == null)
                 return;
 
             Object[] args = new Object[] {-1, code, text, k};
 
-            m_scriptModule.PostScriptEvent(script, "link_message", args);
+            m_scriptModule.PostScriptEvent(script, primID, "link_message", args);
         }
     }
 }

@@ -25,15 +25,44 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.Xml.Serialization;
+using System.Collections;
 
-namespace OpenSim.Framework.Communications.XMPP
+using key = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString;
+using rotation = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Quaternion;
+using vector = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Vector3;
+using LSL_List = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.list;
+using LSL_String = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString;
+using LSL_Integer = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLInteger;
+using LSL_Float = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLFloat;
+
+namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
 {
-    [XmlRoot("error")]
-    public class XmppErrorStanza
+    public interface IAA_Api
     {
-        public XmppErrorStanza()
-        {
-        }
+        void AASetCloudDensity(LSL_Float density);
+
+        void AAUpdateDatabase(LSL_String key, LSL_String value, LSL_String token);
+
+        LSL_List AAQueryDatabase(LSL_String key, LSL_String token);
+
+        LSL_Types.list AADeserializeXMLValues(LSL_Types.LSLString xmlFile);
+
+        LSL_Types.list AADeserializeXMLKeys(LSL_Types.LSLString xmlFile);
+
+        void AASetConeOfSilence(LSL_Float radius);
+
+        LSL_Types.LSLString AASerializeXML(LSL_Types.list keys, LSL_Types.list values);
+
+        LSL_String AAGetTeam();
+
+        LSL_Float AAGetHealth();
+
+        void AAJoinCombat();
+
+        void AALeaveCombat();
+
+        void AAJoinCombatTeam(LSL_String team);
+
+        LSL_List AAGetTeamMembers();
     }
 }

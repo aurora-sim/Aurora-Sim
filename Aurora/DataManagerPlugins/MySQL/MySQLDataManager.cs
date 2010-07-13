@@ -112,7 +112,6 @@ namespace Aurora.DataManager.MySQL
             {
                 reader.Close();
                 reader.Dispose();
-                result.Cancel();
                 result.Dispose();
                 CloseDatabase(dbcon);
             }
@@ -177,7 +176,6 @@ namespace Aurora.DataManager.MySQL
                     {
                         reader.Close();
                         reader.Dispose();
-                        result.Cancel();
                         result.Dispose();
                         CloseDatabase(dbcon);
                     }
@@ -221,7 +219,6 @@ namespace Aurora.DataManager.MySQL
                     {
                         reader.Close();
                         reader.Dispose();
-                        result.Cancel();
                         result.Dispose();
                         CloseDatabase(dbcon);
                     }
@@ -265,7 +262,6 @@ namespace Aurora.DataManager.MySQL
                     {
                         reader.Close();
                         reader.Dispose();
-                        result.Cancel();
                         result.Dispose();
                         CloseDatabase(dbcon);
                     }
@@ -305,7 +301,6 @@ namespace Aurora.DataManager.MySQL
                 {
                     reader.Close();
                     reader.Dispose();
-                    result.Cancel();
                     result.Dispose();
                     CloseDatabase(dbcon);
                 }
@@ -335,7 +330,6 @@ namespace Aurora.DataManager.MySQL
                     {
                         reader.Close();
                         reader.Dispose();
-                        result.Cancel();
                         result.Dispose();
                         CloseDatabase(dbcon);
                     }
@@ -376,9 +370,6 @@ namespace Aurora.DataManager.MySQL
                 {
                     using (reader = result.ExecuteReader())
                     {
-                        reader.Close();
-                        reader.Dispose();
-                        result.Cancel();
                         result.Dispose();
                         CloseDatabase(dbcon);
                     }
@@ -404,9 +395,6 @@ namespace Aurora.DataManager.MySQL
             {
                 using (reader = result.ExecuteReader())
                 {
-                    reader.Close();
-                    reader.Dispose();
-                    result.Cancel();
                     result.Dispose();
                     CloseDatabase(dbcon);
                 }
@@ -431,9 +419,6 @@ namespace Aurora.DataManager.MySQL
             {
                 using (reader = result.ExecuteReader())
                 {
-                    reader.Close();
-                    reader.Dispose();
-                    result.Cancel();
                     result.Dispose();
                 }
             }

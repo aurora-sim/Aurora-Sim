@@ -52,20 +52,10 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
         }
 
         /// <summary>Lookup table to speed up terrain exports</summary>
-        HeightmapLookupValue[] LookupHeightTable;
+        HeightmapLookupValue[] LookupHeightTable = null;
 
         public LLRAW()
         {
-            LookupHeightTable = new HeightmapLookupValue[256 * 256];
-
-            for (int i = 0; i < 256; i++)
-            {
-                for (int j = 0; j < 256; j++)
-                {
-                    LookupHeightTable[i + (j * 256)] = new HeightmapLookupValue((ushort)(i + (j * 256)), (float)((double)i * ((double)j / 128.0d)));
-                }
-            }
-            Array.Sort<HeightmapLookupValue>(LookupHeightTable);
         }
 
         #region ITerrainLoader Members
@@ -177,6 +167,19 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
 
         public void SaveStream(Stream s, ITerrainChannel map)
         {
+            if (LookupHeightTable == null)
+            {
+                LookupHeightTable = new HeightmapLookupValue[256 * 256];
+
+                for (int i = 0; i < 256; i++)
+                {
+                    for (int j = 0; j < 256; j++)
+                    {
+                        LookupHeightTable[i + (j * 256)] = new HeightmapLookupValue((ushort)(i + (j * 256)), (float)((double)i * ((double)j / 128.0d)));
+                    }
+                }
+                Array.Sort<HeightmapLookupValue>(LookupHeightTable);
+            }
             BinaryWriter binStream = new BinaryWriter(s);
 
             // Output the calculated raw

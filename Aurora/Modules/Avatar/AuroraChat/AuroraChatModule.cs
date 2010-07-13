@@ -173,7 +173,9 @@ namespace Aurora.Modules
 
         public virtual void RegionLoaded(Scene scene)
         {
-            if(m_useMuteListModule)
+            if (!m_enabled) return;
+
+            if (m_useMuteListModule)
                 MuteListConnector = Aurora.DataManager.DataManager.RequestPlugin<IMuteListConnector>("IMuteListConnector");
 
             if (m_TransferModule == null)
@@ -956,7 +958,7 @@ namespace Aurora.Modules
             string capsBase = "/CAPS/" + caps.CapsObjectPath;
 
             caps.RegisterHandler("ChatSessionRequest",
-                                new RestHTTPHandler("POST", capsBase + m_chatSessionRequestPath,
+                                new RestHTTPHandler("POST", capsBase,
                                                       delegate(Hashtable m_dhttpMethod)
                                                       {
                                                           return ProcessChatSessionRequest(m_dhttpMethod, agentID);

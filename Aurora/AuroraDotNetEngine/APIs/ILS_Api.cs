@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) Contributors, http://opensimulator.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
@@ -25,69 +25,23 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.Xml.Serialization;
+using System.Collections;
 
-namespace OpenSim.Framework.Communications.XMPP
+using key = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString;
+using rotation = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Quaternion;
+using vector = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Vector3;
+using LSL_List = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.list;
+using LSL_String = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString;
+using LSL_Integer = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLInteger;
+using LSL_Float = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLFloat;
+
+namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
 {
-    /// <summary>
-    /// Message types.
-    /// </summary>
-    public enum XmppMessageType
+    public interface ILS_Api
     {
-        [XmlEnum("chat")] chat,
-        [XmlEnum("error")] error,
-        [XmlEnum("groupchat")] groupchat,
-        [XmlEnum("headline")] headline,
-        [XmlEnum("normal")] normal,
-    }
-
-    /// <summary>
-    /// Message body.
-    /// </summary>
-    public class XmppMessageBody
-    {
-        [XmlText]
-        public string Text;
-
-        public XmppMessageBody()
-        {
-        }
-
-        public XmppMessageBody(string message)
-        {
-            Text = message;
-        }
-
-        new public string ToString()
-        {
-            return Text;
-        }
-    }
-
-    [XmlRoot("message")]
-    public class XmppMessageStanza: XmppStanza
-    {
-        /// <summary>
-        /// IQ type: one of set, get, result, error
-        /// </summary>
-        [XmlAttribute("type")]
-        public XmppMessageType MessageType;
-
-        // [XmlAttribute("error")]
-        // public XmppError Error;
-
-        [XmlElement("body")]
-        public XmppMessageBody Body;
-
-        public XmppMessageStanza() : base()
-        {
-        }
-
-        public XmppMessageStanza(string fromJid, string toJid, XmppMessageType mType, string message) :
-            base(fromJid, toJid)
-        {
-            MessageType = mType;
-            Body = new XmppMessageBody(message);
-        }
+        // Windlight Functions
+        LSL_List lsGetWindlightScene(LSL_List rules);
+        int lsSetWindlightScene(LSL_List rules);
+        int lsSetWindlightSceneTargeted(LSL_List rules, key target);
     }
 }

@@ -52,7 +52,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="code"></param>
         /// <param name="text"></param>
         /// <param name="key"></param>
-        void DispatchReply(UUID scriptId, int code, string text, string key);
+        void DispatchReply(UUID scriptId, UUID primID, int code, string text, string key);
 
         // For use ONLY by the script API
         void RaiseEvent(UUID script, string id, string module, string command, string key);

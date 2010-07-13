@@ -34,6 +34,7 @@ using System.Text;
 using System.Threading;
 using log4net;
 using Nini.Config;
+using Mono.Addins;
 
 namespace OpenSim.Framework
 {
@@ -565,6 +566,7 @@ namespace OpenSim.Framework
     /// <summary>
     /// A console that processes commands internally
     /// </summary>
+    [Extension(Path = "/OpenSim/Console", NodeName = "ConsolePlugin")]
     public class CommandConsole : ICommandConsole
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);

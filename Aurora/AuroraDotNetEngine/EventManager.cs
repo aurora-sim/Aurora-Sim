@@ -26,72 +26,105 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using OpenMetaverse;
 using OpenSim.Framework;
+using OpenSim.Region.CoreModules;
+using OpenSim.Region;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.ScriptEngine.Shared;
-using OpenSim.Region.ScriptEngine.Interfaces;
+using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
+using Aurora.ScriptEngine.AuroraDotNetEngine.Plugins;
+using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
 using log4net;
 
-namespace OpenSim.Region.ScriptEngine.XEngine
+namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
     /// <summary>
     /// Prepares events so they can be directly executed upon a script by EventQueueManager, then queues it.
     /// </summary>
+    [Serializable]
     public class EventManager
     {
+        //
+        // Class is instanced in "ScriptEngine" and Uses "EventQueueManager"
+        // that is also instanced in "ScriptEngine".
+        // This class needs a bit of explaining:
+        //
+        // This class it the link between an event inside OpenSim and
+        // the corresponding event in a user script being executed.
+        //
+        // For example when an user touches an object then the
+        // "scene.EventManager.OnObjectGrab" event is fired
+        // inside OpenSim.
+        // We hook up to this event and queue a touch_start in
+        // EventQueueManager with the proper LSL parameters.
+        // It will then be delivered to the script by EventQueueManager.
+        //
+        // You can check debug C# dump of an LSL script if you need to
+        // verify what exact parameters are needed.
+        //
+
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private XEngine myScriptEngine;
+        private ScriptEngine m_scriptEngine;
 
-        public EventManager(XEngine _ScriptEngine)
+        public EventManager(ScriptEngine _ScriptEngine, bool performHookUp)
         {
-            myScriptEngine = _ScriptEngine;
-
-            m_log.Info("[XEngine] Hooking up to server events");
-            myScriptEngine.World.EventManager.OnAttach += attach;
-            myScriptEngine.World.EventManager.OnObjectGrab += touch_start;
-            myScriptEngine.World.EventManager.OnObjectGrabbing += touch;
-            myScriptEngine.World.EventManager.OnObjectDeGrab += touch_end;
-            myScriptEngine.World.EventManager.OnScriptChangedEvent += changed;
-            myScriptEngine.World.EventManager.OnScriptAtTargetEvent += at_target;
-            myScriptEngine.World.EventManager.OnScriptNotAtTargetEvent += not_at_target;
-            myScriptEngine.World.EventManager.OnScriptAtRotTargetEvent += at_rot_target;
-            myScriptEngine.World.EventManager.OnScriptNotAtRotTargetEvent += not_at_rot_target;
-            myScriptEngine.World.EventManager.OnScriptControlEvent += control;
-            myScriptEngine.World.EventManager.OnScriptColliderStart += collision_start;
-            myScriptEngine.World.EventManager.OnScriptColliding += collision;
-            myScriptEngine.World.EventManager.OnScriptCollidingEnd += collision_end;
-            myScriptEngine.World.EventManager.OnScriptLandColliderStart += land_collision_start;
-            myScriptEngine.World.EventManager.OnScriptLandColliding += land_collision;
-            myScriptEngine.World.EventManager.OnScriptLandColliderEnd += land_collision_end;
-            IMoneyModule money=myScriptEngine.World.RequestModuleInterface<IMoneyModule>();
-            if (money != null)
-            {
-                money.OnObjectPaid+=HandleObjectPaid;
-            }
+            m_scriptEngine = _ScriptEngine;
         }
 
-        /// <summary>
-        /// When an object gets paid by an avatar and generates the paid event, 
-        /// this will pipe it to the script engine
-        /// </summary>
-        /// <param name="objectID">Object ID that got paid</param>
-        /// <param name="agentID">Agent Id that did the paying</param>
-        /// <param name="amount">Amount paid</param>
-        private void HandleObjectPaid(UUID objectID, UUID agentID,
-                int amount)
+        public void HookUpRegionEvents(Scene scene)
         {
-            // Since this is an event from a shared module, all scenes will
-            // get it. But only one has the object in question. The others
-            // just ignore it.
-            //
+            //m_log.Info("[" + myScriptEngine.ScriptEngineName +
+            //           "]: Hooking up to server events");
+
+            scene.EventManager.OnObjectGrab +=
+                    touch_start;
+            scene.EventManager.OnObjectGrabbing += 
+                    touch;
+            scene.EventManager.OnObjectDeGrab +=
+                    touch_end;
+            scene.EventManager.OnRemoveScript +=
+                    OnRemoveScript;
+            scene.EventManager.OnScriptChangedEvent +=
+                    changed;
+            scene.EventManager.OnScriptAtTargetEvent +=
+                    at_target;
+            scene.EventManager.OnScriptNotAtTargetEvent +=
+                    not_at_target;
+            scene.EventManager.OnScriptAtRotTargetEvent +=
+                    at_rot_target;
+            scene.EventManager.OnScriptNotAtRotTargetEvent +=
+                    not_at_rot_target;
+            scene.EventManager.OnScriptControlEvent +=
+                    control;
+            scene.EventManager.OnScriptColliderStart +=
+                    collision_start;
+            scene.EventManager.OnScriptColliding +=
+                    collision;
+            scene.EventManager.OnScriptCollidingEnd +=
+                    collision_end;
+            scene.EventManager.OnScriptLandColliderStart += 
+                    land_collision_start;
+            scene.EventManager.OnScriptLandColliding += 
+                    land_collision;
+            scene.EventManager.OnScriptLandColliderEnd += 
+                    land_collision_end;
+            scene.EventManager.OnAttach += attach;
+
+
+            IMoneyModule money =
+                    scene.RequestModuleInterface<IMoneyModule>();
+            if (money != null)
+                money.OnObjectPaid+=HandleObjectPaid;
+        }
+
+        private void HandleObjectPaid(UUID objectID, UUID agentID, int amount)
+        {
             SceneObjectPart part =
-                    myScriptEngine.World.GetSceneObjectPart(objectID);
+                    m_scriptEngine.findPrimsScene(objectID).GetSceneObjectPart(objectID);
 
             if (part == null)
                 return;
@@ -104,6 +137,22 @@ namespace OpenSim.Region.ScriptEngine.XEngine
             {
                 money(part.LocalId, agentID, amount);
             }
+        }
+
+        public void changed(uint localID, uint change)
+        {
+            // Add to queue for all scripts in localID, Object pass change.
+            m_scriptEngine.PostObjectEvent(localID, new EventParams(
+                    "changed",new object[] { new LSL_Types.LSLInteger(change) },
+                    new DetectParams[0]));
+        }
+
+        public void state_entry(uint localID)
+        {
+            // Add to queue for all scripts in ObjectID object
+            m_scriptEngine.PostObjectEvent(localID, new EventParams(
+                    "state_entry",new object[] { },
+                    new DetectParams[0]));
         }
 
         /// <summary>
@@ -122,11 +171,11 @@ namespace OpenSim.Region.ScriptEngine.XEngine
             DetectParams[] det = new DetectParams[1];
             det[0] = new DetectParams();
             det[0].Key = remoteClient.AgentId;
-            det[0].Populate(myScriptEngine.World);
 
             if (originalID == 0)
             {
-                SceneObjectPart part = myScriptEngine.World.GetSceneObjectPart(localID);
+                det[0].Populate(m_scriptEngine.findPrimsScene(localID));
+                SceneObjectPart part = m_scriptEngine.findPrimsScene(localID).GetSceneObjectPart(localID);
                 if (part == null)
                     return;
 
@@ -134,7 +183,8 @@ namespace OpenSim.Region.ScriptEngine.XEngine
             }
             else
             {
-                SceneObjectPart originalPart = myScriptEngine.World.GetSceneObjectPart(originalID);
+                det[0].Populate(m_scriptEngine.findPrimsScene(originalID));
+                SceneObjectPart originalPart = m_scriptEngine.findPrimsScene(originalID).GetSceneObjectPart(originalID);
                 det[0].LinkNum = originalPart.LinkNum;
             }
 
@@ -143,7 +193,7 @@ namespace OpenSim.Region.ScriptEngine.XEngine
                 det[0].SurfaceTouchArgs = surfaceArgs;
             }
 
-            myScriptEngine.PostObjectEvent(localID, new EventParams(
+            m_scriptEngine.PostObjectEvent(localID, new EventParams(
                     "touch_start", new Object[] { new LSL_Types.LSLInteger(1) },
                     det));
         }
@@ -155,14 +205,14 @@ namespace OpenSim.Region.ScriptEngine.XEngine
             DetectParams[] det = new DetectParams[1];
             det[0] = new DetectParams();
             det[0].Key = remoteClient.AgentId;
-            det[0].Populate(myScriptEngine.World);
             det[0].OffsetPos = new LSL_Types.Vector3(offsetPos.X,
                                                      offsetPos.Y,
                                                      offsetPos.Z);
 
             if (originalID == 0)
             {
-                SceneObjectPart part = myScriptEngine.World.GetSceneObjectPart(localID);
+                det[0].Populate(m_scriptEngine.findPrimsScene(localID));
+                SceneObjectPart part = m_scriptEngine.findPrimsScene(localID).GetSceneObjectPart(localID);
                 if (part == null)
                     return;
 
@@ -170,7 +220,8 @@ namespace OpenSim.Region.ScriptEngine.XEngine
             }
             else
             {
-                SceneObjectPart originalPart = myScriptEngine.World.GetSceneObjectPart(originalID);
+                det[0].Populate(m_scriptEngine.findPrimsScene(originalID));
+                SceneObjectPart originalPart = m_scriptEngine.findPrimsScene(originalID).GetSceneObjectPart(originalID);
                 det[0].LinkNum = originalPart.LinkNum;
             }
             if (surfaceArgs != null)
@@ -178,7 +229,7 @@ namespace OpenSim.Region.ScriptEngine.XEngine
                 det[0].SurfaceTouchArgs = surfaceArgs;
             }
 
-            myScriptEngine.PostObjectEvent(localID, new EventParams(
+            m_scriptEngine.PostObjectEvent(localID, new EventParams(
                     "touch", new Object[] { new LSL_Types.LSLInteger(1) },
                     det));
         }
@@ -190,11 +241,11 @@ namespace OpenSim.Region.ScriptEngine.XEngine
             DetectParams[] det = new DetectParams[1];
             det[0] = new DetectParams();
             det[0].Key = remoteClient.AgentId;
-            det[0].Populate(myScriptEngine.World);
 
             if (originalID == 0)
             {
-                SceneObjectPart part = myScriptEngine.World.GetSceneObjectPart(localID);
+                det[0].Populate(m_scriptEngine.findPrimsScene(localID));
+                SceneObjectPart part = m_scriptEngine.findPrimsScene(localID).GetSceneObjectPart(localID);
                 if (part == null)
                     return;
 
@@ -202,7 +253,8 @@ namespace OpenSim.Region.ScriptEngine.XEngine
             }
             else
             {
-                SceneObjectPart originalPart = myScriptEngine.World.GetSceneObjectPart(originalID);
+                det[0].Populate(m_scriptEngine.findPrimsScene(originalID));
+                SceneObjectPart originalPart = m_scriptEngine.findPrimsScene(originalID).GetSceneObjectPart(originalID);
                 det[0].LinkNum = originalPart.LinkNum;
             }
 
@@ -211,28 +263,31 @@ namespace OpenSim.Region.ScriptEngine.XEngine
                 det[0].SurfaceTouchArgs = surfaceArgs;
             }
 
-            myScriptEngine.PostObjectEvent(localID, new EventParams(
+            m_scriptEngine.PostObjectEvent(localID, new EventParams(
                     "touch_end", new Object[] { new LSL_Types.LSLInteger(1) },
                     det));
         }
 
-        public void changed(uint localID, uint change)
+        public void OnRemoveScript(uint localID, UUID itemID)
         {
-            // Add to queue for all scripts in localID, Object pass change.
-            myScriptEngine.PostObjectEvent(localID, new EventParams(
-                    "changed",new object[] { new LSL_Types.LSLInteger(change) },
-                    new DetectParams[0]));
+            m_scriptEngine.StopScript(
+                localID,
+                itemID);
         }
-
-        // state_entry: not processed here
-        // state_exit: not processed here
 
         public void money(uint localID, UUID agentID, int amount)
         {
-            myScriptEngine.PostObjectEvent(localID, new EventParams(
+            m_scriptEngine.PostObjectEvent(localID, new EventParams(
                     "money", new object[] {
                     new LSL_Types.LSLString(agentID.ToString()),
                     new LSL_Types.LSLInteger(amount) },
+                    new DetectParams[0]));
+        }
+
+        public void state_exit(uint localID)
+        {
+            m_scriptEngine.PostObjectEvent(localID, new EventParams(
+                    "state_exit", new object[0] { },
                     new DetectParams[0]));
         }
 
@@ -244,13 +299,13 @@ namespace OpenSim.Region.ScriptEngine.XEngine
             foreach (DetectedObject detobj in col.Colliders)
             {
                 DetectParams d = new DetectParams();
-                d.Key =detobj.keyUUID;
-                d.Populate(myScriptEngine.World);
+                d.Key = detobj.keyUUID;
+                d.Populate(m_scriptEngine.findPrimsScene(localID));
                 det.Add(d);
             }
 
             if (det.Count > 0)
-                myScriptEngine.PostObjectEvent(localID, new EventParams(
+                m_scriptEngine.PostObjectEvent(localID, new EventParams(
                         "collision_start",
                         new Object[] { new LSL_Types.LSLInteger(det.Count) },
                         det.ToArray()));
@@ -264,13 +319,13 @@ namespace OpenSim.Region.ScriptEngine.XEngine
             foreach (DetectedObject detobj in col.Colliders)
             {
                 DetectParams d = new DetectParams();
-                d.Key =detobj.keyUUID;
-                d.Populate(myScriptEngine.World);
+                d.Key = detobj.keyUUID;
+                d.Populate(m_scriptEngine.findPrimsScene(localID));
                 det.Add(d);
             }
 
             if (det.Count > 0)
-                myScriptEngine.PostObjectEvent(localID, new EventParams(
+                m_scriptEngine.PostObjectEvent(localID, new EventParams(
                         "collision", new Object[] { new LSL_Types.LSLInteger(det.Count) },
                         det.ToArray()));
         }
@@ -283,20 +338,20 @@ namespace OpenSim.Region.ScriptEngine.XEngine
             foreach (DetectedObject detobj in col.Colliders)
             {
                 DetectParams d = new DetectParams();
-                d.Key =detobj.keyUUID;
-                d.Populate(myScriptEngine.World);
+                d.Key = detobj.keyUUID;
+                d.Populate(m_scriptEngine.findPrimsScene(localID));
                 det.Add(d);
             }
 
             if (det.Count > 0)
-                myScriptEngine.PostObjectEvent(localID, new EventParams(
+                m_scriptEngine.PostObjectEvent(localID, new EventParams(
                         "collision_end",
                         new Object[] { new LSL_Types.LSLInteger(det.Count) },
                         det.ToArray()));
         }
 
         public void land_collision_start(uint localID, ColliderArgs col)
-         {
+        {
             List<DetectParams> det = new List<DetectParams>();
 
             foreach (DetectedObject detobj in col.Colliders)
@@ -305,9 +360,9 @@ namespace OpenSim.Region.ScriptEngine.XEngine
                 d.Position = new LSL_Types.Vector3(detobj.posVector.X,
                     detobj.posVector.Y,
                     detobj.posVector.Z);
-                d.Populate(myScriptEngine.World);
+                d.Populate(m_scriptEngine.findPrimsScene(localID));
                 det.Add(d);
-                myScriptEngine.PostObjectEvent(localID, new EventParams(
+                m_scriptEngine.PostObjectEvent(localID, new EventParams(
                         "land_collision_start",
                         new Object[] { new LSL_Types.Vector3(d.Position) },
                         det.ToArray()));
@@ -325,9 +380,9 @@ namespace OpenSim.Region.ScriptEngine.XEngine
                 d.Position = new LSL_Types.Vector3(detobj.posVector.X,
                     detobj.posVector.Y,
                     detobj.posVector.Z);
-                d.Populate(myScriptEngine.World);
+                d.Populate(m_scriptEngine.findPrimsScene(localID));
                 det.Add(d);
-                myScriptEngine.PostObjectEvent(localID, new EventParams(
+                m_scriptEngine.PostObjectEvent(localID, new EventParams(
                         "land_collision",
                         new Object[] { new LSL_Types.Vector3(d.Position) },
                         det.ToArray()));
@@ -344,21 +399,18 @@ namespace OpenSim.Region.ScriptEngine.XEngine
                 d.Position = new LSL_Types.Vector3(detobj.posVector.X,
                     detobj.posVector.Y,
                     detobj.posVector.Z);
-                d.Populate(myScriptEngine.World);
+                d.Populate(m_scriptEngine.findPrimsScene(localID));
                 det.Add(d);
-                myScriptEngine.PostObjectEvent(localID, new EventParams(
+                m_scriptEngine.PostObjectEvent(localID, new EventParams(
                         "land_collision_end",
                         new Object[] { new LSL_Types.Vector3(d.Position) },
                         det.ToArray()));
             }
-         }
+        }
 
-        // timer: not handled here
-        // listen: not handled here
-
-        public void control(UUID itemID, UUID agentID, uint held, uint change)
+        public void control(uint localID, UUID itemID, UUID agentID, uint held, uint change)
         {
-            myScriptEngine.PostScriptEvent(itemID, new EventParams(
+            m_scriptEngine.PostObjectEvent(localID, new EventParams(
                     "control",new object[] {
                     new LSL_Types.LSLString(agentID.ToString()),
                     new LSL_Types.LSLInteger(held),
@@ -369,8 +421,8 @@ namespace OpenSim.Region.ScriptEngine.XEngine
         public void email(uint localID, UUID itemID, string timeSent,
                 string address, string subject, string message, int numLeft)
         {
-            myScriptEngine.PostObjectEvent(localID, new EventParams(
-                    "email",new object[] {
+            m_scriptEngine.PostObjectEvent(localID, new EventParams(
+                    "email", new object[] {
                     new LSL_Types.LSLString(timeSent),
                     new LSL_Types.LSLString(address),
                     new LSL_Types.LSLString(subject),
@@ -382,7 +434,7 @@ namespace OpenSim.Region.ScriptEngine.XEngine
         public void at_target(uint localID, uint handle, Vector3 targetpos,
                 Vector3 atpos)
         {
-            myScriptEngine.PostObjectEvent(localID, new EventParams(
+            m_scriptEngine.PostObjectEvent(localID, new EventParams(
                     "at_target", new object[] {
                     new LSL_Types.LSLInteger(handle),
                     new LSL_Types.Vector3(targetpos.X,targetpos.Y,targetpos.Z),
@@ -392,15 +444,15 @@ namespace OpenSim.Region.ScriptEngine.XEngine
 
         public void not_at_target(uint localID)
         {
-            myScriptEngine.PostObjectEvent(localID, new EventParams(
-                    "not_at_target",new object[0],
+            m_scriptEngine.PostObjectEvent(localID, new EventParams(
+                    "not_at_target", new object[0],
                     new DetectParams[0]));
         }
 
         public void at_rot_target(uint localID, uint handle, Quaternion targetrot,
                 Quaternion atrot)
         {
-            myScriptEngine.PostObjectEvent(localID, new EventParams(
+            m_scriptEngine.PostObjectEvent(localID, new EventParams(
                     "at_rot_target", new object[] {
                     new LSL_Types.LSLInteger(handle),
                     new LSL_Types.Quaternion(targetrot.X,targetrot.Y,targetrot.Z,targetrot.W),
@@ -410,40 +462,41 @@ namespace OpenSim.Region.ScriptEngine.XEngine
 
         public void not_at_rot_target(uint localID)
         {
-            myScriptEngine.PostObjectEvent(localID, new EventParams(
-                    "not_at_rot_target",new object[0],
+            m_scriptEngine.PostObjectEvent(localID, new EventParams(
+                    "not_at_rot_target", new object[0],
                     new DetectParams[0]));
         }
 
-        // run_time_permissions: not handled here
-
         public void attach(uint localID, UUID itemID, UUID avatar)
         {
-            myScriptEngine.PostObjectEvent(localID, new EventParams(
-                    "attach",new object[] {
+            m_scriptEngine.PostObjectEvent(localID, new EventParams(
+                    "attach", new object[] {
                     new LSL_Types.LSLString(avatar.ToString()) },
                     new DetectParams[0]));
         }
 
-        // dataserver: not handled here
-        // link_message: not handled here
-
         public void moving_start(uint localID, UUID itemID)
         {
-            myScriptEngine.PostObjectEvent(localID, new EventParams(
-                    "moving_start",new object[0],
+            m_scriptEngine.PostObjectEvent(localID, new EventParams(
+                    "moving_start", new object[0],
                     new DetectParams[0]));
         }
 
         public void moving_end(uint localID, UUID itemID)
         {
-            myScriptEngine.PostObjectEvent(localID, new EventParams(
-                    "moving_end",new object[0],
+            m_scriptEngine.PostObjectEvent(localID, new EventParams(
+                    "moving_end", new object[0],
                     new DetectParams[0]));
         }
 
-        // object_rez: not handled here
-        // remote_data: not handled here
-        // http_response: not handled here
+        /// <summary>
+        /// If set to true then threads and stuff should try to make a graceful exit
+        /// </summary>
+        public bool PleaseShutdown
+        {
+            get { return _PleaseShutdown; }
+            set { _PleaseShutdown = value; }
+        }
+        private bool _PleaseShutdown = false;
     }
 }

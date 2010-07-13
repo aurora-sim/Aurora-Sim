@@ -1365,7 +1365,7 @@ namespace OpenSim.Framework
         void SendClearFollowCamProperties(UUID objectID);
 
         void SendRegionHandle(UUID regoinID, ulong handle);
-        void SendParcelInfo(RegionInfo info, LandData land, UUID parcelID, uint x, uint y);
+        void SendParcelInfo(LandData land, UUID parcelID, uint x, uint y, string SimName);
         void SendScriptTeleportRequest(string objName, string simName, Vector3 pos, Vector3 lookAt);
 
         void SendDirPlacesReply(UUID queryID, DirPlacesReplyData[] data);

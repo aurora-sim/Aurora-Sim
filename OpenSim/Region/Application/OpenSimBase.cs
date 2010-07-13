@@ -153,8 +153,10 @@ namespace OpenSim
         private void SetUpConsole()
         {
             List<ICommandConsole> Consoles = Aurora.Framework.AuroraModuleLoader.LoadPlugins<ICommandConsole>("/OpenSim/Console", new ConsolePluginInitialiser("Region", ConfigSource, this));
+            
             m_console = m_applicationRegistry.Get<ICommandConsole>();
-
+            if (m_console == null)
+                m_console = new LocalConsole();
             ILoggerRepository repository = LogManager.GetRepository();
             IAppender[] appenders = repository.GetAppenders();
             OpenSimAppender m_consoleAppender = null;

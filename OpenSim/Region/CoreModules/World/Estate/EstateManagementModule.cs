@@ -1150,12 +1150,13 @@ namespace OpenSim.Region.CoreModules.World.Estate
             flags |= RegionFlags.AllowLandmark;
             flags |= RegionFlags.AllowSetHome;
 
-            // TODO: SkipUpdateInterestList
+            
 
             // Omitted
             //
-            // Omitted: NullLayer (what is that?)
-            // Omitted: SkipAgentAction (what does it do?)
+            // Omitted: SkipUpdateInterestList  Region does not update agent prim interest lists. Internal debugging option.
+            // Omitted: NullLayer Unknown: Related to the availability of an overview world map tile.(Think mainland images when zoomed out.)
+            // Omitted: SkipAgentAction Unknown: Related to region debug flags. Possibly to skip processing of agent interaction with world.
 
             return (uint)flags;
         }

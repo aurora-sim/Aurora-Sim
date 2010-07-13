@@ -34,7 +34,7 @@ using System.Runtime.Remoting.Lifetime;
 using OpenSim.Region.ScriptEngine.Interfaces;
 using OpenSim.Region.ScriptEngine.Shared.ScriptBase;
 
-namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
+namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
     public interface IScript : IDisposable
     {

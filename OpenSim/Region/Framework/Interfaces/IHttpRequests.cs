@@ -41,8 +41,8 @@ namespace OpenSim.Region.Framework.Interfaces
     public interface IHttpRequestModule
     {
         UUID MakeHttpRequest(string url, string parameters, string body);
-        UUID StartHttpRequest(uint localID, UUID itemID, string url, List<string> parameters, Dictionary<string, string> headers, string body);
-        void StopHttpRequest(uint m_localID, UUID m_itemID);
+        UUID StartHttpRequest(UUID primID, UUID itemID, string url, List<string> parameters, Dictionary<string, string> headers, string body);
+        void StopHttpRequest(UUID m_primID, UUID m_itemID);
         IServiceRequest GetNextCompletedRequest();
         void RemoveCompletedRequest(UUID id);
     }

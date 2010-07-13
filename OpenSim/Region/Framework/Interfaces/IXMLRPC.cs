@@ -38,7 +38,7 @@ namespace OpenSim.Region.Framework.Interfaces
         string GetStrRetval();
         void SetIntRetval(int resp);
         int GetIntRetval();
-        uint GetLocalID();
+        UUID GetPrimID();
         UUID GetItemID();
         string GetStrVal();
         int GetIntValue();
@@ -47,7 +47,7 @@ namespace OpenSim.Region.Framework.Interfaces
 
     public interface IXMLRPC
     {
-        UUID OpenXMLRPCChannel(uint localID, UUID itemID, UUID channelID);
+        UUID OpenXMLRPCChannel(UUID primID, UUID itemID, UUID channelID);
         void CloseXMLRPCChannel(UUID channelKey);
         bool hasRequests();
         void RemoteDataReply(string channel, string message_id, string sdata, int idata);
@@ -55,7 +55,7 @@ namespace OpenSim.Region.Framework.Interfaces
         IXmlRpcRequestInfo GetNextCompletedRequest();
         void RemoveCompletedRequest(UUID id);
         void DeleteChannels(UUID itemID);
-        UUID SendRemoteData(uint localID, UUID itemID, string channel, string dest, int idata, string sdata);
+        UUID SendRemoteData(UUID primID, UUID itemID, string channel, string dest, int idata, string sdata);
         IServiceRequest GetNextCompletedSRDRequest();
         void RemoveCompletedSRDRequest(UUID id);
         void CancelSRDRequests(UUID itemID);

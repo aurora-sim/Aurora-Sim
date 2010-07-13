@@ -203,7 +203,7 @@ namespace OpenSim.Region.CoreModules.Scripting.XMLRPC
          *
          * ********************************************/
 
-        public UUID OpenXMLRPCChannel(uint localID, UUID itemID, UUID channelID)
+        public UUID OpenXMLRPCChannel(UUID primID, UUID itemID, UUID channelID)
         {
             UUID newChannel = UUID.Zero;
 
@@ -228,7 +228,7 @@ namespace OpenSim.Region.CoreModules.Scripting.XMLRPC
             if (newChannel == UUID.Zero)
             {
                 newChannel = (channelID == UUID.Zero) ? UUID.Random() : channelID;
-                RPCChannelInfo rpcChanInfo = new RPCChannelInfo(localID, itemID, newChannel);
+                RPCChannelInfo rpcChanInfo = new RPCChannelInfo(primID, itemID, newChannel);
                 lock (XMLRPCListLock)
                 {
                     m_openChannels.Add(newChannel, rpcChanInfo);
@@ -330,16 +330,13 @@ namespace OpenSim.Region.CoreModules.Scripting.XMLRPC
         {
             if (m_rpcPending != null)
             {
+                if (m_rpcPending.Count == 0)
+                    return null;
                 lock (XMLRPCListLock)
                 {
-                    foreach (UUID luid in m_rpcPending.Keys)
+                    foreach (RPCRequestInfo luid in m_rpcPending.Values)
                     {
-                        RPCRequestInfo tmpReq;
-
-                        if (m_rpcPending.TryGetValue(luid, out tmpReq))
-                        {
-                            if (!tmpReq.IsProcessed()) return tmpReq;
-                        }
+                        if (!luid.IsProcessed()) return luid;
                     }
                 }
             }
@@ -363,10 +360,10 @@ namespace OpenSim.Region.CoreModules.Scripting.XMLRPC
             }
         }
 
-        public UUID SendRemoteData(uint localID, UUID itemID, string channel, string dest, int idata, string sdata)
+        public UUID SendRemoteData(UUID primID, UUID itemID, string channel, string dest, int idata, string sdata)
         {
             SendRemoteDataRequest req = new SendRemoteDataRequest(
-                localID, itemID, channel, dest, idata, sdata
+                primID, itemID, channel, dest, idata, sdata
                 );
             m_pendingSRDResponses.Add(req.GetReqID(), req);
             req.Process();
@@ -377,17 +374,14 @@ namespace OpenSim.Region.CoreModules.Scripting.XMLRPC
         {
             if (m_pendingSRDResponses != null)
             {
+                if (m_pendingSRDResponses.Count == 0)
+                    return null;
                 lock (XMLRPCListLock)
                 {
-                    foreach (UUID luid in m_pendingSRDResponses.Keys)
+                    foreach (SendRemoteDataRequest luid in m_pendingSRDResponses.Values)
                     {
-                        SendRemoteDataRequest tmpReq;
-
-                        if (m_pendingSRDResponses.TryGetValue(luid, out tmpReq))
-                        {
-                            if (tmpReq.Finished)
-                                return tmpReq;
-                        }
+                        if (luid.Finished)
+                            return luid;
                     }
                 }
             }
@@ -445,7 +439,7 @@ namespace OpenSim.Region.CoreModules.Scripting.XMLRPC
                     lock (XMLRPCListLock)
                     {
                         rpcInfo =
-                            new RPCRequestInfo(rpcChanInfo.GetLocalID(), rpcChanInfo.GetItemID(), channel, strVal,
+                            new RPCRequestInfo(rpcChanInfo.GetPrimID(), rpcChanInfo.GetItemID(), channel, strVal,
                                                intVal);
                         m_rpcPending.Add(rpcInfo.GetMessageID(), rpcInfo);
                     }
@@ -490,16 +484,16 @@ namespace OpenSim.Region.CoreModules.Scripting.XMLRPC
         private UUID m_ChannelKey;
         private string m_IntVal;
         private UUID m_ItemID;
-        private uint m_localID;
+        private UUID m_PrimID;
         private UUID m_MessageID;
         private bool m_processed;
         private int m_respInt;
         private string m_respStr;
         private string m_StrVal;
 
-        public RPCRequestInfo(uint localID, UUID itemID, UUID channelKey, string strVal, string intVal)
+        public RPCRequestInfo(UUID primID, UUID itemID, UUID channelKey, string strVal, string intVal)
         {
-            m_localID = localID;
+            m_PrimID = primID;
             m_StrVal = strVal;
             m_IntVal = intVal;
             m_ItemID = itemID;
@@ -545,9 +539,9 @@ namespace OpenSim.Region.CoreModules.Scripting.XMLRPC
             return m_respInt;
         }
 
-        public uint GetLocalID()
+        public UUID GetPrimID()
         {
-            return m_localID;
+            return m_PrimID;
         }
 
         public UUID GetItemID()
@@ -575,12 +569,12 @@ namespace OpenSim.Region.CoreModules.Scripting.XMLRPC
     {
         private UUID m_ChannelKey;
         private UUID m_itemID;
-        private uint m_localID;
+        private UUID m_primID;
 
-        public RPCChannelInfo(uint localID, UUID itemID, UUID channelID)
+        public RPCChannelInfo(UUID primID, UUID itemID, UUID channelID)
         {
             m_ChannelKey = channelID;
-            m_localID = localID;
+            m_primID = primID;
             m_itemID = itemID;
         }
 
@@ -594,9 +588,9 @@ namespace OpenSim.Region.CoreModules.Scripting.XMLRPC
             return m_ChannelKey;
         }
 
-        public uint GetLocalID()
+        public UUID GetPrimID()
         {
-            return m_localID;
+            return m_primID;
         }
     }
 
@@ -620,11 +614,11 @@ namespace OpenSim.Region.CoreModules.Scripting.XMLRPC
             get { return _itemID; }
             set { _itemID = value; }
         }
-        private uint _localID;
-        public uint LocalID
+        private UUID _PrimID;
+        public UUID PrimID
         {
-            get { return _localID; }
-            set { _localID = value; }
+            get { return _PrimID; }
+            set { _PrimID = value; }
         }
         private UUID _reqID;
         public UUID ReqID 
@@ -637,14 +631,14 @@ namespace OpenSim.Region.CoreModules.Scripting.XMLRPC
         public string ResponseSdata;
         public string Sdata;
 
-        public SendRemoteDataRequest(uint localID, UUID itemID, string channel, string dest, int idata, string sdata)
+        public SendRemoteDataRequest(UUID primID, UUID itemID, string channel, string dest, int idata, string sdata)
         {
             this.Channel = channel;
             DestURL = dest;
             this.Idata = idata;
             this.Sdata = sdata;
             ItemID = itemID;
-            LocalID = localID;
+            PrimID = primID;
 
             ReqID = UUID.Random();
         }

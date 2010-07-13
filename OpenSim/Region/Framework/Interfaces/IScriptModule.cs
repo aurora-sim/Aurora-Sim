@@ -39,7 +39,7 @@ namespace OpenSim.Region.Framework.Interfaces
         string GetXMLState(UUID itemID);
         bool SetXMLState(UUID itemID, string xml);
 
-        bool PostScriptEvent(UUID itemID, string name, Object[] args);
+        bool PostScriptEvent(UUID itemID, UUID primID, string name, Object[] args);
         bool PostObjectEvent(UUID itemID, string name, Object[] args);
 
         // Suspend ALL scripts in a given scene object. The item ID

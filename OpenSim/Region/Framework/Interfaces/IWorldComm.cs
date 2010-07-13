@@ -37,7 +37,6 @@ namespace OpenSim.Region.Framework.Interfaces
         UUID GetItemID();
         UUID GetHostID();
         int GetChannel();
-        uint GetLocalID();
         int GetHandle();
         string GetMessage();
         string GetName();
@@ -63,7 +62,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="id">key to filter on (user given, could be totally faked)</param>
         /// <param name="msg">msg to filter on</param>
         /// <returns>number of the scripts handle</returns>
-        int Listen(uint LocalID, UUID itemID, UUID hostID, int channel, string name, UUID id, string msg);
+        int Listen(UUID itemID, UUID hostID, int channel, string name, UUID id, string msg);
 
         /// <summary>
         /// This method scans over the objects which registered an interest in listen callbacks.
@@ -96,7 +95,7 @@ namespace OpenSim.Region.Framework.Interfaces
         void ListenRemove(UUID itemID, int handle);
         void DeleteListener(UUID itemID);
         Object[] GetSerializationData(UUID itemID);
-        void CreateFromData(uint localID, UUID itemID, UUID hostID,
+        void CreateFromData(UUID itemID, UUID hostID,
                             Object[] data);
     }
 }

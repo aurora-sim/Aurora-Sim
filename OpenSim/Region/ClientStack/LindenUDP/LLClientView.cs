@@ -2794,7 +2794,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             OutPacket(reply, ThrottleOutPacketType.Land);
         }
 
-        public void SendParcelInfo(RegionInfo info, LandData land, UUID parcelID, uint x, uint y)
+        public void SendParcelInfo(LandData land, UUID parcelID, uint x, uint y, string SimName)
         {
             ParcelInfoReplyPacket reply = (ParcelInfoReplyPacket)PacketPool.Instance.GetPacket(PacketType.ParcelInfoReply);
             reply.AgentData.AgentID = m_agentId;
@@ -2815,10 +2815,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             {
                 pos = (land.AABBMax + land.AABBMin) * 0.5f;
             }
-            reply.Data.GlobalX = info.RegionLocX * Constants.RegionSize + x;
-            reply.Data.GlobalY = info.RegionLocY * Constants.RegionSize + y;
+            reply.Data.GlobalX = x;
+            reply.Data.GlobalY = y;
             reply.Data.GlobalZ = pos.Z;
-            reply.Data.SimName = Utils.StringToBytes(info.RegionName);
+            reply.Data.SimName = Utils.StringToBytes(SimName);
             reply.Data.SnapshotID = land.SnapshotID;
             reply.Data.Dwell = land.Dwell;
             reply.Data.SalePrice = land.SalePrice;

@@ -41,6 +41,7 @@ namespace OpenSim.Framework
     /// <summary>
     /// A console that uses cursor control and color
     /// </summary>    
+    [Extension(Path = "/OpenSim/Console", NodeName = "ConsolePlugin")]
     public class LocalConsole : CommandConsole
     {
 //        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);

@@ -9,11 +9,10 @@ using OpenSim.Framework;
 using OpenSim.Framework.Client;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
-using OpenSim.Region.ScriptEngine.Interfaces;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
-    public class ScriptProtectionModule: IScriptProtectionModule
+    public class ScriptProtectionModule
 	{
 		#region Declares
 		
@@ -213,9 +212,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 ScriptData ID = null;
                 PreviouslyCompiled.TryGetValue(source, out ID);
-                //Just as a check...
-                if (ID == null)
-                    return null;
                 return ID;
             }
         }
@@ -224,33 +220,30 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public Dictionary<UUID, Dictionary<UUID, ScriptData>> Scripts = new Dictionary<UUID, Dictionary<UUID, ScriptData>>();
         public ScriptData GetScript(UUID primID, UUID itemID)
         {
-            if (!Scripts.ContainsKey(primID))
-        		return null;
-            Dictionary<UUID, ScriptData> Instances = Scripts[primID]; 
-        	if(!Instances.ContainsKey(itemID))
-        		return null;
-        	return Instances[itemID];
+            Dictionary<UUID, ScriptData> Instances;
+            if (Scripts.TryGetValue(primID, out Instances))
+            {
+                ScriptData SD;
+                Instances.TryGetValue(itemID, out SD);
+                return SD;
+            }
+            return null;
         }
         
         public ScriptData GetScript(UUID itemID)
         {
-        	if(!ScriptsItems.ContainsKey(itemID))
-        		return null;
-        	UUID primID = ScriptsItems[itemID];
-            return GetScript(primID, itemID);
+            UUID primID;
+            if (ScriptsItems.TryGetValue(itemID, out primID))
+                return GetScript(primID, itemID);
+            return null;
         }
 
         public ScriptData[] GetScripts(UUID primID)
         {
-            if (!Scripts.ContainsKey(primID))
-        		return null;
-            Dictionary<UUID, ScriptData> Instances = Scripts[primID];
-        	List<ScriptData> RetVal = new List<ScriptData>();
-        	foreach(ScriptData ID in Instances.Values)
-        	{
-        		RetVal.Add(ID);
-        	}
-        	return RetVal.ToArray();
+            Dictionary<UUID, ScriptData> Instances;
+            if (Scripts.TryGetValue(primID, out Instances))
+                return new List<ScriptData>(Instances.Values).ToArray();
+            return null;
         }
         
         public void AddNewScript(ScriptData Data)

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) Contributors, http://opensimulator.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
@@ -26,54 +26,52 @@
  */
 
 using System;
+using System.Runtime.Remoting.Lifetime;
+using System.Threading;
+using System.Reflection;
 using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
-using OpenSim.Region.ScriptEngine.Interfaces;
+using OpenSim.Framework;
+using OpenSim.Region.Framework.Interfaces;
+using integer = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLInteger;
+using vector = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Vector3;
+using rotation = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Quaternion;
+using key = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString;
+using LSL_List = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.list;
+using LSL_String = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString;
+using LSL_Float = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLFloat;
+using LSL_Integer = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLInteger;
+using Aurora.ScriptEngine.AuroraDotNetEngine;
+using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
+using Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools;
 
-namespace OpenSim.Region.ScriptEngine.Shared.Api
+namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
 {
-    public class ApiManager
+    public partial class ScriptBaseClass : MarshalByRefObject
     {
-        private Dictionary<string,Type> m_Apis = new Dictionary<string,Type>();
+        public ILS_Api m_LS_Functions;
 
-        public string[] GetApis()
+        public void ApiTypeLS(IScriptApi api)
         {
-            if (m_Apis.Count > 0)
-            {
-                List<string> l = new List<string>(m_Apis.Keys);
-                return l.ToArray();
-            }
+            if (!(api is ILS_Api))
+                return;
 
-            Assembly a = Assembly.GetExecutingAssembly();
-
-            Type[] types = a.GetExportedTypes();
-
-            foreach (Type t in types)
-            {
-                string name = t.ToString();
-                int idx = name.LastIndexOf('.');
-                if (idx != -1)
-                    name = name.Substring(idx+1);
-
-                if (name.EndsWith("_Api"))
-                {
-                    name = name.Substring(0, name.Length - 4);
-                    m_Apis[name] = t;
-                }
-            }
-
-            List<string> ret = new List<string>(m_Apis.Keys);
-            return ret.ToArray();
+            m_LS_Functions = (ILS_Api)api;
         }
 
-        public IScriptApi CreateApi(string api)
+        public LSL_List lsGetWindlightScene(LSL_List rules)
         {
-            if (!m_Apis.ContainsKey(api))
-                return null;
+            return m_LS_Functions.lsGetWindlightScene(rules);
+        }
 
-            IScriptApi ret = (IScriptApi)(Activator.CreateInstance(m_Apis[api]));
-            return ret;
+        public int lsSetWindlightScene(LSL_List rules)
+        {
+            return m_LS_Functions.lsSetWindlightScene(rules);
+        }
+
+        public int lsSetWindlightSceneTargeted(LSL_List rules, key target)
+        {
+            return m_LS_Functions.lsSetWindlightSceneTargeted(rules, target);
         }
     }
 }

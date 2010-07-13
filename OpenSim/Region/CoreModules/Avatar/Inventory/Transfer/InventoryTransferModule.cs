@@ -260,6 +260,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
             }
             else if (im.dialog == (byte) InstantMessageDialog.InventoryAccepted)
             {
+                client.SendAgentAlertMessage("Inventory accepted.", false);
                 ScenePresence user = scene.GetScenePresence(new UUID(im.toAgentID));
 
                 if (user != null) // Local

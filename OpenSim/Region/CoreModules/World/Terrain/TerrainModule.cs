@@ -117,13 +117,13 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 {
                     m_channel = new TerrainChannel();
                     m_scene.Heightmap = m_channel;
-                    m_revert = new TerrainChannel();
+                    m_revert = m_channel;
                     UpdateRevertMap();
                 }
                 else
                 {
                     m_channel = m_scene.Heightmap;
-                    m_revert = new TerrainChannel();
+                    m_revert = m_scene.Heightmap;
                     FindRevertMap();
                 }
 
@@ -486,15 +486,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         /// </summary>
         public void FindRevertMap()
         {
-            int x;
-            for (x = 0; x < m_channel.Width; x++)
-            {
-                int y;
-                for (y = 0; y < m_channel.Height; y++)
-                {
-                    m_revert[x, y] = m_channel[x, y];
-                }
-            }
+            m_revert = m_scene.LoadRevertMap();
         }
 
         /// <summary>

@@ -25,46 +25,21 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Xml.Serialization;
+using System.Collections;
 
-namespace OpenSim.Framework.Communications.XMPP
+using key = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString;
+using rotation = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Quaternion;
+using vector = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Vector3;
+using LSL_List = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.list;
+using LSL_String = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString;
+using LSL_Integer = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLInteger;
+using LSL_Float = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLFloat;
+
+namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
 {
-    public abstract class XmppStanza
+    public interface IMOD_Api
     {
-        /// <summary>
-        /// counter used for generating ID
-        /// </summary>
-        [XmlIgnore]
-        private static ulong _ctr = 0;
-
-        /// <summary>
-        /// recipient JID
-        /// </summary>
-        [XmlAttribute("to")]
-        public string ToJid;
-
-        /// <summary>
-        /// sender JID
-        /// </summary>
-        [XmlAttribute("from")]
-        public string FromJid;
-
-        /// <summary>
-        /// unique ID.
-        /// </summary>
-        [XmlAttribute("id")]
-        public string MessageId;
-
-        public XmppStanza()
-        {
-        }
-
-        public XmppStanza(string fromJid, string toJid)
-        {
-            ToJid = toJid;
-            FromJid = fromJid;
-            MessageId = String.Format("OpenSim_{0}{1}", DateTime.UtcNow.Ticks, _ctr++);
-        }
+        //Module functions
+        string modSendCommand(string modules, string command, string k);
     }
 }

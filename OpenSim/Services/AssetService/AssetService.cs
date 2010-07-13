@@ -243,10 +243,7 @@ namespace OpenSim.Services.AssetService
 
             Delete(args[2]);
 
-            //MainConsole.Instance.Output("Asset deleted");
-            // TODO: Implement this
-
-            MainConsole.Instance.Output("Asset deletion not supported by database");
+            MainConsole.Instance.Output("Asset deleted");
         }
     }
 }

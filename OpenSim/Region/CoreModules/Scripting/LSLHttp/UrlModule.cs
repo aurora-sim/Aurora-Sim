@@ -139,7 +139,7 @@ namespace OpenSim.Region.CoreModules.Scripting.LSLHttp
             {
                 if (m_UrlMap.Count >= m_TotalUrls)
                 {
-                    engine.PostScriptEvent(itemID, "http_request", new Object[] { urlcode.ToString(), "URL_REQUEST_DENIED", "" });
+                    engine.PostScriptEvent(itemID, host.UUID, "http_request", new Object[] { urlcode.ToString(), "URL_REQUEST_DENIED", "" });
                     return urlcode;
                 }
                 string url = "http://" + m_ExternalHostNameForLSL + ":" + m_HttpServer.Port.ToString() + "/lslhttp/" + urlcode.ToString() + "/";
@@ -161,7 +161,7 @@ namespace OpenSim.Region.CoreModules.Scripting.LSLHttp
                         new PollServiceEventArgs(HttpRequestHandler,HasEvents, GetEvents, NoEvents,
                             urlcode));
 
-                engine.PostScriptEvent(itemID, "http_request", new Object[] { urlcode.ToString(), "URL_REQUEST_GRANTED", url });
+                engine.PostScriptEvent(itemID, host.UUID, "http_request", new Object[] { urlcode.ToString(), "URL_REQUEST_GRANTED", url });
             }
 
             return urlcode;
@@ -171,7 +171,7 @@ namespace OpenSim.Region.CoreModules.Scripting.LSLHttp
         {
             UUID urlcode = UUID.Random();
 
-            engine.PostScriptEvent(itemID, "http_request", new Object[] { urlcode.ToString(), "URL_REQUEST_DENIED", "" });
+            engine.PostScriptEvent(itemID, host.UUID, "http_request", new Object[] { urlcode.ToString(), "URL_REQUEST_DENIED", "" });
 
             return urlcode;
         }
@@ -467,7 +467,7 @@ namespace OpenSim.Region.CoreModules.Scripting.LSLHttp
                         m_RequestMap.Add(requestID, url);
                     }
 
-                    url.engine.PostScriptEvent(url.itemID, "http_request", new Object[] { requestID.ToString(), request["http-method"].ToString(), request["body"].ToString() });
+                    url.engine.PostScriptEvent(url.itemID, url.hostID, "http_request", new Object[] { requestID.ToString(), request["http-method"].ToString(), request["body"].ToString() });
 
                     //send initial response?
 //                    Hashtable response = new Hashtable();

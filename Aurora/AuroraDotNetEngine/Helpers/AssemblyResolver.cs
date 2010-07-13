@@ -25,33 +25,38 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using System.IO;
-using System.Text;
-using System.Xml;
-using IOStream = System.IO.Stream;
+using System.Reflection;
 
-namespace OpenSim.Framework.Communications.XMPP
+namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
-    public class XMPPWriter: XmlTextWriter
+    [Serializable]
+    public class AssemblyResolver
     {
-        public XMPPWriter(TextWriter textWriter) : base(textWriter)
+        public static Assembly OnAssemblyResolve(object sender,
+                ResolveEventArgs args)
         {
-        }
+            if (!(sender is System.AppDomain))
+                return null;
 
-        public XMPPWriter(IOStream stream) : this(stream, Util.UTF8)
-        {
-        }
+            string[] pathList = new string[] {"bin", "ScriptEngines",
+                                              Path.Combine("ScriptEngines", "Script")};
 
-        public XMPPWriter(IOStream stream, Encoding enc) : base(stream, enc)
-        {
-        }
+            string assemblyName = args.Name;
+            if (assemblyName.IndexOf(",") != -1)
+                assemblyName = args.Name.Substring(0, args.Name.IndexOf(","));
 
-        public override void WriteStartDocument()
-        {
-        }
+            foreach (string s in pathList)
+            {
+                string path = Path.Combine(Directory.GetCurrentDirectory(),
+                        Path.Combine(s, assemblyName))+".dll";
 
-        public override void WriteStartDocument(bool standalone)
-        {
+                if (File.Exists(path))
+                    return Assembly.LoadFrom(path);
+            }
+
+            return null;
         }
     }
 }

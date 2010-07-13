@@ -34,15 +34,8 @@ using OpenSim.Framework;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Region.ScriptEngine.Shared;
 
-namespace OpenSim.Region.ScriptEngine.Interfaces
+namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
-    public interface IScriptProtectionModule
-    {
-        bool AllowHTMLLinking { get; }
-        ThreatLevel GetThreatLevel();
-        void CheckThreatLevel(ThreatLevel level, string function, SceneObjectPart m_host, string API);
-    }
-
     public enum ThreatLevel
     {
         None = 0,

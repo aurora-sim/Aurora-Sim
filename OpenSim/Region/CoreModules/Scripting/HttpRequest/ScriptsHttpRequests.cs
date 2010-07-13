@@ -111,7 +111,7 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
             return UUID.Zero;
         }
 
-        public UUID StartHttpRequest(uint localID, UUID itemID, string url, List<string> parameters, Dictionary<string, string> headers, string body)
+        public UUID StartHttpRequest(UUID primID, UUID itemID, string url, List<string> parameters, Dictionary<string, string> headers, string body)
         {
             UUID reqID = UUID.Random();
             HttpRequestClass htc = new HttpRequestClass();
@@ -150,7 +150,7 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
                 }
             }
 
-            htc.LocalID = localID;
+            htc.PrimID = primID;
             htc.ItemID = itemID;
             htc.Url = url;
             htc.ReqID = reqID;
@@ -170,7 +170,7 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
             return reqID;
         }
 
-        public void StopHttpRequest(uint m_localID, UUID m_itemID)
+        public void StopHttpRequest(UUID primID, UUID m_itemID)
         {
             if (m_pendingRequests != null)
             {
@@ -197,19 +197,14 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
 
         public IServiceRequest GetNextCompletedRequest()
         {
+            if (m_pendingRequests.Count == 0)
+                return null;
             lock (HttpListLock)
             {
-                foreach (UUID luid in m_pendingRequests.Keys)
+                foreach (HttpRequestClass luid in m_pendingRequests.Values)
                 {
-                    HttpRequestClass tmpReq;
-
-                    if (m_pendingRequests.TryGetValue(luid, out tmpReq))
-                    {
-                        if (tmpReq.Finished)
-                        {
-                            return tmpReq;
-                        }
-                    }
+                    if (luid.Finished)
+                        return luid;
                 }
             }
             return null;
@@ -312,11 +307,11 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
             get { return _itemID; }
             set { _itemID = value; }
         }
-        private uint _localID;
-        public uint LocalID
+        private UUID _primID;
+        public UUID PrimID
         {
-            get { return _localID; }
-            set { _localID = value; }
+            get { return _primID; }
+            set { _primID = value; }
         }
         public DateTime Next;
         public string proxyurl;

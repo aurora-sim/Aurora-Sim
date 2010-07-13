@@ -35,7 +35,7 @@ namespace OpenSim.Region.Framework.Interfaces
 
         // Request info
         UUID ItemID { get; set; }
-        uint LocalID { get; set; }
+        UUID PrimID { get; set; }
         UUID ReqID { get; set; }
 
         void Process();

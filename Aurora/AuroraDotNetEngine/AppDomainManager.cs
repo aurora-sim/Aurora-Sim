@@ -31,9 +31,10 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Security;
 using System.Security.Policy;
-using System.Security.Permissions; 
-using OpenSim.Region.ScriptEngine.Interfaces;
-using OpenSim.Region.ScriptEngine.Shared.ScriptBase;
+using System.Security.Permissions;
+using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
+using Aurora.ScriptEngine.AuroraDotNetEngine.Plugins;
+using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
 using log4net;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
@@ -107,7 +108,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     "ScriptsPerAppDomain", 1);
             m_PermissionLevel = m_scriptEngine.ScriptConfigSource.GetString(
                     "AppDomainPermissions", "Internet");
-            loadAllScriptsIntoCurrentDomain = m_scriptEngine.ScriptConfigSource.GetBoolean("LoadAllScriptsIntoCurrentAppDomain ", false);
+            loadAllScriptsIntoCurrentDomain = m_scriptEngine.ScriptConfigSource.GetBoolean("LoadAllScriptsIntoCurrentAppDomain", false);
         }
 
         // Find a free AppDomain, creating one if necessary
@@ -115,9 +116,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             if (loadAllScriptsIntoCurrentDomain)
             {
-                AppDomainStructure currentAD = new AppDomainStructure();
-                currentAD.CurrentAppDomain = AppDomain.CurrentDomain;
-                return currentAD;
+                if (currentAD != null)
+                    return currentAD;
+                else
+                {
+                    currentAD = new AppDomainStructure();
+                    currentAD.CurrentAppDomain = AppDomain.CurrentDomain;
+                    AppDomain.CurrentDomain.AssemblyResolve += AssemblyResolver.OnAssemblyResolve;
+                    return currentAD;
+                }
             }
             lock (getLock)
             {
@@ -161,7 +168,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             AppDomain AD = CreateRestrictedDomain(m_PermissionLevel, 
                 "ScriptAppDomain_" + AppDomainNameCount,ads);
 
-            AD.AssemblyResolve += OpenSim.Region.ScriptEngine.Shared.AssemblyResolver.OnAssemblyResolve;
+            AD.AssemblyResolve += AssemblyResolver.OnAssemblyResolve;
 
             //AD.Load(AssemblyName.GetAssemblyName(
             //            "OpenSim.Region.ScriptEngine.Shared.dll"));

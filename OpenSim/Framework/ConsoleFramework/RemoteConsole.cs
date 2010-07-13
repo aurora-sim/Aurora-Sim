@@ -38,6 +38,7 @@ using Nini.Config;
 using OpenSim.Framework.Servers.HttpServer;
 using log4net;
 using OpenSim.Framework.Console;
+using Mono.Addins;
 
 namespace OpenSim.Framework
 {
@@ -49,6 +50,7 @@ namespace OpenSim.Framework
 
     // A console that uses REST interfaces
     //
+    [Extension(Path = "/OpenSim/Console", NodeName = "ConsolePlugin")]
     public class RemoteConsole : CommandConsole
     {
         private IHttpServer m_Server = null;

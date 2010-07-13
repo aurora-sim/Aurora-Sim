@@ -185,9 +185,9 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
         /// <param name="id">key to filter on (user given, could be totally faked)</param>
         /// <param name="msg">msg to filter on</param>
         /// <returns>number of the scripts handle</returns>
-        public int Listen(uint localID, UUID itemID, UUID hostID, int channel, string name, UUID id, string msg)
+        public int Listen(UUID itemID, UUID hostID, int channel, string name, UUID id, string msg)
         {
-            return m_listenerManager.AddListener(localID, itemID, hostID, channel, name, id, msg);
+            return m_listenerManager.AddListener(itemID, hostID, channel, name, id, msg);
         }
 
         /// <summary>
@@ -316,7 +316,7 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
         /// <returns>boolean indication</returns>
         public bool HasMessages()
         {
-            return (m_pending.Count > 0);
+            return m_pending.Count != 0;
         }
 
         /// <summary>
@@ -356,10 +356,10 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
             return m_listenerManager.GetSerializationData(itemID);
         }
 
-        public void CreateFromData(uint localID, UUID itemID, UUID hostID,
+        public void CreateFromData(UUID itemID, UUID hostID,
                 Object[] data)
         {
-            m_listenerManager.AddFromData(localID, itemID, hostID, data);
+            m_listenerManager.AddFromData(itemID, hostID, data);
         }
     }
 
@@ -377,7 +377,7 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
             m_curlisteners = 0;
         }
 
-        public int AddListener(uint localID, UUID itemID, UUID hostID, int channel, string name, UUID id, string msg)
+        public int AddListener(UUID itemID, UUID hostID, int channel, string name, UUID id, string msg)
         {
             // do we already have a match on this particular filter event?
             List<ListenerInfo> coll = GetListeners(itemID, channel, name, id, msg);
@@ -397,7 +397,7 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
 
                     if (newHandle > 0)
                     {
-                        ListenerInfo li = new ListenerInfo(newHandle, localID, itemID, hostID, channel, name, id, msg);
+                        ListenerInfo li = new ListenerInfo(newHandle, itemID, hostID, channel, name, id, msg);
 
                             List<ListenerInfo> listeners;
                             if (!m_listeners.TryGetValue(channel,out listeners))
@@ -599,7 +599,7 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
             return (Object[])data.ToArray();
         }
 
-        public void AddFromData(uint localID, UUID itemID, UUID hostID,
+        public void AddFromData(UUID itemID, UUID hostID,
                 Object[] data)
         {
             int idx = 0;
@@ -610,7 +610,7 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
                 Array.Copy(data, idx, item, 0, 6);
 
                 ListenerInfo info =
-                        ListenerInfo.FromData(localID, itemID, hostID, item);
+                        ListenerInfo.FromData(itemID, hostID, item);
 
                 lock (m_listeners)
                 {
@@ -628,7 +628,7 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
     {
         private bool m_active; // Listener is active or not
         private int m_handle; // Assigned handle of this listener
-        private uint m_localID; // Local ID from script engine
+        //private uint m_localID; // Local ID from script engine
         private UUID m_itemID; // ID of the host script engine
         private UUID m_hostID; // ID of the host/scene part
         private int m_channel; // Channel
@@ -636,22 +636,21 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
         private string m_name; // Object name to filter messages from
         private string m_message; // The message
 
-        public ListenerInfo(int handle, uint localID, UUID ItemID, UUID hostID, int channel, string name, UUID id, string message)
+        public ListenerInfo(int handle, UUID ItemID, UUID hostID, int channel, string name, UUID id, string message)
         {
-            Initialise(handle, localID, ItemID, hostID, channel, name, id, message);
+            Initialise(handle, ItemID, hostID, channel, name, id, message);
         }
 
         public ListenerInfo(ListenerInfo li, string name, UUID id, string message)
         {
-            Initialise(li.m_handle, li.m_localID, li.m_itemID, li.m_hostID, li.m_channel, name, id, message);
+            Initialise(li.m_handle, li.m_itemID, li.m_hostID, li.m_channel, name, id, message);
         }
 
-        private void Initialise(int handle, uint localID, UUID ItemID, UUID hostID, int channel, string name,
+        private void Initialise(int handle, UUID ItemID, UUID hostID, int channel, string name,
                                 UUID id, string message)
         {
             m_active = true;
             m_handle = handle;
-            m_localID = localID;
             m_itemID = ItemID;
             m_hostID = hostID;
             m_channel = channel;
@@ -674,9 +673,9 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
             return data;
         }
 
-        public static ListenerInfo FromData(uint localID, UUID ItemID, UUID hostID, Object[] data)
+        public static ListenerInfo FromData(UUID ItemID, UUID hostID, Object[] data)
         {
-            ListenerInfo linfo = new ListenerInfo(Convert.ToInt32(data[1]), localID,
+            ListenerInfo linfo = new ListenerInfo(Convert.ToInt32(data[1]),
                     ItemID, hostID, Convert.ToInt32(data[2]), (string)data[3],
                     new UUID(data[4].ToString()), (string)data[5]);
             linfo.m_active=Convert.ToBoolean(data[0]);
@@ -697,11 +696,6 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
         public int GetChannel()
         {
             return m_channel;
-        }
-
-        public uint GetLocalID()
-        {
-            return m_localID;
         }
 
         public int GetHandle()
