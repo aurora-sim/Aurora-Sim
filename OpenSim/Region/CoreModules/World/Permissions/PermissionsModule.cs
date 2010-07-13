@@ -178,7 +178,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
 
             string permissionModules = myConfig.GetString("permissionmodules", "DefaultPermissionsModule");
 
-            List<string> modules = new List<string>(permissionModules.Split(','));
+            List<string> modules=new List<string>(permissionModules.Split(','));
 
             if (!modules.Contains("DefaultPermissionsModule"))
                 return;
@@ -251,7 +251,6 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             m_scene.Permissions.OnTeleport += CanTeleport; //NOT YET IMPLEMENTED
             
             m_scene.Permissions.OnControlPrimMedia += CanControlPrimMedia;
-            m_scene.Permissions.OnInteractWithPrimMedia += CanInteractWithPrimMedia;
 
             m_scene.AddCommand(this, "bypass permissions",
                     "bypass permissions <true / false>",
@@ -399,10 +398,6 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                 m_log.Warn("[PERMISSIONS]: Groups module not found, group permissions will not work");        
             
             m_moapModule = m_scene.RequestModuleInterface<IMoapModule>();
-            
-            // This log line will be commented out when no longer required for debugging
-//            if (m_moapModule == null)
-//                m_log.Warn("[PERMISSIONS]: Media on a prim module not found, media on a prim permissions will not work");                    
         }
 
         public void Close()
@@ -1905,37 +1900,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
         }
         
         private bool CanControlPrimMedia(UUID agentID, UUID primID, int face)
-        {            
-//            m_log.DebugFormat(
-//                "[PERMISSONS]: Performing CanControlPrimMedia check with agentID {0}, primID {1}, face {2}",
-//                agentID, primID, face);
-            
-            if (null == m_moapModule)
-                return false;
-            
-            SceneObjectPart part = m_scene.GetSceneObjectPart(primID);
-            if (null == part)
-                return false;
-            
-            MediaEntry me = m_moapModule.GetMediaEntry(part, face);                                  
-            
-            // If there is no existing media entry then it can be controlled (in this context, created).
-            if (null == me)
-                return true;
-            
-            m_log.DebugFormat(
-                "[PERMISSIONS]: Checking CanControlPrimMedia for {0} on {1} face {2} with control permissions {3}", 
-                agentID, primID, face, me.ControlPermissions);
-            
-            return GenericPrimMediaPermission(part, agentID, me.ControlPermissions);
-        }  
-        
-        private bool CanInteractWithPrimMedia(UUID agentID, UUID primID, int face)
         {
-//            m_log.DebugFormat(
-//                "[PERMISSONS]: Performing CanInteractWithPrimMedia check with agentID {0}, primID {1}, face {2}",
-//                agentID, primID, face);
-            
             if (null == m_moapModule)
                 return false;
             
@@ -1949,34 +1914,25 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             if (null == me)
                 return true;
             
-            m_log.DebugFormat(
-                "[PERMISSIONS]: Checking CanInteractWithPrimMedia for {0} on {1} face {2} with interact permissions {3}", 
-                agentID, primID, face, me.InteractPermissions);            
+            if (IsAdministrator(agentID))
+                return true;            
             
-            return GenericPrimMediaPermission(part, agentID, me.InteractPermissions);
-        }          
-        
-        private bool GenericPrimMediaPermission(SceneObjectPart part, UUID agentID, MediaPermission perms)
-        {
-//            if (IsAdministrator(agentID))
-//                return true;            
-            
-            if ((perms & MediaPermission.Anyone) == MediaPermission.Anyone)
+            if ((me.ControlPermissions & MediaPermission.Anyone) == MediaPermission.Anyone)
                 return true;
 
-            if ((perms & MediaPermission.Owner) == MediaPermission.Owner)
+            if ((me.ControlPermissions & MediaPermission.Owner) == MediaPermission.Owner)
             {
                 if (agentID == part.OwnerID)
                     return true;
             }           
             
-            if ((perms & MediaPermission.Group) == MediaPermission.Group)
+            if ((me.ControlPermissions & MediaPermission.Group) == MediaPermission.Group)
             {
                 if (IsGroupMember(part.GroupID, agentID, 0))
                     return true;
             }                 
             
-            return false;            
+            return false;
         }
     }
 }

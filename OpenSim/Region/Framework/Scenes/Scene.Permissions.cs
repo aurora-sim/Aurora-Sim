@@ -82,7 +82,6 @@ namespace OpenSim.Region.Framework.Scenes
     public delegate bool DeleteUserInventoryHandler(UUID itemID, UUID userID);
     public delegate bool TeleportHandler(UUID userID, Scene scene);
     public delegate bool ControlPrimMediaHandler(UUID userID, UUID primID, int face);
-    public delegate bool InteractWithPrimMediaHandler(UUID userID, UUID primID, int face);
     #endregion
 
     public class ScenePermissions
@@ -142,7 +141,6 @@ namespace OpenSim.Region.Framework.Scenes
         public event DeleteUserInventoryHandler OnDeleteUserInventory;
         public event TeleportHandler OnTeleport;
         public event ControlPrimMediaHandler OnControlPrimMedia;
-        public event InteractWithPrimMediaHandler OnInteractWithPrimMedia;
         #endregion
 
         #region Object Permission Checks
@@ -965,21 +963,6 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
             return true;
-        } 
-        
-        public bool CanInteractWithPrimMedia(UUID userID, UUID primID, int face)
-        {
-            InteractWithPrimMediaHandler handler = OnInteractWithPrimMedia;
-            if (handler != null)
-            {
-                Delegate[] list = handler.GetInvocationList();
-                foreach (InteractWithPrimMediaHandler h in list)
-                {
-                    if (h(userID, primID, face) == false)
-                        return false;
-                }
-            }
-            return true;
-        }    
+        }      
     }
 }
