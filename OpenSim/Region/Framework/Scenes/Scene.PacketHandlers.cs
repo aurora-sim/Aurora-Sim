@@ -39,7 +39,7 @@ namespace OpenSim.Region.Framework.Scenes
     public partial class Scene
     {
         protected void SimChat(byte[] message, ChatTypeEnum type, int channel, Vector3 fromPos, string fromName,
-                               UUID fromID, bool fromAgent, bool broadcast)
+                               UUID fromID, bool fromAgent, bool broadcast, float range, UUID ToAgentID)
         {
             OSChatMessage args = new OSChatMessage();
 
@@ -47,8 +47,10 @@ namespace OpenSim.Region.Framework.Scenes
             args.Channel = channel;
             args.Type = type;
             args.Position = fromPos;
+            args.Range = range;
             args.SenderUUID = fromID;
             args.Scene = this;
+            args.ToAgentID = ToAgentID;
 
             if (fromAgent)
             {
@@ -79,10 +81,17 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="fromPos"></param>
         /// <param name="fromName"></param>
         /// <param name="fromAgentID"></param>
+        /// 
+        public void SimChat(byte[] message, ChatTypeEnum type, int channel, Vector3 fromPos, string fromName,
+                            UUID fromID, bool fromAgent, float range)
+        {
+            SimChat(message, type, channel, fromPos, fromName, fromID, fromAgent, false, range, UUID.Zero);
+        }
+
         public void SimChat(byte[] message, ChatTypeEnum type, int channel, Vector3 fromPos, string fromName,
                             UUID fromID, bool fromAgent)
         {
-            SimChat(message, type, channel, fromPos, fromName, fromID, fromAgent, false);
+            SimChat(message, type, channel, fromPos, fromName, fromID, fromAgent, -1);
         }
 
         public void SimChat(string message, ChatTypeEnum type, Vector3 fromPos, string fromName, UUID fromID, bool fromAgent)
@@ -104,9 +113,9 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="fromName"></param>
         /// <param name="fromAgentID"></param>
         public void SimChatBroadcast(byte[] message, ChatTypeEnum type, int channel, Vector3 fromPos, string fromName,
-                                     UUID fromID, bool fromAgent)
+                                     UUID fromID, bool fromAgent, UUID ToAgentID)
         {
-            SimChat(message, type, channel, fromPos, fromName, fromID, fromAgent, true);
+            SimChat(message, type, channel, fromPos, fromName, fromID, fromAgent, true, -1, ToAgentID);
         }
 
         /// <summary>

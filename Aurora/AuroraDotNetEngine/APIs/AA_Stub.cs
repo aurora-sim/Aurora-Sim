@@ -123,5 +123,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         {
             return m_AA_Functions.AAGetTeamMembers();
         }
+
+        public LSL_String AAGetLastOwner()
+        {
+            return m_AA_Functions.AAGetLastOwner();
+        }
+
+        public LSL_String AAGetLastOwner(LSL_String PrimID)
+        {
+            return m_AA_Functions.AAGetLastOwner(PrimID);
+        }
+
+        public void AASayDistance(int channelID, float Distance, string text)
+        {
+            m_AA_Functions.AASayDistance(channelID, Distance, text);
+        }
+
+        public void AASayTo(string userID, string text)
+        {
+            m_AA_Functions.AASayTo(userID, text);
+        }
     }
 }

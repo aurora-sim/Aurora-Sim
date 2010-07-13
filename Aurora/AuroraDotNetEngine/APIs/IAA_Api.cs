@@ -64,5 +64,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         void AAJoinCombatTeam(LSL_String team);
 
         LSL_List AAGetTeamMembers();
+
+        LSL_String AAGetLastOwner();
+
+        LSL_String AAGetLastOwner(LSL_String PrimID);
+
+        void AASayDistance(int channelID, float Distance, string text);
+
+        void AASayTo(string userID, string text);
     }
 }

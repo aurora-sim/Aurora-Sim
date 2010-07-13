@@ -31,7 +31,7 @@ namespace Aurora.Modules
         IConfig Config { get; }
         void TrySendChatMessage(ScenePresence presence, Vector3 fromPos, Vector3 regionPos,
                                                   UUID fromAgentID, string fromName, ChatTypeEnum type,
-                                                  string message, ChatSourceType src);
+                                                  string message, ChatSourceType src, float Range);
         void OnChatFromWorld(Object sender, OSChatMessage c);
     }
 }

@@ -261,20 +261,49 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return members;
         }
 
-        public LSL_Key AAGetLastOwner()
+        public LSL_String AAGetLastOwner()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "AAGetLastOwner", m_host, "AA");
-            return new LSL_Key(m_host.LastOwnerID.ToString());
+            return new LSL_String(m_host.LastOwnerID.ToString());
         }
 
-        public LSL_Key AAGetLastOwner(LSL_Key PrimID)
+        public LSL_String AAGetLastOwner(LSL_String PrimID)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "AAGetLastOwner", m_host, "AA");
             SceneObjectPart part = m_host.ParentGroup.Scene.GetSceneObjectPart(UUID.Parse(PrimID.m_string));
             if (part != null)
-                return new LSL_Key(part.LastOwnerID.ToString());
+                return new LSL_String(part.LastOwnerID.ToString());
             else
                 return ScriptBaseClass.NULL_KEY;
+        }
+
+        public void AASayDistance(int channelID, float Distance, string text)
+        {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "AASayDistance", m_host, "AA");
+            m_host.AddScriptLPS(1);
+
+            if (text.Length > 1023)
+                text = text.Substring(0, 1023);
+
+            World.SimChat(OpenMetaverse.Utils.StringToBytes(text),
+                          ChatTypeEnum.Custom, channelID, m_host.ParentGroup.RootPart.AbsolutePosition, m_host.Name, m_host.UUID, true, Distance);
+
+            IWorldComm wComm = World.RequestModuleInterface<IWorldComm>();
+            if (wComm != null)
+                wComm.DeliverMessage(ChatTypeEnum.Custom, channelID, m_host.Name, m_host.UUID, text, Distance);
+        }
+
+        public void AASayTo(string userID, string text)
+        {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "AASayDistance", m_host, "AA");
+            m_host.AddScriptLPS(1);
+
+            UUID AgentID;
+            if(UUID.TryParse(userID, out AgentID))
+            {
+                World.SimChatBroadcast(OpenMetaverse.Utils.StringToBytes(text), ChatTypeEnum.SayTo, 0,
+                                       m_host.AbsolutePosition, m_host.Name, m_host.UUID, false, AgentID);
+            }
         }
     }
 }

@@ -243,7 +243,25 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
             else
                 return;
 
-            DeliverMessage(type, channel, name, id, msg, position);
+            DeliverMessage(type, channel, name, id, msg, position, -1);
+        }
+
+        public void DeliverMessage(ChatTypeEnum type, int channel, string name, UUID id, string msg, float Range)
+        {
+            Vector3 position;
+            SceneObjectPart source;
+            ScenePresence avatar;
+
+            if ((source = m_scene.GetSceneObjectPart(id)) != null)
+                position = source.AbsolutePosition;
+            else if ((avatar = m_scene.GetScenePresence(id)) != null)
+                position = avatar.AbsolutePosition;
+            else if (ChatTypeEnum.Region == type)
+                position = CenterOfRegion;
+            else
+                return;
+
+            DeliverMessage(type, channel, name, id, msg, position, Range);
         }
 
         /// <summary>
@@ -259,7 +277,7 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
         /// <param name="name">name of sender (object or avatar)</param>
         /// <param name="id">key of sender (object or avatar)</param>
         /// <param name="msg">msg to sent</param>
-        public void DeliverMessage(ChatTypeEnum type, int channel, string name, UUID id, string msg, Vector3 position)
+        public void DeliverMessage(ChatTypeEnum type, int channel, string name, UUID id, string msg, Vector3 position, float Range)
         {
             // m_log.DebugFormat("[WorldComm] got[2] type {0}, channel {1}, name {2}, id {3}, msg {4}",
             //                   type, channel, name, id, msg);
@@ -290,8 +308,18 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
                             QueueMessage(new ListenerInfo(li, name, id, msg));
                         break;
 
+                    case ChatTypeEnum.ObsoleteSay:
+                        if (dis < m_saydistance)
+                            QueueMessage(new ListenerInfo(li, name, id, msg));
+                        break;
+
                     case ChatTypeEnum.Shout:
                         if (dis < m_shoutdistance)
+                            QueueMessage(new ListenerInfo(li, name, id, msg));
+                        break;
+
+                    case ChatTypeEnum.Custom:
+                        if (dis < Range)
                             QueueMessage(new ListenerInfo(li, name, id, msg));
                         break;
 
@@ -346,9 +374,9 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
         private void DeliverClientMessage(Object sender, OSChatMessage e)
         {
             if (null != e.Sender)
-                DeliverMessage(e.Type, e.Channel, e.Sender.Name, e.Sender.AgentId, e.Message, e.Position);
+                DeliverMessage(e.Type, e.Channel, e.Sender.Name, e.Sender.AgentId, e.Message, e.Position, -1);
             else
-                DeliverMessage(e.Type, e.Channel, e.From, UUID.Zero, e.Message, e.Position);
+                DeliverMessage(e.Type, e.Channel, e.From, UUID.Zero, e.Message, e.Position, -1);
         }
 
         public Object[] GetSerializationData(UUID itemID)

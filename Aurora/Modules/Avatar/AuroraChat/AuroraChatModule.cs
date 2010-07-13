@@ -58,6 +58,7 @@ namespace Aurora.Modules
         private int m_saydistance = 30;
         private int m_shoutdistance = 100;
         private int m_whisperdistance = 10;
+        private float m_maxChatDistance = 100;
 
         public int SayDistance
         {
@@ -75,6 +76,12 @@ namespace Aurora.Modules
         {
             get { return m_whisperdistance; }
             set { m_whisperdistance = value; }
+        }
+
+        public float MaxChatDistance
+        {
+            get { return m_maxChatDistance; }
+            set { m_maxChatDistance = value; }
         }
 
         public List<Scene> Scenes
@@ -128,6 +135,7 @@ namespace Aurora.Modules
             m_whisperdistance = m_config.GetInt("whisper_distance", m_whisperdistance);
             m_saydistance = m_config.GetInt("say_distance", m_saydistance);
             m_shoutdistance = m_config.GetInt("shout_distance", m_shoutdistance);
+            m_maxChatDistance = m_config.GetFloat("max_chat_distance", m_maxChatDistance);
 
             m_useMuteListModule = (config.Configs["Messaging"].GetString("MuteListModule", "AuroraChatModule") == "AuroraChatModule");
 
@@ -302,6 +310,9 @@ namespace Aurora.Modules
             if (c.Channel != 0 && c.Channel != DEBUG_CHANNEL) return;
 
             bool Sent = false;
+
+            if(c.Range > m_maxChatDistance)
+                c.Range = m_maxChatDistance;
 
             if (c.Type == ChatTypeEnum.Say)
             {
@@ -660,6 +671,125 @@ namespace Aurora.Modules
                     }
                 }
             }
+            if (c.Type == ChatTypeEnum.Custom)
+            {
+                if (c.Position.X + c.Range > 256)
+                {
+                    Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX + 1, c.Scene.RegionInfo.RegionLocY);
+                    if (scene != null)
+                    {
+                        OSChatMessage newC = c.Copy();
+                        newC.Scene = scene;
+                        Vector3 Position = newC.Position;
+                        Position.X -= Constants.RegionSize;
+                        newC.Position = Position;
+                        DeliverChatToAvatars(ChatSourceType.Object, newC);
+                        Sent = true;
+                    }
+                }
+                if (c.Position.Y + c.Range > 256)
+                {
+                    Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX, c.Scene.RegionInfo.RegionLocY + 1);
+                    if (scene != null)
+                    {
+                        OSChatMessage newC = c.Copy();
+                        newC.Scene = scene;
+                        Vector3 Position = newC.Position;
+                        Position.Y -= Constants.RegionSize;
+                        newC.Position = Position;
+                        DeliverChatToAvatars(ChatSourceType.Object, newC);
+                        Sent = true;
+                    }
+                }
+                if (c.Position.X + c.Range > 256 && c.Position.Y + c.Range > 256)
+                {
+                    Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX + 1, c.Scene.RegionInfo.RegionLocY + 1);
+                    if (scene != null)
+                    {
+                        OSChatMessage newC = c.Copy();
+                        newC.Scene = scene;
+                        Vector3 Position = newC.Position;
+                        Position.X -= Constants.RegionSize;
+                        Position.Y -= Constants.RegionSize;
+                        newC.Position = Position;
+                        DeliverChatToAvatars(ChatSourceType.Object, newC);
+                        Sent = true;
+                    }
+                }
+                if (c.Position.X + c.Range > 256 && c.Position.Y - c.Range < 0)
+                {
+                    Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX + 1, c.Scene.RegionInfo.RegionLocY - 1);
+                    if (scene != null)
+                    {
+                        OSChatMessage newC = c.Copy();
+                        newC.Scene = scene;
+                        Vector3 Position = newC.Position;
+                        Position.X -= Constants.RegionSize;
+                        Position.Y += Constants.RegionSize;
+                        newC.Position = Position;
+                        DeliverChatToAvatars(ChatSourceType.Object, newC);
+                        Sent = true;
+                    }
+                }
+                if (c.Position.Y - c.Range < 0)
+                {
+                    Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX, c.Scene.RegionInfo.RegionLocY - 1);
+                    if (scene != null)
+                    {
+                        OSChatMessage newC = c.Copy();
+                        newC.Scene = scene;
+                        Vector3 Position = newC.Position;
+                        Position.Y += Constants.RegionSize;
+                        newC.Position = Position;
+                        DeliverChatToAvatars(ChatSourceType.Object, newC);
+                        Sent = true;
+                    }
+                }
+                if (c.Position.X - c.Range < 0 && c.Position.Y - c.Range < 0)
+                {
+                    Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX - 1, c.Scene.RegionInfo.RegionLocY - 1);
+                    if (scene != null)
+                    {
+                        OSChatMessage newC = c.Copy();
+                        newC.Scene = scene;
+                        Vector3 Position = newC.Position;
+                        Position.X += Constants.RegionSize;
+                        Position.Y += Constants.RegionSize;
+                        newC.Position = Position;
+                        DeliverChatToAvatars(ChatSourceType.Object, newC);
+                        Sent = true;
+                    }
+                }
+                if (c.Position.X - c.Range < 0)
+                {
+                    Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX - 1, c.Scene.RegionInfo.RegionLocY);
+                    if (scene != null)
+                    {
+                        OSChatMessage newC = c.Copy();
+                        newC.Scene = scene;
+                        Vector3 Position = newC.Position;
+                        Position.X += Constants.RegionSize;
+                        newC.Position = Position;
+                        DeliverChatToAvatars(ChatSourceType.Object, newC);
+                        Sent = true;
+                    }
+                }
+                if (c.Position.X - c.Range < 0 && c.Position.Y + c.Range > 256)
+                {
+                    Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX - 1, c.Scene.RegionInfo.RegionLocY + 1);
+                    if (scene != null)
+                    {
+                        OSChatMessage newC = c.Copy();
+                        newC.Scene = scene;
+                        Vector3 Position = newC.Position;
+                        Position.X += Constants.RegionSize;
+                        Position.Y -= Constants.RegionSize;
+                        newC.Position = Position;
+                        DeliverChatToAvatars(ChatSourceType.Object, newC);
+                        Sent = true;
+                    }
+                }
+            }
             if(!Sent)
             DeliverChatToAvatars(ChatSourceType.Object, c);
         }
@@ -758,7 +888,7 @@ namespace Aurora.Modules
                                 }
                             }
                             if (!IsMuted)
-                                TrySendChatMessage(presence, fromPos, regionPos, fromID, fromName, c.Type, message, sourceType);
+                                TrySendChatMessage(presence, fromPos, regionPos, fromID, fromName, c.Type, message, sourceType, c.Range);
                         }
                     }
                 );
@@ -776,6 +906,12 @@ namespace Aurora.Modules
             ChatTypeEnum cType = c.Type;
             if (c.Channel == DEBUG_CHANNEL)
                 cType = ChatTypeEnum.DebugChannel;
+
+            if (c.Range > m_maxChatDistance)
+                c.Range = m_maxChatDistance;
+
+            if (cType == ChatTypeEnum.SayTo) //Change to something client can understand
+                cType = ChatTypeEnum.Owner;
 
             if (cType == ChatTypeEnum.Region)
                 cType = ChatTypeEnum.Say;
@@ -814,6 +950,12 @@ namespace Aurora.Modules
                         (((SceneObjectPart)c.SenderObject).OwnerID != client.AgentId))
                         return;
 
+                    // don't forward SayTo chat from objects to
+                    // non-targeted agents
+                    if ((c.Type == ChatTypeEnum.SayTo) &&
+                        (c.ToAgentID != client.AgentId))
+                        return;
+
                     client.SendChatMessage(c.Message, (byte)cType, CenterOfRegion, fromName, fromID,
                                            (byte)sourceType, (byte)ChatAudibleLevel.Fully);
                 });
@@ -822,7 +964,7 @@ namespace Aurora.Modules
 
         public virtual void TrySendChatMessage(ScenePresence presence, Vector3 fromPos, Vector3 regionPos,
                                                   UUID fromAgentID, string fromName, ChatTypeEnum type,
-                                                  string message, ChatSourceType src)
+                                                  string message, ChatSourceType src, float Range)
         {
             // don't send stuff to child agents
             if (presence.IsChildAgent) return;
@@ -836,9 +978,20 @@ namespace Aurora.Modules
 
             if (type == ChatTypeEnum.Whisper && dis > m_whisperdistance ||
                 type == ChatTypeEnum.Say && dis > m_saydistance ||
-                type == ChatTypeEnum.Shout && dis > m_shoutdistance)
+                type == ChatTypeEnum.Shout && dis > m_shoutdistance ||
+                type == ChatTypeEnum.Custom && dis > Range)
             {
                 return;
+            }
+
+            if (type == ChatTypeEnum.Custom)
+            {
+                if (dis < m_whisperdistance)
+                    type = ChatTypeEnum.Whisper;
+                else if (dis > m_saydistance)
+                    type = ChatTypeEnum.Shout;
+                else if (dis > m_whisperdistance && dis < m_saydistance)
+                    type = ChatTypeEnum.Say;
             }
 
             // TODO: should change so the message is sent through the avatar rather than direct to the ClientView

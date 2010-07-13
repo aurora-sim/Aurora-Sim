@@ -51,6 +51,8 @@ namespace OpenSim.Framework
         protected object m_senderObject;
         protected ChatTypeEnum m_type;
         protected UUID m_fromID;
+        protected float m_range;
+        protected UUID m_toAgentID;
 
         public OSChatMessage Copy()
         {
@@ -59,11 +61,13 @@ namespace OpenSim.Framework
             message.From = From;
             message.Message = Message;
             message.Position = Position;
+            message.Range = Range;
             message.Scene = Scene;
             message.Sender = Sender;
             message.SenderObject = SenderObject;
             message.SenderUUID = SenderUUID;
             message.Type = Type;
+            message.ToAgentID = ToAgentID;
             return message;
         }
 
@@ -97,6 +101,15 @@ namespace OpenSim.Framework
         {
             get { return m_channel; }
             set { m_channel = value; }
+        }
+
+        /// <summary>
+        /// How far should this chat go? -1 is default range for the type
+        /// </summary>
+        public float Range
+        {
+            get { return m_range; }
+            set { m_range = value; }
         }
 
         /// <summary>
@@ -144,6 +157,12 @@ namespace OpenSim.Framework
         {
             get { return m_fromID; }
             set { m_fromID = value; }
+        }
+
+        public UUID ToAgentID
+        {
+            get { return m_toAgentID; }
+            set { m_toAgentID = value; }
         }
 
         /// <summary>
