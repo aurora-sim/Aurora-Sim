@@ -94,7 +94,7 @@ namespace OpenSim.Tests.Common.Mock
 
         public event DeRezObject OnDeRezObject;
         public event Action<IClientAPI> OnRegionHandShakeReply;
-        public event GenericCall1 OnRequestWearables;
+        public event GenericCall2 OnRequestWearables;
         public event GenericCall1 OnCompleteMovementToRegion;
         public event UpdateAgent OnPreAgentUpdate;
         public event UpdateAgent OnAgentUpdate;
@@ -614,11 +614,7 @@ namespace OpenSim.Tests.Common.Mock
         {
         }
 
-        public virtual void SendTeleportStart(uint flags)
-        {
-        }
-
-        public void SendTeleportProgress(uint flags, string message)
+        public virtual void SendTeleportLocationStart()
         {
         }
 

@@ -165,7 +165,6 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         public event ChatMessage OnChatFromClient;
         public event TextureRequest OnRequestTexture;
         public event RezObject OnRezObject;
-        public event RezObjectFromNotecard OnRezObjectFromNotecard;
         public event ModifyTerrain OnModifyTerrain;
         public event SetAppearance OnSetAppearance;
         public event AvatarNowWearing OnAvatarNowWearing;
@@ -505,10 +504,6 @@ namespace OpenSim.Region.OptionalModules.World.NPC
 
         public virtual void Kick(string message)
         {
-            // Remove ourselves from the scene
-            m_scene.RemoveClient(AgentId);
-            if (OnConnectionClosed != null)
-                OnConnectionClosed(this);
         }
 
         public virtual void SendStartPingCheck(byte seq)
@@ -591,24 +586,7 @@ namespace OpenSim.Region.OptionalModules.World.NPC
 
         public virtual AgentCircuitData RequestClientInfo()
         {
-            AgentCircuitData agentData = new AgentCircuitData();
-            agentData.AgentID = AgentId;
-            agentData.SessionID = UUID.Zero;
-            agentData.SecureSessionID = SecureSessionId;
-            agentData.circuitcode = m_circuitCode;
-            agentData.child = false;
-            agentData.firstname = FirstName;
-            agentData.lastname = LastName;
-
-            //ICapabilitiesModule capsModule = m_scene.RequestModuleInterface<ICapabilitiesModule>();
-
-            //if (capsModule == null) // can happen when shutting down.
-                return agentData;
-
-            //agentData.CapsPath = capsModule.GetCapsPath(m_agentId);
-            //agentData.ChildrenCapSeeds = new Dictionary<ulong, string>(capsModule.GetChildrenSeeds(m_agentId));
-
-            //return agentData;
+            return new AgentCircuitData();
         }
 
         public virtual void CrossRegion(ulong newRegionHandle, Vector3 pos, Vector3 lookAt,
@@ -646,10 +624,6 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         }
 
         public virtual void SendCoarseLocationUpdate(List<UUID> users, List<Vector3> CoarseLocations)
-        {
-        }
-
-        public virtual void AttachObject(uint localID, Quaternion rotation, byte attachPoint, UUID ownerID)
         {
         }
 
@@ -998,7 +972,7 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         {
         }
 
-        public void SendParcelInfo (LandData land, UUID parcelID, uint x, uint y, string simname)
+        public void SendParcelInfo (RegionInfo info, LandData land, UUID parcelID, uint x, uint y)
         {
         }
 
@@ -1184,40 +1158,9 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         public void SendTextBoxRequest(string message, int chatChannel, string objectname, string ownerFirstName, string ownerLastName, UUID objectId)
         {
         }
-
-        public void SendPlacesQuery(Aurora.Framework.ExtendedAuroraLandData[] LandData, UUID queryID, UUID transactionID)
+        
+        public void StopFlying(ISceneEntity presence)
         {
         }
-        public void FireUpdateParcel(LandUpdateArgs args, int LocalID)
-        {
-        }
-
-        #region IClientAPI Members
-
-
-        public void SendTelehubInfo(Vector3 pos, Quaternion rot)
-        {
-            throw new NotImplementedException();
-        }
-
-        #endregion
-
-        #region IClientAPI Members
-
-
-        public void SendLayerPacket(float[] map, int x, int y)
-        {
-            throw new NotImplementedException();
-        }
-
-        #endregion
-
-        #region IClientAPI Members
-
-
-        public event ChangeInventoryItemFlags OnChangeInventoryItemFlags;
-        public event TeleportCancel OnTeleportCancel;
-
-        #endregion
     }
 }

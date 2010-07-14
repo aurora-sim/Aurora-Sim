@@ -1055,11 +1055,6 @@ namespace OpenSim.Region.OptionalModules.Agent.InternetRelayClientView.Server
             
         }
 
-        public void AttachObject(uint localID, Quaternion rotation, byte attachPoint, UUID ownerID)
-        {
-            
-        }
-
         public void SendAvatarDataImmediate(ISceneEntity avatar)
         {
 
@@ -1681,31 +1676,8 @@ namespace OpenSim.Region.OptionalModules.Agent.InternetRelayClientView.Server
         {
         }
 
-        public void SendPlacesQuery(Aurora.Framework.ExtendedAuroraLandData[] LandData, UUID queryID, UUID transactionID)
+        public void StopFlying(ISceneEntity presence)
         {
         }
-        public void FireUpdateParcel(LandUpdateArgs args, int LocalID)
-        { 
-        }
-
-        #region IClientAPI Members
-
-
-        public void SendTelehubInfo(Vector3 pos, Quaternion rot)
-        {
-            throw new NotImplementedException();
-        }
-
-        #endregion
-
-        #region IClientAPI Members
-
-
-        public void SendLayerPacket(float[] map, int x, int y)
-        {
-            throw new NotImplementedException();
-        }
-
-        #endregion
     }
 }
