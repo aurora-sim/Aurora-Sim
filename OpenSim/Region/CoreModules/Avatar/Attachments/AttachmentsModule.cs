@@ -36,40 +36,19 @@ using OpenSim.Framework;
 using OpenSim.Region.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
-using Mono.Addins;
 
 namespace OpenSim.Region.CoreModules.Avatar.Attachments
 {
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
-    public class AttachmentsModule : IAttachmentsModule, INonSharedRegionModule
+    public class AttachmentsModule : IAttachmentsModule, IRegionModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         
         protected Scene m_scene = null;
 
-        public void Initialise(IConfigSource source)
-        {
-        }
-
-        public void AddRegion(Scene scene)
+        public void Initialise(Scene scene, IConfigSource source)
         {
             scene.RegisterModuleInterface<IAttachmentsModule>(this);
             m_scene = scene;
-        }
-
-        public void RemoveRegion(Scene scene)
-        {
-
-        }
-
-        public void RegionLoaded(Scene scene)
-        {
-
-        }
-
-        public Type ReplaceableInterface
-        {
-            get { return null; }
         }
 
         public void PostInitialise()
@@ -90,7 +69,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             get { return false; }
         }
 
-        public void AttachObject(IClientAPI remoteClient, uint objectLocalID, uint AttachmentPt, Quaternion rot, bool silent)
+        public void AttachObject(IClientAPI remoteClient, uint objectLocalID, uint AttachmentPt, bool silent)
         {
             m_log.Debug("[ATTACHMENTS MODULE]: Invoking AttachObject");
 
@@ -105,7 +84,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                     return;
 
                 // Calls attach with a Zero position
-                if (AttachObject(remoteClient, objectLocalID, AttachmentPt, rot, Vector3.Zero, false))
+                if (AttachObject(remoteClient, objectLocalID, AttachmentPt, Vector3.Zero, false))
                 {
                     m_scene.EventManager.TriggerOnAttach(objectLocalID, part.ParentGroup.GetFromItemID(), remoteClient.AgentId);
 
@@ -116,6 +95,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                         m_log.Info(
                             "[ATTACHMENTS MODULE]: Saving avatar attachment. AgentID: " + remoteClient.AgentId
                                 + ", AttachmentPoint: " + AttachmentPt);
+
                         m_scene.AvatarFactory.UpdateDatabase(remoteClient.AgentId, presence.Appearance);
                     }
                 }
@@ -127,12 +107,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
         }
         
         public bool AttachObject(
-            IClientAPI remoteClient, uint objectLocalID, uint AttachmentPt, Quaternion rot, Vector3 attachPos, bool silent)
+            IClientAPI remoteClient, uint objectLocalID, uint AttachmentPt, Vector3 attachPos, bool silent)
         {
             SceneObjectGroup group = m_scene.GetGroupByPrim(objectLocalID);
             if (group != null)
             {
-                SceneObjectPart part = m_scene.GetSceneObjectPart(objectLocalID);
                 if (m_scene.Permissions.CanTakeObject(group.UUID, remoteClient.AgentId))
                 {
                     // If the attachment point isn't the same as the one previously used
@@ -154,7 +133,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                     if (AttachmentPt == 0)
                     {
                         // Stick it on left hand with Zero Offset from the attachment point.
-                        AttachmentPt = (uint)AttachmentPoint.RightHand;
+                        AttachmentPt = (uint)AttachmentPoint.LeftHand;
                         attachPos = Vector3.Zero;
                     }
 
@@ -173,18 +152,14 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                         itemId = group.GetFromItemID();
                     }
 
-                    group.AttachToAgent(remoteClient.AgentId, AttachmentPt, attachPos, silent);
+                    SetAttachmentInventoryStatus(remoteClient, AttachmentPt, itemId, group);
 
+                    group.AttachToAgent(remoteClient.AgentId, AttachmentPt, attachPos, silent);
+                    
                     // In case it is later dropped again, don't let
                     // it get cleaned up
                     group.RootPart.RemFlag(PrimFlags.TemporaryOnRez);
                     group.HasGroupChanged = false;
-                    
-                    SetAttachmentInventoryStatus(remoteClient, AttachmentPt, itemId, group);
-
-                    //if (part == null)
-                    //    return true;
-                    //m_scene.EventManager.TriggerOnAttach(objectLocalID, group.GetFromItemID(), remoteClient.AgentId);
                 }
                 else
                 {
@@ -230,12 +205,10 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             {
                 if (att == null)
                 {
-                    ShowDetachInUserInventory(itemID, att, remoteClient);
+                    ShowDetachInUserInventory(itemID, remoteClient);
                 }
-                else
-                {
-                    SetAttachmentInventoryStatus(att, remoteClient, itemID, AttachmentPt);
-                }
+    
+                SetAttachmentInventoryStatus(att, remoteClient, itemID, AttachmentPt);
             }
 
             if (null == att)
@@ -265,7 +238,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                         tainted = true;
 
                     AttachObject(
-                        remoteClient, objatt.LocalId, AttachmentPt, Quaternion.Identity, objatt.AbsolutePosition, false);
+                        remoteClient, objatt.LocalId, AttachmentPt, objatt.AbsolutePosition, false);
                     //objatt.ScheduleGroupForFullUpdate();
                     
                     if (tainted)
@@ -273,7 +246,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
                     // Fire after attach, so we don't get messy perms dialogs
                     // 3 == AttachedRez
-                    objatt.CreateScriptInstances(0, true, m_scene.DefaultScriptEngine, 3, UUID.Zero);
+                    objatt.CreateScriptInstances(0, true, m_scene.DefaultScriptEngine, 3);
                     objatt.ResumeScripts();
 
                     // Do this last so that event listeners have access to all the effects of the attachment
@@ -364,18 +337,13 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             SceneObjectGroup group = m_scene.GetGroupByPrim(objectLocalID);
             if (group != null)
             {
-                ShowDetachInUserInventory(group.GetFromItemID(), group, remoteClient);
+                //group.DetachToGround();
+                ShowDetachInUserInventory(group.GetFromItemID(), remoteClient);
             }
         }
-
-        public void ShowDetachInUserInventory(UUID itemID, SceneObjectGroup group, IClientAPI remoteClient)
+        
+        public void ShowDetachInUserInventory(UUID itemID, IClientAPI remoteClient)
         {
-            m_scene.EventManager.TriggerOnAttach(group.LocalId, group.GetFromItemID(), UUID.Zero);
-            group.DetachToInventoryPrep();
-            m_log.Debug("[ATTACHMENTS MODULE]: Saving attachpoint: " + ((uint)group.GetAttachmentPoint()).ToString());
-            m_scene.UpdateKnownItem(remoteClient, group, group.GetFromItemID(), group.OwnerID);
-            m_scene.DeleteSceneObject(group, false, true);
-
             ScenePresence presence;
             if (m_scene.TryGetScenePresence(remoteClient.AgentId, out presence))
             {
@@ -388,25 +356,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                     m_scene.AvatarFactory.UpdateDatabase(remoteClient.AgentId, presence.Appearance);
                 }
             }
-        }
-        
-        public void ShowDetachInUserInventoryClient(UUID itemID, IClientAPI remoteClient)
-        {
-            ScenePresence presence;
-            if (m_scene.TryGetScenePresence(remoteClient.AgentId, out presence))
-            {
-                if (presence.Appearance.DetachAttachment(itemID))
-                {
 
-                    // Save avatar attachment information
-                    if (m_scene.AvatarFactory != null)
-                    {
-                        m_log.Debug("[ATTACHMENTS MODULE]: Dettaching from UserID: " + remoteClient.AgentId + ", ItemID: " + itemID);
-                        m_scene.AvatarFactory.UpdateDatabase(remoteClient.AgentId, presence.Appearance);
-                    }
-                    DetachSingleAttachmentToInv(itemID, remoteClient);
-                }
-            }
+            DetachSingleAttachmentToInv(itemID, remoteClient);
         }
 
         public void DetachSingleAttachmentToGround(UUID itemID, IClientAPI remoteClient)
@@ -464,7 +415,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                         group.DetachToInventoryPrep();
                         m_log.Debug("[ATTACHMENTS MODULE]: Saving attachpoint: " + ((uint)group.GetAttachmentPoint()).ToString());
                         m_scene.UpdateKnownItem(remoteClient, group,group.GetFromItemID(), group.OwnerID);
-                        m_scene.DeleteSceneObject(group, false, true);
+                        m_scene.DeleteSceneObject(group, false);
                         return;
                     }
                 }

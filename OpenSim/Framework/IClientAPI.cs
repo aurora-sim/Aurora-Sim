@@ -51,21 +51,17 @@ namespace OpenSim.Framework
                                    UUID RayTargetID, byte BypassRayCast, bool RayEndIsIntersection,
                                    bool RezSelected, bool RemoveItem, UUID fromTaskID);
 
-    public delegate void RezObjectFromNotecard(IClientAPI remoteClient, UUID itemID, Vector3 RayEnd, Vector3 RayStart,
-                                   UUID RayTargetID, byte BypassRayCast, bool RayEndIsIntersection,
-                                   bool RezSelected, bool RemoveItem, UUID fromTaskID, UUID NotecardItemID, UUID ObjectID);
-
     public delegate UUID RezSingleAttachmentFromInv(IClientAPI remoteClient, UUID itemID, uint AttachmentPt);
 
     public delegate void RezMultipleAttachmentsFromInv(IClientAPI remoteClient, RezMultipleAttachmentsFromInvPacket.HeaderDataBlock header,
                                                        RezMultipleAttachmentsFromInvPacket.ObjectDataBlock[] objects);
 
     public delegate void ObjectAttach(
-        IClientAPI remoteClient, uint objectLocalID, uint AttachmentPt, Quaternion rot, bool silent);
+        IClientAPI remoteClient, uint objectLocalID, uint AttachmentPt, bool silent);
 
     public delegate void ModifyTerrain(UUID user, 
         float height, float seconds, byte size, byte action, float north, float west, float south, float east,
-        UUID agentId, float BrushSize);
+        UUID agentId);
 
     public delegate void NetworkStats(int inPackets, int outPackets, int unAckedBytes);
 
@@ -93,7 +89,7 @@ namespace OpenSim.Framework
 
     public delegate void RequestAvatarProperties(IClientAPI remoteClient, UUID avatarID);
 
-    public delegate void UpdateAvatarProperties(IClientAPI remoteClient, UserProfileData ProfileData, bool AllowPublish, bool MaturePublish);
+    public delegate void UpdateAvatarProperties(IClientAPI remoteClient, UserProfileData ProfileData);
 
     public delegate void SetAlwaysRun(IClientAPI remoteClient, bool SetAlwaysRun);
 
@@ -260,9 +256,6 @@ namespace OpenSim.Framework
 
     public delegate void UpdateInventoryItem(
         IClientAPI remoteClient, UUID transactionID, UUID itemID, InventoryItemBase itemUpd);
-
-    public delegate void ChangeInventoryItemFlags(
-        IClientAPI remoteClient, UUID itemID, uint flags);
 
     public delegate void CopyInventoryItem(
         IClientAPI remoteClient, uint callbackID, UUID oldAgentID, UUID oldItemID, UUID newFolderID,
@@ -483,8 +476,8 @@ namespace OpenSim.Framework
     public delegate void NewUserReport(IClientAPI client, string regionName,UUID abuserID, byte catagory, byte checkflags, string details, UUID objectID, Vector3 postion, byte reportType ,UUID screenshotID, string Summary, UUID reporter);
     
     public delegate void GodUpdateRegionInfoUpdate(IClientAPI client, float BillableFactor, ulong EstateID, ulong RegionFlags, byte[] SimName,int RedirectX, int RedirectY);
-
-    public delegate void GodlikeMessage(IClientAPI client, UUID requester, string Method, List<string> Parameter);
+    
+    public delegate void GodlikeMessage(IClientAPI client, UUID requester, byte[] Method, byte[] Parameter);
     
     public delegate void SaveStateHandler(IClientAPI client,UUID agentID);
     
@@ -501,15 +494,15 @@ namespace OpenSim.Framework
     public delegate void GroupActiveProposalsRequest(IClientAPI client,UUID agentID, UUID groupID, UUID transactionID, UUID sessionID);
     
     public delegate void GroupVoteHistoryRequest(IClientAPI client,UUID agentID, UUID groupID, UUID transactionID, UUID sessionID);
-
+    
+    
     public delegate void SimWideDeletesDelegate(IClientAPI client,UUID agentID, int flags, UUID targetID);
     
     public delegate void SendPostcard(IClientAPI client);
-    public delegate void TeleportCancel(IClientAPI client);
 
     #endregion
 
-    public class DirPlacesReplyData
+    public struct DirPlacesReplyData
     {
         public UUID parcelID;
         public string name;
@@ -517,31 +510,6 @@ namespace OpenSim.Framework
         public bool auction;
         public float dwell;
         public uint Status;
-        public Dictionary<string, object> ToKeyValuePairs()
-        {
-            Dictionary<string, object> KVP = new Dictionary<string, object>();
-            KVP["parcelID"] = parcelID;
-            KVP["name"] = name;
-            KVP["forSale"] = forSale;
-            KVP["auction"] = auction;
-            KVP["dwell"] = dwell;
-            KVP["Status"] = Status;
-            return KVP;
-        }
-
-        public DirPlacesReplyData()
-        {
-        }
-
-        public DirPlacesReplyData(Dictionary<string, object> KVP)
-        {
-            Status = uint.Parse(KVP["Status"].ToString());
-            dwell = float.Parse(KVP["dwell"].ToString());
-            auction = bool.Parse(KVP["auction"].ToString());
-            forSale = bool.Parse(KVP["forSale"].ToString());
-            name = KVP["name"].ToString();
-            parcelID = UUID.Parse(KVP["parcelID"].ToString());
-        }
     }
 
     public struct DirPeopleReplyData
@@ -554,7 +522,7 @@ namespace OpenSim.Framework
         public int reputation;
     }
 
-    public class DirEventsReplyData
+    public struct DirEventsReplyData
     {
         public UUID ownerID;
         public string name;
@@ -563,33 +531,6 @@ namespace OpenSim.Framework
         public uint unixTime;
         public uint eventFlags;
         public uint Status;
-        public Dictionary<string, object> ToKeyValuePairs()
-        {
-            Dictionary<string, object> KVP = new Dictionary<string, object>();
-            KVP["ownerID"] = ownerID;
-            KVP["name"] = name;
-            KVP["eventID"] = eventID;
-            KVP["date"] = date;
-            KVP["unixTime"] = unixTime;
-            KVP["eventFlags"] = eventFlags;
-            KVP["Status"] = Status;
-            return KVP;
-        }
-
-        public DirEventsReplyData()
-        {
-        }
-
-        public DirEventsReplyData(Dictionary<string, object> KVP)
-        {
-            Status = uint.Parse(KVP["Status"].ToString());
-            eventFlags = uint.Parse(KVP["eventFlags"].ToString());
-            unixTime = uint.Parse(KVP["unixTime"].ToString());
-            date = KVP["date"].ToString();
-            eventID = uint.Parse(KVP["eventID"].ToString());
-            name = KVP["name"].ToString();
-            ownerID = UUID.Parse(KVP["ownerID"].ToString());
-        }
     }
 
     public struct DirGroupsReplyData
@@ -600,7 +541,7 @@ namespace OpenSim.Framework
         public float searchOrder;
     }
 
-    public class DirClassifiedReplyData
+    public struct DirClassifiedReplyData
     {
         public UUID classifiedID;
         public string name;
@@ -609,36 +550,9 @@ namespace OpenSim.Framework
         public uint expirationDate;
         public int price;
         public uint Status;
-        public Dictionary<string, object> ToKeyValuePairs()
-        {
-            Dictionary<string, object> KVP = new Dictionary<string, object>();
-            KVP["classifiedID"] = classifiedID;
-            KVP["name"] = name;
-            KVP["classifiedFlags"] = classifiedFlags;
-            KVP["creationDate"] = creationDate;
-            KVP["expirationDate"] = expirationDate;
-            KVP["price"] = price;
-            KVP["Status"] = Status;
-            return KVP;
-        }
-
-        public DirClassifiedReplyData()
-        {
-        }
-
-        public DirClassifiedReplyData(Dictionary<string, object> KVP)
-        {
-            Status = uint.Parse(KVP["Status"].ToString());
-            price = int.Parse(KVP["price"].ToString());
-            expirationDate = uint.Parse(KVP["expirationDate"].ToString());
-            creationDate = uint.Parse(KVP["creationDate"].ToString());
-            classifiedFlags = byte.Parse(KVP["classifiedFlags"].ToString());
-            name = KVP["name"].ToString();
-            classifiedID = UUID.Parse(KVP["classifiedID"].ToString());
-        }
     }
 
-    public class DirLandReplyData
+    public struct DirLandReplyData
     {
         public UUID parcelID;
         public string name;
@@ -646,31 +560,6 @@ namespace OpenSim.Framework
         public bool forSale;
         public int salePrice;
         public int actualArea;
-        public Dictionary<string, object> ToKeyValuePairs()
-        {
-            Dictionary<string, object> KVP = new Dictionary<string, object>();
-            KVP["parcelID"] = parcelID;
-            KVP["name"] = name;
-            KVP["forSale"] = forSale;
-            KVP["auction"] = auction;
-            KVP["salePrice"] = salePrice;
-            KVP["actualArea"] = actualArea;
-            return KVP;
-        }
-
-        public DirLandReplyData()
-        {
-        }
-
-        public DirLandReplyData(Dictionary<string, object> KVP)
-        {
-            actualArea = int.Parse(KVP["actualArea"].ToString());
-            salePrice = int.Parse(KVP["salePrice"].ToString());
-            auction = bool.Parse(KVP["auction"].ToString());
-            forSale = bool.Parse(KVP["forSale"].ToString());
-            name = KVP["name"].ToString();
-            parcelID = UUID.Parse(KVP["parcelID"].ToString());
-        }
     }
 
     public struct DirPopularReplyData
@@ -795,7 +684,6 @@ namespace OpenSim.Framework
         event TextureRequest OnRequestTexture;
         // [Obsolete("LLClientView Specific - Remove bitbuckets. Adam, can you be more specific here..  as I don't see any bit buckets.")]
         event RezObject OnRezObject;
-        event RezObjectFromNotecard OnRezObjectFromNotecard;
         // [Obsolete("LLClientView Specific - Replace with more suitable arguments.")]
         event ModifyTerrain OnModifyTerrain;
         event BakeTerrain OnBakeTerrain;
@@ -1045,9 +933,6 @@ namespace OpenSim.Framework
         event MuteListEntryRemove OnRemoveMuteListEntry;
         event GodlikeMessage onGodlikeMessage;
         event GodUpdateRegionInfoUpdate OnGodUpdateRegionInfoUpdate;
-
-        event ChangeInventoryItemFlags OnChangeInventoryItemFlags;
-        event TeleportCancel OnTeleportCancel;
         
         /// <summary>
         /// Set the debug level at which packet output should be printed to console.
@@ -1103,7 +988,6 @@ namespace OpenSim.Framework
 
         void SendLayerData(float[] map);
         void SendLayerData(int px, int py, float[] map);
-        void SendLayerPacket(float[] map, int x, int y);
 
         void SendWindData(Vector2[] windSpeeds);
         void SendCloudData(float[] cloudCover);
@@ -1128,7 +1012,6 @@ namespace OpenSim.Framework
 
         void SendTeleportFailed(string reason);
         void SendTeleportLocationStart();
-        void SendTeleportProgress(string reason);
         void SendMoneyBalance(UUID transaction, bool success, byte[] description, int balance);
         void SendPayPrice(UUID objectID, int[] payPrice);
 
@@ -1365,7 +1248,7 @@ namespace OpenSim.Framework
         void SendClearFollowCamProperties(UUID objectID);
 
         void SendRegionHandle(UUID regoinID, ulong handle);
-        void SendParcelInfo(LandData land, UUID parcelID, uint x, uint y, string SimName);
+        void SendParcelInfo(RegionInfo info, LandData land, UUID parcelID, uint x, uint y);
         void SendScriptTeleportRequest(string objName, string simName, Vector3 pos, Vector3 lookAt);
 
         void SendDirPlacesReply(UUID queryID, DirPlacesReplyData[] data);
@@ -1425,10 +1308,6 @@ namespace OpenSim.Framework
         
         void SendChangeUserRights(UUID agentID, UUID friendID, int rights);
         void SendTextBoxRequest(string message, int chatChannel, string objectname, string ownerFirstName, string ownerLastName, UUID objectId);
-        void SendPlacesQuery(Aurora.Framework.ExtendedAuroraLandData[] LandData, UUID queryID, UUID transactionID);
-        void FireUpdateParcel(LandUpdateArgs args, int LocalID);
-
-        void SendTelehubInfo(Vector3 pos, Quaternion rot);
 
         void StopFlying(ISceneEntity presence);
     }
