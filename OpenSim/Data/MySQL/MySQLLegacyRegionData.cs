@@ -222,7 +222,7 @@ namespace OpenSim.Data.MySQL
                                 "PathTaperX, PathTaperY, PathTwist, " +
                                 "PathTwistBegin, ProfileBegin, ProfileEnd, " +
                                 "ProfileCurve, ProfileHollow, Texture, " +
-                                "ExtraParams, State) values (?UUID, " +
+                                "ExtraParams, State, Media) values (?UUID, " +
                                 "?Shape, ?ScaleX, ?ScaleY, ?ScaleZ, " +
                                 "?PCode, ?PathBegin, ?PathEnd, " +
                                 "?PathScaleX, ?PathScaleY, " +
@@ -233,7 +233,7 @@ namespace OpenSim.Data.MySQL
                                 "?PathTwistBegin, ?ProfileBegin, " +
                                 "?ProfileEnd, ?ProfileCurve, " +
                                 "?ProfileHollow, ?Texture, ?ExtraParams, " +
-                                "?State)";
+                                "?State, ?Media)";
 
                         FillShapeCommand(cmd, prim);
 
@@ -287,25 +287,6 @@ namespace OpenSim.Data.MySQL
             {
                 RemoveShapes(uuids);
                 RemoveItems(uuids);
-            }
-        }
-
-        public void RemoveRegion(UUID regionUUID)
-        {
-            lock (m_dbLock)
-            {
-                using (MySqlConnection dbcon = new MySqlConnection(m_connectionString))
-                {
-                    dbcon.Open();
-
-                    using (MySqlCommand cmd = dbcon.CreateCommand())
-                    {
-                        cmd.Parameters.AddWithValue("UUID", regionUUID.ToString());
-
-                        cmd.CommandText = "delete from prims where RegionUUID = ?UUID";
-                        ExecuteNonQuery(cmd);
-                    }
-                }
             }
         }
 
@@ -578,7 +559,7 @@ namespace OpenSim.Data.MySQL
             }
         }
 
-        public void StoreTerrain(double[,] ter, UUID regionID, bool Revert)
+        public void StoreTerrain(double[,] ter, UUID regionID)
         {
             m_log.Info("[REGION DB]: Storing terrain");
 
@@ -590,15 +571,14 @@ namespace OpenSim.Data.MySQL
 
                     using (MySqlCommand cmd = dbcon.CreateCommand())
                     {
-                        cmd.CommandText = "delete from terrain where RegionUUID = ?RegionUUID and Revert = ?Revert";
+                        cmd.CommandText = "delete from terrain where RegionUUID = ?RegionUUID";
                         cmd.Parameters.AddWithValue("RegionUUID", regionID.ToString());
-                        cmd.Parameters.AddWithValue("Revert", Revert.ToString());
 
                         ExecuteNonQuery(cmd);
 
                         cmd.CommandText = "insert into terrain (RegionUUID, " +
-                            "Revision, Heightfield, Revert) values (?RegionUUID, " +
-                            "1, ?Heightfield, ?Revert)";
+                            "Revision, Heightfield) values (?RegionUUID, " +
+                            "1, ?Heightfield)";
 
                         cmd.Parameters.AddWithValue("Heightfield", SerializeTerrain(ter));
 
@@ -608,7 +588,7 @@ namespace OpenSim.Data.MySQL
             }
         }
 
-        public double[,] LoadTerrain(UUID regionID, bool Revert)
+        public double[,] LoadTerrain(UUID regionID)
         {
             double[,] terrain = null;
 
@@ -621,9 +601,8 @@ namespace OpenSim.Data.MySQL
                     using (MySqlCommand cmd = dbcon.CreateCommand())
                     {
                         cmd.CommandText = "select RegionUUID, Revision, Heightfield " +
-                            "from terrain where RegionUUID = ?RegionUUID and Revert = '" + Revert.ToString() + "'" +
+                            "from terrain where RegionUUID = ?RegionUUID " +
                             "order by Revision desc limit 1";
-                        
                         cmd.Parameters.AddWithValue("RegionUUID", regionID.ToString());
 
                         using (IDataReader reader = ExecuteReader(cmd))
@@ -648,7 +627,7 @@ namespace OpenSim.Data.MySQL
                                         }
                                     }
 
-                                    //m_log.InfoFormat("[REGION DB]: Loaded terrain revision r{0}", rev);
+                                    m_log.InfoFormat("[REGION DB]: Loaded terrain revision r{0}", rev);
                                 }
                             }
                         }
@@ -1721,6 +1700,9 @@ namespace OpenSim.Data.MySQL
             s.ExtraParams = (byte[])row["ExtraParams"];
 
             s.State = (byte)(int)row["State"];
+            
+            if (!(row["Media"] is System.DBNull))          
+                s.MediaRaw = (string)row["Media"];
 
             return s;
         }
@@ -1764,6 +1746,7 @@ namespace OpenSim.Data.MySQL
             cmd.Parameters.AddWithValue("Texture", s.TextureEntry);
             cmd.Parameters.AddWithValue("ExtraParams", s.ExtraParams);
             cmd.Parameters.AddWithValue("State", s.State);
+            cmd.Parameters.AddWithValue("Media", s.MediaRaw);
         }
 
         public void StorePrimInventory(UUID primID, ICollection<TaskInventoryItem> items)
