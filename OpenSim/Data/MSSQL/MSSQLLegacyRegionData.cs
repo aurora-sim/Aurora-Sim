@@ -385,7 +385,7 @@ IF EXISTS (SELECT UUID FROM primshapes WHERE UUID = @UUID)
             PathSkew = @PathSkew, PathCurve = @PathCurve, PathRadiusOffset = @PathRadiusOffset, PathRevolutions = @PathRevolutions, 
             PathTaperX = @PathTaperX, PathTaperY = @PathTaperY, PathTwist = @PathTwist, PathTwistBegin = @PathTwistBegin, 
             ProfileBegin = @ProfileBegin, ProfileEnd = @ProfileEnd, ProfileCurve = @ProfileCurve, ProfileHollow = @ProfileHollow, 
-            Texture = @Texture, ExtraParams = @ExtraParams, State = @State
+            Texture = @Texture, ExtraParams = @ExtraParams, State = @State, Media = @Media
         WHERE UUID = @UUID
     END
 ELSE
@@ -394,11 +394,11 @@ ELSE
             primshapes (
             UUID, Shape, ScaleX, ScaleY, ScaleZ, PCode, PathBegin, PathEnd, PathScaleX, PathScaleY, PathShearX, PathShearY, 
             PathSkew, PathCurve, PathRadiusOffset, PathRevolutions, PathTaperX, PathTaperY, PathTwist, PathTwistBegin, ProfileBegin, 
-            ProfileEnd, ProfileCurve, ProfileHollow, Texture, ExtraParams, State
+            ProfileEnd, ProfileCurve, ProfileHollow, Texture, ExtraParams, State, Media
             ) VALUES (
             @UUID, @Shape, @ScaleX, @ScaleY, @ScaleZ, @PCode, @PathBegin, @PathEnd, @PathScaleX, @PathScaleY, @PathShearX, @PathShearY, 
             @PathSkew, @PathCurve, @PathRadiusOffset, @PathRevolutions, @PathTaperX, @PathTaperY, @PathTwist, @PathTwistBegin, @ProfileBegin, 
-            @ProfileEnd, @ProfileCurve, @ProfileHollow, @Texture, @ExtraParams, @State
+            @ProfileEnd, @ProfileCurve, @ProfileHollow, @Texture, @ExtraParams, @State, @Media
             )
     END";
 
@@ -444,35 +444,6 @@ ELSE
                     cmd.ExecuteNonQuery();
 
                     cmd.CommandText = sqlPrims;
-                    cmd.ExecuteNonQuery();
-                }
-            }
-        }
-
-        /// <summary>
-        /// Removes a object from the database.
-        /// Meaning removing it from tables Prims, PrimShapes and PrimItems
-        /// </summary>
-        /// <param name="objectID">id of scenegroup</param>
-        /// <param name="regionUUID">regionUUID (is this used anyway</param>
-        public void RemoveRegion(UUID regionUUID)
-        {
-            _Log.InfoFormat("[MSSQL]: Removing region: {0}", regionUUID);
-
-            //Remove from prims and primsitem table
-            string sqlPrims = "DELETE FROM PRIMS WHERE RegionUUID = @regionID";
-            
-            lock (_Database)
-            {
-                //Using the non transaction mode.
-                using (SqlConnection conn = new SqlConnection(m_connectionString))
-                using (SqlCommand cmd = new SqlCommand())
-                {
-                    cmd.Connection = conn;
-                    cmd.CommandText = sqlPrims;
-                    cmd.ExecuteNonQuery();
-                    conn.Open();
-                    cmd.Parameters.Add(_Database.CreateParameter("regionID", regionUUID));
                     cmd.ExecuteNonQuery();
                 }
             }
@@ -531,19 +502,18 @@ ELSE
         /// </summary>
         /// <param name="regionID">regionID.</param>
         /// <returns></returns>
-        public double[,] LoadTerrain(UUID regionID, bool Revert)
+        public double[,] LoadTerrain(UUID regionID)
         {
             double[,] terrain = new double[(int)Constants.RegionSize, (int)Constants.RegionSize];
             terrain.Initialize();
 
-            string sql = "select top 1 RegionUUID, Revision, Heightfield from terrain where RegionUUID = @RegionUUID and Revert = @Revert order by Revision desc";
+            string sql = "select top 1 RegionUUID, Revision, Heightfield from terrain where RegionUUID = @RegionUUID order by Revision desc";
 
             using (SqlConnection conn = new SqlConnection(m_connectionString))
             using (SqlCommand cmd = new SqlCommand(sql, conn))
             {
                 // MySqlParameter param = new MySqlParameter();
                 cmd.Parameters.Add(_Database.CreateParameter("@RegionUUID", regionID));
-                cmd.Parameters.Add(_Database.CreateParameter("@Revert", Revert));
                 conn.Open();
                 using (SqlDataReader reader = cmd.ExecuteReader())
                 {
@@ -566,7 +536,7 @@ ELSE
                         _Log.Info("[REGION DB]: No terrain found for region");
                         return null;
                     }
-                    //_Log.Info("[REGION DB]: Loaded terrain revision r" + rev);
+                    _Log.Info("[REGION DB]: Loaded terrain revision r" + rev);
                 }
             }
 
@@ -578,22 +548,21 @@ ELSE
         /// </summary>
         /// <param name="terrain">terrain map data.</param>
         /// <param name="regionID">regionID.</param>
-        public void StoreTerrain(double[,] terrain, UUID regionID, bool Revert)
+        public void StoreTerrain(double[,] terrain, UUID regionID)
         {
             int revision = Util.UnixTimeSinceEpoch();
 
             //Delete old terrain map
-            string sql = "delete from terrain where RegionUUID=@RegionUUID and Revert = @Revert";
+            string sql = "delete from terrain where RegionUUID=@RegionUUID";
             using (SqlConnection conn = new SqlConnection(m_connectionString))
             using (SqlCommand cmd = new SqlCommand(sql, conn))
             {
                 cmd.Parameters.Add(_Database.CreateParameter("@RegionUUID", regionID));
-                cmd.Parameters.Add(_Database.CreateParameter("@Revert", Revert.ToString()));
                 conn.Open();
                 cmd.ExecuteNonQuery();
             }
 
-            sql = "insert into terrain(RegionUUID, Revision, Heightfield, Revert) values(@RegionUUID, @Revision, @Heightfield, @Revert)";
+            sql = "insert into terrain(RegionUUID, Revision, Heightfield) values(@RegionUUID, @Revision, @Heightfield)";
 
             using (SqlConnection conn = new SqlConnection(m_connectionString))
             using (SqlCommand cmd = new SqlCommand(sql, conn))
@@ -601,7 +570,6 @@ ELSE
                 cmd.Parameters.Add(_Database.CreateParameter("@RegionUUID", regionID));
                 cmd.Parameters.Add(_Database.CreateParameter("@Revision", revision));
                 cmd.Parameters.Add(_Database.CreateParameter("@Heightfield", serializeTerrain(terrain)));
-                cmd.Parameters.Add(_Database.CreateParameter("@Revert", Revert.ToString()));
                 conn.Open();
                 cmd.ExecuteNonQuery();
             }
@@ -1212,6 +1180,9 @@ VALUES
             {
             }
 
+            if (!(shapeRow["Media"] is System.DBNull))          
+                baseShape.MediaRaw = (string)shapeRow["Media"];
+
             return baseShape;
         }
 
@@ -1589,6 +1560,7 @@ VALUES
             parameters.Add(_Database.CreateParameter("Texture", s.TextureEntry));
             parameters.Add(_Database.CreateParameter("ExtraParams", s.ExtraParams));
             parameters.Add(_Database.CreateParameter("State", s.State));
+            parameters.Add(_Database.CreateParameter("Media", s.MediaRaw));
 
             return parameters.ToArray();
         }
