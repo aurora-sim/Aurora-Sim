@@ -2789,7 +2789,6 @@ namespace OpenSim.Region.Framework.Scenes
             SubscribeToClientScriptEvents(client);
             SubscribeToClientParcelEvents(client);
             SubscribeToClientGridEvents(client);
-            SubscribeToClientGodEvents(client);
             SubscribeToClientNetworkEvents(client);
         }
 
@@ -2800,8 +2799,7 @@ namespace OpenSim.Region.Framework.Scenes
         }
         
         public virtual void SubscribeToClientPrimEvents(IClientAPI client)
-        {
-            
+        {            
             client.OnUpdatePrimGroupPosition += m_sceneGraph.UpdatePrimPosition;
             client.OnUpdatePrimSinglePosition += m_sceneGraph.UpdatePrimSinglePosition;
             client.OnUpdatePrimGroupRotation += m_sceneGraph.UpdatePrimRotation;
@@ -2900,14 +2898,7 @@ namespace OpenSim.Region.Framework.Scenes
             client.OnSetStartLocationRequest += SetHomeRezPoint;
             client.OnRegionHandleRequest += RegionHandleRequest;
         }
-
-        public virtual void SubscribeToClientGodEvents(IClientAPI client)
-        {
-            IGodsModule godsModule = RequestModuleInterface<IGodsModule>();
-            client.OnGodKickUser += godsModule.KickUser;
-            client.OnRequestGodlikePowers += godsModule.RequestGodlikePowers;
-        }
-
+        
         public virtual void SubscribeToClientNetworkEvents(IClientAPI client)
         {
             client.OnNetworkStatsUpdate += StatsReporter.AddPacketsStats;
@@ -2917,6 +2908,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// Unsubscribe the client from events.
         /// </summary>
+        /// FIXME: Not called anywhere!
         /// <param name="client">The IClientAPI of the client</param>
         public virtual void UnSubscribeToClientEvents(IClientAPI client)
         {
@@ -2928,8 +2920,6 @@ namespace OpenSim.Region.Framework.Scenes
             UnSubscribeToClientScriptEvents(client);
             UnSubscribeToClientParcelEvents(client);
             UnSubscribeToClientGridEvents(client);
-            UnSubscribeToClientGodEvents(client);
-
             UnSubscribeToClientNetworkEvents(client);
         }
 
@@ -3036,13 +3026,6 @@ namespace OpenSim.Region.Framework.Scenes
             client.OnAvatarPickerRequest -= ProcessAvatarPickerRequest;
             client.OnSetStartLocationRequest -= SetHomeRezPoint;
             client.OnRegionHandleRequest -= RegionHandleRequest;
-        }
-
-        public virtual void UnSubscribeToClientGodEvents(IClientAPI client)
-        {
-            IGodsModule godsModule = RequestModuleInterface<IGodsModule>();
-            client.OnGodKickUser -= godsModule.KickUser;
-            client.OnRequestGodlikePowers -= godsModule.RequestGodlikePowers;
         }
 
         public virtual void UnSubscribeToClientNetworkEvents(IClientAPI client)

@@ -25,19 +25,16 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using System.Collections.Generic;
 using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Region.Framework.Interfaces;
-using Mono.Addins;
 
 namespace OpenSim.Region.CoreModules.Avatar.Gods
 {
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
-    public class GodsModule : INonSharedRegionModule, IGodsModule
+    public class GodsModule : IRegionModule, IGodsModule
     {
         /// <summary>Special UUID for actions that apply to all agents</summary>
         private static readonly UUID ALL_AGENTS = new UUID("44e87126-e794-4ded-05b3-7c42da3d5cdb");
@@ -45,37 +42,30 @@ namespace OpenSim.Region.CoreModules.Avatar.Gods
         protected Scene m_scene;
         protected IDialogModule m_dialogModule;
         
-        public void Initialise(IConfigSource source)
-        {
-        }
-
-        public void AddRegion(Scene scene)
+        public void Initialise(Scene scene, IConfigSource source)
         {
             m_scene = scene;
-            m_scene.RegisterModuleInterface<IGodsModule>(this);
-        }
-
-        public void RemoveRegion(Scene scene)
-        {
-
-        }
-
-        public void RegionLoaded(Scene scene)
-        {
             m_dialogModule = m_scene.RequestModuleInterface<IDialogModule>();
+            m_scene.RegisterModuleInterface<IGodsModule>(this);
+            m_scene.EventManager.OnNewClient += SubscribeToClientEvents;
         }
-
-        public Type ReplaceableInterface
-        {
-            get { return null; }
-        }
-
-        public void PostInitialise()
-        {
-        }
+        
+        public void PostInitialise() {}
         public void Close() {}
         public string Name { get { return "Gods Module"; } }
         public bool IsSharedModule { get { return false; } }
+        
+        public void SubscribeToClientEvents(IClientAPI client)
+        {
+            client.OnGodKickUser += KickUser;
+            client.OnRequestGodlikePowers += RequestGodlikePowers;             
+        }        
+        
+        public void UnsubscribeFromClientEvents(IClientAPI client)
+        {
+            client.OnGodKickUser -= KickUser;
+            client.OnRequestGodlikePowers -= RequestGodlikePowers;       
+        }
         
         public void RequestGodlikePowers(
             UUID agentID, UUID sessionID, UUID token, bool godLike, IClientAPI controllingClient)
