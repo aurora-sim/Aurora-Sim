@@ -234,13 +234,16 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
         {
             UndeliveredMessage handlerUndeliveredMessage = OnUndeliveredMessage;
 
-            // If this event has handlers, then the IM will be considered
-            // delivered. This will suppress the error message.
+            // If this event has handlers, then an IM from an agent will be
+            // considered delivered. This will suppress the error message.
             //
             if (handlerUndeliveredMessage != null)
             {
                 handlerUndeliveredMessage(im);
-                result(true);
+                if (im.dialog == (byte)InstantMessageDialog.MessageFromAgent)
+                    result(true);
+                else
+                    result(false);
                 return;
             }
 
@@ -553,14 +556,14 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                     //
                     if (upd.RegionID == prevRegionID)
                     {
-                        m_log.Error("[GRID INSTANT MESSAGE]: Unable to deliver an instant message");
+                        // m_log.Error("[GRID INSTANT MESSAGE]: Unable to deliver an instant message");
                         HandleUndeliveredMessage(im, result);
                         return;
                     }
                 }
                 else
                 {
-                    m_log.Error("[GRID INSTANT MESSAGE]: Unable to deliver an instant message");
+                    // m_log.Error("[GRID INSTANT MESSAGE]: Unable to deliver an instant message");
                     HandleUndeliveredMessage(im, result);
                     return;
                 }
