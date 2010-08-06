@@ -1135,6 +1135,10 @@ namespace OpenSim.Region.Framework.Scenes
             set { _nextOwnerMask = value; }
         }
 
+        /// <summary>
+        /// Property flags.  See OpenMetaverse.PrimFlags 
+        /// </summary>      
+        /// Example properties are PrimFlags.Phantom and PrimFlags.DieAtEdge
         public PrimFlags Flags
         {
             get { return _flags; }
