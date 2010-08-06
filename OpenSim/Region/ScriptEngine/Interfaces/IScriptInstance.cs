@@ -38,9 +38,10 @@ namespace OpenSim.Region.ScriptEngine.Interfaces
 {
     public enum StateSource
     {
-        NewRez = 0,
-        PrimCrossing = 1,
-        ScriptedRez = 2,
-        AttachedRez = 3
+        RegionStart = 0,
+        NewRez = 1,
+        PrimCrossing = 2,
+        ScriptedRez = 3,
+        AttachedRez = 4
     }
 }
