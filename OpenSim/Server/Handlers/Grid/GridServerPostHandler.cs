@@ -51,11 +51,6 @@ namespace OpenSim.Server.Handlers.Grid
 
         private IGridService m_GridService;
 
-        public delegate void RegisterRegion(GridRegion region, out string result);
-        public delegate void DeregisterRegion(UUID regionID);
-        public event RegisterRegion OnRegisterRegion;
-        public event DeregisterRegion OnDeregisterRegion;
-
         public GridServerPostHandler(IGridService service) :
                 base("POST", "/grid")
         {
@@ -114,6 +109,9 @@ namespace OpenSim.Server.Handlers.Grid
                     case "get_fallback_regions":
                         return GetFallbackRegions(request);
 
+                    case "get_hyperlinks":
+                        return GetHyperlinks(request);
+
                     case "get_region_flags":
                         return GetRegionFlags(request);
                 }
@@ -170,11 +168,6 @@ namespace OpenSim.Server.Handlers.Grid
             }
 
             string result = "Error communicating with grid service";
-            if (OnRegisterRegion != null)
-                OnRegisterRegion(rinfo, out result);
-            if (result != String.Empty)
-                return FailureResult(result);
-
             if (rinfo != null)
                 result = m_GridService.RegisterRegion(scopeID, rinfo);
 
@@ -193,9 +186,6 @@ namespace OpenSim.Server.Handlers.Grid
                 m_log.WarnFormat("[GRID HANDLER]: no regionID in request to deregister region");
 
             bool result = m_GridService.DeregisterRegion(regionID);
-
-            if (OnDeregisterRegion != null)
-                OnDeregisterRegion(regionID);
 
             if (result)
                 return SuccessResult();
@@ -476,6 +466,36 @@ namespace OpenSim.Server.Handlers.Grid
 
 
             List<GridRegion> rinfos = m_GridService.GetFallbackRegions(scopeID, x, y);
+
+            Dictionary<string, object> result = new Dictionary<string, object>();
+            if ((rinfos == null) || ((rinfos != null) && (rinfos.Count == 0)))
+                result["result"] = "null";
+            else
+            {
+                int i = 0;
+                foreach (GridRegion rinfo in rinfos)
+                {
+                    Dictionary<string, object> rinfoDict = rinfo.ToKeyValuePairs();
+                    result["region" + i] = rinfoDict;
+                    i++;
+                }
+            }
+            string xmlString = ServerUtils.BuildXmlResponse(result);
+            //m_log.DebugFormat("[GRID HANDLER]: resp string: {0}", xmlString);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
+        }
+
+        byte[] GetHyperlinks(Dictionary<string, object> request)
+        {
+            //m_log.DebugFormat("[GRID HANDLER]: GetHyperlinks");
+            UUID scopeID = UUID.Zero;
+            if (request.ContainsKey("SCOPEID"))
+                UUID.TryParse(request["SCOPEID"].ToString(), out scopeID);
+            else
+                m_log.WarnFormat("[GRID HANDLER]: no scopeID in request to get linked regions");
+
+            List<GridRegion> rinfos = m_GridService.GetHyperlinks(scopeID);
 
             Dictionary<string, object> result = new Dictionary<string, object>();
             if ((rinfos == null) || ((rinfos != null) && (rinfos.Count == 0)))
