@@ -26,43 +26,71 @@
  */
 
 using System;
-using System.Collections.Generic;
+using System.Collections;
+using System.IO;
 using System.Reflection;
-using log4net;
-using Nini.Config;
+using System.Net;
+using System.Text;
+
 using OpenSim.Server.Base;
+using OpenSim.Server.Handlers.Base;
 using OpenSim.Services.Interfaces;
 using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
-using OpenSim.Server.Handlers.Base;
 
-namespace OpenSim.Server.Handlers.Neighbour
+using OpenMetaverse;
+using OpenMetaverse.StructuredData;
+using Nwc.XmlRpc;
+using Nini.Config;
+using log4net;
+
+
+namespace OpenSim.Server.Handlers.Land
 {
-    public class NeighbourServiceInConnector : ServiceConnector
+    public class LandHandlers
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private INeighbourService m_NeighbourService;
-        private IAuthenticationService m_AuthenticationService = null;
+        private ILandService m_LocalService;
 
-        public NeighbourServiceInConnector(IConfigSource source, IHttpServer server, INeighbourService nService, IScene scene) :
-                base(source, server, String.Empty)
+        public LandHandlers(ILandService service)
         {
+            m_LocalService = service;
+        }
 
-            m_NeighbourService = nService;
-            if (m_NeighbourService == null)
+        public XmlRpcResponse GetLandData(XmlRpcRequest request, IPEndPoint remoteClient)
+        {
+            Hashtable requestData = (Hashtable)request.Params[0];
+            ulong regionHandle = Convert.ToUInt64(requestData["region_handle"]);
+            uint x = Convert.ToUInt32(requestData["x"]);
+            uint y = Convert.ToUInt32(requestData["y"]);
+            m_log.DebugFormat("[LAND HANDLER]: Got request for land data at {0}, {1} for region {2}", x, y, regionHandle);
+
+            byte regionAccess;
+            LandData landData = m_LocalService.GetLandData(regionHandle, x, y, out regionAccess);
+            Hashtable hash = new Hashtable();
+            if (landData != null)
             {
-                m_log.Error("[NEIGHBOUR IN CONNECTOR]: neighbour service was not provided");
-                return;
+                // for now, only push out the data we need for answering a ParcelInfoReqeust
+                hash["AABBMax"] = landData.AABBMax.ToString();
+                hash["AABBMin"] = landData.AABBMin.ToString();
+                hash["Area"] = landData.Area.ToString();
+                hash["AuctionID"] = landData.AuctionID.ToString();
+                hash["Description"] = landData.Description;
+                hash["Flags"] = landData.Flags.ToString();
+                hash["GlobalID"] = landData.GlobalID.ToString();
+                hash["Name"] = landData.Name;
+                hash["OwnerID"] = landData.OwnerID.ToString();
+                hash["SalePrice"] = landData.SalePrice.ToString();
+                hash["SnapshotID"] = landData.SnapshotID.ToString();
+                hash["UserLocation"] = landData.UserLocation.ToString();
+                hash["RegionAccess"] = regionAccess.ToString();
             }
-            
-            //bool authentication = neighbourConfig.GetBoolean("RequireAuthentication", false);
-            //if (authentication)
-            //    m_AuthenticationService = scene.RequestModuleInterface<IAuthenticationService>();
 
-
-            server.AddStreamHandler(new NeighbourPostHandler(m_NeighbourService, m_AuthenticationService));
-            server.AddStreamHandler(new NeighbourGetHandler(m_NeighbourService, m_AuthenticationService));
+            XmlRpcResponse response = new XmlRpcResponse();
+            response.Value = hash;
+            return response;
         }
     }
+
 }

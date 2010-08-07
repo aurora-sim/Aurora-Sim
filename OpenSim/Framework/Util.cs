@@ -544,12 +544,7 @@ namespace OpenSim.Framework
             IPAddress ipa;
             if (IPAddress.TryParse(dnsAddress, out ipa))
                 return ipa;
-            try
-            {
-                if (IPAddress.TryParse(dnsAddress.Split(':')[0], out ipa))
-                    return ipa;
-            }
-            catch { }
+
             IPAddress[] hosts = null;
 
             // Not an IP, lookup required
@@ -1178,22 +1173,12 @@ namespace OpenSim.Framework
 
         public static uint ConvertAccessLevelToMaturity(byte maturity)
         {
-            uint retVal = 0;
-            switch (maturity)
-            {
-                case 13: //PG
-                    retVal = 0;
-                    break;
-                case 21: //Mature
-                    retVal = 1;
-                    break;
-                case 42: // Adult
-                    retVal = 2;
-                    break;
-            }
-
-            return retVal;
-
+            if (maturity <= 13)
+                return 0;
+            else if (maturity <= 21)
+                return 1;
+            else
+                return 2;
         }
 
         /// <summary>
