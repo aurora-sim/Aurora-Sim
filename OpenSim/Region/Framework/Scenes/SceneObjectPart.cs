@@ -59,6 +59,7 @@ namespace OpenSim.Region.Framework.Scenes
         REGION = 256,
         TELEPORT = 512,
         REGION_RESTART = 1024,
+        MEDIA = 2048,
         ANIMATION = 16384
     }
 
@@ -149,8 +150,17 @@ namespace OpenSim.Region.Framework.Scenes
         // TODO: This needs to be persisted in next XML version update!
         [XmlIgnore]
         public readonly int[] PayPrice = {-2,-2,-2,-2,-2};
+        
         [XmlIgnore]
-        public PhysicsActor PhysActor;
+        public PhysicsActor PhysActor
+        {
+            get { return m_physActor; }
+            set
+            {
+//                m_log.DebugFormat("[SOP]: PhysActor set to {0} for {1} {2}", value, Name, UUID);
+                m_physActor = value;
+            }
+        }
 
         //Xantor 20080528 Sound stuff:
         //  Note: This isn't persisted in the database right now, as the fields for that aren't just there yet.
@@ -296,6 +306,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         private byte m_updateFlag;
 
+        private PhysicsActor m_physActor;
         protected Vector3 m_acceleration;
         protected Vector3 m_angularVelocity;
 
@@ -321,6 +332,11 @@ namespace OpenSim.Region.Framework.Scenes
         protected Vector3 m_lastAcceleration;
         protected Vector3 m_lastAngularVelocity;
         protected int m_lastTerseSent;
+        
+        /// <summary>
+        /// Stores media texture data
+        /// </summary>
+        protected string m_mediaUrl;
 
         // TODO: Those have to be changed into persistent properties at some later point,
         // or sit-camera on vehicles will break on sim-crossing.
@@ -969,18 +985,43 @@ namespace OpenSim.Region.Framework.Scenes
                 TriggerScriptChangedEvent(Changed.SCALE);
             }
         }
+        
         public byte UpdateFlag
         {
             get { return m_updateFlag; }
             set { m_updateFlag = value; }
+        }
+        
+        /// <summary>
+        /// Used for media on a prim.
+        /// </summary>
+        /// Do not change this value directly - always do it through an IMoapModule.
+        public string MediaUrl 
+        { 
+            get
+            {
+                return m_mediaUrl; 
+            }
+            
+            set               
+            {   
+                m_mediaUrl = value;
+                
+                if (ParentGroup != null)
+                    ParentGroup.HasGroupChanged = true;        
+            }
         }
 
         [XmlIgnore]
         public bool CreateSelected
         {
             get { return m_createSelected; }
-            set { m_createSelected = value; }
-        }
+            set 
+            { 
+//                m_log.DebugFormat("[SOP]: Setting CreateSelected to {0} for {1} {2}", value, Name, UUID);
+                m_createSelected = value; 
+            }
+        }                
 
         #endregion
 
@@ -1504,7 +1545,7 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                     else
                     {
-                        m_log.DebugFormat("[SPEW]: physics actor is null for {0} with parent {1}", UUID, this.ParentGroup.UUID);
+                        m_log.DebugFormat("[SOP]: physics actor is null for {0} with parent {1}", UUID, this.ParentGroup.UUID);
                     }
                 }
             }
@@ -1539,6 +1580,11 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// Duplicates this part.
         /// </summary>
+        /// <param name="localID"></param>
+        /// <param name="AgentID"></param>
+        /// <param name="GroupID"></param>
+        /// <param name="linkNum"></param>
+        /// <param name="userExposed">True if the duplicate will immediately be in the scene, false otherwise</param>
         /// <returns></returns>
         public SceneObjectPart Copy(uint localID, UUID AgentID, UUID GroupID, int linkNum, bool userExposed)
         {
@@ -1602,7 +1648,11 @@ namespace OpenSim.Region.Framework.Scenes
                 dupe.DoPhysicsPropertyUpdate(UsePhysics, true);
             }
             
-            return dupe;
+            ParentGroup.Scene.EventManager.TriggerOnSceneObjectPartCopy(dupe, this, userExposed);
+
+//            m_log.DebugFormat("[SCENE OBJECT PART]: Clone of {0} {1} finished", Name, UUID);
+                          
+            return dupe;            
         }
 
         protected void AssetReceived(string id, Object sender, AssetBase asset)
@@ -1765,7 +1815,7 @@ namespace OpenSim.Region.Framework.Scenes
                         /// that's not wholesome.  Had to make Scene public
                         //PhysActor = null;
 
-                        if ((ObjectFlags & (uint)PrimFlags.Phantom) == 0)
+                        if ((Flags & PrimFlags.Phantom) == 0)
                         {
                             if (UsePhysics)
                             {
