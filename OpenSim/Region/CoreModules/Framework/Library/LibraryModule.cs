@@ -51,7 +51,7 @@ namespace OpenSim.Region.CoreModules.Framework.Library
         private static bool m_HasRunOnce = false;
 
         private bool m_Enabled = false;
-        private string m_LibraryName = "OpenSim Library";
+//        private string m_LibraryName = "OpenSim Library";
         private Scene m_Scene;
 
         private ILibraryService m_Library;
@@ -67,7 +67,7 @@ namespace OpenSim.Region.CoreModules.Framework.Library
                 if (libConfig != null)
                 {
                     string dllName = libConfig.GetString("LocalServiceModule", string.Empty);
-                    //m_log.Debug("[LIBRARY MODULE]: Library service dll is " + dllName);
+                    m_log.Debug("[LIBRARY MODULE]: Library service dll is " + dllName);
                     if (dllName != string.Empty)
                     {
                         Object[] args = new Object[] { config };
@@ -77,7 +77,7 @@ namespace OpenSim.Region.CoreModules.Framework.Library
             }
             if (m_Library == null)
             {
-                //m_log.Warn("[LIBRARY MODULE]: No local library service. Module will be disabled.");
+                m_log.Warn("[LIBRARY MODULE]: No local library service. Module will be disabled.");
                 m_Enabled = false;
             }
         }
@@ -212,13 +212,21 @@ namespace OpenSim.Region.CoreModules.Framework.Library
             }
         }
 
-        private void DumpLibrary()
-        {
-            InventoryFolderImpl lib = m_Library.LibraryRootFolder;
-
-            m_log.DebugFormat(" - folder {0}", lib.Name);
-            DumpFolder(lib);
-        }
+//        private void DumpLibrary()
+//        {
+//            InventoryFolderImpl lib = m_Library.LibraryRootFolder;
+//
+//            m_log.DebugFormat(" - folder {0}", lib.Name);
+//            DumpFolder(lib);
+//        }
+//
+//        private void DumpLibrary()
+//        {
+//            InventoryFolderImpl lib = m_Scene.CommsManager.UserProfileCacheService.LibraryRoot;
+//
+//            m_log.DebugFormat(" - folder {0}", lib.Name);
+//            DumpFolder(lib);
+//        }
 
         private void DumpFolder(InventoryFolderImpl folder)
         {

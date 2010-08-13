@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) Contributors, http://opensimulator.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
@@ -55,7 +55,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
             get { return m_assMapper; }
         }
 
-        private bool m_Initialized = false;
+//        private bool m_Initialized = false;
 
         #region INonSharedRegionModule
 
