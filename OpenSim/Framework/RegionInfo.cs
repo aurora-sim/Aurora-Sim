@@ -29,13 +29,14 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Xml;
 using System.IO;
+using log4net;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework.Console;
-
 
 namespace OpenSim.Framework
 {
@@ -94,22 +95,252 @@ namespace OpenSim.Framework
 
     }
 
+    [Serializable]
+    public class SimpleRegionInfo
+    {    
+//        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        
+        /// <summary>
+        /// The port by which http communication occurs with the region (most noticeably, CAPS communication)
+        /// </summary>
+        public uint HttpPort
+        {
+            get { return m_httpPort; }
+            set { m_httpPort = value; }
+        }
+        protected uint m_httpPort;
+
+        /// <summary>
+        /// A well-formed URI for the host region server (namely "http://" + ExternalHostName)
+        /// </summary>
+        public string ServerURI
+        {
+            get { return m_serverURI; }
+            set { m_serverURI = value; }
+        }
+        protected string m_serverURI;
+
+        public string RegionName
+        {
+            get { return m_regionName; }
+            set { m_regionName = value; }
+        }
+        protected string m_regionName = String.Empty;
+
+        protected bool Allow_Alternate_Ports;
+        public bool m_allow_alternate_ports;
+        protected string m_externalHostName;
+
+        protected IPEndPoint m_internalEndPoint;
+        protected uint? m_regionLocX;
+        protected uint? m_regionLocY;
+        protected uint m_remotingPort;
+        public UUID RegionID = UUID.Zero;
+        public string RemotingAddress;
+        public UUID ScopeID = UUID.Zero;
+
+        public SimpleRegionInfo()
+        {
+        }
+
+        public SimpleRegionInfo(uint regionLocX, uint regionLocY, IPEndPoint internalEndPoint, string externalUri)
+        {
+            m_regionLocX = regionLocX;
+            m_regionLocY = regionLocY;
+
+            m_internalEndPoint = internalEndPoint;
+            m_externalHostName = externalUri;
+        }
+
+        public SimpleRegionInfo(uint regionLocX, uint regionLocY, string externalUri, uint port)
+        {
+            m_regionLocX = regionLocX;
+            m_regionLocY = regionLocY;
+
+            m_externalHostName = externalUri;
+
+            m_internalEndPoint = new IPEndPoint(IPAddress.Parse("0.0.0.0"), (int) port);
+        }
+
+        public SimpleRegionInfo(RegionInfo ConvertFrom)
+        {
+            m_regionName = ConvertFrom.RegionName;
+            m_regionLocX = ConvertFrom.RegionLocX;
+            m_regionLocY = ConvertFrom.RegionLocY;
+            m_internalEndPoint = ConvertFrom.InternalEndPoint;
+            m_externalHostName = ConvertFrom.ExternalHostName;
+            m_remotingPort = ConvertFrom.RemotingPort;
+            m_httpPort = ConvertFrom.HttpPort;
+            m_allow_alternate_ports = ConvertFrom.m_allow_alternate_ports;
+            RemotingAddress = ConvertFrom.RemotingAddress;
+            RegionID = UUID.Zero;
+            ServerURI = ConvertFrom.ServerURI;
+        }
+
+        public uint RemotingPort
+        {
+            get { return m_remotingPort; }
+            set { m_remotingPort = value; }
+        }
+
+        /// <value>
+        /// This accessor can throw all the exceptions that Dns.GetHostAddresses can throw.
+        ///
+        /// XXX Isn't this really doing too much to be a simple getter, rather than an explict method?
+        /// </value>
+        public IPEndPoint ExternalEndPoint
+        {
+            get
+            {
+                // Old one defaults to IPv6
+                //return new IPEndPoint(Dns.GetHostAddresses(m_externalHostName)[0], m_internalEndPoint.Port);
+
+                IPAddress ia = null;
+                // If it is already an IP, don't resolve it - just return directly
+                if (IPAddress.TryParse(m_externalHostName, out ia))
+                    return new IPEndPoint(ia, m_internalEndPoint.Port);
+
+                // Reset for next check
+                ia = null;
+                try
+                {
+                    foreach (IPAddress Adr in Dns.GetHostAddresses(m_externalHostName))
+                    {
+                        if (ia == null)
+                            ia = Adr;
+
+                        if (Adr.AddressFamily == AddressFamily.InterNetwork)
+                        {
+                            ia = Adr;
+                            break;
+                        }
+                    }
+                }
+                catch (SocketException e)
+                {
+                    throw new Exception(
+                        "Unable to resolve local hostname " + m_externalHostName + " innerException of type '" +
+                        e + "' attached to this exception", e);
+                }
+
+                return new IPEndPoint(ia, m_internalEndPoint.Port);
+            }
+
+            set { m_externalHostName = value.ToString(); }
+        }
+
+        public string ExternalHostName
+        {
+            get { return m_externalHostName; }
+            set { m_externalHostName = value; }
+        }
+
+        public IPEndPoint InternalEndPoint
+        {
+            get { return m_internalEndPoint; }
+            set { m_internalEndPoint = value; }
+        }
+
+        public uint RegionLocX
+        {
+            get { return m_regionLocX.Value; }
+            set { m_regionLocX = value; }
+        }
+
+        public uint RegionLocY
+        {
+            get { return m_regionLocY.Value; }
+            set { m_regionLocY = value; }
+        }
+
+        public ulong RegionHandle
+        {
+            get { return Util.UIntsToLong((RegionLocX * (uint) Constants.RegionSize), (RegionLocY * (uint) Constants.RegionSize)); }
+        }
+
+        public int getInternalEndPointPort()
+        {
+            return m_internalEndPoint.Port;
+        }
+
+        public Dictionary<string, object> ToKeyValuePairs()
+        {
+            Dictionary<string, object> kvp = new Dictionary<string, object>();
+            kvp["uuid"] = RegionID.ToString();
+            kvp["locX"] = RegionLocX.ToString();
+            kvp["locY"] = RegionLocY.ToString();
+            kvp["external_ip_address"] = ExternalEndPoint.Address.ToString();
+            kvp["external_port"] = ExternalEndPoint.Port.ToString();
+            kvp["external_host_name"] = ExternalHostName;
+            kvp["http_port"] = HttpPort.ToString();
+            kvp["internal_ip_address"] = InternalEndPoint.Address.ToString();
+            kvp["internal_port"] = InternalEndPoint.Port.ToString();
+            kvp["alternate_ports"] = m_allow_alternate_ports.ToString();
+            kvp["server_uri"] = ServerURI;
+
+            return kvp;
+        }
+
+        public SimpleRegionInfo(Dictionary<string, object> kvp)
+        {
+            if ((kvp["external_ip_address"] != null) && (kvp["external_port"] != null))
+            {
+                int port = 0;
+                Int32.TryParse((string)kvp["external_port"], out port);
+                IPEndPoint ep = new IPEndPoint(IPAddress.Parse((string)kvp["external_ip_address"]), port);
+                ExternalEndPoint = ep;
+            }
+            else
+                ExternalEndPoint = new IPEndPoint(IPAddress.Parse("0.0.0.0"), 0);
+
+            if (kvp["external_host_name"] != null)
+                ExternalHostName = (string)kvp["external_host_name"];
+
+            if (kvp["http_port"] != null)
+            {
+                UInt32 port = 0;
+                UInt32.TryParse((string)kvp["http_port"], out port);
+                HttpPort = port;
+            }
+
+            if ((kvp["internal_ip_address"] != null) && (kvp["internal_port"] != null))
+            {
+                int port = 0;
+                Int32.TryParse((string)kvp["internal_port"], out port);
+                IPEndPoint ep = new IPEndPoint(IPAddress.Parse((string)kvp["internal_ip_address"]), port);
+                InternalEndPoint = ep;
+            }
+            else
+                InternalEndPoint = new IPEndPoint(IPAddress.Parse("0.0.0.0"), 0);
+
+            if (kvp["alternate_ports"] != null)
+            {
+                bool alts = false;
+                Boolean.TryParse((string)kvp["alternate_ports"], out alts);
+                m_allow_alternate_ports = alts;
+            }
+
+            if (kvp["server_uri"] != null)
+                ServerURI = (string)kvp["server_uri"];
+        }
+    }
+
     public class RegionInfo
     {
-        // private static readonly log4net.ILog m_log
-        //     = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         public bool commFailTF = false;
+        public ConfigurationMember configMember;
         public string DataStore = String.Empty;
         public string RegionFile = String.Empty;
         public bool isSandbox = false;
         public bool Persistent = true;
-        public bool Disabled = false;
 
         private EstateSettings m_estateSettings;
         private RegionSettings m_regionSettings;
         // private IConfigSource m_configSource = null;
 
+        public UUID originRegionID = UUID.Zero;
         public string proxyUrl = "";
         public int ProxyOffset = 0;
         public string regionSecret = UUID.Random().ToString();
@@ -149,6 +380,10 @@ namespace OpenSim.Framework
 
         // File based loading
         //
+        public RegionInfo(string description, string filename, bool skipConsoleConfig, IConfigSource configSource) : this(description, filename, skipConsoleConfig, configSource, String.Empty)
+        {
+        }
+
         public RegionInfo(string description, string filename, bool skipConsoleConfig, IConfigSource configSource, string configName)
         {
             // m_configSource = configSource;
@@ -158,7 +393,8 @@ namespace OpenSim.Framework
                 if (!File.Exists(filename)) // New region config request
                 {
                     IniConfigSource newFile = new IniConfigSource();
-                    ReadNiniConfig(newFile, String.Empty);
+                    ReadNiniConfig(newFile, configName);
+
                     newFile.Save(filename);
 
                     RegionFile = filename;
@@ -172,9 +408,9 @@ namespace OpenSim.Framework
                 if (source.Configs[configName] == null)
                     saveFile = true;
 
-                bool update = ReadNiniConfig(source, configName);
+                ReadNiniConfig(source, configName);
 
-                if (configName != String.Empty && (saveFile || update))
+                if (configName != String.Empty && saveFile)
                     source.Save(filename);
 
                 RegionFile = filename;
@@ -198,6 +434,21 @@ namespace OpenSim.Framework
             catch (Exception)
             {
             }
+
+            configMember =
+                new ConfigurationMember(filename, description, loadConfigurationOptions, handleIncomingConfiguration, !skipConsoleConfig);
+            configMember.performConfigurationRetrieve();
+            RegionFile = filename;
+        }
+
+        // The web loader uses this
+        //
+        public RegionInfo(string description, XmlNode xmlNode, bool skipConsoleConfig, IConfigSource configSource)
+        {
+            // m_configSource = configSource;
+            configMember =
+                new ConfigurationMember(xmlNode, description, loadConfigurationOptions, handleIncomingConfiguration, !skipConsoleConfig);
+            configMember.performConfigurationRetrieve();
         }
 
         public RegionInfo(uint regionLocX, uint regionLocY, IPEndPoint internalEndPoint, string externalUri)
@@ -261,37 +512,31 @@ namespace OpenSim.Framework
         public int NonphysPrimMax
         {
             get { return m_nonphysPrimMax; }
-            set { m_nonphysPrimMax = value; }
         }
 
         public int PhysPrimMax
         {
             get { return m_physPrimMax; }
-            set { m_physPrimMax = value; }
         }
 
         public bool ClampPrimSize
         {
             get { return m_clampPrimSize; }
-            set { m_clampPrimSize = value; }
         }
 
         public int ObjectCapacity
         {
             get { return m_objectCapacity; }
-            set { m_objectCapacity = value; }
         }
 
         public byte AccessLevel
         {
             get { return (byte)Util.ConvertMaturityToAccessLevel((uint)RegionSettings.Maturity); }
-            set { RegionSettings.Maturity = (int)Util.ConvertAccessLevelToMaturity(value); }
         }
 
         public string RegionType
         {
             get { return m_regionType; }
-            set { m_regionType = value; }
         }
 
         /// <summary>
@@ -363,6 +608,7 @@ namespace OpenSim.Framework
                         "Unable to resolve local hostname " + m_externalHostName + " innerException of type '" +
                         e + "' attached to this exception", e);
                 }
+
                 return new IPEndPoint(ia, m_internalEndPoint.Port);
             }
 
@@ -373,13 +619,6 @@ namespace OpenSim.Framework
         {
             get { return m_externalHostName; }
             set { m_externalHostName = value; }
-        }
-
-        private bool m_FindExternalIP = true;
-        public bool FindExternalAutomatically
-        {
-            get { return m_FindExternalIP; }
-            set { m_FindExternalIP = value; }
         }
 
         public IPEndPoint InternalEndPoint
@@ -412,38 +651,35 @@ namespace OpenSim.Framework
             m_internalEndPoint = tmpEPE;
         }
 
-        //Returns true if the source should be updated. Returns false if it does not.
-        private bool ReadNiniConfig(IConfigSource source, string name)
+        private void ReadNiniConfig(IConfigSource source, string name)
         {
 //            bool creatingNew = false;
 
-            if (name == String.Empty || source.Configs.Count == 0)
+            if (source.Configs.Count == 0)
             {
                 MainConsole.Instance.Output("=====================================\n");
                 MainConsole.Instance.Output("We are now going to ask a couple of questions about your region.\n");
                 MainConsole.Instance.Output("You can press 'enter' without typing anything to use the default\n");
                 MainConsole.Instance.Output("the default is displayed between [ ] brackets.\n");
                 MainConsole.Instance.Output("=====================================\n");
-            }
 
-            bool NeedsUpdate = false;
-            if (name == String.Empty)
-                name = MainConsole.Instance.CmdPrompt("New region name", name);
-            if (name == String.Empty)
-                throw new Exception("Cannot interactively create region with no name");
+                if (name == String.Empty)
+                    name = MainConsole.Instance.CmdPrompt("New region name", name);
+                if (name == String.Empty)
+                    throw new Exception("Cannot interactively create region with no name");
 
-            if (source.Configs.Count == 0)
-            {
                 source.AddConfig(name);
 
 //                creatingNew = true;
-                NeedsUpdate = true;
             }
+
+            if (name == String.Empty)
+                name = source.Configs[0].Name;
 
             if (source.Configs[name] == null)
             {
                 source.AddConfig(name);
-                NeedsUpdate = true;
+
 //                creatingNew = true;
             }
 
@@ -455,7 +691,6 @@ namespace OpenSim.Framework
 
             if (regionUUID == String.Empty)
             {
-                NeedsUpdate = true;
                 UUID newID = UUID.Random();
 
                 regionUUID = MainConsole.Instance.CmdPrompt("Region UUID", newID.ToString());
@@ -463,13 +698,13 @@ namespace OpenSim.Framework
             }
 
             RegionID = new UUID(regionUUID);
-            
+            originRegionID = RegionID; // What IS this?!
+          
             RegionName = name;
             string location = config.GetString("Location", String.Empty);
 
             if (location == String.Empty)
             {
-                NeedsUpdate = true;
                 location = MainConsole.Instance.CmdPrompt("Region Location", "1000,1000");
                 config.Set("Location", location);
             }
@@ -492,7 +727,6 @@ namespace OpenSim.Framework
             }
             else
             {
-                NeedsUpdate = true;
                 address = IPAddress.Parse(MainConsole.Instance.CmdPrompt("Internal IP address", "0.0.0.0"));
                 config.Set("InternalAddress", address.ToString());
             }
@@ -505,7 +739,6 @@ namespace OpenSim.Framework
             }
             else
             {
-                NeedsUpdate = true;
                 port = Convert.ToInt32(MainConsole.Instance.CmdPrompt("Internal port", "9000"));
                 config.Set("InternalPort", port);
             }
@@ -518,7 +751,6 @@ namespace OpenSim.Framework
             }
             else
             {
-                NeedsUpdate = true;
                 m_allow_alternate_ports = Convert.ToBoolean(MainConsole.Instance.CmdPrompt("Allow alternate ports", "False"));
 
                 config.Set("AllowAlternatePorts", m_allow_alternate_ports.ToString());
@@ -534,24 +766,23 @@ namespace OpenSim.Framework
             }
             else
             {
-                NeedsUpdate = true;
                 externalName = MainConsole.Instance.CmdPrompt("External host name", "SYSTEMIP");
                 config.Set("ExternalHostName", externalName);
             }
 
             if (externalName == "SYSTEMIP")
+            {
                 m_externalHostName = Util.GetLocalHost().ToString();
+                m_log.InfoFormat(
+                    "[REGIONINFO]: Resolving SYSTEMIP to {0} for external hostname of region {1}", 
+                    m_externalHostName, name);
+            }
             else
+            {
                 m_externalHostName = externalName;
+            }
 
             m_regionType = config.GetString("RegionType", String.Empty);
-
-            if (m_regionType == String.Empty)
-            {
-                NeedsUpdate = true;
-                m_regionType = MainConsole.Instance.CmdPrompt("Region Type", "Mainland");
-                config.Set("RegionType", m_regionType);
-            }
 
             // Prim stuff
             //
@@ -567,7 +798,6 @@ namespace OpenSim.Framework
             // Multi-tenancy
             //
             ScopeID = new UUID(config.GetString("ScopeID", UUID.Zero.ToString()));
-            return NeedsUpdate;
         }
 
         private void WriteNiniConfig(IConfigSource source)
@@ -631,13 +861,195 @@ namespace OpenSim.Framework
                 WriteNiniConfig(source);
 
                 source.Save(filename);
+
+                return;
             }
+            configMember = new ConfigurationMember(filename, description, loadConfigurationOptionsFromMe,
+                                                   ignoreIncomingConfiguration, false);
+            configMember.performConfigurationRetrieve();
+            RegionFile = filename;
+        }
+
+        public void loadConfigurationOptionsFromMe()
+        {
+            configMember.addConfigurationOption("sim_UUID", ConfigurationOption.ConfigurationTypes.TYPE_UUID_NULL_FREE,
+                                                "UUID of Region (Default is recommended, random UUID)",
+                                                RegionID.ToString(), true);
+            configMember.addConfigurationOption("sim_name", ConfigurationOption.ConfigurationTypes.TYPE_STRING_NOT_EMPTY,
+                                                "Region Name", RegionName, true);
+            configMember.addConfigurationOption("sim_location_x", ConfigurationOption.ConfigurationTypes.TYPE_UINT32,
+                                                "Grid Location (X Axis)", m_regionLocX.ToString(), true);
+            configMember.addConfigurationOption("sim_location_y", ConfigurationOption.ConfigurationTypes.TYPE_UINT32,
+                                                "Grid Location (Y Axis)", m_regionLocY.ToString(), true);
+            //m_configMember.addConfigurationOption("datastore", ConfigurationOption.ConfigurationTypes.TYPE_STRING_NOT_EMPTY, "Filename for local storage", "OpenSim.db", false);
+            configMember.addConfigurationOption("internal_ip_address",
+                                                ConfigurationOption.ConfigurationTypes.TYPE_IP_ADDRESS,
+                                                "Internal IP Address for incoming UDP client connections",
+                                                m_internalEndPoint.Address.ToString(),
+                                                true);
+            configMember.addConfigurationOption("internal_ip_port", ConfigurationOption.ConfigurationTypes.TYPE_INT32,
+                                                "Internal IP Port for incoming UDP client connections",
+                                                m_internalEndPoint.Port.ToString(), true);
+            configMember.addConfigurationOption("allow_alternate_ports",
+                                                ConfigurationOption.ConfigurationTypes.TYPE_BOOLEAN,
+                                                "Allow sim to find alternate UDP ports when ports are in use?",
+                                                m_allow_alternate_ports.ToString(), true);
+            configMember.addConfigurationOption("external_host_name",
+                                                ConfigurationOption.ConfigurationTypes.TYPE_STRING_NOT_EMPTY,
+                                                "External Host Name", m_externalHostName, true);
+            configMember.addConfigurationOption("lastmap_uuid", ConfigurationOption.ConfigurationTypes.TYPE_UUID,
+                                                "Last Map UUID", lastMapUUID.ToString(), true);
+            configMember.addConfigurationOption("lastmap_refresh", ConfigurationOption.ConfigurationTypes.TYPE_STRING_NOT_EMPTY,
+                                                "Last Map Refresh", Util.UnixTimeSinceEpoch().ToString(), true);
+
+            configMember.addConfigurationOption("nonphysical_prim_max", ConfigurationOption.ConfigurationTypes.TYPE_INT32,
+                                                "Maximum size for nonphysical prims", m_nonphysPrimMax.ToString(), true);
+            
+            configMember.addConfigurationOption("physical_prim_max", ConfigurationOption.ConfigurationTypes.TYPE_INT32,
+                                                "Maximum size for physical prims", m_physPrimMax.ToString(), true);
+            
+            configMember.addConfigurationOption("clamp_prim_size", ConfigurationOption.ConfigurationTypes.TYPE_BOOLEAN,
+                                                "Clamp prims to max size", m_clampPrimSize.ToString(), true);
+            
+            configMember.addConfigurationOption("object_capacity", ConfigurationOption.ConfigurationTypes.TYPE_INT32,
+                                                "Max objects this sim will hold", m_objectCapacity.ToString(), true);
+            
+            configMember.addConfigurationOption("scope_id", ConfigurationOption.ConfigurationTypes.TYPE_UUID,
+                                                "Scope ID for this region", ScopeID.ToString(), true);
+
+            configMember.addConfigurationOption("region_type", ConfigurationOption.ConfigurationTypes.TYPE_STRING,
+                                                "Free form string describing the type of region", String.Empty, true);
+        }
+
+        public void loadConfigurationOptions()
+        {
+            configMember.addConfigurationOption("sim_UUID", ConfigurationOption.ConfigurationTypes.TYPE_UUID,
+                                                "UUID of Region (Default is recommended, random UUID)",
+                                                UUID.Random().ToString(), true);
+            configMember.addConfigurationOption("sim_name", ConfigurationOption.ConfigurationTypes.TYPE_STRING_NOT_EMPTY,
+                                                "Region Name", "OpenSim Test", false);
+            configMember.addConfigurationOption("sim_location_x", ConfigurationOption.ConfigurationTypes.TYPE_UINT32,
+                                                "Grid Location (X Axis)", "1000", false);
+            configMember.addConfigurationOption("sim_location_y", ConfigurationOption.ConfigurationTypes.TYPE_UINT32,
+                                                "Grid Location (Y Axis)", "1000", false);
+            //m_configMember.addConfigurationOption("datastore", ConfigurationOption.ConfigurationTypes.TYPE_STRING_NOT_EMPTY, "Filename for local storage", "OpenSim.db", false);
+            configMember.addConfigurationOption("internal_ip_address",
+                                                ConfigurationOption.ConfigurationTypes.TYPE_IP_ADDRESS,
+                                                "Internal IP Address for incoming UDP client connections", "0.0.0.0",
+                                                false);
+            configMember.addConfigurationOption("internal_ip_port", ConfigurationOption.ConfigurationTypes.TYPE_INT32,
+                                                "Internal IP Port for incoming UDP client connections",
+                                                ConfigSettings.DefaultRegionHttpPort.ToString(), false);
+            configMember.addConfigurationOption("allow_alternate_ports", ConfigurationOption.ConfigurationTypes.TYPE_BOOLEAN,
+                                                "Allow sim to find alternate UDP ports when ports are in use?",
+                                                "false", true);
+            configMember.addConfigurationOption("external_host_name",
+                                                ConfigurationOption.ConfigurationTypes.TYPE_STRING_NOT_EMPTY,
+                                                "External Host Name", "127.0.0.1", false);
+            configMember.addConfigurationOption("lastmap_uuid", ConfigurationOption.ConfigurationTypes.TYPE_UUID,
+                                    "Last Map UUID", lastMapUUID.ToString(), true);
+
+            configMember.addConfigurationOption("lastmap_refresh", ConfigurationOption.ConfigurationTypes.TYPE_STRING_NOT_EMPTY,
+                                                "Last Map Refresh", Util.UnixTimeSinceEpoch().ToString(), true);
+            
+            configMember.addConfigurationOption("nonphysical_prim_max", ConfigurationOption.ConfigurationTypes.TYPE_INT32,
+                                                "Maximum size for nonphysical prims", "0", true);
+            
+            configMember.addConfigurationOption("physical_prim_max", ConfigurationOption.ConfigurationTypes.TYPE_INT32,
+                                                "Maximum size for physical prims", "0", true);
+            
+            configMember.addConfigurationOption("clamp_prim_size", ConfigurationOption.ConfigurationTypes.TYPE_BOOLEAN,
+                                                "Clamp prims to max size", "false", true);
+            
+            configMember.addConfigurationOption("object_capacity", ConfigurationOption.ConfigurationTypes.TYPE_INT32,
+                                                "Max objects this sim will hold", "0", true);
+
+            configMember.addConfigurationOption("scope_id", ConfigurationOption.ConfigurationTypes.TYPE_UUID,
+                                                "Scope ID for this region", UUID.Zero.ToString(), true);
+
+            configMember.addConfigurationOption("region_type", ConfigurationOption.ConfigurationTypes.TYPE_STRING,
+                                                "Region Type", String.Empty, true);
+        }
+
+        public bool handleIncomingConfiguration(string configuration_key, object configuration_result)
+        {
+            switch (configuration_key)
+            {
+                case "sim_UUID":
+                    RegionID = (UUID) configuration_result;
+                    originRegionID = (UUID) configuration_result;
+                    break;
+                case "sim_name":
+                    RegionName = (string) configuration_result;
+                    break;
+                case "sim_location_x":
+                    m_regionLocX = (uint) configuration_result;
+                    break;
+                case "sim_location_y":
+                    m_regionLocY = (uint) configuration_result;
+                    break;
+                case "datastore":
+                    DataStore = (string) configuration_result;
+                    break;
+                case "internal_ip_address":
+                    IPAddress address = (IPAddress) configuration_result;
+                    m_internalEndPoint = new IPEndPoint(address, 0);
+                    break;
+                case "internal_ip_port":
+                    m_internalEndPoint.Port = (int) configuration_result;
+                    break;
+                case "allow_alternate_ports":
+                    m_allow_alternate_ports = (bool) configuration_result;
+                    break;
+                case "external_host_name":
+                    if ((string) configuration_result != "SYSTEMIP")
+                    {
+                        m_externalHostName = (string) configuration_result;
+                    }
+                    else
+                    {
+                        m_externalHostName = Util.GetLocalHost().ToString();
+                    }
+                    break;
+                case "lastmap_uuid":
+                    lastMapUUID = (UUID)configuration_result;
+                    break;
+                case "lastmap_refresh":
+                    lastMapRefresh = (string)configuration_result;
+                    break;
+                case "nonphysical_prim_max":
+                    m_nonphysPrimMax = (int)configuration_result;
+                    break;
+                case "physical_prim_max":
+                    m_physPrimMax = (int)configuration_result;
+                    break;
+                case "clamp_prim_size":
+                    m_clampPrimSize = (bool)configuration_result;
+                    break;
+                case "object_capacity":
+                    m_objectCapacity = (int)configuration_result;
+                    break;
+                case "scope_id":
+                    ScopeID = (UUID)configuration_result;
+                    break;
+                case "region_type":
+                    m_regionType = (string)configuration_result;
+                    break;
+            }
+
+            return true;
         }
 
         public void SaveLastMapUUID(UUID mapUUID)
         {
             lastMapUUID = mapUUID;
             lastMapRefresh = Util.UnixTimeSinceEpoch().ToString();
+
+            if (configMember == null)
+                return;
+
+            configMember.forceSetConfigurationOption("lastmap_uuid", mapUUID.ToString());
+            configMember.forceSetConfigurationOption("lastmap_refresh", lastMapRefresh);
         }
 
         public OSDMap PackRegionInfoData()
