@@ -45,10 +45,6 @@ namespace OpenSim.Framework
         public static readonly UUID DEFAULT_TERRAIN_TEXTURE_3 = new UUID("179cdabd-398a-9b6b-1391-4dc333ba321f");
         public static readonly UUID DEFAULT_TERRAIN_TEXTURE_4 = new UUID("beb169c7-11ea-fff2-efe5-0f24dc881df2");
 
-        public RegionSettings()
-        {
-        }
-
         public void Save()
         {
             if (OnSave != null)
