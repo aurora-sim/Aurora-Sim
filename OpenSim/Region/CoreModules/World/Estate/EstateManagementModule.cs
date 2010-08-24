@@ -35,11 +35,9 @@ using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
-using Mono.Addins;
 
 namespace OpenSim.Region.CoreModules.World.Estate
 {
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class EstateManagementModule : IEstateModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -170,7 +168,6 @@ namespace OpenSim.Region.CoreModules.World.Estate
             }
             m_scene.RegionInfo.RegionSettings.Save();
             TriggerRegionInfoChange();
-            sendRegionHandshakeToAll();
             sendRegionInfoPacketToAll();
         }
 
@@ -197,13 +194,12 @@ namespace OpenSim.Region.CoreModules.World.Estate
             }
             m_scene.RegionInfo.RegionSettings.Save();
             TriggerRegionInfoChange();
-            sendRegionHandshakeToAll();
             sendRegionInfoPacketToAll();
         }
 
         private void handleCommitEstateTerrainTextureRequest(IClientAPI remoteClient)
         {
-            //sendRegionHandshakeToAll();
+            sendRegionHandshakeToAll();
         }
 
         public void setRegionTerrainSettings(float WaterHeight,
@@ -544,28 +540,21 @@ namespace OpenSim.Region.CoreModules.World.Estate
                 try
                 {
 
-                    string localfilename = filename + ".raw";
+                    string localfilename = "terrain.raw";
 
                     if (terrainData.Length == 851968)
                     {
-                        localfilename = Path.Combine(Util.dataDir(), filename + ".raw"); // It's a .LLRAW
+                        localfilename = Path.Combine(Util.dataDir(),"terrain.raw"); // It's a .LLRAW
                     }
 
-                    bool OARUpload = false;
                     if (terrainData.Length == 196662) // 24-bit 256x256 Bitmap
-                        localfilename = Path.Combine(Util.dataDir(), filename + ".bmp");
+                        localfilename = Path.Combine(Util.dataDir(), "terrain.bmp");
 
-                    else if (terrainData.Length == 256 * 256 * 4) // It's a .R32
-                        localfilename = Path.Combine(Util.dataDir(), filename + ".r32");
+                    if (terrainData.Length == 256 * 256 * 4) // It's a .R32
+                        localfilename = Path.Combine(Util.dataDir(), "terrain.r32");
 
-                    else if (terrainData.Length == 256 * 256 * 8) // It's a .R64
-                        localfilename = Path.Combine(Util.dataDir(), filename + ".r64");
-                    else
-                    {
-                        // Assume its a .oar then
-                        OARUpload = true;
-                        localfilename = Path.Combine(Util.dataDir(), filename + ".oar");
-                    }
+                    if (terrainData.Length == 256 * 256 * 8) // It's a .R64
+                        localfilename = Path.Combine(Util.dataDir(), "terrain.r64");
 
                     if (File.Exists(localfilename))
                     {
@@ -578,16 +567,9 @@ namespace OpenSim.Region.CoreModules.World.Estate
 
                     FileInfo x = new FileInfo(localfilename);
 
-                    if (!OARUpload)
-                    {
-                        terr.LoadFromFile(localfilename);
-                        remoteClient.SendAlertMessage("Your terrain was loaded as a ." + x.Extension + " file. It may take a few moments to appear.");
-                    }
-                    else
-                    {
-                        OpenSim.Framework.Console.MainConsole.Instance.RunCommand("load oar " + localfilename);
-                        remoteClient.SendAlertMessage("Your oar file was loaded. It may take a few moments to appear.");
-                    }
+                    terr.LoadFromFile(localfilename);
+                    remoteClient.SendAlertMessage("Your terrain was loaded as a ." + x.Extension + " file. It may take a few moments to appear.");
+
                 }
                 catch (IOException e)
                 {
@@ -688,8 +670,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
            args.useEstateSun = m_scene.RegionInfo.RegionSettings.UseEstateSun;
            args.waterHeight = (float)m_scene.RegionInfo.RegionSettings.WaterHeight;
            args.simName = m_scene.RegionInfo.RegionName;
-           args.RegionType = m_scene.RegionInfo.RegionType;
-           args.MaxAgents = (uint)m_scene.RegionInfo.RegionSettings.AgentLimit;
+           args.regionType = m_scene.RegionInfo.RegionType;
 
            remote_client.SendRegionInfoToEstateMenu(args);
         }
@@ -835,7 +816,6 @@ namespace OpenSim.Region.CoreModules.World.Estate
             args.terrainDetail1 = m_scene.RegionInfo.RegionSettings.TerrainTexture2;
             args.terrainDetail2 = m_scene.RegionInfo.RegionSettings.TerrainTexture3;
             args.terrainDetail3 = m_scene.RegionInfo.RegionSettings.TerrainTexture4;
-            args.RegionType = Utils.StringToBytes(m_scene.RegionInfo.RegionType);
 
             remoteClient.SendRegionHandshake(m_scene.RegionInfo,args);
         }
@@ -910,8 +890,26 @@ namespace OpenSim.Region.CoreModules.World.Estate
 
         #region IRegionModule Members
 
-        public void Initialise(IConfigSource source)
+        public void Initialise(Scene scene, IConfigSource source)
         {
+            m_scene = scene;
+            m_scene.RegisterModuleInterface<IEstateModule>(this);
+            m_scene.EventManager.OnNewClient += EventManager_OnNewClient;
+            m_scene.EventManager.OnRequestChangeWaterHeight += changeWaterHeight;
+
+            m_scene.AddCommand(this, "set terrain texture",
+                               "set terrain texture <number> <uuid> [<x>] [<y>]",
+                               "Sets the terrain <number> to <uuid>, if <x> or <y> are specified, it will only " +
+                               "set it on regions with a matching coordinate. Specify -1 in <x> or <y> to wildcard" +
+                               " that coordinate.",
+                               consoleSetTerrainTexture);
+
+            m_scene.AddCommand(this, "set terrain heights",
+                               "set terrain heights <corner> <min> <max> [<x>] [<y>]",
+                               "Sets the terrain texture heights on corner #<corner> to <min>/<max>, if <x> or <y> are specified, it will only " +
+                               "set it on regions with a matching coordinate. Specify -1 in <x> or <y> to wildcard" +
+                               " that coordinate. Corner # SW = 0, NW = 1, SE = 2, NE = 3.",
+                               consoleSetTerrainHeights);
         }
 
         #region Console Commands
@@ -1003,49 +1001,11 @@ namespace OpenSim.Region.CoreModules.World.Estate
 
         #endregion
 
-
-
-        public void AddRegion(Scene scene)
-        {
-            m_scene = scene;
-            m_scene.RegisterModuleInterface<IEstateModule>(this);
-            m_scene.EventManager.OnNewClient += EventManager_OnNewClient;
-            m_scene.EventManager.OnRequestChangeWaterHeight += changeWaterHeight;
-
-            m_scene.AddCommand(this, "set terrain texture",
-                               "set terrain texture <number> <uuid> [<x>] [<y>]",
-                               "Sets the terrain <number> to <uuid>, if <x> or <y> are specified, it will only " +
-                               "set it on regions with a matching coordinate. Specify -1 in <x> or <y> to wildcard" +
-                               " that coordinate.",
-                               consoleSetTerrainTexture);
-
-            m_scene.AddCommand(this, "set terrain heights",
-                               "set terrain heights <corner> <min> <max> [<x>] [<y>]",
-                               "Sets the terrain texture heights on corner #<corner> to <min>/<max>, if <x> or <y> are specified, it will only " +
-                               "set it on regions with a matching coordinate. Specify -1 in <x> or <y> to wildcard" +
-                               " that coordinate. Corner # SW = 0, NW = 1, SE = 2, NE = 3.",
-                               consoleSetTerrainHeights);
-        }
-
-        public void RemoveRegion(Scene scene)
-        {
-
-        }
-
-        public void RegionLoaded(Scene scene)
+        public void PostInitialise()
         {
             // Sets up the sun module based no the saved Estate and Region Settings
             // DO NOT REMOVE or the sun will stop working
             m_scene.TriggerEstateSunUpdate();
-        }
-
-        public Type ReplaceableInterface
-        {
-            get { return null; }
-        }
-        
-        public void PostInitialise()
-        {
         }
 
         public void Close()
@@ -1147,13 +1107,12 @@ namespace OpenSim.Region.CoreModules.World.Estate
             flags |= RegionFlags.AllowLandmark;
             flags |= RegionFlags.AllowSetHome;
 
-            
+            // TODO: SkipUpdateInterestList
 
             // Omitted
             //
-            // Omitted: SkipUpdateInterestList  Region does not update agent prim interest lists. Internal debugging option.
-            // Omitted: NullLayer Unknown: Related to the availability of an overview world map tile.(Think mainland images when zoomed out.)
-            // Omitted: SkipAgentAction Unknown: Related to region debug flags. Possibly to skip processing of agent interaction with world.
+            // Omitted: NullLayer (what is that?)
+            // Omitted: SkipAgentAction (what does it do?)
 
             return (uint)flags;
         }
