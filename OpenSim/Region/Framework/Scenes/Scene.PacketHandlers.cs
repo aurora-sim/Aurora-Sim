@@ -39,7 +39,7 @@ namespace OpenSim.Region.Framework.Scenes
     public partial class Scene
     {
         protected void SimChat(byte[] message, ChatTypeEnum type, int channel, Vector3 fromPos, string fromName,
-                               UUID fromID, bool fromAgent, bool broadcast, float range, UUID ToAgentID)
+                               UUID fromID, bool fromAgent, bool broadcast)
         {
             OSChatMessage args = new OSChatMessage();
 
@@ -47,10 +47,8 @@ namespace OpenSim.Region.Framework.Scenes
             args.Channel = channel;
             args.Type = type;
             args.Position = fromPos;
-            args.Range = range;
             args.SenderUUID = fromID;
             args.Scene = this;
-            args.ToAgentID = ToAgentID;
 
             if (fromAgent)
             {
@@ -81,17 +79,10 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="fromPos"></param>
         /// <param name="fromName"></param>
         /// <param name="fromAgentID"></param>
-        /// 
-        public void SimChat(byte[] message, ChatTypeEnum type, int channel, Vector3 fromPos, string fromName,
-                            UUID fromID, bool fromAgent, float range)
-        {
-            SimChat(message, type, channel, fromPos, fromName, fromID, fromAgent, false, range, UUID.Zero);
-        }
-
         public void SimChat(byte[] message, ChatTypeEnum type, int channel, Vector3 fromPos, string fromName,
                             UUID fromID, bool fromAgent)
         {
-            SimChat(message, type, channel, fromPos, fromName, fromID, fromAgent, -1);
+            SimChat(message, type, channel, fromPos, fromName, fromID, fromAgent, false);
         }
 
         public void SimChat(string message, ChatTypeEnum type, Vector3 fromPos, string fromName, UUID fromID, bool fromAgent)
@@ -113,9 +104,9 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="fromName"></param>
         /// <param name="fromAgentID"></param>
         public void SimChatBroadcast(byte[] message, ChatTypeEnum type, int channel, Vector3 fromPos, string fromName,
-                                     UUID fromID, bool fromAgent, UUID ToAgentID)
+                                     UUID fromID, bool fromAgent)
         {
-            SimChat(message, type, channel, fromPos, fromName, fromID, fromAgent, true, -1, ToAgentID);
+            SimChat(message, type, channel, fromPos, fromName, fromID, fromAgent, true);
         }
 
         /// <summary>
@@ -148,14 +139,13 @@ namespace OpenSim.Region.Framework.Scenes
         public void SelectPrim(uint primLocalID, IClientAPI remoteClient)
         {
             List<EntityBase> EntityList = GetEntities();
-            UUID prim = new UUID();
+
             foreach (EntityBase ent in EntityList)
             {
                 if (ent is SceneObjectGroup)
                 {
                     if (((SceneObjectGroup) ent).LocalId == primLocalID)
                     {
-
                         ((SceneObjectGroup) ent).GetProperties(remoteClient);
                         ((SceneObjectGroup) ent).IsSelected = true;
                         // A prim is only tainted if it's allowed to be edited by the person clicking it.
@@ -164,32 +154,34 @@ namespace OpenSim.Region.Framework.Scenes
                         {
                             EventManager.TriggerParcelPrimCountTainted();
                         }
-                        prim = ((SceneObjectGroup)ent).UUID;
                         break;
                     }
-                   else 
-                   {
-                       // We also need to check the children of this prim as they
-                       // can be selected as well and send property information
-                       bool foundPrim = false;
-                       foreach (KeyValuePair<UUID, SceneObjectPart> child in ((SceneObjectGroup) ent).Children)
-                       {
-                           if (child.Value.LocalId == primLocalID) 
-                           {
-                               child.Value.GetProperties(remoteClient);
-                               foundPrim = true;
-                               prim = child.Value.UUID;
-                               break;
-                           }
-                       }
-                       if (foundPrim) break;
+                    else 
+                    {
+                        // We also need to check the children of this prim as they
+                        // can be selected as well and send property information
+                        bool foundPrim = false;
+                        
+                        SceneObjectGroup sog = ent as SceneObjectGroup;
+                        
+                        lock (sog.Children)
+                        {
+                            foreach (KeyValuePair<UUID, SceneObjectPart> child in (sog.Children))
+                            {
+                                if (child.Value.LocalId == primLocalID) 
+                                {
+                                    child.Value.GetProperties(remoteClient);
+                                    foundPrim = true;
+                                    break;
+                                }
+                            }
+                        }
+                            
+                        if (foundPrim) 
+                            break;
                    }
                 }
             }
-                ScenePresence SP;
-                TryGetScenePresence(remoteClient.AgentId, out SP);
-                SP.SelectedUUID = prim;
-                SP.IsSelecting = true;
         }
 
         /// <summary>
@@ -200,12 +192,6 @@ namespace OpenSim.Region.Framework.Scenes
         public void DeselectPrim(uint primLocalID, IClientAPI remoteClient)
         {
             SceneObjectPart part = GetSceneObjectPart(primLocalID);
-            //Do this first... As if its null, this wont be fired.
-            ScenePresence SP;
-            TryGetScenePresence(remoteClient.AgentId, out SP);
-            SP.SelectedUUID = UUID.Zero;
-            SP.IsSelecting = false;
-
             if (part == null)
                 return;
             
@@ -285,8 +271,6 @@ namespace OpenSim.Region.Framework.Scenes
                     SceneObjectGroup obj = ent as SceneObjectGroup;
                     if (obj != null)
                     {
-                        if (obj.RootPart.BlockGrab)
-                            return;
                         // Is this prim part of the group
                         if (obj.HasChildPrim(localID))
                         {
@@ -331,8 +315,6 @@ namespace OpenSim.Region.Framework.Scenes
                     SceneObjectGroup obj = ent as SceneObjectGroup;
                     if (obj != null)
                     {
-                        if (obj.RootPart.BlockGrab)
-                            return;
                         // Is this prim part of the group
                         if (obj.HasChildPrim(objectID))
                         {
@@ -372,8 +354,6 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     SceneObjectGroup obj = ent as SceneObjectGroup;
 
-                    if (obj.RootPart.BlockGrab)
-                        return;
                     // Is this prim part of the group
                     if (obj.HasChildPrim(localID))
                     {
@@ -465,8 +445,6 @@ namespace OpenSim.Region.Framework.Scenes
         {
             // TODO: don't create new blocks if recycling an old packet
             ViewerEffectPacket.EffectBlock[] effectBlockArray = new ViewerEffectPacket.EffectBlock[args.Count];
-            ScenePresence SP;
-            TryGetScenePresence(remoteClient.AgentId, out SP);
             for (int i = 0; i < args.Count; i++)
             {
                 ViewerEffectPacket.EffectBlock effect = new ViewerEffectPacket.EffectBlock();
@@ -477,11 +455,6 @@ namespace OpenSim.Region.Framework.Scenes
                 effect.Type = args[i].Type;
                 effect.TypeData = args[i].TypeData;
                 effectBlockArray[i] = effect;
-                //Save the color
-                if (effect.Type == 7 || effect.Type == 9)
-                {
-                    SP.EffectColor = args[i].Color;
-                }
             }
 
             ForEachClient(
