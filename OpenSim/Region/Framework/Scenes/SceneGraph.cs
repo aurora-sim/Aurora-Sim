@@ -1688,8 +1688,6 @@ namespace OpenSim.Region.Framework.Scenes
                             SceneObjectPart newRoot = newSet[0];
                             newSet.RemoveAt(0);
 
-                            List<uint> linkIDs = new List<uint>();
-
                             foreach (SceneObjectPart newChild in newSet)
                                 newChild.UpdateFlag = 0;
 
