@@ -90,8 +90,78 @@ namespace OpenSim.Framework
         private Vector3 _userLookAt = new Vector3();
         private int _dwell = 0;
         private int _otherCleanTime = 0;
-        private ulong _regionHandle;
-        private UUID _regionID;
+		private string _mediaType = "none/none";
+		private string _mediaDescription = "";
+		private int _mediaHeight = 0;
+		private int _mediaWidth = 0;
+		private bool _mediaLoop = false;
+		private bool _obscureMusic = false;
+		private bool _obscureMedia = false;
+
+        /// <summary>
+        /// Whether to obscure parcel media URL
+        /// </summary>
+        [XmlIgnore]
+        public bool ObscureMedia {
+            get {
+                return _obscureMedia;
+            }
+            set {
+                _obscureMedia = value;
+            }
+        }
+
+        /// <summary>
+        /// Whether to obscure parcel music URL
+        /// </summary>
+        [XmlIgnore]
+        public bool ObscureMusic {
+            get {
+                return _obscureMusic;
+            }
+            set {
+                _obscureMusic = value;
+            }
+        }
+
+        /// <summary>
+        /// Whether to loop parcel media
+        /// </summary>
+        [XmlIgnore]
+        public bool MediaLoop {
+            get {
+                return _mediaLoop;
+            }
+            set {
+                _mediaLoop = value;
+            }
+        }
+
+        /// <summary>
+        /// Height of parcel media render
+        /// </summary>
+        [XmlIgnore]
+        public int MediaHeight {
+            get {
+                return _mediaHeight;
+            }
+            set {
+                _mediaHeight = value;
+            }
+        }
+
+        /// <summary>
+        /// Width of parcel media render
+        /// </summary>
+        [XmlIgnore]
+        public int MediaWidth {
+            get {
+                return _mediaWidth;
+            }
+            set {
+                _mediaWidth = value;
+            }
+        }
 
         /// <summary>
         /// Upper corner of the AABB for the parcel
@@ -199,22 +269,6 @@ namespace OpenSim.Framework
             }
             set {
                 _globalID = value;
-            }
-        }
-
-        protected UUID _infoUUID;
-        /// <summary>
-        /// Grid Wide ID for the parcel.
-        /// </summary>
-        public UUID InfoUUID
-        {
-            get
-            {
-                return _infoUUID;
-            }
-            set
-            {
-                _infoUUID = value;
             }
         }
 
@@ -340,30 +394,6 @@ namespace OpenSim.Framework
             }
         }
 
-        public ulong RegionHandle
-        {
-            get
-            {
-                return _regionHandle;
-            }
-            set
-            {
-                _regionHandle = value;
-            }
-        }
-
-        public UUID RegionID
-        {
-            get
-            {
-                return _regionID;
-            }
-            set
-            {
-                _regionID = value;
-            }
-        }
-
         /// <summary>
         /// Determines if we scale the media based on the surface it's on
         /// </summary>
@@ -376,69 +406,6 @@ namespace OpenSim.Framework
             }
         }
 
-        private byte _mediaLoop = 0;
-        /// <summary>
-        /// Type of media
-        /// </summary>
-        public byte MediaLoop
-        {
-            get
-            {
-                return _mediaLoop;
-            }
-            set
-            {
-                _mediaLoop = value;
-            }
-        }
-
-        private byte _ObscureMusic = 0;
-        /// <summary>
-        /// Type of media
-        /// </summary>
-        public byte ObscureMusic
-        {
-            get
-            {
-                return _ObscureMusic;
-            }
-            set
-            {
-                _ObscureMusic = value;
-            }
-        }
-
-        private byte _ObscureMedia = 0;
-        /// <summary>
-        /// Type of media
-        /// </summary>
-        public byte ObscureMedia
-        {
-            get
-            {
-                return _ObscureMedia;
-            }
-            set
-            {
-                _ObscureMedia = value;
-            }
-        }
-
-        private string _mediaDescription = "";
-        /// <summary>
-        /// Parcel Media Description
-        /// </summary>
-        public string MediaDescription
-        {
-            get
-            {
-                return _mediaDescription;
-            }
-            set
-            {
-                _mediaDescription = value;
-            }
-        }
         /// <summary>
         /// Texture Guid to replace with the output of the media stream
         /// </summary>
@@ -463,33 +430,6 @@ namespace OpenSim.Framework
             }
         }
 
-        private int[] _mediaSize = new int[] {0,0};
-        public int[] MediaSize
-        {
-            get
-            {
-                return _mediaSize;
-            }
-            set
-            {
-                _mediaSize = value;
-            }
-        }
-
-        private int _Maturity = 2;
-        public int Maturity
-        {
-            get
-            {
-                return _Maturity;
-            }
-            set
-            {
-                _Maturity = value;
-            }
-        }
-
-        private string _mediaType = "none/none";
         public string MediaType
         {
             get
@@ -704,6 +644,17 @@ namespace OpenSim.Framework
             }
         }
 
+        /// <summary>
+        /// parcel media description
+        /// </summary>
+        public string MediaDescription {
+            get {
+                return _mediaDescription;
+            }
+            set {
+                _mediaDescription = value;
+            }
+        }
 
         public LandData()
         {
@@ -753,15 +704,13 @@ namespace OpenSim.Framework
             landData._userLookAt = _userLookAt;
             landData._otherCleanTime = _otherCleanTime;
             landData._dwell = _dwell;
-            landData._mediaDescription = _mediaDescription;
-            landData._mediaLoop = _mediaLoop;
-            landData._mediaSize = _mediaSize;
-            landData._mediaType = _mediaType;
-            landData._ObscureMedia = _ObscureMedia;
-            landData._ObscureMusic = _ObscureMusic;
-            landData._regionID = _regionID;
-            landData._regionHandle = _regionHandle;
-            landData._infoUUID = _infoUUID;
+			landData._mediaType = _mediaType;
+			landData._mediaDescription = _mediaDescription;
+			landData._mediaWidth = _mediaWidth;
+			landData._mediaHeight = _mediaHeight;
+			landData._mediaLoop = _mediaLoop;
+			landData._obscureMusic = _obscureMusic;
+			landData._obscureMedia = _obscureMedia;
 
             landData._parcelAccessList.Clear();
             foreach (ParcelManager.ParcelAccessEntry entry in _parcelAccessList)

@@ -54,11 +54,6 @@ namespace OpenSim.Region.CoreModules.World.Land
         protected LandData m_landData = new LandData();
         protected Scene m_scene;
         protected List<SceneObjectGroup> primsOverMe = new List<SceneObjectGroup>();
-        public List<SceneObjectGroup> PrimsOverMe
-        {
-            get { return primsOverMe; }
-            set { primsOverMe = value; }
-        }
 
         public bool[,] LandBitmap
         {
@@ -93,54 +88,6 @@ namespace OpenSim.Region.CoreModules.World.Land
             else
                 LandData.GroupID = UUID.Zero;
             LandData.IsGroupOwned = is_group_owned;
-
-            LandData.RegionID = scene.RegionInfo.RegionID;
-            LandData.RegionHandle = scene.RegionInfo.RegionHandle;
-
-            //We don't set up the InfoID here... it will just be overwriten
-        }
-
-        public void SetInfoID()
-        {
-            //Make the InfoUUID for this parcel
-            uint x = (uint)LandData.UserLocation.X, y = (uint)LandData.UserLocation.Y;
-            findPointInParcel(this, ref x, ref y); // find a suitable spot
-            LandData.InfoUUID = Util.BuildFakeParcelID(LandData.RegionHandle, x, y);
-        }
-
-        // this is needed for non-convex parcels (example: rectangular parcel, and in the exact center
-        // another, smaller rectangular parcel). Both will have the same initial coordinates.
-        private void findPointInParcel(ILandObject land, ref uint refX, ref uint refY)
-        {
-            // the point we started with already is in the parcel
-            if (land.ContainsPoint((int)refX, (int)refY)) return;
-
-            // ... otherwise, we have to search for a point within the parcel
-            uint startX = (uint)land.LandData.AABBMin.X;
-            uint startY = (uint)land.LandData.AABBMin.Y;
-            uint endX = (uint)land.LandData.AABBMax.X;
-            uint endY = (uint)land.LandData.AABBMax.Y;
-
-            // default: center of the parcel
-            refX = (startX + endX) / 2;
-            refY = (startY + endY) / 2;
-            // If the center point is within the parcel, take that one
-            if (land.ContainsPoint((int)refX, (int)refY)) return;
-
-            // otherwise, go the long way.
-            for (uint y = startY; y <= endY; ++y)
-            {
-                for (uint x = startX; x <= endX; ++x)
-                {
-                    if (land.ContainsPoint((int)x, (int)y))
-                    {
-                        // found a point
-                        refX = x;
-                        refY = y;
-                        return;
-                    }
-                }
-            }
         }
 
         #endregion
@@ -282,12 +229,13 @@ namespace OpenSim.Region.CoreModules.World.Land
                 newData.SnapshotID = args.SnapshotID;
                 newData.UserLocation = args.UserLocation;
                 newData.UserLookAt = args.UserLookAt;
-                newData.MediaDescription = args.MediaDesc;
-                newData.MediaLoop = (byte)Convert.ToInt32(args.MediaLoop);
-                newData.MediaSize = new int[] { args.MediaWidth, args.MediaHeight };
-                newData.MediaType = args.MediaType;
-                newData.ObscureMedia = Convert.ToByte(args.ObscureMedia);
-                newData.ObscureMusic = Convert.ToByte(args.ObscureMusic);
+				newData.MediaType = args.MediaType;
+				newData.MediaDescription = args.MediaDescription;
+				newData.MediaWidth = args.MediaWidth;
+				newData.MediaHeight = args.MediaHeight;
+				newData.MediaLoop = args.MediaLoop;
+				newData.ObscureMusic = args.ObscureMusic;
+				newData.ObscureMedia = args.ObscureMedia;
 
                 m_scene.LandChannel.UpdateLandObject(LandData.LocalID, newData);
 
@@ -950,20 +898,6 @@ namespace OpenSim.Region.CoreModules.World.Land
                     foreach (SceneObjectGroup obj in primsOverMe)
                     {
                         if (ownerlist.Contains(obj.OwnerID))
-                        {
-                            if (!returns.ContainsKey(obj.OwnerID))
-                                returns[obj.OwnerID] =
-                                        new List<SceneObjectGroup>();
-                            returns[obj.OwnerID].Add(obj);
-                        }
-                    }
-                }
-                else if (type == 1)
-                {
-                    foreach (SceneObjectGroup obj in primsOverMe)
-                    {
-                        List<UUID> Tasks = new List<UUID>(tasks);
-                        if (Tasks.Contains(obj.UUID))
                         {
                             if (!returns.ContainsKey(obj.OwnerID))
                                 returns[obj.OwnerID] =

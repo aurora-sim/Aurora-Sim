@@ -49,12 +49,12 @@ namespace OpenSim.Framework
         public UUID SnapshotID;
         public Vector3 UserLocation;
         public Vector3 UserLookAt;
-        public string MediaDesc;
-        public int MediaHeight;
-        public int MediaWidth;
-        public bool MediaLoop;
-        public string MediaType;
-        public bool ObscureMedia;
-        public bool ObscureMusic;
+		public string MediaType;
+		public string MediaDescription;
+		public int MediaHeight;
+		public int MediaWidth;
+		public bool MediaLoop;
+		public bool ObscureMusic;
+		public bool ObscureMedia;
     }
 }

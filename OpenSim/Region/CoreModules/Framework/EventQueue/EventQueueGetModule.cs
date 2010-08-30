@@ -34,6 +34,7 @@ using System.Threading;
 using log4net;
 using Nini.Config;
 using OpenMetaverse;
+using OpenMetaverse.Messages.Linden;
 using OpenMetaverse.Packets;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
@@ -42,8 +43,7 @@ using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using BlockingLLSDQueue = OpenSim.Framework.BlockingQueue<OpenMetaverse.StructuredData.OSD>;
-using Caps = OpenSim.Framework.Capabilities.Caps;
-using Mono.Addins;
+using Caps=OpenSim.Framework.Capabilities.Caps;
 
 namespace OpenSim.Region.CoreModules.Framework.EventQueue
 {
@@ -53,8 +53,7 @@ namespace OpenSim.Region.CoreModules.Framework.EventQueue
         public OSDMap body;
     }
 
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
-    public class EventQueueGetModule : IEventQueue, INonSharedRegionModule
+    public class EventQueueGetModule : IEventQueue, IRegionModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         protected Scene m_scene = null;
@@ -66,28 +65,24 @@ namespace OpenSim.Region.CoreModules.Framework.EventQueue
         private Dictionary<UUID, Queue<OSD>> queues = new Dictionary<UUID, Queue<OSD>>();
         private Dictionary<UUID, UUID> m_QueueUUIDAvatarMapping = new Dictionary<UUID, UUID>();
         private Dictionary<UUID, UUID> m_AvatarQueueUUIDMapping = new Dictionary<UUID, UUID>();
-        IConfig startupConfig = null;
-
+            
         #region IRegionModule methods
-        public virtual void Initialise(IConfigSource config)
+        public virtual void Initialise(Scene scene, IConfigSource config)
         {
             m_gConfig = config;
 
-            startupConfig = m_gConfig.Configs["Startup"];
-        }
+            IConfig startupConfig = m_gConfig.Configs["Startup"];
 
-        public void AddRegion(Scene scene)
-        {
             ReadConfigAndPopulate(scene, startupConfig, "Startup");
 
             if (enabledYN)
             {
                 m_scene = scene;
                 scene.RegisterModuleInterface<IEventQueue>(this);
-
+                
                 // Register fallback handler
                 // Why does EQG Fail on region crossings!
-
+                
                 //scene.CommsManager.HttpServer.AddLLSDHandler("/CAPS/EQG/", EventQueueFallBack);
 
                 scene.EventManager.OnNewClient += OnNewClient;
@@ -105,21 +100,7 @@ namespace OpenSim.Region.CoreModules.Framework.EventQueue
             {
                 m_gConfig = null;
             }
-        }
-
-        public void RemoveRegion(Scene scene)
-        {
-
-        }
-
-        public void RegionLoaded(Scene scene)
-        {
-
-        }
-
-        public Type ReplaceableInterface
-        {
-            get { return null; }
+        
         }
 
         private void ReadConfigAndPopulate(Scene scene, IConfig startupConfig, string p)
@@ -157,10 +138,11 @@ namespace OpenSim.Region.CoreModules.Framework.EventQueue
             {
                 if (!queues.ContainsKey(agentId))
                 {
-                    //m_log.DebugFormat(
-                    //    "[EVENTQUEUE]: Adding new queue for agent {0} in region {1}", 
-                    //    agentId, m_scene.RegionInfo.RegionName);
-                    
+					/*
+                    m_log.DebugFormat(
+                        "[EVENTQUEUE]: Adding new queue for agent {0} in region {1}", 
+                        agentId, m_scene.RegionInfo.RegionName);
+                    */
                     queues[agentId] = new Queue<OSD>();
                 }
                 
@@ -304,7 +286,7 @@ namespace OpenSim.Region.CoreModules.Framework.EventQueue
                 // Reuse open queues.  The client does!
                 if (m_AvatarQueueUUIDMapping.ContainsKey(agentID))
                 {
-                    m_log.DebugFormat("[EVENTQUEUE]: Found Existing UUID!");
+                    //m_log.DebugFormat("[EVENTQUEUE]: Found Existing UUID!");
                     EventQueueGetUUID = m_AvatarQueueUUIDMapping[agentID];
                 }
                 else
@@ -385,7 +367,7 @@ namespace OpenSim.Region.CoreModules.Framework.EventQueue
             {
                 // Send it a fake event to keep the client polling!   It doesn't like 502s like the proxys say!
                 array.Add(EventQueueHelper.KeepAliveEvent());
-                m_log.DebugFormat("[EVENTQUEUE]: adding fake event for {0} in region {1}", pAgentId, m_scene.RegionInfo.RegionName);
+                //m_log.DebugFormat("[EVENTQUEUE]: adding fake event for {0} in region {1}", pAgentId, m_scene.RegionInfo.RegionName);
             }
             else
             {
@@ -414,8 +396,8 @@ namespace OpenSim.Region.CoreModules.Framework.EventQueue
             responsedata["keepalive"] = false;
             responsedata["reusecontext"] = false;
             responsedata["str_response_string"] = OSDParser.SerializeLLSDXmlString(events);
+            //m_log.DebugFormat("[EVENTQUEUE]: sending response for {0} in region {1}: {2}", pAgentId, m_scene.RegionInfo.RegionName, responsedata["str_response_string"]);
             return responsedata;
-            //m_log.DebugFormat("[EVENTQUEUE]: sending response for {0} in region {1}: {2}", agentID, m_scene.RegionInfo.RegionName, responsedata["str_response_string"]);
         }
 
         public Hashtable NoEvents(UUID requestID, UUID agentID)
@@ -481,7 +463,7 @@ namespace OpenSim.Region.CoreModules.Framework.EventQueue
             {
                 // Send it a fake event to keep the client polling!   It doesn't like 502s like the proxys say!
                 array.Add(EventQueueHelper.KeepAliveEvent());
-                m_log.DebugFormat("[EVENTQUEUE]: adding fake event for {0} in region {1}", agentID, m_scene.RegionInfo.RegionName);
+                //m_log.DebugFormat("[EVENTQUEUE]: adding fake event for {0} in region {1}", agentID, m_scene.RegionInfo.RegionName);
             }
             else
             {
@@ -717,16 +699,9 @@ namespace OpenSim.Region.CoreModules.Framework.EventQueue
             //m_log.InfoFormat("########### eq ChatterBoxSessionAgentListUpdates #############\n{0}", item);
         }
 
-        public void ChatterBoxSessionAgentListUpdates(OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage message, UUID toAgent)
+        public void ParcelProperties(ParcelPropertiesMessage parcelPropertiesMessage, UUID avatarID)
         {
-            OSD item = message.Serialize();
-            Enqueue(item, toAgent);
-            //m_log.InfoFormat("########### eq ChatterBoxSessionAgentListUpdates #############\n{0}", item);
-        }
-
-        public void ParcelProperties(ParcelPropertiesPacket parcelPropertiesPacket, LandData data, UUID avatarID)
-        {
-            OSD item = EventQueueHelper.ParcelProperties(parcelPropertiesPacket, data);
+			OSD item = EventQueueHelper.ParcelProperties(parcelPropertiesMessage);
             Enqueue(item, avatarID);
         }
 
@@ -735,9 +710,9 @@ namespace OpenSim.Region.CoreModules.Framework.EventQueue
             OSD item = EventQueueHelper.GroupMembership(groupUpdate);
             Enqueue(item, avatarID);
         }
-        public void QueryReply(PlacesReplyPacket groupUpdate, UUID avatarID, string[] info)
+        public void QueryReply(PlacesReplyPacket groupUpdate, UUID avatarID)
         {
-            OSD item = EventQueueHelper.PlacesQuery(groupUpdate, info);
+            OSD item = EventQueueHelper.PlacesQuery(groupUpdate);
             Enqueue(item, avatarID);
         }
     }
