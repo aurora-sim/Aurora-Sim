@@ -44,7 +44,9 @@ namespace OpenSim.Framework.Capabilities
         string assetName, string description, UUID assetID, UUID inventoryItem, UUID parentFolder,
         byte[] data, string inventoryType, string assetType);
 
-    public delegate string UpdateItem(UUID itemID, byte[] data);
+    public delegate void UploadedBakedTexture(UUID assetID, byte[] data);
+
+    public delegate UUID UpdateItem(UUID itemID, byte[] data);
 
     public delegate void UpdateTaskScript(UUID itemID, UUID primID, bool isScriptRunning, byte[] data, ref ArrayList errors);
 
@@ -52,7 +54,7 @@ namespace OpenSim.Framework.Capabilities
 
     public delegate void NewAsset(AssetBase asset);
 
-    public delegate string ItemUpdatedCallback(UUID userID, UUID itemID, byte[] data);
+    public delegate UUID ItemUpdatedCallback(UUID userID, UUID itemID, byte[] data);
 
     public delegate ArrayList TaskScriptUpdatedCallback(UUID userID, UUID itemID, UUID primID,
                                                    bool isScriptRunning, byte[] data);
@@ -86,10 +88,10 @@ namespace OpenSim.Framework.Capabilities
         private static readonly string m_requestPath = "0000/";
         // private static readonly string m_mapLayerPath = "0001/";
         private static readonly string m_newInventory = "0002/";
-        private static readonly string m_requestTexture = "0003/";
+        //private static readonly string m_requestTexture = "0003/";
         private static readonly string m_notecardUpdatePath = "0004/";
         private static readonly string m_notecardTaskUpdatePath = "0005/";
-        private static readonly string m_fetchInventoryPath = "0006/";
+//        private static readonly string m_fetchInventoryPath = "0006/";
 
         // The following entries are in a module, however, they are also here so that we don't re-assign
         // the path to another cap by mistake.
@@ -97,6 +99,7 @@ namespace OpenSim.Framework.Capabilities
         // private static readonly string m_provisionVoiceAccountRequestPath = "0008/";// This is in a module.
 
         // private static readonly string m_remoteParcelRequestPath = "0009/";// This is in the LandManagementModule.
+        private static readonly string m_uploadBakedTexturePath = "0010/";// This is in the LandManagementModule.
 
         //private string eventQueue = "0100/";
         private IScene m_Scene;
@@ -175,10 +178,18 @@ namespace OpenSim.Framework.Capabilities
             {
                 // the root of all evil
                 m_capsHandlers["SEED"] = new RestStreamHandler("POST", capsBase + m_requestPath, CapsRequest);
-                
+                m_log.DebugFormat(
+                    "[CAPS]: Registered seed capability {0} for {1}", capsBase + m_requestPath, m_agentID);
+
+                //m_capsHandlers["MapLayer"] =
+                //    new LLSDStreamhandler<OSDMapRequest, OSDMapLayerResponse>("POST",
+                //                                                                capsBase + m_mapLayerPath,
+                //                                                                GetMapLayer);
                 m_capsHandlers["UpdateScriptTaskInventory"] =
                     new RestStreamHandler("POST", capsBase + m_notecardTaskUpdatePath, ScriptTaskInventory);
                 m_capsHandlers["UpdateScriptTask"] = m_capsHandlers["UpdateScriptTaskInventory"];
+                m_capsHandlers["UploadBakedTexture"] =
+                    new RestStreamHandler("POST", capsBase + m_uploadBakedTexturePath, UploadBakedTexture);
 
             }
             catch (Exception e)
@@ -204,8 +215,7 @@ namespace OpenSim.Framework.Capabilities
                 // As of RC 1.22.9 of the Linden client this is
                 // supported
 
-                m_capsHandlers["WebFetchInventoryDescendents"] =
-                    new RestStreamHandler("POST", capsBase + m_fetchInventoryPath, FetchInventoryDescendentsRequest);
+                //m_capsHandlers["WebFetchInventoryDescendents"] =new RestStreamHandler("POST", capsBase + m_fetchInventoryPath, FetchInventoryDescendentsRequest);
 
                 // justincc: I've disabled the CAPS service for now to fix problems with selecting textures, and
                 // subsequent inventory breakage, in the edit object pane (such as mantis 1085).  This requires
@@ -217,16 +227,16 @@ namespace OpenSim.Framework.Capabilities
                 // This is very probably just a temporary measure - once the CAPS service appears again on the Linden grid
                 // we will be
                 // able to get the data we need to implement the necessary part of the protocol to fix the issue above.
-                                m_capsHandlers["FetchInventoryDescendents"] =
-                                    new RestStreamHandler("POST", capsBase + m_fetchInventoryPath, FetchInventoryRequest);
+                //                m_capsHandlers["FetchInventoryDescendents"] =
+                //                    new RestStreamHandler("POST", capsBase + m_fetchInventoryPath, FetchInventoryRequest);
 
-                 //m_capsHandlers["FetchInventoryDescendents"] =
-                 //     new LLSDStreamhandler<LLSDFetchInventoryDescendents, LLSDInventoryDescendents>("POST",
-                 //                                                                                   capsBase + m_fetchInventory,
-                 //                                                                                   FetchInventory));
-                 //m_capsHandlers["RequestTextureDownload"] = new RestStreamHandler("POST",
-                 //                                                                 capsBase + m_requestTexture,
-                 //                                                                 RequestTexture);
+                // m_capsHandlers["FetchInventoryDescendents"] =
+                //     new LLSDStreamhandler<LLSDFetchInventoryDescendents, LLSDInventoryDescendents>("POST",
+                //                                                                                    capsBase + m_fetchInventory,
+                //                                                                                    FetchInventory));
+                // m_capsHandlers["RequestTextureDownload"] = new RestStreamHandler("POST",
+                //                                                                  capsBase + m_requestTexture,
+                //                                                                  RequestTexture);
             }
             catch (Exception e)
             {
@@ -242,6 +252,7 @@ namespace OpenSim.Framework.Capabilities
         public void RegisterHandler(string capName, IRequestHandler handler)
         {
             m_capsHandlers[capName] = handler;
+            //m_log.DebugFormat("[CAPS]: Registering handler for \"{0}\": path {1}", capName, handler.Path);
         }
 
         /// <summary>
@@ -274,7 +285,7 @@ namespace OpenSim.Framework.Capabilities
         public string CapsRequest(string request, string path, string param,
                                   OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
-            //m_log.Debug("[CAPS]: Seed Caps Request in region: " + m_regionName);
+            m_log.Debug("[CAPS]: Seed Caps Request in region: " + m_regionName);
 
             if (!m_Scene.CheckClient(m_agentID, httpRequest.RemoteIPEndPoint))
             {
@@ -312,7 +323,7 @@ namespace OpenSim.Framework.Capabilities
         //</llsd>
         //
         // multiple fetch-folder maps are allowed within the larger folders map.
-        public string FetchInventoryRequest(string request, string path, string param, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+        public string FetchInventoryRequest(string request, string path, string param)
         {
             // string unmodifiedRequest = request.ToString();
 
@@ -530,12 +541,9 @@ namespace OpenSim.Framework.Capabilities
             llsdItem.parent_id = invItem.Folder;
             try
             {
-                
                 // TODO reevaluate after upgrade to libomv >= r2566. Probably should use UtilsConversions.
                 llsdItem.type = TaskInventoryItem.Types[invItem.AssetType];
                 llsdItem.inv_type = TaskInventoryItem.InvTypes[invItem.InvType];
-                llsdItem.type = Utils.InventoryTypeToString((InventoryType)invItem.AssetType);
-                llsdItem.inv_type = Utils.InventoryTypeToString((InventoryType)invItem.InvType);
             }
             catch (Exception e)
             {
@@ -739,6 +747,50 @@ namespace OpenSim.Framework.Capabilities
             return null;
         }
 
+        public string UploadBakedTexture(string request, string path,
+                string param, OSHttpRequest httpRequest,
+                OSHttpResponse httpResponse)
+        {
+            try
+            {
+                m_log.Debug("[CAPS]: UploadBakedTexture Request in region: " +
+                        m_regionName);
+
+                string capsBase = "/CAPS/" + m_capsObjectPath;
+                string uploaderPath = Util.RandomClass.Next(5000, 8000).ToString("0000");
+
+                BakedTextureUploader uploader =
+                    new BakedTextureUploader( capsBase + uploaderPath,
+                        m_httpListener);
+                uploader.OnUpLoad += BakedTextureUploaded;
+
+                m_httpListener.AddStreamHandler(
+                        new BinaryStreamHandler("POST", capsBase + uploaderPath,
+                        uploader.uploaderCaps));
+
+                string protocol = "http://";
+
+                if (m_httpListener.UseSSL)
+                    protocol = "https://";
+
+                string uploaderURL = protocol + m_httpListenerHostName + ":" +
+                        m_httpListenPort.ToString() + capsBase + uploaderPath;
+
+                LLSDAssetUploadResponse uploadResponse =
+                        new LLSDAssetUploadResponse();
+                uploadResponse.uploader = uploaderURL;
+                uploadResponse.state = "upload";
+
+                return LLSDHelpers.SerialiseLLSDReply(uploadResponse);
+            }
+            catch (Exception e)
+            {
+                m_log.Error("[CAPS]: " + e.ToString());
+            }
+
+            return null;
+        }
+
         /// <summary>
         /// Called by the notecard update handler.  Provides a URL to which the client can upload a new asset.
         /// </summary>
@@ -922,20 +974,31 @@ namespace OpenSim.Framework.Capabilities
             }
         }
 
+        public void BakedTextureUploaded(UUID assetID, byte[] data)
+        {
+            m_log.DebugFormat("[CAPS]: Received baked texture {0}", assetID.ToString());
+            AssetBase asset;
+            asset = new AssetBase(assetID, "Baked Texture", (sbyte)AssetType.Texture, m_agentID.ToString());
+            asset.Data = data;
+            asset.Temporary = true;
+            asset.Local = true;
+            m_assetCache.Store(asset);
+        }
+
         /// <summary>
         /// Called when new asset data for an agent inventory item update has been uploaded.
         /// </summary>
         /// <param name="itemID">Item to update</param>
         /// <param name="data">New asset data</param>
         /// <returns></returns>
-        public string ItemUpdated(UUID itemID, byte[] data)
+        public UUID ItemUpdated(UUID itemID, byte[] data)
         {
             if (ItemUpdatedCall != null)
             {
                 return ItemUpdatedCall(m_agentID, itemID, data);
             }
 
-            return "";
+            return UUID.Zero;
         }
 
         /// <summary>
@@ -1086,11 +1149,19 @@ namespace OpenSim.Framework.Capabilities
             {
                 UUID inv = inventoryItemID;
                 string res = String.Empty;
+                LLSDAssetUploadComplete uploadComplete = new LLSDAssetUploadComplete();
+                UUID assetID = UUID.Zero;
                 handlerUpdateItem = OnUpLoad;
                 if (handlerUpdateItem != null)
                 {
-                    res = handlerUpdateItem(inv, data);
+                    assetID = handlerUpdateItem(inv, data);
                 }
+
+                uploadComplete.new_asset = assetID.ToString();
+                uploadComplete.new_inventory_item = inv;
+                uploadComplete.state = "complete";
+
+                res = LLSDHelpers.SerialiseLLSDReply(uploadComplete);
 
                 httpListener.RemoveStreamHandler("POST", uploaderPath);
 
@@ -1230,6 +1301,51 @@ namespace OpenSim.Framework.Capabilities
                 bw.Write(data);
                 bw.Close();
                 fs.Close();
+            }
+        }
+
+        public class BakedTextureUploader
+        {
+            public event UploadedBakedTexture OnUpLoad;
+            private UploadedBakedTexture handlerUpLoad = null;
+
+            private string uploaderPath = String.Empty;
+            private UUID newAssetID;
+            private IHttpServer httpListener;
+
+            public BakedTextureUploader(string path, IHttpServer httpServer)
+            {
+                newAssetID = UUID.Random();
+                uploaderPath = path;
+                httpListener = httpServer;
+            }
+
+            /// <summary>
+            ///
+            /// </summary>
+            /// <param name="data"></param>
+            /// <param name="path"></param>
+            /// <param name="param"></param>
+            /// <returns></returns>
+            public string uploaderCaps(byte[] data, string path, string param)
+            {
+                string res = String.Empty;
+                LLSDAssetUploadComplete uploadComplete = new LLSDAssetUploadComplete();
+                uploadComplete.new_asset = newAssetID.ToString();
+                uploadComplete.new_inventory_item = UUID.Zero;
+                uploadComplete.state = "complete";
+
+                res = LLSDHelpers.SerialiseLLSDReply(uploadComplete);
+
+                httpListener.RemoveStreamHandler("POST", uploaderPath);
+
+                handlerUpLoad = OnUpLoad;
+                if (handlerUpLoad != null)
+                {
+                    handlerUpLoad(newAssetID, data);
+                }
+
+                return res;
             }
         }
     }
