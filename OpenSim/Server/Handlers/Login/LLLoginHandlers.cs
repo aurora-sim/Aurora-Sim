@@ -27,7 +27,6 @@
 
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Net;
@@ -53,18 +52,24 @@ namespace OpenSim.Server.Handlers.Login
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private ILoginService m_LocalService;
+        private bool m_Proxy;
 
-        private IConfigSource m_Config;
-
-        public LLLoginHandlers(ILoginService service, IConfigSource config)
+        public LLLoginHandlers(ILoginService service, bool hasProxy)
         {
-            m_Config = config;
             m_LocalService = service;
+            m_Proxy = hasProxy;
         }
 
         public XmlRpcResponse HandleXMLRPCLogin(XmlRpcRequest request, IPEndPoint remoteClient)
         {
             Hashtable requestData = (Hashtable)request.Params[0];
+            if (m_Proxy && request.Params[3] != null)
+            {
+                IPEndPoint ep = Util.GetClientIPFromXFF((string)request.Params[3]);
+                if (ep != null)
+                    // Bang!
+                    remoteClient = ep;
+            }
 
             if (requestData != null)
             {
@@ -87,40 +92,10 @@ namespace OpenSim.Server.Handlers.Login
                         clientVersion = requestData["version"].ToString();
                     // We should do something interesting with the client version...
 
-                    //MAC BANNING START
-                    string mac = (string)requestData["mac"];
-                    Aurora.Framework.IGenericData GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
-                    if (GD == null)
-                    {
-                        Aurora.Services.DataService.LocalDataService IDS = new Aurora.Services.DataService.LocalDataService();
-                        IDS.Initialise(m_Config);
-                        GD = Aurora.DataManager.DataManager.GetDefaultGenericPlugin();
-                    }
-                    //We tried... might as well skip it
-                    if (GD != null)
-                    {
-                        List<string> found = GD.Query("macAddress", mac, "macban", "*");
-                        if (found.Count != 0)
-                        {
-                            m_log.InfoFormat("Mac is in the list");
-                            return new XmlRpcResponse();
-                        }
-                        //MAC BANNING END
-
-                        //Viewer Ban Start
-                        List<string> clientfound = GD.Query("Client", clientVersion, "BannedViewers", "*");
-                        if (clientfound.Count != 0)
-                        {
-                            return new XmlRpcResponse();
-                        }
-
-                        //Viewer ban end
-                    }
-
-                    m_log.InfoFormat("[LOGIN]: XMLRPC Login Requested for {0} {1}, starting in {2}, using {3}", first, last, startLocation, clientVersion);
+                    //m_log.InfoFormat("[LOGIN]: XMLRPC Login Requested for {0} {1}, starting in {2}, using {3}", first, last, startLocation, clientVersion);
 
                     LoginResponse reply = null;
-                    reply = m_LocalService.Login(first, last, passwd, startLocation, scopeID, clientVersion, remoteClient, requestData);
+                    reply = m_LocalService.Login(first, last, passwd, startLocation, scopeID, clientVersion, remoteClient);
 
                     XmlRpcResponse response = new XmlRpcResponse();
                     response.Value = reply.ToHashtable();
@@ -191,7 +166,7 @@ namespace OpenSim.Server.Handlers.Login
                     m_log.Info("[LOGIN]: LLSD Login Requested for: '" + map["first"].AsString() + "' '" + map["last"].AsString() + "' / " + startLocation);
 
                     LoginResponse reply = null;
-                    reply = m_LocalService.Login(map["first"].AsString(), map["last"].AsString(), map["passwd"].AsString(), startLocation, scopeID, "", remoteClient, new Hashtable());
+                    reply = m_LocalService.Login(map["first"].AsString(), map["last"].AsString(), map["passwd"].AsString(), startLocation, scopeID, String.Empty, remoteClient);
                     return reply.ToOSDMap();
 
                 }
@@ -223,6 +198,7 @@ namespace OpenSim.Server.Handlers.Login
 
             return map;
         }
+
     }
 
 }
