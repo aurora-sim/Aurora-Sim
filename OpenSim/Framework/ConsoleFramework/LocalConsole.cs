@@ -33,15 +33,12 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using log4net;
-using Nini.Config;
-using Mono.Addins;
 
-namespace OpenSim.Framework
+namespace OpenSim.Framework.Console
 {
     /// <summary>
     /// A console that uses cursor control and color
     /// </summary>    
-    [Extension(Path = "/OpenSim/Console", NodeName = "ConsolePlugin")]
     public class LocalConsole : CommandConsole
     {
 //        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -71,30 +68,14 @@ namespace OpenSim.Framework
             ConsoleColor.Yellow
         };
 
-        public override void Initialise(string defaultPrompt, IConfigSource source, IOpenSimBase baseOpenSim)
-        {
-            string m_consoleType = "LocalConsole";
-            if (source.Configs["Startup"].GetString("console", String.Empty) != String.Empty)
-                m_consoleType = source.Configs["Startup"].GetString("console", String.Empty);
-
-            if (m_consoleType != Name)
-                return;
-            if(baseOpenSim != null)
-                baseOpenSim.ApplicationRegistry.RegisterInterface<ICommandConsole>(this);
-
-            m_Commands.AddCommand("console", false, "help", "help [<command>]",
-                    "Get general command list or more detailed help on a specific command", base.Help);
-        }
-
         private static ConsoleColor DeriveColor(string input)
         {
             // it is important to do Abs, hash values can be negative
             return Colors[(Math.Abs(input.ToUpper().GetHashCode()) % Colors.Length)];
         }
 
-        public override string Name
+        public LocalConsole(string defaultPrompt) : base(defaultPrompt)
         {
-            get { return "LocalConsole"; }
         }
 
         private void AddToHistory(string text)
@@ -201,8 +182,6 @@ namespace OpenSim.Framework
 
             return left;
         }
-
-        protected string prompt = "# ";
 
         private void Show()
         {
@@ -482,7 +461,8 @@ namespace OpenSim.Framework
                         SetCursorLeft(0);
                         y = SetCursorTop(y);
 
-                        System.Console.WriteLine("{0}{1}", prompt, cmdline);
+                        System.Console.WriteLine();
+                        //Show();
 
                         lock (cmdline)
                         {
@@ -507,7 +487,7 @@ namespace OpenSim.Framework
                             }
                         }
 
-                        AddToHistory(cmdline.ToString());
+                        //AddToHistory(cmdline.ToString());
                         return cmdline.ToString();
                     default:
                         break;
