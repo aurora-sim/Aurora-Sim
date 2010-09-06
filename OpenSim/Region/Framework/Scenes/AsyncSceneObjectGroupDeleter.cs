@@ -33,169 +33,90 @@ using log4net;
 using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using Amib.Threading;
 
 namespace OpenSim.Region.Framework.Scenes
 {
     class DeleteToInventoryHolder
     {
         public DeRezAction action;
-        public UUID agentId;
+        public IClientAPI remoteClient;
         public List<SceneObjectGroup> objectGroups;
         public UUID folderID;
         public bool permissionToDelete;
-        public bool permissionToTake;
     }
-
+    
     /// <summary>
-    /// Asynchronously derez objects.  This is used to derez large number of objects to inventory without holding
+    /// Asynchronously derez objects.  This is used to derez large number of objects to inventory without holding 
     /// up the main client thread.
     /// </summary>
     public class AsyncSceneObjectGroupDeleter
     {
         private static readonly ILog m_log
             = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
+        
         /// <value>
         /// Is the deleter currently enabled?
         /// </value>
         public bool Enabled;
-
+        
+        private Timer m_inventoryTicker = new Timer(2000);
         private readonly Queue<DeleteToInventoryHolder> m_inventoryDeletes = new Queue<DeleteToInventoryHolder>();
-        private readonly Queue<DeleteToInventoryHolder> m_sendToInventory = new Queue<DeleteToInventoryHolder>();
-        private SmartThreadPool m_ThreadPool;
-        private bool DeleteLoopInUse = false;
-        private bool SendToInventoryLoopInUse = false;
         private Scene m_scene;
-
+        
         public AsyncSceneObjectGroupDeleter(Scene scene)
         {
-            STPStartInfo startInfo = new STPStartInfo();
-            startInfo.IdleTimeout = 60 * 1000; // convert to seconds as stated in .ini
-            startInfo.MaxWorkerThreads = 2;
-            startInfo.MinWorkerThreads = 0;
-            startInfo.ThreadPriority = System.Threading.ThreadPriority.BelowNormal;
-            startInfo.StackSize = 262144;
-            startInfo.StartSuspended = true;
-
-            m_ThreadPool = new SmartThreadPool(startInfo);
-
-            m_ThreadPool.Start();
             m_scene = scene;
+            
+            m_inventoryTicker.AutoReset = false;
+            m_inventoryTicker.Elapsed += InventoryRunDeleteTimer;
         }
 
         /// <summary>
         /// Delete the given object from the scene
         /// </summary>
         public void DeleteToInventory(DeRezAction action, UUID folderID,
-                List<SceneObjectGroup> objectGroups, UUID AgentId,
-                bool permissionToDelete, bool permissionToTake)
+                List<SceneObjectGroup> objectGroups, IClientAPI remoteClient, 
+                bool permissionToDelete)
         {
+            if (Enabled)
+                lock (m_inventoryTicker)
+                    m_inventoryTicker.Stop();
+
             lock (m_inventoryDeletes)
             {
                 DeleteToInventoryHolder dtis = new DeleteToInventoryHolder();
                 dtis.action = action;
                 dtis.folderID = folderID;
                 dtis.objectGroups = objectGroups;
-                dtis.agentId = AgentId;
+                dtis.remoteClient = remoteClient;
                 dtis.permissionToDelete = permissionToDelete;
-                dtis.permissionToTake = permissionToTake;
 
                 m_inventoryDeletes.Enqueue(dtis);
-                m_sendToInventory.Enqueue(dtis);
-            }
-            foreach(SceneObjectGroup g in objectGroups)
-            {
-                g.DeleteGroup(false);
             }
 
-            if (!DeleteLoopInUse)
+            if (Enabled)
+                lock (m_inventoryTicker)
+                    m_inventoryTicker.Start();
+        
+            // Visually remove it, even if it isnt really gone yet.  This means that if we crash before the object
+            // has gone to inventory, it will reappear in the region again on restart instead of being lost.
+            // This is not ideal since the object will still be available for manipulation when it should be, but it's
+            // better than losing the object for now.
+            if (permissionToDelete)
             {
-                DeleteLoopInUse = true;
-                m_log.Debug("[SCENE]: Starting delete loop");
-                m_ThreadPool.QueueWorkItem(this.DoDeleteObject,
-                                            new Object[] { 0 });
-            }
-            if (!SendToInventoryLoopInUse)
-            {
-                SendToInventoryLoopInUse = true;
-                m_log.Debug("[SCENE]: Starting send to inventory loop");
-                m_ThreadPool.QueueWorkItem(this.DoSendToInventory,
-                                            new Object[] { 0 });
+                foreach (SceneObjectGroup g in objectGroups)
+                    g.DeleteGroup(false);
             }
         }
-
-        public object DoDeleteObject(object o)
+        
+        private void InventoryRunDeleteTimer(object sender, ElapsedEventArgs e)
         {
-            if (DeleteObject())
+            m_log.Debug("[ASYNC DELETER]: Starting send to inventory loop");
+            
+            while (InventoryDeQueueAndDelete())
             {
-                //Requeue us if there is some left
-                m_ThreadPool.QueueWorkItem(this.DoDeleteObject,
-                                              new Object[] { 0 });
+                //m_log.Debug("[ASYNC DELETER]: Sent item successfully to inventory, continuing...");
             }
-            else
-            {
-                DeleteLoopInUse = false;
-                m_log.Debug("[SCENE]: Ending delete loop");
-            }
-            return 0;
-        }
-
-        public object DoSendToInventory(object o)
-        {
-            if (InventoryDeQueueAndDelete())
-            {
-                //Requeue us if there is some left
-                m_ThreadPool.QueueWorkItem(this.DoSendToInventory,
-                                              new Object[] { 0 });
-            }
-            else
-            {
-                SendToInventoryLoopInUse = false;
-                m_log.Debug("[SCENE]: Ending send to inventory loop");
-            }
-            return 0;
-        }
-
-        public bool DeleteObject()
-        {
-            DeleteToInventoryHolder x = null;
-
-            try
-            {
-                lock (m_sendToInventory)
-                {
-                    int left = m_sendToInventory.Count;
-                    if (left > 0)
-                    {
-                        x = m_sendToInventory.Dequeue();
-
-                        if (x.permissionToDelete)
-                        {
-                            foreach (SceneObjectGroup g in x.objectGroups)
-                            {
-                                // Force a database backup/update on this SceneObjectGroup
-                                // So that we know the database is upto date,
-                                // for when deleting the object from it
-                                m_scene.ForceSceneObjectBackup(g);
-                                m_scene.DeleteSceneObject(g, false, true);
-                            }
-                        }
-                        return true;
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                // We can't put the object group details in here since the root part may have disappeared (which is where these sit).
-                // FIXME: This needs to be fixed.
-                m_log.ErrorFormat(
-                    "[SCENE]: Queued sending of scene object to agent {0} {1} failed: {2}",
-                    (x != null ? x.agentId.ToString() : "unavailable"), (x != null ? x.agentId.ToString() : "unavailable"), e.ToString());
-            }
-
-            m_log.Debug("[SCENE]: No objects left in delete queue.");
-            return false;
         }
 
         /// <summary>
@@ -205,7 +126,7 @@ namespace OpenSim.Region.Framework.Scenes
         public bool InventoryDeQueueAndDelete()
         {
             DeleteToInventoryHolder x = null;
-
+ 
             try
             {
                 lock (m_inventoryDeletes)
@@ -216,22 +137,25 @@ namespace OpenSim.Region.Framework.Scenes
                         x = m_inventoryDeletes.Dequeue();
 
                         m_log.DebugFormat(
-                            "[SCENE]: Sending object to user's inventory, {0} item(s) remaining.", left);
-
-                        if (x.permissionToTake)
+                            "[ASYNC DELETER]: Sending object to user's inventory, {0} item(s) remaining.", left);
+                        
+                        try
                         {
-                            try
+                            IInventoryAccessModule invAccess = m_scene.RequestModuleInterface<IInventoryAccessModule>();
+                            if (invAccess != null)
+                                invAccess.DeleteToInventory(x.action, x.folderID, x.objectGroups, x.remoteClient);
+                            if (x.permissionToDelete)
                             {
-                                IInventoryAccessModule invAccess = m_scene.RequestModuleInterface<IInventoryAccessModule>();
-                                if (invAccess != null)
-                                    invAccess.DeleteToInventory(x.action, x.folderID, x.objectGroups, x.agentId);
-                            }
-                            catch (Exception e)
-                            {
-                                m_log.DebugFormat("Exception background sending object: " + e);
+                                foreach (SceneObjectGroup g in x.objectGroups)
+                                    m_scene.DeleteSceneObject(g, false);
                             }
                         }
-
+                        catch (Exception e)
+                        {
+                            m_log.ErrorFormat(
+                                "[ASYNC DELETER]: Exception background sending object: {0}{1}", e.Message, e.StackTrace);
+                        }
+                        
                         return true;
                     }
                 }
@@ -241,11 +165,15 @@ namespace OpenSim.Region.Framework.Scenes
                 // We can't put the object group details in here since the root part may have disappeared (which is where these sit).
                 // FIXME: This needs to be fixed.
                 m_log.ErrorFormat(
-                    "[SCENE]: Queued sending of scene object to agent {0} {1} failed: {2}",
-                    (x != null ? x.agentId.ToString() : "unavailable"), (x != null ? x.agentId.ToString() : "unavailable"), e.ToString());
+                    "[ASYNC DELETER]: Queued sending of scene object to agent {0} {1} failed: {2} {3}",
+                    (x != null ? x.remoteClient.Name : "unavailable"), 
+                    (x != null ? x.remoteClient.AgentId.ToString() : "unavailable"), 
+                    e.Message, 
+                    e.StackTrace);
             }
 
-            m_log.Debug("[SCENE]: No objects left in inventory send queue.");
+            m_log.Debug("[ASYNC DELETER]: No objects left in inventory send queue.");
+            
             return false;
         }
     }
