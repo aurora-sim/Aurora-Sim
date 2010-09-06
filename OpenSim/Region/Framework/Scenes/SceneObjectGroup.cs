@@ -1387,9 +1387,6 @@ namespace OpenSim.Region.Framework.Scenes
                 return;
             }
 
-            // Since this is the top of the section of call stack for backing up a particular scene object, don't let
-            // any exception propogate upwards.
-
             if (IsDeleted || UUID == UUID.Zero)
             {
 //                m_log.DebugFormat(
@@ -1397,6 +1394,8 @@ namespace OpenSim.Region.Framework.Scenes
                 return;
             }
 
+            // Since this is the top of the section of call stack for backing up a particular scene object, don't let
+            // any exception propogate upwards.            
             try
             {
                 if (!m_scene.ShuttingDown) // if shutting down then there will be nothing to handle the return so leave till next restart
