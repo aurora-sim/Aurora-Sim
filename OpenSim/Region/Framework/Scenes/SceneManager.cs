@@ -27,20 +27,17 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Net;
 using System.Reflection;
 using OpenMetaverse;
 using log4net;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Physics.Manager;
-using Nini.Config;
-using OpenSim.Framework.Console;
-using OpenSim;
 
 namespace OpenSim.Region.Framework.Scenes
 {
+    public delegate void RestartSim(RegionInfo thisregion);
+
     /// <summary>
     /// Manager for adding, closing and restarting scenes.
     /// </summary>
@@ -48,10 +45,11 @@ namespace OpenSim.Region.Framework.Scenes
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
+        public event RestartSim OnRestartSim;
+
         private readonly List<Scene> m_localScenes;
         private Scene m_currentScene = null;
-        private IOpenSimBase m_OpenSimBase;
-        
+
         public List<Scene> Scenes
         {
             get { return m_localScenes; }
@@ -84,30 +82,47 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public SceneManager(IOpenSimBase OSB, string dllName, string connectionstring, string estateconnectionstring)
+        public SceneManager()
         {
-            m_OpenSimBase = OSB;
             m_localScenes = new List<Scene>();
-
-            IRegionDataStore plug = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IRegionDataStore>(dllName, "IRegionDataStore");
-            plug.Initialise(connectionstring);
-
-            m_dataStore = plug;
         }
-
-        protected IRegionDataStore m_dataStore;
 
         public void Close()
         {
-            if (proxyUrl.Length > 0)
-            {
-                Util.XmlRpcCommand(proxyUrl, "Stop");
-            }
             // collect known shared modules in sharedModules
+            Dictionary<string, IRegionModule> sharedModules = new Dictionary<string, IRegionModule>();
             for (int i = 0; i < m_localScenes.Count; i++)
             {
+                // extract known shared modules from scene
+                foreach (string k in m_localScenes[i].Modules.Keys)
+                {
+                    if (m_localScenes[i].Modules[k].IsSharedModule &&
+                        !sharedModules.ContainsKey(k))
+                        sharedModules[k] = m_localScenes[i].Modules[k];
+                }
                 // close scene/region
                 m_localScenes[i].Close();
+            }
+
+            // all regions/scenes are now closed, we can now safely
+            // close all shared modules
+            foreach (IRegionModule mod in sharedModules.Values)
+            {
+                mod.Close();
+            }
+        }
+
+        public void Close(Scene cscene)
+        {
+            if (m_localScenes.Contains(cscene))
+            {
+                for (int i = 0; i < m_localScenes.Count; i++)
+                {
+                    if (m_localScenes[i].Equals(cscene))
+                    {
+                        m_localScenes[i].Close();
+                    }
+                }
             }
         }
 
@@ -137,12 +152,79 @@ namespace OpenSim.Region.Framework.Scenes
                 m_localScenes.RemoveAt(RegionSceneElement);
             }
 
-            // Restarting this sim.
-            m_log.Info("[SCENEMANAGER]: Got restart signal");
+            // Send signal to main that we're restarting this sim.
+            OnRestartSim(rdata);
+        }
 
-            ShutdownClientServer(m_localScenes[RegionSceneElement].RegionInfo);
-            IScene scene;
-            CreateRegion(m_localScenes[RegionSceneElement].RegionInfo, true, out scene);
+        public void SendSimOnlineNotification(ulong regionHandle)
+        {
+            RegionInfo Result = null;
+
+            for (int i = 0; i < m_localScenes.Count; i++)
+            {
+                if (m_localScenes[i].RegionInfo.RegionHandle == regionHandle)
+                {
+                    // Inform other regions to tell their avatar about me
+                    Result = m_localScenes[i].RegionInfo;
+                }
+            }
+            if (Result != null)
+            {
+                for (int i = 0; i < m_localScenes.Count; i++)
+                {
+                    if (m_localScenes[i].RegionInfo.RegionHandle != regionHandle)
+                    {
+                        // Inform other regions to tell their avatar about me
+                        //m_localScenes[i].OtherRegionUp(Result);
+                    }
+                }
+            }
+            else
+            {
+                m_log.Error("[REGION]: Unable to notify Other regions of this Region coming up");
+            }
+        }
+
+        /// <summary>
+        /// Save the prims in the current scene to an xml file in OpenSimulator's original 'xml' format
+        /// </summary>
+        /// <param name="filename"></param>
+        public void SaveCurrentSceneToXml(string filename)
+        {
+            IRegionSerialiserModule serialiser = CurrentOrFirstScene.RequestModuleInterface<IRegionSerialiserModule>();
+            if (serialiser != null)
+                serialiser.SavePrimsToXml(CurrentOrFirstScene, filename);
+        }
+
+        /// <summary>
+        /// Load an xml file of prims in OpenSimulator's original 'xml' file format to the current scene
+        /// </summary>
+        /// <param name="filename"></param>
+        /// <param name="generateNewIDs"></param>
+        /// <param name="loadOffset"></param>
+        public void LoadCurrentSceneFromXml(string filename, bool generateNewIDs, Vector3 loadOffset)
+        {
+            IRegionSerialiserModule serialiser = CurrentOrFirstScene.RequestModuleInterface<IRegionSerialiserModule>();
+            if (serialiser != null)
+                serialiser.LoadPrimsFromXml(CurrentOrFirstScene, filename, generateNewIDs, loadOffset);
+        }
+
+        /// <summary>
+        /// Save the prims in the current scene to an xml file in OpenSimulator's current 'xml2' format
+        /// </summary>
+        /// <param name="filename"></param>
+        public void SaveCurrentSceneToXml2(string filename)
+        {
+            IRegionSerialiserModule serialiser = CurrentOrFirstScene.RequestModuleInterface<IRegionSerialiserModule>();
+            if (serialiser != null)
+                serialiser.SavePrimsToXml2(CurrentOrFirstScene, filename);
+        }
+
+        public void SaveNamedPrimsToXml2(string primName, string filename)
+        {
+            IRegionSerialiserModule serialiser = CurrentOrFirstScene.RequestModuleInterface<IRegionSerialiserModule>();
+            if (serialiser != null)
+                serialiser.SaveNamedPrimsToXml2(CurrentOrFirstScene, primName, filename);
         }
 
         /// <summary>
@@ -179,6 +261,16 @@ namespace OpenSim.Region.Framework.Scenes
                 archiver.HandleLoadOarConsoleCommand(string.Empty, cmdparams);
         }
 
+        public string SaveCurrentSceneMapToXmlString()
+        {
+            return CurrentOrFirstScene.Heightmap.SaveToXmlString();
+        }
+
+        public void LoadCurrenSceneMapFromXmlString(string mapData)
+        {
+            CurrentOrFirstScene.Heightmap.LoadFromXmlString(mapData);
+        }
+
         public void SendCommandToPluginModules(string[] cmdparams)
         {
             ForEachCurrentScene(delegate(Scene scene) { scene.SendCommandToPlugins(cmdparams); });
@@ -208,7 +300,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void BackupCurrentScene()
         {
-            ForEachCurrentScene(delegate(Scene scene) { scene.Backup(); });
+            ForEachCurrentScene(delegate(Scene scene) { scene.Backup(true); });
         }
 
         public bool TrySetCurrentScene(string regionName)
@@ -250,8 +342,6 @@ namespace OpenSim.Region.Framework.Scenes
 
             return false;
         }
-
-        #region TryGetScene functions
 
         public bool TryGetScene(string regionName, out Scene scene)
         {
@@ -314,8 +404,6 @@ namespace OpenSim.Region.Framework.Scenes
             return false;
         }
 
-        #endregion
-
         /// <summary>
         /// Set the debug packet level on the current scene.  This level governs which packets are printed out to the
         /// console.
@@ -375,9 +463,27 @@ namespace OpenSim.Region.Framework.Scenes
             return presences;
         }
 
+        public RegionInfo GetRegionInfo(UUID regionID)
+        {
+            foreach (Scene scene in m_localScenes)
+            {
+                if (scene.RegionInfo.RegionID == regionID)
+                {
+                    return scene.RegionInfo;
+                }
+            }
+
+            return null;
+        }
+
         public void ForceCurrentSceneClientUpdate()
         {
             ForEachCurrentScene(delegate(Scene scene) { scene.ForceClientUpdate(); });
+        }
+
+        public void HandleEditCommandOnCurrentScene(string[] cmdparams)
+        {
+            ForEachCurrentScene(delegate(Scene scene) { scene.HandleEditCommand(cmdparams); });
         }
 
         public bool TryGetScenePresence(UUID avatarId, out ScenePresence avatar)
@@ -433,323 +539,6 @@ namespace OpenSim.Region.Framework.Scenes
         public void ForEachScene(Action<Scene> action)
         {
             m_localScenes.ForEach(action);
-        }
-
-        private string proxyUrl = "";
-        private int proxyOffset = 0;
-        private string SecretID = UUID.Random().ToString();
-
-        /// <summary>
-        /// Execute the region creation process.  This includes setting up scene infrastructure.
-        /// </summary>
-        /// <param name="regionInfo"></param>
-        /// <param name="portadd_flag"></param>
-        /// <param name="do_post_init"></param>
-        /// <returns></returns>
-        public IClientNetworkServer CreateRegion(RegionInfo regionInfo, bool portadd_flag, out IScene mscene)
-        {
-            int port = regionInfo.InternalEndPoint.Port;
-
-            // set initial ServerURI
-            regionInfo.ServerURI = "http://" + regionInfo.ExternalHostName + ":" + regionInfo.InternalEndPoint.Port;
-            regionInfo.HttpPort = MainServer.Instance.Port;
-
-            regionInfo.osSecret = SecretID;
-
-            IConfig networkConfig = m_OpenSimBase.ConfigSource.Configs["Network"];
-            if (networkConfig != null)
-            {
-                proxyUrl = networkConfig.GetString("proxy_url", "");
-                proxyOffset = Int32.Parse(networkConfig.GetString("proxy_offset", "0"));
-            }
-
-            if ((proxyUrl.Length > 0) && (portadd_flag))
-            {
-                // set proxy url to RegionInfo
-                regionInfo.proxyUrl = proxyUrl;
-                regionInfo.ProxyOffset = proxyOffset;
-                Util.XmlRpcCommand(proxyUrl, "AddPort", port, port + proxyOffset, regionInfo.ExternalHostName);
-            }
-
-            IClientNetworkServer clientServer = null;
-            Scene scene = SetupScene(regionInfo, proxyOffset, m_OpenSimBase.ConfigSource, out clientServer);
-
-            m_log.Info("[MODULES]: Loading New Style Region's modules");
-            IRegionModulesController controller;
-            if (m_OpenSimBase.ApplicationRegistry.TryGet(out controller))
-            {
-                controller.AddRegionToModules(scene);
-            }
-            else
-                m_log.Error("[MODULES]: The new RegionModulesController is missing...");
-
-            scene.SetModuleInterfaces();
-
-            // Prims have to be loaded after module configuration since some modules may be invoked during the load
-            scene.LoadPrimsFromStorage(regionInfo.RegionID);
-
-            // moved these here as the terrain texture has to be created after the modules are initialized
-            // and has to happen before the region is registered with the grid.
-            scene.CreateTerrainTexture();
-
-            // TODO : Try setting resource for region xstats here on scene
-            MainServer.Instance.AddStreamHandler(new Region.Framework.Scenes.RegionStatsHandler(regionInfo));
-
-            RegisterRegionWithGrid(scene);
-
-            // We need to do this after we've initialized the
-            // scripting engines.
-            scene.CreateScriptInstances();
-            scene.EventManager.TriggerScriptLoadingComplete();
-
-            scene.loadAllLandObjectsFromStorage(regionInfo.RegionID);
-            scene.EventManager.TriggerParcelPrimCountUpdate();
-
-            Add(scene);
-
-            clientServer.Start();
-            scene.EventManager.OnShutdown += delegate() { ShutdownRegion(scene); };
-
-            mscene = scene;
-
-            scene.StartTimer();
-
-            return clientServer;
-        }
-
-        private void RegisterRegionWithGrid(Scene scene)
-        {
-            string error = scene.RegisterRegionWithGrid();
-            if (error != "")
-            {
-                if (error == "Region location is reserved")
-                {
-                    m_log.Error("[STARTUP]: Registration of region with grid failed - The region location you specified is reserved. You must move your region.");
-                    scene.RegionInfo.RegionLocY = uint.Parse(MainConsole.Instance.CmdPrompt("New Region Location X", "1000"));
-                    scene.RegionInfo.RegionLocX = uint.Parse(MainConsole.Instance.CmdPrompt("New Region Location Y", "1000"));
-
-                    Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>("IRegionInfoConnector").UpdateRegionInfo(scene.RegionInfo, false);
-                }
-                if (error == "Region overlaps another region")
-                {
-                    m_log.Error("[STARTUP]: Registration of region with grid failed - The region location you specified is already in use. You must move your region.");
-                    scene.RegionInfo.RegionLocY = uint.Parse(MainConsole.Instance.CmdPrompt("New Region Location X", "1000"));
-                    scene.RegionInfo.RegionLocX = uint.Parse(MainConsole.Instance.CmdPrompt("New Region Location Y", "1000"));
-
-                    Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>("IRegionInfoConnector").UpdateRegionInfo(scene.RegionInfo, false);
-                }
-                if (error.Contains("Can't move this region"))
-                {
-                    m_log.Error("[STARTUP]: Registration of region with grid failed - You can not move this region. Moving it back to its original position.");
-                    //Opensim Grid Servers don't have this functionality.
-                    try
-                    {
-                        string[] position = error.Split(',');
-
-                        scene.RegionInfo.RegionLocY = uint.Parse(position[1]);
-                        scene.RegionInfo.RegionLocX = uint.Parse(position[2]);
-
-                        Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>("IRegionInfoConnector").UpdateRegionInfo(scene.RegionInfo, false);
-                    }
-                    catch (Exception e)
-                    {
-                        m_log.Error("Unable to move the region back to its original position, is this an opensim server? Please manually move the region back.");
-                        throw e;
-                    }
-                }
-                if (error == "Duplicate region name")
-                {
-                    m_log.Error("[STARTUP]: Registration of region with grid failed - The region name you specified is already in use. Please change the name.");
-                    scene.RegionInfo.RegionName = MainConsole.Instance.CmdPrompt("New Region Name", "");
-
-                    Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>("IRegionInfoConnector").UpdateRegionInfo(scene.RegionInfo, false);
-                }
-                if (error == "Region locked out")
-                {
-                    m_log.Error("[STARTUP]: Registration of region with grid failed - The region you are attempting to join has been blocked from connecting. Please connect another region.");
-                    throw new Exception(error);
-                }
-                if (error == "Error communicating with grid service")
-                {
-                    m_log.Error("[STARTUP]: Registration of region with grid failed - The grid service can not be found! Please make sure that you can connect to the grid server and that the grid server is on.");
-                    string input = MainConsole.Instance.CmdPrompt("Press enter when you are ready to proceed, or type cancel to exit");
-                    if (input == "cancel")
-                    {
-                        Environment.Exit(0);
-                    }
-                }
-                RegisterRegionWithGrid(scene);
-            }
-        }
-
-        private void ShutdownRegion(Scene scene)
-        {
-            m_log.DebugFormat("[SHUTDOWN]: Shutting down region {0}", scene.RegionInfo.RegionName);
-            IRegionModulesController controller;
-            if (m_OpenSimBase.ApplicationRegistry.TryGet<IRegionModulesController>(out controller))
-            {
-                controller.RemoveRegionFromModules(scene);
-            }
-        }
-
-        protected List<IClientNetworkServer> m_clientServers = new List<IClientNetworkServer>();
-        public List<IClientNetworkServer> ClientServers
-        {
-            get { return m_clientServers; }
-        }
-
-        public void ShutdownClientServer(RegionInfo whichRegion)
-        {
-            // Close and remove the clientserver for a region
-            bool foundClientServer = false;
-            int clientServerElement = 0;
-            Location location = new Location(whichRegion.RegionHandle);
-
-            for (int i = 0; i < m_clientServers.Count; i++)
-            {
-                if (m_clientServers[i].HandlesRegion(location))
-                {
-                    clientServerElement = i;
-                    foundClientServer = true;
-                    break;
-                }
-            }
-
-            if (foundClientServer)
-            {
-                m_clientServers[clientServerElement].NetworkStop();
-                m_clientServers.RemoveAt(clientServerElement);
-            }
-        }
-
-        public void RemoveRegion(IScene scene, bool cleanup)
-        {
-            // only need to check this if we are not at the
-            // root level
-            if ((CurrentScene != null) && (CurrentScene.RegionInfo.RegionID == scene.RegionInfo.RegionID))
-            {
-                TrySetCurrentScene("..");
-            }
-
-            ((Scene)scene).DeleteAllSceneObjects();
-            CloseScene((Scene)scene);
-            ShutdownClientServer(scene.RegionInfo);
-
-            if (!cleanup)
-                return;
-
-            if (!String.IsNullOrEmpty(scene.RegionInfo.RegionFile))
-            {
-                if (scene.RegionInfo.RegionFile.ToLower().EndsWith(".xml"))
-                {
-                    File.Delete(scene.RegionInfo.RegionFile);
-                    m_log.InfoFormat("[OPENSIM]: deleting region file \"{0}\"", scene.RegionInfo.RegionFile);
-                }
-                if (scene.RegionInfo.RegionFile.ToLower().EndsWith(".ini"))
-                {
-                    try
-                    {
-                        IniConfigSource source = new IniConfigSource(scene.RegionInfo.RegionFile);
-                        if (source.Configs[scene.RegionInfo.RegionName] != null)
-                        {
-                            source.Configs.Remove(scene.RegionInfo.RegionName);
-
-                            if (source.Configs.Count == 0)
-                            {
-                                File.Delete(scene.RegionInfo.RegionFile);
-                            }
-                            else
-                            {
-                                source.Save(scene.RegionInfo.RegionFile);
-                            }
-                        }
-                    }
-                    catch (Exception)
-                    {
-                    }
-                }
-            }
-        }
-
-        public void RemoveRegion(string name, bool cleanUp)
-        {
-            Scene target;
-            if (TryGetScene(name, out target))
-                RemoveRegion(target, cleanUp);
-        }
-
-        /// <summary>
-        /// Remove a region from the simulator without deleting it permanently.
-        /// </summary>
-        /// <param name="scene"></param>
-        /// <returns></returns>
-        public void CloseRegion(IScene scene)
-        {
-            // only need to check this if we are not at the
-            // root level
-            if ((CurrentScene != null) && (CurrentScene.RegionInfo.RegionID == scene.RegionInfo.RegionID))
-            {
-                TrySetCurrentScene("..");
-            }
-
-            CloseScene((Scene)scene);
-            ShutdownClientServer(scene.RegionInfo);
-        }
-
-        /// <summary>
-        /// Create a scene and its initial base structures.
-        /// </summary>
-        /// <param name="regionInfo"></param>
-        /// <param name="proxyOffset"></param>
-        /// <param name="configSource"></param>
-        /// <param name="clientServer"> </param>
-        /// <returns></returns>
-        protected Scene SetupScene(RegionInfo regionInfo, int proxyOffset, IConfigSource configSource, out IClientNetworkServer clientServer)
-        {
-            AgentCircuitManager circuitManager = new AgentCircuitManager();
-            IPAddress listenIP = regionInfo.InternalEndPoint.Address;
-            //if (!IPAddress.TryParse(regionInfo.InternalEndPoint, out listenIP))
-            //    listenIP = IPAddress.Parse("0.0.0.0");
-
-            uint port = (uint)regionInfo.InternalEndPoint.Port;
-
-            clientServer = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IClientNetworkServer>(m_OpenSimBase.ConfigurationSettings.ClientstackDll, "IClientNetworkServer");
-            clientServer.Initialise(
-                    listenIP, ref port, proxyOffset, regionInfo.m_allow_alternate_ports,
-                    m_OpenSimBase.ConfigSource, circuitManager);
-            
-            regionInfo.InternalEndPoint.Port = (int)port;
-
-            SceneCommunicationService sceneGridService = new SceneCommunicationService();
-            Scene scene = new Scene(regionInfo, circuitManager, sceneGridService, false, m_OpenSimBase.ConfigurationSettings.PhysicalPrim, m_OpenSimBase.ConfigurationSettings.See_into_region_from_neighbor, m_OpenSimBase.ConfigSource, m_OpenSimBase.Version, m_dataStore);
-            
-            clientServer.AddScene(scene);
-
-            scene.PhysicsScene = GetPhysicsScene(m_OpenSimBase.ConfigurationSettings.PhysicsEngine, m_OpenSimBase.ConfigurationSettings.MeshEngineName, m_OpenSimBase.ConfigSource, scene.RegionInfo.RegionName);
-            scene.PhysicsScene.SetTerrain(scene.Heightmap.GetFloatsSerialised());
-            scene.PhysicsScene.SetWaterLevel((float)regionInfo.RegionSettings.WaterHeight);
-
-            return scene;
-        }
-
-        /// <summary>
-        /// Get a new physics scene.
-        /// </summary>
-        /// <param name="engine">The name of the physics engine to use</param>
-        /// <param name="meshEngine">The name of the mesh engine to use</param>
-        /// <param name="config">The configuration data to pass to the physics and mesh engines</param>
-        /// <param name="osSceneIdentifier">
-        /// The name of the OpenSim scene this physics scene is serving.  This will be used in log messages.
-        /// </param>
-        /// <returns></returns>
-        protected PhysicsScene GetPhysicsScene(
-            string engine, string meshEngine, IConfigSource config, string osSceneIdentifier)
-        {
-            PhysicsPluginManager physicsPluginManager;
-            physicsPluginManager = new PhysicsPluginManager();
-            physicsPluginManager.LoadPluginsFromAssemblies("Physics");
-
-            return physicsPluginManager.GetPhysicsScene(engine, meshEngine, config, osSceneIdentifier);
         }
     }
 }
