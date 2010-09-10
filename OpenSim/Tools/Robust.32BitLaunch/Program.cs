@@ -25,36 +25,50 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using log4net;
-
-namespace Robust._32BitLaunch
+namespace OpenSim
 {
-    class Program
+    public class VersionInfo
     {
-        static void Main(string[] args)
-        {
-            log4net.Config.XmlConfigurator.Configure();
+        private const string VERSION_NUMBER = "0.7.1";
+        private const Flavour VERSION_FLAVOUR = Flavour.Dev;
 
-            System.Console.WriteLine("32-bit OpenSim executor");
-            System.Console.WriteLine("-----------------------");
-            System.Console.WriteLine("");
-            System.Console.WriteLine("This application is compiled for 32-bit CPU and will run under WOW32 or similar.");
-            System.Console.WriteLine("All 64-bit incompatibilities should be gone.");
-            System.Console.WriteLine("");
-            System.Threading.Thread.Sleep(300);
-            try
-            {
-                global::OpenSim.Server.OpenSimServer.Main(args);
-            }
-            catch (Exception ex)
-            {
-                System.Console.WriteLine("OpenSim threw an exception:");
-                System.Console.WriteLine(ex.ToString());
-                System.Console.WriteLine("");
-                System.Console.WriteLine("Application will now terminate!");
-                System.Console.WriteLine("");
-            }
+        public enum Flavour
+        {
+            Unknown,
+            Dev,
+            RC1,
+            RC2,
+            Release,
+            Post_Fixes
         }
+
+        public static string Version
+        {
+            get { return GetVersionString(VERSION_NUMBER, VERSION_FLAVOUR); }
+        }
+
+        public static string GetVersionString(string versionNumber, Flavour flavour)
+        {
+            string versionString = "OpenSim " + versionNumber + " " + flavour;
+            return versionString.PadRight(VERSIONINFO_VERSION_LENGTH);
+        }
+
+        public const int VERSIONINFO_VERSION_LENGTH = 27;
+        
+        /// <value>
+        /// This is the external interface version.  It is separate from the OpenSimulator project version.
+        /// 
+        /// This version number should be 
+        /// increased by 1 every time a code change makes the previous OpenSimulator revision incompatible
+        /// with the new revision.  This will usually be due to interregion or grid facing interface changes.
+        /// 
+        /// Changes which are compatible with an older revision (e.g. older revisions experience degraded functionality
+        /// but not outright failure) do not need a version number increment.
+        /// 
+        /// Having this version number allows the grid service to reject connections from regions running a version
+        /// of the code that is too old. 
+        ///
+        /// </value>
+        public readonly static int MajorInterfaceVersion = 6;
     }
 }
