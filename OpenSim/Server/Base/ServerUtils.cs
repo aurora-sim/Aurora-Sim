@@ -62,7 +62,7 @@ namespace OpenSim.Server.Base
         /// </summary>
         /// <param name="dllName"></param>
         /// <param name="args">The arguments which control which constructor is invoked on the plugin</param>
-        /// <returns></returns>        
+        /// <returns></returns>
         public static T LoadPlugin<T>(string dllName, Object[] args) where T:class
         {
             string[] parts = dllName.Split(new char[] {':'});
@@ -265,20 +265,6 @@ namespace OpenSim.Server.Base
                     elem.Attributes.Append(type);
 
                     BuildXmlData(elem, (Dictionary<string, object>)kvp.Value);
-                }
-                else if (kvp.Value is Dictionary<string, string>)
-                {
-                    XmlAttribute type = parent.OwnerDocument.CreateAttribute("",
-                        "type", "");
-                    type.Value = "List";
-
-                    elem.Attributes.Append(type);
-                    Dictionary<string, object> value = new Dictionary<string, object>();
-                    foreach (KeyValuePair<string, string> pair in (Dictionary<string, string>)kvp.Value)
-                    {
-                        value.Add(pair.Key, pair.Value);
-                    }
-                    BuildXmlData(elem, value);
                 }
                 else
                 {

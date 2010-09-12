@@ -25,59 +25,69 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.Collections.Generic;
+using System.Text;
 using OpenMetaverse;
 using OpenSim.Framework;
+using OpenSim.Region.Framework.Scenes;
+using OpenSim.Region.Framework.Scenes.Serialization;
 
-namespace OpenSim.Region.Framework.Interfaces
+namespace OpenSim.Tests.Common
 {
-    public interface ILandChannel
+    public class AssetHelpers
     {
         /// <summary>
-        /// Get all parcels
+        /// Create a notecard asset with a random uuid and dummy text.
         /// </summary>
+        /// <param name="creatorId">/param>
         /// <returns></returns>
-        List<ILandObject> AllParcels();
-             
-        /// <summary>
-        /// Get the parcel at the specified point
-        /// </summary>
-        /// <param name="x">Value between 0 - 256 on the x axis of the point</param>
-        /// <param name="y">Value between 0 - 256 on the y axis of the point</param>
-        /// <returns>Land object at the point supplied</returns>
-        ILandObject GetLandObject(int x, int y);
-
-        /// <summary>
-        /// Get the parcel at the specified point
-        /// </summary>
-        /// <param name="x">Value between 0 - 256 on the x axis of the point</param>
-        /// <param name="y">Value between 0 - 256 on the y axis of the point</param>
-        /// <returns>Land object at the point supplied</returns>
-        ILandObject GetLandObject(float x, float y);
-
-        /// <summary>
-        /// Get the parcels near the specified point
-        /// </summary>
-        /// <param name="position"></param>
-        /// <returns></returns>
-        List<ILandObject> ParcelsNearPoint(Vector3 position);
-
-        /// <summary>
-        /// Get the parcel given the land's local id.
-        /// </summary>
-        /// <param name="localID"></param>
-        /// <returns></returns>
-        ILandObject GetLandObject(int localID);
+        public static AssetBase CreateAsset(UUID creatorId)
+        {
+            return CreateAsset(UUID.Random(), AssetType.Notecard, "hello", creatorId);
+        }
         
-        bool IsLandPrimCountTainted();
-        bool IsForcefulBansAllowed();
-        void UpdateLandObject(int localID, LandData data);
-        void ReturnObjectsInParcel(int localID, uint returnType, UUID[] agentIDs, UUID[] taskIDs, IClientAPI remoteClient);
-        void setParcelObjectMaxOverride(overrideParcelMaxPrimCountDelegate overrideDel);
-        void setSimulatorObjectMaxOverride(overrideSimulatorMaxPrimCountDelegate overrideDel);
-        void SetParcelOtherCleanTime(IClientAPI remoteClient, int localID, int otherCleanTime);
-
-        void Join(int start_x, int start_y, int end_x, int end_y, UUID attempting_user_id);
-        void Subdivide(int start_x, int start_y, int end_x, int end_y, UUID attempting_user_id);
+        /// <summary>
+        /// Create and store a notecard asset with a random uuid and dummy text.
+        /// </summary>
+        /// <param name="creatorId">/param>
+        /// <returns></returns>
+        public static AssetBase CreateAsset(Scene scene, UUID creatorId)
+        {
+            AssetBase asset = CreateAsset(UUID.Random(), AssetType.Notecard, "hello", creatorId);
+            scene.AssetService.Store(asset);
+            return asset;
+        }
+                
+        /// <summary>
+        /// Create an asset from the given scene object.
+        /// </summary>
+        /// <param name="assetUuid"></param>
+        /// <param name="sog"></param>
+        /// <returns></returns>
+        public static AssetBase CreateAsset(UUID assetUuid, SceneObjectGroup sog)
+        {
+            return CreateAsset(
+                assetUuid, 
+                AssetType.Object, 
+                Encoding.ASCII.GetBytes(SceneObjectSerializer.ToXml2Format(sog)), 
+                sog.OwnerID);
+        }
+            
+        /// <summary>
+        /// Create an asset from the given data.
+        /// </summary>
+        public static AssetBase CreateAsset(UUID assetUuid, AssetType assetType, string data, UUID creatorID)
+        {
+            return CreateAsset(assetUuid, assetType, Encoding.ASCII.GetBytes(data), creatorID);
+        }
+        
+        /// <summary>
+        /// Create an asset from the given data.
+        /// </summary>
+        public static AssetBase CreateAsset(UUID assetUuid, AssetType assetType, byte[] data, UUID creatorID)
+        {
+            AssetBase asset = new AssetBase(assetUuid, assetUuid.ToString(), (sbyte)assetType, creatorID.ToString());
+            asset.Data = data;
+            return asset;
+        }
     }
 }

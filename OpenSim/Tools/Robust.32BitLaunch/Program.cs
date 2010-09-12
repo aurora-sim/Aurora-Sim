@@ -25,50 +25,50 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-namespace OpenSim
+using System;
+using Nini.Config;
+using OpenSim.Framework;
+using OpenSim.Framework.Communications;
+using OpenSim.Framework.Servers;
+using OpenSim.Region.Framework;
+using OpenSim.Region.Framework.Scenes;
+
+namespace OpenSim.Tests.Common.Mock
 {
-    public class VersionInfo
+    public class TestScene : Scene
     {
-        private const string VERSION_NUMBER = "0.7.1";
-        private const Flavour VERSION_FLAVOUR = Flavour.Dev;
-
-        public enum Flavour
+        public TestScene(
+            RegionInfo regInfo, AgentCircuitManager authen,
+            SceneCommunicationService sceneGridService, StorageManager storeManager,
+            ModuleLoader moduleLoader, bool dumpAssetsToFile, bool physicalPrim,
+            bool SeeIntoRegionFromNeighbor, IConfigSource config, string simulatorVersion)
+            : base(regInfo, authen, sceneGridService, storeManager, moduleLoader,
+                   dumpAssetsToFile, physicalPrim, SeeIntoRegionFromNeighbor, config, simulatorVersion)
         {
-            Unknown,
-            Dev,
-            RC1,
-            RC2,
-            Release,
-            Post_Fixes
         }
-
-        public static string Version
-        {
-            get { return GetVersionString(VERSION_NUMBER, VERSION_FLAVOUR); }
-        }
-
-        public static string GetVersionString(string versionNumber, Flavour flavour)
-        {
-            string versionString = "OpenSim " + versionNumber + " " + flavour;
-            return versionString.PadRight(VERSIONINFO_VERSION_LENGTH);
-        }
-
-        public const int VERSIONINFO_VERSION_LENGTH = 27;
         
-        /// <value>
-        /// This is the external interface version.  It is separate from the OpenSimulator project version.
+        /// <summary>
+        /// Allow retrieval for test check purposes
+        /// </summary>
+        public StorageManager StorageManager { get { return m_storageManager; } }
+        
+        /// <summary>
+        /// Temporarily override session authentication for tests (namely teleport).
+        /// </summary>
         /// 
-        /// This version number should be 
-        /// increased by 1 every time a code change makes the previous OpenSimulator revision incompatible
-        /// with the new revision.  This will usually be due to interregion or grid facing interface changes.
+        /// TODO: This needs to be mocked out properly.
         /// 
-        /// Changes which are compatible with an older revision (e.g. older revisions experience degraded functionality
-        /// but not outright failure) do not need a version number increment.
-        /// 
-        /// Having this version number allows the grid service to reject connections from regions running a version
-        /// of the code that is too old. 
-        ///
-        /// </value>
-        public readonly static int MajorInterfaceVersion = 6;
+        /// <param name="agent"></param>
+        /// <returns></returns>
+        public override bool VerifyUserPresence(AgentCircuitData agent, out string reason)
+        {
+            reason = String.Empty;
+            return true;
+        }
+            
+        public AsyncSceneObjectGroupDeleter SceneObjectGroupDeleter
+        {
+            get { return m_asyncSceneObjectDeleter; }
+        }
     }
 }

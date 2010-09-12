@@ -26,13 +26,9 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using log4net;
-using log4net.Appender;
-using log4net.Core;
-using log4net.Repository;
 using log4net.Config;
 using Nini.Config;
 using OpenSim.Framework;
@@ -65,6 +61,11 @@ namespace OpenSim
         /// </summary>
         public static string m_crashDir = "crashes";
 
+        /// <summary>
+        /// Instance of the OpenSim class.  This could be OpenSim or OpenSimBackground depending on the configuration
+        /// </summary>
+        protected static OpenSimBase m_sim = null;
+
         //could move our main function into OpenSimMain and kill this class
         public static void Main(string[] args)
         {
@@ -81,24 +82,24 @@ namespace OpenSim
             if (logConfigFile != String.Empty)
             {
                 XmlConfigurator.Configure(new System.IO.FileInfo(logConfigFile));
-                //m_log.InfoFormat("[OPENSIM MAIN]: configured log4net using \"{0}\" as configuration file",
-                //                 logConfigFile);
-            }
+                m_log.InfoFormat("[OPENSIM MAIN]: configured log4net using \"{0}\" as configuration file", 
+                                 logConfigFile);
+            } 
             else
             {
                 XmlConfigurator.Configure();
-                //m_log.Info("[OPENSIM MAIN]: configured log4net using default OpenSim.exe.config");
+                m_log.Info("[OPENSIM MAIN]: configured log4net using default OpenSim.exe.config");
             }
 
             // Increase the number of IOCP threads available. Mono defaults to a tragically low number
             int workerThreads, iocpThreads;
             System.Threading.ThreadPool.GetMaxThreads(out workerThreads, out iocpThreads);
-            //m_log.InfoFormat("[OPENSIM MAIN]: Runtime gave us {0} worker threads and {1} IOCP threads", workerThreads, iocpThreads);
+            m_log.InfoFormat("[OPENSIM MAIN]: Runtime gave us {0} worker threads and {1} IOCP threads", workerThreads, iocpThreads);
             if (workerThreads < 500 || iocpThreads < 1000)
             {
                 workerThreads = 500;
                 iocpThreads = 1000;
-                //m_log.Info("[OPENSIM MAIN]: Bumping up to 500 worker threads and 1000 IOCP threads");
+                m_log.Info("[OPENSIM MAIN]: Bumping up to 500 worker threads and 1000 IOCP threads");
                 System.Threading.ThreadPool.SetMaxThreads(workerThreads, iocpThreads);
             }
 
@@ -117,7 +118,7 @@ namespace OpenSim
 
             // Configure nIni aliases and localles
             Culture.SetCurrentCulture();
-            #region Disabled
+
 
             // Validate that the user has the most basic configuration done
             // If not, offer to do the most basic configuration for them warning them along the way of the importance of 
@@ -224,10 +225,8 @@ namespace OpenSim
                         }
                 }
                 MainConsole.Instance = null;
-            }      
+            }
             */
-
-            #endregion
             configSource.Alias.AddAlias("On", true);
             configSource.Alias.AddAlias("Off", false);
             configSource.Alias.AddAlias("True", true);
@@ -253,9 +252,38 @@ namespace OpenSim
             // load Crash directory config
             m_crashDir = configSource.Configs["Startup"].GetString("crash_dir", m_crashDir);
 
-            OpenSimBase m_sim = new OpenSimBase(configSource);
+           
 
-            m_sim.Startup();
+            if (background)
+            {
+                m_sim = new OpenSimBackground(configSource);
+                m_sim.Startup();
+            }
+            else
+            {
+
+
+                       
+
+                m_sim = new OpenSim(configSource);
+
+                    
+      
+                m_sim.Startup();
+
+                while (true)
+                {
+                    try
+                    {
+                        // Block thread here for input
+                        MainConsole.Instance.Prompt();
+                    }
+                    catch (Exception e)
+                    {
+                        m_log.ErrorFormat("Command error: {0}", e);
+                    }
+                }
+            }
         }
 
         private static bool _IsHandlingException = false; // Make sure we don't go recursive on ourself
@@ -315,8 +343,6 @@ namespace OpenSim
                     m_log.ErrorFormat("[CRASH LOGGER CRASHED]: {0}", e2);
                 }
             }
-
-            Console.ReadLine();
 
             _IsHandlingException = false;
         }
