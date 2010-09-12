@@ -26,92 +26,71 @@
  */
 
 using System;
-using System.Net;
 using System.Reflection;
 using log4net;
-using Nini.Config;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
-using OpenSim.Region.OptionalModules.Agent.InternetRelayClientView.Server;
-using Mono.Addins;
 
-namespace OpenSim.Region.OptionalModules.Agent.InternetRelayClientView
+namespace OpenSim.Region.Framework
 {
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
-    public class IRCStackModule : INonSharedRegionModule
+    public class StorageManager
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private IRCServer m_server;
-//        private Scene m_scene;
-        private IConfigSource m_source;
+        protected ISimulationDataStore m_dataStore;
 
-        #region Implementation of IRegionModule
-
-        public void Initialise(IConfigSource source)
+        public ISimulationDataStore DataStore
         {
-            m_source = source;
+            get { return m_dataStore; }
         }
 
-        public void AddRegion(Scene scene)
+        private IEstateDataStore m_estateDataStore;
+
+        public IEstateDataStore EstateDataStore
         {
-            if (null != m_source.Configs["IRCd"] &&
-                m_source.Configs["IRCd"].GetBoolean("Enabled", false))
+            get { return m_estateDataStore; }
+        }
+
+        public StorageManager(ISimulationDataStore storage)
+        {
+            m_dataStore = storage;
+        }
+
+        public StorageManager(string dllName, string connectionstring, string estateconnectionstring)
+        {
+            m_log.Info("[DATASTORE]: Attempting to load " + dllName);
+            Assembly pluginAssembly = Assembly.LoadFrom(dllName);
+
+            foreach (Type pluginType in pluginAssembly.GetTypes())
             {
-                int portNo = m_source.Configs["IRCd"].GetInt("Port", 6666);
-                //                m_scene = scene;
-                m_server = new IRCServer(IPAddress.Parse("0.0.0.0"), portNo, scene);
-                m_server.OnNewIRCClient += m_server_OnNewIRCClient;
+                if (pluginType.IsPublic)
+                {
+                    Type typeInterface = pluginType.GetInterface("IRegionDataStore", true);
+
+                    if (typeInterface != null)
+                    {
+                        ISimulationDataStore plug =
+                            (ISimulationDataStore)Activator.CreateInstance(pluginAssembly.GetType(pluginType.ToString()));
+                        plug.Initialise(connectionstring);
+
+                        m_dataStore = plug;
+
+                        m_log.Info("[DATASTORE]: Added IRegionDataStore Interface");
+                    }
+
+                    typeInterface = pluginType.GetInterface("IEstateDataStore", true);
+
+                    if (typeInterface != null)
+                    {
+                        IEstateDataStore estPlug =
+                            (IEstateDataStore) Activator.CreateInstance(pluginAssembly.GetType(pluginType.ToString()));
+                        estPlug.Initialise(estateconnectionstring);
+
+                        m_estateDataStore = estPlug;
+                    }
+                }
             }
+
+            //TODO: Add checking and warning to make sure it initialised.
         }
-
-        public void RemoveRegion(Scene scene)
-        {
-
-        }
-
-        public void RegionLoaded(Scene scene)
-        {
-
-        }
-
-        public Type ReplaceableInterface
-        {
-            get { return null; }
-        }
-
-        void m_server_OnNewIRCClient(IRCClientView user)
-        {
-            user.OnIRCReady += user_OnIRCReady;
-        }
-
-        void user_OnIRCReady(IRCClientView cv)
-        {
-            m_log.Info("[IRCd] Adding user...");
-            cv.Start();
-            m_log.Info("[IRCd] Added user to Scene");
-        }
-
-        public void PostInitialise()
-        {
-
-        }
-
-        public void Close()
-        {
-
-        }
-
-        public string Name
-        {
-            get { return "IRCClientStackModule"; }
-        }
-
-        public bool IsSharedModule
-        {
-            get { return false; }
-        }
-
-        #endregion
     }
 }
