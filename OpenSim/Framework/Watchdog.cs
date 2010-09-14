@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) Contributors, http://opensimulator.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using log4net;
 
@@ -43,7 +44,7 @@ namespace OpenSim.Framework
         const int WATCHDOG_TIMEOUT_MS = 5000;
 
         [System.Diagnostics.DebuggerDisplay("{Thread.Name}")]
-        private class ThreadWatchdogInfo
+        public class ThreadWatchdogInfo
         {
             public Thread Thread;
             public int LastTick;
@@ -120,7 +121,7 @@ namespace OpenSim.Framework
 
         private static void AddThread(ThreadWatchdogInfo threadInfo)
         {
-           // m_log.Debug("[WATCHDOG]: Started tracking thread \"" + threadInfo.Thread.Name + "\" (ID " + threadInfo.Thread.ManagedThreadId + ")");
+            m_log.Debug("[WATCHDOG]: Started tracking thread \"" + threadInfo.Thread.Name + "\" (ID " + threadInfo.Thread.ManagedThreadId + ")");
 
             lock (m_threads)
                 m_threads.Add(threadInfo.Thread.ManagedThreadId, threadInfo);
@@ -149,34 +150,41 @@ namespace OpenSim.Framework
             }
             catch { }
         }
+        
+        /// <summary>
+        /// Get currently watched threads for diagnostic purposes
+        /// </summary>
+        /// <returns></returns>
+        public static ThreadWatchdogInfo[] GetThreads()
+        {
+            return m_threads.Values.ToArray();
+        }
 
         private static void WatchdogTimerElapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
             WatchdogTimeout callback = OnWatchdogTimeout;
 
-            ThreadWatchdogInfo timedOut = null;
-
-            lock (m_threads)
+            if (callback != null)
             {
-                int now = Environment.TickCount & Int32.MaxValue;
+                ThreadWatchdogInfo timedOut = null;
 
-                foreach (ThreadWatchdogInfo threadInfo in m_threads.Values)
+                lock (m_threads)
                 {
-                    if (threadInfo.Thread.ThreadState == ThreadState.Stopped || now - threadInfo.LastTick >= WATCHDOG_TIMEOUT_MS)
+                    int now = Environment.TickCount & Int32.MaxValue;
+
+                    foreach (ThreadWatchdogInfo threadInfo in m_threads.Values)
                     {
-                        timedOut = threadInfo;
-                        m_threads.Remove(threadInfo.Thread.ManagedThreadId);
-                        break;
+                        if (threadInfo.Thread.ThreadState == ThreadState.Stopped || now - threadInfo.LastTick >= WATCHDOG_TIMEOUT_MS)
+                        {
+                            timedOut = threadInfo;
+                            m_threads.Remove(threadInfo.Thread.ManagedThreadId);
+                            break;
+                        }
                     }
                 }
-            }
 
-            if (timedOut != null)
-            {
-                if (callback != null)
+                if (timedOut != null)
                     callback(timedOut.Thread, timedOut.LastTick);
-                int now = Environment.TickCount & Int32.MaxValue;
-                m_log.ErrorFormat("[WATCHDOG]: Timeout detected for thread \"{0}\". ThreadState={1}. Last tick was {2}ms ago", timedOut.Thread.Name, timedOut.Thread.ThreadState, now - timedOut.LastTick);
             }
 
             m_watchdogTimer.Start();
