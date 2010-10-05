@@ -37,13 +37,11 @@ using OpenSim.Framework;
 using OpenSim.Region.CoreModules.Framework.InterfaceCommander;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
-using Mono.Addins;
 
 
 namespace OpenSim.Region.CoreModules.World.LightShare
 {
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
-    public class LightShareModule : INonSharedRegionModule, ICommandableModule
+    public class LightShareModule : IRegionModule, ICommandableModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly Commander m_commander = new Commander("windlight");
@@ -72,8 +70,13 @@ namespace OpenSim.Region.CoreModules.World.LightShare
             }
         }
 
-        public void Initialise(IConfigSource config)
+        public void Initialise(Scene scene, IConfigSource config)
         {
+            m_scene = scene;
+            m_scene.RegisterModuleInterface<IRegionModule>(this);
+            m_scene.EventManager.OnPluginConsole += EventManager_OnPluginConsole;
+            
+            // ini file settings
             try
             {
                 m_enableWindlight = config.Configs["LightShare"].GetBoolean("enable_windlight", false);
@@ -82,38 +85,18 @@ namespace OpenSim.Region.CoreModules.World.LightShare
             {
                 m_log.Debug("[WINDLIGHT]: ini failure for enable_windlight - using default");
             }
-        }
 
-        public void AddRegion(Scene scene)
-        {
-            if (!m_enableWindlight)
-                return;
-
-            m_scene = scene;
-            m_scene.EventManager.OnPluginConsole += EventManager_OnPluginConsole;
-
-            m_scene.EventManager.OnMakeRootAgent += EventManager_OnMakeRootAgent;
-            m_scene.EventManager.OnSaveNewWindlightProfile += EventManager_OnSaveNewWindlightProfile;
-            m_scene.EventManager.OnSendNewWindlightProfileTargeted += EventManager_OnSendNewWindlightProfileTargeted;
+            if (m_enableWindlight)
+            {
+                m_scene.EventManager.OnMakeRootAgent += EventManager_OnMakeRootAgent;
+                m_scene.EventManager.OnSaveNewWindlightProfile += EventManager_OnSaveNewWindlightProfile;
+                m_scene.EventManager.OnSendNewWindlightProfileTargeted += EventManager_OnSendNewWindlightProfileTargeted;
+                m_scene.LoadWindlightProfile();
+            }
 
             InstallCommands();
 
-            //m_log.Debug("[WINDLIGHT]: Initialised windlight module");
-        }
-
-        public void RemoveRegion(Scene scene)
-        {
-
-        }
-
-        public void RegionLoaded(Scene scene)
-        {
-
-        }
-
-        public Type ReplaceableInterface
-        {
-            get { return null; }
+            m_log.Debug("[WINDLIGHT]: Initialised windlight module");
         }
 
         private List<byte[]> compileWindlightSettings(RegionLightShareData wl)
@@ -176,7 +159,7 @@ namespace OpenSim.Region.CoreModules.World.LightShare
             else
             {
                 //We probably don't want to spam chat with this.. probably
-                m_log.Debug("[WINDLIGHT]: Module disabled");
+                //m_log.Debug("[WINDLIGHT]: Module disabled");
             }
         }
         public void SendProfileToClient(ScenePresence presence, RegionLightShareData wl)
@@ -193,12 +176,12 @@ namespace OpenSim.Region.CoreModules.World.LightShare
             else
             {
                 //We probably don't want to spam chat with this.. probably
-                m_log.Debug("[WINDLIGHT]: Module disabled");
+                //m_log.Debug("[WINDLIGHT]: Module disabled");
             }
         }
         private void EventManager_OnMakeRootAgent(ScenePresence presence)
         {
-            //m_log.Debug("[WINDLIGHT]: Sending windlight scene to new client");
+            m_log.Debug("[WINDLIGHT]: Sending windlight scene to new client");
             SendProfileToClient(presence);
         }
         private void EventManager_OnSendNewWindlightProfileTargeted(RegionLightShareData wl, UUID pUUID)
