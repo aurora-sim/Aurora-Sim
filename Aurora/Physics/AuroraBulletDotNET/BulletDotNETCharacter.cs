@@ -279,6 +279,11 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             set { return; }
         }
 
+        public override bool VolumeDetect
+        {
+            get { return false; }
+        }
+
         public override uint LocalID
         {
             set { m_localID = value; }
@@ -333,6 +338,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
                 float AVvolume = (float)(Math.PI * Math.Pow(CAPSULE_RADIUS, 2) * CAPSULE_LENGTH);
                 return m_density * AVvolume;
             }
+            set { }
         }
 
         public override Vector3 Force
@@ -601,9 +607,9 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             set { m_buoyancy = value; }
         }
 
-        public override Vector3 PIDTarget { set { return; } }
-        public override bool PIDActive { set { return; } }
-        public override float PIDTau { set { return; } }
+        public override Vector3 PIDTarget { get { return Vector3.Zero; } set { return; } }
+        public override bool PIDActive { get { return false; } set { return; } }
+        public override float PIDTau { get { return 0; } set { return; } }
 
         public override bool PIDHoverActive
         {
@@ -691,7 +697,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
 
         public void doImpulse(Vector3 force, bool now)
         {
-
+            force /= Mass;
             tempVector3.setValue(force.X, force.Y, force.Z);
             if (now)
             {

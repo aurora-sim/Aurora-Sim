@@ -177,6 +177,19 @@ namespace OpenSim.Framework
             }
         }
 
+        private int m_MinimumAge = 0;
+        public int MinimumAge
+        {
+            get
+            {
+                return m_MinimumAge;
+            }
+            set
+            {
+                m_MinimumAge = value;
+            }
+        }
+
         private UUID m_TerrainTexture2 = UUID.Zero;
 
         public UUID TerrainTexture2
@@ -332,11 +345,23 @@ namespace OpenSim.Framework
         }
 
         private UUID m_TerrainImageID;
-
+        /// <summary>
+        /// Terrain (and probably) prims asset ID for the map
+        /// </summary>
         public UUID TerrainImageID
         {
             get { return m_TerrainImageID; }
             set { m_TerrainImageID = value; }
+        }
+
+        private UUID m_TerrainMapImageID;
+        /// <summary>
+        /// Terrain only asset ID for the map
+        /// </summary>
+        public UUID TerrainMapImageID
+        {
+            get { return m_TerrainMapImageID; }
+            set { m_TerrainMapImageID = value; }
         }
 
         private bool m_FixedSun = false;
@@ -390,7 +415,7 @@ namespace OpenSim.Framework
             }
         }
 
-        private String m_LoadedCreationID;
+        private String m_LoadedCreationID = String.Empty;
         public String LoadedCreationID
         {
             get { return m_LoadedCreationID; }

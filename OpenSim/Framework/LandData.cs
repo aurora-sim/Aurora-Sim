@@ -31,13 +31,16 @@ using System.Xml;
 using System.Xml.Serialization;
 
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
+
+using Aurora.Framework;
 
 namespace OpenSim.Framework
 {
     /// <summary>
     /// Details of a Parcel of land
     /// </summary>
-    public class LandData
+    public class LandData : IDataTransferable
     {
         // use only one serializer to give the runtime a chance to
         // optimize it (it won't do that if you use a new instance
@@ -64,7 +67,7 @@ namespace OpenSim.Framework
                                 (uint) ParcelFlags.AllowAPrimitiveEntry |
                                 (uint) ParcelFlags.AllowDeedToGroup | (uint) ParcelFlags.AllowTerraform |
                                 (uint) ParcelFlags.CreateObjects | (uint) ParcelFlags.AllowOtherScripts |
-                                (uint) ParcelFlags.SoundLocal;
+                                (uint) ParcelFlags.SoundLocal | (uint)ParcelFlags.AllowVoiceChat;
 
         private byte _landingType = 0;
         private string _name = "Your Parcel";
@@ -81,86 +84,17 @@ namespace OpenSim.Framework
         private List<ParcelManager.ParcelAccessEntry> _parcelAccessList = new List<ParcelManager.ParcelAccessEntry>();
         private float _passHours = 0;
         private int _passPrice = 0;
-        private int _salePrice = 0; //Unemeplemented. Parcels price.
+        private int _salePrice = 0;
         private int _selectedPrims = 0;
         private int _simwideArea = 0;
         private int _simwidePrims = 0;
         private UUID _snapshotID = UUID.Zero;
         private Vector3 _userLocation = new Vector3();
         private Vector3 _userLookAt = new Vector3();
+        private int _dwell = 0;
         private int _otherCleanTime = 0;
-        private string _mediaType = "none/none";
-        private string _mediaDescription = "";
-        private int _mediaHeight = 0;
-        private int _mediaWidth = 0;
-        private bool _mediaLoop = false;
-        private bool _obscureMusic = false;
-        private bool _obscureMedia = false;
-
-        /// <summary>
-        /// Whether to obscure parcel media URL
-        /// </summary>
-        [XmlIgnore]
-        public bool ObscureMedia {
-            get {
-                return _obscureMedia;
-            }
-            set {
-                _obscureMedia = value;
-            }
-        }
-
-        /// <summary>
-        /// Whether to obscure parcel music URL
-        /// </summary>
-        [XmlIgnore]
-        public bool ObscureMusic {
-            get {
-                return _obscureMusic;
-            }
-            set {
-                _obscureMusic = value;
-            }
-        }
-
-        /// <summary>
-        /// Whether to loop parcel media
-        /// </summary>
-        [XmlIgnore]
-        public bool MediaLoop {
-            get {
-                return _mediaLoop;
-            }
-            set {
-                _mediaLoop = value;
-            }
-        }
-
-        /// <summary>
-        /// Height of parcel media render
-        /// </summary>
-        [XmlIgnore]
-        public int MediaHeight {
-            get {
-                return _mediaHeight;
-            }
-            set {
-                _mediaHeight = value;
-            }
-        }
-
-        /// <summary>
-        /// Width of parcel media render
-        /// </summary>
-        [XmlIgnore]
-        public int MediaWidth {
-            get {
-                return _mediaWidth;
-            }
-            set {
-                _mediaWidth = value;
-            }
-        }
+        private ulong _regionHandle;
+        private UUID _regionID;
 
         /// <summary>
         /// Upper corner of the AABB for the parcel
@@ -268,6 +202,22 @@ namespace OpenSim.Framework
             }
             set {
                 _globalID = value;
+            }
+        }
+
+        protected UUID _infoUUID;
+        /// <summary>
+        /// Grid Wide ID for the parcel.
+        /// </summary>
+        public UUID InfoUUID
+        {
+            get
+            {
+                return _infoUUID;
+            }
+            set
+            {
+                _infoUUID = value;
             }
         }
 
@@ -393,6 +343,91 @@ namespace OpenSim.Framework
             }
         }
 
+        public ulong RegionHandle
+        {
+            get
+            {
+                return _regionHandle;
+            }
+            set
+            {
+                _regionHandle = value;
+            }
+        }
+
+        public string m_GenericData = "";
+
+        public string GenericData
+        {
+            get
+            {
+                return m_GenericData;
+            }
+            set
+            {
+                m_GenericData = value;
+            }
+        }
+
+        [XmlIgnore]
+        public OSDMap GenericDataMap
+        {
+            get
+            {
+                OSD osd = OSDParser.DeserializeLLSDXml(m_GenericData);
+                OSDMap map = new OSDMap();
+                if (osd.Type == OSDType.Map)
+                {
+                    map = (OSDMap)osd;
+                }
+                return map;
+            }
+        }
+
+        public void AddGenericData(string Key, object Value)
+        {
+            OSD osd = OSDParser.DeserializeLLSDXml(m_GenericData);
+            OSDMap map = new OSDMap();
+            if (osd.Type == OSDType.Map)
+            {
+                map = (OSDMap)osd;
+            }
+            if (Value is OSD)
+            {
+                map[Key] = Value as OSD;
+            }
+            else
+                map[Key] = OSD.FromObject(Value);
+            m_GenericData = OSDParser.SerializeLLSDXmlString(map);
+        }
+
+
+        public void RemoveGenericData(string Key)
+        {
+            OSD osd = OSDParser.DeserializeLLSDXml(m_GenericData);
+            OSDMap map = new OSDMap();
+            if (osd.Type == OSDType.Map)
+            {
+                map = (OSDMap)osd;
+                map.Remove(Key);
+                m_GenericData = OSDParser.SerializeLLSDXmlString(map);
+            }
+        }
+
+
+
+        public UUID RegionID
+        {
+            get
+            {
+                return _regionID;
+            }
+            set
+            {
+                _regionID = value;
+            }
+        }
+
         /// <summary>
         /// Determines if we scale the media based on the surface it's on
         /// </summary>
@@ -405,6 +440,69 @@ namespace OpenSim.Framework
             }
         }
 
+        private byte _mediaLoop = 0;
+        /// <summary>
+        /// Type of media
+        /// </summary>
+        public byte MediaLoop
+        {
+            get
+            {
+                return _mediaLoop;
+            }
+            set
+            {
+                _mediaLoop = value;
+            }
+        }
+
+        private byte _ObscureMusic = 0;
+        /// <summary>
+        /// Type of media
+        /// </summary>
+        public byte ObscureMusic
+        {
+            get
+            {
+                return _ObscureMusic;
+            }
+            set
+            {
+                _ObscureMusic = value;
+            }
+        }
+
+        private byte _ObscureMedia = 0;
+        /// <summary>
+        /// Type of media
+        /// </summary>
+        public byte ObscureMedia
+        {
+            get
+            {
+                return _ObscureMedia;
+            }
+            set
+            {
+                _ObscureMedia = value;
+            }
+        }
+
+        private string _mediaDescription = "";
+        /// <summary>
+        /// Parcel Media Description
+        /// </summary>
+        public string MediaDescription
+        {
+            get
+            {
+                return _mediaDescription;
+            }
+            set
+            {
+                _mediaDescription = value;
+            }
+        }
         /// <summary>
         /// Texture Guid to replace with the output of the media stream
         /// </summary>
@@ -429,6 +527,46 @@ namespace OpenSim.Framework
             }
         }
 
+        private int[] _mediaSize = new int[] {0,0};
+        public int[] MediaSize
+        {
+            get
+            {
+                return _mediaSize;
+            }
+            set
+            {
+                _mediaSize = value;
+            }
+        }
+
+        private float _MediaLoopSet = 0;
+        public float MediaLoopSet
+        {
+            get
+            {
+                return _MediaLoopSet;
+            }
+            set
+            {
+                _MediaLoopSet = value;
+            }
+        }
+
+        private int _Maturity = 2;
+        public int Maturity
+        {
+            get
+            {
+                return _Maturity;
+            }
+            set
+            {
+                _Maturity = value;
+            }
+        }
+
+        private string _mediaType = "none/none";
         public string MediaType
         {
             get
@@ -619,6 +757,18 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
+        /// Deprecated idea.  Number of visitors ~= free money
+        /// </summary>
+        public int Dwell {
+            get {
+                return _dwell;
+            }
+            set {
+                _dwell = value;
+            }
+        }
+
+        /// <summary>
         /// Number of minutes to return SceneObjectGroup that are owned by someone who doesn't own 
         /// the parcel and isn't set to the same 'group' as the parcel.
         /// </summary>
@@ -631,17 +781,6 @@ namespace OpenSim.Framework
             }
         }
 
-        /// <summary>
-        /// parcel media description
-        /// </summary>
-        public string MediaDescription {
-            get {
-                return _mediaDescription;
-            }
-            set {
-                _mediaDescription = value;
-            }
-        }
 
         public LandData()
         {
@@ -690,13 +829,16 @@ namespace OpenSim.Framework
             landData._userLocation = _userLocation;
             landData._userLookAt = _userLookAt;
             landData._otherCleanTime = _otherCleanTime;
-            landData._mediaType = _mediaType;
+            landData._dwell = _dwell;
             landData._mediaDescription = _mediaDescription;
-            landData._mediaWidth = _mediaWidth;
-            landData._mediaHeight = _mediaHeight;
             landData._mediaLoop = _mediaLoop;
-            landData._obscureMusic = _obscureMusic;
-            landData._obscureMedia = _obscureMedia;
+            landData._mediaSize = _mediaSize;
+            landData._mediaType = _mediaType;
+            landData._ObscureMedia = _ObscureMedia;
+            landData._ObscureMusic = _ObscureMusic;
+            landData._regionID = _regionID;
+            landData._regionHandle = _regionHandle;
+            landData._infoUUID = _infoUUID;
 
             landData._parcelAccessList.Clear();
             foreach (ParcelManager.ParcelAccessEntry entry in _parcelAccessList)
@@ -727,6 +869,112 @@ namespace OpenSim.Framework
             LandData land = (LandData)serializer.Deserialize(xmlReader);
 
             return land;
+        }
+
+        public override Dictionary<string, object> ToKeyValuePairs()
+        {
+            return Util.OSDToDictionary(ToOSD());
+        }
+
+        public override OSDMap ToOSD()
+        {
+            OSDMap map = new OSDMap();
+            map["GroupID"] = OSD.FromUUID(GroupID);
+            map["OwnerID"] = OSD.FromUUID(OwnerID);
+            map["Maturity"] = OSD.FromInteger(Maturity);
+            map["Area"] = OSD.FromInteger(Area);
+            map["AuctionID"] = OSD.FromUInteger(AuctionID);
+            map["SalePrice"] = OSD.FromInteger(SalePrice);
+            map["InfoUUID"] = OSD.FromUUID(InfoUUID);
+            map["Dwell"] = OSD.FromInteger(Dwell);
+            map["Flags"] = OSD.FromUInteger(Flags);
+            map["Name"] = OSD.FromString(Name);
+            map["Description"] = OSD.FromString(Description);
+            map["UserLocation"] = OSD.FromVector3(UserLocation);
+            map["LocalID"] = OSD.FromInteger(LocalID);
+            map["GlobalID"] = OSD.FromUUID(GlobalID);
+            map["RegionID"] = OSD.FromUUID(RegionID);
+            map["MediaDescription"] = OSD.FromString(MediaDescription);
+            map["MediaSizeX"] = OSD.FromInteger(MediaSize[0]);
+            map["MediaSizeY"] = OSD.FromInteger(MediaSize[1]);
+            map["MediaLoop"] = OSD.FromInteger(MediaLoop);
+            map["MediaType"] = OSD.FromString(MediaType);
+            map["ObscureMedia"] = OSD.FromInteger(ObscureMedia);
+            map["ObscureMusic"] = OSD.FromInteger(ObscureMusic);
+            map["SnapshotID"] = OSD.FromUUID(SnapshotID);
+            map["MediaAutoScale"] = OSD.FromInteger(MediaAutoScale);
+            map["MediaURL"] = OSD.FromString(MediaURL);
+            map["MusicURL"] = OSD.FromString(MusicURL);
+            map["Bitmap"] = OSD.FromBinary(Bitmap);
+            map["Category"] = OSD.FromInteger((int)Category);
+            map["ClaimDate"] = OSD.FromInteger(ClaimDate);
+            map["ClaimPrice"] = OSD.FromInteger(ClaimPrice);
+            map["Status"] = OSD.FromInteger((int)Status);
+            map["LandingType"] = OSD.FromInteger(LandingType);
+            map["PassHours"] = OSD.FromReal(PassHours);
+            map["PassPrice"] = OSD.FromInteger(PassPrice);
+            map["UserLookAt"] = OSD.FromVector3(UserLookAt);
+            map["AuthBuyerID"] = OSD.FromUUID(AuthBuyerID);
+            map["OtherCleanTime"] = OSD.FromInteger(OtherCleanTime);
+            map["RegionHandle"] = OSD.FromULong(RegionHandle);
+            map["GenericData"] = OSD.FromString(GenericData);
+            return map;
+        }
+
+        public override void FromOSD(OSDMap map)
+        {
+            RegionID = map["RegionID"].AsUUID();
+            GlobalID = map["GlobalID"].AsUUID();
+            LocalID = map["LocalID"].AsInteger();
+            UserLocation = map["UserLocation"].AsVector3();
+            Name = map["Name"].AsString();
+            Description = map["Description"].AsString();
+            Flags = map["Flags"].AsUInteger();
+            Dwell = map["Dwell"].AsInteger();
+            InfoUUID = map["InfoUUID"].AsUUID();
+            AuctionID = map["AuctionID"].AsUInteger();
+            Area = map["Area"].AsInteger();
+            Maturity = map["Maturity"].AsInteger();
+            OwnerID = map["OwnerID"].AsUUID();
+            GroupID = map["GroupID"].AsUUID();
+            SnapshotID = map["SnapshotID"].AsUUID();
+            MediaDescription = map["MediaDescription"].AsString();
+            MediaSize[0] = map["MediaSizeX"].AsInteger();
+            MediaSize[1] = map["MediaSizeY"].AsInteger();
+            MediaLoop = (byte)map["MediaLoop"].AsInteger();
+            MediaType = map["MediaType"].AsString();
+            ObscureMedia = (byte)map["ObscureMedia"].AsInteger();
+            ObscureMusic = (byte)map["SnapshotID"].AsInteger();
+            MediaAutoScale = (byte)map["MediaAutoScale"].AsInteger();
+            MediaURL = map["MediaURL"].AsString();
+            Bitmap = map["Bitmap"].AsBinary();
+            Category = (ParcelCategory)map["Category"].AsInteger();
+            ClaimDate = map["ClaimDate"].AsInteger();
+            ClaimPrice = map["ClaimPrice"].AsInteger();
+            Status = (ParcelStatus)map["Status"].AsInteger();
+            LandingType = (byte)map["LandingType"].AsInteger();
+            PassHours = (float)map["PassHours"].AsReal();
+            PassPrice = map["PassPrice"].AsInteger();
+            UserLookAt = map["UserLookAt"].AsVector3();
+            AuthBuyerID = map["AuthBuyerID"].AsUUID();
+            OtherCleanTime = map["OtherCleanTime"].AsInteger();
+            RegionHandle = map["RegionHandle"].AsULong();
+            GenericData = map["GenericData"].AsString();
+
+            if (GroupID != UUID.Zero)
+                IsGroupOwned = true;
+        }
+
+        public override void FromKVP(Dictionary<string, object> KVP)
+        {
+            FromOSD(Util.DictionaryToOSD(KVP));
+        }
+
+        public override IDataTransferable Duplicate()
+        {
+            LandData m = new LandData();
+            m.FromOSD(ToOSD());
+            return m;
         }
     }
 }

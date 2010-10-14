@@ -189,6 +189,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
 
         private btGeneric6DofConstraint m_aMotor;
         private Vector3 m_axislock;
+        private bool m_frozen;
 
         public btRigidBody Body;
 
@@ -372,6 +373,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
         public override float Mass
         {
             get { return CalculateMass(); }
+            set { }
         }
 
         public override Vector3 Force
@@ -572,9 +574,9 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             set { m_buoyancy = value; }
         }
 
-        public override Vector3 PIDTarget { set { m_PIDTarget = value; ; } }
-        public override bool PIDActive { set { m_usePID = value; } }
-        public override float PIDTau { set { m_PIDTau = value; } }
+        public override Vector3 PIDTarget { get { return m_PIDTarget; } set { m_PIDTarget = value; } }
+        public override bool PIDActive { get { return m_usePID; } set { m_usePID = value; } }
+        public override float PIDTau { get { return m_PIDTau; } set { m_PIDTau = value; } }
 
         public override float PIDHoverHeight { set { m_PIDHoverHeight = value; ; } }
         public override bool PIDHoverActive { set { m_useHoverPID = value; } }
@@ -585,6 +587,11 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
         public override bool APIDActive { set { return; } }
         public override float APIDStrength { set { return; } }
         public override float APIDDamping { set { return; } }
+
+        public override bool VolumeDetect
+        {
+            get { return false; }
+        }
         
         public override void AddForce(Vector3 force, bool pushforce)
         {
@@ -1028,7 +1035,6 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
 
         private void changePhysicsStatus(float timestep)
         {
-            m_taintPhysics = m_isphysical;
             if (Body != null)
             {
                 if (Body.Handle != IntPtr.Zero)
@@ -1052,6 +1058,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             changeSelectedStatus(timestep);
 
             resetCollisionAccounting();
+            m_taintPhysics = m_isphysical;
         }
 
 
@@ -1113,14 +1120,11 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
                 {
                     mesh.TransformLinear(matrix, xyz);
                 }
-                catch (NotSupportedException ex)
+                catch (NotSupportedException)
                 {
                     mesh.releasePinned();
                     mesh.TransformLinear(matrix, xyz);
                 }
-
-
-
             }
         }
 
@@ -2552,7 +2556,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
 
         public void UpdatePositionAndVelocity()
         {
-            if (!m_isSelected)
+            if (!m_isSelected && !m_frozen)
             {
                 if (_parent == null)
                 {
@@ -2603,6 +2607,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
                         {
                             _position = l_position;
                             //_parent_scene.remActivePrim(this);
+                            m_crossingfailures++;
                             if (_parent == null)
                                 base.RequestPhysicsterseUpdate();
                             return;
@@ -2614,7 +2619,9 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
                             return;
                         }
                     }
-                    if (l_position.X > Constants.RegionSize)
+                    if (l_position.X > Constants.RegionSize ||
+                        l_position.Y > Constants.RegionSize ||
+                        l_position.Z < 0f)
                     {
                         IsPhysical = false;
                         if (_parent == null)
@@ -2638,63 +2645,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
                         // throttleCounter = 0;
                         _zeroFlag = true;
                         //outofBounds = true;
-                    }
-                    if (l_position.Y > Constants.RegionSize)
-                    {
-                        IsPhysical = false;
-                        if (_parent == null)
-                            base.RaiseOutOfBounds(_position);
-
-                        _acceleration.X = 0;
-                        _acceleration.Y = 0;
-                        _acceleration.Z = 0;
-
-                        _velocity.X = 0;
-                        _velocity.Y = 0;
-                        _velocity.Z = 0;
-                        m_rotationalVelocity.X = 0;
-                        m_rotationalVelocity.Y = 0;
-                        m_rotationalVelocity.Z = 0;
-
-                        if (_parent == null)
-                            base.RequestPhysicsterseUpdate();
-
-                        m_throttleUpdates = false;
-                        // throttleCounter = 0;
-                        _zeroFlag = true;
-                        //outofBounds = true;
-                    }
-
-                    if (l_position.Z < 0f)
-                    {
-                        // This is so prim that get lost underground don't fall forever and suck up
-                        //
-                        // Sim resources and memory.
-                        // Disables the prim's movement physics....
-                        // It's a hack and will generate a console message if it fails.
-
-                        IsPhysical = false;
-                        if (_parent == null)
-                            base.RaiseOutOfBounds(_position);
-
-                        _acceleration.X = 0;
-                        _acceleration.Y = 0;
-                        _acceleration.Z = 0;
-
-                        _velocity.X = 0;
-                        _velocity.Y = 0;
-                        _velocity.Z = 0;
-                        m_rotationalVelocity.X = 0;
-                        m_rotationalVelocity.Y = 0;
-                        m_rotationalVelocity.Z = 0;
-
-                        if (_parent == null)
-                            base.RequestPhysicsterseUpdate();
-
-                        m_throttleUpdates = false;
-                        // throttleCounter = 0;
-                        _zeroFlag = true;
-                        //outofBounds = true;
+                        m_frozen = true;
                     }
 
                     if ((Math.Abs(m_lastposition.X - l_position.X) < 0.02)
@@ -2784,6 +2735,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
                         {
                             if (_parent == null)
                                 base.RequestPhysicsterseUpdate();
+                            throttleCounter = 0;
                         }
                         else
                         {

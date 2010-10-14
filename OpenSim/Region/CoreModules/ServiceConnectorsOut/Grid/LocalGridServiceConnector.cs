@@ -61,7 +61,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Grid
 
         public LocalGridServicesConnector(IConfigSource source)
         {
-            m_log.Debug("[LOCAL GRID CONNECTOR]: LocalGridServicesConnector instantiated");
+            //m_log.Debug("[LOCAL GRID CONNECTOR]: LocalGridServicesConnector instantiated");
             m_MainInstance = this;
             InitialiseService(source);
         }
@@ -154,7 +154,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Grid
 
         public void RemoveRegion(Scene scene)
         {
-            if (m_MainInstance == this)
+            if (m_LocalCache.ContainsKey(scene.RegionInfo.RegionID))
             {
                 m_LocalCache[scene.RegionInfo.RegionID].Clear();
                 m_LocalCache.Remove(scene.RegionInfo.RegionID);
@@ -169,14 +169,14 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Grid
 
         #region IGridService
 
-        public string RegisterRegion(UUID scopeID, GridRegion regionInfo)
+        public string RegisterRegion(UUID scopeID, GridRegion regionInfo, UUID SecureSessionID, out UUID SessionID)
         {
-            return m_GridService.RegisterRegion(scopeID, regionInfo);
+            return m_GridService.RegisterRegion(scopeID, regionInfo, SecureSessionID, out SessionID);
         }
 
-        public bool DeregisterRegion(UUID regionID)
+        public bool DeregisterRegion(UUID regionID, UUID SessionID)
         {
-            return m_GridService.DeregisterRegion(regionID);
+            return m_GridService.DeregisterRegion(regionID, SessionID);
         }
 
         public List<GridRegion> GetNeighbours(UUID scopeID, UUID regionID)
@@ -233,11 +233,16 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Grid
             return m_GridService.GetFallbackRegions(scopeID, x, y);
         }
 
-        public List<GridRegion> GetHyperlinks(UUID scopeID)
+        public void SetRegionUnsafe(UUID r)
         {
-            return m_GridService.GetHyperlinks(scopeID);
+            m_GridService.SetRegionUnsafe(r);
         }
-        
+
+        public List<GridRegion> GetSafeRegions(UUID scopeID, int x, int y)
+        {
+            return m_GridService.GetSafeRegions(scopeID, x, y);
+        }
+
         public int GetRegionFlags(UUID scopeID, UUID regionID)
         {
             return m_GridService.GetRegionFlags(scopeID, regionID);
@@ -256,5 +261,24 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Grid
             }
         }
 
+        public string UpdateMap(UUID scopeID, UUID RegionID, UUID mapID, UUID terrainID, UUID sessionID)
+        {
+            return m_GridService.UpdateMap(scopeID, RegionID, mapID, terrainID, sessionID);
+        }
+
+        public multipleMapItemReply GetMapItems(ulong regionHandle, GridItemType gridItemType)
+        {
+            return m_GridService.GetMapItems(regionHandle, gridItemType);
+        }
+
+        public void RemoveAgent(UUID regionID, UUID agentID)
+        {
+            m_GridService.RemoveAgent(regionID, agentID);
+        }
+
+        public void AddAgent(UUID regionID, UUID agentID, Vector3 Position)
+        {
+            m_GridService.AddAgent(regionID, agentID, Position);
+        }
     }
 }

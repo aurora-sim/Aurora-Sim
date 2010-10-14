@@ -44,7 +44,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
     public partial class ScriptBaseClass : MarshalByRefObject, IScript, IDisposable
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private Dictionary<string, MethodInfo> inits = new Dictionary<string, MethodInfo>();
         private ScriptSponsor m_sponser;
 
         public ISponsor Sponsor
@@ -71,7 +70,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
                 }
                 return lease;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return null;
             }
@@ -97,37 +96,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         {
             m_Executor = new Executor(this);
 
-            MethodInfo[] myArrayMethodInfo = GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance);
-
-            foreach (MethodInfo mi in myArrayMethodInfo)
-            {
-                if (mi.Name.Length > 7 && mi.Name.Substring(0, 7) == "ApiType")
-                {
-                    string type = mi.Name.Substring(7);
-                    inits[type] = mi;
-                }
-            }
-
             m_sponser = new ScriptSponsor();
         }
 
         public Executor m_Executor = null;
 
-        public int GetStateEventFlags(string state)
+        public long GetStateEventFlags(string state)
         {
-            return (int)m_Executor.GetStateEventFlags(state);
+            return (long)m_Executor.GetStateEventFlags(state);
         }
 
-        public Guid ExecuteEvent(string state, string FunctionName, object[] args, Guid Start, out Exception ex)
+        public EnumeratorInfo ExecuteEvent(string state, string FunctionName, object[] args, EnumeratorInfo Start, out Exception ex)
         {
             return m_Executor.ExecuteEvent(state, FunctionName, args, Start, out ex);
-        }
-
-        public string[] GetApis()
-        {
-            string[] apis = new string[inits.Count];
-            inits.Keys.CopyTo(apis, 0);
-            return apis;
         }
 
         private Dictionary<string, object> m_InitialValues =
@@ -137,14 +118,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
 
         public void InitApi(string api, IScriptApi data)
         {
-            if (!inits.ContainsKey(api))
+            MethodInfo mi = GetType().GetMethod("ApiType" + api);
+            if (mi == null)
                 return;
 
             ILease lease = (ILease)RemotingServices.GetLifetimeService(data as MarshalByRefObject);
             if (lease != null)
                 lease.Register(m_sponser);
-
-            MethodInfo mi = inits[api];
 
             Object[] args = new Object[1];
             args[0] = data;

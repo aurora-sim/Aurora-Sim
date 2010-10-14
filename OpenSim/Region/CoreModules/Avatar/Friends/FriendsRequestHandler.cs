@@ -193,7 +193,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
             if (!UUID.TryParse(request["ToID"].ToString(), out toID))
                 return FailureResult();
 
-            if (m_FriendsModule.LocalFriendshipTerminated(toID))
+            if (m_FriendsModule.LocalFriendshipTerminated(toID, fromID))
                 return SuccessResult();
 
             return FailureResult();

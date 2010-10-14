@@ -34,14 +34,24 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
     [Serializable]
     public class AssemblyResolver
     {
-        public static Assembly OnAssemblyResolve(object sender,
+        private string PathToSearch = "";
+
+        public AssemblyResolver(string pathToSearch)
+        {
+            PathToSearch = pathToSearch;
+        }
+
+        public Assembly OnAssemblyResolve(object sender,
                 ResolveEventArgs args)
         {
             if (!(sender is System.AppDomain))
                 return null;
 
-            string[] pathList = new string[] {"bin", "ScriptEngines",
-                                              Path.Combine("ScriptEngines", "Script")};
+            string[] pathList = new string[] {Path.Combine(Directory.GetCurrentDirectory(), "bin"),
+                Path.Combine(Directory.GetCurrentDirectory(),PathToSearch),
+                Path.Combine(Directory.GetCurrentDirectory(),Path.Combine(PathToSearch, "Script")),
+                Directory.GetCurrentDirectory(),
+                };
 
             string assemblyName = args.Name;
             if (assemblyName.IndexOf(",") != -1)
@@ -49,8 +59,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             foreach (string s in pathList)
             {
-                string path = Path.Combine(Directory.GetCurrentDirectory(),
-                        Path.Combine(s, assemblyName))+".dll";
+                string path = Path.Combine(s, assemblyName)+".dll";
 
                 if (File.Exists(path))
                     return Assembly.LoadFrom(path);

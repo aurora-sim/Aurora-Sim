@@ -16,7 +16,7 @@ namespace Aurora.Framework
         public string AbuseLocation;
         public string AbuseDetails;
         public string ObjectPosition;
-        public int EstateID;
+        public string RegionName;
         public UUID ScreenshotID;
         public string AbuseSummary;
         public int Number;
@@ -38,7 +38,7 @@ namespace Aurora.Framework
             AbuseLocation = KVP["AbuseLocation"].ToString();
             AbuseDetails = KVP["AbuseDetails"].ToString();
             ObjectPosition = KVP["AbusePosition"].ToString();
-            EstateID = int.Parse(KVP["EstateID"].ToString());
+            RegionName = KVP["RegionName"].ToString();
             AbuseSummary = KVP["AbuseSummary"].ToString();
             Number = int.Parse(KVP["Number"].ToString());
             AssignedTo = KVP["AssignedTo"].ToString();
@@ -57,7 +57,7 @@ namespace Aurora.Framework
             RetVal["AbuseLocation"] = AbuseLocation;
             RetVal["AbuseDetails"] = AbuseDetails;
             RetVal["AbusePosition"] = ObjectPosition;
-            RetVal["EstateID"] = EstateID;
+            RetVal["RegionName"] = RegionName;
             RetVal["AbuseSummary"] = AbuseSummary;
             RetVal["Number"] = Number;
             RetVal["AssignedTo"] = AssignedTo;

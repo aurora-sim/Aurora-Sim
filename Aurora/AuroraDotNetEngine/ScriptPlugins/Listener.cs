@@ -38,20 +38,20 @@ using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 {
-    public class Listener
+    public class ListenerPlugin : INonSharedScriptPlugin
     {
         // private static readonly ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         public ScriptEngine m_ScriptEngine;
         private IWorldComm comms;
 
-        public Listener(ScriptEngine ScriptEngine, IWorldComm WC)
+        public void Initialize(ScriptEngine ScriptEngine, Scene scene)
         {
             m_ScriptEngine = ScriptEngine;
-            comms = WC;
+            comms = scene.RequestModuleInterface<IWorldComm>();
         }
 
-        public void CheckListeners()
+        public void Check()
         {
             if (comms.HasMessages())
             {
@@ -69,22 +69,43 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                     };
 
                     m_ScriptEngine.PostScriptEvent(
-                                lInfo.GetItemID(), lInfo.GetID(), new EventParams(
+                                lInfo.GetItemID(), lInfo.GetHostID(), new EventParams(
                                 "listen", resobj,
                                 new DetectParams[0]), EventPriority.Suspended);
                 }
             }
         }
 
-        public Object[] GetSerializationData(UUID itemID)
+        public Object[] GetSerializationData(UUID itemID, UUID primID)
         {
-            return comms.GetSerializationData(itemID);
+            object[] listeners = comms.GetSerializationData(itemID);
+            
+            List<Object> data = new List<object>();
+            data.Add(Name);
+            data.Add(listeners.Length);
+            data.AddRange(listeners);
+            
+            return data.ToArray();
         }
 
         public void CreateFromData(UUID itemID, UUID hostID,
                 Object[] data)
         {
             comms.CreateFromData(itemID, hostID, data);
+        }
+
+        public string Name
+        {
+            get { return "Listener"; }
+        }
+
+        public void Dispose()
+        {
+        }
+
+        public void RemoveScript(UUID primID, UUID itemID)
+        {
+            comms.DeleteListener(itemID);
         }
     }
 }

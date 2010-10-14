@@ -69,5 +69,6 @@ namespace OpenSim.Services.Interfaces
 
         PresenceInfo GetAgent(UUID sessionID);
         PresenceInfo[] GetAgents(string[] userIDs);
+        string[] GetAgentsLocations(string[] userIDs);
     }
 }

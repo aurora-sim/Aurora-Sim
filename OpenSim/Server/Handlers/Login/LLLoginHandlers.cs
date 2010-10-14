@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Net;
@@ -52,24 +53,18 @@ namespace OpenSim.Server.Handlers.Login
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private ILoginService m_LocalService;
-        private bool m_Proxy;
 
-        public LLLoginHandlers(ILoginService service, bool hasProxy)
+        private IConfigSource m_Config;
+
+        public LLLoginHandlers(ILoginService service, IConfigSource config)
         {
+            m_Config = config;
             m_LocalService = service;
-            m_Proxy = hasProxy;
         }
 
         public XmlRpcResponse HandleXMLRPCLogin(XmlRpcRequest request, IPEndPoint remoteClient)
         {
             Hashtable requestData = (Hashtable)request.Params[0];
-            if (m_Proxy && request.Params[3] != null)
-            {
-                IPEndPoint ep = Util.GetClientIPFromXFF((string)request.Params[3]);
-                if (ep != null)
-                    // Bang!
-                    remoteClient = ep;
-            }
 
             if (requestData != null)
             {
@@ -88,26 +83,32 @@ namespace OpenSim.Server.Handlers.Login
                         startLocation = requestData["start"].ToString();
 
                     string clientVersion = "Unknown";
-                    if (requestData.Contains("version") && requestData["version"] != null)
+                    if (requestData.Contains("version"))
                         clientVersion = requestData["version"].ToString();
-                    // We should do something interesting with the client version...
 
-                    string channel = "Unknown";
-                    if (requestData.Contains("channel") && requestData["channel"] != null)
-                        channel = requestData["channel"].ToString();
+                    //MAC BANNING START
+                    string mac = (string)requestData["mac"];
+                    Aurora.Framework.IAgentConnector AgentConnector = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IAgentConnector>();
+                    if (AgentConnector == null)
+                    {
+                        Aurora.Services.DataService.LocalDataService IDS = new Aurora.Services.DataService.LocalDataService();
+                        IDS.Initialise(m_Config);
+                        AgentConnector = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IAgentConnector>();
+                    }
+                    if (AgentConnector != null)
+                    {
+                        if (!AgentConnector.CheckMacAndViewer(mac, clientVersion))
+                            return FailedXMLRPCResponse("You have been banned from this grid.");
+                    }
+                    else
+                    {
+                        //We tried... might as well skip it
+                    }
 
-                    string mac = "Unknown";
-                    if (requestData.Contains("mac") && requestData["mac"] != null)
-                        mac = requestData["mac"].ToString();
-
-                    string id0 = "Unknown";
-                    if (requestData.Contains("id0") && requestData["id0"] != null)
-                        id0 = requestData["id0"].ToString();
-                    
-                    //m_log.InfoFormat("[LOGIN]: XMLRPC Login Requested for {0} {1}, starting in {2}, using {3}", first, last, startLocation, clientVersion);
+                    m_log.InfoFormat("[LOGIN]: XMLRPC Login Requested for {0} {1}, starting in {2}, using {3}", first, last, startLocation, clientVersion);
 
                     LoginResponse reply = null;
-                    reply = m_LocalService.Login(first, last, passwd, startLocation, scopeID, clientVersion, channel, mac, id0, remoteClient);
+                    reply = m_LocalService.Login(first, last, passwd, startLocation, scopeID, clientVersion, remoteClient, requestData);
 
                     XmlRpcResponse response = new XmlRpcResponse();
                     response.Value = reply.ToHashtable();
@@ -178,8 +179,7 @@ namespace OpenSim.Server.Handlers.Login
                     m_log.Info("[LOGIN]: LLSD Login Requested for: '" + map["first"].AsString() + "' '" + map["last"].AsString() + "' / " + startLocation);
 
                     LoginResponse reply = null;
-                    reply = m_LocalService.Login(map["first"].AsString(), map["last"].AsString(), map["passwd"].AsString(), startLocation, scopeID,
-                        map["version"].AsString(), map["channel"].AsString(), map["mac"].AsString(), map["id0"].AsString(), remoteClient);
+                    reply = m_LocalService.Login(map["first"].AsString(), map["last"].AsString(), map["passwd"].AsString(), startLocation, scopeID, "", remoteClient, new Hashtable());
                     return reply.ToOSDMap();
 
                 }
@@ -201,6 +201,19 @@ namespace OpenSim.Server.Handlers.Login
             return response;
         }
 
+        private XmlRpcResponse FailedXMLRPCResponse(string message)
+        {
+            Hashtable hash = new Hashtable();
+            hash["reason"] = "key";
+            hash["message"] = message;
+            hash["login"] = "false";
+
+            XmlRpcResponse response = new XmlRpcResponse();
+            response.Value = hash;
+
+            return response;
+        }
+
         private OSD FailedOSDResponse()
         {
             OSDMap map = new OSDMap();
@@ -211,7 +224,6 @@ namespace OpenSim.Server.Handlers.Login
 
             return map;
         }
-
     }
 
 }

@@ -39,38 +39,48 @@ using TPFlags = OpenSim.Framework.Constants.TeleportFlags;
 namespace Aurora.Modules
 {
 	public class LureModule : ISharedRegionModule
-	{
-		private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+    {
+        #region Declares
+        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
 		private List<Scene> m_scenes = new List<Scene>();
 
 		private IMessageTransferModule m_TransferModule = null;
         private bool m_Enabled = true;
 
-		public void Initialise(IConfigSource config)
+        #endregion
+
+        #region ISharedRegionModule
+
+        public void Initialise(IConfigSource source)
 		{
-            if (config.Configs["Messaging"] != null)
-            {
-                if (config.Configs["Messaging"].GetString(
-                        "LureModule", Name) !=
-                        Name)
-                {
-                    m_Enabled = false;
-                    return;
-                }
-            }
+            IConfig ccmModuleConfig = source.Configs["Messaging"];
+            if (ccmModuleConfig != null)
+                m_Enabled = ccmModuleConfig.GetString("LureModule", Name) == Name;
 		}
 
         public void AddRegion(Scene scene)
         {
-            m_scenes.Add(scene);
+            if (!m_Enabled)
+                return;
+
+            if(!m_scenes.Contains(scene))
+                m_scenes.Add(scene);
+
             scene.EventManager.OnNewClient += OnNewClient;
             scene.EventManager.OnIncomingInstantMessage += OnGridInstantMessage;
         }
 
         public void RemoveRegion(Scene scene)
         {
+            if (!m_Enabled)
+                return;
 
+            if (m_scenes.Contains(scene))
+                m_scenes.Remove(scene);
+
+            scene.EventManager.OnNewClient -= OnNewClient;
+            scene.EventManager.OnIncomingInstantMessage -= OnGridInstantMessage;
         }
 
         public void RegionLoaded(Scene scene)
@@ -89,12 +99,6 @@ namespace Aurora.Modules
             get { return null; }
         }
 
-		void OnNewClient(IClientAPI client)
-		{
-			client.OnStartLure += OnStartLure;
-			client.OnTeleportLureRequest += OnTeleportLureRequest;
-		}
-
 		public void PostInitialise()
 		{
 		}
@@ -108,27 +112,35 @@ namespace Aurora.Modules
             get { return "AuroraLureModule"; }
 		}
 
-		public bool IsSharedModule
-		{
-			get { return true; }
-		}
+        #endregion
+
+        #region Client
+
+        private void OnNewClient(IClientAPI client)
+        {
+            client.OnStartLure += OnStartLure;
+            client.OnTeleportLureRequest += OnTeleportLureRequest;
+        }
 
 		public void OnStartLure(byte lureType, string message, UUID targetid, IClientAPI client)
 		{
 			if (!(client.Scene is Scene))
 				return;
 			Scene scene = (Scene)(client.Scene);
-			ScenePresence presence = scene.GetScenePresence(client.AgentId);
+            
+            OpenSim.Services.Interfaces.UserAccount us = m_scenes[0].UserAccountService.GetUserAccount(UUID.Zero, client.AgentId);
             OpenSim.Services.Interfaces.UserAccount target = m_scenes[0].UserAccountService.GetUserAccount(UUID.Zero, targetid);
+            
+            ScenePresence presence = scene.GetScenePresence(client.AgentId);
             UUID dest = Util.BuildFakeParcelID(
 				scene.RegionInfo.RegionHandle,
 				(uint)presence.AbsolutePosition.X,
 				(uint)presence.AbsolutePosition.Y,
 				(uint)presence.AbsolutePosition.Z);
 			GridInstantMessage m;
-			if(presence.GodLevel >= 1)
+            if (us.UserLevel >= 1)
 			{
-                if (target.UserFlags >= 1)
+                if (target.UserLevel >= 1)
 				{
                     //Gods do not tp other gods
 					m = new GridInstantMessage(scene, client.AgentId,
@@ -189,10 +201,14 @@ namespace Aurora.Modules
 			{
 				ex = new Exception();
 			}
-			
-		}
 
-		private void OnGridInstantMessage(GridInstantMessage msg)
+        }
+
+        #endregion
+
+        #region GridInstantMessage
+
+        private void OnGridInstantMessage(GridInstantMessage msg)
 		{
 			// Forward remote teleport requests
 			//
@@ -204,6 +220,8 @@ namespace Aurora.Modules
 				m_TransferModule.SendInstantMessage(msg,
 				                                    delegate(bool success) { });
 			}
-		}
-	}
+        }
+
+        #endregion
+    }
 }

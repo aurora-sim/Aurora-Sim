@@ -55,8 +55,10 @@ namespace OpenSim.Framework
         public readonly static int UNDERSHIRT = 10;
         public readonly static int UNDERPANTS = 11;
         public readonly static int SKIRT = 12;
+        public readonly static int ALPHA = 13;
+        public readonly static int TATTOO = 14;
 
-        private readonly static int MAX_WEARABLES = 13;
+        private readonly static int MAX_WEARABLES = 15;
 
         private static UUID BODY_ASSET = new UUID("66c41e39-38f9-f75a-024e-585989bfab73");
         private static UUID BODY_ITEM = new UUID("66c41e39-38f9-f75a-024e-585989bfaba9");
@@ -222,14 +224,40 @@ namespace OpenSim.Framework
             set { m_wearables[UNDERPANTS].AssetID = value; }
         }
 
-        public virtual UUID SkirtItem {
+        public virtual UUID SkirtItem
+        {
             get { return m_wearables[SKIRT].ItemID; }
             set { m_wearables[SKIRT].ItemID = value; }
         }
 
-        public virtual UUID SkirtAsset {
+        public virtual UUID SkirtAsset
+        {
             get { return m_wearables[SKIRT].AssetID; }
             set { m_wearables[SKIRT].AssetID = value; }
+        }
+
+        public virtual UUID TattooItem
+        {
+            get { return m_wearables[TATTOO].ItemID; }
+            set { m_wearables[TATTOO].ItemID = value; }
+        }
+
+        public virtual UUID TattooAsset
+        {
+            get { return m_wearables[TATTOO].AssetID; }
+            set { m_wearables[TATTOO].AssetID = value; }
+        }
+
+        public virtual UUID AlphaItem
+        {
+            get { return m_wearables[ALPHA].ItemID; }
+            set { m_wearables[ALPHA].ItemID = value; }
+        }
+
+        public virtual UUID AlphaAsset
+        {
+            get { return m_wearables[ALPHA].AssetID; }
+            set { m_wearables[ALPHA].AssetID = value; }
         }
 
         public virtual void SetDefaultWearables()
@@ -257,7 +285,6 @@ namespace OpenSim.Framework
 
         public virtual void SetDefaultParams(byte[] vparams)
         {
-            // TODO: Figure out better values then 'fat scientist 150' or 'alien 0'
             for (int i = 0; i < VISUALPARAM_COUNT; i++)
             {
                 vparams[i] = 150;
@@ -380,6 +407,7 @@ namespace OpenSim.Framework
         {
             if (textureEntry != null)
                 m_texture = textureEntry;
+
             if (visualParams != null)
                 m_visualparams = visualParams;
 
@@ -487,6 +515,10 @@ namespace OpenSim.Framework
             h["underpants_asset"] = UnderPantsAsset.ToString();
             h["skirt_item"] = SkirtItem.ToString();
             h["skirt_asset"] = SkirtAsset.ToString();
+            h["alpha_item"] = AlphaItem.ToString();
+            h["alpha_asset"] = AlphaAsset.ToString();
+            h["tattoo_item"] = TattooItem.ToString();
+            h["tattoo_asset"] = TattooAsset.ToString();
 
             string attachments = GetAttachmentsString();
             if (attachments != String.Empty)
@@ -548,8 +580,10 @@ namespace OpenSim.Framework
             UnderShirtAsset = new UUID((string)h["undershirt_asset"]);
             UnderPantsItem = new UUID((string)h["underpants_item"]);
             UnderPantsAsset = new UUID((string)h["underpants_asset"]);
-            SkirtItem = new UUID((string)h["skirt_item"]);
-            SkirtAsset = new UUID((string)h["skirt_asset"]);
+            AlphaItem = new UUID((string)h["alpha_item"]);
+            AlphaAsset = new UUID((string)h["alpha_asset"]);
+            TattooItem = new UUID((string)h["tattoo_item"]);
+            TattooAsset = new UUID((string)h["tattoo_asset"]);
 
             if (h.ContainsKey("attachments"))
             {

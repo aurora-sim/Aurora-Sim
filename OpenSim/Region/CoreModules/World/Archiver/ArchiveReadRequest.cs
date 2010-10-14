@@ -26,6 +26,7 @@
  */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
@@ -56,11 +57,15 @@ namespace OpenSim.Region.CoreModules.World.Archiver
         protected Stream m_loadStream;
         protected Guid m_requestId;
         protected string m_errorMessage;
+        protected HashSet<AssetBase> AssetsToAdd = new HashSet<AssetBase>();
+        protected bool AssetSaverIsRunning = false;
 
         /// <value>
         /// Should the archive being loaded be merged with what is already on the region?
         /// </value>
         protected bool m_merge;
+
+        protected Aurora.Framework.AuroraThreadPool m_threadpool;
 
         /// <value>
         /// Should we ignore any assets when reloading the archive?
@@ -119,11 +124,18 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             List<string> serialisedSceneObjects = new List<string>();
             List<string> serialisedParcels = new List<string>();
             string filePath = "NONE";
+            DateTime start = DateTime.Now;
 
             TarArchiveReader archive = new TarArchiveReader(m_loadStream);
             byte[] data;
             TarArchiveReader.TarEntryType entryType;
-            
+
+            m_threadpool = new Aurora.Framework.AuroraThreadPool(new Aurora.Framework.AuroraThreadPoolStartInfo()
+                {
+                    Threads = 1,
+                    priority = System.Threading.ThreadPriority.BelowNormal
+                });
+
             try
             {
                 while ((data = archive.ReadEntry(out filePath, out entryType)) != null)
@@ -181,6 +193,9 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                 archive.Close();
             }
 
+            if (!AssetSaverIsRunning && !m_skipAssets)
+                m_threadpool.QueueEvent(SaveAssets, 0);
+
             if (!m_skipAssets)
             {
                 m_log.InfoFormat("[ARCHIVER]: Restored {0} assets", successfulAssetRestores);
@@ -194,8 +209,10 @@ namespace OpenSim.Region.CoreModules.World.Archiver
 
             if (!m_merge)
             {
+                DateTime before = DateTime.Now;
                 m_log.Info("[ARCHIVER]: Clearing all existing scene objects");
                 m_scene.DeleteAllSceneObjects();
+                m_log.Info("[ARCHIVER]: Cleared all existing scene objects in " + (DateTime.Now - before).Minutes + ":" + (DateTime.Now - before).Seconds);
             }
 
             // Try to retain the original creator/owner/lastowner if their uuid is present on this grid
@@ -238,12 +255,18 @@ namespace OpenSim.Region.CoreModules.World.Archiver
 
                 SceneObjectGroup sceneObject = serialiser.DeserializeGroupFromXml2(serialisedSceneObject);
 
+                if (sceneObject == null)
+                {
+                    //! big error!
+                    m_log.Error("Error reading SOP XML (Please mantis this!): " + serialisedSceneObject);
+                    continue;
+                }
                 // For now, give all incoming scene objects new uuids.  This will allow scenes to be cloned
                 // on the same region server and multiple examples a single object archive to be imported
                 // to the same scene (when this is possible).
                 sceneObject.ResetIDs();
 
-                foreach (SceneObjectPart part in sceneObject.Parts)
+                foreach (SceneObjectPart part in sceneObject.ChildrenList)
                 {
                     if (!ResolveUserUuid(part.CreatorID))
                         part.CreatorID = m_scene.RegionInfo.EstateSettings.EstateOwner;
@@ -278,7 +301,9 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                     }
                 }
 
-                if (!m_scene.AddRestoredSceneObject(sceneObject, true, false))
+                sceneObject.SetScene(m_scene);
+
+                if (!m_scene.AddRestoredSceneObject(sceneObject, true, false, true))
                 {
                     sceneObjectsLoadedCount++;
                     sceneObject.CreateScriptInstances(0, false, m_scene.DefaultScriptEngine, 0, UUID.Zero);
@@ -293,9 +318,13 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             if (ignoredObjects > 0)
                 m_log.WarnFormat("[ARCHIVER]: Ignored {0} scene objects that already existed in the scene", ignoredObjects);
 
-            m_log.InfoFormat("[ARCHIVER]: Successfully loaded archive");
+            m_log.InfoFormat("[ARCHIVER]: Successfully loaded archive in " + (DateTime.Now - start).Minutes + ":" + (DateTime.Now - start).Seconds);
 
             m_scene.EventManager.TriggerOarFileLoaded(m_requestId, m_errorMessage);
+            m_validUserUuids.Clear();
+            m_loadStream.Close();
+            m_loadStream.Dispose();
+            archive.Close();
         }
 
         /// <summary>
@@ -305,19 +334,24 @@ namespace OpenSim.Region.CoreModules.World.Archiver
         /// <returns></returns>
         private bool ResolveUserUuid(UUID uuid)
         {
-            if (!m_validUserUuids.ContainsKey(uuid))
+            bool v;
+            if (!m_validUserUuids.TryGetValue(uuid, out v))
             {
+                DateTime now = DateTime.Now;
                 UserAccount account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, uuid);
                 if (account != null)
+                {
                     m_validUserUuids.Add(uuid, true);
+                    return true;
+                }
                 else
+                {
                     m_validUserUuids.Add(uuid, false);
+                    return false;
+                }
             }
 
-            if (m_validUserUuids[uuid])
-                return true;
-            else
-                return false;
+            return v;
         }
 
         /// <summary>
@@ -352,13 +386,13 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                     m_log.WarnFormat("[ARCHIVER]: Importing {0} byte asset {1} with unknown type", data.Length, uuid);
 
                 //m_log.DebugFormat("[ARCHIVER]: Importing asset {0}, type {1}", uuid, assetType);
-
                 AssetBase asset = new AssetBase(new UUID(uuid), String.Empty, assetType, UUID.Zero.ToString());
                 asset.Data = data;
 
                 // We're relying on the asset service to do the sensible thing and not store the asset if it already
                 // exists.
-                m_scene.AssetService.Store(asset);
+                lock(AssetsToAdd)
+                    AssetsToAdd.Add(asset);
 
                 /**
                  * Create layers on decode for image assets.  This is likely to significantly increase the time to load archives so
@@ -381,6 +415,21 @@ namespace OpenSim.Region.CoreModules.World.Archiver
 
                 return false;
             }
+        }
+
+        private bool SaveAssets()
+        {
+            AssetSaverIsRunning = true;
+            lock (AssetsToAdd)
+            {
+                foreach (AssetBase asset in AssetsToAdd)
+                {
+                    m_scene.AssetService.Store(asset);
+                }
+            }
+            AssetsToAdd.Clear();
+            AssetSaverIsRunning = false;
+            return false;
         }
 
         /// <summary>

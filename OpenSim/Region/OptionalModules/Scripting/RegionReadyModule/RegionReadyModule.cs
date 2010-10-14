@@ -89,7 +89,8 @@ namespace OpenSim.Region.OptionalModules.Scripting.RegionReady
 
             m_scene = scene;
 
-            m_scene.EventManager.OnEmptyScriptCompileQueue += OnEmptyScriptCompileQueue;
+            //m_scene.EventManager.OnEmptyScriptCompileQueue += OnEmptyScriptCompileQueue;
+            m_scene.EventManager.OnStartupComplete += OnStartupComplete;
             m_scene.EventManager.OnOarFileLoaded += OnOarFileLoaded;
 
             m_log.DebugFormat("[RegionReady]: Enabled for region {0}", scene.RegionInfo.RegionName);
@@ -100,7 +101,8 @@ namespace OpenSim.Region.OptionalModules.Scripting.RegionReady
             if (!m_enabled)
                 return;
 
-            m_scene.EventManager.OnEmptyScriptCompileQueue -= OnEmptyScriptCompileQueue;
+            //m_scene.EventManager.OnEmptyScriptCompileQueue -= OnEmptyScriptCompileQueue;
+            m_scene.EventManager.OnStartupComplete -= OnStartupComplete;
             m_scene.EventManager.OnOarFileLoaded -= OnOarFileLoaded;
 
             m_scene = null;
@@ -120,8 +122,55 @@ namespace OpenSim.Region.OptionalModules.Scripting.RegionReady
         }
 
         #endregion
+
+        void OnStartupComplete(List<string> data)
+        {
+            int num = 0;
+            while (num < data.Count - 1)
+            {
+                string type = data[num].ToString();
+                int len = Convert.ToInt32(data[num + 1]);
+                num += 2;
+                if (type == "ScriptEngine")
+                {
+                    if (m_firstEmptyCompileQueue || m_oarFileLoading)
+                    {
+                        OSChatMessage c = new OSChatMessage();
+                        if (m_firstEmptyCompileQueue)
+                            c.Message = "server_startup,";
+                        else
+                            c.Message = "oar_file_load,";
+                        m_firstEmptyCompileQueue = false;
+                        m_oarFileLoading = false;
+
+                        m_scene.Backup();
+
+                        c.From = "RegionReady";
+                        if (m_lastOarLoadedOk)
+                            c.Message += "1,";
+                        else
+                            c.Message += "0,";
+                        c.Channel = m_channelNotify;
+                        //Equiv of 'c.Message += numScriptsFailed.ToString() + "," + message;'
+                        c.Message += data[num] + "," + data[num+1];
+                        c.Type = ChatTypeEnum.Region;
+                        c.Position = new Vector3(((int)Constants.RegionSize * 0.5f), ((int)Constants.RegionSize * 0.5f), 30);
+                        c.Sender = null;
+                        c.SenderUUID = UUID.Zero;
+                        c.Scene = m_scene;
+
+                        m_log.InfoFormat("[RegionReady]: Region \"{0}\" is ready: \"{1}\" on channel {2}",
+                                         m_scene.RegionInfo.RegionName, c.Message, m_channelNotify);
+                        m_scene.EventManager.TriggerOnChatBroadcast(this, c);
+                    }
+                }
+                else
+                    num += len;
+            }
+        }
         
-        void OnEmptyScriptCompileQueue(int numScriptsFailed, string message)
+        //Old and hackish, see above
+        /*void OnEmptyScriptCompileQueue(int numScriptsFailed, string message)
         {
             if (m_firstEmptyCompileQueue || m_oarFileLoading) 
             {
@@ -152,7 +201,7 @@ namespace OpenSim.Region.OptionalModules.Scripting.RegionReady
                                  m_scene.RegionInfo.RegionName, c.Message, m_channelNotify);
                 m_scene.EventManager.TriggerOnChatBroadcast(this, c); 
             }
-        }
+        }*/
 
         void OnOarFileLoaded(Guid requestId, string message)
         {

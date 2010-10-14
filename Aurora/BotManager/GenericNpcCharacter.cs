@@ -1,0 +1,1264 @@
+/*
+ * Copyright (c) Contributors, http://opensimulator.org/
+ * See CONTRIBUTORS.TXT for a full list of copyright holders.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * Neither the name of the OpenSim Project nor the
+ *       names of its contributors may be used to endorse or promote products
+ *       derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE DEVELOPERS ``AS IS'' AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE CONTRIBUTORS BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+using System;
+using System.Collections.Generic;
+using System.Net;
+using OpenMetaverse;
+using OpenMetaverse.Packets;
+using OpenSim.Framework;
+using OpenSim.Region.Framework.Scenes;
+
+
+namespace Aurora.BotManager
+{
+    /// <summary>
+    /// Created by RealXtend
+    /// </summary>
+    public abstract class GenericNpcCharacter : IClientAPI
+    {   
+       
+// disable warning: public events, part of the public API
+#pragma warning disable 67
+        public event Action<IClientAPI> OnLogout;
+        public event ObjectPermissions OnObjectPermissions;
+
+        public event MoneyTransferRequest OnMoneyTransferRequest;
+        public event ParcelBuy OnParcelBuy;
+        public event Action<IClientAPI> OnConnectionClosed;
+
+        public event ImprovedInstantMessage OnInstantMessage;
+        public event ChatMessage OnChatFromClient;
+        public event TextureRequest OnRequestTexture;
+        public event RezObject OnRezObject;
+        public event ModifyTerrain OnModifyTerrain;
+        public event BakeTerrain OnBakeTerrain;
+        public event SetAppearance OnSetAppearance;
+        public event AvatarNowWearing OnAvatarNowWearing;
+        public event RezSingleAttachmentFromInv OnRezSingleAttachmentFromInv;
+        public event UUIDNameRequest OnDetachAttachmentIntoInv;
+        public event ObjectAttach OnObjectAttach;
+        public event ObjectDeselect OnObjectDetach;
+        public event ObjectDrop OnObjectDrop;
+        public event StartAnim OnStartAnim;
+        public event StopAnim OnStopAnim;
+        public event LinkObjects OnLinkObjects;
+        public event DelinkObjects OnDelinkObjects;
+        public event RequestMapBlocks OnRequestMapBlocks;
+        public event RequestMapName OnMapNameRequest;
+        public event TeleportLocationRequest OnTeleportLocationRequest;
+        public event TeleportLandmarkRequest OnTeleportLandmarkRequest;
+        public event DisconnectUser OnDisconnectUser;
+        public event RequestAvatarProperties OnRequestAvatarProperties;
+        public event SetAlwaysRun OnSetAlwaysRun;
+		public event DeRezObject OnDeRezObject;
+        public event Action<IClientAPI> OnRegionHandShakeReply;
+        public event GenericCall2 OnRequestWearables;
+        public event GenericCall1 OnCompleteMovementToRegion;
+        public event UpdateAgent OnAgentUpdate;
+        public event AgentRequestSit OnAgentRequestSit;
+        public event AgentSit OnAgentSit;
+        public event AvatarPickerRequest OnAvatarPickerRequest;
+        public event Action<IClientAPI> OnRequestAvatarsData;
+        public event AddNewPrim OnAddPrim;
+        public event RequestGodlikePowers OnRequestGodlikePowers;
+        public event GodKickUser OnGodKickUser;
+        public event ObjectDuplicate OnObjectDuplicate;
+        public event GrabObject OnGrabObject;
+        public event ObjectSelect OnDeGrabObject;
+        public event MoveObject OnGrabUpdate;
+        public event ViewerEffectEventHandler OnViewerEffect;
+
+        public event FetchInventory OnAgentDataUpdateRequest;
+        public event TeleportLocationRequest OnSetStartLocationRequest;
+
+        public event UpdateShape OnUpdatePrimShape;
+        public event ObjectExtraParams OnUpdateExtraParams;
+        public event RequestObjectPropertiesFamily OnRequestObjectPropertiesFamily;
+        public event ObjectSelect OnObjectSelect;
+        public event GenericCall7 OnObjectDescription;
+        public event GenericCall7 OnObjectName;
+        public event GenericCall7 OnObjectClickAction;
+        public event GenericCall7 OnObjectMaterial;
+        public event UpdatePrimFlags OnUpdatePrimFlags;
+        public event UpdatePrimTexture OnUpdatePrimTexture;
+        public event UpdateVectorWithUpdate OnUpdatePrimGroupPosition;
+        public event UpdateVectorWithUpdate OnUpdatePrimSinglePosition;
+        public event UpdatePrimRotation OnUpdatePrimGroupRotation;
+        public event UpdatePrimSingleRotation OnUpdatePrimSingleRotation;
+        public event UpdatePrimGroupRotation OnUpdatePrimGroupMouseRotation;
+        public event UpdateVector OnUpdatePrimScale;
+        public event UpdateVector OnUpdatePrimGroupScale;
+        public event StatusChange OnChildAgentStatus;
+        public event GenericCall2 OnStopMovement;
+
+        public event CreateNewInventoryItem OnCreateNewInventoryItem;
+        public event CreateInventoryFolder OnCreateNewInventoryFolder;
+        public event UpdateInventoryFolder OnUpdateInventoryFolder;
+        public event MoveInventoryFolder OnMoveInventoryFolder;
+        public event RemoveInventoryFolder OnRemoveInventoryFolder;
+        public event RemoveInventoryItem OnRemoveInventoryItem;
+        public event FetchInventoryDescendents OnFetchInventoryDescendents;
+        public event PurgeInventoryDescendents OnPurgeInventoryDescendents;
+        public event FetchInventory OnFetchInventory;
+        public event RequestTaskInventory OnRequestTaskInventory;
+        public event UpdateInventoryItem OnUpdateInventoryItem;
+        public event CopyInventoryItem OnCopyInventoryItem;
+        public event MoveInventoryItem OnMoveInventoryItem;
+        public event UDPAssetUploadRequest OnAssetUploadRequest;
+        public event RequestTerrain OnRequestTerrain;
+        public event RequestTerrain OnUploadTerrain;
+        public event XferReceive OnXferReceive;
+        public event RequestXfer OnRequestXfer;
+        public event ConfirmXfer OnConfirmXfer;
+        public event AbortXfer OnAbortXfer;
+        public event RezScript OnRezScript;
+        public event UpdateTaskInventory OnUpdateTaskInventory;
+        public event MoveTaskInventory OnMoveTaskItem;
+        public event RemoveTaskInventory OnRemoveTaskItem;
+        public event GenericMessage OnGenericMessage;
+        public event UUIDNameRequest OnNameFromUUIDRequest;
+        public event UUIDNameRequest OnUUIDGroupNameRequest;
+
+        public event ParcelPropertiesRequest OnParcelPropertiesRequest;
+        public event ParcelDivideRequest OnParcelDivideRequest;
+        public event ParcelJoinRequest OnParcelJoinRequest;
+        public event ParcelPropertiesUpdateRequest OnParcelPropertiesUpdateRequest;
+        public event ParcelAbandonRequest OnParcelAbandonRequest;
+        public event ParcelGodForceOwner OnParcelGodForceOwner;
+        public event ParcelReclaim OnParcelReclaim;
+        public event ParcelReturnObjectsRequest OnParcelReturnObjectsRequest;
+        public event ParcelAccessListRequest OnParcelAccessListRequest;
+        public event ParcelAccessListUpdateRequest OnParcelAccessListUpdateRequest;
+        public event ParcelSelectObjects OnParcelSelectObjects;
+        public event ParcelObjectOwnerRequest OnParcelObjectOwnerRequest;
+        public event ObjectDeselect OnObjectDeselect;
+        public event RegionInfoRequest OnRegionInfoRequest;
+        public event EstateCovenantRequest OnEstateCovenantRequest;
+        public event EstateChangeInfo OnEstateChangeInfo;
+
+        public event ObjectDuplicateOnRay OnObjectDuplicateOnRay;
+
+        public event FriendActionDelegate OnApproveFriendRequest;
+        public event FriendActionDelegate OnDenyFriendRequest;
+        public event FriendshipTermination OnTerminateFriendship;
+
+        public event EconomyDataRequest OnEconomyDataRequest;
+        public event MoneyBalanceRequest OnMoneyBalanceRequest;
+        public event UpdateAvatarProperties OnUpdateAvatarProperties;
+
+        public event ObjectIncludeInSearch OnObjectIncludeInSearch;
+        public event UUIDNameRequest OnTeleportHomeRequest;
+
+        public event ScriptAnswer OnScriptAnswer;
+        public event RequestPayPrice OnRequestPayPrice;
+        public event ObjectSaleInfo OnObjectSaleInfo;
+        public event ObjectBuy OnObjectBuy;
+        public event BuyObjectInventory OnBuyObjectInventory;
+        public event AgentSit OnUndo;
+
+        public event ForceReleaseControls OnForceReleaseControls;
+
+        public event GodLandStatRequest OnLandStatRequest;
+        public event RequestObjectPropertiesFamily OnObjectGroupRequest;
+
+        public event DetailedEstateDataRequest OnDetailedEstateDataRequest;
+        public event SetEstateFlagsRequest OnSetEstateFlagsRequest;
+        public event SetEstateTerrainBaseTexture OnSetEstateTerrainBaseTexture;
+        public event SetEstateTerrainDetailTexture OnSetEstateTerrainDetailTexture;
+        public event SetEstateTerrainTextureHeights OnSetEstateTerrainTextureHeights;
+        public event CommitEstateTerrainTextureRequest OnCommitEstateTerrainTextureRequest;
+        public event SetRegionTerrainSettings OnSetRegionTerrainSettings;
+        public event EstateRestartSimRequest OnEstateRestartSimRequest;
+        public event EstateChangeCovenantRequest OnEstateChangeCovenantRequest;
+        public event UpdateEstateAccessDeltaRequest OnUpdateEstateAccessDeltaRequest;
+        public event SimulatorBlueBoxMessageRequest OnSimulatorBlueBoxMessageRequest;
+        public event EstateBlueBoxMessageRequest OnEstateBlueBoxMessageRequest;
+        public event EstateDebugRegionRequest OnEstateDebugRegionRequest;
+        public event EstateTeleportOneUserHomeRequest OnEstateTeleportOneUserHomeRequest;
+        public event EstateTeleportAllUsersHomeRequest OnEstateTeleportAllUsersHomeRequest;
+        public event ScriptReset OnScriptReset;
+        public event GetScriptRunning OnGetScriptRunning;
+        public event SetScriptRunning OnSetScriptRunning;
+        public event UpdateVector OnAutoPilotGo;
+
+        public event TerrainUnacked OnUnackedTerrain;
+
+        public event RegionHandleRequest OnRegionHandleRequest;
+        public event ParcelInfoRequest OnParcelInfoRequest;
+
+        public event ActivateGesture OnActivateGesture;
+        public event DeactivateGesture OnDeactivateGesture;
+        public event ObjectOwner OnObjectOwner;
+ 
+        public event DirPlacesQuery OnDirPlacesQuery;
+        public event DirFindQuery OnDirFindQuery;
+        public event DirLandQuery OnDirLandQuery;
+        public event DirPopularQuery OnDirPopularQuery;
+        public event DirClassifiedQuery OnDirClassifiedQuery;
+        public event EventInfoRequest OnEventInfoRequest;
+        public event ParcelSetOtherCleanTime OnParcelSetOtherCleanTime;
+
+        public event MapItemRequest OnMapItemRequest;
+
+        public event OfferCallingCard OnOfferCallingCard;
+        public event AcceptCallingCard OnAcceptCallingCard;
+        public event DeclineCallingCard OnDeclineCallingCard;
+        public event SoundTrigger OnSoundTrigger;
+
+        public event StartLure OnStartLure;
+        public event TeleportLureRequest OnTeleportLureRequest;
+        public event NetworkStats OnNetworkStatsUpdate;
+
+        public event ClassifiedInfoRequest OnClassifiedInfoRequest;
+        public event ClassifiedInfoUpdate OnClassifiedInfoUpdate;
+        public event ClassifiedDelete OnClassifiedDelete;
+        public event ClassifiedDelete OnClassifiedGodDelete;
+
+        public event EventNotificationAddRequest OnEventNotificationAddRequest;
+        public event EventNotificationRemoveRequest OnEventNotificationRemoveRequest;
+        public event EventGodDelete OnEventGodDelete;
+
+        public event ParcelDwellRequest OnParcelDwellRequest;
+        public event UserInfoRequest OnUserInfoRequest;
+        public event UpdateUserInfo OnUpdateUserInfo;
+
+        public event RetrieveInstantMessages OnRetrieveInstantMessages;
+        public event RezMultipleAttachmentsFromInv OnRezMultipleAttachmentsFromInv;
+        public event SpinStart OnSpinStart;
+        public event SpinStop OnSpinStop;
+        public event SpinObject OnSpinUpdate;
+        public event ParcelDeedToGroup OnParcelDeedToGroup;
+
+        public event AvatarNotesUpdate OnAvatarNotesUpdate;
+        public event MuteListRequest OnMuteListRequest;
+        public event PickDelete OnPickDelete;
+        public event PickGodDelete OnPickGodDelete;
+        public event PickInfoUpdate OnPickInfoUpdate;
+
+        public event PlacesQuery OnPlacesQuery;
+
+        public event UpdatePrimSingleRotationPosition OnUpdatePrimSingleRotationPosition;
+
+        public event ObjectRequest OnObjectRequest;
+
+        public event AvatarInterestUpdate OnAvatarInterestUpdate;
+        public event GrantUserFriendRights OnGrantUserRights;
+        
+
+#pragma warning restore 67
+
+        private UUID myID = UUID.Random();
+
+        protected virtual void OnBotChatFromViewer(object sender, OSChatMessage e)
+        {
+            OnChatFromClient(sender, e);
+        }
+
+        protected virtual void OnBotAgentUpdate(uint controlFlag, Quaternion bodyRotation)
+        {
+            if (OnAgentUpdate != null)
+            {
+                AgentUpdateArgs pack = new AgentUpdateArgs();
+                pack.ControlFlags = controlFlag;
+                pack.BodyRotation = bodyRotation;
+                OnAgentUpdate(this, pack);
+            }
+        }
+
+        protected virtual void OnBotLogout()
+        {
+            if (OnLogout != null)
+            {
+                OnLogout(this);
+            }
+        }
+
+        protected virtual void OnBotConnectionClosed()
+        {
+            OnConnectionClosed(this);
+        }
+
+        private Vector3 startPos = new Vector3(128, 128, 30);
+
+        public virtual Vector3 StartPos
+        {
+            get { return startPos; }
+            set { }
+        }
+
+        public virtual UUID AgentId
+        {
+            get { return myID; }
+        }
+
+        public UUID SessionId
+        {
+            get { return UUID.Zero; }
+        }
+
+        public UUID SecureSessionId
+        {
+            get { return UUID.Zero; }
+        }
+
+        public abstract string FirstName
+        {
+            get;
+            set;
+        }
+
+        // private string lastName = "Today" + Util.RandomClass.Next(1, 1000);
+        public abstract string LastName
+        {
+            get;
+            set;
+        }
+
+        public abstract String Name
+        {
+            get;
+        }
+
+        public bool IsActive
+        {
+            get { return true; }
+            set { }
+        }
+
+        public UUID ActiveGroupId
+        {
+            get { return UUID.Zero; }
+        }
+
+        public string ActiveGroupName
+        {
+            get { return String.Empty; }
+        }
+
+        public ulong ActiveGroupPowers
+        {
+            get { return 0; }
+        }
+
+        public bool IsGroupMember(UUID groupID)
+        {
+            return false;
+        }
+
+        public ulong GetGroupPowers(UUID groupID)
+        {
+            return 0;
+        }
+
+        public virtual int NextAnimationSequenceNumber
+        {
+            get { return 1; }
+        }
+        
+        public abstract IScene Scene
+        {
+            get;         
+        }
+
+        public bool SendLogoutPacketWhenClosing
+        {
+            set { }
+        }
+
+        public virtual void ActivateGesture(UUID assetId, UUID gestureId)
+        {
+        }
+
+        public virtual void SendWearables(AvatarWearable[] wearables, int serial)
+        {
+        }
+
+        public virtual void SendAppearance(UUID agentID, byte[] visualParams, byte[] textureEntry)
+        {
+        }
+
+        public virtual void Kick(string message)
+        {
+        }
+
+        public virtual void SendStartPingCheck(byte seq)
+        {
+        }
+
+        public virtual void SendAvatarPickerReply(AvatarPickerReplyAgentDataArgs AgentData, List<AvatarPickerReplyDataArgs> Data)
+        {
+        }
+
+        public virtual void SendAgentDataUpdate(UUID agentid, UUID activegroupid, string firstname, string lastname, ulong grouppowers, string groupname, string grouptitle)
+        {
+
+        }
+
+        public virtual void SendKillObject(ulong regionHandle, uint localID)
+        {
+        }
+
+        public virtual void SetChildAgentThrottle(byte[] throttle)
+        {
+        }
+        public byte[] GetThrottlesPacked(float multiplier)
+        {
+            return new byte[0];
+        }
+
+
+        public virtual void SendAnimations(UUID[] animations, int[] seqs, UUID sourceAgentId, UUID[] objectIDs)
+        {
+        }
+
+        public virtual void SendChatMessage(string message, byte type, Vector3 fromPos, string fromName,
+                                            UUID fromAgentID, byte source, byte audible)
+        {
+        }
+
+        public virtual void SendChatMessage(byte[] message, byte type, Vector3 fromPos, string fromName,
+                                            UUID fromAgentID, byte source, byte audible)
+        {
+        }
+
+        public void SendInstantMessage(UUID fromAgent, string message, UUID toAgent, string fromName, byte dialog, uint timeStamp)
+        {
+            
+        }
+
+        public void SendInstantMessage(UUID fromAgent, string message, UUID toAgent, string fromName, byte dialog, uint timeStamp, UUID transactionID, bool fromGroup, byte[] binaryBucket)
+        {
+            
+        }
+
+        public void SendGenericMessage(string method, List<string> message)
+        {
+
+        }
+
+        public virtual void SendLayerData(float[] map)
+        {
+        }
+
+        public virtual void SendLayerData(int px, int py, float[] map)
+        {
+        }
+        public virtual void SendLayerData(int px, int py, float[] map, bool track)
+        {
+        }
+
+        public virtual void SendWindData(Vector2[] windSpeeds) { }
+
+        public virtual void MoveAgentIntoRegion(RegionInfo regInfo, Vector3 pos, Vector3 look)
+        {
+        }
+
+        public virtual void InformClientOfNeighbour(ulong neighbourHandle, IPEndPoint neighbourExternalEndPoint)
+        {
+        }
+
+        public virtual AgentCircuitData RequestClientInfo()
+        {
+            return new AgentCircuitData();
+        }
+
+        public virtual void CrossRegion(ulong newRegionHandle, Vector3 pos, Vector3 lookAt,
+                                        IPEndPoint newRegionExternalEndPoint, string capsURL)
+        {
+        }
+
+        public virtual void SendMapBlock(List<MapBlockData> mapBlocks, uint flag)
+        {
+        }
+
+        public virtual void SendLocalTeleport(Vector3 position, Vector3 lookAt, uint flags)
+        {
+        }
+
+        public virtual void SendRegionTeleport(ulong regionHandle, byte simAccess, IPEndPoint regionExternalEndPoint,
+                                               uint locationID, uint flags, string capsURL)
+        {
+        }
+
+        public virtual void SendTeleportFailed(string reason)
+        {
+        }
+
+        public virtual void SendTeleportLocationStart()
+        {
+        }
+
+        public virtual void SendMoneyBalance(UUID transaction, bool success, byte[] description, int balance)
+        {
+        }
+
+        public virtual void SendPayPrice(UUID objectID, int[] payPrice)
+        {
+        }
+
+        public virtual void SendAvatarData(ulong regionHandle, string firstName, string lastName, string grouptitle, UUID avatarID,
+                                           uint avatarLocalID, Vector3 Pos, byte[] textureEntry, uint parentID, Quaternion rotation)
+        {
+        }
+
+        public virtual void SendAvatarTerseUpdate(ulong regionHandle, ushort timeDilation, uint localID,
+                                                  Vector3 position, Vector3 velocity, Quaternion rotation)
+        {
+        }
+
+        public virtual void SendAvatarTerseUpdate(ulong regionHandle, ushort timeDilation, uint localID,
+                                                  Vector3 position, Vector3 velocity, Quaternion rotation, UUID agentId)
+        {
+        }
+
+        public virtual void SendCoarseLocationUpdate(List<Vector3> CoarseLocations)
+        {
+        }
+
+        public virtual void AttachObject(uint localID, Quaternion rotation, byte attachPoint, UUID ownerID)
+        {
+        }
+
+        public virtual void SendDialog(string objectname, UUID objectID, UUID ownerID, string msg, UUID textureID, int ch, string[] buttonlabels)
+        {
+        }
+
+        public virtual void SendPrimitiveToClient(ulong regionHandle, ushort timeDilation, uint localID,
+                                                  PrimitiveBaseShape primShape, Vector3 pos, Vector3 vel,
+                                                  Vector3 acc, Quaternion rotation, Vector3 rvel, uint flags,
+                                                  UUID objectID, UUID ownerID, string text, byte[] color,
+                                                  uint parentID,
+                                                  byte[] particleSystem, byte clickAction, byte material)
+        {
+        }
+        public virtual void SendPrimitiveToClient(ulong regionHandle, ushort timeDilation, uint localID,
+                                                  PrimitiveBaseShape primShape, Vector3 pos, Vector3 vel,
+                                                  Vector3 acc, Quaternion rotation, Vector3 rvel, uint flags,
+                                                  UUID objectID, UUID ownerID, string text, byte[] color,
+                                                  uint parentID,
+                                                  byte[] particleSystem, byte clickAction, byte material, byte[] textureanimation,
+                                                  bool attachment, uint AttachmentPoint, UUID AssetId, UUID SoundId, double SoundVolume, byte SoundFlags, double SoundRadius)
+        {
+        }
+        public virtual void SendPrimTerseUpdate(ulong regionHandle, ushort timeDilation, uint localID,
+                                                Vector3 position, Quaternion rotation, Vector3 velocity,
+                                                Vector3 rotationalvelocity, byte state, UUID AssetId,
+                                                UUID ownerID, int attachPoint)
+        {
+        }
+
+        public virtual void SendInventoryFolderDetails(UUID ownerID, UUID folderID,
+                                                       List<InventoryItemBase> items,
+                                                       List<InventoryFolderBase> folders,int asdf,
+                                                       bool fetchFolders,
+                                                       bool fetchItems)
+        {
+        }
+
+        public virtual void SendInventoryItemDetails(UUID ownerID, InventoryItemBase item)
+        {
+        }
+
+        public virtual void SendInventoryItemCreateUpdate(InventoryItemBase Item, uint callbackID)
+        {
+        }
+
+        public virtual void SendRemoveInventoryItem(UUID itemID)
+        {
+        }
+
+        public virtual void SendBulkUpdateInventory(InventoryNodeBase node)
+        {
+        }
+
+        public UUID GetDefaultAnimation(string name)
+        {
+            return UUID.Zero;
+        }
+
+        public void SendTakeControls(int controls, bool passToAgent, bool TakeControls)
+        {
+        }
+
+        public virtual void SendTaskInventory(UUID taskID, short serial, byte[] fileName)
+        {
+        }
+
+        public virtual void SendXferPacket(ulong xferID, uint packet, byte[] data)
+        {
+        }
+
+        public virtual void SendEconomyData(float EnergyEfficiency, int ObjectCapacity, int ObjectCount, int PriceEnergyUnit,
+            int PriceGroupCreate, int PriceObjectClaim, float PriceObjectRent, float PriceObjectScaleFactor,
+            int PriceParcelClaim, float PriceParcelClaimFactor, int PriceParcelRent, int PricePublicObjectDecay,
+            int PricePublicObjectDelete, int PriceRentLight, int PriceUpload, int TeleportMinPrice, float TeleportPriceExponent)
+        {
+
+        }
+        public virtual void SendNameReply(UUID profileId, string firstname, string lastname)
+        {
+        }
+
+        public virtual void SendPreLoadSound(UUID objectID, UUID ownerID, UUID soundID)
+        {
+        }
+
+        public virtual void SendPlayAttachedSound(UUID soundID, UUID objectID, UUID ownerID, float gain,
+                                                  byte flags)
+        {
+        }
+
+        public void SendTriggeredSound(UUID soundID, UUID ownerID, UUID objectID, UUID parentID, ulong handle, Vector3 position, float gain)
+        {
+        }
+
+        public void SendAttachedSoundGainChange(UUID objectID, float gain)
+        {
+
+        }
+
+        public void SendAlertMessage(string message)
+        {
+        }
+
+        public void SendAgentAlertMessage(string message, bool modal)
+        {
+        }
+
+        public void SendSystemAlertMessage(string message)
+        {
+        }
+
+        public void SendLoadURL(string objectname, UUID objectID, UUID ownerID, bool groupOwned, string message,
+                                string url)
+        {
+        }
+
+        public virtual void SendRegionHandshake(RegionInfo regionInfo, RegionHandshakeArgs args)
+        {
+            if (OnRegionHandShakeReply != null)
+            {
+                OnRegionHandShakeReply(this);
+            }
+
+            if (OnCompleteMovementToRegion != null)
+            {
+                OnCompleteMovementToRegion(this);
+            }
+        }
+        public void SendAssetUploadCompleteMessage(sbyte AssetType, bool Success, UUID AssetFullID)
+        {
+        }
+
+        public void SendConfirmXfer(ulong xferID, uint PacketID)
+        {
+        }
+
+        public void SendXferRequest(ulong XferID, short AssetType, UUID vFileID, byte FilePath, byte[] FileName)
+        {
+        }
+
+        public void SendInitiateDownload(string simFileName, string clientFileName)
+        {
+        }
+
+        public void SendImageFirstPart(ushort numParts, UUID ImageUUID, uint ImageSize, byte[] ImageData, byte imageCodec)
+        {
+        }
+        
+        public void SendImageNextPart(ushort partNumber, UUID imageUuid, byte[] imageData)
+        {
+        }
+         
+        public void SendImageNotFound(UUID imageid)
+        {
+        }
+        
+        public void SendShutdownConnectionNotice()
+        {
+        }
+
+        public void SendSimStats(SimStats stats)
+        {
+        }
+
+        public void SendObjectPropertiesFamilyData(uint RequestFlags, UUID ObjectUUID, UUID OwnerID, UUID GroupID,
+                                                    uint BaseMask, uint OwnerMask, uint GroupMask, uint EveryoneMask,
+                                                    uint NextOwnerMask, int OwnershipCost, byte SaleType,int SalePrice, uint Category,
+                                                    UUID LastOwnerID, string ObjectName, string Description)
+        {
+        }
+
+        public void SendObjectPropertiesReply(List<ISceneEntity> part)
+        {
+        }
+
+        public void SendAgentOffline(UUID[] agentIDs)
+        {
+
+        }
+
+        public void SendAgentOnline(UUID[] agentIDs)
+        {
+
+        }
+
+        public void SendSitResponse(UUID TargetID, Vector3 OffsetPos, Quaternion SitOrientation, bool autopilot,
+                                        Vector3 CameraAtOffset, Vector3 CameraEyeOffset, bool ForceMouseLook)
+        {
+        }
+
+        public void SendAdminResponse(UUID Token, uint AdminLevel)
+        {
+
+        }
+
+        public void SendGroupMembership(GroupMembershipData[] GroupMembership)
+        {
+
+        }
+        
+        public bool AddMoney(int debit)
+        {
+            return false;
+        }
+
+        public void SendSunPos(Vector3 sunPos, Vector3 sunVel, ulong time, uint dlen, uint ylen, float phase)
+        {
+        }
+        
+        public void SendViewerEffect(ViewerEffectPacket.EffectBlock[] effectBlocks)
+        {
+        }        
+
+        public void SendViewerTime(int phase)
+        {
+        }
+
+        public void SendAvatarProperties(UUID avatarID, string aboutText, string bornOn, Byte[] charterMember,
+                                         string flAbout, uint flags, UUID flImageID, UUID imageID, string profileURL,
+                                         UUID partnerID)
+        {
+        }
+
+        public void SetDebugPacketLevel(int newDebug)
+        {
+        }
+
+        public void InPacket(object NewPack)
+        {
+        }
+
+        public void ProcessInPacket(Packet NewPack)
+        {
+        }
+
+        public void Start()
+        {
+        }
+        public void SendAvatarInterestsReply(IClientAPI sender,UUID targetID, uint profileWantToMask, string wanttext, uint skillsmask, string skillstext, string languages){
+        	
+        }
+        public void Stop()
+        {
+        }
+
+        // private uint m_circuitCode;
+        public abstract uint CircuitCode
+        {
+            get;
+            set;
+        }
+
+        public void SendBlueBoxMessage(UUID FromAvatarID, String FromAvatarName, String Message)
+        {
+
+        }
+        public void SendLogoutPacket()
+        {
+        }
+
+        public void Terminate()
+        {
+        }
+
+        public ClientInfo GetClientInfo()
+        {
+            return null;
+        }
+
+        public void SetClientInfo(ClientInfo info)
+        {
+        }
+
+        public void SendScriptQuestion(UUID objectID, string taskName, string ownerName, UUID itemID, int question)
+        {
+        }
+        public void SendHealth(float health)
+        {
+        }
+
+        public void SendEstateManagersList(UUID invoice, UUID[] EstateManagers, uint estateID)
+        {
+        }
+
+        public void SendBannedUserList(UUID invoice, EstateBan[] banlist, uint estateID)
+        {
+        }
+
+        public void SendRegionInfoToEstateMenu(RegionInfoForEstateMenuArgs args)
+        {
+        }
+        
+        public void SendEstateCovenantInformation(UUID covenant)
+        {
+        }
+        
+        public void SendDetailedEstateData(UUID invoice, string estateName, uint estateID, uint parentEstate, uint estateFlags, uint sunPosition, UUID covenant, string abuseEmail, UUID estateOwner)
+        {
+        }
+
+        public void SendLandProperties(int sequence_id, bool snap_selection, int request_result, LandData landData, float simObjectBonusFactor, int parcelObjectCapacity, int simObjectCapacity, uint regionFlags)
+        {
+        }
+        
+        public void SendLandAccessListData(List<UUID> avatars, uint accessFlag, int localLandID)
+        {
+        }
+        
+        public void SendForceClientSelectObjects(List<uint> objectIDs)
+        {
+        }
+        
+        public void SendLandObjectOwners(Dictionary<UUID, int> ownersAndCount)
+        {
+        }
+        
+        public void SendLandParcelOverlay(byte[] data, int sequence_id)
+        {
+        }
+
+        public void SendParcelMediaCommand(uint flags, ParcelMediaCommandEnum command, float time)
+        {
+        }
+
+        public void SendParcelMediaUpdate(string mediaUrl, UUID mediaTextureID, byte autoScale, string mediaType,
+                                          string mediaDesc, int mediaWidth, int mediaHeight, byte mediaLoop)
+        {
+        }
+
+        public void SendGroupNameReply(UUID groupLLUID, string GroupName)
+        {
+        }
+
+        public void SendLandStatReply(uint reportType, uint requestFlags, uint resultCount, LandStatReportItem[] lsrpia)
+        {
+        }
+
+        public void SendScriptRunningReply(UUID objectID, UUID itemID, bool running)
+        {
+        }
+
+        public void SendAsset(AssetRequestToClient req)
+        {
+        }
+
+        public void SendTexture(AssetBase TextureAsset)
+        {
+
+        }
+
+        public void SendSetFollowCamProperties (UUID objectID, SortedDictionary<int, float> parameters)
+        {
+        }
+
+        public void SendClearFollowCamProperties (UUID objectID)
+        {
+        }
+
+        public void SendRegionHandle (UUID regoinID, ulong handle)
+        {
+        }
+
+        public void SendParcelInfo (RegionInfo info, LandData land, UUID parcelID, uint x, uint y)
+        {
+        }
+
+        public void SetClientOption(string option, string value)
+        {
+        }
+
+        public string GetClientOption(string option)
+        {
+            return string.Empty;
+        }
+
+        public void SendScriptTeleportRequest(string objName, string simName, Vector3 pos, Vector3 lookAt)
+        {
+        }
+
+        public void SendDirPlacesReply(UUID queryID, DirPlacesReplyData[] data)
+        {
+        }
+
+        public void SendDirPeopleReply(UUID queryID, DirPeopleReplyData[] data)
+        {
+        }
+
+        public void SendDirEventsReply(UUID queryID, DirEventsReplyData[] data)
+        {
+        }
+
+        public void SendDirGroupsReply(UUID queryID, DirGroupsReplyData[] data)
+        {
+        }
+
+        public void SendDirClassifiedReply(UUID queryID, DirClassifiedReplyData[] data)
+        {
+        }
+
+        public void SendDirLandReply(UUID queryID, DirLandReplyData[] data)
+        {
+        }
+
+        public void SendDirPopularReply(UUID queryID, DirPopularReplyData[] data)
+        {
+        }
+
+        public void SendMapItemReply(mapItemReply[] replies, uint mapitemtype, uint flags)
+        {
+        }
+
+        public void KillEndDone()
+        {
+        }
+
+        public void SendEventInfoReply (EventData info)
+        {
+        }
+
+        public void SendOfferCallingCard (UUID destID, UUID transactionID)
+        {
+        }
+
+        public void SendAcceptCallingCard (UUID transactionID)
+        {
+        }
+
+        public void SendDeclineCallingCard (UUID transactionID)
+        {
+        }
+
+        public void SendAvatarGroupsReply(UUID avatarID, GroupMembershipData[] data)
+        {
+        }
+
+        public void SendJoinGroupReply(UUID groupID, bool success)
+        {
+        }
+
+        public void SendEjectGroupMemberReply(UUID agentID, UUID groupID, bool succss)
+        {
+        }
+
+        public void SendLeaveGroupReply(UUID groupID, bool success)
+        {
+        }
+
+        public void SendTerminateFriend(UUID exFriendID)
+        {
+        }
+        
+        public void SendAvatarInterestsReply(UUID avatarID, uint wantMask, string wantText, uint skillsMask, string skillsText, string languages)
+        {
+        }
+
+        #region IClientAPI Members
+
+
+        public bool AddGenericPacketHandler(string MethodName, GenericMessage handler)
+        {
+            return true;
+        }
+
+        public void SendAvatarClassifiedReply(UUID targetID, UUID[] classifiedID, string[] name)
+        {
+        }
+
+        public void SendClassifiedInfoReply(UUID classifiedID, UUID creatorID, uint creationDate, uint expirationDate, uint category, string name, string description, UUID parcelID, uint parentEstate, UUID snapshotID, string simName, Vector3 globalPos, string parcelName, byte classifiedFlags, int price)
+        {
+        }
+
+        public void SendAgentDropGroup(UUID groupID)
+        {
+        }
+
+        public void SendAvatarNotesReply(UUID targetID, string text)
+        {
+        }
+
+        public void SendAvatarPicksReply(UUID targetID, Dictionary<UUID, string> picks)
+        {
+        }
+
+        public void SendAvatarClassifiedReply(UUID targetID, Dictionary<UUID, string> classifieds)
+        {
+        }
+
+        public void SendParcelDwellReply(int localID, UUID parcelID, float dwell)
+        {
+        }
+
+        public void SendUserInfoReply(bool imViaEmail, bool visible, string email)
+        {
+        }
+       
+
+        public void SendCoarseLocationUpdate(List<UUID> users, List<Vector3> CoarseLocations)
+        {
+        }
+
+        public void SendCreateGroupReply(UUID groupID, bool success, string message)
+        {
+        }
+
+        public void SendInstantMessage(GridInstantMessage im)
+        {
+        }
+
+        public void SendMuteListUpdate(string filename)
+        {
+        }
+
+        public void SendUseCachedMuteList()
+        {
+        }
+
+        public void SendPickInfoReply(UUID pickID, UUID creatorID, bool topPick, UUID parcelID, string name, string desc, UUID snapshotID, string user, string originalName, string simName, Vector3 posGlobal, int sortOrder, bool enabled)
+        {
+        }
+
+        public void SendCloudData(float[] cloudCover)
+        {
+        }
+
+        public void SendLandObjectOwners(LandData land, List<UUID> groups, Dictionary<UUID, int> ownersAndCount)
+        {
+        }
+
+        public void FlushPrimUpdates()
+        {
+        }
+
+        public void RefreshGroupMembership()
+        {
+        }
+
+        public void SendDialog(string objectname, UUID objectID, string ownerFirstName, string ownerLastName, string msg, UUID textureID, int ch, string[] buttonlabels)
+        {
+        }
+
+        event DeGrabObject IClientAPI.OnDeGrabObject
+        {
+            add { ;}
+            remove { ; }
+        }
+
+        public EndPoint GetClientEP()
+        {
+            return null;
+        }
+
+        public void SendCameraConstraint(Vector4 ConstraintPlane)
+        {
+        }
+
+        public void SendRebakeAvatarTextures(UUID textureID)
+        {
+        }
+
+        public virtual IPEndPoint RemoteEndPoint
+        {
+            get { return new IPEndPoint(IPAddress.Loopback, (int)CircuitCode); }
+        }
+
+        public virtual void Close()
+        {
+        }
+
+        public bool IsLoggingOut
+        {
+            get
+            {
+                return false;
+            }
+            set
+            {
+            }
+        }
+
+        public event LinkInventoryItem OnLinkInventoryItem;
+
+        public event AgentSit OnRedo;
+
+        public event LandUndo OnLandUndo;
+
+        public event FindAgentUpdate OnFindAgent;
+
+        public event TrackAgentUpdate OnTrackAgent;
+
+        public event NewUserReport OnUserReport;
+
+        public event SaveStateHandler OnSaveState;
+
+        public event GroupAccountSummaryRequest OnGroupAccountSummaryRequest;
+
+        public event GroupAccountDetailsRequest OnGroupAccountDetailsRequest;
+
+        public event GroupAccountTransactionsRequest OnGroupAccountTransactionsRequest;
+
+        public event FreezeUserUpdate OnParcelFreezeUser;
+
+        public event EjectUserUpdate OnParcelEjectUser;
+
+        public event ParcelBuyPass OnParcelBuyPass;
+
+        public event ParcelGodMark OnParcelGodMark;
+
+        public event GroupActiveProposalsRequest OnGroupActiveProposalsRequest;
+
+        public event GroupVoteHistoryRequest OnGroupVoteHistoryRequest;
+
+        public event SimWideDeletesDelegate OnSimWideDeletes;
+
+        public event SendPostcard OnSendPostcard;
+
+        public event MuteListEntryUpdate OnUpdateMuteListEntry;
+
+        public event MuteListEntryRemove OnRemoveMuteListEntry;
+
+        public event GodlikeMessage OnGodlikeMessage;
+
+        public event GodUpdateRegionInfoUpdate OnGodUpdateRegionInfoUpdate;
+
+        public event ChangeInventoryItemFlags OnChangeInventoryItemFlags;
+
+        public event TeleportCancel OnTeleportCancel;
+
+        public event GodlikeMessage OnEstateTelehubRequest;
+
+        public void SendKillObject(ulong regionHandle, uint[] localIDs)
+        {
+        }
+
+        public void SendGenericMessage(string method, List<byte[]> message)
+        {
+        }
+
+        public void SendLayerPacket(float[] map, int x, int y)
+        {
+        }
+
+        public void SendTeleportProgress(string reason)
+        {
+        }
+
+        public void SendAvatarDataImmediate(ISceneEntity avatar)
+        {
+        }
+
+        public void SendPrimUpdate(ISceneEntity entity, PrimUpdateFlags updateFlags)
+        {
+        }
+
+        public void ReprioritizeUpdates()
+        {
+        }
+
+        public void SendEstateList(UUID invoice, int code, UUID[] Data, uint estateID)
+        {
+        }
+
+        public void SendParcelInfo(LandData land, UUID parcelID, uint x, uint y, string SimName)
+        {
+        }
+
+        public void SendGroupActiveProposals(UUID groupID, UUID transactionID, GroupActiveProposals[] Proposals)
+        {
+        }
+
+        public void SendGroupVoteHistory(UUID groupID, UUID transactionID, GroupVoteHistory Vote, GroupVoteHistoryItem[] Items)
+        {
+        }
+
+        public void SendGroupAccountingDetails(IClientAPI sender, UUID groupID, UUID transactionID, UUID sessionID, int amt)
+        {
+        }
+
+        public void SendGroupAccountingSummary(IClientAPI sender, UUID groupID, uint moneyAmt, int totalTier, int usedTier)
+        {
+        }
+
+        public void SendGroupTransactionsSummaryDetails(IClientAPI sender, UUID groupID, UUID transactionID, UUID sessionID, int amt)
+        {
+        }
+
+        public void SendChangeUserRights(UUID agentID, UUID friendID, int rights)
+        {
+        }
+
+        public void SendTextBoxRequest(string message, int chatChannel, string objectname, string ownerFirstName, string ownerLastName, UUID objectId)
+        {
+        }
+
+        public void SendPlacesQuery(Aurora.Framework.ExtendedLandData[] LandData, UUID queryID, UUID transactionID)
+        {
+        }
+
+        public void FireUpdateParcel(LandUpdateArgs args, int LocalID)
+        {
+        }
+
+        public void SendTelehubInfo(Vector3 TelehubPos, Quaternion TelehubRot, List<Vector3> SpawnPoint, UUID ObjectID, string Name)
+        {
+        }
+
+        public void StopFlying(ISceneEntity presence)
+        {
+        }
+
+        #endregion
+
+        #region IClientAPI Members
+
+
+        public event ViewerStartAuction OnViewerStartAuction;
+
+        #endregion
+    }
+}

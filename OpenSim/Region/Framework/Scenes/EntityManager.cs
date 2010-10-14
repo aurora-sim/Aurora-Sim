@@ -31,92 +31,227 @@ using System.Collections.Generic;
 using System.Reflection;
 using log4net;
 using OpenMetaverse;
+using OpenSim.Framework;
 
 namespace OpenSim.Region.Framework.Scenes
 {
-    public class EntityManager
+    public class EntityManager : IEnumerable<EntityBase>
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private readonly DoubleDictionary<UUID, uint, EntityBase> m_entities = new DoubleDictionary<UUID, uint, EntityBase>();
-
-        public int Count
-        {
-            get { return m_entities.Count; }
-        }
+        private readonly Dictionary<UUID,EntityBase> m_eb_uuid = new Dictionary<UUID, EntityBase>();
+        private readonly Dictionary<uint, EntityBase> m_eb_localID = new Dictionary<uint, EntityBase>();
+        private readonly Dictionary<UUID, UUID> m_child_uuid = new Dictionary<UUID, UUID>();
+        private readonly Dictionary<uint, UUID> m_child_loc_id = new Dictionary<uint, UUID>();
+        private readonly Dictionary<uint, ISceneEntity> m_eb_child_loc_id = new Dictionary<uint, ISceneEntity>();
+        private readonly Object m_lock = new Object();
 
         public void Add(EntityBase entity)
         {
-            m_entities.Add(entity.UUID, entity.LocalId, entity);
+            lock (m_lock)
+            {
+                try
+                {
+                    m_eb_uuid.Add(entity.UUID, entity);
+                    m_eb_localID.Add(entity.LocalId, entity);
+                    if (entity is SceneObjectGroup)
+                    {
+                        foreach (SceneObjectPart part in (entity as SceneObjectGroup).ChildrenList)
+                        {
+                            m_child_uuid[part.UUID] = entity.UUID;
+                            m_child_loc_id[part.LocalId] = entity.UUID;
+                            m_eb_child_loc_id[part.LocalId] = part;
+                        }
+                    }
+                }
+                catch(Exception e)
+                {
+                    m_log.ErrorFormat("Add Entity failed: {0}", e.Message);
+                }
+            }
+        }
+
+        public void InsertOrReplace(EntityBase entity)
+        {
+            lock (m_lock)
+            {
+                try
+                {
+                    m_eb_uuid[entity.UUID] = entity;
+                    m_eb_localID[entity.LocalId] = entity;
+                    if (entity is SceneObjectGroup)
+                    {
+                        foreach (SceneObjectPart part in (entity as SceneObjectGroup).ChildrenList)
+                        {
+                            m_child_uuid[part.UUID] = entity.UUID;
+                            m_child_loc_id[part.LocalId] = entity.UUID;
+                            m_eb_child_loc_id[part.LocalId] = part;
+                        }
+                    }
+                }
+                catch(Exception e)
+                {
+                    m_log.ErrorFormat("Insert or Replace Entity failed: {0}", e.Message);
+                }
+            }
         }
 
         public void Clear()
         {
-            m_entities.Clear();
+            lock (m_lock)
+            {
+                m_eb_uuid.Clear();
+                m_eb_localID.Clear();
+                m_child_uuid.Clear();
+                m_child_loc_id.Clear();
+            }
+        }
+
+        public int Count
+        {
+            get
+            {
+                return m_eb_uuid.Count;
+            }
         }
 
         public bool ContainsKey(UUID id)
         {
-            return m_entities.ContainsKey(id);
+            try
+            {
+                return m_eb_uuid.ContainsKey(id);
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         public bool ContainsKey(uint localID)
         {
-            return m_entities.ContainsKey(localID);
+            try
+            {
+                return m_eb_localID.ContainsKey(localID);
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         public bool Remove(uint localID)
         {
-            return m_entities.Remove(localID);
+            lock (m_lock)
+            {
+                try
+                {
+                    bool a = false;
+                    EntityBase entity;
+                    if (m_eb_localID.TryGetValue(localID, out entity))
+                        a = m_eb_uuid.Remove(entity.UUID);
+
+                    if (entity != null && entity is SceneObjectGroup)
+                    {
+                        foreach (SceneObjectPart part in (entity as SceneObjectGroup).ChildrenList)
+                        {
+                            m_child_uuid.Remove(part.UUID);
+                            m_child_loc_id.Remove(part.LocalId);
+                            m_eb_child_loc_id.Remove(part.LocalId);
+                        }
+                    }
+
+                    bool b = m_eb_localID.Remove(localID);
+                    return a && b;
+                }
+                catch (Exception e)
+                {
+                    m_log.ErrorFormat("Remove Entity failed for {0}", localID, e);
+                    return false;
+                }
+            }
         }
 
         public bool Remove(UUID id)
         {
-            return m_entities.Remove(id);
+            lock (m_lock)
+            {
+                try 
+                {
+                    bool a = false;
+                    EntityBase entity;
+                    if (m_eb_uuid.TryGetValue(id, out entity))
+                        a = m_eb_localID.Remove(entity.LocalId);
+
+                    if (entity != null && entity is SceneObjectGroup)
+                    {
+                        foreach (SceneObjectPart part in (entity as SceneObjectGroup).ChildrenList)
+                        {
+                            m_child_uuid.Remove(part.UUID);
+                            m_child_loc_id.Remove(part.LocalId);
+                            m_eb_child_loc_id.Remove(part.LocalId);
+                        }
+                    }
+
+                    bool b = m_eb_uuid.Remove(id);
+                    return a && b;
+                }
+                catch (Exception e)
+                {
+                    m_log.ErrorFormat("Remove Entity failed for {0}", id, e);
+                    return false;
+                }
+            }
         }
 
-        public EntityBase[] GetAllByType<T>()
+        public List<EntityBase> GetAllByType<T>()
         {
             List<EntityBase> tmp = new List<EntityBase>();
 
-            m_entities.ForEach(
-                delegate(EntityBase entity)
+            lock (m_lock)
+            {
+                try
                 {
-                    if (entity is T)
-                        tmp.Add(entity);
+                    foreach (KeyValuePair<UUID, EntityBase> pair in m_eb_uuid)
+                    {
+                        if (pair.Value is T)
+                        {
+                            tmp.Add(pair.Value);
+                        }
+                    }
                 }
-            );
+                catch (Exception e) 
+                {
+                    m_log.ErrorFormat("GetAllByType failed for {0}", e);
+                    tmp = null;
+                }
+            }
 
-            return tmp.ToArray();
+            return tmp;
         }
 
-        public EntityBase[] GetEntities()
+        public List<EntityBase> GetEntities()
         {
-            List<EntityBase> tmp = new List<EntityBase>(m_entities.Count);
-            m_entities.ForEach(delegate(EntityBase entity) { tmp.Add(entity); });
-            return tmp.ToArray();
-        }
-
-        public void ForEach(Action<EntityBase> action)
-        {
-            m_entities.ForEach(action);
-        }
-
-        public EntityBase Find(Predicate<EntityBase> predicate)
-        {
-            return m_entities.FindValue(predicate);
+            lock (m_lock)
+            {
+                return new List<EntityBase>(m_eb_uuid.Values);
+            }
         }
 
         public EntityBase this[UUID id]
         {
             get
             {
-                EntityBase entity;
-                m_entities.TryGetValue(id, out entity);
-                return entity;
+                lock (m_lock)
+                {
+                    EntityBase entity;
+                    if (m_eb_uuid.TryGetValue(id, out entity))
+                        return entity;
+                    else
+                        return null;
+                }
             }
             set
             {
-                Add(value);
+                InsertOrReplace(value);
             }
         }
 
@@ -124,24 +259,101 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get
             {
-                EntityBase entity;
-                m_entities.TryGetValue(localID, out entity);
-                return entity;
+                lock (m_lock)
+                {
+                    EntityBase entity;
+                    if (m_eb_localID.TryGetValue(localID, out entity))
+                        return entity;
+                    else
+                        return null;
+                }
             }
             set
             {
-                Add(value);
+                InsertOrReplace(value);
             }
         }
 
         public bool TryGetValue(UUID key, out EntityBase obj)
         {
-            return m_entities.TryGetValue(key, out obj);
+            lock (m_lock)
+            {
+                return m_eb_uuid.TryGetValue(key, out obj);
+            }
         }
 
         public bool TryGetValue(uint key, out EntityBase obj)
         {
-            return m_entities.TryGetValue(key, out obj);
+            lock (m_lock)
+            {
+                return m_eb_localID.TryGetValue(key, out obj);
+            }
         }
+
+        /// <summary>
+        /// Retrives the SceneObjectGroup of this child
+        /// </summary>
+        /// <param name="childkey"></param>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public bool TryGetChildPrimParent(UUID childkey, out EntityBase obj)
+        {
+            lock (m_lock)
+            {
+                UUID ParentKey = UUID.Zero;
+                if (m_child_uuid.TryGetValue(childkey, out ParentKey))
+                    return TryGetValue(ParentKey, out obj);
+
+                obj = null;
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Retrives the SceneObjectGroup of this child
+        /// </summary>
+        /// <param name="childkey"></param>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public bool TryGetChildPrimParent(uint childkey, out EntityBase obj)
+        {
+            lock (m_lock)
+            {
+                UUID ParentKey = UUID.Zero;
+                if (m_child_loc_id.TryGetValue(childkey, out ParentKey))
+                    return TryGetValue(ParentKey, out obj);
+
+                obj = null;
+                return false;
+            }
+        }
+
+        public bool TryGetChildPrim(uint childkey, out ISceneEntity child)
+        {
+            lock (m_lock)
+            {
+                if (m_eb_child_loc_id.TryGetValue(childkey, out child))
+                    return true;
+
+                child = null;
+                return false;
+            }
+            
+        }
+
+        /// <summary>
+        /// This could be optimised to work on the list 'live' rather than making a safe copy and iterating that.
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerator<EntityBase> GetEnumerator()
+        {
+            return GetEntities().GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
     }
 }

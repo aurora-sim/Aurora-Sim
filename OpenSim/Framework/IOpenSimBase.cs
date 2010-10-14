@@ -41,7 +41,6 @@ namespace OpenSim.Framework
 {
 	public interface IOpenSimBase
 	{
-		ConfigSettings ConfigurationSettings { get; set; }
         IConfigSource ConfigSource { get; set; }
 		IRegistryCore ApplicationRegistry { get; }
         IStatsCollector Stats { get; }

@@ -60,7 +60,6 @@ namespace OpenSim.Services.Connectors.SimianGrid
 
         private string m_serverUrl = String.Empty;
         private Dictionary<UUID, Scene> m_scenes = new Dictionary<UUID, Scene>();
-        private bool m_Enabled = false;
 
         #region ISharedRegionModule
 
@@ -73,68 +72,57 @@ namespace OpenSim.Services.Connectors.SimianGrid
         public string Name { get { return "SimianGridServiceConnector"; } }
         public void AddRegion(Scene scene)
         {
-            if (!m_Enabled)
-                return;
-
             // Every shared region module has to maintain an indepedent list of
             // currently running regions
             lock (m_scenes)
                 m_scenes[scene.RegionInfo.RegionID] = scene;
 
-            scene.RegisterModuleInterface<IGridService>(this);
+            if (!String.IsNullOrEmpty(m_serverUrl))
+                scene.RegisterModuleInterface<IGridService>(this);
         }
         public void RemoveRegion(Scene scene)
         {
-            if (!m_Enabled)
-                return;
-
             lock (m_scenes)
                 m_scenes.Remove(scene.RegionInfo.RegionID);
 
-            scene.UnregisterModuleInterface<IGridService>(this);
+            if (!String.IsNullOrEmpty(m_serverUrl))
+                scene.UnregisterModuleInterface<IGridService>(this);
         }
 
         #endregion ISharedRegionModule
 
         public SimianGridServiceConnector(IConfigSource source)
         {
-            CommonInit(source);
+            Initialise(source);
         }
 
         public void Initialise(IConfigSource source)
         {
-            IConfig moduleConfig = source.Configs["Modules"];
-            if (moduleConfig != null)
+            if (Simian.IsSimianEnabled(source, "GridServices", this.Name))
             {
-                string name = moduleConfig.GetString("GridServices", "");
-                if (name == Name)
-                    CommonInit(source);
-            }
-        }
-
-        private void CommonInit(IConfigSource source)
-        {
-            IConfig gridConfig = source.Configs["GridService"];
-            if (gridConfig != null)
-            {
-                string serviceUrl = gridConfig.GetString("GridServerURI");
-                if (!String.IsNullOrEmpty(serviceUrl))
+                IConfig gridConfig = source.Configs["GridService"];
+                if (gridConfig == null)
                 {
-                    if (!serviceUrl.EndsWith("/") && !serviceUrl.EndsWith("="))
-                        serviceUrl = serviceUrl + '/';
-                    m_serverUrl = serviceUrl;
-                    m_Enabled = true;
+                    m_log.Error("[SIMIAN GRID CONNECTOR]: GridService missing from OpenSim.ini");
+                    throw new Exception("Grid connector init error");
                 }
-            }
 
-            if (String.IsNullOrEmpty(m_serverUrl))
-                m_log.Info("[SIMIAN GRID CONNECTOR]: No GridServerURI specified, disabling connector");
+                string serviceUrl = gridConfig.GetString("GridServerURI");
+                if (String.IsNullOrEmpty(serviceUrl))
+                {
+                    m_log.Error("[SIMIAN GRID CONNECTOR]: No Server URI named in section GridService");
+                    throw new Exception("Grid connector init error");
+                }
+
+                m_serverUrl = serviceUrl;
+            }
         }
 
         #region IGridService
 
-        public string RegisterRegion(UUID scopeID, GridRegion regionInfo)
+        public string RegisterRegion(UUID scopeID, GridRegion regionInfo, UUID oldSessionID, out UUID SessionID)
         {
+            SessionID = UUID.Zero;
             // Generate and upload our map tile in PNG format to the SimianGrid AddMapTile service
             Scene scene;
             if (m_scenes.TryGetValue(regionInfo.RegionID, out scene))
@@ -180,7 +168,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 return "Region registration for " + regionInfo.RegionName + " failed: " + response["Message"].AsString();
         }
 
-        public bool DeregisterRegion(UUID regionID)
+        public bool DeregisterRegion(UUID regionID, UUID SessionID)
         {
             NameValueCollection requestArgs = new NameValueCollection
             {
@@ -370,12 +358,11 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 return new List<GridRegion>(0);
         }
 
-        public List<GridRegion> GetHyperlinks(UUID scopeID)
+        public List<GridRegion> GetSafeRegions(UUID scopeID, int x, int y)
         {
-            // Hypergrid/linked regions are not supported
-            return new List<GridRegion>();
+            return new List<GridRegion>(0);
         }
-        
+
         public int GetRegionFlags(UUID scopeID, UUID regionID)
         {
             const int REGION_ONLINE = 4;
@@ -413,13 +400,12 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 return;
             }
 
-            using (Image mapTile = tileGenerator.CreateMapTile())
+            Bitmap mapTile, terrainTile;
+            tileGenerator.CreateMapTile(out terrainTile, out mapTile);
+            using (MemoryStream stream = new MemoryStream())
             {
-                using (MemoryStream stream = new MemoryStream())
-                {
-                    mapTile.Save(stream, ImageFormat.Png);
-                    pngData = stream.ToArray();
-                }
+                mapTile.Save(stream, ImageFormat.Png);
+                pngData = stream.ToArray();
             }
 
             List<MultipartForm.Element> postParameters = new List<MultipartForm.Element>()
@@ -539,19 +525,27 @@ namespace OpenSim.Services.Connectors.SimianGrid
             return region;
         }
 
-        #region IGridService Members
-
-
-        public GridRegion IncomingNewRegion(GridRegion region)
+        public string UpdateMap(UUID scopeID, UUID RegionID, UUID mapID, UUID terrainID, UUID sessionID)
         {
-            throw new NotImplementedException();
+            UUID SessionID;
+            return RegisterRegion(scopeID, GetRegionByUUID(scopeID, RegionID), UUID.Zero, out SessionID);
         }
 
-        public void ClosingRegion(GridRegion region)
+        public multipleMapItemReply GetMapItems(ulong regionHandle, GridItemType gridItemType)
         {
-            throw new NotImplementedException();
+            return new multipleMapItemReply();
         }
 
-        #endregion
+        public void RemoveAgent(UUID regionID, UUID agentID)
+        {
+        }
+
+        public void AddAgent(UUID regionID, UUID agentID, Vector3 Position)
+        {
+        }
+
+        public void SetRegionUnsafe(UUID r)
+        {
+        }
     }
 }

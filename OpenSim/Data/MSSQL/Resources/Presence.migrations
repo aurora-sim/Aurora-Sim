@@ -28,3 +28,11 @@ CREATE UNIQUE INDEX SessionID ON Presence(SessionID);
 CREATE INDEX UserID ON Presence(UserID);
 
 COMMIT
+
+:VERSION 3
+
+BEGIN TRANSACTION
+
+ALTER TABLE Presence ADD LastSeen int NOT NULL default 0
+
+COMMIT

@@ -60,7 +60,7 @@ namespace OpenSim.Region.RegionCombinerModule
             return m_rootScene.Permissions.PropagatePermissions();
         }
 
-        public uint GenerateClientFlags(UUID userid, UUID objectidid)
+        public uint GenerateClientFlags(UUID userid, SceneObjectPart objectidid)
         {
             return m_rootScene.Permissions.GenerateClientFlags(userid,objectidid);
         }
@@ -140,9 +140,9 @@ namespace OpenSim.Region.RegionCombinerModule
             return m_rootScene.Permissions.CanReturnObjects(land, user, objects);
         }
 
-        public bool CanRezObject(int objectcount, UUID owner, Vector3 objectposition, Scene scene)
+        public bool CanRezObject(int objectcount, UUID owner, Vector3 objectposition, Scene scene, out string reason)
         {
-            return m_rootScene.Permissions.CanRezObject(objectcount, owner, objectposition);
+            return m_rootScene.Permissions.CanRezObject(objectcount, owner, objectposition, out reason);
         }
 
         public bool CanRunConsoleCommand(UUID user, Scene requestfromscene)
@@ -260,10 +260,11 @@ namespace OpenSim.Region.RegionCombinerModule
             return m_rootScene.Permissions.CanDeleteUserInventory(itemid, userid);
         }
 
-        public bool CanTeleport(UUID userid, Scene scene, Vector3 Position, out Vector3 newPos)
+        public bool CanTeleport(UUID userid, Scene scene, Vector3 Position, string IP, out Vector3 newPos, out string reason)
         {
             newPos = Position;
-            return m_rootScene.Permissions.CanTeleport(userid, Vector3.Zero, out newPos);
+            reason = "";
+            return m_rootScene.Permissions.CanTeleport(userid, Vector3.Zero, IP, out newPos, out reason);
         }
 
         #endregion

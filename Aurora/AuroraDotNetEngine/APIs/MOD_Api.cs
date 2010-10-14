@@ -48,7 +48,6 @@ using LSL_Rotation = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Quaternion
 using LSL_String = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString;
 using LSL_Vector = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Vector3;
 using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
-using Aurora.ScriptEngine.AuroraDotNetEngine.Plugins;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
@@ -116,7 +115,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (message.Length > 1023)
                 message = message.Substring(0, 1023);
 
-            World.SimChat(OpenMetaverse.Utils.StringToBytes(message),
+            World.SimChat(message,
                           ChatTypeEnum.Shout, ScriptBaseClass.DEBUG_CHANNEL, m_host.ParentGroup.RootPart.AbsolutePosition, m_host.Name, m_host.UUID, true);
 
             IWorldComm wComm = World.RequestModuleInterface<IWorldComm>();

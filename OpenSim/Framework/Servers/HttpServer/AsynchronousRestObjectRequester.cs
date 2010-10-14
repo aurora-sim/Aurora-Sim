@@ -92,7 +92,7 @@ namespace OpenSim.Framework.Servers.HttpServer
 
                     requestStream.Write(buffer.ToArray(), 0, length);
                     requestStream.Close();
-
+                    
                     request.BeginGetResponse(delegate(IAsyncResult ar)
                     {
                         response = request.EndGetResponse(ar);
@@ -114,7 +114,8 @@ namespace OpenSim.Framework.Servers.HttpServer
                             response.Close();
                         }
 
-                        action(deserial);
+                        if(action != null)
+                            action(deserial);
 
                     }, null);
                 }, null);
@@ -178,7 +179,8 @@ namespace OpenSim.Framework.Servers.HttpServer
 
                 try
                 {
-                    action(deserial);
+                    if(action != null)
+                        action(deserial);
                 }
                 catch (Exception e)
                 {

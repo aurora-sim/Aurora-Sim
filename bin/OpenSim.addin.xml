@@ -7,7 +7,23 @@
     </Runtime>
 
     <ExtensionPoint path="/OpenSim/Startup">
-        <ExtensionNode name="Plugin" type="OpenSim.Framework.PluginExtensionNode" objectType="OpenSim.IApplicationPlugin"/>
+        <ExtensionNode name="Plugin" type="Mono.Addins.TypeExtensionNode" objectType="OpenSim.IApplicationPlugin"/>
+    </ExtensionPoint>
+
+    <ExtensionPoint path="/OpenSim/RegionLoader">
+        <ExtensionNode name="RegionLoader" type="Mono.Addins.TypeExtensionNode" objectType="OpenSim.IApplicationPlugin"/>
+    </ExtensionPoint>
+
+	<ExtensionPoint path="/Aurora/DataPlugin">
+        <ExtensionNode name="DataPlugin" type="Mono.Addins.TypeExtensionNode" objectType="Aurora.Framework.IAuroraDataPlugin"/>
+    </ExtensionPoint>
+
+	<ExtensionPoint path="/OpenSim/Console">
+        <ExtensionNode name="ConsolePlugin" type="Mono.Addins.TypeExtensionNode" objectType="OpenSim.Framework.ICommandConsole"/>
+    </ExtensionPoint>
+
+<ExtensionPoint path="/Aurora/ChatPlugins">
+        <ExtensionNode name="ChatPlugins" type="Mono.Addins.TypeExtensionNode" objectType="Aurora.Framework.IAuroraDataPlugin"/>
     </ExtensionPoint>
 
     <ExtensionPoint path="/OpenSim/WindModule" name="Wind Module Plugins for wind models">
@@ -16,5 +32,20 @@
 
     <ExtensionPoint path="/OpenSim/RegionModules">
         <ExtensionNode name="RegionModule" type="Mono.Addins.TypeExtensionNode" objectType="OpenSim.Region.Framework.Interfaces.IRegionModuleBase"/>
+    </ExtensionPoint>
+	<ExtensionPoint path="/OpenSim/ScriptConverter">
+        <ExtensionNode name="ScriptConverter" type="Mono.Addins.TypeExtensionNode" objectType="OpenSim.Framework.IPlugin"/>
+    </ExtensionPoint>
+
+	<ExtensionPoint path="/OpenSim/ScriptAPI">
+        <ExtensionNode name="ScriptAPI" type="Mono.Addins.TypeExtensionNode" objectType="OpenSim.Framework.IPlugin"/>
+    </ExtensionPoint>
+
+	<ExtensionPoint path="/OpenSim/NonSharedScriptPlugins">
+        <ExtensionNode name="NonSharedScriptPlugin" type="Mono.Addins.TypeExtensionNode" objectType="OpenSim.Framework.IPlugin"/>
+    </ExtensionPoint>
+	
+	<ExtensionPoint path="/OpenSim/SharedScriptPlugins">
+        <ExtensionNode name="SharedScriptPlugin" type="Mono.Addins.TypeExtensionNode" objectType="OpenSim.Framework.IPlugin"/>
     </ExtensionPoint>
 </Addin>

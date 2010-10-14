@@ -162,6 +162,11 @@ namespace OpenSim.Services.Interfaces
             Data["UnderPantsAsset"] = appearance.UnderPantsAsset.ToString();
             Data["UnderShirtAsset"] = appearance.UnderShirtAsset.ToString();
 
+            Data["AlphaAsset"] = appearance.AlphaAsset.ToString();
+            Data["AlphaItem"] = appearance.AlphaItem.ToString();
+            Data["TattooAsset"] = appearance.TattooAsset.ToString();
+            Data["TattooItem"] = appearance.TattooItem.ToString();
+
             // Attachments
             Hashtable attachs = appearance.GetAttachments();
             if (attachs != null)
@@ -211,6 +216,11 @@ namespace OpenSim.Services.Interfaces
                 appearance.SocksAsset = UUID.Parse(Data["SocksAsset"]);
                 appearance.UnderPantsAsset = UUID.Parse(Data["UnderPantsAsset"]);
                 appearance.UnderShirtAsset = UUID.Parse(Data["UnderShirtAsset"]);
+
+                appearance.AlphaAsset = UUID.Parse(Data["AlphaAsset"]);
+                appearance.AlphaItem = UUID.Parse(Data["AlphaItem"]);
+                appearance.TattooAsset = UUID.Parse(Data["TattooAsset"]);
+                appearance.TattooItem = UUID.Parse(Data["TattooItem"]);
 
                 // Attachments
                 Dictionary<string, string> attchs = new Dictionary<string, string>();

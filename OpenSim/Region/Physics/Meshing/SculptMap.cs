@@ -38,7 +38,7 @@ using System.Drawing.Imaging;
 
 namespace PrimMesher
 {
-    public class SculptMap
+    public unsafe class SculptMap
     {
         public int width;
         public int height;
@@ -96,6 +96,9 @@ namespace PrimMesher
             greenBytes = new byte[numBytes];
             blueBytes = new byte[numBytes];
 
+            BitmapProcessing.FastBitmap unsafeBMP = new BitmapProcessing.FastBitmap(bm);
+            unsafeBMP.LockBitmap(); //Lock the bitmap for the unsafe operation
+            
             int byteNdx = 0;
 
             try
@@ -106,11 +109,11 @@ namespace PrimMesher
                     {
                         int bmY = y < height ? y * 2 : y * 2 - 1;
                         int bmX = x < width ? x * 2 : x * 2 - 1;
-                        Color c = bm.GetPixel(bmX, bmY);
+                        Color pixel = unsafeBMP.GetPixel(bmX, bmY);
 
-                        redBytes[byteNdx] = c.R;
-                        greenBytes[byteNdx] = c.G;
-                        blueBytes[byteNdx] = c.B;
+                        redBytes[byteNdx] = pixel.R;
+                        greenBytes[byteNdx] = pixel.G;
+                        blueBytes[byteNdx] = pixel.B;
 
                         ++byteNdx;
                     }
@@ -120,6 +123,9 @@ namespace PrimMesher
             {
                 throw new Exception("Caught exception processing byte arrays in SculptMap(): e: " + e.ToString());
             }
+
+            //All done, unlock
+            unsafeBMP.UnlockBitmap();
 
             width++;
             height++;

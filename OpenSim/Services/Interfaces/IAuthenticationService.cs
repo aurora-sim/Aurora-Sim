@@ -75,6 +75,7 @@ namespace OpenSim.Services.Interfaces
         // authentication/authorization.
         //
         bool SetPassword(UUID principalID, string passwd);
+        bool SetPasswordHashed(UUID UUID, string passwd);
 
         //////////////////////////////////////////////////////
         // Grid
@@ -94,7 +95,6 @@ namespace OpenSim.Services.Interfaces
         // Session IDs are not handled here. After obtaining
         // a token, the session ID regions use can be
         // obtained from the presence service.
-        bool SetPasswordHashed(UUID UUID, string passwd);
         string GetToken(UUID principalID, int lifetime);
     }
 }

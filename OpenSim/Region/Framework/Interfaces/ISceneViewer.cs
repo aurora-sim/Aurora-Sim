@@ -27,6 +27,7 @@
 
 using System;
 using OpenSim.Region.Framework.Scenes;
+using OpenSim.Framework;
 
 namespace OpenSim.Region.Framework.Interfaces
 {
@@ -34,7 +35,7 @@ namespace OpenSim.Region.Framework.Interfaces
     {
         void Reset();
         void Close();
-        void QueuePartForUpdate(SceneObjectPart part);
+        void QueuePartForUpdate(SceneObjectPart part, PrimUpdateFlags UpdateFlags);
         void SendPrimUpdates();
     }
 }

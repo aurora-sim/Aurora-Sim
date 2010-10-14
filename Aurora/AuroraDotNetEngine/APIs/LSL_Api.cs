@@ -63,7 +63,6 @@ using LSL_List = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.list;
 using LSL_Rotation = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Quaternion;
 using LSL_String = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString;
 using LSL_Vector = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Vector3;
-using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
 using System.Reflection;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
@@ -71,6 +70,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
     /// <summary>
     /// Contains all LSL ll-functions. This class will be in Default AppDomain.
     /// </summary>
+    [Serializable]
     public class LSL_Api : MarshalByRefObject, ILSL_Api, IScriptApi
     {
         //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -81,7 +81,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         protected bool throwErrorOnNotImplemented = true;
         protected float m_ScriptDelayFactor = 1.0f;
         protected float m_ScriptDistanceFactor = 1.0f;
-        protected float m_MinTimerInterval = 0.5f;
+        protected float m_MinTimerInterval = 0.1f;
 
         protected DateTime m_timer = DateTime.Now;
         protected bool m_waitingForScriptAnswer = false;
@@ -92,6 +92,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         protected bool m_scriptConsoleChannelEnabled = false;
         protected IUrlModule m_UrlModule = null;
 		internal ScriptProtectionModule ScriptProtection;
+        protected IWorldComm m_comms = null;
         
         public void Initialize(ScriptEngine ScriptEngine, SceneObjectPart host, uint localID, UUID itemID, ScriptProtectionModule module)
         {
@@ -117,6 +118,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             m_TransferModule =
                     World.RequestModuleInterface<IMessageTransferModule>();
             m_UrlModule = World.RequestModuleInterface<IUrlModule>();
+            m_comms = World.RequestModuleInterface<IWorldComm>();
         }
 
         public string Name
@@ -147,7 +149,23 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             delay = (int)((float)delay * m_ScriptDelayFactor);
             if (delay == 0)
                 return;
+
             System.Threading.Thread.Sleep(delay);
+        }
+
+        /// <summary>
+        /// This is the new sleep implementation that allows for us to not freeze the script thread while we run
+        /// </summary>
+        /// <param name="delay"></param>
+        /// <returns></returns>
+        protected DateTime PScriptSleep(int delay)
+        {
+            delay = (int)((float)delay * m_ScriptDelayFactor);
+            if (delay == 0)
+                return DateTime.Now;
+
+            DateTime timeToStopSleeping = DateTime.Now.AddMilliseconds(delay);
+            return timeToStopSleeping;
         }
 
         public Scene World
@@ -168,9 +186,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llResetScript()
         {
         	ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
-            m_ScriptEngine.ApiResetScript(m_itemID);
-            throw new EventAbortException();
+            
+            m_ScriptEngine.ResetScript(m_host.UUID, m_itemID, true);
         }
 
         public void llResetOtherScript(string name)
@@ -178,10 +195,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             UUID item;
 
-            m_host.AddScriptLPS(1);
+            
 
             if ((item = ScriptByName(name)) != UUID.Zero)
-                m_ScriptEngine.ResetScript(item);
+                m_ScriptEngine.ResetScript(m_host.UUID, item, false);
             else
                 ShoutError("llResetOtherScript: script "+name+" not found");
         }
@@ -191,11 +208,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             UUID item;
 
-            m_host.AddScriptLPS(1);
+            
 
             if ((item = ScriptByName(name)) != UUID.Zero)
             {
-                return m_ScriptEngine.GetScriptState(item) ?1:0;
+                return m_ScriptEngine.GetScriptRunningState(item) ?1:0;
             }
 
             ShoutError("llGetScriptState: script "+name+" not found");
@@ -211,14 +228,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             UUID item;
 
-            m_host.AddScriptLPS(1);
+            
 
             // These functions are supposed to be robust,
             // so get the state one step at a time.
 
             if ((item = ScriptByName(name)) != UUID.Zero)
             {
-                m_ScriptEngine.SetScriptState(item, run == 0 ? false : true);
+                m_ScriptEngine.SetScriptRunningState(item, run == 1);
             }
             else
             {
@@ -235,7 +252,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
             case ScriptBaseClass.LINK_SET:
                 if (m_host.ParentGroup != null)
-                    return new List<SceneObjectPart>(m_host.ParentGroup.Children.Values);
+                    return new List<SceneObjectPart>(m_host.ParentGroup.ChildrenList);
                 return ret;
 
             case ScriptBaseClass.LINK_ROOT:
@@ -250,7 +267,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             case ScriptBaseClass.LINK_ALL_OTHERS:
                 if (m_host.ParentGroup ==  null)
                     return new List<SceneObjectPart>();
-                ret = new List<SceneObjectPart>(m_host.ParentGroup.Children.Values);
+                ret = new List<SceneObjectPart>(m_host.ParentGroup.ChildrenList);
                 if (ret.Contains(m_host))
                     ret.Remove(m_host);
                 return ret;
@@ -258,7 +275,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             case ScriptBaseClass.LINK_ALL_CHILDREN:
                 if (m_host.ParentGroup ==  null)
                     return new List<SceneObjectPart>();
-                ret = new List<SceneObjectPart>(m_host.ParentGroup.Children.Values);
+                ret = new List<SceneObjectPart>(m_host.ParentGroup.ChildrenList);
                 if (ret.Contains(m_host.ParentGroup.RootPart))
                     ret.Remove(m_host.ParentGroup.RootPart);
                 return ret;
@@ -293,7 +310,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 case ScriptBaseClass.LINK_SET:
                     if (m_host.ParentGroup != null)
                     {
-                        List < SceneObjectPart > parts = new List<SceneObjectPart>(m_host.ParentGroup.Children.Values);
+                        List<SceneObjectPart> parts = new List<SceneObjectPart>(m_host.ParentGroup.ChildrenList);
                         return parts.ConvertAll<ISceneEntity>(new Converter<SceneObjectPart,ISceneEntity>(delegate(SceneObjectPart part)
                             {
                                 return (ISceneEntity)part;
@@ -313,7 +330,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 case ScriptBaseClass.LINK_ALL_OTHERS:
                     if (m_host.ParentGroup == null)
                         return new List<ISceneEntity>();
-                    List < SceneObjectPart > sceneobjectparts = new List<SceneObjectPart>(m_host.ParentGroup.Children.Values);
+                    List < SceneObjectPart > sceneobjectparts = new List<SceneObjectPart>(m_host.ParentGroup.ChildrenList);
                     ret = sceneobjectparts.ConvertAll<ISceneEntity>(new Converter<SceneObjectPart, ISceneEntity>(delegate(SceneObjectPart part)
                             {
                                 return (ISceneEntity)part;
@@ -325,7 +342,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 case ScriptBaseClass.LINK_ALL_CHILDREN:
                     if (m_host.ParentGroup == null)
                         return new List<ISceneEntity>();
-                    List<SceneObjectPart> children = new List<SceneObjectPart>(m_host.ParentGroup.Children.Values);
+                    List<SceneObjectPart> children = new List<SceneObjectPart>(m_host.ParentGroup.ChildrenList);
                     ret = children.ConvertAll<ISceneEntity>(new Converter<SceneObjectPart, ISceneEntity>(delegate(SceneObjectPart part)
                     {
                         return (ISceneEntity)part;
@@ -372,7 +389,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         protected UUID InventoryKey(string name, int type)
         {
-            m_host.AddScriptLPS(1);
+            
 
             lock (m_host.TaskInventory)
             {
@@ -393,7 +410,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         protected UUID InventoryKey(string name)
         {
-            m_host.AddScriptLPS(1);
+            
 
             lock (m_host.TaskInventory)
             {
@@ -446,42 +463,42 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Float llSin(double f)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return (double)Math.Sin(f);
         }
 
         public LSL_Float llCos(double f)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return (double)Math.Cos(f);
         }
 
         public LSL_Float llTan(double f)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return (double)Math.Tan(f);
         }
 
         public LSL_Float llAtan2(double x, double y)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return (double)Math.Atan2(x, y);
         }
 
         public LSL_Float llSqrt(double f)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return (double)Math.Sqrt(f);
         }
 
         public LSL_Float llPow(double fbase, double fexponent)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return (double)Math.Pow(fbase, fexponent);
         }
 
@@ -489,7 +506,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             // changed to replicate LSL behaviour whereby minimum int value is returned untouched.
-            m_host.AddScriptLPS(1);
+            
             if (i == Int32.MinValue)
                 return i;
             else
@@ -499,14 +516,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Float llFabs(double f)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return (double)Math.Abs(f);
         }
 
         public LSL_Float llFrand(double mag)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             lock (Util.RandomClass)
             {
                 return Util.RandomClass.NextDouble() * mag;
@@ -516,14 +533,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Integer llFloor(double f)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return (int)Math.Floor(f);
         }
 
         public LSL_Integer llCeil(double f)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return (int)Math.Ceiling(f);
         }
 
@@ -531,22 +548,31 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Integer llRound(double f)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
-            return (int)Math.Round(f, MidpointRounding.AwayFromZero);
+            
+            double RoundedNumber = Math.Round(f, MidpointRounding.AwayFromZero);
+            //Attempt to fix rounded numbers like -4.5 arounding away from zero
+            if (f < 0)
+            {
+                if (f + 0.5 == RoundedNumber || f - 0.5 == RoundedNumber)
+                {
+                    RoundedNumber += 1;
+                }
+            }
+            return (int)RoundedNumber;
         }
 
         //This next group are vector operations involving squaring and square root. ckrinke
         public LSL_Float llVecMag(LSL_Vector v)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return LSL_Vector.Mag(v);
         }
 
         public LSL_Vector llVecNorm(LSL_Vector v)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             double mag = LSL_Vector.Mag(v);
             LSL_Vector nor = new LSL_Vector();
             nor.x = v.x / mag;
@@ -558,7 +584,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Float llVecDist(LSL_Vector a, LSL_Vector b)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             double dx = a.x - b.x;
             double dy = a.y - b.y;
             double dz = a.z - b.z;
@@ -587,7 +613,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Vector llRot2Euler(LSL_Rotation r)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             //This implementation is from http://lslwiki.net/lslwiki/wakka.php?wakka=LibraryRotationFunctions. ckrinke
             LSL_Rotation t = new LSL_Rotation(r.x * r.x, r.y * r.y, r.z * r.z, r.s * r.s);
             double m = (t.x + t.y + t.z + t.s);
@@ -652,7 +678,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Rotation llEuler2Rot(LSL_Vector v)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             double x,y,z,s;
 
@@ -674,7 +700,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Rotation llAxes2Rot(LSL_Vector fwd, LSL_Vector left, LSL_Vector up)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             double s;
             double tr = fwd.x + left.y + up.z + 1.0;
 
@@ -730,7 +756,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Vector llRot2Fwd(LSL_Rotation r)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             double x, y, z, m;
 
@@ -756,7 +782,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Vector llRot2Left(LSL_Rotation r)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             double x, y, z, m;
 
@@ -782,7 +808,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Vector llRot2Up(LSL_Rotation r)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             double x, y, z, m;
 
             m = r.x * r.x + r.y * r.y + r.z * r.z + r.s * r.s;
@@ -808,7 +834,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             //A and B should both be normalized
-            m_host.AddScriptLPS(1);
+            
             LSL_Rotation rotBetween;
             // Check for zero vectors. If either is zero, return zero rotation. Otherwise,
             // continue calculation.
@@ -883,23 +909,23 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llWhisper(int channelID, string text)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             if (text.Length > 1023)
                 text = text.Substring(0, 1023);
 
-            World.SimChat(Utils.StringToBytes(text),
+            World.SimChat(text,
                           ChatTypeEnum.Whisper, channelID, m_host.ParentGroup.RootPart.AbsolutePosition, m_host.Name, m_host.UUID, false);
 
-            IWorldComm wComm = World.RequestModuleInterface<IWorldComm>();
-            if (wComm != null)
-                wComm.DeliverMessage(ChatTypeEnum.Whisper, channelID, m_host.Name, m_host.UUID, text);
+            if (m_comms != null)
+                m_comms.DeliverMessage(ChatTypeEnum.Whisper, channelID, m_host.Name, m_host.UUID, text);
         }
 
-        public void llSay(int channelID, string text)
+        public void llSay(int channelID, object m_text)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+
+            string text = m_text.ToString();
 
             if (m_scriptConsoleChannelEnabled && (channelID == m_scriptConsoleChannel))
             {
@@ -910,29 +936,27 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (text.Length > 1023)
                     text = text.Substring(0, 1023);
 
-                World.SimChat(Utils.StringToBytes(text),
+                World.SimChat(text,
                               ChatTypeEnum.Say, channelID, m_host.ParentGroup.RootPart.AbsolutePosition, m_host.Name, m_host.UUID, false);
 
-                IWorldComm wComm = World.RequestModuleInterface<IWorldComm>();
-                if (wComm != null)
-                    wComm.DeliverMessage(ChatTypeEnum.Say, channelID, m_host.Name, m_host.UUID, text);
+                if (m_comms != null)
+                    m_comms.DeliverMessage(ChatTypeEnum.Say, channelID, m_host.Name, m_host.UUID, text);
             }
         }
 
         public void llShout(int channelID, string text)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             if (text.Length > 1023)
                 text = text.Substring(0, 1023);
 
-            World.SimChat(Utils.StringToBytes(text),
+            World.SimChat(text,
                           ChatTypeEnum.Shout, channelID, m_host.ParentGroup.RootPart.AbsolutePosition, m_host.Name, m_host.UUID, true);
 
-            IWorldComm wComm = World.RequestModuleInterface<IWorldComm>();
-            if (wComm != null)
-                wComm.DeliverMessage(ChatTypeEnum.Shout, channelID, m_host.Name, m_host.UUID, text);
+            if (m_comms != null)
+                m_comms.DeliverMessage(ChatTypeEnum.Shout, channelID, m_host.Name, m_host.UUID, text);
         }
 
         public void llRegionSay(int channelID, string text)
@@ -944,32 +968,29 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             	if (text.Length > 1023)
                 text = text.Substring(0, 1023);
 
-            	m_host.AddScriptLPS(1);
+            	
 
-            	IWorldComm wComm1 = World.RequestModuleInterface<IWorldComm>();
-            	if (wComm1 != null)
-                	wComm1.DeliverMessage(ChatTypeEnum.Region, channelID, m_host.Name, m_host.UUID, text);
+            	if (m_comms != null)
+                    m_comms.DeliverMessage(ChatTypeEnum.Region, channelID, m_host.Name, m_host.UUID, text);
             }
 
             if (text.Length > 1023)
                 text = text.Substring(0, 1023);
 
-            m_host.AddScriptLPS(1);
+            
 
-            IWorldComm wComm = World.RequestModuleInterface<IWorldComm>();
-            if (wComm != null)
-                wComm.DeliverMessage(ChatTypeEnum.Region, channelID, m_host.Name, m_host.UUID, text);
+            if (m_comms != null)
+                m_comms.DeliverMessage(ChatTypeEnum.Region, channelID, m_host.Name, m_host.UUID, text);
         }
 
         public LSL_Integer llListen(int channelID, string name, string ID, string msg)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             UUID keyID;
             UUID.TryParse(ID, out keyID);
-            IWorldComm wComm = World.RequestModuleInterface<IWorldComm>();
-            if (wComm != null)
-                return wComm.Listen(m_itemID, m_host.UUID, channelID, name, keyID, msg);
+            if (m_comms != null)
+                return m_comms.Listen(m_itemID, m_host.UUID, channelID, name, keyID, msg);
             else
                 return -1;
         }
@@ -977,46 +998,46 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llListenControl(int number, int active)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
-            IWorldComm wComm = World.RequestModuleInterface<IWorldComm>();
-            if (wComm != null)
-                wComm.ListenControl(m_itemID, number, active);
+            
+            if (m_comms != null)
+                m_comms.ListenControl(m_itemID, number, active);
         }
 
         public void llListenRemove(int number)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
-            IWorldComm wComm = World.RequestModuleInterface<IWorldComm>();
-            if (wComm != null)
-                wComm.ListenRemove(m_itemID, number);
+            
+            if (m_comms != null)
+                m_comms.ListenRemove(m_itemID, number);
         }
 
         public void llSensor(string name, string id, int type, double range, double arc)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             UUID keyID = UUID.Zero;
             UUID.TryParse(id, out keyID);
-
-            m_ScriptEngine.SensorRepeatPlugin.SenseOnce(m_host.UUID, m_itemID, name, keyID, type, range, arc, m_host);
+            SensorRepeatPlugin sensorPlugin = (SensorRepeatPlugin)m_ScriptEngine.GetScriptPlugin("SensorRepeat");
+            sensorPlugin.SenseOnce(m_host.UUID, m_itemID, name, keyID, type, range, arc, m_host);
        }
 
         public void llSensorRepeat(string name, string id, int type, double range, double arc, double rate)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             UUID keyID = UUID.Zero;
             UUID.TryParse(id, out keyID);
 
-            m_ScriptEngine.SensorRepeatPlugin.SetSenseRepeatEvent(m_host.UUID, m_itemID, name, keyID, type, range, arc, rate, m_host);
+            SensorRepeatPlugin sensorPlugin = (SensorRepeatPlugin)m_ScriptEngine.GetScriptPlugin("SensorRepeat");
+            sensorPlugin.SetSenseRepeatEvent(m_host.UUID, m_itemID, name, keyID, type, range, arc, rate, m_host);
         }
 
         public void llSensorRemove()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
-            m_ScriptEngine.SensorRepeatPlugin.UnSetSenseRepeaterEvents(m_host.UUID, m_itemID);
+
+            SensorRepeatPlugin sensorPlugin = (SensorRepeatPlugin)m_ScriptEngine.GetScriptPlugin("SensorRepeat");
+            sensorPlugin.RemoveScript(m_host.UUID, m_itemID);
         }
 
         public string resolveName(UUID objecUUID)
@@ -1052,8 +1073,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_String llDetectedName(int number)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
-            DetectParams detectedParams = m_ScriptEngine.GetDetectParams(m_itemID, m_host.UUID, number);
+
+            DetectParams detectedParams = m_ScriptEngine.GetDetectParams(m_host.UUID, m_itemID, number);
             if (detectedParams == null)
                 return String.Empty;
             return detectedParams.Name;
@@ -1062,8 +1083,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_String llDetectedKey(int number)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
-            DetectParams detectedParams = m_ScriptEngine.GetDetectParams(m_itemID, m_host.UUID, number);
+
+            DetectParams detectedParams = m_ScriptEngine.GetDetectParams(m_host.UUID, m_itemID, number);
             if (detectedParams == null)
                 return String.Empty;
             return detectedParams.Key.ToString();
@@ -1072,8 +1093,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_String llDetectedOwner(int number)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
-            DetectParams detectedParams = m_ScriptEngine.GetDetectParams(m_itemID, m_host.UUID, number);
+
+            DetectParams detectedParams = m_ScriptEngine.GetDetectParams(m_host.UUID, m_itemID, number);
             if (detectedParams == null)
                 return String.Empty;
             return detectedParams.Owner.ToString();
@@ -1082,8 +1103,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Integer llDetectedType(int number)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
-            DetectParams detectedParams = m_ScriptEngine.GetDetectParams(m_itemID, m_host.UUID, number);
+
+            DetectParams detectedParams = m_ScriptEngine.GetDetectParams(m_host.UUID, m_itemID, number);
             if (detectedParams == null)
                 return 0;
             return new LSL_Integer(detectedParams.Type);
@@ -1092,8 +1113,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Vector llDetectedPos(int number)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
-            DetectParams detectedParams = m_ScriptEngine.GetDetectParams(m_itemID, m_host.UUID, number);
+
+            DetectParams detectedParams = m_ScriptEngine.GetDetectParams(m_host.UUID, m_itemID, number);
             if (detectedParams == null)
                 return new LSL_Vector();
             return detectedParams.Position;
@@ -1102,8 +1123,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Vector llDetectedVel(int number)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
-            DetectParams detectedParams = m_ScriptEngine.GetDetectParams(m_itemID, m_host.UUID, number);
+
+            DetectParams detectedParams = m_ScriptEngine.GetDetectParams(m_host.UUID, m_itemID, number);
             if (detectedParams == null)
                 return new LSL_Vector();
             return detectedParams.Velocity;
@@ -1112,8 +1133,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Vector llDetectedGrab(int number)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
-            DetectParams parms = m_ScriptEngine.GetDetectParams(m_itemID, m_host.UUID, number);
+
+            DetectParams parms = m_ScriptEngine.GetDetectParams(m_host.UUID, m_itemID, number);
             if (parms == null)
                 return new LSL_Vector(0, 0, 0);
 
@@ -1123,8 +1144,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Rotation llDetectedRot(int number)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
-            DetectParams detectedParams = m_ScriptEngine.GetDetectParams(m_itemID, m_host.UUID, number);
+
+            DetectParams detectedParams = m_ScriptEngine.GetDetectParams(m_host.UUID, m_itemID, number);
             if (detectedParams == null)
                 return new LSL_Rotation();
             return detectedParams.Rotation;
@@ -1133,8 +1154,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Integer llDetectedGroup(int number)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
-            DetectParams detectedParams = m_ScriptEngine.GetDetectParams(m_itemID, m_host.UUID, number);
+
+            DetectParams detectedParams = m_ScriptEngine.GetDetectParams(m_host.UUID, m_itemID, number);
             if (detectedParams == null)
                 return new LSL_Integer(0);
             if (m_host.GroupID == detectedParams.Group)
@@ -1145,8 +1166,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Integer llDetectedLinkNumber(int number)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
-            DetectParams parms = m_ScriptEngine.GetDetectParams(m_itemID, m_host.UUID, number);
+
+            DetectParams parms = m_ScriptEngine.GetDetectParams(m_host.UUID, m_itemID, number);
             if (parms == null)
                 return new LSL_Integer(0);
 
@@ -1159,8 +1180,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Vector llDetectedTouchBinormal(int index)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
-            DetectParams detectedParams = m_ScriptEngine.GetDetectParams(m_itemID, m_host.UUID, index);
+
+            DetectParams detectedParams = m_ScriptEngine.GetDetectParams(m_host.UUID, m_itemID, index);
             if (detectedParams == null)
                 return new LSL_Vector();
             return detectedParams.TouchBinormal;
@@ -1172,8 +1193,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Integer llDetectedTouchFace(int index)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
-            DetectParams detectedParams = m_ScriptEngine.GetDetectParams(m_itemID, m_host.UUID, index);
+
+            DetectParams detectedParams = m_ScriptEngine.GetDetectParams(m_host.UUID, m_itemID, index);
             if (detectedParams == null)
                 return new LSL_Integer(-1);
             return new LSL_Integer(detectedParams.TouchFace);
@@ -1185,8 +1206,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Vector llDetectedTouchNormal(int index)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
-            DetectParams detectedParams = m_ScriptEngine.GetDetectParams(m_itemID, m_host.UUID, index);
+
+            DetectParams detectedParams = m_ScriptEngine.GetDetectParams(m_host.UUID, m_itemID, index);
             if (detectedParams == null)
                 return new LSL_Vector();
             return detectedParams.TouchNormal;
@@ -1198,8 +1219,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Vector llDetectedTouchPos(int index)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
-            DetectParams detectedParams = m_ScriptEngine.GetDetectParams(m_itemID, m_host.UUID, index);
+
+            DetectParams detectedParams = m_ScriptEngine.GetDetectParams(m_host.UUID, m_itemID, index);
             if (detectedParams == null)
                 return new LSL_Vector();
             return detectedParams.TouchPos;
@@ -1211,8 +1232,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Vector llDetectedTouchST(int index)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
-            DetectParams detectedParams = m_ScriptEngine.GetDetectParams(m_itemID, m_host.UUID, index);
+
+            DetectParams detectedParams = m_ScriptEngine.GetDetectParams(m_host.UUID, m_itemID, index);
             if (detectedParams == null)
                 return new LSL_Vector(-1.0, -1.0, 0.0);
             return detectedParams.TouchST;
@@ -1224,8 +1245,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Vector llDetectedTouchUV(int index)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
-            DetectParams detectedParams = m_ScriptEngine.GetDetectParams(m_itemID, m_host.UUID, index);
+
+            DetectParams detectedParams = m_ScriptEngine.GetDetectParams(m_host.UUID, m_itemID, index);
             if (detectedParams == null)
                 return new LSL_Vector(-1.0, -1.0, 0.0);
             return detectedParams.TouchUV;
@@ -1234,14 +1255,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public virtual void llDie()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             throw new SelfDeleteException();
         }
 
         public LSL_Float llGround(LSL_Vector offset)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             Vector3 pos = m_host.GetWorldPosition() + new Vector3((float)offset.x,
                                                                   (float)offset.y,
                                                                   (float)offset.z);
@@ -1274,7 +1295,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Float llCloud(LSL_Vector offset)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             float cloudCover = 0f;
             ICloudModule module = World.RequestModuleInterface<ICloudModule>();
             if (module != null)
@@ -1292,7 +1313,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Vector llWind(LSL_Vector offset)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             LSL_Vector wind = new LSL_Vector(0, 0, 0);
             IWindModule module = World.RequestModuleInterface<IWindModule>();
             if (module != null)
@@ -1312,7 +1333,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llSetStatus(int status, int value)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             int statusrotationaxis = 0;
 
@@ -1324,12 +1345,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     if (group == null)
                         return;
                     bool allow = true;
-                    foreach (SceneObjectPart part in group.Children.Values)
+                    foreach (SceneObjectPart part in group.ChildrenList)
                     {
-                        if (part.Scale.X > World.m_maxPhys || part.Scale.Y > World.m_maxPhys || part.Scale.Z > World.m_maxPhys)
+                        IOpenRegionSettingsModule WSModule = m_host.ParentGroup.Scene.RequestModuleInterface<IOpenRegionSettingsModule>();
+                        if (WSModule != null)
                         {
-                            allow = false;
-                            break;
+                            if (part.Scale.X > WSModule.MaximumPhysPrimScale ||
+                                part.Scale.Y > WSModule.MaximumPhysPrimScale ||
+                                part.Scale.Z > WSModule.MaximumPhysPrimScale)
+                            {
+                                allow = false;
+                                break;
+                            }
                         }
                     }
 
@@ -1410,7 +1437,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Integer llGetStatus(int status)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             // m_log.Debug(m_host.ToString() + " status is " + m_host.GetEffectiveObjectFlags().ToString());
             switch (status)
             {
@@ -1483,68 +1510,73 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llSetScale(LSL_Vector scale)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             SetScale(m_host, scale);
         }
 
         protected void SetScale(SceneObjectPart part, LSL_Vector scale)
         {
-            // TODO: this needs to trigger a persistance save as well
             if (part == null || part.ParentGroup == null || part.ParentGroup.IsDeleted)
                 return;
-            if (scale.x < 0.01)
-                scale.x = 0.01;
-            if (scale.y < 0.01)
-                scale.y = 0.01;
-            if (scale.z < 0.01)
-                scale.z = 0.01;
 
-            if (part.ParentGroup.RootPart.PhysActor != null && part.ParentGroup.RootPart.PhysActor.IsPhysical)
+            IOpenRegionSettingsModule WSModule = m_host.ParentGroup.Scene.RequestModuleInterface<IOpenRegionSettingsModule>();
+            if (WSModule != null)
             {
-                if (scale.x > World.m_maxPhys)
-                    scale.x = World.m_maxPhys;
-                if (scale.y > World.m_maxPhys)
-                    scale.y = World.m_maxPhys;
-                if (scale.z > World.m_maxPhys)
-                    scale.z = World.m_maxPhys;
-            }
+                if (scale.x < WSModule.MinimumPrimScale)
+                    scale.x = WSModule.MinimumPrimScale;
+                if (scale.y < WSModule.MinimumPrimScale)
+                    scale.y = WSModule.MinimumPrimScale;
+                if (scale.z < WSModule.MinimumPrimScale)
+                    scale.z = WSModule.MinimumPrimScale;
 
-            if (scale.x > World.m_maxNonphys)
-                scale.x = World.m_maxNonphys;
-            if (scale.y > World.m_maxNonphys)
-                scale.y = World.m_maxNonphys;
-            if (scale.z > World.m_maxNonphys)
-                scale.z = World.m_maxNonphys;
+                if (part.ParentGroup.RootPart.PhysActor != null && part.ParentGroup.RootPart.PhysActor.IsPhysical)
+                {
+                    if (scale.x > WSModule.MaximumPhysPrimScale)
+                        scale.x = WSModule.MaximumPhysPrimScale;
+                    if (scale.y > WSModule.MaximumPhysPrimScale)
+                        scale.y = WSModule.MaximumPhysPrimScale;
+                    if (scale.z > WSModule.MaximumPhysPrimScale)
+                        scale.z = WSModule.MaximumPhysPrimScale;
+                }
+
+                if (scale.x > WSModule.MaximumPrimScale)
+                    scale.x = WSModule.MaximumPrimScale;
+                if (scale.y > WSModule.MaximumPrimScale)
+                    scale.y = WSModule.MaximumPrimScale;
+                if (scale.z > WSModule.MaximumPrimScale)
+                    scale.z = WSModule.MaximumPrimScale;
+            }
 
             Vector3 tmp = part.Scale;
             tmp.X = (float)scale.x;
             tmp.Y = (float)scale.y;
             tmp.Z = (float)scale.z;
             part.Scale = tmp;
-            part.ScheduleFullUpdate();
+            part.ScheduleFullUpdate(PrimUpdateFlags.Shape);
+            part.ParentGroup.HasGroupChanged = true;
         }
 
         public LSL_Vector llGetScale()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return new LSL_Vector(m_host.Scale.X, m_host.Scale.Y, m_host.Scale.Z);
         }
 
         public void llSetClickAction(int action)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             m_host.ClickAction = (byte)action;
             if (m_host.ParentGroup != null) m_host.ParentGroup.HasGroupChanged = true;
-            m_host.ScheduleFullUpdate();
+            m_host.ScheduleFullUpdate(PrimUpdateFlags.ClickAction);
             return;
         }
 
         public void llSetColor(LSL_Vector color, int face)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             if (face == ScriptBaseClass.ALL_SIDES)
                 face = SceneObjectPart.ALL_SIDES;
@@ -1685,7 +1717,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Float llGetAlpha(int face)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             return GetAlpha(m_host, face);
         }
@@ -1711,7 +1743,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llSetAlpha(double alpha, int face)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             SetAlpha(m_host, alpha, face);
         }
@@ -1719,7 +1751,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llSetLinkAlpha(int linknumber, double alpha, int face)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             List<SceneObjectPart> parts = GetLinkParts(linknumber);
 
@@ -1793,7 +1825,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
 
             part.ParentGroup.HasGroupChanged = true;
-            part.ScheduleFullUpdate();
+            part.ScheduleFullUpdate(PrimUpdateFlags.Shape);
         }
 
         /// <summary>
@@ -1828,13 +1860,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
 
             part.ParentGroup.HasGroupChanged = true;
-            part.ScheduleFullUpdate();
+            part.ScheduleFullUpdate(PrimUpdateFlags.Shape);
         }
 
         public LSL_Vector llGetColor(int face)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return GetColor(m_host, face);
         }
 
@@ -1875,25 +1907,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
         }
 
-        public void llSetTexture(string texture, int face)
+        public DateTime llSetTexture(string texture, int face)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+
             SetTexture(m_host, texture, face);
-            ScriptSleep(200);
+            return PScriptSleep(200);
         }
 
-        public void llSetLinkTexture(int linknumber, string texture, int face)
+        public DateTime llSetLinkTexture(int linknumber, string texture, int face)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             List<SceneObjectPart> parts = GetLinkParts(linknumber);
 
             foreach (SceneObjectPart part in parts)
               SetTexture(part, texture, face);
 
-            ScriptSleep(200);
+            return PScriptSleep(100);
         }
 
         protected void SetTexture(SceneObjectPart part, string texture, int face)
@@ -1933,13 +1965,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
         }
 
-        public void llScaleTexture(double u, double v, int face)
+        public DateTime llScaleTexture(double u, double v, int face)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+
 
             ScaleTexture(m_host, u, v, face);
-            ScriptSleep(200);
+            return PScriptSleep(200);
         }
 
         protected void ScaleTexture(SceneObjectPart part, double u, double v, int face)
@@ -1971,12 +2003,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
         }
 
-        public void llOffsetTexture(double u, double v, int face)
+        public DateTime llOffsetTexture(double u, double v, int face)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+
             OffsetTexture(m_host, u, v, face);
-            ScriptSleep(200);
+            return PScriptSleep(200);
         }
 
         protected void OffsetTexture(SceneObjectPart part, double u, double v, int face)
@@ -2008,12 +2040,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
         }
 
-        public void llRotateTexture(double rotation, int face)
+        public DateTime llRotateTexture(double rotation, int face)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+
             RotateTexture(m_host, rotation, face);
-            ScriptSleep(200);
+            return PScriptSleep(200);
         }
 
         protected void RotateTexture(SceneObjectPart part, double rotation, int face)
@@ -2045,7 +2077,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_String llGetTexture(int face)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return GetTexture(m_host, face);
         }
 
@@ -2073,14 +2105,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
         }
 
-        public void llSetPos(LSL_Vector pos)
+        public DateTime llSetPos(LSL_Vector pos)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             SetPos(m_host, pos);
 
-            ScriptSleep(200);
+            return PScriptSleep(200);
         }
 
         // Capped movemment if distance > 10m (http://wiki.secondlife.com/wiki/LlSetPos)
@@ -2117,7 +2149,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         targetPos.z = ground;
                 }
                 LSL_Vector real_vec = SetPosAdjust(currentPos, targetPos);
-                parent.UpdateGroupPosition(new Vector3((float)real_vec.x, (float)real_vec.y, (float)real_vec.z));
+                parent.UpdateGroupPosition(new Vector3((float)real_vec.x, (float)real_vec.y, (float)real_vec.z), true);
             }
             else
             {
@@ -2135,7 +2167,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Vector llGetPos()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             Vector3 pos = m_host.GetWorldPosition();
             return new LSL_Vector(pos.X, pos.Y, pos.Z);
         }
@@ -2143,7 +2175,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Vector llGetLocalPos()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             if (m_host.ParentID != 0)
             {
                 return new LSL_Vector(m_host.OffsetPosition.X,
@@ -2158,10 +2190,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
         }
 
-        public void llSetRot(LSL_Rotation rot)
+        public DateTime llSetRot(LSL_Rotation rot)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             // try to let this work as in SL...
             if (m_host.ParentID == 0)
@@ -2182,16 +2214,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     }
                 }
             }
-
-            ScriptSleep(200);
+            return PScriptSleep(200);
         }
 
-        public void llSetLocalRot(LSL_Rotation rot)
+        public DateTime llSetLocalRot(LSL_Rotation rot)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+
             SetRot(m_host, Rot2Quaternion(rot));
-            ScriptSleep(200);
+            return PScriptSleep(200);
         }
 
         protected void SetRot(SceneObjectPart part, Quaternion rot)
@@ -2227,7 +2258,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 return llGetRootRotation();
             }
-            m_host.AddScriptLPS(1);
+            
             Quaternion q = m_host.GetWorldRotation();
             return new LSL_Rotation(q.X, q.Y, q.Z, q.W);
         }
@@ -2261,14 +2292,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Rotation llGetLocalRot()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return new LSL_Rotation(m_host.RotationOffset.X, m_host.RotationOffset.Y, m_host.RotationOffset.Z, m_host.RotationOffset.W);
         }
 
         public void llSetForce(LSL_Vector force, int local)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             if (m_host.ParentGroup != null)
             {
@@ -2287,7 +2318,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             LSL_Vector force = new LSL_Vector(0.0, 0.0, 0.0);
 
-            m_host.AddScriptLPS(1);
+            
 
             if (m_host.ParentGroup != null)
             {
@@ -2306,49 +2337,49 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Integer llTarget(LSL_Vector position, double range)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return m_host.registerTargetWaypoint(new Vector3((float)position.x, (float)position.y, (float)position.z), (float)range);
         }
 
         public void llTargetRemove(int number)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             m_host.unregisterTargetWaypoint(number);
         }
 
         public LSL_Integer llRotTarget(LSL_Rotation rot, double error)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return m_host.registerRotTargetWaypoint(new Quaternion((float)rot.x, (float)rot.y, (float)rot.z, (float)rot.s), (float)error);
         }
 
         public void llRotTargetRemove(int number)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             m_host.unregisterRotTargetWaypoint(number);
         }
 
         public void llMoveToTarget(LSL_Vector target, double tau)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             m_host.MoveToTarget(new Vector3((float)target.x, (float)target.y, (float)target.z), (float)tau);
         }
 
         public void llStopMoveToTarget()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             m_host.StopMoveToTarget();
         }
 
         public void llApplyImpulse(LSL_Vector force, int local)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             //No energy force yet
             Vector3 v = new Vector3((float)force.x, (float)force.y, (float)force.z);
             if (v.Length() > 20000.0f)
@@ -2362,21 +2393,21 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llApplyRotationalImpulse(LSL_Vector force, int local)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             m_host.ApplyAngularImpulse(new Vector3((float)force.x, (float)force.y, (float)force.z), local != 0);
         }
 
         public void llSetTorque(LSL_Vector torque, int local)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             m_host.SetAngularImpulse(new Vector3((float)torque.x, (float)torque.y, (float)torque.z), local != 0);
         }
 
         public LSL_Vector llGetTorque()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             Vector3 torque = m_host.GetTorque();
             return new LSL_Vector(torque.X,torque.Y,torque.Z);
         }
@@ -2384,7 +2415,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llSetForceAndTorque(LSL_Vector force, LSL_Vector torque, int local)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             llSetForce(force, local);
             llSetTorque(torque, local);
         }
@@ -2392,42 +2423,42 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Vector llGetVel()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return new LSL_Vector(m_host.Velocity.X, m_host.Velocity.Y, m_host.Velocity.Z);
         }
 
         public LSL_Vector llGetAccel()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return new LSL_Vector(m_host.Acceleration.X, m_host.Acceleration.Y, m_host.Acceleration.Z);
         }
 
         public LSL_Vector llGetOmega()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return new LSL_Vector(m_host.AngularVelocity.X, m_host.AngularVelocity.Y, m_host.AngularVelocity.Z);
         }
 
         public LSL_Float llGetTimeOfDay()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return (double)((DateTime.Now.TimeOfDay.TotalMilliseconds / 1000) % (3600 * 4));
         }
 
         public LSL_Float llGetWallclock()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return DateTime.Now.TimeOfDay.TotalSeconds;
         }
 
         public LSL_Float llGetTime()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             TimeSpan ScriptTime = DateTime.Now - m_timer;
             return (double)(ScriptTime.TotalMilliseconds / 1000);
         }
@@ -2435,14 +2466,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llResetTime()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             m_timer = DateTime.Now;
         }
 
         public LSL_Float llGetAndResetTime()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             TimeSpan ScriptTime = DateTime.Now - m_timer;
             m_timer = DateTime.Now;
             return (double)(ScriptTime.TotalMilliseconds / 1000);
@@ -2451,7 +2482,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llSound(string sound, double volume, int queue, int loop)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             // This function has been deprecated
             // see http://www.lslwiki.net/lslwiki/wakka.php?wakka=llSound
             Deprecated("llSound");
@@ -2462,7 +2493,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llPlaySound(string sound, double volume)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             // send the sound, once, to all clients in range
             m_host.SendSound(KeyOrName(sound).ToString(), volume, false, 0, 0, false, false);
@@ -2479,7 +2510,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llLoopSound(string sound, double volume)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             if (m_host.Sound != UUID.Zero)
                 llStopSound();
@@ -2489,14 +2520,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             m_host.SoundFlags = (int)SoundFlags.Loop;      // looping
             m_host.SoundRadius = 20;    // Magic number, 20 seems reasonable. Make configurable?
 
-            m_host.ScheduleFullUpdate();
-            //m_host.SendFullUpdateToAllClients();
+            m_host.ScheduleFullUpdate(PrimUpdateFlags.Sound);
         }
 
         public void llLoopSoundMaster(string sound, double volume)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             m_host.ParentGroup.LoopSoundMasterPrim = m_host;
             lock (m_host.ParentGroup.LoopSoundSlavePrims)
             {
@@ -2510,7 +2540,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     prim.SoundFlags = 1;      // looping
                     prim.SoundRadius = 20;    // Magic number, 20 seems reasonable. Make configurable?
 
-                    prim.ScheduleFullUpdate();
+                    prim.ScheduleFullUpdate(PrimUpdateFlags.Sound);
                     //prim.SendFullUpdateToAllClients();
                 }
             }
@@ -2522,14 +2552,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             m_host.SoundFlags = 1;      // looping
             m_host.SoundRadius = 20;    // Magic number, 20 seems reasonable. Make configurable?
 
-            m_host.ScheduleFullUpdate();
+            m_host.ScheduleFullUpdate(PrimUpdateFlags.Sound);
             //m_host.SendFullUpdateToAllClients();
         }
 
         public void llLoopSoundSlave(string sound, double volume)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             lock (m_host.ParentGroup.LoopSoundSlavePrims)
             {
                 m_host.ParentGroup.LoopSoundSlavePrims.Add(m_host);
@@ -2539,7 +2569,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llPlaySoundSlave(string sound, double volume)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             // send the sound, once, to all clients in range
             m_host.SendSound(KeyOrName(sound).ToString(), volume, false, 0, 0, true, false);
@@ -2548,7 +2578,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llTriggerSound(string sound, double volume)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             // send the sound, once, to all clients in range
             m_host.SendSound(KeyOrName(sound).ToString(), volume, true, 0, 0, false, false);
         }
@@ -2557,7 +2587,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llStopSound()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             if (m_host.ParentGroup.LoopSoundSlavePrims.Contains(m_host))
             {
                 if (m_host.ParentGroup.LoopSoundMasterPrim == m_host)
@@ -2568,7 +2598,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         part.SoundGain = 0;
                         part.SoundFlags = 0;
                         part.SoundRadius = 0;
-                        part.ScheduleFullUpdate();
+                        part.ScheduleFullUpdate(PrimUpdateFlags.Sound);
                         //part.SendFullUpdateToAllClients();
                     }
                     m_host.ParentGroup.LoopSoundMasterPrim = null;
@@ -2580,8 +2610,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     m_host.SoundGain = 0;
                     m_host.SoundFlags = 0;
                     m_host.SoundRadius = 0;
-                    m_host.ScheduleFullUpdate();
-                    //m_host.SendFullUpdateToAllClients();
+                    m_host.ScheduleFullUpdate(PrimUpdateFlags.Sound);
                 }
             }
             else
@@ -2590,17 +2619,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 m_host.SoundGain = 0;
                 m_host.SoundFlags = 0;
                 m_host.SoundRadius = 0;
-                m_host.ScheduleFullUpdate();
-                //m_host.SendFullUpdateToAllClients();
+                m_host.ScheduleFullUpdate(PrimUpdateFlags.Sound);
             }
         }
 
-        public void llPreloadSound(string sound)
+        public DateTime llPreloadSound(string sound)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+
             m_host.PreloadSound(sound);
-            ScriptSleep(1000);
+            return PScriptSleep(1000);
         }
 
         /// <summary>
@@ -2614,7 +2642,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
 
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             // Normalize indices (if negative).
             // After normlaization they may still be
@@ -2711,7 +2739,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
 
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             // Normalize indices (if negative).
             // After normlaization they may still be
@@ -2795,7 +2823,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
 
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             // Normalize indices (if negative).
             // After normlaization they may still be
@@ -2833,14 +2861,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_String llToUpper(string src)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return src.ToUpper();
         }
 
         public LSL_String llToLower(string src)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return src.ToLower();
         }
 
@@ -2851,7 +2879,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (invItemID == UUID.Zero)
                 return 0;
 
-            m_host.AddScriptLPS(1);
+            
 
             TaskInventoryItem item = m_host.TaskInventory[invItemID];
 
@@ -2894,10 +2922,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return 0;
         }
 
-        public void llMakeExplosion(int particles, double scale, double vel, double lifetime, double arc, string texture, LSL_Vector offset)
+        public DateTime llMakeExplosion(int particles, double scale, double vel, double lifetime, double arc, string texture, LSL_Vector offset)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             /*llParticleSystem([
         PSYS_PART_FLAGS,            PSYS_PART_INTERP_COLOR_MASK | PSYS_PART_INTERP_SCALE_MASK | PSYS_PART_EMISSIVE_MASK | PSYS_PART_WIND_MASK,
@@ -2966,13 +2994,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             llParticleSystem(new LSL_Types.list(list.ToArray()));
 
-            ScriptSleep(100);
+            return PScriptSleep(100);
         }
 
-        public void llMakeFountain(int particles, double scale, double vel, double lifetime, double arc, int bounce, string texture, LSL_Vector offset, double bounce_offset)
+        public DateTime llMakeFountain(int particles, double scale, double vel, double lifetime, double arc, int bounce, string texture, LSL_Vector offset, double bounce_offset)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             /*llParticleSystem([
         PSYS_PART_FLAGS,            PSYS_PART_INTERP_COLOR_MASK | PSYS_PART_INTERP_SCALE_MASK | PSYS_PART_WIND_MASK | PSYS_PART_BOUNCE_MASK | PSYS_PART_EMISSIVE_MASK,
@@ -3041,13 +3069,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             llParticleSystem(new LSL_Types.list(list.ToArray()));
 
-            ScriptSleep(100);
+            return PScriptSleep(100);
         }
 
-        public void llMakeSmoke(int particles, double scale, double vel, double lifetime, double arc, string texture, LSL_Vector offset)
+        public DateTime llMakeSmoke(int particles, double scale, double vel, double lifetime, double arc, string texture, LSL_Vector offset)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             /*llParticleSystem([
        PSYS_PART_FLAGS,            PSYS_PART_INTERP_COLOR_MASK | PSYS_PART_INTERP_SCALE_MASK | PSYS_PART_EMISSIVE_MASK | PSYS_PART_WIND_MASK,
        PSYS_SRC_PATTERN,           PSYS_SRC_PATTERN_ANGLE_CONE,
@@ -3113,13 +3141,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             list.Add(new LSL_Vector(0, 0, 0));
 
             llParticleSystem(new LSL_Types.list(list.ToArray()));
-            ScriptSleep(100);
+            return PScriptSleep(100);
         }
 
-        public void llMakeFire(int particles, double scale, double vel, double lifetime, double arc, string texture, LSL_Vector offset)
+        public DateTime llMakeFire(int particles, double scale, double vel, double lifetime, double arc, string texture, LSL_Vector offset)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             /*llParticleSystem([
         PSYS_PART_FLAGS,            PSYS_PART_INTERP_COLOR_MASK | PSYS_PART_INTERP_SCALE_MASK | PSYS_PART_EMISSIVE_MASK | PSYS_PART_WIND_MASK,
@@ -3187,22 +3215,39 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             list.Add(new LSL_Vector(0, 0, 0));
 
             llParticleSystem(new LSL_Types.list(list.ToArray()));
-            ScriptSleep(100);
+            return PScriptSleep(100);
         }
 
-        public void llRezAtRoot(string inventory, LSL_Vector pos, LSL_Vector vel, LSL_Rotation rot, int param)
+        public DateTime llRezAtRoot(string inventory, LSL_Vector pos, LSL_Vector vel, LSL_Rotation rot, int param)
+        {
+            return llRezPrim(inventory, pos, vel, rot, param, true, true, true, true);
+        }
+
+        /// <summary>
+        /// This isn't really an LSL function, just a way to merge llRezAtRoot and llRezObject into one
+        /// </summary>
+        /// <param name="inventory"></param>
+        /// <param name="pos"></param>
+        /// <param name="vel"></param>
+        /// <param name="rot"></param>
+        /// <param name="param"></param>
+        /// <param name="isRezAtRoot"></param>
+        /// <returns></returns>
+        public DateTime llRezPrim(string inventory, LSL_Types.Vector3 pos, LSL_Types.Vector3 vel, LSL_Types.Quaternion rot, int param, bool isRezAtRoot, bool doRecoil, bool SetDieAtEdge, bool CheckPos)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+
             if (m_ScriptEngine.Config.GetBoolean("AllowllRezObject", true))
             {
-
                 if (Double.IsNaN(rot.x) || Double.IsNaN(rot.y) || Double.IsNaN(rot.z) || Double.IsNaN(rot.s))
-                    return;
-                float dist = (float)llVecDist(llGetPos(), pos);
+                    return DateTime.Now;
+                if (CheckPos)
+                {
+                    float dist = (float)llVecDist(llGetPos(), pos);
 
-                if (dist > m_ScriptDistanceFactor * 10.0f)
-                    return;
+                    if (dist > m_ScriptDistanceFactor * 10.0f)
+                        return DateTime.Now;
+                }
 
                 TaskInventoryDictionary partInventory = (TaskInventoryDictionary)m_host.TaskInventory.Clone();
 
@@ -3214,7 +3259,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         if (inv.Value.InvType != (int)InventoryType.Object)
                         {
                             llSay(0, "Unable to create requested object. Object is missing from database.");
-                            return;
+                            return DateTime.Now;
                         }
 
                         Vector3 llpos = new Vector3((float)pos.x, (float)pos.y, (float)pos.z);
@@ -3223,7 +3268,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         // need the magnitude later
                         float velmag = (float)Util.GetMagnitude(llvel);
 
-                        SceneObjectGroup new_group = World.RezObject(m_host, inv.Value, llpos, Rot2Quaternion(rot), llvel, param, m_host.UUID);
+                        SceneObjectGroup new_group = World.RezObject(m_host, inv.Value, llpos, Rot2Quaternion(rot), llvel, param, m_host.UUID, isRezAtRoot);
 
                         // If either of these are null, then there was an unknown error.
                         if (new_group == null)
@@ -3232,7 +3277,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                             continue;
 
                         // objects rezzed with this method are die_at_edge by default.
-                        new_group.RootPart.SetDieAtEdge(true);
+                        if(SetDieAtEdge)
+                            new_group.RootPart.SetDieAtEdge(true);
 
                         new_group.ResumeScripts();
 
@@ -3242,29 +3288,45 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                         if (new_group.RootPart.PhysActor != null && new_group.RootPart.PhysActor.IsPhysical && llvel != Vector3.Zero)
                         {
-                            //Recoil.
-                            llApplyImpulse(new LSL_Vector(llvel.X * groupmass, llvel.Y * groupmass, llvel.Z * groupmass), 0);
+                            //Apply the velocity to the object
+                            //llApplyImpulse(new LSL_Vector(llvel.X * groupmass, llvel.Y * groupmass, llvel.Z * groupmass), 0);
+                            // @Above: Err.... no. Read http://lslwiki.net/lslwiki/wakka.php?wakka=llRezObject
+                            //    Notice the "Creates ("rezzes") object's inventory object centered at position pos (in region coordinates) with velocity vel"
+                            //    This means SET the velocity to X, not just temperarily add it!
+                            //   -- Revolution Smythe
+                            llSetForce(new LSL_Vector(llvel.X * groupmass, llvel.Y * groupmass, llvel.Z * groupmass), 0);
                         }
+
+                        //Recoil to the av
+                        if (m_host.IsAttachment && doRecoil)
+                        {
+                            ScenePresence SP = m_host.ParentGroup.Scene.GetScenePresence(m_host.OwnerID);
+                            if (SP != null)
+                            {
+                                //Push the av backwards (For every action, there is an equal, but opposite reaction)
+                                SP.PushForce(llvel * groupmass);
+                            }
+                        }
+
                         // Variable script delay? (see (http://wiki.secondlife.com/wiki/LSL_Delay)
-                        ScriptSleep((int)((groupmass * velmag) / 10));
-                        ScriptSleep(100);
-                        return;
+                        return PScriptSleep((int)((groupmass * velmag) / 10) + 100);
                     }
                 }
 
                 llSay(0, "Could not find object " + inventory);
             }
+            return DateTime.Now;
         }
 
-        public void llRezObject(string inventory, LSL_Vector pos, LSL_Vector vel, LSL_Rotation rot, int param)
+        public DateTime llRezObject(string inventory, LSL_Vector pos, LSL_Vector vel, LSL_Rotation rot, int param)
         {
-            llRezAtRoot(inventory, pos, vel, rot, param);
+            return llRezPrim(inventory, pos, vel, rot, param, false, true, true, true);
         }
 
         public void llLookAt(LSL_Vector target, double strength, double damping)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             // Determine where we are looking from
             LSL_Vector from = llGetPos();
 
@@ -3289,11 +3351,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             //llSetRot(rot);
         }
 
+        public void llRotLookAt(LSL_Rotation target, double strength, double damping)
+        {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
+
+            Quaternion rot = new Quaternion((float)target.x, (float)target.y, (float)target.z, (float)target.s);
+            m_host.RotLookAt(rot, (float)strength, (float)damping);
+        }
+
         public void llStopLookAt()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
-//            NotImplemented("llStopLookAt");
+            
             m_host.StopLookAt();
         }
 
@@ -3302,29 +3371,68 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             if (sec != 0.0 && sec < m_MinTimerInterval)
                 sec = m_MinTimerInterval;
-            m_host.AddScriptLPS(1);
+            
             // Setting timer repeat
-            m_ScriptEngine.TimerPlugin.SetTimerEvent(m_host.UUID, m_itemID, sec);
+            TimerPlugin timerPlugin = (TimerPlugin)m_ScriptEngine.GetScriptPlugin("Timer");
+            timerPlugin.SetTimerEvent(m_host.UUID, m_itemID, sec);
         }
 
-        public virtual void llSleep(double sec)
+        public virtual DateTime llSleep(double sec)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
-            ScriptSleep((int)(sec * 1000));
+
+            return PScriptSleep((int)sec * 1000);
+        }
+
+        public LSL_Float llGetObjectMass(string id)
+        {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
+
+            UUID key = new UUID();
+            if (UUID.TryParse(id, out key))
+            {
+                try
+                {
+                    SceneObjectPart obj = World.GetSceneObjectPart(World.Entities[key].LocalId);
+                    if (obj != null)
+                        return (double)obj.GetMass();
+                    // the object is null so the key is for an avatar
+                    ScenePresence avatar = World.GetScenePresence(key);
+                    if (avatar != null)
+                        if (avatar.IsChildAgent)
+                            // reference http://www.lslwiki.net/lslwiki/wakka.php?wakka=llGetObjectMass
+                            // child agents have a mass of 1.0
+                            return 1;
+                        else
+                            return (double)avatar.PhysicsActor.Mass;
+                }
+                catch (KeyNotFoundException)
+                {
+                    return 0; // The Object/Agent not in the region so just return zero
+                }
+            }
+            return 0;
         }
 
         public LSL_Float llGetMass()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
-            return m_host.GetMass();
+            if (m_host.IsAttachment)
+            {
+                ScenePresence SP = m_host.ParentGroup.Scene.GetScenePresence(m_host.OwnerID);
+                if (SP != null)
+                    return SP.PhysicsActor.Mass;
+                else
+                    return 0.0;
+            }
+            else
+                return m_host.GetMass();
         }
 
         public void llCollisionFilter(string name, string id, int accept)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             m_host.CollisionFilter.Clear();
             if (id != null)
             {
@@ -3357,12 +3465,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     if ((item.PermsMask & ScriptBaseClass.PERMISSION_TAKE_CONTROLS) != 0)
                     {
-                        presence.RegisterControlEventsToScript(controls, accept, pass_on, m_localID, m_itemID);
+                        presence.RegisterControlEventsToScript(controls, accept, pass_on, m_host, m_itemID);
                     }
                 }
             }
 
-            m_host.AddScriptLPS(1);
+            
         }
 
         public void llReleaseControls()
@@ -3378,7 +3486,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     item = m_host.TaskInventory[InventorySelf()];
             }
 
-            m_host.AddScriptLPS(1);
+            
 
             if (item.PermsGranter != UUID.Zero)
             {
@@ -3400,7 +3508,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llReleaseURL(string url)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             if (m_UrlModule != null)
                 m_UrlModule.ReleaseURL(url);
         }
@@ -3408,7 +3516,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llAttachToAvatar(int attachment)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             if (m_host.ParentGroup.RootPart.AttachmentPoint != 0)
                 return;
@@ -3443,7 +3551,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llDetachFromAvatar()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             if (m_host.ParentGroup.RootPart.AttachmentPoint == 0)
                 return;
@@ -3477,29 +3585,29 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llTakeCamera(string avatar)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             Deprecated("llTakeCamera");
         }
 
         public void llReleaseCamera(string avatar)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             Deprecated("llReleaseCamera");
         }
 
         public LSL_String llGetOwner()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             return m_host.OwnerID.ToString();
         }
 
-        public void llInstantMessage(string user, string message)
+        public DateTime llInstantMessage(string user, string message)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             // We may be able to use ClientView.SendInstantMessage here, but we need a client instance.
             // InstantMessageModule.OnInstantMessage searches through a list of scenes for a client matching the toAgent,
@@ -3533,28 +3641,28 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 m_TransferModule.SendInstantMessage(msg, delegate(bool success) {});
             }
-            ScriptSleep(2000);
+            return PScriptSleep(2000);
       }
 
-        public void llEmail(string address, string subject, string message)
+        public DateTime llEmail(string address, string subject, string message)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "llEmail", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             IEmailModule emailModule = World.RequestModuleInterface<IEmailModule>();
             if (emailModule == null)
             {
                 ShoutError("llEmail: email module not configured");
-                return;
+                return DateTime.Now;
             }
 
             emailModule.SendEmail(m_host.UUID, address, subject, message);
-            ScriptSleep(20000);
+            return PScriptSleep(20000);
         }
 
         public void llGetNextEmail(string address, string subject)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             IEmailModule emailModule = World.RequestModuleInterface<IEmailModule>();
             if (emailModule == null)
             {
@@ -3568,29 +3676,28 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (email == null)
                 return;
 
-            m_ScriptEngine.PostObjectEvent(m_host.LocalId,
-                    new EventParams("email",
-                    new Object[] {
+            m_ScriptEngine.AddToObjectQueue(m_host.UUID, "email",
+                    new DetectParams[0], -1, new Object[] {
                         new LSL_String(email.time),
                         new LSL_String(email.sender),
                         new LSL_String(email.subject),
                         new LSL_String(email.message),
-                        new LSL_Integer(email.numLeft)},
-                    new DetectParams[0]));
+                        new LSL_Integer(email.numLeft)}
+                    );
 
         }
 
         public LSL_String llGetKey()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return m_host.UUID.ToString();
         }
 
         public void llSetBuoyancy(double buoyancy)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             if (m_host.ParentGroup != null)
             {
                 if (!m_host.ParentGroup.IsDeleted)
@@ -3609,7 +3716,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llSetHoverHeight(double height, int water, double tau)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             if (m_host.PhysActor != null)
             {
                 PIDHoverType hoverType = PIDHoverType.Ground;
@@ -3625,7 +3732,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llStopHover()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             if (m_host.PhysActor != null)
             {
                 m_host.SetHoverHeight(0f, PIDHoverType.Ground, 0f);
@@ -3635,7 +3742,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llMinEventDelay(double delay)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             m_ScriptEngine.SetMinEventDelay(m_itemID, m_host.UUID, delay);
         }
 
@@ -3646,21 +3753,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llSoundPreload(string sound)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
-        }
-
-        public void llRotLookAt(LSL_Rotation target, double strength, double damping)
-        {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
-            Quaternion rot = new Quaternion((float)target.x, (float)target.y, (float)target.z, (float)target.s);
-            m_host.RotLookAt(rot, (float)strength, (float)damping);
+            
         }
 
         public LSL_Integer llStringLength(string str)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             if (str.Length > 0)
             {
                 return str.Length;
@@ -3674,7 +3773,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llStartAnimation(string anim)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             UUID invItemID = InventorySelf();
             if (invItemID == UUID.Zero)
@@ -3712,7 +3811,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llStopAnimation(string anim)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             UUID invItemID=InventorySelf();
             if (invItemID == UUID.Zero)
@@ -3755,7 +3854,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llPointAt(LSL_Vector pos)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             ScenePresence Owner = World.GetScenePresence(m_host.UUID);
             LSL_Rotation rot = llEuler2Rot(pos);
             Owner.PreviousRotation = Owner.Rotation;
@@ -3765,7 +3864,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llStopPointAt()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             ScenePresence Owner = m_host.ParentGroup.Scene.GetScenePresence(m_host.OwnerID);
             Owner.Rotation = Owner.PreviousRotation;
         }
@@ -3773,7 +3872,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llTargetOmega(LSL_Vector axis, double spinrate, double gain)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             m_host.AngularVelocity = new Vector3((float)(axis.x * spinrate), (float)(axis.y * spinrate), (float)(axis.z * spinrate));
             m_host.ScheduleTerseUpdate();
             //m_host.SendTerseUpdateToAllClients();
@@ -3783,14 +3882,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Integer llGetStartParameter()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return m_ScriptEngine.GetStartParameter(m_itemID, m_host.UUID);
         }
 
         public void llGodLikeRezObject(string inventory, LSL_Vector pos)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             if (m_ScriptEngine.Config.GetBoolean("AllowGodFunctions", false))
             {
                 if (World.Permissions.CanRunConsoleCommand(m_host.OwnerID))
@@ -3812,19 +3911,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     // if attachment we set it's asset id so object updates can reflect that
                     // if not, we set it's position in world.
                     group.AbsolutePosition = new Vector3((float)pos.x, (float)pos.y, (float)pos.z);
-                    group.ScheduleGroupForFullUpdate();
+                    group.ScheduleGroupForFullUpdate(PrimUpdateFlags.FullUpdate);
 
                     SceneObjectPart rootPart = null;
-                    try
-                    {
-                        rootPart = group.GetChildPart(group.UUID);
-                    }
-                    catch (NullReferenceException)
-                    {
+                    rootPart = group.GetChildPart(group.UUID);
 
-                    }
-
-                    List<SceneObjectPart> partList = new List<SceneObjectPart>(group.Children.Values);
+                    List<SceneObjectPart> partList = new List<SceneObjectPart>(group.ChildrenList);
                     ScenePresence SP = World.GetScenePresence(m_host.OwnerID);
                     if (SP != null)
                         group.SetGroup(m_host.GroupID, SP.ControllingClient);
@@ -3879,7 +3971,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (item.PermsGranter != agentID || (perm & ScriptBaseClass.PERMISSION_TAKE_CONTROLS) == 0)
                 llReleaseControls();
 
-            m_host.AddScriptLPS(1);
+            
 
             if (m_host.ParentGroup.IsAttachment && (UUID)agent == m_host.ParentGroup.RootPart.AttachedAvatar)
             {
@@ -4000,7 +4092,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_String llGetPermissionsKey()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             lock (m_host.TaskInventory)
             {
@@ -4018,7 +4110,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public LSL_Integer llGetPermissions()
         {
-            m_host.AddScriptLPS(1);
+            
 
             lock (m_host.TaskInventory)
             {
@@ -4040,9 +4132,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Integer llGetLinkNumber()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
 
-            if (m_host.ParentGroup.Children.Count > 1)
+
+            if (m_host.ParentGroup.ChildrenList.Count > 1)
             {
                 return m_host.LinkNum;
             }
@@ -4055,17 +4147,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llSetLinkColor(int linknumber, LSL_Vector color, int face)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             List<SceneObjectPart> parts = GetLinkParts(linknumber);
 
             foreach (SceneObjectPart part in parts)
                 part.SetFaceColor(new Vector3((float)color.x, (float)color.y, (float)color.z), face);
         }
 
-        public void llCreateLink(string target, int parent)
+        public DateTime llCreateLink(string target, int parent)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             UUID invItemID = InventorySelf();
 
             TaskInventoryItem item;
@@ -4078,7 +4170,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 && !m_automaticLinkPermission)
             {
                 ShoutError("Script trying to link but PERMISSION_CHANGE_LINKS permission not set!");
-                return;
+                return DateTime.Now;
             }
 
             IClientAPI client = null;
@@ -4089,7 +4181,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             SceneObjectPart targetPart = World.GetSceneObjectPart((UUID)target);
 
             if (targetPart.ParentGroup.RootPart.AttachmentPoint != 0)
-                return; // Fail silently if attached
+                return DateTime.Now; ; // Fail silently if attached
             SceneObjectGroup parentPrim = null, childPrim = null;
 
             if (targetPart != null)
@@ -4104,7 +4196,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     childPrim = m_host.ParentGroup;
                 }
 //                byte uf = childPrim.RootPart.UpdateFlag;
-                childPrim.RootPart.UpdateFlag = 0;
+                childPrim.RootPart.UpdateFlag = InternalUpdateFlags.NoUpdate;
                 parentPrim.LinkToGroup(childPrim);
 //                if (uf != (Byte)0)
 //                    parent.RootPart.UpdateFlag = uf;
@@ -4113,18 +4205,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             parentPrim.TriggerScriptChangedEvent(Changed.LINK);
             parentPrim.RootPart.CreateSelected = true;
             parentPrim.HasGroupChanged = true;
-            parentPrim.ScheduleGroupForFullUpdate();
+            parentPrim.ScheduleGroupForFullUpdate(PrimUpdateFlags.FullUpdate);
 
             if (client != null)
                 parentPrim.GetProperties(client);
 
-            ScriptSleep(1000);
+            return PScriptSleep(1000);
         }
 
         public void llBreakLink(int linknum)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             UUID invItemID = InventorySelf();
 
             lock (m_host.TaskInventory)
@@ -4154,7 +4246,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 case ScriptBaseClass.LINK_ALL_OTHERS:
                 case ScriptBaseClass.LINK_ALL_CHILDREN:
                 case ScriptBaseClass.LINK_THIS:
-                    foreach (SceneObjectPart part in parentPrim.Children.Values)
+                    foreach (SceneObjectPart part in parentPrim.ChildrenList)
                     {
                         if (part.UUID != m_host.UUID)
                         {
@@ -4179,14 +4271,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (linknum == ScriptBaseClass.LINK_ROOT)
             {
                 // Restructuring Multiple Prims.
-                List<SceneObjectPart> parts = new List<SceneObjectPart>(parentPrim.Children.Values);
+                List<SceneObjectPart> parts = new List<SceneObjectPart>(parentPrim.ChildrenList);
                 parts.Remove(parentPrim.RootPart);
                 foreach (SceneObjectPart part in parts)
                 {
                     parentPrim.DelinkFromGroup(part.LocalId, true);
                 }
                 parentPrim.HasGroupChanged = true;
-                parentPrim.ScheduleGroupForFullUpdate();
+                parentPrim.ScheduleGroupForFullUpdate(PrimUpdateFlags.FullUpdate);
                 parentPrim.TriggerScriptChangedEvent(Changed.LINK);
 
                 if (parts.Count > 0)
@@ -4195,11 +4287,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     parts.Remove(newRoot);
                     foreach (SceneObjectPart part in parts)
                     {
-                        part.UpdateFlag = 0;
+                        part.UpdateFlag = InternalUpdateFlags.NoUpdate;
                         newRoot.ParentGroup.LinkToGroup(part.ParentGroup);
                     }
                     newRoot.ParentGroup.HasGroupChanged = true;
-                    newRoot.ParentGroup.ScheduleGroupForFullUpdate();
+                    newRoot.ParentGroup.ScheduleGroupForFullUpdate(PrimUpdateFlags.FullUpdate);
                 }
             }
             else
@@ -4209,7 +4301,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                 parentPrim.DelinkFromGroup(childPrim.LocalId, true);
                 parentPrim.HasGroupChanged = true;
-                parentPrim.ScheduleGroupForFullUpdate();
+                parentPrim.ScheduleGroupForFullUpdate(PrimUpdateFlags.FullUpdate);
                 parentPrim.TriggerScriptChangedEvent(Changed.LINK);
             }
         }
@@ -4217,12 +4309,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llBreakAllLinks()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             SceneObjectGroup parentPrim = m_host.ParentGroup;
             if (parentPrim.RootPart.AttachmentPoint != 0)
                 return; // Fail silently if attached
 
-            List<SceneObjectPart> parts = new List<SceneObjectPart>(parentPrim.Children.Values);
+            List<SceneObjectPart> parts = new List<SceneObjectPart>(parentPrim.ChildrenList);
             parts.Remove(parentPrim.RootPart);
 
             foreach (SceneObjectPart part in parts)
@@ -4231,13 +4323,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 parentPrim.TriggerScriptChangedEvent(Changed.LINK);
             }
             parentPrim.HasGroupChanged = true;
-            parentPrim.ScheduleGroupForFullUpdate();
+            parentPrim.ScheduleGroupForFullUpdate(PrimUpdateFlags.FullUpdate);
         }
 
         public LSL_String llGetLinkKey(int linknum)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             ISceneEntity target = m_host.ParentGroup.GetLinkNumPart(linknum);
             if (target != null)
             {
@@ -4281,7 +4373,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_String llGetLinkName(int linknum)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             // simplest case, this prims link number
             if (m_host.LinkNum == linknum)
@@ -4340,7 +4432,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Integer llGetInventoryNumber(int type)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             int count = 0;
 
             lock (m_host.TaskInventory)
@@ -4360,7 +4452,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_String llGetInventoryName(int type, int number)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             ArrayList keys = new ArrayList();
 
             lock (m_host.TaskInventory)
@@ -4389,15 +4481,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Float llGetEnergy()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
-            // TODO: figure out real energy value
+            
             return 1.0f;
         }
 
-        public void llGiveInventory(string destination, string inventory)
+        public DateTime llGiveInventory(string destination, string inventory)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             bool found = false;
             UUID destId = UUID.Zero;
             UUID objId = UUID.Zero;
@@ -4407,7 +4498,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (!UUID.TryParse(destination, out destId))
             {
                 llSay(0, "Could not parse key " + destination);
-                return;
+                return DateTime.Now;
             }
 
             // move the first object found with this inventory name
@@ -4432,47 +4523,48 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 throw new Exception(String.Format("The inventory object '{0}' could not be found", inventory));
             }
 
+            GridUserInfo info = m_host.ParentGroup.Scene.GridUserService.GetGridUserInfo(destId.ToString());
+
             // check if destination is an avatar
-            if (World.GetScenePresence(destId) != null)
+            if ((info != null && info.Online) || World.GetScenePresence(destId) != null)
             {
                 // destination is an avatar
                 InventoryItemBase agentItem =
                         World.MoveTaskInventoryItem(destId, UUID.Zero, m_host, objId);
 
                 if (agentItem == null)
-                    return;
+                    return DateTime.Now;
 
                 byte[] bucket = new byte[17];
                 bucket[0] = (byte)assetType;
                 byte[] objBytes = objId.GetBytes();
                 Array.Copy(objBytes, 0, bucket, 1, 16);
 
-                Console.WriteLine("Giving inventory");
+                Console.WriteLine("Giving inventory to " + destId + " from " + m_host.Name);
                 GridInstantMessage msg = new GridInstantMessage(World,
                         m_host.UUID, m_host.Name+", an object owned by "+
                         resolveName(m_host.OwnerID)+",", destId,
                         (byte)InstantMessageDialog.InventoryOffered,
-                        false, objName+"\n"+m_host.Name+" is located at "+
-                        World.RegionInfo.RegionName+" "+
-                        m_host.AbsolutePosition.ToString(),
+                        false, objName+"'\n'"+m_host.Name+"' is located at "+
+                        m_host.AbsolutePosition.ToString() + " in '" + World.RegionInfo.RegionName,
                         agentItem.ID, true, m_host.AbsolutePosition,
                         bucket);
 
                 if (m_TransferModule != null)
-                    m_TransferModule.SendInstantMessage(msg, delegate(bool success) {});
+                    m_TransferModule.SendInstantMessage(msg);
             }
             else
             {
                 // destination is an object
                 World.MoveTaskInventoryItem(destId, m_host, objId);
             }
-            ScriptSleep(3000);
+            return PScriptSleep(3000);
         }
 
         public void llRemoveInventory(string name)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             lock (m_host.TaskInventory)
             {
@@ -4493,7 +4585,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llSetText(string text, LSL_Vector color, double alpha)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             Vector3 av3 = new Vector3(Util.Clip((float)color.x, 0.0f, 1.0f),
                                       Util.Clip((float)color.y, 0.0f, 1.0f),
                                       Util.Clip((float)color.z, 0.0f, 1.0f));
@@ -4505,24 +4597,21 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Float llWater(LSL_Vector offset)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return World.RegionInfo.RegionSettings.WaterHeight;
         }
 
         public void llPassTouches(int pass)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
-            if (pass != 0)
-                m_host.PassTouches = true;
-            else
-                m_host.PassTouches = false;
+            
+            m_host.PassTouch = pass;
         }
 
         public LSL_String llRequestAgentData(string id, int data)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             UUID uuid = (UUID)id;
 
@@ -4560,12 +4649,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             UUID rq = UUID.Random();
 
-            UUID tid = m_ScriptEngine.
-                DataserverPlugin.RegisterRequest(m_host.UUID,
+            DataserverPlugin dataserverPlugin = (DataserverPlugin)m_ScriptEngine.GetScriptPlugin("Dataserver");
+            UUID tid = dataserverPlugin.RegisterRequest(m_host.UUID,
                                              m_itemID, rq.ToString());
 
-            m_ScriptEngine.
-            DataserverPlugin.AddReply(rq.ToString(), reply, 100);
+            dataserverPlugin.AddReply(rq.ToString(), reply, 100);
 
             ScriptSleep(100);
             return tid.ToString();
@@ -4574,7 +4662,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_String llRequestInventoryData(string name)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             TaskInventoryDictionary itemDictionary = (TaskInventoryDictionary)m_host.TaskInventory.Clone();
 
@@ -4582,8 +4670,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 if (item.Type == 3 && item.Name == name)
                 {
-                    UUID tid = m_ScriptEngine.
-                        DataserverPlugin.RegisterRequest(m_host.UUID,
+                    DataserverPlugin dataserverPlugin = (DataserverPlugin)m_ScriptEngine.GetScriptPlugin("Dataserver");
+
+                    UUID tid = dataserverPlugin.RegisterRequest(m_host.UUID,
                                                      m_itemID, item.AssetID.ToString());
 
                     Vector3 region = new Vector3(
@@ -4601,8 +4690,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                             region = lm.Position + new Vector3(rx, ry, 0) - region;
 
                             string reply = region.ToString();
-                            m_ScriptEngine.
-                                DataserverPlugin.AddReply(i.ToString(),
+                            dataserverPlugin.AddReply(i.ToString(),
                                                              reply, 1000);
                         });
 
@@ -4617,14 +4705,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llSetDamage(double damage)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             m_host.ParentGroup.Damage = (float)damage;
         }
 
-        public void llTeleportAgentHome(string agent)
+        public DateTime llTeleportAgentHome(object _agent)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+
+            string agent = _agent.ToString();
+
             UUID agentId = new UUID();
             if (UUID.TryParse(agent, out agentId))
             {
@@ -4640,44 +4730,36 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     }
                 }
             }
-            ScriptSleep(5000);
+            return PScriptSleep(5000);
         }
 
-        public void llTextBox(string agent, string message, int chatChannel)
+        public DateTime llTextBox(string agent, string message, int chatChannel)
         {
             IDialogModule dm = World.RequestModuleInterface<IDialogModule>();
 
             if (dm == null)
-                return;
+                return DateTime.Now;
 
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+
             UUID av = new UUID();
-            if (!UUID.TryParse(agent,out av))
+            if (!UUID.TryParse(agent, out av))
             {
                 LSLError("First parameter to llDialog needs to be a key");
-                return;
+                return DateTime.Now;
             }
 
-            if (message == string.Empty)
-            {
-                ShoutError("Trying to use llTextBox with empty message.");
-            }
-            else if (message.Length > 512)
-            {
-                ShoutError("Trying to use llTextBox with message over 512 characters.");
-            }
-            else
-            {
-                dm.SendTextBoxToUser(av, message, chatChannel, m_host.Name, m_host.UUID, m_host.OwnerID);
-                ScriptSleep(1000);
-            }
+            if (message != null && message.Length > 1024)
+                message = message.Substring(0, 1024);
+
+            dm.SendTextBoxToUser(av, message, chatChannel, m_host.Name, m_host.UUID, m_host.OwnerID);
+            return PScriptSleep(1000);
         }
 
         public void llModifyLand(int action, int brush)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             ITerrainModule tm = World.RequestModuleInterface<ITerrainModule>();
             if (tm != null)
             {
@@ -4688,7 +4770,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llCollisionSound(string impact_sound, double impact_volume)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             UUID soundId = UUID.Zero;
             if (!UUID.TryParse(impact_sound, out soundId))
             {
@@ -4714,7 +4796,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llCollisionSprite(string impact_sprite)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             // Since this is broken in SL, we can do this however we want, until they fix it.
             m_host.CollisionSprite = UUID.Parse(impact_sprite);
         }
@@ -4723,13 +4805,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             // This should only return a value if the avatar is in the same region
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             UUID avatar = (UUID)id;
             ScenePresence presence = World.GetScenePresence(avatar);
             if (presence == null)
                 return "";
 
-            if (m_host.RegionHandle == presence.RegionHandle)
+            if (m_host.ParentGroup.Scene.RegionInfo.RegionHandle == presence.RegionHandle)
             {
                 Dictionary<UUID, string> animationstateNames = AnimationSet.Animations.AnimStateNames;
 
@@ -4748,22 +4830,21 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llMessageLinked(int linknumber, int num, string msg, string id)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             List<SceneObjectPart> parts = GetLinkParts(linknumber);
 
             UUID partItemID;
             foreach (SceneObjectPart part in parts)
             {
-                TaskInventoryDictionary itemsDictionary = (TaskInventoryDictionary)part.TaskInventory.Clone();
-
+                TaskInventoryDictionary itemsDictionary = (TaskInventoryDictionary)((ICloneable)part.TaskInventory).Clone();
                 foreach (TaskInventoryItem item in itemsDictionary.Values)
                 {
                     if (item.Type == ScriptBaseClass.INVENTORY_SCRIPT)
                     {
                         partItemID = item.ItemID;
                         int linkNumber = m_host.LinkNum;
-                        if (m_host.ParentGroup.Children.Count == 1)
+                        if (m_host.ParentGroup.ChildrenList.Count == 1)
                             linkNumber = 0;
 
                         object[] resobj = new object[]
@@ -4782,7 +4863,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llPushObject(string target, LSL_Vector impulse, LSL_Vector ang_impulse, int local)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             bool pushrestricted = World.RegionInfo.RegionSettings.RestrictPushing;
             bool pushAllowed = false;
 
@@ -4877,13 +4958,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         // Parcel push restriction
                         if ((targetlandObj.LandData.Flags & (uint)ParcelFlags.RestrictPushObject) == (uint)ParcelFlags.RestrictPushObject)
                         {
+                            //This takes care of everything
+                            pushAllowed = m_host.ParentGroup.Scene.Permissions.CanPushObject(m_host.OwnerID, targetlandObj);
                             // Need provisions for Group Owned here
-                            if (m_host.OwnerID == targetlandObj.LandData.OwnerID || 
+                            /*if (m_host.OwnerID == targetlandObj.LandData.OwnerID || 
                                 targetlandObj.LandData.IsGroupOwned || 
                                 m_host.OwnerID == targetID)
                             {
                                 pushAllowed = true;
-                            }
+                            }*/
 
                             //ParcelFlags.RestrictPushObject
                             //pushAllowed = true;
@@ -4954,15 +5037,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llPassCollisions(int pass)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
-            if (pass == 0)
-            {
-                m_host.ParentGroup.PassCollision = false;
-            }
-            else
-            {
-                m_host.ParentGroup.PassCollision = true;
-            }
+            
+            m_host.PassCollisions = pass;
         }
 
         public LSL_String llGetScriptName()
@@ -4970,7 +5046,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             string result = String.Empty;
 
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             lock (m_host.TaskInventory)
             {
@@ -4990,7 +5066,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Integer llGetNumberOfSides()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             return GetNumberOfSides(m_host);
         }
@@ -5038,7 +5114,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Rotation llAxisAngle2Rot(LSL_Vector axis, double angle)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             double x, y, z, s, t;
 
@@ -5057,7 +5133,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Vector llRot2Axis(LSL_Rotation rot)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             double x,y,z;
 
             if (rot.s > 1) // normalization needed
@@ -5094,7 +5170,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Float llRot2Angle(LSL_Rotation rot)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             if (rot.s > 1) // normalization needed
             {
@@ -5115,14 +5191,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Float llAcos(double val)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return (double)Math.Acos(val);
         }
 
         public LSL_Float llAsin(double val)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return (double)Math.Asin(val);
         }
 
@@ -5130,7 +5206,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Float llAngleBetween(LSL_Rotation a, LSL_Rotation b)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             double angle = Math.Acos(a.x * b.x + a.y * b.y + a.z * b.z + a.s * b.s) * 2;
             if (angle < 0) angle = -angle;
@@ -5141,7 +5217,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_String llGetInventoryKey(string name)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             lock (m_host.TaskInventory)
             {
@@ -5167,7 +5243,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llAllowInventoryDrop(int add)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             if (add != 0)
                 m_host.ParentGroup.RootPart.AllowedDrop = true;
@@ -5181,7 +5257,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Vector llGetSunDirection()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             LSL_Vector SunDoubleVector3;
             Vector3 SunFloatVector3;
@@ -5199,7 +5275,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Vector llGetTextureOffset(int face)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return GetTextureOffset(m_host, face);
         }
 
@@ -5227,7 +5303,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Vector llGetTextureScale(int side)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             Primitive.TextureEntry tex = m_host.Shape.Textures;
             LSL_Vector scale;
             if (side == -1)
@@ -5243,7 +5319,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Float llGetTextureRot(int face)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return GetTextureRot(m_host, face);
         }
 
@@ -5267,14 +5343,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Integer llSubStringIndex(string source, string pattern)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return source.IndexOf(pattern);
         }
 
         public LSL_String llGetOwnerKey(string id)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             UUID key = new UUID();
             if (UUID.TryParse(id, out key))
             {
@@ -5300,7 +5376,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Vector llGetCenterOfMass()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             Vector3 center = m_host.GetGeometricCenter();
             return new LSL_Vector(center.X,center.Y,center.Z);
         }
@@ -5308,7 +5384,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_List llListSort(LSL_List src, int stride, int ascending)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             if (stride <= 0)
             {
@@ -5320,7 +5396,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Integer llGetListLength(LSL_List src)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             if (src == null)
             {
@@ -5335,7 +5411,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Integer llList2Integer(LSL_List src, int index)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             if (index < 0)
             {
                 index = src.Length + index;
@@ -5356,12 +5432,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 return 0;
             }
+            catch (InvalidCastException)
+            {
+                return 0;
+            }
         }
 
         public LSL_Float llList2Float(LSL_List src, int index)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             if (index < 0)
             {
                 index = src.Length + index;
@@ -5373,14 +5453,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             try
             {
                 if (src.Data[index] is LSL_Integer)
-                    return Convert.ToDouble(((LSL_Integer) src.Data[index]).value);
+                    return Convert.ToDouble(((LSL_Integer)src.Data[index]).value);
                 else if (src.Data[index] is LSL_Float)
-                    return Convert.ToDouble(((LSL_Float) src.Data[index]).value);
+                    return Convert.ToDouble(((LSL_Float)src.Data[index]).value);
                 else if (src.Data[index] is LSL_String)
-                    return Convert.ToDouble(((LSL_String) src.Data[index]).m_string);
+                    return Convert.ToDouble(((LSL_String)src.Data[index]).m_string);
                 return Convert.ToDouble(src.Data[index]);
             }
             catch (FormatException)
+            {
+                return 0.0;
+            }
+            catch (InvalidCastException)
             {
                 return 0.0;
             }
@@ -5389,7 +5473,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_String llList2String(LSL_List src, int index)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             if (index < 0)
             {
                 index = src.Length + index;
@@ -5404,7 +5488,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_String llList2Key(LSL_List src, int index)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             if (index < 0)
             {
                 index = src.Length + index;
@@ -5419,7 +5503,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Vector llList2Vector(LSL_List src, int index)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             if (index < 0)
             {
                 index = src.Length + index;
@@ -5441,7 +5525,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Rotation llList2Rot(LSL_List src, int index)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             if (index < 0)
             {
                 index = src.Length + index;
@@ -5463,7 +5547,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_List llList2List(LSL_List src, int start, int end)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return src.GetSublist(start, end);
         }
 
@@ -5475,7 +5559,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Integer llGetListEntryType(LSL_List src, int index)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             if (index < 0)
             {
                 index = src.Length + index;
@@ -5525,7 +5609,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             int    x   = 0;
 
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             if (src.Data.Length > 0)
             {
@@ -5556,7 +5640,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             int length = 0;
 
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             for (int i = 0; i < src.Length; i++)
             {
@@ -5614,7 +5698,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             int[] chunks;
 
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             if (stride <= 0)
             {
@@ -5685,7 +5769,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             bool twopass = false;
 
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             //  First step is always to deal with negative indices
 
@@ -5767,14 +5851,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Integer llGetRegionAgentCount()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return new LSL_Integer(World.GetRootAgentCount());
         }
 
         public LSL_Vector llGetRegionCorner()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return new LSL_Vector(World.RegionInfo.RegionLocX * Constants.RegionSize, World.RegionInfo.RegionLocY * Constants.RegionSize, 0);
         }
 
@@ -5791,7 +5875,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             LSL_List pref = null;
             LSL_List suff = null;
 
-            m_host.AddScriptLPS(1);
+            
 
             if (index < 0)
             {
@@ -5842,7 +5926,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             int length = src.Length - test.Length + 1;
 
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             // If either list is empty, do not match
 
@@ -5872,21 +5956,21 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_String llGetObjectName()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return m_host.Name!=null?m_host.Name:String.Empty;
         }
 
         public void llSetObjectName(string name)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             m_host.Name = name!=null?name:String.Empty;
         }
 
         public LSL_String llGetDate()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             DateTime date = DateTime.Now.ToUniversalTime();
             string result = date.ToString("yyyy-MM-dd");
             return result;
@@ -5895,7 +5979,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Integer llEdgeOfWorld(LSL_Vector pos, LSL_Vector dir)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             // edge will be used to pass the Region Coordinates offset
             // we want to check for a neighboring sim
@@ -5964,7 +6048,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Integer llGetAgentInfo(string id)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             UUID key = new UUID();
             if (!UUID.TryParse(id, out key))
@@ -6067,8 +6151,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_String llGetAgentLanguage(string id)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
-            Aurora.Framework.IAgentConnector AgentFrontend = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IAgentConnector>("IAgentConnector");
+            
+            Aurora.Framework.IAgentConnector AgentFrontend = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IAgentConnector>();
             if (AgentFrontend == null)
                 return "en-us";
             Aurora.Framework.IAgentInfo Agent = AgentFrontend.GetAgent(new UUID(id));
@@ -6082,32 +6166,32 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 return "en-us";
         }
 
-        public void llAdjustSoundVolume(double volume)
+        public DateTime llAdjustSoundVolume(double volume)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+
             m_host.AdjustSoundGain(volume);
-            ScriptSleep(100);
+            return PScriptSleep(100);
         }
 
         public void llSetSoundQueueing(int queue)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             m_host.SetSoundQueueing(queue);
         }
 
         public void llSetSoundRadius(double radius)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             m_host.SoundRadius = radius;
         }
 
         public LSL_String llKey2Name(string id)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             UUID key = new UUID();
             if (UUID.TryParse(id,out key))
             {
@@ -6132,14 +6216,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llSetTextureAnim(int mode, int face, int sizex, int sizey, double start, double length, double rate)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             SetTextureAnim(m_host, mode, face, sizex, sizey, start, length, rate);
         }
 
         public void llSetLinkTextureAnim(int linknumber, int mode, int face, int sizex, int sizey, double start, double length, double rate)
         {
-            m_host.AddScriptLPS(1);
+            
 
             List<SceneObjectPart> parts = GetLinkParts(linknumber);
 
@@ -6167,7 +6251,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             pTexAnim.Start = (float)start;
 
             part.AddTextureAnimation(pTexAnim);
-            part.SendFullUpdateToAllClients();
+            part.SendFullUpdateToAllClients(PrimUpdateFlags.TextureAnim);
             part.ParentGroup.HasGroupChanged = true;
         }
 
@@ -6175,17 +6259,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                                           LSL_Vector bottom_south_west)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             float radius1 = (float)llVecDist(llGetPos(), top_north_east);
             float radius2 = (float)llVecDist(llGetPos(), bottom_south_west);
             float radius = Math.Abs(radius1 - radius2);
             m_host.SendSound(KeyOrName(sound).ToString(), volume, true, 0, radius, false, false);
         }
 
-        public void llEjectFromLand(string pest)
+        public DateTime llEjectFromLand(string pest)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             UUID agentId = new UUID();
             if (UUID.TryParse(pest, out agentId))
             {
@@ -6198,13 +6282,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         World.TeleportClientHome(agentId, presence.ControllingClient);
                 }
             }
-            ScriptSleep(5000);
+            return PScriptSleep(5000);
         }
 
         public LSL_List llParseString2List(string str, LSL_List separators, LSL_List in_spacers)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             LSL_List ret = new LSL_List();
             LSL_List spacers = new LSL_List();
             if (in_spacers.Length > 0 && separators.Length > 0)
@@ -6277,7 +6361,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Integer llOverMyLand(string id)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             UUID key = new UUID();
             if (UUID.TryParse(id, out key))
             {
@@ -6306,7 +6390,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_String llGetLandOwnerAt(LSL_Vector pos)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             ILandObject land = World.LandChannel.GetLandObject((float)pos.x, (float)pos.y);
             if (land == null)
                 return UUID.Zero.ToString();
@@ -6321,7 +6405,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Vector llGetAgentSize(string id)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             ScenePresence avatar = World.GetScenePresence((UUID)id);
             LSL_Vector agentSize;
             if (avatar == null || avatar.IsChildAgent) // Fail if not in the same region
@@ -6338,7 +6422,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Integer llSameGroup(string agent)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             UUID agentId = new UUID();
             if (!UUID.TryParse(agent, out agentId))
                 return new LSL_Integer(0);
@@ -6355,7 +6439,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llUnSit(string id)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             UUID key = new UUID();
             if (UUID.TryParse(id, out key))
@@ -6399,7 +6483,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Vector llGroundSlope(LSL_Vector offset)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             //Get the slope normal.  This gives us the equation of the plane tangent to the slope.
             LSL_Vector vsn = llGroundNormal(offset);
 
@@ -6418,7 +6502,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Vector llGroundNormal(LSL_Vector offset)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             Vector3 pos = m_host.GetWorldPosition() + new Vector3((float)offset.x,
                                                                 (float)offset.y,
                                                                 (float)offset.z);
@@ -6471,7 +6555,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Vector llGroundContour(LSL_Vector offset)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             LSL_Vector x = llGroundSlope(offset);
             return new LSL_Vector(-x.y, x.x, 0.0);
         }
@@ -6479,14 +6563,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Integer llGetAttached()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return m_host.ParentGroup.RootPart.AttachmentPoint;
         }
 
         public LSL_Integer llGetFreeMemory()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             // Make scripts designed for LSO happy
             return 16384;
         }
@@ -6494,7 +6578,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Integer llGetFreeURLs()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             if (m_UrlModule != null)
                 return new LSL_Integer(m_UrlModule.GetFreeUrls());
             return new LSL_Integer(0);
@@ -6510,7 +6594,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Float llGetRegionTimeDilation()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return (double)World.TimeDilation;
         }
 
@@ -6520,7 +6604,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Float llGetRegionFPS()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return World.SimulatorFPS;
         }
         
@@ -6590,7 +6674,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llLinkParticleSystem(int linknumber, LSL_List rules)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             List<SceneObjectPart> parts = GetLinkParts(linknumber);
 
@@ -6603,7 +6687,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llParticleSystem(LSL_List rules)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             SetParticleSystem(m_host, rules);
         }
 
@@ -6770,13 +6854,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 part.AddNewParticleSystem(prules);
                 part.ParentGroup.HasGroupChanged = true;
             }
-            part.SendFullUpdateToAllClients();
+            part.SendFullUpdateToAllClients(PrimUpdateFlags.Particles);
         }
 
         public void llGroundRepel(double height, int water, double tau)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             if (m_host.PhysActor != null)
             {
                 float ground = (float)llGround(new LSL_Types.Vector3(0, 0, 0));
@@ -6816,7 +6900,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llGiveInventoryList(string destination, string category, LSL_List inventory)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             UUID destID;
             if (!UUID.TryParse(destination, out destID))
@@ -6883,7 +6967,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llSetVehicleFloatParam(int param, LSL_Float value)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             if (m_host.ParentGroup != null)
             {
@@ -6899,7 +6983,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llSetVehicleVectorParam(int param, LSL_Vector vec)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             if (m_host.ParentGroup != null)
             {
                 if (!m_host.ParentGroup.IsDeleted)
@@ -6915,7 +6999,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llSetVehicleRotationParam(int param, LSL_Rotation rot)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             if (m_host.ParentGroup != null)
             {
                 if (!m_host.ParentGroup.IsDeleted)
@@ -6929,7 +7013,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llSetVehicleFlags(int flags)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             if (m_host.ParentGroup != null)
             {
                 if (!m_host.ParentGroup.IsDeleted)
@@ -6942,7 +7026,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llRemoveVehicleFlags(int flags)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             if (m_host.ParentGroup != null)
             {
                 if (!m_host.ParentGroup.IsDeleted)
@@ -6955,7 +7039,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llSitTarget(LSL_Vector offset, LSL_Rotation rot)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             // LSL quaternions can normalize to 0, normal Quaternions can't.
             if (rot.s == 0 && rot.x == 0 && rot.y == 0 && rot.z == 0)
                 rot.z = 1; // ZERO_ROTATION = 0,0,0,1
@@ -6968,17 +7052,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_String llAvatarOnSitTarget()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             if (m_host.GetAvatarOnSitTarget().Count != 0)
                 return m_host.GetAvatarOnSitTarget()[0].ToString();
             else
                 return ScriptBaseClass.NULL_KEY;
         }
 
-        public void llAddToLandPassList(string avatar, double hours)
+        public DateTime llAddToLandPassList(string avatar, double hours)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             UUID key;
             LandData land = World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData;
             if (land.OwnerID == m_host.OwnerID)
@@ -6992,41 +7076,41 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     land.ParcelAccessList.Add(entry);
                 }
             }
-            ScriptSleep(100);
+            return PScriptSleep(100);
         }
 
         public void llSetTouchText(string text)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             m_host.TouchName = text;
         }
 
         public void llSetSitText(string text)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             m_host.SitName = text;
         }
 
         public void llSetCameraEyeOffset(LSL_Vector offset)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
-            m_host.SetCameraEyeOffset(new Vector3((float)offset.x, (float)offset.y, (float)offset.z));
+            
+            m_host.CameraEyeOffset = new Vector3((float)offset.x, (float)offset.y, (float)offset.z);
         }
 
         public void llSetCameraAtOffset(LSL_Vector offset)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
-            m_host.SetCameraAtOffset(new Vector3((float)offset.x, (float)offset.y, (float)offset.z));
+            
+            m_host.CameraAtOffset = new Vector3((float)offset.x, (float)offset.y, (float)offset.z);
         }
 
         public LSL_String llDumpList2String(LSL_List src, string seperator)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             if (src.Length == 0)
             {
                 return String.Empty;
@@ -7043,7 +7127,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Integer llScriptDanger(LSL_Vector pos)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             bool result = World.ScriptDanger(m_host.LocalId, new Vector3((float)pos.x, (float)pos.y, (float)pos.z));
             if (result)
             {
@@ -7056,30 +7140,30 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         }
 
-        public void llDialog(string avatar, string message, LSL_List buttons, int chat_channel)
+        public DateTime llDialog(string avatar, string message, LSL_List buttons, int chat_channel)
         {
             IDialogModule dm = World.RequestModuleInterface<IDialogModule>();
 
             if (dm == null)
-                return;
+                return DateTime.Now;
 
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             UUID av = new UUID();
             if (!UUID.TryParse(avatar,out av))
             {
                 LSLError("First parameter to llDialog needs to be a key");
-                return;
+                return DateTime.Now;
             }
             if (buttons.Length < 1)
             {
                 LSLError("No less than 1 button can be shown");
-                return;
+                return DateTime.Now;
             }
             if (buttons.Length > 12)
             {
                 LSLError("No more than 12 buttons can be shown");
-                return;
+                return DateTime.Now;
             }
             string[] buts = new string[buttons.Length];
             for (int i = 0; i < buttons.Length; i++)
@@ -7087,12 +7171,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (buttons.Data[i].ToString() == String.Empty)
                 {
                     LSLError("button label cannot be blank");
-                    return;
+                    return DateTime.Now;
                 }
                 if (buttons.Data[i].ToString().Length > 24)
                 {
                     LSLError("button label cannot be longer than 24 characters");
-                    return;
+                    return DateTime.Now;
                 }
                 buts[i] = buttons.Data[i].ToString();
             }
@@ -7101,13 +7185,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 av, m_host.Name, m_host.UUID, m_host.OwnerID,
                 message, new UUID("00000000-0000-2222-3333-100000001000"), chat_channel, buts);
 
-            ScriptSleep(1000);
+            return PScriptSleep(1000);
         }
 
         public void llVolumeDetect(int detect)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             if (m_host.ParentGroup != null)
             {
                 if (!m_host.ParentGroup.IsDeleted)
@@ -7122,26 +7206,26 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         /// invoking it in SL
         /// </summary>
 
-        public void llRemoteLoadScript(string target, string name, int running, int start_param)
+        public DateTime llRemoteLoadScript(string target, string name, int running, int start_param)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             // Report an error as it does in SL
             ShoutError("Deprecated. Please use llRemoteLoadScriptPin instead.");
-            ScriptSleep(3000);
+            return PScriptSleep(3000);
         }
 
         public void llSetRemoteScriptAccessPin(int pin)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             m_host.ScriptAccessPin = pin;
         }
 
-        public void llRemoteLoadScriptPin(string target, string name, int pin, int running, int start_param)
+        public DateTime llRemoteLoadScriptPin(string target, string name, int pin, int running, int start_param)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             bool found = false;
             UUID destId = UUID.Zero;
             UUID srcId = UUID.Zero;
@@ -7149,13 +7233,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (!UUID.TryParse(target, out destId))
             {
                 llSay(0, "Could not parse key " + target);
-                return;
+                return DateTime.Now;
             }
 
             // target must be a different prim than the one containing the script
             if (m_host.UUID == destId)
             {
-                return;
+                return DateTime.Now;
             }
 
             // copy the first script found with this inventory name
@@ -7179,19 +7263,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (!found)
             {
                 llSay(0, "Could not find script " + name);
-                return;
+                return DateTime.Now;
             }
 
             // the rest of the permission checks are done in RezScript, so check the pin there as well
             World.RezScript(srcId, m_host, destId, pin, running, start_param);
             // this will cause the delay even if the script pin or permissions were wrong - seems ok
-            ScriptSleep(3000);
+            return PScriptSleep(3000); 
         }
 
-        public void llOpenRemoteDataChannel()
+        public DateTime llOpenRemoteDataChannel()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             IXMLRPC xmlrpcMod = World.RequestModuleInterface<IXMLRPC>();
             if (xmlrpcMod.IsEnabled())
             {
@@ -7217,47 +7301,47 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 m_ScriptEngine.PostScriptEvent(m_itemID, m_host.UUID, new EventParams("remote_data", resobj,
                                                                          new DetectParams[0]), EventPriority.FirstStart);
             }
-            ScriptSleep(1000);
+            return PScriptSleep(1000);
         }
 
         public LSL_String llSendRemoteData(string channel, string dest, int idata, string sdata)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             IXMLRPC xmlrpcMod = World.RequestModuleInterface<IXMLRPC>();
             ScriptSleep(3000);
             return (xmlrpcMod.SendRemoteData(m_host.UUID, m_itemID, channel, dest, idata, sdata)).ToString();
         }
 
-        public void llRemoteDataReply(string channel, string message_id, string sdata, int idata)
+        public DateTime llRemoteDataReply(string channel, string message_id, string sdata, int idata)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             IXMLRPC xmlrpcMod = World.RequestModuleInterface<IXMLRPC>();
             xmlrpcMod.RemoteDataReply(channel, message_id, sdata, idata);
-            ScriptSleep(3000);
+            return PScriptSleep(100);
         }
 
-        public void llCloseRemoteDataChannel(string channel)
+        public DateTime llCloseRemoteDataChannel(object _channel)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             IXMLRPC xmlrpcMod = World.RequestModuleInterface<IXMLRPC>();
-            xmlrpcMod.CloseXMLRPCChannel((UUID)channel);
-            ScriptSleep(1000);
+            xmlrpcMod.CloseXMLRPCChannel(UUID.Parse(_channel.ToString()));
+            return PScriptSleep(100); 
         }
 
         public LSL_String llMD5String(string src, int nonce)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return Util.Md5Hash(String.Format("{0}:{1}", src, nonce.ToString()));
         }
 
         public LSL_String llSHA1String(string src)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return Util.SHA1Hash(src).ToLower();
         }
 
@@ -7591,14 +7675,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llSetPrimitiveParams(LSL_List rules)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             SetPrimParams(m_host, rules);
         }
 
         public void llSetLinkPrimitiveParams(int linknumber, LSL_List rules)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             List<ISceneEntity> parts = GetLinkPartsAndEntities(linknumber);
 
@@ -7609,6 +7693,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llSetLinkPrimitiveParamsFast(int linknumber, LSL_List rules)
         {
             llSetLinkPrimitiveParams(linknumber, rules);
+        }
+
+        public LSL_Integer llGetLinkNumberOfSides(int LinkNum)
+        {
+            int faces = 0;
+            List<SceneObjectPart> Parts = GetLinkParts(LinkNum);
+            foreach (SceneObjectPart part in Parts)
+            {
+                faces += GetNumberOfSides(part);
+            }
+            return new LSL_Integer(faces);
         }
 
         protected void SetPrimParams(ISceneEntity part, LSL_List rules)
@@ -7626,6 +7721,24 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                 switch (code)
                 {
+                    case (int)ScriptBaseClass.PRIM_NAME:
+                        if (remain < 1)
+                            return;
+
+                        string name = rules.Data[idx++].ToString();
+                        if (part is SceneObjectPart)
+                            (part as SceneObjectPart).Name = name;
+                        break;
+
+                    case (int)ScriptBaseClass.PRIM_DESC:
+                        if (remain < 1)
+                            return;
+
+                        string desc = rules.Data[idx++].ToString();
+                        if (part is SceneObjectPart)
+                            (part as SceneObjectPart).Description = desc;
+                        break;
+
                     case (int)ScriptBaseClass.PRIM_POSITION:
                         if (remain < 1)
                             return;
@@ -7633,7 +7746,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         v=rules.GetVector3Item(idx++);
                         if (part is SceneObjectPart)
                             SetPos(part as SceneObjectPart, v);
-                        else if (part is ScenePresence)
+                        else if (part is ScenePresence) 
                         {
                             (part as ScenePresence).OffsetPosition = new Vector3((float)v.x, (float)v.y, (float)v.z);
                             (part as ScenePresence).SendTerseUpdateToAllClients();
@@ -8032,7 +8145,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_String llStringToBase64(string str)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             try
             {
                 byte[] encData_byte = new byte[str.Length];
@@ -8049,7 +8162,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_String llBase64ToString(string str)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             try
             {
                 return Util.Base64ToString(str);
@@ -8063,7 +8176,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_String llXorBase64Strings(string str1, string str2)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             Deprecated("llXorBase64Strings");
             ScriptSleep(300);
             return String.Empty;
@@ -8072,28 +8185,28 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llRemoteDataSetRegion()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             Deprecated("llRemoteDataSetRegion");
         }
 
         public LSL_Float llLog10(double val)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return (double)Math.Log10(val);
         }
 
         public LSL_Float llLog(double val)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return (double)Math.Log(val);
         }
 
         public LSL_List llGetAnimationList(string id)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             LSL_List l = new LSL_List();
             ScenePresence av = World.GetScenePresence((UUID)id);
@@ -8106,25 +8219,28 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return l;
         }
 
-        public void llSetParcelMusicURL(string url)
+        public DateTime llSetParcelMusicURL(string url)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             ILandObject land = World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y);
+            
+            if(land == null)
+                return DateTime.Now;
 
-            if (land.LandData.OwnerID != m_host.OwnerID)
-                return;
+            if(!World.Permissions.CanEditParcel(m_host.UUID, land))
+                return DateTime.Now;
 
             land.SetMusicUrl(url);
 
-            ScriptSleep(2000);
+            return PScriptSleep(2000); 
         }
 
         public LSL_Vector llGetRootPosition()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return new LSL_Vector(m_host.ParentGroup.AbsolutePosition.X, m_host.ParentGroup.AbsolutePosition.Y, 
                                   m_host.ParentGroup.AbsolutePosition.Z);
         }
@@ -8141,7 +8257,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Rotation llGetRootRotation()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             Quaternion q;
             if (m_host.ParentGroup.RootPart.AttachmentPoint != 0)
             {
@@ -8162,35 +8278,35 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_String llGetObjectDesc()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return m_host.Description != null ? m_host.Description : String.Empty;
         }
 
         public void llSetObjectDesc(string desc)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             m_host.Description = desc != null ? desc : String.Empty;
         }
 
         public LSL_String llGetCreator()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return m_host.CreatorID.ToString();
         }
 
         public LSL_String llGetTimestamp()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return DateTime.Now.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffffffZ");
         }
 
         public LSL_Integer llGetNumberOfPrims()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             int avatarCount = m_host.SitTargetAvatar.Count;
             
             /*World.ForEachScenePresence(delegate(ScenePresence presence)
@@ -8212,7 +8328,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_List llGetBoundingBox(string obj)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             UUID objID = UUID.Zero;
             LSL_List result = new LSL_List();
             if (!UUID.TryParse(obj, out objID))
@@ -8278,21 +8394,43 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Vector llGetGeometricCenter()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
-            return new LSL_Vector(m_host.GetGeometricCenter().X, m_host.GetGeometricCenter().Y, m_host.GetGeometricCenter().Z);
+
+            Vector3 MinPos = new Vector3(100000, 100000, 100000);
+            Vector3 MaxPos = Vector3.Zero;
+            foreach (SceneObjectPart child in m_host.ParentGroup.ChildrenList)
+            {
+                if (child.AbsolutePosition.X < MinPos.X)
+                    MinPos.X = child.AbsolutePosition.X;
+                if (child.AbsolutePosition.Y < MinPos.Y)
+                    MinPos.Y = child.AbsolutePosition.Y;
+                if (child.AbsolutePosition.Z < MinPos.Z)
+                    MinPos.Z = child.AbsolutePosition.Z;
+
+                if (child.AbsolutePosition.X > MaxPos.X)
+                    MaxPos.X = child.AbsolutePosition.X;
+                if (child.AbsolutePosition.Y > MaxPos.Y)
+                    MaxPos.Y = child.AbsolutePosition.Y;
+                if (child.AbsolutePosition.Z > MaxPos.Z)
+                    MaxPos.Z = child.AbsolutePosition.Z;
+            }
+            Vector3 GroupAvg = ((MaxPos + MinPos) / 2);
+            return new LSL_Vector(GroupAvg.X, GroupAvg.Y, GroupAvg.Z);
+
+            //Just plain wrong!
+            //return new LSL_Vector(m_host.GetGeometricCenter().X, m_host.GetGeometricCenter().Y, m_host.GetGeometricCenter().Z);
         }
 
         public LSL_List llGetPrimitiveParams(LSL_List rules)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return GetLinkPrimitiveParams(m_host, rules);
         }
 
         public LSL_List llGetLinkPrimitiveParams(int linknumber, LSL_List rules)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             
             List<SceneObjectPart> parts = GetLinkParts(linknumber);
 
@@ -8321,6 +8459,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                 switch (code)
                 {
+                    case (int)ScriptBaseClass.PRIM_NAME:
+                        res.Add(new LSL_Integer(part.Name));
+                        break;
+
+                    case (int)ScriptBaseClass.PRIM_DESC:
+                        res.Add(new LSL_Integer(part.Description));
+                        break;
+
                     case (int)ScriptBaseClass.PRIM_MATERIAL:
                         res.Add(new LSL_Integer(part.Material));
                         break;
@@ -8761,7 +8907,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             char[] imdt = new char[8];
 
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             
             // Manually unroll the loop
 
@@ -8824,7 +8970,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             int digit;
 
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             
             //    Require a well-fromed base64 string
 
@@ -8882,14 +9028,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Float llGetGMTclock()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return DateTime.UtcNow.TimeOfDay.TotalSeconds;
         }
 
         public LSL_String llGetHTTPHeader(LSL_Key request_id, string header)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             
            if (m_UrlModule != null)
                return m_UrlModule.GetHttpHeader(new UUID(request_id), header);
@@ -8900,7 +9046,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_String llGetSimulatorHostname()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return System.Environment.MachineName;
         }
 
@@ -8973,7 +9119,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             LSL_List tokens = new LSL_List();
 
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
 
             //    All entries are initially valid
 
@@ -9084,7 +9230,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Integer llGetObjectPermMask(int mask)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             
             int permmask = 0;
 
@@ -9119,7 +9265,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llSetObjectPermMask(int mask, int value)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             
             if (m_ScriptEngine.Config.GetBoolean("AllowGodFunctions", false))
             {
@@ -9156,7 +9302,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Integer llGetInventoryPermMask(string item, int mask)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             
             lock (m_host.TaskInventory)
             {
@@ -9187,7 +9333,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llSetInventoryPermMask(string item, int mask, int value)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             if (m_ScriptEngine.Config.GetBoolean("AllowGodFunctions", false))
             {
                 if (World.Permissions.CanRunConsoleCommand(m_host.OwnerID))
@@ -9226,7 +9372,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_String llGetInventoryCreator(string item)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             
             lock (m_host.TaskInventory)
             {
@@ -9247,16 +9393,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llOwnerSay(string msg)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
             
-            World.SimChatBroadcast(Utils.StringToBytes(msg), ChatTypeEnum.Owner, 0,
+            
+            World.SimChatBroadcast(msg, ChatTypeEnum.Owner, 0,
                                    m_host.AbsolutePosition, m_host.Name, m_host.UUID, false, UUID.Zero);
         }
 
         public LSL_String llRequestSecureURL()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             if (m_UrlModule != null)
                 return m_UrlModule.RequestSecureURL(m_ScriptEngine.ScriptModule, m_host, m_itemID).ToString();
             return UUID.Zero.ToString();
@@ -9269,7 +9415,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             try
             {
                 ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-                m_host.AddScriptLPS(1);
+                
             
                 string reply = String.Empty;
 
@@ -9320,11 +9466,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 }
                 UUID rq = UUID.Random();
 
-                UUID tid = m_ScriptEngine.
-                    DataserverPlugin.RegisterRequest(m_host.UUID, m_itemID, rq.ToString());
+                DataserverPlugin dataserverPlugin = (DataserverPlugin)m_ScriptEngine.GetScriptPlugin("Dataserver");
 
-                m_ScriptEngine.
-                    DataserverPlugin.AddReply(rq.ToString(), reply, 1000);
+                UUID tid = dataserverPlugin.RegisterRequest(m_host.UUID, m_itemID, rq.ToString());
+
+                dataserverPlugin.AddReply(rq.ToString(), reply, 1000);
 
                 ScriptSleep(1000);
                 return tid.ToString();
@@ -9338,7 +9484,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_String llRequestURL()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             
             if (m_UrlModule != null)
                 return m_UrlModule.RequestURL(m_ScriptEngine.ScriptModule, m_host, m_itemID).ToString();
@@ -9348,38 +9494,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llForceMouselook(int mouselook)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
-            m_host.SetForceMouselook(mouselook != 0);
-        }
-
-        public LSL_Float llGetObjectMass(string id)
-        {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
-            UUID key = new UUID();
-            if (UUID.TryParse(id, out key))
-            {
-                try
-                {
-                    SceneObjectPart obj = World.GetSceneObjectPart(World.Entities[key].LocalId);
-                    if (obj != null)
-                        return (double)obj.GetMass();
-                    // the object is null so the key is for an avatar
-                    ScenePresence avatar = World.GetScenePresence(key);
-                    if (avatar != null)
-                        if (avatar.IsChildAgent)
-                            // reference http://www.lslwiki.net/lslwiki/wakka.php?wakka=llGetObjectMass
-                            // child agents have a mass of 1.0
-                            return 1;
-                        else
-                            return (double)avatar.PhysicsActor.Mass;
-                }
-                catch (KeyNotFoundException)
-                {
-                    return 0; // The Object/Agent not in the region so just return zero
-                }
-            }
-            return 0;
+            
+            m_host.ForceMouselook = (mouselook != 0);
         }
 
         /// <summary>
@@ -9399,7 +9515,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             LSL_List pref = null;
 
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             
             // Note that although we have normalized, both
             // indices could still be negative.
@@ -9465,31 +9581,28 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
         }
 
-        public void llLoadURL(string avatar_id, string message, string url)
+        public DateTime llLoadURL(string avatar_id, string message, string url)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             
             IDialogModule dm = World.RequestModuleInterface<IDialogModule>();
             if (null != dm)
                 dm.SendUrlToUser(
                     new UUID(avatar_id), m_host.Name, m_host.UUID, m_host.OwnerID, false, message, url);
 
-            ScriptSleep(10000);
+            return PScriptSleep(10000);
         }
 
-        public void llParcelMediaCommandList(LSL_List commandList)
+        public DateTime llParcelMediaCommandList(LSL_List commandList)
         {
-            // TODO: Not implemented yet (missing in libomv?):
-            //  PARCEL_MEDIA_COMMAND_LOOP_SET    float loop      Use this to get or set the parcel's media loop duration. (1.19.1 RC0 or later)
-
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             
             // according to the docs, this command only works if script owner and land owner are the same
             // lets add estate owners and gods, too, and use the generic permission check.
             ILandObject landObject = World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y);
-            if (!World.Permissions.CanEditParcel(m_host.OwnerID, landObject)) return;
+            if (!World.Permissions.CanEditParcel(m_host.OwnerID, landObject)) return DateTime.Now;
 
             bool update = false; // send a ParcelMediaUpdate (and possibly change the land's media URL)?
             byte loop = 0;
@@ -9502,6 +9615,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             string description = landData.MediaDescription;
             int width = landData.MediaSize[0];
             int height = landData.MediaSize[1];
+            float mediaLoopSet = landData.MediaLoopSet;
             
             ParcelMediaCommandEnum? commandToSend = null;
             float time = 0.0f; // default is from start
@@ -9537,8 +9651,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         break;
 
                     case ParcelMediaCommandEnum.LoopSet:
-                        ShoutError("PARCEL_MEDIA_COMMAND_LOOP_SET is not currently supported.");
-                        return;
+                        if ((i + 1) < commandList.Length)
+                        {
+                            if (commandList.Data[i + 1] is LSL_Float)
+                            {
+                                mediaLoopSet = (float)((LSL_Float)commandList.Data[i + 1]).value;
+                            }
+                            else ShoutError("The argument of PARCEL_MEDIA_COMMAND_LOOP_SET must be a float");
+                            ++i;
+                        }
+                        commandToSend = command;
                         break;
 
                     case ParcelMediaCommandEnum.Play:
@@ -9589,6 +9711,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                             else ShoutError("The argument of PARCEL_MEDIA_COMMAND_TIME must be a float.");
                             ++i;
                         }
+                        commandToSend = command;
                         break;
 
                     case ParcelMediaCommandEnum.AutoAlign:
@@ -9704,6 +9827,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             if (commandToSend != null)
             {
+                float ParamToSend = time;
+                if ((ParcelMediaCommandEnum)commandToSend == ParcelMediaCommandEnum.LoopSet)
+                    ParamToSend = mediaLoopSet;
+
                 // the commandList contained a start/stop/... command, too
                 if (presence == null)
                 {
@@ -9712,26 +9839,26 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     {
                         if (!sp.IsChildAgent)
                         {
-                            sp.ControllingClient.SendParcelMediaCommand(0x4, // TODO what is this? ParcelFlags enum
+                            sp.ControllingClient.SendParcelMediaCommand(landData.Flags,
                                                                            (ParcelMediaCommandEnum)commandToSend,
-                                                                           time);
+                                                                           ParamToSend);
                         }
                     });
                 }
                 else if (!presence.IsChildAgent)
                 {
-                    presence.ControllingClient.SendParcelMediaCommand(0x4, // TODO what is this? ParcelFlags enum
+                    presence.ControllingClient.SendParcelMediaCommand(landData.Flags,
                                                                       (ParcelMediaCommandEnum)commandToSend,
-                                                                      time);
+                                                                      ParamToSend);
                 }
             }
-            ScriptSleep(2000);
+            return PScriptSleep(2000);
         }
 
         public LSL_List llParcelMediaQuery(LSL_List aList)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             LSL_List list = new LSL_List();
             for (int i = 0; i < aList.Data.Length; i++)
             {
@@ -9778,7 +9905,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Integer llClearPrimMedia(LSL_Integer face)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             if (face == ScriptBaseClass.ALL_SIDES)
             {
                 for (uint i = 0; i < m_host.GetNumberOfSides(); i++)
@@ -9796,321 +9923,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         private void ClearPrimMedia(LSL_Integer face)
         {
-            m_host.TriggerScriptChangedEvent(Changed.MEDIA);
-            Aurora.Framework.IAssetConnector connector = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IAssetConnector>("IAssetConnector");
-            connector.UpdateObjectMediaInfo(null, face.value, m_host.UUID);
         }
 
         public LSL_Integer llSetPrimMediaParams(LSL_Integer face, LSL_List commandList)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
-            if (face == ScriptBaseClass.ALL_SIDES)
-            {
-                for (uint i = 0; i < m_host.GetNumberOfSides(); i++)
-                {
-                    face = i;
-                    LSL_Integer status = SetPrimMedia(face, commandList);
-                    if (status != (int)PrimMediaUpdate.OK)
-                        return status;
-                }
-            }
-            else
-            {
-                LSL_Integer status = SetPrimMedia(face, commandList);
-                if(status != (int)PrimMediaUpdate.OK)
-                    return status;
-            }
-            string Version = m_host.CurrentMediaVersion.Remove(0, 14);
-            Version = Version.Remove(1, Version.Length - 1);
-            int version = int.Parse(Version);
-            version++;
-            Version = "x-mv:000000000" + version + "/00000000-0000-0000-0000-000000000000";
-            m_host.CurrentMediaVersion = Version;
-
-            m_host.SendFullUpdateToAllClients();
-
+            
             return new LSL_Integer((int)PrimMediaUpdate.OK);
         }
 
         private LSL_Integer SetPrimMedia(LSL_Integer face, LSL_List commandList)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
-            m_host.TriggerScriptChangedEvent(Changed.MEDIA);
-            Aurora.Framework.IAssetConnector connector = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IAssetConnector>("IAssetConnector");
-            Aurora.Framework.ObjectMediaURL MediaFace = connector.GetObjectMediaInfo(m_host.UUID.ToString(), face.value);
-            if (MediaFace == null)
-            {
-                MediaFace = new Aurora.Framework.ObjectMediaURL();
-                MediaFace.ObjectID = m_host.UUID;
-                MediaFace.FromInventoryObjectUUID = m_host.FromItemID;
-                MediaFace.OwnerID = m_host.OwnerID;
-                MediaFace.Side = face.value;
-                MediaFace.object_media_version = "x-mv:0000000001/00000000-0000-0000-0000-000000000000";
-            }
-            for (int i = 0; i < commandList.Data.Length; i += 2)
-            {
-                PrimMediaCommandEnum command = (PrimMediaCommandEnum)commandList.Data[i];
-                switch (command)
-                {
-                    case PrimMediaCommandEnum.AltImageEnable:
-                        if ((i + 1) < commandList.Length)
-                        {
-                            if (commandList.Data[i + 1] is LSL_Integer)
-                            {
-                                MediaFace.alt_image_enable = ((LSL_Integer)commandList.Data[i + 1]).value == 1;
-                            }
-                            else
-                                return new LSL_Integer((int)PrimMediaUpdate.TYPE_MISMATCH);
-                        }
-                        break;
-
-                    case PrimMediaCommandEnum.AutoLoop:
-                        if ((i + 1) < commandList.Length)
-                        {
-                            if (commandList.Data[i + 1] is LSL_Integer)
-                            {
-                                MediaFace.auto_loop = ((LSL_Integer)commandList.Data[i + 1]).value == 1;
-                            }
-                            else
-                                return new LSL_Integer((int)PrimMediaUpdate.TYPE_MISMATCH);
-                        }
-                        break;
-                    case PrimMediaCommandEnum.AutoPlay:
-                        if ((i + 1) < commandList.Length)
-                        {
-                            if (commandList.Data[i + 1] is LSL_Integer)
-                            {
-                                MediaFace.auto_play = ((LSL_Integer)commandList.Data[i + 1]).value == 1;
-                            }
-                            else
-                                return new LSL_Integer((int)PrimMediaUpdate.TYPE_MISMATCH);
-                        }
-                        break;
-                    case PrimMediaCommandEnum.AutoScale:
-                        if ((i + 1) < commandList.Length)
-                        {
-                            if (commandList.Data[i + 1] is LSL_Integer)
-                            {
-                                MediaFace.auto_scale = ((LSL_Integer)commandList.Data[i + 1]).value == 1;
-                            }
-                            else
-                                return new LSL_Integer((int)PrimMediaUpdate.TYPE_MISMATCH);
-                        }
-                        break;
-                    case PrimMediaCommandEnum.AutoZoom:
-                        if ((i + 1) < commandList.Length)
-                        {
-                            if (commandList.Data[i + 1] is LSL_Integer)
-                            {
-                                MediaFace.auto_zoom = ((LSL_Integer)commandList.Data[i + 1]).value == 1;
-                            }
-                            else
-                                return new LSL_Integer((int)PrimMediaUpdate.TYPE_MISMATCH);
-                        }
-                        break;
-                    case PrimMediaCommandEnum.Controls:
-                        if ((i + 1) < commandList.Length)
-                        {
-                            if (commandList.Data[i + 1] is LSL_Integer)
-                            {
-                                MediaFace.controls = ((LSL_Integer)commandList.Data[i + 1]).value;
-                            }
-                            else
-                                return new LSL_Integer((int)PrimMediaUpdate.TYPE_MISMATCH);
-                        }
-                        break;
-                    case PrimMediaCommandEnum.CurrentURL:
-                        if ((i + 1) < commandList.Length)
-                        {
-                            if (commandList.Data[i + 1] is LSL_String)
-                            {
-                                MediaFace.current_url = ((LSL_String)commandList.Data[i + 1]).m_string;
-                            }
-                            else
-                                return new LSL_Integer((int)PrimMediaUpdate.TYPE_MISMATCH);
-                        }
-                        break;
-                    case PrimMediaCommandEnum.FirstClickInteract:
-                        if ((i + 1) < commandList.Length)
-                        {
-                            if (commandList.Data[i + 1] is LSL_Integer)
-                            {
-                                MediaFace.first_click_interact = ((LSL_Integer)commandList.Data[i + 1]).value == 1;
-                            }
-                            else
-                                return new LSL_Integer((int)PrimMediaUpdate.TYPE_MISMATCH);
-                        }
-                        break;
-                    case PrimMediaCommandEnum.HeightPixels:
-                        if ((i + 1) < commandList.Length)
-                        {
-                            if (commandList.Data[i + 1] is LSL_Integer)
-                            {
-                                MediaFace.height_pixels = ((LSL_Integer)commandList.Data[i + 1]).value;
-                            }
-                            else
-                                return new LSL_Integer((int)PrimMediaUpdate.TYPE_MISMATCH);
-                        }
-                        break;
-                    case PrimMediaCommandEnum.HomeURL:
-                        if ((i + 1) < commandList.Length)
-                        {
-                            if (commandList.Data[i + 1] is LSL_String)
-                            {
-                                MediaFace.home_url = ((LSL_String)commandList.Data[i + 1]).m_string;
-                            }
-                            else
-                                return new LSL_Integer((int)PrimMediaUpdate.TYPE_MISMATCH);
-                        }
-                        break;
-                    case PrimMediaCommandEnum.PermsControl:
-                        if ((i + 1) < commandList.Length)
-                        {
-                            if (commandList.Data[i + 1] is LSL_Integer)
-                            {
-                                MediaFace.perms_control = ((LSL_Integer)commandList.Data[i + 1]).value;
-                            }
-                            else
-                                return new LSL_Integer((int)PrimMediaUpdate.TYPE_MISMATCH);
-                        }
-                        break;
-                    case PrimMediaCommandEnum.PermsInteract:
-                        if ((i + 1) < commandList.Length)
-                        {
-                            if (commandList.Data[i + 1] is LSL_Integer)
-                            {
-                                MediaFace.perms_interact = ((LSL_Integer)commandList.Data[i + 1]).value;
-                            }
-                            else
-                                return new LSL_Integer((int)PrimMediaUpdate.TYPE_MISMATCH);
-                        }
-                        break;
-                    case PrimMediaCommandEnum.Whitelist:
-                        if ((i + 1) < commandList.Length)
-                        {
-                            if (commandList.Data[i + 1] is LSL_String)
-                            {
-                                MediaFace.whitelist = ((LSL_String)commandList.Data[i + 1]).m_string;
-                            }
-                            else
-                                return new LSL_Integer((int)PrimMediaUpdate.TYPE_MISMATCH);
-                        }
-                        break;
-                    case PrimMediaCommandEnum.WhitelistEnable:
-                        if ((i + 1) < commandList.Length)
-                        {
-                            if (commandList.Data[i + 1] is LSL_Integer)
-                            {
-                                MediaFace.whitelist_enable = ((LSL_Integer)commandList.Data[i + 1]).value == 1;
-                            }
-                            else
-                                return new LSL_Integer((int)PrimMediaUpdate.TYPE_MISMATCH);
-                        }
-                        break;
-                    case PrimMediaCommandEnum.WidthPixels:
-                        if ((i + 1) < commandList.Length)
-                        {
-                            if (commandList.Data[i + 1] is LSL_Integer)
-                            {
-                                MediaFace.width_pixels = ((LSL_Integer)commandList.Data[i + 1]).value;
-                            }
-                            else
-                                return new LSL_Integer((int)PrimMediaUpdate.TYPE_MISMATCH);
-                        }
-                        break;
-                    default:
-                        PrimMediaCommandEnum mediaCommandEnum = PrimMediaCommandEnum.WidthPixels;
-                        NotImplemented("llSetPrimMediaParams parameter do not supported yet: " + Enum.Parse(mediaCommandEnum.GetType(), commandList.Data[i].ToString()).ToString());
-                        break;
-                }//end switch
-            }//end for
-
-            connector.UpdateObjectMediaInfo(MediaFace, MediaFace.Side, m_host.UUID);
-            Primitive.TextureEntry textures = m_host.Shape.Textures;
-            if (textures.FaceTextures[face.value] == null)
-            {
-                Primitive.TextureEntryFace texface = m_host.Shape.Textures.CreateFace((uint)face.value);
-                textures.FaceTextures[face.value] = texface;
-            }
-            textures.FaceTextures[face.value].MediaFlags = true;
-            m_host.Shape.Textures = textures;
-            return new LSL_Integer((int)PrimMediaUpdate.OK);
+           return new LSL_Integer((int)PrimMediaUpdate.OK);
         }
 
         public LSL_List llGetPrimMediaParams(LSL_Integer face, LSL_List aList)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
-            LSL_List list = new LSL_List();
-            Aurora.Framework.IAssetConnector connector = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IAssetConnector>("IAssetConnector");
-            Aurora.Framework.ObjectMediaURL MediaFace = connector.GetObjectMediaInfo(m_host.UUID.ToString(), face.value);
-            if (MediaFace == null)
-            {
-                //Fail silently..
-                return new LSL_Integer((int)PrimMediaUpdate.OK);
-            }
             
-            for (int i = 0; i < aList.Data.Length; i++)
-            {
-                if (aList.Data[i] != null)
-                {
-                    switch ((PrimMediaCommandEnum)aList.Data[i])
-                    {
-                        case PrimMediaCommandEnum.AltImageEnable:
-                            list.Add(new LSL_String(MediaFace.alt_image_enable));
-                            break;
-                        case PrimMediaCommandEnum.AutoLoop:
-                            list.Add(new LSL_String(MediaFace.auto_loop));
-                            break;
-                        case PrimMediaCommandEnum.AutoPlay:
-                            list.Add(new LSL_String(MediaFace.auto_play));
-                            break;
-                        case PrimMediaCommandEnum.AutoScale:
-                            list.Add(new LSL_String(MediaFace.auto_scale));
-                            break;
-                        case PrimMediaCommandEnum.AutoZoom:
-                            list.Add(new LSL_String(MediaFace.auto_zoom));
-                            break;
-                        case PrimMediaCommandEnum.Controls:
-                            list.Add(new LSL_String(MediaFace.controls));
-                            break;
-                        case PrimMediaCommandEnum.CurrentURL:
-                            list.Add(new LSL_String(MediaFace.current_url));
-                            break;
-                        case PrimMediaCommandEnum.FirstClickInteract:
-                            list.Add(new LSL_String(MediaFace.first_click_interact));
-                            break;
-                        case PrimMediaCommandEnum.HeightPixels:
-                            list.Add(new LSL_String(MediaFace.height_pixels));
-                            break;
-                        case PrimMediaCommandEnum.HomeURL:
-                            list.Add(new LSL_String(MediaFace.home_url));
-                            break;
-                        case PrimMediaCommandEnum.PermsControl:
-                            list.Add(new LSL_String(MediaFace.perms_control));
-                            break;
-                        case PrimMediaCommandEnum.PermsInteract:
-                            list.Add(new LSL_String(MediaFace.perms_interact));
-                            break;
-                        case PrimMediaCommandEnum.Whitelist:
-                            list.Add(new LSL_String(MediaFace.whitelist));
-                            break;
-                        case PrimMediaCommandEnum.WhitelistEnable:
-                            list.Add(new LSL_String(MediaFace.whitelist_enable));
-                            break;
-                        case PrimMediaCommandEnum.WidthPixels:
-                            list.Add(new LSL_String(MediaFace.width_pixels));
-                            break;
-                        default:
-                            PrimMediaCommandEnum mediaCommandEnum = PrimMediaCommandEnum.WidthPixels;
-                            NotImplemented("llGetPrimMediaParams parameter do not supported yet: " + Enum.Parse(mediaCommandEnum.GetType(), aList.Data[i].ToString()).ToString());
-                            break;
-                    }
-
-                }
-            }
+            LSL_List list = new LSL_List();
             ScriptSleep(2000);
             return list;
         }
@@ -10118,7 +9949,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Integer llModPow(int a, int b, int c)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             Int64 tmp = 0;
             Math.DivRem(Convert.ToInt64(Math.Pow(a, b)), c, out tmp);
             ScriptSleep(1000);
@@ -10128,7 +9959,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Integer llGetInventoryType(string name)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             
             lock (m_host.TaskInventory)
             {
@@ -10147,7 +9978,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llSetPayPrice(int price, LSL_List quick_pay_buttons)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             
             if (quick_pay_buttons.Data.Length < 4)
             {
@@ -10166,7 +9997,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Vector llGetCameraPos()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             UUID invItemID = InventorySelf();
 
             if (invItemID == UUID.Zero)
@@ -10196,7 +10027,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Rotation llGetCameraRot()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             UUID invItemID = InventorySelf();
             if (invItemID == UUID.Zero)
                 return new LSL_Rotation();
@@ -10226,29 +10057,29 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         /// The SL implementation does nothing, it is deprecated
         /// This duplicates SL
         /// </summary>
-        public void llSetPrimURL(string url)
+        public DateTime llSetPrimURL(string url)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
-            ScriptSleep(2000);
+
+            return PScriptSleep(2000);
         }
 
         /// <summary>
         /// The SL implementation shouts an error, it is deprecated
         /// This duplicates SL
         /// </summary>
-        public void llRefreshPrimURL()
+        public DateTime llRefreshPrimURL()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             Deprecated("llRefreshPrimURL");
-            ScriptSleep(20000);
+            return PScriptSleep(20000);
         }
 
         public LSL_String llEscapeURL(string url)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             try
             {
                 return Uri.EscapeDataString(url);
@@ -10262,7 +10093,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_String llUnescapeURL(string url)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             try
             {
                 return Uri.UnescapeDataString(url);
@@ -10273,27 +10104,37 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
         }
 
-        public void llMapDestination(string simname, LSL_Vector pos, LSL_Vector lookAt)
+        public DateTime llMapDestination(string simname, LSL_Vector pos, LSL_Vector lookAt)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             DetectParams detectedParams = m_ScriptEngine.GetDetectParams(m_itemID, m_host.UUID, 0);
-            if (detectedParams == null) return; // only works on the first detected avatar
+            if (detectedParams == null) return DateTime.Now; // only works on the first detected avatar
 
             ScenePresence avatar = World.GetScenePresence(detectedParams.Key);
             if (avatar != null)
             {
+                Aurora.Framework.IMuteListModule module = m_host.ParentGroup.Scene.RequestModuleInterface<Aurora.Framework.IMuteListModule>();
+                if (module != null)
+                {
+                    bool cached = false; //Unneeded
+                    foreach (Aurora.Framework.MuteList mute in module.GetMutes(avatar.UUID, out cached))
+                    {
+                        if (mute.MuteID == m_host.OwnerID)
+                            return DateTime.Now;
+                    }
+                }
                 avatar.ControllingClient.SendScriptTeleportRequest(m_host.Name, simname,
                                                                    new Vector3((float)pos.x, (float)pos.y, (float)pos.z),
                                                                    new Vector3((float)lookAt.x, (float)lookAt.y, (float)lookAt.z));
             }
-            ScriptSleep(1000);
+            return PScriptSleep(1000);
         }
 
-        public void llAddToLandBanList(string avatar, double hours)
+        public DateTime llAddToLandBanList(string avatar, double hours)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             UUID key;
             LandData land = World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData;
             if (land.OwnerID == m_host.OwnerID)
@@ -10307,13 +10148,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     land.ParcelAccessList.Add(entry);
                 }
             }
-            ScriptSleep(100);
+            return PScriptSleep(100);
         }
 
-        public void llRemoveFromLandPassList(string avatar)
+        public DateTime llRemoveFromLandPassList(string avatar)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             UUID key;
             LandData land = World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData;
             if (land.OwnerID == m_host.OwnerID)
@@ -10330,13 +10171,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     }
                 }
             }
-            ScriptSleep(100);
+            return PScriptSleep(100);
         }
 
-        public void llRemoveFromLandBanList(string avatar)
+        public DateTime llRemoveFromLandBanList(string avatar)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             UUID key;
             LandData land = World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData;
             if (land.OwnerID == m_host.OwnerID)
@@ -10353,13 +10194,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     }
                 }
             }
-            ScriptSleep(100);
+            return PScriptSleep(100);
         }
 
         public void llSetCameraParams(LSL_List rules)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             
             // our key in the object we are in
             UUID invItemID = InventorySelf();
@@ -10401,7 +10242,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     parameters.Add(type + 3, (float)v.z);
                     break;
                 default:
-                    // TODO: clean that up as soon as the implicit casts are in
                     if (data[i] is LSL_Float)
                         parameters.Add(type, (float)((LSL_Float)data[i]).value);
                     else if (data[i] is LSL_Integer)
@@ -10416,7 +10256,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llClearCameraParams()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             
             // our key in the object we are in
             UUID invItemID=InventorySelf();
@@ -10446,7 +10286,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Float llListStatistics(int operation, LSL_List src)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             LSL_List nums = LSL_List.ToDoubleList(src);
             switch (operation)
             {
@@ -10480,21 +10320,21 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Integer llGetUnixTime()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return Util.UnixTimeSinceEpoch();
         }
 
         public LSL_Integer llGetParcelFlags(LSL_Vector pos)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             return (int)World.LandChannel.GetLandObject((float)pos.x, (float)pos.y).LandData.Flags;
         }
 
         public LSL_Integer llGetRegionFlags()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             IEstateModule estate = World.RequestModuleInterface<IEstateModule>();
             if (estate == null)
                 return 67108864;
@@ -10504,7 +10344,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_String llXorBase64StringsCorrect(string str1, string str2)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             string ret = String.Empty;
             string src1 = llBase64ToString(str1);
             string src2 = llBase64ToString(str2);
@@ -10528,7 +10368,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             //   in StartHttpRequest
 
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             IHttpRequestModule httpScriptMod =
                 World.RequestModuleInterface<IHttpRequestModule>();
             List<string> param = new List<string>();
@@ -10553,10 +10393,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             string shard = "OpenSim";
             IConfigSource config = m_ScriptEngine.ConfigSource;
-            if (config.Configs["Network"] != null)
-            {
-                shard = config.Configs["Network"].GetString("shard", shard);
-            }
+            if (config.Configs["LSLRemoting"] != null)
+                shard = config.Configs["LSLRemoting"].GetString("shard", shard);
 
             httpHeaders["X-SecondLife-Shard"] = shard;
             httpHeaders["X-SecondLife-Object-Name"] = m_host.Name;
@@ -10567,7 +10405,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             httpHeaders["X-SecondLife-Local-Rotation"] = string.Format("({0:0.000000}, {1:0.000000}, {2:0.000000}, {3:0.000000})", rotation.X, rotation.Y, rotation.Z, rotation.W);
             httpHeaders["X-SecondLife-Owner-Name"] = ownerName;
             httpHeaders["X-SecondLife-Owner-Key"] = m_host.OwnerID.ToString();
-            string userAgent = config.Configs["Network"].GetString("user_agent", null);
+            string userAgent = "";
+            if (config.Configs["LSLRemoting"] != null)
+                shard = config.Configs["LSLRemoting"].GetString("user_agent", null);
+
             if (userAgent != null)
                 httpHeaders["User-Agent"] = userAgent;
 
@@ -10602,16 +10443,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             //   see http://wiki.secondlife.com/wiki/llHTTPResponse
 
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             
             if (m_UrlModule != null)
                 m_UrlModule.HttpResponse(new UUID(id), status,body);
         }
 
-        public void llResetLandBanList()
+        public DateTime llResetLandBanList()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             LandData land = World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData;
             if (land.OwnerID == m_host.OwnerID)
             {
@@ -10623,13 +10464,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     }
                 }
             }
-            ScriptSleep(100);
+            return PScriptSleep(100);
         }
 
-        public void llResetLandPassList()
+        public DateTime llResetLandPassList()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             LandData land = World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData;
             if (land.OwnerID == m_host.OwnerID)
             {
@@ -10641,13 +10482,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     }
                 }
             }
-            ScriptSleep(100);
+            return PScriptSleep(100);
         }
 
         public LSL_Integer llGetParcelPrimCount(LSL_Vector pos, int category, int sim_wide)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             
             LandData land = World.GetLandData((float)pos.x, (float)pos.y);
 
@@ -10711,7 +10552,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_List llGetParcelPrimOwners(LSL_Vector pos)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             LandObject land = (LandObject)World.LandChannel.GetLandObject((float)pos.x, (float)pos.y);
             LSL_List ret = new LSL_List();
             if (land != null)
@@ -10729,7 +10570,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Integer llGetObjectPrimCount(string object_id)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             SceneObjectPart part = World.GetSceneObjectPart(new UUID(object_id));
             if (part == null)
             {
@@ -10744,7 +10585,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Integer llGetParcelMaxPrims(LSL_Vector pos, int sim_wide)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             // Alondria: This currently just is utilizing the normal grid's 0.22 prims/m2 calculation
             // Which probably will be irrelevent in OpenSim....
             LandData land = World.GetLandData((float)pos.x, (float)pos.y);
@@ -10775,7 +10616,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_List llGetParcelDetails(LSL_Vector pos, LSL_List param)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             LandData land = World.GetLandData((float)pos.x, (float)pos.y);
             if (land == null)
             {
@@ -10801,6 +10642,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     case "4":
                         ret = ret + new LSL_List(land.Area);
                         break;
+                    case "5":
+                        ret = ret + new LSL_List(land.InfoUUID);
+                    //Returning the InfoUUID so that we can use this for landmarks outside of this region
+                    // http://wiki.secondlife.com/wiki/PARCEL_DETAILS_ID
+                        break;
                     default:
                         ret = ret + new LSL_List(0);
                         break;
@@ -10812,7 +10658,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_String llStringTrim(string src, int type)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             if (type == (int)ScriptBaseClass.STRING_TRIM_HEAD) { return src.TrimStart(); }
             if (type == (int)ScriptBaseClass.STRING_TRIM_TAIL) { return src.TrimEnd(); }
             if (type == (int)ScriptBaseClass.STRING_TRIM) { return src.Trim(); }
@@ -10822,7 +10668,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_List llGetObjectDetails(string id, LSL_List args)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             LSL_List ret = new LSL_List();
             UUID key = new UUID();
             if (UUID.TryParse(id, out key))
@@ -10952,7 +10798,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_String llGetNumberOfNotecardLines(string name)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             
             TaskInventoryDictionary itemsDictionary = (TaskInventoryDictionary)m_host.TaskInventory.Clone();
 
@@ -10979,12 +10825,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
 
             // was: UUID tid = tid = m_ScriptEngine.
-            UUID tid = m_ScriptEngine.DataserverPlugin.RegisterRequest(m_host.UUID, m_itemID, assetID.ToString());
+            DataserverPlugin dataserverPlugin = (DataserverPlugin)m_ScriptEngine.GetScriptPlugin("Dataserver");
+            UUID tid = dataserverPlugin.RegisterRequest(m_host.UUID, m_itemID, assetID.ToString());
 
             if (NotecardCache.IsCached(assetID))
             {
-                m_ScriptEngine.
-                DataserverPlugin.AddReply(assetID.ToString(),
+                dataserverPlugin.AddReply(assetID.ToString(),
                 NotecardCache.GetLines(assetID).ToString(), 100);
                 ScriptSleep(100);
                 return tid.ToString();
@@ -11003,8 +10849,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 string data = enc.GetString(a.Data);
                 //m_log.Debug(data);
                 NotecardCache.Cache(id, data);
-                m_ScriptEngine.
-                        DataserverPlugin.AddReply(id.ToString(),
+                dataserverPlugin.AddReply(id.ToString(),
                         NotecardCache.GetLines(id).ToString(), 100);
             });
 
@@ -11015,7 +10860,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_String llGetNotecardLine(string name, int line)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            m_host.AddScriptLPS(1);
+            
             
             TaskInventoryDictionary itemsDictionary = (TaskInventoryDictionary)m_host.TaskInventory.Clone();
 
@@ -11042,11 +10887,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
 
             // was: UUID tid = tid = m_ScriptEngine.
-            UUID tid = m_ScriptEngine.DataserverPlugin.RegisterRequest(m_host.UUID, m_itemID, assetID.ToString());
+            DataserverPlugin dataserverPlugin = (DataserverPlugin)m_ScriptEngine.GetScriptPlugin("Dataserver");
+            UUID tid = dataserverPlugin.RegisterRequest(m_host.UUID, m_itemID, assetID.ToString());
 
             if (NotecardCache.IsCached(assetID))
             {
-                m_ScriptEngine.DataserverPlugin.AddReply(assetID.ToString(),
+                dataserverPlugin.AddReply(assetID.ToString(),
                                                                NotecardCache.GetLine(assetID, line, m_notecardLineReadCharsMax), 100);
                 ScriptSleep(100);
                 return tid.ToString();
@@ -11065,7 +10911,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                              string data = enc.GetString(a.Data);
                              //m_log.Debug(data);
                              NotecardCache.Cache(id, data);
-                             m_ScriptEngine.DataserverPlugin.AddReply(id.ToString(),
+                             dataserverPlugin.AddReply(id.ToString(),
                                                                             NotecardCache.GetLine(id, line, m_notecardLineReadCharsMax), 100);
                          });
 
@@ -11075,6 +10921,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public void SetPrimitiveParamsEx(LSL_Key prim, LSL_List rules)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osSetPrimitiveParams", m_host, "OSSL");
             SceneObjectPart obj = World.GetSceneObjectPart(new UUID(prim));
             if (obj == null)
                 return;

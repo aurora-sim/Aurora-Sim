@@ -53,7 +53,7 @@ namespace Aurora.Modules.RegionLoader
             string externalName = ExternalIP.Text;
             if (externalName == "DEFAULT")
             {
-                externalName = Aurora.Framework.Utils.GetExternalIp();
+                externalName = Aurora.Framework.Utilities.GetExternalIp();
                 region.FindExternalAutomatically = true;
             }
             else
@@ -61,13 +61,10 @@ namespace Aurora.Modules.RegionLoader
             region.ExternalHostName = externalName;
 
             region.RegionType = Type.Text;
-            region.NonphysPrimMax = int.Parse(MaxNonPhys.Text);
-            region.PhysPrimMax = int.Parse(MaxPhys.Text);
-            region.ClampPrimSize = true;
             region.ObjectCapacity = int.Parse(ObjectCount.Text);
             region.AccessLevel = Util.ConvertMaturityToAccessLevel(uint.Parse(Maturity.Text));
 
-            Aurora.DataManager.DataManager.RequestPlugin<IRegionInfoConnector>("IRegionInfoConnector").UpdateRegionInfo(region, bool.Parse(Disabled.Text));
+            Aurora.DataManager.DataManager.RequestPlugin<IRegionInfoConnector>().UpdateRegionInfo(region, bool.Parse(Disabled.Text));
             IScene scene;
             m_log.Debug("[LOADREGIONS]: Creating Region: " + region.RegionName + ")");
             m_OpenSimBase.SceneManager.CreateRegion(region, true, out scene);
@@ -78,7 +75,7 @@ namespace Aurora.Modules.RegionLoader
 
         private void SearchForRegionByName_Click(object sender, EventArgs e)
         {
-            RegionInfo region = Aurora.DataManager.DataManager.RequestPlugin<IRegionInfoConnector>("IRegionInfoConnector").GetRegionInfo(RegionToFind.Text);
+            RegionInfo region = Aurora.DataManager.DataManager.RequestPlugin<IRegionInfoConnector>().GetRegionInfo(RegionToFind.Text);
             if (region == null)
             {
                 MessageBox.Show("Region was not found!");
@@ -86,8 +83,6 @@ namespace Aurora.Modules.RegionLoader
             }
             CurrentRegionID = region.RegionID;
             textBox11.Text = region.RegionType;
-            textBox10.Text = region.NonphysPrimMax.ToString();
-            textBox8.Text = region.PhysPrimMax.ToString();
             textBox6.Text = region.ObjectCapacity.ToString();
             textBox4.Text = Util.ConvertAccessLevelToMaturity(Convert.ToByte(region.AccessLevel.ToString())).ToString();
             textBox2.Text = region.Disabled.ToString();
@@ -118,7 +113,7 @@ namespace Aurora.Modules.RegionLoader
             string externalName = textBox9.Text;
             if (externalName == "DEFAULT")
             {
-                externalName = Aurora.Framework.Utils.GetExternalIp();
+                externalName = Aurora.Framework.Utilities.GetExternalIp();
                 region.FindExternalAutomatically = true;
             }
             else
@@ -126,13 +121,10 @@ namespace Aurora.Modules.RegionLoader
             region.ExternalHostName = externalName;
 
             region.RegionType = textBox11.Text;
-            region.NonphysPrimMax = int.Parse(textBox10.Text);
-            region.PhysPrimMax = int.Parse(textBox8.Text);
-            region.ClampPrimSize = true;
             region.ObjectCapacity = int.Parse(textBox6.Text);
             region.AccessLevel = Util.ConvertMaturityToAccessLevel(uint.Parse(textBox4.Text));
 
-            Aurora.DataManager.DataManager.RequestPlugin<IRegionInfoConnector>("IRegionInfoConnector").UpdateRegionInfo(region, bool.Parse(textBox2.Text));
+            Aurora.DataManager.DataManager.RequestPlugin<IRegionInfoConnector>().UpdateRegionInfo(region, bool.Parse(textBox2.Text));
             if (OnNewRegion != null)
                 OnNewRegion(region);
         }

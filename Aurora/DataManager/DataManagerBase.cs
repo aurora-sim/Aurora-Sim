@@ -29,6 +29,8 @@ namespace Aurora.DataManager
         public abstract void CloseDatabase();
         public abstract bool TableExists(string table);
         public abstract void CreateTable(string table, ColumnDefinition[] columns);
+        public abstract bool Replace(string table, string[] keys, object[] values);
+        public abstract IGenericData Copy();
 
         public Version GetAuroraVersion()
         {

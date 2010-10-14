@@ -7,6 +7,10 @@ using System.Windows.Forms;
 using Aurora.DataManager;
 using Aurora.Framework;
 using Microsoft.VisualBasic;
+using OpenMetaverse;
+using OpenMetaverse.Imaging;
+using OpenSim.Framework;
+using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules.AbuseReportsGUI
 {
@@ -16,133 +20,34 @@ namespace Aurora.Modules.AbuseReportsGUI
         private IAbuseReportsConnector AbuseReportsConnector;
         private string Password;
         private AbuseReport CurrentReport = null;
+        private IAssetService m_assetService;
 
-        public Abuse()
+        public Abuse(IAssetService assetService)
         {
             InitializeComponent();
-            AbuseReportsConnector = Aurora.DataManager.DataManager.RequestPlugin<IAbuseReportsConnector>("IAbuseReportsConnector");
-            Password = Microsoft.VisualBasic.Interaction.InputBox("Password for abuse reports database.","Password Input Required","",0,0);
+            m_assetService = assetService;
+            AbuseReportsConnector = Aurora.DataManager.DataManager.RequestPlugin<IAbuseReportsConnector>();
+            Password = Util.Md5Hash(Microsoft.VisualBasic.Interaction.InputBox("Password for abuse reports database.", "Password Input Required", "", 0, 0));
         }
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            AbuseReport AR = AbuseReportsConnector.GetAbuseReport(formNumber, Password);
-            if (AR != null)
-            {
-                CurrentReport = AR;
-                Category.Text = AR.Category.ToString();
-                ReporterName.Text = AR.ReporterName;
-                ObjectName.Text = AR.ObjectName;
-                ObjectPos.Text = AR.ObjectPosition.ToString();
-                Abusername.Text = AR.AbuserName;
-                Location.Text = AR.AbuseLocation;
-                Summary.Text = AR.AbuseSummary;
-                Details.Text = AR.AbuseDetails;
-                AssignedTo.Text = AR.AssignedTo;
-                Active.Text = AR.Active.ToString();
-                Checked.Text = AR.Checked.ToString();
-                Notes.Text = AR.Notes;
-                CardNumber.Text = formNumber.ToString();
-            }
-            else
-            {
-                Category.Text = "";
-                ReporterName.Text = "";
-                ObjectName.Text = "";
-                ObjectPos.Text = "";
-                Abusername.Text = "";
-                Location.Text = "";
-                Summary.Text = "";
-                Details.Text = "";
-                AssignedTo.Text = "";
-                Active.Text = "";
-                Checked.Text = "";
-                Notes.Text = "";
-                CardNumber.Text = formNumber.ToString();
-            }
+            SetGUI(AbuseReportsConnector.GetAbuseReport(formNumber, Password));
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
             formNumber -= 1;
             if (formNumber == 0)
-            {
                 formNumber = 1;
-            }
 
-            AbuseReport AR = AbuseReportsConnector.GetAbuseReport(formNumber, Password);
-            if (AR != null)
-            {
-                CurrentReport = AR;
-                Category.Text = AR.Category.ToString();
-                ReporterName.Text = AR.ReporterName;
-                ObjectName.Text = AR.ObjectName;
-                ObjectPos.Text = AR.ObjectPosition.ToString();
-                Abusername.Text = AR.AbuserName;
-                Location.Text = AR.AbuseLocation;
-                Summary.Text = AR.AbuseSummary;
-                Details.Text = AR.AbuseDetails;
-                AssignedTo.Text = AR.AssignedTo;
-                Active.Text = AR.Active.ToString();
-                Checked.Text = AR.Checked.ToString();
-                Notes.Text = AR.Notes;
-                CardNumber.Text = formNumber.ToString();
-            }
-            else
-            {
-                Category.Text = "";
-                ReporterName.Text = "";
-                ObjectName.Text = "";
-                Abusername.Text = "";
-                Location.Text = "";
-                Details.Text = "";
-                Summary.Text = "";
-                AssignedTo.Text = "";
-                Active.Text = "";
-                Checked.Text = "";
-                ObjectPos.Text = "";
-                Notes.Text = "";
-                CardNumber.Text = formNumber.ToString();
-            }
+            SetGUI(AbuseReportsConnector.GetAbuseReport(formNumber, Password));
         }
 
         private void button2_Click(object sender, EventArgs e)
         {
             formNumber += 1;
-            AbuseReport AR = AbuseReportsConnector.GetAbuseReport(formNumber, Password);
-            if (AR != null)
-            {
-                CurrentReport = AR;
-                Category.Text = AR.Category.ToString();
-                ReporterName.Text = AR.ReporterName;
-                ObjectName.Text = AR.ObjectName;
-                ObjectPos.Text = AR.ObjectPosition.ToString();
-                Abusername.Text = AR.AbuserName;
-                Location.Text = AR.AbuseLocation;
-                Summary.Text = AR.AbuseSummary;
-                Details.Text = AR.AbuseDetails;
-                AssignedTo.Text = AR.AssignedTo;
-                Active.Text = AR.Active.ToString();
-                Checked.Text = AR.Checked.ToString();
-                Notes.Text = AR.Notes;
-                CardNumber.Text = formNumber.ToString();
-            }
-            else
-            {
-                Category.Text = "";
-                ReporterName.Text = "";
-                ObjectName.Text = "";
-                Abusername.Text = "";
-                Location.Text = "";
-                Details.Text = "";
-                Summary.Text = "";
-                AssignedTo.Text = "";
-                Active.Text = "";
-                Checked.Text = "";
-                ObjectPos.Text = "";
-                Notes.Text = "";
-                CardNumber.Text = formNumber.ToString();
-            }
+            SetGUI(AbuseReportsConnector.GetAbuseReport(formNumber, Password));
         }
 
         private void textBox7_TextChanged(object sender, EventArgs e)
@@ -177,7 +82,12 @@ namespace Aurora.Modules.AbuseReportsGUI
             if (formNumber <= 0)
                 formNumber = 1;
             GotoARNumber.Text = "";
-            AbuseReport AR = AbuseReportsConnector.GetAbuseReport(formNumber, Password);
+            SetGUI(AbuseReportsConnector.GetAbuseReport(formNumber, Password));
+            
+        }
+
+        public void SetGUI(AbuseReport AR)
+        {
             if (AR != null)
             {
                 CurrentReport = AR;
@@ -194,6 +104,7 @@ namespace Aurora.Modules.AbuseReportsGUI
                 Checked.Text = AR.Checked.ToString();
                 Notes.Text = AR.Notes;
                 CardNumber.Text = formNumber.ToString();
+                SnapshotUUID.Image = GetTexture(AR.ScreenshotID);
             }
             else
             {
@@ -210,7 +121,23 @@ namespace Aurora.Modules.AbuseReportsGUI
                 Checked.Text = "";
                 Notes.Text = "";
                 CardNumber.Text = formNumber.ToString();
+                SnapshotUUID.Image = GetTexture(UUID.Zero);
             }
+        }
+
+        public Image GetTexture(UUID TextureID)
+        {
+            if (TextureID == UUID.Zero) //Send white instead of null
+                TextureID = Util.BLANK_TEXTURE_UUID;
+
+            AssetBase asset = m_assetService.Get(TextureID.ToString());
+            ManagedImage managedImage;
+            Image image;
+
+            if (asset != null && OpenJPEG.DecodeToImage(asset.Data, out managedImage, out image))
+                return image;
+            else
+                return new Bitmap(1, 1);
         }
     }
 }

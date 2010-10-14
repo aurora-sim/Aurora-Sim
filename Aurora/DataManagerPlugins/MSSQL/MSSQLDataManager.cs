@@ -11,6 +11,7 @@ using Aurora.DataManager;
 using Aurora.Framework;
 using OpenSim.Framework;
 using OpenMetaverse;
+using Aurora.DataManager.Migration;
 
 namespace Aurora.DataManager.MSSQL
 {
@@ -19,7 +20,7 @@ namespace Aurora.DataManager.MSSQL
         readonly Mutex m_lock = new Mutex(false);
         string connectionString = "";
         private SqlConnection m_connection = null;
-        private volatile bool m_InUse = false;
+        //private volatile bool m_InUse = false;
 
         public override string Identifier
         {
@@ -68,6 +69,10 @@ namespace Aurora.DataManager.MSSQL
             SqlConnection dbcon = GetLockedConnection();
             dbcon.Close();
             dbcon.Dispose();
+
+            var migrationManager = new MigrationManager(DataSessionProviderConnector.DataSessionProvider, this);
+            migrationManager.DetermineOperation();
+            migrationManager.ExecuteOperation();
         }
 
         public bool ExecuteCommand(string query)
@@ -383,6 +388,44 @@ namespace Aurora.DataManager.MSSQL
             return true;
         }
 
+        public override bool Replace(string table, string[] keys, object[] values)
+        {
+            SqlConnection dbcon = GetLockedConnection();
+            IDbCommand result;
+            IDataReader reader;
+
+            string query = String.Format("replace into {0} (", table);
+
+            foreach (object key in keys)
+            {
+                query += String.Format("{0},", key);
+            }
+            query = query.Remove(query.Length - 1);
+            query += ") values (";
+            foreach (object value in values)
+            {
+                query += String.Format("'{0}',", value);
+            }
+            query = query.Remove(query.Length - 1);
+            query += ")";
+            using (result = Query(query, new Dictionary<string, object>(), dbcon))
+            {
+                try
+                {
+                    using (reader = result.ExecuteReader())
+                    {
+                        reader.Close();
+                        reader.Dispose();
+                        result.Cancel();
+                        result.Dispose();
+                        CloseDatabase(dbcon);
+                    }
+                }
+                catch { }
+            }
+            return true;
+        }
+
         public override bool Insert(string table, object[] values, string updateKey, object updateValue)
         {
             SqlConnection dbcon = GetLockedConnection();
@@ -623,6 +666,11 @@ namespace Aurora.DataManager.MSSQL
                 default:
                     throw new Exception("You've discovered some type in MySQL that's not reconized by Aurora, please place the correct conversion in ConvertTypeToColumnType.");
             }
+        }
+
+        public override IGenericData Copy()
+        {
+            return new MSSQLDataLoader();
         }
     }
 }

@@ -30,23 +30,23 @@ using System.Collections.Generic;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Region.CoreModules.Scripting.XMLRPC;
-using OpenSim.Region.Framework.Scenes;
 using OpenSim.Framework;
+using OpenMetaverse;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 {
-    public class XmlRequest
+    public class XmlRequestPlugin : INonSharedScriptPlugin
     {
         public ScriptEngine m_ScriptEngine;
         private IXMLRPC xmlrpc = null;
 
-        public XmlRequest(ScriptEngine ScriptEngine, Scene scene)
+        public void Initialize(ScriptEngine ScriptEngine, Scene scene)
         {
             xmlrpc = scene.RequestModuleInterface<IXMLRPC>();
             m_ScriptEngine = ScriptEngine;
         }
 
-        public void CheckXMLRPCRequests()
+        public void Check()
         {
             if (xmlrpc == null)
                 return;
@@ -103,6 +103,30 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 
                 srdInfo = (SendRemoteDataRequest)xmlrpc.GetNextCompletedSRDRequest();
             }
+        }
+
+        public string Name
+        {
+            get { return "XmlRequest"; }
+        }
+
+        public void Dispose()
+        {
+        }
+
+        public Object[] GetSerializationData(UUID itemID, UUID primID)
+        {
+            return new Object[0];
+        }
+
+        public void CreateFromData(UUID itemID, UUID objectID, Object[] data)
+        {
+        }
+
+        public void RemoveScript(UUID primID, UUID itemID)
+        {
+            xmlrpc.DeleteChannels(itemID);
+            xmlrpc.CancelSRDRequests(itemID);
         }
     }
 }

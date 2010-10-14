@@ -531,11 +531,18 @@ namespace OpenSim.Framework
             if (args["energy_level"] != null)
                 EnergyLevel = (float)(args["energy_level"].AsReal());
 
+            //This IS checked later
             if (args["god_level"] != null)
                 Byte.TryParse(args["god_level"].AsString(), out GodLevel);
 
             if (args["speed"] != null)
                 float.TryParse(args["speed"].AsString(), out Speed);
+            else
+                Speed = 1;
+
+            //Reset this to fix movement... since regions are being bad about this
+            if (Speed == 0)
+                Speed = 1;
 
             if (args["always_run"] != null)
                 AlwaysRun = args["always_run"].AsBoolean();

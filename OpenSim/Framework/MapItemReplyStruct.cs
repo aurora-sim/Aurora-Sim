@@ -30,6 +30,42 @@ using System.Collections.Generic;
 
 namespace OpenSim.Framework
 {
+    public class multipleMapItemReply
+    {
+        public Dictionary<ulong, List<mapItemReply>> items = new Dictionary<ulong, List<mapItemReply>>();
+
+        public multipleMapItemReply() { }
+
+        public multipleMapItemReply(Dictionary<string, object> KVP)
+        {
+            foreach (KeyValuePair<string, object> kvp in KVP)
+            {
+                ulong handle = ulong.Parse(kvp.Key.Split('A')[1]);
+                mapItemReply item = new mapItemReply(kvp.Value as Dictionary<string, object>);
+                
+                if (!items.ContainsKey(handle))
+                    items.Add(handle, new List<mapItemReply>());
+
+                items[handle].Add(item);
+            }
+        }
+
+        public Dictionary<string, object> ToKeyValuePairs()
+        {
+            Dictionary<string, object> result = new Dictionary<string, object>();
+            foreach (KeyValuePair<ulong, List<mapItemReply>> kvp in items)
+            {
+                int i = 0;
+                foreach (mapItemReply item in kvp.Value)
+                {
+                    result["A" + kvp.Key + "A" + i.ToString()] = item.ToKeyValuePairs();
+                    i++;
+                }
+            }
+            return result;
+        }
+    }
+
     public class mapItemReply
     {
         public mapItemReply() { }

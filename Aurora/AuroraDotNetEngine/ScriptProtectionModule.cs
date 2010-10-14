@@ -15,42 +15,38 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
     public class ScriptProtectionModule
 	{
 		#region Declares
-		
-		private enum Trust : int
-    	{
-        	Full = 5,
-        	Medium = 3,
-        	Low = 1
-    	}
 
-		IConfigSource m_source;
-        ScriptEngine m_engine;
-        bool allowHTMLLinking = true;
+        private IConfig m_config;
+        private bool allowHTMLLinking = true;
 
-        Dictionary<UUID, List<string>> WantedClassesByItemID = new Dictionary<UUID, List<string>>();
-        //First String: ClassName, Second String: Class Source
-        Dictionary<string, string> ClassScripts = new Dictionary<string, string>();
-
-        //String: ClassName, InstanceData: data of the script.
-        Dictionary<string, ScriptData> ClassInstances = new Dictionary<string, ScriptData>();
-        
         //Threat Level for scripts.
-        ThreatLevel m_MaxThreatLevel = 0;
-        List<string> EnabledAPIs = new List<string>();
-        internal Dictionary<string, List<UUID> > m_FunctionPerms = new Dictionary<string, List<UUID> >();
-		public Dictionary<string, ScriptData> PreviouslyCompiled = new Dictionary<string, ScriptData>();
+        private ThreatLevel m_MaxThreatLevel = 0;
+        //List of all enabled APIs for scripts
+        private List<string> EnabledAPIs = new List<string>();
+        //Which owners have access to which functions
+        private Dictionary<string, List<UUID> > m_FunctionPerms = new Dictionary<string, List<UUID> >();
+        //Keeps track of whether the source has been compiled before
+        public Dictionary<string, string> PreviouslyCompiled = new Dictionary<string, string>();
+
+        public bool AllowHTMLLinking
+        {
+            get
+            {
+                return allowHTMLLinking;
+            }
+        }
         
         #endregion
         
         #region Constructor
         
-        public ScriptProtectionModule(IConfigSource source, ScriptEngine engine)
+        public ScriptProtectionModule(IConfig config)
 		{
-			m_source = source;
-            m_engine = engine;
-            EnabledAPIs = new List<string>(m_engine.Config.GetString("AllowedAPIs", "LSL").Split(','));
-            
-            allowHTMLLinking = m_engine.Config.GetBoolean("AllowHTMLLinking", true);
+            m_config = config;
+            EnabledAPIs = new List<string>(config.GetString("AllowedAPIs", "LSL").Split(','));
+
+            allowHTMLLinking = config.GetBoolean("AllowHTMLLinking", true);
+            GetThreatLevel();
 		}
         
 		#endregion
@@ -61,7 +57,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 		{
 			if(m_MaxThreatLevel != 0)
 				return m_MaxThreatLevel;
-			string risk = m_engine.Config.GetString("FunctionThreatLevel", "VeryLow");
+            string risk = m_config.GetString("FunctionThreatLevel", "VeryLow");
 			switch (risk)
 			{
 				case "None":
@@ -90,18 +86,24 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 			}
             return m_MaxThreatLevel;
 		}
+
+        public bool CheckAPI(string Name)
+        {
+            if (!EnabledAPIs.Contains(Name))
+                return false;
+            return true;
+        }
 		
 		public void CheckThreatLevel(ThreatLevel level, string function, SceneObjectPart m_host, string API)
         {
-            if (!EnabledAPIs.Contains(API))
-                Error("", String.Format("{0} permission denied.  All "+API+" functions are disabled.", function)); // throws
-
-            if (!m_FunctionPerms.ContainsKey(function))
+            List<UUID> FunctionPerms = new List<UUID>();
+            if (!m_FunctionPerms.TryGetValue(function, out FunctionPerms))
             {
-                string perm = m_engine.Config.GetString("Allow_" + function, "");
+                string perm = m_config.GetString("Allow_" + function, "");
                 if (perm == "")
                 {
                     m_FunctionPerms[function] = null; // a null value is default
+                    FunctionPerms = null;
                 }
                 else
                 {
@@ -114,6 +116,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         {
                             m_FunctionPerms[function] = new List<UUID>();
                             m_FunctionPerms[function].Add(UUID.Zero);
+                            FunctionPerms.Add(UUID.Zero);
                         }
                         else
                             m_FunctionPerms[function] = new List<UUID>(); // Empty list = none
@@ -147,7 +150,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //
             // To allow use by anyone, the list contains UUID.Zero
             //
-            if (m_FunctionPerms[function] == null) // No list = true
+            if (FunctionPerms == null) // No list = true
             {
                 if (level > m_MaxThreatLevel)
                     Error("Runtime Error: ",
@@ -157,9 +160,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             else
             {
-                if (!m_FunctionPerms[function].Contains(UUID.Zero))
+                if (!FunctionPerms.Contains(UUID.Zero))
                 {
-                	if (!m_FunctionPerms[function].Contains(m_host.OwnerID))
+                    if (!FunctionPerms.Contains(m_host.OwnerID))
                         Error("Runtime Error: ",
                             String.Format("{0} permission denied.  Prim owner is not in the list of users allowed to execute this function.",
                             function));
@@ -174,14 +177,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
 		#endregion
         
-        public bool AllowHTMLLinking
-        {
-            get
-            {
-                return allowHTMLLinking;
-            }
-        }
-        
         #region Previously Compiled Scripts
         
         public void AddPreviouslyCompiled(string source, ScriptData ID)
@@ -190,7 +185,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 if (!PreviouslyCompiled.ContainsKey(source))
                 {
-                    PreviouslyCompiled.Add(source, ID);
+                    PreviouslyCompiled.Add(source, ID.AssemblyName);
                 }
             }
         }
@@ -206,14 +201,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
         }
         
-        public ScriptData TryGetPreviouslyCompiledScript(string source)
+        public string TryGetPreviouslyCompiledScript(string source)
         {
-            lock (PreviouslyCompiled)
-            {
-                ScriptData ID = null;
-                PreviouslyCompiled.TryGetValue(source, out ID);
-                return ID;
-            }
+            string assemblyName = "";
+            PreviouslyCompiled.TryGetValue(source, out assemblyName);
+            return assemblyName;
         }
         
         public Dictionary<UUID, UUID> ScriptsItems = new Dictionary<UUID, UUID>();
@@ -223,9 +215,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             Dictionary<UUID, ScriptData> Instances;
             if (Scripts.TryGetValue(primID, out Instances))
             {
-                ScriptData SD;
-                Instances.TryGetValue(itemID, out SD);
-                return SD;
+                ScriptData ID = null;
+                Instances.TryGetValue(itemID, out ID);
+                return ID;
             }
             return null;
         }
@@ -246,24 +238,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             return null;
         }
         
-        public void AddNewScript(ScriptData Data)
+        public void AddNewScript(ScriptData ID)
         {
             lock (Scripts)
             {
-                ScriptData ID = Data;
-                if (ScriptsItems.ContainsKey(ID.ItemID))
-                    ScriptsItems.Remove(ID.ItemID);
-                ScriptsItems.Add(ID.ItemID, ID.part.UUID);
+                ScriptsItems[ID.ItemID] = ID.part.UUID;
                 Dictionary<UUID, ScriptData> Instances = new Dictionary<UUID, ScriptData>();
-                if (Scripts.ContainsKey(ID.part.UUID))
+                if (!Scripts.TryGetValue(ID.part.UUID, out Instances))
                 {
-                    Scripts.TryGetValue(ID.part.UUID, out Instances);
-                    Scripts.Remove(ID.part.UUID);
+                    Instances = new Dictionary<UUID, ScriptData>();
                 }
-                if (Instances.ContainsKey(ID.ItemID))
-                    Instances.Remove(ID.ItemID);
-                Instances.Add(ID.ItemID, ID);
-                Scripts.Add(ID.part.UUID, Instances);
+                Instances[ID.ItemID] = ID;
+                Scripts[ID.part.UUID] = Instances;
             }
         }
         
@@ -282,15 +268,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         
         public void RemoveScript(ScriptData Data)
         {
-        	ScriptData ID = Data;
-        	ScriptsItems.Remove(ID.ItemID);
+            ScriptsItems.Remove(Data.ItemID);
         	Dictionary<UUID, ScriptData> Instances = new Dictionary<UUID, ScriptData>();
-            if (Scripts.ContainsKey(ID.part.UUID))
+            if (Scripts.ContainsKey(Data.part.UUID))
         	{
-                Instances = Scripts[ID.part.UUID];
-        		Instances.Remove(ID.ItemID);
+                Instances = Scripts[Data.part.UUID];
+                Instances.Remove(Data.ItemID);
         	}
-            Scripts[ID.part.UUID] = Instances;
+            Scripts[Data.part.UUID] = Instances;
         }
         
         #endregion

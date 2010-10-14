@@ -213,19 +213,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
 
         // Teleport Functions
 
-        public void osTeleportAgent(string agent, string regionName, vector position, vector lookat)
+        public DateTime osTeleportAgent(string agent, string regionName, vector position, vector lookat)
         {
-            m_OSSL_Functions.osTeleportAgent(agent, regionName, position, lookat);
+            return m_OSSL_Functions.osTeleportAgent(agent, regionName, position, lookat);
         }
 
-        public void osTeleportAgent(string agent, int regionX, int regionY, vector position, vector lookat)
+        public DateTime osTeleportAgent(string agent, int regionX, int regionY, vector position, vector lookat)
         {
-            m_OSSL_Functions.osTeleportAgent(agent, regionX, regionY, position, lookat);
+            return m_OSSL_Functions.osTeleportAgent(agent, regionX, regionY, position, lookat);
         }
 
-        public void osTeleportAgent(string agent, vector position, vector lookat)
+        public DateTime osTeleportAgent(string agent, vector position, vector lookat)
         {
-            m_OSSL_Functions.osTeleportAgent(agent, position, lookat);
+            return m_OSSL_Functions.osTeleportAgent(agent, position, lookat);
         }
 
         // Avatar info functions
@@ -332,11 +332,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         public vector osGetDrawStringSize(string contentType, string text, string fontName, int fontSize)
         {
             return m_OSSL_Functions.osGetDrawStringSize(contentType, text, fontName, fontSize);
-        }
-
-        public void osSetStateEvents(int events)
-        {
-            m_OSSL_Functions.osSetStateEvents(events);
         }
 
         public string osGetScriptEngineName()
@@ -671,14 +666,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         public void osSetSpeed(string UUID, float SpeedModifier)
         {
             m_OSSL_Functions.osSetSpeed(UUID, SpeedModifier);
-        }
-        public void osCauseDamage(string avatar, double damage)
-        {
-            m_OSSL_Functions.osCauseDamage(avatar, damage);
-        }
-        public void osCauseHealing(string avatar, double healing)
-        {
-            m_OSSL_Functions.osCauseHealing(avatar, healing);
         }
         public LSL_List osGetPrimitiveParams(LSL_Key prim, LSL_List rules)
         {

@@ -352,18 +352,18 @@ namespace OpenSim.Services.Connectors.SimianGrid
             }
         }
 
-        private void UpdateAvatarPropertiesHandler(IClientAPI client, UserProfileData profileData, bool AllowPublish, bool MaturePublish)
+        private void UpdateAvatarPropertiesHandler(IClientAPI remoteClient, string AboutText, string FLAboutText, UUID FLImageID, UUID ImageID, string WebProfileURL, bool allowpublish, bool maturepublish)
         {
             OSDMap map = new OSDMap
             {
-                { "About", OSD.FromString(profileData.AboutText) },
-                { "Image", OSD.FromUUID(profileData.Image) },
-                { "FLAbout", OSD.FromString(profileData.FirstLifeAboutText) },
-                { "FLImage", OSD.FromUUID(profileData.FirstLifeImage) },
-                { "URL", OSD.FromString(profileData.ProfileUrl) }
+                { "About", OSD.FromString(AboutText) },
+                { "Image", OSD.FromUUID(ImageID) },
+                { "FLAbout", OSD.FromString(FLAboutText) },
+                { "FLImage", OSD.FromUUID(FLImageID) },
+                { "URL", OSD.FromString(WebProfileURL) }
             };
 
-            AddUserData(client.AgentId, "LLAbout", map);
+            AddUserData(remoteClient.AgentId, "LLAbout", map);
         }
 
         private void AvatarInterestUpdateHandler(IClientAPI client, uint wantmask, string wanttext, uint skillsmask,

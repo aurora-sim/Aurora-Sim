@@ -99,7 +99,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Vegetation
                 return null;
             }
             
-            SceneObjectGroup sceneObject = new SceneObjectGroup(ownerID, pos, rot, shape);
+            SceneObjectGroup sceneObject = new SceneObjectGroup(ownerID, pos, rot, shape, m_scene);
             SceneObjectPart rootPart = sceneObject.GetChildPart(sceneObject.UUID);
             
             // if grass or tree, make phantom
@@ -121,7 +121,18 @@ namespace OpenSim.Region.CoreModules.Avatar.Vegetation
             {
                 case Tree.Cypress1:
                 case Tree.Cypress2:
+                case Tree.Palm1:
+                case Tree.Palm2:
+                case Tree.WinterAspen:
                     tree.Scale = new Vector3(4, 4, 10);
+                    break;
+                case Tree.WinterPine1:
+                case Tree.WinterPine2:
+                    tree.Scale = new Vector3(4, 4, 20);
+                    break;
+
+                case Tree.Dogwood:
+                    tree.Scale = new Vector3(6.5f, 6.5f, 6.5f);
                     break;
 
                 // case... other tree types

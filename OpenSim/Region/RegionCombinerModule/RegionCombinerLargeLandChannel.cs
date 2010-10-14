@@ -155,19 +155,29 @@ public class RegionCombinerLargeLandChannel : ILandChannel
             RootRegionLandChannel.ReturnObjectsInParcel(localID, returnType, agentIDs, taskIDs, remoteClient);
         }
 
-        public void setParcelObjectMaxOverride(overrideParcelMaxPrimCountDelegate overrideDel)
-        {
-            RootRegionLandChannel.setParcelObjectMaxOverride(overrideDel);
-        }
-
-        public void setSimulatorObjectMaxOverride(overrideSimulatorMaxPrimCountDelegate overrideDel)
-        {
-            RootRegionLandChannel.setSimulatorObjectMaxOverride(overrideDel);
-        }
-
         public void SetParcelOtherCleanTime(IClientAPI remoteClient, int localID, int otherCleanTime)
         {
             RootRegionLandChannel.SetParcelOtherCleanTime(remoteClient, localID, otherCleanTime);
+        }
+
+        public Vector3 GetNearestRegionEdgePosition(OpenSim.Region.Framework.Scenes.ScenePresence avatar)
+        {
+            return RootRegionLandChannel.GetNearestRegionEdgePosition(avatar);
+        }
+
+        public ILandObject GetNearestAllowedParcel(UUID avatarId, float x, float y)
+        {
+            return RootRegionLandChannel.GetNearestAllowedParcel(avatarId, x, y);
+        }
+
+        public Vector3? GetNearestAllowedPosition(OpenSim.Region.Framework.Scenes.ScenePresence avatar)
+        {
+            return RootRegionLandChannel.GetNearestAllowedPosition(avatar);
+        }
+
+        public Vector3 GetParcelCenterAtGround(ILandObject parcel)
+        {
+            return RootRegionLandChannel.GetParcelCenterAtGround(parcel);
         }
 
         #endregion

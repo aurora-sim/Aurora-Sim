@@ -214,8 +214,17 @@ namespace OpenSim.Framework
             clear_registry_();
 
             suppress_console_output_(true);
-            AddinManager.Initialize(dir);
-            AddinManager.Registry.Update(null);
+            try
+            {
+                AddinManager.Initialize(dir);
+                AddinManager.Registry.Update(null);
+            }
+            catch (InvalidOperationException)
+            {
+                //This is to stop temperary crashes when starting robust and opensim at the same time
+                System.Threading.Thread.Sleep(10);
+                initialise_plugin_dir_(dir);
+            }
             suppress_console_output_(false);
         }
 

@@ -28,7 +28,6 @@
 using System.Net;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
-using OpenMetaverse.Messages.Linden;
 using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Region.Framework.Interfaces
@@ -44,8 +43,8 @@ namespace OpenSim.Region.Framework.Interfaces
                                          string capsPath);
         void TeleportFinishEvent(ulong regionHandle, byte simAccess, 
                                  IPEndPoint regionExternalEndPoint,
-                                 uint locationID, uint flags, string capsURL, 
-                                 UUID agentID);
+                                 uint locationID, uint flags, string capsURL,
+                                 UUID agentID, uint teleportFlags);
         void CrossRegion(ulong handle, Vector3 pos, Vector3 lookAt,
                          IPEndPoint newRegionExternalEndPoint,
                          string capsURL, UUID avatarID, UUID sessionID);
@@ -55,7 +54,9 @@ namespace OpenSim.Region.Framework.Interfaces
                                   uint ttl, UUID transactionID, bool fromGroup, byte[] binaryBucket);
         void ChatterBoxSessionAgentListUpdates(UUID sessionID, UUID fromAgent, UUID toAgent, bool canVoiceChat, 
                                                bool isModerator, bool textMute);
-        void ParcelProperties(ParcelPropertiesMessage parcelPropertiesMessage, UUID avatarID);
+        void ChatterBoxSessionAgentListUpdates(UUID sessionID, OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock[] message, UUID toAgent, string Transition);
+        void ParcelProperties(ParcelPropertiesPacket parcelPropertiesPacket, OpenSim.Framework.LandData data, UUID avatarID);
         void GroupMembership(AgentGroupDataUpdatePacket groupUpdate, UUID avatarID);
+        void QueryReply(PlacesReplyPacket placesReply, UUID avatarID, string[] RegionTypes);
     }
 }

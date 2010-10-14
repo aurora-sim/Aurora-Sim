@@ -32,7 +32,7 @@ using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.Framework.Interfaces
 {
-    public interface ISimulationDataStore
+    public interface IRegionDataStore
     {
         /// <summary>
         /// Initialises the data storage engine
@@ -62,6 +62,20 @@ namespace OpenSim.Region.Framework.Interfaces
         void RemoveObject(UUID uuid, UUID regionUUID);
 
         /// <summary>
+        /// Removes multiple objects from the database
+        /// </summary>
+        /// <param name="objGroups"></param>
+        void RemoveObjects(List<UUID> objGroups);
+
+        /// <summary>
+        /// Entirely removes the region, including prims and prim inventory
+        /// </summary>
+        /// <param name="uuid"></param>
+        /// <param name="regionUUID"></param>
+        /// <returns></returns>
+        void RemoveRegion(UUID regionUUID);
+
+        /// <summary>
         /// Store a prim's inventory
         /// </summary>
         /// <returns></returns>
@@ -79,32 +93,21 @@ namespace OpenSim.Region.Framework.Interfaces
         /// </summary>
         /// <param name="ter">HeightField data</param>
         /// <param name="regionID">region UUID</param>
-        void StoreTerrain(double[,] terrain, UUID regionID);
+        void StoreTerrain(double[,] terrain, UUID regionID, bool Revert);
         
         /// <summary>
         /// Load the latest terrain revision from region storage
         /// </summary>
         /// <param name="regionID">the region UUID</param>
         /// <returns>Heightfield data</returns>
-        double[,] LoadTerrain(UUID regionID);
-
-        void StoreLandObject(ILandObject Parcel);
-        
-        /// <summary>
-        /// <list type="bullet">
-        /// <item>delete from land where UUID=globalID</item>
-        /// <item>delete from landaccesslist where LandUUID=globalID</item>
-        /// </list>
-        /// </summary>
-        /// <param name="globalID"></param>
-        void RemoveLandObject(UUID globalID);
-        
-        List<LandData> LoadLandObjects(UUID regionUUID);
+        double[,] LoadTerrain(UUID regionID, bool RevertMap);
 
         void StoreRegionSettings(RegionSettings rs);
         RegionSettings LoadRegionSettings(UUID regionUUID);
-        RegionLightShareData LoadRegionWindlightSettings(UUID regionUUID);
-        void StoreRegionWindlightSettings(RegionLightShareData wl);
+
+        void StoreLandObject(LandData args);
+        void RemoveLandObject(UUID RegionID, UUID ParcelID);
+        List<LandData> LoadLandObjects(UUID regionUUID);
 
         void Shutdown();
     }

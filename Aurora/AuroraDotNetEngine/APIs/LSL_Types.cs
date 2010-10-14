@@ -410,7 +410,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         }
 
         [Serializable]
-        public class list
+        public class list : IEnumerator
         {
             private object[] m_data;
 
@@ -1247,6 +1247,29 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 return Data.GetHashCode();
             }
+
+            #region IEnumerator Members
+
+            private int i = 0;
+            public object Current
+            {
+                get { return m_data[i]; }
+            }
+
+            public bool MoveNext()
+            {
+                i++;
+                if (m_data.Length == i)
+                    return false;
+                return true;
+            }
+
+            public void Reset()
+            {
+                i = 0;
+            }
+
+            #endregion
         }
 
         [Serializable]
@@ -1570,11 +1593,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 Regex r = new Regex("(^[ ]*0[xX][0-9A-Fa-f][0-9A-Fa-f]*)|(^[ ]*-?[0-9][0-9]*)");
                 Match m = r.Match(s);
                 string v = m.Groups[0].Value;
-
-                if (v == String.Empty)
-                {
+                if (s == "TRUE")
+                    value = 1;
+                else if (s == "FALSE")
                     value = 0;
-                }
+                else if (v == String.Empty)
+                    value = 0;
                 else
                 {
                     try
@@ -1867,7 +1891,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
                 v = v.Trim();
 
-                if (v == String.Empty || v == null)
+                if (s == "TRUE")
+                    value = 1.0;
+                else if (s == "FALSE")
+                    value = 0.0;
+                else if (v == String.Empty || v == null)
                     v = "0.0";
                 else
                     if (!v.Contains(".") && !v.ToLower().Contains("e"))

@@ -134,7 +134,8 @@ namespace OpenSim.Data.MySQL
                                         asset.Local = false;
 
                                     asset.Temporary = Convert.ToBoolean(dbReader["temporary"]);
-                                    asset.Flags = (AssetFlags)Convert.ToInt32(dbReader["asset_flags"]);
+                                    if(!(dbReader["asset_flags"] is DBNull))
+                                        asset.Flags = (AssetFlags)Convert.ToInt32(dbReader["asset_flags"]);
                                 }
                             }
                         }

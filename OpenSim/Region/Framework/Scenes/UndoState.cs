@@ -27,6 +27,7 @@
 
 using OpenMetaverse;
 using OpenSim.Region.Framework.Interfaces;
+using OpenSim.Framework;
 
 namespace OpenSim.Region.Framework.Scenes
 {
@@ -40,7 +41,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (part != null)
             {
-                if (part.UUID == part.ParentGroup.RootPart.UUID)
+                if (part.UUID == part.ParentGroup.UUID)
                 {
                     Position = part.ParentGroup.AbsolutePosition;
                     Rotation = part.RotationOffset;
@@ -59,7 +60,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (part != null)
             {
-                if (part.UUID == part.ParentGroup.RootPart.UUID)
+                if (part.UUID == part.ParentGroup.UUID)
                 {
                     if (Position == part.AbsolutePosition && Rotation == part.RotationOffset && Scale == part.Shape.Scale)
                         return true;
@@ -84,61 +85,108 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 part.Undoing = true;
 
-                if (part.UUID == part.ParentGroup.RootPart.UUID)
+                bool ChangedScale = false;
+                bool ChangedRot = false;
+                bool ChangedPos = false;
+
+                if (part.UUID == part.ParentGroup.UUID)
                 {
-                    part.Undoing = true;
                     if (Position != Vector3.Zero)
+                    {
+                        ChangedPos = true;
                         part.ParentGroup.AbsolutePosition = Position;
+                    }
+                    ChangedRot = true;
                     part.RotationOffset = Rotation;
                     if (Scale != Vector3.Zero)
+                    {
+                        ChangedScale = true;
                         part.Scale = Scale;
-                    part.ParentGroup.ScheduleGroupForFullUpdate();
-                    foreach (SceneObjectPart child in part.ParentGroup.Children.Values)
+                    }
+
+                    foreach (SceneObjectPart child in part.ParentGroup.ChildrenList)
                     {
                         if(child.UUID != part.UUID)
-                            child.Undo();
+                            child.Undo(); //No updates here, child undo will do it on their own
                     }
                 }
                 else
                 {
                     if (Position != Vector3.Zero)
+                    {
+                        ChangedPos = true;
                         part.OffsetPosition = Position;
+                    }
+                    ChangedRot = true;
                     part.UpdateRotation(Rotation);
                     if (Scale != Vector3.Zero)
+                    {
+                        ChangedScale = true;
                         part.Resize(Scale);
+                    }
                 }
                 part.Undoing = false;
-                part.ScheduleFullUpdate();
+                part.ScheduleFullUpdate((ChangedScale ? PrimUpdateFlags.Shape : PrimUpdateFlags.None) |
+                    (ChangedPos ? PrimUpdateFlags.Position : PrimUpdateFlags.None) |
+                    (ChangedRot ? PrimUpdateFlags.Rotation : PrimUpdateFlags.None));
             }
         }
         public void PlayfwdState(SceneObjectPart part)
         {
             if (part != null)
             {
+                bool ChangedScale = false;
+                bool ChangedRot = false;
+                bool ChangedPos = false;
                 part.Undoing = true;
 
-                if (part.ParentID == 0)
+                if (part.UUID == part.ParentGroup.UUID)
                 {
                     if (Position != Vector3.Zero)
+                    {
+                        ChangedPos = true;
                         part.ParentGroup.AbsolutePosition = Position;
+                    }
                     if (Rotation != Quaternion.Identity)
+                    {
+                        ChangedRot = true;
                         part.UpdateRotation(Rotation);
+                    }
                     if (Scale != Vector3.Zero)
+                    {
+                        ChangedScale = true;
                         part.Resize(Scale);
-                    part.ParentGroup.ScheduleGroupForTerseUpdate();
+                    }
+
+                    foreach (SceneObjectPart child in part.ParentGroup.ChildrenList)
+                    {
+                        if (child.UUID != part.UUID)
+                            child.Redo(); //No updates here, child redo will do it on their own
+                    }
                 }
                 else
                 {
                     if (Position != Vector3.Zero)
+                    {
+                        ChangedPos = true;
                         part.OffsetPosition = Position;
+                    }
                     if (Rotation != Quaternion.Identity)
-                        part.UpdateRotation(Rotation);
+                    {
+                        ChangedRot = true;
+                        part.ParentGroup.Rotation = (Rotation);
+                    }
                     if (Scale != Vector3.Zero)
+                    {
+                        ChangedScale = true;
                         part.Resize(Scale);
-                    part.ScheduleTerseUpdate();
+                    }
                 }
-                part.Undoing = false;
 
+                part.ScheduleFullUpdate((ChangedScale ? PrimUpdateFlags.Shape : PrimUpdateFlags.None) |
+                    (ChangedPos ? PrimUpdateFlags.Position : PrimUpdateFlags.None) | 
+                    (ChangedRot ? PrimUpdateFlags.Rotation : PrimUpdateFlags.None));
+                part.Undoing = false;
             }
         }
     }

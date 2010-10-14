@@ -337,10 +337,10 @@ namespace OpenSim.Framework
             _scale.X = _scale.Y = radius * 2f;
         }
 
-        // TODO: void returns need to change of course
+        /*void returns need to change of course
         public virtual void GetMesh()
         {
-        }
+        }*/
 
         public PrimitiveBaseShape Copy()
         {
@@ -797,9 +797,9 @@ namespace OpenSim.Framework
 
         public byte[] ExtraParamsToBytes()
         {
-            ushort FlexiEP = 0x10;
-            ushort LightEP = 0x20;
-            ushort SculptEP = 0x30;
+            ushort FlexiEP = (ushort)ExtraParamType.Flexible;
+            ushort LightEP = (ushort)ExtraParamType.Light;
+            ushort SculptEP = (ushort)ExtraParamType.Sculpt;
 
             int i = 0;
             uint TotalBytesLength = 1; // ExtraParamsNum
@@ -836,13 +836,14 @@ namespace OpenSim.Framework
             {
                 byte[] FlexiData = GetFlexiBytes();
 
-                returnbytes[i++] = (byte)(FlexiEP % 256);
-                returnbytes[i++] = (byte)((FlexiEP >> 8) % 256);
+                Utils.UInt16ToBytes(FlexiEP, returnbytes, i);
+                i += 2;
+                //returnbytes[i++] = (byte)(FlexiEP % 256);
+                //returnbytes[i++] = (byte)((FlexiEP >> 8) % 256);
 
-                returnbytes[i++] = (byte)(FlexiData.Length % 256);
-                returnbytes[i++] = (byte)((FlexiData.Length >> 8) % 256);
-                returnbytes[i++] = (byte)((FlexiData.Length >> 16) % 256);
-                returnbytes[i++] = (byte)((FlexiData.Length >> 24) % 256);
+                Utils.UIntToBytes((uint)FlexiData.Length, returnbytes, i);
+                i += 4;
+
                 Array.Copy(FlexiData, 0, returnbytes, i, FlexiData.Length);
                 i += FlexiData.Length;
             }
@@ -850,13 +851,12 @@ namespace OpenSim.Framework
             {
                 byte[] LightData = GetLightBytes();
 
-                returnbytes[i++] = (byte)(LightEP % 256);
-                returnbytes[i++] = (byte)((LightEP >> 8) % 256);
+                Utils.UInt16ToBytes(LightEP, returnbytes, i);
+                i += 2;
 
-                returnbytes[i++] = (byte)(LightData.Length % 256);
-                returnbytes[i++] = (byte)((LightData.Length >> 8) % 256);
-                returnbytes[i++] = (byte)((LightData.Length >> 16) % 256);
-                returnbytes[i++] = (byte)((LightData.Length >> 24) % 256);
+                Utils.UIntToBytes((uint)LightData.Length, returnbytes, i);
+                i += 4;
+
                 Array.Copy(LightData, 0, returnbytes, i, LightData.Length);
                 i += LightData.Length;
             }
@@ -864,13 +864,12 @@ namespace OpenSim.Framework
             {
                 byte[] SculptData = GetSculptBytes();
 
-                returnbytes[i++] = (byte)(SculptEP % 256);
-                returnbytes[i++] = (byte)((SculptEP >> 8) % 256);
+                Utils.UInt16ToBytes(SculptEP, returnbytes, i);
+                i += 2;
 
-                returnbytes[i++] = (byte)(SculptData.Length % 256);
-                returnbytes[i++] = (byte)((SculptData.Length >> 8) % 256);
-                returnbytes[i++] = (byte)((SculptData.Length >> 16) % 256);
-                returnbytes[i++] = (byte)((SculptData.Length >> 24) % 256);
+                Utils.UIntToBytes((uint)SculptData.Length, returnbytes, i);
+                i += 4;
+
                 Array.Copy(SculptData, 0, returnbytes, i, SculptData.Length);
                 i += SculptData.Length;
             }

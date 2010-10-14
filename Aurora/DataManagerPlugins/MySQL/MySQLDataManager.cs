@@ -11,6 +11,7 @@ using Aurora.DataManager;
 using Aurora.Framework;
 using OpenSim.Framework;
 using OpenMetaverse;
+using Aurora.DataManager.Migration;
 
 namespace Aurora.DataManager.MySQL
 {
@@ -65,6 +66,10 @@ namespace Aurora.DataManager.MySQL
             connectionString = connectionstring;
             MySqlConnection dbcon = GetLockedConnection();
             CloseDatabase(dbcon);
+
+            var migrationManager = new MigrationManager(DataSessionProviderConnector.DataSessionProvider, this);
+            migrationManager.DetermineOperation();
+            migrationManager.ExecuteOperation();
         }
 
         public override List<string> Query(string keyRow, object keyValue, string table, string wantedValue)
@@ -110,8 +115,11 @@ namespace Aurora.DataManager.MySQL
             }
             finally
             {
-                reader.Close();
-                reader.Dispose();
+                if (reader != null)
+                {
+                    reader.Close();
+                    reader.Dispose();
+                }
                 result.Dispose();
                 CloseDatabase(dbcon);
             }
@@ -174,8 +182,11 @@ namespace Aurora.DataManager.MySQL
                     }
                     finally
                     {
-                        reader.Close();
-                        reader.Dispose();
+                        if (reader != null)
+                        {
+                            reader.Close();
+                            reader.Dispose();
+                        }
                         result.Dispose();
                         CloseDatabase(dbcon);
                     }
@@ -215,10 +226,17 @@ namespace Aurora.DataManager.MySQL
                         }
                         return RetVal;
                     }
+                    catch (Exception)
+                    {
+                        return new List<string>();
+                    }
                     finally
                     {
-                        reader.Close();
-                        reader.Dispose();
+                        if (reader != null)
+                        {
+                            reader.Close();
+                            reader.Dispose();
+                        }
                         result.Dispose();
                         CloseDatabase(dbcon);
                     }
@@ -258,10 +276,17 @@ namespace Aurora.DataManager.MySQL
                         }
                         return RetVal;
                     }
+                    catch
+                    {
+                        return null;
+                    }
                     finally
                     {
-                        reader.Close();
-                        reader.Dispose();
+                        if (reader != null)
+                        {
+                            reader.Close();
+                            reader.Dispose();
+                        }
                         result.Dispose();
                         CloseDatabase(dbcon);
                     }
@@ -295,15 +320,24 @@ namespace Aurora.DataManager.MySQL
                 i++;
             }
             query = query.Remove(query.Length - 5);
-            using (result = Query(query, parameters, dbcon))
+            try
             {
-                using (reader = result.ExecuteReader())
+                using (result = Query(query, parameters, dbcon))
                 {
-                    reader.Close();
-                    reader.Dispose();
-                    result.Dispose();
-                    CloseDatabase(dbcon);
+                    using (reader = result.ExecuteReader())
+                    {
+                        if (reader != null)
+                        {
+                            reader.Close();
+                            reader.Dispose();
+                        }
+                        result.Dispose();
+                        CloseDatabase(dbcon);
+                    }
                 }
+            }
+            catch (MySqlException)
+            {
             }
             return true;
         }
@@ -328,8 +362,11 @@ namespace Aurora.DataManager.MySQL
                 {
                     using (reader = result.ExecuteReader())
                     {
-                        reader.Close();
-                        reader.Dispose();
+                        if (reader != null)
+                        {
+                            reader.Close();
+                            reader.Dispose();
+                        }
                         result.Dispose();
                         CloseDatabase(dbcon);
                     }
@@ -345,21 +382,63 @@ namespace Aurora.DataManager.MySQL
             IDbCommand result;
             IDataReader reader;
 
-            string query = String.Format("insert into {0} ", table);
+            string query = String.Format("insert into {0} (", table);
             Dictionary<string, object> param = new Dictionary<string, object>();
 
             int i = 0;
-            foreach (object value in keys)
+            foreach (object key in keys)
             {
-                param.Add("?"+value, values[i]);
+                param.Add("?" + key, values[i]);
+                query += String.Format("{0},", key);
                 i++;
             }
             query = query.Remove(query.Length - 1);
-            query += " values (";
+            query += ") values (";
 
-            foreach (object value in keys)
+            foreach (object key in keys)
             {
-                query += String.Format("?{0},", value);
+                query += String.Format("?{0},", key);
+            }
+            query = query.Remove(query.Length - 1);
+            query += ")";
+
+            using (result = Query(query, param, dbcon))
+            {
+                try
+                {
+                    using (reader = result.ExecuteReader())
+                    {
+                        result.Dispose();
+                        CloseDatabase(dbcon);
+                    }
+                }
+                catch { }
+            }
+            return true;
+        }
+
+        public override bool Replace(string table, string[] keys, object[] values)
+        {
+            MySqlConnection dbcon = GetLockedConnection();
+            IDbCommand result;
+            IDataReader reader;
+
+            string query = String.Format("replace into {0} (", table);
+            Dictionary<string, object> param = new Dictionary<string, object>();
+
+            int i = 0;
+            foreach (object key in keys)
+            {
+                param.Add("?" + key, values[i].ToString());
+                query += "`" + key + "`" + ",";
+                i++;
+            }
+            query = query.Remove(query.Length - 1);
+            query += ") values (";
+
+            foreach (object key in keys)
+            {
+                query += String.Format("?{0},", key);
             }
             query = query.Remove(query.Length - 1);
             query += ")";
@@ -613,6 +692,11 @@ namespace Aurora.DataManager.MySQL
                 default:
                     throw new Exception("You've discovered some type in MySQL that's not reconized by Aurora, please place the correct conversion in ConvertTypeToColumnType.");
             }
+        }
+
+        public override IGenericData Copy()
+        {
+            return new MySQLDataLoader();
         }
     }
 }

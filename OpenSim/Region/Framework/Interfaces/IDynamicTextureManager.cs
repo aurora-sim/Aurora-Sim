@@ -35,13 +35,13 @@ namespace OpenSim.Region.Framework.Interfaces
         void RegisterRender(string handleType, IDynamicTextureRender render);
         void ReturnData(UUID id, byte[] data);
 
-        UUID AddDynamicTextureURL(UUID simID, UUID primID, string contentType, string url, string extraParams,
+        UUID AddDynamicTextureURL(UUID simID, UUID primID, UUID oldAssetID, string contentType, string url, string extraParams,
                                     int updateTimer);
-        UUID AddDynamicTextureURL(UUID simID, UUID primID, string contentType, string url, string extraParams,
+        UUID AddDynamicTextureURL(UUID simID, UUID primID, UUID oldAssetID, string contentType, string url, string extraParams,
                                    int updateTimer, bool SetBlending, byte AlphaValue);
-        UUID AddDynamicTextureURL(UUID simID, UUID primID, string contentType, string url, string extraParams,
+        UUID AddDynamicTextureURL(UUID simID, UUID primID, UUID oldAssetID, string contentType, string url, string extraParams,
                                    int updateTimer, bool SetBlending, int disp, byte AlphaValue, int face);
-        UUID AddDynamicTextureData(UUID simID, UUID primID, string contentType, string data, string extraParams,
+        UUID AddDynamicTextureData(UUID simID, UUID primID, UUID oldAssetID, string contentType, string data, string extraParams,
                                      int updateTimer);
 
         /// Apply a dynamically generated texture to all sides of the given prim.  The texture is not persisted to the
@@ -66,7 +66,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// to obtain it directly from the SceneObjectPart.  For instance, if ALL_SIDES is set then this texture
         /// can be obtained as SceneObjectPart.Shape.Textures.DefaultTexture.TextureID
         /// </returns>
-        UUID AddDynamicTextureData(UUID simID, UUID primID, string contentType, string data, string extraParams,
+        UUID AddDynamicTextureData(UUID simID, UUID primID, UUID oldAssetID, string contentType, string data, string extraParams,
                                     int updateTimer, bool SetBlending, byte AlphaValue);
 
         /// <summary>
@@ -101,7 +101,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// can be obtained as SceneObjectPart.Shape.Textures.DefaultTexture.TextureID
         /// </returns>
         UUID AddDynamicTextureData(
-            UUID simID, UUID primID, string contentType, string data, string extraParams,
+            UUID simID, UUID primID, UUID oldAssetID, string contentType, string data, string extraParams,
             int updateTimer, bool SetBlending, int disp, byte AlphaValue, int face);
         
         void GetDrawStringSize(string contentType, string text, string fontName, int fontSize,

@@ -32,6 +32,7 @@ using log4net;
 using Nini.Config;
 using System.Reflection;
 using OpenSim.Services.Base;
+using OpenSim.Server.Base;
 using OpenSim.Services.Interfaces;
 using OpenSim.Data;
 using OpenSim.Framework;
@@ -45,7 +46,7 @@ namespace OpenSim.Services.InventoryService
                 MethodBase.GetCurrentMethod().DeclaringType);
 
         protected IXInventoryData m_Database;
-        protected bool m_AllowDelete = true;
+        protected IUserAccountService m_UserAccountService;
 
         public XInventoryService(IConfigSource config) : base(config)
         {
@@ -61,7 +62,6 @@ namespace OpenSim.Services.InventoryService
             {
                 dllName = authConfig.GetString("StorageProvider", dllName);
                 connString = authConfig.GetString("ConnectionString", connString);
-                m_AllowDelete = authConfig.GetBoolean("AllowDelete", true);
                 // realm = authConfig.GetString("Realm", realm);
             }
 
@@ -87,6 +87,13 @@ namespace OpenSim.Services.InventoryService
                     new Object[] {connString, String.Empty});
             if (m_Database == null)
                 throw new Exception("Could not find a storage interface in the given module");
+
+            IConfig m_LoginServerConfig = config.Configs["LoginService"];
+            if (m_LoginServerConfig == null)
+                throw new Exception(String.Format("No section LoginService in config file"));
+            Object[] args = new Object[] { config };
+            string accountService = m_LoginServerConfig.GetString("UserAccountService", String.Empty);
+            m_UserAccountService = ServerUtils.LoadPlugin<IUserAccountService>(accountService, args);
         }
 
         public virtual bool CreateUserInventory(UUID principalID)
@@ -157,8 +164,6 @@ namespace OpenSim.Services.InventoryService
 
         protected virtual XInventoryFolder[] GetSystemFolders(UUID principalID)
         {
-//            m_log.DebugFormat("[XINVENTORY SERVICE]: Getting system folders for {0}", principalID);
-            
             XInventoryFolder[] allFolders = m_Database.GetFolders(
                     new string[] { "agentID" },
                     new string[] { principalID.ToString() });
@@ -172,9 +177,6 @@ namespace OpenSim.Services.InventoryService
                         return false;
                     });
 
-//            m_log.DebugFormat(
-//                "[XINVENTORY SERVICE]: Found {0} system folders for {1}", sysFolders.Length, principalID);
-            
             return sysFolders;
         }
 
@@ -191,7 +193,7 @@ namespace OpenSim.Services.InventoryService
 
             foreach (XInventoryFolder x in allFolders)
             {
-                //m_log.DebugFormat("[XINVENTORY SERVICE]: Adding folder {0} to skeleton", x.folderName);
+                //m_log.DebugFormat("[XINVENTORY]: Adding folder {0} to skeleton", x.folderName);
                 folders.Add(ConvertToOpenSim(x));
             }
 
@@ -219,21 +221,12 @@ namespace OpenSim.Services.InventoryService
 
         public virtual InventoryFolderBase GetFolderForType(UUID principalID, AssetType type)
         {
-//            m_log.DebugFormat("[XINVENTORY SERVICE]: Getting folder type {0} for user {1}", type, principalID);
-            
             XInventoryFolder[] folders = m_Database.GetFolders(
                     new string[] { "agentID", "type"},
                     new string[] { principalID.ToString(), ((int)type).ToString() });
 
             if (folders.Length == 0)
-            {
-//                m_log.WarnFormat("[XINVENTORY SERVICE]: Found no folder for type {0} for user {1}", type, principalID);
                 return null;
-            }
-            
-//            m_log.DebugFormat(
-//                "[XINVENTORY SERVICE]: Found folder {0} {1} for type {2} for user {3}", 
-//                folders[0].folderName, folders[0].folderID, type, principalID);
 
             return ConvertToOpenSim(folders[0]);
         }
@@ -244,7 +237,7 @@ namespace OpenSim.Services.InventoryService
             // connector. So we disregard the principal and look
             // by ID.
             //
-            m_log.DebugFormat("[XINVENTORY SERVICE]: Fetch contents for folder {0}", folderID.ToString());
+            m_log.DebugFormat("[XINVENTORY]: Fetch contents for folder {0}", folderID.ToString());
             InventoryCollection inventory = new InventoryCollection();
             inventory.UserID = principalID;
             inventory.Folders = new List<InventoryFolderBase>();
@@ -275,14 +268,12 @@ namespace OpenSim.Services.InventoryService
         
         public virtual List<InventoryItemBase> GetFolderItems(UUID principalID, UUID folderID)
         {
-//            m_log.DebugFormat("[XINVENTORY]: Fetch items for folder {0}", folderID);
-            
             // Since we probably don't get a valid principal here, either ...
             //
             List<InventoryItemBase> invItems = new List<InventoryItemBase>();
 
             XInventoryItem[] items = m_Database.GetItems(
-                    new string[] { "parentFolderID" },
+                    new string[] { "parentFolderID"},
                     new string[] { folderID.ToString() });
 
             foreach (XInventoryItem i in items)
@@ -293,35 +284,13 @@ namespace OpenSim.Services.InventoryService
 
         public virtual bool AddFolder(InventoryFolderBase folder)
         {
-            InventoryFolderBase check = GetFolder(folder);
-            if (check != null)
-                return false;
-
             XInventoryFolder xFolder = ConvertFromOpenSim(folder);
             return m_Database.StoreFolder(xFolder);
         }
 
         public virtual bool UpdateFolder(InventoryFolderBase folder)
         {
-            XInventoryFolder xFolder = ConvertFromOpenSim(folder);
-            InventoryFolderBase check = GetFolder(folder);
-            if (check == null)
-                return AddFolder(folder);
-
-            if (check.Type != -1 || xFolder.type != -1)
-            {
-                if (xFolder.version > check.Version)
-                    return false;
-                check.Version = (ushort)xFolder.version;
-                xFolder = ConvertFromOpenSim(check);
-                return m_Database.StoreFolder(xFolder);
-            }
-
-            if (xFolder.version < check.Version)
-                xFolder.version = check.Version;
-            xFolder.folderID = check.ID;
-
-            return m_Database.StoreFolder(xFolder);
+            return AddFolder(folder);
         }
 
         public virtual bool MoveFolder(InventoryFolderBase folder)
@@ -342,15 +311,10 @@ namespace OpenSim.Services.InventoryService
         //
         public virtual bool DeleteFolders(UUID principalID, List<UUID> folderIDs)
         {
-            if (!m_AllowDelete)
-                return false;
-
             // Ignore principal ID, it's bogus at connector level
             //
             foreach (UUID id in folderIDs)
             {
-                if (!ParentIsTrash(id))
-                    continue;
                 InventoryFolderBase f = new InventoryFolderBase();
                 f.ID = id;
                 PurgeFolder(f);
@@ -362,12 +326,6 @@ namespace OpenSim.Services.InventoryService
 
         public virtual bool PurgeFolder(InventoryFolderBase folder)
         {
-            if (!m_AllowDelete)
-                return false;
-
-            if (!ParentIsTrash(folder.ID))
-                return false;
-
             XInventoryFolder[] subFolders = m_Database.GetFolders(
                     new string[] { "parentFolderID" },
                     new string[] { folder.ID.ToString() });
@@ -385,9 +343,6 @@ namespace OpenSim.Services.InventoryService
 
         public virtual bool AddItem(InventoryItemBase item)
         {
-//            m_log.DebugFormat(
-//                "[XINVENTORY SERVICE]: Adding item {0} to folder {1} for {2}", item.ID, item.Folder, item.Owner);
-            
             return m_Database.StoreItem(ConvertFromOpenSim(item));
         }
 
@@ -410,9 +365,6 @@ namespace OpenSim.Services.InventoryService
 
         public virtual bool DeleteItems(UUID principalID, List<UUID> itemIDs)
         {
-            if (!m_AllowDelete)
-                return false;
-
             // Just use the ID... *facepalms*
             //
             foreach (UUID id in itemIDs)
@@ -426,6 +378,42 @@ namespace OpenSim.Services.InventoryService
             XInventoryItem[] items = m_Database.GetItems(
                     new string[] { "inventoryID" },
                     new string[] { item.ID.ToString() });
+
+            foreach (XInventoryItem xitem in items)
+            {
+                UUID nn;
+                if (!UUID.TryParse(xitem.creatorID, out nn))
+                {
+                    try
+                    {
+                        if (xitem.creatorID != string.Empty)
+                        {
+                            string FullName = xitem.creatorID.Remove(0, 7);
+                            string[] FirstLast = FullName.Split(' ');
+                            UserAccount account = m_UserAccountService.GetUserAccount(UUID.Zero, FirstLast[0], FirstLast[1]);
+                            if (account == null)
+                            {
+                                xitem.creatorID = UUID.Zero.ToString();
+                                m_Database.StoreItem(xitem);
+                            }
+                            else
+                            {
+                                xitem.creatorID = account.PrincipalID.ToString();
+                                m_Database.StoreItem(xitem);
+                            }
+                        }
+                        else
+                        {
+                            xitem.creatorID = UUID.Zero.ToString();
+                            m_Database.StoreItem(xitem);
+                        }
+                    }
+                    catch
+                    {
+                        xitem.creatorID = UUID.Zero.ToString();
+                    }
+                }
+            }
 
             if (items.Length == 0)
                 return null;
@@ -575,30 +563,8 @@ namespace OpenSim.Services.InventoryService
             return newItem;
         }
 
-        private bool ParentIsTrash(UUID folderID)
+        public bool LinkItem(IClientAPI client, UUID oldItemID, UUID parentID, uint Callback)
         {
-            XInventoryFolder[] folder = m_Database.GetFolders(new string[] {"folderID"}, new string[] {folderID.ToString()});
-            if (folder.Length < 1)
-                return false;
-
-            if (folder[0].type == (int)AssetType.TrashFolder)
-                return true;
-
-            UUID parentFolder = folder[0].parentFolderID;
-
-            while (parentFolder != UUID.Zero)
-            {
-                XInventoryFolder[] parent = m_Database.GetFolders(new string[] {"folderID"}, new string[] {parentFolder.ToString()});
-                if (parent.Length < 1)
-                    return false;
-
-                if (parent[0].type == (int)AssetType.TrashFolder)
-                    return true;
-                if (parent[0].type == (int)AssetType.RootFolder)
-                    return false;
-
-                parentFolder = parent[0].parentFolderID;
-            }
             return false;
         }
     }

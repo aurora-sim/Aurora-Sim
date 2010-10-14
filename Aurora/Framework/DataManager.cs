@@ -17,12 +17,12 @@ namespace Aurora.DataManager
     public static class DataManager
     {
         private static Dictionary<string, object> Plugins = new Dictionary<string, object>();
-        public static T RequestPlugin<T>(string Type)
+        public static T RequestPlugin<T>()
         {
-            if (Plugins.ContainsKey(Type))
+            if (Plugins.ContainsKey(typeof(T).Name))
             {
                 object Plugin;
-                Plugins.TryGetValue(Type, out Plugin);
+                Plugins.TryGetValue(typeof(T).Name, out Plugin);
                 return (T)Plugin;
             }
             return default(T);

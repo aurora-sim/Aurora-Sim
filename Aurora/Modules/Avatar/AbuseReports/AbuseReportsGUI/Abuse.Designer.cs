@@ -60,6 +60,9 @@
             this.label15 = new System.Windows.Forms.Label();
             this.GotoARNumber = new System.Windows.Forms.TextBox();
             this.GotoAR = new System.Windows.Forms.Button();
+            this.SnapshotUUID = new System.Windows.Forms.PictureBox();
+            this.ScreenshotLabel = new System.Windows.Forms.Label();
+            ((System.ComponentModel.ISupportInitialize)(this.SnapshotUUID)).BeginInit();
             this.SuspendLayout();
             // 
             // Category
@@ -349,11 +352,32 @@
             this.GotoAR.UseVisualStyleBackColor = true;
             this.GotoAR.Click += new System.EventHandler(this.GotoAR_Click);
             // 
+            // SnapshotUUID
+            // 
+            this.SnapshotUUID.Location = new System.Drawing.Point(444, 77);
+            this.SnapshotUUID.Name = "SnapshotUUID";
+            this.SnapshotUUID.Size = new System.Drawing.Size(292, 235);
+            this.SnapshotUUID.TabIndex = 32;
+            this.SnapshotUUID.TabStop = false;
+            // 
+            // ScreenshotLabel
+            // 
+            this.ScreenshotLabel.AutoSize = true;
+            this.ScreenshotLabel.BackColor = System.Drawing.Color.Transparent;
+            this.ScreenshotLabel.Location = new System.Drawing.Point(549, 61);
+            this.ScreenshotLabel.Name = "ScreenshotLabel";
+            this.ScreenshotLabel.Size = new System.Drawing.Size(61, 13);
+            this.ScreenshotLabel.TabIndex = 33;
+            this.ScreenshotLabel.Text = "Screenshot";
+            this.ScreenshotLabel.TextAlign = System.Drawing.ContentAlignment.TopCenter;
+            // 
             // Abuse
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(482, 401);
+            this.ClientSize = new System.Drawing.Size(748, 401);
+            this.Controls.Add(this.ScreenshotLabel);
+            this.Controls.Add(this.SnapshotUUID);
             this.Controls.Add(this.GotoAR);
             this.Controls.Add(this.GotoARNumber);
             this.Controls.Add(this.label15);
@@ -390,6 +414,7 @@
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Abuse Reports";
             this.Load += new System.EventHandler(this.Form1_Load);
+            ((System.ComponentModel.ISupportInitialize)(this.SnapshotUUID)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -429,6 +454,8 @@
         private System.Windows.Forms.Label label15;
         private System.Windows.Forms.TextBox GotoARNumber;
         private System.Windows.Forms.Button GotoAR;
+        private System.Windows.Forms.PictureBox SnapshotUUID;
+        private System.Windows.Forms.Label ScreenshotLabel;
     }
 }
 

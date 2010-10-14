@@ -421,7 +421,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
         }
 
-        public void AddAgentToGroupInvite(UUID requestingAgentID, UUID inviteID, UUID groupID, UUID roleID, UUID agentID)
+        public void AddAgentToGroupInvite(UUID requestingAgentID, UUID inviteID, UUID groupID, UUID roleID, UUID agentID, string FromAgentName)
         {
             Hashtable param = new Hashtable();
             param["InviteID"] = inviteID.ToString();
@@ -472,13 +472,14 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             XmlRpcCall(requestingAgentID, "groups.addAgentToGroup", param);
         }
 
-        public void RemoveAgentFromGroup(UUID requestingAgentID, UUID AgentID, UUID GroupID)
+        public bool RemoveAgentFromGroup(UUID requestingAgentID, UUID AgentID, UUID GroupID)
         {
             Hashtable param = new Hashtable();
             param["AgentID"] = AgentID.ToString();
             param["GroupID"] = GroupID.ToString();
 
             XmlRpcCall(requestingAgentID, "groups.removeAgentFromGroup", param);
+            return true;
         }
 
         public void AddAgentToGroupRole(UUID requestingAgentID, UUID AgentID, UUID GroupID, UUID RoleID)
@@ -501,7 +502,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             XmlRpcCall(requestingAgentID, "groups.removeAgentFromGroupRole", param);
         }
 
-        public List<DirGroupsReplyData> FindGroups(UUID requestingAgentID, string search, int queryStart)
+        public List<DirGroupsReplyData> FindGroups(UUID requestingAgentID, string search, int queryStart, uint queryflags)
         {
             Hashtable param = new Hashtable();
             param["Search"] = search;
@@ -761,9 +762,9 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
             return data;
         }
-        public void AddGroupNotice(UUID requestingAgentID, UUID groupID, UUID noticeID, string fromName, string subject, string message, byte[] binaryBucket)
+        public void AddGroupNotice(UUID requestingAgentID, UUID groupID, UUID noticeID, string fromName, string subject, string message, UUID ItemID, int AssetType, string ItemName)
         {
-            string binBucket = OpenMetaverse.Utils.BytesToHexString(binaryBucket, "");
+            string binBucket = OpenMetaverse.Utils.BytesToHexString(new byte[0], "");
 
             Hashtable param = new Hashtable();
             param["GroupID"] = groupID.ToString();
@@ -1097,7 +1098,11 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             }
             */
         }
-        
+
+        public List<GroupInviteInfo> GetGroupInvites(UUID requestingAgentID)
+        {
+            return new List<GroupInviteInfo>();
+        }
     }
 }
 

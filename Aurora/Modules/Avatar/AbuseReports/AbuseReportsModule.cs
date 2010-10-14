@@ -25,6 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Net.Mail;
@@ -45,32 +46,25 @@ using System.Windows.Forms;
 
 namespace Aurora.Modules
 {
-    public class AbuseReports : ISharedRegionModule
+    public class AbuseReportsModule : ISharedRegionModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private bool enabled = false;
+        private bool m_enabled = false;
         private List<Scene> m_SceneList = new List<Scene>();
-        private static char[] charSeparators = new char[] {  };
         
         public void Initialise(IConfigSource source)
         {
             IConfig cnf = source.Configs["AbuseReports"];
-            if (cnf == null)
-            {
-                enabled = false;
-                return;
-            }
-            enabled = cnf.GetBoolean("Enabled",true);
-            if (!enabled)
-            {
-                return;
-            }
-            //m_log.Info("[ABUSE REPORTS MODULE] Enabled");
+            if (cnf != null)
+                m_enabled = cnf.GetBoolean("Enabled", true);
         }
 
         public void AddRegion(Scene scene)
         {
+            if (!m_enabled)
+                return;
+
             lock (m_SceneList)
             {
                 if (!m_SceneList.Contains(scene))
@@ -80,42 +74,37 @@ namespace Aurora.Modules
             MainConsole.Instance.Commands.AddCommand("region", false, "open abusereportsGUI",
                                           "open abusereportsGUI",
                                           "Opens the abuse reports GUI", OpenGUI);
-            scene.EventManager.OnNewClient += new EventManager.OnNewClientDelegate(EventManager_OnNewClient);
+            scene.EventManager.OnNewClient += OnNewClient;
+            //Disabled until complete
+            //scene.EventManager.OnRegisterCaps += OnRegisterCaps;
         }
 
         public void RemoveRegion(Scene scene)
         {
+            if (!m_enabled)
+                return;
 
+            lock (m_SceneList)
+            {
+                if (m_SceneList.Contains(scene))
+                    m_SceneList.Remove(scene);
+            }
+            scene.EventManager.OnNewClient -= OnNewClient;
+            //Disabled until complete
+            //scene.EventManager.OnRegisterCaps -= OnRegisterCaps;
         }
 
         public void RegionLoaded(Scene scene)
         {
+        }
 
+        public void PostInitialise()
+        {
         }
 
         public Type ReplaceableInterface
         {
             get { return null; }
-        }
-
-        protected void OpenGUI(string module, string[] cmdparams)
-        {
-            System.Threading.Thread t = new System.Threading.Thread(new System.Threading.ThreadStart(ThreadProcARGUI));
-            t.Start();
-        }
-
-        public void ThreadProcARGUI()
-        {
-            Application.Run(new Abuse());
-        }
-
-        void EventManager_OnNewClient(IClientAPI client)
-        {
-            client.OnUserReport += UserReport;
-        }
-
-        public void PostInitialise()
-        {
         }
 
         public string Name
@@ -132,6 +121,26 @@ namespace Aurora.Modules
         {
         }
 
+        private void OnNewClient(IClientAPI client)
+        {
+            client.OnUserReport += UserReport;
+        }
+
+        /// <summary>
+        /// This deals with saving the report into the database.
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="regionName"></param>
+        /// <param name="abuserID"></param>
+        /// <param name="catagory"></param>
+        /// <param name="checkflags"></param>
+        /// <param name="details"></param>
+        /// <param name="objectID"></param>
+        /// <param name="position"></param>
+        /// <param name="reportType"></param>
+        /// <param name="screenshotID"></param>
+        /// <param name="summery"></param>
+        /// <param name="reporter"></param>
         private void UserReport(IClientAPI client, string regionName,UUID abuserID, byte catagory, byte checkflags, string details, UUID objectID, Vector3 position, byte reportType ,UUID screenshotID, string summery, UUID reporter)
         {
             AbuseReport report = new AbuseReport();
@@ -144,33 +153,29 @@ namespace Aurora.Modules
             report.ScreenshotID = screenshotID;
             if (objectID != UUID.Zero)
             {
-                SceneObjectPart Object = m_SceneList[0].GetSceneObjectPart(objectID);
+                SceneObjectPart Object = ((Scene)client.Scene).GetSceneObjectPart(objectID);
                 report.ObjectName = Object.Name;
             }
         	else
                 report.ObjectName = "";
 
-        	details =details.Replace("\n", "`");
-        	string [] detailssplit = details.Split(new Char [] {'`'});
-        	
-            if (report.ObjectName != "")
-        	{
-        		report.AbuseDetails = detailssplit[6];
-        	}
-        	else
-        	{
-                report.AbuseDetails = detailssplit[4];
-        	}
+        	string [] detailssplit = details.Split('\n');
 
-            OpenSim.Services.Interfaces.UserAccount reporterProfile = m_SceneList[0].UserAccountService.GetUserAccount(UUID.Zero, reporter);
-            if (reporterProfile != null)
-                report.ReporterName = reporterProfile.FirstName + " " + reporterProfile.LastName;
+            string AbuseDetails = detailssplit[4];
+            if (detailssplit.Length != 4)
+            {
+                AbuseDetails = "";
+                for(int i = 4; i < detailssplit.Length; i++)
+                {
+                    AbuseDetails+= detailssplit[i] + "\n";
+                }
+            }
+
+            report.AbuseDetails = AbuseDetails;
+
+            report.ReporterName = client.Name;
             
-            OpenSim.Services.Interfaces.UserAccount AbuserProfile = m_SceneList[0].UserAccountService.GetUserAccount(UUID.Zero, abuserID);
-            if (AbuserProfile != null)
-                report.AbuserName = AbuserProfile.FirstName + " " + AbuserProfile.LastName;
-            
-            summery = summery.Replace("\"", "`");
+            /*summery = summery.Replace("\"", "`");
         	summery =summery.Replace("|","");
         	summery =summery.Replace(")","");
         	summery =summery.Replace("(","");
@@ -178,28 +183,132 @@ namespace Aurora.Modules
         	summery =summery.Replace("}","`");
         	summery =summery.Replace("[","`");
         	summery =summery.Replace("]","`");
-        	string [] summerysplit = summery.Split(new Char [] {' '});
-
-            report.EstateID = int.Parse(summerysplit[1]);
+        	string [] summerysplit = summery.Split(' ');
+            report.RegionName = summerysplit[1];
             report.AbuseLocation = summerysplit[2];
         	
+            //Right
         	string [] summerysplit2 = summery.Split(new Char [] {'`'});
         	report.Category = summerysplit2[1];
             report.AbuseSummary = summerysplit2[5];
+            report.AbuserName = summerysplit2[3];
         	//Since the server doesn't trust this anyway...
+            report.Number = (-1);*/
+
+            string[] findRegion = summery.Split('|');
+            report.RegionName = findRegion[1];
+
+            string[] findLocation = summery.Split('(');
+            string[] findLocationend = findLocation[1].Split(')');
+            report.AbuseLocation = findLocationend[0];
+
+            string[] findCategory = summery.Split('[');
+            string[] findCategoryend = findCategory[1].Split(']');
+            report.Category = findCategoryend[0];
+
+            string[] findAbuserName = summery.Split('{');
+            string[] findAbuserNameend = findAbuserName[1].Split('}');
+            report.AbuserName = findAbuserNameend[0];
+
+            string[] findSummary = summery.Split('\"');
+
+            string abuseSummary = findSummary[1];
+            if (findSummary.Length != 2)
+            {
+                abuseSummary = "";
+                for (int i = 2; i < detailssplit.Length; i++)
+                {
+                    abuseSummary += findSummary[i] + "\n";
+                }
+            }
+
+            report.AbuseSummary = abuseSummary;
+
+
             report.Number = (-1);
 
-            EstateSettings ES = m_SceneList[0].EstateService.LoadEstateSettings(client.Scene.RegionInfo.RegionID, false);
-            if(ES.AbuseEmailToEstateOwner)
+            EstateSettings ES = client.Scene.RegionInfo.EstateSettings;
+            if (ES.AbuseEmailToEstateOwner && ES.AbuseEmail != "")
             {
                 IEmailModule Email = m_SceneList[0].RequestModuleInterface<IEmailModule>();
                 if(Email != null)
                     Email.SendEmail(UUID.Zero, ES.AbuseEmail, "Abuse Report", "This abuse report was submitted by " +
-                        report.ReporterName + " against " + report.AbuserName + " at " + report.AbuseLocation + " in your estate " + report.EstateID.ToString() +
+                        report.ReporterName + " against " + report.AbuserName + " at " + report.AbuseLocation + " in your region " + report.RegionName +
                         ". Summary: " + report.AbuseSummary + ". Details: " + report.AbuseDetails + ".");
             }
-
+            IAbuseReportsConnector conn = Aurora.DataManager.DataManager.RequestPlugin<IAbuseReportsConnector>();
+            if(conn != null)
+                conn.AddAbuseReport(report);
         }
+
+        #region GUI Code
+
+        protected void OpenGUI(string module, string[] cmdparams)
+        {
+            System.Threading.Thread t = new System.Threading.Thread(new System.Threading.ThreadStart(ThreadProcARGUI));
+            t.Start();
+        }
+
+        public void ThreadProcARGUI()
+        {
+            Application.Run(new Abuse(m_SceneList[0].AssetService));
+        }
+
+        #endregion
+
+        #region Disabled CAPS code
+
+        private void OnRegisterCaps(UUID agentID, OpenSim.Framework.Capabilities.Caps caps)
+        {
+            UUID capuuid = UUID.Random();
+
+            caps.RegisterHandler("SendUserReportWithScreenshot",
+                                new RestHTTPHandler("POST", "/CAPS/" + capuuid + "/",
+                                                      delegate(Hashtable m_dhttpMethod)
+                                                      {
+                                                          return ProcessSendUserReportWithScreenshot(m_dhttpMethod, capuuid, agentID);
+                                                      }));
+
+            
+        }
+
+        private Hashtable ProcessSendUserReportWithScreenshot(Hashtable m_dhttpMethod, UUID capuuid, UUID agentID)
+        {
+            ScenePresence SP = findScenePresence(agentID);
+            string RegionName = (string)m_dhttpMethod["abuse-region-name"];
+            UUID AbuserID = UUID.Parse((string)m_dhttpMethod["abuser-id"]);
+            byte Category = byte.Parse((string)m_dhttpMethod["category"]);
+            byte CheckFlags = byte.Parse((string)m_dhttpMethod["check-flags"]);
+            string details = (string)m_dhttpMethod["details"];
+            UUID objectID = UUID.Parse((string)m_dhttpMethod["object-id"]);
+            Vector3 position = Vector3.Zero;//(string)m_dhttpMethod["position"];
+            byte ReportType = byte.Parse((string)m_dhttpMethod["report-type"]);
+            UUID ScreenShotID = UUID.Parse((string)m_dhttpMethod["screenshot-id"]);
+            string summary = (string)m_dhttpMethod["summary"];
+            UserReport(SP.ControllingClient, RegionName, AbuserID, Category, CheckFlags,
+                details, objectID, position, ReportType, ScreenShotID, summary, SP.UUID);
+            //TODO: Figure this out later
+            return new Hashtable();
+        }
+
+        #endregion
+
+        #region Helpers
+
+        public ScenePresence findScenePresence(UUID avID)
+        {
+            foreach (Scene s in m_SceneList)
+            {
+                ScenePresence SP = s.GetScenePresence(avID);
+                if (SP != null)
+                {
+                    return SP;
+                }
+            }
+            return null;
+        }
+
+        #endregion
     }
 }
     

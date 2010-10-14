@@ -39,6 +39,7 @@ namespace OpenSim.Framework.Statistics
     /// </summary>
     public class SimExtraStatsCollector : BaseStatsCollector
     {
+        private DateTime StartTime = DateTime.Now;
         private long abnormalClientThreadTerminations;
 
         private long assetsInCache;
@@ -121,6 +122,44 @@ namespace OpenSim.Framework.Statistics
         public float PendingUploads { get { return pendingUploads; } }
         public float ActiveScripts { get { return activeScripts; } }
         public float ScriptLinesPerSecond { get { return scriptLinesPerSecond; } }
+
+        private int successfulLoginsTotal = 0;
+        private int successfulLoginsToday = 0;
+        private int successfulLoginsYesterday = 0;
+        public int SuccessfulLoginsTotal { get { return successfulLoginsTotal; } }
+        public int SuccessfulLoginsToday
+        {
+            get
+            {
+                if (DateTime.Now.AddDays(1) < StartTime)
+                {
+                    StartTime = DateTime.Now;
+                    successfulLoginsYesterday = successfulLoginsToday;
+                    successfulLoginsToday = 0;
+                }
+                return successfulLoginsToday;
+            }
+        }
+        public int SuccessfulLoginsYesterday { get { return successfulLoginsYesterday; } }
+
+        private int logoutsTotal = 0;
+        private int logoutsToday = 0;
+        private int logoutsYesterday = 0;
+        public int LogoutsTotal { get { return logoutsTotal; } }
+        public int LogoutsToday
+        {
+            get
+            {
+                if (DateTime.Now.AddDays(1) < StartTime)
+                {
+                    StartTime = DateTime.Now;
+                    logoutsYesterday = logoutsToday;
+                    logoutsToday = 0;
+                }
+                return logoutsToday;
+            }
+        }
+        public int LogoutsYesterday { get { return logoutsYesterday; } }
         
         /// <summary>
         /// This is the time it took for the last asset request made in response to a cache miss.
@@ -172,8 +211,22 @@ namespace OpenSim.Framework.Statistics
 
         public void AddAsset(AssetBase asset)
         {
-            assetsInCache++;
-            //assetCacheMemoryUsage += asset.Data.Length;
+            if (asset != null && asset.Data != null)
+            {
+                if (asset.Type == (sbyte)AssetType.Texture)
+                {
+                    texturesInCache++;
+                    // This could have been a pull stat, though there was originally a nebulous idea to measure flow rates
+                    textureCacheMemoryUsage += asset.Data.Length;
+                }
+                else
+                {
+                    assetsInCache++;
+                    assetCacheMemoryUsage += asset.Data.Length;
+                }
+            }
+            else
+                assetServiceRequestFailures++;
         }
         
         public void RemoveAsset(UUID uuid)
@@ -201,6 +254,18 @@ namespace OpenSim.Framework.Statistics
             assetCacheMemoryUsage = 0;
             texturesInCache = 0;
             textureCacheMemoryUsage = 0;
+        }
+
+        public void AddSuccessfulLogin()
+        {
+            successfulLoginsTotal++;
+            successfulLoginsToday++;
+        }
+
+        public void AddLogout()
+        {
+            logoutsTotal++;
+            logoutsToday++;
         }
         
         public void AddAssetRequestTimeAfterCacheMiss(TimeSpan ts)
@@ -292,7 +357,7 @@ namespace OpenSim.Framework.Statistics
             sb.Append("ASSET STATISTICS");
             sb.Append(Environment.NewLine);
                         
-            /*
+            
             sb.Append(
                 string.Format(
 @"Asset cache contains   {0,6} non-texture assets using {1,10} K
@@ -305,9 +370,9 @@ Asset service request failures: {6}"+ Environment.NewLine,
                     assetRequestTimeAfterCacheMiss.Milliseconds / 1000.0,
                     BlockedMissingTextureRequests,
                     AssetServiceRequestFailures));
-            */
             
-            sb.Append(
+            
+            /*sb.Append(
                 string.Format(
 @"Asset cache contains   {0,6} assets
 Latest asset request time after cache miss: {1}s
@@ -316,24 +381,35 @@ Asset service request failures: {3}" + Environment.NewLine,
                     AssetsInCache,
                     assetRequestTimeAfterCacheMiss.Milliseconds / 1000.0,
                     BlockedMissingTextureRequests,
-                    AssetServiceRequestFailures));
+                    AssetServiceRequestFailures));*/
             
 
             sb.Append(Environment.NewLine);
             sb.Append("CONNECTION STATISTICS");
             sb.Append(Environment.NewLine);
-            sb.Append(
-                string.Format(
-                    "Abnormal client thread terminations: {0}" + Environment.NewLine,
+            sb.Append(string.Format(
+                    @"Successful logins total: {0}" + Environment.NewLine +
+                    "Successful logins Today: {1}" + Environment.NewLine +
+                    "Successful logins Yesterday: {2}" + Environment.NewLine +
+                    "Logouts total: {3}" + Environment.NewLine +
+                    "Logouts total: {4}" + Environment.NewLine +
+                    "Logouts total: {5}" + Environment.NewLine +
+                    "Abnormal client thread terminations: {6}" + Environment.NewLine,
+                    SuccessfulLoginsTotal,
+                    SuccessfulLoginsToday,
+                    SuccessfulLoginsYesterday,
+                    LogoutsTotal,
+                    LogoutsToday,
+                    LogoutsYesterday,
                     abnormalClientThreadTerminations));
 
-            sb.Append(Environment.NewLine);
+            /*sb.Append(Environment.NewLine);
             sb.Append("INVENTORY STATISTICS");
             sb.Append(Environment.NewLine);
             sb.Append(
                 string.Format(
                     "Initial inventory caching failures: {0}" + Environment.NewLine,
-                    InventoryServiceRetrievalFailures));
+                    InventoryServiceRetrievalFailures));*/
 
             sb.Append(Environment.NewLine);
             sb.Append("FRAME STATISTICS");

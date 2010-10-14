@@ -45,9 +45,16 @@ namespace OpenSim.Services.PresenceService
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
+        private IGridService m_GridService;
+
         public PresenceService(IConfigSource config)
             : base(config)
         {
+            IConfig presenceConfig = config.Configs["PresenceService"];
+            string gridServiceDll = presenceConfig.GetString("GridService", string.Empty);
+            if (gridServiceDll != string.Empty)
+                m_GridService = LoadPlugin<IGridService>(gridServiceDll, new Object[] { config });
+
             m_log.Debug("[PRESENCE SERVICE]: Starting presence service");
         }
 
@@ -64,6 +71,7 @@ namespace OpenSim.Services.PresenceService
             data.SessionID = sessionID;
             data.Data = new Dictionary<string, string>();
             data.Data["SecureSessionID"] = secureSessionID.ToString();
+            data.Data["LastSeen"] = Util.UnixTimeSinceEpoch().ToString();
             
             m_Database.Store(data);
 
@@ -84,7 +92,6 @@ namespace OpenSim.Services.PresenceService
 
             return true;
         }
-
 
         public bool ReportAgent(UUID sessionID, UUID regionID)
         {
@@ -114,6 +121,12 @@ namespace OpenSim.Services.PresenceService
             if (data == null)
                 return null;
 
+            if (int.Parse(data.Data["LastSeen"]) + (1000 * 60 * 60) < Util.UnixTimeSinceEpoch())
+            {
+                LogoutAgent(sessionID);
+                return null;
+            }
+
             ret.UserID = data.UserID;
             ret.RegionID = data.RegionID;
 
@@ -133,6 +146,12 @@ namespace OpenSim.Services.PresenceService
                 {
                     PresenceInfo ret = new PresenceInfo();
 
+                    if (int.Parse(d.Data["LastSeen"]) + (60 * 60) < Util.UnixTimeSinceEpoch())
+                    {
+                        LogoutAgent(d.SessionID);
+                        continue;
+                    }
+
                     ret.UserID = d.UserID;
                     ret.RegionID = d.RegionID;
 
@@ -144,5 +163,33 @@ namespace OpenSim.Services.PresenceService
             return info.ToArray();
         }
 
+        public string[] GetAgentsLocations(string[] userIDs)
+        {
+            List<string> info = new List<string>();
+
+            foreach (string userIDStr in userIDs)
+            {
+                PresenceData[] data = m_Database.Get("UserID",
+                        userIDStr);
+
+                foreach (PresenceData d in data)
+                {
+                    PresenceInfo ret = new PresenceInfo();
+
+                    if (int.Parse(d.Data["LastSeen"]) + (1000 * 60 * 60) < Util.UnixTimeSinceEpoch())
+                    {
+                        LogoutAgent(d.SessionID);
+                        continue;
+                    }
+
+                    Services.Interfaces.GridRegion r = m_GridService.GetRegionByUUID(UUID.Zero, d.RegionID);
+                    if(r != null)
+                        info.Add("http://" + r.ExternalHostName + ":" + r.HttpPort);
+                }
+            }
+
+            // m_log.DebugFormat("[PRESENCE SERVICE]: GetAgents for {0} userIDs found {1} presences", userIDs.Length, info.Count);
+            return info.ToArray();
+        }
     }
 }

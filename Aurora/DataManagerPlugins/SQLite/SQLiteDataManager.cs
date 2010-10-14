@@ -4,18 +4,18 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using Mono.Data.SqliteClient;
+using Mono.Data.Sqlite;
 using Aurora.Framework;
 using OpenSim.Framework;
 using OpenMetaverse;
 using log4net;
+using Aurora.DataManager.Migration;
 
 namespace Aurora.DataManager.SQLite
 {
     public class SQLiteLoader : DataManagerBase
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        protected List<string> m_ColumnNames;
         private SqliteConnection m_Connection;
 
         protected Dictionary<string, FieldInfo> m_Fields = new Dictionary<string, FieldInfo>();
@@ -30,32 +30,35 @@ namespace Aurora.DataManager.SQLite
         {
             m_Connection = new SqliteConnection(connectionString);
             m_Connection.Open();
-        }
 
-        private void CheckColumnNames(IDataReader reader)
-        {
-            if (m_ColumnNames != null)
-                return;
-
-            m_ColumnNames = new List<string>();
-
-            DataTable schemaTable = reader.GetSchemaTable();
-            foreach (DataRow row in schemaTable.Rows)
-            {
-                if (row["ColumnName"] != null &&
-                    (!m_Fields.ContainsKey(row["ColumnName"].ToString())))
-                    m_ColumnNames.Add(row["ColumnName"].ToString());
-            }
+            var migrationManager = new MigrationManager(DataSessionProviderConnector.DataSessionProvider, this);
+            migrationManager.DetermineOperation();
+            migrationManager.ExecuteOperation();
         }
 
         protected IDataReader ExecuteReader(SqliteCommand cmd)
         {
-            var newConnection =
-                (SqliteConnection) ((ICloneable) m_Connection).Clone();
-            newConnection.Open();
-            cmd.Connection = newConnection;
-            SqliteDataReader reader = cmd.ExecuteReader();
-            return reader;
+            try
+            {
+                var newConnection =
+                    (SqliteConnection)((ICloneable)m_Connection).Clone();
+                if (newConnection.State != ConnectionState.Open)
+                    newConnection.Open();
+                cmd.Connection = newConnection;
+                SqliteDataReader reader = cmd.ExecuteReader();
+                return reader;
+            }
+            catch (Mono.Data.Sqlite.SqliteException ex)
+            {
+                //m_log.Warn("[SQLiteDataManager]: Exception processing command: " + cmd.CommandText + ", Exception: " + ex);
+                //throw ex;
+            }
+            catch (Exception ex)
+            {
+                m_log.Warn("[SQLiteDataManager]: Exception processing command: " + cmd.CommandText + ", Exception: " + ex);
+                throw ex;
+            }
+            return null;
         }
 
         protected int ExecuteNonQuery(SqliteCommand cmd)
@@ -66,39 +69,34 @@ namespace Aurora.DataManager.SQLite
                 {
                     var newConnection =
                         (SqliteConnection)((ICloneable)m_Connection).Clone();
-                    newConnection.Open();
+                    if (newConnection.State != ConnectionState.Open)
+                        newConnection.Open();
                     cmd.Connection = newConnection;
 
                     return cmd.ExecuteNonQuery();
                 }
             }
-            catch (Mono.Data.SqliteClient.SqliteBusyException)
+            catch (Mono.Data.Sqlite.SqliteException ex)
             {
-                System.Threading.Thread.Sleep(5);
-                return ExecuteNonQuery(cmd);
+                //m_log.Warn("[SQLiteDataManager]: Exception processing command: " + cmd.CommandText + ", Exception: " + ex);
+                //throw ex;
             }
             catch (Exception ex)
             {
                 m_log.Warn("[SQLiteDataManager]: Exception processing command: " + cmd.CommandText + ", Exception: " + ex);
                 throw ex;
             }
+            return 0;
         }
 
         protected IDataReader GetReader(SqliteCommand cmd)
         {
-            IDataReader reader = ExecuteReader(cmd);
-            if (reader == null)
-                return null;
-
-            CheckColumnNames(reader);
-            return reader;
+            return ExecuteReader(cmd);
         }
 
         protected void CloseReaderCommand(SqliteCommand cmd)
         {
             cmd.Connection.Close();
-            cmd.Connection.Dispose();
-            cmd.Dispose();
         }
 
         public override List<string> Query(string keyRow, object keyValue, string table, string wantedValue)
@@ -118,15 +116,23 @@ namespace Aurora.DataManager.SQLite
             cmd.CommandText = query;
             IDataReader reader = GetReader(cmd);
             var RetVal = new List<string>();
-            while (reader.Read())
+            try
             {
-                for (int i = 0; i < reader.FieldCount; i++)
+                while (reader.Read())
                 {
-                    RetVal.Add(reader.GetString(i));
+                    for (int i = 0; i < reader.FieldCount; i++)
+                    {
+                        if (reader[i] is byte[])
+                            RetVal.Add(OpenMetaverse.Utils.BytesToString((byte[])reader[i]));
+                        else
+                            RetVal.Add(reader[i].ToString());
+                    }
                 }
             }
+            catch
+            {
+            }
             reader.Close();
-            reader.Dispose();
             CloseReaderCommand(cmd);
 
             return RetVal;
@@ -147,8 +153,7 @@ namespace Aurora.DataManager.SQLite
                                       wantedValue, table, keyRow, keyValue.ToString());
             }
             cmd.CommandText = query;
-            IDataReader reader = GetReader(cmd);
-            return reader;
+            return GetReader(cmd);
         }
 
         public override List<string> Query(string whereClause, string table, string wantedValue)
@@ -168,7 +173,6 @@ namespace Aurora.DataManager.SQLite
                 }
             }
             reader.Close();
-            reader.Dispose();
             CloseReaderCommand(cmd);
 
             return RetVal;
@@ -191,15 +195,18 @@ namespace Aurora.DataManager.SQLite
             cmd.CommandText = query + Order;
             IDataReader reader = GetReader(cmd);
             var RetVal = new List<string>();
-            while (reader.Read())
+            try
             {
-                for (int i = 0; i < reader.FieldCount; i++)
+                while (reader.Read())
                 {
-                    RetVal.Add(reader.GetString(i));
+                    for (int i = 0; i < reader.FieldCount; i++)
+                    {
+                        RetVal.Add(reader.GetString(i));
+                    }
                 }
             }
+            catch { }
             reader.Close();
-            reader.Dispose();
             CloseReaderCommand(cmd);
 
             return RetVal;
@@ -213,7 +220,7 @@ namespace Aurora.DataManager.SQLite
             int i = 0;
             foreach (object value in keyValue)
             {
-                query += String.Format("{0} = {1} and ", keyRow[i], value);
+                query += String.Format("{0} = '{1}' and ", keyRow[i], value);
                 i++;
             }
             query = query.Remove(query.Length - 5);
@@ -224,11 +231,10 @@ namespace Aurora.DataManager.SQLite
             {
                 for (i = 0; i < reader.FieldCount; i++)
                 {
-                    RetVal.Add(reader.GetString(i));
+                    RetVal.Add(reader[i].ToString());
                 }
             }
             reader.Close();
-            reader.Dispose();
             CloseReaderCommand(cmd);
 
             return RetVal;
@@ -242,7 +248,10 @@ namespace Aurora.DataManager.SQLite
             query = String.Format("insert into {0} values (", table);
             foreach (object value in values)
             {
-                query += String.Format("'{0}',", value);
+                object v = value;
+                if (v is byte[])
+                    v = OpenMetaverse.Utils.BytesToString((byte[])v);
+                query = String.Format(query + "'{0}',", v);
             }
             query = query.Remove(query.Length - 1);
             query += ")";
@@ -254,16 +263,73 @@ namespace Aurora.DataManager.SQLite
 
         public override bool Insert(string table, string[] keys, object[] values)
         {
-            var cmd = new SqliteCommand();
+            SqliteCommand cmd = new SqliteCommand();
 
             string query = "";
-            query = String.Format("insert into {0} values (", table);
-            foreach (object value in values)
+            query = String.Format("insert into {0} (", table);
+            
+            int i = 0;
+            foreach (object key in keys)
             {
-                query += String.Format("'{0}',", value);
+                cmd.Parameters.AddWithValue(":" + key, values[i]);
+                query += key + ",";
+                i++;
+            }
+
+            query = query.Remove(query.Length - 1);
+            query += ") values (";
+
+            foreach (object key in keys)
+            {
+                query += String.Format(":{0},", key);
             }
             query = query.Remove(query.Length - 1);
             query += ")";
+
+            cmd.CommandText = query;
+            ExecuteNonQuery(cmd);
+            CloseReaderCommand(cmd);
+            return true;
+        }
+
+        public override bool Replace(string table, string[] keys, object[] values)
+        {
+            var cmd = new SqliteCommand();
+
+            string query = "";
+            query = String.Format("replace into {0} (", table);
+
+            int i = 0;
+            foreach (string key in keys)
+            {
+                string k = key;
+                if (k.StartsWith("`"))
+                {
+                    k = k.Remove(0, 1);
+                    k = k.Remove(k.Length - 1, 1);
+                }
+                cmd.Parameters.AddWithValue(":" + k, values[i]);
+                query += key + ",";
+                i++;
+            }
+
+            query = query.Remove(query.Length - 1);
+            query += ") values (";
+
+            foreach (string key in keys)
+            {
+                string k = key;
+                if (k.StartsWith("`"))
+                {
+                    k = k.Remove(0, 1);
+                    k = k.Remove(k.Length - 1, 1);
+                }
+                query += String.Format(":{0},", k);
+            }
+
+            query = query.Remove(query.Length - 1);
+            query += ")";
+
             cmd.CommandText = query;
             ExecuteNonQuery(cmd);
             CloseReaderCommand(cmd);
@@ -274,7 +340,7 @@ namespace Aurora.DataManager.SQLite
         {
             var cmd = new SqliteCommand();
 
-            string query = String.Format("delete from '{0}' where ", table);
+            string query = String.Format("delete from {0} where ", table);
             ;
             int i = 0;
             foreach (object value in values)
@@ -321,17 +387,16 @@ namespace Aurora.DataManager.SQLite
 
         public override bool Update(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues)
         {
+            var cmd = new SqliteCommand();
             Dictionary<string, object> parameters = new Dictionary<string, object>();
             string query = String.Format("update {0} set ", table);
             int i = 0;
             
             foreach (object value in setValues)
             {
-                query += string.Format("{0} = @{1},", setRows[i], setRows[i]);
-                string valueSTR = value.ToString();
-                if (valueSTR == "")
-                    valueSTR = " ";
-                parameters["@" + setRows[i]] = valueSTR;
+                query += string.Format("{0} = :{1},", setRows[i], setRows[i]);
+
+                cmd.Parameters.AddWithValue(":" + setRows[i], value);
                 i++;
             }
             i = 0;
@@ -339,16 +404,11 @@ namespace Aurora.DataManager.SQLite
             query += " where ";
             foreach (object value in keyValues)
             {
-                query += String.Format("{0}  = '{1}' and ", keyRows[i], value);
+                query += String.Format("{0} = '{1}' and ", keyRows[i], value);
                 i++;
             }
             query = query.Remove(query.Length - 5);
-            var cmd = new SqliteCommand();
             cmd.CommandText = query;
-            foreach (KeyValuePair<string, object> kvp in parameters)
-            {
-                cmd.Parameters.Add(kvp.Key, kvp.Value);
-            }
             ExecuteNonQuery(cmd);
             CloseReaderCommand(cmd);
             return true;
@@ -357,7 +417,6 @@ namespace Aurora.DataManager.SQLite
         public override void CloseDatabase()
         {
             m_Connection.Close();
-            m_Connection.Dispose();
         }
 
         public override bool TableExists(string tableName)
@@ -471,7 +530,6 @@ namespace Aurora.DataManager.SQLite
                 defs.Add(new ColumnDefinition {Name = name.ToString(), IsPrimary = (int.Parse(pk.ToString()) > 0), Type = ConvertTypeToColumnType(type.ToString())});
             }
             rdr.Close();
-            rdr.Dispose();
             CloseReaderCommand(cmd);
 
             return defs;
@@ -526,6 +584,11 @@ namespace Aurora.DataManager.SQLite
             cmd.CommandText = string.Format("insert into {0} select * from {1}", destinationTableName, sourceTableName);
             ExecuteNonQuery(cmd);
             CloseReaderCommand(cmd);
+        }
+
+        public override IGenericData Copy()
+        {
+            return new SQLiteLoader();
         }
     }
 }

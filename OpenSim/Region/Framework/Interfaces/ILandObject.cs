@@ -32,9 +32,6 @@ using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.Framework.Interfaces
 {
-    public delegate int overrideParcelMaxPrimCountDelegate(ILandObject obj);
-    public delegate int overrideSimulatorMaxPrimCountDelegate(ILandObject obj);
-
     public interface ILandObject
     {
         int GetParcelMaxPrimCount(ILandObject thisObject);
@@ -80,9 +77,6 @@ namespace OpenSim.Region.Framework.Interfaces
 
         void DeedToGroup(UUID groupID);
         void SetInfoID();
-
-        void SetParcelObjectMaxOverride(overrideParcelMaxPrimCountDelegate overrideDel);
-        void SetSimulatorObjectMaxOverride(overrideSimulatorMaxPrimCountDelegate overrideDel);
 
         /// <summary>
         /// Set the media url for this land parcel

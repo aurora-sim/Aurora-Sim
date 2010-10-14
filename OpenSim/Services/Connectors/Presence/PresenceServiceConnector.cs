@@ -366,6 +366,59 @@ namespace OpenSim.Services.Connectors
             return rinfos.ToArray();
         }
 
+        public string[] GetAgentsLocations(string[] userIDs)
+        {
+            Dictionary<string, object> sendData = new Dictionary<string, object>();
+            //sendData["SCOPEID"] = scopeID.ToString();
+            sendData["VERSIONMIN"] = ProtocolVersions.ClientProtocolVersionMin.ToString();
+            sendData["VERSIONMAX"] = ProtocolVersions.ClientProtocolVersionMax.ToString();
+            sendData["METHOD"] = "getagentslocations";
+
+            sendData["uuids"] = new List<string>(userIDs);
+
+            string reply = string.Empty;
+            string reqString = ServerUtils.BuildQueryString(sendData);
+            //m_log.DebugFormat("[PRESENCE CONNECTOR]: queryString = {0}", reqString);
+            try
+            {
+                reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                        m_ServerURI + "/presence",
+                        reqString);
+                if (reply == null || (reply != null && reply == string.Empty))
+                {
+                    m_log.DebugFormat("[PRESENCE CONNECTOR]: GetAgents received null or empty reply");
+                    return null;
+                }
+            }
+            catch (Exception e)
+            {
+                m_log.DebugFormat("[PRESENCE CONNECTOR]: Exception when contacting presence server: {0}", e.Message);
+            }
+
+            List<string> locations = new List<string>();
+
+            Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+
+            if (replyData != null)
+            {
+                if (replyData.ContainsKey("result") &&
+                    (replyData["result"].ToString() == "null" || replyData["result"].ToString() == "Failure"))
+                {
+                    return new string[1]{"Failure"};
+                }
+
+                Dictionary<string, object>.ValueCollection pinfosList = replyData.Values;
+                //m_log.DebugFormat("[PRESENCE CONNECTOR]: GetAgents returned {0} elements", pinfosList.Count);
+                foreach (object presence in pinfosList)
+                {
+                    locations.Add(presence.ToString());
+                }
+            }
+            else
+                m_log.DebugFormat("[PRESENCE CONNECTOR]: GetAgents received null response");
+
+            return locations.ToArray();
+        }
 
         #endregion
 

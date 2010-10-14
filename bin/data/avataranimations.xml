@@ -139,4 +139,8 @@
   <animation name="YES_HAPPY" state="">b8c8b2a3-9008-1771-3bfc-90924955ab2d</animation>
   <animation name="YES_HEAD" state="">15dd911d-be82-2856-26db-27659b142875</animation>
   <animation name="YOGA_FLOAT" state="">42ecd00b-9947-a97c-400a-bbc9174c7aeb</animation>
+  <animation name="SWIM_HOVER" state="Swimming">4ae8016b-31b9-03bb-c401-b1ea941db41d</animation>
+  <animation name="SWIM_DOWN" state="Swimming Down">20f063ea-8306-2562-0b07-5c853b37b31e</animation>
+  <animation name="SWIM_UP" state="Swimming Up">62c5de58-cb33-5743-3d07-9e4cd4352864</animation>
+  <animation name="SWIM_FORWARD" state="Swimming Forward">aec4610c-757f-bc4e-c092-c6e9caf18daf</animation>
 </animations>

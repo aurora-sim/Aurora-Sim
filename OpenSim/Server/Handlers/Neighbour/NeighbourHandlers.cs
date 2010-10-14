@@ -48,14 +48,14 @@ namespace OpenSim.Server.Handlers.Neighbour
 {
     public class NeighbourGetHandler : BaseStreamHandler
     {
-        // TODO: unused: private ISimulationService m_SimulationService;
-        // TODO: unused: private IAuthenticationService m_AuthenticationService;
+        // unused: private ISimulationService m_SimulationService;
+        // unused: private IAuthenticationService m_AuthenticationService;
 
         public NeighbourGetHandler(INeighbourService service, IAuthenticationService authentication) :
                 base("GET", "/region")
         {
-            // TODO: unused: m_SimulationService = service;
-            // TODO: unused: m_AuthenticationService = authentication;
+            // unused: m_SimulationService = service;
+            // unused: m_AuthenticationService = authentication;
         }
 
         public override byte[] Handle(string path, Stream request,
@@ -73,14 +73,14 @@ namespace OpenSim.Server.Handlers.Neighbour
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private INeighbourService m_NeighbourService;
         private IAuthenticationService m_AuthenticationService;
-        // TODO: unused: private bool m_AllowForeignGuests;
+        // unused: private bool m_AllowForeignGuests;
 
         public NeighbourPostHandler(INeighbourService service, IAuthenticationService authentication) :
             base("POST", "/region")
         {
             m_NeighbourService = service;
             m_AuthenticationService = authentication;
-            // TODO: unused: m_AllowForeignGuests = foreignGuests;
+            // unused: m_AllowForeignGuests = foreignGuests;
         }
 
         public override byte[] Handle(string path, Stream request,
@@ -111,7 +111,7 @@ namespace OpenSim.Server.Handlers.Neighbour
                     httpResponse.StatusCode = (int)HttpStatusCode.Unauthorized;
                     return result;
                 }
-                // TODO: Rethink this
+                // Rethink this
                 //if (!m_AuthenticationService.VerifyKey(regionID, authToken))
                 //{
                 //    m_log.InfoFormat("[RegionPostHandler]: Authentication failed for neighbour message {0}", path);
@@ -166,14 +166,14 @@ namespace OpenSim.Server.Handlers.Neighbour
 
     public class NeighbourPutHandler : BaseStreamHandler
     {
-        // TODO: unused: private ISimulationService m_SimulationService;
-        // TODO: unused: private IAuthenticationService m_AuthenticationService;
+        // unused: private ISimulationService m_SimulationService;
+        // unused: private IAuthenticationService m_AuthenticationService;
 
         public NeighbourPutHandler(INeighbourService service, IAuthenticationService authentication) :
             base("PUT", "/region")
         {
-            // TODO: unused: m_SimulationService = service;
-            // TODO: unused: m_AuthenticationService = authentication;
+            // unused: m_SimulationService = service;
+            // unused: m_AuthenticationService = authentication;
         }
 
         public override byte[] Handle(string path, Stream request,
@@ -187,14 +187,14 @@ namespace OpenSim.Server.Handlers.Neighbour
 
     public class NeighbourDeleteHandler : BaseStreamHandler
     {
-        // TODO: unused: private ISimulationService m_SimulationService;
-        // TODO: unused: private IAuthenticationService m_AuthenticationService;
+        // unused: private ISimulationService m_SimulationService;
+        // unused: private IAuthenticationService m_AuthenticationService;
 
         public NeighbourDeleteHandler(INeighbourService service, IAuthenticationService authentication) :
             base("DELETE", "/region")
         {
-            // TODO: unused: m_SimulationService = service;
-            // TODO: unused: m_AuthenticationService = authentication;
+            // unused: m_SimulationService = service;
+            // unused: m_AuthenticationService = authentication;
         }
 
         public override byte[] Handle(string path, Stream request,

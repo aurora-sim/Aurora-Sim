@@ -28,6 +28,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.Reflection;
 using log4net;
 using Nini.Config;
@@ -144,10 +145,8 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         private Scene m_scene;
         // private IConfigSource m_config; // not used currently
 
-        // mapping from texture UUIDs to averaged color. This will contain 5-9 values, in general; new values are only
-        // added when the terrain textures are changed in the estate dialog and a new map is generated (and will stay in
-        // that map until the region-server restarts. This could be considered a memory-leak, but it's a *very* small one.
-        // TODO does it make sense to use a "real" cache and regenerate missing entries on fetch?
+        // mapping from texture UUIDs to averaged color. This will contain all the textures in the sim.
+        //   This could be considered a memory-leak, but it's *hopefully* taken care of after the terrain is generated
         private Dictionary<UUID, Color> m_mapping;
 
 
@@ -165,11 +164,8 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
         #region Helpers
         // This fetches the texture from the asset server synchroneously. That should be ok, as we
-        // call map-creation only in those places:
-        // - on start: We can wait here until the asset server returns the texture
-        // TODO (- on "map" command: We are in the command-line thread, we will wait for completion anyway)
-        // TODO (- on "automatic" update after some change: We are called from the mapUpdateTimer here and
-        //   will wait anyway)
+        // call map-creation either async or sync, depending on what the user specified and it shouldn't
+        // take too long, as most assets should be cached
         private Bitmap fetchTexture(UUID id)
         {
             AssetBase asset = m_scene.AssetService.Get(id.ToString());
@@ -178,7 +174,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
             ManagedImage managedImage;
             Image image;
-            
+
             try
             {
                 if (OpenJPEG.DecodeToImage(asset.Data, out managedImage, out image))
@@ -206,35 +202,46 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         }
 
         // Compute the average color of a texture.
-        private Color computeAverageColor(Bitmap bmp)
+        private unsafe Color computeAverageColor(Bitmap bmp)
         {
+            BitmapProcessing.FastBitmap unsafeBMP = new BitmapProcessing.FastBitmap(bmp);
             // we have 256 x 256 pixel, each with 256 possible color-values per
             // color-channel, so 2^24 is the maximum value we can get, adding everything.
-            // int is be big enough for that.
-            int r = 0, g = 0, b = 0;
-            for (int y = 0; y < bmp.Height; ++y)
+            unsafeBMP.LockBitmap();
+            int r = 0;
+            int g = 0;
+            int b = 0;
+
+            for (int y = 0; y < bmp.Height; y += 10)
             {
-                for (int x = 0; x < bmp.Width; ++x)
+                for (int x = 0; x < bmp.Width; x += 10)
                 {
-                    Color c = bmp.GetPixel(x, y);
-                    r += (int)c.R & 0xff;
-                    g += (int)c.G & 0xff;
-                    b += (int)c.B & 0xff;
+                    Color pixel = unsafeBMP.GetPixel(x, y);
+                    r += pixel.R;
+                    g += pixel.G;
+                    b += pixel.B;
                 }
             }
 
-            int pixels = bmp.Width * bmp.Height;
-            return Color.FromArgb(r / pixels, g / pixels, b / pixels);
+            unsafeBMP.UnlockBitmap();
+
+            int pixels = (bmp.Width * bmp.Height) / (10 * 10);
+            return Color.FromArgb((int)r / pixels, (int)g / pixels, (int)b / pixels);
         }
 
         // return either the average color of the texture, or the defaultColor if the texturID is invalid
         // or the texture couldn't be found
         private Color computeAverageColor(UUID textureID, Color defaultColor) {
-            if (textureID == UUID.Zero) return defaultColor; // not set
-            if (m_mapping.ContainsKey(textureID)) return m_mapping[textureID]; // one of the predefined textures
+            if (textureID == UUID.Zero) 
+                return defaultColor; // not set
+
+            if (m_mapping.ContainsKey(textureID)) 
+                return m_mapping[textureID]; // one of the predefined textures
 
             Bitmap bmp = fetchTexture(textureID);
             Color color = bmp == null ? defaultColor : computeAverageColor(bmp);
+            if(bmp != null)
+                bmp.Dispose(); //Destroy the image that we don't need
             // store it for future reference
             m_mapping[textureID] = color;
 
@@ -275,8 +282,13 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         }
         #endregion
 
-        public void TerrainToBitmap(Bitmap mapbmp)
+        public unsafe Bitmap TerrainToBitmap(Bitmap mapbmp)
         {
+            BitmapData originalData = mapbmp.LockBits(
+                new Rectangle(0, 0, mapbmp.Width, mapbmp.Height),
+                ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
+
+            DateTime start = DateTime.Now;
             int tc = Environment.TickCount;
             m_log.Info("[MAPTILE]: Generating Maptile");
             //m_log.Info("[MAPTILE]: Generating Maptile Step 1: Terrain");
@@ -308,13 +320,14 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             float waterHeight = (float)settings.WaterHeight;
 
             double[,] hm = m_scene.Heightmap.GetDoubles();
+            int pixelSize = 3;
 
-            for (int x = 0; x < (int)Constants.RegionSize; x++)
+            for (int y = 0; y < (int)Constants.RegionSize; y++)
             {
-                float columnRatio = x / ((float)Constants.RegionSize - 1); // 0 - 1, for interpolation
-                for (int y = 0; y < (int)Constants.RegionSize; y++)
+                float rowRatio = y / ((float)Constants.RegionSize - 1); // 0 - 1, for interpolation
+                for (int x = 0; x < (int)Constants.RegionSize; x++)
                 {
-                    float rowRatio = y / ((float)Constants.RegionSize - 1); // 0 - 1, for interpolation
+                    float columnRatio = x / ((float)Constants.RegionSize - 1); // 0 - 1, for interpolation
 
                     // Y flip the cordinates for the bitmap: hf origin is lower left, bm origin is upper left
                     int yr = ((int)Constants.RegionSize - 1) - y;
@@ -363,8 +376,8 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                             // first, rescale h to 0.0 - 1.0
                             hmod = (hmod - low) / (high - low);
                             // now we have to split: 0.00 => color1, 0.33 => color2, 0.67 => color3, 1.00 => color4
-                            if (hmod < 1f/3f) hsv = interpolateHSV(ref hsv1, ref hsv2, hmod * 3f);
-                            else if (hmod < 2f/3f) hsv = interpolateHSV(ref hsv2, ref hsv3, (hmod * 3f) - 1f);
+                            if (hmod < 1f / 3f) hsv = interpolateHSV(ref hsv1, ref hsv2, hmod * 3f);
+                            else if (hmod < 2f / 3f) hsv = interpolateHSV(ref hsv2, ref hsv3, (hmod * 3f) - 1f);
                             else hsv = interpolateHSV(ref hsv3, ref hsv4, (hmod * 3f) - 2f);
                         }
 
@@ -393,7 +406,12 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                                 hsv.v = (hsv.v + hfdiff > 0f) ? hsv.v + hfdiff : 0f;
                             }
                         }
-                        mapbmp.SetPixel(x, yr, hsv.toColor());
+                        //get the data from the original image
+                        byte* Row = (byte*)originalData.Scan0 + (y * originalData.Stride);
+                        Color hsvColor = hsv.toColor();
+                        Row[x * pixelSize + 2] = hsvColor.R;
+                        Row[x * pixelSize + 1] = hsvColor.G;
+                        Row[x * pixelSize] = hsvColor.B;
                     }
                     else
                     {
@@ -409,11 +427,19 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
                         heightvalue = 100f - (heightvalue * 100f) / 19f;  // 0 - 19 => 100 - 0
 
-                        mapbmp.SetPixel(x, yr, WATER_COLOR);
+                        //get the data from the original image
+                        byte* Row = (byte*)originalData.Scan0 + (y * originalData.Stride);
+                        Row[x * pixelSize + 2] = WATER_COLOR.R;
+                        Row[x * pixelSize + 1] = WATER_COLOR.G;
+                        Row[x * pixelSize] = WATER_COLOR.B;
                     }
                 }
             }
+            if (m_mapping != null)
+                m_mapping.Clear();
+            mapbmp.UnlockBits(originalData);
             //m_log.Info("[MAPTILE]: Generating Maptile Step 1: Done in " + (Environment.TickCount - tc) + " ms");
+            return mapbmp;
         }
     }
 }

@@ -163,8 +163,9 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Presence
 
         public bool LoginAgent(string userID, UUID sessionID, UUID secureSessionID)
         {
-            m_log.Warn("[LOCAL PRESENCE CONNECTOR]: LoginAgent connector not implemented at the simulators");
-            return false;
+            //m_log.Warn("[LOCAL PRESENCE CONNECTOR]: LoginAgent connector not implemented at the simulators");
+
+            return m_PresenceService.LoginAgent(userID, sessionID, secureSessionID);
         }
 
         public bool LogoutAgent(UUID sessionID)
@@ -191,6 +192,11 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Presence
         public PresenceInfo[] GetAgents(string[] userIDs)
         {
             return m_PresenceService.GetAgents(userIDs);
+        }
+
+        public string[] GetAgentsLocations(string[] userIDs)
+        {
+            return m_PresenceService.GetAgentsLocations(userIDs);
         }
 
         #endregion

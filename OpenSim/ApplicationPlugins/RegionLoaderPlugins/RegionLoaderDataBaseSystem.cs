@@ -49,6 +49,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
         private OpenSimBase m_openSim;
         private IRegionCreator m_creator;
         private IConfigSource m_configSource;
+        private bool m_default = false;
 
         public void Initialise(IConfigSource configSource, IRegionCreator creator, IOpenSimBase openSim)
         {
@@ -56,6 +57,10 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             m_creator = creator;
             m_openSim = (OpenSimBase)openSim;
             MainConsole.Instance.Commands.AddCommand("base", false, "export database regions", "export database regions", "Exports regions in the database to an .ini file", Export);
+
+            IConfig config = configSource.Configs["RegionStartup"];
+            if (config != null)
+                m_default = config.GetString("Default") == Name;
         }
 
         public string Name
@@ -69,22 +74,30 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
         public RegionInfo[] LoadRegions()
         {
             //Grab old region files
-            //FindOldRegionFiles(); //Not enabled
+            if(m_default)
+                FindOldRegionFiles();
 
-            RegionInfo[] infos = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>("IRegionInfoConnector").GetRegionInfos();
-            if (infos.Length == 0)
-            {
-                //RegionManager manager = new RegionManager(true, m_openSim);
-                //System.Windows.Forms.Application.Run(manager);
-                //return LoadRegions();
+            Aurora.Framework.IRegionInfoConnector conn = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>();
+            if (conn == null)
                 return null;
+            RegionInfo[] infos = conn.GetRegionInfos();
+            if (infos.Length == 0 && m_default)
+            {
+                //Load up the GUI to make a new region
+                RegionManager manager = new RegionManager(true, m_openSim);
+                System.Windows.Forms.Application.Run(manager);
+                return LoadRegions();
             }
+            else if (infos.Length == 0)
+                return null;
             else
                 return infos;
         }
 
-        public void AddRegion(IOpenSimBase baseOS)
+        public void AddRegion(IOpenSimBase baseOS, string[] cmd)
         {
+            if (!m_default)
+                return;
             RegionManager manager = new RegionManager(true, (OpenSimBase)baseOS);
             System.Windows.Forms.Application.Run(manager);
         }
@@ -116,7 +129,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                 {
                     foreach (string file in iniFiles)
                     {
-                        IConfigSource source = new IniConfigSource(file);
+                        IConfigSource source = new IniConfigSource(file, Nini.Ini.IniFileType.AuroraStyle);
 
                         foreach (IConfig config in source.Configs)
                         {
@@ -140,12 +153,12 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                 }
                 foreach (RegionInfo info in RegionsToConvert)
                 {
-                    Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>("IRegionInfoConnector").UpdateRegionInfo(info, false);
+                    Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>().UpdateRegionInfo(info, false);
                 }
                 bool foundAll = false;
                 foreach (RegionInfo info in RegionsToConvert)
                 {
-                    if (Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>("IRegionInfoConnector").GetRegionInfo(info.RegionID) == null)
+                    if (Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>().GetRegionInfo(info.RegionID) == null)
                         foundAll = false;
                 }
                 //Something went really wrong here... so lets not destroy anything
@@ -164,7 +177,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 
         protected void Export(string module, string[] cmdparams)
         {
-            RegionInfo[] infos = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>("IRegionInfoConnector").GetRegionInfos();
+            RegionInfo[] infos = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>().GetRegionInfos();
             if (infos.Length != 0)
             {
                 StreamWriter writer = new StreamWriter("Regions/"+cmdparams[3]);

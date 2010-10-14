@@ -46,23 +46,31 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void ForceInventoryPersistence()
         {
-            SceneObjectPart[] parts = m_parts.GetArray();
-            for (int i = 0; i < parts.Length; i++)
-                parts[i].Inventory.ForceInventoryPersistence();
+            lock (m_partsLock)
+            {
+                foreach (SceneObjectPart part in m_partsList)
+                {
+                    part.Inventory.ForceInventoryPersistence();
+                }
+            }
         }
 
         /// <summary>
         /// Start the scripts contained in all the prims in this group.
         /// </summary>
         public void CreateScriptInstances(int startParam, bool postOnRez,
-                string engine, int stateSource)
+                string engine, int stateSource, UUID RezzedFrom)
         {
             // Don't start scripts if they're turned off in the region!
             if (!m_scene.RegionInfo.RegionSettings.DisableScripts)
             {
-                SceneObjectPart[] parts = m_parts.GetArray();
-                for (int i = 0; i < parts.Length; i++)
-                    parts[i].Inventory.CreateScriptInstances(startParam, postOnRez, engine, stateSource);
+                lock (m_partsLock)
+                {
+                    foreach (SceneObjectPart part in m_partsList)
+                    {
+                        part.Inventory.CreateScriptInstances(startParam, postOnRez, engine, stateSource, RezzedFrom);
+                    }
+                }
             }
         }
 
@@ -75,31 +83,13 @@ namespace OpenSim.Region.Framework.Scenes
         /// </param>
         public void RemoveScriptInstances(bool sceneObjectBeingDeleted)
         {
-            SceneObjectPart[] parts = m_parts.GetArray();
-            for (int i = 0; i < parts.Length; i++)
-                parts[i].Inventory.RemoveScriptInstances(sceneObjectBeingDeleted);
-        }
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="remoteClient"></param>
-        /// <param name="localID"></param>
-        public bool GetPartInventoryFileName(IClientAPI remoteClient, uint localID)
-        {
-            SceneObjectPart part = GetChildPart(localID);
-            if (part != null)
+            lock (m_partsLock)
             {
-                return part.Inventory.GetInventoryFileName(remoteClient, localID);
+                foreach (SceneObjectPart part in m_partsList)
+                {
+                    part.Inventory.RemoveScriptInstances(sceneObjectBeingDeleted);
+                }
             }
-            else
-            {
-                m_log.ErrorFormat(
-                    "[PRIM INVENTORY]: " +
-                    "Couldn't find part {0} in object group {1}, {2} to retreive prim inventory",
-                    localID, Name, UUID);
-            }
-            return false;
         }
 
         /// <summary>
@@ -163,23 +153,21 @@ namespace OpenSim.Region.Framework.Scenes
                     taskItem.GroupPermissions = item.GroupPermissions &
                             item.NextPermissions;
                     taskItem.NextPermissions = item.NextPermissions;
-                    // We're adding this to a prim we don't own. Force
-                    // owner change
-                    taskItem.CurrentPermissions |= 16; // Slam
+                    taskItem.CurrentPermissions |= 8;
                 } 
                 else 
                 {
                     taskItem.BasePermissions = item.BasePermissions;
                     taskItem.CurrentPermissions = item.CurrentPermissions;
+                    taskItem.CurrentPermissions |= 8;
                     taskItem.EveryonePermissions = item.EveryOnePermissions;
                     taskItem.GroupPermissions = item.GroupPermissions;
                     taskItem.NextPermissions = item.NextPermissions;
                 }
 
                 taskItem.Flags = item.Flags;
-                // TODO: These are pending addition of those fields to TaskInventoryItem
-//                taskItem.SalePrice = item.SalePrice;
-//                taskItem.SaleType = item.SaleType;
+                taskItem.SalePrice = item.SalePrice;
+                taskItem.SaleType = item.SaleType;
                 taskItem.CreationDate = (uint)item.CreationDate;
 
                 bool addFromAllowedDrop = false;
@@ -273,14 +261,14 @@ namespace OpenSim.Region.Framework.Scenes
                               PermissionMask.Move |
                               PermissionMask.Transfer) | 7;
 
-            uint ownerMask = 0x7fffffff;
-
-            SceneObjectPart[] parts = m_parts.GetArray();
-            for (int i = 0; i < parts.Length; i++)
+            uint ownerMask = 0x7ffffff;
+            lock (m_partsLock)
             {
-                SceneObjectPart part = parts[i];
-                ownerMask &= part.OwnerMask;
-                perms &= part.Inventory.MaskEffectivePermissions();
+                foreach (SceneObjectPart part in m_partsList)
+                {
+                    ownerMask &= part.OwnerMask;
+                    perms &= part.Inventory.MaskEffectivePermissions();
+                }
             }
 
             if ((ownerMask & (uint)PermissionMask.Modify) == 0)
@@ -290,56 +278,57 @@ namespace OpenSim.Region.Framework.Scenes
             if ((ownerMask & (uint)PermissionMask.Transfer) == 0)
                 perms &= ~(uint)PermissionMask.Transfer;
 
-            // If root prim permissions are applied here, this would screw
-            // with in-inventory manipulation of the next owner perms
-            // in a major way. So, let's move this to the give itself.
-            // Yes. I know. Evil.
-//            if ((ownerMask & RootPart.NextOwnerMask & (uint)PermissionMask.Modify) == 0)
-//                perms &= ~((uint)PermissionMask.Modify >> 13);
-//            if ((ownerMask & RootPart.NextOwnerMask & (uint)PermissionMask.Copy) == 0)
-//                perms &= ~((uint)PermissionMask.Copy >> 13);
-//            if ((ownerMask & RootPart.NextOwnerMask & (uint)PermissionMask.Transfer) == 0)
-//                perms &= ~((uint)PermissionMask.Transfer >> 13);
+            if ((ownerMask & RootPart.NextOwnerMask & (uint)PermissionMask.Modify) == 0)
+                perms &= ~((uint)PermissionMask.Modify >> 13);
+            if ((ownerMask & RootPart.NextOwnerMask & (uint)PermissionMask.Copy) == 0)
+                perms &= ~((uint)PermissionMask.Copy >> 13);
+            if ((ownerMask & RootPart.NextOwnerMask & (uint)PermissionMask.Transfer) == 0)
+                perms &= ~((uint)PermissionMask.Transfer >> 13);
 
             return perms;
         }
 
         public void ApplyNextOwnerPermissions()
         {
-            SceneObjectPart[] parts = m_parts.GetArray();
-            for (int i = 0; i < parts.Length; i++)
-                parts[i].ApplyNextOwnerPermissions();
+            lock (m_partsLock)
+            {
+                foreach (SceneObjectPart part in m_partsList)
+                {
+                    part.ApplyNextOwnerPermissions();
+                }
+            }
         }
 
         public string GetStateSnapshot()
         {
             Dictionary<UUID, string> states = new Dictionary<UUID, string>();
 
-            SceneObjectPart[] parts = m_parts.GetArray();
-            for (int i = 0; i < parts.Length; i++)
+            lock (m_partsLock)
             {
-                SceneObjectPart part = parts[i];
-                foreach (KeyValuePair<UUID, string> s in part.Inventory.GetScriptStates())
-                    states[s.Key] = s.Value;
+                foreach (SceneObjectPart part in m_partsList)
+                {
+                    foreach (KeyValuePair<UUID, string> s in part.Inventory.GetScriptStates())
+                        states[s.Key] = s.Value;
+                }
             }
 
             if (states.Count < 1)
-                return String.Empty;
+                return "";
 
             XmlDocument xmldoc = new XmlDocument();
 
             XmlNode xmlnode = xmldoc.CreateNode(XmlNodeType.XmlDeclaration,
-                    String.Empty, String.Empty);
+                    "", "");
 
             xmldoc.AppendChild(xmlnode);
             XmlElement rootElement = xmldoc.CreateElement("", "ScriptData",
-                    String.Empty);
+                    "");
             
             xmldoc.AppendChild(rootElement);
 
             
             XmlElement wrapper = xmldoc.CreateElement("", "ScriptStates",
-                    String.Empty);
+                    "");
             
             rootElement.AppendChild(wrapper);
 
@@ -419,9 +408,13 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void ResumeScripts()
         {
-            SceneObjectPart[] parts = m_parts.GetArray();
-            for (int i = 0; i < parts.Length; i++)
-                parts[i].Inventory.ResumeScripts();
+            lock (m_partsLock)
+            {
+                foreach (SceneObjectPart part in m_partsList)
+                {
+                    part.Inventory.ResumeScripts();
+                }
+            }
         }
     }
 }

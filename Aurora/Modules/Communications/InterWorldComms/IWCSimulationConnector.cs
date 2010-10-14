@@ -40,13 +40,16 @@ using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 using OpenSim.Server.Handlers.Simulation;
+using Mono.Addins;
 
 namespace Aurora.Modules
 {
+    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class IWCSimulationConnectorModule : ISharedRegionModule, ISimulationService
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private List<Scene> m_sceneList = new List<Scene>();
+        private IWComms m_IWC = null;
 
         private IEntityTransferModule m_AgentTransferModule;
         protected IEntityTransferModule AgentTransferModule
@@ -107,6 +110,7 @@ namespace Aurora.Modules
 
         public void RegionLoaded(Scene scene)
         {
+            m_IWC = scene.RequestModuleInterface<IWComms>();
         }
 
         public void Close()

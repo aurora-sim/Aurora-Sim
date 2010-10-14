@@ -32,9 +32,6 @@ namespace OpenSim.Framework
 {
     /// <summary>
     /// Enapsulate statistics for a simulator/scene.
-    /// 
-    /// TODO: This looks very much like the OpenMetaverse SimStatsPacket.  It should be much more generic stats
-    /// storage.
     /// </summary>
     public class SimStats
     {

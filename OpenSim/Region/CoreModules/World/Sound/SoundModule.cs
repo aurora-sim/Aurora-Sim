@@ -84,6 +84,9 @@ namespace OpenSim.Region.CoreModules.World.Sound
         public virtual void PlayAttachedSound(
             UUID soundID, UUID ownerID, UUID objectID, double gain, Vector3 position, byte flags, float radius)
         {
+            ILandObject ILO = m_scene.LandChannel.GetLandObject(position.X, position.Y);
+            bool LocalOnly = (ILO.LandData.Flags & (uint)ParcelFlags.SoundLocal) == (uint)ParcelFlags.SoundLocal;
+            
             m_scene.ForEachScenePresence(delegate(ScenePresence sp)
             {
                 if (Cones.Count != 0)
@@ -120,13 +123,17 @@ namespace OpenSim.Region.CoreModules.World.Sound
                     if (dis > 100.0) // Max audio distance
                         return;
 
+                    //Check to see if the person is local and the av is in the same parcel
+                    if (LocalOnly && sp.currentParcelUUID != ILO.LandData.GlobalID)
+                        return;
+
                     // Scale by distance
                     if (radius == 0)
                         gain = (float)((double)gain * ((100.0 - dis) / 100.0));
                     else
                         gain = (float)((double)gain * ((radius - dis) / radius));
 
-                    if (sp.Scene.GetSceneObjectPart(objectID).m_UseSoundQueue == 1)
+                    if (sp.Scene.GetSceneObjectPart(objectID).UseSoundQueue == 1)
                         flags += (int)OpenMetaverse.SoundFlags.Queue;
                     sp.ControllingClient.SendPlayAttachedSound(soundID, objectID, ownerID, (float)gain, flags);
                 }
@@ -143,10 +150,16 @@ namespace OpenSim.Region.CoreModules.World.Sound
 
         public virtual void AddConeOfSilence(UUID objectID, Vector3 position, double Radius)
         {
-            ConeOfSilence CS = new ConeOfSilence();
-            CS.Position = position;
-            CS.Radius = Radius;
-            Cones.Add(objectID, CS);
+            //Must have parcel owner permissions, too many places for abuse in this
+            SceneObjectGroup group = m_scene.GetSceneObjectPart(objectID).ParentGroup;
+            ILandObject land = m_scene.LandChannel.GetLandObject((int)position.X, (int)position.Y);
+            if (m_scene.Permissions.CanEditParcel(group.OwnerID, land))
+            {
+                ConeOfSilence CS = new ConeOfSilence();
+                CS.Position = position;
+                CS.Radius = Radius;
+                Cones.Add(objectID, CS);
+            }
         }
 
         public virtual void RemoveConeOfSilence(UUID objectID)
@@ -157,6 +170,9 @@ namespace OpenSim.Region.CoreModules.World.Sound
         public virtual void TriggerSound(
             UUID soundId, UUID ownerID, UUID objectID, UUID parentID, double gain, Vector3 position, UInt64 handle, float radius)
         {
+            ILandObject ILO = m_scene.LandChannel.GetLandObject(position.X, position.Y);
+            bool LocalOnly = (ILO.LandData.Flags & (uint)ParcelFlags.SoundLocal) == (uint)ParcelFlags.SoundLocal;
+           
             m_scene.ForEachScenePresence(delegate(ScenePresence sp)
             {
                 if (Cones.Count != 0)
@@ -191,6 +207,10 @@ namespace OpenSim.Region.CoreModules.World.Sound
 
                     double dis = Util.GetDistanceTo(sp.AbsolutePosition, position);
                     if (dis > 100.0) // Max audio distance
+                        return;
+
+                    //Check to see if the person is local and the av is in the same parcel
+                    if (LocalOnly && sp.currentParcelUUID != ILO.LandData.GlobalID)
                         return;
 
                     // Scale by distance

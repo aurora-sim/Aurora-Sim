@@ -196,11 +196,14 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
 
         public void AddRegion(Scene scene)
         {
-            m_scene = scene;
-            m_scene.RegisterModuleInterface<IVegetationModule>(this);
-            m_scene.EventManager.OnPluginConsole += EventManager_OnPluginConsole;
+            if (m_active_trees)
+            {
+                m_scene = scene;
+                m_scene.RegisterModuleInterface<IVegetationModule>(this);
+                m_scene.EventManager.OnPluginConsole += EventManager_OnPluginConsole;
 
-            InstallCommands();
+                InstallCommands();
+            }
         }
 
         public void RemoveRegion(Scene scene)
@@ -209,12 +212,14 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
 
         public void RegionLoaded(Scene scene)
         {
-            ReloadCopse();
-            if (m_copse.Count > 0)
-                m_log.Info("[TREES]: Copse load complete");
-
             if (m_active_trees)
+            {
+                ReloadCopse();
+                if (m_copse.Count > 0)
+                    m_log.Info("[TREES]: Copse load complete");
+
                 activeizeTreeze(true);
+            }
         }
 
         public Type ReplaceableInterface
@@ -401,7 +406,7 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
                         m_scene.ForEachClient(delegate(IClientAPI controller)
                         {
                             controller.SendKillObject(m_scene.RegionInfo.RegionHandle,
-                                                      selectedTree.LocalId);
+                                                      new uint[]{selectedTree.LocalId});
                         });
                     }
                     else
@@ -530,10 +535,40 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
                 return null;
             }
 
-            SceneObjectGroup sceneObject = new SceneObjectGroup(ownerID, pos, rot, shape);
+            SceneObjectGroup sceneObject = new SceneObjectGroup(ownerID, pos, rot, shape, m_scene);
             SceneObjectPart rootPart = sceneObject.GetChildPart(sceneObject.UUID);
 
             rootPart.AddFlag(PrimFlags.Phantom);
+            if (rootPart.Shape.PCode != (byte)PCode.Grass)
+            {
+                // Tree size has to be adapted depending on its type
+                switch ((Tree)rootPart.Shape.State)
+                {
+                    case Tree.Cypress1:
+                    case Tree.Cypress2:
+                    case Tree.Palm1:
+                    case Tree.Palm2:
+                    case Tree.WinterAspen:
+                        rootPart.Scale = new Vector3(4, 4, 10);
+                        break;
+                    case Tree.WinterPine1:
+                    case Tree.WinterPine2:
+                        rootPart.Scale = new Vector3(4, 4, 20);
+                        break;
+
+                    case Tree.Dogwood:
+                        rootPart.Scale = new Vector3(6.5f, 6.5f, 6.5f);
+                        break;
+
+                    // case... other tree types
+                    // tree.Scale = new Vector3(?, ?, ?);
+                    // break;
+
+                    default:
+                        rootPart.Scale = new Vector3(4, 4, 4);
+                        break;
+                }
+            }
 
             m_scene.AddNewSceneObject(sceneObject, true);
             sceneObject.SetGroup(groupID, null);
@@ -655,7 +690,7 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
                             {
                                 s_tree.Scale += copse.m_rate;
                                 s_tree.ParentGroup.HasGroupChanged = true;
-                                s_tree.ScheduleFullUpdate();
+                                s_tree.ScheduleFullUpdate(PrimUpdateFlags.FindBest);
                             }
                         }
                         else
@@ -742,7 +777,7 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
                                 m_scene.ForEachClient(delegate(IClientAPI controller)
                                                           {
                                                               controller.SendKillObject(m_scene.RegionInfo.RegionHandle,
-                                                                                        selectedTree.LocalId);
+                                                                                        new uint[]{selectedTree.LocalId});
                                                           });
 
                                 break;
@@ -787,7 +822,7 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
 
                 tree.Name = copse.ToString();
                 copse.m_trees.Add(tree.UUID);
-                tree.SendGroupFullUpdate();
+                tree.SendGroupFullUpdate(PrimUpdateFlags.FindBest);
             }
         }
 

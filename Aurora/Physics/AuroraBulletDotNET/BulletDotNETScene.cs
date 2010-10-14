@@ -118,6 +118,23 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
         private List<PhysicsActor> RemoveQueue = new List<PhysicsActor>();
         private bool forceSimplePrimMeshing = false;
 
+        public override bool DisableCollisions
+        {
+            get { return false; }
+            set { }
+        }
+
+        public override bool UseUnderWaterPhysics
+        {
+            get { return false; }
+        }
+
+        public override Vector3 PointOfGravity
+        {
+            get { return Vector3.Zero; }
+            set { }
+        }
+
         public BulletDotNETScene(string sceneIdentifier)
         {
             BulletLock = new object();
@@ -267,10 +284,10 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
                         AddPhysicsActorTaint(prim);
                     }
                 }
-            }
-            else
-            {
-                RemoveQueue.Add(prim);
+                else
+                {
+                    RemoveQueue.Add(prim);
+                }
             }
         }
 
@@ -408,7 +425,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
                     */
                     prm.UpdatePositionAndVelocity();
                 }
-                if (m_CollisionInterface != null)
+                /*if (m_CollisionInterface != null)
                 {
                     List<BulletDotNETPrim> primsWithCollisions = new List<BulletDotNETPrim>();
                     List<BulletDotNETCharacter> charactersWithCollisions = new List<BulletDotNETCharacter>();
@@ -436,7 +453,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
                     {
                         bdnc.SendCollisions();
                     }
-                }
+                }*/
             }
             Locked = false;
             //No lock, as the lock that was adding to this was just removed
@@ -509,7 +526,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             
         }
 
-        public override void SetTerrain(float[] heightMap)
+        public override void SetTerrain(float[] heightMap, double[,] normalHeightMap)
         {
             if (m_terrainShape != null)
                 DeleteTerrain();
@@ -583,8 +600,6 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             TerrainBody = new btRigidBody(0, m_terrainMotionState, m_terrainShape);
             TerrainBody.setUserPointer((IntPtr)0);
             m_world.addRigidBody(TerrainBody);
-
-
         }
 
         public override void SetWaterLevel(float baseheight)

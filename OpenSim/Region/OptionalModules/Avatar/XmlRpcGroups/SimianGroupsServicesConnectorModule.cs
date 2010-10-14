@@ -554,7 +554,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             SimianAddGeneric(agentID, "GroupMember", groupID.ToString(), GroupMemberInfo);
         }
 
-        public void AddAgentToGroupInvite(UUID requestingAgentID, UUID inviteID, UUID groupID, UUID roleID, UUID agentID)
+        public void AddAgentToGroupInvite(UUID requestingAgentID, UUID inviteID, UUID groupID, UUID roleID, UUID agentID, string FromAgentName)
         {
             if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
 
@@ -610,7 +610,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             SetAgentActiveGroupRole(requestingAgentID, AgentID, GroupID, RoleID);
         }
 
-        public void RemoveAgentFromGroup(UUID requestingAgentID, UUID agentID, UUID groupID)
+        public bool RemoveAgentFromGroup(UUID requestingAgentID, UUID agentID, UUID groupID)
         {
             if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
 
@@ -638,6 +638,8 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                     SimianRemoveGenericEntry(agentID, GroupRoleMemberType, roleID);
                 }
             }
+
+            return true;
         }
 
         public void AddAgentToGroupRole(UUID requestingAgentID, UUID agentID, UUID groupID, UUID roleID)
@@ -661,7 +663,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             }
         }
 
-        public List<DirGroupsReplyData> FindGroups(UUID requestingAgentID, string search, int queryStart)
+        public List<DirGroupsReplyData> FindGroups(UUID requestingAgentID, string search, int queryStart, uint queryflags)
         {
             if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
 
@@ -1005,7 +1007,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             }
             return null;
         }
-        public void AddGroupNotice(UUID requestingAgentID, UUID groupID, UUID noticeID, string fromName, string subject, string message, byte[] binaryBucket)
+        public void AddGroupNotice(UUID requestingAgentID, UUID groupID, UUID noticeID, string fromName, string subject, string message, UUID ItemID, int AssetType, string ItemName)
         {
             if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
 
@@ -1014,7 +1016,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             Notice["FromName"] = OSD.FromString(fromName);
             Notice["Subject"] = OSD.FromString(subject);
             Notice["Message"] = OSD.FromString(message);
-            Notice["BinaryBucket"] = OSD.FromBinary(binaryBucket);
+            Notice["BinaryBucket"] = OSD.FromBinary(new byte[0]);
 
             SimianAddGeneric(groupID, "GroupNotice", noticeID.ToString(), Notice);
             
@@ -1381,6 +1383,10 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
         }
         #endregion
 
+        public List<GroupInviteInfo> GetGroupInvites(UUID requestingAgentID)
+        {
+            return new List<GroupInviteInfo>();
+        }
     }
 
 }

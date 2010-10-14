@@ -11,7 +11,6 @@ namespace Aurora.Framework
 {
     public interface IDataConnector : IGenericData
     {
-        void ConnectToDatabase(string connectionString);
         void CloseDatabase();
         bool TableExists(string table);
         void CreateTable(string table, ColumnDefinition[] columns);
@@ -62,6 +61,11 @@ namespace Aurora.Framework
                 return cdef.Name == Name && cdef.Type == Type && cdef.IsPrimary == IsPrimary;
             }
             return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
         }
     }
 }

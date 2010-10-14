@@ -94,51 +94,12 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                                                            return ProcessAdd(m_dhttpMethod, agentID, caps);
                                                        }));
 
-            caps.RegisterHandler("ParcelPropertiesUpdate",
-                                new RestHTTPHandler("POST", "/CAPS/ParcelPropertiesUpdate/" + capuuid + "/",
-                                                      delegate(Hashtable m_dhttpMethod)
-                                                      {
-                                                          return ProcessUpdateParcel(m_dhttpMethod, agentID, capuuid);
-                                                      }));
-
-            caps.RegisterHandler("UpdateAgentInformation",
-                                new RestHTTPHandler("POST", "/CAPS/UpdateAgentInformation/" + capuuid + "/",
-                                                      delegate(Hashtable m_dhttpMethod)
-                                                      {
-                                                          return ProcessUpdateAgentInfo(m_dhttpMethod, agentID, capuuid);
-                                                      }));
-
             caps.RegisterHandler("ServerReleaseNotes",
                                 new RestHTTPHandler("POST", "/CAPS/ServerReleaseNotes/" + capuuid + "/",
                                                       delegate(Hashtable m_dhttpMethod)
                                                       {
                                                           return ProcessServerReleaseNotes(m_dhttpMethod, agentID, capuuid);
                                                       }));
-
-            caps.RegisterHandler("UpdateAgentLanguage",
-                                new RestHTTPHandler("POST", "/CAPS/UpdateAgentLanguage/" + capuuid + "/",
-                                                      delegate(Hashtable m_dhttpMethod)
-                                                      {
-                                                          return ProcessUpdateAgentLanguage(m_dhttpMethod, agentID, capuuid);
-                                                      }));
-        }
-
-        private Hashtable ProcessUpdateAgentLanguage(Hashtable m_dhttpMethod, UUID agentID, UUID capuuid)
-        {
-            Hashtable responsedata = new Hashtable();
-            responsedata["int_response_code"] = 200; //501; //410; //404;
-            responsedata["content_type"] = "text/plain";
-            responsedata["keepalive"] = false;
-
-            OSD r = OSDParser.DeserializeLLSDXml((string)m_dhttpMethod["requestbody"]);
-            OSDMap rm = (OSDMap)r;
-            IAgentConnector AgentFrontend = DataManager.RequestPlugin<IAgentConnector>("IAgentConnector");
-            IAgentInfo IAI = AgentFrontend.GetAgent(agentID);
-            IAI.Language = rm["language"].AsString();
-            IAI.LanguageIsPublic = int.Parse(rm["language_is_public"].AsString()) == 1;
-            AgentFrontend.UpdateAgent(IAI);
-            responsedata["str_response_string"] = "";
-            return responsedata;
         }
 
         private Hashtable ProcessServerReleaseNotes(Hashtable m_dhttpMethod, UUID agentID, UUID capuuid)
@@ -149,93 +110,9 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
             responsedata["keepalive"] = false;
             
             OSDMap osd = new OSDMap();
-            osd.Add("ServerReleaseNotes", new OSDString(Aurora.Framework.Utils.GetServerReleaseNotesURL()));
+            osd.Add("ServerReleaseNotes", new OSDString(Aurora.Framework.Utilities.GetServerReleaseNotesURL()));
             string response = OSDParser.SerializeLLSDXmlString(osd);
             responsedata["str_response_string"] = response;
-            return responsedata;
-        }
-
-        private Hashtable ProcessUpdateAgentInfo(Hashtable mDhttpMethod, UUID agentID, UUID capuuid)
-        {
-        	OSD r = OSDParser.DeserializeLLSDXml((string)mDhttpMethod["requestbody"]);
-            OSDMap rm = (OSDMap)r;
-            OSDMap access = (OSDMap)rm["access_prefs"];
-            string Level = access["max"].AsString();
-            int maxLevel = 0;
-            if (Level == "PG")
-                maxLevel = 0;
-            if (Level == "M")
-                maxLevel = 1;
-            if (Level == "A")
-                maxLevel = 2;
-            IAgentConnector data = DataManager.RequestPlugin<IAgentConnector>("IAgentConnector");
-            IAgentInfo agent = data.GetAgent(agentID);
-            agent.MaxMaturity = maxLevel;
-            data.UpdateAgent(agent);
-            Hashtable cancelresponsedata = new Hashtable();
-            cancelresponsedata["int_response_code"] = 200; //501; //410; //404;
-            cancelresponsedata["content_type"] = "text/plain";
-            cancelresponsedata["keepalive"] = false;
-            cancelresponsedata["str_response_string"] = "";
-            return cancelresponsedata;
-        }
-
-        private Hashtable ProcessUpdateParcel(Hashtable mDhttpMethod, UUID agentID, UUID capuuid)
-        {
-            OSD r = OSDParser.DeserializeLLSDXml((string)mDhttpMethod["requestbody"]);
-            OSDMap rm = (OSDMap)r;
-            
-            ScenePresence SP;
-            m_scene.TryGetScenePresence(agentID, out SP);
-            ILandObject ILO = SP.Scene.LandChannel.GetLandObject(rm["local_id"].AsInteger());
-
-            if (!m_scene.Permissions.CanEditParcel(agentID, ILO))
-            {
-                Hashtable cancelresponsedata = new Hashtable();
-                cancelresponsedata["int_response_code"] = 200; //501; //410; //404;
-                cancelresponsedata["content_type"] = "text/plain";
-                cancelresponsedata["keepalive"] = false;
-                cancelresponsedata["str_response_string"] = "Updated.";
-                return cancelresponsedata;
-            }
-            LandUpdateArgs args = new LandUpdateArgs();
-            args.AuthBuyerID = new UUID(rm["auth_buyer_id"].AsString());
-            args.MediaAutoScale =  Convert.ToByte(rm["auto_scale"].AsString());
-            args.Category = (ParcelCategory)rm["category"].AsInteger();
-            args.Desc = rm["description"].AsString();
-            args.ParcelFlags = rm["parcel_flags"].AsUInteger();
-            args.GroupID = new UUID(rm["group_id"].AsString());
-            args.LandingType = Convert.ToByte(rm["landing_type"].AsString());
-            args.MediaDesc = rm["media_desc"].AsString();
-            args.MediaHeight = rm["media_height"].AsInteger();
-            args.MediaID = new UUID(rm["media_id"].AsString());
-            args.MediaLoop = rm["media_loop"].AsBoolean();
-            args.MediaType = rm["media_type"].AsString();
-            args.MediaURL = rm["media_url"].AsString();
-            args.MediaWidth = rm["media_width"].AsInteger();
-            args.MusicURL = rm["music_url"].AsString();
-            args.Name = rm["name"].AsString();
-            args.ObscureMedia = rm["obscure_media"].AsInteger() == 1;
-            args.ObscureMusic = rm["obscure_music"].AsInteger() == 1;
-            args.PassHours = rm["pass_hours"].AsInteger();
-            args.PassPrice = rm["pass_price"].AsInteger();
-            args.SalePrice = rm["sale_price"].AsInteger();
-            string snapshot = rm["snapshot_id"].AsString();
-            args.SnapshotID = new UUID(snapshot);
-            Vector3 TempVector = new Vector3();
-            OSDArray loc = (OSDArray)rm["user_location"];
-            TempVector = new Vector3(loc[0].AsInteger(),loc[1].AsInteger(),loc[2].AsInteger());
-            args.UserLocation = TempVector;
-            OSDArray lookat = (OSDArray)rm["user_look_at"];
-            TempVector = new Vector3(lookat[0].AsInteger(), lookat[1].AsInteger(), lookat[2].AsInteger());
-            args.UserLookAt = TempVector;
-
-            SP.ControllingClient.FireUpdateParcel(args, rm["local_id"].AsInteger());
-            Hashtable responsedata = new Hashtable();
-            responsedata["int_response_code"] = 200; //501; //410; //404;
-            responsedata["content_type"] = "text/plain";
-            responsedata["keepalive"] = false;
-            responsedata["str_response_string"] = "Updated.";
             return responsedata;
         }
 
@@ -466,12 +343,17 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
 
             SceneObjectGroup obj = null; ;
 
-            if (m_scene.Permissions.CanRezObject(1, avatar.UUID, pos))
+            string reason;
+            if (m_scene.Permissions.CanRezObject(1, avatar.UUID, pos, out reason))
             {
                 // rez ON the ground, not IN the ground
-               // pos.Z += 0.25F;
+                // pos.Z += 0.25F;
 
                 obj = m_scene.AddNewPrim(avatar.UUID, group_id, pos, rotation, pbs);
+            }
+            else
+            {
+                avatar.Scene.GetScenePresence(avatar.UUID).ControllingClient.SendAlertMessage("You do not have permission to rez objects here: " + reason);
             }
 
 

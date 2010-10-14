@@ -53,6 +53,20 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
     }
 
     [Serializable]
+    public class MinEventDelayException : Exception
+    {
+        public MinEventDelayException()
+        {
+        }
+
+        protected MinEventDelayException(
+                SerializationInfo info,
+                StreamingContext context)
+        {
+        }
+    }
+
+    [Serializable]
     public class SelfDeleteException : Exception
     {
         public SelfDeleteException()
@@ -209,7 +223,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             else
                 Type = 0x02; // Passive
 
-            foreach (SceneObjectPart p in part.ParentGroup.Children.Values)
+            foreach (SceneObjectPart p in part.ParentGroup.ChildrenList)
             {
                 if (p.Inventory.ContainsScripts())
                 {
@@ -246,5 +260,124 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public string EventName;
         public Object[] Params;
         public DetectParams[] DetectParams;
+    }
+
+    /// <summary>
+    /// Queue item structure
+    /// </summary>
+    public struct QueueItemStruct
+    {
+        public ScriptData ID;
+        public string functionName;
+        public DetectParams[] llDetectParams;
+        public object[] param;
+        public EnumeratorInfo CurrentlyAt;
+        public int VersionID;
+    }
+
+    public struct StateQueueItem
+    {
+        public ScriptData ID;
+        public bool Create;
+    }
+
+    // Load/Unload structure
+    public struct LUStruct
+    {
+        public ScriptData ID;
+        public LUType Action;
+    }
+
+    public enum LUType
+    {
+        Unknown = 0,
+        Load = 1,
+        Unload = 2,
+        Reupload = 3
+    }
+
+    public enum Trust : int
+    {
+        Full = 5,
+        Medium = 3,
+        Low = 1
+    }
+
+    public enum EventPriority : int
+    {
+        FirstStart = 0,
+        Suspended = 1,
+        Continued = 2
+    }
+
+    public enum LoadPriority : int
+    {
+        FirstStart = 0,
+        Restart = 1,
+        Stop = 2
+    }
+
+    public enum StateSource
+    {
+        NewRez = 0,
+        PrimCrossing = 1,
+        ScriptedRez = 2,
+        AttachedRez = 3
+    }
+
+    //////////////////////////////////////////////////////////////
+    //
+    // Level description
+    //
+    // None     - Function is no threat at all. It doesn't constitute
+    //            an threat to either users or the system and has no
+    //            known side effects
+    //
+    // Nuisance - Abuse of this command can cause a nuisance to the
+    //            region operator, such as log message spew
+    //
+    // VeryLow  - Extreme levels ob abuse of this function can cause
+    //            impaired functioning of the region, or very gullible
+    //            users can be tricked into experiencing harmless effects
+    //
+    // Low      - Intentional abuse can cause crashes or malfunction
+    //            under certain circumstances, which can easily be rectified,
+    //            or certain users can be tricked into certain situations
+    //            in an avoidable manner.
+    //
+    // Moderate - Intentional abuse can cause denial of service and crashes
+    //            with potential of data or state loss, or trusting users
+    //            can be tricked into embarrassing or uncomfortable
+    //            situationsa.
+    //
+    // High     - Casual abuse can cause impaired functionality or temporary
+    //            denial of service conditions. Intentional abuse can easily
+    //            cause crashes with potential data loss, or can be used to
+    //            trick experienced and cautious users into unwanted situations,
+    //            or changes global data permanently and without undo ability
+    //            Malicious scripting can allow theft of content
+    //
+    // VeryHigh - Even normal use may, depending on the number of instances,
+    //            or frequency of use, result in severe service impairment
+    //            or crash with loss of data, or can be used to cause
+    //            unwanted or harmful effects on users without giving the
+    //            user a means to avoid it.
+    //
+    // Severe   - Even casual use is a danger to region stability, or function
+    //            allows console or OS command execution, or function allows
+    //            taking money without consent, or allows deletion or
+    //            modification of user data, or allows the compromise of
+    //            sensitive data by design.
+
+    public enum ThreatLevel
+    {
+        None = 0,
+        Nuisance = 1,
+        VeryLow = 2,
+        Low = 3,
+        Moderate = 4,
+        High = 5,
+        VeryHigh = 6,
+        Severe = 7
     }
 }

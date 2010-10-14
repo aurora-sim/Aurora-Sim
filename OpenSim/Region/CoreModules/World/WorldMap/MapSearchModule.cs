@@ -155,7 +155,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                     data.Access = info.Access;
                     data.MapImageId = info.TerrainImage;
                     data.Name = info.RegionName;
-                    data.RegionFlags = 0; // TODO not used?
+                    data.RegionFlags = 0;
                     data.WaterHeight = 0; // not used
                     data.X = (ushort)(info.RegionLocX / Constants.RegionSize);
                     data.Y = (ushort)(info.RegionLocY / Constants.RegionSize);

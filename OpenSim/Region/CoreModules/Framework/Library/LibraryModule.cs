@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) Contributors, http://opensimulator.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
@@ -51,7 +51,6 @@ namespace OpenSim.Region.CoreModules.Framework.Library
         private static bool m_HasRunOnce = false;
 
         private bool m_Enabled = false;
-//        private string m_LibraryName = "OpenSim Library";
         private Scene m_Scene;
 
         private ILibraryService m_Library;
@@ -67,7 +66,7 @@ namespace OpenSim.Region.CoreModules.Framework.Library
                 if (libConfig != null)
                 {
                     string dllName = libConfig.GetString("LocalServiceModule", string.Empty);
-                    m_log.Debug("[LIBRARY MODULE]: Library service dll is " + dllName);
+                    //m_log.Debug("[LIBRARY MODULE]: Library service dll is " + dllName);
                     if (dllName != string.Empty)
                     {
                         Object[] args = new Object[] { config };
@@ -77,7 +76,7 @@ namespace OpenSim.Region.CoreModules.Framework.Library
             }
             if (m_Library == null)
             {
-                m_log.Warn("[LIBRARY MODULE]: No local library service. Module will be disabled.");
+                //m_log.Warn("[LIBRARY MODULE]: No local library service. Module will be disabled.");
                 m_Enabled = false;
             }
         }
@@ -173,16 +172,16 @@ namespace OpenSim.Region.CoreModules.Framework.Library
                 m_log.InfoFormat("[LIBRARY MODULE]: Loading library archive {0} ({1})...", iarFileName, simpleName);
                 simpleName = GetInventoryPathFromName(simpleName);
 
-                InventoryArchiveReadRequest archread = new InventoryArchiveReadRequest(m_MockScene, uinfo, simpleName, iarFileName, false);
+                InventoryArchiveReadRequest archread = new InventoryArchiveReadRequest(m_MockScene, uinfo, simpleName, iarFileName);
                 try
                 {
-                    HashSet<InventoryNodeBase> nodes = archread.Execute();
+                    List<InventoryNodeBase> nodes = archread.Execute();
                     if (nodes != null && nodes.Count == 0)
                     {
                         // didn't find the subfolder with the given name; place it on the top
                         m_log.InfoFormat("[LIBRARY MODULE]: Didn't find {0} in library. Placing archive on the top level", simpleName);
                         archread.Close();
-                        archread = new InventoryArchiveReadRequest(m_MockScene, uinfo, "/", iarFileName, false);
+                        archread = new InventoryArchiveReadRequest(m_MockScene, uinfo, "/", iarFileName);
                         archread.Execute();
                     }
                     foreach (InventoryNodeBase node in nodes)
@@ -212,21 +211,13 @@ namespace OpenSim.Region.CoreModules.Framework.Library
             }
         }
 
-//        private void DumpLibrary()
-//        {
-//            InventoryFolderImpl lib = m_Library.LibraryRootFolder;
-//
-//            m_log.DebugFormat(" - folder {0}", lib.Name);
-//            DumpFolder(lib);
-//        }
-//
-//        private void DumpLibrary()
-//        {
-//            InventoryFolderImpl lib = m_Scene.CommsManager.UserProfileCacheService.LibraryRoot;
-//
-//            m_log.DebugFormat(" - folder {0}", lib.Name);
-//            DumpFolder(lib);
-//        }
+        private void DumpLibrary()
+        {
+            InventoryFolderImpl lib = m_Library.LibraryRootFolder;
+
+            m_log.DebugFormat(" - folder {0}", lib.Name);
+            DumpFolder(lib);
+        }
 
         private void DumpFolder(InventoryFolderImpl folder)
         {

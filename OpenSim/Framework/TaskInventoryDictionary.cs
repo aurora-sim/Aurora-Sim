@@ -56,7 +56,22 @@ namespace OpenSim.Framework
             {
                 foreach (UUID uuid in Keys)
                 {
-                    clone.Add(uuid, (TaskInventoryItem) this[uuid].Clone());
+                    clone.Add(uuid, (TaskInventoryItem)this[uuid].Clone());
+                }
+            }
+
+            return clone;
+        }
+
+        public List<TaskInventoryItem> Clone2List()
+        {
+            List<TaskInventoryItem> clone = new List<TaskInventoryItem>();
+
+            lock (this)
+            {
+                foreach (UUID uuid in Keys)
+                {
+                    clone.Add((TaskInventoryItem)this[uuid].Clone());
                 }
             }
 

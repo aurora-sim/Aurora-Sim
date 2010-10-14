@@ -173,7 +173,7 @@ namespace OpenSim.Region.Physics.OdePlugin
         private int smallHashspaceLow = -4;
         private int smallHashspaceHigh = 66;
 
-        public float waterlevel = 0f;
+        private float waterlevel = 0f;
         private int framecount = 0;
         //private int m_returncollisions = 10;
 
@@ -309,23 +309,19 @@ namespace OpenSim.Region.Physics.OdePlugin
         public d.Vector3 xyz = new d.Vector3(128.1640f, 128.3079f, 25.7600f);
         public d.Vector3 hpr = new d.Vector3(125.5000f, -17.0000f, 0.0000f);
 
-        // TODO: unused: private uint heightmapWidth = m_regionWidth + 1;
-        // TODO: unused: private uint heightmapHeight = m_regionHeight + 1;
-        // TODO: unused: private uint heightmapWidthSamples;
-        // TODO: unused: private uint heightmapHeightSamples;
-
         private volatile int m_global_contactcount = 0;
 
         private Vector3 m_worldOffset = Vector3.Zero;
         public Vector2 WorldExtents = new Vector2((int)Constants.RegionSize, (int)Constants.RegionSize);
         private PhysicsScene m_parentScene = null;
-        public bool AllowUnderwaterPhysics = false;
 
         private ODERayCastRequestManager m_rayCastManager;
-        private bool IsLocked = false;
-        private List<PhysicsActor> RemoveQueue;
-        private Dictionary<PhysicsActor, bool> ActiveCollisionQueue = new Dictionary<PhysicsActor, bool>();
-        
+
+        public override bool UseUnderWaterPhysics
+        {
+            get { return false; }
+        }
+
         /// <summary>
         /// Initiailizes the scene
         /// Sets many properties that ODE requires to be stable
@@ -385,7 +381,6 @@ namespace OpenSim.Region.Physics.OdePlugin
         // Initialize the mesh plugin
         public override void Initialise(IMesher meshmerizer, IConfigSource config)
         {
-            RemoveQueue = new List<PhysicsActor>();
             mesher = meshmerizer;
             m_config = config;
             // Defaults
@@ -413,7 +408,6 @@ namespace OpenSim.Region.Physics.OdePlugin
                     gravityx = physicsconfig.GetFloat("world_gravityx", 0f);
                     gravityy = physicsconfig.GetFloat("world_gravityy", 0f);
                     gravityz = physicsconfig.GetFloat("world_gravityz", -9.8f);
-                    AllowUnderwaterPhysics = physicsconfig.GetBoolean("useunderwaterphysics", false);
 
                     worldHashspaceLow = physicsconfig.GetInt("world_hashspace_size_low", -4);
                     worldHashspaceHigh = physicsconfig.GetInt("world_hashspace_size_high", 128);
@@ -1662,33 +1656,19 @@ namespace OpenSim.Region.Physics.OdePlugin
 
         public void addCollisionEventReporting(PhysicsActor obj)
         {
-            if (IsLocked)
+            lock (_collisionEventPrim)
             {
-                ActiveCollisionQueue.Add(obj, true);
-            }
-            else
-            {
-                lock (_collisionEventPrim)
-                {
-                    if (!_collisionEventPrim.Contains(obj))
-                        _collisionEventPrim.Add(obj);
-                }
+                if (!_collisionEventPrim.Contains(obj))
+                    _collisionEventPrim.Add(obj);
             }
         }
 
         public void remCollisionEventReporting(PhysicsActor obj)
         {
-            if (IsLocked)
+            lock (_collisionEventPrim)
             {
-                ActiveCollisionQueue.Add(obj, false);
-            }
-            else
-            {
-                lock (_collisionEventPrim)
-                {
-                    if (!_collisionEventPrim.Contains(obj))
-                        _collisionEventPrim.Remove(obj);
-                }
+                if (!_collisionEventPrim.Contains(obj))
+                    _collisionEventPrim.Remove(obj);
             }
         }
 
@@ -2067,14 +2047,7 @@ namespace OpenSim.Region.Physics.OdePlugin
             //m_log.Debug("RemoveAllJointsConnectedToActor: start");
             if (actor.SOPName != null && joints_connecting_actor.ContainsKey(actor.SOPName) && joints_connecting_actor[actor.SOPName] != null)
             {
-
-                List<PhysicsJoint> jointsToRemove = new List<PhysicsJoint>();
-                //TODO: merge these 2 loops (originally it was needed to avoid altering a list being iterated over, but it is no longer needed due to the joint request queue mechanism)
                 foreach (PhysicsJoint j in joints_connecting_actor[actor.SOPName])
-                {
-                    jointsToRemove.Add(j);
-                }
-                foreach (PhysicsJoint j in jointsToRemove)
                 {
                     //m_log.Debug("RemoveAllJointsConnectedToActor: about to request deletion of " + j.ObjectNameInScene);
                     RequestJointDeletion(j.ObjectNameInScene);
@@ -2162,21 +2135,13 @@ namespace OpenSim.Region.Physics.OdePlugin
         {
             if (prim is OdePrim)
             {
-                if (!IsLocked) //Fix a deadlock situation.. have we been locked by Simulate?
+                lock (OdeLock)
                 {
-                    lock (OdeLock)
-                    {
-                        OdePrim p = (OdePrim)prim;
+                    OdePrim p = (OdePrim) prim;
 
-                        p.setPrimForRemoval();
-                        AddPhysicsActorTaint(prim);
-                        //RemovePrimThreadLocked(p);
-                    }
-                }
-                else
-                {
-                    //Add the prim to a queue which will be removed when Simulate has finished what it's doing.
-                    RemoveQueue.Add(prim);
+                    p.setPrimForRemoval();
+                    AddPhysicsActorTaint(prim);
+                    //RemovePrimThreadLocked(p);
                 }
             }
         }
@@ -2711,7 +2676,6 @@ namespace OpenSim.Region.Physics.OdePlugin
                 CreateRequestedJoints(); // this must be outside of the lock (OdeLock) to avoid deadlocks
             }
 
-            IsLocked = true;
             lock (OdeLock)
             {
                 // Process 10 frames if the sim is running normal..
@@ -3136,8 +3100,8 @@ namespace OpenSim.Region.Physics.OdePlugin
                 //DumpJointInfo();
 
                 // Finished with all sim stepping. If requested, dump world state to file for debugging.
-                // TODO: This call to the export function is already inside lock (OdeLock) - but is an extra lock needed?
-                // TODO: This overwrites all dump files in-place. Should this be a growing logfile, or separate snapshots?
+                // TODO: This call to the export function is already inside lock (OdeLock) - but is an extra lock needed? 
+                // This overwrites all dump files in-place. Should this be a growing logfile, or separate snapshots?
                 if (physics_logging && (physics_logging_interval>0) && (framecount % physics_logging_interval == 0))
                 {
                     string fname = "state-" + world.ToString() + ".DIF"; // give each physics world a separate filename
@@ -3153,38 +3117,7 @@ namespace OpenSim.Region.Physics.OdePlugin
                     d.WorldExportDIF(world, fname, physics_logging_append_existing_logfile, prefix);
                 }
             }
-            IsLocked = false;
-            if (RemoveQueue.Count > 0)
-            {
-                do
-                {
-                    if (RemoveQueue[0] != null)
-                    {
-                        RemovePrimThreadLocked((OdePrim)RemoveQueue[0]);
-                    }
-                    RemoveQueue.RemoveAt(0);
-                }
-                while (RemoveQueue.Count > 0);
-            }
-            if (ActiveCollisionQueue.Count > 0)
-            {
-                foreach (PhysicsActor actor in ActiveCollisionQueue.Keys)
-                {
-                    if (ActiveCollisionQueue[actor])
-                    {
-                        //add
-                        if (_collisionEventPrim.Contains(actor))
-                            _collisionEventPrim.Add(actor);
-                    }
-                    else
-                    {
-                        //remove
-                        if (!_collisionEventPrim.Contains(actor))
-                            _collisionEventPrim.Remove(actor);
-                    }
-                }
-                ActiveCollisionQueue.Clear();
-            }
+
             return fps;
         }
 
@@ -3465,7 +3398,7 @@ namespace OpenSim.Region.Physics.OdePlugin
 
         #endregion
 
-        public override void SetTerrain(float[] heightMap)
+        public override void SetTerrain(float[] heightMap, double[,] normalHeightMap)
         {
             if (m_worldOffset != Vector3.Zero && m_parentScene != null)
             {
@@ -3518,7 +3451,7 @@ namespace OpenSim.Region.Physics.OdePlugin
 
             const float scale = 1.0f;
             const float offset = 0.0f;
-            const float thickness = 0.5f;
+            const float thickness = 0.2f;
             const int wrap = 0;
 
             int regionsize = (int) Constants.RegionSize + 2;
@@ -3933,5 +3866,16 @@ namespace OpenSim.Region.Physics.OdePlugin
             ds.SetViewpoint(ref xyz, ref hpr);
         }
 #endif
+
+        public override bool DisableCollisions
+        {
+            get
+            {
+                return false;
+            }
+            set
+            {
+            }
+        }
     }
 }

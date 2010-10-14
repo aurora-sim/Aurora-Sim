@@ -44,7 +44,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
         {
             get { return m_animations;  }
         }
-        protected AnimationSet m_animations = new AnimationSet();
+        protected AnimationSet m_animations = null;
 
         /// <value>
         /// The current movement animation
@@ -55,8 +55,11 @@ namespace OpenSim.Region.Framework.Scenes.Animation
         }
         protected string m_movementAnimation = "DEFAULT";
 
-        private int m_animTickFall;
-        private int m_animTickJump;
+        private float m_animTickFall;
+        private float m_animTickJump;
+        private float m_timesBeforeSlowFlyIsOff = 0;
+        private float m_animTickStandup = 0;
+        private float m_jumpZ = 0;
         
         /// <value>
         /// The scene presence that this animator applies to
@@ -66,6 +69,8 @@ namespace OpenSim.Region.Framework.Scenes.Animation
         public ScenePresenceAnimator(ScenePresence sp)
         {
             m_scenePresence = sp;
+            //This step makes sure that we don't waste almost 2.5! seconds on incoming agents
+            m_animations = new AnimationSet(sp.Scene.DefaultAnimations);
         }
         
         public void AddAnimation(UUID animID, UUID objectID)
@@ -128,10 +133,9 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             if (!m_scenePresence.IsChildAgent)
             {
                 if (m_animations.TrySetDefaultAnimation(
-                    anim, m_scenePresence.ControllingClient.NextAnimationSequenceNumber, m_scenePresence.UUID))
+                    anim, m_scenePresence.ControllingClient.NextAnimationSequenceNumber, UUID.Zero))
                 {
-                    // 16384 is CHANGED_ANIMATION
-                    m_scenePresence.SendScriptEventToAttachments("changed", new Object[] { (int)Changed.ANIMATION});
+                    m_scenePresence.SendScriptEventToAttachments("changed", new Object[] { Changed.ANIMATION });
                     SendAnimPack();
                 }
             }
@@ -142,8 +146,17 @@ namespace OpenSim.Region.Framework.Scenes.Animation
         /// </summary>
         public string GetMovementAnimation()
         {
+            const float SLOWFLY_DELAY = 25f;
             const float FALL_DELAY = 0.33f;
-            const float PREJUMP_DELAY = 0.25f;
+            const float STANDUP_TIME = 2f;
+            const float BRUSH_TIME = 3.5f;
+
+            const float SOFTLAND_FORCE = 10;
+            const float LAND_FORCE = 20f;
+
+
+            const float PREJUMP_DELAY = 0.35f;
+            const float JUMP_END = 1.750f;
 
             #region Inputs
             if (m_scenePresence.SitGround)
@@ -159,13 +172,13 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             Vector3 left = Vector3.Transform(Vector3.UnitY, rotMatrix);
 
             // Check control flags
-            bool heldForward = 
+            bool heldForward =
                 (((controlFlags & AgentManager.ControlFlags.AGENT_CONTROL_AT_POS) == AgentManager.ControlFlags.AGENT_CONTROL_AT_POS) || ((controlFlags & AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_AT_POS) == AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_AT_POS));
             bool heldBack = (controlFlags & AgentManager.ControlFlags.AGENT_CONTROL_AT_NEG) == AgentManager.ControlFlags.AGENT_CONTROL_AT_NEG;
             bool heldLeft = (controlFlags & AgentManager.ControlFlags.AGENT_CONTROL_LEFT_POS) == AgentManager.ControlFlags.AGENT_CONTROL_LEFT_POS;
             bool heldRight = (controlFlags & AgentManager.ControlFlags.AGENT_CONTROL_LEFT_NEG) == AgentManager.ControlFlags.AGENT_CONTROL_LEFT_NEG;
-            //bool heldTurnLeft = (controlFlags & AgentManager.ControlFlags.AGENT_CONTROL_TURN_LEFT) == AgentManager.ControlFlags.AGENT_CONTROL_TURN_LEFT;
-            //bool heldTurnRight = (controlFlags & AgentManager.ControlFlags.AGENT_CONTROL_TURN_RIGHT) == AgentManager.ControlFlags.AGENT_CONTROL_TURN_RIGHT;
+            bool heldTurnLeft = (controlFlags & AgentManager.ControlFlags.AGENT_CONTROL_TURN_LEFT) == AgentManager.ControlFlags.AGENT_CONTROL_TURN_LEFT;
+            bool heldTurnRight = (controlFlags & AgentManager.ControlFlags.AGENT_CONTROL_TURN_RIGHT) == AgentManager.ControlFlags.AGENT_CONTROL_TURN_RIGHT;
             bool heldUp = (controlFlags & AgentManager.ControlFlags.AGENT_CONTROL_UP_POS) == AgentManager.ControlFlags.AGENT_CONTROL_UP_POS;
             bool heldDown = (controlFlags & AgentManager.ControlFlags.AGENT_CONTROL_UP_NEG) == AgentManager.ControlFlags.AGENT_CONTROL_UP_NEG;
             //bool flying = (controlFlags & AgentManager.ControlFlags.AGENT_CONTROL_FLY) == AgentManager.ControlFlags.AGENT_CONTROL_FLY;
@@ -179,12 +192,44 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             if (heldRight) { move.X -= left.X; move.Y -= left.Y; }
             if (heldUp) { move.Z += 1; }
             if (heldDown) { move.Z -= 1; }
+            bool jumping = m_animTickJump != 0;
+            float fallVelocity = (actor != null) ? actor.Velocity.Z : 0.0f;
+
+            if (heldTurnLeft && !heldForward && !heldBack && !jumping && actor != null && !actor.Flying && move.Z == 0 && fallVelocity == 0.0f)
+            {
+                return "TURNLEFT";
+            }
+            if (heldTurnRight && !heldForward && !heldBack && !jumping && actor != null && !actor.Flying && move.Z == 0 && fallVelocity == 0.0f)
+            {
+                return "TURNRIGHT";
+            }
 
             // Is the avatar trying to move?
-//            bool moving = (move != Vector3.Zero);
-            bool jumping = m_animTickJump != 0;
+            //            bool moving = (move != Vector3.Zero);
 
             #endregion Inputs
+
+            #region Standup
+
+            float standupElapsed = (float)(Environment.TickCount - m_animTickStandup) / 1000f;
+            if (standupElapsed < STANDUP_TIME)
+            {
+                // Falling long enough to trigger the animation
+                m_scenePresence.AllowMovement = false;
+                return "STANDUP";
+            }
+            else if (standupElapsed < BRUSH_TIME)
+            {
+                m_scenePresence.AllowMovement = false;
+                return "BRUSH";
+            }
+            else
+            {
+                m_animTickStandup = 0;
+                m_scenePresence.AllowMovement = true;
+            }
+
+            #endregion Standup
 
             #region Flying
 
@@ -192,95 +237,265 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             {
                 m_animTickFall = 0;
                 m_animTickJump = 0;
-
                 if (move.X != 0f || move.Y != 0f)
                 {
-                    return (m_scenePresence.Scene.m_useFlySlow ? "FLYSLOW" : "FLY");
+                    if (move.Z == 0)
+                    {
+                        if (m_scenePresence.Scene.PhysicsScene.UseUnderWaterPhysics &&
+                            actor.Position.Z < m_scenePresence.Scene.RegionInfo.RegionSettings.WaterHeight)
+                        {
+                            return "SWIM_FORWARD";
+                        }
+                        else
+                        {
+                            if (m_timesBeforeSlowFlyIsOff < SLOWFLY_DELAY)
+                            {
+                                m_timesBeforeSlowFlyIsOff++;
+                                return "FLYSLOW";
+                            }
+                            else
+                                return "FLY";
+                        }
+                    }
+                    else if (move.Z > 0)
+                    {
+                        if (m_scenePresence.Scene.PhysicsScene.UseUnderWaterPhysics &&
+                            actor.Position.Z < m_scenePresence.Scene.RegionInfo.RegionSettings.WaterHeight)
+                            return "SWIM_UP";
+                        else
+                            return "FLYSLOW";
+                    }
+                    if (m_scenePresence.Scene.PhysicsScene.UseUnderWaterPhysics &&
+                            actor.Position.Z < m_scenePresence.Scene.RegionInfo.RegionSettings.WaterHeight)
+                        return "SWIM_DOWN";
+                    else
+                        return "FLY";
                 }
                 else if (move.Z > 0f)
                 {
-                    return "HOVER_UP";
+                    //This is for the slow fly timer
+                    m_timesBeforeSlowFlyIsOff = 0;
+                    if (m_scenePresence.Scene.PhysicsScene.UseUnderWaterPhysics &&
+                            actor.Position.Z < m_scenePresence.Scene.RegionInfo.RegionSettings.WaterHeight)
+                        return "SWIM_UP";
+                    else
+                        return "HOVER_UP";
                 }
                 else if (move.Z < 0f)
                 {
-                    if (actor != null && actor.IsColliding)
-                        return "LAND";
+                    //This is for the slow fly timer
+                    m_timesBeforeSlowFlyIsOff = 0;
+                    if (m_scenePresence.Scene.PhysicsScene.UseUnderWaterPhysics &&
+                            actor.Position.Z < m_scenePresence.Scene.RegionInfo.RegionSettings.WaterHeight)
+                        return "SWIM_DOWN";
                     else
-                        return "HOVER_DOWN";
+                    {
+                        float groundHeight = m_scenePresence.Scene.GetGroundHeight(m_scenePresence.AbsolutePosition.X, m_scenePresence.AbsolutePosition.Y);
+                        if (actor != null && (m_scenePresence.AbsolutePosition.Z - groundHeight) < 2)
+                            return "LAND";
+                        else
+                            return "HOVER_DOWN";
+                    }
                 }
                 else
                 {
-                    return "HOVER";
+                    //This is for the slow fly timer
+                    m_timesBeforeSlowFlyIsOff = 0;
+                    if (m_scenePresence.Scene.PhysicsScene.UseUnderWaterPhysics &&
+                            actor.Position.Z < m_scenePresence.Scene.RegionInfo.RegionSettings.WaterHeight)
+                        return "SWIM_HOVER";
+                    else
+                        return "HOVER";
                 }
             }
 
+            m_timesBeforeSlowFlyIsOff = 0;
             #endregion Flying
 
             #region Falling/Floating/Landing
 
-            if (actor == null || !actor.IsColliding)
+            if (actor == null && !jumping && move.Z == 0 || (actor != null && (!actor.CollidingObj || !actor.CollidingGround) && m_scenePresence.Velocity.Z < -2))
             {
-                float fallElapsed = (float)(Environment.TickCount - m_animTickFall) / 1000f;
-                float fallVelocity = (actor != null) ? actor.Velocity.Z : 0.0f;
-
+                /*float fallElapsed = (float)(Environment.TickCount - m_animTickFall) / 1000f;
                 if (m_animTickFall == 0 || (fallElapsed > FALL_DELAY && fallVelocity >= 0.0f))
                 {
                     // Just started falling
-                    m_animTickFall = Environment.TickCount;
-                }
+                    m_animTickFall = Environment.TickCount;*/
+                    return "FALLDOWN";
+                /*}
                 else if (!jumping && fallElapsed > FALL_DELAY)
                 {
                     // Falling long enough to trigger the animation
                     return "FALLDOWN";
                 }
 
-                return m_movementAnimation;
+                return m_movementAnimation;*/
             }
 
             #endregion Falling/Floating/Landing
 
             #region Ground Movement
 
+            //This needs to be in front of landing, otherwise you get odd landing effects sometimes when one jumps
+            // -- Revolution
+            if (move.Z > 0f || m_animTickJump != 0)
+            {
+                if (m_scenePresence.Scene.m_usePreJump)
+                {
+                    //This is to check to make sure they arn't trying to fly up by holding down jump
+                    if ((m_scenePresence.AgentControlFlags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY) == 0)
+                    {
+                        // Jumping
+                        float jumpChange = (((float)Environment.TickCount) - m_animTickJump) / 1000;
+                        if (!jumping || (jumpChange < PREJUMP_DELAY))
+                        {
+                            m_scenePresence.AllowMovement = false;
+                            // Begin prejump
+                            if (m_animTickJump == 0)
+                                m_animTickJump = Environment.TickCount;
+                            return "PREJUMP";
+                        }
+                        else if (m_animTickJump != 0)
+                        {
+                            if (m_scenePresence.PreJumpForce.Z != 0)
+                            {
+                                m_scenePresence.PreJumpForce.X /= 2f;
+                                m_scenePresence.PreJumpForce.Y /= 2f;
+                                m_scenePresence.PreJumpForce.Z /= 1.75f;
+                                m_scenePresence.m_velocityIsDecaying = false;
+
+                                m_scenePresence.m_forceToApply = m_scenePresence.PreJumpForce;
+
+                                m_scenePresence.PreJumpForce = new Vector3(
+                                    m_scenePresence.PreJumpForce.X > 0 ? 3 : (m_scenePresence.PreJumpForce.X < 0 ? -3 : 0),
+                                    m_scenePresence.PreJumpForce.Y > 0 ? 3 : (m_scenePresence.PreJumpForce.Y < 0 ? -3 : 0),
+                                    0);
+
+                                m_jumpZ = 0;
+                                return "JUMP";
+                            }
+
+                            if (jumpChange >= 3) //Kill this if it takes too long
+                            {
+                                m_scenePresence.m_forceToApply = Vector3.Zero;
+                                m_animTickJump = 0;
+                                m_scenePresence.AllowMovement = true;
+                                return "STAND";
+                            }
+
+                            //Check #1: Going up.
+                            if (m_jumpZ == 0 &&
+                                m_scenePresence.Velocity.Z >= -0.3)
+                            {
+                                //This stops from double jump when you jump straight up and doesn't break jumping with X and Y velocity
+                                //This particular check makes sure that we do not break jumping straight up
+                                if (!m_scenePresence.m_forceToApply.HasValue ||
+                                     (m_scenePresence.m_forceToApply.HasValue &&
+                                     m_scenePresence.m_forceToApply.Value.X != 0 &&
+                                     m_scenePresence.m_forceToApply.Value.Y != 0))
+                                    m_scenePresence.m_forceToApply = m_scenePresence.PreJumpForce;
+
+                                m_scenePresence.AllowMovement = false;
+                                return "JUMP";
+                            }
+                            //Check #2: Coming down
+                            else if (m_jumpZ <= 1 &&
+                                m_scenePresence.Velocity.Z < 0)
+                            {
+                                m_jumpZ = 1;
+                                //This stops from double jump when you jump straight up and doesn't break jumping with X and Y velocity
+                                //This particular check makes sure that we do not break jumping straight up
+                                if (!m_scenePresence.m_forceToApply.HasValue ||
+                                     (m_scenePresence.m_forceToApply.HasValue &&
+                                     m_scenePresence.m_forceToApply.Value.X != 0 &&
+                                     m_scenePresence.m_forceToApply.Value.Y != 0))
+                                    m_scenePresence.m_forceToApply = m_scenePresence.PreJumpForce;
+
+                                m_scenePresence.AllowMovement = false;
+                                return "JUMP";
+                            }
+                            else
+                            {
+                                m_scenePresence.m_forceToApply = Vector3.Zero;
+                                m_animTickJump = 0;
+                                m_scenePresence.AllowMovement = true;
+                                return "STAND";
+                            }
+                        }
+                        else
+                        {
+                            m_animTickJump = 0;
+                            m_scenePresence.AllowMovement = true;
+                        }
+                    }
+                }
+                else
+                {
+                    // Jumping
+                    float jumpChange = (((float)Environment.TickCount) - m_animTickJump) / 1000;
+                    if (!jumping)
+                    {
+                        // Begin prejump
+                        m_animTickJump = Environment.TickCount;
+                        return "JUMP";
+                    }
+                    else if (m_animTickJump != 0)
+                    {
+                        if (jumpChange < JUMP_END)
+                        {
+                            return "JUMP";
+                        }
+                        m_animTickJump = 0;
+                        return "STAND";
+                    }
+                }
+            }
+
+            m_animTickJump = 0;
             if (m_movementAnimation == "FALLDOWN")
             {
-                m_animTickFall = Environment.TickCount;
+                //Experimentally found variables, but it makes soft landings look good.
+                // -- Revolution
+                //Note: we use m_scenePresence.LastVelocity for a reason! The PhysActor and SP Velocity are both cleared before this is called.
+                float Z = Math.Abs(m_scenePresence.LastVelocity.Z);
+                if (Z < SOFTLAND_FORCE)
+                {
+                    m_animTickFall = Environment.TickCount;
 
-                // TODO: SOFT_LAND support
-                return "LAND";
+                    return "SOFT_LAND";
+                }
+                else if (Z < LAND_FORCE)
+                {
+                    m_animTickFall = Environment.TickCount;
+
+                    return "LAND";
+                }
+                else
+                {
+                    if (m_scenePresence.Scene.m_useSplatAnimation)
+                    {
+                        m_animTickStandup = Environment.TickCount;
+                        return "STANDUP";
+                    }
+                    else
+                        return "LAND";
+                }
             }
             else if (m_movementAnimation == "LAND")
             {
                 float landElapsed = (float)(Environment.TickCount - m_animTickFall) / 1000f;
                 if ((m_animTickFall != 0) && (landElapsed <= FALL_DELAY))
-                    return "LAND";
+                {
+                    //See note above about soft landings
+                    if (actor.Velocity.Z < SOFTLAND_FORCE)
+                        return "LAND";
+                    return "SOFT_LAND";
+                }
             }
 
             m_animTickFall = 0;
 
-            if (move.Z > 0f)
-            {
-                // Jumping
-                if (!jumping)
-                {
-                    // Begin prejump
-                    m_animTickJump = Environment.TickCount;
-                    return "PREJUMP";
-                }
-                else if (Environment.TickCount - m_animTickJump > PREJUMP_DELAY * 1000.0f)
-                {
-                    // Start actual jump
-                    if (m_animTickJump == -1)
-                    {
-                        // Already jumping! End the current jump
-                        m_animTickJump = 0;
-                        return "JUMP";
-                    }
-
-                    m_animTickJump = -1;
-                    return "JUMP";
-                }
-            }
-            else
+            if (move.Z <= 0f)
             {
                 // Not jumping
                 m_animTickJump = 0;
@@ -301,7 +516,16 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                     if (move.Z < 0f)
                         return "CROUCH";
                     else
-                        return "STAND";
+                        if (m_scenePresence.Scene.m_UseNewStyleMovement &&
+                            actor.Velocity.X != 0 && actor.Velocity.Y != 0)
+                        {
+                            if (m_scenePresence.SetAlwaysRun)
+                                return "RUN";
+                            else
+                                return "WALK";
+                        }
+                        else
+                            return "STAND";
                 }
             }
 
@@ -317,15 +541,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
         {
             m_movementAnimation = GetMovementAnimation();
 
-            if (m_movementAnimation == "PREJUMP" && !m_scenePresence.Scene.m_usePreJump)
-            {
-                // This was the previous behavior before PREJUMP
-                TrySetMovementAnimation("JUMP");
-            }
-            else
-            {
-                TrySetMovementAnimation(m_movementAnimation);
-            }
+            TrySetMovementAnimation(m_movementAnimation);
         }
 
         public UUID[] GetAnimationArray()

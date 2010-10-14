@@ -250,6 +250,11 @@ namespace OpenSim.Services.Connectors.SimianGrid
             return presences.ToArray();
         }
 
+        public string[] GetAgentsLocations(string[] userIDs)
+        {
+            return new string[0];
+        }
+
         #endregion IPresenceService
 
         #region IGridUserService

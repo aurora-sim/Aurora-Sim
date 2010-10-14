@@ -37,7 +37,7 @@ namespace OpenSim.Framework
         UUID CreateGroup(UUID RequestingAgentID, string name, string charter, bool showInList, UUID insigniaID, int membershipFee, bool openEnrollment, bool allowPublish, bool maturePublish, UUID founderID);
         void UpdateGroup(UUID RequestingAgentID, UUID groupID, string charter, bool showInList, UUID insigniaID, int membershipFee, bool openEnrollment, bool allowPublish, bool maturePublish);
         GroupRecord GetGroupRecord(UUID RequestingAgentID, UUID GroupID, string GroupName);
-        List<DirGroupsReplyData> FindGroups(UUID RequestingAgentID, string search, int queryStart);
+        List<DirGroupsReplyData> FindGroups(UUID RequestingAgentID, string search, int queryStart, uint queryFlags);
         List<GroupMembersData> GetGroupMembers(UUID RequestingAgentID, UUID GroupID);
 
         void AddGroupRole(UUID RequestingAgentID, UUID groupID, UUID roleID, string name, string description, string title, ulong powers);
@@ -47,9 +47,9 @@ namespace OpenSim.Framework
         List<GroupRoleMembersData> GetGroupRoleMembers(UUID RequestingAgentID, UUID GroupID);
 
         void AddAgentToGroup(UUID RequestingAgentID, UUID AgentID, UUID GroupID, UUID RoleID);
-        void RemoveAgentFromGroup(UUID RequestingAgentID, UUID AgentID, UUID GroupID);
+        bool RemoveAgentFromGroup(UUID RequestingAgentID, UUID AgentID, UUID GroupID);
 
-        void AddAgentToGroupInvite(UUID RequestingAgentID, UUID inviteID, UUID groupID, UUID roleID, UUID agentID);
+        void AddAgentToGroupInvite(UUID RequestingAgentID, UUID inviteID, UUID groupID, UUID roleID, UUID agentIDFromAgentName, string FromAgentName);
         GroupInviteInfo GetAgentToGroupInvite(UUID RequestingAgentID, UUID inviteID);
         void RemoveAgentToGroupInvite(UUID RequestingAgentID, UUID inviteID);
 
@@ -66,7 +66,7 @@ namespace OpenSim.Framework
         GroupMembershipData GetAgentGroupMembership(UUID RequestingAgentID, UUID AgentID, UUID GroupID);
         List<GroupMembershipData> GetAgentGroupMemberships(UUID RequestingAgentID, UUID AgentID);
 
-        void AddGroupNotice(UUID RequestingAgentID, UUID groupID, UUID noticeID, string fromName, string subject, string message, byte[] binaryBucket);
+        void AddGroupNotice(UUID RequestingAgentID, UUID groupID, UUID noticeID, string fromName, string subject, string message, UUID ItemID, int AssetType, string ItemName);
         GroupNoticeInfo GetGroupNotice(UUID RequestingAgentID, UUID noticeID);
         List<GroupNoticeData> GetGroupNotices(UUID RequestingAgentID, UUID GroupID);
 
@@ -75,6 +75,7 @@ namespace OpenSim.Framework
         bool hasAgentDroppedGroupChatSession(UUID agentID, UUID groupID);
         void AgentDroppedFromGroupChatSession(UUID agentID, UUID groupID);
         void AgentInvitedToGroupChatSession(UUID agentID, UUID groupID);
+        List<GroupInviteInfo> GetGroupInvites(UUID requestingAgentID);
     }
 
     public class GroupInviteInfo
@@ -83,6 +84,31 @@ namespace OpenSim.Framework
         public UUID RoleID   = UUID.Zero;
         public UUID AgentID  = UUID.Zero;
         public UUID InviteID = UUID.Zero;
+        public string FromAgentName = "";
+
+        public GroupInviteInfo()
+        {
+        }
+
+        public GroupInviteInfo(Dictionary<string, object> values)
+        {
+            GroupID = UUID.Parse(values["GroupID"].ToString());
+            RoleID = UUID.Parse(values["RoleID"].ToString());
+            AgentID = UUID.Parse(values["AgentID"].ToString());
+            InviteID = UUID.Parse(values["InviteID"].ToString());
+            FromAgentName = values["FromAgentName"].ToString();
+        }
+
+        public Dictionary<string, object> ToKeyValuePairs()
+        {
+            Dictionary<string, object> values = new Dictionary<string, object>();
+            values["GroupID"] = GroupID;
+            values["RoleID"] = RoleID;
+            values["AgentID"] = AgentID;
+            values["InviteID"] = InviteID;
+            values["FromAgentName"] = FromAgentName;
+            return values;
+        }
     }
 
     public class GroupNoticeInfo
@@ -91,5 +117,27 @@ namespace OpenSim.Framework
         public UUID GroupID = UUID.Zero;
         public string Message = string.Empty;
         public byte[] BinaryBucket = new byte[0];
+
+        public GroupNoticeInfo()
+        {
+        }
+
+        public GroupNoticeInfo(Dictionary<string, object> values)
+        {
+            noticeData = new GroupNoticeData(values["noticeData"] as Dictionary<string, object>);
+            GroupID = UUID.Parse(values["GroupID"].ToString());
+            Message = values["Message"].ToString();
+            BinaryBucket = Utils.HexStringToBytes(values["BinaryBucket"].ToString(), true);
+        }
+        
+        public Dictionary<string, object> ToKeyValuePairs()
+        {
+            Dictionary<string, object> values = new Dictionary<string, object>();
+            values["noticeData"] = noticeData.ToKeyValuePairs();
+            values["GroupID"] = GroupID;
+            values["Message"] = Message;
+            values["BinaryBucket"] = Utils.BytesToHexString(BinaryBucket, "BinaryBucket");
+            return values;
+        }
     }
 }

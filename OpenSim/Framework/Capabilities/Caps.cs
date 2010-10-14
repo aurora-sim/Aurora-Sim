@@ -36,17 +36,13 @@ using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
 
-// using OpenSim.Region.Framework.Interfaces;
-
 namespace OpenSim.Framework.Capabilities
 {
     public delegate void UpLoadedAsset(
         string assetName, string description, UUID assetID, UUID inventoryItem, UUID parentFolder,
         byte[] data, string inventoryType, string assetType);
 
-    public delegate void UploadedBakedTexture(UUID assetID, byte[] data);
-
-    public delegate UUID UpdateItem(UUID itemID, byte[] data);
+    public delegate string UpdateItem(UUID itemID, byte[] data);
 
     public delegate void UpdateTaskScript(UUID itemID, UUID primID, bool isScriptRunning, byte[] data, ref ArrayList errors);
 
@@ -54,14 +50,15 @@ namespace OpenSim.Framework.Capabilities
 
     public delegate void NewAsset(AssetBase asset);
 
-    public delegate UUID ItemUpdatedCallback(UUID userID, UUID itemID, byte[] data);
+    public delegate void UploadedBakedTexture(UUID assetID, byte[] data);
+
+    public delegate string ItemUpdatedCallback(UUID userID, UUID itemID, byte[] data);
 
     public delegate ArrayList TaskScriptUpdatedCallback(UUID userID, UUID itemID, UUID primID,
                                                    bool isScriptRunning, byte[] data);
 
     public delegate InventoryCollection FetchInventoryDescendentsCAPS(UUID agentID, UUID folderID, UUID ownerID,
                                                                           bool fetchFolders, bool fetchItems, int sortOrder, out int version);
-
     /// <summary>
     /// XXX Probably not a particularly nice way of allow us to get the scene presence from the scene (chiefly so that
     /// we can popup a message on the user's client if the inventory service has permanently failed).  But I didn't want
@@ -91,7 +88,8 @@ namespace OpenSim.Framework.Capabilities
         //private static readonly string m_requestTexture = "0003/";
         private static readonly string m_notecardUpdatePath = "0004/";
         private static readonly string m_notecardTaskUpdatePath = "0005/";
-//        private static readonly string m_fetchInventoryPath = "0006/";
+        //private static readonly string m_fetchInventoryPath = "0006/";
+
 
         // The following entries are in a module, however, they are also here so that we don't re-assign
         // the path to another cap by mistake.
@@ -99,8 +97,8 @@ namespace OpenSim.Framework.Capabilities
         // private static readonly string m_provisionVoiceAccountRequestPath = "0008/";// This is in a module.
 
         // private static readonly string m_remoteParcelRequestPath = "0009/";// This is in the LandManagementModule.
-        private static readonly string m_uploadBakedTexturePath = "0010/";// This is in the LandManagementModule.
 
+        private static readonly string m_uploadBakedTexturePath = "0010/";
         //private string eventQueue = "0100/";
         private IScene m_Scene;
         private IHttpServer m_httpListener;
@@ -108,7 +106,6 @@ namespace OpenSim.Framework.Capabilities
         private IAssetService m_assetCache;
         private int m_eventQueueCount = 1;
         private Queue<string> m_capsEventQueue = new Queue<string>();
-        private bool m_dumpAssetsToFile;
         private string m_regionName;
         private object m_fetchLock = new Object();
 
@@ -135,7 +132,7 @@ namespace OpenSim.Framework.Capabilities
         public GetClientDelegate GetClient = null;
 
         public Caps(IScene scene, IAssetService assetCache, IHttpServer httpServer, string httpListen, uint httpPort, string capsPath,
-                    UUID agent, bool dumpAssetsToFile, string regionName)
+                    UUID agent, string regionName)
         {
             m_Scene = scene;
             m_assetCache = assetCache;
@@ -145,7 +142,7 @@ namespace OpenSim.Framework.Capabilities
 
             m_httpListenPort = httpPort;
 
-            if (httpServer != null && httpServer.UseSSL)
+            if (httpServer.UseSSL)
             {
                 m_httpListenPort = httpServer.SSLPort;
                 httpListen = httpServer.SSLCommonName;
@@ -153,8 +150,7 @@ namespace OpenSim.Framework.Capabilities
             }
 
             m_agentID = agent;
-            m_dumpAssetsToFile = dumpAssetsToFile;
-            m_capsHandlers = new CapsHandlers(httpServer, httpListen, httpPort, (httpServer == null) ? false : httpServer.UseSSL);
+            m_capsHandlers = new CapsHandlers(httpServer, httpListen, httpPort, httpServer.UseSSL);
             m_regionName = regionName;
         }
 
@@ -178,18 +174,13 @@ namespace OpenSim.Framework.Capabilities
             {
                 // the root of all evil
                 m_capsHandlers["SEED"] = new RestStreamHandler("POST", capsBase + m_requestPath, CapsRequest);
-                m_log.DebugFormat(
-                    "[CAPS]: Registered seed capability {0} for {1}", capsBase + m_requestPath, m_agentID);
 
-                //m_capsHandlers["MapLayer"] =
-                //    new LLSDStreamhandler<OSDMapRequest, OSDMapLayerResponse>("POST",
-                //                                                                capsBase + m_mapLayerPath,
-                //                                                                GetMapLayer);
+                m_capsHandlers["UploadBakedTexture"] =
+                    new RestStreamHandler("POST", capsBase + m_uploadBakedTexturePath, UploadBakedTexture);
+
                 m_capsHandlers["UpdateScriptTaskInventory"] =
                     new RestStreamHandler("POST", capsBase + m_notecardTaskUpdatePath, ScriptTaskInventory);
                 m_capsHandlers["UpdateScriptTask"] = m_capsHandlers["UpdateScriptTaskInventory"];
-                m_capsHandlers["UploadBakedTexture"] =
-                    new RestStreamHandler("POST", capsBase + m_uploadBakedTexturePath, UploadBakedTexture);
 
             }
             catch (Exception e)
@@ -209,13 +200,19 @@ namespace OpenSim.Framework.Capabilities
                                                                                            NewAgentInventoryRequest);
                 m_capsHandlers["UpdateNotecardAgentInventory"] =
                     new RestStreamHandler("POST", capsBase + m_notecardUpdatePath, NoteCardAgentInventory);
+                
                 m_capsHandlers["UpdateScriptAgentInventory"] = m_capsHandlers["UpdateNotecardAgentInventory"];
                 m_capsHandlers["UpdateScriptAgent"] = m_capsHandlers["UpdateScriptAgentInventory"];
                 
+                //
+                //START: MOVED TO THE CAPS SERVICE
+                //
+
                 // As of RC 1.22.9 of the Linden client this is
                 // supported
 
-                //m_capsHandlers["WebFetchInventoryDescendents"] =new RestStreamHandler("POST", capsBase + m_fetchInventoryPath, FetchInventoryDescendentsRequest);
+                //m_capsHandlers["WebFetchInventoryDescendents"] =
+                //    new RestStreamHandler("POST", capsBase + m_fetchInventoryPath, FetchInventoryDescendentsRequest);
 
                 // justincc: I've disabled the CAPS service for now to fix problems with selecting textures, and
                 // subsequent inventory breakage, in the edit object pane (such as mantis 1085).  This requires
@@ -227,16 +224,19 @@ namespace OpenSim.Framework.Capabilities
                 // This is very probably just a temporary measure - once the CAPS service appears again on the Linden grid
                 // we will be
                 // able to get the data we need to implement the necessary part of the protocol to fix the issue above.
-                //                m_capsHandlers["FetchInventoryDescendents"] =
-                //                    new RestStreamHandler("POST", capsBase + m_fetchInventoryPath, FetchInventoryRequest);
 
-                // m_capsHandlers["FetchInventoryDescendents"] =
-                //     new LLSDStreamhandler<LLSDFetchInventoryDescendents, LLSDInventoryDescendents>("POST",
-                //                                                                                    capsBase + m_fetchInventory,
-                //                                                                                    FetchInventory));
-                // m_capsHandlers["RequestTextureDownload"] = new RestStreamHandler("POST",
-                //                                                                  capsBase + m_requestTexture,
-                //                                                                  RequestTexture);
+                //Reenabled
+                //m_capsHandlers["FetchInventoryDescendents"] =
+                //       new RestStreamHandler("POST", capsBase + m_fetchInventoryPath, FetchInventoryRequest);
+
+                 //m_capsHandlers["RequestTextureDownload"] = new RestStreamHandler("POST",
+                 //                                                                 capsBase + m_requestTexture,
+                 //                                                                 RequestTexture);
+
+
+                //
+                //END: MOVED TO THE CAPS SERVICE
+                //
             }
             catch (Exception e)
             {
@@ -252,7 +252,6 @@ namespace OpenSim.Framework.Capabilities
         public void RegisterHandler(string capName, IRequestHandler handler)
         {
             m_capsHandlers[capName] = handler;
-            //m_log.DebugFormat("[CAPS]: Registering handler for \"{0}\": path {1}", capName, handler.Path);
         }
 
         /// <summary>
@@ -285,7 +284,7 @@ namespace OpenSim.Framework.Capabilities
         public string CapsRequest(string request, string path, string param,
                                   OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
-            m_log.Debug("[CAPS]: Seed Caps Request in region: " + m_regionName);
+            //m_log.Debug("[CAPS]: Seed Caps Request in region: " + m_regionName);
 
             if (!m_Scene.CheckClient(m_agentID, httpRequest.RemoteIPEndPoint))
             {
@@ -298,286 +297,6 @@ namespace OpenSim.Framework.Capabilities
             //m_log.DebugFormat("[CAPS] CapsRequest {0}", result);
 
             return result;
-        }
-
-        // FIXME: these all should probably go into the respective region
-        // modules
-
-        /// <summary>
-        /// Processes a fetch inventory request and sends the reply
-
-        /// </summary>
-        /// <param name="request"></param>
-        /// <param name="path"></param>
-        /// <param name="param"></param>
-        /// <returns></returns>
-        // Request is like:
-        //<llsd>
-        //   <map><key>folders</key>
-        //       <array>
-        //            <map>
-        //                <key>fetch-folders</key><boolean>1</boolean><key>fetch-items</key><boolean>1</boolean><key>folder-id</key><uuid>8e1e3a30-b9bf-11dc-95ff-0800200c9a66</uuid><key>owner-id</key><uuid>11111111-1111-0000-0000-000100bba000</uuid><key>sort-order</key><integer>1</integer>
-        //            </map>
-        //       </array>
-        //   </map>
-        //</llsd>
-        //
-        // multiple fetch-folder maps are allowed within the larger folders map.
-        public string FetchInventoryRequest(string request, string path, string param)
-        {
-            // string unmodifiedRequest = request.ToString();
-
-            //m_log.DebugFormat("[AGENT INVENTORY]: Received CAPS fetch inventory request {0}", unmodifiedRequest);
-            m_log.Debug("[CAPS]: Inventory Request in region: " + m_regionName);
-
-            Hashtable hash = new Hashtable();
-            try
-            {
-                hash = (Hashtable)LLSD.LLSDDeserialize(Utils.StringToBytes(request));
-            }
-            catch (LLSD.LLSDParseException pe)
-            {
-                m_log.Error("[AGENT INVENTORY]: Fetch error: " + pe.Message);
-                m_log.Error("Request: " + request.ToString());
-            }
-
-            ArrayList foldersrequested = (ArrayList)hash["folders"];
-
-            string response = "";
-
-            for (int i = 0; i < foldersrequested.Count; i++)
-            {
-                string inventoryitemstr = "";
-                Hashtable inventoryhash = (Hashtable)foldersrequested[i];
-
-                LLSDFetchInventoryDescendents llsdRequest = new LLSDFetchInventoryDescendents();
-                LLSDHelpers.DeserialiseOSDMap(inventoryhash, llsdRequest);
-                LLSDInventoryDescendents reply = FetchInventoryReply(llsdRequest);
-
-                inventoryitemstr = LLSDHelpers.SerialiseLLSDReply(reply);
-                inventoryitemstr = inventoryitemstr.Replace("<llsd><map><key>folders</key><array>", "");
-                inventoryitemstr = inventoryitemstr.Replace("</array></map></llsd>", "");
-
-                response += inventoryitemstr;
-            }
-
-            if (response.Length == 0)
-            {
-                // Ter-guess: If requests fail a lot, the client seems to stop requesting descendants.
-                // Therefore, I'm concluding that the client only has so many threads available to do requests
-                // and when a thread stalls..   is stays stalled.
-                // Therefore we need to return something valid
-                response = "<llsd><map><key>folders</key><array /></map></llsd>";
-            }
-            else
-            {
-                response = "<llsd><map><key>folders</key><array>" + response + "</array></map></llsd>";
-            }
-
-            //m_log.DebugFormat("[AGENT INVENTORY]: Replying to CAPS fetch inventory request with following xml");
-            //m_log.Debug(Util.GetFormattedXml(response));
-
-            return response;
-        }
-
-        public string FetchInventoryDescendentsRequest(string request, string path, string param,OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-        {
-            // nasty temporary hack here, the linden client falsely
-            // identifies the uuid 00000000-0000-0000-0000-000000000000
-            // as a string which breaks us
-            //
-            // correctly mark it as a uuid
-            //
-            request = request.Replace("<string>00000000-0000-0000-0000-000000000000</string>", "<uuid>00000000-0000-0000-0000-000000000000</uuid>");
-            
-            // another hack <integer>1</integer> results in a
-            // System.ArgumentException: Object type System.Int32 cannot
-            // be converted to target type: System.Boolean
-            //
-            request = request.Replace("<key>fetch_folders</key><integer>0</integer>", "<key>fetch_folders</key><boolean>0</boolean>");
-            request = request.Replace("<key>fetch_folders</key><integer>1</integer>", "<key>fetch_folders</key><boolean>1</boolean>");
-
-            Hashtable hash = new Hashtable();
-            try
-            {
-                hash = (Hashtable)LLSD.LLSDDeserialize(Utils.StringToBytes(request));
-            }
-            catch (LLSD.LLSDParseException pe)
-            {
-                m_log.Error("[AGENT INVENTORY]: Fetch error: " + pe.Message);
-                m_log.Error("Request: " + request.ToString());
-            }
-
-            ArrayList foldersrequested = (ArrayList)hash["folders"];
-
-            string response = "";
-            lock (m_fetchLock)
-            {
-                for (int i = 0; i < foldersrequested.Count; i++)
-                {
-                    string inventoryitemstr = "";
-                    Hashtable inventoryhash = (Hashtable)foldersrequested[i];
-
-                    LLSDFetchInventoryDescendents llsdRequest = new LLSDFetchInventoryDescendents();
-                    
-                    try{
-                        LLSDHelpers.DeserialiseOSDMap(inventoryhash, llsdRequest);
-                    }
-                    catch(Exception e)
-                    {
-                        m_log.Debug("[CAPS]: caught exception doing OSD deserialize" + e);
-                    }
-                    LLSDInventoryDescendents reply = FetchInventoryReply(llsdRequest);
-
-                    inventoryitemstr = LLSDHelpers.SerialiseLLSDReply(reply);
-                    inventoryitemstr = inventoryitemstr.Replace("<llsd><map><key>folders</key><array>", "");
-                    inventoryitemstr = inventoryitemstr.Replace("</array></map></llsd>", "");
-
-                    response += inventoryitemstr;
-                }
-                
-                
-                if (response.Length == 0)
-                {
-                    // Ter-guess: If requests fail a lot, the client seems to stop requesting descendants.
-                    // Therefore, I'm concluding that the client only has so many threads available to do requests
-                    // and when a thread stalls..   is stays stalled.
-                    // Therefore we need to return something valid
-                    response = "<llsd><map><key>folders</key><array /></map></llsd>";
-                }
-                else
-                {
-                    response = "<llsd><map><key>folders</key><array>" + response + "</array></map></llsd>";
-                }
-
-                //m_log.DebugFormat("[CAPS]: Replying to CAPS fetch inventory request with following xml");
-                //m_log.Debug("[CAPS] "+response);
-
-            }
-            return response;
-        }
-        
-
-
-        /// <summary>
-        /// Construct an LLSD reply packet to a CAPS inventory request
-        /// </summary>
-        /// <param name="invFetch"></param>
-        /// <returns></returns>
-        private LLSDInventoryDescendents FetchInventoryReply(LLSDFetchInventoryDescendents invFetch)
-        {
-            LLSDInventoryDescendents reply = new LLSDInventoryDescendents();
-            LLSDInventoryFolderContents contents = new LLSDInventoryFolderContents();
-            contents.agent_id = m_agentID;
-            contents.owner_id =  invFetch.owner_id;
-            contents.folder_id = invFetch.folder_id;
-
-            reply.folders.Array.Add(contents);
-            InventoryCollection inv = new InventoryCollection();
-            inv.Folders = new List<InventoryFolderBase>();
-            inv.Items = new List<InventoryItemBase>();
-            int version = 0;
-            if (CAPSFetchInventoryDescendents != null)
-            {
-                inv = CAPSFetchInventoryDescendents(m_agentID, invFetch.folder_id, invFetch.owner_id, invFetch.fetch_folders, invFetch.fetch_items, invFetch.sort_order, out version);
-            }
-
-            if (inv.Folders != null)
-            {
-                foreach (InventoryFolderBase invFolder in inv.Folders)
-                {
-                    contents.categories.Array.Add(ConvertInventoryFolder(invFolder));
-                }
-            }
-
-            if (inv.Items != null)
-            {
-                foreach (InventoryItemBase invItem in inv.Items)
-                {
-                    contents.items.Array.Add(ConvertInventoryItem(invItem));
-                }
-            }
-
-            contents.descendents = contents.items.Array.Count + contents.categories.Array.Count;
-            contents.version = version;
-
-            return reply;
-        }
-
-        /// <summary>
-        /// Convert an internal inventory folder object into an LLSD object.
-        /// </summary>
-        /// <param name="invFolder"></param>
-        /// <returns></returns>
-        private LLSDInventoryFolder ConvertInventoryFolder(InventoryFolderBase invFolder)
-        {
-            LLSDInventoryFolder llsdFolder = new LLSDInventoryFolder();
-            llsdFolder.folder_id = invFolder.ID;
-            llsdFolder.parent_id = invFolder.ParentID;
-            llsdFolder.name = invFolder.Name;
-            if (invFolder.Type < 0 || invFolder.Type >= TaskInventoryItem.Types.Length)
-                llsdFolder.type = "-1";
-            else
-                llsdFolder.type = TaskInventoryItem.Types[invFolder.Type];
-            llsdFolder.preferred_type = "-1";
-
-            return llsdFolder;
-        }
-
-        /// <summary>
-        /// Convert an internal inventory item object into an LLSD object.
-        /// </summary>
-        /// <param name="invItem"></param>
-        /// <returns></returns>
-        private LLSDInventoryItem ConvertInventoryItem(InventoryItemBase invItem)
-        {
-            LLSDInventoryItem llsdItem = new LLSDInventoryItem();
-            llsdItem.asset_id = invItem.AssetID;
-            llsdItem.created_at = invItem.CreationDate;
-            llsdItem.desc = invItem.Description;
-            llsdItem.flags = (int)invItem.Flags;
-            llsdItem.item_id = invItem.ID;
-            llsdItem.name = invItem.Name;
-            llsdItem.parent_id = invItem.Folder;
-            try
-            {
-                // TODO reevaluate after upgrade to libomv >= r2566. Probably should use UtilsConversions.
-                llsdItem.type = TaskInventoryItem.Types[invItem.AssetType];
-                llsdItem.inv_type = TaskInventoryItem.InvTypes[invItem.InvType];
-            }
-            catch (Exception e)
-            {
-                m_log.Error("[CAPS]: Problem setting asset/inventory type while converting inventory item " + invItem.Name + " to LLSD:", e);
-            }
-            llsdItem.permissions = new LLSDPermissions();
-            llsdItem.permissions.creator_id = invItem.CreatorIdAsUuid;
-            llsdItem.permissions.base_mask = (int)invItem.CurrentPermissions;
-            llsdItem.permissions.everyone_mask = (int)invItem.EveryOnePermissions;
-            llsdItem.permissions.group_id = invItem.GroupID;
-            llsdItem.permissions.group_mask = (int)invItem.GroupPermissions;
-            llsdItem.permissions.is_owner_group = invItem.GroupOwned;
-            llsdItem.permissions.next_owner_mask = (int)invItem.NextPermissions;
-            llsdItem.permissions.owner_id = m_agentID;
-            llsdItem.permissions.owner_mask = (int)invItem.CurrentPermissions;
-            llsdItem.sale_info = new LLSDSaleInfo();
-            llsdItem.sale_info.sale_price = invItem.SalePrice;
-            switch (invItem.SaleType)
-            {
-            default:
-                llsdItem.sale_info.sale_type = "not";
-                break;
-            case 1:
-                llsdItem.sale_info.sale_type = "original";
-                break;
-            case 2:
-                llsdItem.sale_info.sale_type = "copy";
-                break;
-            case 3:
-                llsdItem.sale_info.sale_type = "contents";
-                break;
-            }
-
-            return llsdItem;
         }
 
         /// <summary>
@@ -714,8 +433,7 @@ namespace OpenSim.Framework.Capabilities
                         llsdUpdateRequest.task_id,
                         llsdUpdateRequest.is_script_running,
                         capsBase + uploaderPath,
-                        m_httpListener,
-                        m_dumpAssetsToFile);
+                        m_httpListener);
                 uploader.OnUpLoad += TaskScriptUpdated;
 
                 m_httpListener.AddStreamHandler(
@@ -736,50 +454,6 @@ namespace OpenSim.Framework.Capabilities
 //                m_log.InfoFormat("[CAPS]: " +
 //                                 "ScriptTaskInventory response: {0}",
 //                                 LLSDHelpers.SerialiseLLSDReply(uploadResponse)));
-
-                return LLSDHelpers.SerialiseLLSDReply(uploadResponse);
-            }
-            catch (Exception e)
-            {
-                m_log.Error("[CAPS]: " + e.ToString());
-            }
-
-            return null;
-        }
-
-        public string UploadBakedTexture(string request, string path,
-                string param, OSHttpRequest httpRequest,
-                OSHttpResponse httpResponse)
-        {
-            try
-            {
-                m_log.Debug("[CAPS]: UploadBakedTexture Request in region: " +
-                        m_regionName);
-
-                string capsBase = "/CAPS/" + m_capsObjectPath;
-                string uploaderPath = Util.RandomClass.Next(5000, 8000).ToString("0000");
-
-                BakedTextureUploader uploader =
-                    new BakedTextureUploader(capsBase + uploaderPath,
-                        m_httpListener);
-                uploader.OnUpLoad += BakedTextureUploaded;
-
-                m_httpListener.AddStreamHandler(
-                        new BinaryStreamHandler("POST", capsBase + uploaderPath,
-                        uploader.uploaderCaps));
-
-                string protocol = "http://";
-
-                if (m_httpListener.UseSSL)
-                    protocol = "https://";
-
-                string uploaderURL = protocol + m_httpListenerHostName + ":" +
-                        m_httpListenPort.ToString() + capsBase + uploaderPath;
-
-                LLSDAssetUploadResponse uploadResponse =
-                        new LLSDAssetUploadResponse();
-                uploadResponse.uploader = uploaderURL;
-                uploadResponse.state = "upload";
 
                 return LLSDHelpers.SerialiseLLSDReply(uploadResponse);
             }
@@ -813,7 +487,7 @@ namespace OpenSim.Framework.Capabilities
             string uploaderPath = Util.RandomClass.Next(5000, 8000).ToString("0000");
 
             ItemUpdater uploader =
-                new ItemUpdater(llsdRequest.item_id, capsBase + uploaderPath, m_httpListener, m_dumpAssetsToFile);
+                new ItemUpdater(llsdRequest.item_id, capsBase + uploaderPath, m_httpListener);
             uploader.OnUpLoad += ItemUpdated;
 
             m_httpListener.AddStreamHandler(
@@ -888,7 +562,7 @@ namespace OpenSim.Framework.Capabilities
 
             AssetUploader uploader =
                 new AssetUploader(assetName, assetDes, newAsset, newInvItem, parentFolder, llsdRequest.inventory_type,
-                                  llsdRequest.asset_type, capsBase + uploaderPath, m_httpListener, m_dumpAssetsToFile);
+                                  llsdRequest.asset_type, capsBase + uploaderPath, m_httpListener);
             m_httpListener.AddStreamHandler(
                 new BinaryStreamHandler("POST", capsBase + uploaderPath, uploader.uploaderCaps));
 
@@ -962,10 +636,10 @@ namespace OpenSim.Framework.Capabilities
             item.AssetType = assType;
             item.InvType = inType;
             item.Folder = parentFolder;
-            item.CurrentPermissions = (uint)PermissionMask.All;
-            item.BasePermissions = (uint)PermissionMask.All;
+            item.CurrentPermissions = 2147483647;
+            item.BasePermissions = 2147483647;
             item.EveryOnePermissions = 0;
-            item.NextPermissions = (uint)(PermissionMask.Move | PermissionMask.Modify | PermissionMask.Transfer);
+            item.NextPermissions = 2147483647;
             item.CreationDate = Util.UnixTimeSinceEpoch();
 
             if (AddNewInventoryItem != null)
@@ -974,9 +648,80 @@ namespace OpenSim.Framework.Capabilities
             }
         }
 
+        /// <summary>
+        /// Called when new asset data for an agent inventory item update has been uploaded.
+        /// </summary>
+        /// <param name="itemID">Item to update</param>
+        /// <param name="data">New asset data</param>
+        /// <returns></returns>
+        public string ItemUpdated(UUID itemID, byte[] data)
+        {
+            if (ItemUpdatedCall != null)
+            {
+                return ItemUpdatedCall(m_agentID, itemID, data);
+            }
+
+            return "";
+        }
+
+        public string UploadBakedTexture(string request, string path,
+                string param, OSHttpRequest httpRequest,
+                OSHttpResponse httpResponse)
+        {
+            try
+            {
+                //m_log.Debug("[CAPS]: UploadBakedTexture Request in region: " +
+                //        m_regionName);
+
+                string capsBase = "/CAPS/" + m_capsObjectPath;
+                string uploaderPath = Util.RandomClass.Next(5000, 8000).ToString("0000");
+
+                BakedTextureUploader uploader =
+                    new BakedTextureUploader( capsBase + uploaderPath,
+                        m_httpListener);
+                uploader.OnUpLoad += BakedTextureUploaded;
+
+                m_httpListener.AddStreamHandler(
+                        new BinaryStreamHandler("POST", capsBase + uploaderPath,
+                        uploader.uploaderCaps));
+
+                string protocol = "http://";
+
+                if (m_httpListener.UseSSL)
+                    protocol = "https://";
+
+                string uploaderURL = protocol + m_httpListenerHostName + ":" +
+                        m_httpListenPort.ToString() + capsBase + uploaderPath;
+
+                LLSDAssetUploadResponse uploadResponse =
+                        new LLSDAssetUploadResponse();
+                uploadResponse.uploader = uploaderURL;
+                uploadResponse.state = "upload";
+
+                return LLSDHelpers.SerialiseLLSDReply(uploadResponse);
+            }
+            catch (Exception e)
+            {
+                m_log.Error("[CAPS]: " + e.ToString());
+            }
+
+            return null;
+        }
+
         public void BakedTextureUploaded(UUID assetID, byte[] data)
         {
             m_log.DebugFormat("[CAPS]: Received baked texture {0}", assetID.ToString());
+            IJ2KDecoder j2kDecoder = GetClient(m_agentID).Scene.RequestModuleInterface<IJ2KDecoder>();
+            if (j2kDecoder != null)
+            {
+                if (!j2kDecoder.Decode(assetID, data))
+                {
+                    //Uhoh, bad upload, rerequest them from the client
+                    m_log.DebugFormat("[CAPS]: Received corrupted baked texture {0}", assetID.ToString());
+                    GetClient(m_agentID).SendRebakeAvatarTextures(assetID);
+                    return;
+                }
+            }
             AssetBase asset;
             asset = new AssetBase(assetID, "Baked Texture", (sbyte)AssetType.Texture, m_agentID.ToString());
             asset.Data = data;
@@ -985,21 +730,6 @@ namespace OpenSim.Framework.Capabilities
             m_assetCache.Store(asset);
         }
 
-        /// <summary>
-        /// Called when new asset data for an agent inventory item update has been uploaded.
-        /// </summary>
-        /// <param name="itemID">Item to update</param>
-        /// <param name="data">New asset data</param>
-        /// <returns></returns>
-        public UUID ItemUpdated(UUID itemID, byte[] data)
-        {
-            if (ItemUpdatedCall != null)
-            {
-                return ItemUpdatedCall(m_agentID, itemID, data);
-            }
-
-            return UUID.Zero;
-        }
 
         /// <summary>
         /// Called when new asset data for an agent inventory item update has been uploaded.
@@ -1018,6 +748,52 @@ namespace OpenSim.Framework.Capabilities
             }
         }
 
+        public class BakedTextureUploader
+        {
+            public event UploadedBakedTexture OnUpLoad;
+            private UploadedBakedTexture handlerUpLoad = null;
+
+            private string uploaderPath = String.Empty;
+            private UUID newAssetID;
+            private IHttpServer httpListener;
+
+            public BakedTextureUploader(string path, IHttpServer httpServer)
+            {
+                newAssetID = UUID.Random();
+                uploaderPath = path;
+                httpListener = httpServer;
+            }
+
+            /// <summary>
+            ///
+            /// </summary>
+            /// <param name="data"></param>
+            /// <param name="path"></param>
+            /// <param name="param"></param>
+            /// <returns></returns>
+            public string uploaderCaps(byte[] data, string path, string param)
+            {
+                string res = String.Empty;
+                LLSDAssetUploadComplete uploadComplete = new LLSDAssetUploadComplete();
+                uploadComplete.new_asset = newAssetID.ToString();
+                uploadComplete.new_inventory_item = UUID.Zero;
+                uploadComplete.state = "complete";
+
+                res = LLSDHelpers.SerialiseLLSDReply(uploadComplete);
+
+                httpListener.RemoveStreamHandler("POST", uploaderPath);
+
+                handlerUpLoad = OnUpLoad;
+                if (handlerUpLoad != null)
+                {
+                    handlerUpLoad(newAssetID, data);
+                }
+
+                return res;
+            }
+        }
+
+
         public class AssetUploader
         {
             public event UpLoadedAsset OnUpLoad;
@@ -1028,7 +804,6 @@ namespace OpenSim.Framework.Capabilities
             private UUID inventoryItemID;
             private UUID parentFolder;
             private IHttpServer httpListener;
-            private bool m_dumpAssetsToFile;
             private string m_assetName = String.Empty;
             private string m_assetDes = String.Empty;
 
@@ -1037,7 +812,7 @@ namespace OpenSim.Framework.Capabilities
 
             public AssetUploader(string assetName, string description, UUID assetID, UUID inventoryItem,
                                  UUID parentFolderID, string invType, string assetType, string path,
-                                 IHttpServer httpServer, bool dumpAssetsToFile)
+                                 IHttpServer httpServer)
             {
                 m_assetName = assetName;
                 m_assetDes = description;
@@ -1048,7 +823,6 @@ namespace OpenSim.Framework.Capabilities
                 parentFolder = parentFolderID;
                 m_assetType = assetType;
                 m_invType = invType;
-                m_dumpAssetsToFile = dumpAssetsToFile;
             }
 
             /// <summary>
@@ -1071,17 +845,6 @@ namespace OpenSim.Framework.Capabilities
 
                 httpListener.RemoveStreamHandler("POST", uploaderPath);
 
-                // TODO: probably make this a better set of extensions here
-                string extension = ".jp2";
-                if (m_invType != "image")
-                {
-                    extension = ".dat";
-                }
-
-                if (m_dumpAssetsToFile)
-                {
-                    SaveAssetToFile(m_assetName + extension, data);
-                }
                 handlerUpLoad = OnUpLoad;
                 if (handlerUpLoad != null)
                 {
@@ -1127,12 +890,9 @@ namespace OpenSim.Framework.Capabilities
             private string uploaderPath = String.Empty;
             private UUID inventoryItemID;
             private IHttpServer httpListener;
-            private bool m_dumpAssetToFile;
 
-            public ItemUpdater(UUID inventoryItem, string path, IHttpServer httpServer, bool dumpAssetToFile)
+            public ItemUpdater(UUID inventoryItem, string path, IHttpServer httpServer)
             {
-                m_dumpAssetToFile = dumpAssetToFile;
-
                 inventoryItemID = inventoryItem;
                 uploaderPath = path;
                 httpListener = httpServer;
@@ -1149,26 +909,13 @@ namespace OpenSim.Framework.Capabilities
             {
                 UUID inv = inventoryItemID;
                 string res = String.Empty;
-                LLSDAssetUploadComplete uploadComplete = new LLSDAssetUploadComplete();
-                UUID assetID = UUID.Zero;
                 handlerUpdateItem = OnUpLoad;
                 if (handlerUpdateItem != null)
                 {
-                    assetID = handlerUpdateItem(inv, data);
+                    res = handlerUpdateItem(inv, data);
                 }
-
-                uploadComplete.new_asset = assetID.ToString();
-                uploadComplete.new_inventory_item = inv;
-                uploadComplete.state = "complete";
-
-                res = LLSDHelpers.SerialiseLLSDReply(uploadComplete);
 
                 httpListener.RemoveStreamHandler("POST", uploaderPath);
-
-                if (m_dumpAssetToFile)
-                {
-                    SaveAssetToFile("updateditem" + Util.RandomClass.Next(1, 1000) + ".dat", data);
-                }
 
                 return res;
             }
@@ -1211,12 +958,10 @@ namespace OpenSim.Framework.Capabilities
             private UUID primID;
             private bool isScriptRunning;
             private IHttpServer httpListener;
-            private bool m_dumpAssetToFile;
 
             public TaskInventoryScriptUpdater(UUID inventoryItemID, UUID primID, int isScriptRunning,
-                                              string path, IHttpServer httpServer, bool dumpAssetToFile)
+                                              string path, IHttpServer httpServer)
             {
-                m_dumpAssetToFile = dumpAssetToFile;
 
                 this.inventoryItemID = inventoryItemID;
                 this.primID = primID;
@@ -1263,11 +1008,6 @@ namespace OpenSim.Framework.Capabilities
 
                     httpListener.RemoveStreamHandler("POST", uploaderPath);
 
-                    if (m_dumpAssetToFile)
-                    {
-                        SaveAssetToFile("updatedtaskscript" + Util.RandomClass.Next(1, 1000) + ".dat", data);
-                    }
-
 //                    m_log.InfoFormat("[CAPS]: TaskInventoryScriptUpdater.uploaderCaps res: {0}", res);
 
                     return res;
@@ -1301,51 +1041,6 @@ namespace OpenSim.Framework.Capabilities
                 bw.Write(data);
                 bw.Close();
                 fs.Close();
-            }
-        }
-
-        public class BakedTextureUploader
-        {
-            public event UploadedBakedTexture OnUpLoad;
-            private UploadedBakedTexture handlerUpLoad = null;
-
-            private string uploaderPath = String.Empty;
-            private UUID newAssetID;
-            private IHttpServer httpListener;
-
-            public BakedTextureUploader(string path, IHttpServer httpServer)
-            {
-                newAssetID = UUID.Random();
-                uploaderPath = path;
-                httpListener = httpServer;
-            }
-
-            /// <summary>
-            ///
-            /// </summary>
-            /// <param name="data"></param>
-            /// <param name="path"></param>
-            /// <param name="param"></param>
-            /// <returns></returns>
-            public string uploaderCaps(byte[] data, string path, string param)
-            {
-                string res = String.Empty;
-                LLSDAssetUploadComplete uploadComplete = new LLSDAssetUploadComplete();
-                uploadComplete.new_asset = newAssetID.ToString();
-                uploadComplete.new_inventory_item = UUID.Zero;
-                uploadComplete.state = "complete";
-
-                res = LLSDHelpers.SerialiseLLSDReply(uploadComplete);
-
-                httpListener.RemoveStreamHandler("POST", uploaderPath);
-
-                handlerUpLoad = OnUpLoad;
-                if (handlerUpLoad != null)
-                {
-                    handlerUpLoad(newAssetID, data);
-                }
-
-                return res;
             }
         }
     }

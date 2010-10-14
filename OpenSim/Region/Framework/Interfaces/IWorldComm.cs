@@ -98,5 +98,7 @@ namespace OpenSim.Region.Framework.Interfaces
         Object[] GetSerializationData(UUID itemID);
         void CreateFromData(UUID itemID, UUID hostID,
                             Object[] data);
+        void AddBlockedChannel(int channel);
+        void RemoveBlockedChannel(int channel);
     }
 }

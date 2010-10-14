@@ -12,7 +12,6 @@
 		<DataPlugin id="LocalAgentConnector" type="Aurora.Services.DataService.LocalAgentConnector" />
 		<DataPlugin id="LocalAssetConnector" type="Aurora.Services.DataService.LocalAssetConnector" />
 		<DataPlugin id="LocalAvatarArchiverConnector" type="Aurora.Services.DataService.LocalAvatarArchiverConnector" />
-		<DataPlugin id="LocalCurrencyConnector" type="Aurora.Services.DataService.LocalCurrencyConnector" />
 		<DataPlugin id="LocalParcelServiceConnector" type="Aurora.Services.DataService.LocalParcelServiceConnector" />
 		<DataPlugin id="LocalDirectoryServiceConnector" type="Aurora.Services.DataService.LocalDirectoryServiceConnector" />
 		<DataPlugin id="LocalEstateConnector" type="Aurora.Services.DataService.LocalEstateConnector" />
@@ -22,13 +21,17 @@
 		<DataPlugin id="LocalRegionConnector" type="Aurora.Services.DataService.LocalRegionConnector" />
 		<DataPlugin id="LocalRegionInfoConnector" type="Aurora.Services.DataService.LocalRegionInfoConnector" />
 		<DataPlugin id="LocalScriptDataConnector" type="Aurora.Services.DataService.LocalScriptDataConnector" />
-		<DataPlugin id="LocalSimMapConnector" type="Aurora.Services.DataService.LocalSimMapConnector" />
+		
 		<DataPlugin id="RemoteAgentConnector" type="Aurora.Services.DataService.RemoteAgentConnector" />
 		<DataPlugin id="RemoteDirectoryServiceConnector" type="Aurora.Services.DataService.RemoteDirectoryServiceConnector" />
 		<DataPlugin id="RemoteEstateConnector" type="Aurora.Services.DataService.RemoteEstateConnector" />
+		<DataPlugin id="RemoteGroupsServiceConnector" type="Aurora.Services.DataService.RemoteGroupsServiceConnector" />
 		<DataPlugin id="RemoteMuteListConnector" type="Aurora.Services.DataService.RemoteMuteListConnector" />
 		<DataPlugin id="RemoteOfflineMessagesConnector" type="Aurora.Services.DataService.RemoteOfflineMessagesConnector" />
 		<DataPlugin id="RemoteProfileConnector" type="Aurora.Services.DataService.RemoteProfileConnector" />
 		<DataPlugin id="RemoteRegionConnector" type="Aurora.Services.DataService.RemoteRegionConnector" />
+		
+		<DataPlugin id="SimianAgentConnector" type="Aurora.Services.DataService.SimianAgentConnector" />
+		<DataPlugin id="SimianProfileConnector" type="Aurora.Services.DataService.SimianProfileConnector" />
 	</Extension>
 </Addin>

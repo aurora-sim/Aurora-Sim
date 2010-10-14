@@ -92,17 +92,6 @@ namespace OpenSim.Framework
         public static FireAndForgetMethod FireAndForgetMethod = FireAndForgetMethod.SmartThreadPool;
 
         /// <summary>
-        /// Gets the name of the directory where the current running executable
-        /// is located
-        /// </summary>
-        /// <returns>Filesystem path to the directory containing the current
-        /// executable</returns>
-        public static string ExecutingDirectory()
-        {
-            return Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-        }
-
-        /// <summary>
         /// Linear interpolates B<->C using percent A
         /// </summary>
         /// <param name="a"></param>
@@ -297,32 +286,6 @@ namespace OpenSim.Framework
             return id;
         }
 
-        public static string GetFileName(string file)
-        {
-            // Return just the filename on UNIX platforms
-            // TODO: this should be customisable with a prefix, but that's something to do later.
-            if (Environment.OSVersion.Platform == PlatformID.Unix)
-            {
-                return file;
-            }
-
-            // Return %APPDATA%/OpenSim/file for 2K/XP/NT/2K3/VISTA
-            // TODO: Switch this to System.Enviroment.SpecialFolders.ApplicationData
-            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
-            {
-                if (!Directory.Exists("%APPDATA%\\OpenSim\\"))
-                {
-                    Directory.CreateDirectory("%APPDATA%\\OpenSim");
-                }
-
-                return "%APPDATA%\\OpenSim\\" + file;
-            }
-
-            // Catch all - covers older windows versions
-            // (but those probably wont work anyway)
-            return file;
-        }
-
         /// <summary>
         /// Debug utility function to convert unbroken strings of XML into something human readable for occasional debugging purposes.
         ///
@@ -451,10 +414,31 @@ namespace OpenSim.Framework
             return (x + y - (min >> 1) - (min >> 2) + (min >> 4));
         }
 
-        public static bool IsOutsideView(uint oldx, uint newx, uint oldy, uint newy)
+        public static bool CloseLocalRegions = true;
+        public static int RegionViewSize = 1;
+        private static List<IScene> Scenes = new List<IScene>();
+
+        public static void AddScene(IScene scene)
         {
+            Scenes.Add(scene);
+        }
+
+        public static bool GetIsLocalRegion(ulong handle)
+        {
+            foreach (IScene scene in Scenes)
+            {
+                if (handle == scene.RegionInfo.RegionHandle)
+                    return true;
+            }
+            return false;
+        }
+
+        public static bool IsOutsideView(double oldx, double newx, double oldy, double newy, bool IsLocalRegion)
+        {
+            if (IsLocalRegion && !CloseLocalRegions)
+                return false;
             // Eventually this will be a function of the draw distance / camera position too.
-            return (((int)Math.Abs((int)(oldx - newx)) > 1) || ((int)Math.Abs((int)(oldy - newy)) > 1));
+            return ((Math.Abs(oldx - newx) > RegionViewSize) || (Math.Abs(oldy - newy) > RegionViewSize));
         }
 
         public static string FieldToString(byte[] bytes)
@@ -555,7 +539,12 @@ namespace OpenSim.Framework
             IPAddress ipa;
             if (IPAddress.TryParse(dnsAddress, out ipa))
                 return ipa;
-
+            try
+            {
+                if (IPAddress.TryParse(dnsAddress.Split(':')[0], out ipa))
+                    return ipa;
+            }
+            catch { }
             IPAddress[] hosts = null;
 
             // Not an IP, lookup required
@@ -1184,12 +1173,22 @@ namespace OpenSim.Framework
 
         public static uint ConvertAccessLevelToMaturity(byte maturity)
         {
-            if (maturity <= 13)
-                return 0;
-            else if (maturity <= 21)
-                return 1;
-            else
-                return 2;
+            uint retVal = 0;
+            switch (maturity)
+            {
+                case 13: //PG
+                    retVal = 0;
+                    break;
+                case 21: //Mature
+                    retVal = 1;
+                    break;
+                case 42: // Adult
+                    retVal = 2;
+                    break;
+            }
+
+            return retVal;
+
         }
 
         /// <summary>
@@ -1507,48 +1506,35 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// Gets the client IP address
+        /// Gets the name of the directory where the current running executable
+        /// is located
         /// </summary>
-        /// <param name="xff"></param>
-        /// <returns></returns>
-        public static IPEndPoint GetClientIPFromXFF(string xff)
+        /// <returns>Filesystem path to the directory containing the current
+        /// executable</returns>
+        public static string ExecutingDirectory()
         {
-            if (xff == string.Empty)
-                return null;
-
-            string[] parts = xff.Split(new char[] { ',' });
-            if (parts.Length > 0)
-            {
-                try
-                {
-                    return new IPEndPoint(IPAddress.Parse(parts[0]), 0);
-                }
-                catch (Exception e)
-                {
-                    m_log.WarnFormat("[UTIL]: Exception parsing XFF header {0}: {1}", xff, e.Message);
-                }
-            }
-
-            return null;
+            return Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
         }
 
-        public static string GetCallerIP(Hashtable req)
+        public static OSDMap DictionaryToOSD(Dictionary<string, object> sendData)
         {
-            if (req.ContainsKey("headers"))
+            OSDMap map = new OSDMap();
+            foreach (KeyValuePair<string, object> kvp in sendData)
             {
-                try
-                {
-                    Hashtable headers = (Hashtable)req["headers"];
-                    if (headers.ContainsKey("remote_addr") && headers["remote_addr"] != null)
-                        return headers["remote_addr"].ToString();
-                }
-                catch (Exception e)
-                {
-                    m_log.WarnFormat("[UTIL]: exception in GetCallerIP: {0}", e.Message);
-                }
+                OSD val = (OSD)kvp.Value;
+                map[kvp.Key] = val;
             }
-            return string.Empty;
+            return map;
         }
 
+        public static Dictionary<string, object> OSDToDictionary(OSDMap map)
+        {
+            Dictionary<string, object> retVal = new Dictionary<string, object>();
+            foreach (string key in map.Keys)
+            {
+                retVal.Add(key, map[key]);
+            }
+            return retVal;
+        }
     }
 }

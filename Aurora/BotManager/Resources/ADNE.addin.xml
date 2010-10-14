@@ -1,0 +1,16 @@
+<Addin id="Aurora.BotManager" version="0.2">
+    <Runtime>
+        <Import assembly="Aurora.BotManager.dll"/>
+    </Runtime>
+
+    <Dependencies>
+        <Addin id="OpenSim" version="0.5" />
+    </Dependencies>
+
+    <Extension path = "/OpenSim/ScriptPlugins">
+		<ScriptPlugin id="Bot_Api"             type="Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Bot_Api" />
+	</Extension>
+	<Extension path = "/OpenSim/RegionModules">
+		<RegionModule id="BotManager" type="Aurora.BotManager.BotManager" />
+	</Extension>
+</Addin>

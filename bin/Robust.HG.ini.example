@@ -1,27 +1,17 @@
-; * Run
-; * $ Robust.exe -inifile Robust.HG.ini
-; *
+;; Configurations for enabling HG1.5
+;; 
+;; Run
+;; $ Robust.exe -inifile Robust.HG.ini
 
-; * Configurations for enabling HG1.5
-; * 
-; * HG1.5 handlers are: OpenSim.Server.Handlers.dll:GatekeeperService
-; *                     OpenSim.Server.Handlers.dll:UserAgentService
-; * Additional OpenSim.Server.Handlers.dll:AssetServiceConnector and 
-; *            OpenSim.Server.Handlers.dll:XInventoryInConnector 
-; * are started in port 8002, outside the firewall
-; *
-; * The startup section lists all the connectors to start up in this server
-; * instance. This may be only one, or it may be the entire server suite.
-; * Multiple connectors should be separated by commas.
-; *
-; * These are the IN connectors the server uses, the in connectors
-; * read this config file and load the needed service and database connectors
-; *
-; * The full syntax of a connector string is:
-; * [[<ConfigName>@]<port>/]<dll name>[:<class name>]
-; *
+;; HG1.5 handlers are: OpenSim.Server.Handlers.dll:GatekeeperService
+;;                     OpenSim.Server.Handlers.dll:UserAgentService
+;; Additional OpenSim.Server.Handlers.dll:AssetServiceConnector and 
+;;            OpenSim.Server.Handlers.dll:XInventoryInConnector 
+;; are started in port 8002, outside the firewall
+;;
+
 [Startup]
-ServiceConnectors = "8003/OpenSim.Server.Handlers.dll:AssetServiceConnector,8003/OpenSim.Server.Handlers.dll:XInventoryInConnector,8002/OpenSim.Server.Handlers.dll:FreeswitchServerConnector,8003/OpenSim.Server.Handlers.dll:GridServiceConnector,8002/OpenSim.Server.Handlers.dll:GridInfoServerInConnector,8003/OpenSim.Server.Handlers.dll:AuthenticationServiceConnector,8002/OpenSim.Server.Handlers.dll:OpenIdServerConnector,8003/OpenSim.Server.Handlers.dll:AvatarServiceConnector,8002/OpenSim.Server.Handlers.dll:LLLoginServiceInConnector,8003/OpenSim.Server.Handlers.dll:PresenceServiceConnector,8003/OpenSim.Server.Handlers.dll:UserAccountServiceConnector,8003/OpenSim.Server.Handlers.dll:GridUserServiceConnector,8003/OpenSim.Server.Handlers.dll:FriendsServiceConnector,8002/OpenSim.Server.Handlers.dll:GatekeeperServiceInConnector,8002/OpenSim.Server.Handlers.dll:UserAgentServerConnector,HGInventoryService@8002/OpenSim.Server.Handlers.dll:XInventoryInConnector,8002/OpenSim.Server.Handlers.dll:AssetServiceConnector,8002/OpenSim.Server.Handlers.dll:HeloServiceInConnector"
+ServiceConnectors = "8003/OpenSim.Server.Handlers.dll:AssetServiceConnector,8003/OpenSim.Server.Handlers.dll:XInventoryInConnector,8002/OpenSim.Server.Handlers.dll:FreeswitchServerConnector,8003/OpenSim.Server.Handlers.dll:GridServiceConnector,8003/OpenSim.Server.Handlers.dll:GridInfoServerInConnector,8003/OpenSim.Server.Handlers.dll:AuthenticationServiceConnector,8002/OpenSim.Server.Handlers.dll:OpenIdServerConnector,8003/OpenSim.Server.Handlers.dll:AvatarServiceConnector,8002/OpenSim.Server.Handlers.dll:LLLoginServiceInConnector,8003/OpenSim.Server.Handlers.dll:PresenceServiceConnector,8003/OpenSim.Server.Handlers.dll:UserAccountServiceConnector,8003/OpenSim.Server.Handlers.dll:GridUserServiceConnector,8003/OpenSim.Server.Handlers.dll:FriendsServiceConnector,8002/OpenSim.Server.Handlers.dll:GatekeeperServiceInConnector,8002/OpenSim.Server.Handlers.dll:UserAgentServerConnector,HGInventoryService@8002/OpenSim.Server.Handlers.dll:XInventoryInConnector,8002/OpenSim.Server.Handlers.dll:AssetServiceConnector,8007/OpenSim.Server.Handlers.dll:AuroraCAPSHandler,8003/OpenSim.Server.Handlers.dll:AuroraDataServiceConnector"
 
 ; * This is common for all services, it's the network setup for the entire
 ; * server instance, if none if specified above
@@ -36,9 +26,10 @@ ServiceConnectors = "8003/OpenSim.Server.Handlers.dll:AssetServiceConnector,8003
 ;ConsolePass = secret
 ;ConsolePort = 0
 
+
 [DatabaseService]
     StorageProvider = "OpenSim.Data.MySQL.dll"
-    ConnectionString = "Data Source=localhost;Database=opensim;User ID=opensim;Password=*****;Old Guids=true;"
+    ConnectionString = "Data Source=localhost;Database=*;User ID=root;Password=*;"
 
 ; * As an example, the below configuration precisely mimicks the legacy
 ; * asset server. It is read by the asset IN connector (defined above)
@@ -62,17 +53,13 @@ ServiceConnectors = "8003/OpenSim.Server.Handlers.dll:AssetServiceConnector,8003
 ; *
 [GridService]
     LocalServiceModule = "OpenSim.Services.GridService.dll:GridService"
-    ; Realm = "regions"
+    Realm = "regions"
     ; AllowDuplicateNames = "True"
-    ; Check4096 = "False"
-
     ;; Next, we can specify properties of regions, including default and fallback regions
     ;; The syntax is: Region_<RegionName> = "<flags>"
     ;; or:            Region_<RegionID> = "<flags>"
     ;; where <flags> can be DefaultRegion, FallbackRegion, NoDirectLogin, Persistent, LockedOut,Reservation,NoMove,Authenticate
-    ;; For example: 
-    ; Region_Welcome_Area = "DefaultRegion, FallbackRegion"
-    ; (replace spaces with underscore)
+    Region_Welcome= "DefaultRegion"
 
 ; * This is the configuration for the freeswitch server in grid mode
 [FreeswitchService]
@@ -80,13 +67,12 @@ ServiceConnectors = "8003/OpenSim.Server.Handlers.dll:AssetServiceConnector,8003
 
 ; * This is the new style authentication service. Currently, only MySQL
 ; * is implemented. "Realm" is the table that is used for user lookup.
-; * It defaults to "useraccounts", which uses the new style.
-; * Realm = "users" will use the legacy tables as an authentication source
+; * By setting it to "users", you can use the old style users table
+; * as an authentication source.
 ; *
 [AuthenticationService]
     ; for the server connector
     LocalServiceModule = "OpenSim.Services.AuthenticationService.dll:PasswordAuthenticationService"
-    ; Realm = "useraccounts"
 
 [OpenIdService]
     ; for the server connector
@@ -100,9 +86,7 @@ ServiceConnectors = "8003/OpenSim.Server.Handlers.dll:AssetServiceConnector,8003
 [UserAccountService]
     ; for the server connector
     LocalServiceModule = "OpenSim.Services.UserAccountService.dll:UserAccountService"
-    ; Realm = "useraccounts"
-
-    ; These are for creating new accounts by the service
+    ;; These are for creating new accounts by the service
     AuthenticationService = "OpenSim.Services.AuthenticationService.dll:PasswordAuthenticationService"
     PresenceService = "OpenSim.Services.PresenceService.dll:PresenceService"
     GridService = "OpenSim.Services.GridService.dll:GridService"
@@ -147,15 +131,12 @@ ServiceConnectors = "8003/OpenSim.Server.Handlers.dll:AssetServiceConnector,8003
     WelcomeMessage = "Welcome, Avatar!"
     AllowRemoteSetLoginLevel = "false"
     
-    ; If you run this login server behind a proxy, set this to true
-    ; HasProxy = true
-    
     ; Defaults for the users, if none is specified in the useraccounts table entry (ServiceURLs)
     ; CHANGE THIS
-    HomeURI = "http://127.0.0.1:8002"
-    GatekeeperURI = "http://127.0.0.1:8002"
-    InventoryServerURI = "http://127.0.0.1:8002"
-    AssetServerURI = "http://127.0.0.1:8002"
+    HomeURI = "http://auroraserver.ath.cx:8002"
+    GatekeeperURI = "http://auroraserver.ath.cx:8002"
+    InventoryServerURI = "http://auroraserver.ath.cx:8002"
+    AssetServerURI = "http://auroraserver.ath.cx:8002"
 
 [GridInfoService]
     ; These settings are used to return information on a get_grid_info call.
@@ -177,24 +158,31 @@ ServiceConnectors = "8003/OpenSim.Server.Handlers.dll:AssetServiceConnector,8003
 
     ; login page: optional: if it exists it will be used to tell the client to use
     ;                       this as splash page
+    ; currently unused
     ;welcome = http://127.0.0.1/welcome
 
     ; helper uri: optional: if it exists if will be used to tell the client to use
     ;                       this for all economy related things
+    ; currently unused
     ;economy = http://127.0.0.1:9000/
 
     ; web page of grid: optional: page providing further information about your grid
+    ; currently unused
     ;about = http://127.0.0.1/about/
 
     ; account creation: optional: page providing further information about obtaining
     ;                             a user account on your grid
+    ; currently unused
     ;register = http://127.0.0.1/register
 
     ; help: optional: page providing further assistance for users of your grid
+    ; currently unused
     ;help = http://127.0.0.1/help
 
     ; password help: optional: page providing password assistance for users of your grid
+    ; currently unused
     ;password = http://127.0.0.1/password
+
 
 [GatekeeperService]
     LocalServiceModule = "OpenSim.Services.HypergridService.dll:GatekeeperService"
@@ -207,36 +195,82 @@ ServiceConnectors = "8003/OpenSim.Server.Handlers.dll:AssetServiceConnector,8003
     SimulationService ="OpenSim.Services.Connectors.dll:SimulationServiceConnector"
     ; how does the outside world reach me? This acts as public key too.
     ; CHANGE THIS
-    ExternalName = "http://127.0.0.1:8002"
+    ExternalName = "http://auroraserver.ath.cx:8002"
 
-    ; Does this grid allow incoming links to any region in it? 
-    ; If false, HG TPs happen only to the Default regions specified in [GridService] section
-    AllowTeleportsToAnyRegion = true
-    
-    ; If you run this gatekeeper server behind a proxy, set this to true
-    ; HasProxy = true
-
+	; Does this grid allow incoming links to any region in it? 
+	; If false, HG TPs happen only to the  Default regions specified in [GridService] section
+	AllowTeleportsToAnyRegion = true
 
 [UserAgentService]
     LocalServiceModule = "OpenSim.Services.HypergridService.dll:UserAgentService"
     ;; for the service
     GridUserService = "OpenSim.Services.UserAccountService.dll:GridUserService"
     GridService = "OpenSim.Services.GridService.dll:GridService"
-    GatekeeperService = "OpenSim.Services.HypergridService.dll:GatekeeperService"
-    
-    ; If you run this user agent server behind a proxy, set this to true
-    ; HasProxy = true
 
-    ;; If you separate the UserAgentService from the LoginService, set this to
-    ;; the IP address of the machine where your LoginService is
-    ;LoginServerIP = "127.0.0.1"
-
-; * The interface that local users get when they are in other grids.
-; * This restricts the inventory operations while in other grids.
-; * Still not completely safe, especially if users perform inventory operations 
-; * while in those grids. The more the user accesses his/her inventory, the more
-; * those simulators will know about the user's inventory.
-; * 
+;; The interface that local users get when they are in other grids.
+;; This restricts the inventory operations while in other grids.
+;; Still not completely safe, especially if users perform inventory operations 
+;; while in those grids. The more the user accesses his/her inventory, the more
+;; those simulators will know about the user's inventory.
 [HGInventoryService]
     ; For the InventoryServiceInConnector
-    LocalServiceModule = "OpenSim.Services.InventoryService.dll:HGInventoryService"
+    LocalServiceModule    = "OpenSim.Services.InventoryService.dll:HGInventoryService"
+
+
+[AuroraData]
+
+; Local Data Manager Config
+PluginModule = MySQL
+
+ConnectionString = "Data Source=localhost;Database=*;User ID=root;Password=*;"
+
+[AuroraConnectors]
+AbuseReportsConnector = LocalConnector
+AssetConnector = LocalConnector
+AvatarArchiverConnector = LocalConnector
+SimMapDataConnector = LocalConnector
+ScriptDataConnector = LocalConnector
+RegionInfoConnector = LocalConnector
+AgentConnector = LocalConnector
+RegionConnector = LocalConnector
+ProfileConnector = LocalConnector
+EstateConnector = LocalConnector
+OfflineMessagesConnector = LocalConnector
+DirectoryServiceConnector = LocalConnector
+MuteListConnector = LocalConnector
+ParcelConnector = LocalConnector
+
+
+[AuroraStartup]
+AssetLoaderEnabled = False
+
+[AuroraLoginService]
+; Should new users be shown the ToS
+UseTermsOfServiceOnFirstLogin = false
+; File name of the location of the ToS document in the /bin folder
+FileNameOfTOS = ToS.txt
+; Allow users to login anonymously and have a new account created automatically
+AllowAnonymousLogin = true
+; Check for passwords
+AuthenticateUsers = false
+; This allows for a default avatar to be created so the user does not login as ruth. Save an Avatar Archive then put the name of it here.
+DefaultAvatarArchiveForNewUser = 
+; Will hide the First Life setting of profile from all users
+AllowFirstLifeInProfile = true
+; Sets the tutorial URL for new users
+; NOTE: the URL you provide will NOT be the URL the client goes to! The client automatically appends it's language specification to the end of this URL. Ex. http://localhost/tutorial/ becomes http://localhost/tutorial/en for english language.
+TutorialURL = 
+CAPSServiceURL = http://auroraserver.ath.cx:8007
+CAPSServicePassword = TestPass
+
+
+[CAPSService]
+; for the CAPS service connector
+InventoryService = OpenSim.Services.InventoryService.dll:XInventoryService
+LibraryService = OpenSim.Services.InventoryService.dll:LibraryService
+; Subsection Security
+; The CAPS service deals with setting up inventory and other parts of the client that need security, we don't want anyone to be able to access things that they do not have clearance to access
+
+; Password for the public CAPS service URL
+Password = TestPass
+HostName = http://auroraserver.ath.cx:8007

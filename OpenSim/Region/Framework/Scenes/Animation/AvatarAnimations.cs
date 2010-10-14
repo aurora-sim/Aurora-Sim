@@ -34,7 +34,6 @@ namespace OpenSim.Region.Framework.Scenes.Animation
     public class AvatarAnimations
     {
         public Dictionary<string, UUID> AnimsUUID = new Dictionary<string, UUID>();
-        public Dictionary<UUID, string> AnimsNames = new Dictionary<UUID, string>();
         public Dictionary<UUID, string> AnimStateNames = new Dictionary<UUID, string>();
 
         public AvatarAnimations()
@@ -51,10 +50,15 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                         UUID id = (UUID)nod.InnerText;
                         string animState = (string)nod.Attributes["state"].Value;
 
-                        AnimsUUID.Add(name, id);
-                        AnimsNames.Add(id, name);
-                        if (animState != "")
-                            AnimStateNames.Add(id, animState);
+                        try
+                        {
+                            AnimsUUID.Add(name, id);
+                            if (animState != "")
+                                AnimStateNames.Add(id, animState);
+                        }
+                        catch
+                        {
+                        }
                     }
                 }
             }

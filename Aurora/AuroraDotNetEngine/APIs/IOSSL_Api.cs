@@ -25,6 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using System.Collections;
 
 using key = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString;
@@ -68,9 +69,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         LSL_List osGetAgents();
 
         // Teleport commands
-        void osTeleportAgent(string agent, string regionName, LSL_Types.Vector3 position, LSL_Types.Vector3 lookat);
-        void osTeleportAgent(string agent, int regionX, int regionY, LSL_Types.Vector3 position, LSL_Types.Vector3 lookat);
-        void osTeleportAgent(string agent, LSL_Types.Vector3 position, LSL_Types.Vector3 lookat);
+        DateTime osTeleportAgent(string agent, string regionName, LSL_Types.Vector3 position, LSL_Types.Vector3 lookat);
+        DateTime osTeleportAgent(string agent, int regionX, int regionY, LSL_Types.Vector3 position, LSL_Types.Vector3 lookat);
+        DateTime osTeleportAgent(string agent, LSL_Types.Vector3 position, LSL_Types.Vector3 lookat);
 
         // Animation commands
         void osAvatarPlayAnimation(string avatar, string animation);
@@ -93,7 +94,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         string osSetPenCap(string drawList, string direction, string type);
         string osDrawImage(string drawList, int width, int height, string imageUrl);
         vector osGetDrawStringSize(string contentType, string text, string fontName, int fontSize);
-        void osSetStateEvents(int events);
 
         double osList2Double(LSL_Types.list src, int index);
 
@@ -157,8 +157,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         int osGetSimulatorMemory();
         void osKickAvatar(string FirstName,string SurName,string alert);
         void osSetSpeed(string UUID, float SpeedModifier);
-        void osCauseHealing(string avatar, double healing);
-        void osCauseDamage(string avatar, double damage);
         LSL_List osGetPrimitiveParams(LSL_Key prim, LSL_List rules);
         void osSetPrimitiveParams(LSL_Key prim, LSL_List rules);
         LSL_List osGetAvatarList();
@@ -168,6 +166,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         void osShutDown();
 
         LSL_Integer osAddAgentToGroup(LSL_Key AgentID, LSL_Key GroupID, LSL_Key RequestedRoleID);
-
+        DateTime osRezObject(string inventory, LSL_Types.Vector3 pos, LSL_Types.Vector3 vel, LSL_Types.Quaternion rot, int param, LSL_Integer isRezAtRoot, LSL_Integer doRecoil, LSL_Integer SetDieAtEdge, LSL_Integer CheckPos);
     }
 }

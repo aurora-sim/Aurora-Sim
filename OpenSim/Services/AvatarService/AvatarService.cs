@@ -98,6 +98,8 @@ namespace OpenSim.Services.AvatarService
                 
                 if (!m_Database.Store(av))
                 {
+                    m_log.Error("[AVATARSERVICE]: Error saving appearance for " + principalID + ", data follows " +
+                        kvp.Key + ", " + kvp.Value);
                     m_Database.Delete("PrincipalID", principalID.ToString());
                     return false;
                 }

@@ -72,44 +72,29 @@ namespace OpenSim.Framework
 
         public override void Initialise(string defaultPrompt, IConfigSource source, IOpenSimBase baseOpenSim)
         {
-            string m_consoleType = "LocalConsole";
-            if (source.Configs["Startup"].GetString("console", String.Empty) != String.Empty)
-                m_consoleType = source.Configs["Startup"].GetString("console", String.Empty);
-
-            if (m_consoleType != Name)
-                return;
-
-            if (baseOpenSim != null)
-                baseOpenSim.ApplicationRegistry.RegisterInterface<ICommandConsole>(this);
-
-            IConfig networkConfig = m_Config.Configs["Network"];
+            m_Config = source;
             uint m_consolePort = 0;
-            if (networkConfig != null)
-                m_consolePort = (uint)networkConfig.GetInt("console_port", 0);
 
-            if (m_consolePort == 0)
+            if (source.Configs["Console"] != null)
             {
-                SetServer(MainServer.Instance);
+                if (source.Configs["Console"].GetString("Console", String.Empty) != Name)
+                    return;
+                m_consolePort = (uint)source.Configs["Console"].GetInt("remote_console_port", 0);
+                m_UserName = source.Configs["Console"].GetString("RemoteConsoleUser", String.Empty);
+                m_Password = source.Configs["Console"].GetString("RemoteConsolePass", String.Empty);
             }
             else
-            {
+                return;
+
+            baseOpenSim.ApplicationRegistry.RegisterInterface<ICommandConsole>(this);
+
+            if (m_consolePort == 0)
+                SetServer(MainServer.Instance);
+            else
                 SetServer(MainServer.GetHttpServer(m_consolePort));
-            }
 
             m_Commands.AddCommand("console", false, "help", "help [<command>]",
                     "Get general command list or more detailed help on a specific command", base.Help);
-        }
-
-        public void ReadConfig(IConfigSource config)
-        {
-            m_Config = config;
-
-            IConfig netConfig = m_Config.Configs["Network"];
-            if (netConfig == null)
-                return;
-
-            m_UserName = netConfig.GetString("ConsoleUser", String.Empty);
-            m_Password = netConfig.GetString("ConsolePass", String.Empty);
         }
 
         public void SetServer(IHttpServer server)

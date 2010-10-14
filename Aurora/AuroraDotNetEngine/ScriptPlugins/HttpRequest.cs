@@ -34,21 +34,22 @@ using OpenSim.Region.ScriptEngine.Shared;
 using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Plugins;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
+using OpenMetaverse;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 {
-    public class HttpRequest
+    public class HttpRequestPlugin : INonSharedScriptPlugin
     {
         public ScriptEngine m_ScriptEngine;
         private IHttpRequestModule iHttpReq = null;
 
-        public HttpRequest(ScriptEngine ScriptEngine, Scene scene)
+        public void Initialize(ScriptEngine engine, Scene scene)
         {
             iHttpReq = scene.RequestModuleInterface<IHttpRequestModule>();
-            m_ScriptEngine = ScriptEngine;
+            m_ScriptEngine = engine;
         }
 
-        public void CheckHttpRequests()
+        public void Check()
         {
             IServiceRequest httpInfo = null;
 
@@ -64,11 +65,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                 //m_log.Debug("[AsyncLSL]:" + httpInfo.response_body + httpInfo.status);
 
                 // Deliver data to prim's remote_data handler
-                //
-                // TODO: Returning null for metadata, since the lsl function
-                // only returns the byte for HTTP_BODY_TRUNCATED, which is not
-                // implemented here yet anyway.  Should be fixed if/when maxsize
-                // is supported
 
                 iHttpReq.RemoveCompletedRequest(info.ReqID);
 
@@ -76,15 +72,36 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                 {
                     new LSL_Types.LSLString(info.ReqID.ToString()),
                     new LSL_Types.LSLInteger(info.Status),
-                    new LSL_Types.list(),
+                    new LSL_Types.list(info.Metadata),
                     new LSL_Types.LSLString(info.ResponseBody)
                 };
 
-                m_ScriptEngine.PostObjectEvent(info.PrimID,
-                            new EventParams("http_response",
-                            resobj, new DetectParams[0]));
+                m_ScriptEngine.AddToObjectQueue(info.PrimID, "http_response", new DetectParams[0], -1, resobj);
                 httpInfo = iHttpReq.GetNextCompletedRequest();
             }
+        }
+
+        public string Name
+        {
+            get { return "HttpRequest"; }
+        }
+
+        public void Dispose()
+        {
+        }
+
+        public Object[] GetSerializationData(UUID itemID, UUID primID)
+        {
+            return new Object[0];
+        }
+
+        public void CreateFromData(UUID itemID, UUID objectID, Object[] data)
+        {
+        }
+
+        public void RemoveScript(UUID primID, UUID itemID)
+        {
+            iHttpReq.StopHttpRequest(primID, itemID);
         }
     }
 }

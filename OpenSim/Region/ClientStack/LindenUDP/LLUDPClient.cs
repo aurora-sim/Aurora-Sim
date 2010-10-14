@@ -208,44 +208,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             OnQueueEmpty = null;
         }
 
-        /// <summary>
-        /// Gets information about this client connection
-        /// </summary>
-        /// <returns>Information about the client connection</returns>
-        public ClientInfo GetClientInfo()
-        {
-            // TODO: This data structure is wrong in so many ways. Locking and copying the entire lists
-            // of pending and needed ACKs for every client every time some method wants information about
-            // this connection is a recipe for poor performance
-            ClientInfo info = new ClientInfo();
-            info.pendingAcks = new Dictionary<uint, uint>();
-            info.needAck = new Dictionary<uint, byte[]>();
-
-            info.resendThrottle = m_throttleCategories[(int)ThrottleOutPacketType.Resend].DripRate;
-            info.landThrottle = m_throttleCategories[(int)ThrottleOutPacketType.Land].DripRate;
-            info.windThrottle = m_throttleCategories[(int)ThrottleOutPacketType.Wind].DripRate;
-            info.cloudThrottle = m_throttleCategories[(int)ThrottleOutPacketType.Cloud].DripRate;
-            info.taskThrottle = m_throttleCategories[(int)ThrottleOutPacketType.State].DripRate + m_throttleCategories[(int)ThrottleOutPacketType.Task].DripRate;
-            info.assetThrottle = m_throttleCategories[(int)ThrottleOutPacketType.Asset].DripRate;
-            info.textureThrottle = m_throttleCategories[(int)ThrottleOutPacketType.Texture].DripRate;
-            info.totalThrottle = info.resendThrottle + info.landThrottle + info.windThrottle + info.cloudThrottle +
-                info.taskThrottle + info.assetThrottle + info.textureThrottle;
-
-            return info;
-        }
-
-        /// <summary>
-        /// Modifies the UDP throttles
-        /// </summary>
-        /// <param name="info">New throttling values</param>
-        public void SetClientInfo(ClientInfo info)
-        {
-            // TODO: Allowing throttles to be manually set from this function seems like a reasonable
-            // idea. On the other hand, letting external code manipulate our ACK accounting is not
-            // going to happen
-            throw new NotImplementedException();
-        }
-
         public string GetStats()
         {
             // TODO: ???

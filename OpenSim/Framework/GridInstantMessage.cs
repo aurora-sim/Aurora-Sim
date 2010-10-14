@@ -26,12 +26,15 @@
  */
 
 using System;
+using System.Collections.Generic;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
+using Aurora.Framework;
 
 namespace OpenSim.Framework
 {
     [Serializable]
-    public class GridInstantMessage
+    public class GridInstantMessage : IDataTransferable
     {
         public Guid fromAgentID;
         public string fromAgentName;
@@ -90,7 +93,37 @@ namespace OpenSim.Framework
                 _fromAgentID ^ _toAgentID, _offline, _position, new byte[0])
         {
         }
-        public GridInstantMessage(System.Collections.Generic.Dictionary<string, object> RetVal)
+
+        public override Dictionary<string, object> ToKeyValuePairs()
+        {
+            Dictionary<string, object> RetVal = new Dictionary<string, object>();
+            RetVal.Add("fromAgentID", fromAgentID);
+            RetVal.Add("fromAgentName", fromAgentName);
+            RetVal.Add("toAgentID", toAgentID);
+            RetVal.Add("dialog", dialog);
+            RetVal.Add("fromGroup", fromGroup);
+            RetVal.Add("message", message);
+            RetVal.Add("imSessionID", imSessionID);
+            RetVal.Add("offline", offline);
+            RetVal.Add("Position", Position);
+            RetVal.Add("binaryBucket", Utils.BytesToString(binaryBucket));
+            RetVal.Add("ParentEstateID", ParentEstateID);
+            RetVal.Add("RegionID", RegionID);
+            RetVal.Add("timestamp", timestamp);
+            return RetVal;
+        }
+
+        public override void FromOSD(OSDMap map)
+        {
+            FromKVP(OSDToDictionary(map));
+        }
+
+        public override OSDMap ToOSD()
+        {
+            return DictionaryToOSD(ToKeyValuePairs());
+        }
+
+        public override void FromKVP(Dictionary<string, object> RetVal)
         {
             fromAgentID = UUID.Parse(RetVal["fromAgentID"].ToString()).Guid;
             fromAgentName = RetVal["fromAgentName"].ToString();
@@ -103,26 +136,35 @@ namespace OpenSim.Framework
             binaryBucket = Utils.StringToBytes(RetVal["binaryBucket"].ToString());
             ParentEstateID = uint.Parse(RetVal["ParentEstateID"].ToString());
             RegionID = UUID.Parse(RetVal["RegionID"].ToString()).Guid;
+            imSessionID = UUID.Parse(RetVal["imSessionID"].ToString()).Guid;
             timestamp = uint.Parse(RetVal["timestamp"].ToString());
         }
 
-        public System.Collections.Generic.Dictionary<string, object> ToKeyValuePairs()
+        private OSDMap DictionaryToOSD(Dictionary<string, object> sendData)
         {
-            System.Collections.Generic.Dictionary<string, object> RetVal = new System.Collections.Generic.Dictionary<string, object>();
-            RetVal.Add("fromAgentID", fromAgentID);
-            RetVal.Add("fromAgentName", fromAgentName);
-            RetVal.Add("toAgentID", toAgentID);
-            RetVal.Add("dialog", dialog);
-            RetVal.Add("fromGroup", fromGroup);
-            RetVal.Add("message", message);
-            RetVal.Add("imSessionID", imSessionID);
-            RetVal.Add("offline", offline);
-            RetVal.Add("Position", Position);
-            RetVal.Add("binaryBucket", binaryBucket);
-            RetVal.Add("ParentEstateID", ParentEstateID);
-            RetVal.Add("RegionID", RegionID);
-            RetVal.Add("timestamp", timestamp);
-            return RetVal;
+            OSDMap map = new OSDMap();
+            foreach (KeyValuePair<string, object> kvp in sendData)
+            {
+                map[kvp.Key] = OSD.FromObject(kvp.Value);
+            }
+            return map;
+        }
+
+        private Dictionary<string, object> OSDToDictionary(OSDMap map)
+        {
+            Dictionary<string, object> retVal = new Dictionary<string, object>();
+            foreach (string key in map.Keys)
+            {
+                retVal.Add(key, map[key]);
+            }
+            return retVal;
+        }
+
+        public override IDataTransferable Duplicate()
+        {
+            GridInstantMessage m = new GridInstantMessage();
+            m.FromOSD(ToOSD());
+            return m;
         }
     }
 }

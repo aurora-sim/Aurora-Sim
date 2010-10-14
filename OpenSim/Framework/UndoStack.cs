@@ -97,18 +97,5 @@ namespace OpenSim.Framework
         {
             return m_Undos[m_new];
         }
-
-        public void Clear()
-        {
-            if (Count > 0)
-            {
-                for (int i = 0; i < m_Undos.Length; i++)
-                {
-                    m_Undos[i] = default(T);
-                }
-                m_new = 1;
-                m_old = 0;
-            }
-        }
     }
 }

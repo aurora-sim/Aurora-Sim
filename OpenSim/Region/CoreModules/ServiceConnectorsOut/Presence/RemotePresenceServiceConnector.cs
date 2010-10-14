@@ -153,6 +153,11 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Presence
             return m_RemoteConnector.GetAgents(userIDs);
         }
 
+        public string[] GetAgentsLocations(string[] userIDs)
+        {
+            return m_RemoteConnector.GetAgentsLocations(userIDs);
+        }
+
         #endregion
 
     }

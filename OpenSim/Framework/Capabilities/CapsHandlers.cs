@@ -162,7 +162,15 @@ namespace OpenSim.Framework.Capabilities
                 {
                     // skip SEED cap
                     if ("SEED" == capsName) continue;
-                    caps[capsName] = baseUrl + m_capsHandlers[capsName].Path;
+                    if (m_capsHandlers[capsName].Path.Contains(":"))
+                    {
+                        //Should allow for external CAPS paths
+                        caps[capsName] = m_capsHandlers[capsName].Path;
+                    }
+                    else
+                    {
+                        caps[capsName] = baseUrl + m_capsHandlers[capsName].Path;
+                    }
                 }
                 return caps;
             }

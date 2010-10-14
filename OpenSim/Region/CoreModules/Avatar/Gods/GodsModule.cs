@@ -25,16 +25,19 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using System.Collections.Generic;
 using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Region.Framework.Interfaces;
+using Mono.Addins;
 
 namespace OpenSim.Region.CoreModules.Avatar.Gods
 {
-    public class GodsModule : IRegionModule, IGodsModule
+    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
+    public class GodsModule : INonSharedRegionModule, IGodsModule
     {
         /// <summary>Special UUID for actions that apply to all agents</summary>
         private static readonly UUID ALL_AGENTS = new UUID("44e87126-e794-4ded-05b3-7c42da3d5cdb");
@@ -42,30 +45,37 @@ namespace OpenSim.Region.CoreModules.Avatar.Gods
         protected Scene m_scene;
         protected IDialogModule m_dialogModule;
         
-        public void Initialise(Scene scene, IConfigSource source)
+        public void Initialise(IConfigSource source)
+        {
+        }
+
+        public void AddRegion(Scene scene)
         {
             m_scene = scene;
-            m_dialogModule = m_scene.RequestModuleInterface<IDialogModule>();
             m_scene.RegisterModuleInterface<IGodsModule>(this);
-            m_scene.EventManager.OnNewClient += SubscribeToClientEvents;
         }
-        
-        public void PostInitialise() {}
+
+        public void RemoveRegion(Scene scene)
+        {
+
+        }
+
+        public void RegionLoaded(Scene scene)
+        {
+            m_dialogModule = m_scene.RequestModuleInterface<IDialogModule>();
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
+        }
+
+        public void PostInitialise()
+        {
+        }
         public void Close() {}
         public string Name { get { return "Gods Module"; } }
         public bool IsSharedModule { get { return false; } }
-        
-        public void SubscribeToClientEvents(IClientAPI client)
-        {
-            client.OnGodKickUser += KickUser;
-            client.OnRequestGodlikePowers += RequestGodlikePowers;
-        }
-        
-        public void UnsubscribeFromClientEvents(IClientAPI client)
-        {
-            client.OnGodKickUser -= KickUser;
-            client.OnRequestGodlikePowers -= RequestGodlikePowers;
-        }
         
         public void RequestGodlikePowers(
             UUID agentID, UUID sessionID, UUID token, bool godLike, IClientAPI controllingClient)
@@ -154,7 +164,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Gods
                         }
                         else
                         {
-                            m_scene.SceneGraph.removeUserCount(!sp.IsChildAgent);
+                            m_scene.removeUserCount(!sp.IsChildAgent);
 
                             sp.ControllingClient.Kick(Utils.BytesToString(reason));
                             sp.ControllingClient.Close();
@@ -163,14 +173,14 @@ namespace OpenSim.Region.CoreModules.Avatar.Gods
                     
                     if (kickflags == 1)
                     {
-                        sp.AllowMovement = false;
+                        sp.Frozen = true;
                         m_dialogModule.SendAlertToUser(agentID, Utils.BytesToString(reason));
                         m_dialogModule.SendAlertToUser(godID, "User Frozen");
                     }
                     
                     if (kickflags == 2)
                     {
-                        sp.AllowMovement = true;
+                        sp.Frozen = false;
                         m_dialogModule.SendAlertToUser(agentID, Utils.BytesToString(reason));
                         m_dialogModule.SendAlertToUser(godID, "User Unfrozen");
                     }

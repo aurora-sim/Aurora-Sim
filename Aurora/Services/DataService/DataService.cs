@@ -17,87 +17,62 @@ namespace Aurora.Services.DataService
     public class LocalDataService
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        internal IConfig m_config;
-        string PluginModule = "";
-        string ConnectionString = "";
+        private string StorageProvider = "";
+        private string ConnectionString = "";
 
         public void Initialise(IConfigSource source)
         {
-            m_config = source.Configs["AuroraData"];
-            if (null == m_config)
+            //
+            // Try reading the [DatabaseService] section, if it exists
+            //
+            IConfig dbConfig = source.Configs["DatabaseService"];
+            if (dbConfig != null)
             {
-                m_log.Error("[AuroraData]: no data plugin found!");
-                return;
+                StorageProvider = dbConfig.GetString("StorageProvider", String.Empty);
+                ConnectionString = dbConfig.GetString("ConnectionString", String.Empty);
             }
 
-            PluginModule = m_config.GetString("PluginModule", "");
-            ConnectionString = m_config.GetString("ConnectionString", "");
-            IGenericData ScriptSaveDataConnector = null;
+            //
+            // [AuroraData] section overrides [DatabaseService], if it exists
+            //
+            IConfig m_config = source.Configs["AuroraData"];
+            if (m_config != null)
+            {
+                StorageProvider = m_config.GetString("StorageProvider", StorageProvider);
+                ConnectionString = m_config.GetString("ConnectionString", ConnectionString);
+            }
+
             IGenericData DataConnector = null;
-            if (PluginModule == "MySQL")
+            if (StorageProvider == "MySQL" || StorageProvider == "OpenSim.Data.MySQL.dll") //Allow for fallback when AuroraData isn't set
             {
                 DataManager.DataSessionProviderConnector.DataSessionProvider = new DataSessionProvider(DataManagerTechnology.MySql, ConnectionString);
                 MySQLDataLoader GenericData = new MySQLDataLoader();
-                GenericData.ConnectToDatabase(ConnectionString);
-                ScriptSaveDataConnector = GenericData;
-
-                var migrationManager = new MigrationManager(DataManager.DataSessionProviderConnector.DataSessionProvider, GenericData);
-                migrationManager.DetermineOperation();
-                migrationManager.ExecuteOperation();
 
                 DataConnector = GenericData;
             }
-            else if (PluginModule == "MSSQL2008")
+            else if (StorageProvider == "MSSQL2008")
             {
                 DataManager.DataSessionProviderConnector.DataSessionProvider = new DataSessionProvider(DataManagerTechnology.MSSQL2008, ConnectionString);
                 MSSQLDataLoader GenericData = new MSSQLDataLoader();
-                GenericData.ConnectToDatabase(ConnectionString);
-                ScriptSaveDataConnector = GenericData;
-
-                var migrationManager = new MigrationManager(DataManager.DataSessionProviderConnector.DataSessionProvider, GenericData);
-                migrationManager.DetermineOperation();
-                migrationManager.ExecuteOperation();
 
                 DataConnector = GenericData;
             }
-            else if (PluginModule == "MSSQL7")
+            else if (StorageProvider == "MSSQL7")
             {
                 DataManager.DataSessionProviderConnector.DataSessionProvider = new DataSessionProvider(DataManagerTechnology.MSSQL7, ConnectionString);
                 MSSQLDataLoader GenericData = new MSSQLDataLoader();
-                GenericData.ConnectToDatabase(ConnectionString);
-                ScriptSaveDataConnector = GenericData;
-
-                var migrationManager = new MigrationManager(DataManager.DataSessionProviderConnector.DataSessionProvider, GenericData);
-                migrationManager.DetermineOperation();
-                migrationManager.ExecuteOperation();
 
                 DataConnector = GenericData;
             }
-            else if (PluginModule == "SQLite")
+            else if (StorageProvider == "SQLite" || StorageProvider == "OpenSim.Data.SQLite.dll") //Allow for fallback when AuroraData isn't set
             {
                 DataManager.DataSessionProviderConnector.DataSessionProvider = new DataSessionProvider(DataManagerTechnology.SQLite, ConnectionString);
                 SQLiteLoader GenericData = new SQLiteLoader();
-                GenericData.ConnectToDatabase(ConnectionString);
-
-                //SQLite needs a second database for ScriptSaves, otherwise it locks it up...
-                string ScriptConnectionString = m_config.GetString("ScriptConnectionString", "");
-                DataManager.DataSessionProviderConnector.StateSaveDataSessionProvider = new DataSessionProvider(DataManagerTechnology.SQLite, ScriptConnectionString);
-                SQLiteStateSaver ScriptSaverData = new SQLiteStateSaver();
-                ScriptSaverData.ConnectToDatabase(ScriptConnectionString);
-                ScriptSaveDataConnector = ScriptSaverData;
-
-                var migrationManager = new MigrationManager(DataManager.DataSessionProviderConnector.DataSessionProvider, GenericData);
-                migrationManager.DetermineOperation();
-                migrationManager.ExecuteOperation();
-
-                var statesavemigrationManager = new MigrationManager(DataManager.DataSessionProviderConnector.StateSaveDataSessionProvider, ScriptSaverData);
-                statesavemigrationManager.DetermineOperation();
-                statesavemigrationManager.ExecuteOperation();
 
                 DataConnector = GenericData;
             }
 
-            Aurora.Framework.AuroraModuleLoader.LoadPlugins<IAuroraDataPlugin>("/Aurora/DataPlugin", new AuroraDataPluginInitialiser(DataConnector, source));
+            Aurora.Framework.AuroraModuleLoader.LoadPlugins<IAuroraDataPlugin>("/Aurora/DataPlugin", new AuroraDataPluginInitialiser(DataConnector, source, ConnectionString));
         }
     }
 
@@ -105,16 +80,19 @@ namespace Aurora.Services.DataService
     {
         IGenericData GD;
         IConfigSource m_source;
+        string m_defaultConnectionString = "";
 
-        public AuroraDataPluginInitialiser(IGenericData GenericData, IConfigSource source)
+        public AuroraDataPluginInitialiser(IGenericData GenericData, IConfigSource source, string DefaultConnectionString)
         {
             GD = GenericData;
             m_source = source;
+            m_defaultConnectionString = DefaultConnectionString;
         }
         public override void Initialise(IPlugin plugin)
         {
             IAuroraDataPlugin dataplugin = plugin as IAuroraDataPlugin;
-            dataplugin.Initialise(GD, m_source);
+            IGenericData GenericData = GD.Copy();
+            dataplugin.Initialise(GenericData, m_source, m_defaultConnectionString);
         }
     }
 }

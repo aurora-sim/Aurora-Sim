@@ -106,21 +106,21 @@ namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
             }
         }
 
-        public UUID AddDynamicTextureURL(UUID simID, UUID primID, string contentType, string url,
+        public UUID AddDynamicTextureURL(UUID simID, UUID primID, UUID oldAssetID, string contentType, string url,
                                          string extraParams, int updateTimer)
         {
-            return AddDynamicTextureURL(simID, primID, contentType, url, extraParams, updateTimer, false, 255);
+            return AddDynamicTextureURL(simID, primID, oldAssetID, contentType, url, extraParams, updateTimer, false, 255);
         }
 
-        public UUID AddDynamicTextureURL(UUID simID, UUID primID, string contentType, string url,
+        public UUID AddDynamicTextureURL(UUID simID, UUID primID, UUID oldAssetID, string contentType, string url,
                                          string extraParams, int updateTimer, bool SetBlending, byte AlphaValue)
         {
-            return AddDynamicTextureURL(simID, primID, contentType, url,
+            return AddDynamicTextureURL(simID, primID, oldAssetID, contentType, url,
                                           extraParams, updateTimer, SetBlending, 
                                          (int)(DISP_TEMP|DISP_EXPIRE), AlphaValue, ALL_SIDES);
         }
 
-        public UUID AddDynamicTextureURL(UUID simID, UUID primID, string contentType, string url,
+        public UUID AddDynamicTextureURL(UUID simID, UUID primID, UUID oldAssetID, string contentType, string url,
                                          string extraParams, int updateTimer, bool SetBlending, 
                                          int disp, byte AlphaValue, int face)
         {
@@ -138,6 +138,7 @@ namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
                 updater.FrontAlpha = AlphaValue;
                 updater.Face = face;
                 updater.Disp = disp;
+                updater.LastAssetID = oldAssetID;
 
                 lock (Updaters)
                 {
@@ -153,20 +154,20 @@ namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
             return UUID.Zero;
         }
 
-        public UUID AddDynamicTextureData(UUID simID, UUID primID, string contentType, string data,
+        public UUID AddDynamicTextureData(UUID simID, UUID primID, UUID oldAssetID, string contentType, string data,
                                           string extraParams, int updateTimer)
         {
-            return AddDynamicTextureData(simID, primID, contentType, data, extraParams, updateTimer, false, 255);
+            return AddDynamicTextureData(simID, primID, oldAssetID, contentType, data, extraParams, updateTimer, false, 255);
         }
 
-        public UUID AddDynamicTextureData(UUID simID, UUID primID, string contentType, string data,
+        public UUID AddDynamicTextureData(UUID simID, UUID primID, UUID oldAssetID, string contentType, string data,
                                           string extraParams, int updateTimer, bool SetBlending, byte AlphaValue)
         {
-            return AddDynamicTextureData(simID, primID, contentType, data, extraParams, updateTimer, SetBlending, 
+            return AddDynamicTextureData(simID, primID, oldAssetID, contentType, data, extraParams, updateTimer, SetBlending, 
                                           (int) (DISP_TEMP|DISP_EXPIRE), AlphaValue, ALL_SIDES);
         }
 
-        public UUID AddDynamicTextureData(UUID simID, UUID primID, string contentType, string data,
+        public UUID AddDynamicTextureData(UUID simID, UUID primID, UUID oldAssetID, string contentType, string data,
                                           string extraParams, int updateTimer, bool SetBlending, int disp, byte AlphaValue, int face)
         {
             if (RenderPlugins.ContainsKey(contentType))
@@ -184,6 +185,7 @@ namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
                 updater.Face = face;
                 updater.Url = "Local image";
                 updater.Disp = disp;
+                updater.LastAssetID = oldAssetID;
 
                 lock (Updaters)
                 {
@@ -273,7 +275,7 @@ namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
             public string BodyData;
             public string ContentType;
             public byte FrontAlpha = 255;
-            public UUID LastAssetID;
+            public UUID LastAssetID = UUID.Zero;
             public string Params;
             public UUID PrimID;
             public bool SetNewFrontAlpha = false;
@@ -286,7 +288,6 @@ namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
 
             public DynamicTextureUpdater()
             {
-                LastAssetID = UUID.Zero;
                 UpdateTimer = 0;
                 BodyData = null;
             }
@@ -302,7 +303,7 @@ namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
                 {
                     string msg = 
                         String.Format("DynamicTextureModule: Error preparing image using URL {0}", Url);
-                    scene.SimChat(Utils.StringToBytes(msg), ChatTypeEnum.Say,
+                    scene.SimChat(msg, ChatTypeEnum.Say,
                                   0, part.ParentGroup.RootPart.AbsolutePosition, part.Name, part.UUID, false);
                     return;
                 }
@@ -328,15 +329,29 @@ namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
                     Array.Copy(data, assetData, data.Length);
                 }
 
-                // Create a new asset for user
-                AssetBase asset = new AssetBase(UUID.Random(), "DynamicImage" + Util.RandomClass.Next(1, 10000), (sbyte)AssetType.Texture,
-                    scene.RegionInfo.RegionID.ToString());
-                asset.Data = assetData;
-                asset.Description = String.Format("URL image : {0}", Url);
-                asset.Local = false;
-                asset.Temporary = ((Disp & DISP_TEMP) != 0);
-                scene.AssetService.Store(asset);
-//                scene.CommsManager.AssetCache.AddAsset(asset);
+                AssetBase asset = null;
+
+                if (LastAssetID != UUID.Zero)
+                {
+                    asset = scene.AssetService.Get(LastAssetID.ToString());
+                    asset.Description = String.Format("URL image : {0}", Url);
+                    asset.Data = assetData;
+                    asset.Local = false;
+                    asset.Temporary = ((Disp & DISP_TEMP) != 0);
+                    scene.AssetService.Store(asset);
+                }
+                else
+                {
+
+                    // Create a new asset for user
+                    asset = new AssetBase(UUID.Random(), "DynamicImage" + Util.RandomClass.Next(1, 10000), (sbyte)AssetType.Texture,
+                        scene.RegionInfo.RegionID.ToString());
+                    asset.Data = assetData;
+                    asset.Description = String.Format("URL image : {0}", Url);
+                    asset.Local = false;
+                    asset.Temporary = ((Disp & DISP_TEMP) != 0);
+                    scene.AssetService.Store(asset);
+                }
 
                 IJ2KDecoder cacheLayerDecode = scene.RequestModuleInterface<IJ2KDecoder>();
                 if (cacheLayerDecode != null)

@@ -28,6 +28,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.Reflection;
 using log4net;
 using Nini.Config;
@@ -36,8 +37,9 @@ using OpenMetaverse.Imaging;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using Mono.Addins;
 
-namespace OpenSim.Region.CoreModules.World.LegacyMap
+namespace OpenSim.Region.CoreModules.World.WorldMap
 {
     public enum DrawRoutine
     {
@@ -59,6 +61,7 @@ namespace OpenSim.Region.CoreModules.World.LegacyMap
         public face[] trns;
     }
 
+    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class MapImageModule : IMapImageGenerator, INonSharedRegionModule
     {
         private static readonly ILog m_log =
@@ -67,66 +70,104 @@ namespace OpenSim.Region.CoreModules.World.LegacyMap
         private Scene m_scene;
         private IConfigSource m_config;
         private IMapTileTerrainRenderer terrainRenderer;
-        private bool m_Enabled = false;
+        
 
+         
         #region IMapImageGenerator Members
 
         public Bitmap CreateMapTile()
         {
             bool drawPrimVolume = true;
-            bool textureTerrain = false;
+            string tileRenderer = "WarpTileRenderer";
 
-            try
+            if (m_config.Configs["MapModule"] != null)
             {
-                IConfig startupConfig = m_config.Configs["Startup"];
-                drawPrimVolume = startupConfig.GetBoolean("DrawPrimOnMapTile", drawPrimVolume);
-                textureTerrain = startupConfig.GetBoolean("TextureOnMapTile", textureTerrain);
-            }
-            catch
-            {
-                m_log.Warn("[MAPTILE]: Failed to load StartupConfig");
+                drawPrimVolume = m_config.Configs["MapModule"].GetBoolean("DrawPrimOnMapTile", drawPrimVolume);
+                tileRenderer = m_config.Configs["MapModule"].GetString("TerrainTileRenderer", tileRenderer);
             }
 
-            if (textureTerrain)
+            if (tileRenderer == "TexturedMapTileRenderer")
             {
                 terrainRenderer = new TexturedMapTileRenderer();
             }
-            else
+            else if (tileRenderer == "ShadedMapTileRenderer")
             {
                 terrainRenderer = new ShadedMapTileRenderer();
             }
+            else
+            {
+                terrainRenderer = new WarpTileRenderer();
+            }
+
             terrainRenderer.Initialise(m_scene, m_config);
 
             Bitmap mapbmp = new Bitmap((int)Constants.RegionSize, (int)Constants.RegionSize, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-            //long t = System.Environment.TickCount;
-            //for (int i = 0; i < 10; ++i) {
             terrainRenderer.TerrainToBitmap(mapbmp);
-            //}
-            //t = System.Environment.TickCount - t;
-            //m_log.InfoFormat("[MAPTILE] generation of 10 maptiles needed {0} ms", t);
-
-
+            
             if (drawPrimVolume)
             {
-                DrawObjectVolume(m_scene, mapbmp);
+                if(mapbmp != null) //If something goes seriously wrong, this DOES happen
+                    DrawObjectVolume(m_scene, mapbmp);
             }
-
+            if (m_mapping != null)
+                m_mapping.Clear();
             return mapbmp;
         }
 
-        public byte[] WriteJpeg2000Image()
+        public void CreateMapTile(out Bitmap terrainBMP, out Bitmap mapBMP)
         {
-            try
+            bool drawPrimVolume = true;
+            string tileRenderer = "WarpTileRenderer";
+
+            if (m_config.Configs["MapModule"] != null)
             {
-                using (Bitmap mapbmp = CreateMapTile())
-                    return OpenJPEG.EncodeFromImage(mapbmp, true);
-            }
-            catch (Exception e) // LEGIT: Catching problems caused by OpenJPEG p/invoke
-            {
-                m_log.Error("Failed generating terrain map: " + e);
+                drawPrimVolume = m_config.Configs["MapModule"].GetBoolean("DrawPrimOnMapTile", drawPrimVolume);
+                tileRenderer = m_config.Configs["MapModule"].GetString("TerrainTileRenderer", tileRenderer);
             }
 
-            return null;
+            if (tileRenderer == "TexturedMapTileRenderer")
+            {
+                terrainRenderer = new TexturedMapTileRenderer();
+            }
+            else if (tileRenderer == "ShadedMapTileRenderer")
+            {
+                terrainRenderer = new ShadedMapTileRenderer();
+            }
+            else
+            {
+                terrainRenderer = new WarpTileRenderer();
+                drawPrimVolume = false;
+            }
+
+            terrainRenderer.Initialise(m_scene, m_config);
+
+            mapBMP = null;
+            terrainBMP = new Bitmap((int)Constants.RegionSize, (int)Constants.RegionSize, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            terrainBMP = terrainRenderer.TerrainToBitmap(terrainBMP);
+
+            mapBMP = terrainBMP;
+
+            if (drawPrimVolume)
+            {
+                if (mapBMP != null) //If something goes seriously wrong, this DOES happen
+                    mapBMP = DrawObjectVolume(m_scene, mapBMP);
+            }
+
+            if(m_mapping != null)
+                m_mapping.Clear();
+        }
+
+        public void CreateMapTile(out byte[] terrain, out byte[] map)
+        {
+            terrain = null;
+            map = null;
+            Bitmap terrainBMP, mapBMP;
+            CreateMapTile(out terrainBMP, out mapBMP);
+
+            if(mapBMP != null)
+                map = OpenJPEG.EncodeFromImage(mapBMP, true);
+            if(terrainBMP != null)
+                terrain = OpenJPEG.EncodeFromImage(terrainBMP, true);
         }
 
         #endregion
@@ -136,30 +177,36 @@ namespace OpenSim.Region.CoreModules.World.LegacyMap
         public void Initialise(IConfigSource source)
         {
             m_config = source;
+        }
+
+        public void AddRegion(Scene scene)
+        {
+            m_scene = scene;
 
             IConfig startupConfig = m_config.Configs["Startup"];
             if (startupConfig.GetString("MapImageModule", "MapImageModule") !=
                     "MapImageModule")
                 return;
 
-            m_Enabled = true;
+            m_scene.RegisterModuleInterface<IMapImageGenerator>(this);
         }
 
-        public void AddRegion(Scene scene)
+        public void RemoveRegion(Scene scene)
         {
-            if (!m_Enabled)
-                return;
 
-            m_scene = scene;
-
-            m_scene.RegisterModuleInterface<IMapImageGenerator>(this);
         }
 
         public void RegionLoaded(Scene scene)
         {
+
         }
 
-        public void RemoveRegion(Scene scene)
+        public Type ReplaceableInterface
+        {
+            get { return null; }
+        }
+
+        public void PostInitialise()
         {
         }
 
@@ -172,61 +219,20 @@ namespace OpenSim.Region.CoreModules.World.LegacyMap
             get { return "MapImageModule"; }
         }
 
-        public Type ReplaceableInterface
+        public bool IsSharedModule
         {
-            get { return null; }
+            get { return false; }
         }
 
         #endregion
-
-// TODO: unused:
-//         private void ShadeBuildings(Bitmap map)
-//         {
-//             lock (map)
-//             {
-//                 lock (m_scene.Entities)
-//                 {
-//                     foreach (EntityBase entity in m_scene.Entities.Values)
-//                     {
-//                         if (entity is SceneObjectGroup)
-//                         {
-//                             SceneObjectGroup sog = (SceneObjectGroup) entity;
-//
-//                             foreach (SceneObjectPart primitive in sog.Children.Values)
-//                             {
-//                                 int x = (int) (primitive.AbsolutePosition.X - (primitive.Scale.X / 2));
-//                                 int y = (int) (primitive.AbsolutePosition.Y - (primitive.Scale.Y / 2));
-//                                 int w = (int) primitive.Scale.X;
-//                                 int h = (int) primitive.Scale.Y;
-//
-//                                 int dx;
-//                                 for (dx = x; dx < x + w; dx++)
-//                                 {
-//                                     int dy;
-//                                     for (dy = y; dy < y + h; dy++)
-//                                     {
-//                                         if (x < 0 || y < 0)
-//                                             continue;
-//                                         if (x >= map.Width || y >= map.Height)
-//                                             continue;
-//
-//                                         map.SetPixel(dx, dy, Color.DarkGray);
-//                                     }
-//                                 }
-//                             }
-//                         }
-//                     }
-//                 }
-//             }
-//         }
 
         private Bitmap DrawObjectVolume(Scene whichScene, Bitmap mapbmp)
         {
             int tc = 0;
             double[,] hm = whichScene.Heightmap.GetDoubles();
             tc = Environment.TickCount;
-            m_log.Info("[MAPTILE]: Generating Maptile Step 2: Object Volume Profile");
-            EntityBase[] objs = whichScene.GetEntities();
+            //m_log.Info("[MAPTILE]: Generating Maptile Step 2: Object Volume Profile");
+            List<EntityBase> objs = whichScene.GetEntities();
             Dictionary<uint, DrawStruct> z_sort = new Dictionary<uint, DrawStruct>();
             //SortedList<float, RectangleDrawStruct> z_sort = new SortedList<float, RectangleDrawStruct>();
             List<float> z_sortheights = new List<float>();
@@ -241,68 +247,15 @@ namespace OpenSim.Region.CoreModules.World.LegacyMap
                     {
                         SceneObjectGroup mapdot = (SceneObjectGroup)obj;
                         Color mapdotspot = Color.Gray; // Default color when prim color is white
-                        
                         // Loop over prim in group
-                        foreach (SceneObjectPart part in mapdot.Parts)
+                        foreach (SceneObjectPart part in mapdot.ChildrenList)
                         {
                             if (part == null)
                                 continue;
 
-                            // Draw if the object is at least 1 meter wide in any direction
-                            if (part.Scale.X > 1f || part.Scale.Y > 1f || part.Scale.Z > 1f)
+                            // Draw if the object is at least .5 meter wide in any direction
+                            if (part.Scale.X > .5f || part.Scale.Y > .5f || part.Scale.Z > .5f)
                             {
-                                // Try to get the RGBA of the default texture entry..
-                                //
-                                try
-                                {
-                                    // get the null checks out of the way
-                                    // skip the ones that break
-                                    if (part == null)
-                                        continue;
-
-                                    if (part.Shape == null)
-                                        continue;
-
-                                    if (part.Shape.PCode == (byte)PCode.Tree || part.Shape.PCode == (byte)PCode.NewTree || part.Shape.PCode == (byte)PCode.Grass)
-                                        continue; // eliminates trees from this since we don't really have a good tree representation
-                                    // if you want tree blocks on the map comment the above line and uncomment the below line
-                                    //mapdotspot = Color.PaleGreen;
-
-                                    Primitive.TextureEntry textureEntry = part.Shape.Textures;
-
-                                    if (textureEntry == null || textureEntry.DefaultTexture == null)
-                                        continue;
-
-                                    Color4 texcolor = textureEntry.DefaultTexture.RGBA;
-
-                                    // Not sure why some of these are null, oh well.
-
-                                    int colorr = 255 - (int)(texcolor.R * 255f);
-                                    int colorg = 255 - (int)(texcolor.G * 255f);
-                                    int colorb = 255 - (int)(texcolor.B * 255f);
-
-                                    if (!(colorr == 255 && colorg == 255 && colorb == 255))
-                                    {
-                                        //Try to set the map spot color
-                                        try
-                                        {
-                                            // If the color gets goofy somehow, skip it *shakes fist at Color4
-                                            mapdotspot = Color.FromArgb(colorr, colorg, colorb);
-                                        }
-                                        catch (ArgumentException)
-                                        {
-                                        }
-                                    }
-                                }
-                                catch (IndexOutOfRangeException)
-                                {
-                                    // Windows Array
-                                }
-                                catch (ArgumentOutOfRangeException)
-                                {
-                                    // Mono Array
-                                }
-
                                 Vector3 pos = part.GetWorldPosition();
 
                                 // skip prim outside of retion
@@ -327,15 +280,60 @@ namespace OpenSim.Region.CoreModules.World.LegacyMap
 
                                 if (isBelow256AboveTerrain)
                                 {
+                                    // Try to get the RGBA of the default texture entry..
+                                    //
+                                    try
+                                    {
+                                        // get the null checks out of the way
+                                        // skip the ones that break
+                                        if (part == null)
+                                            continue;
+
+                                        if (part.Shape == null)
+                                            continue;
+
+                                        if (part.Shape.PCode == (byte)PCode.Tree || part.Shape.PCode == (byte)PCode.NewTree || part.Shape.PCode == (byte)PCode.Grass)
+                                            continue; // eliminates trees from this since we don't really have a good tree representation
+                                        // if you want tree blocks on the map comment the above line and uncomment the below line
+                                        //mapdotspot = Color.PaleGreen;
+
+                                        Primitive.TextureEntry textureEntry = part.Shape.Textures;
+
+                                        if (textureEntry == null || textureEntry.DefaultTexture == null)
+                                            continue;
+                                        Color texcolor = Color.Black;
+                                        try
+                                        {
+                                            Primitive.TextureEntryFace tx = part.Shape.Textures.CreateFace(6);
+                                            texcolor = computeAverageColor(tx.TextureID, Color.Black);
+                                        }
+                                        catch (Exception)
+                                        {
+                                            texcolor = Color.FromArgb((int)textureEntry.DefaultTexture.RGBA.A, (int)textureEntry.DefaultTexture.RGBA.R, (int)textureEntry.DefaultTexture.RGBA.G, (int)textureEntry.DefaultTexture.RGBA.B);
+                                        }
+
+                                        if (!(texcolor.R == 255 && texcolor.G == 255 && texcolor.B == 255))
+                                        {
+                                            // Try to set the map spot color
+                                            // If the color gets goofy somehow, skip it *shakes fist at Color4
+                                            mapdotspot = texcolor;
+                                        }
+                                    }
+                                    catch (IndexOutOfRangeException)
+                                    {
+                                        // Windows Array
+                                    }
+                                    catch (ArgumentOutOfRangeException)
+                                    {
+                                        // Mono Array
+                                    }
                                     // Translate scale by rotation so scale is represented properly when object is rotated
                                     Vector3 lscale = new Vector3(part.Shape.Scale.X, part.Shape.Scale.Y, part.Shape.Scale.Z);
                                     Vector3 scale = new Vector3();
                                     Vector3 tScale = new Vector3();
-                                    Vector3 axPos = new Vector3(pos.X,pos.Y,pos.Z);
+                                    Vector3 axPos = new Vector3(pos.X, pos.Y, pos.Z);
 
-                                    Quaternion llrot = part.GetWorldRotation();
-                                    Quaternion rot = new Quaternion(llrot.W, llrot.X, llrot.Y, llrot.Z);
-                                    scale = lscale * rot;
+                                    scale = lscale * part.GetWorldRotation();
 
                                     // negative scales don't work in this situation
                                     scale.X = Math.Abs(scale.X);
@@ -354,7 +352,7 @@ namespace OpenSim.Region.CoreModules.World.LegacyMap
                                                           || mapdrawendY > ((int)Constants.RegionSize - 1))
                                         continue;
 
-#region obb face reconstruction part duex
+                                    #region obb face reconstruction part duex
                                     Vector3[] vertexes = new Vector3[8];
 
                                     // float[] distance = new float[6];
@@ -364,7 +362,7 @@ namespace OpenSim.Region.CoreModules.World.LegacyMap
                                     Vector3[] FaceD = new Vector3[6]; // vertex D for Facei
 
                                     tScale = new Vector3(lscale.X, -lscale.Y, lscale.Z);
-                                    scale = ((tScale * rot));
+                                    scale = ((tScale * part.GetWorldRotation()));
                                     vertexes[0] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
                                     // vertexes[0].x = pos.X + vertexes[0].x;
                                     //vertexes[0].y = pos.Y + vertexes[0].y;
@@ -375,7 +373,7 @@ namespace OpenSim.Region.CoreModules.World.LegacyMap
                                     FaceA[4] = vertexes[0];
 
                                     tScale = lscale;
-                                    scale = ((tScale * rot));
+                                    scale = ((tScale * part.GetWorldRotation()));
                                     vertexes[1] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
 
                                     // vertexes[1].x = pos.X + vertexes[1].x;
@@ -387,7 +385,7 @@ namespace OpenSim.Region.CoreModules.World.LegacyMap
                                     FaceC[4] = vertexes[1];
 
                                     tScale = new Vector3(lscale.X, -lscale.Y, -lscale.Z);
-                                    scale = ((tScale * rot));
+                                    scale = ((tScale * part.GetWorldRotation()));
 
                                     vertexes[2] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
 
@@ -400,7 +398,7 @@ namespace OpenSim.Region.CoreModules.World.LegacyMap
                                     FaceC[5] = vertexes[2];
 
                                     tScale = new Vector3(lscale.X, lscale.Y, -lscale.Z);
-                                    scale = ((tScale * rot));
+                                    scale = ((tScale * part.GetWorldRotation()));
                                     vertexes[3] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
 
                                     //vertexes[3].x = pos.X + vertexes[3].x;
@@ -412,7 +410,7 @@ namespace OpenSim.Region.CoreModules.World.LegacyMap
                                     FaceA[5] = vertexes[3];
 
                                     tScale = new Vector3(-lscale.X, lscale.Y, lscale.Z);
-                                    scale = ((tScale * rot));
+                                    scale = ((tScale * part.GetWorldRotation()));
                                     vertexes[4] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
 
                                     // vertexes[4].x = pos.X + vertexes[4].x;
@@ -424,7 +422,7 @@ namespace OpenSim.Region.CoreModules.World.LegacyMap
                                     FaceD[4] = vertexes[4];
 
                                     tScale = new Vector3(-lscale.X, lscale.Y, -lscale.Z);
-                                    scale = ((tScale * rot));
+                                    scale = ((tScale * part.GetWorldRotation()));
                                     vertexes[5] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
 
                                     // vertexes[5].x = pos.X + vertexes[5].x;
@@ -436,7 +434,7 @@ namespace OpenSim.Region.CoreModules.World.LegacyMap
                                     FaceB[5] = vertexes[5];
 
                                     tScale = new Vector3(-lscale.X, -lscale.Y, lscale.Z);
-                                    scale = ((tScale * rot));
+                                    scale = ((tScale * part.GetWorldRotation()));
                                     vertexes[6] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
 
                                     // vertexes[6].x = pos.X + vertexes[6].x;
@@ -448,7 +446,7 @@ namespace OpenSim.Region.CoreModules.World.LegacyMap
                                     FaceB[4] = vertexes[6];
 
                                     tScale = new Vector3(-lscale.X, -lscale.Y, -lscale.Z);
-                                    scale = ((tScale * rot));
+                                    scale = ((tScale * part.GetWorldRotation()));
                                     vertexes[7] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
 
                                     // vertexes[7].x = pos.X + vertexes[7].x;
@@ -458,7 +456,7 @@ namespace OpenSim.Region.CoreModules.World.LegacyMap
                                     FaceD[2] = vertexes[7];
                                     FaceC[3] = vertexes[7];
                                     FaceD[5] = vertexes[7];
-#endregion
+                                    #endregion
 
                                     //int wy = 0;
 
@@ -466,51 +464,41 @@ namespace OpenSim.Region.CoreModules.World.LegacyMap
                                     // loop so we don't lag to death on error handling
                                     DrawStruct ds = new DrawStruct();
                                     ds.brush = new SolidBrush(mapdotspot);
-                                    //ds.rect = new Rectangle(mapdrawstartX, (255 - mapdrawstartY), mapdrawendX - mapdrawstartX, mapdrawendY - mapdrawstartY);
-
-                                    ds.trns = new face[FaceA.Length];
-
-                                    for (int i = 0; i < FaceA.Length; i++)
+                                    if (mapdot.RootPart.Shape.ProfileShape == ProfileShape.Circle)
                                     {
-                                        Point[] working = new Point[5];
-                                        working[0] = project(FaceA[i], axPos);
-                                        working[1] = project(FaceB[i], axPos);
-                                        working[2] = project(FaceD[i], axPos);
-                                        working[3] = project(FaceC[i], axPos);
-                                        working[4] = project(FaceA[i], axPos);
+                                        ds.dr = DrawRoutine.Ellipse;
+                                        Vector3 Location = new Vector3(part.AbsolutePosition.X - (part.Scale.X / 2),
+                                            (256 - (part.AbsolutePosition.Y + (part.Scale.Y / 2))),
+                                            0);
+                                        Location = Location * part.GetWorldRotation();
+                                        ds.rect = new Rectangle((int)Location.X, (int)Location.Y, (int)Math.Abs(part.Shape.Scale.X), (int)Math.Abs(part.Shape.Scale.Y));
+                                    }
+                                    else //if (mapdot.RootPart.Shape.ProfileShape == ProfileShape.Square)
+                                    {
+                                        ds.dr = DrawRoutine.Rectangle;
+                                        //ds.rect = new Rectangle(mapdrawstartX, (255 - mapdrawstartY), mapdrawendX - mapdrawstartX, mapdrawendY - mapdrawstartY);
 
-                                        face workingface = new face();
-                                        workingface.pts = working;
+                                        ds.trns = new face[FaceA.Length];
 
-                                        ds.trns[i] = workingface;
+                                        for (int i = 0; i < FaceA.Length; i++)
+                                        {
+                                            Point[] working = new Point[5];
+                                            working[0] = project(FaceA[i], axPos);
+                                            working[1] = project(FaceB[i], axPos);
+                                            working[2] = project(FaceD[i], axPos);
+                                            working[3] = project(FaceC[i], axPos);
+                                            working[4] = project(FaceA[i], axPos);
+
+                                            face workingface = new face();
+                                            workingface.pts = working;
+
+                                            ds.trns[i] = workingface;
+                                        }
                                     }
 
                                     z_sort.Add(part.LocalId, ds);
                                     z_localIDs.Add(part.LocalId);
                                     z_sortheights.Add(pos.Z);
-
-                                    //for (int wx = mapdrawstartX; wx < mapdrawendX; wx++)
-                                    //{
-                                        //for (wy = mapdrawstartY; wy < mapdrawendY; wy++)
-                                        //{
-                                            //m_log.InfoFormat("[MAPDEBUG]: {0},{1}({2})", wx, (255 - wy),wy);
-                                            //try
-                                            //{
-                                                // Remember, flip the y!
-                                            //    mapbmp.SetPixel(wx, (255 - wy), mapdotspot);
-                                            //}
-                                            //catch (ArgumentException)
-                                            //{
-                                            //    breakYN = true;
-                                            //}
-
-                                            //if (breakYN)
-                                            //    break;
-                                        //}
-
-                                        //if (breakYN)
-                                        //    break;
-                                    //}
                                 } // Object is within 256m Z of terrain
                             } // object is at least a meter wide
                         } // loop over group children
@@ -530,9 +518,16 @@ namespace OpenSim.Region.CoreModules.World.LegacyMap
                     if (z_sort.ContainsKey(sortedlocalIds[s]))
                     {
                         DrawStruct rectDrawStruct = z_sort[sortedlocalIds[s]];
-                        for (int r = 0; r < rectDrawStruct.trns.Length; r++)
+                        if (rectDrawStruct.dr == DrawRoutine.Rectangle)
                         {
-                            g.FillPolygon(rectDrawStruct.brush,rectDrawStruct.trns[r].pts);
+                            for (int r = 0; r < rectDrawStruct.trns.Length; r++)
+                            {
+                                g.FillPolygon(rectDrawStruct.brush, rectDrawStruct.trns[r].pts);
+                            }
+                        }
+                        else if (rectDrawStruct.dr == DrawRoutine.Ellipse)
+                        {
+                            g.FillEllipse(rectDrawStruct.brush, rectDrawStruct.rect);
                         }
                         //g.FillRectangle(rectDrawStruct.brush , rectDrawStruct.rect);
                     }
@@ -541,8 +536,87 @@ namespace OpenSim.Region.CoreModules.World.LegacyMap
                 g.Dispose();
             } // lock entities objs
 
-            m_log.Info("[MAPTILE]: Generating Maptile Step 2: Done in " + (Environment.TickCount - tc) + " ms");
+            //m_log.Info("[MAPTILE]: Generating Maptile Step 2: Done in " + (Environment.TickCount - tc) + " ms");
             return mapbmp;
+        }
+
+        private Dictionary<UUID, Color> m_mapping;
+        private Color computeAverageColor(UUID textureID, Color defaultColor)
+        {
+            if (m_mapping == null)
+                m_mapping = new Dictionary<UUID, Color>();
+            if (textureID == UUID.Zero) return defaultColor; // not set
+            if (m_mapping.ContainsKey(textureID)) return m_mapping[textureID]; // one of the predefined textures
+
+            Bitmap bmp = fetchTexture(textureID);
+            Color color = bmp == null ? defaultColor : computeAverageColor(bmp);
+            // store it for future reference
+            m_mapping[textureID] = color;
+
+            return color;
+        }
+
+        private Bitmap fetchTexture(UUID id)
+        {
+            AssetBase asset = m_scene.AssetService.Get(id.ToString());
+            //m_log.DebugFormat("Fetched texture {0}, found: {1}", id, asset != null);
+            if (asset == null) return null;
+
+            ManagedImage managedImage;
+            Image image;
+
+            try
+            {
+                if (OpenJPEG.DecodeToImage(asset.Data, out managedImage, out image))
+                    return new Bitmap(image);
+                else
+                    return null;
+            }
+            catch (DllNotFoundException)
+            {
+                m_log.ErrorFormat("[TexturedMapTileRenderer]: OpenJpeg is not installed correctly on this system.   Asset Data is emtpy for {0}", id);
+
+            }
+            catch (IndexOutOfRangeException)
+            {
+                m_log.ErrorFormat("[TexturedMapTileRenderer]: OpenJpeg was unable to encode this.   Asset Data is emtpy for {0}", id);
+
+            }
+            catch (Exception)
+            {
+                m_log.ErrorFormat("[TexturedMapTileRenderer]: OpenJpeg was unable to encode this.   Asset Data is emtpy for {0}", id);
+
+            }
+            return null;
+
+        }
+
+        // Compute the average color of a texture.
+        private unsafe Color computeAverageColor(Bitmap bmp)
+        {
+            BitmapProcessing.FastBitmap unsafeBMP = new BitmapProcessing.FastBitmap(bmp);
+            // we have 256 x 256 pixel, each with 256 possible color-values per
+            // color-channel, so 2^24 is the maximum value we can get, adding everything.
+            unsafeBMP.LockBitmap();
+            int r = 0;
+            int g = 0;
+            int b = 0;
+
+            for (int y = 0; y < bmp.Height; y += 10)
+            {
+                for (int x = 0; x < bmp.Width; x += 10)
+                {
+                    Color pixel = unsafeBMP.GetPixel(x, y);
+                    r += pixel.R;
+                    g += pixel.G;
+                    b += pixel.B;
+                }
+            }
+
+            unsafeBMP.UnlockBitmap();
+
+            int pixels = (bmp.Width * bmp.Height) / (10 * 10);
+            return Color.FromArgb((int)r / pixels, (int)g / pixels, (int)b / pixels);
         }
 
         private Point project(Vector3 point3d, Vector3 originpos)
@@ -558,11 +632,6 @@ namespace OpenSim.Region.CoreModules.World.LegacyMap
             returnpt.Y = (int)(((int)Constants.RegionSize - 1) - point3d.Y);//(int)(255 - (((topos.y - point3d.y) / z * d)));
 
             return returnpt;
-        }
-
-        public Bitmap CreateViewImage(Vector3 camPos, Vector3 camDir, float fov, int width, int height, bool useTextures)
-        {
-            return null;
         }
     }
 }

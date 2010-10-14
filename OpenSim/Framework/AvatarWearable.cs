@@ -34,23 +34,8 @@ namespace OpenSim.Framework
 {
     public class AvatarWearable
     {
-        public static readonly UUID DEFAULT_BODY_ITEM = new UUID("66c41e39-38f9-f75a-024e-585989bfaba9");
-        public static readonly UUID DEFAULT_BODY_ASSET = new UUID("66c41e39-38f9-f75a-024e-585989bfab73");
-
-        public static readonly UUID DEFAULT_HAIR_ITEM = new UUID("d342e6c1-b9d2-11dc-95ff-0800200c9a66");
-        public static readonly UUID DEFAULT_HAIR_ASSET = new UUID("d342e6c0-b9d2-11dc-95ff-0800200c9a66");
-
-        public static readonly UUID DEFAULT_SKIN_ITEM = new UUID("77c41e39-38f9-f75a-024e-585989bfabc9");
-        public static readonly UUID DEFAULT_SKIN_ASSET = new UUID("77c41e39-38f9-f75a-024e-585989bbabbb");
-
-        public static readonly UUID DEFAULT_SHIRT_ITEM = new UUID("77c41e39-38f9-f75a-0000-585989bf0000");
-        public static readonly UUID DEFAULT_SHIRT_ASSET = new UUID("00000000-38f9-1111-024e-222222111110");
-
-        public static readonly UUID DEFAULT_PANTS_ITEM = new UUID("77c41e39-38f9-f75a-0000-5859892f1111");
-        public static readonly UUID DEFAULT_PANTS_ASSET = new UUID("00000000-38f9-1111-024e-222222111120");
-
-        public UUID AssetID;
-        public UUID ItemID;
+        public UUID AssetID = new UUID("00000000-0000-0000-0000-000000000000");
+        public UUID ItemID = new UUID("00000000-0000-0000-0000-000000000000");
 
         public AvatarWearable()
         {
@@ -73,25 +58,31 @@ namespace OpenSim.Framework
                 }
                 
                 // Body
-                defaultWearables[0].ItemID  = DEFAULT_BODY_ITEM;
-                defaultWearables[0].AssetID = DEFAULT_BODY_ASSET;
+                defaultWearables[0].ItemID  = new UUID("66c41e39-38f9-f75a-024e-585989bfaba9");
+                defaultWearables[0].AssetID = new UUID("66c41e39-38f9-f75a-024e-585989bfab73");
                 
                 // Hair
-                defaultWearables[2].ItemID  = DEFAULT_HAIR_ITEM;
-                defaultWearables[2].AssetID = DEFAULT_HAIR_ASSET;
+                defaultWearables[2].ItemID  = new UUID("d342e6c1-b9d2-11dc-95ff-0800200c9a66");
+                defaultWearables[2].AssetID = new UUID("d342e6c0-b9d2-11dc-95ff-0800200c9a66");
 
                 // Skin
-                defaultWearables[1].ItemID  = DEFAULT_SKIN_ITEM;
-                defaultWearables[1].AssetID = DEFAULT_SKIN_ASSET;
+                defaultWearables[1].ItemID  = new UUID("77c41e39-38f9-f75a-024e-585989bfabc9");
+                defaultWearables[1].AssetID = new UUID("77c41e39-38f9-f75a-024e-585989bbabbb");
 
                 // Shirt
-                defaultWearables[4].ItemID  = DEFAULT_SHIRT_ITEM;
-                defaultWearables[4].AssetID = DEFAULT_SHIRT_ASSET;
+                defaultWearables[4].ItemID  = new UUID("77c41e39-38f9-f75a-0000-585989bf0000");
+                defaultWearables[4].AssetID = new UUID("00000000-38f9-1111-024e-222222111110");
 
                 // Pants
-                defaultWearables[5].ItemID  = DEFAULT_PANTS_ITEM;
-                defaultWearables[5].AssetID = DEFAULT_PANTS_ASSET;
-                
+                defaultWearables[5].ItemID = new UUID("77c41e39-38f9-f75a-0000-5859892f1111");
+                defaultWearables[5].AssetID = new UUID("00000000-38f9-1111-024e-222222111120");
+
+                defaultWearables[10].ItemID = new UUID("77c41e39-38f9-f75a-0000-5859892f1111");
+                defaultWearables[10].AssetID = new UUID("00000000-38f9-1111-024e-222222111120");
+
+                defaultWearables[11].ItemID = new UUID("77c41e39-38f9-f75a-0000-585989bf0000");
+                defaultWearables[11].AssetID = new UUID("00000000-38f9-1111-024e-222222111110");
+
                 return defaultWearables;
             }
         }

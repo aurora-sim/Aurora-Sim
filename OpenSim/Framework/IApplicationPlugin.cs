@@ -83,10 +83,12 @@ namespace Aurora.Framework
         /// update table set setRow = setValue WHERE keyRow = keyValue
         /// </summary>
         bool Update(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues);
+        
         /// <summary>
         /// select wantedValue from table where keyRow = keyValue
         /// </summary>
         List<string> Query(string keyRow, object keyValue, string table, string wantedValue);
+        
         List<string> Query(string whereClause, string table, string wantedValue);
         List<string> Query(string keyRow, object keyValue, string table, string wantedValue, string Order);
         List<string> Query(string[] keyRow, object[] keyValue, string table, string wantedValue);
@@ -94,11 +96,28 @@ namespace Aurora.Framework
         bool Insert(string table, object[] values);
         bool Insert(string table, string[] keys, object[] values);
         bool Delete(string table, string[] keys, object[] values);
+        bool Replace(string table, string[] keys, object[] values);
+        /// <summary>
+        /// Inserts a row into the database
+        /// </summary>
+        /// <param name="table">table name</param>
+        /// <param name="values">All values to be inserted in the correct table order</param>
+        /// <param name="updateKey">If a row is already existing, update this key</param>
+        /// <param name="updateValue">If a row is already existing, update this value</param>
+        /// <returns></returns>
         bool Insert(string table, object[] values, string updateKey, object updateValue);
+        
+        /// <summary>
+        /// Connects to the database and then performs migrations
+        /// </summary>
+        /// <param name="connectionString"></param>
+        void ConnectToDatabase(string connectionString);
+
+        IGenericData Copy();
     }
 
     public interface IAuroraDataPlugin : IPlugin
     {
-        void Initialise(IGenericData GenericData, IConfigSource source);
+        void Initialise(IGenericData GenericData, IConfigSource source, string DefaultConnectionString);
     }
 }

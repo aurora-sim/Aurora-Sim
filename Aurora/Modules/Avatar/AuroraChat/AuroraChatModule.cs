@@ -47,7 +47,7 @@ using Mono.Addins;
 
 namespace Aurora.Modules
 {
-    public class AuroraChatModule : ISharedRegionModule, IChatModule
+    public class AuroraChatModule : ISharedRegionModule, IChatModule, IMuteListModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -174,6 +174,9 @@ namespace Aurora.Modules
                 scene.EventManager.OnChatBroadcast += OnChatBroadcast;
                 scene.EventManager.OnRegisterCaps += RegisterCaps;
                 scene.EventManager.OnClientConnect += OnClientConnect;
+                scene.EventManager.OnIncomingInstantMessage += OnGridInstantMessage;
+
+                scene.RegisterModuleInterface<IMuteListModule>(this);
             }
             //m_log.InfoFormat("[CHAT]: Initialized for {0} w:{1} s:{2} S:{3}", scene.RegionInfo.RegionName,
             //                 m_whisperdistance, m_saydistance, m_shoutdistance);
@@ -184,7 +187,7 @@ namespace Aurora.Modules
             if (!m_enabled) return;
 
             if (m_useMuteListModule)
-                MuteListConnector = Aurora.DataManager.DataManager.RequestPlugin<IMuteListConnector>("IMuteListConnector");
+                MuteListConnector = Aurora.DataManager.DataManager.RequestPlugin<IMuteListConnector>();
 
             if (m_TransferModule == null)
             {
@@ -215,6 +218,7 @@ namespace Aurora.Modules
                 scene.EventManager.OnRegisterCaps -= RegisterCaps;
                 scene.EventManager.OnClientConnect -= OnClientConnect;
                 m_scenes.Remove(scene);
+                scene.UnregisterModuleInterface<IMuteListModule>(this);
             }
         }
 
@@ -851,47 +855,55 @@ namespace Aurora.Modules
 
             foreach (Scene s in m_scenes)
             {
-                s.ForEachScenePresence(
-                    delegate(ScenePresence presence)
+                List<ScenePresence> ScenePresences = s.ScenePresences;
+                foreach (ScenePresence presence in ScenePresences)
+                {
+                    // don't send stuff to child agents
+                    if (!presence.IsChildAgent)
                     {
-                        // don't send stuff to child agents
-                        if (!presence.IsChildAgent)
+                        //Block this out early so we don't look through the mutes if the message shouldn't even be sent
+                        Vector3 fromRegionPos = fromPos + regionPos;
+                        Vector3 toRegionPos = presence.AbsolutePosition +
+                            new Vector3(presence.Scene.RegionInfo.RegionLocX * Constants.RegionSize,
+                                        presence.Scene.RegionInfo.RegionLocY * Constants.RegionSize, 0);
+
+                        int dis = (int)Util.GetDistanceTo(toRegionPos, fromRegionPos);
+
+                        if (c.Type == ChatTypeEnum.Whisper && dis > m_whisperdistance ||
+                            c.Type == ChatTypeEnum.Say && dis > m_saydistance ||
+                            c.Type == ChatTypeEnum.Shout && dis > m_shoutdistance ||
+                            c.Type == ChatTypeEnum.Custom && dis > c.Range)
                         {
-                            bool IsMuted = false;
-                            if (message != "" && m_useMuteListModule)
+                            continue;
+                        }
+                        bool IsMuted = false;
+                        if (message != "" && m_useMuteListModule)
+                        {
+                            Dictionary<UUID, bool> cache = new Dictionary<UUID,bool>();
+                            if (IsMutedCache.TryGetValue(presence.UUID, out cache))
                             {
-                                lock (IsMutedCache)
+                                //If the cache doesn't contain the person, they arn't used
+                                if (!cache.TryGetValue(fromID, out IsMuted))
                                 {
-                                    if (IsMutedCache.ContainsKey(presence.UUID))
-                                    {
-                                        Dictionary<UUID, bool> cache;
-                                        IsMutedCache.TryGetValue(presence.UUID, out cache);
-                                        if (cache.ContainsKey(fromID))
-                                        {
-                                            cache.TryGetValue(fromID, out IsMuted);
-                                        }
-                                        else
-                                        {
-                                            IsMuted = MuteListConnector.IsMuted(presence.UUID, fromID);
-                                            cache.Add(fromID, IsMuted);
-                                            IsMutedCache.Remove(presence.UUID);
-                                            IsMutedCache.Add(presence.UUID, cache);
-                                        }
-                                    }
-                                    else
-                                    {
-                                        Dictionary<UUID, bool> cache = new Dictionary<UUID, bool>();
-                                        IsMuted = MuteListConnector.IsMuted(presence.UUID, fromID);
-                                        cache.Add(fromID, IsMuted);
-                                        IsMutedCache.Add(presence.UUID, cache);
-                                    }
+                                    cache[fromID] = IsMuted = false;
                                 }
                             }
-                            if (!IsMuted)
-                                TrySendChatMessage(presence, fromPos, regionPos, fromID, fromName, c.Type, message, sourceType, c.Range);
+                            else
+                            {
+                                cache = new Dictionary<UUID, bool>();
+                                //This loads all mutes into the list
+                                MuteList[] List = MuteListConnector.GetMuteList(presence.UUID);
+                                foreach (MuteList mute in List)
+                                {
+                                    cache[mute.MuteID] = true;
+                                }
+                                IsMutedCache[presence.UUID] = cache;
+                            }
                         }
+                        if (!IsMuted)
+                            TrySendChatMessage(presence, fromPos, regionPos, fromID, fromName, c.Type, message, sourceType, c.Range);
                     }
-                );
+                }
             }
         }
 
@@ -966,26 +978,14 @@ namespace Aurora.Modules
                                                   UUID fromAgentID, string fromName, ChatTypeEnum type,
                                                   string message, ChatSourceType src, float Range)
         {
-            // don't send stuff to child agents
-            if (presence.IsChildAgent) return;
-
-            Vector3 fromRegionPos = fromPos + regionPos;
-            Vector3 toRegionPos = presence.AbsolutePosition +
-                new Vector3(presence.Scene.RegionInfo.RegionLocX * Constants.RegionSize,
-                            presence.Scene.RegionInfo.RegionLocY * Constants.RegionSize, 0);
-
-            int dis = (int)Util.GetDistanceTo(toRegionPos, fromRegionPos);
-
-            if (type == ChatTypeEnum.Whisper && dis > m_whisperdistance ||
-                type == ChatTypeEnum.Say && dis > m_saydistance ||
-                type == ChatTypeEnum.Shout && dis > m_shoutdistance ||
-                type == ChatTypeEnum.Custom && dis > Range)
-            {
-                return;
-            }
-
             if (type == ChatTypeEnum.Custom)
             {
+                Vector3 fromRegionPos = fromPos + regionPos;
+                Vector3 toRegionPos = presence.AbsolutePosition +
+                    new Vector3(presence.Scene.RegionInfo.RegionLocX * Constants.RegionSize,
+                                presence.Scene.RegionInfo.RegionLocY * Constants.RegionSize, 0);
+
+                int dis = (int)Util.GetDistanceTo(toRegionPos, fromRegionPos);
                 if (dis < m_whisperdistance)
                     type = ChatTypeEnum.Whisper;
                 else if (dis > m_saydistance)
@@ -1010,23 +1010,23 @@ namespace Aurora.Modules
             byte[] fileData = new byte[0];
             string invString = "";
             int i = 0;
-            MuteList[] List;
-
-            if (!MuteListCache.ContainsKey(client.AgentId))
-                List = MuteListConnector.GetMuteList(client.AgentId);
-            else
-            {
+            bool cached = false;
+            MuteList[] List = GetMutes(client.AgentId, out cached);
+            if (cached)
                 client.SendUseCachedMuteList();
-                return;
-            }
 
+            Dictionary<UUID, bool> cache = new Dictionary<UUID, bool>();
             foreach (MuteList mute in List)
             {
+                cache[mute.MuteID] = true;
                 invString += (mute.MuteType + " " + mute.MuteID + " " + mute.MuteName + " |\n");
                 i++;
             }
+            IsMutedCache[client.AgentId] = cache; //Load up the mute list early if they login or add mutes
+            
             if(invString != "")
                 invString = invString.Remove(invString.Length - 3, 3);
+            
             fileData = OpenMetaverse.Utils.StringToBytes(invString);
             IXfer xfer = client.Scene.RequestModuleInterface<IXfer>();
             if (xfer != null)
@@ -1035,11 +1035,32 @@ namespace Aurora.Modules
                 client.SendMuteListUpdate(filename);
             }
         }
-        
+
+        public MuteList[] GetMutes(UUID AgentID, out bool Cached)
+        {
+            Cached = false;
+            MuteList[] List = new MuteList[0];
+            if (MuteListConnector == null)
+                return List;
+            if (!MuteListCache.TryGetValue(AgentID, out List))
+                List = MuteListConnector.GetMuteList(AgentID);
+            else
+            {
+                Cached = true;
+            }
+            return List;
+        }
+
         private void OnMuteListUpdate(IClientAPI client, UUID MuteID, string Name, int Flags, UUID AgentID)
         {
             if (!m_useMuteListModule)
                 return;
+            UpdateMuteList(MuteID, Name, Flags, client.AgentId);
+            OnMuteListRequest(client, 0);
+        }
+
+        public void UpdateMuteList(UUID MuteID, string Name, int Flags, UUID AgentID)
+        {
             if (MuteID == UUID.Zero)
                 return;
             MuteList Mute = new MuteList()
@@ -1050,23 +1071,26 @@ namespace Aurora.Modules
             };
             MuteListConnector.UpdateMute(Mute, AgentID);
             MuteListCache.Remove(AgentID);
-            OnMuteListRequest(client, 0);
         }
 
         private void OnMuteListRemove(IClientAPI client, UUID MuteID, string Name, UUID AgentID)    
         {
             if (!m_useMuteListModule)
                 return;
+            RemoveMute(MuteID, Name, client.AgentId);
+            OnMuteListRequest(client, 0);
+        }
+
+        public void RemoveMute(UUID MuteID, string Name, UUID AgentID)
+        {
             //Gets sent if a mute is not selected.
             if (MuteID != UUID.Zero)
             {
                 MuteListConnector.DeleteMute(MuteID, AgentID);
                 MuteListCache.Remove(AgentID);
             }
-            OnMuteListRequest(client, 0);
         }
 
-        private string m_chatSessionRequestPath = "0009/";
         private Dictionary<UUID, ChatSession> ChatSessions = new Dictionary<UUID, ChatSession>();
 
         public class ChatSession
@@ -1190,34 +1214,37 @@ namespace Aurora.Modules
                 List<OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock> NotUsAgents = new List<OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock>();
 
                 ChatSession session = GetSession(sessionid);
-                ChatSessionMember thismember = FindMember(sessionid, Agent);
-                foreach (ChatSessionMember sessionMember in session.Members)
+                if (session != null)
                 {
-                    OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock block = new OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock();
-                    block.AgentID = sessionMember.AvatarKey;
-                    block.CanVoiceChat = sessionMember.CanVoiceChat;
-                    block.IsModerator = sessionMember.IsModerator;
-                    block.MuteText = sessionMember.MuteText;
-                    block.MuteVoice = sessionMember.MuteVoice;
-                    block.Transition = "ENTER";
-                    if (sessionMember.AvatarKey == thismember.AvatarKey)
-                        Us.Add(block);
-                    else
+                    ChatSessionMember thismember = FindMember(sessionid, Agent);
+                    foreach (ChatSessionMember sessionMember in session.Members)
                     {
-                        if(sessionMember.HasBeenAdded) // Don't add not joined yet agents. They don't watn to be here.
-                            NotUsAgents.Add(block);
+                        OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock block = new OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock();
+                        block.AgentID = sessionMember.AvatarKey;
+                        block.CanVoiceChat = sessionMember.CanVoiceChat;
+                        block.IsModerator = sessionMember.IsModerator;
+                        block.MuteText = sessionMember.MuteText;
+                        block.MuteVoice = sessionMember.MuteVoice;
+                        block.Transition = "ENTER";
+                        if (sessionMember.AvatarKey == thismember.AvatarKey)
+                            Us.Add(block);
+                        else
+                        {
+                            if (sessionMember.HasBeenAdded) // Don't add not joined yet agents. They don't watn to be here.
+                                NotUsAgents.Add(block);
+                        }
                     }
-                }
-                thismember.HasBeenAdded = true;
-                foreach (ChatSessionMember member in session.Members)
-                {
-                    if (member.AvatarKey == thismember.AvatarKey)
+                    thismember.HasBeenAdded = true;
+                    foreach (ChatSessionMember member in session.Members)
                     {
-                        eq.ChatterBoxSessionAgentListUpdates(session.SessionID, NotUsAgents.ToArray(), member.AvatarKey, "ENTER");
-                    }
-                    else
-                    {
-                        eq.ChatterBoxSessionAgentListUpdates(session.SessionID, Us.ToArray(), member.AvatarKey, "ENTER");
+                        if (member.AvatarKey == thismember.AvatarKey)
+                        {
+                            eq.ChatterBoxSessionAgentListUpdates(session.SessionID, NotUsAgents.ToArray(), member.AvatarKey, "ENTER");
+                        }
+                        else
+                        {
+                            eq.ChatterBoxSessionAgentListUpdates(session.SessionID, Us.ToArray(), member.AvatarKey, "ENTER");
+                        }
                     }
                 }
                 Hashtable responsedata = new Hashtable();
@@ -1301,6 +1328,11 @@ namespace Aurora.Modules
             return null;
         }
 
+        private void OnGridInstantMessage(GridInstantMessage msg)
+        {
+            OnInstantMessage(findScenePresence(new UUID(msg.toAgentID)).ControllingClient, msg);
+        }
+
         public void OnInstantMessage(IClientAPI client, GridInstantMessage im)
         {
             byte dialog = im.dialog;
@@ -1316,6 +1348,8 @@ namespace Aurora.Modules
         {
             ChatSession session;
             ChatSessions.TryGetValue(sessionid, out session);
+            if (session == null)
+                return null;
             ChatSessionMember thismember = new ChatSessionMember() { AvatarKey = UUID.Zero };
             foreach (ChatSessionMember testmember in session.Members)
             {
@@ -1380,6 +1414,8 @@ namespace Aurora.Modules
         {
             ChatSession session;
             ChatSessions.TryGetValue(UUID.Parse(im.imSessionID.ToString()), out session);
+            if (session == null)
+                return;
             IEventQueue eq = client.Scene.RequestModuleInterface<IEventQueue>();
             foreach (ChatSessionMember member in session.Members)
             {

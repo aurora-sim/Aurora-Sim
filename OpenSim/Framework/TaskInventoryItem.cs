@@ -118,6 +118,17 @@ namespace OpenSim.Framework
 
             };
 
+        /// <summary>
+        /// Asset types
+        /// </summary>
+        public static string[] SaleTypes = new string[]
+            {
+                "not",
+                "original",
+                "copy",
+                "contents"
+            };
+
         private UUID _assetID = UUID.Zero;
 
         private uint _baseMask = FULL_MASK_PERMISSIONS_GENERAL;
@@ -142,6 +153,8 @@ namespace OpenSim.Framework
         private int _permsMask;
         private int _type = 0;
         private UUID _oldID;
+        private int _SalePrice = 0;
+        private byte _SaleType = 0;
 
         private bool _ownerChanged = false;
 
@@ -349,6 +362,30 @@ namespace OpenSim.Framework
             }
             set {
                 _ownerChanged = value;
+            }
+        }
+
+        public int SalePrice
+        {
+            get
+            {
+                return _SalePrice;
+            }
+            set
+            {
+                _SalePrice = value;
+            }
+        }
+
+        public byte SaleType
+        {
+            get
+            {
+                return _SaleType;
+            }
+            set
+            {
+                _SaleType = value;
             }
         }
 

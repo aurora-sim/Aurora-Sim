@@ -37,15 +37,15 @@ using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 {
-    public class SensorRepeat
+    public class SensorRepeatPlugin : ISharedScriptPlugin
     {
         public ScriptEngine m_ScriptEngine;
 
-        public SensorRepeat(ScriptEngine ScriptEngine)
+        public void Initialize(ScriptEngine engine)
         {
-            m_ScriptEngine = ScriptEngine;
-            maximumRange = m_ScriptEngine.Config.GetDouble("SensorMaxRange", 96.0d);
-            maximumToReturn = m_ScriptEngine.Config.GetInt("SensorMaxResults", 16);
+            m_ScriptEngine = engine;
+            maximumRange = engine.Config.GetDouble("SensorMaxRange", 96.0d);
+            maximumToReturn = engine.Config.GetInt("SensorMaxResults", 16);
         }
 
         private Object SenseLock = new Object();
@@ -106,7 +106,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                                         double arc, double sec, SceneObjectPart host)
         {
             // Always remove first, in case this is a re-set
-            UnSetSenseRepeaterEvents(objectID, m_itemID);
+            RemoveScript(objectID, m_itemID);
             if (sec == 0) // Disabling timer
                 return;
 
@@ -132,7 +132,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             }
         }
 
-        public void UnSetSenseRepeaterEvents(UUID objectID, UUID m_itemID)
+        public void RemoveScript(UUID objectID, UUID m_itemID)
         {
             // Remove from timer
             lock (SenseRepeatListLock)
@@ -150,7 +150,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             }
         }
 
-        public void CheckSenseRepeaterEvents()
+        public void Check()
         {
             // Nothing to do here?
             if (SenseRepeaters.Count == 0)
@@ -159,10 +159,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             lock (SenseRepeatListLock)
             {
                 // Go through all timers
+                DateTime UniversalTime = DateTime.Now.ToUniversalTime();
                 foreach (SenseRepeatClass ts in SenseRepeaters)
                 {
                     // Time has passed?
-                    if (ts.next.ToUniversalTime() < DateTime.Now.ToUniversalTime())
+                    if (ts.next.ToUniversalTime() < UniversalTime)
                     {
                         SensorSweep(ts);
                         // set next interval
@@ -233,20 +234,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                     List<DetectParams> detected = new List<DetectParams>();
                     for (idx = 0; idx < count; idx++)
                     {
-                        try
-                        {
-                            DetectParams detect = new DetectParams();
+                        if(ts.host != null && ts.host.ParentGroup != null && ts.host.ParentGroup.Scene != null)
+                        {	
+                        	DetectParams detect = new DetectParams();
                             detect.Key = sensedEntities[idx].itemID;
                             detect.Populate(ts.host.ParentGroup.Scene);
                             detected.Add(detect);
+                        	if (detected.Count == maximumToReturn)
+                            	break;
                         }
-                        catch (Exception)
-                        {
-                            // Ignore errors, the object has been deleted or the avatar has gone and
-                            // there was a problem in detect.Populate so nothing added to the list
-                        }
-                        if (detected.Count == maximumToReturn)
-                            break;
                     }
 
                     if (detected.Count == 0)
@@ -505,7 +501,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             return sensedEntities;
         }
 
-        public Object[] GetSerializationData(UUID itemID)
+        public Object[] GetSerializationData(UUID itemID, UUID primID)
         {
             List<Object> data = new List<Object>();
 
@@ -524,7 +520,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                     }
                 }
             }
-            return data.ToArray();
+
+            List<object> RetVal = new List<object>();
+            RetVal.Add(Name);
+            RetVal.Add(data.Count);
+            RetVal.AddRange(data);
+
+            return RetVal.ToArray();
         }
 
         public void CreateFromData(UUID itemID, UUID objectID,
@@ -586,6 +588,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                 }
             }
             return null;
+        }
+
+        public string Name
+        {
+            get { return "SensorRepeat"; }
+        }
+
+        public void Dispose()
+        {
         }
     }
 }

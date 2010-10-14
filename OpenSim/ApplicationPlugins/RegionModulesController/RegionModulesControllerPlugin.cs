@@ -172,43 +172,13 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
             //
             foreach (TypeExtensionNode node in m_sharedModules)
             {
-                Object[] ctorArgs = new Object[] { (uint)0 };
-
-                // Read the config again
-                string moduleString =
-                        modulesConfig.GetString("Setup_" + node.Id, String.Empty);
-
-                // Get the port number, if there is one
-                if (moduleString != String.Empty)
-                {
-                    // Get the port number from the string
-                    string[] moduleParts = moduleString.Split(new char[] { '/' },
-                            2);
-                    if (moduleParts.Length > 1)
-                        ctorArgs[0] = Convert.ToUInt32(moduleParts[0]);
-                }
-
-                // Try loading and initilaizing the module, using the
-                // port if appropriate
-                ISharedRegionModule module = null;
-
-                try
-                {
-                    module = (ISharedRegionModule)Activator.CreateInstance(
-                            node.Type, ctorArgs);
-                }
-                catch
-                {
-                    module = (ISharedRegionModule)Activator.CreateInstance(
+                ISharedRegionModule module = (ISharedRegionModule)Activator.CreateInstance(
                             node.Type);
-                }
 
                 // OK, we're up and running
                 m_sharedInstances.Add(module);
                 module.Initialise(m_openSim.ConfigSource);
             }
-
-
         }
 
         public void PostInitialise ()

@@ -41,27 +41,63 @@ namespace OpenSim.Region.Framework.Scenes
         protected ScenePresence m_presence;
         protected UpdateQueue m_partsUpdateQueue = new UpdateQueue();
         protected Queue<SceneObjectGroup> m_pendingObjects;
+        protected volatile List<UUID> m_objectsInView = new List<UUID>();
 
         protected Dictionary<UUID, ScenePartUpdate> m_updateTimes = new Dictionary<UUID, ScenePartUpdate>();
-
-        public SceneViewer()
-        {
-        }
 
         public SceneViewer(ScenePresence presence)
         {
             m_presence = presence;
+            if(presence.Scene.CheckForObjectCulling) //Only do culling checks if enabled
+                presence.Scene.EventManager.OnSignificantClientMovement += SignificantClientMovement;
         }
 
         /// <summary>
         /// Add the part to the queue of parts for which we need to send an update to the client
         /// </summary>
         /// <param name="part"></param>
-        public void QueuePartForUpdate(SceneObjectPart part)
+        public void QueuePartForUpdate(SceneObjectPart part, PrimUpdateFlags UpdateFlags)
         {
             lock (m_partsUpdateQueue)
             {
-                m_partsUpdateQueue.Enqueue(part);
+                PrimUpdate update = new PrimUpdate();
+                update.Part = part;
+                update.UpdateFlags = UpdateFlags;
+                m_partsUpdateQueue.Enqueue(update);
+            }
+        }
+
+        void SignificantClientMovement(IClientAPI remote_client)
+        {
+            if (remote_client.AgentId != m_presence.UUID)
+                return;
+
+            if(m_presence.DrawDistance == 0)
+                return;
+
+            //This checks to see if we need to send more updates to the avatar since they last moved
+            List<EntityBase> Entities = m_presence.Scene.Entities.GetEntities();
+
+            foreach (EntityBase entity in Entities)
+            {
+                if (entity is SceneObjectGroup) //Only objects
+                {
+                    //Check to see if they are out of range
+                    if ((!Util.DistanceLessThan(m_presence.AbsolutePosition, entity.AbsolutePosition, m_presence.DrawDistance) && !Util.DistanceLessThan(m_presence.CameraPosition, entity.AbsolutePosition, m_presence.DrawDistance)))
+                    {
+                        //Check if we already have sent them an update
+                        if (!m_objectsInView.Contains(entity.UUID))
+                        {
+                            if (m_pendingObjects != null)
+                            {
+                                //Update the list
+                                m_objectsInView.Add(entity.UUID);
+                                //Enqueue them for an update
+                                m_pendingObjects.Enqueue((SceneObjectGroup)entity);
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -72,63 +108,83 @@ namespace OpenSim.Region.Framework.Scenes
                 if (!m_presence.IsChildAgent || (m_presence.Scene.m_seeIntoRegionFromNeighbor))
                 {
                     m_pendingObjects = new Queue<SceneObjectGroup>();
+                    List<EntityBase> entities = m_presence.Scene.Entities.GetEntities();
 
-                    lock (m_pendingObjects)
+                    lock(m_pendingObjects)
                     {
-                        EntityBase[] entities = m_presence.Scene.Entities.GetEntities();
                         foreach (EntityBase e in entities)
                         {
                             if (e != null && e is SceneObjectGroup)
                                 m_pendingObjects.Enqueue((SceneObjectGroup)e);
                         }
                     }
+                    entities.Clear();
+                    entities = null;
                 }
             }
 
-            lock (m_pendingObjects)
+            lock(m_pendingObjects)
             {
                 while (m_pendingObjects != null && m_pendingObjects.Count > 0)
                 {
                     SceneObjectGroup g = m_pendingObjects.Dequeue();
-                     // Yes, this can really happen
-                     if (g == null)
+                    // Yes, this can really happen
+                    if (g == null)
                         continue;
 
                     // This is where we should check for draw distance
                     // do culling and stuff. Problem with that is that until
                     // we recheck in movement, that won't work right.
                     // So it's not implemented now.
-                    //
+                    // - This note is from OS core, and has since been implemented as seen below
+
+                    if (m_presence.Scene.CheckForObjectCulling)
+                    {
+                        //Check for part position against the av and the camera position
+                        if ((!Util.DistanceLessThan(m_presence.AbsolutePosition, g.AbsolutePosition, m_presence.DrawDistance) &&
+                            !Util.DistanceLessThan(m_presence.CameraPosition, g.AbsolutePosition, m_presence.DrawDistance)))
+                            if (m_presence.DrawDistance != 0)
+                                continue;
+                    }
 
                     // Don't even queue if we have sent this one
                     //
                     if (!m_updateTimes.ContainsKey(g.UUID))
-                        g.ScheduleFullUpdateToAvatar(m_presence);
+                        g.ScheduleFullUpdateToAvatar(m_presence, PrimUpdateFlags.FullUpdate); //New object, send full
                 }
 
                 while (m_partsUpdateQueue.Count > 0)
                 {
-                    SceneObjectPart part = m_partsUpdateQueue.Dequeue();
-                    
-                    if (part.ParentGroup == null || part.ParentGroup.IsDeleted)
+                    PrimUpdate update = m_partsUpdateQueue.Dequeue();
+
+                    if (update.Part.ParentGroup == null || update.Part.ParentGroup.IsDeleted)
                         continue;
-                    
-                    if (m_updateTimes.ContainsKey(part.UUID))
+
+                    if (m_presence.Scene.CheckForObjectCulling)
                     {
-                        ScenePartUpdate update = m_updateTimes[part.UUID];
+                        //Check for part position against the av and the camera position
+                        if ((!Util.DistanceLessThan(m_presence.AbsolutePosition, update.Part.AbsolutePosition, m_presence.DrawDistance) &&
+                            !Util.DistanceLessThan(m_presence.CameraPosition, update.Part.AbsolutePosition, m_presence.DrawDistance)))
+                            if (m_presence.DrawDistance != 0)
+                                continue;
+                    }
+
+                    if (m_updateTimes.ContainsKey(update.Part.UUID))
+                    {
+                        ScenePartUpdate partupdate = m_updateTimes[update.Part.UUID];
 
                         // We deal with the possibility that two updates occur at
                         // the same unix time at the update point itself.
 
-                        if ((update.LastFullUpdateTime < part.TimeStampFull) ||
-                                part.IsAttachment)
+                        if ((partupdate.LastFullUpdateTime < update.Part.TimeStampFull) ||
+                                update.Part.IsAttachment)
                         {
     //                            m_log.DebugFormat(
     //                                "[SCENE PRESENCE]: Fully   updating prim {0}, {1} - part timestamp {2}",
     //                                part.Name, part.UUID, part.TimeStampFull);
 
-                            part.SendFullUpdate(m_presence.ControllingClient,
-                                   m_presence.GenerateClientFlags(part.UUID));
+                            update.Part.SendFullUpdate(m_presence.ControllingClient,
+                                   m_presence.GenerateClientFlags(update.Part), update.UpdateFlags);
 
                             // We'll update to the part's timestamp rather than
                             // the current time to avoid the race condition
@@ -137,41 +193,41 @@ namespace OpenSim.Region.Framework.Scenes
                             // updates which occurred on the same tick or the
                             // next tick of the last update would be ignored.
 
-                            update.LastFullUpdateTime = part.TimeStampFull;
+                            partupdate.LastFullUpdateTime = update.Part.TimeStampFull;
 
                         }
-                        else if (update.LastTerseUpdateTime <= part.TimeStampTerse)
+                        else if (partupdate.LastTerseUpdateTime <= update.Part.TimeStampTerse)
                         {
     //                            m_log.DebugFormat(
     //                                "[SCENE PRESENCE]: Tersely updating prim {0}, {1} - part timestamp {2}",
     //                                part.Name, part.UUID, part.TimeStampTerse);
 
-                            part.SendTerseUpdateToClient(m_presence.ControllingClient);
+                            update.Part.SendTerseUpdateToClient(m_presence.ControllingClient);
 
-                            update.LastTerseUpdateTime = part.TimeStampTerse;
+                            partupdate.LastTerseUpdateTime = update.Part.TimeStampTerse;
                         }
                     }
                     else
                     {
                         //never been sent to client before so do full update
-                        ScenePartUpdate update = new ScenePartUpdate();
-                        update.FullID = part.UUID;
-                        update.LastFullUpdateTime = part.TimeStampFull;
-                        m_updateTimes.Add(part.UUID, update);
+                        ScenePartUpdate partupdate = new ScenePartUpdate();
+                        partupdate.FullID = update.Part.UUID;
+                        partupdate.LastFullUpdateTime = update.Part.TimeStampFull;
+                        m_updateTimes.Add(update.Part.UUID, partupdate);
 
                         // Attachment handling
                         //
-                        if (part.ParentGroup.RootPart.Shape.PCode == 9 && part.ParentGroup.RootPart.Shape.State != 0)
+                        if (update.Part.ParentGroup.RootPart.Shape.PCode == 9 && update.Part.ParentGroup.RootPart.Shape.State != 0)
                         {
-                            if (part != part.ParentGroup.RootPart)
+                            if (update.Part != update.Part.ParentGroup.RootPart)
                                 continue;
 
-                            part.ParentGroup.SendFullUpdateToClient(m_presence.ControllingClient);
+                            update.Part.ParentGroup.SendFullUpdateToClient(m_presence.ControllingClient, update.UpdateFlags);
                             continue;
                         }
 
-                        part.SendFullUpdate(m_presence.ControllingClient,
-                                m_presence.GenerateClientFlags(part.UUID));
+                        update.Part.SendFullUpdate(m_presence.ControllingClient,
+                                m_presence.GenerateClientFlags(update.Part), update.UpdateFlags);
                     }
                 }
             }
@@ -179,13 +235,11 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void Reset()
         {
-            if (m_pendingObjects == null)
-                return;
-
-            lock (m_pendingObjects)
+            if (m_pendingObjects != null)
             {
-                if (m_pendingObjects != null)
+                lock (m_pendingObjects)
                 {
+
                     m_pendingObjects.Clear();
                     m_pendingObjects = null;
                 }

@@ -41,7 +41,8 @@ namespace OpenSim.Region.Physics.Manager
         Unknown = 0,
         Agent = 1,
         Prim = 2,
-        Ground = 3
+        Ground = 3,
+        Water = 4
     }
 
     public enum PIDHoverType
@@ -103,13 +104,12 @@ namespace OpenSim.Region.Physics.Manager
 
         public void addCollider(uint localID, ContactPoint contact)
         {
-            if (!m_objCollisionList.ContainsKey(localID))
-            {
+            ContactPoint oldCol;
+            if (!m_objCollisionList.TryGetValue(localID, out oldCol))
                 m_objCollisionList.Add(localID, contact);
-            }
             else
             {
-                if (m_objCollisionList[localID].PenetrationDepth < contact.PenetrationDepth)
+                if (oldCol.PenetrationDepth < contact.PenetrationDepth)
                     m_objCollisionList[localID] = contact;
             }
         }
@@ -201,7 +201,7 @@ namespace OpenSim.Region.Physics.Manager
         }
 
         public abstract Vector3 Position { get; set; }
-        public abstract float Mass { get; }
+        public abstract float Mass { get; set; }
         public abstract Vector3 Force { get; set; }
 
         public abstract int VehicleType { get; set; }
@@ -234,16 +234,18 @@ namespace OpenSim.Region.Physics.Manager
         public abstract float Buoyancy { get; set; }
 
         // Used for MoveTo
-        public abstract Vector3 PIDTarget { set; }
-        public abstract bool  PIDActive { set;}
-        public abstract float PIDTau { set; }
+        public abstract Vector3 PIDTarget { get;  set; }
+        public abstract bool PIDActive { get; set; }
+        public abstract float PIDTau { get; set; }
 
         // Used for llSetHoverHeight and maybe vehicle height
         // Hover Height will override MoveTo target's Z
         public abstract bool PIDHoverActive { set;}
         public abstract float PIDHoverHeight { set;}
         public abstract PIDHoverType PIDHoverType { set;}
-        public abstract float PIDHoverTau { set;}
+        public abstract float PIDHoverTau { set; }
+
+        public abstract bool VolumeDetect { get; }
 
         // For RotLookAt
         public abstract Quaternion APIDTarget { set;}
@@ -293,6 +295,11 @@ namespace OpenSim.Region.Physics.Manager
             set { return; }
         }
 
+        public override bool VolumeDetect
+        {
+            get { return false; }
+        }
+
         public override float Buoyancy
         {
             get { return 0f; }
@@ -325,6 +332,7 @@ namespace OpenSim.Region.Physics.Manager
         public override float Mass
         {
             get { return 0f; }
+            set { }
         }
 
         public override Vector3 Force
@@ -445,10 +453,11 @@ namespace OpenSim.Region.Physics.Manager
             set { return; }
         }
 
+        int type = (int)ActorTypes.Unknown;
         public override int PhysicsActorType
         {
-            get { return (int) ActorTypes.Unknown; }
-            set { return; }
+            get { return type; }
+            set { type = value; }
         }
 
         public override bool Kinematic
@@ -484,9 +493,9 @@ namespace OpenSim.Region.Physics.Manager
             set { return; }
         }
 
-        public override Vector3 PIDTarget { set { return; } }
-        public override bool PIDActive { set { return; } }
-        public override float PIDTau { set { return; } }
+        public override Vector3 PIDTarget { get { return Vector3.Zero; } set { return; } }
+        public override bool PIDActive { get { return false; } set { return; } }
+        public override float PIDTau { get { return 0; } set { return; } }
 
         public override float PIDHoverHeight { set { return; } }
         public override bool PIDHoverActive { set { return; } }

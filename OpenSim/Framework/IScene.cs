@@ -25,6 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System.Collections.Generic;
 using OpenMetaverse;
 using OpenSim.Framework.Console;
 using Nini.Config;
@@ -32,6 +33,7 @@ using Nini.Config;
 namespace OpenSim.Framework
 {
     public delegate void restart(RegionInfo thisRegion);
+    public delegate void startupComplete(IScene scene, List<string> data);
 
     //public delegate void regionup (RegionInfo thisRegion);
 

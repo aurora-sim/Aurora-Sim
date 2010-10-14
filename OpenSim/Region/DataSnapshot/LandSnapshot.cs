@@ -144,7 +144,6 @@ namespace OpenSim.Region.DataSnapshot.Providers
                         (parcel.Flags & (uint)ParcelFlags.ShowDirectory) == (uint)ParcelFlags.ShowDirectory))
                     {
 
-                        //TODO: make better method of marshalling data from LandData to XmlNode
                         XmlNode xmlparcel = nodeFactory.CreateNode(XmlNodeType.Element, "parcel", "");
 
                         // Attributes of the parcel node
@@ -215,8 +214,6 @@ namespace OpenSim.Region.DataSnapshot.Providers
                         else
                             dwell.InnerText = "0";
                         xmlparcel.AppendChild(dwell);
-
-                        //TODO: figure how to figure out teleport system landData.landingType
 
                         //land texture snapshot uuid
                         if (parcel.SnapshotID != UUID.Zero)

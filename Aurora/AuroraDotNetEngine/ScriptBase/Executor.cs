@@ -31,6 +31,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.Remoting.Lifetime;
+using System.Threading;
 using log4net;
 using Aurora.ScriptEngine.AuroraDotNetEngine;
 using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
@@ -51,7 +52,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         protected Dictionary<Guid, IEnumerator> m_enumerators = new Dictionary<Guid, IEnumerator>();
 
         [Flags]
-        public enum scriptEvents : int
+        public enum scriptEvents : long
         {
             None = 0,
             attach = 1,
@@ -81,13 +82,22 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             touch = 8,
             touch_end = 536870912,
             touch_start = 2097152,
-            object_rez = 4194304
+            object_rez = 4194304,
+            changed = 2147483648,
+            link_message = 4294967296,
+            no_sensor = 8589934592,
+            on_rez = 17179869184,
+            sensor = 34359738368
         }
 
         // Cache functions by keeping a reference to them in a dictionary
         private Dictionary<string, MethodInfo> Events = new Dictionary<string, MethodInfo>();
         private Dictionary<string, scriptEvents> m_stateEvents = new Dictionary<string, scriptEvents>();
         private Type m_scriptType;
+        //TODO: Hook this up somehow to configs above
+        private bool killProcessing = true;
+        private int timeout = 10;
+
         public Executor(IScript script)
         {
             m_Script = script;
@@ -136,126 +146,167 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             return eventFlags;
         }
 
-        public Guid ExecuteEvent(string state, string FunctionName, object[] args, Guid Start, out Exception ex)
+        public EnumeratorInfo ExecuteEvent(string state, string FunctionName, object[] args, EnumeratorInfo Start, out Exception ex)
         {
             ex = null;
-            try
+            // IMPORTANT: Types and MemberInfo-derived objects require a LOT of memory.
+            // Instead use RuntimeTypeHandle, RuntimeFieldHandle and RunTimeHandle (IntPtr) instead!
+            string EventName = state + "_event_" + FunctionName;
+
+            //#if DEBUG
+            //m_log.Debug("ScriptEngine: Script event function name: " + EventName);
+            //#endif
+
+            #region Find Event
+
+            MethodInfo ev = null;
+            if (m_scriptType == null)
+                m_scriptType = m_Script.GetType();
+
+            if (!Events.TryGetValue(EventName, out ev))
             {
-                // IMPORTANT: Types and MemberInfo-derived objects require a LOT of memory.
-                // Instead use RuntimeTypeHandle, RuntimeFieldHandle and RunTimeHandle (IntPtr) instead!
-                string EventName = state + "_event_" + FunctionName;
-
-                //#if DEBUG
-                //m_log.Debug("ScriptEngine: Script event function name: " + EventName);
-                //#endif
-
-                #region Find Event
-
-                MethodInfo ev = null;
-                if(m_scriptType == null)
-                    m_scriptType = m_Script.GetType();
+                // Not found, create
+                ev = m_scriptType.GetMethod(EventName);
+                Events.Add(EventName, ev);
+            }
+            if (ev == null) // No event by that event name!
+            {
+                //Attempt to find it just by name
 
                 if (!Events.TryGetValue(EventName, out ev))
                 {
                     // Not found, create
-                    try
-                    {
-                        ev = m_scriptType.GetMethod(EventName);
-                        Events.Add(EventName, ev);
-                    }
-                    catch
-                    {
-                        if (!Events.ContainsKey(EventName))
-                            // Event name not found, cache it as not found
-                            Events.Add(EventName, null);
-                    }
+                    ev = m_scriptType.GetMethod(FunctionName);
+                    Events.Add(FunctionName, ev);
                 }
-                if (ev == null) // No event by that event name!
+                if (ev == null) // No event by that name!
                 {
-                    //Attempt to find it just by name
-
-                    if (!Events.TryGetValue(EventName, out ev))
-                    {
-                        // Not found, create
-                        try
-                        {
-                            ev = m_scriptType.GetMethod(FunctionName);
-                            Events.Add(FunctionName, ev);
-                        }
-                        catch
-                        {
-                            if (!Events.ContainsKey(FunctionName))
-                                // Event name not found, cache it as not found
-                                Events.Add(FunctionName, null);
-                        }
-                    }
-                    if (ev == null) // No event by that name!
-                    {
-                        //m_log.Debug("ScriptEngine Can not find any event named:" + EventName);
-                        return new Guid();
-                    }
+                    //m_log.Debug("ScriptEngine Can not find any event named:" + EventName);
+                    return null;
                 }
-                #endregion
+            }
+            #endregion
 
-                return FireAsEnumerator(Start, ev, args);
-            }
-            catch(Exception exception)
-            {
-                if (ex == null)
-                    ex = exception;
-            }
-            return Guid.Empty;
+            return FireAsEnumerator(Start, ev, args, out ex);
         }
 
-        public Guid FireAsEnumerator(Guid Start, MethodInfo ev, object[] args)
+        public EnumeratorInfo FireAsEnumerator(EnumeratorInfo Start, MethodInfo ev, object[] args, out Exception ex)
         {
             IEnumerator thread = null;
-            if (Start != Guid.Empty)
+            if (Start != null)
+                lock (m_enumerators)
+                {
+                    m_enumerators.TryGetValue(Start.Key, out thread);
+                }
+            else
+                thread = (IEnumerator)ev.Invoke(m_Script, args);
+
+            int i = 0;
+            bool running = false;
+            if (thread != null)
             {
-                m_enumerators.TryGetValue(Start, out thread);
+                while (i < i + 10)
+                {
+                    i++;
+                    try
+                    {
+                        running = CallAndWait(timeout, thread);
+                        //Sleep processing
+                        if (running && thread.Current != null)
+                        {
+                            if (thread.Current is DateTime)
+                            {
+                                if (Start == null)
+                                {
+                                    Start = new EnumeratorInfo();
+                                    Start.Key = System.Guid.NewGuid();
+                                }
+                                Start.SleepTo = (DateTime)thread.Current;
+                                lock (m_enumerators)
+                                {
+                                    m_enumerators[Start.Key] = thread;
+                                }
+                                ex = null;
+                                return Start;
+                            }
+                        }
+                        if (!running)
+                        {
+                            lock (m_enumerators)
+                            {
+                                if(Start != null)
+                                    m_enumerators.Remove(Start.Key);
+                            }
+                            ex = null;
+                            return null;
+                        }
+                    }
+                    catch (Exception tie)
+                    {
+                        // Grab the inner exception and rethrow it, unless the inner
+                        // exception is an EventAbortException as this indicates event
+                        // invocation termination due to a state change.
+                        // DO NOT THROW JUST THE INNER EXCEPTION!
+                        // FriendlyErrors depends on getting the whole exception!
+                        //
+                        ex = null;
+                        if (!(tie is EventAbortException) ||
+                            !(tie is MinEventDelayException) ||
+                            !(tie is EventAbortException) ||
+                            !(tie is EventAbortException))
+                            ex = tie;
+                        return null;
+                    }
+                }
             }
             else
             {
-                thread = (IEnumerator)ev.Invoke(m_Script, args);
+                //No enumerator.... errr.... something went really wrong here
+                ex = null;
+                return Start;
             }
-            int i = 0;
-            bool running = false;
-            while (i < i + 10)
+            if (Start == null)
             {
-                i++;
-                try
-                {
-                    running = thread.MoveNext();
-                    if (!running)
-                    {
-                        lock (m_enumerators)
-                        {
-                            if (m_enumerators.ContainsKey(Start))
-                                m_enumerators.Remove(Start);
-                        }
-                        return Guid.Empty;
-                    }
+                Start = new EnumeratorInfo();
+                Start.Key = System.Guid.NewGuid();
+            }
 
-                }
-                catch (TargetInvocationException tie)
-                {
-                    // Grab the inner exception and rethrow it, unless the inner
-                    // exception is an EventAbortException as this indicates event
-                    // invocation termination due to a state change.
-                    // DO NOT THROW JUST THE INNER EXCEPTION!
-                    // FriendlyErrors depends on getting the whole exception!
-                    //
-                    if (!(tie.InnerException is EventAbortException))
-                        throw;
-                }
-            }
-            if (Start == Guid.Empty)
+            lock (m_enumerators)
             {
-                Start = System.Guid.NewGuid();
-                m_enumerators.Add(Start, thread);
+                m_enumerators[Start.Key] = thread;
             }
+            ex = null;
             return Start;
         }
+
+        public delegate void FireEvent(IEnumerator thread);
+
+        private bool CallAndWait(int timeout, IEnumerator enumerator)
+        {
+            bool RetVal = true;
+            FireEvent wrappedAction = delegate(IEnumerator en)
+            {
+                RetVal = enumerator.MoveNext();
+            };
+
+            IAsyncResult result = wrappedAction.BeginInvoke(enumerator, null, null);
+            if (((timeout != -1) && !result.IsCompleted) &&
+            (!result.AsyncWaitHandle.WaitOne(timeout, false) || !result.IsCompleted))
+            {
+                //If we don't kill processing, then we pass on
+                if (!killProcessing)
+                    return true;
+                else
+                    return false;
+            }
+            else
+            {
+                wrappedAction.EndInvoke(result);
+            }
+            //Return what we got
+            return RetVal;
+        }
+
 
         protected void initEventFlags()
         {
@@ -266,7 +317,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             m_eventFlagsMap.Add("attach", scriptEvents.attach);
             m_eventFlagsMap.Add("at_rot_target", scriptEvents.at_rot_target);
             m_eventFlagsMap.Add("at_target", scriptEvents.at_target);
-            // m_eventFlagsMap.Add("changed",(long)scriptEvents.changed);
+            m_eventFlagsMap.Add("changed", scriptEvents.changed);
             m_eventFlagsMap.Add("collision", scriptEvents.collision);
             m_eventFlagsMap.Add("collision_end", scriptEvents.collision_end);
             m_eventFlagsMap.Add("collision_start", scriptEvents.collision_start);
@@ -277,18 +328,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             m_eventFlagsMap.Add("land_collision", scriptEvents.land_collision);
             m_eventFlagsMap.Add("land_collision_end", scriptEvents.land_collision_end);
             m_eventFlagsMap.Add("land_collision_start", scriptEvents.land_collision_start);
-            // m_eventFlagsMap.Add("link_message",scriptEvents.link_message);
+            m_eventFlagsMap.Add("link_message",scriptEvents.link_message);
             m_eventFlagsMap.Add("listen", scriptEvents.listen);
             m_eventFlagsMap.Add("money", scriptEvents.money);
             m_eventFlagsMap.Add("moving_end", scriptEvents.moving_end);
             m_eventFlagsMap.Add("moving_start", scriptEvents.moving_start);
             m_eventFlagsMap.Add("not_at_rot_target", scriptEvents.not_at_rot_target);
             m_eventFlagsMap.Add("not_at_target", scriptEvents.not_at_target);
-            // m_eventFlagsMap.Add("no_sensor",(long)scriptEvents.no_sensor);
-            // m_eventFlagsMap.Add("on_rez",(long)scriptEvents.on_rez);
+            m_eventFlagsMap.Add("no_sensor", scriptEvents.no_sensor);
+            m_eventFlagsMap.Add("on_rez", scriptEvents.on_rez);
             m_eventFlagsMap.Add("remote_data", scriptEvents.remote_data);
             m_eventFlagsMap.Add("run_time_permissions", scriptEvents.run_time_permissions);
-            // m_eventFlagsMap.Add("sensor",(long)scriptEvents.sensor);
+            m_eventFlagsMap.Add("sensor", scriptEvents.sensor);
             m_eventFlagsMap.Add("state_entry", scriptEvents.state_entry);
             m_eventFlagsMap.Add("state_exit", scriptEvents.state_exit);
             m_eventFlagsMap.Add("timer", scriptEvents.timer);

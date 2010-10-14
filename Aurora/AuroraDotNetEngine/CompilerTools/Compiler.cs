@@ -69,11 +69,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
         public bool firstStartup = true;
         private string FilePrefix;
-        private string ScriptEnginesPath = "ScriptEngines";
 
         private List<string> m_warnings = new List<string>();
 
         private List<string> m_errors = new List<string>();
+
+        public bool m_XEngineLSLCompatabilityModule = false;
+        public bool m_SLCompatabilityMode = false;
 
         private static UInt64 scriptCompileCounter = 0; // And a counter
 
@@ -99,7 +101,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             // Get some config
             WriteScriptSourceToDebugFile = m_scriptEngine.Config.GetBoolean("WriteScriptSourceToDebugFile", false);
             CompileWithDebugInformation = m_scriptEngine.Config.GetBoolean("CompileWithDebugInformation", true);
-            
+
+            m_XEngineLSLCompatabilityModule = m_scriptEngine.Config.GetBoolean("XEngineCompatabilityMode", false);
+            m_SLCompatabilityMode = m_scriptEngine.Config.GetBoolean("SLCompatabilityMode", false);
+
             MakeFilePrefixSafe();
             //Set up the compilers
             SetupCompilers();
@@ -188,28 +193,33 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         /// </summary>
         /// <param name="Script">LSL script</param>
         /// <returns>Filename to .dll assembly</returns>
-        public void PerformScriptCompile(string Script, UUID itemID, UUID ownerUUID, out string assembly)
+        public string PerformScriptCompile(string Script, UUID itemID, UUID ownerUUID, int VersionID, out string assembly)
         {
+            assembly = "";
             if (Script == String.Empty)
-                throw new Exception("No script text present");
+                return "No script text present";
 
             m_warnings.Clear();
             m_errors.Clear();
 
-            assembly = CheckDirectories(Path.Combine("ScriptEngines", Path.Combine(
+            assembly = CheckDirectories(Path.Combine(m_scriptEngine.ScriptEnginesPath, Path.Combine(
                         "Script",
-                        FilePrefix + "_compiled_" + itemID.ToString() + ".dll")));
+                        FilePrefix + "_compiled_" + itemID.ToString() + "V" + VersionID + ".dll")));
 
             IScriptConverter converter;
             string compileScript;
+            string retval = CheckLanguageAndConvert(Script, ownerUUID, out converter, out compileScript);
+            if (retval != string.Empty)
+                return retval;
 
-            CheckLanguageAndConvert(Script, ownerUUID, out converter, out compileScript);
-
-            CompileFromDotNetText(compileScript, converter, assembly);
+            retval = CompileFromDotNetText(compileScript, converter, assembly);
+            return retval;
         }
 
-        private void CheckLanguageAndConvert(string Script, UUID ownerID, out IScriptConverter converter, out string compileScript)
+        private string CheckLanguageAndConvert(string Script, UUID ownerID, out IScriptConverter converter, out string compileScript)
         {
+            compileScript = Script;
+            converter = null;
             string language = DefaultCompileLanguage;
 
             foreach (IScriptConverter convert in converters)
@@ -223,7 +233,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 // Not allowed to compile to this language!
                 string errtext = String.Empty;
                 errtext += "The compiler for language \"" + language.ToString() + "\" is not in list of allowed compilers. Script will not be executed!";
-                throw new Exception(errtext);
+                return errtext;
             }
 
             if (m_scriptEngine.Worlds[0].Permissions.CanCompileScript(ownerID, language) == false)
@@ -231,10 +241,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 // Not allowed to compile to this language!
                 string errtext = String.Empty;
                 errtext += ownerID + " is not in list of allowed users for this scripting language. Script will not be executed!";
-                throw new Exception(errtext);
+                return errtext;
             }
-
-            compileScript = Script;
 
             string[] Warnings;
             AllowedCompilers.TryGetValue(language, out converter);
@@ -246,23 +254,24 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             {
                 AddWarning(warning);
             }
+            return "";
         }
 
         public void RecreateDirectory()
         {
-            if (Directory.Exists(ScriptEnginesPath))
+            if (Directory.Exists(m_scriptEngine.ScriptEnginesPath))
             {
                 try
                 {
-                    Directory.Delete(ScriptEnginesPath, true);
+                    Directory.Delete(m_scriptEngine.ScriptEnginesPath, true);
                 }
                 catch (Exception) { }
             }
-            if (!Directory.Exists(ScriptEnginesPath))
+            if (!Directory.Exists(m_scriptEngine.ScriptEnginesPath))
             {
                 try
                 {
-                    Directory.CreateDirectory(ScriptEnginesPath);
+                    Directory.CreateDirectory(m_scriptEngine.ScriptEnginesPath);
                 }
                 catch (Exception) { }
             }
@@ -270,11 +279,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         
         private string CheckDirectories(string assembly)
         {
-            if (!Directory.Exists(ScriptEnginesPath))
+            if (!Directory.Exists(m_scriptEngine.ScriptEnginesPath))
             {
                 try
                 {
-                    Directory.CreateDirectory(ScriptEnginesPath);
+                    Directory.CreateDirectory(m_scriptEngine.ScriptEnginesPath);
                 }
                 catch (Exception)
                 {
@@ -306,7 +315,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     File.Delete(assembly);
                     File.Delete(assembly.Remove(assembly.Length - 4) + ".pdb");
                 }
-                catch (Exception e) // NOTLEGIT - Should be just FileIOException
+                catch (Exception) // NOTLEGIT - Should be just FileIOException
                 {
                     assembly = assembly.Remove(assembly.Length - 4);
                     assembly += "A.dll";
@@ -348,7 +357,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         /// </summary>
         /// <param name="Script">CS script</param>
         /// <returns>Filename to .dll assembly</returns>
-        internal void CompileFromDotNetText(string Script, IScriptConverter converter, string assembly)
+        internal string CompileFromDotNetText(string Script, IScriptConverter converter, string assembly)
         {
             string ext = "." + converter.Name;
 
@@ -360,9 +369,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             }
             catch (Exception e) // NOTLEGIT - Should be just FileIOException
             {
-                throw new Exception("Unable to delete old existing " +
+                return "Unable to delete old existing " +
                         "script-file before writing new. Compile aborted: " +
-                        e.ToString());
+                        e.ToString();
             }
 
             // DEBUG - write source to disk
@@ -373,7 +382,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 try
                 {
                     File.WriteAllText(Path.Combine(Path.Combine(
-                        ScriptEnginesPath,
+                        m_scriptEngine.ScriptEnginesPath,
                         "Script"),
                         srcFileName), Script);
                 }
@@ -447,6 +456,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                             CharN = CompErr.Column;
                         }
 
+                        //This will crash some viewers if the pos is 0,0!
+                        if (LineN <= 0 && CharN <= 0)
+                        {
+                            CharN = 1;
+                            LineN = 1;
+                        }
+                            
+
                         // The Second Life viewer's script editor begins
                         // countingn lines and columns at 0, so we subtract 1.
                         errtext += String.Format("({0},{1}): {3}: {2}\n",
@@ -473,6 +490,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                             CharN = CompErr.Column;
                         }
 
+                        //This will crash some viewers if the pos is 0,0!
+                        if (LineN == 0 && CharN == 0)
+                        {
+                            CharN = 1;
+                            LineN = 1;
+                        }
+
                         // The Second Life viewer's script editor begins
                         // countingn lines and columns at 0, so we subtract 1.
                         errtext += String.Format("({0},{1}): {3}: {2}\n",
@@ -483,7 +507,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             }
 
             if (m_errors.Count != 0) // Quit early then
-                return;
+                return "Error";
 
             //  On today's highly asynchronous systems, the result of
             //  the compile may not be immediately apparent. Wait a 
@@ -491,16 +515,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
             if (!File.Exists(assembly))
             {
-                for (int i = 0; i < 50 && !File.Exists(assembly); i++)
+                for (int i = 0; i < 500 && !File.Exists(assembly); i++)
                 {
-                    System.Threading.Thread.Sleep(100);
+                    System.Threading.Thread.Sleep(10);
                 }
-                // One final chance...
-                if (!File.Exists(assembly))
-                {
-                    throw new Exception("No compile error. But not able to locate compiled file.");
-                }
+                return "No compile error. But not able to locate compiled file.";
             }
+            return "";
         }
 
         private class kvpSorter : IComparer<KeyValuePair<int, int>>

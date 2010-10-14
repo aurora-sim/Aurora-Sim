@@ -205,7 +205,7 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
         private bool IsLocal(UUID objectID)
         {
             string unused;
-            return (null != findPrim(objectID, out unused));
+            return (findPrim(objectID, out unused) != null);
         }
 
         private SceneObjectPart findPrim(UUID objectID, out string ObjectRegionName)
@@ -368,7 +368,7 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
                 string guid = address.Substring(0, address.IndexOf("@"));
                 UUID toID = new UUID(guid);
 
-                if (IsLocal(toID)) // TODO FIX check to see if it is local
+                if (IsLocal(toID))
                 {
                     // object in this region
                     InsertEmail(toID, email);
@@ -376,7 +376,8 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
                 else
                 {
                     // object on another region
-                    // TODO FIX
+
+                    //This should be dealt with by other modules, not us
                 }
             }
 

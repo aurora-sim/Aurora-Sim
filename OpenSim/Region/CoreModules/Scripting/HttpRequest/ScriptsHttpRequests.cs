@@ -56,14 +56,11 @@ using Mono.Addins;
  * LSLLongCmdHandler polling loop.  Similiar to the
  * XMLRPCModule, since that seems to work.
  *
- * //TODO
- *
  * This probably needs some throttling mechanism but
- * it's wide open right now.  This applies to both
- * number of requests and data volume.
+ * it's wide open right now.  This applies to
+ * number of requests
  *
  * Linden puts all kinds of header fields in the requests.
- * Not doing any of that:
  * User-Agent
  * X-SecondLife-Shard
  * X-SecondLife-Object-Name
@@ -91,13 +88,23 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
         private object HttpListLock = new object();
         private int httpTimeout = 30000;
         private string m_name = "HttpScriptRequests";
+        private int DEFAULT_BODY_MAXLENGTH = 2048;
 
         private string m_proxyurl = "";
         private string m_proxyexcepts = "";
 
-        // <request id, HttpRequestClass>
-        private Dictionary<UUID, HttpRequestClass> m_pendingRequests;
+        // <itemID, HttpRequestClasss>
+        private Dictionary<UUID, List<HttpRequestClass>> m_pendingRequests;
+        // <reqID, itemID>
+        private Dictionary<UUID, UUID> m_reqID2itemID = new Dictionary<UUID, UUID>();
         private Scene m_scene;
+        public class HTTPMax
+        {
+            public int Number = 0;
+            public long LastTicks = 0;
+        }
+        private Dictionary<UUID, HTTPMax> m_numberOfPrimHTTPRequests = new Dictionary<UUID, HTTPMax>();
+        private int MaxNumberOfHTTPRequestsPerSecond = 1;
         // private Queue<HttpRequestClass> rpcQueue = new Queue<HttpRequestClass>();
 
         public HttpRequestModule()
@@ -120,6 +127,9 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
             //   see http://wiki.secondlife.com/wiki/LlHTTPRequest
             //
             // Parameters are expected in {key, value, ... , key, value}
+
+            int BODY_MAXLENGTH = DEFAULT_BODY_MAXLENGTH;
+
             if (parameters != null)
             {
                 string[] parms = parameters.ToArray();
@@ -139,7 +149,7 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
 
                         case (int)HttpRequestConstants.HTTP_BODY_MAXLENGTH:
 
-                            // TODO implement me
+                            BODY_MAXLENGTH = int.Parse(parms[i + 1]);
                             break;
 
                         case (int)HttpRequestConstants.HTTP_VERIFY_CERT:
@@ -150,9 +160,26 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
                 }
             }
 
+            bool ShouldProcess = true;
+
+            HTTPMax r = null;
+            if (!m_numberOfPrimHTTPRequests.TryGetValue(primID, out r))
+                r = new HTTPMax();
+
+            if (DateTime.Now.AddSeconds(1).Ticks > r.LastTicks)
+                r.Number = 0;
+
+            if (r.Number++ > MaxNumberOfHTTPRequestsPerSecond)
+            {
+                ShouldProcess = false; //Too many for this prim, return status 499
+                htc.Status = (int)OSHttpStatusCode.ClientErrorJoker;
+                htc.Finished = true;
+            }
+
             htc.PrimID = primID;
             htc.ItemID = itemID;
             htc.Url = url;
+            htc.MaxLength = BODY_MAXLENGTH;
             htc.ReqID = reqID;
             htc.HttpTimeout = httpTimeout;
             htc.OutboundBody = body;
@@ -162,38 +189,40 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
 
             lock (HttpListLock)
             {
-                m_pendingRequests.Add(reqID, htc);
+                if (m_pendingRequests.ContainsKey(itemID))
+                    m_pendingRequests[itemID].Add(htc);
+                else
+                {
+                    m_reqID2itemID.Add(reqID, itemID);
+                    m_pendingRequests.Add(itemID, new List<HttpRequestClass>() { htc });
+                }
             }
 
-            htc.Process();
+            if(ShouldProcess)
+                htc.Process();
 
             return reqID;
         }
 
         public void StopHttpRequest(UUID primID, UUID m_itemID)
         {
+            //Kill all requests and return
             if (m_pendingRequests != null)
             {
                 lock (HttpListLock)
                 {
-                    HttpRequestClass tmpReq;
-                    if (m_pendingRequests.TryGetValue(m_itemID, out tmpReq))
+                    List<HttpRequestClass> tmpReqs;
+                    if (m_pendingRequests.TryGetValue(m_itemID, out tmpReqs))
                     {
-                        tmpReq.Stop();
-                        m_pendingRequests.Remove(m_itemID);
+                        foreach (HttpRequestClass tmpReq in tmpReqs)
+                        {
+                            tmpReq.Stop();
+                        }
                     }
+                    m_pendingRequests.Remove(m_itemID);
                 }
             }
         }
-
-        /*
-        * TODO
-        * Not sure how important ordering is is here - the next first
-        * one completed in the list is returned, based soley on its list
-        * position, not the order in which the request was started or
-        * finsihed.  I thought about setting up a queue for this, but
-        * it will need some refactoring and this works 'enough' right now
-        */
 
         public IServiceRequest GetNextCompletedRequest()
         {
@@ -201,25 +230,41 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
                 return null;
             lock (HttpListLock)
             {
-                foreach (HttpRequestClass luid in m_pendingRequests.Values)
+                foreach (List<HttpRequestClass> luids in m_pendingRequests.Values)
                 {
-                    if (luid.Finished)
-                        return luid;
+                    foreach (HttpRequestClass luid in luids)
+                    {
+                        if (luid.Finished)
+                            return luid;
+                    }
                 }
             }
             return null;
         }
 
-        public void RemoveCompletedRequest(UUID id)
+        public void RemoveCompletedRequest(UUID reqid)
         {
             lock (HttpListLock)
             {
-                HttpRequestClass tmpReq;
-                if (m_pendingRequests.TryGetValue(id, out tmpReq))
+                List<HttpRequestClass> tmpReqs;
+                UUID ItemID;
+                if (m_reqID2itemID.TryGetValue(reqid, out ItemID))
                 {
-                    tmpReq.Stop();
-                    tmpReq = null;
-                    m_pendingRequests.Remove(id);
+                    if (m_pendingRequests.TryGetValue(ItemID, out tmpReqs))
+                    {
+                        for(int i = 0; i < tmpReqs.Count; i++)
+                        {
+                            if (tmpReqs[i].ReqID == reqid)
+                            {
+                                tmpReqs[i].Stop();
+                                tmpReqs.RemoveAt(i);
+                            }
+                        }
+                        if (tmpReqs.Count == 1)
+                            m_pendingRequests.Remove(ItemID);
+                        else
+                            m_pendingRequests[ItemID] = tmpReqs;
+                    }
                 }
             }
         }
@@ -230,10 +275,10 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
 
         public void Initialise(IConfigSource config)
         {
-            m_proxyurl = config.Configs["Startup"].GetString("HttpProxy");
-            m_proxyexcepts = config.Configs["Startup"].GetString("HttpProxyExceptions");
+            m_proxyurl = config.Configs["HTTPScriptModule"].GetString("HttpProxy");
+            m_proxyexcepts = config.Configs["HTTPScriptModule"].GetString("HttpProxyExceptions");
 
-            m_pendingRequests = new Dictionary<UUID, HttpRequestClass>();
+            m_pendingRequests = new Dictionary<UUID, List<HttpRequestClass>>();
         }
 
         public void AddRegion(Scene scene)
@@ -288,8 +333,9 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
         // public const int HTTP_VERIFY_CERT = 3;
         private bool _finished;
         public bool Finished
-        { 
+        {
             get { return _finished; }
+            set { _finished = value; }
         }
         // public int HttpBodyMaxLen = 2048; // not implemented
 
@@ -328,13 +374,15 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
         public List<string> ResponseMetadata;
         public Dictionary<string, string> ResponseHeaders;
         public int Status;
+        public object[] Metadata = new object[0];
         public string Url;
+        public int MaxLength = 0;
 
         public void Process()
         {
             httpThread = new Thread(SendRequest);
             httpThread.Name = "HttpRequestThread";
-            httpThread.Priority = ThreadPriority.BelowNormal;
+            httpThread.Priority = ThreadPriority.Lowest;
             httpThread.IsBackground = true;
             _finished = false;
             httpThread.Start();
@@ -356,6 +404,7 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
             try
             {
                 Request = (HttpWebRequest) WebRequest.Create(Url);
+
                 Request.Method = HttpMethod;
                 Request.ContentType = HttpMIMEType;
 
@@ -412,6 +461,13 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
                 } while (count > 0); // any more data to read?
 
                 ResponseBody = sb.ToString();
+
+                if (ResponseBody.Length > MaxLength) //Cut it off then
+                {
+                    ResponseBody = ResponseBody.Remove(MaxLength);
+                    //Add the metaData
+                    Metadata = new object[2] { 0, MaxLength };
+                }
             }
             catch (Exception e)
             {

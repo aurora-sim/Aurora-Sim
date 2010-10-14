@@ -143,5 +143,50 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         {
             m_AA_Functions.AASayTo(userID, text);
         }
+
+        public bool AAGetWalkDisabled(string userID)
+        {
+            return m_AA_Functions.AAGetWalkDisabled(userID);
+        }
+
+        public void AASetWalkDisabled(string userID, bool Value)
+        {
+            m_AA_Functions.AASetWalkDisabled(userID, Value);
+        }
+
+        public bool AAGetFlyDisabled(string userID)
+        {
+            return m_AA_Functions.AAGetFlyDisabled(userID);
+        }
+
+        public void AASetFlyDisabled(string userID, bool Value)
+        {
+            m_AA_Functions.AASetFlyDisabled(userID, Value);
+        }
+
+        public string AAAvatarFullName2Key(string username)
+        {
+            return m_AA_Functions.AAAvatarFullName2Key(username);
+        }
+
+        public void osCauseDamage(string avatar, double damage)
+        {
+            m_AA_Functions.osCauseDamage(avatar, damage);
+        }
+
+        public void osCauseDamage(string avatar, double damage, string regionName, LSL_Types.Vector3 position, LSL_Types.Vector3 lookat)
+        {
+            m_AA_Functions.osCauseDamage(avatar, damage, regionName, position, lookat);
+        }
+
+        public void osCauseHealing(string avatar, double healing)
+        {
+            m_AA_Functions.osCauseHealing(avatar, healing);
+        }
+
+        public void AASetCenterOfGravity(LSL_Types.Vector3 position)
+        {
+            m_AA_Functions.AASetCenterOfGravity(position);
+        }
     }
 }

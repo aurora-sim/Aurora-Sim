@@ -1947,7 +1947,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 	public class Event_34 : Event {
 		public Event_34(Parser yyq):base(yyq,
 		                                 ((HTTP_REQUEST_EVENT)(yyq.StackAt(0).m_value))
-		                                 .yytext){}}
+                                         .yytext) { }
+    }
+
+    public class Event_35 : Event
+    {
+        public Event_35(Parser yyq)
+            : base(yyq,
+                  ((ON_ERROR_EVENT)(yyq.StackAt(0).m_value))
+                  .yytext) { }
+    }
 	public class yyLSLSyntax
 		: YyParser {
 		public override object Action(Parser yyq,SYMBOL yysym, int yyact) {
@@ -10931,8 +10940,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 			new Sfactory(this,"StateEvent",new SCreator(StateEvent_factory));
 			new Sfactory(this,"Event_20",new SCreator(Event_20_factory));
 			new Sfactory(this,"Event_23",new SCreator(Event_23_factory));
-			new Sfactory(this,"Event_24",new SCreator(Event_24_factory));
-			new Sfactory(this,"Event_26",new SCreator(Event_26_factory));
+            new Sfactory(this, "Event_24", new SCreator(Event_24_factory));
+            new Sfactory(this, "Event_26", new SCreator(Event_26_factory));
+            new Sfactory(this, "Event_35", new SCreator(Event_35_factory));
 			new Sfactory(this,"SimpleAssignment_10",new SCreator(SimpleAssignment_10_factory));
 			new Sfactory(this,"Event",new SCreator(Event_factory));
 			new Sfactory(this,"SimpleAssignment_14",new SCreator(SimpleAssignment_14_factory));
@@ -11165,6 +11175,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 		public static object Event_23_factory(Parser yyp) { return new Event_23(yyp); }
 		public static object Event_24_factory(Parser yyp) { return new Event_24(yyp); }
 		public static object Event_26_factory(Parser yyp) { return new Event_26(yyp); }
+		public static object Event_35_factory(Parser yyp) { return new Event_35(yyp); }
 		public static object SimpleAssignment_10_factory(Parser yyp) { return new SimpleAssignment_10(yyp); }
 		public static object Event_factory(Parser yyp) { return new Event(yyp); }
 		public static object SimpleAssignment_14_factory(Parser yyp) { return new SimpleAssignment_14(yyp); }

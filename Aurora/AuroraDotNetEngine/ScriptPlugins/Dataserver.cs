@@ -29,22 +29,23 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using OpenMetaverse;
+using OpenSim.Region.Framework.Scenes;
 using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Plugins;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 {
-    public class Dataserver
+    public class DataserverPlugin : ISharedScriptPlugin
     {
         public ScriptEngine m_ScriptEngine;
 
         private Dictionary<string, DataserverRequest> DataserverRequests =
                 new Dictionary<string, DataserverRequest>();
 
-        public Dataserver(ScriptEngine ScriptEngine)
+        public void Initialize(ScriptEngine engine)
         {
-            m_ScriptEngine = ScriptEngine;
+            m_ScriptEngine = engine;
         }
 
         private class DataserverRequest
@@ -63,27 +64,27 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
         public UUID RegisterRequest(UUID primID, UUID itemID,
                                       string identifier)
         {
+            DataserverRequest ds = new DataserverRequest();
+
+            ds.primID = primID;
+            ds.itemID = itemID;
+
+            ds.ID = UUID.Random();
+            ds.handle = identifier;
+
+            ds.startTime = DateTime.Now;
+            ds.IsCompleteAt = DateTime.Now.AddHours(1);
+            ds.Reply = "";
+
             lock (DataserverRequests)
             {
                 if (DataserverRequests.ContainsKey(identifier))
                     return UUID.Zero;
 
-                DataserverRequest ds = new DataserverRequest();
-
-                ds.primID = primID;
-                ds.itemID = itemID;
-
-                ds.ID = UUID.Random();
-                ds.handle = identifier;
-
-                ds.startTime = DateTime.Now;
-                ds.IsCompleteAt = DateTime.Now.AddHours(1);
-                ds.Reply = "";
-
                 DataserverRequests[identifier] = ds;
-
-                return ds.ID;
             }
+
+            return ds.ID;
         }
 
         private void DataserverReply(string identifier, string reply)
@@ -96,7 +97,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                     return;
 
                 ds = DataserverRequests[identifier];
-                DataserverRequests.Remove(identifier);
             }
 
             m_ScriptEngine.PostObjectEvent(ds.primID,
@@ -105,42 +105,78 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                             new LSL_Types.LSLString(reply)});
         }
 
-        public void RemoveEvents(UUID primID, UUID itemID)
+        public void RemoveScript(UUID primID, UUID itemID)
         {
             lock (DataserverRequests)
             {
+                List<DataserverRequest> ToRemove = new List<DataserverRequest>();
                 foreach (DataserverRequest ds in DataserverRequests.Values)
                 {
                     if (ds.itemID == itemID)
-                        DataserverRequests.Remove(ds.handle);
+                    {
+                        ToRemove.Add(ds);
+                    }
+                }
+                foreach (DataserverRequest re in ToRemove)
+                {
+                    DataserverRequests.Remove(re.handle);
                 }
             }
         }
 
-        public void CheckAndExpireRequests()
+        public void Check()
         {
-            if (DataserverRequests.Count == 0)
-                return;
             lock (DataserverRequests)
             {
+                if (DataserverRequests.Count == 0)
+                    return;
+                List<DataserverRequest> ToRemove = new List<DataserverRequest>();
                 foreach (DataserverRequest ds in DataserverRequests.Values)
                 {
                     if (ds.IsCompleteAt < DateTime.Now)
+                    {
                         DataserverReply(ds.handle, ds.Reply);
+                        ToRemove.Add(ds);
+                    }
 
                     if (ds.startTime > DateTime.Now.AddSeconds(30))
-                        DataserverRequests.Remove(ds.handle);
+                        ToRemove.Add(ds);
+                }
+                foreach (DataserverRequest re in ToRemove)
+                {
+                    DataserverRequests.Remove(re.handle);
                 }
             }
         }
 
         internal void AddReply(string handle, string reply, int millisecondsToWait)
         {
-            DataserverRequest request = null;
-            DataserverRequests.TryGetValue(handle, out request);
-            //Wait for the value to be returned in LSL_Api
-            request.IsCompleteAt = DateTime.Now.AddSeconds(millisecondsToWait / 1000 + 0.1);
-            request.Reply = reply;
+            lock (DataserverRequests)
+            {
+                DataserverRequest request = null;
+                DataserverRequests.TryGetValue(handle, out request);
+                //Wait for the value to be returned in LSL_Api
+                request.IsCompleteAt = DateTime.Now.AddSeconds(millisecondsToWait / 1000 + 0.1);
+                request.Reply = reply;
+            }
+        }
+
+        public string Name
+        {
+            get { return "Dataserver"; }
+        }
+
+        public void Dispose()
+        {
+        }
+
+        public Object[] GetSerializationData(UUID itemID, UUID primID)
+        {
+            return new Object[0];
+        }
+
+        public void CreateFromData(UUID itemID, UUID objectID, Object[] data)
+        {
         }
     }
 }

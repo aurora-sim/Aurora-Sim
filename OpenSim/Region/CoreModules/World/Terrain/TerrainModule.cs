@@ -68,7 +68,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         #endregion
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        
+
         private readonly Commander m_commander = new Commander("terrain");
 
         private readonly Dictionary<StandardTerrainEffects, ITerrainFloodEffect> m_floodeffects =
@@ -117,14 +117,14 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 {
                     m_channel = new TerrainChannel();
                     m_scene.Heightmap = m_channel;
-                    m_revert = new TerrainChannel();
+                    m_revert = m_channel;
                     UpdateRevertMap();
                 }
                 else
                 {
                     m_channel = m_scene.Heightmap;
-                    m_revert = new TerrainChannel();
-                    UpdateRevertMap();
+                    m_revert = m_scene.Heightmap;
+                    FindRevertMap();
                 }
 
                 m_scene.RegisterModuleInterface<ITerrainModule>(this);
@@ -343,7 +343,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             float duration = 0.25f;
             if (action == 0)
                 duration = 4.0f;
-            client_OnModifyTerrain(user, (float)pos.Z, duration, size, action, pos.Y, pos.X, pos.Y, pos.X, agentId);
+            client_OnModifyTerrain(user, (float)pos.Z, duration, size, action, pos.Y, pos.X, pos.Y, pos.X, agentId, size);
         }
 
         /// <summary>
@@ -381,16 +381,11 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         private void LoadPlugins()
         {
             m_plugineffects = new Dictionary<string, ITerrainEffect>();
-            string plugineffectsPath = "Terrain";
-            
             // Load the files in the Terrain/ dir
-            if (!Directory.Exists(plugineffectsPath))
-                return;
-            
-            string[] files = Directory.GetFiles(plugineffectsPath);
+            string[] files = Directory.GetFiles("Terrain", "*.dll");
             foreach (string file in files)
             {
-                m_log.Info("Loading effects in " + file);
+                //m_log.Info("Loading effects in " + file);
                 try
                 {
                     Assembly library = Assembly.LoadFrom(file);
@@ -413,7 +408,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                             {
                                 ITerrainLoader terLoader = (ITerrainLoader) Activator.CreateInstance(library.GetType(pluginType.ToString()));
                                 m_loaders[terLoader.FileExtension] = terLoader;
-                                m_log.Info("L ... " + typeName);
+                                //m_log.Info("L ... " + typeName);
                             }
                         }
                         catch (AmbiguousMatchException)
@@ -434,12 +429,12 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 if (!m_plugineffects.ContainsKey(pluginName))
                 {
                     m_plugineffects.Add(pluginName, effect);
-                    m_log.Info("E ... " + pluginName);
+                    //m_log.Info("E ... " + pluginName);
                 }
                 else
                 {
                     m_plugineffects[pluginName] = effect;
-                    m_log.Warn("E ... " + pluginName + " (Replaced)");
+                    //m_log.Warn("E ... " + pluginName + " (Replaced)");
                 }
             }
         }
@@ -487,6 +482,14 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         }
 
         /// <summary>
+        /// Finds and updates the revert map from the database.
+        /// </summary>
+        public void FindRevertMap()
+        {
+            m_revert = m_scene.LoadRevertMap();
+        }
+
+        /// <summary>
         /// Saves the current state of the region into the revert map buffer.
         /// </summary>
         public void UpdateRevertMap()
@@ -500,6 +503,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                     m_revert[x, y] = m_channel[x, y];
                 }
             }
+            m_scene.SaveRevertTerrain(m_revert);
         }
 
         /// <summary>
@@ -546,11 +550,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             if (m_tainted)
             {
                 m_tainted = false;
-                m_scene.PhysicsScene.SetTerrain(m_channel.GetFloatsSerialised());
+                m_scene.PhysicsScene.SetTerrain(m_channel.GetFloatsSerialised(), m_channel.GetDoubles());
                 m_scene.SaveTerrain();
-
-                // Clients who look at the map will never see changes after they looked at the map, so i've commented this out.
-                //m_scene.CreateTerrainTexture(true);
             }
         }
 
@@ -586,9 +587,33 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             client.OnModifyTerrain += client_OnModifyTerrain;
             client.OnBakeTerrain += client_OnBakeTerrain;
             client.OnLandUndo += client_OnLandUndo;
-            client.OnUnackedTerrain += client_OnUnackedTerrain;
+            client.OnGodlikeMessage += client_onGodlikeMessage;
         }
-        
+
+        void client_onGodlikeMessage(IClientAPI client, UUID requester, string Method, List<string> Parameters)
+        {
+            if (!m_scene.Permissions.IsGod(client.AgentId))
+                return;
+            if (((Scene)client.Scene).RegionInfo.RegionID != m_scene.RegionInfo.RegionID)
+                return;
+            string parameter1 = Parameters[0];
+            if (Method == "terrain")
+            {
+                if (parameter1 == "bake")
+                {
+                    UpdateRevertMap();
+                }
+                if (parameter1 == "revert")
+                {
+                    InterfaceRevertTerrain(null);
+                }
+                if (parameter1 == "swap")
+                {
+                    //This is so you can change terrain with other regions... not implemented yet
+                }
+            }
+        }
+
         /// <summary>
         /// Checks to see if the terrain has been modified since last check
         /// but won't attempt to limit those changes to the limits specified in the estate settings
@@ -700,14 +725,14 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         {
             m_scene.ForEachClient(
                 delegate(IClientAPI controller)
-                    { controller.SendLayerData(
-                        x / Constants.TerrainPatchSize, y / Constants.TerrainPatchSize, serialised);
-                    }
+                {
+                    controller.SendLayerData(x / Constants.TerrainPatchSize, y / Constants.TerrainPatchSize, serialised);
+                }
             );
         }
 
         private void client_OnModifyTerrain(UUID user, float height, float seconds, byte size, byte action,
-                                            float north, float west, float south, float east, UUID agentId)
+                                            float north, float west, float south, float east, UUID agentId, float BrushSize)
         {
             bool god = m_scene.Permissions.IsGod(user);
             bool allowed = false;
@@ -717,9 +742,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 {
                     bool[,] allowMask = new bool[m_channel.Width,m_channel.Height];
                     allowMask.Initialize();
-                    int n = size + 1;
-                    if (n > 2)
-                        n = 4;
+                    int n = (int)BrushSize;
 
                     int zx = (int) (west + 0.5);
                     int zy = (int) (north + 0.5);
@@ -746,7 +769,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                     {
                         StoreUndoState();
                         m_painteffects[(StandardTerrainEffects) action].PaintEffect(
-                            m_channel, allowMask, west, south, height, size, seconds);
+                            m_channel, allowMask, west, south, height, size, seconds, BrushSize);
 
                         CheckForTerrainUpdates(!god); //revert changes outside estate limits
                     }
@@ -808,12 +831,6 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             {
                 InterfaceBakeTerrain(null); //bake terrain does not use the passed in parameter
             }
-        }
-        
-        protected void client_OnUnackedTerrain(IClientAPI client, int patchX, int patchY)
-        {
-            //m_log.Debug("Terrain packet unacked, resending patch: " + patchX + " , " + patchY);
-             client.SendLayerData(patchX, patchY, m_scene.Heightmap.GetFloatsSerialised());
         }
 
         private void StoreUndoState()

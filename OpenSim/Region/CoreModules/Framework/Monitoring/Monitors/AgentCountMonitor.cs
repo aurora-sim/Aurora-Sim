@@ -42,7 +42,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 
         public double GetValue()
         {
-            return m_scene.SceneGraph.GetRootAgentCount();
+            return m_scene.GetRootAgentCount();
         }
 
         public string GetName()

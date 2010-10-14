@@ -24,8 +24,6 @@ namespace OpenSim.Server.Handlers.AuroraData
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private Aurora.Framework.IProfileConnector ProfileFrontend = null;
-
         public AuroraDataServiceConnector(IConfigSource config, IHttpServer server, string configName) :
                 base(config, server, configName)
         {

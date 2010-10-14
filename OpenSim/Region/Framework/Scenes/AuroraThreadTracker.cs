@@ -32,7 +32,7 @@ namespace OpenSim.Region.Framework.Scenes
         private static readonly ILog m_log
             = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        Timer checkTimer = null;
+        //Timer checkTimer = null;
         List<IThread> AllHeartbeats = new List<IThread>();
         Scene m_scene = null;
         public delegate void NeedToAddThread(string type);

@@ -26,9 +26,13 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using log4net;
+using log4net.Appender;
+using log4net.Core;
+using log4net.Repository;
 using log4net.Config;
 using Nini.Config;
 using OpenSim.Framework;
@@ -57,14 +61,19 @@ namespace OpenSim
         public static bool m_saveCrashDumps = false;
 
         /// <summary>
+        /// Should we send an error report?
+        /// </summary>
+        public static bool m_sendErrorReport = false;
+
+        /// <summary>
+        /// Where to post errors
+        /// </summary>
+        public static string m_urlToPostErrors = "http://auroraserver.ath.cx/posterror.php";
+
+        /// <summary>
         /// Directory to save crash reports to.  Relative to bin/
         /// </summary>
         public static string m_crashDir = "crashes";
-
-        /// <summary>
-        /// Instance of the OpenSim class.  This could be OpenSim or OpenSimBackground depending on the configuration
-        /// </summary>
-        protected static OpenSimBase m_sim = null;
 
         //could move our main function into OpenSimMain and kill this class
         public static void Main(string[] args)
@@ -82,24 +91,24 @@ namespace OpenSim
             if (logConfigFile != String.Empty)
             {
                 XmlConfigurator.Configure(new System.IO.FileInfo(logConfigFile));
-                m_log.InfoFormat("[OPENSIM MAIN]: configured log4net using \"{0}\" as configuration file", 
-                                 logConfigFile);
-            } 
+                //m_log.InfoFormat("[OPENSIM MAIN]: configured log4net using \"{0}\" as configuration file",
+                //                 logConfigFile);
+            }
             else
             {
                 XmlConfigurator.Configure();
-                m_log.Info("[OPENSIM MAIN]: configured log4net using default OpenSim.exe.config");
+                //m_log.Info("[OPENSIM MAIN]: configured log4net using default OpenSim.exe.config");
             }
 
             // Increase the number of IOCP threads available. Mono defaults to a tragically low number
             int workerThreads, iocpThreads;
             System.Threading.ThreadPool.GetMaxThreads(out workerThreads, out iocpThreads);
-            m_log.InfoFormat("[OPENSIM MAIN]: Runtime gave us {0} worker threads and {1} IOCP threads", workerThreads, iocpThreads);
+            //m_log.InfoFormat("[OPENSIM MAIN]: Runtime gave us {0} worker threads and {1} IOCP threads", workerThreads, iocpThreads);
             if (workerThreads < 500 || iocpThreads < 1000)
             {
                 workerThreads = 500;
                 iocpThreads = 1000;
-                m_log.Info("[OPENSIM MAIN]: Bumping up to 500 worker threads and 1000 IOCP threads");
+                //m_log.Info("[OPENSIM MAIN]: Bumping up to 500 worker threads and 1000 IOCP threads");
                 System.Threading.ThreadPool.SetMaxThreads(workerThreads, iocpThreads);
             }
 
@@ -118,7 +127,7 @@ namespace OpenSim
 
             // Configure nIni aliases and localles
             Culture.SetCurrentCulture();
-
+            #region Disabled
 
             // Validate that the user has the most basic configuration done
             // If not, offer to do the most basic configuration for them warning them along the way of the importance of 
@@ -225,8 +234,10 @@ namespace OpenSim
                         }
                 }
                 MainConsole.Instance = null;
-            }
+            }      
             */
+
+            #endregion
             configSource.Alias.AddAlias("On", true);
             configSource.Alias.AddAlias("Off", false);
             configSource.Alias.AddAlias("True", true);
@@ -243,47 +254,32 @@ namespace OpenSim
             configSource.AddConfig("StandAlone");
             configSource.AddConfig("Network");
 
+            IConfigSource m_configSource = Configuration(configSource);
+
             // Check if we're running in the background or not
-            bool background = configSource.Configs["Startup"].GetBoolean("background", false);
+            bool background = m_configSource.Configs["Startup"].GetBoolean("background", false);
 
             // Check if we're saving crashes
-            m_saveCrashDumps = configSource.Configs["Startup"].GetBoolean("save_crashes", false);
+            m_saveCrashDumps = m_configSource.Configs["Startup"].GetBoolean("save_crashes", false);
 
             // load Crash directory config
-            m_crashDir = configSource.Configs["Startup"].GetString("crash_dir", m_crashDir);
+            m_crashDir = m_configSource.Configs["Startup"].GetString("crash_dir", m_crashDir);
 
-           
-
-            if (background)
+            //Set up the error reporting
+            if (m_configSource.Configs["ErrorReporting"] != null)
             {
-                m_sim = new OpenSimBackground(configSource);
-                m_sim.Startup();
+                m_sendErrorReport = m_configSource.Configs["ErrorReporting"].GetBoolean("SendErrorReports", true);
+                m_urlToPostErrors = m_configSource.Configs["ErrorReporting"].GetString("ErrorReportingURL", m_urlToPostErrors);
             }
-            else
-            {
 
+            OpenSimBase m_sim = new OpenSimBase(m_configSource);
+            m_sim.Startup();
+        }
 
-                       
-
-                m_sim = new OpenSim(configSource);
-
-                    
-      
-                m_sim.Startup();
-
-                while (true)
-                {
-                    try
-                    {
-                        // Block thread here for input
-                        MainConsole.Instance.Prompt();
-                    }
-                    catch (Exception e)
-                    {
-                        m_log.ErrorFormat("Command error: {0}", e);
-                    }
-                }
-            }
+        private static IConfigSource Configuration(IConfigSource configSource)
+        {
+            ConfigurationLoader m_configLoader = new ConfigurationLoader();
+            return m_configLoader.LoadConfigSettings(configSource);
         }
 
         private static bool _IsHandlingException = false; // Make sure we don't go recursive on ourself
@@ -296,14 +292,10 @@ namespace OpenSim
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
             if (_IsHandlingException)
-            {
                 return;
-            }
 
             _IsHandlingException = true;
-            // TODO: Add config option to allow users to turn off error reporting
-            // TODO: Post error report (disabled for now)
-
+            
             string msg = String.Empty;
             msg += "\r\n";
             msg += "APPLICATION EXCEPTION DETECTED: " + e.ToString() + "\r\n";
@@ -344,7 +336,90 @@ namespace OpenSim
                 }
             }
 
+            if (m_sendErrorReport)
+            {
+                List<string> parameters = new List<string>();
+                parameters.Add(VersionInfo.Version); //Aurora version
+                parameters.Add(msg); //The error
+                parameters.Add(Environment.OSVersion.Platform.ToString()); //The operating system
+                Nwc.XmlRpc.ConfigurableKeepAliveXmlRpcRequest req;
+                req = new Nwc.XmlRpc.ConfigurableKeepAliveXmlRpcRequest("SendErrorReport", parameters, true);
+
+                req.Send(m_urlToPostErrors, 10000);
+            }
+
             _IsHandlingException = false;
+        }
+    }
+}
+namespace Nwc.XmlRpc
+{
+    using System;
+    using System.Collections;
+    using System.IO;
+    using System.Xml;
+    using System.Net;
+    using System.Text;
+    using System.Reflection;
+
+    /// <summary>Class supporting the request side of an XML-RPC transaction.</summary>
+    public class ConfigurableKeepAliveXmlRpcRequest : XmlRpcRequest
+    {
+        private Encoding _encoding = new ASCIIEncoding();
+        private XmlRpcRequestSerializer _serializer = new XmlRpcRequestSerializer();
+        private XmlRpcResponseDeserializer _deserializer = new XmlRpcResponseDeserializer();
+        private bool _disableKeepAlive = true;
+
+        public string RequestResponse = String.Empty;
+
+        /// <summary>Instantiate an <c>XmlRpcRequest</c> for a specified method and parameters.</summary>
+        /// <param name="methodName"><c>String</c> designating the <i>object.method</i> on the server the request
+        /// should be directed to.</param>
+        /// <param name="parameters"><c>ArrayList</c> of XML-RPC type parameters to invoke the request with.</param>
+        public ConfigurableKeepAliveXmlRpcRequest(String methodName, IList parameters, bool disableKeepAlive)
+        {
+            MethodName = methodName;
+            _params = parameters;
+            _disableKeepAlive = disableKeepAlive;
+        }
+
+        /// <summary>Send the request to the server.</summary>
+        /// <param name="url"><c>String</c> The url of the XML-RPC server.</param>
+        /// <returns><c>XmlRpcResponse</c> The response generated.</returns>
+        public XmlRpcResponse Send(String url)
+        {
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+            if (request == null)
+                throw new XmlRpcException(XmlRpcErrorCodes.TRANSPORT_ERROR,
+                              XmlRpcErrorCodes.TRANSPORT_ERROR_MSG + ": Could not create request with " + url);
+            request.Method = "POST";
+            request.ContentType = "text/xml";
+            request.AllowWriteStreamBuffering = true;
+            request.KeepAlive = !_disableKeepAlive;
+
+            Stream stream = request.GetRequestStream();
+            XmlTextWriter xml = new XmlTextWriter(stream, _encoding);
+            _serializer.Serialize(xml, this);
+            xml.Flush();
+            xml.Close();
+
+            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            StreamReader input = new StreamReader(response.GetResponseStream());
+
+            string inputXml = input.ReadToEnd();
+            XmlRpcResponse resp;
+            try
+            {
+                resp = (XmlRpcResponse)_deserializer.Deserialize(inputXml);
+            }
+            catch (Exception e)
+            {
+                RequestResponse = inputXml;
+                throw e;
+            }
+            input.Close();
+            response.Close();
+            return resp;
         }
     }
 }

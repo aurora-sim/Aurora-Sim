@@ -49,6 +49,7 @@ using LSL_String = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString;
 using LSL_Vector = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Vector3;
 using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
+using OpenSim.Services.Interfaces;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 {
@@ -59,13 +60,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         internal SceneObjectPart m_host;
         internal IAssetConnector AssetConnector;
         internal ScriptProtectionModule ScriptProtection;
+        internal UUID m_itemID;
 
         public void Initialize(ScriptEngine ScriptEngine, SceneObjectPart host, uint localID, UUID itemID, ScriptProtectionModule module)
         {
+            m_itemID = itemID;
             m_ScriptEngine = ScriptEngine;
             m_host = host;
             ScriptProtection = module;
-            AssetConnector = Aurora.DataManager.DataManager.RequestPlugin<IAssetConnector>("IAssetConnector");
+            AssetConnector = Aurora.DataManager.DataManager.RequestPlugin<IAssetConnector>();
         }
 
         public string Name
@@ -224,7 +227,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             ScenePresence SP = World.GetScenePresence(m_host.OwnerID);
             if (SP != null)
             {
-                return new LSL_Float(SP.Health);
+                ICombatPresence cp = SP.RequestModuleInterface<ICombatPresence>();
+                return new LSL_Float(cp.Health);
             }
             return new LSL_Float(-1);
         }
@@ -280,12 +284,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void AASayDistance(int channelID, float Distance, string text)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "AASayDistance", m_host, "AA");
-            m_host.AddScriptLPS(1);
+            
 
             if (text.Length > 1023)
                 text = text.Substring(0, 1023);
 
-            World.SimChat(OpenMetaverse.Utils.StringToBytes(text),
+            World.SimChat(text,
                           ChatTypeEnum.Custom, channelID, m_host.ParentGroup.RootPart.AbsolutePosition, m_host.Name, m_host.UUID, true, Distance);
 
             IWorldComm wComm = World.RequestModuleInterface<IWorldComm>();
@@ -296,14 +300,414 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void AASayTo(string userID, string text)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "AASayDistance", m_host, "AA");
-            m_host.AddScriptLPS(1);
+            
 
             UUID AgentID;
             if(UUID.TryParse(userID, out AgentID))
             {
-                World.SimChatBroadcast(OpenMetaverse.Utils.StringToBytes(text), ChatTypeEnum.SayTo, 0,
+                World.SimChatBroadcast(text, ChatTypeEnum.SayTo, 0,
                                        m_host.AbsolutePosition, m_host.Name, m_host.UUID, false, AgentID);
             }
         }
+
+        public LSL_String AAGetText()
+        {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "AAGetText", m_host, "AA");
+            return m_host.Text;
+        }
+
+        public void AARaiseError(string message)
+        {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "AARaiseError", m_host, "AA");
+            m_ScriptEngine.AddToObjectQueue(m_host.UUID, "on_error", new DetectParams[0], -1, new object[] { message });
+            throw new EventAbortException();
+        }
+
+        public void AAFreezeAvatar(string ID)
+        {
+            UUID AgentID = UUID.Zero;
+            if (UUID.TryParse(ID, out AgentID))
+            {
+                ScenePresence SP;
+                if (World.TryGetScenePresence(AgentID, out SP))
+                {
+                    ICombatModule module = World.RequestModuleInterface<ICombatModule>();
+                    if (module.CheckCombatPermission(AgentID))
+                    {
+                        //If they have combat permission on, do it whether the threat level is enabled or not
+                        SP.AllowMovement = false;
+                        return;
+                    }
+
+                    ScriptProtection.CheckThreatLevel(ThreatLevel.High, "AAThawAvatar", m_host, "AA");
+                    SP.AllowMovement = false;
+                }
+            }
+        }
+
+        public void AAThawAvatar(string ID)
+        {
+            UUID AgentID = UUID.Zero;
+            if (UUID.TryParse(ID, out AgentID))
+            {
+                ScenePresence SP;
+                if (World.TryGetScenePresence(AgentID, out SP))
+                {
+                    ICombatModule module = World.RequestModuleInterface<ICombatModule>();
+                    if (module.CheckCombatPermission(AgentID))
+                    {
+                        //If they have combat permission on, do it whether the threat level is enabled or not
+                        SP.AllowMovement = true;
+                        return;
+                    }
+
+                    ScriptProtection.CheckThreatLevel(ThreatLevel.High, "AAThawAvatar", m_host, "AA");
+                    SP.AllowMovement = true;
+                }
+            }
+        }
+
+        public void AARegisterToAvatarDeathEvents()
+        {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "AARegisterToAvatarDeathEvents", m_host, "AA");
+            ICombatModule module = World.RequestModuleInterface<ICombatModule>();
+            module.RegisterToAvatarDeathEvents(m_host.UUID);
+        }
+
+        public void AADeregisterFromAvatarDeathEvents()
+        {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "AARegisterToAvatarDeathEvents", m_host, "AA");
+            ICombatModule module = World.RequestModuleInterface<ICombatModule>();
+            module.DeregisterFromAvatarDeathEvents(m_host.UUID);
+        }
+
+        //This asks the agent whether they would like to participate in the combat
+        public void AARequestCombatPermission(string ID)
+        {
+            ScenePresence SP;
+            UUID AgentID = UUID.Zero;
+            if (UUID.TryParse(ID, out AgentID))
+            {
+                if (World.TryGetScenePresence(AgentID, out SP))
+                {
+                    ICombatModule module = World.RequestModuleInterface<ICombatModule>();
+                    if(!module.CheckCombatPermission(AgentID)) //Don't ask multiple times
+                        RequestPermissions(SP, ScriptBaseClass.PERMISSION_COMBAT);
+                }
+            }
+        }
+
+        public bool AAGetWalkDisabled(string vPresenceId)
+        {   
+            TaskInventoryItem item;
+
+            lock (m_host.TaskInventory)
+            {
+                if (!m_host.TaskInventory.ContainsKey(InventorySelf()))
+                    return false;
+                else
+                    item = m_host.TaskInventory[InventorySelf()];
+            }
+
+            if (item.PermsGranter != UUID.Zero)
+            {
+                ScenePresence presence = World.GetScenePresence(item.PermsGranter);
+
+                if (presence != null)
+                {
+                    if ((item.PermsMask & ScriptBaseClass.PERMISSION_TAKE_CONTROLS) != 0)
+                    {
+                        UUID avatarId = new UUID(vPresenceId);
+                        ScenePresence avatar = World.GetScenePresence(avatarId);
+                        return avatar.ForceFly;
+                    }
+                }
+            }
+            return false;
+        }
+
+        public void AASetWalkDisabled(string vPresenceId, bool vbValue)
+        {
+            TaskInventoryItem item;
+
+            lock (m_host.TaskInventory)
+            {
+                if (!m_host.TaskInventory.ContainsKey(InventorySelf()))
+                    return;
+                else
+                    item = m_host.TaskInventory[InventorySelf()];
+            }
+
+            if (item.PermsGranter != UUID.Zero)
+            {
+                ScenePresence presence = World.GetScenePresence(item.PermsGranter);
+
+                if (presence != null)
+                {
+                    if ((item.PermsMask & ScriptBaseClass.PERMISSION_TAKE_CONTROLS) != 0)
+                    {
+                        UUID avatarId = new UUID(vPresenceId);
+                        ScenePresence avatar = World.GetScenePresence(avatarId);
+                        avatar.ForceFly = vbValue;
+                    }
+                }
+            }
+        }
+
+        public bool AAGetFlyDisabled(string vPresenceId)
+        {
+            TaskInventoryItem item;
+
+            lock (m_host.TaskInventory)
+            {
+                if (!m_host.TaskInventory.ContainsKey(InventorySelf()))
+                    return false;
+                else
+                    item = m_host.TaskInventory[InventorySelf()];
+            }
+
+            if (item.PermsGranter != UUID.Zero)
+            {
+                ScenePresence presence = World.GetScenePresence(item.PermsGranter);
+
+                if (presence != null)
+                {
+                    if ((item.PermsMask & ScriptBaseClass.PERMISSION_TAKE_CONTROLS) != 0)
+                    {
+                        UUID avatarId = new UUID(vPresenceId);
+                        ScenePresence avatar = World.GetScenePresence(avatarId);
+                        return avatar.FlyDisabled;
+                    }
+                }
+            }
+            return false;
+        }
+
+        public void AASetFlyDisabled(string vPresenceId, bool vbValue)
+        {
+            TaskInventoryItem item;
+
+            lock (m_host.TaskInventory)
+            {
+                if (!m_host.TaskInventory.ContainsKey(InventorySelf()))
+                    return;
+                else
+                    item = m_host.TaskInventory[InventorySelf()];
+            }
+
+            if (item.PermsGranter != UUID.Zero)
+            {
+                ScenePresence presence = World.GetScenePresence(item.PermsGranter);
+
+                if (presence != null)
+                {
+                    if ((item.PermsMask & ScriptBaseClass.PERMISSION_TAKE_CONTROLS) != 0)
+                    {
+                        UUID avatarId = new UUID(vPresenceId);
+                        ScenePresence avatar = World.GetScenePresence(avatarId);
+                        avatar.FlyDisabled = vbValue;
+                    }
+                }
+            }
+        }
+
+        public string AAAvatarFullName2Key(string fullname)
+        {
+            string[] Split = fullname.Split(new Char[] { ' ' });
+            UserAccount account = World.UserAccountService.GetUserAccount(World.RegionInfo.ScopeID, Split[0], Split[1]);
+
+            if (null == account)
+                return UUID.Zero.ToString();
+
+            return account.PrincipalID.ToString();
+        }
+
+        private void RequestPermissions(ScenePresence presence, int perm)
+        {
+            UUID invItemID = InventorySelf();
+
+            if (invItemID == UUID.Zero)
+                return; // Not in a prim? How??
+
+            TaskInventoryItem item;
+
+            lock (m_host.TaskInventory)
+            {
+                item = m_host.TaskInventory[invItemID];
+            }
+
+            
+
+            string ownerName = "";
+            ScenePresence ownerPresence = World.GetScenePresence(m_host.ParentGroup.RootPart.OwnerID);
+            if (ownerPresence == null)
+                ownerName = resolveName(m_host.OwnerID);
+            else
+                ownerName = ownerPresence.Name;
+
+            if (ownerName == String.Empty)
+                ownerName = "(hippos)";
+
+            presence.ControllingClient.OnScriptAnswer += handleScriptAnswer;
+
+            presence.ControllingClient.SendScriptQuestion(
+                m_host.UUID, m_host.ParentGroup.RootPart.Name, ownerName, invItemID, perm);
+        }
+
+        void handleScriptAnswer(IClientAPI client, UUID taskID, UUID itemID, int answer)
+        {
+            if (taskID != m_host.UUID)
+                return;
+
+            UUID invItemID = InventorySelf();
+
+            if (invItemID == UUID.Zero)
+                return;
+
+            if (invItemID == itemID)
+                return;
+
+            client.OnScriptAnswer -= handleScriptAnswer;
+
+            ICombatModule module = World.RequestModuleInterface<ICombatModule>();
+            //Tell the combat module about this new permission
+            if ((answer & ScriptBaseClass.PERMISSION_COMBAT) == ScriptBaseClass.PERMISSION_COMBAT)
+                module.AddCombatPermission(client.AgentId);
+
+            //Tell the prim about the new permissions
+            m_ScriptEngine.PostScriptEvent(m_itemID, m_host.UUID, new EventParams(
+                    "run_time_permissions", new Object[] {
+                    new LSL_Integer(answer) },
+                    new DetectParams[0]), EventPriority.FirstStart);
+        }
+
+        public void osCauseDamage(string avatar, double damage)
+        {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osCauseDamage", m_host, "OSSL");
+
+            UUID avatarId = new UUID(avatar);
+            Vector3 pos = m_host.GetWorldPosition();
+
+            ScenePresence presence = World.GetScenePresence(avatarId);
+            if (presence != null)
+            {
+                LandData land = World.GetLandData((float)pos.X, (float)pos.Y);
+                if ((land.Flags & (uint)ParcelFlags.AllowDamage) == (uint)ParcelFlags.AllowDamage)
+                {
+                    ICombatPresence cp = presence.RequestModuleInterface<ICombatPresence>();
+                    cp.IncurDamage(m_host.LocalId, damage, m_host.OwnerID);
+                }
+            }
+        }
+
+        public void osCauseDamage(string avatar, double damage, string regionName, LSL_Types.Vector3 position, LSL_Types.Vector3 lookat)
+        {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osCauseDamage", m_host, "OSSL");
+
+            UUID avatarId = new UUID(avatar);
+            Vector3 pos = m_host.GetWorldPosition();
+
+            ScenePresence presence = World.GetScenePresence(avatarId);
+            if (presence != null)
+            {
+                LandData land = World.GetLandData((float)pos.X, (float)pos.Y);
+                if ((land.Flags & (uint)ParcelFlags.AllowDamage) == (uint)ParcelFlags.AllowDamage)
+                {
+                    ICombatPresence cp = presence.RequestModuleInterface<ICombatPresence>();
+                    cp.IncurDamage(m_host.LocalId, damage, regionName, new Vector3((float)position.x, (float)position.y, (float)position.z),
+                            new Vector3((float)lookat.x, (float)lookat.y, (float)lookat.z), m_host.OwnerID);
+
+                }
+            }
+        }
+
+        public void osCauseHealing(string avatar, double healing)
+        {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osCauseHealing", m_host, "OSSL");
+
+
+            UUID avatarId = new UUID(avatar);
+            ScenePresence presence = World.GetScenePresence(avatarId);
+            if (presence != null)
+            {
+                Vector3 pos = m_host.GetWorldPosition();
+                LandData land = World.GetLandData((float)pos.X, (float)pos.Y);
+                if ((land.Flags & (uint)ParcelFlags.AllowDamage) == (uint)ParcelFlags.AllowDamage)
+                {
+                    ICombatPresence cp = presence.RequestModuleInterface<ICombatPresence>();
+                    cp.IncurHealing(healing, m_host.OwnerID);
+                }
+            }
+        }
+
+        public void AASetCharacterStat(string UUIDofAv, string StatName, float statValue)
+        {
+            UUID avatarId = new UUID(UUIDofAv);
+            ScenePresence presence = World.GetScenePresence(avatarId);
+            if (presence != null)
+            {
+                ICombatPresence cp = presence.RequestModuleInterface<ICombatPresence>();
+                cp.SetStat(StatName, statValue);
+            }
+        }
+
+        public void AASetCenterOfGravity(LSL_Types.Vector3 position)
+        {
+            if (m_host.ParentGroup.Scene.Permissions.CanIssueEstateCommand(m_host.OwnerID, true))
+                m_host.ParentGroup.Scene.PhysicsScene.PointOfGravity = new Vector3((float)position.x, (float)position.y, (float)position.z);
+        }
+
+        #region Helpers
+
+        protected UUID InventorySelf()
+        {
+            UUID invItemID = new UUID();
+
+            lock (m_host.TaskInventory)
+            {
+                foreach (KeyValuePair<UUID, TaskInventoryItem> inv in m_host.TaskInventory)
+                {
+                    if (inv.Value.Type == 10 && inv.Value.ItemID == m_itemID)
+                    {
+                        invItemID = inv.Key;
+                        break;
+                    }
+                }
+            }
+
+            return invItemID;
+        }
+
+        public string resolveName(UUID objecUUID)
+        {
+            // try avatar username surname
+            UserAccount account = World.UserAccountService.GetUserAccount(World.RegionInfo.ScopeID, objecUUID);
+            if (account != null)
+                return account.Name;
+
+            // try an scene object
+            SceneObjectPart SOP = World.GetSceneObjectPart(objecUUID);
+            if (SOP != null)
+                return SOP.Name;
+
+            EntityBase SensedObject;
+            World.Entities.TryGetValue(objecUUID, out SensedObject);
+
+            if (SensedObject == null)
+            {
+                IGroupsModule groups = World.RequestModuleInterface<IGroupsModule>();
+                if (groups != null)
+                {
+                    GroupRecord gr = groups.GetGroupRecord(objecUUID);
+                    if (gr != null)
+                        return gr.GroupName;
+                }
+                return String.Empty;
+            }
+
+            return SensedObject.Name;
+        }
+
+        #endregion
     }
 }

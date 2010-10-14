@@ -44,102 +44,14 @@ using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace OpenSim.Region.Framework.Scenes
 {
-    public delegate void KiPrimitiveDelegate(uint localID);
-
-    public delegate void RemoveKnownRegionsFromAvatarList(UUID avatarID, List<ulong> regionlst);
-
-    /// <summary>
-    /// Class that Region communications runs through
-    /// </summary>
-    public class SceneCommunicationService //one instance per region
+    public class SceneCommunicationService 
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
-        protected RegionInfo m_regionInfo;
         protected Scene m_scene;
-
-        protected RegionCommsListener regionCommsHost;
-
-        protected List<UUID> m_agentsInTransit;
-
-        /// <summary>
-        /// An agent is crossing into this region
-        /// </summary>
-        public event AgentCrossing OnAvatarCrossingIntoRegion;
-
-        /// <summary>
-        /// A user will arrive shortly, set up appropriate credentials so it can connect
-        /// </summary>
-//        public event ExpectUserDelegate OnExpectUser;
-
-        /// <summary>
-        /// A Prim will arrive shortly
-        /// </summary>
-        public event CloseAgentConnection OnCloseAgentConnection;
-
-        /// <summary>
-        /// A new prim has arrived
-        /// </summary>
-//        public event PrimCrossing OnPrimCrossingIntoRegion;
-
-        ///// <summary>
-        ///// A New Region is up and available
-        ///// </summary>
-        //public event RegionUp OnRegionUp;
-
-        /// <summary>
-        /// We have a child agent for this avatar and we're getting a status update about it
-        /// </summary>
-//        public event ChildAgentUpdate OnChildAgentUpdate;
-        //public event RemoveKnownRegionsFromAvatarList OnRemoveKnownRegionFromAvatar;
-
-        /// <summary>
-        /// Time to log one of our users off.   Grid Service sends this mostly
-        /// </summary>
-        public event LogOffUser OnLogOffUser;
-
-        /// <summary>
-        /// A region wants land data from us!
-        /// </summary>
-        public event GetLandData OnGetLandData;
-
-//        private AgentCrossing handlerAvatarCrossingIntoRegion = null; // OnAvatarCrossingIntoRegion;
-//        private ExpectUserDelegate handlerExpectUser = null; // OnExpectUser;
-//        private CloseAgentConnection handlerCloseAgentConnection = null; // OnCloseAgentConnection;
-//        private PrimCrossing handlerPrimCrossingIntoRegion = null; // OnPrimCrossingIntoRegion;
-        //private RegionUp handlerRegionUp = null; // OnRegionUp;
-//        private ChildAgentUpdate handlerChildAgentUpdate = null; // OnChildAgentUpdate;
-        //private RemoveKnownRegionsFromAvatarList handlerRemoveKnownRegionFromAvatar = null; // OnRemoveKnownRegionFromAvatar;
-//        private LogOffUser handlerLogOffUser = null;
-//        private GetLandData handlerGetLandData = null; // OnGetLandData
-
-        public KiPrimitiveDelegate KiPrimitive;
-
-        public SceneCommunicationService()
-        {
-        }
 
         public void SetScene(Scene s)
         {
             m_scene = s;
-            m_regionInfo = s.RegionInfo;
-        }
-
-        /// <summary>
-        /// Register a region with the grid
-        /// </summary>
-        /// <param name="regionInfos"></param>
-        /// <exception cref="System.Exception">Thrown if region registration fails.</exception>
-        public void RegisterRegion(IInterregionCommsOut comms_out, RegionInfo regionInfos)
-        {
-        }
-
-        /// <summary>
-        /// This region is shutting down, de-register all events!
-        /// De-Register region from Grid!
-        /// </summary>
-        public void Close()
-        {
         }
 
         public delegate void InformNeighbourThatRegionUpDelegate(INeighbourService nService, RegionInfo region, ulong regionhandle);
@@ -168,7 +80,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (neighbour != null)
             {
-                //m_log.DebugFormat("[INTERGRID]: Successfully informed neighbour {0}-{1} that I'm here", x / Constants.RegionSize, y / Constants.RegionSize);
+                m_log.DebugFormat("[INTERGRID]: Successfully informed neighbour {0}-{1} that I'm here", x / Constants.RegionSize, y / Constants.RegionSize);
                 m_scene.EventManager.TriggerOnRegionUp(neighbour);
             }
             else
@@ -213,25 +125,16 @@ namespace OpenSim.Region.Framework.Scenes
             //m_log.Info("[INTERGRID]: Informing neighbors about my agent in " + m_regionInfo.RegionName);
             try
             {
-                //m_commsProvider.InterRegion.ChildAgentUpdate(regionHandle, cAgentData);
                 uint x = 0, y = 0;
                 Utils.LongToUInts(regionHandle, out x, out y);
                 GridRegion destination = m_scene.GridService.GetRegionByPosition(UUID.Zero, (int)x, (int)y);
-                m_scene.SimulationService.UpdateAgent(destination, cAgentData);
+                if (!m_scene.SimulationService.UpdateAgent(destination, cAgentData))
+                    m_log.Info("[INTERGRID]: Failed sending a neighbor an update about my agent");
             }
             catch
             {
                 // Ignore; we did our best
             }
-
-            //if (regionAccepted)
-            //{
-            //    //m_log.Info("[INTERGRID]: Completed sending a neighbor an update about my agent");
-            //}
-            //else
-            //{
-            //    //m_log.Info("[INTERGRID]: Failed sending a neighbor an update about my agent");
-            //}
                 
         }
 
@@ -248,7 +151,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 foreach (ulong regionHandle in presence.KnownChildRegionHandles)
                 {
-                    if (regionHandle != m_regionInfo.RegionHandle)
+                    if (regionHandle != m_scene.RegionInfo.RegionHandle)
                     {
                         SendChildAgentDataUpdateDelegate d = SendChildAgentDataUpdateAsync;
                         d.BeginInvoke(cAgentData, regionHandle,
@@ -299,11 +202,5 @@ namespace OpenSim.Region.Framework.Scenes
                               d);
             }
         }
-       
-        public List<GridRegion> RequestNamedRegions(string name, int maxNumber)
-        {
-            return m_scene.GridService.GetRegionsByName(UUID.Zero, name, maxNumber);
-        }
-
     }
 }

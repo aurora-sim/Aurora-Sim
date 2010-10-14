@@ -113,9 +113,9 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
             }
         }
 
-        void EventManager_OnObjectGrab(uint localID, uint originalID, Vector3 offsetPos, IClientAPI remoteClient, SurfaceTouchEventArgs surfaceArgs)
+        void EventManager_OnObjectGrab(SceneObjectPart part, Vector3 offsetPos, IClientAPI remoteClient, SurfaceTouchEventArgs surfaceArgs)
         {
-            if (_OnTouchActive && m_localID == localID)
+            if (_OnTouchActive && m_localID == part.LocalId)
             {
                 TouchEventArgs e = new TouchEventArgs();
                 e.Avatar = new SPAvatar(m_rootScene, remoteClient.AgentId, m_security);
@@ -185,17 +185,14 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
             get
             {
                 SceneObjectPart my = GetSOP();
-                IObject[] rets = null;
+                int total = my.ParentGroup.ChildrenList.Count;
 
-                int total = my.ParentGroup.PrimCount;
-
-                rets = new IObject[total];
+                IObject[] rets = new IObject[total];
 
                 int i = 0;
-                    
-                foreach (SceneObjectPart part in my.ParentGroup.Parts)
+                foreach (SceneObjectPart child in my.ParentGroup.ChildrenList)
                 {
-                    rets[i++] = new SOPObject(m_rootScene, part.LocalId, m_security);
+                    rets[i++] = new SOPObject(m_rootScene, child.LocalId, m_security);
                 }
 
                 return rets;
@@ -404,7 +401,7 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
                 return;
 
             SceneObjectPart sop = GetSOP();
-            m_rootScene.SimChat(Utils.StringToBytes(msg), ChatTypeEnum.Say,channel, sop.AbsolutePosition, sop.Name, sop.UUID, false);
+            m_rootScene.SimChat(msg, ChatTypeEnum.Say,channel, sop.AbsolutePosition, sop.Name, sop.UUID, false);
         }
          
         public void Dialog(UUID avatar, string message, string[] buttons, int chat_channel)
@@ -428,7 +425,7 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
                 return;
             }
 
-            foreach (string button in buttons)
+            foreach(string button in buttons)
             {
                 if (button == String.Empty)
                 {
@@ -444,7 +441,7 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
 
             dm.SendDialogToUser(
                 avatar, GetSOP().Name, GetSOP().UUID, GetSOP().OwnerID,
-                message, new UUID("00000000-0000-2222-3333-100000001000"), chat_channel, buttons);
+                message, new UUID("00000000-0000-2222-3333-100000001000"), chat_channel, buttons);         
             
         }
         

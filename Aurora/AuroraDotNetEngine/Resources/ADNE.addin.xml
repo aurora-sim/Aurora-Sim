@@ -11,11 +11,23 @@
         <RegionModule id="AuroraDotNetEngine" type="Aurora.ScriptEngine.AuroraDotNetEngine.ScriptEngine" />
     </Extension>
 
-	<Extension path = "/OpenSim/ScriptPlugins">
-		<ScriptPlugin id="LS_Api"             type="Aurora.ScriptEngine.AuroraDotNetEngine.APIs.LS_Api" />
-		<ScriptPlugin id="LSL_Api"            type="Aurora.ScriptEngine.AuroraDotNetEngine.APIs.LSL_Api" />
-		<ScriptPlugin id="MOD_Api"            type="Aurora.ScriptEngine.AuroraDotNetEngine.APIs.MOD_Api" />
-		<ScriptPlugin id="AA_Api"             type="Aurora.ScriptEngine.AuroraDotNetEngine.APIs.AA_Api" />
-		<ScriptPlugin id="OSSL_Api"           type="Aurora.ScriptEngine.AuroraDotNetEngine.APIs.OSSL_Api" />
+	<Extension path = "/OpenSim/ScriptAPI">
+		<ScriptAPI id="LS_Api"             type="Aurora.ScriptEngine.AuroraDotNetEngine.APIs.LS_Api" />
+		<ScriptAPI id="LSL_Api"            type="Aurora.ScriptEngine.AuroraDotNetEngine.APIs.LSL_Api" />
+		<ScriptAPI id="MOD_Api"            type="Aurora.ScriptEngine.AuroraDotNetEngine.APIs.MOD_Api" />
+		<ScriptAPI id="AA_Api"             type="Aurora.ScriptEngine.AuroraDotNetEngine.APIs.AA_Api" />
+		<ScriptAPI id="OSSL_Api"           type="Aurora.ScriptEngine.AuroraDotNetEngine.APIs.OSSL_Api" />
+	</Extension>
+
+	<Extension path = "/OpenSim/NonSharedScriptPlugins">
+		<NonSharedScriptPlugin id="HttpRequestPlugin"             type="Aurora.ScriptEngine.AuroraDotNetEngine.Plugins.HttpRequestPlugin" />
+		<NonSharedScriptPlugin id="ListenerPlugin"            type="Aurora.ScriptEngine.AuroraDotNetEngine.Plugins.ListenerPlugin" />
+		<NonSharedScriptPlugin id="XmlRequestPlugin"            type="Aurora.ScriptEngine.AuroraDotNetEngine.Plugins.XmlRequestPlugin" />
+	</Extension>
+
+	<Extension path = "/OpenSim/SharedScriptPlugins">
+		<SharedScriptPlugin id="DataserverPlugin"             type="Aurora.ScriptEngine.AuroraDotNetEngine.Plugins.DataserverPlugin" />
+		<SharedScriptPlugin id="SensorRepeatPlugin"            type="Aurora.ScriptEngine.AuroraDotNetEngine.Plugins.SensorRepeatPlugin" />
+		<SharedScriptPlugin id="TimerPlugin"            type="Aurora.ScriptEngine.AuroraDotNetEngine.Plugins.TimerPlugin" />
 	</Extension>
 </Addin>

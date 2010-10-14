@@ -31,12 +31,19 @@ using System.Runtime.Serialization;
 using System.Security.Permissions;
 using OpenMetaverse;
 using OpenSim.Region.Framework.Scenes;
+using OpenSim.Framework;
 
 namespace OpenSim.Region.Framework.Scenes.Types
 {
+    public class PrimUpdate
+    {
+        public SceneObjectPart Part;
+        public PrimUpdateFlags UpdateFlags;
+    }
+
     public class UpdateQueue
     {
-        private Queue<SceneObjectPart> m_queue;
+        private Queue<PrimUpdate> m_queue;
 
         private Dictionary<UUID, bool> m_ids;
 
@@ -49,7 +56,7 @@ namespace OpenSim.Region.Framework.Scenes.Types
 
         public UpdateQueue()
         {
-            m_queue = new Queue<SceneObjectPart>();
+            m_queue = new Queue<PrimUpdate>();
             m_ids = new Dictionary<UUID, bool>();
         }
 
@@ -62,26 +69,27 @@ namespace OpenSim.Region.Framework.Scenes.Types
             }
         }
 
-        public void Enqueue(SceneObjectPart part)
+        public void Enqueue(PrimUpdate part)
         {
             lock (m_syncObject)
             {
-                if (!m_ids.ContainsKey(part.UUID)) {
-                    m_ids.Add(part.UUID, true);
+                if (!m_ids.ContainsKey(part.Part.UUID))
+                {
+                    m_ids.Add(part.Part.UUID, true);
                     m_queue.Enqueue(part);
                 }
             }
         }
 
-        public SceneObjectPart Dequeue()
+        public PrimUpdate Dequeue()
         {
-            SceneObjectPart part = null;
+            PrimUpdate part = null;
             lock (m_syncObject)
             {
                 if (m_queue.Count > 0)
                 {
                     part = m_queue.Dequeue();
-                    m_ids.Remove(part.UUID);
+                    m_ids.Remove(part.Part.UUID);
                 }
             }
 

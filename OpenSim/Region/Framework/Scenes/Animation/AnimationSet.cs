@@ -46,9 +46,10 @@ namespace OpenSim.Region.Framework.Scenes.Animation
         {
             get { return m_defaultAnimation; } 
         }
-        
-        public AnimationSet()
+
+        public AnimationSet(AvatarAnimations animations)
         {
+            Animations = animations;
             ResetDefaultAnimation();
         }
 
@@ -178,8 +179,11 @@ namespace OpenSim.Region.Framework.Scenes.Animation
 
         public void FromArray(OpenSim.Framework.Animation[] theArray)
         {
+            if (theArray == null)
+                return;
             foreach (OpenSim.Framework.Animation anim in theArray)
                 m_animations.Add(anim);
         }
     }
 }
+ 

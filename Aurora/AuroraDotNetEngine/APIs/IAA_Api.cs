@@ -72,5 +72,23 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         void AASayDistance(int channelID, float Distance, string text);
 
         void AASayTo(string userID, string text);
+
+        bool AAGetWalkDisabled(string userID);
+
+        void AASetWalkDisabled(string userID, bool Value);
+
+        bool AAGetFlyDisabled(string userID);
+
+        void AASetFlyDisabled(string userID, bool Value);
+
+        string AAAvatarFullName2Key(string username);
+
+        void osCauseDamage(string avatar, double damage, string regionName, LSL_Types.Vector3 position, LSL_Types.Vector3 lookat);
+
+        void osCauseHealing(string avatar, double healing);
+
+        void osCauseDamage(string avatar, double damage);
+
+        void AASetCenterOfGravity(LSL_Types.Vector3 position);
     }
 }

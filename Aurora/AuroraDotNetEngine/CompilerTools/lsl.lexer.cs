@@ -315,9 +315,18 @@ public class OBJECT_REZ_EVENT : TOKEN{ public override string yyname { get { ret
 public override int yynum { get { return 80; }}
  public OBJECT_REZ_EVENT(Lexer yyl):base(yyl) {}}
 //%ON_REZ_EVENT+81
-public class ON_REZ_EVENT : TOKEN{ public override string yyname { get { return "ON_REZ_EVENT";}}
-public override int yynum { get { return 81; }}
- public ON_REZ_EVENT(Lexer yyl):base(yyl) {}}
+public class ON_REZ_EVENT : TOKEN
+{
+    public override string yyname { get { return "ON_REZ_EVENT"; } }
+    public override int yynum { get { return 81; } }
+    public ON_REZ_EVENT(Lexer yyl) : base(yyl) { }
+}
+public class ON_ERROR_EVENT : TOKEN
+{
+    public override string yyname { get { return "ON_ERROR_EVENT"; } }
+    public override int yynum { get { return 96; } }
+    public ON_ERROR_EVENT(Lexer yyl) : base(yyl) { }
+}
 //%REMOTE_DATA_EVENT+82
 public class REMOTE_DATA_EVENT : TOKEN{ public override string yyname { get { return "REMOTE_DATA_EVENT";}}
 public override int yynum { get { return 82; }}
@@ -18633,8 +18642,9 @@ public class yyLSLTokens : YyLexer {
  new Tfactory(this,"LESS_EQUALS",new TCreator(LESS_EQUALS_factory));
  new Tfactory(this,"FLOAT_TYPE",new TCreator(FLOAT_TYPE_factory));
  new Tfactory(this,"MOVING_START_EVENT",new TCreator(MOVING_START_EVENT_factory));
- new Tfactory(this,"RUN_TIME_PERMISSIONS_EVENT",new TCreator(RUN_TIME_PERMISSIONS_EVENT_factory));
- new Tfactory(this,"ON_REZ_EVENT",new TCreator(ON_REZ_EVENT_factory));
+ new Tfactory(this, "RUN_TIME_PERMISSIONS_EVENT", new TCreator(RUN_TIME_PERMISSIONS_EVENT_factory));
+ new Tfactory(this, "ON_REZ_EVENT", new TCreator(ON_REZ_EVENT_factory));
+ new Tfactory(this, "ON_ERROR_EVENT", new TCreator(ON_ERROR_EVENT_factory));
  new Tfactory(this,"NO_SENSOR_EVENT",new TCreator(NO_SENSOR_EVENT_factory));
  new Tfactory(this,"EXCLAMATION_EQUALS",new TCreator(EXCLAMATION_EQUALS_factory));
  new Tfactory(this,"MINUS_EQUALS",new TCreator(MINUS_EQUALS_factory));
@@ -18728,8 +18738,9 @@ public static object LESS_EQUALS_factory(Lexer yyl) { return new LESS_EQUALS(yyl
 public static object FLOAT_TYPE_factory(Lexer yyl) { return new FLOAT_TYPE(yyl);}
 public static object MOVING_START_EVENT_factory(Lexer yyl) { return new MOVING_START_EVENT(yyl);}
 public static object RUN_TIME_PERMISSIONS_EVENT_factory(Lexer yyl) { return new RUN_TIME_PERMISSIONS_EVENT(yyl);}
-public static object ON_REZ_EVENT_factory(Lexer yyl) { return new ON_REZ_EVENT(yyl);}
-public static object NO_SENSOR_EVENT_factory(Lexer yyl) { return new NO_SENSOR_EVENT(yyl);}
+public static object ON_REZ_EVENT_factory(Lexer yyl) { return new ON_REZ_EVENT(yyl); }
+public static object ON_ERROR_EVENT_factory(Lexer yyl) { return new ON_ERROR_EVENT(yyl); }
+public static object NO_SENSOR_EVENT_factory(Lexer yyl) { return new NO_SENSOR_EVENT(yyl); }
 public static object EXCLAMATION_EQUALS_factory(Lexer yyl) { return new EXCLAMATION_EQUALS(yyl);}
 public static object MINUS_EQUALS_factory(Lexer yyl) { return new MINUS_EQUALS(yyl);}
 public static object LISTEN_EVENT_factory(Lexer yyl) { return new LISTEN_EVENT(yyl);}

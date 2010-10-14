@@ -90,6 +90,8 @@ namespace OpenSim.Server.Handlers.Presence
                         return GetAgent(request);
                     case "getagents":
                         return GetAgents(request);
+                    case "getagentslocations":
+                        return GetAgentsLocations(request);
                 }
                 m_log.DebugFormat("[PRESENCE HANDLER]: unknown method request: {0}", method);
             }
@@ -247,6 +249,45 @@ namespace OpenSim.Server.Handlers.Presence
             return encoding.GetBytes(xmlString);
         }
 
+        byte[] GetAgentsLocations(Dictionary<string, object> request)
+        {
+
+            string[] userIDs;
+
+            if (!request.ContainsKey("uuids"))
+            {
+                m_log.DebugFormat("[PRESENCE HANDLER]: GetAgents called without required uuids argument");
+                return FailureResult();
+            }
+
+            if (!(request["uuids"] is List<string>))
+            {
+                m_log.DebugFormat("[PRESENCE HANDLER]: GetAgents input argument was of unexpected type {0}", request["uuids"].GetType().ToString());
+                return FailureResult();
+            }
+
+            userIDs = ((List<string>)request["uuids"]).ToArray();
+
+            string[] pinfos = m_PresenceService.GetAgentsLocations(userIDs);
+
+            Dictionary<string, object> result = new Dictionary<string, object>();
+            if ((pinfos == null) || ((pinfos != null) && (pinfos.Length == 0)))
+                result["result"] = "null";
+            else
+            {
+                int i = 0;
+                foreach (string pinfo in pinfos)
+                {
+                    result["presence" + i] = pinfo;
+                    i++;
+                }
+            }
+
+            string xmlString = ServerUtils.BuildXmlResponse(result);
+            //m_log.DebugFormat("[GRID HANDLER]: resp string: {0}", xmlString);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
+        }
         
         private byte[] SuccessResult()
         {

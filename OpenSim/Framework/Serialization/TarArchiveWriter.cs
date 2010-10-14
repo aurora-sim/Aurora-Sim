@@ -43,6 +43,7 @@ namespace OpenSim.Framework.Serialization
 
         protected static ASCIIEncoding m_asciiEncoding = new ASCIIEncoding();
         protected static UTF8Encoding m_utf8Encoding = new UTF8Encoding();
+        protected bool m_closed = false;
 
         /// <summary>
         /// Binary writer for the underlying stream
@@ -51,6 +52,7 @@ namespace OpenSim.Framework.Serialization
 
         public TarArchiveWriter(Stream s)
         {
+            m_closed = false;
             m_bw = new BinaryWriter(s);
         }
 
@@ -115,14 +117,14 @@ namespace OpenSim.Framework.Serialization
 
             lock (m_bw)
             {
-                try
+                if (!m_closed)
                 {
+                    m_closed = true;
                     m_bw.Write(finalZeroPadding);
 
                     m_bw.Flush();
                     m_bw.Close();
                 }
-                catch { }
             }
         }
 

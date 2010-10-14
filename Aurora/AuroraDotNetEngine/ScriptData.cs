@@ -38,6 +38,7 @@ using System.Xml;
 using log4net;
 using OpenMetaverse;
 using OpenSim.Framework;
+using OpenSim.Framework.Console;
 using OpenSim.Region.Framework.Scenes;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -49,8 +50,6 @@ using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
-    #region ScriptData
-
     public class ScriptData
     {
         #region Constructor
@@ -58,7 +57,41 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public ScriptData(ScriptEngine engine)
         {
             m_ScriptEngine = engine;
-            ScriptFrontend = Aurora.DataManager.DataManager.RequestPlugin<IScriptDataConnector>("IScriptDataConnector");
+            ScriptFrontend = Aurora.DataManager.DataManager.RequestPlugin<IScriptDataConnector>();
+
+            NextEventDelay.Add("at_rot_target", 0);
+            NextEventDelay.Add("at_target", 0);
+            NextEventDelay.Add("attach", 0);
+            NextEventDelay.Add("changed", 0);
+            NextEventDelay.Add("collision", 0);
+            NextEventDelay.Add("collision_end", 0);
+            NextEventDelay.Add("collision_start", 0);
+            NextEventDelay.Add("control", 0);
+            NextEventDelay.Add("dataserver", 0);
+            NextEventDelay.Add("email", 0);
+            NextEventDelay.Add("http_response", 0);
+            NextEventDelay.Add("http_request", 0);
+            NextEventDelay.Add("land_collision", 0);
+            NextEventDelay.Add("land_collision_end", 0);
+            NextEventDelay.Add("land_collision_start", 0);
+            NextEventDelay.Add("link_message", 0);
+            NextEventDelay.Add("listen", 0);
+            NextEventDelay.Add("money", 0);
+            NextEventDelay.Add("moving_end", 0);
+            NextEventDelay.Add("moving_start", 0);
+            NextEventDelay.Add("no_sensor", 0);
+            NextEventDelay.Add("not_at_rot_target", 0);
+            NextEventDelay.Add("object_rez", 0);
+            NextEventDelay.Add("on_rez", 0);
+            NextEventDelay.Add("remote_data", 0);
+            NextEventDelay.Add("run_time_permissions", 0);
+            NextEventDelay.Add("sensor", 0);
+            NextEventDelay.Add("state_entry", 0);
+            NextEventDelay.Add("state_exit", 0);
+            NextEventDelay.Add("timer", 0);
+            NextEventDelay.Add("touch", 0);
+            NextEventDelay.Add("touch_end", 0);
+            NextEventDelay.Add("touch_start", 0);
         }
 
         #endregion
@@ -83,6 +116,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public bool TimerQueued = false;
         public bool CollisionInQueue = false;
         public bool TouchInQueue = false;
+        public bool RemoveTouchEvents = false;
+        public bool RemoveCollisionEvents = false;
+        public bool RemoveLandCollisionEvents = false;
         public bool LandCollisionInQueue = false;
         public List<Changed> ChangedInQueue = new List<Changed>();
         public int LastControlLevel = 0;
@@ -106,7 +142,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public Object[] PluginData = new Object[0];
         private StateSave LastStateSave = null;
         private IScriptDataConnector ScriptFrontend;
-        
+        private double DefaultEventDelayTicks = (double)0.05;
+        private double TouchEventDelayTicks = (double)0.1;
+        private double TimerEventDelayTicks = (double)0.01;
+        private double CollisionEventDelayTicks = (double)0.5;
+        private Dictionary<string, long> NextEventDelay = new Dictionary<string, long>();
+        public bool MovingInQueue = false;
+
         #endregion
 
         #region Close Script
@@ -114,24 +156,21 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <summary>
         /// This closes the scrpit, removes it from any known spots, and disposes of itself.
         /// </summary>
-        /// <returns></returns>
+        /// <param name="Silent">Should we back up this script and fire state_exit?</param>
         public void CloseAndDispose(bool Silent)
         {
-            ScriptEngine.NeedsRemoved.Remove(ItemID);
-
             if (!Silent)
             {
                 if (Script != null)
                 {
                     //Save the state
-                    //Must be called directly or it wont be processed in time
-                    SerializeDatabase();
+                    ScriptDataSQLSerializer.SaveState(this, m_ScriptEngine);
                     //Fire this directly so its not closed before its fired
-                    SetEventParams(new DetectParams[0]);
-                    m_ScriptEngine.m_MaintenanceThread.ProcessQIS(new QueueItemStruct()
+                    SetEventParams("state_exit", new DetectParams[0]);
+                    m_ScriptEngine.MaintenanceThread.ProcessQIS(new QueueItemStruct()
                     {
                         ID = this,
-                        CurrentlyAt = Guid.Empty,
+                        CurrentlyAt = null,
                         functionName = "state_exit",
                         param = new object[0],
                         llDetectParams = new DetectParams[0],
@@ -139,63 +178,45 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     });
                 }
             }
-            VersionID++;
-            ScriptEngine.NeedsRemoved[ItemID] = VersionID;
+            VersionID += 5;
+            m_ScriptEngine.MaintenanceThread.RemoveFromEventQueue(ItemID, VersionID);
             ReleaseControls();
             // Tell script not to accept new requests
             //These are fine to set as the state wont be saved again
-            Running = false;
-            Disabled = true;
+            if (!Silent)
+            {
+                Running = false;
+                Disabled = true;
+            }
 
             // Remove from internal structure
             ScriptEngine.ScriptProtection.RemoveScript(this);
+            if (!Silent) //Don't remove on a recompile
+                ScriptEngine.ScriptProtection.RemovePreviouslyCompiled(Source);
 
-            //ScriptEngine.NeedsRemoved.Add(ItemID, VersionID);
-
-            if (m_ScriptEngine.Errors.ContainsKey(ItemID))
-                m_ScriptEngine.Errors.Remove(ItemID);
+            m_ScriptEngine.ScriptErrorReporter.RemoveError(ItemID);
 
             #region Clean out script parts
             part.AngularVelocity = Vector3.Zero; // Removed in SL
-            part.ScheduleFullUpdate(); // Send changes to client.
+            part.ScheduleFullUpdate(PrimUpdateFlags.AngularVelocity); // Send changes to client.
             #endregion
 
             if (Script != null)
             {
                 // Stop long command on script
-                m_ScriptEngine.RemoveScript(m_ScriptEngine, World, part.UUID, ItemID);
+                m_ScriptEngine.RemoveScript(part.UUID, ItemID);
                 ILease lease = (ILease)RemotingServices.GetLifetimeService(Script as MarshalByRefObject);
-                if(lease != null)
+                if (lease != null)
                     lease.Unregister(Script.Sponsor);
-                try
-                {
-                    Script.Close();
-                    Script.Dispose();
-                    Script = null;
-                }
-                catch
-                {
-                }
+                Script.Close();
+                Script = null;
             }
-            try
-            {
-                if (AppDomain == null)
-                    return;
-
-                try
-                {
-                    // Tell AppDomain that we have stopped script
-                    m_ScriptEngine.AppDomainManager.UnloadScriptAppDomain(AppDomain);
-                    AppDomain = null;
-                }
-                //Legit: If the script had an error, this can happen... really shouldn't, but it does.
-                catch (Exception) { }
-            }
-            catch (Exception e)
-            {
-                m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: Exception stopping script UUID: " + part.UUID + " LLUID: " + ItemID.ToString() + ": " + e.ToString());
-            }
-            m_log.DebugFormat("[{0}]: Closed Script {1} in " + part.Name, m_ScriptEngine.ScriptEngineName, InventoryItem.Name);
+            if (AppDomain == null)
+                return;
+            // Tell AppDomain that we have stopped script
+            m_ScriptEngine.AppDomainManager.UnloadScriptAppDomain(AppDomain);
+            AppDomain = null;
+            MainConsole.Instance.Output("[" + m_ScriptEngine.ScriptEngineName+ "]: Closed Script " + InventoryItem.Name + " in " + part.Name, "None");
         }
 
         /// <summary>
@@ -205,26 +226,29 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <param name="itemID"></param>
         private void ReleaseControls()
         {
-            if (part != null)
+            if (InventoryItem != null)
             {
-                int permsMask = InventoryItem.PermsMask;
-                UUID permsGranter = InventoryItem.PermsGranter;
-
-
-                if ((permsMask & ScriptBaseClass.PERMISSION_TAKE_CONTROLS) != 0)
+                if (part != null)
                 {
-                    if (presence != null)
-                        presence.UnRegisterControlEventsToScript(part.LocalId, ItemID);
-                }
-            }
+                    int permsMask = InventoryItem.PermsMask;
+                    UUID permsGranter = InventoryItem.PermsGranter;
 
-            InventoryItem.PermsMask = 0;
-            InventoryItem.PermsGranter = UUID.Zero;
+
+                    if ((permsMask & ScriptBaseClass.PERMISSION_TAKE_CONTROLS) != 0)
+                    {
+                        if (presence != null)
+                            presence.UnRegisterControlEventsToScript(part.LocalId, ItemID);
+                    }
+                }
+
+                InventoryItem.PermsMask = 0;
+                InventoryItem.PermsGranter = UUID.Zero;
+            }
         }
 
         #endregion
 
-        #region Reset Script
+        #region Reset Script and State Change
 
         /// <summary>
         /// This resets the script back to its default state.
@@ -235,33 +259,64 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return;
             //Release controls over people.
             ReleaseControls();
-            //Must be posted immediately, otherwise the next line will delete it.
-            m_ScriptEngine.m_MaintenanceThread.ProcessQIS(new QueueItemStruct()
-            {
-                ID = this,
-                CurrentlyAt = Guid.Empty,
-                functionName = "state_exit",
-                llDetectParams = new DetectParams[0],
-                param = new object[0],
-                VersionID = VersionID
-            });
             //Remove other items from the queue.
-            ScriptEngine.NeedsRemoved[ItemID] = VersionID;
+            m_ScriptEngine.MaintenanceThread.RemoveFromEventQueue(ItemID, VersionID);
             VersionID++;
-            //Reset all variables back to their original values.
-            Script.ResetVars();
             //Reset the state to default
             State = "default";
+            //Reset all variables back to their original values.
+            Script.ResetVars();
             //Tell the SOP about the change.
-            part.SetScriptEvents(ItemID,
-                                 (int)Script.GetStateEventFlags(State));
+            if (!Running) //No events!
+                part.SetScriptEvents(ItemID, 0);
+            else
+                part.SetScriptEvents(ItemID, Script.GetStateEventFlags(State));
+
+            //Remove MinEventDelay
+            EventDelayTicks = 0;
+            //Remove events that may be fired again after the user stops touching the prim, etc
+            // These will be removed after the next ***_start event
+            RemoveLandCollisionEvents = true;
+            RemoveCollisionEvents = true;
+            RemoveTouchEvents = true;
+
+            //Unset the events that may still be firing after the change.
+            m_ScriptEngine.RemoveScript(part.UUID, ItemID);
             
             //Fire state_entry
             m_ScriptEngine.AddToScriptQueue(this, "state_entry", new DetectParams[0], VersionID, EventPriority.FirstStart, new object[] { });
 
-            m_ScriptEngine.AddToStateSaverQueue(this, true);
-            m_log.InfoFormat("[{0}]: Reset Script {1}", m_ScriptEngine.ScriptEngineName, ItemID);
+            m_ScriptEngine.MaintenanceThread.AddToStateSaverQueue(this, true);
+            MainConsole.Instance.Output("[" + m_ScriptEngine.ScriptEngineName + "]: Reset Script " + ItemID, "None");
         }
+
+        internal void ChangeState(string state)
+        {
+            if (State != state)
+            {
+                m_ScriptEngine.AddToScriptQueue(this, "state_exit",
+                    new DetectParams[0], VersionID, EventPriority.FirstStart, new object[0] { });
+                State = state;
+
+                //Remove events that may be fired again after the user stops touching the prim, etc
+                // These will be removed after the next ***_start event
+                RemoveLandCollisionEvents = true;
+                RemoveCollisionEvents = true;
+                RemoveTouchEvents = true;
+
+                //Wipe out old events
+                m_ScriptEngine.MaintenanceThread.RemoveFromEventQueue(ItemID, VersionID);
+                VersionID++;
+
+                //Tell the SOP about the change.
+                part.SetScriptEvents(ItemID, Script.GetStateEventFlags(state));
+                ScriptEngine.ScriptProtection.AddNewScript(this);
+
+                m_ScriptEngine.AddToScriptQueue(this, "state_entry",
+                    new DetectParams[0], VersionID, EventPriority.FirstStart, new object[0] { });
+            }
+        }
+
         #endregion
 
         #region Helpers
@@ -281,8 +336,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             foreach (IScriptApi api in m_ScriptEngine.GetAPIs())
             {
-                Apis[api.Name] = api;
-                Apis[api.Name].Initialize(m_ScriptEngine, part, part.LocalId, ItemID, ScriptEngine.ScriptProtection);
+                if (ScriptEngine.ScriptProtection.CheckAPI(api.Name))
+                {
+                    Apis[api.Name] = api;
+                    Apis[api.Name].Initialize(m_ScriptEngine, part, part.LocalId, ItemID, ScriptEngine.ScriptProtection);
+                }
             }
             foreach (KeyValuePair<string, IScriptApi> kv in Apis)
             {
@@ -296,7 +354,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 presence.ControllingClient.SendAgentAlertMessage("Script saved with errors, check debug window!", false);
 
             if (postScriptCAPSError)
-                m_ScriptEngine.Errors[ItemID] = new String[] { message };
+                m_ScriptEngine.ScriptErrorReporter.AddError(ItemID, new ArrayList(new string[]{message}));
 
             // DISPLAY ERROR ON CONSOLE
             if (m_ScriptEngine.DisplayErrorsOnConsole)
@@ -312,7 +370,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (inworldtext.Length > 1100)
                 inworldtext = inworldtext.Substring(0, 1099);
 
-            World.SimChat(OpenMetaverse.Utils.StringToBytes(inworldtext), ChatTypeEnum.DebugChannel, 2147483647, part.AbsolutePosition, part.Name, part.UUID, false);
+            World.SimChat(inworldtext, ChatTypeEnum.DebugChannel, 2147483647, part.AbsolutePosition, part.Name, part.UUID, false);
 
             m_ScriptEngine.ScriptFailCount++;
             m_ScriptEngine.ScriptErrorMessages += inworldtext;
@@ -330,8 +388,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (RezzedFrom != UUID.Zero)
             {
                 //Post the event for the prim that rezzed us
-                m_ScriptEngine.PostObjectEvent(RezzedFrom, new EventParams("object_rez", new object[] {
-                            part.ParentGroup.RootPart.UUID },new DetectParams[0]));
+                m_ScriptEngine.AddToObjectQueue(RezzedFrom, "object_rez", new DetectParams[0]
+                    , -1, new object[] { part.ParentGroup.RootPart.UUID });
                 RezzedFrom = UUID.Zero;
             }
             if (StartedFromSavedState)
@@ -349,12 +407,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             else
             {
+                m_ScriptEngine.AddToScriptQueue(this, "state_entry", new DetectParams[0], VersionID, EventPriority.FirstStart, new object[0]);
+
                 if (PostOnRez)
                     m_ScriptEngine.AddToScriptQueue(this, "on_rez", new DetectParams[0], VersionID, EventPriority.FirstStart, new object[] { new LSL_Types.LSLInteger(StartParam) });
 
                 if (stateSource == StateSource.AttachedRez)
                     m_ScriptEngine.AddToScriptQueue(this, "attach", new DetectParams[0], VersionID, EventPriority.FirstStart, new object[] { new LSL_Types.LSLString(part.AttachedAvatar.ToString()) });
-                m_ScriptEngine.AddToScriptQueue(this, "state_entry", new DetectParams[0], VersionID, EventPriority.FirstStart, new object[0]);
             }
         }
 
@@ -364,14 +423,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <returns></returns>
         public void Start(bool reupload)
         {
+            DateTime StartTime = DateTime.Now.ToUniversalTime();
+
             //Clear out the removing of events for this script.
             VersionID++;
 
-            //Remove any script errors that might be waiting.
-            if (m_ScriptEngine.Errors.ContainsKey(ItemID))
-                m_ScriptEngine.Errors.Remove(ItemID);
+            //Reset this
+            StartedFromSavedState = false;
 
-            DateTime StartTime = DateTime.Now.ToUniversalTime();
+            m_ScriptEngine.ScriptErrorReporter.RemoveError(ItemID);
 
             //Find the inventory item
             part.TaskInventory.TryGetValue(ItemID, out InventoryItem);
@@ -415,43 +475,39 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             #endregion
 
             // Attempt to find a state save
-            LastStateSave = ScriptFrontend.GetStateSave(ItemID, UserInventoryItemID);
+            if(ScriptFrontend != null)
+                LastStateSave = ScriptFrontend.GetStateSave(ItemID, UserInventoryItemID);
 
             if (!reupload && Loading && LastStateSave != null
-                && File.Exists(Path.Combine("ScriptEngines", Path.Combine(
+                && File.Exists(Path.Combine(m_ScriptEngine.ScriptEnginesPath, Path.Combine(
                     "Script",
                     LastStateSave.AssemblyName))))
             {
                 //Retrive the previous assembly
-                AssemblyName = Path.Combine("ScriptEngines", Path.Combine(
+                AssemblyName = Path.Combine(m_ScriptEngine.ScriptEnginesPath, Path.Combine(
                     "Script",
                     LastStateSave.AssemblyName));
             }
             else
             {
                 LastStateSave = null;
-
-                //Try to find a previously compiled script in this instance
-                ScriptData PreviouslyCompiledID = ScriptEngine.ScriptProtection.TryGetPreviouslyCompiledScript(Source);
                 if (reupload)
                 {
                     //Close the previous script
                     CloseAndDispose(true);
-                    ScriptEngine.ScriptProtection.RemovePreviouslyCompiled(Source);
 
-                    Running = true;
-                    Disabled = false;
                     VersionID++;
                 }
-                if (PreviouslyCompiledID != null)
-                {
-                    AssemblyName = PreviouslyCompiledID.AssemblyName;
-                }
+
+                //Try to find a previously compiled script in this instance
+                string PreviouslyCompiledAssemblyName = ScriptEngine.ScriptProtection.TryGetPreviouslyCompiledScript(Source);
+                if (PreviouslyCompiledAssemblyName != null)
+                    AssemblyName = PreviouslyCompiledAssemblyName;
                 else
                 {
                     try
                     {
-                        m_ScriptEngine.Compiler.PerformScriptCompile(Source, ItemID, part.OwnerID, out AssemblyName);
+                        m_ScriptEngine.Compiler.PerformScriptCompile(Source, ItemID, part.OwnerID, VersionID, out AssemblyName);
                         #region Errors and Warnings
 
                         #region Errors
@@ -503,10 +559,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             bool useDebug = false;
             if (useDebug)
-            {
-                TimeSpan t = (DateTime.Now.ToUniversalTime() - StartTime);
-                m_log.Debug("[" + m_ScriptEngine.ScriptEngineName + "]: Stage 1 compile: " + t.TotalSeconds);
-            }
+                m_log.Debug("[" + m_ScriptEngine.ScriptEngineName + "]: Stage 1 compile: " + (DateTime.Now.ToUniversalTime() - StartTime).TotalSeconds);
 
             //Create the app domain if needed.
             try
@@ -534,160 +587,117 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             //If its a reupload, an avatar is waiting for the script errors
             if (reupload)
-                m_ScriptEngine.Errors[ItemID] = new String[] { "SUCCESSFULL" };
+                m_ScriptEngine.ScriptErrorReporter.AddError(ItemID, new ArrayList(new string[] { "SUCCESSFULL" }));
 
             if (useDebug)
-            {
-                TimeSpan t = (DateTime.Now.ToUniversalTime() - StartTime);
-                m_log.Debug("[" + m_ScriptEngine.ScriptEngineName + "]: Stage 2 compile: " + t.TotalSeconds);
-            }
+                m_log.Debug("[" + m_ScriptEngine.ScriptEngineName + "]: Stage 2 compile: " + (DateTime.Now.ToUniversalTime() - StartTime).TotalSeconds);
 
-            //ALWAYS reset up APIs, otherwise m_host doesn't get updated and APIs could think that they are in another prim.
             SetApis();
 
             //Set the event flags
-            int eventFlags = Script.GetStateEventFlags(State);
-            part.SetScriptEvents(ItemID, eventFlags);
+            part.SetScriptEvents(ItemID, Script.GetStateEventFlags(State));
 
             //Now do the full state save finding now that we have an app domain.
             if (LastStateSave != null)
             {
-                DeserializeDatabase();
+                ScriptDataSQLSerializer.Deserialize(this, m_ScriptEngine, LastStateSave);
 
-                m_ScriptEngine.CreateFromData(m_ScriptEngine, part.ParentGroup.Scene,
-                    part.UUID, ItemID, part.UUID,
+                m_ScriptEngine.CreateFromData(part.UUID, ItemID, part.UUID,
                     PluginData);
 
                 // we get new rez events on sim restart, too
                 // but if there is state, then we fire the change
                 // event
                 StartedFromSavedState = true;
-
-                // We loaded state, don't force a re-save
             }
             else
             {
-                // Add it to our script memstruct so it can be found by other scripts
-                m_ScriptEngine.UpdateScriptInstanceData(this);
 
                 //Make a new state save now
-                m_ScriptEngine.AddToStateSaverQueue(this, true);
+                m_ScriptEngine.MaintenanceThread.AddToStateSaverQueue(this, true);
             }
+
+            // Add it to our script memstruct so it can be found by other scripts
+            ScriptEngine.ScriptProtection.AddNewScript(this);
 
             //All done, compiled successfully
             Loading = false;
 
             TimeSpan time = (DateTime.Now.ToUniversalTime() - StartTime);
+
             if (presence != null)
-                m_log.DebugFormat("[{0}]: Started Script {1} in object {2} by avatar {3} in {4} seconds.", m_ScriptEngine.ScriptEngineName, InventoryItem.Name, part.Name, presence.Name, time.TotalSeconds);
+                MainConsole.Instance.Output("[" + m_ScriptEngine.ScriptEngineName +
+                    "]: Started Script " + InventoryItem.Name +
+                    " in object " + part.Name +
+                    " by " + presence.Name +
+                    " in region " + part.ParentGroup.Scene.RegionInfo.RegionName +
+                    " in " + time.TotalSeconds + " seconds.", "None");
             else
-                m_log.DebugFormat("[{0}]: Started Script {1} in object {2} in {3} seconds.", m_ScriptEngine.ScriptEngineName, InventoryItem.Name, part.Name, time.TotalSeconds);
+                MainConsole.Instance.Output("[" + m_ScriptEngine.ScriptEngineName +
+                    "]: Started Script " + InventoryItem.Name +
+                    " in object " + part.Name +
+                    " in region " + part.ParentGroup.Scene.RegionInfo.RegionName +
+                    " in " + time.TotalSeconds + " seconds.", "None");
         }
 
         #endregion
 
         #region Event Processing
 
-        public void SetEventParams(DetectParams[] qParams)
+        public bool SetEventParams(string functionName, DetectParams[] qParams)
         {
-            if (!Running || Disabled)
-                return;
-
             if (qParams.Length > 0)
                 LastDetectParams = qParams;
 
+            if (functionName == "control")
+            {
+                //For vehicles, otherwise breaks them. DO NOT REMOVE UNLESS YOU FIND A BETTER WAY TO FIX
+                return true;
+            }
+
+            long NowTicks = Environment.TickCount;
+
             if (EventDelayTicks != 0)
             {
-                if (DateTime.Now.Ticks < NextEventTimeTicks)
-                    throw new Exception();
+                if (NowTicks < NextEventTimeTicks)
+                    return false;
 
-                NextEventTimeTicks = DateTime.Now.Ticks + EventDelayTicks;
+                NextEventTimeTicks = NowTicks + EventDelayTicks;
             }
-        }
-
-        #endregion
-
-        #region Serialize
-
-        private void DeserializeDatabase()
-        {
-            Dictionary<string, object> vars = LastStateSave.Variables as Dictionary<string,object>;
-            State = LastStateSave.State;
-            Running = LastStateSave.Running;
-
-            if (vars != null && vars.Count != 0)
-                Script.SetVars(vars);
-
-            PluginData = (object[])LastStateSave.Plugins;
-            if (LastStateSave.Permissions != " " && LastStateSave.Permissions != "")
+            switch (functionName)
             {
-                InventoryItem.PermsGranter = new UUID(LastStateSave.Permissions.Split(',')[0]);
-                InventoryItem.PermsMask = int.Parse(LastStateSave.Permissions.Split(',')[1], NumberStyles.Integer, Culture.NumberFormatInfo);
-                //m_ScriptEngine.PostScriptEvent(ItemID, new EventParams(
-                //            "run_time_permissions", new Object[] {
-                //            new LSL_Types.LSLInteger(InventoryItem.PermsMask) },
-                //            new DetectParams[0]));
+                //Times pulled from http://wiki.secondlife.com/wiki/LSL_Delay
+                case "touch": //Limits for 0.1 seconds
+                case "touch_start":
+                case "touch_end":
+                    if (NowTicks < NextEventDelay[functionName])
+                        return false;
+                    NextEventDelay[functionName] = NowTicks + (long)(TouchEventDelayTicks * 100);
+                    break;
+                case "timer": //Settable timer limiter
+                    if (NowTicks < NextEventDelay[functionName])
+                        return false;
+                    NextEventDelay[functionName] = NowTicks + (long)(TimerEventDelayTicks * 100);
+                    break;
+                case "collision": //Collision limiters taken off of reporting from WhiteStar in mantis 0004513
+                case "collision_start":
+                case "collision_end":
+                case "land_collision":
+                case "land_collision_start":
+                case "land_collision_end":
+                    if (NowTicks < NextEventDelay[functionName])
+                        return false;
+                    NextEventDelay[functionName] = NowTicks + (long)(CollisionEventDelayTicks * 100);
+                    break;
+                default: //Default is 0.05 seconds for event limiting
+                    if (NowTicks < NextEventDelay[functionName])
+                        return false;
+                    NextEventDelay[functionName] = NowTicks + (long)(DefaultEventDelayTicks * 100);
+                    break;
             }
-            EventDelayTicks = (long)LastStateSave.MinEventDelay;
-            AssemblyName = LastStateSave.AssemblyName;
-            Disabled = LastStateSave.Disabled;
-            UserInventoryItemID = LastStateSave.UserInventoryID;
-            // Add it to our script memstruct
-            m_ScriptEngine.UpdateScriptInstanceData(this);
-        }
-
-        /// <summary>
-        /// This saves the script to a database so that it can be reloaded in exactly the same state it was before it was closed.
-        /// </summary>
-        public void SerializeDatabase()
-        {
-            StateSave Insert = new StateSave();
-            Insert.State = State;
-            Insert.ItemID = ItemID;
-            string source = Source.Replace("\n", " ");
-            Insert.Source = source.Replace("'", " ");
-            Insert.Running = Running;
-            //Vars
-            Dictionary<string, Object> vars = new Dictionary<string,object>();
-            if (Script != null)
-                vars = Script.GetVars();
-            string varsmap = "";
-            foreach (KeyValuePair<string, Object> var in vars)
-            {
-                varsmap += var.Key + "," + var.Value + "\n";
-            }
-            Insert.Variables = varsmap;
-            //Plugins
-            object[] Plugins = m_ScriptEngine.GetSerializationData(m_ScriptEngine, part.ParentGroup.Scene, ItemID, part.UUID);
-            string plugins = "";
-            foreach (object plugin in Plugins)
-                plugins += plugin + ",";
-            Insert.Plugins = plugins;
-
-            //perms
-            string perms = "";
-            if (InventoryItem != null)
-            {
-                if (InventoryItem.PermsMask != 0 && InventoryItem.PermsGranter != UUID.Zero)
-                {
-                    perms += InventoryItem.PermsGranter.ToString() + "," + InventoryItem.PermsMask.ToString();
-
-                }
-            }
-            Insert.Permissions = perms;
-            
-            Insert.MinEventDelay = EventDelayTicks;
-            try
-            {
-                Insert.AssemblyName = AssemblyName.Split('\\')[2];
-            }
-            catch
-            {
-                Insert.AssemblyName = AssemblyName;
-            }
-            Insert.Disabled = Disabled;
-            Insert.UserInventoryID = UserInventoryItemID;
-            ScriptFrontend.SaveStateSave(Insert);
+            //Add the event to the stats
+            part.ParentGroup.AddScriptEPS(1);
+            return true;
         }
 
         #endregion
@@ -712,6 +722,4 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         }
         #endregion
     }
-
-    #endregion
 }

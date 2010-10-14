@@ -25,7 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
+using System.Collections.Generic;
 using OpenMetaverse;
 
 namespace OpenSim.Framework
@@ -43,6 +43,42 @@ namespace OpenSim.Framework
         public bool OpenEnrollment = true;
         public UUID OwnerRoleID = UUID.Zero;
         public bool ShowInList = false;
+
+        public GroupRecord()
+        {
+        }
+
+        public GroupRecord(Dictionary<string, object> values)
+        {
+            GroupID = UUID.Parse(values["GroupID"].ToString());
+            GroupName = values["GroupName"].ToString();
+            AllowPublish = bool.Parse(values["AllowPublish"].ToString());
+            MaturePublish = bool.Parse(values["MaturePublish"].ToString());
+            Charter = values["Charter"].ToString();
+            FounderID = UUID.Parse(values["FounderID"].ToString());
+            GroupPicture = UUID.Parse(values["GroupPicture"].ToString());
+            MembershipFee = int.Parse(values["MembershipFee"].ToString());
+            OpenEnrollment = bool.Parse(values["OpenEnrollment"].ToString());
+            OwnerRoleID = UUID.Parse(values["OwnerRoleID"].ToString());
+            ShowInList = bool.Parse(values["ShowInList"].ToString());
+        }
+
+        public Dictionary<string, object> ToKeyValuePairs()
+        {
+            Dictionary<string, object> values = new Dictionary<string, object>();
+            values["GroupID"] = GroupID;
+            values["GroupName"] = GroupName;
+            values["AllowPublish"] = AllowPublish;
+            values["MaturePublish"] = MaturePublish;
+            values["Charter"] = Charter;
+            values["FounderID"] = FounderID;
+            values["GroupPicture"] = GroupPicture;
+            values["MembershipFee"] = MembershipFee;
+            values["OpenEnrollment"] = OpenEnrollment;
+            values["OwnerRoleID"] = OwnerRoleID;
+            values["ShowInList"] = ShowInList;
+            return values;
+        }
     }
 
     public class GroupMembershipData
@@ -67,16 +103,84 @@ namespace OpenSim.Framework
         public UUID ActiveRole = UUID.Zero;
         public bool ListInProfile = false;
         public string GroupTitle;
+
+        public GroupMembershipData()
+        {
+        }
+
+        public GroupMembershipData(Dictionary<string, object> values)
+        {
+            GroupID = UUID.Parse(values["GroupID"].ToString());
+            GroupName = values["GroupName"].ToString();
+            AllowPublish = bool.Parse(values["AllowPublish"].ToString());
+            MaturePublish = bool.Parse(values["MaturePublish"].ToString());
+            Charter = values["Charter"].ToString();
+            FounderID = UUID.Parse(values["FounderID"].ToString());
+            GroupPicture = UUID.Parse(values["GroupPicture"].ToString());
+            MembershipFee = int.Parse(values["MembershipFee"].ToString());
+            OpenEnrollment = bool.Parse(values["OpenEnrollment"].ToString());
+            ShowInList = bool.Parse(values["ShowInList"].ToString());
+            AcceptNotices = bool.Parse(values["AcceptNotices"].ToString());
+            Contribution = int.Parse(values["Contribution"].ToString());
+            GroupPowers = ulong.Parse(values["GroupPowers"].ToString());
+            Active = bool.Parse(values["Active"].ToString());
+            ActiveRole = UUID.Parse(values["ActiveRole"].ToString());
+            ListInProfile = bool.Parse(values["ListInProfile"].ToString());
+            GroupTitle = values["GroupTitle"].ToString();
+        }
+
+        public Dictionary<string, object> ToKeyValuePairs()
+        {
+            Dictionary<string, object> values = new Dictionary<string, object>();
+            values["GroupID"] = GroupID;
+            values["GroupName"] = GroupName;
+            values["AllowPublish"] = AllowPublish;
+            values["MaturePublish"] = MaturePublish;
+            values["Charter"] = Charter;
+            values["FounderID"] = FounderID;
+            values["GroupPicture"] = GroupPicture;
+            values["MembershipFee"] = MembershipFee;
+            values["OpenEnrollment"] = OpenEnrollment;
+            values["ShowInList"] = ShowInList;
+            values["AcceptNotices"] = AcceptNotices;
+            values["Contribution"] = Contribution;
+            values["GroupPowers"] = GroupPowers;
+            values["Active"] = Active;
+            values["ActiveRole"] = ActiveRole;
+            values["ListInProfile"] = ListInProfile;
+            values["GroupTitle"] = GroupTitle;
+            return values;
+        }
     }
 
-    public struct GroupTitlesData
+    public class GroupTitlesData
     {
         public string Name;
         public UUID UUID;
         public bool Selected;
+
+        public GroupTitlesData()
+        {
+        }
+
+        public GroupTitlesData(Dictionary<string, object> values)
+        {
+            UUID = UUID.Parse(values["UUID"].ToString());
+            Name = values["Name"].ToString();
+            Selected = bool.Parse(values["Selected"].ToString());
+        }
+
+        public Dictionary<string, object> ToKeyValuePairs()
+        {
+            Dictionary<string, object> values = new Dictionary<string, object>();
+            values["Name"] = Name;
+            values["UUID"] = UUID;
+            values["Selected"] = Selected;
+            return values;
+        }
     }
 
-    public struct GroupProfileData
+    public class GroupProfileData
     {
         public UUID GroupID;
         public string Name;
@@ -94,9 +198,55 @@ namespace OpenSim.Framework
         public bool AllowPublish;
         public bool MaturePublish;
         public UUID OwnerRole;
+
+        public GroupProfileData()
+        {
+        }
+
+        public GroupProfileData(Dictionary<string, object> values)
+        {
+            GroupID = UUID.Parse(values["GroupID"].ToString());
+            Name = values["Name"].ToString();
+            Charter = values["Charter"].ToString();
+            ShowInList = bool.Parse(values["ShowInList"].ToString());
+            MemberTitle = values["MemberTitle"].ToString();
+            PowersMask = ulong.Parse(values["PowersMask"].ToString());
+            InsigniaID = UUID.Parse(values["InsigniaID"].ToString());
+            FounderID = UUID.Parse(values["FounderID"].ToString());
+            MembershipFee = int.Parse(values["MembershipFee"].ToString());
+            OpenEnrollment = bool.Parse(values["OpenEnrollment"].ToString());
+            Money = int.Parse(values["Money"].ToString());
+            GroupMembershipCount = int.Parse(values["GroupMembershipCount"].ToString());
+            GroupRolesCount = int.Parse(values["GroupRolesCount"].ToString());
+            AllowPublish = bool.Parse(values["AllowPublish"].ToString());
+            MaturePublish = bool.Parse(values["MaturePublish"].ToString());
+            OwnerRole = UUID.Parse(values["OwnerRole"].ToString());
+        }
+
+        public Dictionary<string, object> ToKeyValuePairs()
+        {
+            Dictionary<string, object> values = new Dictionary<string, object>();
+            values["GroupID"] = GroupID;
+            values["Name"] = Name;
+            values["Charter"] = Charter;
+            values["ShowInList"] = ShowInList;
+            values["MemberTitle"] = MemberTitle;
+            values["PowersMask"] = PowersMask;
+            values["InsigniaID"] = InsigniaID;
+            values["FounderID"] = FounderID;
+            values["MembershipFee"] = MembershipFee;
+            values["OpenEnrollment"] = OpenEnrollment;
+            values["Money"] = Money;
+            values["GroupMembershipCount"] = GroupMembershipCount;
+            values["GroupRolesCount"] = GroupRolesCount;
+            values["AllowPublish"] = AllowPublish;
+            values["MaturePublish"] = MaturePublish;
+            values["OwnerRole"] = OwnerRole;
+            return values;
+        }
     }
 
-    public struct GroupMembersData
+    public class GroupMembersData
     {
         public UUID AgentID;
         public int Contribution;
@@ -106,9 +256,39 @@ namespace OpenSim.Framework
         public bool IsOwner;
         public bool ListInProfile;
         public bool AcceptNotices;
+
+        public GroupMembersData()
+        {
+        }
+
+        public GroupMembersData(Dictionary<string, object> values)
+        {
+            AgentID = UUID.Parse(values["AgentID"].ToString());
+            Contribution = int.Parse(values["Contribution"].ToString());
+            OnlineStatus = values["OnlineStatus"].ToString();
+            Title = values["Title"].ToString();
+            AgentPowers = ulong.Parse(values["AgentPowers"].ToString());
+            IsOwner = bool.Parse(values["IsOwner"].ToString());
+            ListInProfile = bool.Parse(values["ListInProfile"].ToString());
+            AcceptNotices = bool.Parse(values["AcceptNotices"].ToString());
+        }
+
+        public Dictionary<string, object> ToKeyValuePairs()
+        {
+            Dictionary<string, object> values = new Dictionary<string, object>();
+            values["AgentID"] = AgentID;
+            values["Contribution"] = Contribution;
+            values["OnlineStatus"] = OnlineStatus;
+            values["AgentPowers"] = AgentPowers;
+            values["Title"] = Title;
+            values["IsOwner"] = IsOwner;
+            values["ListInProfile"] = ListInProfile;
+            values["AcceptNotices"] = AcceptNotices;
+            return values;
+        }
     }
 
-    public struct GroupRolesData
+    public class GroupRolesData
     {
         public UUID RoleID;
         public string Name;
@@ -116,15 +296,59 @@ namespace OpenSim.Framework
         public string Description;
         public ulong Powers;
         public int Members;
+
+        public GroupRolesData()
+        {
+        }
+
+        public GroupRolesData(Dictionary<string, object> values)
+        {
+            RoleID = UUID.Parse(values["RoleID"].ToString());
+            Name = values["Name"].ToString();
+            Title = values["Title"].ToString();
+            Description = values["Description"].ToString();
+            Powers = ulong.Parse(values["Powers"].ToString());
+            Members = int.Parse(values["Members"].ToString());
+        }
+
+        public Dictionary<string, object> ToKeyValuePairs()
+        {
+            Dictionary<string, object> values = new Dictionary<string, object>();
+            values["RoleID"] = RoleID;
+            values["Name"] = Name;
+            values["Title"] = Title;
+            values["Description"] = Description;
+            values["Powers"] = Powers;
+            values["Members"] = Members;
+            return values;
+        }
     }
 
-    public struct GroupRoleMembersData
+    public class GroupRoleMembersData
     {
         public UUID RoleID;
         public UUID MemberID;
+
+        public GroupRoleMembersData()
+        {
+        }
+
+        public GroupRoleMembersData(Dictionary<string, object> values)
+        {
+            RoleID = UUID.Parse(values["RoleID"].ToString());
+            MemberID = UUID.Parse(values["MemberID"].ToString());
+        }
+
+        public Dictionary<string, object> ToKeyValuePairs()
+        {
+            Dictionary<string, object> values = new Dictionary<string, object>();
+            values["RoleID"] = RoleID;
+            values["MemberID"] = MemberID;
+            return values;
+        }
     }
 
-    public struct GroupNoticeData
+    public class GroupNoticeData
     {
         public UUID NoticeID;
         public uint Timestamp;
@@ -132,6 +356,39 @@ namespace OpenSim.Framework
         public string Subject;
         public bool HasAttachment;
         public byte AssetType;
+        public UUID ItemID;
+        public string ItemName;
+
+        public GroupNoticeData()
+        {
+        }
+
+        public GroupNoticeData(Dictionary<string, object> values)
+        {
+            NoticeID = UUID.Parse(values["NoticeID"].ToString());
+            Timestamp = uint.Parse(values["Timestamp"].ToString());
+            FromName = values["FromName"].ToString();
+            Subject = values["Subject"].ToString();
+            HasAttachment = bool.Parse(values["HasAttachment"].ToString());
+            AssetType = byte.Parse(values["AssetType"].ToString());
+            ItemID = UUID.Parse(values["ItemID"].ToString());
+            if(values.ContainsKey("ItemName"))
+                ItemName = values["ItemName"].ToString();
+        }
+
+        public Dictionary<string, object> ToKeyValuePairs()
+        {
+            Dictionary<string, object> values = new Dictionary<string, object>();
+            values["NoticeID"] = NoticeID;
+            values["Timestamp"] = Timestamp;
+            values["FromName"] = FromName;
+            values["Subject"] = Subject;
+            values["HasAttachment"] = HasAttachment;
+            values["AssetType"] = AssetType;
+            values["ItemID"] = ItemID;
+            values["ItemName"] = ItemName;
+            return values;
+        }
     }
 
     public struct GroupVoteHistory
@@ -158,5 +415,12 @@ namespace OpenSim.Framework
         public string StartDateTime;
         public string EndDateTime;
         public string ProposalText;
+    }
+
+    public struct GroupVoteHistoryItem
+    {
+        public UUID CandidateID;
+        public int NumVotes;
+        public string VoteCast;
     }
 }

@@ -179,8 +179,8 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
 
             IClientAPI clientView = (IClientAPI)sender;
             ScenePresence sp = m_scene.GetScenePresence(clientView.AgentId);
-            
-            if (sp == null) 
+
+            if (sp == null)
             {
                 m_log.Error("[APPEARANCE]: Avatar is child agent, ignoring AvatarIsWearing event");
                 return;
@@ -192,9 +192,35 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             //    m_log.Warn("[APPEARANCE]: We didn't seem to find the appearance, falling back to ScenePresence");
             //    avatAppearance = sp.Appearance;
             //}
-            
+
             //m_log.DebugFormat("[APPEARANCE]: Received wearables for {0}", clientView.Name);
-            
+
+            IOpenRegionSettingsModule module = m_scene.RequestModuleInterface<IOpenRegionSettingsModule>();
+
+            bool NeedsRebake = false;
+            if (module != null && module.EnableTeenMode)
+            {
+                foreach (AvatarWearingArgs.Wearable wear in e.NowWearing)
+                {
+                    if (wear.Type == 10)
+                    {
+                        if (wear.ItemID == UUID.Zero && module.DefaultUnderpants != UUID.Zero)
+                        {
+                            NeedsRebake = true;
+                            wear.ItemID = module.DefaultUnderpants;
+                        }
+                    }
+                    if (wear.Type == 11)
+                    {
+                        if (wear.ItemID == UUID.Zero && module.DefaultUndershirt != UUID.Zero)
+                        {
+                            NeedsRebake = true;
+                            wear.ItemID = module.DefaultUndershirt;
+                        }
+                    }
+                }
+            }
+
             foreach (AvatarWearingArgs.Wearable wear in e.NowWearing)
             {
                 if (wear.Type < 13)
@@ -202,12 +228,28 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
                     avatAppearance.Wearables[wear.Type].ItemID = wear.ItemID;
                 }
             }
-            
-            SetAppearanceAssets(sp.UUID, ref avatAppearance);
-            AvatarData adata = new AvatarData(avatAppearance);
-            m_scene.AvatarService.SetAvatar(clientView.AgentId, adata);
 
+            SetAppearanceAssets(sp.UUID, ref avatAppearance);
             sp.Appearance = avatAppearance;
+
+            if (NeedsRebake)
+            {
+                sp.SendWearables();
+                for (int i = 0; i < sp.Appearance.Texture.FaceTextures.Length; i++)
+                {
+                    Primitive.TextureEntryFace face = (sp.Appearance.Texture.FaceTextures[i]);
+
+                    if (face != null)
+                    {
+                        sp.ControllingClient.SendRebakeAvatarTextures(face.TextureID);
+                    }
+                }
+            }
+
+
+            AvatarData adata = new AvatarData(avatAppearance);
+            if (!m_scene.AvatarService.SetAvatar(clientView.AgentId, adata))
+                m_log.Error("[AVFACTORY]: Error saving appearance for " + sp.Name + ".");
         }
 
         public static void GetDefaultAvatarAppearance(out AvatarWearable[] wearables, out byte[] visualParams)
@@ -220,7 +262,8 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
         {
             //m_log.DebugFormat("[APPEARANCE]: UpdateDatabase");
             AvatarData adata = new AvatarData(appearance);
-            m_scene.AvatarService.SetAvatar(user, adata);
+            if(!m_scene.AvatarService.SetAvatar(user, adata))
+                m_log.Error("[AVFACTORY]: Error saving appearance for " + user + ".");
         }
 
         private static byte[] GetDefaultVisualParams()

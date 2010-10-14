@@ -73,10 +73,10 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
 
         public void Initialise(IConfigSource source)
         {
-            IConfig startupConfig = source.Configs["Startup"];
-            if (startupConfig != null)
+            IConfig imageConfig = source.Configs["ImageDecoding"];
+            if (imageConfig != null)
             {
-                m_useCSJ2K = startupConfig.GetBoolean("UseCSJ2K", m_useCSJ2K);
+                m_useCSJ2K = imageConfig.GetBoolean("UseCSJ2K", m_useCSJ2K);
             }
         }
 
@@ -157,9 +157,9 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
         /// </summary>
         /// <param name="assetID"></param>
         /// <param name="j2kData"></param>
-        public void Decode(UUID assetID, byte[] j2kData)
+        public bool Decode(UUID assetID, byte[] j2kData)
         {
-            DoJ2KDecode(assetID, j2kData);
+            return DoJ2KDecode(assetID, j2kData);
         }
 
         #endregion IJ2KDecoder
@@ -169,7 +169,7 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
         /// </summary>
         /// <param name="assetID">UUID of Asset</param>
         /// <param name="j2kData">JPEG2000 data</param>
-        private void DoJ2KDecode(UUID assetID, byte[] j2kData)
+        private bool DoJ2KDecode(UUID assetID, byte[] j2kData)
         {
             //int DecodeTime = 0;
             //DecodeTime = Environment.TickCount;
@@ -221,13 +221,16 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
 
                 if (layers == null || layers.Length == 0)
                 {
-                    m_log.Warn("[J2KDecoderModule]: Failed to decode layer data for texture " + assetID + ", guessing sane defaults");
+                    m_log.Warn("[J2KDecoderModule]: Failed to decode layer data (" + (m_useCSJ2K ? "CSJ2K" : "OpenJPEG") + ") for texture " + assetID + ", length " + j2kData.Length + " guessing sane defaults");
                     // Layer decoding completely failed. Guess at sane defaults for the layer boundaries
                     layers = CreateDefaultLayers(j2kData.Length);
+                    return false;
                 }
-
-                // Cache Decoded layers
-                SaveFileCacheForAsset(assetID, layers);
+                else //Don't save the corrupt texture!
+                {
+                    // Cache Decoded layers
+                    SaveFileCacheForAsset(assetID, layers);
+                }
             }
             
             // Notify Interested Parties
@@ -243,6 +246,7 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
                     m_notifyList.Remove(assetID);
                 }
             }
+            return true;
         }
 
         private OpenJPEG.J2KLayerInfo[] CreateDefaultLayers(int j2kLength)

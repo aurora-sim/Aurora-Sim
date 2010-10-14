@@ -33,8 +33,10 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using log4net;
+using Nini.Config;
+using Mono.Addins;
 
-namespace OpenSim.Framework.Console
+namespace OpenSim.Framework
 {
     public delegate void CommandDelegate(string module, string[] cmd);
 
@@ -151,7 +153,7 @@ namespace OpenSim.Framework.Console
                 help.Add(commandInfo.descriptive_help);
 
                 if (descriptiveHelp != string.Empty)
-                    help.Add(string.Empty);
+                    help.Add(string.Empty);                
             }
             else
             {
@@ -564,21 +566,30 @@ namespace OpenSim.Framework.Console
     /// <summary>
     /// A console that processes commands internally
     /// </summary>
-    public class CommandConsole : ConsoleBase
+    [Extension(Path = "/OpenSim/Console", NodeName = "ConsolePlugin")]
+    public class CommandConsole : ICommandConsole
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        public Commands Commands = new Commands();
-
-        public CommandConsole(string defaultPrompt) : base(defaultPrompt)
+        public virtual void Initialise(string defaultPrompt, IConfigSource source, IOpenSimBase baseOpenSim)
         {
-            Commands.AddCommand("console", false, "help", "help [<command>]", 
+            if (source.Configs["Console"] != null)
+            {
+                if (source.Configs["Console"].GetString("Console", String.Empty) != Name)
+                    return;
+            }
+            else
+                return;
+
+            baseOpenSim.ApplicationRegistry.RegisterInterface<ICommandConsole>(this);
+            
+            m_Commands.AddCommand("console", false, "help", "help [<command>]", 
                     "Get general command list or more detailed help on a specific command", Help);
         }
 
-        private void Help(string module, string[] cmd)
+        public void Help(string module, string[] cmd)
         {
-            List<string> help = Commands.GetHelp(cmd);
+            List<string> help = m_Commands.GetHelp(cmd);
 
             foreach (string s in help)
                 Output(s);
@@ -600,17 +611,17 @@ namespace OpenSim.Framework.Console
         public void RunCommand(string cmd)
         {
             string[] parts = Parser.Parse(cmd);
-            Commands.Resolve(parts);
+            m_Commands.Resolve(parts);
         }
 
-        public override string ReadLine(string p, bool isCommand, bool e)
+        public virtual string ReadLine(string p, bool isCommand, bool e)
         {
             System.Console.Write("{0}", p);
             string cmdinput = System.Console.ReadLine();
 
             if (isCommand)
             {
-                string[] cmd = Commands.Resolve(Parser.Parse(cmdinput));
+                string[] cmd = m_Commands.Resolve(Parser.Parse(cmdinput));
 
                 if (cmd.Length != 0)
                 {
@@ -625,6 +636,134 @@ namespace OpenSim.Framework.Console
                 }
             }
             return cmdinput;
+        }
+
+        public string CmdPrompt(string p)
+        {
+            return ReadLine(String.Format("{0}: ", p), false, true);
+        }
+
+        public string CmdPrompt(string p, string def)
+        {
+            string ret = ReadLine(String.Format("{0} [{1}]: ", p, def), false, true);
+            if (ret == String.Empty)
+                ret = def;
+
+            return ret;
+        }
+
+        // Displays a command prompt and returns a default value, user may only enter 1 of 2 options
+        public string CmdPrompt(string prompt, string defaultresponse, List<string> options)
+        {
+            bool itisdone = false;
+            string optstr = String.Empty;
+            foreach (string s in options)
+                optstr += " " + s;
+
+            string temp = CmdPrompt(prompt, defaultresponse);
+            while (itisdone == false)
+            {
+                if (options.Contains(temp))
+                {
+                    itisdone = true;
+                }
+                else
+                {
+                    System.Console.WriteLine("Valid options are" + optstr);
+                    temp = CmdPrompt(prompt, defaultresponse);
+                }
+            }
+            return temp;
+        }
+
+        // Displays a prompt and waits for the user to enter a string, then returns that string
+        // (Done with no echo and suitable for passwords)
+        public string PasswdPrompt(string p)
+        {
+            return ReadLine(p, false, false);
+        }
+
+        public virtual void Output(string text, string level)
+        {
+            Output(text);
+        }
+
+        public virtual void Output(string text)
+        {
+            System.Console.WriteLine(text);
+        }
+
+        public virtual void LockOutput()
+        {
+        }
+
+        public virtual void UnlockOutput()
+        {
+        }
+
+        /// <summary>
+        /// The default prompt text.
+        /// </summary>
+        public string DefaultPrompt
+        {
+            set { m_defaultPrompt = value; }
+            get { return m_defaultPrompt; }
+        }
+        protected string m_defaultPrompt;
+
+        public virtual string Name
+        {
+            get { return "CommandConsole"; }
+        }
+
+        public Commands m_Commands = new Commands();
+
+        public Commands Commands
+        {
+            get
+            {
+                return m_Commands;
+            }
+            set
+            {
+                m_Commands = value;
+            }
+        }
+        
+        public object ConsoleScene
+        {
+            get
+            {
+                return m_ConsoleScene;
+            }
+            set
+            {
+                m_ConsoleScene = value;
+            }
+        }
+        public object m_ConsoleScene = null;
+        
+        public void Dispose()
+        {
+        }
+
+        /// <summary>
+        /// Starts the prompt for the console. This will never stop until the region is closed.
+        /// </summary>
+        public void ReadConsole()
+        {
+            while (true)
+            {
+                try
+                {
+                    // Block thread here for input
+                    Prompt();
+                }
+                catch (Exception e)
+                {
+                    m_log.ErrorFormat("Command error: {0}", e);
+                }
+            }
         }
     }
 }

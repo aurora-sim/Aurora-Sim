@@ -34,9 +34,12 @@ using System.Reflection;
 using OpenSim.Framework;
 using OpenSim.Framework.Capabilities;
 using OpenSim.Services.Interfaces;
+using OpenSim.Server.Base;
+using OpenSim.Framework.Servers.HttpServer;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 using FriendInfo = OpenSim.Services.Interfaces.FriendInfo;
 
+using Nini.Config;
 using log4net;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
@@ -52,6 +55,7 @@ namespace OpenSim.Services.LLLoginService
         protected string m_login;
 
         public static LLFailedLoginResponse UserProblem;
+        public static LLFailedLoginResponse AuthorizationProblem;
         public static LLFailedLoginResponse GridProblem;
         public static LLFailedLoginResponse InventoryProblem;
         public static LLFailedLoginResponse DeadRegionProblem;
@@ -64,19 +68,22 @@ namespace OpenSim.Services.LLLoginService
             UserProblem = new LLFailedLoginResponse("key", 
                 "Could not authenticate your avatar. Please check your username and password, and check the grid if problems persist.",
                 "false");
-            GridProblem = new LLFailedLoginResponse("key",
+            AuthorizationProblem = new LLFailedLoginResponse("key",
+                "Error connecting to grid. Unable to authorize your session into the region.",
+                "false");
+            GridProblem = new LLFailedLoginResponse("Internal Error",
                 "Error connecting to the desired location. Try connecting to another region.",
                 "false");
-            InventoryProblem = new LLFailedLoginResponse("key",
+            InventoryProblem = new LLFailedLoginResponse("Internal Error",
                 "The inventory service is not responding.  Please notify your login region operator.",
                 "false");
-            DeadRegionProblem = new LLFailedLoginResponse("key",
+            DeadRegionProblem = new LLFailedLoginResponse("Internal Error",
                 "The region you are attempting to log into is not responding. Please select another region and try again.",
                 "false");
-            LoginBlockedProblem = new LLFailedLoginResponse("presence",
+            LoginBlockedProblem = new LLFailedLoginResponse("Internal Error",
                 "Logins are currently restricted. Please try again later.",
                 "false");
-            AlreadyLoggedInProblem = new LLFailedLoginResponse("presence",
+            AlreadyLoggedInProblem = new LLFailedLoginResponse("Internal Error",
                 "You appear to be already logged in. " +
                 "If this is not the case please wait for your session to timeout. " +
                 "If this takes longer than a few minutes please contact the grid owner. " +
@@ -140,6 +147,7 @@ namespace OpenSim.Services.LLLoginService
         private ArrayList inventoryLibRoot;
         private ArrayList inventoryLibrary;
         private ArrayList activeGestures;
+        private ArrayList tutorial = new ArrayList();
 
         private UserInfo userProfile;
 
@@ -169,8 +177,6 @@ namespace OpenSim.Services.LLLoginService
         // Web map
         private string mapTileURL;
 
-        private string searchURL;
-
         // Error Flags
         private string errorReason;
         private string errorMessage;
@@ -181,6 +187,27 @@ namespace OpenSim.Services.LLLoginService
         private string home;
         private string seedCapability;
         private string lookAt;
+        private string tutorialURL;
+        private string udpBlackList;
+        private string CAPSServiceURL;
+        private string CAPSServicePassword;
+        private IConfigSource m_source;
+
+        private long m_MaximumPrimScale = 256;
+        private long m_MinimumPrimScale = 256;
+        private long m_MaximumPhysPrimScale = 10;
+
+        private long m_MaximumHollowSize = 10;
+        private long m_MaximumHoleSize = 10;
+
+        private long m_MaximumLinkCount = 2000;
+        private long m_MaximumLinkCountPhys = 32;
+
+        private int m_MaximumInventoryItemsTransfer = 100;
+        private bool m_AllowPhysicalPrims = true;
+        private bool m_ClampPrimSizes = true;
+        private string m_OffsetOfUTC = "SLT";
+        private bool m_PreferGridSettingsOverRegion = false;
 
         private BuddyList m_buddyList = null;
 
@@ -219,9 +246,14 @@ namespace OpenSim.Services.LLLoginService
         public LLLoginResponse(UserAccount account, AgentCircuitData aCircuit, GridUserInfo pinfo,
             GridRegion destination, List<InventoryFolderBase> invSkel, FriendInfo[] friendsList, ILibraryService libService,
             string where, string startlocation, Vector3 position, Vector3 lookAt, List<InventoryItemBase> gestures, string message,
-            GridRegion home, IPEndPoint clientIP, string mapTileURL, string searchURL)
+            GridRegion home, IPEndPoint clientIP, string AdultMax, string AdultRating, string mapTileURL, string AllowFL, string TutorialURL,
+            ArrayList eventValues, ArrayList classifiedValues, string CAPSURL, string CAPSPass, IConfigSource source)
             : this()
         {
+            m_source = source;
+            CAPSServiceURL = CAPSURL;
+            CAPSServicePassword = CAPSPass;
+
             FillOutInventoryData(invSkel, libService);
 
             FillOutActiveGestures(gestures);
@@ -235,8 +267,13 @@ namespace OpenSim.Services.LLLoginService
             Message = message;
             BuddList = ConvertFriendListItem(friendsList);
             StartLocation = where;
-            MapTileURL = mapTileURL;
-            SearchURL = searchURL;
+            AgentAccessMax = AdultMax;
+            AgentAccess = AdultRating;
+			MapTileURL = mapTileURL;
+            allowFirstLife = AllowFL;
+            tutorialURL = TutorialURL;
+            eventCategories = eventValues;
+            classifiedCategories = classifiedValues;
 
             FillOutHomeData(pinfo, home);
             LookAt = String.Format("[r{0},r{1},r{2}]", lookAt.X, lookAt.Y, lookAt.Z);
@@ -244,6 +281,8 @@ namespace OpenSim.Services.LLLoginService
             FillOutRegionData(destination);
 
             FillOutSeedCap(aCircuit, destination, clientIP);
+
+            ReadGridSettings(source);
             
         }
 
@@ -334,15 +373,12 @@ namespace OpenSim.Services.LLLoginService
         private void FillOutSeedCap(AgentCircuitData aCircuit, GridRegion destination, IPEndPoint ipepClient)
         {
             string capsSeedPath = String.Empty;
-
-            // Don't use the following!  It Fails for logging into any region not on the same port as the http server!
-            // Kept here so it doesn't happen again!
-            // response.SeedCapability = regionInfo.ServerURI + capsSeedPath;
+            string SimcapsSeedPath = String.Empty;
 
             #region IP Translation for NAT
             if (ipepClient != null)
             {
-                capsSeedPath
+                SimcapsSeedPath
                     = "http://"
                       + NetworkUtil.GetHostFor(ipepClient.Address, destination.ExternalHostName)
                       + ":"
@@ -351,7 +387,7 @@ namespace OpenSim.Services.LLLoginService
             }
             else
             {
-                capsSeedPath
+                SimcapsSeedPath
                     = "http://"
                       + destination.ExternalHostName
                       + ":"
@@ -360,7 +396,70 @@ namespace OpenSim.Services.LLLoginService
             }
             #endregion
 
+            // Don't use the following!  It Fails for logging into any region not on the same port as the http server!
+            // Kept here so it doesn't happen again!
+            // response.SeedCapability = regionInfo.ServerURI + capsSeedPath;
+
+            if (CAPSServiceURL != "")
+            {
+                if(CAPSServiceURL.StartsWith("http")) //Note: Don't do any more than http, we allow for https
+                {
+                    capsSeedPath = CAPSServiceURL + CapsUtil.GetCapsSeedPath(aCircuit.CapsPath);
+                }
+                else
+                {
+                    capsSeedPath
+                        = "http://"
+                          + CAPSServiceURL
+                          + CapsUtil.GetCapsSeedPath(aCircuit.CapsPath);
+                }
+
+                if (!InformCAPSServerAboutIncomingConnection(capsSeedPath, CapsUtil.GetCapsSeedPath(aCircuit.CapsPath), SimcapsSeedPath))
+                {
+                    capsSeedPath = SimcapsSeedPath;
+                }
+            }
+            else
+            {
+                capsSeedPath = SimcapsSeedPath;
+            }
+
             SeedCapability = capsSeedPath;
+        }
+
+        private bool InformCAPSServerAboutIncomingConnection(string capsSeedPath, string CAPSSeed, string SimCAPS)
+        {
+            Dictionary<string, object> sendData = new Dictionary<string, object>();
+
+            sendData["CAPSSEEDPATH"] = CAPSSeed;
+            sendData["SIMCAPS"] = SimCAPS;
+            sendData["PASS"] = CAPSServicePassword;
+            sendData["AGENTID"] = AgentID.ToString();
+
+            string reqString = ServerUtils.BuildQueryString(sendData);
+
+            try
+            {
+                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                        CAPSServiceURL + "/CAPS/REGISTER",
+                        reqString);
+                if (reply != "")
+                {
+                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+
+                    if (replyData != null)
+                    {
+                        if (replyData.ContainsKey("result") && (string)replyData["result"] == "true")
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+            catch (Exception)
+            {
+            }
+            return false;
         }
 
         private void SetDefaultValues()
@@ -376,6 +475,7 @@ namespace OpenSim.Services.LLLoginService
             agentAccessMax = "A";
             startLocation = "last";
             allowFirstLife = "Y";
+            udpBlackList = "EnableSimulator,TeleportFinish,CrossedRegion,OpenCircuit";
 
             ErrorMessage = "You have entered an invalid name/password combination.  Check Caps/lock.";
             ErrorReason = "key";
@@ -389,17 +489,6 @@ namespace OpenSim.Services.LLLoginService
             RegionX = (uint) 255232;
             RegionY = (uint) 254976;
 
-            // Classifieds;
-            AddClassifiedCategory((Int32) 1, "Shopping");
-            AddClassifiedCategory((Int32) 2, "Land Rental");
-            AddClassifiedCategory((Int32) 3, "Property Rental");
-            AddClassifiedCategory((Int32) 4, "Special Attraction");
-            AddClassifiedCategory((Int32) 5, "New Products");
-            AddClassifiedCategory((Int32) 6, "Employment");
-            AddClassifiedCategory((Int32) 7, "Wanted");
-            AddClassifiedCategory((Int32) 8, "Service");
-            AddClassifiedCategory((Int32) 9, "Personal");
-
             SessionID = UUID.Random();
             SecureSessionID = UUID.Random();
             AgentID = UUID.Random();
@@ -408,8 +497,17 @@ namespace OpenSim.Services.LLLoginService
             InitialOutfitHash["folder_name"] = "Nightclub Female";
             InitialOutfitHash["gender"] = "female";
             initialOutfit.Add(InitialOutfitHash);
+
+            Hashtable TutorialHash = new Hashtable();
+            TutorialHash["tutorial_url"] = tutorialURL;
+
+            if (tutorialURL != "")
+                TutorialHash["use_tutorial"] = "Y";
+            else
+                TutorialHash["use_tutorial"] = "";
+            tutorial.Add(TutorialHash);
+
             mapTileURL = String.Empty;
-            searchURL = String.Empty;
         }
 
 
@@ -430,9 +528,9 @@ namespace OpenSim.Services.LLLoginService
                 responseData["last_name"] = Lastname;
                 responseData["agent_access"] = agentAccess;
                 responseData["agent_access_max"] = agentAccessMax;
+                responseData["udp_blacklist"] = udpBlackList;
 
                 globalTextures.Add(globalTexturesHash);
-                // this.eventCategories.Add(this.eventCategoriesHash);
 
                 AddToUIConfig("allow_first_life", allowFirstLife);
                 uiConfig.Add(uiConfigHash);
@@ -451,7 +549,7 @@ namespace OpenSim.Services.LLLoginService
                 responseData["seed_capability"] = seedCapability;
 
                 responseData["event_categories"] = eventCategories;
-                responseData["event_notifications"] = new ArrayList(); // todo
+                responseData["event_notifications"] = new ArrayList(); // TODO: What is this?
                 responseData["classified_categories"] = classifiedCategories;
                 responseData["ui-config"] = uiConfig;
 
@@ -465,6 +563,7 @@ namespace OpenSim.Services.LLLoginService
                 responseData["gestures"] = activeGestures;
                 responseData["inventory-lib-owner"] = inventoryLibraryOwner;
                 responseData["initial-outfit"] = initialOutfit;
+                responseData["tutorial_setting"] = tutorial;
                 responseData["start_location"] = startLocation;
                 responseData["seed_capability"] = seedCapability;
                 responseData["home"] = home;
@@ -472,9 +571,6 @@ namespace OpenSim.Services.LLLoginService
                 responseData["message"] = welcomeMessage;
                 responseData["region_x"] = (Int32)(RegionX);
                 responseData["region_y"] = (Int32)(RegionY);
-
-                if (searchURL != String.Empty)
-                    responseData["search"] = searchURL;
 
                 if (mapTileURL != String.Empty)
                     responseData["map-server-url"] = mapTileURL;
@@ -486,6 +582,8 @@ namespace OpenSim.Services.LLLoginService
 
                 responseData["login"] = "true";
 
+                BuildGridSettings(responseData);
+
                 return responseData;
             }
             catch (Exception e)
@@ -493,6 +591,45 @@ namespace OpenSim.Services.LLLoginService
                 m_log.Warn("[CLIENT]: LoginResponse: Error creating Hashtable Response: " + e.Message);
 
                 return LLFailedLoginResponse.InternalError.ToHashtable();
+            }
+        }
+
+        private void BuildGridSettings(Hashtable responseData)
+        {
+            responseData["MaximumPrimScale"] = m_MaximumPrimScale.ToString();
+            responseData["MinimumPrimScale"] = m_MinimumPrimScale.ToString();
+            responseData["MaximumPhysicalPrimScale"] = m_MaximumPhysPrimScale.ToString();
+            responseData["MaximumHollowSize"] = m_MaximumHollowSize.ToString();
+            responseData["MaximumHoleSize"] = m_MaximumHoleSize.ToString();
+            responseData["MaximumLinkCount"] = m_MaximumLinkCount.ToString();
+            responseData["MaximumLinkCountPhys"] = m_MaximumLinkCountPhys.ToString();
+            responseData["MaximumInventoryItemsTransfer"] = m_MaximumInventoryItemsTransfer.ToString();
+            responseData["AllowPhysicalPrims"] = m_AllowPhysicalPrims ? 1 : 0;
+            responseData["ClampPrimSizes"] = m_ClampPrimSizes ? 1 : 0;
+            responseData["OffsetOfUTC"] = m_OffsetOfUTC;
+            responseData["PreferGridSettingsOverRegion"] = m_PreferGridSettingsOverRegion ? 1 : 0;
+        }
+
+        private void ReadGridSettings(IConfigSource source)
+        {
+            IConfig gridSettings = m_source.Configs["GridWideSettings"];
+            if (gridSettings != null)
+            {
+                m_MaximumPrimScale = gridSettings.GetLong("MaximumPrimScale", m_MaximumPrimScale);
+                m_MinimumPrimScale = gridSettings.GetLong("MinimumPrimScale", m_MinimumPrimScale);
+                m_MaximumPhysPrimScale = gridSettings.GetLong("MaximumPhysPrimScale", m_MaximumPhysPrimScale);
+
+
+                m_MaximumHollowSize = gridSettings.GetLong("MaximumHollowSize", m_MaximumHollowSize);
+                m_MaximumHoleSize = gridSettings.GetLong("MaximumHoleSize", m_MaximumHoleSize);
+
+
+                m_MaximumLinkCount = gridSettings.GetLong("MaximumLinkCount", m_MaximumLinkCount);
+                m_MaximumLinkCountPhys = gridSettings.GetLong("MaximumLinkCountPhys", m_MaximumLinkCountPhys);
+
+                m_MaximumInventoryItemsTransfer = gridSettings.GetInt("MaximumInventoryItemsTransfer", m_MaximumInventoryItemsTransfer);
+
+                m_OffsetOfUTC = gridSettings.GetString("OffsetOfUTC", m_OffsetOfUTC);
             }
         }
 
@@ -566,7 +703,9 @@ namespace OpenSim.Services.LLLoginService
                 map["gestures"] = ArrayListToOSDArray(activeGestures);
 
                 map["initial-outfit"] = ArrayListToOSDArray(initialOutfit);
+                map["tutorial_setting"] = ArrayListToOSDArray(tutorial);
                 map["start_location"] = OSD.FromString(startLocation);
+                map["udp_blacklist"] = OSD.FromString(udpBlackList);
 
                 map["seed_capability"] = OSD.FromString(seedCapability);
                 map["home"] = OSD.FromString(home);
@@ -577,9 +716,6 @@ namespace OpenSim.Services.LLLoginService
 
                 if (mapTileURL != String.Empty)
                     map["map-server-url"] = OSD.FromString(mapTileURL);
-
-                if (searchURL != String.Empty)
-                    map["search"] = OSD.FromString(searchURL);
 
                 if (m_buddyList != null)
                 {
@@ -620,26 +756,10 @@ namespace OpenSim.Services.LLLoginService
             return array;
         }
 
-        public void SetEventCategories(string category, string value)
-        {
-            //  this.eventCategoriesHash[category] = value;
-            //TODO
-        }
-
         public void AddToUIConfig(string itemName, string item)
         {
             uiConfigHash[itemName] = item;
         }
-
-        public void AddClassifiedCategory(Int32 ID, string categoryName)
-        {
-            Hashtable hash = new Hashtable();
-            hash["category_name"] = categoryName;
-            hash["category_id"] = ID;
-            classifiedCategories.Add(hash);
-            // this.classifiedCategoriesHash.Clear();
-        }
-
 
         private static LLLoginResponse.BuddyList ConvertFriendListItem(FriendInfo[] friendsList)
         {
@@ -664,7 +784,7 @@ namespace OpenSim.Services.LLLoginService
             Hashtable TempHash;
             foreach (InventoryFolderBase InvFolder in folders)
             {
-                if (InvFolder.ParentID == UUID.Zero && InvFolder.Name == "My Inventory")
+                if (InvFolder.ParentID == UUID.Zero)
                 {
                     rootID = InvFolder.ID;
                 }
@@ -938,16 +1058,15 @@ namespace OpenSim.Services.LLLoginService
             set { mapTileURL = value; }
         }
 
-        public string SearchURL
-        {
-            get { return searchURL; }
-            set { searchURL = value; }
-        }
-
         public string Message
         {
             get { return welcomeMessage; }
-            set { welcomeMessage = value; }
+            set 
+            {
+                if (value.Contains("<USERNAME>"))
+                    value = value.Replace("<USERNAME>", firstname + " " + lastname);
+                welcomeMessage = value; 
+            }
         }
 
         public BuddyList BuddList

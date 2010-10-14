@@ -25,6 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System.Collections.Generic;
 using OpenMetaverse;
 
 namespace OpenSim.Region.Framework.Scenes
@@ -35,5 +36,6 @@ namespace OpenSim.Region.Framework.Scenes
         public Vector3 location;
         public string objectName;
         public string reason;
+        public List<SceneObjectGroup> Groups;
     }
 }

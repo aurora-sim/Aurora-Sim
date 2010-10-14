@@ -216,7 +216,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
                 break;
             }
 
-            // TODO: iterate over message
             if (message.Length >= 1000) // libomv limit
                 message = message.Substring(0, 1000);
 
@@ -311,7 +310,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
                 return;
             }
 
-            // TODO: should change so the message is sent through the avatar rather than direct to the ClientView
             presence.ControllingClient.SendChatMessage(message, (byte) type, fromPos, fromName,
                                                        fromAgentID,(byte)src,(byte)ChatAudibleLevel.Fully);
         }

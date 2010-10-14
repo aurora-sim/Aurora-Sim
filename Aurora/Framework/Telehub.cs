@@ -18,6 +18,10 @@ namespace Aurora.Framework
         public float TelehubRotY = 0;
         public float TelehubRotZ = 0;
 
+        public List<Vector3> SpawnPos = new List<Vector3>();
+        public string Name = "";
+        public string ObjectUUID = "";
+
         public Telehub() { }
 
         public Telehub(Dictionary<string, object> KVP)
@@ -31,6 +35,9 @@ namespace Aurora.Framework
             TelehubLocX = float.Parse(KVP["TelehubLocX"].ToString());
             TelehubLocY = float.Parse(KVP["TelehubLocY"].ToString());
             TelehubLocZ = float.Parse(KVP["TelehubLocZ"].ToString());
+            SpawnPos = BuildToList(KVP["Spawns"].ToString());
+            Name = KVP["Name"].ToString();
+            ObjectUUID = KVP["ObjectUUID"].ToString();
         }
 
         public Dictionary<string, object> ToKeyValuePairs()
@@ -45,7 +52,34 @@ namespace Aurora.Framework
             Telehub["TelehubLocX"] = TelehubLocX;
             Telehub["TelehubLocY"] = TelehubLocY;
             Telehub["TelehubLocZ"] = TelehubLocZ;
+            Telehub["Spawns"] = BuildFromList(SpawnPos);
+            Telehub["ObjectUUID"] = ObjectUUID;
+            Telehub["Name"] = Name;
             return Telehub;
+        }
+
+        public string BuildFromList(List<Vector3> SpawnPos)
+        {
+            string retVal = "";
+            foreach (Vector3 Pos in SpawnPos)
+            {
+                retVal += Pos.ToString() + "\n";
+            }
+            return retVal;
+        }
+
+        public List<Vector3> BuildToList(string SpawnPos)
+        {
+            if (SpawnPos == "" || SpawnPos == " ")
+                return new List<Vector3>();
+            List<Vector3> retVal = new List<Vector3>();
+            foreach (string Pos in SpawnPos.Split('\n'))
+            {
+                if (Pos == "")
+                    continue;
+                retVal.Add(Vector3.Parse(Pos));
+            }
+            return retVal;
         }
     }
 }

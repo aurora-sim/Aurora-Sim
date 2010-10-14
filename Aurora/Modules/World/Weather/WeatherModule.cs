@@ -16,7 +16,7 @@ using OpenMetaverse;
 
 namespace Aurora.Modules
 {
-    #region Weather Module
+    /*#region Weather Module
     [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class WeatherModule : ISharedRegionModule
     {
@@ -42,15 +42,10 @@ namespace Aurora.Modules
             m_enabled = m_config.GetBoolean("Enabled", false);
             if (!m_enabled)
                 return;
-            timer.Interval = 10000;
+            timer.Interval = 3000;
             timer.Enabled = true;
             timer.Elapsed += new ElapsedEventHandler(GenerateNewWindlightProfiles);
             timer.Start();
-        }
-
-        public void Close()
-        {
-
         }
 
         public void AddRegion(Scene scene)
@@ -67,12 +62,14 @@ namespace Aurora.Modules
 
         public void RemoveRegion(Scene scene)
         {
-
         }
 
         public void RegionLoaded(Scene scene)
         {
+        }
 
+        public void Close()
+        {
         }
 
         public void PostInitialise() { }
@@ -125,18 +122,10 @@ namespace Aurora.Modules
                 m_log.Warn("Wrong amount of parameters!");
                 return;
             }
-            if (cmdparams[1] == "off")
-            {
-                m_enabled = false;
-                m_paused = false;
-            }
-            if (cmdparams[1] == "on")
-            {
-                m_paused = false;
-                m_enabled = true;
-            }
             if (cmdparams[1] == "pause")
                 m_paused = true;
+            if (cmdparams[1] == "unpause")
+                m_paused = false;
         }
 
         public void ConsoleChangeWeather(string module, string[] cmdparams)
@@ -175,19 +164,15 @@ namespace Aurora.Modules
 
         private void GenerateNewWindlightProfiles()
         {
-            if (!m_enabled)
-                return;
             if (m_paused)
-            {
-                SendCurrentProfilesToClients();
                 return;
-            }
             SendCurrentProfilesToClients();
             List<Scene> isRaining = new List<Scene>();
             Random random = new Random();
             Dictionary<Scene, WeatherInRegion> unfinishedScenes = Scenes;
             foreach (KeyValuePair<Scene, WeatherInRegion> scene in Scenes)
             {
+                scene.Value.Randomize();
                 if (scene.Value.CurrentRainy || scene.Value.NextRainy)
                     isRaining.Add(scene.Key);
                 scene.Key.RegionInfo.WindlightSettings = scene.Value.MakeRegionWindLightData(scene.Key.RegionInfo.WindlightSettings);
@@ -196,14 +181,14 @@ namespace Aurora.Modules
             #region Move rain
             if (isRaining.Count > 0)
             {
-                
                 //unfinishedScenes.Remove();
             }
             #endregion
             #region Make new rain
             else
             {
-                if (random.Next(1) == 1)
+                int randomnum = random.Next(0,2);
+                if (randomnum == 1)
                 {
                     //Make new rain
                 }
@@ -316,41 +301,49 @@ namespace Aurora.Modules
         {
             Random random = new Random();
 
-            int randomnum = random.Next(1);
+            int randomnum = random.Next(0, 2);
             CurrentlyCloudy = randomnum == 1;
 
-            randomnum = random.Next(1);
+            randomnum = random.Next(0, 2);
             CurrentlySunny = randomnum == 1;
 
-            randomnum = random.Next(1);
+            randomnum = random.Next(0, 2);
             NextCloudy = randomnum == 1;
 
-            randomnum = random.Next(1);
+            randomnum = random.Next(0, 2);
             NextSunny = randomnum == 1;
 
-            randomnum = random.Next(1);
+            randomnum = random.Next(0, 2);
             CurrentlyFoggy = randomnum == 1;
 
-            randomnum = random.Next(1);
+            randomnum = random.Next(0, 2);
             NextFoggy = randomnum == 1;
 
-            randomnum = random.Next(1);
+            randomnum = random.Next(0, 2);
             CurrentRainy = randomnum == 1;
 
-            randomnum = random.Next(1);
+            randomnum = random.Next(0, 2);
             NextRainy = randomnum == 1;
+
+            double windRandom = Util.RandomClass.NextDouble();
+            NextWindDirection.X = (float)windRandom;
+
+            windRandom = Util.RandomClass.NextDouble();
+            NextWindDirection.Y = (float)windRandom;
         }
 
         public RegionLightShareData MakeRegionWindLightData(RegionLightShareData RLS)
         {
             #region Sun position and star brightness
-            RLS.sunMoonPosition += .1f;
+            RLS.sunMoonPosition += .01f;
             if (RLS.sunMoonPosition > 1)
                 RLS.sunMoonPosition = 0;
-            if (RLS.sunMoonPosition > .5f)
-                RLS.starBrightness += .5f;
+
+            if (RLS.sunMoonPosition > .875f || RLS.sunMoonPosition < .125f)
+                RLS.starBrightness += .1f;
             else
-                RLS.starBrightness -= .5f;
+                RLS.starBrightness -= .075f;
+
             if (RLS.starBrightness > 2)
                 RLS.starBrightness = 2;
             if (RLS.starBrightness < 0)
@@ -363,25 +356,37 @@ namespace Aurora.Modules
             Random random = new Random();
             if (NextSunny)
             {
-                RLS.cloudCoverage -= .05f;
-                if (random.Next(0, 1) == 1)
-                {
-                    RLS.cloudScale += .025f;
-                }
-                else
-                {
-                    RLS.cloudScale -= .025f;
-                }
+                RLS.cloudCoverage -= .01f;
+            }
+            else
+            {
+                RLS.cloudCoverage += .01f;
+            }
+            if (random.Next(0, 4) == 1)
+            {
+                RLS.cloudScale += .01f;
+            }
+            else
+            {
+                RLS.cloudScale -= .01f;
             }
             if (CurrentlySunny && !NextSunny)
             {
-                RLS.cloudCoverage += .05f;
+                RLS.cloudCoverage += .005f;
             }
             if (CurrentlySunny && NextSunny)
             {
                 //Clear ambient light changes.
-                RLS.ambient.W = .4f;
+                RLS.ambient.W = 1f;
             }
+            if (RLS.cloudScale > 0.9f)
+                RLS.cloudScale = 0.9f;
+            if (RLS.cloudScale < 0.1f)
+                RLS.cloudScale = 0.1f;
+            if (RLS.cloudCoverage > 0.50f)
+                RLS.cloudCoverage = 0.50f;
+            if (RLS.cloudCoverage < 0.25f)
+                RLS.cloudCoverage = 0.25f;
             
             #endregion
 
@@ -392,7 +397,7 @@ namespace Aurora.Modules
                 RLS.ambient.W -= .1f;
                 RLS.sceneGamma -= .05f;
             }
-            if (NextSunny && CurrentRainy)
+            if (NextSunny)
             {
                 RLS.ambient.W += .1f;
                 RLS.sceneGamma += .05f;
@@ -401,6 +406,10 @@ namespace Aurora.Modules
             {
                 RLS.ambient.W -= .05f;
             }
+            if (RLS.sceneGamma > 1.5f)
+                RLS.sceneGamma = 1.5f;
+            if (RLS.sceneGamma < 0.5f)
+                RLS.sceneGamma = 0.5f;
 
             #endregion
 
@@ -408,29 +417,29 @@ namespace Aurora.Modules
 
             if (CurrentlyFoggy)
             {
-                RLS.densityMultiplier += .1f;
-                RLS.distanceMultiplier += 10;
+                RLS.densityMultiplier += .005f;
+                RLS.distanceMultiplier += 1;
             }
             if (CurrentlyFoggy && !NextFoggy)
             {
-                RLS.distanceMultiplier -= 5;
+                RLS.distanceMultiplier -= 1;
             }
             if (CurrentlyFoggy && NextFoggy)
             {
-                RLS.distanceMultiplier += 5;
+                RLS.distanceMultiplier += 1;
             }
             if (NextSunny)
             {
-                RLS.densityMultiplier -= .1f;
-                RLS.distanceMultiplier -= 5;
+                //RLS.densityMultiplier -= .005f;
+                RLS.distanceMultiplier -= 1;
             }
             if (!CurrentlyFoggy && !NextFoggy && (RLS.densityMultiplier > 0.75 || RLS.distanceMultiplier > 10))
             {
-                RLS.densityMultiplier -= .1f;
+                //RLS.densityMultiplier -= .1f;
                 RLS.distanceMultiplier -= 5;
             }
-            if (RLS.distanceMultiplier > 100)
-                RLS.distanceMultiplier = 100;
+            if (RLS.distanceMultiplier > 10)
+                RLS.distanceMultiplier = 10;
             if (RLS.distanceMultiplier < 0)
                 RLS.distanceMultiplier = 1;
             if (RLS.densityMultiplier > 1)
@@ -448,17 +457,17 @@ namespace Aurora.Modules
                 //Little decrease
                 if (NewWind.X < 0.1)
                 {
-                    RLS.cloudScrollX -= 2;
+                    RLS.cloudScrollX -= .125f;
                 }
                 //Significant decrease
                 else if (NewWind.X < 0.25)
                 {
-                    RLS.cloudScrollX -= 3.5f;
+                    RLS.cloudScrollX -= .185f;
                 }
                 //Large decrease
                 else if (NewWind.X < .5)
                 {
-                    RLS.cloudScrollX -= 5;
+                    RLS.cloudScrollX -= .25f;
                 }
                 //Check to make sure values dont get too small.
                 if (RLS.cloudScrollX < -10)
@@ -471,17 +480,17 @@ namespace Aurora.Modules
                 //Little increase
                 if (NewWind.X < 0.1)
                 {
-                    RLS.cloudScrollX += 2;
+                    RLS.cloudScrollX += .125f;
                 }
                 //Significant increase
                 else if (NewWind.X < 0.25)
                 {
-                    RLS.cloudScrollX += 3.5f;
+                    RLS.cloudScrollX += .185f;
                 }
                 //Large increase
                 else if (NewWind.X < .5)
                 {
-                    RLS.cloudScrollX += 5;
+                    RLS.cloudScrollX += .25f;
                 }
                 //Check to make sure values dont get too big.
                 if (RLS.cloudScrollX > 10)
@@ -493,17 +502,17 @@ namespace Aurora.Modules
                 //Little decrease
                 if (NewWind.Y < 0.1)
                 {
-                    RLS.cloudScrollY -= 2;
+                    RLS.cloudScrollY -= .125f;
                 }
                 //Significant decrease
                 else if (NewWind.Y < 0.25)
                 {
-                    RLS.cloudScrollY -= 3.5f;
+                    RLS.cloudScrollY -= 0.185f;
                 }
                 //Large decrease
                 else if (NewWind.Y < .5)
                 {
-                    RLS.cloudScrollY -= 5;
+                    RLS.cloudScrollY -= .25f;
                 }
                 //Check to make sure values dont get too small.
                 if (RLS.cloudScrollY < -10)
@@ -516,17 +525,17 @@ namespace Aurora.Modules
                 //Little increase
                 if (NewWind.Y < 0.1)
                 {
-                    RLS.cloudScrollY += 2;
+                    RLS.cloudScrollY += .125f;
                 }
                 //Significant increase
                 else if (NewWind.Y < 0.25)
                 {
-                    RLS.cloudScrollY += 3.5f;
+                    RLS.cloudScrollY += .185f;
                 }
                 //Large increase
                 else if (NewWind.Y < .5)
                 {
-                    RLS.cloudScrollY += 5;
+                    RLS.cloudScrollY += .25f;
                 }
                 //Check to make sure values dont get too big.
                 if (RLS.cloudScrollY > 10)
@@ -534,7 +543,10 @@ namespace Aurora.Modules
             }
             #endregion
 
-            RLS.Save();
+            //Rev: Decided unnesessary and that weather should not be saved, but instead, start from the original every time
+            // Also takes a long time to do
+            //RLS.Save();
+            CurrentWindDirection = NextWindDirection;
             return RLS;
         }
     }
@@ -553,5 +565,5 @@ namespace Aurora.Modules
         Sync = 6
     }
 
-    #endregion
+    #endregion*/
 }

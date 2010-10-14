@@ -30,6 +30,7 @@ using System.IO;
 using System.Xml;
 using System.Threading;
 using System.Reflection;
+using OpenSim.Framework;
 using OpenSim.Framework.Console;
 using log4net;
 using log4net.Config;
@@ -85,13 +86,11 @@ namespace OpenSim.Server.Base
             argvConfig.AddSwitch("Startup", "logfile", "l");
             argvConfig.AddSwitch("Startup", "inifile", "i");
             argvConfig.AddSwitch("Startup", "prompt",  "p");
-            argvConfig.AddSwitch("Startup", "logconfig", "g");
 
             // Automagically create the ini file name
             //
             string fileName = Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().Location);
             string iniFile = fileName + ".ini";
-            string logConfig = null;
 
             IConfig startupConfig = argvConfig.Configs["Startup"];
             if (startupConfig != null)
@@ -102,9 +101,6 @@ namespace OpenSim.Server.Base
                 //
                 // Check if a prompt was given on the command line
                 prompt = startupConfig.GetString("prompt", prompt);
-                //
-                // Check for a Log4Net config file on the command line
-                logConfig =startupConfig.GetString("logconfig",logConfig);
             }
 
             // Find out of the file name is a URI and remote load it
@@ -122,7 +118,7 @@ namespace OpenSim.Server.Base
                 }
                 else
                 {
-                    m_Config = new IniConfigSource(iniFile);
+                    m_Config = new IniConfigSource(iniFile, Nini.Ini.IniFileType.AuroraStyle);
                 }
             }
             catch (Exception)
@@ -153,38 +149,28 @@ namespace OpenSim.Server.Base
 
             // Create main console
             //
-            string consoleType = "local";
-            if (startupConfig != null)
-                consoleType = startupConfig.GetString("console", consoleType);
+            string consoleType = "LocalConsole";
+            if(m_Config.Configs["Console"] != null)
+                consoleType = m_Config.Configs["Console"].GetString("Console", consoleType);
 
-            if (consoleType == "basic")
-            {
-                MainConsole.Instance = new CommandConsole(prompt);
-            }
-            else if (consoleType == "rest")
-            {
-                MainConsole.Instance = new RemoteConsole(prompt);
-                ((RemoteConsole)MainConsole.Instance).ReadConfig(Config);
-            }
+            if (consoleType == "CommandConsole")
+                MainConsole.Instance = new CommandConsole();
+
+            else if (consoleType == "RemoteConsole")
+                MainConsole.Instance = new RemoteConsole();
+
             else
-            {
-                MainConsole.Instance = new LocalConsole(prompt);
-            }
+                MainConsole.Instance = new LocalConsole();
+
+            MainConsole.Instance.DefaultPrompt = prompt;
+            MainConsole.Instance.Initialise(prompt, Config, null);
 
             // Configure the appenders for log4net
             //
             OpenSimAppender consoleAppender = null;
             FileAppender fileAppender = null;
 
-            if (logConfig != null)
-            {
-                FileInfo cfg = new FileInfo(logConfig);
-                XmlConfigurator.Configure(cfg);
-            }
-            else
-            {
-                XmlConfigurator.Configure();
-            }
+            XmlConfigurator.Configure();
 
             ILoggerRepository repository = LogManager.GetRepository();
             IAppender[] appenders = repository.GetAppenders();
@@ -192,13 +178,9 @@ namespace OpenSim.Server.Base
             foreach (IAppender appender in appenders)
             {
                 if (appender.Name == "Console")
-                {
                     consoleAppender = (OpenSimAppender)appender;
-                }
                 if (appender.Name == "LogFileAppender")
-                {
                     fileAppender = (FileAppender)appender;
-                }
             }
 
             if (consoleAppender == null)
@@ -220,12 +202,11 @@ namespace OpenSim.Server.Base
             {
                 if (startupConfig != null)
                 {
-                    string cfgFileName = startupConfig.GetString("logfile", null);
-                    if (cfgFileName != null)
-                    {
-                        fileAppender.File = cfgFileName;
-                        fileAppender.ActivateOptions();
-                    }
+
+                    fileName = startupConfig.GetString("logfile", fileName+".log");
+                    fileName = Path.GetFullPath(Path.Combine(".", fileName));
+                    fileAppender.File = fileName;
+                    fileAppender.ActivateOptions();
                 }
             }
 

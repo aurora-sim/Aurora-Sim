@@ -259,7 +259,6 @@ namespace Flotsam.RegionModules.AssetCache
 
         public void Cache(AssetBase asset)
         {
-            // TODO: Spawn this off to some seperate thread to do the actual writing
             if (asset != null)
             {
                 UpdateMemoryCache(asset.ID, asset);
@@ -403,6 +402,11 @@ namespace Flotsam.RegionModules.AssetCache
                 
             }
 
+            if (m_Scenes[0].Stats is OpenSim.Framework.Statistics.SimExtraStatsCollector)
+            {
+                OpenSim.Framework.Statistics.SimExtraStatsCollector stats = m_Scenes[0].Stats as OpenSim.Framework.Statistics.SimExtraStatsCollector;
+                stats.AddAsset(asset);
+            }
             return asset;
         }
 
@@ -445,6 +449,12 @@ namespace Flotsam.RegionModules.AssetCache
 
             if (m_MemoryCacheEnabled)
                 m_MemoryCache.Clear();
+
+            if (m_Scenes[0].Stats is OpenSim.Framework.Statistics.SimExtraStatsCollector)
+            {
+                OpenSim.Framework.Statistics.SimExtraStatsCollector stats = m_Scenes[0].Stats as OpenSim.Framework.Statistics.SimExtraStatsCollector;
+                stats.ClearAssetCacheStatistics();
+            }
         }
 
         private void CleanupExpiredFiles(object source, ElapsedEventArgs e)

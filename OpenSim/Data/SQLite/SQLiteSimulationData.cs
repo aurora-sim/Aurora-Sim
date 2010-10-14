@@ -32,13 +32,8 @@ using System.Drawing;
 using System.IO;
 using System.Reflection;
 using log4net;
-#if CSharpSqlite
-    using Community.CsharpSqlite.Sqlite;
-#else
-    using Mono.Data.Sqlite;
-#endif
+using Mono.Data.Sqlite;
 using OpenMetaverse;
-using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
@@ -48,7 +43,7 @@ namespace OpenSim.Data.SQLite
     /// <summary>
     /// A RegionData Interface to the SQLite database
     /// </summary>
-    public class SQLiteSimulationData : ISimulationDataStore
+    public class SQLiteRegionData : IRegionDataStore
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -74,15 +69,6 @@ namespace OpenSim.Data.SQLite
 
         private String m_connectionString;
 
-        public SQLiteSimulationData()
-        {
-        }
-
-        public SQLiteSimulationData(string connectionString)
-        {
-            Initialise(connectionString);
-        }
-
         // Temporary attribute while this is experimental
 
         /***********************************************************************
@@ -92,6 +78,7 @@ namespace OpenSim.Data.SQLite
          **********************************************************************/
 
         /// <summary>
+        /// See IRegionDataStore
         /// <list type="bullet">
         /// <item>Initialises RegionData Interface</item>
         /// <item>Loads and initialises a new SQLite connection and maintains it.</item>
@@ -189,7 +176,7 @@ namespace OpenSim.Data.SQLite
                     {
                         m_log.Info("[SQLITE REGION DB]: Caught fill error on primitems table");
                     }
-
+					
                     try
                     {
                         terrainDa.Fill(ds.Tables["terrain"]);
@@ -226,6 +213,8 @@ namespace OpenSim.Data.SQLite
                         m_log.Info("[SQLITE REGION DB]: Caught fill error on regionsettings table");
                     }
 
+                    itemsDa.Fill(ds.Tables["primitems"]);
+
                     // We have to create a data set mapping for every table, otherwise the IDataAdaptor.Update() will not populate rows with values!
                     // Not sure exactly why this is - this kind of thing was not necessary before - justincc 20100409
                     // Possibly because we manually set up our own DataTables before connecting to the database
@@ -240,8 +229,8 @@ namespace OpenSim.Data.SQLite
             }
             catch (Exception e)
             {
-              m_log.Error(e);
-              Environment.Exit(23);
+                m_log.Error(e);
+                Environment.Exit(23);
             }
 
             return;
@@ -256,42 +245,34 @@ namespace OpenSim.Data.SQLite
             }
             if (ds != null)
             {
-                ds.Dispose();
                 ds = null;
             }
             if (primDa != null)
             {
-                primDa.Dispose();
                 primDa = null;
             }
             if (shapeDa != null)
             {
-                shapeDa.Dispose();
                 shapeDa = null;
             }
             if (itemsDa != null)
             {
-                itemsDa.Dispose();
                 itemsDa = null;
             }
             if (terrainDa != null)
             {
-                terrainDa.Dispose();
                 terrainDa = null;
             }
             if (landDa != null)
             {
-                landDa.Dispose();
                 landDa = null;
             }
             if (landAccessListDa != null)
             {
-                landAccessListDa.Dispose();
                 landAccessListDa = null;
             }
             if (regionSettingsDa != null)
             {
-                regionSettingsDa.Dispose();
                 regionSettingsDa = null;
             }
         }
@@ -317,16 +298,7 @@ namespace OpenSim.Data.SQLite
                 Commit();
             }
         }
-        public RegionLightShareData LoadRegionWindlightSettings(UUID regionUUID)
-        {
-            //This connector doesn't support the windlight module yet
-            //Return default LL windlight settings
-            return new RegionLightShareData();
-        }
-        public void StoreRegionWindlightSettings(RegionLightShareData wl)
-        {
-            //This connector doesn't support the windlight module yet
-        }
+
         public RegionSettings LoadRegionSettings(UUID regionUUID)
         {
             lock (ds)
@@ -372,7 +344,7 @@ namespace OpenSim.Data.SQLite
 
             lock (ds)
             {
-                foreach (SceneObjectPart prim in obj.Parts)
+                foreach (SceneObjectPart prim in obj.ChildrenList)
                 {
 //                    m_log.Info("[REGION DB]: Adding obj: " + obj.UUID + " to region: " + regionUUID);
                     addPrim(prim, obj.UUID, regionUUID);
@@ -381,6 +353,42 @@ namespace OpenSim.Data.SQLite
 
             Commit();
             // m_log.Info("[Dump of prims]: " + ds.GetXml());
+        }
+
+        public void RemoveObjects(List<UUID> objGroups)
+        {
+            // m_log.InfoFormat("[REGION DB]: Removing obj: {0} from region: {1}", obj.Guid, regionUUID);
+
+            DataTable prims = ds.Tables["prims"];
+            DataTable shapes = ds.Tables["primshapes"];
+
+            string selectExp = "";
+            foreach (UUID obj in objGroups)
+            {
+                selectExp += "SceneGroupID = '" + obj + "' or ";
+            }
+            selectExp = selectExp.Remove(selectExp.Length - 4, 4);
+            lock (ds)
+            {
+                DataRow[] primRows = prims.Select(selectExp);
+                foreach (DataRow row in primRows)
+                {
+                    // Remove shape rows
+                    UUID uuid = new UUID((string)row["UUID"]);
+                    DataRow shapeRow = shapes.Rows.Find(uuid.ToString());
+                    if (shapeRow != null)
+                    {
+                        shapeRow.Delete();
+                    }
+
+                    RemoveItems(uuid);
+
+                    // Remove prim row
+                    row.Delete();
+                }
+            }
+
+            Commit();
         }
 
         /// <summary>
@@ -395,7 +403,7 @@ namespace OpenSim.Data.SQLite
             DataTable prims = ds.Tables["prims"];
             DataTable shapes = ds.Tables["primshapes"];
 
-            string selectExp = "SceneGroupID = '" + obj + "' and RegionUUID = '" + regionUUID + "'";
+            string selectExp = "SceneGroupID = '" + obj + "'";
             lock (ds)
             {
                 DataRow[] primRows = prims.Select(selectExp);
@@ -417,6 +425,34 @@ namespace OpenSim.Data.SQLite
             }
 
             Commit();
+        }
+
+        /// <summary>
+        /// Removes an object from region storage
+        /// </summary>
+        /// <param name="obj">the object</param>
+        /// <param name="regionUUID">the region UUID</param>
+        public void RemoveRegion(UUID regionUUID)
+        {
+            DateTime start = DateTime.Now;
+            // m_log.InfoFormat("[REGION DB]: Removing obj: {0} from region: {1}", obj.Guid, regionUUID);
+
+            DataTable prims = ds.Tables["prims"];
+            
+            string selectExp = "RegionUUID = '" + regionUUID + "'";
+            lock (ds)
+            {
+                DataRow[] primRows = prims.Select(selectExp);
+                foreach (DataRow row in primRows)
+                {
+                    row.Delete();
+                }
+            }
+            m_log.Warn("First SQL Delete Step: " + (DateTime.Now - start).Seconds);
+
+            Commit("prims");
+
+            m_log.Warn("Second SQL Delete Step: " + (DateTime.Now - start).Seconds);
         }
 
         /// <summary>
@@ -524,6 +560,12 @@ namespace OpenSim.Data.SQLite
                                 prim.Shape = PrimitiveBaseShape.Default;
                             }
 
+                            if (!createdObjects.ContainsKey(new UUID(objID)))
+                            {
+                                Console.WriteLine("Found an SceneObjectPart without a SceneObjectGroup! ObjectID: " + objID);
+                                continue;
+                            }
+
                             createdObjects[new UUID(objID)].AddPart(prim);
                             LoadItems(prim);
                         }
@@ -547,17 +589,17 @@ namespace OpenSim.Data.SQLite
         /// </summary>
         /// <param name="prim">the prim</param>
         private void LoadItems(SceneObjectPart prim)
-        {
-//            m_log.DebugFormat("[SQLITE REGION DB]: Loading inventory for {0} {1}", prim.Name, prim.UUID);
-
+        {                			
+//			m_log.DebugFormat("[SQLITE REGION DB]: Loading inventory for {0} {1}", prim.Name, prim.UUID);
+			
             DataTable dbItems = ds.Tables["primitems"];
-            String sql = String.Format("primID = '{0}'", prim.UUID.ToString());
+            String sql = String.Format("primID = '{0}'", prim.UUID.ToString());			
             DataRow[] dbItemRows = dbItems.Select(sql);
             IList<TaskInventoryItem> inventory = new List<TaskInventoryItem>();
 
-//            m_log.DebugFormat(
-//                "[SQLITE REGION DB]: Found {0} items for {1} {2}", dbItemRows.Length, prim.Name, prim.UUID);
-
+//			m_log.DebugFormat(
+//			    "[SQLITE REGION DB]: Found {0} items for {1} {2}", dbItemRows.Length, prim.Name, prim.UUID);
+			
             foreach (DataRow row in dbItemRows)
             {
                 TaskInventoryItem item = buildItem(row);
@@ -574,7 +616,7 @@ namespace OpenSim.Data.SQLite
         /// </summary>
         /// <param name="ter">terrain heightfield</param>
         /// <param name="regionID">region UUID</param>
-        public void StoreTerrain(double[,] ter, UUID regionID)
+        public void StoreTerrain(double[,] ter, UUID regionID, bool Revert)
         {
             lock (ds)
             {
@@ -589,9 +631,10 @@ namespace OpenSim.Data.SQLite
 
                 using (
                     SqliteCommand cmd =
-                        new SqliteCommand("delete from terrain where RegionUUID=:RegionUUID and Revision <= :Revision",
+                        new SqliteCommand("delete from terrain where RegionUUID=:RegionUUID and Revision <= :Revision and Revert = :Revert",
                                           m_conn))
                 {
+                    cmd.Parameters.Add(new SqliteParameter(":Revert", Revert.ToString()));
                     cmd.Parameters.Add(new SqliteParameter(":RegionUUID", regionID.ToString()));
                     cmd.Parameters.Add(new SqliteParameter(":Revision", revision));
                     cmd.ExecuteNonQuery();
@@ -600,14 +643,15 @@ namespace OpenSim.Data.SQLite
                 // the following is an work around for .NET.  The perf
                 // issues associated with it aren't as bad as you think.
                 m_log.Debug("[SQLITE REGION DB]: Storing terrain revision r" + revision.ToString());
-                String sql = "insert into terrain(RegionUUID, Revision, Heightfield)" +
-                             " values(:RegionUUID, :Revision, :Heightfield)";
+                String sql = "insert into terrain(RegionUUID, Revision, Heightfield, Revert)" +
+                             " values(:RegionUUID, :Revision, :Heightfield, :Revert)";
 
                 using (SqliteCommand cmd = new SqliteCommand(sql, m_conn))
                 {
                     cmd.Parameters.Add(new SqliteParameter(":RegionUUID", regionID.ToString()));
                     cmd.Parameters.Add(new SqliteParameter(":Revision", revision));
                     cmd.Parameters.Add(new SqliteParameter(":Heightfield", serializeTerrain(ter)));
+                    cmd.Parameters.Add(new SqliteParameter(":Revert", Revert.ToString()));
                     cmd.ExecuteNonQuery();
                 }
             }
@@ -618,15 +662,24 @@ namespace OpenSim.Data.SQLite
         /// </summary>
         /// <param name="regionID">the region UUID</param>
         /// <returns>Heightfield data</returns>
-        public double[,] LoadTerrain(UUID regionID)
+        public double[,] LoadTerrain(UUID regionID, bool revert)
         {
             lock (ds)
             {
                 double[,] terret = new double[(int)Constants.RegionSize, (int)Constants.RegionSize];
                 terret.Initialize();
 
-                String sql = "select RegionUUID, Revision, Heightfield from terrain" +
-                             " where RegionUUID=:RegionUUID order by Revision desc";
+                String sql = "";
+                if (revert)
+                {
+                    sql = "select RegionUUID, Revision, Heightfield from terrain" +
+                              " where RegionUUID=:RegionUUID and Revert = 'True' order by Revision desc";
+                }
+                else
+                {
+                    sql = "select RegionUUID, Revision, Heightfield from terrain" +
+                              " where RegionUUID=:RegionUUID and Revert = 'False' order by Revision desc";
+                }
 
                 using (SqliteCommand cmd = new SqliteCommand(sql, m_conn))
                 {
@@ -670,7 +723,7 @@ namespace OpenSim.Data.SQLite
         ///
         /// </summary>
         /// <param name="globalID"></param>
-        public void RemoveLandObject(UUID globalID)
+        public void RemoveLandObject(UUID RegionID, UUID globalID)
         {
             lock (ds)
             {
@@ -706,6 +759,8 @@ namespace OpenSim.Data.SQLite
                 {
                     landaccesslist.Rows.Remove(rowsToDelete[iter]);
                 }
+
+               
             }
             Commit();
         }
@@ -714,23 +769,23 @@ namespace OpenSim.Data.SQLite
         ///
         /// </summary>
         /// <param name="parcel"></param>
-        public void StoreLandObject(ILandObject parcel)
+        public void StoreLandObject(LandData parcel)
         {
             lock (ds)
             {
                 DataTable land = ds.Tables["land"];
                 DataTable landaccesslist = ds.Tables["landaccesslist"];
 
-                DataRow landRow = land.Rows.Find(parcel.LandData.GlobalID.ToString());
+                DataRow landRow = land.Rows.Find(parcel.GlobalID.ToString());
                 if (landRow == null)
                 {
                     landRow = land.NewRow();
-                    fillLandRow(landRow, parcel.LandData, parcel.RegionUUID);
+                    fillLandRow(landRow, parcel, parcel.RegionID);
                     land.Rows.Add(landRow);
                 }
                 else
                 {
-                    fillLandRow(landRow, parcel.LandData, parcel.RegionUUID);
+                    fillLandRow(landRow, parcel, parcel.RegionID);
                 }
 
                 // I know this caused someone issues before, but OpenSim is unusable if we leave this stuff around
@@ -747,7 +802,7 @@ namespace OpenSim.Data.SQLite
                 List<DataRow> rowsToDelete = new List<DataRow>();
                 foreach (DataRow rowToCheck in landaccesslist.Rows)
                 {
-                    if (rowToCheck["LandUUID"].ToString() == parcel.LandData.GlobalID.ToString())
+                    if (rowToCheck["LandUUID"].ToString() == parcel.GlobalID.ToString())
                         rowsToDelete.Add(rowToCheck);
                 }
                 for (int iter = 0; iter < rowsToDelete.Count; iter++)
@@ -755,10 +810,10 @@ namespace OpenSim.Data.SQLite
                     landaccesslist.Rows.Remove(rowsToDelete[iter]);
                 }
                 rowsToDelete.Clear();
-                foreach (ParcelManager.ParcelAccessEntry entry in parcel.LandData.ParcelAccessList)
+                foreach (ParcelManager.ParcelAccessEntry entry in parcel.ParcelAccessList)
                 {
                     DataRow newAccessRow = landaccesslist.NewRow();
-                    fillLandAccessRow(newAccessRow, entry, parcel.LandData.GlobalID);
+                    fillLandAccessRow(newAccessRow, entry, parcel.GlobalID);
                     landaccesslist.Rows.Add(newAccessRow);
                 }
             }
@@ -815,6 +870,43 @@ namespace OpenSim.Data.SQLite
                 try
                 {
                     regionSettingsDa.Update(ds, "regionsettings");
+                } 
+                catch (SqliteException SqlEx)
+                {
+                    throw new Exception(
+                        "There was a SQL error or connection string configuration error when saving the region settings.  This could be a bug, it could also happen if ConnectionString is defined in the [DatabaseService] section of StandaloneCommon.ini in the config_include folder.  This could also happen if the config_include folder doesn't exist or if the OpenSim.ini [Architecture] section isn't set.  If this is your first time running OpenSimulator, please restart the simulator and bug a developer to fix this!",
+                        SqlEx);
+                }
+                ds.AcceptChanges();
+            }
+        }
+
+        public void Commit(string type)
+        {
+            //m_log.Debug("[SQLITE]: Starting commit");
+            lock (ds)
+            {
+                if (type == "prims")
+                    primDa.Update(ds, "prims");
+
+                else if (type == "primshapes")
+                    shapeDa.Update(ds, "primshapes");
+
+                else if (type == "primitems")
+                    itemsDa.Update(ds, "primitems");
+
+                else if (type == "terrain")
+                    terrainDa.Update(ds, "terrain");
+
+                else if (type == "land")
+                    landDa.Update(ds, "land");
+
+                else if (type == "landaccesslist")
+                    landAccessListDa.Update(ds, "landaccesslist");
+                try
+                {
+                    if (type == "regionsettings")
+                        regionSettingsDa.Update(ds, "regionsettings");
                 }
                 catch (SqliteException SqlEx)
                 {
@@ -986,8 +1078,6 @@ namespace OpenSim.Data.SQLite
 
             createCol(prims, "VolumeDetect", typeof(Int16));
 
-            createCol(prims, "MediaURL", typeof(String));
-
             // Add in contraints
             prims.PrimaryKey = new DataColumn[] {prims.Columns["UUID"]};
 
@@ -1034,7 +1124,6 @@ namespace OpenSim.Data.SQLite
             // way to specify this as a blob atm
             createCol(shapes, "Texture", typeof (Byte[]));
             createCol(shapes, "ExtraParams", typeof (Byte[]));
-            createCol(shapes, "Media", typeof(String));
 
             shapes.PrimaryKey = new DataColumn[] {shapes.Columns["UUID"]};
 
@@ -1121,6 +1210,7 @@ namespace OpenSim.Data.SQLite
             createCol(land, "UserLookAtZ", typeof (Double));
             createCol(land, "AuthbuyerID", typeof(String));
             createCol(land, "OtherCleanTime", typeof(Int32));
+            createCol(land, "Dwell", typeof(Int32));
 
             land.PrimaryKey = new DataColumn[] {land.Columns["UUID"]};
 
@@ -1202,10 +1292,10 @@ namespace OpenSim.Data.SQLite
         private SceneObjectPart buildPrim(DataRow row)
         {
             // Code commented.  Uncomment to test the unit test inline.
-
-            // The unit test mentions this commented code for the purposes
+            
+            // The unit test mentions this commented code for the purposes 
             // of debugging a unit test failure
-
+            
             // SceneObjectGroup sog = new SceneObjectGroup();
             // SceneObjectPart sop = new SceneObjectPart();
             // sop.LocalId = 1;
@@ -1222,7 +1312,7 @@ namespace OpenSim.Data.SQLite
             // TODO: this doesn't work yet because something more
             // interesting has to be done to actually get these values
             // back out.  Not enough time to figure it out yet.
-
+            
             SceneObjectPart prim = new SceneObjectPart();
             prim.UUID = new UUID((String) row["UUID"]);
             // explicit conversion of integers is required, which sort
@@ -1319,20 +1409,20 @@ namespace OpenSim.Data.SQLite
                 Convert.ToSingle(row["OmegaZ"])
                 );
 
-            prim.SetCameraEyeOffset(new Vector3(
+            prim.CameraEyeOffset = new Vector3(
                 Convert.ToSingle(row["CameraEyeOffsetX"]),
                 Convert.ToSingle(row["CameraEyeOffsetY"]),
                 Convert.ToSingle(row["CameraEyeOffsetZ"])
-                ));
+                );
 
-            prim.SetCameraAtOffset(new Vector3(
+            prim.CameraAtOffset = new Vector3(
                 Convert.ToSingle(row["CameraAtOffsetX"]),
                 Convert.ToSingle(row["CameraAtOffsetY"]),
                 Convert.ToSingle(row["CameraAtOffsetZ"])
-                ));
+                );
 
             if (Convert.ToInt16(row["ForceMouselook"]) != 0)
-                prim.SetForceMouselook(true);
+                prim.ForceMouselook = (true);
 
             prim.ScriptAccessPin = Convert.ToInt32(row["ScriptAccessPin"]);
 
@@ -1353,11 +1443,7 @@ namespace OpenSim.Data.SQLite
             if (Convert.ToInt16(row["VolumeDetect"]) != 0)
                 prim.VolumeDetectActive = true;
 
-            if (!(row["MediaURL"] is System.DBNull))
-            {
-                //m_log.DebugFormat("[SQLITE]: MediaUrl type [{0}]", row["MediaURL"].GetType());
-                prim.MediaUrl = (string)row["MediaURL"];
-            }
+            prim.GenericData = row["Generic"].ToString();
 
             return prim;
         }
@@ -1392,7 +1478,9 @@ namespace OpenSim.Data.SQLite
             taskItem.BasePermissions      = Convert.ToUInt32(row["basePermissions"]);
             taskItem.EveryonePermissions  = Convert.ToUInt32(row["everyonePermissions"]);
             taskItem.GroupPermissions     = Convert.ToUInt32(row["groupPermissions"]);
-            taskItem.Flags         = Convert.ToUInt32(row["flags"]);
+            taskItem.Flags = Convert.ToUInt32(row["flags"]);
+            taskItem.SalePrice = Convert.ToInt32(row["salePrice"]);
+            taskItem.SaleType = Convert.ToByte(row["saleType"]);
 
             return taskItem;
         }
@@ -1458,6 +1546,7 @@ namespace OpenSim.Data.SQLite
             UUID.TryParse((string)row["AuthbuyerID"], out authBuyerID);
 
             newData.OtherCleanTime = Convert.ToInt32(row["OtherCleanTime"]);
+            newData.Dwell = Convert.ToInt32(row["Dwell"]);
 
             return newData;
         }
@@ -1632,6 +1721,7 @@ namespace OpenSim.Data.SQLite
             row["PayButton3"] = prim.PayPrice[3];
             row["PayButton4"] = prim.PayPrice[4];
 
+
             row["TextureAnimation"] = Convert.ToBase64String(prim.TextureAnimation);
             row["ParticleSystem"] = Convert.ToBase64String(prim.ParticleSystem);
 
@@ -1639,13 +1729,13 @@ namespace OpenSim.Data.SQLite
             row["OmegaY"] = prim.AngularVelocity.Y;
             row["OmegaZ"] = prim.AngularVelocity.Z;
 
-            row["CameraEyeOffsetX"] = prim.GetCameraEyeOffset().X;
-            row["CameraEyeOffsetY"] = prim.GetCameraEyeOffset().Y;
-            row["CameraEyeOffsetZ"] = prim.GetCameraEyeOffset().Z;
+            row["CameraEyeOffsetX"] = prim.CameraEyeOffset.X;
+            row["CameraEyeOffsetY"] = prim.CameraEyeOffset.Y;
+            row["CameraEyeOffsetZ"] = prim.CameraEyeOffset.Z;
 
-            row["CameraAtOffsetX"] = prim.GetCameraAtOffset().X;
-            row["CameraAtOffsetY"] = prim.GetCameraAtOffset().Y;
-            row["CameraAtOffsetZ"] = prim.GetCameraAtOffset().Z;
+            row["CameraAtOffsetX"] = prim.CameraAtOffset.X;
+            row["CameraAtOffsetY"] = prim.CameraAtOffset.Y;
+            row["CameraAtOffsetZ"] = prim.CameraAtOffset.Z;
 
 
             if ((prim.SoundFlags & 1) != 0) // Looped
@@ -1659,7 +1749,7 @@ namespace OpenSim.Data.SQLite
                 row["LoopedSoundGain"] = 0.0f;
             }
 
-            if (prim.GetForceMouselook())
+            if (prim.ForceMouselook)
                 row["ForceMouselook"] = 1;
             else
                 row["ForceMouselook"] = 0;
@@ -1692,7 +1782,8 @@ namespace OpenSim.Data.SQLite
             else
                 row["VolumeDetect"] = 0;
 
-            row["MediaURL"] = prim.MediaUrl;
+            row["Generic"] = prim.GenericData;
+
         }
 
         /// <summary>
@@ -1723,6 +1814,8 @@ namespace OpenSim.Data.SQLite
             row["everyonePermissions"] = taskItem.EveryonePermissions;
             row["groupPermissions"] = taskItem.GroupPermissions;
             row["flags"] = taskItem.Flags;
+            row["salePrice"] = taskItem.SalePrice;
+            row["saleType"] = taskItem.SaleType;
         }
 
         /// <summary>
@@ -1769,12 +1862,7 @@ namespace OpenSim.Data.SQLite
             row["UserLookAtZ"] = land.UserLookAt.Z;
             row["AuthbuyerID"] = land.AuthBuyerID.ToString();
             row["OtherCleanTime"] = land.OtherCleanTime;
-            row["MediaType"] = land.MediaType;
-            row["MediaDescription"] = land.MediaDescription;
-            row["MediaSize"] = land.MediaWidth.ToString() + "," + land.MediaHeight.ToString();
-            row["MediaLoop"] = land.MediaLoop.ToString();
-            row["ObscureMusic"] = land.ObscureMusic.ToString();
-            row["ObscureMedia"] = land.ObscureMedia.ToString();
+            row["Dwell"] = land.Dwell;
         }
 
         /// <summary>
@@ -1872,10 +1960,6 @@ namespace OpenSim.Data.SQLite
             s.TextureEntry = textureEntry;
 
             s.ExtraParams = (byte[]) row["ExtraParams"];
-
-            if (!(row["Media"] is System.DBNull))
-                s.Media = PrimitiveBaseShape.MediaList.FromXml((string)row["Media"]);
-
             return s;
         }
 
@@ -1919,19 +2003,17 @@ namespace OpenSim.Data.SQLite
 
             row["Texture"] = s.TextureEntry;
             row["ExtraParams"] = s.ExtraParams;
-
-            if (s.Media != null)
-                row["Media"] = s.Media.ToXml();
         }
 
         /// <summary>
-        /// Persistently store a prim.
+        ///
         /// </summary>
         /// <param name="prim"></param>
         /// <param name="sceneGroupID"></param>
         /// <param name="regionUUID"></param>
         private void addPrim(SceneObjectPart prim, UUID sceneGroupID, UUID regionUUID)
         {
+
             DataTable prims = ds.Tables["prims"];
             DataTable shapes = ds.Tables["primshapes"];
 
@@ -1961,6 +2043,7 @@ namespace OpenSim.Data.SQLite
         }
 
         /// <summary>
+        /// see IRegionDatastore
         /// </summary>
         /// <param name="primID"></param>
         /// <param name="items"></param>
@@ -1979,14 +2062,12 @@ namespace OpenSim.Data.SQLite
                 // repalce with current inventory details
                 foreach (TaskInventoryItem newItem in items)
                 {
-//                    m_log.InfoFormat(
-//                        "[DATASTORE]: ",
-//                        "Adding item {0}, {1} to prim ID {2}",
-//                        newItem.Name, newItem.ItemID, newItem.ParentPartID);
-
                     DataRow newItemRow = dbItems.NewRow();
                     fillItemRow(newItemRow, newItem);
                     dbItems.Rows.Add(newItemRow);
+                    //m_log.InfoFormat(
+                    //    "[DATASTORE]: Adding item {0}, {1} to prim ID {2}",
+                    //    newItem.Name, newItem.ItemID, newItem.ParentPartID);
                 }
             }
 
@@ -2257,6 +2338,7 @@ namespace OpenSim.Data.SQLite
             delete.Parameters.Add(createSqliteParameter("AccessUUID", typeof(String)));
             da.DeleteCommand = delete;
             da.DeleteCommand.Connection = conn;
+            
         }
 
         private void setupRegionSettingsCommands(SqliteDataAdapter da, SqliteConnection conn)
@@ -2328,7 +2410,7 @@ namespace OpenSim.Data.SQLite
                 return DbType.String;
             }
         }
-
+        
         static void PrintDataSet(DataSet ds)
         {
           // Print out any name and extended properties.

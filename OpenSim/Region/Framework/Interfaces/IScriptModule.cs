@@ -57,8 +57,10 @@ namespace OpenSim.Region.Framework.Interfaces
 
         string TestCompileScript(UUID assetID, UUID itemID);
 
-        void SaveStateSave(UUID itemID);
-        List<UUID> GetScriptKeys(uint localID);
         void UpdateScriptToNewObject(UUID olditemID, OpenSim.Framework.TaskInventoryItem newItem, OpenSim.Region.Framework.Scenes.SceneObjectPart newPart);
+
+        void SaveStateSave(UUID uUID, UUID uUID_2);
+
+        List<string> GetAllFunctionNames();
     }
 }

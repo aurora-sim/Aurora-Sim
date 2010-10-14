@@ -65,13 +65,13 @@ namespace OpenSim.Region.RegionCombinerModule
 
         public void Initialise(IConfigSource source)
         {
-            IConfig myConfig = source.Configs["Startup"];
-            enabledYN = myConfig.GetBoolean("CombineContiguousRegions", false);
-            //enabledYN = true;
+            IConfig RegionCombinerConfig = source.Configs["RegionCombiner"];
+            enabledYN = RegionCombinerConfig.GetBoolean("CombineContiguousRegions", false);
+            
             if (enabledYN)
                 MainConsole.Instance.Commands.AddCommand("RegionCombinerModule", false, "fix-phantoms",
                     "Fix phantom objects", "Fixes phantom objects after an import to megaregions", FixPhantoms);
-            }
+        }
 
         public void Close()
         {
@@ -493,7 +493,7 @@ namespace OpenSim.Region.RegionCombinerModule
             // Reset Terrain..  since terrain loads before we get here, we need to load 
             // it again so it loads in the root region
 
-            scene.PhysicsScene.SetTerrain(scene.Heightmap.GetFloatsSerialised());
+            scene.PhysicsScene.SetTerrain(scene.Heightmap.GetFloatsSerialised(), scene.Heightmap.GetDoubles());
 
             // Unlock borders
             conn.RegionScene.BordersLocked = false;
@@ -550,7 +550,7 @@ namespace OpenSim.Region.RegionCombinerModule
 
             // Reset Terrain..  since terrain normally loads first.
             //conn.RegionScene.PhysicsScene.SetTerrain(conn.RegionScene.Heightmap.GetFloatsSerialised());
-            scene.PhysicsScene.SetTerrain(scene.Heightmap.GetFloatsSerialised());
+            scene.PhysicsScene.SetTerrain(scene.Heightmap.GetFloatsSerialised(), scene.Heightmap.GetDoubles());
             //conn.RegionScene.PhysicsScene.SetTerrain(conn.RegionScene.Heightmap.GetFloatsSerialised());
 
             scene.BordersLocked = false;
@@ -646,7 +646,7 @@ namespace OpenSim.Region.RegionCombinerModule
 
             // Reset Terrain..  since terrain normally loads first.
             //conn.RegionScene.PhysicsScene.SetTerrain(conn.RegionScene.Heightmap.GetFloatsSerialised());
-            scene.PhysicsScene.SetTerrain(scene.Heightmap.GetFloatsSerialised());
+            scene.PhysicsScene.SetTerrain(scene.Heightmap.GetFloatsSerialised(), scene.Heightmap.GetDoubles());
             //conn.RegionScene.PhysicsScene.SetTerrain(conn.RegionScene.Heightmap.GetFloatsSerialised());
             scene.BordersLocked = false;
             conn.RegionScene.BordersLocked = false;
@@ -861,10 +861,9 @@ namespace OpenSim.Region.RegionCombinerModule
             flags |= RegionFlags.AllowLandmark;
             flags |= RegionFlags.AllowSetHome;
 
-            // TODO: SkipUpdateInterestList
-
             // Omitted
             //
+            // Omitted: SkipUpdateInterestList (what does it do?)
             // Omitted: NullLayer (what is that?)
             // Omitted: SkipAgentAction (what does it do?)
 
@@ -1012,7 +1011,7 @@ namespace OpenSim.Region.RegionCombinerModule
             {
                 if (r.Offset.X == offset.X && r.Offset.Y == offset.Y)
                 {
-                    return r.RegionScene.SceneGraph.GetControllingClient(uUID);
+                    return r.RegionScene.GetControllingClient(uUID);
                 }
             }
 
@@ -1024,7 +1023,7 @@ namespace OpenSim.Region.RegionCombinerModule
         }
         
         /// <summary>
-        /// TODO:
+        /// TODO: UnCombineRegion
         /// </summary>
         /// <param name="rdata"></param>
         public void UnCombineRegion(RegionData rdata)

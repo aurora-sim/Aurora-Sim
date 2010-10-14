@@ -99,7 +99,9 @@ namespace OpenSim.Region.CoreModules.Scripting.LSLHttp
 
         public void Initialise(IConfigSource config)
         {
-            m_ExternalHostNameForLSL = config.Configs["Network"].GetString("ExternalHostNameForLSL", System.Environment.MachineName);
+            m_ExternalHostNameForLSL = System.Environment.MachineName;
+            if(config.Configs["LSLRemoting"] != null)
+                m_ExternalHostNameForLSL = config.Configs["LSLRemoting"].GetString("ExternalHostNameForLSL", System.Environment.MachineName);
         }
 
         public void PostInitialise()

@@ -58,68 +58,54 @@ namespace Aurora.Modules
         private Scene m_scene;
         private IConfigSource m_config;
         private IProfileConnector ProfileFrontend = null;
-        private IConfigSource m_gConfig;
         private List<Scene> m_Scenes = new List<Scene>();
-        private bool m_SearchEnabled = true;
-        protected IFriendsService m_FriendsService = null;
-        protected IGroupsModule GroupsModule = null;
-        protected IDirectoryServiceConnector DSC = null;
+        private bool m_SearchEnabled = false;
+        private IGroupsModule GroupsModule = null;
+        private IDirectoryServiceConnector DSC = null;
 
         #endregion
 
-        #region IRegionModule Members
+        #region ISharedRegionModule Members
 
         public void Initialise(IConfigSource config)
         {
             m_config = config;
-            m_gConfig = config;
             IConfig searchConfig = config.Configs["Search"];
-            if (searchConfig == null)
-            {
-                m_log.Info("[AuroraSearch] Not configured, disabling");
-                m_SearchEnabled = false;
-                return;
-            }
-            IConfig friendsConfig = config.Configs["Friends"];
-            if (friendsConfig != null)
-            {
-                int mPort = friendsConfig.GetInt("Port", 0);
-
-                string connector = friendsConfig.GetString("Connector", String.Empty);
-                Object[] args = new Object[] { config };
-
-                m_FriendsService = ServerUtils.LoadPlugin<IFriendsService>(connector, args);
-
-            }
-            if (m_FriendsService == null)
-            {
-                m_log.Error("[AuroraSearch]: No Connector defined in section Friends, or filed to load, cannot continue");
-                m_SearchEnabled = false;
-            }
-            else if (searchConfig.GetString("SearchModule", Name) != Name)
-            {
-                m_SearchEnabled = false;
-            }
+            if (searchConfig != null)
+                if (searchConfig.GetString("SearchModule", Name) == Name)
+                    m_SearchEnabled = true;
         }
 
         public void AddRegion(Scene scene)
         {
-            ProfileFrontend = DataManager.DataManager.RequestPlugin<IProfileConnector>("IProfileConnector");
+            if (!m_SearchEnabled)
+                return;
 
             if (!m_Scenes.Contains(scene))
                 m_Scenes.Add(scene);
             m_scene = scene;
             m_scene.EventManager.OnNewClient += NewClient;
+            m_scene.EventManager.OnClientClosed += RemoveClient;
         }
 
         public void RemoveRegion(Scene scene)
         {
-            m_Scenes.Remove(scene);
+            if (!m_SearchEnabled)
+                return;
+
+            if (m_Scenes.Contains(scene))
+                m_Scenes.Remove(scene);
+            m_scene.EventManager.OnNewClient -= NewClient;
+            m_scene.EventManager.OnClientClosed -= RemoveClient;
         }
 
         public void RegionLoaded(Scene scene)
         {
-            DSC = Aurora.DataManager.DataManager.RequestPlugin<IDirectoryServiceConnector>("IDirectoryServiceConnector");
+            if (!m_SearchEnabled)
+                return;
+
+            ProfileFrontend = DataManager.DataManager.RequestPlugin<IProfileConnector>();
+            DSC = Aurora.DataManager.DataManager.RequestPlugin<IDirectoryServiceConnector>();
             GroupsModule = m_scene.RequestModuleInterface<IGroupsModule>();
         }
 
@@ -152,46 +138,30 @@ namespace Aurora.Modules
 
         public void NewClient(IClientAPI client)
         {
-            if (m_SearchEnabled)
-            {
-                // Subscribe to messages
-                client.OnDirPlacesQuery += DirPlacesQuery;
-                client.OnDirFindQuery += DirFindQuery;
-                client.OnDirPopularQuery += DirPopularQuery;
-                client.OnDirLandQuery += DirLandQuery;
-                client.OnDirClassifiedQuery += DirClassifiedQuery;
-                // Response after Directory Queries
-                client.OnEventInfoRequest += EventInfoRequest;
-                client.OnMapItemRequest += HandleMapItemRequest;
-                client.OnPlacesQuery += OnPlacesQueryRequest;
-            }
+            // Subscribe to messages
+            client.OnDirPlacesQuery += DirPlacesQuery;
+            client.OnDirFindQuery += DirFindQuery;
+            client.OnDirPopularQuery += DirPopularQuery;
+            client.OnDirLandQuery += DirLandQuery;
+            client.OnDirClassifiedQuery += DirClassifiedQuery;
+            // Response after Directory Queries
+            client.OnEventInfoRequest += EventInfoRequest;
+            client.OnMapItemRequest += HandleMapItemRequest;
+            client.OnPlacesQuery += OnPlacesQueryRequest;
         }
 
-        public void RemoveClient(IClientAPI client)
+        public void RemoveClient(UUID clientID, Scene scene)
         {
-        }
-
-        #endregion
-
-        #region Helpers
-
-        private bool IsFriendOfUser(UUID friend, UUID requested)
-        {
-            OpenSim.Services.Interfaces.FriendInfo[] friendList = m_FriendsService.GetFriends(requested);
-            if (friend == requested)
-                return true;
-
-            foreach (OpenSim.Services.Interfaces.FriendInfo item in friendList)
-            {
-                if (item.PrincipalID == friend)
-                {
-                    return true;
-                }
-            }
-            ScenePresence sp = m_scene.GetScenePresence(friend);
-            if (sp.GodLevel != 0)
-                return true;
-            return false;
+            IClientAPI client = scene.GetScenePresence(clientID).ControllingClient;
+            client.OnDirPlacesQuery -= DirPlacesQuery;
+            client.OnDirFindQuery -= DirFindQuery;
+            client.OnDirPopularQuery -= DirPopularQuery;
+            client.OnDirLandQuery -= DirLandQuery;
+            client.OnDirClassifiedQuery -= DirClassifiedQuery;
+            // Response after Directory Queries
+            client.OnEventInfoRequest -= EventInfoRequest;
+            client.OnMapItemRequest -= HandleMapItemRequest;
+            client.OnPlacesQuery -= OnPlacesQueryRequest;
         }
 
         #endregion
@@ -212,18 +182,10 @@ namespace Aurora.Modules
                                       string queryText, int queryFlags, int category, string simName,
                                       int queryStart)
         {
-            DirPlacesReplyData[] ReturnValues = DSC.FindLand(queryText, category.ToString(), queryStart);
+            DirPlacesReplyData[] ReturnValues = DSC.FindLand(queryText, category.ToString(), queryStart, (uint)queryFlags);
             if (ReturnValues.Length > 10)
             {
-                DirPlacesReplyData[] data;
-                if (ReturnValues.Length < 10)
-                {
-                    data = new DirPlacesReplyData[ReturnValues.Length];
-                }
-                else
-                {
-                    data = new DirPlacesReplyData[10];
-                }
+                DirPlacesReplyData[] data = new DirPlacesReplyData[10];
 
                 int i = 0;
                 foreach (DirPlacesReplyData d in ReturnValues)
@@ -273,18 +235,10 @@ namespace Aurora.Modules
                                  uint queryFlags, uint searchType, int price, int area,
                                  int queryStart)
         {
-            DirLandReplyData[] ReturnValues = DSC.FindLandForSale(searchType.ToString(), price.ToString(), area.ToString(), queryStart);
+            DirLandReplyData[] ReturnValues = DSC.FindLandForSale(searchType.ToString(), price.ToString(), area.ToString(), queryStart, queryFlags);
             if (ReturnValues.Length > 10)
             {
-                DirLandReplyData[] data;
-                if (ReturnValues.Length < 10)
-                {
-                    data = new DirLandReplyData[ReturnValues.Length];
-                }
-                else
-                {
-                    data = new DirLandReplyData[10];
-                }
+                DirLandReplyData[] data = new DirLandReplyData[10];
                 
                 int i = 0;
                 foreach (DirLandReplyData d in ReturnValues)
@@ -328,6 +282,7 @@ namespace Aurora.Modules
             }
         }
 
+        //TODO: Flagged to optimize
         public void DirPeopleQuery(IClientAPI remoteClient, UUID queryID,
                                    string queryText, uint queryFlags, int queryStart)
         {
@@ -362,9 +317,8 @@ namespace Aurora.Modules
                         data[i].online = true;
                     data[i].reputation = 0;
                     i++;
-                    continue;
                 }
-                if (UserProfile.AllowPublish)
+                else if (UserProfile.AllowPublish)
                 {
                     data[i] = new DirPeopleReplyData();
                     data[i].agentID = item.PrincipalID;
@@ -383,22 +337,15 @@ namespace Aurora.Modules
                         }
                     }
                     OpenSim.Services.Interfaces.GridUserInfo Pinfo = m_scene.GridUserService.GetGridUserInfo(item.PrincipalID.ToString());
-                    data[i].online = Pinfo.Online;
+                    if (Pinfo != null)
+                        data[i].online = true;
                     data[i].reputation = 0;
                     i++;
                 }
             }
             if (data.Length > 10)
             {
-                DirPeopleReplyData[] retvals;
-                if (data.Length < 10)
-                {
-                    retvals = new DirPeopleReplyData[data.Length];
-                }
-                else
-                {
-                    retvals = new DirPeopleReplyData[10];
-                }
+                DirPeopleReplyData[] retvals = new DirPeopleReplyData[10];
                 
                 i = 0;
                 foreach (DirPeopleReplyData d in data)
@@ -431,17 +378,9 @@ namespace Aurora.Modules
         {
             DirEventsReplyData[] ReturnValues = DSC.FindEvents(queryText, queryFlags.ToString(), queryStart);
 
-            if (ReturnValues.Length != 0)
+            if (ReturnValues.Length > 10)
             {
-                DirEventsReplyData[] data;
-                if (ReturnValues.Length < 10)
-                {
-                    data = new DirEventsReplyData[ReturnValues.Length];
-                }
-                else
-                {
-                    data = new DirEventsReplyData[10];
-                }
+                DirEventsReplyData[] data = new DirEventsReplyData[10];
                 int i = 0;
 
                 foreach (DirEventsReplyData d in ReturnValues)
@@ -465,9 +404,7 @@ namespace Aurora.Modules
                 remoteClient.SendDirEventsReply(queryID, data);
             }
             else
-            {
                 remoteClient.SendDirEventsReply(queryID, ReturnValues);
-            }
         }
 
         public void DirClassifiedQuery(IClientAPI remoteClient, UUID queryID,
@@ -475,17 +412,9 @@ namespace Aurora.Modules
                                        int queryStart)
         {
             DirClassifiedReplyData[] ReturnValues = DSC.FindClassifieds(queryText, category.ToString(), queryFlags.ToString(), queryStart);
-            if (ReturnValues.Length != 0)
+            if (ReturnValues.Length > 10)
             {
-                DirClassifiedReplyData[] data;
-                if (ReturnValues.Length < 10)
-                {
-                    data = new DirClassifiedReplyData[ReturnValues.Length];
-                }
-                else
-                {
-                    data = new DirClassifiedReplyData[10];
-                }
+                DirClassifiedReplyData[] data = new DirClassifiedReplyData[10];
                 int i = 0;
 
                 foreach (DirClassifiedReplyData d in ReturnValues)
@@ -509,9 +438,7 @@ namespace Aurora.Modules
                 remoteClient.SendDirClassifiedReply(queryID, data);
             }
             else
-            {
                 remoteClient.SendDirClassifiedReply(queryID, ReturnValues);
-            }
         }
 
         public void EventInfoRequest(IClientAPI remoteClient, uint queryEventID)
@@ -535,7 +462,9 @@ namespace Aurora.Modules
             #region Telehub
             if (itemtype == (uint)OpenMetaverse.GridItemType.Telehub)
             {
-                IRegionConnector GF = DataManager.DataManager.RequestPlugin<IRegionConnector>("IRegionConnector");
+                IRegionConnector GF = DataManager.DataManager.RequestPlugin<IRegionConnector>();
+                if (GF == null)
+                    return;
                 int tc = Environment.TickCount;
                 Telehub telehub = GF.FindTelehub(GR.RegionID);
                 if (telehub != null)
@@ -559,13 +488,15 @@ namespace Aurora.Modules
 
             if (itemtype == (uint)OpenMetaverse.GridItemType.LandForSale)
             {
-                DirLandReplyData[] Landdata = DSC.FindLandForSale("4294967295", int.MaxValue.ToString(), "0", 0);
+                if (DSC == null)
+                    return;
+                DirLandReplyData[] Landdata = DSC.FindLandForSale("4294967295", int.MaxValue.ToString(), "0", 0, (uint)DirectoryManager.DirFindFlags.IncludePG);
                 
                 uint locX = 0;
                 uint locY = 0;
                 foreach (DirLandReplyData landDir in Landdata)
                 {
-                    AuroraLandData landdata = DSC.GetParcelInfo(landDir.parcelID);
+                    LandData landdata = DSC.GetParcelInfo(landDir.parcelID);
                     if (landdata.Maturity != 0)
                     {
                         continue;
@@ -581,8 +512,8 @@ namespace Aurora.Modules
                     if (locY == 0 && locX == 0)
                         continue;
                     mapitem = new mapItemReply();
-                    mapitem.x = (uint)(locX + landdata.LandingX);
-                    mapitem.y = (uint)(locY + landdata.LandingY);
+                    mapitem.x = (uint)(locX + landdata.UserLocation.X);
+                    mapitem.y = (uint)(locY + landdata.UserLocation.Y);
                     mapitem.id = landDir.parcelID;
                     mapitem.name = landDir.name;
                     mapitem.Extra = landDir.actualArea;
@@ -598,13 +529,15 @@ namespace Aurora.Modules
 
             if (itemtype == (uint)OpenMetaverse.GridItemType.AdultLandForSale)
             {
-                DirLandReplyData[] Landdata = DSC.FindLandForSale("4294967295", int.MaxValue.ToString(), "0", 0);
+                if (DSC == null)
+                    return;
+                DirLandReplyData[] Landdata = DSC.FindLandForSale("4294967295", int.MaxValue.ToString(), "0",0, 0);
                 
                 uint locX = 0;
                 uint locY = 0;
                 foreach (DirLandReplyData landDir in Landdata)
                 {
-                    AuroraLandData landdata = DSC.GetParcelInfo(landDir.parcelID);
+                    LandData landdata = DSC.GetParcelInfo(landDir.parcelID);
                     if (landdata.Maturity == 0)
                     {
                         continue;
@@ -620,8 +553,8 @@ namespace Aurora.Modules
                     if (locY == 0 && locX == 0)
                         continue;
                     mapitem = new mapItemReply();
-                    mapitem.x = (uint)(locX + landdata.LandingX);
-                    mapitem.y = (uint)(locY + landdata.LandingY);
+                    mapitem.x = (uint)(locX + landdata.UserLocation.X);
+                    mapitem.y = (uint)(locY + landdata.UserLocation.Y);
                     mapitem.id = landDir.parcelID;
                     mapitem.name = landDir.name;
                     mapitem.Extra = landDir.actualArea;
@@ -641,6 +574,8 @@ namespace Aurora.Modules
 
             if (itemtype == (uint)OpenMetaverse.GridItemType.PgEvent)
             {
+                if (DSC == null)
+                    return;
                 DirEventsReplyData[] Eventdata = DSC.FindAllEventsInRegion(GR.RegionName);
                 foreach (DirEventsReplyData eventData in Eventdata)
                 {
@@ -670,6 +605,8 @@ namespace Aurora.Modules
 
             if (itemtype == (uint)OpenMetaverse.GridItemType.AdultEvent)
             {
+                if (DSC == null)
+                    return;
                 DirEventsReplyData[] Eventdata = DSC.FindAllEventsInRegion(GR.RegionName);
                 foreach (DirEventsReplyData eventData in Eventdata)
                 {
@@ -698,6 +635,8 @@ namespace Aurora.Modules
             }
             if (itemtype == (uint)OpenMetaverse.GridItemType.MatureEvent)
             {
+                if (DSC == null)
+                    return;
                 DirEventsReplyData[] Eventdata = DSC.FindAllEventsInRegion(GR.RegionName);
                 foreach (DirEventsReplyData eventData in Eventdata)
                 {
@@ -731,15 +670,15 @@ namespace Aurora.Modules
 
             if (itemtype == (uint)OpenMetaverse.GridItemType.Classified)
             {
+                if (DSC == null)
+                    return;
                 Classified[] Classifieds = DSC.GetClassifiedsInRegion(GR.RegionName);
                 foreach (Classified classified in Classifieds)
                 {
-                    Vector3 Position = new Vector3();
-                    Vector3.TryParse(classified.PosGlobal, out Position);
                     OpenSim.Services.Interfaces.GridRegion region = m_scene.GridService.GetRegionByName(UUID.Zero, classified.SimName);
                     mapitem = new mapItemReply();
-                    mapitem.x = (uint)(region.RegionLocX + Position.X);
-                    mapitem.y = (uint)(region.RegionLocY + Position.Y);
+                    mapitem.x = (uint)(region.RegionLocX + classified.GlobalPos.X);
+                    mapitem.y = (uint)(region.RegionLocY + classified.GlobalPos.Y);
                     mapitem.id = new UUID(classified.CreatorUUID);
                     mapitem.name = classified.Name;
                     mapitem.Extra = 0;
@@ -760,36 +699,44 @@ namespace Aurora.Modules
         {
             if (QueryFlags == 64) //Agent Owned
             {
-                AuroraLandData[] LandData = DSC.GetParcelByOwner(client.AgentId);
-                List<ExtendedAuroraLandData> parcels = new List<ExtendedAuroraLandData>();
-                foreach (AuroraLandData land in LandData)
+                LandData[] LandData = DSC.GetParcelByOwner(client.AgentId);
+                List<ExtendedLandData> parcels = new List<ExtendedLandData>();
+                foreach (LandData land in LandData)
                 {
-                    List<SimMap> map = m_scene.SimMapConnector.GetSimMap(land.RegionID, client.AgentId);
-                    if (map.Count != 0)
+                    OpenSim.Services.Interfaces.GridRegion region = m_scene.GridService.GetRegionByUUID(UUID.Zero, land.RegionID);
+                    if (region != null)
                     {
-                        ExtendedAuroraLandData parcel = new ExtendedAuroraLandData();
-                        parcel.ConvertFrom(land);
-                        parcel.RegionType = map[0].RegionType;
-                        parcel.RegionName = map[0].RegionName;
-                        parcel.GlobalPosX = map[0].RegionLocX + land.LandingX;
-                        parcel.GlobalPosY = map[0].RegionLocY + land.LandingY;
-                        parcels.Add(parcel);
-                    }
-                    else
-                    {
-                        OpenSim.Services.Interfaces.GridRegion region = m_scene.GridService.GetRegionByUUID(UUID.Zero, land.RegionID);
-                        if (region == null)
-                            continue;
-                        ExtendedAuroraLandData parcel = new ExtendedAuroraLandData();
-                        parcel.ConvertFrom(land);
+                        ExtendedLandData parcel = new ExtendedLandData();
+                        parcel.LandData = land;
                         parcel.RegionType = region.RegionType;
                         parcel.RegionName = region.RegionName;
-                        parcel.GlobalPosX = region.RegionLocX + land.LandingX;
-                        parcel.GlobalPosY = region.RegionLocY + land.LandingY;
+                        parcel.GlobalPosX = region.RegionLocX + land.UserLocation.X;
+                        parcel.GlobalPosY = region.RegionLocY + land.UserLocation.Y;
                         parcels.Add(parcel);
                     }
                 }
                 
+                client.SendPlacesQuery(parcels.ToArray(), QueryID, TransactionID);
+            }
+            if (QueryFlags == 256) //Group Owned
+            {
+                LandData[] LandData = DSC.GetParcelByOwner(QueryID);
+                List<ExtendedLandData> parcels = new List<ExtendedLandData>();
+                foreach (LandData land in LandData)
+                {
+                    OpenSim.Services.Interfaces.GridRegion region = m_scene.GridService.GetRegionByUUID(UUID.Zero, land.RegionID);
+                    if (region != null)
+                    {
+                        ExtendedLandData parcel = new ExtendedLandData();
+                        parcel.LandData = land;
+                        parcel.RegionType = region.RegionType;
+                        parcel.RegionName = region.RegionName;
+                        parcel.GlobalPosX = region.RegionLocX + land.UserLocation.X;
+                        parcel.GlobalPosY = region.RegionLocY + land.UserLocation.Y;
+                        parcels.Add(parcel);
+                    }
+                }
+
                 client.SendPlacesQuery(parcels.ToArray(), QueryID, TransactionID);
             }
         }

@@ -331,4 +331,7 @@ ALTER TABLE dbo.estate_map ADD CONSTRAINT
 
 COMMIT
 
+:VERSION 10
+
+alter table estate_settings add EstatePass varchar(36) not null default '';
 

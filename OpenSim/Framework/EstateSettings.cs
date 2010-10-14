@@ -66,6 +66,31 @@ namespace OpenSim.Framework
             set { m_EstatePass = value; }
         }
 
+        private bool m_AllowLandmark = true;
+
+        public bool AllowLandmark
+        {
+            get { return m_AllowLandmark; }
+            set { m_AllowLandmark = value; }
+        }
+
+        private bool m_AllowParcelChanges = true;
+
+        public bool AllowParcelChanges
+        {
+            get { return m_AllowParcelChanges; }
+            set { m_AllowParcelChanges = value; }
+        }
+
+        private bool m_AllowSetHome = true;
+
+        public bool AllowSetHome
+        {
+            get { return m_AllowSetHome; }
+            set { m_AllowSetHome = value; }
+        }
+        
+
         private uint m_ParentEstateID = 1;
 
         public uint ParentEstateID
@@ -284,31 +309,36 @@ namespace OpenSim.Framework
 
         public EstateSettings(Dictionary<string,object> values)
         {
-            EstateID = uint.Parse(values["EstateID"].ToString());
+            EstateID = (uint)int.Parse(values["EstateID"].ToString());
             EstateName = values["EstateName"].ToString();
-            AbuseEmailToEstateOwner = bool.Parse(values["AbuseEmailToEstateOwner"].ToString());
-            DenyAnonymous = bool.Parse(values["DenyAnonymous"].ToString());
-            ResetHomeOnTeleport = bool.Parse(values["ResetHomeOnTeleport"].ToString());
-            FixedSun = bool.Parse(values["FixedSun"].ToString());
-            DenyTransacted = bool.Parse(values["DenyTransacted"].ToString());
-            BlockDwell = bool.Parse(values["BlockDwell"].ToString());
-            DenyIdentified = bool.Parse(values["DenyIdentified"].ToString());
-            AllowVoice = bool.Parse(values["AllowVoice"].ToString());
-            UseGlobalTime = bool.Parse(values["UseGlobalTime"].ToString());
+            AbuseEmailToEstateOwner = int.Parse(values["AbuseEmailToEstateOwner"].ToString()) == 1;
+            DenyAnonymous = int.Parse(values["DenyAnonymous"].ToString()) == 1;
+            ResetHomeOnTeleport = int.Parse(values["ResetHomeOnTeleport"].ToString()) == 1;
+            FixedSun = int.Parse(values["FixedSun"].ToString()) == 1;
+            DenyTransacted = int.Parse(values["DenyTransacted"].ToString()) == 1;
+            BlockDwell = int.Parse(values["BlockDwell"].ToString()) == 1;
+            DenyIdentified = int.Parse(values["DenyIdentified"].ToString()) == 1;
+            AllowVoice = int.Parse(values["AllowVoice"].ToString()) == 1;
+            UseGlobalTime = int.Parse(values["UseGlobalTime"].ToString()) == 1;
             PricePerMeter = int.Parse(values["PricePerMeter"].ToString());
-            TaxFree = bool.Parse(values["TaxFree"].ToString());
-            AllowDirectTeleport = bool.Parse(values["AllowDirectTeleport"].ToString());
+            TaxFree = int.Parse(values["TaxFree"].ToString()) == 1;
+            AllowDirectTeleport = int.Parse(values["AllowDirectTeleport"].ToString()) == 1;
             RedirectGridX = int.Parse(values["RedirectGridX"].ToString());
             RedirectGridY = int.Parse(values["RedirectGridY"].ToString());
-            ParentEstateID = uint.Parse(values["ParentEstateID"].ToString());
+            ParentEstateID = (uint)int.Parse(values["ParentEstateID"].ToString());
             SunPosition = double.Parse(values["SunPosition"].ToString());
-            EstateSkipScripts = bool.Parse(values["EstateSkipScripts"].ToString());
+            EstateSkipScripts = int.Parse(values["EstateSkipScripts"].ToString()) == 1;
             BillableFactor = float.Parse(values["BillableFactor"].ToString());
-            PublicAccess = bool.Parse(values["PublicAccess"].ToString());
+            PublicAccess = int.Parse(values["PublicAccess"].ToString()) == 1;
             AbuseEmail = values["AbuseEmail"].ToString();
             EstateOwner = new UUID(values["EstateOwner"].ToString());
-            DenyMinors = bool.Parse(values["DenyMinors"].ToString());
-            EstatePass = values["EstatePass"].ToString();
+            AllowLandmark = int.Parse(values["AllowLandmark"].ToString()) == 1;
+            AllowParcelChanges = int.Parse(values["AllowParcelChanges"].ToString()) == 1;
+            AllowSetHome = int.Parse(values["AllowSetHome"].ToString()) == 1;
+            DenyMinors = int.Parse(values["DenyMinors"].ToString()) == 1;
+            //We always try to pull this in if it exists
+            if (values.ContainsKey("EstatePass"))
+                EstatePass = values["EstatePass"].ToString();
 
             Dictionary<string, object> Managers = values["EstateManagers"] as Dictionary<string, object>;
             List<UUID> NewManagers = new List<UUID>();
@@ -343,34 +373,39 @@ namespace OpenSim.Framework
             EstateGroups = NewGroups.ToArray();
         }
 
-        public Dictionary<string,object> ToKeyValuePairs()
+        public Dictionary<string,object> ToKeyValuePairs(bool Local)
         {
             Dictionary<string, object> values = new Dictionary<string, object>();
-            values["EstateID"] = EstateID;
+            values["EstateID"] = (int)EstateID;
             values["EstateName"] = EstateName;
-            values["AbuseEmailToEstateOwner"] = AbuseEmailToEstateOwner;
-            values["DenyAnonymous"] = DenyAnonymous;
-            values["ResetHomeOnTeleport"] = ResetHomeOnTeleport;
-            values["FixedSun"] = FixedSun;
-            values["DenyTransacted"] = DenyTransacted;
-            values["BlockDwell"] = BlockDwell;
-            values["DenyIdentified"] = DenyIdentified;
-            values["AllowVoice"] = AllowVoice;
-            values["UseGlobalTime"] = UseGlobalTime;
+            values["AbuseEmailToEstateOwner"] = (int)(AbuseEmailToEstateOwner ? 1 : 0);
+            values["DenyAnonymous"] = DenyAnonymous ? 1 : 0;
+            values["ResetHomeOnTeleport"] = ResetHomeOnTeleport ? 1 : 0;
+            values["FixedSun"] = FixedSun ? 1 : 0;
+            values["DenyTransacted"] = DenyTransacted ? 1 : 0;
+            values["BlockDwell"] = BlockDwell ? 1 : 0;
+            values["DenyIdentified"] = DenyIdentified ? 1 : 0;
+            values["AllowVoice"] = AllowVoice ? 1 : 0;
+            values["UseGlobalTime"] = UseGlobalTime ? 1 : 0;
             values["PricePerMeter"] = PricePerMeter;
-            values["TaxFree"] = TaxFree;
-            values["AllowDirectTeleport"] = AllowDirectTeleport;
+            values["TaxFree"] = TaxFree ? 1 : 0;
+            values["AllowDirectTeleport"] = AllowDirectTeleport ? 1 : 0;
             values["RedirectGridX"] = RedirectGridX;
             values["RedirectGridY"] = RedirectGridY;
-            values["ParentEstateID"] = ParentEstateID;
+            values["ParentEstateID"] = (int)ParentEstateID;
             values["SunPosition"] = SunPosition;
-            values["EstateSkipScripts"] = EstateSkipScripts;
+            values["EstateSkipScripts"] = EstateSkipScripts ? 1 : 0;
             values["BillableFactor"] = BillableFactor;
-            values["PublicAccess"] = PublicAccess;
+            values["PublicAccess"] = PublicAccess ? 1 : 0;
             values["AbuseEmail"] = AbuseEmail;
             values["EstateOwner"] = EstateOwner;
-            values["DenyMinors"] = DenyMinors;
-            values["EstatePass"] = EstatePass;
+            values["DenyMinors"] = DenyMinors ? 1 : 0;
+            values["AllowLandmark"] = AllowLandmark ? 1 : 0;
+            values["AllowParcelChanges"] = AllowParcelChanges ? 1 : 0;
+            values["AllowSetHome"] = AllowSetHome ? 1 : 0;
+            if(Local)
+                values["EstatePass"] = EstatePass; //For security, this is not sent unless it is for local
+
             Dictionary<string, object> Ban = new Dictionary<string, object>();
             int i = 0;
             foreach (EstateBan ban in EstateBans)
@@ -537,6 +572,15 @@ namespace OpenSim.Framework
                 return true;
 
             return l_EstateAccess.Contains(user);
+        }
+
+        public void SetFromFlags(ulong regionFlags)
+        {
+            ResetHomeOnTeleport = ((regionFlags & (ulong)RegionFlags.ResetHomeOnTeleport) == (ulong)RegionFlags.ResetHomeOnTeleport);
+            BlockDwell = ((regionFlags & (ulong)RegionFlags.BlockDwell) == (ulong)RegionFlags.BlockDwell);
+            AllowLandmark = ((regionFlags & (ulong)RegionFlags.AllowLandmark) == (ulong)RegionFlags.AllowLandmark);
+            AllowParcelChanges = ((regionFlags & (ulong)RegionFlags.AllowParcelChanges) == (ulong)RegionFlags.AllowParcelChanges);
+            AllowSetHome = ((regionFlags & (ulong)RegionFlags.AllowSetHome) == (ulong)RegionFlags.AllowSetHome);
         }
     }
 }

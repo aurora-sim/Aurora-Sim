@@ -38,14 +38,14 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
         {
             strength = TerrainUtil.MetersToSphericalStrength(BrushSize);
             int x, y;
-            double[,] tweak = new double[map.Width, map.Height];
 
             double area = BrushSize;
-            double step = BrushSize / 4.0;
-            duration = 0.03; //MCP Should be read from ini file
+            double step = BrushSize / 4;
+            double avgExtra = BrushSize / 5;
+            duration *= 0.03; //MCP Should be read from ini file
 
 
-            // compute delta map
+            // compute delta and blend in
             for (x = 0; x < map.Width; x++)
             {
                 for (y = 0; y < map.Height; y++)
@@ -67,24 +67,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
                                 average += TerrainUtil.GetBilinearInterpolate(x + n, y + l, map);
                             }
                         }
-                        tweak[x, y] = average / avgsteps;
-                    }
-                }
-            }
-            // blend in map
-            for (x = 0; x < map.Width; x++)
-            {
-                for (y = 0; y < map.Height; y++)
-                {
-                    if (!mask[x, y])
-                        continue;
-
-                    double z = TerrainUtil.SphericalFactor(x, y, rx, ry, strength) / (strength);
-
-                    if (z > 0) // add in non-zero amount
-                    {
                         double da = z;
-                        double a = (map[x, y] - tweak[x, y]) * da;
+                        double a = (map[x, y] - (average / avgsteps)) * da;
                         double newz = map[x, y] - (a * duration);
 
                         if (newz > 0.0)

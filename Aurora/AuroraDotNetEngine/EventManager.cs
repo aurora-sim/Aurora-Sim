@@ -48,10 +48,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
     public class EventManager
     {
         //
-        // Class is instanced in "ScriptEngine" and Uses "EventQueueManager"
-        // that is also instanced in "ScriptEngine".
-        // This class needs a bit of explaining:
-        //
         // This class it the link between an event inside OpenSim and
         // the corresponding event in a user script being executed.
         //
@@ -59,8 +55,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         // "scene.EventManager.OnObjectGrab" event is fired
         // inside OpenSim.
         // We hook up to this event and queue a touch_start in
-        // EventQueueManager with the proper LSL parameters.
-        // It will then be delivered to the script by EventQueueManager.
+        // the event queue with the proper LSL parameters.
         //
         // You can check debug C# dump of an LSL script if you need to
         // verify what exact parameters are needed.
@@ -70,61 +65,69 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         private ScriptEngine m_scriptEngine;
 
-        public EventManager(ScriptEngine _ScriptEngine, bool performHookUp)
+        private List<Scene> m_Scenes = new List<Scene>();
+
+        private Dictionary<uint, Dictionary<UUID, DetectParams>> CoalescedTouchEvents = new Dictionary<uint, Dictionary<UUID, DetectParams>>();
+
+        public EventManager(ScriptEngine _ScriptEngine)
         {
             m_scriptEngine = _ScriptEngine;
         }
 
-        public void HookUpRegionEvents(Scene scene)
+        public void HookUpRegionEvents(Scene Scene)
         {
             //m_log.Info("[" + myScriptEngine.ScriptEngineName +
             //           "]: Hooking up to server events");
 
-            scene.EventManager.OnObjectGrab +=
+            m_Scenes.Add(Scene);
+
+            Scene.EventManager.OnObjectGrab +=
                     touch_start;
-            scene.EventManager.OnObjectGrabbing += 
+            Scene.EventManager.OnObjectGrabbing += 
                     touch;
-            scene.EventManager.OnObjectDeGrab +=
+            Scene.EventManager.OnObjectDeGrab +=
                     touch_end;
-            scene.EventManager.OnRemoveScript +=
-                    OnRemoveScript;
-            scene.EventManager.OnScriptChangedEvent +=
+            Scene.EventManager.OnScriptChangedEvent +=
                     changed;
-            scene.EventManager.OnScriptAtTargetEvent +=
+            Scene.EventManager.OnScriptAtTargetEvent +=
                     at_target;
-            scene.EventManager.OnScriptNotAtTargetEvent +=
+            Scene.EventManager.OnScriptNotAtTargetEvent +=
                     not_at_target;
-            scene.EventManager.OnScriptAtRotTargetEvent +=
+            Scene.EventManager.OnScriptAtRotTargetEvent +=
                     at_rot_target;
-            scene.EventManager.OnScriptNotAtRotTargetEvent +=
+            Scene.EventManager.OnScriptNotAtRotTargetEvent +=
                     not_at_rot_target;
-            scene.EventManager.OnScriptControlEvent +=
+            Scene.EventManager.OnScriptControlEvent +=
                     control;
-            scene.EventManager.OnScriptColliderStart +=
+            Scene.EventManager.OnScriptColliderStart +=
                     collision_start;
-            scene.EventManager.OnScriptColliding +=
+            Scene.EventManager.OnScriptColliding +=
                     collision;
-            scene.EventManager.OnScriptCollidingEnd +=
+            Scene.EventManager.OnScriptCollidingEnd +=
                     collision_end;
-            scene.EventManager.OnScriptLandColliderStart += 
+            Scene.EventManager.OnScriptLandColliderStart += 
                     land_collision_start;
-            scene.EventManager.OnScriptLandColliding += 
+            Scene.EventManager.OnScriptLandColliding += 
                     land_collision;
-            scene.EventManager.OnScriptLandColliderEnd += 
+            Scene.EventManager.OnScriptLandColliderEnd +=
                     land_collision_end;
-            scene.EventManager.OnAttach += attach;
+            Scene.EventManager.OnAttach += attach;
+            Scene.EventManager.OnScriptMovingStartEvent += moving_start;
+            Scene.EventManager.OnScriptMovingEndEvent += moving_end;
+
+            Scene.EventManager.OnRezScript += rez_script;
+            Scene.EventManager.OnRezScripts += rez_scripts;
 
 
             IMoneyModule money =
-                    scene.RequestModuleInterface<IMoneyModule>();
+                    Scene.RequestModuleInterface<IMoneyModule>();
             if (money != null)
                 money.OnObjectPaid+=HandleObjectPaid;
         }
 
         private void HandleObjectPaid(UUID objectID, UUID agentID, int amount)
         {
-            SceneObjectPart part =
-                    m_scriptEngine.findPrimsScene(objectID).GetSceneObjectPart(objectID);
+            SceneObjectPart part = m_scriptEngine.findPrim(objectID);
 
             if (part == null)
                 return;
@@ -139,20 +142,24 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
         }
 
-        public void changed(uint localID, uint change)
+        public void changed(SceneObjectPart part, uint change)
         {
-            // Add to queue for all scripts in localID, Object pass change.
-            m_scriptEngine.PostObjectEvent(localID, new EventParams(
-                    "changed",new object[] { new LSL_Types.LSLInteger(change) },
-                    new DetectParams[0]));
-        }
+            ScriptData[] datas = ScriptEngine.ScriptProtection.GetScripts(part.UUID);
 
-        public void state_entry(uint localID)
-        {
-            // Add to queue for all scripts in ObjectID object
-            m_scriptEngine.PostObjectEvent(localID, new EventParams(
-                    "state_entry",new object[] { },
-                    new DetectParams[0]));
+            if (datas == null || datas.Length == 0)
+            {
+                datas = ScriptEngine.ScriptProtection.GetScripts(part.ParentGroup.RootPart.UUID);
+                if (datas == null || datas.Length == 0)
+                    return;
+            }
+            string functionName = "changed";
+            object[] param = new Object[] { new LSL_Types.LSLInteger(change) };
+
+            foreach (ScriptData ID in datas)
+            {
+                if (CheckIfEventShouldFire(ID, functionName, param))
+                    m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], ID.VersionID, EventPriority.FirstStart, param);
+            }
         }
 
         /// <summary>
@@ -164,134 +171,147 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <param name="offsetPos"></param>
         /// <param name="remoteClient"></param>
         /// <param name="surfaceArgs"></param>
-        public void touch_start(uint localID, uint originalID, Vector3 offsetPos,
+        public void touch_start(SceneObjectPart part, Vector3 offsetPos,
                 IClientAPI remoteClient, SurfaceTouchEventArgs surfaceArgs)
         {
             // Add to queue for all scripts in ObjectID object
-            DetectParams[] det = new DetectParams[1];
-            det[0] = new DetectParams();
-            det[0].Key = remoteClient.AgentId;
+            Dictionary<UUID, DetectParams> det = new Dictionary<UUID, DetectParams>();
+            if (!CoalescedTouchEvents.TryGetValue(part.LocalId, out det))
+                det = new Dictionary<UUID, DetectParams>();
 
-            if (originalID == 0)
-            {
-                det[0].Populate(m_scriptEngine.findPrimsScene(localID));
-                SceneObjectPart part = m_scriptEngine.findPrimsScene(localID).GetSceneObjectPart(localID);
-                if (part == null)
-                    return;
+            DetectParams detparam = new DetectParams();
+            detparam.Key = remoteClient.AgentId;
 
-                det[0].LinkNum = part.LinkNum;
-            }
-            else
-            {
-                det[0].Populate(m_scriptEngine.findPrimsScene(originalID));
-                SceneObjectPart originalPart = m_scriptEngine.findPrimsScene(originalID).GetSceneObjectPart(originalID);
-                det[0].LinkNum = originalPart.LinkNum;
-            }
-
+            detparam.Populate(part.ParentGroup.Scene);
+            detparam.LinkNum = part.LinkNum;
+            
             if (surfaceArgs != null)
             {
-                det[0].SurfaceTouchArgs = surfaceArgs;
+                detparam.SurfaceTouchArgs = surfaceArgs;
             }
 
-            m_scriptEngine.PostObjectEvent(localID, new EventParams(
-                    "touch_start", new Object[] { new LSL_Types.LSLInteger(1) },
-                    det));
+            det[remoteClient.AgentId] = detparam;
+            CoalescedTouchEvents[part.LocalId] = det;
+
+            ScriptData[] datas = ScriptEngine.ScriptProtection.GetScripts(part.UUID);
+
+            if (datas == null || datas.Length == 0)
+                return;
+
+            string functionName = "touch_start";
+            object[] param = new Object[] { new LSL_Types.LSLInteger(1) };
+
+            foreach (ScriptData ID in datas)
+            {
+                if (CheckIfEventShouldFire(ID, functionName, param))
+                    m_scriptEngine.AddToScriptQueue(ID, functionName, new List<DetectParams>(det.Values).ToArray(), ID.VersionID, EventPriority.FirstStart, param);
+            }
         }
 
-        public void touch(uint localID, uint originalID, Vector3 offsetPos,
+        public void touch(SceneObjectPart part, Vector3 offsetPos,
                 IClientAPI remoteClient, SurfaceTouchEventArgs surfaceArgs)
         {
+            Dictionary<UUID, DetectParams> det = new Dictionary<UUID, DetectParams>();
+            if (!CoalescedTouchEvents.TryGetValue(part.LocalId, out det))
+                det = new Dictionary<UUID, DetectParams>();
+
             // Add to queue for all scripts in ObjectID object
-            DetectParams[] det = new DetectParams[1];
-            det[0] = new DetectParams();
-            det[0].Key = remoteClient.AgentId;
-            det[0].OffsetPos = new LSL_Types.Vector3(offsetPos.X,
+            DetectParams detparam = new DetectParams();
+            detparam = new DetectParams();
+            detparam.Key = remoteClient.AgentId;
+            detparam.OffsetPos = new LSL_Types.Vector3(offsetPos.X,
                                                      offsetPos.Y,
                                                      offsetPos.Z);
 
-            if (originalID == 0)
-            {
-                det[0].Populate(m_scriptEngine.findPrimsScene(localID));
-                SceneObjectPart part = m_scriptEngine.findPrimsScene(localID).GetSceneObjectPart(localID);
-                if (part == null)
-                    return;
+            detparam.Populate(part.ParentGroup.Scene);
+            detparam.LinkNum = part.LinkNum;
 
-                det[0].LinkNum = part.LinkNum;
-            }
-            else
-            {
-                det[0].Populate(m_scriptEngine.findPrimsScene(originalID));
-                SceneObjectPart originalPart = m_scriptEngine.findPrimsScene(originalID).GetSceneObjectPart(originalID);
-                det[0].LinkNum = originalPart.LinkNum;
-            }
             if (surfaceArgs != null)
-            {
-                det[0].SurfaceTouchArgs = surfaceArgs;
-            }
+                detparam.SurfaceTouchArgs = surfaceArgs;
 
-            m_scriptEngine.PostObjectEvent(localID, new EventParams(
-                    "touch", new Object[] { new LSL_Types.LSLInteger(1) },
-                    det));
+            det[remoteClient.AgentId] = detparam;
+            CoalescedTouchEvents[part.LocalId] = det;
+
+            ScriptData[] datas = ScriptEngine.ScriptProtection.GetScripts(part.UUID);
+
+            if (datas == null || datas.Length == 0)
+                return;
+
+            string functionName = "touch";
+            object[] param = new Object[] { new LSL_Types.LSLInteger(1) };
+
+            foreach (ScriptData ID in datas)
+            {
+                if (CheckIfEventShouldFire(ID, functionName, param))
+                    m_scriptEngine.AddToScriptQueue(ID, functionName, new List<DetectParams>(det.Values).ToArray(), ID.VersionID, EventPriority.FirstStart, param);
+            }
         }
 
-        public void touch_end(uint localID, uint originalID, IClientAPI remoteClient,
+        public void touch_end(SceneObjectPart part, IClientAPI remoteClient,
                               SurfaceTouchEventArgs surfaceArgs)
         {
+            Dictionary<UUID, DetectParams> det = new Dictionary<UUID, DetectParams>();
+            if (!CoalescedTouchEvents.TryGetValue(part.LocalId, out det))
+                det = new Dictionary<UUID, DetectParams>();
+
             // Add to queue for all scripts in ObjectID object
-            DetectParams[] det = new DetectParams[1];
-            det[0] = new DetectParams();
-            det[0].Key = remoteClient.AgentId;
+            DetectParams detparam = new DetectParams();
+            detparam = new DetectParams();
+            detparam.Key = remoteClient.AgentId;
 
-            if (originalID == 0)
-            {
-                det[0].Populate(m_scriptEngine.findPrimsScene(localID));
-                SceneObjectPart part = m_scriptEngine.findPrimsScene(localID).GetSceneObjectPart(localID);
-                if (part == null)
-                    return;
-
-                det[0].LinkNum = part.LinkNum;
-            }
-            else
-            {
-                det[0].Populate(m_scriptEngine.findPrimsScene(originalID));
-                SceneObjectPart originalPart = m_scriptEngine.findPrimsScene(originalID).GetSceneObjectPart(originalID);
-                det[0].LinkNum = originalPart.LinkNum;
-            }
+            detparam.Populate(m_scriptEngine.findPrimsScene(part.LocalId));
+            detparam.LinkNum = part.LinkNum;
 
             if (surfaceArgs != null)
+                detparam.SurfaceTouchArgs = surfaceArgs;
+
+            det[remoteClient.AgentId] = detparam;
+            CoalescedTouchEvents[part.LocalId] = det;
+
+            ScriptData[] datas = ScriptEngine.ScriptProtection.GetScripts(part.UUID);
+
+            if (datas == null || datas.Length == 0)
+                return; 
+            
+            string functionName = "touch_end";
+            object[] param = new Object[] { new LSL_Types.LSLInteger(1) };
+
+            foreach (ScriptData ID in datas)
             {
-                det[0].SurfaceTouchArgs = surfaceArgs;
+                if (CheckIfEventShouldFire(ID, functionName, param))
+                    m_scriptEngine.AddToScriptQueue(ID, functionName, new List<DetectParams>(det.Values).ToArray(), ID.VersionID, EventPriority.FirstStart, param);
             }
-
-            m_scriptEngine.PostObjectEvent(localID, new EventParams(
-                    "touch_end", new Object[] { new LSL_Types.LSLInteger(1) },
-                    det));
-        }
-
-        public void OnRemoveScript(uint localID, UUID itemID)
-        {
-            m_scriptEngine.StopScript(
-                localID,
-                itemID);
+            //Remove us from the det param list
+            det.Remove(remoteClient.AgentId);
+            CoalescedTouchEvents[part.LocalId] = det;
         }
 
         public void money(uint localID, UUID agentID, int amount)
         {
-            m_scriptEngine.PostObjectEvent(localID, new EventParams(
-                    "money", new object[] {
+            SceneObjectPart part = m_scriptEngine.findPrim(localID);
+            if (part == null)
+                return;
+            ScriptData[] datas = ScriptEngine.ScriptProtection.GetScripts(part.UUID);
+
+            if (datas == null || datas.Length == 0)
+            {
+                datas = ScriptEngine.ScriptProtection.GetScripts(part.ParentGroup.RootPart.UUID);
+                if (datas == null || datas.Length == 0)
+                    return;
+            }
+            string functionName = "money";
+            object[] param = new object[] {
                     new LSL_Types.LSLString(agentID.ToString()),
-                    new LSL_Types.LSLInteger(amount) },
-                    new DetectParams[0]));
+                    new LSL_Types.LSLInteger(amount) };
+
+            foreach (ScriptData ID in datas)
+            {
+                if (CheckIfEventShouldFire(ID, functionName, param))
+                    m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], ID.VersionID, EventPriority.FirstStart, param);
+            }
         }
 
-        public void state_exit(uint localID)
-        {
-            m_scriptEngine.PostObjectEvent(localID, new EventParams(
-                    "state_exit", new object[0] { },
-                    new DetectParams[0]));
-        }
-
-        public void collision_start(uint localID, ColliderArgs col)
+        public void collision_start(SceneObjectPart part, ColliderArgs col)
         {
             // Add to queue for all scripts in ObjectID object
             List<DetectParams> det = new List<DetectParams>();
@@ -300,18 +320,32 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 DetectParams d = new DetectParams();
                 d.Key = detobj.keyUUID;
-                d.Populate(m_scriptEngine.findPrimsScene(localID));
+                d.Populate(part.ParentGroup.Scene);
                 det.Add(d);
             }
 
             if (det.Count > 0)
-                m_scriptEngine.PostObjectEvent(localID, new EventParams(
-                        "collision_start",
-                        new Object[] { new LSL_Types.LSLInteger(det.Count) },
-                        det.ToArray()));
+            {
+                ScriptData[] datas = ScriptEngine.ScriptProtection.GetScripts(part.UUID);
+
+                if (datas == null || datas.Length == 0)
+                {
+                    //datas = ScriptEngine.ScriptProtection.GetScripts(part.ParentGroup.RootPart.UUID);
+                    //if (datas == null || datas.Length == 0)
+                        return;
+                }
+                string functionName = "collision_start";
+                object[] param = new Object[] { new LSL_Types.LSLInteger(det.Count) };
+
+                foreach (ScriptData ID in datas)
+                {
+                    if (CheckIfEventShouldFire(ID, functionName, param))
+                        m_scriptEngine.AddToScriptQueue(ID, functionName, det.ToArray(), ID.VersionID, EventPriority.FirstStart, param);
+                }
+            }
         }
 
-        public void collision(uint localID, ColliderArgs col)
+        public void collision(SceneObjectPart part, ColliderArgs col)
         {
             // Add to queue for all scripts in ObjectID object
             List<DetectParams> det = new List<DetectParams>();
@@ -320,17 +354,32 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 DetectParams d = new DetectParams();
                 d.Key = detobj.keyUUID;
-                d.Populate(m_scriptEngine.findPrimsScene(localID));
+                d.Populate(part.ParentGroup.Scene);
                 det.Add(d);
             }
 
             if (det.Count > 0)
-                m_scriptEngine.PostObjectEvent(localID, new EventParams(
-                        "collision", new Object[] { new LSL_Types.LSLInteger(det.Count) },
-                        det.ToArray()));
+            {
+                ScriptData[] datas = ScriptEngine.ScriptProtection.GetScripts(part.UUID);
+
+                if (datas == null || datas.Length == 0)
+                {
+                    //datas = ScriptEngine.ScriptProtection.GetScripts(part.ParentGroup.RootPart.UUID);
+                    //if (datas == null || datas.Length == 0)
+                        return;
+                }
+                string functionName = "collision";
+                object[] param = new Object[] { new LSL_Types.LSLInteger(det.Count) };
+
+                foreach (ScriptData ID in datas)
+                {
+                    if (CheckIfEventShouldFire(ID, functionName, param))
+                        m_scriptEngine.AddToScriptQueue(ID, functionName, det.ToArray(), ID.VersionID, EventPriority.FirstStart, param);
+                }
+            }
         }
 
-        public void collision_end(uint localID, ColliderArgs col)
+        public void collision_end(SceneObjectPart part, ColliderArgs col)
         {
             // Add to queue for all scripts in ObjectID object
             List<DetectParams> det = new List<DetectParams>();
@@ -339,18 +388,32 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 DetectParams d = new DetectParams();
                 d.Key = detobj.keyUUID;
-                d.Populate(m_scriptEngine.findPrimsScene(localID));
+                d.Populate(part.ParentGroup.Scene);
                 det.Add(d);
             }
 
             if (det.Count > 0)
-                m_scriptEngine.PostObjectEvent(localID, new EventParams(
-                        "collision_end",
-                        new Object[] { new LSL_Types.LSLInteger(det.Count) },
-                        det.ToArray()));
+            {
+                ScriptData[] datas = ScriptEngine.ScriptProtection.GetScripts(part.UUID);
+
+                if (datas == null || datas.Length == 0)
+                {
+                    //datas = ScriptEngine.ScriptProtection.GetScripts(part.ParentGroup.RootPart.UUID);
+                    //if (datas == null || datas.Length == 0)
+                        return;
+                }
+                string functionName = "collision_end";
+                object[] param = new Object[] { new LSL_Types.LSLInteger(det.Count) };
+
+                foreach (ScriptData ID in datas)
+                {
+                    if (CheckIfEventShouldFire(ID, functionName, param))
+                        m_scriptEngine.AddToScriptQueue(ID, functionName, det.ToArray(), ID.VersionID, EventPriority.FirstStart, param);
+                }
+            }
         }
 
-        public void land_collision_start(uint localID, ColliderArgs col)
+        public void land_collision_start(SceneObjectPart part, ColliderArgs col)
         {
             List<DetectParams> det = new List<DetectParams>();
 
@@ -360,17 +423,32 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 d.Position = new LSL_Types.Vector3(detobj.posVector.X,
                     detobj.posVector.Y,
                     detobj.posVector.Z);
-                d.Populate(m_scriptEngine.findPrimsScene(localID));
+                d.Key = detobj.keyUUID;
+                d.Populate(part.ParentGroup.Scene);
                 det.Add(d);
-                m_scriptEngine.PostObjectEvent(localID, new EventParams(
-                        "land_collision_start",
-                        new Object[] { new LSL_Types.Vector3(d.Position) },
-                        det.ToArray()));
             }
+            if (det.Count != 0)
+            {
+                ScriptData[] datas = ScriptEngine.ScriptProtection.GetScripts(part.UUID);
 
+                if (datas == null || datas.Length == 0)
+                {
+                    //datas = ScriptEngine.ScriptProtection.GetScripts(part.ParentGroup.RootPart.UUID);
+                    //if (datas == null || datas.Length == 0)
+                        return;
+                }
+                string functionName = "land_collision_start";
+                object[] param = new Object[] { new LSL_Types.Vector3(det[0].Position) };
+
+                foreach (ScriptData ID in datas)
+                {
+                    if (CheckIfEventShouldFire(ID, functionName, param))
+                        m_scriptEngine.AddToScriptQueue(ID, functionName, det.ToArray(), ID.VersionID, EventPriority.FirstStart, param);
+                }
+            }
         }
 
-        public void land_collision(uint localID, ColliderArgs col)
+        public void land_collision(SceneObjectPart part, ColliderArgs col)
         {
             List<DetectParams> det = new List<DetectParams>();
 
@@ -380,16 +458,32 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 d.Position = new LSL_Types.Vector3(detobj.posVector.X,
                     detobj.posVector.Y,
                     detobj.posVector.Z);
-                d.Populate(m_scriptEngine.findPrimsScene(localID));
+                d.Key = detobj.keyUUID;
+                d.Populate(part.ParentGroup.Scene);
                 det.Add(d);
-                m_scriptEngine.PostObjectEvent(localID, new EventParams(
-                        "land_collision",
-                        new Object[] { new LSL_Types.Vector3(d.Position) },
-                        det.ToArray()));
+            }
+            if (det.Count != 0)
+            {
+                ScriptData[] datas = ScriptEngine.ScriptProtection.GetScripts(part.UUID);
+
+                if (datas == null || datas.Length == 0)
+                {
+                    //datas = ScriptEngine.ScriptProtection.GetScripts(part.ParentGroup.RootPart.UUID);
+                    //if (datas == null || datas.Length == 0)
+                        return;
+                }
+                string functionName = "land_collision";
+                object[] param = new Object[] { new LSL_Types.Vector3(det[0].Position) };
+
+                foreach (ScriptData ID in datas)
+                {
+                    if (CheckIfEventShouldFire(ID, functionName, param))
+                        m_scriptEngine.AddToScriptQueue(ID, functionName, det.ToArray(), ID.VersionID, EventPriority.FirstStart, param);
+                }
             }
         }
 
-        public void land_collision_end(uint localID, ColliderArgs col)
+        public void land_collision_end(SceneObjectPart part, ColliderArgs col)
         {
             List<DetectParams> det = new List<DetectParams>();
 
@@ -399,104 +493,523 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 d.Position = new LSL_Types.Vector3(detobj.posVector.X,
                     detobj.posVector.Y,
                     detobj.posVector.Z);
-                d.Populate(m_scriptEngine.findPrimsScene(localID));
+                d.Key = detobj.keyUUID;
+                d.Populate(part.ParentGroup.Scene);
                 det.Add(d);
-                m_scriptEngine.PostObjectEvent(localID, new EventParams(
-                        "land_collision_end",
-                        new Object[] { new LSL_Types.Vector3(d.Position) },
-                        det.ToArray()));
+            }
+            if (det.Count != 0)
+            {
+                ScriptData[] datas = ScriptEngine.ScriptProtection.GetScripts(part.UUID);
+
+                if (datas == null || datas.Length == 0)
+                {
+                    //datas = ScriptEngine.ScriptProtection.GetScripts(part.ParentGroup.RootPart.UUID);
+                    //if (datas == null || datas.Length == 0)
+                        return;
+                }
+                string functionName = "land_collision_end";
+                object[] param = new Object[] { new LSL_Types.Vector3(det[0].Position) };
+
+                foreach (ScriptData ID in datas)
+                {
+                    if (CheckIfEventShouldFire(ID, functionName, param))
+                        m_scriptEngine.AddToScriptQueue(ID, functionName, det.ToArray(), ID.VersionID, EventPriority.FirstStart, param);
+                }
             }
         }
 
-        public void control(uint localID, UUID itemID, UUID agentID, uint held, uint change)
+        public void control(SceneObjectPart part, UUID itemID, UUID agentID, uint held, uint change)
         {
-            m_scriptEngine.PostObjectEvent(localID, new EventParams(
-                    "control",new object[] {
+            ScriptData ID = ScriptEngine.ScriptProtection.GetScript(part.UUID, itemID);
+
+            if (ID == null)
+                return;
+
+            string functionName = "control";
+            object[] param = new object[] {
                     new LSL_Types.LSLString(agentID.ToString()),
                     new LSL_Types.LSLInteger(held),
-                    new LSL_Types.LSLInteger(change)},
-                    new DetectParams[0]));
+                    new LSL_Types.LSLInteger(change)};
+
+            if (CheckIfEventShouldFire(ID, functionName, param))
+                m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], ID.VersionID, EventPriority.FirstStart, param);
         }
 
         public void email(uint localID, UUID itemID, string timeSent,
                 string address, string subject, string message, int numLeft)
         {
-            m_scriptEngine.PostObjectEvent(localID, new EventParams(
-                    "email", new object[] {
+            SceneObjectPart part = m_scriptEngine.findPrim(localID);
+            if (part == null)
+                return;
+            ScriptData[] datas = ScriptEngine.ScriptProtection.GetScripts(part.UUID);
+
+            if (datas == null || datas.Length == 0)
+            {
+                datas = ScriptEngine.ScriptProtection.GetScripts(part.ParentGroup.RootPart.UUID);
+                if (datas == null || datas.Length == 0)
+                    return;
+            }
+            string functionName = "email";
+            object[] param = new object[] {
                     new LSL_Types.LSLString(timeSent),
                     new LSL_Types.LSLString(address),
                     new LSL_Types.LSLString(subject),
                     new LSL_Types.LSLString(message),
-                    new LSL_Types.LSLInteger(numLeft)},
-                    new DetectParams[0]));
+                    new LSL_Types.LSLInteger(numLeft)};
+
+            foreach (ScriptData ID in datas)
+            {
+                if (CheckIfEventShouldFire(ID, functionName, param))
+                    m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], ID.VersionID, EventPriority.FirstStart, param);
+            }
         }
 
         public void at_target(uint localID, uint handle, Vector3 targetpos,
                 Vector3 atpos)
         {
-            m_scriptEngine.PostObjectEvent(localID, new EventParams(
-                    "at_target", new object[] {
+            SceneObjectPart part = m_scriptEngine.findPrim(localID);
+            if (part == null)
+                return;
+            ScriptData[] datas = ScriptEngine.ScriptProtection.GetScripts(part.UUID);
+
+            if (datas == null || datas.Length == 0)
+            {
+                datas = ScriptEngine.ScriptProtection.GetScripts(part.ParentGroup.RootPart.UUID);
+                if (datas == null || datas.Length == 0)
+                    return;
+            }
+            string functionName = "at_target";
+            object[] param = new object[] {
                     new LSL_Types.LSLInteger(handle),
                     new LSL_Types.Vector3(targetpos.X,targetpos.Y,targetpos.Z),
-                    new LSL_Types.Vector3(atpos.X,atpos.Y,atpos.Z) },
-                    new DetectParams[0]));
+                    new LSL_Types.Vector3(atpos.X,atpos.Y,atpos.Z) };
+
+            foreach (ScriptData ID in datas)
+            {
+                if (CheckIfEventShouldFire(ID, functionName, param))
+                    m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], ID.VersionID, EventPriority.FirstStart, param);
+            }
         }
 
         public void not_at_target(uint localID)
         {
-            m_scriptEngine.PostObjectEvent(localID, new EventParams(
-                    "not_at_target", new object[0],
-                    new DetectParams[0]));
+            SceneObjectPart part = m_scriptEngine.findPrim(localID);
+            if (part == null)
+                return;
+            ScriptData[] datas = ScriptEngine.ScriptProtection.GetScripts(part.UUID);
+
+            if (datas == null || datas.Length == 0)
+            {
+                datas = ScriptEngine.ScriptProtection.GetScripts(part.ParentGroup.RootPart.UUID);
+                if (datas == null || datas.Length == 0)
+                    return;
+            }
+            string functionName = "not_at_target";
+            object[] param = new object[0];
+
+            foreach (ScriptData ID in datas)
+            {
+                if (CheckIfEventShouldFire(ID, functionName, param))
+                    m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], ID.VersionID, EventPriority.FirstStart, param);
+            }
         }
 
         public void at_rot_target(uint localID, uint handle, Quaternion targetrot,
                 Quaternion atrot)
         {
-            m_scriptEngine.PostObjectEvent(localID, new EventParams(
-                    "at_rot_target", new object[] {
+            SceneObjectPart part = m_scriptEngine.findPrim(localID);
+            if (part == null)
+                return;
+            ScriptData[] datas = ScriptEngine.ScriptProtection.GetScripts(part.UUID);
+
+            if (datas == null || datas.Length == 0)
+            {
+                datas = ScriptEngine.ScriptProtection.GetScripts(part.ParentGroup.RootPart.UUID);
+                if (datas == null || datas.Length == 0)
+                    return;
+            }
+            string functionName = "at_rot_target";
+            object[] param = new object[] {
                     new LSL_Types.LSLInteger(handle),
                     new LSL_Types.Quaternion(targetrot.X,targetrot.Y,targetrot.Z,targetrot.W),
-                    new LSL_Types.Quaternion(atrot.X,atrot.Y,atrot.Z,atrot.W) },
-                    new DetectParams[0]));
+                    new LSL_Types.Quaternion(atrot.X,atrot.Y,atrot.Z,atrot.W) };
+
+            foreach (ScriptData ID in datas)
+            {
+                if (CheckIfEventShouldFire(ID, functionName, param))
+                    m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], ID.VersionID, EventPriority.FirstStart, param);
+            }
         }
 
         public void not_at_rot_target(uint localID)
         {
-            m_scriptEngine.PostObjectEvent(localID, new EventParams(
-                    "not_at_rot_target", new object[0],
-                    new DetectParams[0]));
+            SceneObjectPart part = m_scriptEngine.findPrim(localID);
+            if (part == null)
+                return;
+            ScriptData[] datas = ScriptEngine.ScriptProtection.GetScripts(part.UUID);
+
+            if (datas == null || datas.Length == 0)
+            {
+                datas = ScriptEngine.ScriptProtection.GetScripts(part.ParentGroup.RootPart.UUID);
+                if (datas == null || datas.Length == 0)
+                    return;
+            }
+            string functionName = "not_at_rot_target";
+            object[] param = new object[0];
+
+            foreach (ScriptData ID in datas)
+            {
+                if (CheckIfEventShouldFire(ID, functionName, param))
+                    m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], ID.VersionID, EventPriority.FirstStart, param);
+            }
         }
 
         public void attach(uint localID, UUID itemID, UUID avatar)
         {
-            m_scriptEngine.PostObjectEvent(localID, new EventParams(
-                    "attach", new object[] {
-                    new LSL_Types.LSLString(avatar.ToString()) },
-                    new DetectParams[0]));
+            SceneObjectPart part = m_scriptEngine.findPrim(localID);
+            if (part == null)
+                return;
+            ScriptData[] datas = ScriptEngine.ScriptProtection.GetScripts(part.UUID);
+
+            if (datas == null || datas.Length == 0)
+            {
+                datas = ScriptEngine.ScriptProtection.GetScripts(part.ParentGroup.RootPart.UUID);
+                if (datas == null || datas.Length == 0)
+                    return;
+            }
+            string functionName = "attach";
+            object[] param = new object[] {
+                    new LSL_Types.LSLString(avatar.ToString()) };
+
+            foreach (ScriptData ID in datas)
+            {
+                if (CheckIfEventShouldFire(ID, functionName, param))
+                    m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], ID.VersionID, EventPriority.FirstStart, param);
+            }
         }
 
-        public void moving_start(uint localID, UUID itemID)
+        public void moving_start(SceneObjectPart part)
         {
-            m_scriptEngine.PostObjectEvent(localID, new EventParams(
-                    "moving_start", new object[0],
-                    new DetectParams[0]));
+            ScriptData[] datas = ScriptEngine.ScriptProtection.GetScripts(part.UUID);
+
+            if (datas == null || datas.Length == 0)
+            {
+                datas = ScriptEngine.ScriptProtection.GetScripts(part.ParentGroup.RootPart.UUID);
+                if (datas == null || datas.Length == 0)
+                    return;
+            }
+            string functionName = "moving_start";
+            object[] param = new object[0];
+
+            foreach (ScriptData ID in datas)
+            {
+                if (CheckIfEventShouldFire(ID, functionName, param))
+                    m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], ID.VersionID, EventPriority.FirstStart, param);
+            }
         }
 
-        public void moving_end(uint localID, UUID itemID)
+        public void moving_end(SceneObjectPart part)
         {
-            m_scriptEngine.PostObjectEvent(localID, new EventParams(
-                    "moving_end", new object[0],
-                    new DetectParams[0]));
+            ScriptData[] datas = ScriptEngine.ScriptProtection.GetScripts(part.UUID);
+
+            if (datas == null || datas.Length == 0)
+            {
+                datas = ScriptEngine.ScriptProtection.GetScripts(part.ParentGroup.RootPart.UUID);
+                if (datas == null || datas.Length == 0)
+                    return;
+            }
+            string functionName = "moving_end";
+            object[] param = new object[0];
+
+            foreach (ScriptData ID in datas)
+            {
+                if (CheckIfEventShouldFire(ID, functionName, param))
+                    m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], ID.VersionID, EventPriority.FirstStart, param);
+            }
         }
 
-        /// <summary>
-        /// If set to true then threads and stuff should try to make a graceful exit
-        /// </summary>
-        public bool PleaseShutdown
+        public void rez_script(SceneObjectPart part, UUID itemID, string script,
+                int startParam, bool postOnRez, string engine, int stateSource)
         {
-            get { return _PleaseShutdown; }
-            set { _PleaseShutdown = value; }
+            if (script.StartsWith("//MRM:"))
+                return;
+
+            List<IScriptModule> engines =
+                new List<IScriptModule>(
+                m_Scenes[0].RequestModuleInterfaces<IScriptModule>());
+
+            List<string> names = new List<string>();
+            foreach (IScriptModule m in engines)
+                names.Add(m.ScriptEngineName);
+
+            int lineEnd = script.IndexOf('\n');
+
+            if (lineEnd > 1)
+            {
+                string firstline = script.Substring(0, lineEnd).Trim();
+
+                int colon = firstline.IndexOf(':');
+                if (firstline.Length > 2 &&
+                    firstline.Substring(0, 2) == "//" && colon != -1)
+                {
+                    string engineName = firstline.Substring(2, colon - 2);
+
+                    if (names.Contains(engineName))
+                    {
+                        engine = engineName;
+                        script = "//" + script.Substring(script.IndexOf(':') + 1);
+                    }
+                    else
+                    {
+                        if (engine == m_scriptEngine.ScriptEngineName)
+                        {
+                            TaskInventoryItem item =
+                                    part.Inventory.GetInventoryItem(itemID);
+
+                            ScenePresence presence =
+                                    part.ParentGroup.Scene.GetScenePresence(
+                                    item.OwnerID);
+
+                            if (presence != null)
+                            {
+                                presence.ControllingClient.SendAgentAlertMessage(
+                                         "Selected engine unavailable. " +
+                                         "Running script on " +
+                                         m_scriptEngine.ScriptEngineName,
+                                         false);
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (engine != m_scriptEngine.ScriptEngineName)
+                return;
+
+            LUStruct itemToQueue = m_scriptEngine.StartScript(part, itemID, script,
+                    startParam, postOnRez, (StateSource)stateSource, UUID.Zero);
+            if (itemToQueue.Action != LUType.Unknown)
+                m_scriptEngine.MaintenanceThread.AddScriptChange(new LUStruct[] { itemToQueue }, LoadPriority.FirstStart);
         }
-        private bool _PleaseShutdown = false;
+
+        public void rez_scripts(SceneObjectPart part, TaskInventoryItem[] items,
+                int startParam, bool postOnRez, string engine, int stateSource, UUID RezzedFrom)
+        {
+            List<TaskInventoryItem> ItemsToStart = new List<TaskInventoryItem>();
+            foreach (TaskInventoryItem item in items)
+            {
+                AssetBase asset = m_Scenes[0].AssetService.Get(item.AssetID.ToString());
+                if (null == asset)
+                {
+                    m_log.ErrorFormat(
+                        "[PRIM INVENTORY]: " +
+                        "Couldn't start script {0}, {1} since asset ID {4} could not be found",
+                        item.Name, item.ItemID, item.AssetID);
+                    continue;
+                }
+                string script = OpenMetaverse.Utils.BytesToString(asset.Data);
+
+                if (script.StartsWith("//MRM:"))
+                    return;
+
+                List<IScriptModule> engines =
+                    new List<IScriptModule>(
+                    m_Scenes[0].RequestModuleInterfaces<IScriptModule>());
+
+                List<string> names = new List<string>();
+                foreach (IScriptModule m in engines)
+                    names.Add(m.ScriptEngineName);
+
+                int lineEnd = script.IndexOf('\n');
+
+                if (lineEnd > 1)
+                {
+                    string firstline = script.Substring(0, lineEnd).Trim();
+
+                    int colon = firstline.IndexOf(':');
+                    if (firstline.Length > 2 &&
+                        firstline.Substring(0, 2) == "//" && colon != -1)
+                    {
+                        string engineName = firstline.Substring(2, colon - 2);
+
+                        if (names.Contains(engineName))
+                        {
+                            engine = engineName;
+                            script = "//" + script.Substring(script.IndexOf(':') + 1);
+                        }
+                        else
+                        {
+                            if (engine == m_scriptEngine.ScriptEngineName)
+                            {
+                                ScenePresence presence =
+                                        part.ParentGroup.Scene.GetScenePresence(
+                                        item.OwnerID);
+
+                                if (presence != null)
+                                {
+                                    presence.ControllingClient.SendAgentAlertMessage(
+                                             "Selected engine unavailable. " +
+                                             "Running script on " +
+                                             m_scriptEngine.ScriptEngineName,
+                                             false);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (engine != m_scriptEngine.ScriptEngineName)
+                    return;
+                ItemsToStart.Add(item);
+            }
+
+            List<LUStruct> ItemsToQueue = new List<LUStruct>();
+            foreach (TaskInventoryItem item in ItemsToStart)
+            {
+                AssetBase asset = m_Scenes[0].AssetService.Get(item.AssetID.ToString());
+                if (null == asset)
+                {
+                    m_log.ErrorFormat(
+                        "[PRIM INVENTORY]: " +
+                        "Couldn't start script {0}, {1} since asset ID {4} could not be found",
+                        item.Name, item.ItemID, item.AssetID);
+                    continue;
+                }
+                string script = OpenMetaverse.Utils.BytesToString(asset.Data);
+
+                LUStruct itemToQueue = m_scriptEngine.StartScript(part, item.ItemID, script,
+                        startParam, postOnRez, (StateSource)stateSource, RezzedFrom);
+                if (itemToQueue.Action != LUType.Unknown)
+                    ItemsToQueue.Add(itemToQueue);
+            }
+            if (ItemsToQueue.Count != 0)
+                m_scriptEngine.MaintenanceThread.AddScriptChange(ItemsToQueue.ToArray(), LoadPriority.FirstStart);
+
+        }
+        
+        private bool CheckIfEventShouldFire(ScriptData ID, string FunctionName, object[] param)
+        {
+            scriptEvents eventType = (scriptEvents)Enum.Parse(typeof(scriptEvents), FunctionName);
+            if ((ID.Script.GetStateEventFlags(ID.State) & (long)eventType) == 0)
+                return false; //If the script doesn't contain the state, don't even bother queueing it
+
+            if (eventType == scriptEvents.timer)
+            {
+                if (ID.TimerQueued)
+                    return false;
+                ID.TimerQueued = true;
+            }
+            else if (eventType == scriptEvents.control)
+            {
+                int held = ((LSL_Types.LSLInteger)param[1]).value;
+                // int changed = ((LSL_Types.LSLInteger)data.Params[2]).value;
+
+                // If the last message was a 0 (nothing held)
+                // and this one is also nothing held, drop it
+                //
+                if (ID.LastControlLevel == held && held == 0)
+                    return true;
+
+                // If there is one or more queued, then queue
+                // only changed ones, else queue unconditionally
+                //
+                if (ID.ControlEventsInQueue > 0)
+                {
+                    if (ID.LastControlLevel == held)
+                        return false;
+                }
+            }
+            else if (eventType == scriptEvents.collision)
+            {
+                if (ID.CollisionInQueue || ID.RemoveCollisionEvents)
+                    return false;
+
+                ID.CollisionInQueue = true;
+            }
+            else if (eventType == scriptEvents.moving_start)
+            {
+                if (ID.MovingInQueue) //Block all other moving_starts until moving_end is called
+                    return false;
+                ID.MovingInQueue = true;
+            }
+            else if (eventType == scriptEvents.moving_end)
+            {
+                if (!ID.MovingInQueue) //If we get a moving_end after we have sent one event, don't fire another
+                    return false;
+            }
+            else if (eventType == scriptEvents.collision_start)
+            {
+                ID.RemoveCollisionEvents = false;
+            }
+            else if (eventType == scriptEvents.collision_end)
+            {
+                if (ID.RemoveCollisionEvents)
+                    return false;
+            }
+            else if (eventType == scriptEvents.touch)
+            {
+                if (ID.TouchInQueue || ID.RemoveTouchEvents)
+                    return false;
+
+                ID.TouchInQueue = true;
+            }
+            else if (eventType == scriptEvents.touch_start)
+            {
+                ID.RemoveTouchEvents = false;
+            }
+            else if (eventType == scriptEvents.touch_end)
+            {
+                if (ID.RemoveTouchEvents)
+                    return false;
+            }
+            else if (eventType == scriptEvents.land_collision)
+            {
+                if (ID.LandCollisionInQueue || ID.RemoveLandCollisionEvents)
+                    return false;
+
+                ID.LandCollisionInQueue = true;
+            }
+            else if (eventType == scriptEvents.land_collision_start)
+            {
+                ID.RemoveLandCollisionEvents = false;
+            }
+            else if (eventType == scriptEvents.land_collision_end)
+            {
+                if (ID.RemoveLandCollisionEvents)
+                    return false;
+            }
+            else if (eventType == scriptEvents.changed)
+            {
+                Changed changed = (Changed)(((LSL_Types.LSLInteger)param[0]).value);
+                if (ID.ChangedInQueue.Contains(changed))
+                    return false;
+                ID.ChangedInQueue.Add(changed);
+            }
+            return true;
+        }
+
+        public void EventComplete(QueueItemStruct QIS)
+        {
+            if (QIS.functionName == "timer")
+                QIS.ID.TimerQueued = false;
+            else if (QIS.functionName == "control")
+            {
+                if (QIS.ID.ControlEventsInQueue > 0)
+                    QIS.ID.ControlEventsInQueue--;
+            }
+            else if (QIS.functionName == "collision")
+                QIS.ID.CollisionInQueue = false;
+            else if (QIS.functionName == "moving_end")
+                QIS.ID.MovingInQueue = false;
+            else if (QIS.functionName == "touch")
+                QIS.ID.TouchInQueue = false;
+            else if (QIS.functionName == "land_collision")
+                QIS.ID.LandCollisionInQueue = false;
+            else if (QIS.functionName == "changed")
+            {
+                Changed changed = (Changed)Enum.Parse(typeof(Changed),QIS.param[0].ToString());
+                QIS.ID.ChangedInQueue.Remove(changed);
+            }
+        }
     }
 }

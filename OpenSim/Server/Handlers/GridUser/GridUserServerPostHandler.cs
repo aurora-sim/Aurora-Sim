@@ -149,7 +149,6 @@ namespace OpenSim.Server.Handlers.GridUser
 
             if (m_GridUserService.SetHome(user, region, position, look))
                 return SuccessResult();
-
             return FailureResult();
         }
 

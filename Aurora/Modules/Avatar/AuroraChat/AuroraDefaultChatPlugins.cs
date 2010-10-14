@@ -9,6 +9,7 @@ using OpenSim.Region.Framework.Scenes;
 using log4net;
 using Aurora.DataManager;
 using Aurora.Framework;
+using Google.API.Translate;
 
 namespace Aurora.Modules.Avatar.AuroraChat
 {
@@ -101,6 +102,124 @@ namespace Aurora.Modules.Avatar.AuroraChat
         }
     }
 
+    public class TranslatorPlugin : IChatPlugin
+    {
+        public class TranslatorUserInfo
+        {
+            public bool enabled = false;
+            public Aurora.GoogleAPIs.Language To = Aurora.GoogleAPIs.Language.English;
+            public Aurora.GoogleAPIs.Language From = Aurora.GoogleAPIs.Language.Unknown;
+            public bool ShowNonTranslated = false;
+        }
+
+        IChatModule chatModule;
+        Dictionary<UUID, TranslatorUserInfo> UserInfos = new Dictionary<UUID, TranslatorUserInfo>();
+        
+        public void Initialize(IChatModule module)
+        {
+            chatModule = module;
+            //We register all so that we can hook up to all chat when they enable us
+            module.RegisterChatPlugin("all", this);
+        }
+
+        public bool OnNewChatMessageFromWorld(OSChatMessage c, out OSChatMessage newc)
+        {
+            Scene scene = (Scene)c.Scene;
+            string[] operators = c.Message.Split(' ');
+            TranslatorUserInfo UInfo = null;
+
+            if (operators[0].StartsWith("translate",StringComparison.CurrentCultureIgnoreCase))
+            {
+                // Example to turn on translator
+                // translator en >> fr         translator en > fr
+                // translator fr << en         translator fr < en
+
+                if (operators[2].Contains(">")) //Covers > and >>, 
+                {
+                    UserInfos[c.SenderUUID] = new TranslatorUserInfo()
+                    {
+                        enabled = true,
+                        From = Aurora.GoogleAPIs.Language.GetValue(operators[1]),
+                        To = Aurora.GoogleAPIs.Language.GetValue(operators[3])
+                    };
+                }
+                else if (operators[2].Contains("<")) //Covers < and <<, 
+                {
+                    UserInfos[c.SenderUUID] = new TranslatorUserInfo()
+                    {
+                        enabled = true,
+                        From = Aurora.GoogleAPIs.Language.GetValue(operators[3]),
+                        To = Aurora.GoogleAPIs.Language.GetValue(operators[1])
+                    };
+                }
+            }
+            else if (c.Message.StartsWith("translator settings", StringComparison.CurrentCultureIgnoreCase))
+            {
+                if (UserInfos.TryGetValue(c.SenderUUID, out UInfo))
+                {
+                    if (operators[2] == "enabled")
+                        UInfo.enabled = bool.Parse(operators[3]);
+                    if (operators[2] == "showold")
+                        UInfo.ShowNonTranslated = bool.Parse(operators[3]);
+                }
+            }
+            else if (c.Message.StartsWith("translator help", StringComparison.CurrentCultureIgnoreCase))
+            {
+                c.Message = "Translate: \n" +
+                    "translate from >> to  - translates from language 'from' into language 'to'\n" +
+                    "Settings:\n" +
+                    "translator settings enabled true/false - enables the translator\n" +
+                    "translator settings showold true/false - shows the original chat\n" +
+                    "Languages\n";
+                foreach (Aurora.GoogleAPIs.Language lang in Aurora.GoogleAPIs.Language.TranslatableList)
+                {
+                    c.Message += lang.Name + " - " + lang.Value + "\n";
+                }
+
+            }
+            else if (UserInfos.TryGetValue(c.SenderUUID, out UInfo))
+            {
+                if (UInfo.enabled)
+                {
+                    TranslateClient tc = new TranslateClient("http://ajax.googleapis.com/ajax/services/language/translate");
+                    string translated = "";
+                    try
+                    {
+                        translated = tc.Translate(c.Message, UInfo.From.Value, UInfo.To.Value);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("[Aurora Translator]: Error in requesting translation, " + ex.ToString());
+                    }
+                    if (!UInfo.ShowNonTranslated)
+                        c.Message = translated;
+                    else
+                        c.Message = translated + " (" + c.Message + ")";
+                }
+            }
+            newc = c;
+            return true;
+        }
+
+        public void OnNewClient(IClientAPI client)
+        {
+        }
+
+        public void OnClosingClient(UUID clientID, Scene scene)
+        {
+            UserInfos.Remove(clientID);
+        }
+
+        public string Name
+        {
+            get { return "TranslatorPlugin"; }
+        }
+
+        public void Dispose()
+        {
+        }
+    }
+
     public class AdminChatPlugin : IChatPlugin
     {
         IChatModule chatModule;
@@ -134,17 +253,19 @@ namespace Aurora.Modules.Avatar.AuroraChat
         {
             Scene scene = (Scene)c.Scene;
             ScenePresence SP = scene.GetScenePresence(c.SenderUUID);
-
-            if (SP.GodLevel != 0 && !!m_authorizedSpeakers.Contains(c.SenderUUID))
-                m_authorizedSpeakers.Add(c.SenderUUID);
-
-            if (SP.GodLevel != 0 && !m_authList.Contains(c.SenderUUID))
-                m_authList.Add(c.SenderUUID);
-
-            if (!m_authorizedSpeakers.Contains(c.SenderUUID))
+            if (SP != null)
             {
-                newc = c;
-                return false;
+                if (SP.GodLevel != 0 && !!m_authorizedSpeakers.Contains(c.SenderUUID))
+                    m_authorizedSpeakers.Add(c.SenderUUID);
+
+                if (SP.GodLevel != 0 && !m_authList.Contains(c.SenderUUID))
+                    m_authList.Add(c.SenderUUID);
+
+                if (!m_authorizedSpeakers.Contains(c.SenderUUID))
+                {
+                    newc = c;
+                    return false;
+                }
             }
 
             if (c.Message.Contains("Chat."))
@@ -221,8 +342,11 @@ namespace Aurora.Modules.Avatar.AuroraChat
                 return false;
             }
 
-            if (SP.GodLevel != 0 && m_indicategod)
-                c.Message = m_godPrefix + c.Message;
+            if (SP != null)
+            {
+                if (SP.GodLevel != 0 && m_indicategod)
+                    c.Message = m_godPrefix + c.Message;
+            }
 
             newc = c;
             return true;
@@ -235,29 +359,25 @@ namespace Aurora.Modules.Avatar.AuroraChat
                 if (!m_authorizedSpeakers.Contains(client.AgentId))
                     m_authorizedSpeakers.Add(client.AgentId);
             }
+            int AgentCount = 0;
             lock (RegionAgentCount)
             {
-                int AgentCount = 0;
-                if (RegionAgentCount.ContainsKey(client.Scene.RegionInfo.RegionID))
-                {
-                    RegionAgentCount.TryGetValue(client.Scene.RegionInfo.RegionID, out AgentCount);
-                    RegionAgentCount.Remove(client.Scene.RegionInfo.RegionID);
-                }
+                RegionAgentCount.TryGetValue(client.Scene.RegionInfo.RegionID, out AgentCount);
                 AgentCount++;
-                RegionAgentCount.Add(client.Scene.RegionInfo.RegionID, AgentCount);
+                RegionAgentCount[client.Scene.RegionInfo.RegionID] = AgentCount;
+            }
 
-                if (m_announceNewAgents)
+            if (m_announceNewAgents)
+            {
+                ((Scene)client.Scene).ForEachScenePresence(delegate(ScenePresence SP)
                 {
-                    ((Scene)client.Scene).ForEachScenePresence(delegate(ScenePresence SP)
+                    if (SP.UUID != client.AgentId && !SP.IsChildAgent)
                     {
-                        if (SP.UUID != client.AgentId && !SP.IsChildAgent)
-                        {
-                            SP.ControllingClient.SendChatMessage(client.Name + " has joined the region. Total Agents: " + AgentCount, 1, SP.AbsolutePosition, "System",
-                                                               UUID.Zero, (byte)ChatSourceType.System, (byte)ChatAudibleLevel.Fully);
-                        }
+                        SP.ControllingClient.SendChatMessage(client.Name + " has joined the region. Total Agents: " + AgentCount, 1, SP.AbsolutePosition, "System",
+                                                           UUID.Zero, (byte)ChatSourceType.System, (byte)ChatAudibleLevel.Fully);
                     }
-                    );
                 }
+                );
             }
 
             if (m_useWelcomeMessage)
@@ -273,35 +393,31 @@ namespace Aurora.Modules.Avatar.AuroraChat
             if (m_authorizedSpeakers.Contains(clientID))
                 m_authorizedSpeakers.Remove(clientID);
 
+            int AgentCount = 0;
             lock (RegionAgentCount)
             {
-                int AgentCount = 0;
-                if (RegionAgentCount.ContainsKey(scene.RegionInfo.RegionID))
-                {
-                    RegionAgentCount.TryGetValue(scene.RegionInfo.RegionID, out AgentCount);
-                    RegionAgentCount.Remove(scene.RegionInfo.RegionID);
-                }
+                RegionAgentCount.TryGetValue(scene.RegionInfo.RegionID, out AgentCount);
                 AgentCount--;
 
                 if (AgentCount < 0)
                     AgentCount = 0;
 
-                RegionAgentCount.Add(scene.RegionInfo.RegionID, AgentCount);
+                RegionAgentCount[scene.RegionInfo.RegionID] = AgentCount;
+            }
 
 
-                if (m_announceClosedAgents)
+            if (m_announceClosedAgents)
+            {
+                string leavingAvatar = scene.GetUserName(clientID);
+                scene.ForEachScenePresence(delegate(ScenePresence SP)
                 {
-                    string leavingAvatar = scene.GetUserName(clientID);
-                    scene.ForEachScenePresence(delegate(ScenePresence SP)
+                    if (SP.UUID != clientID && !SP.IsChildAgent)
                     {
-                        if (SP.UUID != clientID && !SP.IsChildAgent)
-                        {
-                            SP.ControllingClient.SendChatMessage(leavingAvatar + " has left the region. Total Agents: " + AgentCount, 1, SP.AbsolutePosition, "System",
-                                                               UUID.Zero, (byte)ChatSourceType.System, (byte)ChatAudibleLevel.Fully);
-                        }
+                        SP.ControllingClient.SendChatMessage(leavingAvatar + " has left the region. Total Agents: " + AgentCount, 1, SP.AbsolutePosition, "System",
+                                                           UUID.Zero, (byte)ChatSourceType.System, (byte)ChatAudibleLevel.Fully);
                     }
-                    );
                 }
+                );
             }
         }
 

@@ -42,7 +42,7 @@ namespace OpenSim.Services.Interfaces
         /// <param name="regionInfos"> </param>
         /// <returns></returns>
         /// <exception cref="System.Exception">Thrown if region registration failed</exception>
-        string RegisterRegion(UUID scopeID, GridRegion regionInfos);
+        string RegisterRegion(UUID scopeID, GridRegion regionInfos, UUID oldSessionID, out UUID SessionID);
 
         /// <summary>
         /// Deregister a region with the grid service.
@@ -50,7 +50,7 @@ namespace OpenSim.Services.Interfaces
         /// <param name="regionID"></param>
         /// <returns></returns>
         /// <exception cref="System.Exception">Thrown if region deregistration failed</exception>
-        bool DeregisterRegion(UUID regionID);
+        bool DeregisterRegion(UUID regionID, UUID SessionID);
 
         /// <summary>
         /// Get information about the regions neighbouring the given co-ordinates (in meters).
@@ -92,9 +92,19 @@ namespace OpenSim.Services.Interfaces
 
         List<GridRegion> GetDefaultRegions(UUID scopeID);
         List<GridRegion> GetFallbackRegions(UUID scopeID, int x, int y);
-        List<GridRegion> GetHyperlinks(UUID scopeID);
+        List<GridRegion> GetSafeRegions(UUID scopeID, int x, int y);
 
         int GetRegionFlags(UUID scopeID, UUID regionID);
+
+        string UpdateMap(UUID scopeID, UUID RegionID, UUID mapID, UUID terrainID, UUID sessionID);
+
+        multipleMapItemReply GetMapItems(ulong regionHandle, GridItemType gridItemType);
+
+        void RemoveAgent(UUID regionID, UUID agentID);
+
+        void AddAgent(UUID regionID, UUID agentID, Vector3 Position);
+
+        void SetRegionUnsafe(UUID ID);
     }
 
     public class GridRegion
@@ -127,6 +137,13 @@ namespace OpenSim.Services.Interfaces
         }
         protected string m_regionName = String.Empty;
 
+        public string RegionType
+        {
+            get { return m_regionType; }
+            set { m_regionType = value; }
+        }
+        protected string m_regionType = String.Empty;
+
         protected string m_externalHostName;
 
         protected IPEndPoint m_internalEndPoint;
@@ -157,8 +174,9 @@ namespace OpenSim.Services.Interfaces
         public UUID ScopeID = UUID.Zero;
 
         public UUID TerrainImage = UUID.Zero;
+        public UUID TerrainMapImage = UUID.Zero;
         public byte Access;
-        public int  Maturity;
+        public int Maturity;
         public string RegionSecret = string.Empty;
         public string Token = string.Empty;
 
@@ -194,6 +212,7 @@ namespace OpenSim.Services.Interfaces
         public GridRegion(RegionInfo ConvertFrom)
         {
             m_regionName = ConvertFrom.RegionName;
+            m_regionType = ConvertFrom.RegionType;
             m_regionLocX = (int)(ConvertFrom.RegionLocX * Constants.RegionSize);
             m_regionLocY = (int)(ConvertFrom.RegionLocY * Constants.RegionSize);
             m_internalEndPoint = ConvertFrom.InternalEndPoint;
@@ -202,6 +221,7 @@ namespace OpenSim.Services.Interfaces
             RegionID = ConvertFrom.RegionID;
             ServerURI = ConvertFrom.ServerURI;
             TerrainImage = ConvertFrom.RegionSettings.TerrainImageID;
+            TerrainMapImage = ConvertFrom.RegionSettings.TerrainMapImageID;
             Access = ConvertFrom.AccessLevel;
             Maturity = ConvertFrom.RegionSettings.Maturity;
             RegionSecret = ConvertFrom.regionSecret;
@@ -211,6 +231,7 @@ namespace OpenSim.Services.Interfaces
         public GridRegion(GridRegion ConvertFrom)
         {
             m_regionName = ConvertFrom.RegionName;
+            m_regionType = ConvertFrom.RegionType;
             m_regionLocX = ConvertFrom.RegionLocX;
             m_regionLocY = ConvertFrom.RegionLocY;
             m_internalEndPoint = ConvertFrom.InternalEndPoint;
@@ -219,6 +240,7 @@ namespace OpenSim.Services.Interfaces
             RegionID = ConvertFrom.RegionID;
             ServerURI = ConvertFrom.ServerURI;
             TerrainImage = ConvertFrom.TerrainImage;
+            TerrainMapImage = ConvertFrom.TerrainMapImage;
             Access = ConvertFrom.Access;
             Maturity = ConvertFrom.Maturity;
             RegionSecret = ConvertFrom.RegionSecret;
@@ -242,6 +264,12 @@ namespace OpenSim.Services.Interfaces
                 if (IPAddress.TryParse(m_externalHostName, out ia))
                     return new IPEndPoint(ia, m_internalEndPoint.Port);
 
+                try
+                {
+                    if (IPAddress.TryParse(m_externalHostName.Split(':')[0], out ia))
+                        return new IPEndPoint(ia, m_internalEndPoint.Port);
+                }
+                catch { }
                 // Reset for next check
                 ia = null;
                 try
@@ -293,14 +321,17 @@ namespace OpenSim.Services.Interfaces
             kvp["locX"] = RegionLocX.ToString();
             kvp["locY"] = RegionLocY.ToString();
             kvp["regionName"] = RegionName;
+            kvp["regionType"] = RegionType;
             kvp["serverIP"] = ExternalHostName; //ExternalEndPoint.Address.ToString();
             kvp["serverHttpPort"] = HttpPort.ToString();
             kvp["serverURI"] = ServerURI;
             kvp["serverPort"] = InternalEndPoint.Port.ToString();
             kvp["regionMapTexture"] = TerrainImage.ToString();
+            kvp["regionTerrainTexture"] = TerrainMapImage.ToString();
             kvp["access"] = Access.ToString();
             kvp["regionSecret"] = RegionSecret;
             kvp["owner_uuid"] = EstateOwner.ToString();
+            kvp["Maturity"] = Maturity.ToString();
             kvp["Token"] = Token.ToString();
             // Maturity doesn't seem to exist in the DB
             return kvp;
@@ -319,6 +350,9 @@ namespace OpenSim.Services.Interfaces
 
             if (kvp.ContainsKey("regionName"))
                 RegionName = (string)kvp["regionName"];
+
+            if (kvp.ContainsKey("regionType"))
+                RegionType = (string)kvp["regionType"];
 
             if (kvp.ContainsKey("serverIP"))
             {
@@ -350,8 +384,14 @@ namespace OpenSim.Services.Interfaces
             if (kvp.ContainsKey("regionMapTexture"))
                 UUID.TryParse((string)kvp["regionMapTexture"], out TerrainImage);
 
+            if (kvp.ContainsKey("regionTerrainTexture"))
+                UUID.TryParse((string)kvp["regionTerrainTexture"], out TerrainMapImage);
+
             if (kvp.ContainsKey("access"))
                 Access = Byte.Parse((string)kvp["access"]);
+
+            if (kvp.ContainsKey("Maturity"))
+                Maturity = int.Parse((string)kvp["Maturity"]);
 
             if (kvp.ContainsKey("regionSecret"))
                 RegionSecret =(string)kvp["regionSecret"];

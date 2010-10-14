@@ -87,11 +87,12 @@ namespace OpenSim.Data.MSSQL
             {
 
                 cmd.CommandText = String.Format(@"UPDATE {0} SET 
-                                                [RegionID] = @RegionID
+                                                [RegionID] = @RegionID, [LastSeen] = @LastSeen
                                         WHERE [SessionID] = @SessionID", m_Realm);
 
                 cmd.Parameters.Add(m_database.CreateParameter("@SessionID", sessionID.ToString()));
                 cmd.Parameters.Add(m_database.CreateParameter("@RegionID", regionID.ToString()));
+                cmd.Parameters.Add(m_database.CreateParameter("@LastSeen", regionID.ToString()));
                 cmd.Connection = conn;
                 conn.Open();
                 if (cmd.ExecuteNonQuery() == 0)

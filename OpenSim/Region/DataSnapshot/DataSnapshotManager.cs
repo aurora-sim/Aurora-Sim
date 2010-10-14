@@ -66,7 +66,7 @@ namespace OpenSim.Region.DataSnapshot
 
         //DataServices and networking
         private string m_dataServices = "noservices";
-        public string m_listener_port = ConfigSettings.DefaultRegionHttpPort.ToString();
+        public string m_listener_port = "";
         public string m_hostname = "127.0.0.1";
 
         //Update timers

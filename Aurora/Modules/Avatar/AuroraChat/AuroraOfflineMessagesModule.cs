@@ -87,9 +87,9 @@ namespace Aurora.Modules
             if (!enabled)
                 return;
 
-            OfflineMessagesConnector = Aurora.DataManager.DataManager.RequestPlugin<IOfflineMessagesConnector>("IOfflineMessagesConnector");
             if (m_TransferModule == null)
             {
+                OfflineMessagesConnector = Aurora.DataManager.DataManager.RequestPlugin<IOfflineMessagesConnector>();
                 m_TransferModule = scene.RequestModuleInterface<IMessageTransferModule>();
                 if (m_TransferModule == null)
                 {
@@ -99,6 +99,7 @@ namespace Aurora.Modules
                     m_SceneList.Clear();
 
                     m_log.Error("[OFFLINE MESSAGING] No message transfer module is enabled. Diabling offline messages");
+                    return;
                 }
                 m_TransferModule.OnUndeliveredMessage += UndeliveredMessage;
             }
@@ -166,15 +167,14 @@ namespace Aurora.Modules
 
         private void RetrieveInstantMessages(IClientAPI client)
         {
+            if (OfflineMessagesConnector == null)
+                return;
             m_log.DebugFormat("[OFFLINE MESSAGING] Retrieving stored messages for {0}", client.AgentId);
 
             GridInstantMessage[] msglist = OfflineMessagesConnector.GetOfflineMessages(client.AgentId);
 
             foreach (GridInstantMessage IM in msglist)
             {
-
-                // client.SendInstantMessage(im);
-
                 // Send through scene event manager so all modules get a chance
                 // to look at this message before it gets delivered.
                 //
@@ -192,6 +192,12 @@ namespace Aurora.Modules
             if ((im.offline != 0)
                 && (!im.fromGroup || (im.fromGroup && m_ForwardOfflineGroupMessages)))
             {
+                if (im.dialog == 32) //Group notice
+                {
+                    IGroupsModule module = m_SceneList[0].RequestModuleInterface<IGroupsModule>();
+                    if (module != null)
+                        im = module.BuildOfflineGroupNotice(im);
+                }
                 OfflineMessagesConnector.AddOfflineMessage(im);
 
                 if (im.dialog == (byte)InstantMessageDialog.MessageFromAgent)

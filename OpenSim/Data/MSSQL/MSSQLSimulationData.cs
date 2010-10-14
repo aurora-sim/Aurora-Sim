@@ -43,7 +43,7 @@ namespace OpenSim.Data.MSSQL
     /// <summary>
     /// A MSSQL Interface for the Region Server.
     /// </summary>
-    public class MSSQLSimulationData : ISimulationDataStore
+    public class MSSQLRegionDataStore : IRegionDataStore
     {
         private const string _migrationStore = "RegionStore";
 
@@ -55,16 +55,6 @@ namespace OpenSim.Data.MSSQL
         /// </summary>
         private MSSQLManager _Database;
         private string m_connectionString;
-
-        public MSSQLSimulationData()
-        {
-        }
-
-        public MSSQLSimulationData(string connectionString)
-        {
-            Initialise(connectionString);
-        }
-
         /// <summary>
         /// Initialises the region datastore
         /// </summary>
@@ -98,6 +88,7 @@ namespace OpenSim.Data.MSSQL
             Dictionary<UUID, SceneObjectPart> prims = new Dictionary<UUID, SceneObjectPart>();
             Dictionary<UUID, SceneObjectGroup> objects = new Dictionary<UUID, SceneObjectGroup>();
             SceneObjectGroup grp = null;
+
 
             string sql = "SELECT *, " +
                            "sort = CASE WHEN prims.UUID = prims.SceneGroupID THEN 0 ELSE 1 END " +
@@ -241,7 +232,7 @@ namespace OpenSim.Data.MSSQL
         /// <param name="regionUUID"></param>
         public void StoreObject(SceneObjectGroup obj, UUID regionUUID)
         {
-            _Log.DebugFormat("[MSSQL]: Adding/Changing SceneObjectGroup: {0} to region: {1}, object has {2} prims.", obj.UUID, regionUUID, obj.Parts.Length);
+            _Log.InfoFormat("[MSSQL]: Adding/Changing SceneObjectGroup: {0} to region: {1}, object has {2} prims.", obj.UUID, regionUUID, obj.ChildrenList.Count);
 
             using (SqlConnection conn = new SqlConnection(m_connectionString))
             {
@@ -250,7 +241,7 @@ namespace OpenSim.Data.MSSQL
 
                 try
                 {
-                    foreach (SceneObjectPart sceneObjectPart in obj.Parts)
+                    foreach (SceneObjectPart sceneObjectPart in obj.ChildrenList)
                     {
                         //Update prim
                         using (SqlCommand sqlCommand = conn.CreateCommand())
@@ -300,6 +291,7 @@ namespace OpenSim.Data.MSSQL
                     }
                 }
             }
+
         }
 
         /// <summary>
@@ -335,7 +327,7 @@ IF EXISTS (SELECT UUID FROM prims WHERE UUID = @UUID)
             ScriptAccessPin = @ScriptAccessPin, AllowedDrop = @AllowedDrop, DieAtEdge = @DieAtEdge, SalePrice = @SalePrice, 
             SaleType = @SaleType, ColorR = @ColorR, ColorG = @ColorG, ColorB = @ColorB, ColorA = @ColorA, ParticleSystem = @ParticleSystem, 
             ClickAction = @ClickAction, Material = @Material, CollisionSound = @CollisionSound, CollisionSoundVolume = @CollisionSoundVolume, PassTouches = @PassTouches,
-            LinkNumber = @LinkNumber, MediaURL = @MediaURL
+            LinkNumber = @LinkNumber
         WHERE UUID = @UUID
     END
 ELSE
@@ -350,7 +342,7 @@ ELSE
             PayPrice, PayButton1, PayButton2, PayButton3, PayButton4, LoopedSound, LoopedSoundGain, TextureAnimation, OmegaX, 
             OmegaY, OmegaZ, CameraEyeOffsetX, CameraEyeOffsetY, CameraEyeOffsetZ, CameraAtOffsetX, CameraAtOffsetY, CameraAtOffsetZ, 
             ForceMouselook, ScriptAccessPin, AllowedDrop, DieAtEdge, SalePrice, SaleType, ColorR, ColorG, ColorB, ColorA, 
-            ParticleSystem, ClickAction, Material, CollisionSound, CollisionSoundVolume, PassTouches, LinkNumber, MediaURL
+            ParticleSystem, ClickAction, Material, CollisionSound, CollisionSoundVolume, PassTouches, LinkNumber, Generic
             ) VALUES (
             @UUID, @CreationDate, @Name, @Text, @Description, @SitName, @TouchName, @ObjectFlags, @OwnerMask, @NextOwnerMask, @GroupMask, 
             @EveryoneMask, @BaseMask, @PositionX, @PositionY, @PositionZ, @GroupPositionX, @GroupPositionY, @GroupPositionZ, @VelocityX, 
@@ -360,7 +352,7 @@ ELSE
             @PayPrice, @PayButton1, @PayButton2, @PayButton3, @PayButton4, @LoopedSound, @LoopedSoundGain, @TextureAnimation, @OmegaX, 
             @OmegaY, @OmegaZ, @CameraEyeOffsetX, @CameraEyeOffsetY, @CameraEyeOffsetZ, @CameraAtOffsetX, @CameraAtOffsetY, @CameraAtOffsetZ, 
             @ForceMouselook, @ScriptAccessPin, @AllowedDrop, @DieAtEdge, @SalePrice, @SaleType, @ColorR, @ColorG, @ColorB, @ColorA, 
-            @ParticleSystem, @ClickAction, @Material, @CollisionSound, @CollisionSoundVolume, @PassTouches, @LinkNumber, @MediaURL
+            @ParticleSystem, @ClickAction, @Material, @CollisionSound, @CollisionSoundVolume, @PassTouches, @LinkNumber, @Generic
             )
     END";
 
@@ -393,7 +385,7 @@ IF EXISTS (SELECT UUID FROM primshapes WHERE UUID = @UUID)
             PathSkew = @PathSkew, PathCurve = @PathCurve, PathRadiusOffset = @PathRadiusOffset, PathRevolutions = @PathRevolutions, 
             PathTaperX = @PathTaperX, PathTaperY = @PathTaperY, PathTwist = @PathTwist, PathTwistBegin = @PathTwistBegin, 
             ProfileBegin = @ProfileBegin, ProfileEnd = @ProfileEnd, ProfileCurve = @ProfileCurve, ProfileHollow = @ProfileHollow, 
-            Texture = @Texture, ExtraParams = @ExtraParams, State = @State, Media = @Media
+            Texture = @Texture, ExtraParams = @ExtraParams, State = @State
         WHERE UUID = @UUID
     END
 ELSE
@@ -402,11 +394,11 @@ ELSE
             primshapes (
             UUID, Shape, ScaleX, ScaleY, ScaleZ, PCode, PathBegin, PathEnd, PathScaleX, PathScaleY, PathShearX, PathShearY, 
             PathSkew, PathCurve, PathRadiusOffset, PathRevolutions, PathTaperX, PathTaperY, PathTwist, PathTwistBegin, ProfileBegin, 
-            ProfileEnd, ProfileCurve, ProfileHollow, Texture, ExtraParams, State, Media
+            ProfileEnd, ProfileCurve, ProfileHollow, Texture, ExtraParams, State
             ) VALUES (
             @UUID, @Shape, @ScaleX, @ScaleY, @ScaleZ, @PCode, @PathBegin, @PathEnd, @PathScaleX, @PathScaleY, @PathShearX, @PathShearY, 
             @PathSkew, @PathCurve, @PathRadiusOffset, @PathRevolutions, @PathTaperX, @PathTaperY, @PathTwist, @PathTwistBegin, @ProfileBegin, 
-            @ProfileEnd, @ProfileCurve, @ProfileHollow, @Texture, @ExtraParams, @State, @Media
+            @ProfileEnd, @ProfileCurve, @ProfileHollow, @Texture, @ExtraParams, @State
             )
     END";
 
@@ -452,6 +444,68 @@ ELSE
                     cmd.ExecuteNonQuery();
 
                     cmd.CommandText = sqlPrims;
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
+        public void RemoveObjects(List<UUID> objGroups)
+        {
+            //This is extremely bad, but I don't know enough about MSSQL to fix
+            //TODO: Add multiple deleting to MSSQL
+            foreach (UUID objectID in objGroups)
+            {
+                //Remove from prims and primsitem table
+                string sqlPrims = "DELETE FROM PRIMS WHERE SceneGroupID = @objectID";
+                string sqlPrimItems = "DELETE FROM PRIMITEMS WHERE primID in (SELECT UUID FROM PRIMS WHERE SceneGroupID = @objectID)";
+                string sqlPrimShapes = "DELETE FROM PRIMSHAPES WHERE uuid in (SELECT UUID FROM PRIMS WHERE SceneGroupID = @objectID)";
+
+                lock (_Database)
+                {
+                    //Using the non transaction mode.
+                    using (SqlConnection conn = new SqlConnection(m_connectionString))
+                    using (SqlCommand cmd = new SqlCommand())
+                    {
+                        cmd.Connection = conn;
+                        cmd.CommandText = sqlPrimShapes;
+                        conn.Open();
+                        cmd.Parameters.Add(_Database.CreateParameter("objectID", objectID));
+                        cmd.ExecuteNonQuery();
+
+                        cmd.CommandText = sqlPrimItems;
+                        cmd.ExecuteNonQuery();
+
+                        cmd.CommandText = sqlPrims;
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Removes a object from the database.
+        /// Meaning removing it from tables Prims, PrimShapes and PrimItems
+        /// </summary>
+        /// <param name="objectID">id of scenegroup</param>
+        /// <param name="regionUUID">regionUUID (is this used anyway</param>
+        public void RemoveRegion(UUID regionUUID)
+        {
+            _Log.InfoFormat("[MSSQL]: Removing region: {0}", regionUUID);
+
+            //TODO: Remove from prims and primsitem table
+            string sqlPrims = "DELETE FROM PRIMS WHERE RegionUUID = @regionID";
+            
+            lock (_Database)
+            {
+                //Using the non transaction mode.
+                using (SqlConnection conn = new SqlConnection(m_connectionString))
+                using (SqlCommand cmd = new SqlCommand())
+                {
+                    cmd.Connection = conn;
+                    cmd.CommandText = sqlPrims;
+                    cmd.ExecuteNonQuery();
+                    conn.Open();
+                    cmd.Parameters.Add(_Database.CreateParameter("regionID", regionUUID));
                     cmd.ExecuteNonQuery();
                 }
             }
@@ -510,18 +564,19 @@ ELSE
         /// </summary>
         /// <param name="regionID">regionID.</param>
         /// <returns></returns>
-        public double[,] LoadTerrain(UUID regionID)
+        public double[,] LoadTerrain(UUID regionID, bool Revert)
         {
             double[,] terrain = new double[(int)Constants.RegionSize, (int)Constants.RegionSize];
             terrain.Initialize();
 
-            string sql = "select top 1 RegionUUID, Revision, Heightfield from terrain where RegionUUID = @RegionUUID order by Revision desc";
+            string sql = "select top 1 RegionUUID, Revision, Heightfield from terrain where RegionUUID = @RegionUUID and Revert = @Revert order by Revision desc";
 
             using (SqlConnection conn = new SqlConnection(m_connectionString))
             using (SqlCommand cmd = new SqlCommand(sql, conn))
             {
                 // MySqlParameter param = new MySqlParameter();
                 cmd.Parameters.Add(_Database.CreateParameter("@RegionUUID", regionID));
+                cmd.Parameters.Add(_Database.CreateParameter("@Revert", Revert));
                 conn.Open();
                 using (SqlDataReader reader = cmd.ExecuteReader())
                 {
@@ -544,7 +599,7 @@ ELSE
                         _Log.Info("[REGION DB]: No terrain found for region");
                         return null;
                     }
-                    _Log.Info("[REGION DB]: Loaded terrain revision r" + rev);
+                    //_Log.Info("[REGION DB]: Loaded terrain revision r" + rev);
                 }
             }
 
@@ -556,21 +611,22 @@ ELSE
         /// </summary>
         /// <param name="terrain">terrain map data.</param>
         /// <param name="regionID">regionID.</param>
-        public void StoreTerrain(double[,] terrain, UUID regionID)
+        public void StoreTerrain(double[,] terrain, UUID regionID, bool Revert)
         {
             int revision = Util.UnixTimeSinceEpoch();
 
             //Delete old terrain map
-            string sql = "delete from terrain where RegionUUID=@RegionUUID";
+            string sql = "delete from terrain where RegionUUID=@RegionUUID and Revert = @Revert";
             using (SqlConnection conn = new SqlConnection(m_connectionString))
             using (SqlCommand cmd = new SqlCommand(sql, conn))
             {
                 cmd.Parameters.Add(_Database.CreateParameter("@RegionUUID", regionID));
+                cmd.Parameters.Add(_Database.CreateParameter("@Revert", Revert.ToString()));
                 conn.Open();
                 cmd.ExecuteNonQuery();
             }
 
-            sql = "insert into terrain(RegionUUID, Revision, Heightfield) values(@RegionUUID, @Revision, @Heightfield)";
+            sql = "insert into terrain(RegionUUID, Revision, Heightfield, Revert) values(@RegionUUID, @Revision, @Heightfield, @Revert)";
 
             using (SqlConnection conn = new SqlConnection(m_connectionString))
             using (SqlCommand cmd = new SqlCommand(sql, conn))
@@ -578,6 +634,7 @@ ELSE
                 cmd.Parameters.Add(_Database.CreateParameter("@RegionUUID", regionID));
                 cmd.Parameters.Add(_Database.CreateParameter("@Revision", revision));
                 cmd.Parameters.Add(_Database.CreateParameter("@Heightfield", serializeTerrain(terrain)));
+                cmd.Parameters.Add(_Database.CreateParameter("@Revert", Revert.ToString()));
                 conn.Open();
                 cmd.ExecuteNonQuery();
             }
@@ -638,24 +695,24 @@ ELSE
         /// Stores land object with landaccess list.
         /// </summary>
         /// <param name="parcel">parcel data.</param>
-        public void StoreLandObject(ILandObject parcel)
+        public void StoreLandObject(LandData parcel)
         {
             //As this is only one record in land table I just delete all and then add a new record.
             //As the delete landaccess is already in the mysql code
 
             //Delete old values
-            RemoveLandObject(parcel.LandData.GlobalID);
+            RemoveLandObject(parcel.RegionID, parcel.GlobalID);
 
             //Insert new values
             string sql = @"INSERT INTO [land] 
-([UUID],[RegionUUID],[LocalLandID],[Bitmap],[Name],[Description],[OwnerUUID],[IsGroupOwned],[Area],[AuctionID],[Category],[ClaimDate],[ClaimPrice],[GroupUUID],[SalePrice],[LandStatus],[LandFlags],[LandingType],[MediaAutoScale],[MediaTextureUUID],[MediaURL],[MusicURL],[PassHours],[PassPrice],[SnapshotUUID],[UserLocationX],[UserLocationY],[UserLocationZ],[UserLookAtX],[UserLookAtY],[UserLookAtZ],[AuthbuyerID],[OtherCleanTime])
+([UUID],[RegionUUID],[LocalLandID],[Bitmap],[Name],[Description],[OwnerUUID],[IsGroupOwned],[Area],[AuctionID],[Category],[ClaimDate],[ClaimPrice],[GroupUUID],[SalePrice],[LandStatus],[LandFlags],[LandingType],[MediaAutoScale],[MediaTextureUUID],[MediaURL],[MusicURL],[PassHours],[PassPrice],[SnapshotUUID],[UserLocationX],[UserLocationY],[UserLocationZ],[UserLookAtX],[UserLookAtY],[UserLookAtZ],[AuthbuyerID],[OtherCleanTime],[Dwell])
 VALUES
-(@UUID,@RegionUUID,@LocalLandID,@Bitmap,@Name,@Description,@OwnerUUID,@IsGroupOwned,@Area,@AuctionID,@Category,@ClaimDate,@ClaimPrice,@GroupUUID,@SalePrice,@LandStatus,@LandFlags,@LandingType,@MediaAutoScale,@MediaTextureUUID,@MediaURL,@MusicURL,@PassHours,@PassPrice,@SnapshotUUID,@UserLocationX,@UserLocationY,@UserLocationZ,@UserLookAtX,@UserLookAtY,@UserLookAtZ,@AuthbuyerID,@OtherCleanTime)";
+(@UUID,@RegionUUID,@LocalLandID,@Bitmap,@Name,@Description,@OwnerUUID,@IsGroupOwned,@Area,@AuctionID,@Category,@ClaimDate,@ClaimPrice,@GroupUUID,@SalePrice,@LandStatus,@LandFlags,@LandingType,@MediaAutoScale,@MediaTextureUUID,@MediaURL,@MusicURL,@PassHours,@PassPrice,@SnapshotUUID,@UserLocationX,@UserLocationY,@UserLocationZ,@UserLookAtX,@UserLookAtY,@UserLookAtZ,@AuthbuyerID,@OtherCleanTime,@Dwell)";
 
             using (SqlConnection conn = new SqlConnection(m_connectionString))
             using (SqlCommand cmd = new SqlCommand(sql, conn))
             {
-                cmd.Parameters.AddRange(CreateLandParameters(parcel.LandData, parcel.RegionUUID));
+                cmd.Parameters.AddRange(CreateLandParameters(parcel, parcel.RegionID));
                 conn.Open();
                 cmd.ExecuteNonQuery();
             }
@@ -666,9 +723,9 @@ VALUES
             using (SqlCommand cmd = new SqlCommand(sql, conn))
             {
                 conn.Open();
-                foreach (ParcelManager.ParcelAccessEntry parcelAccessEntry in parcel.LandData.ParcelAccessList)
+                foreach (ParcelManager.ParcelAccessEntry parcelAccessEntry in parcel.ParcelAccessList)
                 {
-                    cmd.Parameters.AddRange(CreateLandAccessParameters(parcelAccessEntry, parcel.RegionUUID));
+                    cmd.Parameters.AddRange(CreateLandAccessParameters(parcelAccessEntry, parcel.RegionID));
 
                     cmd.ExecuteNonQuery();
                     cmd.Parameters.Clear();
@@ -680,7 +737,7 @@ VALUES
         /// Removes a land object from DB.
         /// </summary>
         /// <param name="globalID">UUID of landobject</param>
-        public void RemoveLandObject(UUID globalID)
+        public void RemoveLandObject(UUID RegionID, UUID globalID)
         {
             string sql = "delete from land where UUID=@UUID";
             using (SqlConnection conn = new SqlConnection(m_connectionString))
@@ -699,16 +756,7 @@ VALUES
                 cmd.ExecuteNonQuery();
             }
         }
-        public RegionLightShareData LoadRegionWindlightSettings(UUID regionUUID)
-        {
-            //This connector doesn't support the windlight module yet
-            //Return default LL windlight settings
-            return new RegionLightShareData();
-        }
-        public void StoreRegionWindlightSettings(RegionLightShareData wl)
-        {
-            //This connector doesn't support the windlight module yet
-        }
+
         /// <summary>
         /// Loads the settings of a region.
         /// </summary>
@@ -904,6 +952,7 @@ VALUES
                                                  Convert.ToSingle(row["sunvectorz"])
                                                  );
             newSettings.Covenant = new UUID((Guid)row["covenant"]);
+            newSettings.MinimumAge = Convert.ToInt32(row["minimum_age"]);
 
             newSettings.LoadedCreationDateTime = Convert.ToInt32(row["loaded_creation_datetime"]);
 
@@ -964,6 +1013,7 @@ VALUES
             newData.SnapshotID = new UUID((Guid)row["SnapshotUUID"]);
 
             newData.OtherCleanTime = Convert.ToInt32(row["OtherCleanTime"]);
+            newData.Dwell = Convert.ToInt32(row["Dwell"]);
 
             try
             {
@@ -1024,7 +1074,7 @@ VALUES
             prim.SitName = (string)primRow["SitName"];
             prim.TouchName = (string)primRow["TouchName"];
             // permissions
-            prim.Flags = (PrimFlags)Convert.ToUInt32(primRow["ObjectFlags"]);
+            prim.ObjectFlags = Convert.ToUInt32(primRow["ObjectFlags"]);
             prim.CreatorID = new UUID((Guid)primRow["CreatorID"]);
             prim.OwnerID = new UUID((Guid)primRow["OwnerID"]);
             prim.GroupID = new UUID((Guid)primRow["GroupID"]);
@@ -1098,20 +1148,20 @@ VALUES
                                         Convert.ToSingle(primRow["OmegaY"]),
                                         Convert.ToSingle(primRow["OmegaZ"]));
 
-            prim.SetCameraEyeOffset(new Vector3(
+            prim.CameraEyeOffset = new Vector3(
                                         Convert.ToSingle(primRow["CameraEyeOffsetX"]),
                                         Convert.ToSingle(primRow["CameraEyeOffsetY"]),
                                         Convert.ToSingle(primRow["CameraEyeOffsetZ"])
-                                        ));
+                                        );
 
-            prim.SetCameraAtOffset(new Vector3(
+            prim.CameraAtOffset = new Vector3(
                                        Convert.ToSingle(primRow["CameraAtOffsetX"]),
                                        Convert.ToSingle(primRow["CameraAtOffsetY"]),
                                        Convert.ToSingle(primRow["CameraAtOffsetZ"])
-                                       ));
+                                       );
 
             if (Convert.ToInt16(primRow["ForceMouselook"]) != 0)
-                prim.SetForceMouselook(true);
+                prim.ForceMouselook = (true);
 
             prim.ScriptAccessPin = Convert.ToInt32(primRow["ScriptAccessPin"]);
 
@@ -1131,12 +1181,9 @@ VALUES
 
             prim.CollisionSound = new UUID((Guid)primRow["CollisionSound"]);
             prim.CollisionSoundVolume = Convert.ToSingle(primRow["CollisionSoundVolume"]);
-            if (Convert.ToInt16(primRow["PassTouches"]) != 0)
-                prim.PassTouches = true;
+            prim.PassTouch = Convert.ToInt32(primRow["PassTouches"]);
             prim.LinkNum = Convert.ToInt32(primRow["LinkNumber"]);
-            
-            if (!(primRow["MediaURL"] is System.DBNull))
-                prim.MediaUrl = (string)primRow["MediaURL"];
+            prim.GenericData = (string)primRow["Generic"];
 
             return prim;
         }
@@ -1190,9 +1237,6 @@ VALUES
             {
             }
 
-            if (!(shapeRow["Media"] is System.DBNull))
-                baseShape.Media = PrimitiveBaseShape.MediaList.FromXml((string)shapeRow["Media"]);
-
             return baseShape;
         }
 
@@ -1227,6 +1271,8 @@ VALUES
             taskItem.EveryonePermissions = Convert.ToUInt32(inventoryRow["everyonePermissions"]);
             taskItem.GroupPermissions = Convert.ToUInt32(inventoryRow["groupPermissions"]);
             taskItem.Flags = Convert.ToUInt32(inventoryRow["flags"]);
+            taskItem.SalePrice = Convert.ToInt32(inventoryRow["salePrice"]);
+            taskItem.SaleType = Convert.ToByte(inventoryRow["saleType"]);
 
             return taskItem;
         }
@@ -1264,6 +1310,8 @@ VALUES
             parameters.Add(_Database.CreateParameter("everyonePermissions", taskItem.EveryonePermissions));
             parameters.Add(_Database.CreateParameter("groupPermissions", taskItem.GroupPermissions));
             parameters.Add(_Database.CreateParameter("flags", taskItem.Flags));
+            parameters.Add(_Database.CreateParameter("salePrice", taskItem.SalePrice));
+            parameters.Add(_Database.CreateParameter("saleType", taskItem.SaleType));
 
             return parameters.ToArray();
         }
@@ -1316,6 +1364,7 @@ VALUES
             parameters.Add(_Database.CreateParameter("covenant", settings.Covenant));
             parameters.Add(_Database.CreateParameter("Loaded_Creation_DateTime", settings.LoadedCreationDateTime));
             parameters.Add(_Database.CreateParameter("Loaded_Creation_ID", settings.LoadedCreationID));
+            parameters.Add(_Database.CreateParameter("minimum_age", settings.LoadedCreationDateTime));
 
             return parameters.ToArray();
         }
@@ -1366,6 +1415,7 @@ VALUES
             parameters.Add(_Database.CreateParameter("UserLookAtZ", land.UserLookAt.Z));
             parameters.Add(_Database.CreateParameter("AuthBuyerID", land.AuthBuyerID));
             parameters.Add(_Database.CreateParameter("OtherCleanTime", land.OtherCleanTime));
+            parameters.Add(_Database.CreateParameter("Dwell", land.Dwell));
 
             return parameters.ToArray();
         }
@@ -1414,7 +1464,7 @@ VALUES
             parameters.Add(_Database.CreateParameter("SitName", prim.SitName));
             parameters.Add(_Database.CreateParameter("TouchName", prim.TouchName));
             // permissions
-            parameters.Add(_Database.CreateParameter("ObjectFlags", (uint)prim.Flags));
+            parameters.Add(_Database.CreateParameter("ObjectFlags", prim.ObjectFlags));
             parameters.Add(_Database.CreateParameter("CreatorID", prim.CreatorID));
             parameters.Add(_Database.CreateParameter("OwnerID", prim.OwnerID));
             parameters.Add(_Database.CreateParameter("GroupID", prim.GroupID));
@@ -1482,15 +1532,15 @@ VALUES
             parameters.Add(_Database.CreateParameter("OmegaY", prim.AngularVelocity.Y));
             parameters.Add(_Database.CreateParameter("OmegaZ", prim.AngularVelocity.Z));
 
-            parameters.Add(_Database.CreateParameter("CameraEyeOffsetX", prim.GetCameraEyeOffset().X));
-            parameters.Add(_Database.CreateParameter("CameraEyeOffsetY", prim.GetCameraEyeOffset().Y));
-            parameters.Add(_Database.CreateParameter("CameraEyeOffsetZ", prim.GetCameraEyeOffset().Z));
+            parameters.Add(_Database.CreateParameter("CameraEyeOffsetX", prim.CameraEyeOffset.X));
+            parameters.Add(_Database.CreateParameter("CameraEyeOffsetY", prim.CameraEyeOffset.Y));
+            parameters.Add(_Database.CreateParameter("CameraEyeOffsetZ", prim.CameraEyeOffset.Z));
 
-            parameters.Add(_Database.CreateParameter("CameraAtOffsetX", prim.GetCameraAtOffset().X));
-            parameters.Add(_Database.CreateParameter("CameraAtOffsetY", prim.GetCameraAtOffset().Y));
-            parameters.Add(_Database.CreateParameter("CameraAtOffsetZ", prim.GetCameraAtOffset().Z));
+            parameters.Add(_Database.CreateParameter("CameraAtOffsetX", prim.CameraAtOffset.X));
+            parameters.Add(_Database.CreateParameter("CameraAtOffsetY", prim.CameraAtOffset.Y));
+            parameters.Add(_Database.CreateParameter("CameraAtOffsetZ", prim.CameraAtOffset.Z));
 
-            if (prim.GetForceMouselook())
+            if (prim.ForceMouselook)
                 parameters.Add(_Database.CreateParameter("ForceMouselook", 1));
             else
                 parameters.Add(_Database.CreateParameter("ForceMouselook", 0));
@@ -1517,13 +1567,9 @@ VALUES
 
             parameters.Add(_Database.CreateParameter("CollisionSound", prim.CollisionSound));
             parameters.Add(_Database.CreateParameter("CollisionSoundVolume", prim.CollisionSoundVolume));
-            if (prim.PassTouches)
-                parameters.Add(_Database.CreateParameter("PassTouches", 1));
-            else
-                parameters.Add(_Database.CreateParameter("PassTouches", 0));
+            parameters.Add(_Database.CreateParameter("PassTouches", prim.PassTouch));
             parameters.Add(_Database.CreateParameter("LinkNumber", prim.LinkNum));
-            parameters.Add(_Database.CreateParameter("MediaURL", prim.MediaUrl));
-
+            parameters.Add(_Database.CreateParameter("Generic", prim.GenericData));
             return parameters.ToArray();
         }
 
@@ -1570,7 +1616,6 @@ VALUES
             parameters.Add(_Database.CreateParameter("Texture", s.TextureEntry));
             parameters.Add(_Database.CreateParameter("ExtraParams", s.ExtraParams));
             parameters.Add(_Database.CreateParameter("State", s.State));
-            parameters.Add(_Database.CreateParameter("Media", null == s.Media ? null : s.Media.ToXml()));
 
             return parameters.ToArray();
         }

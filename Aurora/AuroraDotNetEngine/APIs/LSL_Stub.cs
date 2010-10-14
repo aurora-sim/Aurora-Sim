@@ -75,19 +75,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             return m_LSL_Functions.llAcos(val);
         }
 
-        public void llAddToLandBanList(string avatar, double hours)
+        public DateTime llAddToLandBanList(string avatar, double hours)
         {
-            m_LSL_Functions.llAddToLandBanList(avatar, hours);
+            return m_LSL_Functions.llAddToLandBanList(avatar, hours);
         }
 
-        public void llAddToLandPassList(string avatar, double hours)
+        public DateTime llAddToLandPassList(string avatar, double hours)
         {
-            m_LSL_Functions.llAddToLandPassList(avatar, hours);
+            return m_LSL_Functions.llAddToLandPassList(avatar, hours);
         }
 
-        public void llAdjustSoundVolume(double volume)
+        public DateTime llAdjustSoundVolume(double volume)
         {
-            m_LSL_Functions.llAdjustSoundVolume(volume);
+            return m_LSL_Functions.llAdjustSoundVolume(volume);
         }
 
         public void llAllowInventoryDrop(int add)
@@ -200,9 +200,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             return m_LSL_Functions.llCos(f);
         }
 
-        public void llCreateLink(string target, int parent)
+        public DateTime llCreateLink(string target, int parent)
         {
-            m_LSL_Functions.llCreateLink(target, parent);
+            return m_LSL_Functions.llCreateLink(target, parent);
         }
 
         public LSL_List llCSV2List(string src)
@@ -305,9 +305,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             return m_LSL_Functions.llDetectedVel(number);
         }
 
-        public void llDialog(string avatar, string message, LSL_List buttons, int chat_channel)
+        public DateTime llDialog(string avatar, string message, LSL_List buttons, int chat_channel)
         {
-            m_LSL_Functions.llDialog(avatar, message, buttons, chat_channel);
+            return m_LSL_Functions.llDialog(avatar, message, buttons, chat_channel);
         }
 
         public void llDie()
@@ -325,14 +325,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             return m_LSL_Functions.llEdgeOfWorld(pos, dir);
         }
 
-        public void llEjectFromLand(string pest)
+        public DateTime llEjectFromLand(string pest)
         {
-            m_LSL_Functions.llEjectFromLand(pest);
+            return m_LSL_Functions.llEjectFromLand(pest);
         }
 
-        public void llEmail(string address, string subject, string message)
+        public DateTime llEmail(string address, string subject, string message)
         {
-            m_LSL_Functions.llEmail(address, subject, message);
+            return m_LSL_Functions.llEmail(address, subject, message);
         }
 
         public LSL_String llEscapeURL(string url)
@@ -820,9 +820,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             return m_LSL_Functions.llGetWallclock();
         }
 
-        public void llGiveInventory(string destination, string inventory)
+        public DateTime llGiveInventory(string destination, string inventory)
         {
-            m_LSL_Functions.llGiveInventory(destination, inventory);
+            return m_LSL_Functions.llGiveInventory(destination, inventory);
         }
 
         public void llGiveInventoryList(string destination, string category, LSL_List inventory)
@@ -880,9 +880,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             return m_LSL_Functions.llInsertString(dst, position, src);
         }
 
-        public void llInstantMessage(string user, string message)
+        public DateTime llInstantMessage(string user, string message)
         {
-            m_LSL_Functions.llInstantMessage(user, message);
+            return m_LSL_Functions.llInstantMessage(user, message);
         }
 
         public LSL_String llIntegerToBase64(int number)
@@ -990,9 +990,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             return m_LSL_Functions.llListStatistics(operation, src);
         }
 
-        public void llLoadURL(string avatar_id, string message, string url)
+        public DateTime llLoadURL(string avatar_id, string message, string url)
         {
-            m_LSL_Functions.llLoadURL(avatar_id, message, url);
+            return m_LSL_Functions.llLoadURL(avatar_id, message, url);
         }
 
         public LSL_Float llLog(double val)
@@ -1025,29 +1025,29 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             m_LSL_Functions.llLoopSoundSlave(sound, volume);
         }
 
-        public void llMakeExplosion(int particles, double scale, double vel, double lifetime, double arc, string texture, LSL_Vector offset)
+        public DateTime llMakeExplosion(int particles, double scale, double vel, double lifetime, double arc, string texture, LSL_Vector offset)
         {
-            m_LSL_Functions.llMakeExplosion(particles, scale, vel, lifetime, arc, texture, offset);
+            return m_LSL_Functions.llMakeExplosion(particles, scale, vel, lifetime, arc, texture, offset);
         }
 
-        public void llMakeFire(int particles, double scale, double vel, double lifetime, double arc, string texture, LSL_Vector offset)
+        public DateTime llMakeFire(int particles, double scale, double vel, double lifetime, double arc, string texture, LSL_Vector offset)
         {
-            m_LSL_Functions.llMakeFire(particles, scale, vel, lifetime, arc, texture, offset);
+            return m_LSL_Functions.llMakeFire(particles, scale, vel, lifetime, arc, texture, offset);
         }
 
-        public void llMakeFountain(int particles, double scale, double vel, double lifetime, double arc, int bounce, string texture, LSL_Vector offset, double bounce_offset)
+        public DateTime llMakeFountain(int particles, double scale, double vel, double lifetime, double arc, int bounce, string texture, LSL_Vector offset, double bounce_offset)
         {
-            m_LSL_Functions.llMakeFountain(particles, scale, vel, lifetime, arc, bounce, texture, offset, bounce_offset);
+            return m_LSL_Functions.llMakeFountain(particles, scale, vel, lifetime, arc, bounce, texture, offset, bounce_offset);
         }
 
-        public void llMakeSmoke(int particles, double scale, double vel, double lifetime, double arc, string texture, LSL_Vector offset)
+        public DateTime llMakeSmoke(int particles, double scale, double vel, double lifetime, double arc, string texture, LSL_Vector offset)
         {
-            m_LSL_Functions.llMakeSmoke(particles, scale, vel, lifetime, arc, texture, offset);
+            return m_LSL_Functions.llMakeSmoke(particles, scale, vel, lifetime, arc, texture, offset);
         }
 
-        public void llMapDestination(string simname, LSL_Vector pos, LSL_Vector look_at)
+        public DateTime llMapDestination(string simname, LSL_Vector pos, LSL_Vector look_at)
         {
-            m_LSL_Functions.llMapDestination(simname, pos, look_at);
+            return m_LSL_Functions.llMapDestination(simname, pos, look_at);
         }
 
         public LSL_String llMD5String(string src, int nonce)
@@ -1085,14 +1085,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             m_LSL_Functions.llMoveToTarget(target, tau);
         }
 
-        public void llOffsetTexture(double u, double v, int face)
+        public DateTime llOffsetTexture(double u, double v, int face)
         {
-            m_LSL_Functions.llOffsetTexture(u, v, face);
+            return m_LSL_Functions.llOffsetTexture(u, v, face);
         }
 
-        public void llOpenRemoteDataChannel()
+        public DateTime llOpenRemoteDataChannel()
         {
-            m_LSL_Functions.llOpenRemoteDataChannel();
+            return m_LSL_Functions.llOpenRemoteDataChannel();
         }
 
         public LSL_Integer llOverMyLand(string id)
@@ -1105,9 +1105,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             m_LSL_Functions.llOwnerSay(msg);
         }
 
-        public void llParcelMediaCommandList(LSL_List commandList)
+        public DateTime llParcelMediaCommandList(LSL_List commandList)
         {
-            m_LSL_Functions.llParcelMediaCommandList(commandList);
+            return m_LSL_Functions.llParcelMediaCommandList(commandList);
         }
 
         public LSL_List llParcelMediaQuery(LSL_List aList)
@@ -1160,9 +1160,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             return m_LSL_Functions.llPow(fbase, fexponent);
         }
 
-        public void llPreloadSound(string sound)
+        public DateTime llPreloadSound(string sound)
         {
-            m_LSL_Functions.llPreloadSound(sound);
+            return m_LSL_Functions.llPreloadSound(sound);
         }
 
         public void llPushObject(string target, LSL_Vector impulse, LSL_Vector ang_impulse, int local)
@@ -1170,9 +1170,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             m_LSL_Functions.llPushObject(target, impulse, ang_impulse, local);
         }
 
-        public void llRefreshPrimURL()
+        public DateTime llRefreshPrimURL()
         {
-            m_LSL_Functions.llRefreshPrimURL();
+            return m_LSL_Functions.llRefreshPrimURL();
         }
 
         public void llRegionSay(int channelID, string text)
@@ -1195,9 +1195,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             m_LSL_Functions.llReleaseControls();
         }
 
-        public void llRemoteDataReply(string channel, string message_id, string sdata, int idata)
+        public DateTime llRemoteDataReply(string channel, string message_id, string sdata, int idata)
         {
-            m_LSL_Functions.llRemoteDataReply(channel, message_id, sdata, idata);
+            return m_LSL_Functions.llRemoteDataReply(channel, message_id, sdata, idata);
         }
 
         public void llRemoteDataSetRegion()
@@ -1205,24 +1205,24 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             m_LSL_Functions.llRemoteDataSetRegion();
         }
 
-        public void llRemoteLoadScript(string target, string name, int running, int start_param)
+        public DateTime llRemoteLoadScript(string target, string name, int running, int start_param)
         {
-            m_LSL_Functions.llRemoteLoadScript(target, name, running, start_param);
+            return m_LSL_Functions.llRemoteLoadScript(target, name, running, start_param);
         }
 
-        public void llRemoteLoadScriptPin(string target, string name, int pin, int running, int start_param)
+        public DateTime llRemoteLoadScriptPin(string target, string name, int pin, int running, int start_param)
         {
-            m_LSL_Functions.llRemoteLoadScriptPin(target, name, pin, running, start_param);
+            return m_LSL_Functions.llRemoteLoadScriptPin(target, name, pin, running, start_param);
         }
 
-        public void llRemoveFromLandBanList(string avatar)
+        public DateTime llRemoveFromLandBanList(string avatar)
         {
-            m_LSL_Functions.llRemoveFromLandBanList(avatar);
+            return m_LSL_Functions.llRemoveFromLandBanList(avatar);
         }
 
-        public void llRemoveFromLandPassList(string avatar)
+        public DateTime llRemoveFromLandPassList(string avatar)
         {
-            m_LSL_Functions.llRemoveFromLandPassList(avatar);
+            return m_LSL_Functions.llRemoveFromLandPassList(avatar);
         }
 
         public void llRemoveInventory(string item)
@@ -1264,14 +1264,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             return m_LSL_Functions.llRequestURL();
         }
 
-        public void llResetLandBanList()
+        public DateTime llResetLandBanList()
         {
-            m_LSL_Functions.llResetLandBanList();
+            return m_LSL_Functions.llResetLandBanList();
         }
 
-        public void llResetLandPassList()
+        public DateTime llResetLandPassList()
         {
-            m_LSL_Functions.llResetLandPassList();
+            return m_LSL_Functions.llResetLandPassList();
         }
 
         public void llResetOtherScript(string name)
@@ -1289,14 +1289,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             m_LSL_Functions.llResetTime();
         }
 
-        public void llRezAtRoot(string inventory, LSL_Vector position, LSL_Vector velocity, LSL_Rotation rot, int param)
+        public DateTime llRezAtRoot(string inventory, LSL_Vector position, LSL_Vector velocity, LSL_Rotation rot, int param)
         {
-            m_LSL_Functions.llRezAtRoot(inventory, position, velocity, rot, param);
+            return m_LSL_Functions.llRezAtRoot(inventory, position, velocity, rot, param);
         }
 
-        public void llRezObject(string inventory, LSL_Vector pos, LSL_Vector vel, LSL_Rotation rot, int param)
+        public DateTime llRezObject(string inventory, LSL_Vector pos, LSL_Vector vel, LSL_Rotation rot, int param)
         {
-            m_LSL_Functions.llRezObject(inventory, pos, vel, rot, param);
+            return m_LSL_Functions.llRezObject(inventory, pos, vel, rot, param);
         }
 
         public LSL_Float llRot2Angle(LSL_Rotation rot)
@@ -1329,9 +1329,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             return m_LSL_Functions.llRot2Up(r);
         }
 
-        public void llRotateTexture(double rotation, int face)
+        public DateTime llRotateTexture(double rotation, int face)
         {
-            m_LSL_Functions.llRotateTexture(rotation, face);
+            return m_LSL_Functions.llRotateTexture(rotation, face);
         }
 
         public LSL_Rotation llRotBetween(LSL_Vector start, LSL_Vector end)
@@ -1364,14 +1364,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             return m_LSL_Functions.llSameGroup(agent);
         }
 
-        public void llSay(int channelID, string text)
+        public void llSay(int channelID, object text)
         {
             m_LSL_Functions.llSay(channelID, text);
         }
 
-        public void llScaleTexture(double u, double v, int face)
+        public DateTime llScaleTexture(double u, double v, int face)
         {
-            m_LSL_Functions.llScaleTexture(u, v, face);
+            return m_LSL_Functions.llScaleTexture(u, v, face);
         }
 
         public LSL_Integer llScriptDanger(LSL_Vector pos)
@@ -1474,9 +1474,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             m_LSL_Functions.llSetLinkPrimitiveParams(linknumber, rules);
         }
 
-        public void llSetLinkTexture(int linknumber, string texture, int face)
+        public DateTime llSetLinkTexture(int linknumber, string texture, int face)
         {
-            m_LSL_Functions.llSetLinkTexture(linknumber, texture, face);
+            return m_LSL_Functions.llSetLinkTexture(linknumber, texture, face);
         }
 
         public void llSetLinkTextureAnim(int linknum, int mode, int face, int sizex, int sizey, double start, double length, double rate)
@@ -1484,9 +1484,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             m_LSL_Functions.llSetLinkTextureAnim(linknum, mode, face, sizex, sizey, start, length, rate);
         }
 
-        public void llSetLocalRot(LSL_Rotation rot)
+        public DateTime llSetLocalRot(LSL_Rotation rot)
         {
-            m_LSL_Functions.llSetLocalRot(rot);
+            return m_LSL_Functions.llSetLocalRot(rot);
         }
 
         public void llSetObjectDesc(string desc)
@@ -1504,9 +1504,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             m_LSL_Functions.llSetObjectPermMask(mask, value);
         }
 
-        public void llSetParcelMusicURL(string url)
+        public DateTime llSetParcelMusicURL(string url)
         {
-            m_LSL_Functions.llSetParcelMusicURL(url);
+            return m_LSL_Functions.llSetParcelMusicURL(url);
         }
 
         public void llSetPayPrice(int price, LSL_List quick_pay_buttons)
@@ -1514,9 +1514,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             m_LSL_Functions.llSetPayPrice(price, quick_pay_buttons);
         }
 
-        public void llSetPos(LSL_Vector pos)
+        public DateTime llSetPos(LSL_Vector pos)
         {
-            m_LSL_Functions.llSetPos(pos);
+            return m_LSL_Functions.llSetPos(pos);
         }
 
         public void llSetPrimitiveParams(LSL_List rules)
@@ -1529,9 +1529,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             m_LSL_Functions.llSetLinkPrimitiveParamsFast(linknum, rules);
         }
 
-        public void llSetPrimURL(string url)
+        public DateTime llSetPrimURL(string url)
         {
-            m_LSL_Functions.llSetPrimURL(url);
+            return m_LSL_Functions.llSetPrimURL(url);
         }
 
         public void llSetRemoteScriptAccessPin(int pin)
@@ -1539,9 +1539,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             m_LSL_Functions.llSetRemoteScriptAccessPin(pin);
         }
 
-        public void llSetRot(LSL_Rotation rot)
+        public DateTime llSetRot(LSL_Rotation rot)
         {
-            m_LSL_Functions.llSetRot(rot);
+            return m_LSL_Functions.llSetRot(rot);
         }
 
         public void llSetScale(LSL_Vector scale)
@@ -1579,9 +1579,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             m_LSL_Functions.llSetText(text, color, alpha);
         }
 
-        public void llSetTexture(string texture, int face)
+        public DateTime llSetTexture(string texture, int face)
         {
-            m_LSL_Functions.llSetTexture(texture, face);
+            return m_LSL_Functions.llSetTexture(texture, face);
         }
 
         public void llSetTextureAnim(int mode, int face, int sizex, int sizey, double start, double length, double rate)
@@ -1644,9 +1644,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             m_LSL_Functions.llSitTarget(offset, rot);
         }
 
-        public void llSleep(double sec)
+        public DateTime llSleep(double sec)
         {
-            m_LSL_Functions.llSleep(sec);
+            return m_LSL_Functions.llSleep(sec);
         }
 
         public void llSound(string sound, double volume, int queue, int loop)
@@ -1749,14 +1749,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             m_LSL_Functions.llTargetRemove(number);
         }
 
-        public void llTeleportAgentHome(string agent)
+        public DateTime llTeleportAgentHome(string agent)
         {
-            m_LSL_Functions.llTeleportAgentHome(agent);
+            return m_LSL_Functions.llTeleportAgentHome(agent);
         }
 
-        public void llTextBox(string avatar, string message, int chat_channel)
+        public DateTime llTextBox(string avatar, string message, int chat_channel)
         {
-            m_LSL_Functions.llTextBox(avatar, message, chat_channel);
+            return m_LSL_Functions.llTextBox(avatar, message, chat_channel);
         }
 
         public LSL_String llToLower(string source)
@@ -1847,6 +1847,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         public LSL_List llGetPrimMediaParams(LSL_Integer face, LSL_List commandList)
         {
             return m_LSL_Functions.llGetPrimMediaParams(face, commandList);
+        }
+
+        public LSL_Integer llGetLinkNumberOfSides(int LinkNum)
+        {
+            return m_LSL_Functions.llGetLinkNumberOfSides(LinkNum);
         }
     }
 }

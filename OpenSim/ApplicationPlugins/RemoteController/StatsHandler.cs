@@ -28,11 +28,9 @@ namespace OpenSim.ApplicationPlugins.RemoteController
         public void Initialise(IOpenSimBase openSim)
         {
             m_OpenSimBase = openSim;
-            IConfig startupConfig = openSim.ConfigSource.Configs["Startup"];
-            if (startupConfig != null)
-            {
-                userStatsURI = startupConfig.GetString("Stats_URI", String.Empty);
-            }
+            IConfig statsConfig = openSim.ConfigSource.Configs["Stats"];
+            if (statsConfig != null)
+                userStatsURI = statsConfig.GetString("Stats_URI", String.Empty);
         }
 
         public void PostInitialise()
@@ -49,7 +47,6 @@ namespace OpenSim.ApplicationPlugins.RemoteController
 
         public void Dispose()
         {
-            throw new NotImplementedException();
         }
 
         /// <summary>

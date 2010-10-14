@@ -41,7 +41,7 @@ using System.Drawing.Imaging;
 namespace PrimMesher
 {
 
-    public class SculptMesh
+    public unsafe class SculptMesh
     {
         public List<Coord> coords;
         public List<Face> faces;
@@ -133,7 +133,6 @@ namespace PrimMesher
 
                     p2 = p4 - numXElements;
                     p1 = p3 - numXElements;
-
                     Coord c = new Coord(xBegin + x * xStep, yBegin + y * yStep, zMap[y, x]);
                     this.coords.Add(c);
                     if (viewerMode)
@@ -215,6 +214,9 @@ namespace PrimMesher
 
             int rowNdx, colNdx;
 
+            BitmapProcessing.FastBitmap unsafeBMP = new BitmapProcessing.FastBitmap(bitmap);
+            unsafeBMP.LockBitmap(); //Lock the bitmap for the unsafe operation
+            
             for (rowNdx = 0; rowNdx < numRows; rowNdx++)
             {
                 List<Coord> row = new List<Coord>(numCols);
@@ -231,15 +233,16 @@ namespace PrimMesher
                     {
                         for (imageY = imageYStart; imageY < imageYEnd; imageY++)
                         {
-                            Color c = bitmap.GetPixel(imageX, imageY);
-                            if (c.A != 255)
+                            Color pixel = unsafeBMP.GetPixel(imageX, imageY);
+
+                            if (pixel.A != 255)
                             {
-                                bitmap.SetPixel(imageX, imageY, Color.FromArgb(255, c.R, c.G, c.B));
-                                c = bitmap.GetPixel(imageX, imageY);
+                                pixel = Color.FromArgb(255, pixel.R, pixel.G, pixel.B);
+                                unsafeBMP.SetPixel(imageX, imageY, pixel);
                             }
-                            rSum += c.R;
-                            gSum += c.G;
-                            bSum += c.B;
+                            rSum += pixel.R;
+                            gSum += pixel.G;
+                            bSum += pixel.B;
                         }
                     }
                     if (mirror)
@@ -250,6 +253,9 @@ namespace PrimMesher
                 }
                 rows.Add(row);
             }
+
+            unsafeBMP.UnlockBitmap();
+
             return rows;
         }
 
@@ -265,6 +271,9 @@ namespace PrimMesher
 
             int rowNdx, colNdx;
 
+            BitmapProcessing.FastBitmap unsafeBMP = new BitmapProcessing.FastBitmap(bitmap);
+            unsafeBMP.LockBitmap(); //Lock the bitmap for the unsafe operation
+
             for (rowNdx = 0; rowNdx <= numRows; rowNdx++)
             {
                 List<Coord> row = new List<Coord>(numCols);
@@ -275,21 +284,25 @@ namespace PrimMesher
                     imageX = colNdx * scale;
                     if (colNdx == numCols) imageX--;
 
-                    Color c = bitmap.GetPixel(imageX, imageY);
-                    if (c.A != 255)
+                    Color pixel = unsafeBMP.GetPixel(imageX, imageY);
+
+                    if (pixel.A != 255)
                     {
-                        bitmap.SetPixel(imageX, imageY, Color.FromArgb(255, c.R, c.G, c.B));
-                        c = bitmap.GetPixel(imageX, imageY);
+                        pixel = Color.FromArgb(255, pixel.R, pixel.G, pixel.B);
+                        unsafeBMP.SetPixel(imageX, imageY, pixel);
                     }
 
                     if (mirror)
-                        row.Add(new Coord(-(c.R * pixScale - 0.5f), c.G * pixScale - 0.5f, c.B * pixScale - 0.5f));
+                        row.Add(new Coord(-(pixel.R * pixScale - 0.5f), pixel.G * pixScale - 0.5f, pixel.B * pixScale - 0.5f));
                     else
-                        row.Add(new Coord(c.R * pixScale - 0.5f, c.G * pixScale - 0.5f, c.B * pixScale - 0.5f));
+                        row.Add(new Coord(pixel.R * pixScale - 0.5f, pixel.G * pixScale - 0.5f, pixel.B * pixScale - 0.5f));
 
                 }
                 rows.Add(row);
             }
+
+            unsafeBMP.UnlockBitmap();
+
             return rows;
         }
 

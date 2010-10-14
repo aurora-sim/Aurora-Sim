@@ -83,7 +83,7 @@ namespace Aurora.Modules
         private bool m_Enabled = true;
         private ConnectionIdentifier[] Connections;
         public IWCOutgoingConnections OutgoingComms;
-        private SimMapConnector SimMapConnector;
+        private IGridService m_GridService;
 
         public void Initialise(IConfigSource source)
         {
@@ -126,7 +126,7 @@ namespace Aurora.Modules
             if (!m_Enabled)
                 return;
 
-            SimMapConnector = new SimMapConnector(scene.GridService);
+            m_GridService = scene.GridService;
             MainServer.Instance.AddStreamHandler(new IWCIncomingConnections(this));
             MainServer.Instance.AddStreamHandler(new IWCForeignAgentsConnector(this));
 
@@ -144,14 +144,10 @@ namespace Aurora.Modules
 
         private void ContactOtherServers()
         {
-            Action<ConnectionIdentifier> action = new Action<ConnectionIdentifier>(
-                delegate(ConnectionIdentifier connection)
-                {
-                    OutgoingComms.AskOtherServerForConnection(connection);
-                }
-                );
-
-            Parallel.ForEach(Connections, action);
+            foreach(ConnectionIdentifier connection in Connections)
+            {
+                OutgoingComms.AskOtherServerForConnection(connection);
+            }
         }
 
         #region Helpers
@@ -172,9 +168,8 @@ namespace Aurora.Modules
             }
             foreach (OpenSim.Services.Interfaces.GridRegion region in Sims)
             {
-                string result;
-                SimMapConnector.TryAddSimMap(region, out result);
-                m_scenes[0].GridService.RegisterRegion(UUID.Zero, region);
+                UUID SecureSessionID; //TODO: LARGE TODO: Save this SecureSessionID so that they can be delinked!!!
+                m_GridService.RegisterRegion(region.ScopeID, region, out SecureSessionID);
             }
         }
 

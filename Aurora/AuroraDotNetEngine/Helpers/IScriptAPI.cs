@@ -27,21 +27,13 @@
 
 using log4net;
 using System;
-using System.Collections.Generic;
-using OpenSim.Region.ScriptEngine.Shared;
 using OpenSim.Region.Framework.Scenes;
-using OpenSim.Region.Framework.Interfaces;
 using OpenMetaverse;
-using Nini.Config;
-using Amib.Threading;
 using OpenSim.Framework;
-using Aurora.ScriptEngine.AuroraDotNetEngine.Plugins;
-using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
-using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
-    public interface IScriptApi : OpenSim.Framework.IPlugin
+    public interface IScriptApi : IPlugin
     {
         //
         // Each API has an identifier, which is used to load the

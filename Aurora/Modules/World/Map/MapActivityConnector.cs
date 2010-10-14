@@ -42,55 +42,49 @@ namespace Aurora.Modules
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private Scene m_aScene;
-        private Aurora.Framework.ISimMapConnector SimMapConnector;
-        public MapActivityDetector(Aurora.Framework.ISimMapConnector connector)
+        private IGridService m_GridService;
+        public MapActivityDetector(Scene scene)
         {
-            SimMapConnector = connector;
+            m_GridService = scene.GridService;
             //m_log.DebugFormat("[MAP ACTIVITY DETECTOR]: starting ");
-        }
-
-        public void AddRegion(Scene scene)
-        {
             // For now the only events we listen to are these
             // But we could trigger the position update more often
             scene.EventManager.OnMakeRootAgent += OnMakeRootAgent;
             scene.EventManager.OnNewClient += OnNewClient;
-            scene.EventManager.OnAvatarEnteringNewParcel += OnEnteringNewParcel;
+
+            //scene.EventManager.OnAvatarEnteringNewParcel += OnEnteringNewParcel;
 
             if (m_aScene == null)
                 m_aScene = scene;
         }
 
-        public void RemoveRegion(Scene scene)
-        {
-            scene.EventManager.OnMakeRootAgent -= OnMakeRootAgent;
-            scene.EventManager.OnNewClient -= OnNewClient;
-            scene.EventManager.OnAvatarEnteringNewParcel -= OnEnteringNewParcel;
-        }
-
         public void OnNewClient(IClientAPI client)
         {
             client.OnConnectionClosed += OnConnectionClose;
+            client.OnLogout += client_OnLogout;
+        }
+
+        public void client_OnLogout(IClientAPI client)
+        {
+            m_GridService.RemoveAgent(client.Scene.RegionInfo.RegionID,
+                    client.AgentId);
         }
 
         public void OnMakeRootAgent(ScenePresence sp)
         {
-            SimMapConnector.AddAgent(sp.Scene.RegionInfo.RegionID,
+            m_GridService.AddAgent(sp.Scene.RegionInfo.RegionID,
                 sp.UUID, sp.AbsolutePosition);
         }
 
         public void OnConnectionClose(IClientAPI client)
         {
-            if (client.IsLoggingOut)
-            {
-                SimMapConnector.RemoveAgent(client.Scene.RegionInfo.RegionID,
+            m_GridService.RemoveAgent(client.Scene.RegionInfo.RegionID,
                     client.AgentId);
-            }
         }
 
         public void OnEnteringNewParcel(ScenePresence sp, int localLandID, UUID regionID)
         {
-            SimMapConnector.AddAgent(regionID, sp.UUID, sp.AbsolutePosition);
+            //We would do this here... if it wouldn't lag movement into new parcels badly
         }
     }
 }

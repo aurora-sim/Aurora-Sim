@@ -182,7 +182,6 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         public event RequestMapName OnMapNameRequest;
         public event TeleportLocationRequest OnTeleportLocationRequest;
         public event TeleportLandmarkRequest OnTeleportLandmarkRequest;
-        public event DisconnectUser OnDisconnectUser;
         public event RequestAvatarProperties OnRequestAvatarProperties;
         public event SetAlwaysRun OnSetAlwaysRun;
 
@@ -190,7 +189,6 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         public event Action<IClientAPI> OnRegionHandShakeReply;
         public event GenericCall2 OnRequestWearables;
         public event GenericCall1 OnCompleteMovementToRegion;
-        public event UpdateAgent OnPreAgentUpdate;
         public event UpdateAgent OnAgentUpdate;
         public event AgentRequestSit OnAgentRequestSit;
         public event AgentSit OnAgentSit;
@@ -222,8 +220,8 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         public event GenericCall7 OnObjectMaterial;
         public event UpdatePrimFlags OnUpdatePrimFlags;
         public event UpdatePrimTexture OnUpdatePrimTexture;
-        public event UpdateVector OnUpdatePrimGroupPosition;
-        public event UpdateVector OnUpdatePrimSinglePosition;
+        public event UpdateVectorWithUpdate OnUpdatePrimGroupPosition;
+        public event UpdateVectorWithUpdate OnUpdatePrimSinglePosition;
         public event UpdatePrimRotation OnUpdatePrimGroupRotation;
         public event UpdatePrimSingleRotationPosition OnUpdatePrimSingleRotationPosition;
         public event UpdatePrimSingleRotation OnUpdatePrimSingleRotation;
@@ -231,8 +229,6 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         public event UpdateVector OnUpdatePrimScale;
         public event UpdateVector OnUpdatePrimGroupScale;
         public event StatusChange OnChildAgentStatus;
-        public event GenericCall2 OnStopMovement;
-        public event Action<UUID> OnRemoveAvatar;
 
         public event CreateNewInventoryItem OnCreateNewInventoryItem;
         public event LinkInventoryItem OnLinkInventoryItem;
@@ -257,7 +253,6 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         public event UpdateTaskInventory OnUpdateTaskInventory;
         public event MoveTaskInventory OnMoveTaskItem;
         public event RemoveTaskInventory OnRemoveTaskItem;
-        public event RequestAsset OnRequestAsset;
 
         public event UUIDNameRequest OnNameFromUUIDRequest;
         public event UUIDNameRequest OnUUIDGroupNameRequest;
@@ -401,8 +396,9 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         public event SendPostcard OnSendPostcard;
         public event MuteListEntryUpdate OnUpdateMuteListEntry;
         public event MuteListEntryRemove OnRemoveMuteListEntry;
-        public event GodlikeMessage onGodlikeMessage;
+        public event GodlikeMessage OnGodlikeMessage;
         public event GodUpdateRegionInfoUpdate OnGodUpdateRegionInfoUpdate;
+        public event GodlikeMessage OnEstateTelehubRequest;
 
 #pragma warning restore 67
 
@@ -504,6 +500,10 @@ namespace OpenSim.Region.OptionalModules.World.NPC
 
         public virtual void Kick(string message)
         {
+            // Remove ourselves from the scene
+            m_scene.RemoveClient(AgentId);
+            if (OnConnectionClosed != null)
+                OnConnectionClosed(this);
         }
 
         public virtual void SendStartPingCheck(byte seq)
@@ -519,7 +519,7 @@ namespace OpenSim.Region.OptionalModules.World.NPC
 
         }
 
-        public virtual void SendKillObject(ulong regionHandle, uint localID)
+        public virtual void SendKillObject(ulong regionHandle, uint[] localID)
         {
         }
 
@@ -586,7 +586,24 @@ namespace OpenSim.Region.OptionalModules.World.NPC
 
         public virtual AgentCircuitData RequestClientInfo()
         {
-            return new AgentCircuitData();
+            AgentCircuitData agentData = new AgentCircuitData();
+            agentData.AgentID = AgentId;
+            agentData.SessionID = UUID.Zero;
+            agentData.SecureSessionID = SecureSessionId;
+            agentData.circuitcode = m_circuitCode;
+            agentData.child = false;
+            agentData.firstname = FirstName;
+            agentData.lastname = LastName;
+
+            //ICapabilitiesModule capsModule = m_scene.RequestModuleInterface<ICapabilitiesModule>();
+
+            //if (capsModule == null) // can happen when shutting down.
+                return agentData;
+
+            //agentData.CapsPath = capsModule.GetCapsPath(m_agentId);
+            //agentData.ChildrenCapSeeds = new Dictionary<ulong, string>(capsModule.GetChildrenSeeds(m_agentId));
+
+            //return agentData;
         }
 
         public virtual void CrossRegion(ulong newRegionHandle, Vector3 pos, Vector3 lookAt,
@@ -611,11 +628,7 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         {
         }
 
-        public virtual void SendTeleportStart(uint flags)
-        {
-        }
-
-        public virtual void SendTeleportProgress(uint flags, string message)
+        public virtual void SendTeleportLocationStart()
         {
         }
 
@@ -628,6 +641,10 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         }
 
         public virtual void SendCoarseLocationUpdate(List<UUID> users, List<Vector3> CoarseLocations)
+        {
+        }
+
+        public virtual void AttachObject(uint localID, Quaternion rotation, byte attachPoint, UUID ownerID)
         {
         }
 
@@ -789,17 +806,8 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         {
         }
 
-        public void SendObjectPropertiesReply(UUID ItemID, ulong CreationDate, UUID CreatorUUID, UUID FolderUUID, UUID FromTaskUUID,
-                                              UUID GroupUUID, short InventorySerial, UUID LastOwnerUUID, UUID ObjectUUID,
-                                              UUID OwnerUUID, string TouchTitle, byte[] TextureID, string SitTitle, string ItemName,
-                                              string ItemDescription, uint OwnerMask, uint NextOwnerMask, uint GroupMask, uint EveryoneMask,
-                                              uint BaseMask, byte saleType, int salePrice)
+        public void SendObjectPropertiesReply(List<ISceneEntity> part)
         {
-        }
-
-        public bool AddMoney(int debit)
-        {
-            return false;
         }
 
         public void SendSunPos(Vector3 sunPos, Vector3 sunVel, ulong time, uint dlen, uint ylen, float phase)
@@ -887,15 +895,6 @@ namespace OpenSim.Region.OptionalModules.World.NPC
             return null;
         }
 
-        public ClientInfo GetClientInfo()
-        {
-            return null;
-        }
-
-        public void SetClientInfo(ClientInfo info)
-        {
-        }
-
         public void SendScriptQuestion(UUID objectID, string taskName, string ownerName, UUID itemID, int question)
         {
         }
@@ -976,17 +975,8 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         {
         }
 
-        public void SendParcelInfo (RegionInfo info, LandData land, UUID parcelID, uint x, uint y)
+        public void SendParcelInfo (LandData land, UUID parcelID, uint x, uint y, string simname)
         {
-        }
-
-        public void SetClientOption(string option, string value)
-        {
-        }
-
-        public string GetClientOption(string option)
-        {
-            return string.Empty;
         }
 
         public void SendScriptTeleportRequest (string objName, string simName, Vector3 pos, Vector3 lookAt)
@@ -1022,10 +1012,6 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         }
 
         public void SendMapItemReply(mapItemReply[] replies, uint mapitemtype, uint flags)
-        {
-        }
-
-        public void KillEndDone()
         {
         }
 
@@ -1147,7 +1133,7 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         {
         }
 
-        public void SendGroupVoteHistory(UUID groupID, UUID transactionID, GroupVoteHistory[] Votes)
+        public void SendGroupVoteHistory(UUID groupID, UUID transactionID, GroupVoteHistory Vote, GroupVoteHistoryItem[] Items)
         {
         }
 
@@ -1162,9 +1148,38 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         public void SendTextBoxRequest(string message, int chatChannel, string objectname, string ownerFirstName, string ownerLastName, UUID objectId)
         {
         }
-        
-        public void StopFlying(ISceneEntity presence)
+
+        public void SendPlacesQuery(Aurora.Framework.ExtendedLandData[] LandData, UUID queryID, UUID transactionID)
         {
         }
+        public void FireUpdateParcel(LandUpdateArgs args, int LocalID)
+        {
+        }
+
+        public void SendTelehubInfo(Vector3 TelehubPos, Quaternion TelehubRot, List<Vector3> SpawnPoint, UUID ObjectID, string Name)
+        {
+        }
+
+        public void SendLayerPacket(float[] map, int x, int y)
+        {
+        }
+
+		public void StopFlying(ISceneEntity presence)
+        {
+        }
+
+        public void SendTeleportProgress(string reason)
+        {
+        }
+
+        public event ChangeInventoryItemFlags OnChangeInventoryItemFlags;
+        public event TeleportCancel OnTeleportCancel;
+
+        #region IClientAPI Members
+
+
+        public event ViewerStartAuction OnViewerStartAuction;
+
+        #endregion
     }
 }

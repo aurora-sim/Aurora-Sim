@@ -40,3 +40,30 @@ ExternalHostName = "SYSTEMIP"
 ; *
 
 ; RegionType = "Mainland"
+
+; Should avatars in neighbor sims see objects in this sim?
+SeeIntoThisSimFromNeighbor = true
+
+; Region crossing
+AllowScriptCrossing = false
+
+; Trust Script Binaries. Enabling this can allow foreign agents to execute binary code on your simulator!
+TrustBinariesFromForeignSims = false
+
+; if you would like to allow prims to be physical and move by physics with the physical checkbox in the client set this to true.
+AllowPhysicalPrims = true
+
+;;
+;; Blocking Child Agent config
+;;
+
+; This allows you to choose which directions you will be able to see into your sim. (All directions are from the sim this config is for)
+
+BlockChildAgentsSouthWest = false
+BlockChildAgentsSouth = false
+BlockChildAgentsSouthEast = false
+BlockChildAgentsWest = false
+BlockChildAgentsEast = false
+BlockChildAgentsNorthWest = false
+BlockChildAgentsNorth = false
+BlockChildAgentsNorthEast = false

@@ -84,19 +84,21 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
         /// </value>
         private Stream m_saveStream;
 
+        private bool m_saveAssets;
+
         /// <summary>
         /// Constructor
         /// </summary>
         public InventoryArchiveWriteRequest(
             Guid id, InventoryArchiverModule module, Scene scene, 
-            UserAccount userInfo, string invPath, string savePath)
+            UserAccount userInfo, string invPath, string savePath, bool UseAssets)
             : this(
                 id,
                 module,
                 scene,
                 userInfo,
                 invPath,
-                new GZipStream(new FileStream(savePath, FileMode.Create), CompressionMode.Compress))
+                new GZipStream(new FileStream(savePath, FileMode.Create), CompressionMode.Compress), UseAssets)
         {
         }
 
@@ -105,7 +107,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
         /// </summary>
         public InventoryArchiveWriteRequest(
             Guid id, InventoryArchiverModule module, Scene scene, 
-            UserAccount userInfo, string invPath, Stream saveStream)
+            UserAccount userInfo, string invPath, Stream saveStream, bool UseAssets)
         {
             m_id = id;
             m_module = module;
@@ -114,6 +116,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
             m_invPath = invPath;
             m_saveStream = saveStream;
             m_assetGatherer = new UuidGatherer(m_scene.AssetService);
+            m_saveAssets = UseAssets;
         }
 
         protected void ReceivedAllAssets(ICollection<UUID> assetsFoundUuids, ICollection<UUID> assetsNotFoundUuids)
@@ -307,6 +310,17 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
             {
                 m_saveStream.Close();
                 throw;
+            }
+            if (m_saveAssets)
+            {
+                new AssetsRequest(
+                    new AssetsArchiver(m_archiveWriter), m_assetUuids,
+                    m_scene.AssetService, ReceivedAllAssets).Execute();
+            }
+            else
+            {
+                m_log.Debug("[INVENTORY ARCHIVER]: Save Complete");
+                m_archiveWriter.Close();
             }
         }
 

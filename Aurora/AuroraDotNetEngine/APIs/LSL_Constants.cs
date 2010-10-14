@@ -80,6 +80,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         public const int PERMISSION_CHANGE_PERMISSIONS = 512;
         public const int PERMISSION_TRACK_CAMERA = 1024;
         public const int PERMISSION_CONTROL_CAMERA = 2048;
+        public const int PERMISSION_COMBAT = 8196;
 
         public const int AGENT_FLYING = 1;
         public const int AGENT_ATTACHMENTS = 2;
@@ -316,10 +317,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         public const int PRIM_FULLBRIGHT = 20;
         public const int PRIM_FLEXIBLE = 21;
         public const int PRIM_TEXGEN = 22;
-        public const int PRIM_CAST_SHADOWS = 24; // Not implemented, here for completeness sake
         public const int PRIM_POINT_LIGHT = 23; // Huh?
+        public const int PRIM_CAST_SHADOWS = 24; // Not implemented, here for completeness sake
         public const int PRIM_GLOW = 25;
         public const int PRIM_TEXT = 26;
+        public const int PRIM_NAME = 27;
+        public const int PRIM_DESC = 28;
         public const int PRIM_TEXGEN_DEFAULT = 0;
         public const int PRIM_TEXGEN_PLANAR = 1;
 
@@ -537,6 +540,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         public const int PARCEL_DETAILS_OWNER = 2;
         public const int PARCEL_DETAILS_GROUP = 3;
         public const int PARCEL_DETAILS_AREA = 4;
+        public const int PARCEL_DETAILS_ID = 5;
 
         // constants for llSetClickAction
         public const int CLICK_ACTION_NONE = 0;
@@ -585,5 +589,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
 
         public const string URL_REQUEST_GRANTED = "URL_REQUEST_GRANTED";
         public const string URL_REQUEST_DENIED = "URL_REQUEST_DENIED";
+
+        public const int PASS_IF_NOT_HANDLED = 0;
+        public const int PASS_ALWAYS = 1;
+        public const int PASS_NEVER = 2;
     }
 }

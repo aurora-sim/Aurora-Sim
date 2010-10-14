@@ -139,24 +139,23 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Grid
 
         #region IGridService
 
-        public override string RegisterRegion(UUID scopeID, GridRegion regionInfo)
+        public override string RegisterRegion(UUID scopeID, GridRegion regionInfo, UUID SecureSessionID, out UUID SessionID)
         {
             m_GridCache.AddRegion(regionInfo);
-            string msg = m_LocalGridService.RegisterRegion(scopeID, regionInfo);
+            string msg = string.Empty;// m_LocalGridService.RegisterRegion(scopeID, regionInfo, SecureSessionID, out SessionID);
 
-            if (msg == String.Empty)
-                return base.RegisterRegion(scopeID, regionInfo);
+            //if (msg == String.Empty)
+                return base.RegisterRegion(scopeID, regionInfo, SecureSessionID,  out SessionID);
 
-            return msg;
+            //return msg;
         }
 
-        public override bool DeregisterRegion(UUID regionID)
+        public override bool DeregisterRegion(UUID regionID, UUID SessionID)
         {
-            m_GridCache.RemoveRegion(regionID);
-            if (m_LocalGridService.DeregisterRegion(regionID))
-                return base.DeregisterRegion(regionID);
+            //if (m_LocalGridService.DeregisterRegion(regionID, SessionID))
+                return base.DeregisterRegion(regionID, SessionID);
 
-            return false;
+            //return false;
         }
 
         // Let's override GetNeighbours completely -- never go to the grid server

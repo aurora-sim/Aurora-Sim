@@ -52,6 +52,12 @@ namespace OpenSim.Region.Physics.Manager
             get { return new NullPhysicsScene(); }
         }
 
+        public virtual Vector3 PointOfGravity
+        {
+            get;
+            set;
+        }
+
         public virtual void TriggerPhysicsBasedRestart()
         {
             physicsCrash handler = OnPhysicsCrash;
@@ -147,7 +153,7 @@ namespace OpenSim.Region.Physics.Manager
 
         public abstract void GetResults();
 
-        public abstract void SetTerrain(float[] heightMap);
+        public abstract void SetTerrain(float[] heightMap, double[,] normalHeightMap);
 
         public abstract void SetWaterLevel(float baseheight);
 
@@ -158,6 +164,10 @@ namespace OpenSim.Region.Physics.Manager
         public abstract Dictionary<uint, float> GetTopColliders();
 
         public abstract bool IsThreaded { get; }
+
+        public abstract bool DisableCollisions { get; set; }
+
+        public abstract bool UseUnderWaterPhysics { get; }
 
         /// <summary>
         /// True if the physics plugin supports raycasting against the physics scene
@@ -272,7 +282,7 @@ namespace OpenSim.Region.Physics.Manager
                 m_log.Info("[PHYSICS]: NullPhysicsScene : GetResults()");
             }
 
-            public override void SetTerrain(float[] heightMap)
+            public override void SetTerrain(float[] heightMap, double[,] normalHeightMap)
             {
                 m_log.InfoFormat("[PHYSICS]: NullPhysicsScene : SetTerrain({0} items)", heightMap.Length);
             }
@@ -286,6 +296,12 @@ namespace OpenSim.Region.Physics.Manager
                 get { return false; }
             }
 
+            public override Vector3 PointOfGravity
+            {
+                get { return Vector3.Zero; }
+                set { }
+            }
+
             public override void Dispose()
             {
             }
@@ -295,7 +311,17 @@ namespace OpenSim.Region.Physics.Manager
                 Dictionary<uint, float> returncolliders = new Dictionary<uint, float>();
                 return returncolliders;
             }
-            
+
+            public override bool DisableCollisions
+            {
+                get { return false; }
+                set { }
+            }
+
+            public override bool UseUnderWaterPhysics
+            {
+                get { return false; }
+            }
         }
     }
     public delegate void JointMoved(PhysicsJoint joint);

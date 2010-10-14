@@ -261,8 +261,7 @@ namespace OpenSim.Region.CoreModules
                 Velocity = (Velocity * Tilt) * (1.0f / Magnitude);
             }
 
-            // TODO: Decouple this, so we can get rid of Linden Hour info
-            // Update Region infor with new Sun Position and Hour
+            // Update RegionInfo with new Sun Position and Hour
             // set estate settings for region access to sun position
             if (receivedEstateToolsSunUpdate)
             {

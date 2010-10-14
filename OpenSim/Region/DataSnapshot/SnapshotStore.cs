@@ -47,7 +47,7 @@ namespace OpenSim.Region.DataSnapshot
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private Dictionary<String, String> m_gridinfo = null;
         private bool m_cacheEnabled = true;
-        private string m_listener_port = "9000"; //TODO: Set default port over 9000
+        private string m_listener_port = "9000";
         private string m_hostname = "127.0.0.1";
         #endregion
 
@@ -300,8 +300,7 @@ namespace OpenSim.Region.DataSnapshot
 
             foreach (KeyValuePair<String, String> GridData in m_gridinfo)
             {
-                //TODO: make it lowercase tag names for diva
-                XmlNode childnode = factory.CreateNode(XmlNodeType.Element, GridData.Key, "");
+                XmlNode childnode = factory.CreateNode(XmlNodeType.Element, GridData.Key.ToLower(), "");
                 childnode.InnerText = GridData.Value;
                 griddata.AppendChild(childnode);
             }

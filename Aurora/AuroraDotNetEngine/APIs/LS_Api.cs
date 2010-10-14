@@ -34,7 +34,6 @@ using OpenMetaverse;
 using Nini.Config;
 using OpenSim;
 using OpenSim.Framework;
-using OpenSim.Region.CoreModules.World.LightShare;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Plugins;
@@ -47,8 +46,8 @@ using LSL_Rotation = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Quaternion
 using LSL_String = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString;
 using LSL_Vector = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Vector3;
 using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
-using Aurora.ScriptEngine.AuroraDotNetEngine.Plugins;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
+using Aurora.Framework;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 {
@@ -62,6 +61,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         internal bool m_LSFunctionsEnabled = false;
         internal IScriptModuleComms m_comms = null;
         internal ScriptProtectionModule ScriptProtection;
+        internal IWindLightSettingsModule m_lightShareModule;
 
         public void Initialize(ScriptEngine ScriptEngine, SceneObjectPart host, uint localID, UUID itemID, ScriptProtectionModule module)
         {
@@ -116,7 +116,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (message.Length > 1023)
                 message = message.Substring(0, 1023);
 
-            World.SimChat(Utils.StringToBytes(message),
+            World.SimChat(message,
                           ChatTypeEnum.Shout, ScriptBaseClass.DEBUG_CHANNEL, m_host.ParentGroup.RootPart.AbsolutePosition, m_host.Name, m_host.UUID, true);
 
             IWorldComm wComm = World.RequestModuleInterface<IWorldComm>();
@@ -129,8 +129,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         /// <returns>List of windlight parameters</returns>
         public LSL_List lsGetWindlightScene(LSL_List rules)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "lsGetWindlightScene", m_host, "LS"); m_host.AddScriptLPS(1);
-            RegionLightShareData wl = m_host.ParentGroup.Scene.RegionInfo.WindlightSettings;
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "lsGetWindlightScene", m_host, "LS");
+
+            /*RegionLightShareData wl = m_lightShareModule.WindLightSettings;
 
             LSL_List values = new LSL_List();
             int idx = 0;
@@ -258,15 +259,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 }
                 idx++;
             }
-
+            
 
             return values;
-
+            */
+            return null;
         }
 
         private RegionLightShareData getWindlightProfileFromRules(LSL_List rules)
         {
-            RegionLightShareData wl = (RegionLightShareData)m_host.ParentGroup.Scene.RegionInfo.WindlightSettings.Clone();
+            /*RegionLightShareData wl = m_lightShareModule.WindLightSettings;
 
             LSL_List values = new LSL_List();
             int idx = 0;
@@ -430,7 +432,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     case (int)ScriptBaseClass.WL_WATER_COLOR:
                         idx++;
                         iV = rules.GetVector3Item(idx);
-                        wl.waterColor = new Vector3((float)iV.x, (float)iV.y, (float)iV.z);
+                        wl.waterColor = new Vector4((float)iV.x, (float)iV.y, (float)iV.z, 0);
                         break;
                     case (int)ScriptBaseClass.WL_WATER_FOG_DENSITY_EXPONENT:
                         idx++;
@@ -440,7 +442,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 idx++;
             }
             wl.regionID = m_host.ParentGroup.Scene.RegionInfo.RegionID;
-            return wl;
+            return wl;*/
+            return null;
         }
         /// <summary>
         /// Set the current Windlight scene
@@ -457,11 +460,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 return 0;
             }
             int success = 0;
-            m_host.AddScriptLPS(1);
-            if (LightShareModule.EnableWindlight)
+
+            if (m_lightShareModule.EnableWindLight)
             {
                 RegionLightShareData wl = getWindlightProfileFromRules(rules);
-                m_host.ParentGroup.Scene.StoreWindlightProfile(wl);
+                //m_lightShareModule.SaveWindLightSettings(wl);
                 success = 1;
             }
             else
@@ -489,11 +492,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 return 0;
             }
             int success = 0;
-            m_host.AddScriptLPS(1);
-            if (LightShareModule.EnableWindlight)
+
+            if (m_lightShareModule.EnableWindLight)
             { 
                 RegionLightShareData wl = getWindlightProfileFromRules(rules);
-                World.EventManager.TriggerOnSendNewWindlightProfileTargeted(wl, new UUID(target.m_string));
+                m_lightShareModule.SendWindlightProfileTargeted(wl, new UUID(target.m_string));
                 success = 1;
             }
             else

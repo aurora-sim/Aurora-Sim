@@ -33,18 +33,20 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using log4net;
+using Nini.Config;
+using Mono.Addins;
 
-namespace OpenSim.Framework.Console
+namespace OpenSim.Framework
 {
     /// <summary>
     /// A console that uses cursor control and color
-    /// </summary>
+    /// </summary>    
+    [Extension(Path = "/OpenSim/Console", NodeName = "ConsolePlugin")]
     public class LocalConsole : CommandConsole
     {
 //        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         // private readonly object m_syncRoot = new object();
-        private const string LOGLEVEL_NONE = "(none)";
 
         private int y = -1;
         private int cp = 0;
@@ -69,14 +71,31 @@ namespace OpenSim.Framework.Console
             ConsoleColor.Yellow
         };
 
+        public override void Initialise(string defaultPrompt, IConfigSource source, IOpenSimBase baseOpenSim)
+        {
+            if (source.Configs["Console"] != null)
+            {
+                if (source.Configs["Console"].GetString("Console", Name) != Name)
+                    return;
+            }
+            else
+                return;
+
+            baseOpenSim.ApplicationRegistry.RegisterInterface<ICommandConsole>(this);
+
+            m_Commands.AddCommand("console", false, "help", "help [<command>]",
+                    "Get general command list or more detailed help on a specific command", base.Help);
+        }
+
         private static ConsoleColor DeriveColor(string input)
         {
             // it is important to do Abs, hash values can be negative
             return Colors[(Math.Abs(input.ToUpper().GetHashCode()) % Colors.Length)];
         }
 
-        public LocalConsole(string defaultPrompt) : base(defaultPrompt)
+        public override string Name
         {
+            get { return "LocalConsole"; }
         }
 
         private void AddToHistory(string text)
@@ -101,8 +120,8 @@ namespace OpenSim.Framework.Console
         private int SetCursorTop(int top)
         {
             // From at least mono 2.4.2.3, window resizing can give mono an invalid row and column values.  If we try
-            // to set a cursor row position with a currently invalid column, mono will throw an exception.
-            // Therefore, we need to make sure that the column position is valid first.
+            // to set a cursor row position with a currently invalid column, mono will throw an exception.  
+            // Therefore, we need to make sure that the column position is valid first.              
             int left = System.Console.CursorLeft;
 
             if (left < 0)
@@ -122,7 +141,7 @@ namespace OpenSim.Framework.Console
             {
                 top = 0;
             }
-            else
+            else                
             {
                 int bh = System.Console.BufferHeight;
                 
@@ -134,7 +153,7 @@ namespace OpenSim.Framework.Console
             System.Console.CursorTop = top;
 
             return top;
-        }
+        }        
 
         /// <summary>
         /// Set the cursor column.
@@ -146,12 +165,12 @@ namespace OpenSim.Framework.Console
         /// </param>
         /// <returns>
         /// The new cursor column.
-        /// </returns>
+        /// </returns>        
         private int SetCursorLeft(int left)
         {
             // From at least mono 2.4.2.3, window resizing can give mono an invalid row and column values.  If we try
-            // to set a cursor column position with a currently invalid row, mono will throw an exception.
-            // Therefore, we need to make sure that the row position is valid first.
+            // to set a cursor column position with a currently invalid row, mono will throw an exception.  
+            // Therefore, we need to make sure that the row position is valid first.               
             int top = System.Console.CursorTop;
 
             if (top < 0)
@@ -184,6 +203,8 @@ namespace OpenSim.Framework.Console
             return left;
         }
 
+        protected string prompt = "# ";
+
         private void Show()
         {
             lock (cmdline)
@@ -215,7 +236,7 @@ namespace OpenSim.Framework.Console
                     System.Console.Write("{0}", prompt);
 
                 SetCursorTop(new_y);
-                SetCursorLeft(new_x);
+                SetCursorLeft(new_x);                
             }
         }
 
@@ -279,40 +300,65 @@ namespace OpenSim.Framework.Console
 
         private void WriteLocalText(string text, string level)
         {
-            string outText = text;
-
-            if (level != LOGLEVEL_NONE)
+            if (level == "None") //No color or flowers or whisles, just basic writing plus the DT must be added manually
+                System.Console.Write(DateTime.Now.Hour + ":" + DateTime.Now.Minute + ":" + DateTime.Now.Second + " - " + text);
+            else if (level == "Notice")
             {
-                string regex = @"^(?<Front>.*?)\[(?<Category>[^\]]+)\]:?(?<End>.*)";
-
-                Regex RE = new Regex(regex, RegexOptions.Multiline);
-                MatchCollection matches = RE.Matches(text);
-
-                if (matches.Count == 1)
+                WriteColorText(ConsoleColor.Gray, DateTime.Now.Hour + ":" + DateTime.Now.Minute + ":" + DateTime.Now.Second + " - ");
+                string[] Split = text.Split(new string[]{" - "}, StringSplitOptions.RemoveEmptyEntries);
+                if (Split.Length != 0)
                 {
-                    outText = matches[0].Groups["End"].Value;
-                    System.Console.Write(matches[0].Groups["Front"].Value);
+                    int i = 0;
+                    foreach (string Rest in Split)
+                    {
+                        if (i != 0)
+                            WriteColorText(ConsoleColor.Magenta, Rest);
+                        else
+                            WriteColorText(ConsoleColor.Gray, Rest + " - ");
+                        i++;
+                    }
+                }
+                else
+                    WriteColorText(ConsoleColor.Magenta, text);
+            }
+            else
+            {
+                string[] Lines = text.Split('\n', '\r');
+                //This exists so that we don't have issues with multiline stuff, since something is messed up with the Regex
+                foreach (string line in Lines)
+                {
+                    string regex = @"^(?<Front>.*?)\[(?<Category>[^\]]+)\]:?(?<End>.*)";
 
-                    System.Console.Write("[");
-                    WriteColorText(DeriveColor(matches[0].Groups["Category"].Value),
-                            matches[0].Groups["Category"].Value);
-                    System.Console.Write("]:");
+                    Regex RE = new Regex(regex, RegexOptions.Multiline);
+                    MatchCollection matches = RE.Matches(line);
+
+                    string outText = line;
+
+                    if (matches.Count == 1)
+                    {
+                        outText = matches[0].Groups["End"].Value;
+                        System.Console.Write(matches[0].Groups["Front"].Value);
+
+                        System.Console.Write("[");
+                        WriteColorText(DeriveColor(matches[0].Groups["Category"].Value),
+                                matches[0].Groups["Category"].Value);
+                        System.Console.Write("]:");
+                    }
+                    if (level == "error")
+                        WriteColorText(ConsoleColor.Red, outText);
+                    else if (level == "warn")
+                        WriteColorText(ConsoleColor.Yellow, outText);
+                    else
+                        WriteColorText(ConsoleColor.Gray, outText);
                 }
             }
 
-            if (level == "error")
-                WriteColorText(ConsoleColor.Red, outText);
-            else if (level == "warn")
-                WriteColorText(ConsoleColor.Yellow, outText);
-            else
-                System.Console.Write(outText);
-        
             System.Console.WriteLine();
         }
 
         public override void Output(string text)
         {
-            Output(text, LOGLEVEL_NONE);
+            Output(text, "normal");
         }
 
         public override void Output(string text, string level)
@@ -417,7 +463,10 @@ namespace OpenSim.Framework.Console
                         SetCursorLeft(0);
                         y = SetCursorTop(y);
 
-                        System.Console.Write("{0}{1} ", prompt, cmdline);
+                        if (echo) //This space makes the last line part disappear
+                            System.Console.WriteLine("{0}{1}", prompt, cmdline + " ");
+                        else
+                            System.Console.WriteLine("{0}", prompt);
 
                         break;
                     case ConsoleKey.End:
@@ -465,8 +514,10 @@ namespace OpenSim.Framework.Console
                         SetCursorLeft(0);
                         y = SetCursorTop(y);
 
-                        System.Console.WriteLine();
-                        //Show();
+                        if (echo)
+                            System.Console.WriteLine("{0}{1}", prompt, cmdline);
+                        else
+                            System.Console.WriteLine("{0}", prompt);
 
                         lock (cmdline)
                         {
@@ -475,6 +526,12 @@ namespace OpenSim.Framework.Console
 
                         if (isCommand)
                         {
+                            if (cmdline.ToString() == "clear console")
+                            {
+                                history.Clear();
+                                System.Console.Clear();
+                                return String.Empty;
+                            }
                             string[] cmd = Commands.Resolve(Parser.Parse(cmdline.ToString()));
 
                             if (cmd.Length != 0)
@@ -491,7 +548,7 @@ namespace OpenSim.Framework.Console
                             }
                         }
 
-                        //AddToHistory(cmdline.ToString());
+                        AddToHistory(cmdline.ToString());
                         return cmdline.ToString();
                     default:
                         break;

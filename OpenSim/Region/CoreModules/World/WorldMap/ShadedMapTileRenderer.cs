@@ -49,7 +49,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             // m_config = config; // not used currently
         }
 
-        public void TerrainToBitmap(Bitmap mapbmp)
+        public Bitmap TerrainToBitmap(Bitmap mapbmp)
         {
             int tc = Environment.TickCount;
             m_log.Info("[MAPTILE]: Generating Maptile");
@@ -238,7 +238,8 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                     }
                 }
             }
-           // m_log.Info("[MAPTILE]: Generating Maptile Step 1: Done in " + (Environment.TickCount - tc) + " ms");
+            // m_log.Info("[MAPTILE]: Generating Maptile Step 1: Done in " + (Environment.TickCount - tc) + " ms");
+            return mapbmp;
         }
     }
 }

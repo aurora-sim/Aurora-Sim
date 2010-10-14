@@ -99,6 +99,7 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
         private int m_whisperdistance = 10;
         private int m_saydistance = 30;
         private int m_shoutdistance = 100;
+        private List<int> BlockedChannels = new List<int>();
 
         #region IRegionModule Members
 
@@ -170,6 +171,18 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
         #endregion
 
         #region IWorldComm Members
+
+        public void AddBlockedChannel(int channel)
+        {
+            if (!BlockedChannels.Contains(channel))
+                BlockedChannels.Add(channel);
+        }
+
+        public void RemoveBlockedChannel(int channel)
+        {
+            if (BlockedChannels.Contains(channel))
+                BlockedChannels.Remove(channel);
+        }
 
         /// <summary>
         /// Create a listen event callback with the specified filters.
@@ -279,6 +292,8 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
         /// <param name="msg">msg to sent</param>
         public void DeliverMessage(ChatTypeEnum type, int channel, string name, UUID id, string msg, Vector3 position, float Range)
         {
+            if (BlockedChannels.Contains(channel))
+                return;
             // m_log.DebugFormat("[WorldComm] got[2] type {0}, channel {1}, name {2}, id {3}, msg {4}",
             //                   type, channel, name, id, msg);
 
@@ -639,13 +654,7 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
 
                 ListenerInfo info =
                         ListenerInfo.FromData(itemID, hostID, item);
-
-                lock (m_listeners)
-                {
-                    if (!m_listeners.ContainsKey(Convert.ToInt32(item[2])))
-                        m_listeners.Add(Convert.ToInt32(item[2]), new List<ListenerInfo>());
-                    m_listeners[Convert.ToInt32(item[2])].Add(info);
-                }
+                AddListener(info.GetItemID(), info.GetHostID(), info.GetChannel(), info.GetName(), info.GetID(), info.GetMessage());
 
                 idx+=6;
             }

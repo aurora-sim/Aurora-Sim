@@ -87,7 +87,7 @@ namespace Aurora.Modules
             UDA.ScopeID = UUID.Zero;
             UDA.UserFlags = int.Parse(results["UserFlags"].ToString());
             UDA.UserLevel = 0; //For security... Don't want everyone loading full god mode.
-            UDA.UserTitle = results["UserTitle"].ToString();
+            UDA.UserTitle = "";
             UDA.Email = results["Email"].ToString();
             UDA.Created = int.Parse(results["Created"].ToString());
             if (results.ContainsKey("ServiceURLs") && results["ServiceURLs"] != null)
@@ -114,7 +114,7 @@ namespace Aurora.Modules
             //Update the principle ID to the new user.
             UPI.PrincipalID = UDA.PrincipalID;
 
-            IProfileConnector profileData = DataManager.DataManager.RequestPlugin<IProfileConnector>("IProfileConnector");
+            IProfileConnector profileData = DataManager.DataManager.RequestPlugin<IProfileConnector>();
             if (profileData.GetUserProfile(UPI.PrincipalID) == null)
                 profileData.CreateNewProfile(UPI.PrincipalID);
 
@@ -134,7 +134,7 @@ namespace Aurora.Modules
                 return;
             }
             UserAccount account = m_scene.UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]);
-            IProfileConnector data = DataManager.DataManager.RequestPlugin<IProfileConnector>("IProfileConnector");
+            IProfileConnector data = DataManager.DataManager.RequestPlugin<IProfileConnector>();
             IUserProfileInfo profile = data.GetUserProfile(account.PrincipalID);
 
             Dictionary<string, object> result = new Dictionary<string, object>();

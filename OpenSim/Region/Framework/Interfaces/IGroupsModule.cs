@@ -95,5 +95,7 @@ namespace OpenSim.Region.Framework.Interfaces
         void EjectGroupMemberRequest(IClientAPI remoteClient, UUID GroupID, UUID EjecteeID);
         void InviteGroupRequest(IClientAPI remoteClient, UUID GroupID, UUID InviteeID, UUID RoleID);
         void NotifyChange(UUID GroupID);
+        bool GroupPermissionCheck(UUID AgentID, UUID GroupID, GroupPowers permissions);
+        GridInstantMessage BuildOfflineGroupNotice(GridInstantMessage msg);
     }
 }

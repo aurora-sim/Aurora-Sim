@@ -72,7 +72,20 @@ namespace OpenSim.Region.Framework.Scenes
             OutPacketsPerSecond = 18,
             PendingDownloads = 19,
             PendingUploads = 20,
+            UnknownB = 21,
+            UnknownC = 22,
+            UnknownA = 23,
             UnAckedBytes = 24,
+            PinnedObjects = 25,
+            LowLodObjects = 26,
+            PhysicsStep = 27,
+            UpdatePhysicsShapes = 28,
+            PhysicsOther = 29,
+            MemoryAllocated = 30,
+            ScriptEventsPerSecond = 31,
+            SpareTime = 32,
+            SleepTime = 33,
+            PumpIO = 34,
         }
 
         // Sending a stats update every 3 seconds-
@@ -82,7 +95,7 @@ namespace OpenSim.Region.Framework.Scenes
         private int m_fps = 0;
         // saved last reported value so there is something available for llGetRegionFPS 
         private float lastReportedSimFPS = 0;
-        private float[] lastReportedSimStats = new float[21];
+        private float[] lastReportedSimStats = new float[35];
         private float m_pfps = 0;
         private int m_agentUpdates = 0;
 
@@ -106,7 +119,10 @@ namespace OpenSim.Region.Framework.Scenes
         private int m_pendingDownloads = 0;
         private int m_pendingUploads = 0;
         private int m_activeScripts = 0;
-        private int m_scriptLinesPerSecond = 0;
+        private int m_scriptEventsPerSecond = 0;
+        private int m_sleepTime = 0;
+        private int m_physicsOther = 0;
+        private int m_physicsStep = 0;
 
         private int objectCapacity = 45000;
 
@@ -142,7 +158,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         private void statsHeartBeat(object sender, EventArgs e)
         {
-            SimStatsPacket.StatBlock[] sb = new SimStatsPacket.StatBlock[21];
+            SimStatsPacket.StatBlock[] sb = new SimStatsPacket.StatBlock[33];
             SimStatsPacket.RegionBlock rb = new SimStatsPacket.RegionBlock();
             
             // Know what's not thread safe in Mono... modifying timers.
@@ -196,11 +212,11 @@ namespace OpenSim.Region.Framework.Scenes
                 // 'statsUpdateFactor' is how often stats packets are sent in seconds. Used below to change
                 // values to X-per-second values.
 
-                for (int i = 0; i<21;i++)
+                for (int i = 0; i<33;i++)
                 {
                     sb[i] = new SimStatsPacket.StatBlock();
                 }
-                
+
                 sb[0].StatID = (uint) Stats.TimeDilation;
                 sb[0].StatValue = (Single.IsNaN(m_timeDilation)) ? 0.1f : m_timeDilation ; //((((m_timeDilation + (0.10f * statsUpdateFactor)) /10)  / statsUpdateFactor));
 
@@ -261,10 +277,55 @@ namespace OpenSim.Region.Framework.Scenes
                 sb[19].StatID = (uint)Stats.ActiveScripts;
                 sb[19].StatValue = m_activeScripts;
 
-                sb[20].StatID = (uint)Stats.ScriptLinesPerSecond;
-                sb[20].StatValue = m_scriptLinesPerSecond / statsUpdateFactor;
+                sb[20].StatID = (uint)Stats.ScriptEventsPerSecond;
+                sb[20].StatValue = m_scriptEventsPerSecond / statsUpdateFactor;
+
+                sb[21].StatID = (uint)Stats.SpareTime;
+                sb[21].StatValue = 0;
+
+                sb[22].StatID = (uint)Stats.SleepTime;
+                sb[22].StatValue = m_sleepTime;
+
+                sb[23].StatID = (uint)Stats.PumpIO;
+                sb[23].StatValue = 0;
+
+                long pws = System.Diagnostics.Process.GetCurrentProcess().WorkingSet64;
+
+                if (pws > Int32.MaxValue)
+                    pws = Int32.MaxValue;
+                if (pws < 0)
+                    pws = 0;
+
+                sb[25].StatID = (uint)Stats.MemoryAllocated;
+                sb[25].StatValue = pws / 4096000;
+
+                sb[26].StatID = (uint)Stats.PhysicsOther;
+                sb[26].StatValue = m_physicsOther;
+
+                sb[27].StatID = (uint)Stats.UpdatePhysicsShapes; 
+                sb[27].StatValue = 0;
+
+                sb[28].StatID = (uint)Stats.PhysicsStep;
+                sb[28].StatValue = m_physicsStep;
+
+                sb[29].StatID = (uint)Stats.LowLodObjects;
+                sb[29].StatValue = 0;
+
+                sb[30].StatID = (uint)Stats.PinnedObjects;
+                sb[30].StatValue = 0;
+
+                sb[31].StatID = (uint)Stats.UnknownA;
+                sb[31].StatValue = 0;
+
+                sb[32].StatID = (uint)Stats.UnknownB;
+                sb[32].StatValue = 0;
+
+                sb[24].StatID = (uint)Stats.UnknownC;
+                sb[24].StatValue = 0;
+
                 
-                for (int i = 0; i < 21; i++)
+                
+                for (int i = 0; i < 33; i++)
                 {
                     lastReportedSimStats[i] = sb[i].StatValue;
                 }
@@ -291,7 +352,7 @@ namespace OpenSim.Region.Framework.Scenes
             //m_inPacketsPerSecond = 0;
             //m_outPacketsPerSecond = 0;
             m_unAckedBytes = 0;
-            m_scriptLinesPerSecond = 0;
+            m_scriptEventsPerSecond = 0;
 
             m_frameMS = 0;
             m_agentMS = 0;
@@ -299,6 +360,9 @@ namespace OpenSim.Region.Framework.Scenes
             m_physicsMS = 0;
             m_imageMS = 0;
             m_otherMS = 0;
+            m_sleepTime = 0;
+            m_physicsOther = 0;
+            m_physicsStep = 0;
 
 //Ckrinke This variable is not used, so comment to remove compiler warning until it is used.
 //Ckrinke            m_scriptMS = 0;
@@ -415,6 +479,16 @@ namespace OpenSim.Region.Framework.Scenes
             m_otherMS += ms;
         }
 
+        public void SetSleepMS(int ms)
+        {
+            m_sleepTime = ms;
+        }
+
+        public void SetPhysicsOther(int ms)
+        {
+            m_physicsOther = ms;
+        }
+
 //        private static readonly log4net.ILog m_log
 //            = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -425,9 +499,9 @@ namespace OpenSim.Region.Framework.Scenes
             //m_log.InfoFormat("[stats]: Adding {0} to pending downloads to make {1}", count, m_pendingDownloads);
         }
 
-        public void addScriptLines(int count)
+        public void addScriptEvents(int count)
         {
-            m_scriptLinesPerSecond += count;
+            m_scriptEventsPerSecond += count;
         }
 
         public void SetActiveScripts(int count)
@@ -438,6 +512,11 @@ namespace OpenSim.Region.Framework.Scenes
         public void SetObjectCapacity(int objects)
         {
             objectCapacity = objects;
+        }
+
+        public void SetPhysicsStep(int p)
+        {
+            m_physicsStep = p;
         }
 
         /// <summary>

@@ -29,6 +29,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using OpenMetaverse;
+using OpenSim.Region.Framework.Scenes;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Plugins;
 using Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools;
 using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
@@ -37,13 +38,13 @@ using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 {
-    public class Timer
+    public class TimerPlugin : ISharedScriptPlugin
     {
         public ScriptEngine m_ScriptEngine;
 
-        public Timer(ScriptEngine ScriptEngine)
+        public void Initialize(ScriptEngine engine)
         {
-            m_ScriptEngine = ScriptEngine;
+            m_ScriptEngine = engine;
         }
 
         //
@@ -69,7 +70,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
         {
             if (sec == 0) // Disabling timer
             {
-                UnSetTimerEvents(m_ID, m_itemID);
+                RemoveScript(m_ID, m_itemID);
                 return;
             }
 
@@ -90,7 +91,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             }
         }
 
-        public void UnSetTimerEvents(UUID m_ID, UUID m_itemID)
+        public void RemoveScript(UUID m_ID, UUID m_itemID)
         {
             // Remove from timer
             string key = MakeTimerKey(m_ID, m_itemID);
@@ -100,7 +101,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             }
         }
 
-        public void CheckTimerEvents()
+        public void Check()
         {
             // Nothing to do here?
             if (Timers.Count == 0)
@@ -134,6 +135,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             TimerClass timer;
             if(Timers.TryGetValue(key, out timer))
             {
+                data.Add(Name);
+                data.Add(2); //Two things after this row
                 data.Add(timer.interval);
                 data.Add(timer.next - Environment.TickCount);
             }
@@ -160,6 +163,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                     Timers[MakeTimerKey(objectID, itemID)] = ts;
                 }
             }
+        }
+
+        public string Name
+        {
+            get { return "Timer"; }
+        }
+
+        public void Dispose()
+        {
         }
     }
 }

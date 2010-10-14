@@ -41,24 +41,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
     public class AppDomainManager
     {
-        //
-        // This class does AppDomain handling and loading/unloading of
-        // scripts in it. It is instanced in "ScriptEngine" and controlled
-        // from "ScriptManager"
-        //
-        // 1. Create a new AppDomain if old one is full (or doesn't exist)
-        // 2. Load scripts into AppDomain
-        // 3. Unload scripts from AppDomain (stopping them and marking
-        //    them as inactive)
-        // 4. Unload AppDomain completely when all scripts in it has stopped
-        //
-
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private int maxScriptsPerAppDomain = 1;
-
         private bool loadAllScriptsIntoCurrentDomain = false;
-
+        private bool loadAllScriptsIntoOneDomain = true;
         private string m_PermissionLevel = "Internet";
 
         public string PermissionLevel
@@ -91,11 +78,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         // Current AppDomain
         private AppDomainStructure currentAD;
 
-        private object getLock = new object(); // Mutex
-        private object freeLock = new object(); // Mutex
+        //This is the main lock for this class
+        private object m_appDomainLock = new object();
+
+        private int AppDomainNameCount;
 
         private ScriptEngine m_scriptEngine;
-        //public AppDomainManager(ScriptEngine scriptEngine)
+        private string PathToLoadScriptsFrom = "";
+
         public AppDomainManager(ScriptEngine scriptEngine)
         {
             m_scriptEngine = scriptEngine;
@@ -104,11 +94,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public void ReadConfig()
         {
+            PathToLoadScriptsFrom = m_scriptEngine.Config.GetString("PathToLoadScriptsFrom", "");
             maxScriptsPerAppDomain = m_scriptEngine.ScriptConfigSource.GetInt(
                     "ScriptsPerAppDomain", 1);
             m_PermissionLevel = m_scriptEngine.ScriptConfigSource.GetString(
                     "AppDomainPermissions", "Internet");
             loadAllScriptsIntoCurrentDomain = m_scriptEngine.ScriptConfigSource.GetBoolean("LoadAllScriptsIntoCurrentAppDomain", false);
+            loadAllScriptsIntoOneDomain = m_scriptEngine.ScriptConfigSource.GetBoolean("LoadAllScriptsIntoOneAppDomain", true);
         }
 
         // Find a free AppDomain, creating one if necessary
@@ -120,35 +112,51 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     return currentAD;
                 else
                 {
-                    currentAD = new AppDomainStructure();
-                    currentAD.CurrentAppDomain = AppDomain.CurrentDomain;
-                    AppDomain.CurrentDomain.AssemblyResolve += AssemblyResolver.OnAssemblyResolve;
-                    return currentAD;
+                    lock (m_appDomainLock)
+                    {
+                        currentAD = new AppDomainStructure();
+                        currentAD.CurrentAppDomain = AppDomain.CurrentDomain;
+                        AppDomain.CurrentDomain.AssemblyResolve += m_scriptEngine.AssemblyResolver.OnAssemblyResolve;
+                        return currentAD;
+                    }
                 }
             }
-            lock (getLock)
+            lock (m_appDomainLock)
             {
-                // Current full?
-                if (currentAD != null &&
-                    currentAD.ScriptsLoaded >= maxScriptsPerAppDomain)
+                if (loadAllScriptsIntoOneDomain)
                 {
-                    // Add it to AppDomains list and empty current
-                    appDomains.Add(currentAD);
-                    currentAD = null;
+                    if (currentAD == null)
+                    {
+                        // Create a new current AppDomain
+                        currentAD = new AppDomainStructure();
+                        currentAD.CurrentAppDomain = PrepareNewAppDomain();
+                    }
                 }
-                // No current
-                if (currentAD == null)
+                else
                 {
-                    // Create a new current AppDomain
-                    currentAD = new AppDomainStructure();
-                    currentAD.CurrentAppDomain = PrepareNewAppDomain();
+                    // Current full?
+                    if (currentAD != null &&
+                        currentAD.ScriptsLoaded >= maxScriptsPerAppDomain)
+                    {
+                        // Add it to AppDomains list and empty current
+                        lock (m_appDomainLock)
+                        {
+                            appDomains.Add(currentAD);
+                        }
+                        currentAD = null;
+                    }
+                    // No current
+                    if (currentAD == null)
+                    {
+                        // Create a new current AppDomain
+                        currentAD = new AppDomainStructure();
+                        currentAD.CurrentAppDomain = PrepareNewAppDomain();
+                    }
                 }
-
-                return currentAD;
             }
-        }
 
-        private int AppDomainNameCount;
+            return currentAD;
+        }
 
         // Create and prepare a new AppDomain for scripts
         private AppDomain PrepareNewAppDomain()
@@ -168,7 +176,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             AppDomain AD = CreateRestrictedDomain(m_PermissionLevel, 
                 "ScriptAppDomain_" + AppDomainNameCount,ads);
 
-            AD.AssemblyResolve += AssemblyResolver.OnAssemblyResolve;
+            AD.AssemblyResolve += m_scriptEngine.AssemblyResolver.OnAssemblyResolve;
 
             //AD.Load(AssemblyName.GetAssemblyName(
             //            "OpenSim.Region.ScriptEngine.Shared.dll"));
@@ -269,10 +277,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         // Unload appdomains that are full and have only dead scripts
         private void UnloadAppDomains()
         {
-            lock (freeLock)
+            lock (m_appDomainLock)
             {
                 // Go through all
-                foreach (AppDomainStructure ads in new ArrayList(appDomains))
+                foreach (AppDomainStructure ads in appDomains)
                 {
                     // Don't process current AppDomain
                     if (ads.CurrentAppDomain != currentAD.CurrentAppDomain)
@@ -284,8 +292,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                             // Remove from internal list
                             appDomains.Remove(ads);
 
-                            // Unload
-                            AppDomain.Unload(ads.CurrentAppDomain);
+                            try
+                            {
+                                // Unload
+                                AppDomain.Unload(ads.CurrentAppDomain);
+                            }
+                            catch { }
                             ads.CurrentAppDomain = null;
                         }
                     }
@@ -310,7 +322,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         // Increase "dead script" counter for an AppDomain
         public void UnloadScriptAppDomain(AppDomain ad)
         {
-            lock (freeLock)
+            lock (m_appDomainLock)
             {
                 // Check if it is current AppDomain
                 if (currentAD.CurrentAppDomain == ad)
@@ -321,7 +333,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 }
 
                 // Lopp through all AppDomains
-                foreach (AppDomainStructure ads in new ArrayList(appDomains))
+                foreach (AppDomainStructure ads in appDomains)
                 {
                     if (ads.CurrentAppDomain == ad)
                     {

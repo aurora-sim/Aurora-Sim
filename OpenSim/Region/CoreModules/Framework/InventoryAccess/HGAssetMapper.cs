@@ -129,7 +129,6 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
 
         }
 
-        // TODO: unused
         // private void Dump(Dictionary<UUID, bool> lst)
         // {
         //     m_log.Debug("XXX -------- UUID DUMP ------- XXX");

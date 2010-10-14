@@ -164,32 +164,46 @@ namespace OpenSim.Data.Null
 
         public List<RegionData> GetDefaultRegions(UUID scopeID)
         {
-            return Get((int)RegionFlags.DefaultRegion, scopeID);
-        }
-
-        public List<RegionData> GetFallbackRegions(UUID scopeID, int x, int y)
-        {
-            List<RegionData> regions = Get((int)RegionFlags.FallbackRegion, scopeID);
-            RegionDataDistanceCompare distanceComparer = new RegionDataDistanceCompare(x, y);
-            regions.Sort(distanceComparer);
-            return regions;
-        }
-
-        public List<RegionData> GetHyperlinks(UUID scopeID)
-        {
-            return Get((int)RegionFlags.Hyperlink, scopeID);
-        }
-
-        private List<RegionData> Get(int regionFlags, UUID scopeID)
-        {
             if (Instance != this)
-                return Instance.Get(regionFlags, scopeID);
+                return Instance.GetDefaultRegions(scopeID);
 
             List<RegionData> ret = new List<RegionData>();
 
             foreach (RegionData r in m_regionData.Values)
             {
-                if ((Convert.ToInt32(r.Data["flags"]) & regionFlags) != 0)
+                if ((Convert.ToInt32(r.Data["flags"]) & 1) != 0)
+                    ret.Add(r);
+            }
+
+            return ret;
+        }
+
+        public List<RegionData> GetFallbackRegions(UUID scopeID, int x, int y)
+        {
+            if (Instance != this)
+                return Instance.GetFallbackRegions(scopeID, x, y);
+
+            List<RegionData> ret = new List<RegionData>();
+
+            foreach (RegionData r in m_regionData.Values)
+            {
+                if ((Convert.ToInt32(r.Data["flags"]) & 2) != 0)
+                    ret.Add(r);
+            }
+
+            return ret;
+        }
+
+        public List<RegionData> GetSafeRegions(UUID scopeID, int x, int y)
+        {
+            if (Instance != this)
+                return Instance.GetSafeRegions(scopeID, x, y);
+
+            List<RegionData> ret = new List<RegionData>();
+
+            foreach (RegionData r in m_regionData.Values)
+            {
+                if ((Convert.ToInt32(r.Data["flags"]) & 4) != 0)
                     ret.Add(r);
             }
 

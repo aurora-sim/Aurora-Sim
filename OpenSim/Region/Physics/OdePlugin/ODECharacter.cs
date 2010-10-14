@@ -107,12 +107,6 @@ namespace OpenSim.Region.Physics.OdePlugin
         public bool m_tainted_isPhysical = false; // set when the physical status is tainted (false=not existing in physics engine, true=existing)
         public float MinimumGroundFlightOffset = 3f;
 
-        private bool UseUnderwaterPhysics = true;
-        private float lastUnderwaterPush = 0;
-        private bool WasUnderWater = false;
-        private bool ShouldBeWalking = true;
-        private bool StartingUnderWater = true;
-                    
         private float m_tainted_CAPSULE_LENGTH; // set when the capsule length changes. 
         private float m_tiltMagnitudeWhenProjectedOnXYPlane = 0.1131371f; // used to introduce a fixed tilt because a straight-up capsule falls through terrain, probably a bug in terrain collider
 
@@ -170,7 +164,7 @@ namespace OpenSim.Region.Physics.OdePlugin
             }
             else
             {
-                _position = new Vector3(((float)parent_scene.WorldExtents.X * 0.5f), ((float)parent_scene.WorldExtents.Y * 0.5f), parent_scene.GetTerrainHeightAtXY(128f, 128f) + 10f);
+                _position = new Vector3(((float)_parent_scene.WorldExtents.X * 0.5f), ((float)_parent_scene.WorldExtents.Y * 0.5f), parent_scene.GetTerrainHeightAtXY(128f, 128f) + 10f);
                 m_taintPosition.X = _position.X;
                 m_taintPosition.Y = _position.Y;
                 m_taintPosition.Z = _position.Z;
@@ -181,7 +175,6 @@ namespace OpenSim.Region.Physics.OdePlugin
 
             PID_D = pid_d;
             PID_P = pid_p;
-            //capsule_radius = .23f;
             CAPSULE_RADIUS = capsule_radius;
             m_tensor = tensor;
             m_density = density;
@@ -197,7 +190,7 @@ namespace OpenSim.Region.Physics.OdePlugin
             {
                 m_colliderarr[i] = false;
             }
-            CAPSULE_LENGTH = (size.Z * 1.15f) - CAPSULE_RADIUS * 2; //* 3.2f;
+            CAPSULE_LENGTH = (size.Z * 1.15f) - CAPSULE_RADIUS * 2.0f;
             //m_log.Info("[SIZE]: " + CAPSULE_LENGTH.ToString());
             m_tainted_CAPSULE_LENGTH = CAPSULE_LENGTH;
 
@@ -533,7 +526,7 @@ namespace OpenSim.Region.Physics.OdePlugin
             // the "-" sign is to force the tilt to be OPPOSITE the direction of movement.
             float xTiltComponent = -movementVector.X * m_tiltMagnitudeWhenProjectedOnXYPlane;
             float yTiltComponent = -movementVector.Y * m_tiltMagnitudeWhenProjectedOnXYPlane;
-            //m_log.Debug(movementVector.X + " " + movementVector.Y);
+
             //m_log.Debug("[PHYSICS] changing avatar tilt");
             d.JointSetAMotorParam(Amotor, (int)dParam.LowStop, xTiltComponent);
             d.JointSetAMotorParam(Amotor, (int)dParam.HiStop, xTiltComponent); // must be same as lowstop, else a different, spurious tilt is introduced
@@ -675,6 +668,7 @@ namespace OpenSim.Region.Physics.OdePlugin
                 float AVvolume = (float) (Math.PI*Math.Pow(CAPSULE_RADIUS, 2)*CAPSULE_LENGTH);
                 return m_density*AVvolume;
             }
+            set { }
         }
         public override void link(PhysicsActor obj)
         {
@@ -1062,51 +1056,8 @@ namespace OpenSim.Region.Physics.OdePlugin
                 }
                 // end add Kitto Flora
             }
-            float groundHeight = _parent_scene.GetTerrainHeightAtXY(_position.X, _position.Y);
-            if (_position.Z - CAPSULE_LENGTH + (CAPSULE_LENGTH / 5) < groundHeight)
-            {
-                vec.Z += ((groundHeight - (_position.Z - CAPSULE_LENGTH + (CAPSULE_LENGTH / 5))) * 100);
-            }
             if (vec.IsFinite())
             {
-                if (UseUnderwaterPhysics)
-                {
-                    //Position plus height to av's shoulder (aprox) is just above water
-                    if ((_position.Z + (CAPSULE_LENGTH / 3) - .25f) < _parent_scene.waterlevel)
-                    {
-                        if (StartingUnderWater)
-                            ShouldBeWalking = Flying == false;
-                        StartingUnderWater = false;
-                        WasUnderWater = true;
-                        Flying = true;
-                        lastUnderwaterPush = 0;
-                        if (ShouldBeWalking)
-                        {
-                            lastUnderwaterPush += (_parent_scene.waterlevel - _position.Z) * 100 + 10;
-                            vec.Z += lastUnderwaterPush;
-                        }
-                        else
-                        {
-                            lastUnderwaterPush += 8000;
-                            lastUnderwaterPush += (_parent_scene.waterlevel - _position.Z) * 25;
-                            vec.Z += lastUnderwaterPush;
-                        }
-                    }
-                    else
-                    {
-                        StartingUnderWater = true;
-                        if (WasUnderWater)
-                        {
-                            WasUnderWater = false;
-                            Flying = true;
-                        }
-                    }
-                }
-                float height = _parent_scene.GetTerrainHeightAtXY(_position.X, _position.Y);
-                if (_position.Z <= height)
-                {
-                    _position.Z = height;
-                }
                 doForce(vec);
                 if (!_zeroFlag)
                 {
@@ -1243,9 +1194,9 @@ namespace OpenSim.Region.Physics.OdePlugin
         {
         }
 
-        public override Vector3 PIDTarget { set { return; } }
-        public override bool PIDActive { set { return; } }
-        public override float PIDTau { set { return; } }
+        public override Vector3 PIDTarget { get { return Vector3.Zero; } set { return; } }
+        public override bool PIDActive { get { return false; } set { return; } }
+        public override float PIDTau { get { return 0; } set { return; } }
 
         public override float PIDHoverHeight { set { return; } }
         public override bool PIDHoverActive { set { return; } }
@@ -1260,9 +1211,6 @@ namespace OpenSim.Region.Physics.OdePlugin
 
         public override float APIDDamping{ set { return; } }
 
-        public override void SetCameraPos(Vector3 CameraRotation)
-        {
-        }
 
         public override void SubscribeEvents(int ms)
         {
@@ -1406,6 +1354,15 @@ namespace OpenSim.Region.Physics.OdePlugin
             if (m_eventsubscription + p >= int.MaxValue)
                 m_eventsubscription = 0;
             m_eventsubscription += p;
+        }
+
+        public override void SetCameraPos(Vector3 CameraRotation)
+        {
+        }
+
+        public override bool VolumeDetect
+        {
+            get { return false; }
         }
     }
 }

@@ -11,18 +11,24 @@ namespace Aurora.Framework
 {
 	public interface IProfileConnector
 	{
-		Classified FindClassified(string classifiedID);
-		ProfilePickInfo FindPick(string pickID);
+        /// <summary>
+        /// Gets the profile for an agent
+        /// </summary>
+        /// <param name="agentID"></param>
+        /// <returns></returns>
         IUserProfileInfo GetUserProfile(UUID agentID);
-        void UpdateUserNotes(UUID agentID, UUID targetAgentID, string notes, IUserProfileInfo UPI);
-		bool UpdateUserProfile(IUserProfileInfo Profile);
-        void UpdateUserInterests(IUserProfileInfo Profile);
+
+        /// <summary>
+        /// Updates the user's profile
+        /// </summary>
+        /// <param name="Profile"></param>
+        /// <returns></returns>
+        bool UpdateUserProfile(IUserProfileInfo Profile);
+
+        /// <summary>
+        /// Creates an new profile for the user
+        /// </summary>
+        /// <param name="UUID"></param>
 		void CreateNewProfile(UUID UUID);
-		void RemoveFromCache(UUID ID);
-        void AddClassified(Classified classified);
-        void DeleteClassified(UUID ID, UUID agentID);
-        void AddPick(ProfilePickInfo pick);
-        void UpdatePick(ProfilePickInfo pick);
-        void DeletePick(UUID ID, UUID agentID);
     }
 }

@@ -31,13 +31,12 @@ using System.IO;
 using System.Collections.Generic;
 using System.Collections;
 using System.Reflection;
+using System.Text;
 using System.Threading;
 using OpenMetaverse;
 using log4net;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes.Scripting;
-using OpenSim.Region.Framework.Scenes.Serialization;
 
 namespace OpenSim.Region.Framework.Scenes
 {
@@ -46,7 +45,8 @@ namespace OpenSim.Region.Framework.Scenes
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private string m_inventoryFileName = String.Empty;
-        private int m_inventoryFileNameSerial = 0;
+        private byte[] m_fileData = new byte[0];
+        private uint m_inventoryFileNameSerial = 0;
         
         /// <value>
         /// The part to which the inventory belongs.
@@ -117,52 +117,33 @@ namespace OpenSim.Region.Framework.Scenes
         /// If this method is called and there are inventory items, then we regard the inventory as having changed.
         /// </summary>
         /// <param name="linkNum">Link number for the part</param>
-        public void ResetInventoryIDs()
+        public void ResetInventoryIDs(bool ChangeScripts)
         {
-            if (null == m_part || null == m_part.ParentGroup)
-                return;
-            
-            lock (m_items)
+            lock (Items)
             {
-                if (0 == m_items.Count)
+                if (0 == Items.Count)
                     return;
 
                 HasInventoryChanged = true;
                 m_part.ParentGroup.HasGroupChanged = true;
-                IList<TaskInventoryItem> items = GetInventoryItems();
-                m_items.Clear();
-
-                foreach (TaskInventoryItem item in items)
-                {
-                    item.ResetIDs(m_part.UUID);
-                    m_items.Add(item.ItemID, item);
-                }
-            }
-        }
-
-        public void ResetObjectID()
-        {
-            lock (Items)
-            {
-                if (Items.Count == 0)
-                {
-                    return;
-                }
-    
-                HasInventoryChanged = true;
-                if (m_part.ParentGroup != null)
-                {
-                    m_part.ParentGroup.HasGroupChanged = true;
-                }
-                
                 IList<TaskInventoryItem> items = new List<TaskInventoryItem>(Items.Values);
                 Items.Clear();
-    
+
                 foreach (TaskInventoryItem item in items)
                 {
-                    item.ParentPartID = m_part.UUID;
-                    item.ParentID = m_part.UUID;
-                    Items.Add(item.ItemID, item);
+                    UUID oldItemID = item.ItemID;
+                    item.ResetIDs(m_part.UUID);
+                    lock (m_part.ParentGroup)
+                    {
+                        if (ChangeScripts && m_part.ParentGroup.Scene != null)
+                        {
+                            foreach (IScriptModule engine in m_part.ParentGroup.Scene.RequestModuleInterfaces<IScriptModule>())
+                            {
+                                engine.UpdateScriptToNewObject(oldItemID, item, m_part);
+                            }
+                        }
+                        Items.Add(item.ItemID, item);
+                    }
                 }
             }
         }
@@ -179,17 +160,17 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     return;
                 }
-            }
 
-            HasInventoryChanged = true;
-            m_part.ParentGroup.HasGroupChanged = true;
-            List<TaskInventoryItem> items = GetInventoryItems();
-            foreach (TaskInventoryItem item in items)
-            {
-                if (ownerId != item.OwnerID)
+                HasInventoryChanged = true;
+                m_part.ParentGroup.HasGroupChanged = true;
+                IList<TaskInventoryItem> items = new List<TaskInventoryItem>(Items.Values);
+                foreach (TaskInventoryItem item in items)
                 {
-                    item.LastOwnerID = item.OwnerID;
-                    item.OwnerID = ownerId;
+                    if (ownerId != item.OwnerID)
+                    {
+                        item.LastOwnerID = item.OwnerID;
+                        item.OwnerID = ownerId;
+                    }
                 }
             }
         }
@@ -206,44 +187,81 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     return;
                 }
-            }
 
-            HasInventoryChanged = true;
-            m_part.ParentGroup.HasGroupChanged = true;
-            List<TaskInventoryItem> items = GetInventoryItems();
-            foreach (TaskInventoryItem item in items)
-            {
-                if (groupID != item.GroupID)
-                    item.GroupID = groupID;
+                HasInventoryChanged = true;
+                m_part.ParentGroup.HasGroupChanged = true;
+                IList<TaskInventoryItem> items = new List<TaskInventoryItem>(Items.Values);
+                foreach (TaskInventoryItem item in items)
+                {
+                    if (groupID != item.GroupID)
+                    {
+                        item.GroupID = groupID;
+                    }
+                }
             }
         }
 
         /// <summary>
         /// Start all the scripts contained in this prim's inventory
         /// </summary>
-        public void CreateScriptInstances(int startParam, bool postOnRez, string engine, int stateSource)
+        public void CreateScriptInstances(int startParam, bool postOnRez, string engine, int stateSource, UUID RezzedFrom)
         {
-            List<TaskInventoryItem> scripts = GetInventoryScripts();
-            foreach (TaskInventoryItem item in scripts)
-                CreateScriptInstance(item, startParam, postOnRez, engine, stateSource);
+            List<TaskInventoryItem> LSLItems = GetInventoryScripts();
+            if (LSLItems.Count == 0)
+                return;
+
+            bool SendUpdate = m_part.AddFlag(PrimFlags.Scripted);
+            m_part.ParentGroup.Scene.EventManager.TriggerRezScripts(
+                                    m_part, LSLItems.ToArray(), startParam, postOnRez, engine, stateSource, RezzedFrom);
+            m_part.ParentGroup.AddActiveScriptCount(LSLItems.Count);
+            if(SendUpdate)
+                m_part.ScheduleFullUpdate(PrimUpdateFlags.PrimFlags); //We only need to send a compressed
         }
 
-        public ArrayList GetScriptErrors(UUID itemID)
+        public List<TaskInventoryItem> GetInventoryScripts()
+        {
+            List<TaskInventoryItem> ret = new List<TaskInventoryItem>();
+
+            lock (m_items)
+            {
+                foreach (TaskInventoryItem item in m_items.Values)
+                    if (item.InvType == (int)InventoryType.LSL)
+                    {
+                        if (!m_part.ParentGroup.Scene.Permissions.CanRunScript(item.ItemID, m_part.UUID, item.OwnerID))
+                            continue;
+                        ret.Add(item);
+                    }
+            }
+
+            return ret;
+        }
+
+        public ArrayList GetScriptErrors(UUID itemID, string DefaultScriptEngine)
         {
             ArrayList ret = new ArrayList();
 
             IScriptModule[] engines = m_part.ParentGroup.Scene.RequestModuleInterfaces<IScriptModule>();
             if (engines == null) // No engine at all
+            {
+                ret.Add("No Script Engines available at this time.");
                 return ret;
+            }
 
+            bool Found = false;
             foreach (IScriptModule e in engines)
             {
                 if (e != null)
                 {
-                    ArrayList errors = e.GetScriptErrors(itemID);
-                    foreach (Object line in errors)
-                        ret.Add(line);
+                    if (e.ScriptEngineName == DefaultScriptEngine)
+                    {
+                        Found = true;
+                        ret = e.GetScriptErrors(itemID);
+                    }
                 }
+            }
+            if (!Found)
+            {
+                ret.Add("The Script Engine you requested is not available at this time.");
             }
 
             return ret;
@@ -258,9 +276,16 @@ namespace OpenSim.Region.Framework.Scenes
         /// </param>
         public void RemoveScriptInstances(bool sceneObjectBeingDeleted)
         {
-            List<TaskInventoryItem> scripts = GetInventoryScripts();
-            foreach (TaskInventoryItem item in scripts)
-                RemoveScriptInstance(item.ItemID, sceneObjectBeingDeleted);
+            lock (Items)
+            {
+                foreach (TaskInventoryItem item in Items.Values)
+                {
+                    if ((int)InventoryType.LSL == item.InvType)
+                    {
+                        RemoveScriptInstance(item.ItemID, sceneObjectBeingDeleted);
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -273,16 +298,14 @@ namespace OpenSim.Region.Framework.Scenes
             // m_log.InfoFormat(
             //     "[PRIM INVENTORY]: " +
             //     "Starting script {0}, {1} in prim {2}, {3}",
-            //     item.Name, item.ItemID, Name, UUID);
+            //     item.Name, item.ItemID, m_part.Name, m_part.UUID);
 
             if (!m_part.ParentGroup.Scene.Permissions.CanRunScript(item.ItemID, m_part.UUID, item.OwnerID))
                 return;
 
-            m_part.AddFlag(PrimFlags.Scripted);
-
             if (!m_part.ParentGroup.Scene.RegionInfo.RegionSettings.DisableScripts)
             {
-                if (stateSource == 2 && // Prim crossing
+                if (stateSource == 1 && // Prim crossing
                         m_part.ParentGroup.Scene.m_trustBinaries)
                 {
                     lock (m_items)
@@ -290,11 +313,13 @@ namespace OpenSim.Region.Framework.Scenes
                         m_items[item.ItemID].PermsMask = 0;
                         m_items[item.ItemID].PermsGranter = UUID.Zero;
                     }
-                    
+
+                    bool SendUpdate = m_part.AddFlag(PrimFlags.Scripted);
                     m_part.ParentGroup.Scene.EventManager.TriggerRezScript(
-                        m_part.LocalId, item.ItemID, String.Empty, startParam, postOnRez, engine, stateSource);
+                        m_part, item.ItemID, String.Empty, startParam, postOnRez, engine, stateSource);
                     m_part.ParentGroup.AddActiveScriptCount(1);
-                    m_part.ScheduleFullUpdate();
+                    if (SendUpdate)
+                        m_part.ScheduleFullUpdate(PrimUpdateFlags.PrimFlags); //We only need to send a compressed
                     return;
                 }
 
@@ -317,12 +342,60 @@ namespace OpenSim.Region.Framework.Scenes
                         m_items[item.ItemID].PermsMask = 0;
                         m_items[item.ItemID].PermsGranter = UUID.Zero;
                     }
-                
+
+                    bool SendUpdate = m_part.AddFlag(PrimFlags.Scripted);
                     string script = Utils.BytesToString(asset.Data);
                     m_part.ParentGroup.Scene.EventManager.TriggerRezScript(
-                        m_part.LocalId, item.ItemID, script, startParam, postOnRez, engine, stateSource);
+                        m_part, item.ItemID, script, startParam, postOnRez, engine, stateSource);
                     m_part.ParentGroup.AddActiveScriptCount(1);
-                    m_part.ScheduleFullUpdate();
+                    if (SendUpdate)
+                        m_part.ScheduleFullUpdate(PrimUpdateFlags.PrimFlags); //We only need to send a compressed
+                }
+            }
+        }
+
+        /// <summary>
+        /// Updates a script which is in this prim's inventory.
+        /// </summary>
+        /// <param name="item"></param>
+        /// <returns></returns>
+        public void UpdateScriptInstance(UUID itemID, int startParam, bool postOnRez, string engine, int stateSource)
+        {
+            TaskInventoryItem item = m_items[itemID];
+            if (!m_part.ParentGroup.Scene.Permissions.CanRunScript(item.ItemID, m_part.UUID, item.OwnerID))
+                return;
+
+            m_part.AddFlag(PrimFlags.Scripted);
+
+            if (!m_part.ParentGroup.Scene.RegionInfo.RegionSettings.DisableScripts)
+            {
+                AssetBase asset = m_part.ParentGroup.Scene.AssetService.Get(item.AssetID.ToString());
+                if (null == asset)
+                {
+                    m_log.ErrorFormat(
+                        "[PRIM INVENTORY]: " +
+                        "Couldn't start script {0}, {1} at {2} in {3} since asset ID {4} could not be found",
+                        item.Name, item.ItemID, m_part.AbsolutePosition,
+                        m_part.ParentGroup.Scene.RegionInfo.RegionName, item.AssetID);
+                }
+                else
+                {
+                    lock (m_items)
+                    {
+                        m_items[item.ItemID].PermsMask = 0;
+                        m_items[item.ItemID].PermsGranter = UUID.Zero;
+                    }
+
+                    string script = Utils.BytesToString(asset.Data);
+                    IScriptModule[] modules = m_part.ParentGroup.Scene.RequestModuleInterfaces<IScriptModule>();
+                    foreach (IScriptModule module in modules)
+                    {
+                        if (module.ScriptEngineName == engine)
+                        {
+                            module.UpdateScript(m_part.UUID, item.ItemID, script, startParam, postOnRez, stateSource);
+                        }
+                    }
+                    m_part.ParentGroup.AddActiveScriptCount(1);
                 }
             }
         }
@@ -390,15 +463,21 @@ namespace OpenSim.Region.Framework.Scenes
         /// </param>
         public void CreateScriptInstance(UUID itemId, int startParam, bool postOnRez, string engine, int stateSource)
         {
-            TaskInventoryItem item = GetInventoryItem(itemId);
-            if (item != null)
-                CreateScriptInstance(item, startParam, postOnRez, engine, stateSource);
-            else
-                m_log.ErrorFormat(
-                    "[PRIM INVENTORY]: " +
-                    "Couldn't start script with ID {0} since it couldn't be found for prim {1}, {2} at {3} in {4}",
-                    itemId, m_part.Name, m_part.UUID, 
-                    m_part.AbsolutePosition, m_part.ParentGroup.Scene.RegionInfo.RegionName);
+            lock (m_items)
+            {
+                if (m_items.ContainsKey(itemId))
+                {
+                    CreateScriptInstance(m_items[itemId], startParam, postOnRez, engine, stateSource);
+                }
+                else
+                {
+                    m_log.ErrorFormat(
+                        "[PRIM INVENTORY]: " +
+                        "Couldn't start script with ID {0} since it couldn't be found for prim {1}, {2} at {3} in {4}",
+                        itemId, m_part.Name, m_part.UUID, 
+                        m_part.AbsolutePosition, m_part.ParentGroup.Scene.RegionInfo.RegionName);
+                }
+            }
         }
 
         /// <summary>
@@ -439,18 +518,16 @@ namespace OpenSim.Region.Framework.Scenes
 
         /// <summary>
         /// Check if the inventory holds an item with a given name.
+        /// This method assumes that the task inventory is already locked.
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
         private bool InventoryContainsName(string name)
         {
-            lock (m_items)
+            foreach (TaskInventoryItem item in Items.Values)
             {
-                foreach (TaskInventoryItem item in m_items.Values)
-                {
-                    if (item.Name == name)
-                        return true;
-                }
+                if (item.Name == name)
+                    return true;
             }
             return false;
         }
@@ -493,7 +570,12 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="item"></param>
         public void AddInventoryItemExclusive(TaskInventoryItem item, bool allowedDrop)
         {
-            List<TaskInventoryItem> il = GetInventoryItems();
+            List<TaskInventoryItem> il;
+
+            lock (m_items)
+            {
+                il = new List<TaskInventoryItem>(m_items.Values);
+            }
             
             foreach (TaskInventoryItem i in il)
             {
@@ -533,12 +615,14 @@ namespace OpenSim.Region.Framework.Scenes
             item.GroupID = m_part.GroupID;
 
             lock (m_items)
+            {
                 m_items.Add(item.ItemID, item);
 
-            if (allowedDrop) 
-                m_part.TriggerScriptChangedEvent(Changed.ALLOWED_DROP);
-            else
-                m_part.TriggerScriptChangedEvent(Changed.INVENTORY);
+                if (allowedDrop) 
+                    m_part.TriggerScriptChangedEvent(Changed.ALLOWED_DROP);
+                else
+                    m_part.TriggerScriptChangedEvent(Changed.INVENTORY);
+            }
 
             m_inventorySerial++;
             //m_inventorySerial += 2;
@@ -562,8 +646,9 @@ namespace OpenSim.Region.Framework.Scenes
                     m_items.Add(item.ItemID, item);
 //                    m_part.TriggerScriptChangedEvent(Changed.INVENTORY);
                 }
-                m_inventorySerial++;
             }
+
+            m_inventorySerial++;
         }
 
         /// <summary>
@@ -605,67 +690,6 @@ namespace OpenSim.Region.Framework.Scenes
             return items;
         }
         
-        public SceneObjectGroup GetRezReadySceneObject(TaskInventoryItem item)
-        {
-            AssetBase rezAsset = m_part.ParentGroup.Scene.AssetService.Get(item.AssetID.ToString());
-
-            if (null == rezAsset)
-            {
-                m_log.WarnFormat(
-                    "[PRIM INVENTORY]: Could not find asset {0} for inventory item {1} in {2}", 
-                    item.AssetID, item.Name, m_part.Name);
-                return null;
-            }
-
-            string xmlData = Utils.BytesToString(rezAsset.Data);
-            SceneObjectGroup group = SceneObjectSerializer.FromOriginalXmlFormat(xmlData);
-
-            group.ResetIDs();
-
-            SceneObjectPart rootPart = group.GetChildPart(group.UUID);
-
-            // Since renaming the item in the inventory does not affect the name stored
-            // in the serialization, transfer the correct name from the inventory to the
-            // object itself before we rez.
-            rootPart.Name = item.Name;
-            rootPart.Description = item.Description;
-
-            SceneObjectPart[] partList = group.Parts;
-
-            group.SetGroup(m_part.GroupID, null);
-
-            if ((rootPart.OwnerID != item.OwnerID) || (item.CurrentPermissions & 16) != 0)
-            {
-                if (m_part.ParentGroup.Scene.Permissions.PropagatePermissions())
-                {
-                    foreach (SceneObjectPart part in partList)
-                    {
-                        part.EveryoneMask = item.EveryonePermissions;
-                        part.NextOwnerMask = item.NextPermissions;
-                    }
-                    
-                    group.ApplyNextOwnerPermissions();
-                }
-            }
-
-            foreach (SceneObjectPart part in partList)
-            {
-                if ((part.OwnerID != item.OwnerID) || (item.CurrentPermissions & 16) != 0)
-                {
-                    part.LastOwnerID = part.OwnerID;
-                    part.OwnerID = item.OwnerID;
-                    part.Inventory.ChangeInventoryOwner(item.OwnerID);
-                }
-                
-                part.EveryoneMask = item.EveryonePermissions;
-                part.NextOwnerMask = item.NextPermissions;
-            }
-            
-            rootPart.TrimPermissions(); 
-            
-            return group;
-        }
-        
         /// <summary>
         /// Update an existing inventory item.
         /// </summary>
@@ -679,44 +703,45 @@ namespace OpenSim.Region.Framework.Scenes
 
         public bool UpdateInventoryItem(TaskInventoryItem item, bool fireScriptEvents)
         {
-            TaskInventoryItem it = GetInventoryItem(item.ItemID);
-            if (it != null)
+            lock(m_items)
             {
-                item.ParentID = m_part.UUID;
-                item.ParentPartID = m_part.UUID;
-                item.Flags = m_items[item.ItemID].Flags;
-
-                // If group permissions have been set on, check that the groupID is up to date in case it has
-                // changed since permissions were last set.
-                if (item.GroupPermissions != (uint)PermissionMask.None)
-                    item.GroupID = m_part.GroupID;
-
-                if (item.AssetID == UUID.Zero)
-                    item.AssetID = it.AssetID;
-
-                lock (m_items)
+                if (m_items.ContainsKey(item.ItemID))
                 {
-                    m_items[item.ItemID] = item;
-                    m_inventorySerial++;
+                    if (m_items.ContainsKey(item.ItemID))
+                    {
+                        item.ParentID = m_part.UUID;
+                        item.ParentPartID = m_part.UUID;
+                        item.Flags = m_items[item.ItemID].Flags;
+
+                        // If group permissions have been set on, check that the groupID is up to date in case it has
+                        // changed since permissions were last set.
+                        if (item.GroupPermissions != (uint)PermissionMask.None)
+                            item.GroupID = m_part.GroupID;
+                        
+                        if (item.AssetID == UUID.Zero)
+                        {
+                            item.AssetID = m_items[item.ItemID].AssetID;
+                        }
+                        m_items[item.ItemID] = item;
+                        m_inventorySerial++;
+                        if (fireScriptEvents)
+                            m_part.TriggerScriptChangedEvent(Changed.INVENTORY);
+                        HasInventoryChanged = true;
+                        m_part.ParentGroup.HasGroupChanged = true;
+                        return true;
+                    }
+                    else
+                    {
+                        m_log.ErrorFormat(
+                            "[PRIM INVENTORY]: " +
+                            "Tried to retrieve item ID {0} from prim {1}, {2} at {3} in {4} but the item does not exist in this inventory",
+                            item.ItemID, m_part.Name, m_part.UUID, 
+                            m_part.AbsolutePosition, m_part.ParentGroup.Scene.RegionInfo.RegionName);
+                    }
+
                 }
-
-                if (fireScriptEvents)
-                    m_part.TriggerScriptChangedEvent(Changed.INVENTORY);
-
-                HasInventoryChanged = true;
-                m_part.ParentGroup.HasGroupChanged = true;
-                return true;
+                return false;
             }
-            else
-            {
-                m_log.ErrorFormat(
-                    "[PRIM INVENTORY]: " +
-                    "Tried to retrieve item ID {0} from prim {1}, {2} at {3} in {4} but the item does not exist in this inventory",
-                    item.ItemID, m_part.Name, m_part.UUID, 
-                    m_part.AbsolutePosition, m_part.ParentGroup.Scene.RegionInfo.RegionName);
-            }
-            return false;
-
         }
 
         /// <summary>
@@ -727,75 +752,71 @@ namespace OpenSim.Region.Framework.Scenes
         /// in this prim's inventory.</returns>
         public int RemoveInventoryItem(UUID itemID)
         {
-            TaskInventoryItem item = GetInventoryItem(itemID);
-            if (item != null)
+            lock (m_items)
             {
-                int type = m_items[itemID].InvType;
-                if (type == 10) // Script
+                if (m_items.ContainsKey(itemID))
                 {
-                    m_part.RemoveScriptEvents(itemID);
-                    m_part.ParentGroup.Scene.EventManager.TriggerRemoveScript(m_part.LocalId, itemID);
+                    int type = m_items[itemID].InvType;
+                    if (type == 10) // Script
+                    {
+                        m_part.RemoveScriptEvents(itemID);
+                        m_part.ParentGroup.Scene.EventManager.TriggerRemoveScript(m_part.LocalId, itemID);
+                    }
+                    m_items.Remove(itemID);
+                    m_inventorySerial++;
+                    m_part.TriggerScriptChangedEvent(Changed.INVENTORY);
+
+                    HasInventoryChanged = true;
+                    m_part.ParentGroup.HasGroupChanged = true;
+
+                    int scriptcount = 0;
+                    lock (m_items)
+                    {
+                        foreach (TaskInventoryItem item in m_items.Values)
+                        {
+                            if (item.Type == 10)
+                            {
+                                scriptcount++;
+                            }
+                        }
+                    }
+                    bool SendUpdate = false;
+                    if (scriptcount <= 0)
+                        SendUpdate = m_part.RemFlag(PrimFlags.Scripted);
+
+                    if (SendUpdate)
+                        m_part.ScheduleFullUpdate(PrimUpdateFlags.PrimFlags);
+
+                    return type;
                 }
-                m_items.Remove(itemID);
-                m_inventorySerial++;
-                m_part.TriggerScriptChangedEvent(Changed.INVENTORY);
-
-                HasInventoryChanged = true;
-                m_part.ParentGroup.HasGroupChanged = true;
-
-                if (!ContainsScripts())
-                    m_part.RemFlag(PrimFlags.Scripted);
-
-                m_part.ScheduleFullUpdate();
-
-                return type;
-                
-            }
-            else
-            {
-                m_log.ErrorFormat(
-                    "[PRIM INVENTORY]: " +
-                    "Tried to remove item ID {0} from prim {1}, {2} at {3} in {4} but the item does not exist in this inventory",
-                    itemID, m_part.Name, m_part.UUID,
-                    m_part.AbsolutePosition, m_part.ParentGroup.Scene.RegionInfo.RegionName);
+                else
+                {
+                    m_log.ErrorFormat(
+                        "[PRIM INVENTORY]: " +
+                        "Tried to remove item ID {0} from prim {1}, {2} at {3} in {4} but the item does not exist in this inventory",
+                        itemID, m_part.Name, m_part.UUID, 
+                        m_part.AbsolutePosition, m_part.ParentGroup.Scene.RegionInfo.RegionName);
+                }
             }
 
             return -1;
         }
 
-        public string GetInventoryFileName()
-        {
-            if (m_inventoryFileName == String.Empty)
-                m_inventoryFileName = "inventory_" + UUID.Random().ToString() + ".tmp";
-            if (m_inventoryFileNameSerial < m_inventorySerial)
-            {
-                m_inventoryFileName = "inventory_" + UUID.Random().ToString() + ".tmp";
-            }
-            return m_inventoryFileName;
-        }
-
         /// <summary>
-        /// Return the name with which a client can request a xfer of this prim's inventory metadata
+        /// Returns true if the file needs to be rebuild, false if it does not
         /// </summary>
-        /// <param name="client"></param>
-        /// <param name="localID"></param>
-        public bool GetInventoryFileName(IClientAPI client, uint localID)
+        /// <param name="FileName"></param>
+        /// <returns></returns>
+        public bool GetInventoryFileName()
         {
-//            m_log.DebugFormat(
-//                 "[PRIM INVENTORY]: Received request from client {0} for inventory file name of {1}, {2}",
-//                 client.AgentId, Name, UUID);
-
-            if (m_inventorySerial > 0)
+            if (m_inventoryFileName == String.Empty ||
+                m_inventoryFileNameSerial < m_inventorySerial)
             {
-                client.SendTaskInventory(m_part.UUID, (short)m_inventorySerial,
-                                         Utils.StringToBytes(GetInventoryFileName()));
-                return true;
+                m_inventoryFileName = "inventory_" + UUID.Random().ToString() + ".tmp";
+                m_inventoryFileNameSerial = m_inventorySerial;
+                return true; //We had to change the filename, need to rebuild the file
             }
-            else
-            {
-                client.SendTaskInventory(m_part.UUID, 0, new byte[0]);
-                return false;
-            }
+            return false;
         }
 
         /// <summary>
@@ -804,20 +825,36 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="xferManager"></param>
         public void RequestInventoryFile(IClientAPI client, IXfer xferManager)
         {
-            byte[] fileData = new byte[0];
+            if (m_inventorySerial == 0)
+            {
+                //No inventory, no sending
+                client.SendTaskInventory(m_part.UUID, 0, new byte[0]);
+                return;
+            }
+            //If update == true, we need to recreate the file for the client
+            bool Update = GetInventoryFileName();
+
+            client.SendTaskInventory(m_part.UUID, (short)m_inventorySerial,
+                                     Utils.StringToBytes(m_inventoryFileName));
+
+            if (!Update)
+            {
+                //We don't need to update the fileData, so just send the cached info and exit out of this method
+                if (m_fileData.Length > 2)
+                {
+                    xferManager.AddNewFile(m_inventoryFileName, m_fileData);
+                }
+                return;
+            }
 
             // Confusingly, the folder item has to be the object id, while the 'parent id' has to be zero.  This matches
             // what appears to happen in the Second Life protocol.  If this isn't the case. then various functionality
             // isn't available (such as drag from prim inventory to agent inventory)
             InventoryStringBuilder invString = new InventoryStringBuilder(m_part.UUID, UUID.Zero);
-
-            bool includeAssets = false;
-            if (m_part.ParentGroup.Scene.Permissions.CanEditObjectInventory(m_part.UUID, client.AgentId))
-                includeAssets = true;
-
-            lock (m_items)
+            List<TaskInventoryItem> items = (List<TaskInventoryItem>)m_items.Clone2List();
+            lock (items)
             {
-                foreach (TaskInventoryItem item in m_items.Values)
+                foreach (TaskInventoryItem item in items)
                 {
                     UUID ownerID = item.OwnerID;
                     uint everyoneMask = 0;
@@ -845,17 +882,14 @@ namespace OpenSim.Region.Framework.Scenes
                     invString.AddNameValueLine("group_id", item.GroupID.ToString());
                     invString.AddSectionEnd();
 
-                    if (includeAssets)
-                        invString.AddNameValueLine("asset_id", item.AssetID.ToString());
-                    else
-                        invString.AddNameValueLine("asset_id", UUID.Zero.ToString());
+                    invString.AddNameValueLine("asset_id", item.AssetID.ToString());
                     invString.AddNameValueLine("type", TaskInventoryItem.Types[item.Type]);
                     invString.AddNameValueLine("inv_type", TaskInventoryItem.InvTypes[item.InvType]);
                     invString.AddNameValueLine("flags", Utils.UIntToHexString(item.Flags));
 
                     invString.AddSaleStart();
-                    invString.AddNameValueLine("sale_type", "not");
-                    invString.AddNameValueLine("sale_price", "0");
+                    invString.AddNameValueLine("sale_type", TaskInventoryItem.SaleTypes[item.SaleType]);
+                    invString.AddNameValueLine("sale_price", item.SalePrice.ToString());
                     invString.AddSectionEnd();
 
                     invString.AddNameValueLine("name", item.Name + "|");
@@ -865,15 +899,14 @@ namespace OpenSim.Region.Framework.Scenes
                     invString.AddSectionEnd();
                 }
             }
-
-            fileData = Utils.StringToBytes(invString.BuildString);
+            m_fileData = Utils.StringToBytes(invString.BuildString.ToString());
 
             //m_log.Debug(Utils.BytesToString(fileData));
             //m_log.Debug("[PRIM INVENTORY]: RequestInventoryFile fileData: " + Utils.BytesToString(fileData));
 
-            if (fileData.Length > 2)
+            if (m_fileData.Length > 2)
             {
-                xferManager.AddNewFile(m_inventoryFileName, fileData);
+                xferManager.AddNewFile(m_inventoryFileName, m_fileData);
             }
         }
 
@@ -881,24 +914,44 @@ namespace OpenSim.Region.Framework.Scenes
         /// Process inventory backup
         /// </summary>
         /// <param name="datastore"></param>
-        public void ProcessInventoryBackup(ISimulationDataService datastore)
+        public void ProcessInventoryBackup(IRegionDataStore datastore)
         {
             if (HasInventoryChanged)
             {
-                HasInventoryChanged = false;
-                List<TaskInventoryItem> items = GetInventoryItems();
-                datastore.StorePrimInventory(m_part.UUID, items);
+                lock (Items)
+                {
+                    datastore.StorePrimInventory(m_part.UUID, Items.Values);
+                    IScriptModule[] engines = m_part.ParentGroup.Scene.RequestModuleInterfaces<IScriptModule>();
+                    if (engines != null)
+                    {
 
+                        foreach (TaskInventoryItem item in m_items.Values)
+                        {
+                            if (item.Type == (int)InventoryType.LSL)
+                            {
+                                foreach (IScriptModule engine in engines)
+                                {
+                                    if (engine != null)
+                                    {
+                                        engine.SaveStateSave(item.ItemID, m_part.UUID);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                HasInventoryChanged = false;
             }
         }
 
         public class InventoryStringBuilder
         {
-            public string BuildString = String.Empty;
+            public StringBuilder BuildString = new StringBuilder();
 
             public InventoryStringBuilder(UUID folderID, UUID parentID)
             {
-                BuildString += "\tinv_object\t0\n\t{\n";
+                BuildString.Append("\tinv_object\t0\n\t{\n");
                 AddNameValueLine("obj_id", folderID.ToString());
                 AddNameValueLine("parent_id", parentID.ToString());
                 AddNameValueLine("type", "category");
@@ -908,42 +961,42 @@ namespace OpenSim.Region.Framework.Scenes
 
             public void AddItemStart()
             {
-                BuildString += "\tinv_item\t0\n";
+                BuildString.Append("\tinv_item\t0\n");
                 AddSectionStart();
             }
 
             public void AddPermissionsStart()
             {
-                BuildString += "\tpermissions 0\n";
+                BuildString.Append("\tpermissions 0\n");
                 AddSectionStart();
             }
 
             public void AddSaleStart()
             {
-                BuildString += "\tsale_info\t0\n";
+                BuildString.Append("\tsale_info\t0\n");
                 AddSectionStart();
             }
 
             protected void AddSectionStart()
             {
-                BuildString += "\t{\n";
+                BuildString.Append("\t{\n");
             }
 
             public void AddSectionEnd()
             {
-                BuildString += "\t}\n";
+                BuildString.Append("\t}\n");
             }
 
             public void AddLine(string addLine)
             {
-                BuildString += addLine;
+                BuildString.Append(addLine);
             }
 
             public void AddNameValueLine(string name, string value)
             {
-                BuildString += "\t\t";
-                BuildString += name + "\t";
-                BuildString += value + "\n";
+                BuildString.Append("\t\t");
+                BuildString.Append( name + "\t");
+                BuildString.Append(value + "\n");
             }
 
             public void Close()
@@ -1004,6 +1057,7 @@ namespace OpenSim.Region.Framework.Scenes
                             item.CurrentPermissions &= ~(uint)PermissionMask.Transfer;
                         if ((item.CurrentPermissions & ((uint)PermissionMask.Modify >> 13)) == 0)
                             item.CurrentPermissions &= ~(uint)PermissionMask.Modify;
+                        item.CurrentPermissions |= 8;
                     }
                     item.CurrentPermissions &= item.NextPermissions;
                     item.BasePermissions &= item.NextPermissions;
@@ -1053,30 +1107,6 @@ namespace OpenSim.Region.Framework.Scenes
 
             return ret;
         }
-
-        public List<TaskInventoryItem> GetInventoryItems()
-        {
-           List<TaskInventoryItem> ret = new List<TaskInventoryItem>();
-
-            lock (m_items)
-                ret = new List<TaskInventoryItem>(m_items.Values);
-
-            return ret;
-        }
-
-        public List<TaskInventoryItem> GetInventoryScripts()
-        {
-            List<TaskInventoryItem> ret = new List<TaskInventoryItem>();
-
-            lock (m_items)
-            {
-                foreach (TaskInventoryItem item in m_items.Values)
-                    if (item.InvType == (int)InventoryType.LSL)
-                        ret.Add(item);
-            }
-
-            return ret;
-        }
         
         public Dictionary<UUID, string> GetScriptStates()
         {
@@ -1086,20 +1116,24 @@ namespace OpenSim.Region.Framework.Scenes
             if (engines == null) // No engine at all
                 return ret;
 
-            List<TaskInventoryItem> scripts = GetInventoryScripts();
-
-            foreach (TaskInventoryItem item in scripts)
+            lock (m_items)
             {
-                foreach (IScriptModule e in engines)
+                foreach (TaskInventoryItem item in m_items.Values)
                 {
-                    if (e != null)
+                    if (item.InvType == (int)InventoryType.LSL)
                     {
-                        string n = e.GetXMLState(item.ItemID);
-                        if (n != String.Empty)
+                        foreach (IScriptModule e in engines)
                         {
-                            if (!ret.ContainsKey(item.ItemID))
-                                ret[item.ItemID] = n;
-                            break;
+                            if (e != null)
+                            {
+                                string n = e.GetXMLState(item.ItemID);
+                                if (n != String.Empty)
+                                {
+                                    if (!ret.ContainsKey(item.ItemID))
+                                        ret[item.ItemID] = n;
+                                    break;
+                                }
+                            }
                         }
                     }
                 }
@@ -1114,18 +1148,22 @@ namespace OpenSim.Region.Framework.Scenes
             if (engines == null)
                 return;
 
-            List<TaskInventoryItem> scripts = GetInventoryScripts();
-
-            foreach (TaskInventoryItem item in scripts)
+            lock (m_items)
             {
-                foreach (IScriptModule engine in engines)
+                foreach (TaskInventoryItem item in m_items.Values)
                 {
-                    if (engine != null)
+                    if (item.InvType == (int)InventoryType.LSL)
                     {
-                        if (item.OwnerChanged)
-                            engine.PostScriptEvent(item.ItemID, "changed", new Object[] { (int)Changed.OWNER });
-                        item.OwnerChanged = false;
-                        engine.ResumeScript(item.ItemID);
+                        foreach (IScriptModule engine in engines)
+                        {
+                            if (engine != null)
+                            {
+                                if (item.OwnerChanged)
+                                    engine.PostScriptEvent(item.ItemID, m_part.UUID, "changed", new Object[] { (int)Changed.OWNER });
+                                item.OwnerChanged = false;
+                                engine.ResumeScript(item.ItemID);
+                            }
+                        }
                     }
                 }
             }

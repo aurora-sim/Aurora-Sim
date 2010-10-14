@@ -25,89 +25,86 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Reflection;
-
-using log4net;
-using Nini.Config;
+using System.Collections.Generic;
 using OpenMetaverse;
-
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
-using Mono.Addins;
 
-
-namespace OpenSim.Region.OptionalModules.Scripting.XmlRpcRouterModule
+namespace OpenSim.Data.Null
 {
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
-    public class XmlRpcRouter : INonSharedRegionModule, IXmlRpcRouter
+    /// <summary>
+    /// NULL DataStore, do not store anything
+    /// </summary>
+    public class NullDataStore : IRegionDataStore
     {
-        //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private bool m_Enabled = false;
-
-        public void Initialise(IConfigSource config)
+        public void Initialise(string dbfile)
         {
-            IConfig startupConfig = config.Configs["Startup"];
-            if (startupConfig == null)
-                return;
-
-            if (startupConfig.GetString("XmlRpcRouterModule",
-                    "XmlRpcRouterModule") == "XmlRpcRouterModule")
-            {
-                m_Enabled = true;
-            }
+            return;
         }
 
-        public void AddRegion(Scene scene)
-        {
-            if(m_Enabled)
-                scene.RegisterModuleInterface<IXmlRpcRouter>(this);
-        }
-
-        public void RemoveRegion(Scene scene)
-        {
-
-        }
-
-        public void RegionLoaded(Scene scene)
-        {
-
-        }
-
-        public Type ReplaceableInterface
-        {
-            get { return null; }
-        }
-
-        public void PostInitialise()
+        public void Dispose()
         {
         }
 
-        public void Close()
+        public void StoreRegionSettings(RegionSettings rs)
+        {
+        }
+        
+        public RegionSettings LoadRegionSettings(UUID regionUUID)
+        {
+            return null;
+        }
+
+        public void StoreObject(SceneObjectGroup obj, UUID regionUUID)
         {
         }
 
-        public string Name
-        {
-            get { return "XmlRpcRouterModule"; }
-        }
-
-        public bool IsSharedModule
-        {
-            get { return false; }
-        }
-
-        public void RegisterNewReceiver(IScriptModule scriptEngine, UUID channel, UUID objectID, UUID itemID, string uri)
-        {
-            scriptEngine.PostScriptEvent(itemID, objectID, "xmlrpc_uri", new Object[] {uri});
-        }
-
-        public void ScriptRemoved(UUID itemID)
+        public void RemoveObject(UUID obj, UUID regionUUID)
         {
         }
 
-        public void ObjectRemoved(UUID objectID)
+        public void RemoveObjects(List<UUID> objGroups)
+        {
+        }
+
+        public void RemoveRegion(UUID regionUUID)
+        {
+        }
+
+        // see IRegionDatastore
+        public void StorePrimInventory(UUID primID, ICollection<TaskInventoryItem> items)
+        {
+        }
+
+        public List<SceneObjectGroup> LoadObjects(UUID regionUUID)
+        {
+            return new List<SceneObjectGroup>();
+        }
+
+        public void StoreTerrain(double[,] ter, UUID regionID, bool Revert)
+        {
+        }
+
+        public double[,] LoadTerrain(UUID regionID, bool Revert)
+        {
+            return null;
+        }
+
+        public void RemoveLandObject(UUID RegionID, UUID globalID)
+        {
+        }
+
+        public void StoreLandObject(LandData land)
+        {
+        }
+
+        public List<LandData> LoadLandObjects(UUID regionUUID)
+        {
+            return new List<LandData>();
+        }
+
+        public void Shutdown()
         {
         }
     }

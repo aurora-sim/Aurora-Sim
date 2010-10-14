@@ -59,58 +59,48 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 
         public RegionInfo[] LoadRegions()
         {
-            if (m_configSource == null)
+            IConfig RegionStartupConfig = m_configSource.Configs["RegionStartup"];
+            if (RegionStartupConfig != null)
             {
-                m_log.Error("[WEBLOADER]: Unable to load configuration source!");
-                return null;
-            }
-            else
-            {
-                try
+                string url = RegionStartupConfig.GetString("WebServerURL", String.Empty).Trim();
+                if (url == String.Empty)
                 {
-                    IConfig startupConfig = (IConfig)m_configSource.Configs["Startup"];
-                    string url = startupConfig.GetString("regionload_webserver_url", String.Empty).Trim();
-                    if (url == String.Empty)
-                    {
-                        m_log.Error("[WEBLOADER]: Unable to load webserver URL - URL was empty.");
-                        return null;
-                    }
-                    else
-                    {
-                        HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(url);
-                        webRequest.Timeout = 30000; //30 Second Timeout
-
-                        m_log.Debug("[WEBLOADER]: Sending Download Request...");
-                        HttpWebResponse webResponse = (HttpWebResponse)webRequest.GetResponse();
-
-                        m_log.Debug("[WEBLOADER]: Downloading Region Information From Remote Server...");
-                        StreamReader reader = new StreamReader(webResponse.GetResponseStream());
-
-                        m_log.Debug("[WEBLOADER]: Done downloading region information from server.");
-
-                        List<RegionInfo> regionInfos = new List<RegionInfo>();
-
-                        IConfigSource source = new IniConfigSource(new Nini.Ini.IniDocument(reader.BaseStream, Nini.Ini.IniFileType.Standard));
-
-                        int i = 0;
-                        foreach (IConfig config in source.Configs)
-                        {
-                            RegionInfo regionInfo = new RegionInfo("REGION CONFIG #" + (i + 1), "", false, m_configSource, config.Name);
-                            regionInfos.Add(regionInfo);
-                            i++;
-                        }
-                        return regionInfos.ToArray();
-                    }
-                }
-                catch
-                {
+                    m_log.Error("[WEBLOADER]: Unable to load webserver URL - URL was empty.");
                     return null;
                 }
+                else
+                {
+                    HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(url);
+                    webRequest.Timeout = 30000; //30 Second Timeout
+
+                    m_log.Debug("[WEBLOADER]: Sending Download Request...");
+                    HttpWebResponse webResponse = (HttpWebResponse)webRequest.GetResponse();
+
+                    m_log.Debug("[WEBLOADER]: Downloading Region Information From Remote Server...");
+                    StreamReader reader = new StreamReader(webResponse.GetResponseStream());
+
+                    m_log.Debug("[WEBLOADER]: Done downloading region information from server.");
+
+                    List<RegionInfo> regionInfos = new List<RegionInfo>();
+
+                    IConfigSource source = new IniConfigSource(new Nini.Ini.IniDocument(reader.BaseStream, Nini.Ini.IniFileType.AuroraStyle));
+
+                    int i = 0;
+                    foreach (IConfig config in source.Configs)
+                    {
+                        RegionInfo regionInfo = new RegionInfo("REGION CONFIG #" + (i + 1), "", false, m_configSource, config.Name);
+                        regionInfos.Add(regionInfo);
+                        i++;
+                    }
+                    return regionInfos.ToArray();
+                }
             }
+            return null;
         }
 
-        public void AddRegion(IOpenSimBase baseOS)
+        public void AddRegion(IOpenSimBase baseOS, string[] cmd)
         {
+            //Can't add regions to remote locations
         }
 
         public void Dispose()

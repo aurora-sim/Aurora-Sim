@@ -336,33 +336,21 @@ namespace OpenSim.Data.SQLite
             get { return "SQLite Asset storage engine"; }
         }
 
-        // TODO: (AlexRa): one of these is to be removed eventually (?)
-
         /// <summary>
         /// Delete an asset from database
         /// </summary>
         /// <param name="uuid"></param>
-        public bool DeleteAsset(UUID uuid)
+        public override bool Delete(string id)
         {
             lock (this)
             {
-            using (SqliteCommand cmd = new SqliteCommand(DeleteAssetSQL, m_conn))
-            {
-                cmd.Parameters.Add(new SqliteParameter(":UUID", uuid.ToString()));
-                cmd.ExecuteNonQuery();
-            }
+                using (SqliteCommand cmd = new SqliteCommand(DeleteAssetSQL, m_conn))
+                {
+                    cmd.Parameters.Add(new SqliteParameter(":UUID", id));
+                    cmd.ExecuteNonQuery();
+                }
             }
             return true;
-        }
-
-        public override bool Delete(string id)
-        {
-            UUID assetID;
-
-            if (!UUID.TryParse(id, out assetID))
-                return false;
-
-            return DeleteAsset(assetID);
         }
 
         #endregion

@@ -34,143 +34,115 @@ using System.Threading;
 using log4net;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Scenes;
-using Amib.Threading;
+using OpenMetaverse;
 using Aurora.Framework;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
-    public class AuroraThreadPoolStartInfo
-    {
-        public ThreadPriority priority;
-        public int Threads = 0;
-        public int InitialSleepTime = 1;
-        public int MaxSleepTime = 300;
-    }
-
-    public class AuroraThreadPool
-    {
-        AuroraThreadPoolStartInfo m_info = null;
-        List<Thread> Threads = new List<Thread>();
-        Queue queue = new Queue();
-        Queue queueTwo = new Queue();
-        Queue queueThree = new Queue();
-
-        public AuroraThreadPool(AuroraThreadPoolStartInfo info)
-        {
-            m_info = info;
-            for (int i = 0; i < m_info.Threads; i++)
-            {
-                Thread thread = new Thread(ThreadStart);
-                thread.Name = "Aurora Thread Pool Thread #" + i;
-                thread.Start(i);
-                Threads.Add(thread);
-            }
-        }
-
-        private void ThreadStart(object ScriptNumber)
-        {
-            int OurSleepTime = m_info.InitialSleepTime;
-            while (true)
-            {
-                QueueItem item = null;
-                Thread.Sleep(OurSleepTime);
-                if (queue.Count == 0)
-                {
-                    OurSleepTime += 2;
-                    if (OurSleepTime > m_info.MaxSleepTime) //Make sure we don't go waay over on how long we sleep
-                        OurSleepTime = m_info.MaxSleepTime;
-                    continue;
-                }
-                else
-                {
-                    item = queue.Dequeue() as QueueItem;
-                    if (item == null)
-                        continue;
-                    item.Invoke();
-                }
-                OurSleepTime = m_info.InitialSleepTime; //Reset sleep timer then
-            }
-        }
-
-        public delegate void QueueItem();
-
-        public void QueueEvent(QueueItem delegat, int Priority)
-        {
-            queue.Enqueue(delegat);
-        }
-    }
-    /// <summary>
-    /// This class does maintenance on script engine.
-    /// </summary>
     public class MaintenanceThread
     {
+        #region Declares 
+
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private IScriptDataConnector ScriptFrontend;
         private ScriptEngine m_ScriptEngine;
-        private bool InitialStart = true;
-        private bool ScriptsLoaded = false;
+        private bool FiredStartupEvent = false;
         private AuroraThreadPool threadpool = null;
         public bool StateSaveIsRunning = false;
         public bool ScriptChangeIsRunning = false;
         public bool EventProcessorIsRunning = false;
+        public bool RunInMainProcessingThread = false;
+
+        /// <summary>
+        /// Queue that handles the loading and unloading of scripts
+        /// </summary>
+        private StartPerformanceQueue LUQueue = new StartPerformanceQueue();
+
+        /// <summary>
+        /// Queue containing events waiting to be executed.
+        /// </summary>
+        private EventPerformanceQueue EventProcessorQueue = new EventPerformanceQueue();
+
+        /// <summary>
+        /// Queue containing scripts that need to have states saved or deleted.
+        /// </summary>
+        private Queue StateQueue = new Queue();
+
+        /// <summary> 
+        /// Removes the script from the event queue so it does not fire anymore events.
+        /// </summary>
+        private Dictionary<UUID, int> NeedsRemoved = new Dictionary<UUID, int>();
+
+        private EventManager EventManager = null;
+
+        #endregion
+
+        #region Constructor
 
         public MaintenanceThread(ScriptEngine Engine)
         {
+            m_ScriptEngine = Engine;
+            ScriptFrontend = Aurora.DataManager.DataManager.RequestPlugin<IScriptDataConnector>();
+            EventManager = Engine.EventManager;
+
+            RunInMainProcessingThread = Engine.Config.GetBoolean("RunInMainProcessingThread", false);
+
+            //There IS a reason we start this, even if RunInMain is enabled
+            //   If this isn't enabled, we run into issues with the CmdHandlerQueue,
+            //    as it always must be async, so we must run the pool anyway
             AuroraThreadPoolStartInfo info = new AuroraThreadPoolStartInfo();
             info.priority = ThreadPriority.Lowest;
-            info.Threads = 1;
+            info.Threads = Engine.Config.GetInt("Threads", 100);
+            info.MaxSleepTime = Engine.Config.GetInt("SleepTime", 100);
             threadpool = new AuroraThreadPool(info);
-            m_ScriptEngine = Engine;
-            ScriptFrontend = Aurora.DataManager.DataManager.RequestPlugin<IScriptDataConnector>("IScriptDataConnector");
+
+            //Start the queue because it can't start itself
             CmdHandlerQueue();
-            AppDomain.CurrentDomain.AssemblyResolve += AssemblyResolver.OnAssemblyResolve;
+
+            AppDomain.CurrentDomain.AssemblyResolve += m_ScriptEngine.AssemblyResolver.OnAssemblyResolve;
+
+            foreach (OpenSim.Region.Framework.Scenes.Scene scene in m_ScriptEngine.Worlds)
+            {
+                //Register our callback so that we don't finish startup too quick
+                scene.EventManager.TriggerAddToStartupQueue("ScriptEngine");
+            }
         }
 
-        public void OnScriptsLoadingComplete()
-        {
-            ScriptsLoaded = true;
-        }
+        #endregion
 
-        public void RemoveState(ScriptData ID)
-        {
-            ScriptFrontend.DeleteStateSave(ID.ItemID);
-        }
+        #region Loops
 
-        public void NewStateSaveQueue()
+        public bool StateSaveQueue()
         {
             StateSaveIsRunning = true;
-            if (ScriptEngine.StateQueue.Count != 0)
+            StateQueueItem item;
+            lock (StateQueue)
             {
-                StateQueueItem item = ScriptEngine.StateQueue.Dequeue() as StateQueueItem;
-                if (item == null || item.ID == null)
-                    return;
-                if (item.Create)
-                    item.ID.SerializeDatabase();
+                if (StateQueue.Count != 0)
+                    item = (StateQueueItem)StateQueue.Dequeue();
                 else
-                    RemoveState(item.ID);
-                threadpool.QueueEvent(NewStateSaveQueue, 3);
-                return;
-            }
-            StateSaveIsRunning = false;
-            return;
-        }
-
-        public void NewScriptChangeQueue()
-        {
-            ScriptChangeIsRunning = true;
-            if (InitialStart)
-            {
-                InitialStart = false;
-                foreach (OpenSim.Region.Framework.Scenes.Scene scene in m_ScriptEngine.Worlds)
                 {
-                    // No scripts on region, so won't get triggered later
-                    // by the queue becoming empty so we trigger it here
-                    scene.EventManager.TriggerEmptyScriptCompileQueue(0, String.Empty);
+                    StateSaveIsRunning = false;
+                    return true;
                 }
             }
+            if (item.ID == null)
+                return false;
+
+            if (item.Create)
+                ScriptDataSQLSerializer.SaveState(item.ID, m_ScriptEngine);
+            else
+                RemoveState(item.ID);
+            threadpool.QueueEvent(StateSaveQueue, 3);
+            return false;
+        }
+
+        public bool ScriptChangeQueue()
+        {
+            ScriptChangeIsRunning = true;
 
             object oitems;
-            if (m_ScriptEngine.LUQueue.GetNext(out oitems))
+            if (LUQueue.GetNext(out oitems))
             {
                 LUStruct[] items = oitems as LUStruct[];
                 List<LUStruct> NeedsFired = new List<LUStruct>();
@@ -178,11 +150,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 {
                     if (item.Action == LUType.Unload)
                     {
-                        try
-                        {
-                            item.ID.CloseAndDispose(false);
-                        }
-                        catch (Exception ex) { m_log.Warn(ex); }
+                        item.ID.CloseAndDispose(false);
                     }
                     else if (item.Action == LUType.Load)
                     {
@@ -207,152 +175,270 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 {
                     item.ID.FireEvents();
                 }
-                threadpool.QueueEvent(NewScriptChangeQueue, 2); //Requeue us
+                threadpool.QueueEvent(ScriptChangeQueue, 2); //Requeue us
             }
             else
-            {
                 ScriptChangeIsRunning = false;
-            }
 
-            if (ScriptsLoaded)
+            if (!FiredStartupEvent)
             {
-                foreach (OpenSim.Region.Framework.Scenes.Scene scene in m_ScriptEngine.Worlds)
+                //If we are empty, we are all done with script startup and can tell the region that we are all done
+                if (LUQueue.Count() == 0)
                 {
-                    scene.EventManager.TriggerEmptyScriptCompileQueue(m_ScriptEngine.ScriptFailCount,
-                                                                    m_ScriptEngine.ScriptErrorMessages);
+                    FiredStartupEvent = true;
+                    foreach (OpenSim.Region.Framework.Scenes.Scene scene in m_ScriptEngine.Worlds)
+                    {
+                        scene.EventManager.TriggerEmptyScriptCompileQueue(m_ScriptEngine.ScriptFailCount,
+                                                                        m_ScriptEngine.ScriptErrorMessages);
+                        
+                        scene.EventManager.TriggerFinishedStartup("ScriptEngine", new List<string>(){m_ScriptEngine.ScriptFailCount.ToString(),
+                                                                    m_ScriptEngine.ScriptErrorMessages}); //Tell that we are done
+                    }
                 }
             }
-            m_ScriptEngine.ScriptFailCount = 0;
+            return false;
         }
 
-        public void NewEventQueue()
+        public bool EventQueue()
         {
+            bool SendUpSleepRequest = false;
             try
             {
                 EventProcessorIsRunning = true;
                 object QIS = null;
-                if (ScriptEngine.EventPerformanceTestQueue.GetNext(out QIS))
+                if (EventProcessorQueue.GetNext(out QIS))
                 {
                     if (QIS != null)
                     {
-                        ProcessQIS(QIS as QueueItemStruct);
-                        threadpool.QueueEvent(NewEventQueue, 1);
+                        SendUpSleepRequest = ProcessQIS((QueueItemStruct)QIS);
+                        threadpool.QueueEvent(EventQueue, 1);
                     }
                 }
                 else
-                {
                     EventProcessorIsRunning = false;
-                }
             }
             catch (Exception ex)
             {
+                EventProcessorIsRunning = false;
                 m_log.WarnFormat("[{0}]: Handled exception stage 2 in the Event Queue: " + ex.Message, m_ScriptEngine.ScriptEngineName);
             }
+            EventProcessorIsRunning = false;
+            return SendUpSleepRequest;
         }
 
-        public void CmdHandlerQueue()
+        public bool CmdHandlerQueue()
         {
             //Check timers, etc
-            m_ScriptEngine.DoOneCmdHandlerPass();
-            threadpool.QueueEvent(NewEventQueue, 2);
-        }
-
-        public void ProcessQIS(QueueItemStruct QIS)
-        {
-            //Suspended scripts get readded
-            if (QIS.ID.Suspended || QIS.ID.Script == null || QIS.ID.Loading)
-            {
-                //ScriptEngine.EventPerformanceTestQueue.Add(QIS, EventPriority.Suspended);
-                return;
-            }
-
-            int Version = 0;
-            if (ScriptEngine.NeedsRemoved.TryGetValue(QIS.ID.ItemID, out Version))
-            {
-                if (Version >= QIS.VersionID)
-                    return;
-            }
-
-            //Disabled or not running scripts dont get events saved.
-            if (QIS.ID.Disabled || !QIS.ID.Running)
-                return;
             try
             {
-                Guid Running;
-                Exception ex;
-                QIS.ID.SetEventParams(QIS.llDetectParams);
-                Running = QIS.ID.Script.ExecuteEvent(QIS.ID.State,
-                            QIS.functionName,
-                            QIS.param, QIS.CurrentlyAt, out ex);
-                if (ex != null)
-                    throw ex;
-                //Finished with nothing left.
-                if (Running == Guid.Empty)
+                m_ScriptEngine.DoOneScriptPluginPass();
+            }
+            catch (Exception ex)
+            {
+                m_log.WarnFormat("[{0}]: Error in CmdHandlerPass, {1}", m_ScriptEngine.ScriptEngineName, ex);
+            }
+            threadpool.QueueEvent(CmdHandlerQueue, 2);
+            return false;
+        }
+
+        #endregion
+
+        #region Queue processing
+
+        public bool ProcessQIS(QueueItemStruct QIS)
+        {
+            //Disabled, not running, suspended, null scripts, or loading scripts dont get events fired.
+            if (QIS.ID.Suspended || QIS.ID.Script == null || 
+                QIS.ID.Loading || QIS.ID.Disabled)
+                return false;
+
+            if (!QIS.ID.Running)
+            {
+                //Readd only state_entry and on_rez
+                if (QIS.functionName == "state_entry"
+                    || QIS.functionName == "on_rez")
+                    EventProcessorQueue.Add(QIS, EventPriority.Continued);
+                return false;
+            }
+
+            //Check if this event was fired with an old versionID
+            if (NeedsRemoved.ContainsKey(QIS.ID.ItemID))
+                if(NeedsRemoved[QIS.ID.ItemID] >= QIS.VersionID)
+                    return false;
+
+            try
+            {
+                if (QIS.CurrentlyAt != null || QIS.ID.SetEventParams(QIS.functionName, QIS.llDetectParams))
                 {
-                    if (QIS.functionName == "timer")
-                        QIS.ID.TimerQueued = false;
-                    if (QIS.functionName == "control")
+                    //If this is true, there is/was a sleep occuring
+                    if (QIS.CurrentlyAt != null && QIS.CurrentlyAt.SleepTo.Ticks != 0)
                     {
-                        if (QIS.ID.ControlEventsInQueue > 0)
-                            QIS.ID.ControlEventsInQueue--;
-                    }
-                    if (QIS.functionName == "collision")
-                        QIS.ID.CollisionInQueue = false;
-                    if (QIS.functionName == "touch")
-                        QIS.ID.TouchInQueue = false;
-                    if (QIS.functionName == "land_collision")
-                        QIS.ID.LandCollisionInQueue = false;
-                    if (QIS.functionName == "changed")
-                    {
-                        Changed changed = (Changed)(new LSL_Types.LSLInteger(QIS.param[0].ToString()).value);
-                        lock (QIS.ID.ChangedInQueue)
+                        DateTime nowTicks = DateTime.Now;
+                        if ((QIS.CurrentlyAt.SleepTo - nowTicks).TotalMilliseconds > 0)
                         {
-                            if (QIS.ID.ChangedInQueue.Contains(changed))
-                                QIS.ID.ChangedInQueue.Remove(changed);
+                            //Its supposed to be sleeping....
+                            // No processing!
+                            EventProcessorQueue.Add(QIS, EventPriority.Continued);
+                            return true;
+                        }
+                        else
+                        {
+                            //Reset the time so we don't keep checking
+                            QIS.CurrentlyAt.SleepTo = DateTime.MinValue;
                         }
                     }
-                    return;
+                    Exception ex = null;
+                    EnumeratorInfo Running = QIS.ID.Script.ExecuteEvent(QIS.ID.State,
+                                QIS.functionName,
+                                QIS.param, QIS.CurrentlyAt, out ex);
+                    if (ex != null)
+                    {
+                        if (ex is SelfDeleteException)
+                        {
+                            if (QIS.ID.part != null && QIS.ID.part.ParentGroup != null)
+                                QIS.ID.part.ParentGroup.Scene.DeleteSceneObject(
+                                    QIS.ID.part.ParentGroup, false, true);
+                        }
+                        if (ex is ScriptDeleteException)
+                        {
+                            if (QIS.ID.part != null && QIS.ID.part.ParentGroup != null)
+                                QIS.ID.part.Inventory.RemoveInventoryItem(QIS.ID.ItemID);
+                        }
+                        return false;
+                    }
+                    else if (Running != null)
+                    {
+                        //Did not finish so requeue it
+                        QIS.CurrentlyAt = Running;
+                        EventProcessorQueue.Add(QIS, EventPriority.Continued);
+                        return false; //Do the return... otherwise we open the queue for this event back up
+                    }
                 }
-                else
-                {
-                    //Did not finish so requeue it
-                    QIS.CurrentlyAt = Running;
-                    ScriptEngine.EventPerformanceTestQueue.Add(QIS, EventPriority.Continued);
-                }
-            }
-            catch (SelfDeleteException) // Must delete SOG
-            {
-                if (QIS.ID.part != null && QIS.ID.part.ParentGroup != null)
-                    m_ScriptEngine.findPrimsScene(QIS.ID.part.UUID).DeleteSceneObject(
-                        QIS.ID.part.ParentGroup, false, true);
-            }
-            catch (ScriptDeleteException) // Must delete item
-            {
-                if (QIS.ID.part != null && QIS.ID.part.ParentGroup != null)
-                    QIS.ID.part.Inventory.RemoveInventoryItem(QIS.ID.ItemID);
-            }
-            catch (EventAbortException) // Changing state, all is ok
-            {
             }
             catch (Exception ex)
             {
                 QIS.ID.DisplayUserNotification(ex.Message, "executing", false, true);
             }
+            EventManager.EventComplete(QIS);
+            return false;
         }
 
-        internal void StartThread(string p)
+        #endregion
+
+        #region Add
+
+        /// <summary>
+        /// Adds the given item to the queue.
+        /// </summary>
+        /// <param name="ID">InstanceData that needs to be state saved</param>
+        /// <param name="create">true: create a new state. false: remove the state.</param>
+        public void AddToStateSaverQueue(ScriptData ID, bool create)
+        {
+            StateQueueItem SQ = new StateQueueItem();
+            SQ.ID = ID;
+            SQ.Create = create;
+
+            if (RunInMainProcessingThread)
+            {
+                if (SQ.Create)
+                    ScriptDataSQLSerializer.SaveState(SQ.ID, m_ScriptEngine);
+                else
+                    RemoveState(SQ.ID);
+            }
+            else
+            {
+                StateQueue.Enqueue(SQ);
+                if (!StateSaveIsRunning)
+                    StartThread("State");
+            }
+        }
+
+        public void AddScriptChange(LUStruct[] items, LoadPriority priority)
+        {
+            if (RunInMainProcessingThread)
+            {
+                List<LUStruct> NeedsFired = new List<LUStruct>();
+                foreach (LUStruct item in items)
+                {
+                    if (item.Action == LUType.Unload)
+                    {
+                        item.ID.CloseAndDispose(false);
+                    }
+                    else if (item.Action == LUType.Load)
+                    {
+                        try
+                        {
+                            item.ID.Start(false);
+                            NeedsFired.Add(item);
+                        }
+                        catch (Exception ex) { m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: LEAKED COMPILE ERROR: " + ex); }
+                    }
+                    else if (item.Action == LUType.Reupload)
+                    {
+                        try
+                        {
+                            item.ID.Start(true);
+                            NeedsFired.Add(item);
+                        }
+                        catch (Exception ex) { m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: LEAKED COMPILE ERROR: " + ex); }
+                    }
+                }
+                foreach (LUStruct item in NeedsFired)
+                {
+                    item.ID.FireEvents();
+                }
+            }
+            else
+            {
+                LUQueue.Add(items, priority);
+                if (!ScriptChangeIsRunning)
+                    StartThread("Change");
+            }
+        }
+
+        public void AddEvent(QueueItemStruct QIS, EventPriority priority)
+        {
+            if (RunInMainProcessingThread)
+            {
+                ProcessQIS(QIS);
+            }
+            else
+            {
+                EventProcessorQueue.Add(QIS, priority);
+                if (!EventProcessorIsRunning)
+                    StartThread("Event");
+            }
+        }
+
+        #endregion
+
+        #region Remove
+
+        public void RemoveFromEventQueue(UUID ItemID, int VersionID)
+        {
+            NeedsRemoved[ItemID] = VersionID;
+        }
+
+        public void RemoveState(ScriptData ID)
+        {
+            ScriptFrontend.DeleteStateSave(ID.ItemID);
+        }
+
+        #endregion
+
+        private void StartThread(string p)
         {
             if (p == "State")
             {
-                threadpool.QueueEvent(NewStateSaveQueue, 3);
+                threadpool.QueueEvent(StateSaveQueue, 3);
             }
             else if (p == "Change")
             {
-                threadpool.QueueEvent(NewScriptChangeQueue, 2);
+                threadpool.QueueEvent(ScriptChangeQueue, 2);
             }
             else if (p == "Event")
             {
-                threadpool.QueueEvent(NewEventQueue, 1);
+                threadpool.QueueEvent(EventQueue, 1);
             }
         }
     }

@@ -61,7 +61,7 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
 
         private readonly MicroScheduler m_microthreads = new MicroScheduler();
 
-        private bool m_enabled = true;
+        private bool m_enabled = false;
 
         private IConfig m_config;
 
@@ -75,18 +75,11 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
             if (source.Configs["MRM"] != null)
             {
                 m_config = source.Configs["MRM"];
-
-                if (source.Configs["MRM"].GetBoolean("Enabled", false))
-                {
-                    m_enabled = false;
-                }
-                else
-                {
-                    //m_log.Info("[MRM] Disabled MRM Module (Disabled in ini)");
-                }
+                m_enabled = source.Configs["MRM"].GetBoolean("Enabled", false);
             }
             else
             {
+                m_enabled = false;
                 //m_log.Info("[MRM] Disabled MRM Module (Default disabled)");
             }
         }
