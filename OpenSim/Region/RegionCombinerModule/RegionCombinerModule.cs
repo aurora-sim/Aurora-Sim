@@ -78,6 +78,8 @@ namespace OpenSim.Region.RegionCombinerModule
 
         public void RemoveRegion(Scene scene)
         {
+            if (m_startingScenes.ContainsKey(scene.RegionInfo.RegionID))
+                m_startingScenes.Remove(scene.RegionInfo.RegionID);
         }
 
         public void RegionLoaded(Scene scene)

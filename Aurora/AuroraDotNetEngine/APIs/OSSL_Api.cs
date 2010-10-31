@@ -228,7 +228,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osShutDown", m_host, "OSSL");
 
-            
             if (World.Permissions.CanIssueEstateCommand(m_host.OwnerID, false))
             {
                 MainConsole.Instance.RunCommand("shutdown");
@@ -240,6 +239,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public void osReturnObjects(LSL_Float Parameter)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "osShutDown", m_host, "OSSL");
+
             Dictionary<UUID, List<SceneObjectGroup>> returns =
                     new Dictionary<UUID, List<SceneObjectGroup>>();
             ILandObject LO = World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y);

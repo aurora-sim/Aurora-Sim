@@ -94,7 +94,7 @@ namespace OpenSim.Framework
         public static readonly Regex UUIDPattern 
             = new Regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
 
-        public static FireAndForgetMethod FireAndForgetMethod = FireAndForgetMethod.SmartThreadPool;
+        public static FireAndForgetMethod FireAndForgetMethod = FireAndForgetMethod.UnsafeQueueUserWorkItem;
 
         /// <summary>
         /// Gets the name of the directory where the current running executable

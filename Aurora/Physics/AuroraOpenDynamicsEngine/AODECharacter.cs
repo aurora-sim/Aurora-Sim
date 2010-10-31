@@ -54,7 +54,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private bool m_pidControllerActive = true;
         public float PID_D = 800.0f;
         public float PID_P = 900.0f;
-        private static float POSTURE_SERVO = 10000.0f;
+        //private static float POSTURE_SERVO = 10000.0f;
         public float CAPSULE_RADIUS = 0.37f;
         public float CAPSULE_LENGTH = 2.140599f;
         public float m_tensor = 3800000f;
@@ -168,7 +168,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 m_colliderarr[i] = false;
             }
-            CAPSULE_LENGTH = (size.Z * 1.15f) - CAPSULE_RADIUS * 2; //* 3.2f;
+            CAPSULE_LENGTH = (size.Z * 1.15f) - CAPSULE_RADIUS * 2.0f;
             m_log.Info("[SIZE]: " + CAPSULE_LENGTH.ToString());
             m_tainted_CAPSULE_LENGTH = CAPSULE_LENGTH;
 
@@ -458,7 +458,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private float FindNewAvatarMass()
         {
             float volume = Size.X * Size.Y * Size.Z;
-            return volume * 10; //Aluminum g/cm3 aprox
+            return volume * 50; //Aluminum g/cm3 aprox * 5
         }
 
         private void AlignAvatarTiltWithCurrentDirectionOfMovement(Vector3 movementVector)
@@ -478,6 +478,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             if (movementVector == Vector3.Zero)
             {
+                return;
             }
             else if (movementVector.X > 0)
             {
@@ -565,6 +566,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             d.MassSetCapsuleTotal(out ShellMass, m_mass, 2, CAPSULE_RADIUS, CAPSULE_LENGTH);
             Body = d.BodyCreate(_parent_scene.world);
+            m_mass /= 2; //nasty nasty hack to keep things from being awkward when you stop moving
             d.BodySetPosition(Body, npositionX, npositionY, npositionZ);
 
             // disconnect from world gravity so we can apply buoyancy
@@ -641,7 +643,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             // Fudge factor is 1f by default, we're setting it to 0.  We don't want it to Fudge or the
             // capped cyllinder will fall over
-            d.JointSetAMotorParam(Amotor, (int)dParam.FudgeFactor, 0);
+            d.JointSetAMotorParam(Amotor, (int)dParam.FudgeFactor, 0f);
             d.JointSetAMotorParam(Amotor, (int)dParam.FMax, tensor);
 
             //d.Matrix3 bodyrotation = d.BodyGetRotation(Body);
@@ -681,26 +683,27 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         }
 
 //      This code is very useful. Written by DanX0r. We're just not using it right now.
+//      Commented out to prevent a warning.
 //
-        private void standupStraight()
-        {
-            // The purpose of this routine here is to quickly stabilize the Body while it's popped up in the air.
-            // The amotor needs a few seconds to stabilize so without it, the avatar shoots up sky high when you
-            // change appearance and when you enter the simulator
-            // After this routine is done, the amotor stabilizes much quicker
-            d.Vector3 feet;
-            d.Vector3 head;
-            d.BodyGetRelPointPos(Body, 0.0f, 0.0f, -1.0f, out feet);
-            d.BodyGetRelPointPos(Body, 0.0f, 0.0f, 1.0f, out head);
-            float posture = head.Z - feet.Z;
+//         private void standupStraight()
+//         {
+//             // The purpose of this routine here is to quickly stabilize the Body while it's popped up in the air.
+//             // The amotor needs a few seconds to stabilize so without it, the avatar shoots up sky high when you
+//             // change appearance and when you enter the simulator
+//             // After this routine is done, the amotor stabilizes much quicker
+//             d.Vector3 feet;
+//             d.Vector3 head;
+//             d.BodyGetRelPointPos(Body, 0.0f, 0.0f, -1.0f, out feet);
+//             d.BodyGetRelPointPos(Body, 0.0f, 0.0f, 1.0f, out head);
+//             float posture = head.Z - feet.Z;
 
-            // restoring force proportional to lack of posture:
-            float servo = (2.5f - posture) * POSTURE_SERVO;
-            d.BodyAddForceAtRelPos(Body, 0.0f, 0.0f, servo, 0.0f, 0.0f, 1.0f);
-            d.BodyAddForceAtRelPos(Body, 0.0f, 0.0f, -servo, 0.0f, 0.0f, -1.0f);
-            //d.Matrix3 bodyrotation = d.BodyGetRotation(Body);
-            //m_log.Info("[PHYSICSAV]: Rotation: " + bodyrotation.M00 + " : " + bodyrotation.M01 + " : " + bodyrotation.M02 + " : " + bodyrotation.M10 + " : " + bodyrotation.M11 + " : " + bodyrotation.M12 + " : " + bodyrotation.M20 + " : " + bodyrotation.M21 + " : " + bodyrotation.M22);
-        }
+//             // restoring force proportional to lack of posture:
+//             float servo = (2.5f - posture) * POSTURE_SERVO;
+//             d.BodyAddForceAtRelPos(Body, 0.0f, 0.0f, servo, 0.0f, 0.0f, 1.0f);
+//             d.BodyAddForceAtRelPos(Body, 0.0f, 0.0f, -servo, 0.0f, 0.0f, -1.0f);
+//             //d.Matrix3 bodyrotation = d.BodyGetRotation(Body);
+//             //m_log.Info("[PHYSICSAV]: Rotation: " + bodyrotation.M00 + " : " + bodyrotation.M01 + " : " + bodyrotation.M02 + " : " + bodyrotation.M10 + " : " + bodyrotation.M11 + " : " + bodyrotation.M12 + " : " + bodyrotation.M20 + " : " + bodyrotation.M21 + " : " + bodyrotation.M22);
+//         }
 
         public override Vector3 Force
         {
@@ -865,7 +868,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
             if (!collidelock)
             {
-                force /= m_mass;
+                //force /= m_mass;
                 d.BodyAddForce(Body, force.X, force.Y, force.Z);
                 //d.BodySetRotation(Body, ref m_StandUpRotation);
                 //standupStraight();

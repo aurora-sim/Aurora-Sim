@@ -221,7 +221,7 @@ namespace OpenSim.Region.CoreModules.Framework.EventQueue
             int count = 0;
             while (queues.ContainsKey(AgentID) && queues[AgentID].Count > 0 && count++ < 2)
             {
-                Thread.Sleep(1000);
+                Thread.Sleep(100);
             }
 
             lock (queues)

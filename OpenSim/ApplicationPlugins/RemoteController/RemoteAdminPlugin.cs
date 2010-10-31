@@ -427,7 +427,7 @@ namespace OpenSim.ApplicationPlugins.RemoteController
 
         private void shutdownTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            m_application.Shutdown();
+            m_application.Shutdown(true);
         }
 
         /// <summary>

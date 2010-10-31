@@ -378,10 +378,6 @@ namespace OpenSim.Framework
                     logtext += outText;
                 }
             }
-            else
-            {
-                System.Console.WriteLine(m_defaultPrompt + "# ");
-            }
             Log(logtext);
 
             System.Console.WriteLine();

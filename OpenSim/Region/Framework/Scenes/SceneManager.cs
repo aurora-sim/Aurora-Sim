@@ -129,6 +129,10 @@ namespace OpenSim.Region.Framework.Scenes
                 // close scene/region
                 m_localScenes[i].Close();
             }
+            foreach (IClientNetworkServer server in m_clientServers)
+            {
+                server.Stop();
+            }
         }
 
         public void Add(Scene scene)

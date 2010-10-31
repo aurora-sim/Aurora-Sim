@@ -65,11 +65,10 @@ namespace OpenSim.Region.CoreModules.World.Estate
 
             if (!m_scene.RegionInfo.EstateSettings.UseGlobalTime)
                 sun=(uint)(m_scene.RegionInfo.EstateSettings.SunPosition*1024.0) + 0x1800;
-            UUID estateOwner;
-            estateOwner = m_scene.RegionInfo.EstateSettings.EstateOwner;
+            UUID estateOwner = m_scene.RegionInfo.EstateSettings.EstateOwner;
 
             //if (m_scene.Permissions.IsGod(remote_client.AgentId))
-                estateOwner = remote_client.AgentId;
+            //    estateOwner = remote_client.AgentId;
 
             remote_client.SendDetailedEstateData(invoice,
                     m_scene.RegionInfo.EstateSettings.EstateName,

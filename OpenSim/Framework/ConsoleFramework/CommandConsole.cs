@@ -803,6 +803,16 @@ namespace OpenSim.Framework
         {
         }
 
+        public bool Processing = true;
+
+        public void EndConsoleProcessing()
+        {
+            Processing = false;
+        }
+
+        private delegate void PromptEvent();
+        private IAsyncResult result = null;
+        private PromptEvent action = null;
         /// <summary>
         /// Starts the prompt for the console. This will never stop until the region is closed.
         /// </summary>
@@ -810,10 +820,29 @@ namespace OpenSim.Framework
         {
             while (true)
             {
+                if (!Processing)
+                {
+                    throw new Exception("Restart");
+                }
                 try
                 {
-                    // Block thread here for input
-                    Prompt();
+                    if (action == null)
+                    {
+                        action = Prompt;
+                        result = action.BeginInvoke(null, null);
+                    }
+
+                    if ((!result.IsCompleted) &&
+                        (!result.AsyncWaitHandle.WaitOne(1000, false) || !result.IsCompleted))
+                    {
+                        
+                    }
+                    else
+                    {
+                        action.EndInvoke(result);
+                        action = null;
+                        result = null;
+                    }
                 }
                 catch (Exception e)
                 {

@@ -170,8 +170,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public void AASetConeOfSilence(LSL_Float radius)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "AASetConeOfSilence", m_host, "AA");
-            m_host.SetConeOfSilence(radius.value);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "AASetConeOfSilence", m_host, "AA");
+            if(World.Permissions.IsAdministrator(m_host.OwnerID))
+                m_host.SetConeOfSilence(radius.value);
         }
 
         public void AAJoinCombatTeam(LSL_String team)
@@ -250,7 +251,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public LSL_List AAGetTeamMembers()
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "AAGetTeam", m_host, "AA");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "AAGetTeamMembers", m_host, "AA");
             ScenePresence SP = World.GetScenePresence(m_host.OwnerID);
             List<UUID> Members = new List<UUID>();
             if (SP != null)
@@ -299,7 +300,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public void AASayTo(string userID, string text)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "AASayDistance", m_host, "AA");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "AASayTo", m_host, "AA");
             
 
             UUID AgentID;
@@ -325,6 +326,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public void AAFreezeAvatar(string ID)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "AAFreezeAvatar", m_host, "AA");
             UUID AgentID = UUID.Zero;
             if (UUID.TryParse(ID, out AgentID))
             {
@@ -332,7 +334,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (World.TryGetScenePresence(AgentID, out SP))
                 {
                     ICombatModule module = World.RequestModuleInterface<ICombatModule>();
-                    if (module.CheckCombatPermission(AgentID))
+                    if (module.CheckCombatPermission(AgentID) || World.Permissions.IsAdministrator(AgentID))
                     {
                         //If they have combat permission on, do it whether the threat level is enabled or not
                         SP.AllowMovement = false;
@@ -347,6 +349,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public void AAThawAvatar(string ID)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "AAThawAvatar", m_host, "AA");
             UUID AgentID = UUID.Zero;
             if (UUID.TryParse(ID, out AgentID))
             {
@@ -354,7 +357,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (World.TryGetScenePresence(AgentID, out SP))
                 {
                     ICombatModule module = World.RequestModuleInterface<ICombatModule>();
-                    if (module.CheckCombatPermission(AgentID))
+                    if (module.CheckCombatPermission(AgentID) || World.Permissions.IsAdministrator(AgentID))
                     {
                         //If they have combat permission on, do it whether the threat level is enabled or not
                         SP.AllowMovement = true;
@@ -376,7 +379,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public void AADeregisterFromAvatarDeathEvents()
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "AARegisterToAvatarDeathEvents", m_host, "AA");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "AADeregisterFromAvatarDeathEvents", m_host, "AA");
             ICombatModule module = World.RequestModuleInterface<ICombatModule>();
             module.DeregisterFromAvatarDeathEvents(m_host.UUID);
         }
@@ -384,6 +387,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         //This asks the agent whether they would like to participate in the combat
         public void AARequestCombatPermission(string ID)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "AARequestCombatPermission", m_host, "AA");
             ScenePresence SP;
             UUID AgentID = UUID.Zero;
             if (UUID.TryParse(ID, out AgentID))
@@ -398,7 +402,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         }
 
         public bool AAGetWalkDisabled(string vPresenceId)
-        {   
+        {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "AAGetWalkDisabled", m_host, "AA");
             TaskInventoryItem item;
 
             lock (m_host.TaskInventory)
@@ -428,6 +433,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public void AASetWalkDisabled(string vPresenceId, bool vbValue)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "AASetWalkDisabled", m_host, "AA");
             TaskInventoryItem item;
 
             lock (m_host.TaskInventory)
@@ -456,6 +462,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public bool AAGetFlyDisabled(string vPresenceId)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "AAGetFlyDisabled", m_host, "AA");
             TaskInventoryItem item;
 
             lock (m_host.TaskInventory)
@@ -485,6 +492,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public void AASetFlyDisabled(string vPresenceId, bool vbValue)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "AASetFlyDisabled", m_host, "AA");
             TaskInventoryItem item;
 
             lock (m_host.TaskInventory)
@@ -513,6 +521,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public string AAAvatarFullName2Key(string fullname)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "AAAvatarFullName2Key", m_host, "AA");
             string[] Split = fullname.Split(new Char[] { ' ' });
             UserAccount account = World.UserAccountService.GetUserAccount(World.RegionInfo.ScopeID, Split[0], Split[1]);
 
@@ -642,6 +651,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public void AASetCharacterStat(string UUIDofAv, string StatName, float statValue)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "AASetCharacterStat", m_host, "AA");
             UUID avatarId = new UUID(UUIDofAv);
             ScenePresence presence = World.GetScenePresence(avatarId);
             if (presence != null)
@@ -653,6 +663,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public void AASetCenterOfGravity(LSL_Types.Vector3 position)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "AASetCenterOfGravity", m_host, "AA");
             if (m_host.ParentGroup.Scene.Permissions.CanIssueEstateCommand(m_host.OwnerID, true))
                 m_host.ParentGroup.Scene.PhysicsScene.PointOfGravity = new Vector3((float)position.x, (float)position.y, (float)position.z);
         }

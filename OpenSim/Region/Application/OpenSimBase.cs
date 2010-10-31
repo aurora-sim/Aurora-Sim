@@ -135,7 +135,8 @@ namespace OpenSim
             m_original_config = configSource;
 
             // This thread will go on to become the console listening thread
-            System.Threading.Thread.CurrentThread.Name = "ConsoleThread";
+            if (System.Threading.Thread.CurrentThread.Name != "ConsoleThread")
+                System.Threading.Thread.CurrentThread.Name = "ConsoleThread";
 
             Configuration(configSource);
 
@@ -272,8 +273,17 @@ namespace OpenSim
 
             RunStartupCommands();
 
-            //Start the prompt
-            MainConsole.Instance.ReadConsole();
+            try
+            {
+                //Start the prompt
+                MainConsole.Instance.ReadConsole();
+            }
+            catch (Exception ex)
+            {
+                //Only error that ever could occur is the restart one
+                Shutdown(false);
+                throw ex;
+            }
 		}
 
         private void RunStartupCommands()
@@ -356,10 +366,12 @@ namespace OpenSim
 
             m_console.Commands.AddCommand("region", false, "create region", "create region", "Create a new region.", HandleCreateRegion);
 
-            m_console.Commands.AddCommand("region", false, "restart", "restart", "Restart all sims in this instance", RunCommand);
+            m_console.Commands.AddCommand("region", false, "restart", "restart", "Restart the current sim selected (all if root)", RunCommand);
 
+            m_console.Commands.AddCommand("region", false, "restart-instance", "restart-instance", "Restarts the instance (as if you closed and re-opened Aurora)", RunCommand);
+            
             m_console.Commands.AddCommand("region", false, "command-script", "command-script <script>", "Run a command script from file", RunCommand);
-
+            
             m_console.Commands.AddCommand("region", false, "remove-region", "remove-region <name>", "Remove a region from this simulator", RunCommand);
 
             m_console.Commands.AddCommand("region", false, "delete-region", "delete-region <name>", "Delete a region from disk", RunCommand);
@@ -391,7 +403,7 @@ namespace OpenSim
 
         private void HandleQuit(string module, string[] args)
         {
-            Shutdown();
+            Shutdown(true);
         }
 
         private void HandleLogLevel(string module, string[] cmd)
@@ -629,7 +641,10 @@ namespace OpenSim
 				case "restart":
 					m_sceneManager.RestartCurrentScene();
 					break;
-
+                case "restart-instance":
+                    //This kills the instance and restarts it
+                    MainConsole.Instance.EndConsoleProcessing();
+                    break;
 			}
 		}
 
@@ -804,7 +819,8 @@ namespace OpenSim
 					}
 
 
-					MainConsole.Instance.Output(String.Empty);
+                    MainConsole.Instance.Output(String.Empty);
+                    MainConsole.Instance.Output(String.Empty);
 					break;
 
 				case "connections":
@@ -996,14 +1012,17 @@ namespace OpenSim
         /// Should be overriden and referenced by descendents if they need to perform extra shutdown processing
         /// Performs any last-minute sanity checking and shuts down the region server
         /// </summary>
-        public virtual void Shutdown()
+        public virtual void Shutdown(bool close)
         {
             if (m_shutdownCommandsFile != String.Empty)
             {
                 RunCommandScript(m_shutdownCommandsFile);
             }
 
-            m_log.Info("[SHUTDOWN]: Terminating");
+            m_BaseHTTPServer.Stop();
+
+            if(close)
+                m_log.Info("[SHUTDOWN]: Terminating");
 
             try
             {
@@ -1014,9 +1033,10 @@ namespace OpenSim
                 m_log.ErrorFormat("[SHUTDOWN]: Ignoring failure during shutdown - {0}", e);
             }
 
-            m_log.Info("[SHUTDOWN]: Shutdown processing on main thread complete.  Exiting...");
+            m_log.Info("[SHUTDOWN]: Shutdown processing on main thread complete. " + (close ? " Exiting..." : ""));
 
-            Environment.Exit(0);
+            if(close)
+                Environment.Exit(0);
         }
     }
 

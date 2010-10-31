@@ -537,6 +537,9 @@ namespace OpenSim.Region.Framework.Scenes
                      SceneCommunicationService sceneGridService,
             IConfigSource config, string simulatorVersion, ISimulationDataService simDataService, IStatsCollector stats)
         {
+            //THIS NEEDS RESET TO FIX RESTARTS
+            shuttingdown = false;
+
             m_stats = stats;
             m_config = config;
             Random random = new Random();
@@ -1108,10 +1111,13 @@ namespace OpenSim.Region.Framework.Scenes
             if (m_RestartTimerCounter <= m_incrementsof15seconds)
             {
                 if (m_RestartTimerCounter == 4 || m_RestartTimerCounter == 6 || m_RestartTimerCounter == 7)
+                {
+                    m_log.Info("[REGION]: Restarting Region in " + ((8 - m_RestartTimerCounter) * 15) + " seconds");
                     m_dialogModule.SendNotificationToUsersInRegion(
                         UUID.Random(),
                         String.Empty,
                         RegionInfo.RegionName + ": Restarting in " + ((8 - m_RestartTimerCounter) * 15) + " seconds");
+                }
             }
             else
             {
@@ -1129,7 +1135,8 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (startupConfig.GetBoolean("InworldRestartShutsDown", false))
                 {
-                    MainConsole.Instance.RunCommand("shutdown");
+                    //This will kill it asyncly
+                    KillInstance();
                     return;
                 }
             }
@@ -1296,6 +1303,11 @@ namespace OpenSim.Region.Framework.Scenes
 
             // call the base class Close method.
             base.Close();
+        }
+
+        public void KillInstance()
+        {
+            MainConsole.Instance.EndConsoleProcessing();
         }
 
         public AuroraThreadTracker tracker = null;
@@ -1475,6 +1487,7 @@ namespace OpenSim.Region.Framework.Scenes
                     m_log.Error("[Scene]: Failed with " + ex);
                 }
                 FireThreadClosing(this);
+                Thread.CurrentThread.Abort();
             }
 
             private void CheckExit()
@@ -1653,6 +1666,7 @@ namespace OpenSim.Region.Framework.Scenes
                     m_log.Error("[Scene]: Failed with " + ex);
                 }
                 FireThreadClosing(this);
+                Thread.CurrentThread.Abort();
             }
 
             private void CheckExit()
@@ -1785,6 +1799,7 @@ namespace OpenSim.Region.Framework.Scenes
                     m_log.Error("[Scene]: Failed with " + ex);
                 }
                 FireThreadClosing(this);
+                Thread.CurrentThread.Abort();
             }
 
             private void CheckExit()

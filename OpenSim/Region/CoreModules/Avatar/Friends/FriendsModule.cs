@@ -468,11 +468,23 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
                 Util.FireAndForget(
                     delegate
                     {
-                        foreach (FriendInfo fi in friendList)
+                        try
                         {
-                            //m_log.DebugFormat("[FRIENDS]: Notifying {0}", fi.PrincipalID);
-                            // Notify about this user status
-                            StatusNotify(fi, agentID, online);
+                            foreach (FriendInfo fi in friendList)
+                            {
+                                try
+                                {
+                                    //m_log.DebugFormat("[FRIENDS]: Notifying {0}", fi.PrincipalID);
+                                    // Notify about this user status
+                                    StatusNotify(fi, agentID, online);
+                                }
+                                catch (Exception ex)
+                                {
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
                         }
                     }
                 );

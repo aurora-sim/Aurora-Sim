@@ -264,6 +264,8 @@ namespace OpenSim
 
             // load Crash directory config
             m_crashDir = m_configSource.Configs["Startup"].GetString("crash_dir", m_crashDir);
+            
+            bool AutoRestart = m_configSource.Configs["Startup"].GetBoolean("AutoRestartOnCrash", true);
 
             //Set up the error reporting
             if (m_configSource.Configs["ErrorReporting"] != null)
@@ -272,8 +274,33 @@ namespace OpenSim
                 m_urlToPostErrors = m_configSource.Configs["ErrorReporting"].GetString("ErrorReportingURL", m_urlToPostErrors);
             }
 
-            OpenSimBase m_sim = new OpenSimBase(configSource);
-            m_sim.Startup();
+            bool Running = true;
+            while (AutoRestart && Running)
+            {
+                //! because if it crashes, it needs restarted, if it didn't crash, don't restart it
+                Running = !Startup(configSource);
+            }
+        }
+
+        public static bool Startup(ArgvConfigSource configSource)
+        {
+            try
+            {
+                OpenSimBase m_sim = new OpenSimBase(configSource);
+                m_sim.Startup();
+            }
+            catch (Exception ex)
+            {
+                if (ex.Message != "Restart") //Internal needs a restart message
+                {
+                    string mes = "[AURORA]: Aurora has crashed! Error: " + ex + ", Stack trace: " + ex.StackTrace;
+
+                    m_log.Error(mes);
+                    handleException(mes, ex);
+                }
+                return false;
+            }
+            return true;
         }
 
         private static IConfigSource Configuration(IConfigSource configSource)
@@ -313,6 +340,13 @@ namespace OpenSim
 
             m_log.ErrorFormat("[APPLICATION]: {0}", msg);
 
+            handleException(msg, ex);
+
+            _IsHandlingException = false;
+        }
+
+        public static void handleException(string msg, Exception ex)
+        {
             if (m_saveCrashDumps)
             {
                 // Log exception to disk
@@ -347,8 +381,6 @@ namespace OpenSim
 
                 req.Send(m_urlToPostErrors, 10000);
             }
-
-            _IsHandlingException = false;
         }
     }
 }

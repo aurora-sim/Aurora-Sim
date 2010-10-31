@@ -249,14 +249,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             {
                 m_scene.tracker = new AuroraThreadTracker();
                 m_scene.tracker.Init(m_scene);
-                m_scene.tracker.AddSceneHeartbeat(new IncomingPacketHandler(this), out thread);
-                m_scene.tracker.AddSceneHeartbeat(new OutgoingPacketHandler(this), out thread);
             }
-            else
-            {
-                m_scene.tracker.AddSceneHeartbeat(new IncomingPacketHandler(this), out thread);
-                m_scene.tracker.AddSceneHeartbeat(new OutgoingPacketHandler(this), out thread);
-            }
+            m_scene.tracker.AddSceneHeartbeat(new IncomingPacketHandler(this), out thread);
+            m_scene.tracker.AddSceneHeartbeat(new OutgoingPacketHandler(this), out thread);
+            
             m_elapsedMSSinceLastStatReport = Environment.TickCount;
             m_scene.tracker.OnNeedToAddThread += NeedsNewThread;
         }

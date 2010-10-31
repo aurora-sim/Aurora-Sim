@@ -90,14 +90,14 @@ namespace OpenSim.Server.Base
 
             if (networkConfig == null)
             {
-                System.Console.WriteLine("Section 'Network' not found, server can't start");
+                m_Log.Error("Section 'Network' not found, server can't start");
                 Thread.CurrentThread.Abort();
             }
             uint port = (uint)networkConfig.GetInt("port", 0);
 
             if (port == 0)
             {
-                System.Console.WriteLine("Port number not specified or 0, server can't start");
+                m_Log.Error("Port number not specified or 0, server can't start");
                 Thread.CurrentThread.Abort();
             }
 

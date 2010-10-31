@@ -77,8 +77,8 @@ namespace Aurora.Modules
 
         private List<MapItemRequester> m_itemsToRequest = new List<MapItemRequester>();
         private bool itemRequesterIsRunning = false;
-        private AuroraThreadPool threadpool = null;
-        private AuroraThreadPool blockthreadpool = null;
+        private static AuroraThreadPool threadpool = null;
+        private static AuroraThreadPool blockthreadpool = null;
         private double minutes = 30;
         private double oneminute = 60000;
         private System.Timers.Timer UpdateMapImage;

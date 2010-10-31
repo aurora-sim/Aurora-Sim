@@ -130,15 +130,13 @@ namespace Aurora.Framework
 
         private bool IsInGraphBar(int x, int y, ProfilerValueInfo[] Stats)
         {
-            for (int i = 0; i < GraphBarsStart.Length; i++)
+            for (int i = GraphBarsStart.Length - 1; i >= 0; i--)
             {
                 //Check whether it is between both the start and end
                 if (x > GraphBarsStart[i] && x < GraphBarsEnd[i])
                 {
-                    if (Stats[i].Value > y)
+                    if (Stats[i].Value >= y)
                         return true;
-                    else
-                        return false;
                 }
             }
             return false;
