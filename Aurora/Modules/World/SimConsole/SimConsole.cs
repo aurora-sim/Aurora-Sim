@@ -9,22 +9,55 @@ using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using Nini.Config;
+using Aurora.Framework;
 
 namespace Aurora.Modules.World.SimConsole
 {
     public class SimConsole : ISharedRegionModule
     {
+        #region Declares
+
         private string Password = "";
         private Scene m_scene;
         private bool m_enabled = false;
-        private List<UUID> m_authorizedParticipants = new List<UUID>();
-        private Dictionary<string, string> m_userKeys = new Dictionary<string, string>();
+        private Dictionary<UUID, Access> m_authorizedParticipants = new Dictionary<UUID, Access>();
+        private DoubleValueDictionary<string, string, Access> m_userKeys = new DoubleValueDictionary<string, string, Access>();
 
-        public void Initialise(Nini.Config.IConfigSource source)
+        #region Enums
+
+        private enum Access
         {
-            if(!m_userKeys.ContainsKey("ConsoleTesting"))
-                m_userKeys.Add("ConsoleTesting", "TestPassword");
-            m_enabled = true;
+            ReadWrite,
+            Read,
+            Write,
+            None
+        }
+
+        #endregion
+
+        #endregion
+
+        #region ISharedRegionModule
+
+        public void Initialise(IConfigSource source)
+        {
+            IConfig config = source.Configs["SimConsole"];
+            if(config != null)
+            {
+                m_enabled = config.GetBoolean("Enabled", false);
+                if(!m_enabled)
+                    return;
+                string User = config.GetString("Users", "");
+                string[] Users = User.Split('|');
+                for (int i = 0; i < Users.Length; i+=3)
+                {
+                    if (!m_userKeys.ContainsKey(Users[i]))
+                    {
+                        m_userKeys.Add(Users[i], Users[i+1], (Access)Enum.Parse(typeof(Access), Users[i + 2]));
+                    }
+                }
+            }
         }
 
         public void PostInitialise()
@@ -36,14 +69,36 @@ namespace Aurora.Modules.World.SimConsole
             if (!m_enabled)
                 return;
 
-            MainConsole.OnIncomingLogWrite += new MainConsole.IncomingLogWrite(MainConsole_OnIncomingLogWrite);
+            MainConsole.OnIncomingLogWrite += IncomingLogWrite;
             scene.EventManager.OnRegisterCaps += OnRegisterCaps;
             m_scene = scene;
         }
 
-        public void MainConsole_OnIncomingLogWrite(string text)
+        public void RegionLoaded(Scene scene)
         {
         }
+
+        public void RemoveRegion(Scene scene)
+        {
+        }
+
+        public void Close()
+        {
+        }
+
+        public string Name
+        {
+            get { return "SimConsole"; }
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
+        }
+
+        #endregion
+
+        #region CAPS
 
         public void OnRegisterCaps(UUID agentID, OpenSim.Framework.Capabilities.Caps caps)
         {
@@ -74,8 +129,8 @@ namespace Aurora.Modules.World.SimConsole
             string message = rm.AsString();
             string response = "Finished.";
 
-            if (SP.Scene.Permissions.CanRunConsoleCommand(SP.UUID) ||
-                AuthenticateUser(SP.UUID, message))
+            if ((SP.Scene.Permissions.CanRunConsoleCommand(SP.UUID) ||
+                AuthenticateUser(SP.UUID, message)) && CanWrite(SP.UUID))
             {
                 MainConsole.Instance.RunCommand(message);
                 responsedata["str_response_string"] = OSDParser.SerializeLLSDXmlString(OSD.FromString(response));
@@ -88,9 +143,33 @@ namespace Aurora.Modules.World.SimConsole
             return responsedata;
         }
 
+        #endregion
+
+        #region Authentication
+
+        private bool CanWrite(UUID AgentID)
+        {
+            if (m_authorizedParticipants.ContainsKey(AgentID))
+            {
+                return m_authorizedParticipants[AgentID] == Access.Write
+                    || m_authorizedParticipants[AgentID] == Access.ReadWrite;
+            }
+            return false;
+        }
+
+        private bool CanRead(UUID AgentID)
+        {
+            if (m_authorizedParticipants.ContainsKey(AgentID))
+            {
+                return m_authorizedParticipants[AgentID] == Access.Read
+                    || m_authorizedParticipants[AgentID] == Access.ReadWrite;
+            }
+            return false;
+        }
+
         private bool AuthenticateUser(UUID AgentID, string message)
         {
-            if (m_authorizedParticipants.Contains(AgentID))
+            if (m_authorizedParticipants.ContainsKey(AgentID))
             {
                 return true;
             }
@@ -103,13 +182,13 @@ namespace Aurora.Modules.World.SimConsole
                     string username, password;
                     if (splits.Length != 2)
                         return false;
-                    username = splits[0].Remove(0,5);
+                    username = splits[0].Remove(0, 5);
                     password = splits[1].Remove(0, 9);
                     if (m_userKeys.ContainsKey(username))
                     {
-                        if (m_userKeys[username] == password)
+                        if (m_userKeys[username, ""] == password)
                         {
-                            m_authorizedParticipants.Add(AgentID);
+                            m_authorizedParticipants.Add(AgentID, m_userKeys[username]);
                             return true;
                         }
                     }
@@ -118,26 +197,25 @@ namespace Aurora.Modules.World.SimConsole
             return false;
         }
 
-        public void RegionLoaded(Scene scene)
+        #endregion
+
+        public void IncomingLogWrite(string text)
         {
+            foreach (KeyValuePair<UUID, Access> kvp in m_authorizedParticipants)
+            {
+                if (kvp.Value == Access.ReadWrite || kvp.Value == Access.Read)
+                {
+                    SendConsoleEventEQM(kvp.Key, text);
+                }
+            }
         }
 
-        public void RemoveRegion(Scene scene)
+        private void SendConsoleEventEQM(UUID AgentID, string text)
         {
-        }
-
-        public void Close()
-        {
-        }
-
-        public string Name
-        {
-            get { return "SimConsole"; }
-        }
-
-        public Type ReplaceableInterface
-        {
-            get { return null; }
+            OSDString t = (OSDString)OSD.FromString(text);
+            IEventQueue eq = m_scene.RequestModuleInterface<IEventQueue>();
+            if (eq != null)
+                eq.Enqueue(t, AgentID);
         }
     }
 }

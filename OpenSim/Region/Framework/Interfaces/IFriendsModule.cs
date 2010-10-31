@@ -33,7 +33,7 @@ namespace OpenSim.Region.Framework.Interfaces
 {
     public interface IFriendsModule
     {
-        uint GetFriendPerms(UUID PrincipalID, UUID FriendID);
+        int GetFriendPerms(UUID PrincipalID, UUID FriendID);
         void SendFriendsOnlineIfNeeded(IClientAPI client);
     }
 }

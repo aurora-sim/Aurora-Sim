@@ -499,15 +499,18 @@ namespace OpenSim.Region.CoreModules.World.Permissions
 
         protected bool IsFriendWithPerms(UUID user,UUID objectOwner)
         {
-            
             if (user == UUID.Zero)
                 return false;
 
             if (m_friendsModule == null)
                 return false;
 
-            uint friendPerms = m_friendsModule.GetFriendPerms(user, objectOwner);
-            if ((friendPerms & (uint)FriendRights.CanModifyObjects) != 0)
+            int friendPerms = m_friendsModule.GetFriendPerms(user, objectOwner);
+            
+            if (friendPerms == -1) //Not a friend
+                return false;
+
+            if ((friendPerms & (int)FriendRights.CanModifyObjects) != 0)
                 return true;
 
             return false;
@@ -707,6 +710,10 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             {
                 permission = false;
             }
+
+            //Check friend perms
+            if (IsFriendWithPerms(currentUser, objectOwner))
+                permission = true;
 
 //            m_log.DebugFormat(
 //                "[PERMISSIONS]: group.GroupID = {0}, part.GroupMask = {1}, isGroupMember = {2} for {3}", 

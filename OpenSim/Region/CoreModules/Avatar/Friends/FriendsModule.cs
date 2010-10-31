@@ -210,16 +210,16 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
             get { return null; }
         }
 
-        public uint GetFriendPerms(UUID principalID, UUID friendID)
+        public int GetFriendPerms(UUID principalID, UUID friendID)
         {
             FriendInfo[] friends = GetFriends(principalID);
             foreach (FriendInfo fi in friends)
             {
                 if (fi.Friend == friendID.ToString())
-                    return (uint)fi.TheirFlags;
+                    return fi.TheirFlags;
             }
 
-            return 0;
+            return -1;
         }
 
         private void OnClosingClient(IClientAPI client)

@@ -61,14 +61,14 @@ namespace Aurora.Modules
         private Dictionary<string, Dictionary<UUID, string>> ClassifiedsCache = new Dictionary<string, Dictionary<UUID, string>>();
         private Dictionary<string, List<string>> ClassifiedInfoCache = new Dictionary<string, List<string>>();
         private IProfileConnector ProfileFrontend = null;
+        private IFriendsModule m_friendsModule;
         private IConfigSource m_gConfig;
         private List<Scene> m_Scenes = new List<Scene>();
         private bool m_ProfileEnabled = true;
-        protected IFriendsService m_FriendsService = null;
 
         #endregion
 
-        #region IRegionModule Members
+        #region ISharedRegionModule Members
 
         public void Initialise(IConfigSource config)
         {
@@ -80,23 +80,7 @@ namespace Aurora.Modules
                 m_log.Info("[AuroraProfile] Not configured, disabling");
                 return;
             }
-            IConfig friendsConfig = config.Configs["Friends"];
-            if (friendsConfig != null)
-            {
-                int mPort = friendsConfig.GetInt("Port", 0);
-
-                string connector = friendsConfig.GetString("Connector", String.Empty);
-                Object[] args = new Object[] { config };
-
-                m_FriendsService = ServerUtils.LoadPlugin<IFriendsService>(connector, args);
-
-            }
-            if (m_FriendsService == null)
-            {
-                m_log.Error("[AuroraProfile]: No Connector defined in section Friends, or filed to load.");
-                m_ProfileEnabled = false;
-            }
-            else if (profileConfig.GetString("ProfileModule", Name) != Name)
+            if (profileConfig.GetString("ProfileModule", Name) != Name)
             {
                 m_ProfileEnabled = false;
             }
@@ -129,6 +113,7 @@ namespace Aurora.Modules
 
         public void RegionLoaded(Scene scene)
         {
+            m_friendsModule = scene.RequestModuleInterface<IFriendsModule>();
         }
 
         public Type ReplaceableInterface
@@ -236,7 +221,9 @@ namespace Aurora.Modules
             if (isFriend)
             {
                 IUserProfileInfo profile = ProfileFrontend.GetUserProfile(requestedUUID);
-                foreach (object classified in profile.Picks.Values)
+                if (profile == null)
+                    return;
+                foreach (object classified in profile.Classifieds.Values)
                 {
                     Classified Classified = (Classified)classified;
                     classifieds.Add(Classified.ClassifiedUUID, Classified.Name);
@@ -249,6 +236,8 @@ namespace Aurora.Modules
         public void ClassifiedInfoRequest(UUID queryClassifiedID, IClientAPI remoteClient)
         {
             IUserProfileInfo info = ProfileFrontend.GetUserProfile(remoteClient.AgentId);
+            if (info == null)
+                return;
             if (info.Classifieds.ContainsKey(queryClassifiedID.ToString()))
             {
                 OSDMap classifieds = Util.DictionaryToOSD(info.Classifieds);
@@ -264,6 +253,8 @@ namespace Aurora.Modules
             //Security check
             IUserProfileInfo info = ProfileFrontend.GetUserProfile(remoteClient.AgentId);
 
+            if (info == null)
+                return;
             if (info.Classifieds.ContainsKey(queryclassifiedID.ToString()))
             {
                 OSDMap Classifieds = Util.DictionaryToOSD(info.Classifieds);
@@ -332,6 +323,8 @@ namespace Aurora.Modules
             //Security check
             IUserProfileInfo info = ProfileFrontend.GetUserProfile(remoteClient.AgentId);
 
+            if (info == null)
+                return;
             if (info.Classifieds.ContainsKey(queryClassifiedID.ToString()))
             {
                 OSDMap Classifieds = Util.DictionaryToOSD(info.Classifieds);
@@ -350,6 +343,8 @@ namespace Aurora.Modules
             {
                 IUserProfileInfo info = ProfileFrontend.GetUserProfile(remoteClient.AgentId);
 
+                if (info == null)
+                    return;
                 if (info.Classifieds.ContainsKey(queryClassifiedID.ToString()))
                 {
                     OSDMap Classifieds = Util.DictionaryToOSD(info.Classifieds);
@@ -381,6 +376,8 @@ namespace Aurora.Modules
             {
                 IUserProfileInfo profile = ProfileFrontend.GetUserProfile(requestedUUID);
 
+                if (profile == null)
+                    return;
                 foreach (object pick in profile.Picks.Values)
                 {
                     ProfilePickInfo Pick = (ProfilePickInfo)pick;
@@ -400,6 +397,8 @@ namespace Aurora.Modules
 
             IUserProfileInfo info = ProfileFrontend.GetUserProfile(remoteClient.AgentId);
 
+            if (info == null)
+                return;
             if (info.Picks.ContainsKey(PickUUID.ToString()))
             {
                 OSDMap picks = Util.DictionaryToOSD(info.Picks);
@@ -411,6 +410,8 @@ namespace Aurora.Modules
         public void PickInfoUpdate(IClientAPI remoteClient, UUID pickID, UUID creatorID, bool topPick, string name, string desc, UUID snapshotID, int sortOrder, bool enabled)
         {
             IUserProfileInfo info = ProfileFrontend.GetUserProfile(remoteClient.AgentId);
+            if (info == null)
+                return;
             ScenePresence p = m_scene.GetScenePresence(remoteClient.AgentId);
 
             UUID parceluuid = p.currentParcelUUID;
@@ -481,6 +482,8 @@ namespace Aurora.Modules
             {
                 IUserProfileInfo info = ProfileFrontend.GetUserProfile(remoteClient.AgentId);
 
+                if (info == null)
+                    return;
                 if (info.Picks.ContainsKey(queryPickID.ToString()))
                 {
                     OSDMap picks = Util.DictionaryToOSD(info.Picks);
@@ -497,7 +500,9 @@ namespace Aurora.Modules
         public void PickDelete(IClientAPI remoteClient, UUID queryPickID)
         {
             IUserProfileInfo info = ProfileFrontend.GetUserProfile(remoteClient.AgentId);
-            
+
+            if (info == null)
+                return;
             if (info.Picks.ContainsKey(queryPickID.ToString()))
             {
                 OSDMap picks = Util.DictionaryToOSD(info.Picks);
@@ -524,6 +529,8 @@ namespace Aurora.Modules
 
             IClientAPI remoteClient = (IClientAPI)sender;
             IUserProfileInfo UPI = ProfileFrontend.GetUserProfile(remoteClient.AgentId);
+            if (UPI == null)
+                return;
             
             object notes = "";
             string targetNotesUUID = args[0];
@@ -537,7 +544,9 @@ namespace Aurora.Modules
         public void AvatarNotesUpdate(IClientAPI remoteClient, UUID queryTargetID, string queryNotes)
         {
             IUserProfileInfo UPI = ProfileFrontend.GetUserProfile(remoteClient.AgentId);
-            string notes = queryNotes;
+            if (UPI == null)
+                return;
+            String notes = queryNotes;
             
             UPI.Notes[queryTargetID.ToString()] = notes;
 
@@ -566,6 +575,8 @@ namespace Aurora.Modules
         public void RequestAvatarProperty(IClientAPI remoteClient, UUID target)
         {
             IUserProfileInfo UPI = ProfileFrontend.GetUserProfile(target);
+            if (UPI == null)
+                return;
             OpenSim.Services.Interfaces.GridUserInfo TargetPI = m_scene.GridUserService.GetGridUserInfo(target.ToString());
             bool isFriend = IsFriendOfUser(remoteClient.AgentId, target);
             if (isFriend)
@@ -609,6 +620,8 @@ namespace Aurora.Modules
         public void UpdateAvatarProperties(IClientAPI remoteClient, string AboutText, string FLAboutText, UUID FLImageID, UUID ImageID, string WebProfileURL, bool allowpublish, bool maturepublish)
         {
             IUserProfileInfo UPI = ProfileFrontend.GetUserProfile(remoteClient.AgentId);
+            if (UPI == null)
+                return;
             
             UPI.Image = ImageID;
             UPI.FirstLifeImage = FLImageID;
@@ -665,6 +678,8 @@ namespace Aurora.Modules
         public void UpdateUserPreferences(bool imViaEmail, bool visible, IClientAPI remoteClient)
         {
             IUserProfileInfo UPI = ProfileFrontend.GetUserProfile(remoteClient.AgentId);
+            if (UPI == null)
+                return;
             UPI.Visible = visible;
             UPI.IMViaEmail = imViaEmail;
             ProfileFrontend.UpdateUserProfile(UPI);
@@ -682,8 +697,8 @@ namespace Aurora.Modules
                 IFriendsModule module = m_Scenes[0].RequestModuleInterface<IFriendsModule>();
                 if (module != null)
                 {
-                    uint perms = module.GetFriendPerms(hunter, target);
-                    if ((perms & (uint)FriendRights.CanSeeOnMap) == (uint)FriendRights.CanSeeOnMap)
+                    int perms = module.GetFriendPerms(hunter, target);
+                    if ((perms & (int)FriendRights.CanSeeOnMap) == (int)FriendRights.CanSeeOnMap)
                     {
                         OpenSim.Services.Interfaces.GridUserInfo GUI = m_scene.GridUserService.GetGridUserInfo(target.ToString());
                         if (GUI != null)
@@ -705,21 +720,17 @@ namespace Aurora.Modules
 
         private bool IsFriendOfUser(UUID friend, UUID requested)
         {
-            OpenSim.Services.Interfaces.FriendInfo[] friendList = m_FriendsService.GetFriends(requested);
             if (friend == requested)
                 return true;
-
-            foreach (OpenSim.Services.Interfaces.FriendInfo item in friendList)
+            if (m_friendsModule.GetFriendPerms(requested, friend) == -1) //They aren't a friend
             {
-                if (item.PrincipalID == friend)
-                {
+                ScenePresence SP = findScenePresence(friend);
+                if (SP != null && SP.Scene.Permissions.IsAdministrator(friend)) //Check is admin
                     return true;
-                }
+
+                return false;
             }
-            ScenePresence sp = m_scene.GetScenePresence(friend);
-            if (sp != null && sp.GodLevel != 0)
-                return true;
-            return false;
+            return true;
         }
 
         public ScenePresence findScenePresence(UUID avID)

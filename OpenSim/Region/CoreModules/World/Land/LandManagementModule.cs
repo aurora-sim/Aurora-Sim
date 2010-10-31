@@ -1695,6 +1695,11 @@ namespace OpenSim.Region.CoreModules.World.Land
                     OpenMetaverse.Utils.LongToUInts(extLandData.RegionHandle, out x, out y);
                     info = m_scene.GridService.GetRegionByPosition(UUID.Zero, (int)x, (int)y);
                 }
+                if (extLandData.LandData == null)
+                {
+                    m_log.WarnFormat("[LAND]: Failed to find parcel {0} in region {1}", parcelID, info.RegionName); 
+                    return;
+                }
                 // we need to transfer the fake parcelID, not the one in landData, so the viewer can match it to the landmark.
                 m_log.DebugFormat("[LAND] got parcelinfo for parcel {0} in region {1}; sending...",
                                   extLandData.LandData.Name, extLandData.RegionHandle);

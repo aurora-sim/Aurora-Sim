@@ -219,7 +219,7 @@ namespace Aurora.Services.DataService
             if ((Flags & (uint)DirectoryManager.DirFindFlags.DwellSort) == (uint)DirectoryManager.DirFindFlags.DwellSort)
                 dwell = " ORDER BY Dwell DESC";
 
-            string whereClause = categoryString + " Description LIKE '%" + queryText + "%' OR Name LIKE '%" + queryText + "%' and ShowInSearch = 'True' LIMIT " + StartQuery.ToString() + ",50 " + dwell;
+            string whereClause = categoryString + " Description LIKE '%" + queryText + "%' OR Name LIKE '%" + queryText + "%' and ShowInSearch = 'True'"  + dwell + " LIMIT " + StartQuery.ToString() + ",50 ";
             List<string> retVal = GD.Query(whereClause, "searchparcel", "InfoUUID,Name,ForSale,Auction,Dwell,Maturity");
             if (retVal.Count == 0)
                 return Data.ToArray();

@@ -20,6 +20,7 @@ namespace Aurora.Framework
             Values[1] = value2;
             Dictionary.Add(key, Values);
         }
+
         public bool Remove(TKey key)
         {
             if (!Dictionary.ContainsKey(key))
@@ -27,6 +28,51 @@ namespace Aurora.Framework
             Dictionary.Remove(key);
             return true;
         }
+
+        public TValue1 this[TKey key, TKey n]
+        {
+            get
+            {
+                if (!Dictionary.ContainsKey(key))
+                    return default(TValue1);
+
+                List<Object> Values = new List<object>();
+                Dictionary.TryGetValue(key, out Values);
+                return (TValue1)Values[0];
+            }
+            set
+            {
+                List<Object> Values = new List<object>();
+                if (Dictionary.ContainsKey(key))
+                    Dictionary.TryGetValue(key, out Values);
+
+                Values[0] = value;
+                Dictionary[key] = Values;
+            }
+        }
+
+        public TValue2 this[TKey key]
+        {
+            get
+            {
+                if (!Dictionary.ContainsKey(key))
+                    return default(TValue2);
+
+                List<Object> Values = new List<object>();
+                Dictionary.TryGetValue(key, out Values);
+                return (TValue2)Values[1];
+            }
+            set
+            {
+                List<Object> Values = new List<object>();
+                if (Dictionary.ContainsKey(key))
+                    Dictionary.TryGetValue(key, out Values);
+
+                Values[1] = value;
+                Dictionary[key] = Values;
+            }
+        }
+
         public void Clear()
         {
             Dictionary.Clear();
