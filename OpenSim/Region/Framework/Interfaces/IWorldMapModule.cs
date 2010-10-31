@@ -30,8 +30,8 @@ namespace OpenSim.Region.Framework.Interfaces
     public interface IWorldMapModule
     {
         /// <summary>
-        /// Generate a map tile for the scene. a terrain texture for this scene
+        /// Build a terrain tile for the current region
         /// </summary>
-        void GenerateMaptile();
+        void CreateTerrainTexture();
     }
 }

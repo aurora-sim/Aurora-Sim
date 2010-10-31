@@ -62,7 +62,6 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api.Interfaces
               void llBreakLink(int linknum);
        LSL_Integer llCeil(double f);
               void llClearCameraParams();
-       LSL_Integer llClearPrimMedia(LSL_Integer face);
               void llCloseRemoteDataChannel(string channel);
          LSL_Float llCloud(LSL_Vector offset);
               void llCollisionFilter(string name, string id, int accept);
@@ -163,7 +162,6 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api.Interfaces
           LSL_List llGetParcelPrimOwners(LSL_Vector pos);
        LSL_Integer llGetPermissions();
            LSL_Key llGetPermissionsKey();
-          LSL_List llGetPrimMediaParams(int face, LSL_List rules);
         LSL_Vector llGetPos();
           LSL_List llGetPrimitiveParams(LSL_List rules);
        LSL_Integer llGetRegionAgentCount();
@@ -334,7 +332,6 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api.Interfaces
               void llSetParcelMusicURL(string url);
               void llSetPayPrice(int price, LSL_List quick_pay_buttons);
               void llSetPos(LSL_Vector pos);
-       LSL_Integer llSetPrimMediaParams(int face, LSL_List rules);
               void llSetPrimitiveParams(LSL_List rules);
               void llSetLinkPrimitiveParamsFast(int linknum, LSL_List rules);
               void llSetPrimURL(string url);

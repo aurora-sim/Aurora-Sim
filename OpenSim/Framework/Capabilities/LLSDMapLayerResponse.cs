@@ -32,6 +32,7 @@ namespace OpenSim.Framework.Capabilities
     {
         public LLSDMapRequest AgentData = new LLSDMapRequest();
         public OSDArray LayerData = new OSDArray();
+        public OSDArray MapBlocks = new OSDArray();
 
         public LLSDMapLayerResponse()
         {

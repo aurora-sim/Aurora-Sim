@@ -57,7 +57,7 @@ namespace OpenSim.Framework
         public string proxyUrl = "";
         public int ProxyOffset = 0;
         public string regionSecret = UUID.Random().ToString();
-        
+
         public string osSecret;
 
         public string lastMapRefresh = "0";
@@ -92,7 +92,7 @@ namespace OpenSim.Framework
                 if (!File.Exists(filename)) // New region config request
                 {
                     IniConfigSource newFile = new IniConfigSource();
-                    ReadNiniConfig(newFile, String.Empty);
+                    ReadNiniConfig(newFile, configName);
                     newFile.Save(filename);
 
                     RegionFile = filename;
@@ -416,7 +416,7 @@ namespace OpenSim.Framework
 
             // Internal IP
             IPAddress address;
-            
+
             if (config.Contains("InternalAddress"))
             {
                 address = IPAddress.Parse(config.GetString("InternalAddress", String.Empty));
@@ -474,7 +474,7 @@ namespace OpenSim.Framework
             {
                 m_externalHostName = Util.GetLocalHost().ToString();
                 m_log.InfoFormat(
-                    "[REGIONINFO]: Resolving SYSTEMIP to {0} for external hostname of region {1}", 
+                    "[REGIONINFO]: Resolving SYSTEMIP to {0} for external hostname of region {1}",
                     m_externalHostName, name);
             }
             else

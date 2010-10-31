@@ -37,11 +37,9 @@ using OpenSim.Region.CoreModules.Framework.Monitoring.Alerts;
 using OpenSim.Region.CoreModules.Framework.Monitoring.Monitors;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
-using Mono.Addins;
 
 namespace OpenSim.Region.CoreModules.Framework.Monitoring
 {
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class MonitorModule : INonSharedRegionModule 
     {
         private Scene m_scene;

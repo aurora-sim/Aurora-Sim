@@ -34,11 +34,9 @@ using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
-using Mono.Addins;
 
 namespace OpenSim.Region.CoreModules
 {
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class SunModule : ISunModule
     {
         /// <summary>

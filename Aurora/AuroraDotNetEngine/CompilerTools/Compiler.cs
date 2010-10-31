@@ -164,24 +164,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             // We now have an allow-list, a mapping list, and a default language
         }
 
-        public class ScriptConverterInitialiser : OpenSim.Framework.PluginInitialiserBase
-        {
-            Compiler m_compiler;
-            public ScriptConverterInitialiser(Compiler compiler)
-            {
-                m_compiler = compiler;
-            }
-
-            public override void Initialise(OpenSim.Framework.IPlugin plugin)
-            {
-                IScriptConverter convert = (IScriptConverter)plugin;
-                convert.Initialise(m_compiler);
-            }
-        }
-
         public void SetupCompilers()
         {
-            converters = Aurora.Framework.AuroraModuleLoader.LoadPlugins<IScriptConverter>("/OpenSim/ScriptConverter", new ScriptConverterInitialiser(this));
+            converters = Aurora.Framework.AuroraModuleLoader.PickupModules<IScriptConverter>();
+            foreach (IScriptConverter convert in converters)
+            {
+                convert.Initialise(this);
+            }
         }
 
         #endregion

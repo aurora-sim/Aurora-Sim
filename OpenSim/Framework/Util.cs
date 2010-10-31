@@ -82,6 +82,11 @@ namespace OpenSim.Framework
         /// FireAndForgetMethod.SmartThreadPool is used</summary>
         private static SmartThreadPool m_ThreadPool;
 
+        public static bool CloseLocalRegions = true;
+        public static int RegionViewSize = 1;
+        private static List<IScene> Scenes = new List<IScene>();
+        public static int NumberofScenes = 0;
+
         // Unix-epoch starts at January 1st 1970, 00:00:00 UTC. And all our times in the server are (or at least should be) in UTC.
         private static readonly DateTime unixEpoch =
             DateTime.ParseExact("1970-01-01 00:00:00 +0", "yyyy-MM-dd hh:mm:ss z", DateTimeFormatInfo.InvariantInfo).ToUniversalTime();
@@ -90,6 +95,17 @@ namespace OpenSim.Framework
             = new Regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
 
         public static FireAndForgetMethod FireAndForgetMethod = FireAndForgetMethod.SmartThreadPool;
+
+        /// <summary>
+        /// Gets the name of the directory where the current running executable
+        /// is located
+        /// </summary>
+        /// <returns>Filesystem path to the directory containing the current
+        /// executable</returns>
+        public static string ExecutingDirectory()
+        {
+            return Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        }
 
         /// <summary>
         /// Linear interpolates B<->C using percent A
@@ -413,10 +429,6 @@ namespace OpenSim.Framework
 
             return (x + y - (min >> 1) - (min >> 2) + (min >> 4));
         }
-
-        public static bool CloseLocalRegions = true;
-        public static int RegionViewSize = 1;
-        private static List<IScene> Scenes = new List<IScene>();
 
         public static void AddScene(IScene scene)
         {
@@ -1505,24 +1517,21 @@ namespace OpenSim.Framework
             }
         }
 
-        /// <summary>
-        /// Gets the name of the directory where the current running executable
-        /// is located
-        /// </summary>
-        /// <returns>Filesystem path to the directory containing the current
-        /// executable</returns>
-        public static string ExecutingDirectory()
-        {
-            return Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-        }
-
         public static OSDMap DictionaryToOSD(Dictionary<string, object> sendData)
         {
             OSDMap map = new OSDMap();
             foreach (KeyValuePair<string, object> kvp in sendData)
             {
-                OSD val = (OSD)kvp.Value;
-                map[kvp.Key] = val;
+                if (kvp.Value is Dictionary<string, object>)
+                {
+                    map[kvp.Key] = DictionaryToOSD(kvp.Value as Dictionary<string, object>);
+                }
+                else
+                {
+                    OSD v = OSD.FromObject(kvp.Value);
+                    OSD val = kvp.Value as OSD;
+                    map[kvp.Key] = v.Type == OSDType.Unknown ? val : v;
+                }
             }
             return map;
         }
@@ -1535,6 +1544,50 @@ namespace OpenSim.Framework
                 retVal.Add(key, map[key]);
             }
             return retVal;
+        }
+
+		/// <summary>
+        /// Gets the client IP address
+        /// </summary>
+        /// <param name="xff"></param>
+        /// <returns></returns>
+        public static IPEndPoint GetClientIPFromXFF(string xff)
+        {
+            if (xff == string.Empty)
+                return null;
+
+            string[] parts = xff.Split(new char[] { ',' });
+            if (parts.Length > 0)
+            {
+                try
+                {
+                    return new IPEndPoint(IPAddress.Parse(parts[0]), 0);
+                }
+                catch (Exception e)
+                {
+                    m_log.WarnFormat("[UTIL]: Exception parsing XFF header {0}: {1}", xff, e.Message);
+                }
+            }
+
+            return null;
+        }
+
+        public static string GetCallerIP(Hashtable req)
+        {
+            if (req.ContainsKey("headers"))
+            {
+                try
+                {
+                    Hashtable headers = (Hashtable)req["headers"];
+                    if (headers.ContainsKey("remote_addr") && headers["remote_addr"] != null)
+                        return headers["remote_addr"].ToString();
+                }
+                catch (Exception e)
+                {
+                    m_log.WarnFormat("[UTIL]: exception in GetCallerIP: {0}", e.Message);
+                }
+            }
+            return string.Empty;
         }
     }
 }

@@ -82,6 +82,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                 m_SceneList.Add(scene);
 
                 scene.EventManager.OnNewClient += OnNewClient;
+                scene.EventManager.OnClosingClient += OnClosingClient;
             }
         }
 
@@ -98,6 +99,9 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             {
                 m_SceneList.Remove(scene);
             }
+
+            scene.EventManager.OnNewClient -= OnNewClient;
+            scene.EventManager.OnClosingClient -= OnClosingClient;
         }
 
         public void PostInitialise()
@@ -125,6 +129,11 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
         private void OnNewClient(IClientAPI client)
         {
             client.OnMuteListRequest += OnMuteListRequest;
+        }
+
+        private void OnClosingClient(IClientAPI client)
+        {
+            client.OnMuteListRequest -= OnMuteListRequest;
         }
 
         private void OnMuteListRequest(IClientAPI client, uint crc)

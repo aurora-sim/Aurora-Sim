@@ -25,7 +25,7 @@ namespace Aurora.Services.DataService
 
         private string m_ServerURI = "";
 
-        public void Initialise(IGenericData unneeded, IConfigSource source, string DefaultConnectionString)
+        public void Initialize(IGenericData unneeded, IConfigSource source, string DefaultConnectionString)
         {
             if (source.Configs["AuroraConnectors"].GetString("EstateConnector", "LocalConnector") == "RemoteConnector")
             {
@@ -89,7 +89,7 @@ namespace Aurora.Services.DataService
                 m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e.Message);
             }
 
-            return ES;
+            return null;
         }
 
         public EstateSettings LoadEstateSettings(int estateID)
@@ -114,9 +114,6 @@ namespace Aurora.Services.DataService
 
                     if (replyData != null)
                     {
-                        if (!replyData.ContainsKey("result"))
-                            return ES;
-
                         ES = new EstateSettings(replyData);
                         ES.OnSave += SaveEstateSettings;
                         return ES;
@@ -133,7 +130,7 @@ namespace Aurora.Services.DataService
                 m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e.Message);
             }
 
-            return ES;
+            return null;
         }
 
         public void SaveEstateSettings(EstateSettings es)
@@ -241,7 +238,7 @@ namespace Aurora.Services.DataService
                 m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e.Message);
             }
 
-            return Estates;
+            return null;
         }
 
         public bool LinkRegion(UUID regionID, int estateID, string password)

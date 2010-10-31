@@ -129,9 +129,10 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         internal ThreatLevel m_MaxThreatLevel = ThreatLevel.VeryLow;
         internal float m_ScriptDelayFactor = 1.0f;
         internal float m_ScriptDistanceFactor = 1.0f;
+        internal IScriptProtectionModule ScriptProtection;
         internal Dictionary<string, FunctionPerms > m_FunctionPerms = new Dictionary<string, FunctionPerms >();
 
-        public void Initialize(IScriptEngine ScriptEngine, SceneObjectPart host, uint localID, UUID itemID)
+        public void Initialize(IScriptEngine ScriptEngine, SceneObjectPart host, uint localID, UUID itemID, IScriptProtectionModule module)
         {
             m_ScriptEngine = ScriptEngine;
             m_host = host;
@@ -145,34 +146,17 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                     m_ScriptEngine.Config.GetFloat("ScriptDelayFactor", 1.0f);
             m_ScriptDistanceFactor =
                     m_ScriptEngine.Config.GetFloat("ScriptDistanceLimitFactor", 1.0f);
+            m_MaxThreatLevel = module.GetThreatLevel();
+            ScriptProtection = module;
+        }
 
-            string risk = m_ScriptEngine.Config.GetString("OSFunctionThreatLevel", "VeryLow");
-            switch (risk)
-            {
-            case "None":
-                m_MaxThreatLevel = ThreatLevel.None;
-                break;
-            case "VeryLow":
-                m_MaxThreatLevel = ThreatLevel.VeryLow;
-                break;
-            case "Low":
-                m_MaxThreatLevel = ThreatLevel.Low;
-                break;
-            case "Moderate":
-                m_MaxThreatLevel = ThreatLevel.Moderate;
-                break;
-            case "High":
-                m_MaxThreatLevel = ThreatLevel.High;
-                break;
-            case "VeryHigh":
-                m_MaxThreatLevel = ThreatLevel.VeryHigh;
-                break;
-            case "Severe":
-                m_MaxThreatLevel = ThreatLevel.Severe;
-                break;
-            default:
-                break;
-            }
+        public string Name
+        {
+            get { return "OSSL"; }
+        }
+
+        public void Dispose()
+        {
         }
 
         public override Object InitializeLifetimeService()
@@ -182,15 +166,16 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             if (lease.CurrentState == LeaseState.Initial)
             {
                 lease.InitialLeaseTime = TimeSpan.FromMinutes(0);
-//                lease.RenewOnCallTime = TimeSpan.FromSeconds(10.0);
-//                lease.SponsorshipTimeout = TimeSpan.FromMinutes(1.0);
+                //                lease.RenewOnCallTime = TimeSpan.FromSeconds(10.0);
+                //                lease.SponsorshipTimeout = TimeSpan.FromMinutes(1.0);
             }
             return lease;
+
         }
 
         public Scene World
         {
-            get { return m_ScriptEngine.World; }
+            get { return m_host.ParentGroup.Scene; }
         }
 
         internal void OSSLError(string msg)
@@ -218,122 +203,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             World.SimChat(Utils.StringToBytes(message),
                           ChatTypeEnum.Shout, ScriptBaseClass.DEBUG_CHANNEL, m_host.ParentGroup.RootPart.AbsolutePosition, m_host.Name, m_host.UUID, true);
 
-            IWorldComm wComm = m_ScriptEngine.World.RequestModuleInterface<IWorldComm>();
+            IWorldComm wComm = World.RequestModuleInterface<IWorldComm>();
             wComm.DeliverMessage(ChatTypeEnum.Shout, ScriptBaseClass.DEBUG_CHANNEL, m_host.Name, m_host.UUID, message);
-        }
-
-        public void CheckThreatLevel(ThreatLevel level, string function)
-        {
-            if (!m_OSFunctionsEnabled)
-                OSSLError(String.Format("{0} permission denied.  All OS functions are disabled.", function)); // throws
-
-            if (!m_FunctionPerms.ContainsKey(function))
-            {
-                FunctionPerms perms = new FunctionPerms();
-                m_FunctionPerms[function] = perms;
-
-                string ownerPerm = m_ScriptEngine.Config.GetString("Allow_" + function, "");
-                string creatorPerm = m_ScriptEngine.Config.GetString("Creators_" + function, "");
-                if (ownerPerm == "" && creatorPerm == "")
-                {
-                    // Default behavior
-                    perms.AllowedOwners = null;
-                    perms.AllowedCreators = null;
-                }
-                else
-                {
-                    bool allowed;
-
-                    if (bool.TryParse(ownerPerm, out allowed))
-                    {
-                        // Boolean given
-                        if (allowed)
-                        {
-                            // Allow globally
-                            perms.AllowedOwners.Add(UUID.Zero);
-                        }
-                    }
-                    else
-                    {
-                        string[] ids = ownerPerm.Split(new char[] {','});
-                        foreach (string id in ids)
-                        {
-                            string current = id.Trim();
-                            UUID uuid;
-
-                            if (UUID.TryParse(current, out uuid))
-                            {
-                                if (uuid != UUID.Zero)
-                                    perms.AllowedOwners.Add(uuid);
-                            }
-                        }
-
-                        ids = creatorPerm.Split(new char[] {','});
-                        foreach (string id in ids)
-                        {
-                            string current = id.Trim();
-                            UUID uuid;
-
-                            if (UUID.TryParse(current, out uuid))
-                            {
-                                if (uuid != UUID.Zero)
-                                    perms.AllowedCreators.Add(uuid);
-                            }
-                        }
-                    }
-                }
-            }
-
-            // If the list is null, then the value was true / undefined
-            // Threat level governs permissions in this case
-            //
-            // If the list is non-null, then it is a list of UUIDs allowed
-            // to use that particular function. False causes an empty
-            // list and therefore means "no one"
-            //
-            // To allow use by anyone, the list contains UUID.Zero
-            //
-            if (m_FunctionPerms[function].AllowedOwners == null)
-            {
-                // Allow / disallow by threat level
-                if (level > m_MaxThreatLevel)
-                    OSSLError(
-                        String.Format(
-                            "{0} permission denied.  Allowed threat level is {1} but function threat level is {2}.",
-                            function, m_MaxThreatLevel, level));
-            }
-            else
-            {
-                if (!m_FunctionPerms[function].AllowedOwners.Contains(UUID.Zero))
-                {
-                    // Not anyone. Do detailed checks
-                    if (m_FunctionPerms[function].AllowedOwners.Contains(m_host.OwnerID))
-                    {
-                        // prim owner is in the list of allowed owners
-                        return;
-                    }
-
-                    TaskInventoryItem ti = m_host.Inventory.GetInventoryItem(m_itemID);
-                    if (ti == null)
-                    {
-                        OSSLError(
-                            String.Format("{0} permission error. Can't find script in prim inventory.",
-                            function));
-                    }
-                    if (!m_FunctionPerms[function].AllowedCreators.Contains(ti.CreatorID))
-                        OSSLError(
-                            String.Format("{0} permission denied. Script creator is not in the list of users allowed to execute this function and prim owner also has no permission.",
-                            function));
-                    if (ti.CreatorID != ti.OwnerID)
-                    {
-                        if ((ti.CurrentPermissions & (uint)PermissionMask.Modify) != 0)
-                            OSSLError(
-                                String.Format("{0} permission denied. Script permissions error.",
-                                function));
-
-                    }
-                }
-            }
         }
 
         protected void ScriptSleep(int delay)
@@ -349,7 +220,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         //
         public LSL_Integer osTerrainSetHeight(int x, int y, double val)
         {
-            CheckThreatLevel(ThreatLevel.High, "osTerrainSetHeight");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osTerrainSetHeight", m_host, "OSSL");
 
             m_host.AddScriptLPS(1);
             if (x > ((int)Constants.RegionSize - 1) || x < 0 || y > ((int)Constants.RegionSize - 1) || y < 0)
@@ -368,7 +239,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Float osTerrainGetHeight(int x, int y)
         {
-            CheckThreatLevel(ThreatLevel.None, "osTerrainGetHeight");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osTerrainGetHeight", m_host, "OSSL");
 
             m_host.AddScriptLPS(1);
             if (x > ((int)Constants.RegionSize - 1) || x < 0 || y > ((int)Constants.RegionSize - 1) || y < 0)
@@ -379,7 +250,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void osTerrainFlush()
         {
-            CheckThreatLevel(ThreatLevel.VeryLow, "osTerrainFlush");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osTerrainFlush", m_host, "OSSL");
 
             ITerrainModule terrainModule = World.RequestModuleInterface<ITerrainModule>();
             if (terrainModule != null) terrainModule.TaintTerrain();
@@ -393,7 +264,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             // The underlying functionality is fixed, since the security
             // as such is sound
             //
-            CheckThreatLevel(ThreatLevel.High, "osRegionRestart");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osRegionRestart", m_host, "OSSL");
 
             m_host.AddScriptLPS(1);
             if (World.Permissions.CanIssueEstateCommand(m_host.OwnerID, false))
@@ -407,13 +278,106 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             }
         }
 
+        public void osShutDown()
+        {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osShutDown", m_host, "OSSL");
+
+            m_host.AddScriptLPS(1);
+            if (World.Permissions.CanIssueEstateCommand(m_host.OwnerID, false))
+            {
+                MainConsole.Instance.RunCommand("shutdown");
+            }
+            else
+            {
+            }
+        }
+
+        public void osReturnObjects(LSL_Float Parameter)
+        {
+            Dictionary<UUID, List<SceneObjectGroup>> returns =
+                    new Dictionary<UUID, List<SceneObjectGroup>>();
+            ILandObject LO = World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y);
+                
+            if (Parameter == 0) // Owner objects
+            {
+                foreach (SceneObjectGroup obj in LO.PrimsOverMe)
+                {
+                    if (obj.OwnerID == LO.LandData.OwnerID)
+                    {
+                        if (!returns.ContainsKey(obj.OwnerID))
+                            returns[obj.OwnerID] =
+                                    new List<SceneObjectGroup>();
+                        returns[obj.OwnerID].Add(obj);
+                    }
+                }
+            }
+            if (Parameter == 1) //Everyone elses
+            {
+                foreach (SceneObjectGroup obj in LO.PrimsOverMe)
+                {
+                    if (obj.OwnerID != LO.LandData.OwnerID &&
+                        (obj.GroupID != LO.LandData.GroupID ||
+                        LO.LandData.GroupID == UUID.Zero))
+                    {
+                        if (!returns.ContainsKey(obj.OwnerID))
+                            returns[obj.OwnerID] =
+                                    new List<SceneObjectGroup>();
+                        returns[obj.OwnerID].Add(obj);
+                    }
+                }
+            }
+            if (Parameter == 2) // Group
+            {
+                foreach (SceneObjectGroup obj in LO.PrimsOverMe)
+                {
+                    if (obj.GroupID == LO.LandData.GroupID)
+                    {
+                        if (!returns.ContainsKey(obj.OwnerID))
+                            returns[obj.OwnerID] =
+                                    new List<SceneObjectGroup>();
+                        returns[obj.OwnerID].Add(obj);
+                    }
+                }
+            }
+
+            foreach (List<SceneObjectGroup> ol in returns.Values)
+            {
+                if (World.Permissions.CanReturnObjects(LO, m_host.OwnerID, ol))
+                    World.returnObjects(ol.ToArray(), m_host.OwnerID);
+            }
+        }
+
+        public void osReturnObject(LSL_Key userID)
+        {
+            Dictionary<UUID, List<SceneObjectGroup>> returns =
+                    new Dictionary<UUID, List<SceneObjectGroup>>();
+            ILandObject LO = World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y);
+
+            foreach (SceneObjectGroup obj in LO.PrimsOverMe)
+            {
+                if (obj.OwnerID == new UUID(userID.m_string))
+                {
+                    if (!returns.ContainsKey(obj.OwnerID))
+                        returns[obj.OwnerID] =
+                                new List<SceneObjectGroup>();
+                    returns[obj.OwnerID].Add(obj);
+                }
+            }
+
+            foreach (List<SceneObjectGroup> ol in returns.Values)
+            {
+                if (World.Permissions.CanReturnObjects(LO, m_host.OwnerID, ol))
+                    World.returnObjects(ol.ToArray(), m_host.OwnerID);
+            }
+        }
+
         public void osRegionNotice(string msg)
         {
             // This implementation provides absolutely no security
             // It's high griefing potential makes this classification
             // necessary
             //
-            CheckThreatLevel(ThreatLevel.VeryHigh, "osRegionNotice");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.VeryHigh, "osRegionNotice", m_host, "OSSL");
 
             m_host.AddScriptLPS(1);
 
@@ -428,7 +392,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             // This function has no security. It can be used to destroy
             // arbitrary builds the user would normally have no rights to
             //
-            CheckThreatLevel(ThreatLevel.VeryHigh, "osSetRot");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.VeryHigh, "osSetRot", m_host, "OSSL");
 
             m_host.AddScriptLPS(1);
             if (World.Entities.ContainsKey(target))
@@ -454,7 +418,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             // This may be upgraded depending on the griefing or DOS
             // potential, or guarded with a delay
             //
-            CheckThreatLevel(ThreatLevel.VeryLow, "osSetDynamicTextureURL");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osSetDynamicTextureURL", m_host, "OSSL");
 
             m_host.AddScriptLPS(1);
             if (dynamicID == String.Empty)
@@ -476,7 +440,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         public string osSetDynamicTextureURLBlend(string dynamicID, string contentType, string url, string extraParams,
                                              int timer, int alpha)
         {
-            CheckThreatLevel(ThreatLevel.VeryLow, "osSetDynamicTextureURLBlend");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osSetDynamicTextureURLBlend", m_host, "OSSL");
 
             m_host.AddScriptLPS(1);
             if (dynamicID == String.Empty)
@@ -498,7 +462,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         public string osSetDynamicTextureURLBlendFace(string dynamicID, string contentType, string url, string extraParams,
                                              bool blend, int disp, int timer, int alpha, int face)
         {
-            CheckThreatLevel(ThreatLevel.VeryLow, "osSetDynamicTextureURLBlendFace");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osSetDynamicTextureURLBlendFace", m_host, "OSSL");
 
             m_host.AddScriptLPS(1);
             if (dynamicID == String.Empty)
@@ -520,7 +484,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         public string osSetDynamicTextureData(string dynamicID, string contentType, string data, string extraParams,
                                            int timer)
         {
-            CheckThreatLevel(ThreatLevel.VeryLow, "osSetDynamicTextureData");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osSetDynamicTextureData", m_host, "OSSL");
 
             m_host.AddScriptLPS(1);
             if (dynamicID == String.Empty)
@@ -549,7 +513,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         public string osSetDynamicTextureDataBlend(string dynamicID, string contentType, string data, string extraParams,
                                           int timer, int alpha)
         {
-            CheckThreatLevel(ThreatLevel.VeryLow, "osSetDynamicTextureDataBlend");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osSetDynamicTextureDataBlend", m_host, "OSSL");
 
             m_host.AddScriptLPS(1);
             if (dynamicID == String.Empty)
@@ -578,7 +542,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         public string osSetDynamicTextureDataBlendFace(string dynamicID, string contentType, string data, string extraParams,
                                           bool blend, int disp, int timer, int alpha, int face)
         {
-            CheckThreatLevel(ThreatLevel.VeryLow, "osSetDynamicTextureDataBlendFace");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osSetDynamicTextureDataBlendFace", m_host, "OSSL");
 
             m_host.AddScriptLPS(1);
             if (dynamicID == String.Empty)
@@ -606,21 +570,23 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public bool osConsoleCommand(string command)
         {
-            CheckThreatLevel(ThreatLevel.Severe, "osConsoleCommand");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.Severe, "osConsoleCommand", m_host, "OSSL");
 
             m_host.AddScriptLPS(1);
-
-            if (World.Permissions.CanRunConsoleCommand(m_host.OwnerID))
+            if (m_ScriptEngine.Config.GetBoolean("AllowosConsoleCommand", false))
             {
-                MainConsole.Instance.RunCommand(command);
-                return true;
+                if (World.Permissions.CanRunConsoleCommand(m_host.OwnerID))
+                {
+                    MainConsole.Instance.RunCommand(command);
+                    return true;
+                }
             }
             return false;
         }
 
         public void osSetPrimFloatOnWater(int floatYN)
         {
-            CheckThreatLevel(ThreatLevel.VeryLow, "osSetPrimFloatOnWater");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osSetPrimFloatOnWater", m_host, "OSSL");
 
             m_host.AddScriptLPS(1);
             if (m_host.ParentGroup != null)
@@ -637,7 +603,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         {
             // High because there is no security check. High griefer potential
             //
-            CheckThreatLevel(ThreatLevel.High, "osTeleportAgent");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osTeleportAgent", m_host, "OSSL");
 
             m_host.AddScriptLPS(1);
             UUID agentId = new UUID();
@@ -664,6 +630,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                                 regionName = regInfo.RegionName;
                             }
                         }
+                        presence.ControllingClient.SendTeleportLocationStart();
                         World.RequestTeleportLocation(presence.ControllingClient, regionName,
                             new Vector3((float)position.x, (float)position.y, (float)position.z),
                             new Vector3((float)lookat.x, (float)lookat.y, (float)lookat.z), (uint)TPFlags.ViaLocation);
@@ -679,7 +646,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         {
             // High because there is no security check. High griefer potential
             //
-            CheckThreatLevel(ThreatLevel.High, "osTeleportAgent");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osTeleportAgent", m_host, "OSSL");
 
             ulong regionHandle = Util.UIntsToLong(((uint)regionX * (uint)Constants.RegionSize), ((uint)regionY * (uint)Constants.RegionSize));
 
@@ -695,6 +662,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                         == World.LandChannel.GetLandObject(
                             presence.AbsolutePosition.X, presence.AbsolutePosition.Y).LandData.OwnerID)
                     {
+                        presence.ControllingClient.SendTeleportLocationStart();
                         World.RequestTeleportLocation(presence.ControllingClient, regionHandle,
                             new Vector3((float)position.x, (float)position.y, (float)position.z),
                             new Vector3((float)lookat.x, (float)lookat.y, (float)lookat.z), (uint)TPFlags.ViaLocation);
@@ -718,7 +686,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         //information leak.
         public string osGetAgentIP(string agent)
         {
-            CheckThreatLevel(ThreatLevel.High, "osGetAgentIP");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osGetAgentIP", m_host, "OSSL");
 
             UUID avatarID = (UUID)agent;
 
@@ -742,7 +710,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         {
             // threat level is None as we could get this information with an
             // in-world script as well, just not as efficient
-            CheckThreatLevel(ThreatLevel.None, "osGetAgents");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osGetAgents", m_host, "OSSL");
 
             LSL_List result = new LSL_List();
             World.ForEachScenePresence(delegate(ScenePresence sp)
@@ -756,7 +724,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         // Adam's super super custom animation functions
         public void osAvatarPlayAnimation(string avatar, string animation)
         {
-            CheckThreatLevel(ThreatLevel.VeryHigh, "osAvatarPlayAnimation");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.VeryHigh, "osAvatarPlayAnimation", m_host, "OSSL");
 
             UUID avatarID = (UUID)avatar;
 
@@ -789,7 +757,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void osAvatarStopAnimation(string avatar, string animation)
         {
-            CheckThreatLevel(ThreatLevel.VeryHigh, "osAvatarStopAnimation");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.VeryHigh, "osAvatarStopAnimation", m_host, "OSSL");
 
             UUID avatarID = (UUID)avatar;
 
@@ -824,7 +792,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         //Texture draw functions
         public string osMovePen(string drawList, int x, int y)
         {
-            CheckThreatLevel(ThreatLevel.None, "osMovePen");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osMovePen", m_host, "OSSL");
 
             m_host.AddScriptLPS(1);
             drawList += "MoveTo " + x + "," + y + ";";
@@ -833,7 +801,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public string osDrawLine(string drawList, int startX, int startY, int endX, int endY)
         {
-            CheckThreatLevel(ThreatLevel.None, "osDrawLine");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osDrawLine", m_host, "OSSL");
 
             m_host.AddScriptLPS(1);
             drawList += "MoveTo "+ startX+","+ startY +"; LineTo "+endX +","+endY +"; ";
@@ -842,7 +810,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public string osDrawLine(string drawList, int endX, int endY)
         {
-            CheckThreatLevel(ThreatLevel.None, "osDrawLine");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osDrawLine", m_host, "OSSL");
 
             m_host.AddScriptLPS(1);
             drawList += "LineTo " + endX + "," + endY + "; ";
@@ -851,7 +819,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public string osDrawText(string drawList, string text)
         {
-            CheckThreatLevel(ThreatLevel.None, "osDrawText");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osDrawText", m_host, "OSSL");
 
             m_host.AddScriptLPS(1);
             drawList += "Text " + text + "; ";
@@ -860,7 +828,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public string osDrawEllipse(string drawList, int width, int height)
         {
-            CheckThreatLevel(ThreatLevel.None, "osDrawEllipse");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osDrawEllipse", m_host, "OSSL");
 
             m_host.AddScriptLPS(1);
             drawList += "Ellipse " + width + "," + height + "; ";
@@ -869,7 +837,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public string osDrawRectangle(string drawList, int width, int height)
         {
-            CheckThreatLevel(ThreatLevel.None, "osDrawRectangle");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osDrawRectangle", m_host, "OSSL");
 
             m_host.AddScriptLPS(1);
             drawList += "Rectangle " + width + "," + height + "; ";
@@ -878,7 +846,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public string osDrawFilledRectangle(string drawList, int width, int height)
         {
-            CheckThreatLevel(ThreatLevel.None, "osDrawFilledRectangle");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osDrawFilledRectangle", m_host, "OSSL");
 
             m_host.AddScriptLPS(1);
             drawList += "FillRectangle " + width + "," + height + "; ";
@@ -887,7 +855,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public string osDrawFilledPolygon(string drawList, LSL_List x, LSL_List y)
         {
-            CheckThreatLevel(ThreatLevel.None, "osDrawFilledPolygon");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osDrawFilledPolygon", m_host, "OSSL");
 
             m_host.AddScriptLPS(1);
 
@@ -906,7 +874,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public string osDrawPolygon(string drawList, LSL_List x, LSL_List y)
         {
-            CheckThreatLevel(ThreatLevel.None, "osDrawFilledPolygon");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osDrawFilledPolygon", m_host, "OSSL");
 
             m_host.AddScriptLPS(1);
 
@@ -925,7 +893,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public string osSetFontSize(string drawList, int fontSize)
         {
-            CheckThreatLevel(ThreatLevel.None, "osSetFontSize");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osSetFontSize", m_host, "OSSL");
 
             m_host.AddScriptLPS(1);
             drawList += "FontSize "+ fontSize +"; ";
@@ -934,7 +902,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public string osSetFontName(string drawList, string fontName)
         {
-            CheckThreatLevel(ThreatLevel.None, "osSetFontName");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osSetFontName", m_host, "OSSL");
 
             m_host.AddScriptLPS(1);
             drawList += "FontName "+ fontName +"; ";
@@ -943,7 +911,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public string osSetPenSize(string drawList, int penSize)
         {
-            CheckThreatLevel(ThreatLevel.None, "osSetPenSize");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osSetPenSize", m_host, "OSSL");
 
             m_host.AddScriptLPS(1);
             drawList += "PenSize " + penSize + "; ";
@@ -952,7 +920,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public string osSetPenColour(string drawList, string colour)
         {
-            CheckThreatLevel(ThreatLevel.None, "osSetPenColour");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osSetPenColour", m_host, "OSSL");
 
             m_host.AddScriptLPS(1);
             drawList += "PenColour " + colour + "; ";
@@ -961,7 +929,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public string osSetPenCap(string drawList, string direction, string type)
         {
-            CheckThreatLevel(ThreatLevel.None, "osSetPenColour");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osSetPenColour", m_host, "OSSL");
 
             m_host.AddScriptLPS(1);
             drawList += "PenCap " + direction + "," + type + "; ";
@@ -970,7 +938,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public string osDrawImage(string drawList, int width, int height, string imageUrl)
         {
-            CheckThreatLevel(ThreatLevel.None, "osDrawImage");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osDrawImage", m_host, "OSSL");
 
             m_host.AddScriptLPS(1);
             drawList +="Image " +width + "," + height+ ","+ imageUrl +"; " ;
@@ -979,7 +947,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_Vector osGetDrawStringSize(string contentType, string text, string fontName, int fontSize)
         {
-            CheckThreatLevel(ThreatLevel.VeryLow, "osGetDrawStringSize");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osGetDrawStringSize", m_host, "OSSL");
             m_host.AddScriptLPS(1);
 
             LSL_Vector vec = new LSL_Vector(0,0,0);
@@ -1002,14 +970,14 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             // It was probably added as a crutch or debugging aid, and
             // should be removed
             //
-            CheckThreatLevel(ThreatLevel.High, "osSetStateEvents");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osSetStateEvents", m_host, "OSSL");
 
             m_host.SetScriptEvents(m_itemID, events);
         }
 
         public void osSetRegionWaterHeight(double height)
         {
-            CheckThreatLevel(ThreatLevel.High, "osSetRegionWaterHeight");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osSetRegionWaterHeight", m_host, "OSSL");
 
             m_host.AddScriptLPS(1);
             //Check to make sure that the script's owner is the estate manager/master
@@ -1028,7 +996,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         /// <param name="sunHour">The "Sun Hour" that is desired, 0...24, with 0 just after SunRise</param>
         public void osSetRegionSunSettings(bool useEstateSun, bool sunFixed, double sunHour)
         {
-            CheckThreatLevel(ThreatLevel.Nuisance, "osSetRegionSunSettings");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.Nuisance, "osSetRegionSunSettings", m_host, "OSSL");
 
             m_host.AddScriptLPS(1);
             //Check to make sure that the script's owner is the estate manager/master
@@ -1058,7 +1026,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         /// <param name="sunHour">The "Sun Hour" that is desired, 0...24, with 0 just after SunRise</param>
         public void osSetEstateSunSettings(bool sunFixed, double sunHour)
         {
-            CheckThreatLevel(ThreatLevel.Nuisance, "osSetEstateSunSettings");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.Nuisance, "osSetEstateSunSettings", m_host, "OSSL");
 
             m_host.AddScriptLPS(1);
             //Check to make sure that the script's owner is the estate manager/master
@@ -1086,7 +1054,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         /// <returns></returns>
         public double osGetCurrentSunHour()
         {
-            CheckThreatLevel(ThreatLevel.None, "osGetCurrentSunHour");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osGetCurrentSunHour", m_host, "OSSL");
 
             m_host.AddScriptLPS(1);
 
@@ -1105,7 +1073,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public double osSunGetParam(string param)
         {
-            CheckThreatLevel(ThreatLevel.None, "osSunGetParam");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osSunGetParam", m_host, "OSSL");
             m_host.AddScriptLPS(1);
 
             double value = 0.0;
@@ -1121,7 +1089,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void osSunSetParam(string param, double value)
         {
-            CheckThreatLevel(ThreatLevel.None, "osSunSetParam");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osSunSetParam", m_host, "OSSL");
             m_host.AddScriptLPS(1);
 
             ISunModule module = World.RequestModuleInterface<ISunModule>();
@@ -1135,7 +1103,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public string osWindActiveModelPluginName()
         {
-            CheckThreatLevel(ThreatLevel.None, "osWindActiveModelPluginName");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osWindActiveModelPluginName", m_host, "OSSL");
             m_host.AddScriptLPS(1);
 
             IWindModule module = World.RequestModuleInterface<IWindModule>();
@@ -1149,7 +1117,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void osWindParamSet(string plugin, string param, float value)
         {
-            CheckThreatLevel(ThreatLevel.VeryLow, "osWindParamSet");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osWindParamSet", m_host, "OSSL");
             m_host.AddScriptLPS(1);
 
             IWindModule module = World.RequestModuleInterface<IWindModule>();
@@ -1165,7 +1133,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public float osWindParamGet(string plugin, string param)
         {
-            CheckThreatLevel(ThreatLevel.VeryLow, "osWindParamGet");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osWindParamGet", m_host, "OSSL");
             m_host.AddScriptLPS(1);
 
             IWindModule module = World.RequestModuleInterface<IWindModule>();
@@ -1180,7 +1148,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         // Routines for creating and managing parcels programmatically
         public void osParcelJoin(LSL_Vector pos1, LSL_Vector pos2)
         {
-            CheckThreatLevel(ThreatLevel.High, "osParcelJoin");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osParcelJoin", m_host, "OSSL");
             m_host.AddScriptLPS(1);
 
             int startx = (int)(pos1.x < pos2.x ? pos1.x : pos2.x);
@@ -1190,10 +1158,10 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
             World.LandChannel.Join(startx,starty,endx,endy,m_host.OwnerID);
         }
-
+          
         public void osParcelSubdivide(LSL_Vector pos1, LSL_Vector pos2)
         {
-            CheckThreatLevel(ThreatLevel.High, "osParcelSubdivide");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osParcelSubdivide", m_host, "OSSL");
             m_host.AddScriptLPS(1);
 
             int startx = (int)(pos1.x < pos2.x ? pos1.x : pos2.x);
@@ -1206,14 +1174,14 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void osParcelSetDetails(LSL_Vector pos, LSL_List rules)
         {
-            CheckThreatLevel(ThreatLevel.High, "osParcelSetDetails");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osParcelSetDetails", m_host, "OSSL");
             m_host.AddScriptLPS(1);
 
             // Get a reference to the land data and make sure the owner of the script
             // can modify it
 
             ILandObject startLandObject = World.LandChannel.GetLandObject((int)pos.x, (int)pos.y);
-            if (startLandObject == null)
+	    if (startLandObject == null)
             {
                 OSSLShoutError("There is no land at that location");
                 return;
@@ -1230,7 +1198,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             UUID uuid;
 
             // Process the rules, not sure what the impact would be of changing owner or group
-            for (int idx = 0; idx < rules.Length;)
+            for (int idx = 0; idx < rules.Length; )
             {
                 int code = rules.GetLSLIntegerItem(idx++);
                 string arg = rules.GetLSLStringItem(idx++);
@@ -1245,13 +1213,13 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                       break;
 
                     case 2:
-                      CheckThreatLevel(ThreatLevel.VeryHigh, "osParcelSetDetails");
+                      ScriptProtection.CheckThreatLevel(ThreatLevel.VeryHigh, "osParcelSetDetails", m_host, "OSSL");
                       if (UUID.TryParse(arg , out uuid))
                           newLand.OwnerID = uuid;
                       break;
 
                     case 3:
-                      CheckThreatLevel(ThreatLevel.VeryHigh, "osParcelSetDetails");
+                      ScriptProtection.CheckThreatLevel(ThreatLevel.VeryHigh, "osParcelSetDetails", m_host, "OSSL");
                       if (UUID.TryParse(arg , out uuid))
                           newLand.GroupID = uuid;
                       break;
@@ -1268,7 +1236,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             // is not allowed to contain any.
             // This really should be removed.
             //
-            CheckThreatLevel(ThreatLevel.None, "osList2Double");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osList2Double", m_host, "OSSL");
 
             m_host.AddScriptLPS(1);
             if (index < 0)
@@ -1286,7 +1254,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         {
             // What actually is the difference to the LL function?
             //
-            CheckThreatLevel(ThreatLevel.VeryLow, "osSetParcelMediaURL");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osSetParcelMediaURL", m_host, "OSSL");
 
             m_host.AddScriptLPS(1);
 
@@ -1303,7 +1271,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         {
             // What actually is the difference to the LL function?
             //
-            CheckThreatLevel(ThreatLevel.VeryLow, "osSetParcelMediaURL");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osSetParcelMediaURL", m_host, "OSSL");
 
             m_host.AddScriptLPS(1);
 
@@ -1335,7 +1303,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             // that trigger engine-specific failures.
             // Besides, public grid users aren't supposed to know.
             //
-            CheckThreatLevel(ThreatLevel.High, "osGetScriptEngineName");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osGetScriptEngineName", m_host, "OSSL");
 
             m_host.AddScriptLPS(1);
 
@@ -1368,14 +1336,14 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
             // require their user to know what they are doing (see script
             // kiddie)
             //
-            CheckThreatLevel(ThreatLevel.High,"osGetSimulatorVersion");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.High,"osGetSimulatorVersion", m_host, "OSSL");
             m_host.AddScriptLPS(1);
-            return m_ScriptEngine.World.GetSimulatorVersion();
+            return World.GetSimulatorVersion();
         }
 
         public Hashtable osParseJSON(string JSON)
         {
-            CheckThreatLevel(ThreatLevel.None, "osParseJSON");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osParseJSON", m_host, "OSSL");
 
             m_host.AddScriptLPS(1);
 
@@ -1582,7 +1550,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         // the dataserver function is passed the ID of the calling function and a string message
         public void osMessageObject(LSL_Key objectUUID, string message)
         {
-            CheckThreatLevel(ThreatLevel.Low, "osMessageObject");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "osMessageObject", m_host, "OSSL");
             m_host.AddScriptLPS(1);
 
             object[] resobj = new object[] { new LSL_Types.LSLString(m_host.UUID.ToString()), new LSL_Types.LSLString(message) };
@@ -1601,7 +1569,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         //
         public void osMakeNotecard(string notecardName, LSL_Types.list contents)
         {
-            CheckThreatLevel(ThreatLevel.High, "osMakeNotecard");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osMakeNotecard", m_host, "OSSL");
             m_host.AddScriptLPS(1);
 
             // Create new asset
@@ -1655,7 +1623,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                 */
         public string osGetNotecardLine(string name, int line)
         {
-            CheckThreatLevel(ThreatLevel.VeryHigh, "osGetNotecardLine");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.VeryHigh, "osGetNotecardLine", m_host, "OSSL");
             m_host.AddScriptLPS(1);
 
             UUID assetID = UUID.Zero;
@@ -1707,7 +1675,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public string osGetNotecard(string name)
         {
-            CheckThreatLevel(ThreatLevel.VeryHigh, "osGetNotecard");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.VeryHigh, "osGetNotecard", m_host, "OSSL");
             m_host.AddScriptLPS(1);
 
             UUID assetID = UUID.Zero;
@@ -1765,7 +1733,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public int osGetNumberOfNotecardLines(string name)
         {
-            CheckThreatLevel(ThreatLevel.VeryHigh, "osGetNumberOfNotecardLines");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.VeryHigh, "osGetNumberOfNotecardLines", m_host, "OSSL");
             m_host.AddScriptLPS(1);
 
             UUID assetID = UUID.Zero;
@@ -1810,7 +1778,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public string osAvatarName2Key(string firstname, string lastname)
         {
-            CheckThreatLevel(ThreatLevel.Low, "osAvatarName2Key");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "osAvatarName2Key", m_host, "OSSL");
 
             UserAccount account = World.UserAccountService.GetUserAccount(World.RegionInfo.ScopeID, firstname, lastname);
             if (null == account)
@@ -1825,7 +1793,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public string osKey2Name(string id)
         {
-            CheckThreatLevel(ThreatLevel.Low, "osKey2Name");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "osKey2Name", m_host, "OSSL");
             UUID key = new UUID();
 
             if (UUID.TryParse(id, out key))
@@ -1855,7 +1823,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         ///
         public string osGetGridNick()
         {
-            CheckThreatLevel(ThreatLevel.Moderate, "osGetGridNick");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "osGetGridNick", m_host, "OSSL");
             m_host.AddScriptLPS(1);
             string nick = "hippogrid";
             IConfigSource config = m_ScriptEngine.ConfigSource;
@@ -1866,7 +1834,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public string osGetGridName()
         {
-            CheckThreatLevel(ThreatLevel.Moderate, "osGetGridName");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "osGetGridName", m_host, "OSSL");
             m_host.AddScriptLPS(1);
             string name = "the lost continent of hippo";
             IConfigSource config = m_ScriptEngine.ConfigSource;
@@ -1877,7 +1845,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public string osGetGridLoginURI()
         {
-            CheckThreatLevel(ThreatLevel.Moderate, "osGetGridLoginURI");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "osGetGridLoginURI", m_host, "OSSL");
             m_host.AddScriptLPS(1);
             string loginURI = "http://127.0.0.1:9000/";
             IConfigSource config = m_ScriptEngine.ConfigSource;
@@ -1888,7 +1856,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_String osFormatString(string str, LSL_List strings)
         {
-            CheckThreatLevel(ThreatLevel.Low, "osFormatString");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "osFormatString", m_host, "OSSL");
             m_host.AddScriptLPS(1);
 
             return String.Format(str, strings.Data);
@@ -1896,7 +1864,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_List osMatchString(string src, string pattern, int start)
         {
-            CheckThreatLevel(ThreatLevel.High, "osMatchString");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osMatchString", m_host, "OSSL");
             m_host.AddScriptLPS(1);
 
             LSL_List result = new LSL_List();
@@ -1936,7 +1904,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public string osLoadedCreationDate()
         {
-            CheckThreatLevel(ThreatLevel.Low, "osLoadedCreationDate");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "osLoadedCreationDate", m_host, "OSSL");
             m_host.AddScriptLPS(1);
 
             return World.RegionInfo.RegionSettings.LoadedCreationDate;
@@ -1944,7 +1912,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public string osLoadedCreationTime()
         {
-            CheckThreatLevel(ThreatLevel.Low, "osLoadedCreationTime");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "osLoadedCreationTime", m_host, "OSSL");
             m_host.AddScriptLPS(1);
 
             return World.RegionInfo.RegionSettings.LoadedCreationTime;
@@ -1952,7 +1920,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public string osLoadedCreationID()
         {
-            CheckThreatLevel(ThreatLevel.Low, "osLoadedCreationID");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "osLoadedCreationID", m_host, "OSSL");
             m_host.AddScriptLPS(1);
 
             return World.RegionInfo.RegionSettings.LoadedCreationID;
@@ -1966,21 +1934,23 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         //
         public LSL_List osGetLinkPrimitiveParams(int linknumber, LSL_List rules)
         {
-            CheckThreatLevel(ThreatLevel.High, "osGetLinkPrimitiveParams");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osGetLinkPrimitiveParams", m_host, "OSSL");
             m_host.AddScriptLPS(1);
             InitLSL();
             LSL_List retVal = new LSL_List();
-            List<SceneObjectPart> parts = ((LSL_Api)m_LSL_Api).GetLinkParts(linknumber);
-            foreach (SceneObjectPart part in parts)
-            {
-                retVal += ((LSL_Api)m_LSL_Api).GetLinkPrimitiveParams(part, rules);
-            }
+            //Assign requested part directly
+            SceneObjectPart part = m_host.ParentGroup.GetLinkNumPart(linknumber) as SceneObjectPart;
+
+            //Check to see if the requested part exists (NOT null) and if so, get it's rules
+            if (part != null) retVal = ((LSL_Api)m_LSL_Api).GetLinkPrimitiveParams(part, rules);
+
+            //Will retun rules for specific part, or an empty list if part == null
             return retVal;
         }
 
         public LSL_Key osNpcCreate(string firstname, string lastname, LSL_Vector position, LSL_Key cloneFrom)
         {
-            CheckThreatLevel(ThreatLevel.High, "osNpcCreate");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osNpcCreate", m_host, "OSSL");
             //QueueUserWorkItem
 
             INPCModule module = World.RequestModuleInterface<INPCModule>();
@@ -1999,7 +1969,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void osNpcMoveTo(LSL_Key npc, LSL_Vector position)
         {
-            CheckThreatLevel(ThreatLevel.High, "osNpcMoveTo");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osNpcMoveTo", m_host, "OSSL");
 
             INPCModule module = World.RequestModuleInterface<INPCModule>();
             if (module != null)
@@ -2011,7 +1981,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void osNpcSay(LSL_Key npc, string message)
         {
-            CheckThreatLevel(ThreatLevel.High, "osNpcSay");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osNpcSay", m_host, "OSSL");
 
             INPCModule module = World.RequestModuleInterface<INPCModule>();
             if (module != null)
@@ -2022,7 +1992,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void osNpcRemove(LSL_Key npc)
         {
-            CheckThreatLevel(ThreatLevel.High, "osNpcRemove");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osNpcRemove", m_host, "OSSL");
 
             INPCModule module = World.RequestModuleInterface<INPCModule>();
             if (module != null)
@@ -2037,8 +2007,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         /// <returns></returns>
         public LSL_Key osGetMapTexture()
         {
-            CheckThreatLevel(ThreatLevel.None, "osGetMapTexture");
-            return m_ScriptEngine.World.RegionInfo.RegionSettings.TerrainImageID.ToString();
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osGetMapTexture", m_host, "OSSL");
+            return World.RegionInfo.RegionSettings.TerrainImageID.ToString();
         }
 
         /// <summary>
@@ -2048,8 +2018,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         /// <returns></returns>
         public LSL_Key osGetRegionMapTexture(string regionName)
         {
-            CheckThreatLevel(ThreatLevel.High, "osGetRegionMapTexture");
-            Scene scene = m_ScriptEngine.World;
+            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osGetRegionMapTexture", m_host, "OSSL");
+            Scene scene = m_host.ParentGroup.Scene;
             UUID key = UUID.Zero;
             GridRegion region;
 
@@ -2077,7 +2047,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         /// <returns>List of floats</returns>
         public LSL_List osGetRegionStats()
         {
-            CheckThreatLevel(ThreatLevel.Moderate, "osGetRegionStats");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "osGetRegionStats", m_host, "OSSL");
             m_host.AddScriptLPS(1);
             LSL_List ret = new LSL_List();
             float[] stats = World.SimulatorStats;
@@ -2091,7 +2061,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public int osGetSimulatorMemory()
         {
-            CheckThreatLevel(ThreatLevel.Moderate, "osGetSimulatorMemory");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "osGetSimulatorMemory", m_host, "OSSL");
             m_host.AddScriptLPS(1);
             long pws = System.Diagnostics.Process.GetCurrentProcess().WorkingSet64;
 
@@ -2105,15 +2075,18 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         
         public void osSetSpeed(string UUID, float SpeedModifier)
         {
-            CheckThreatLevel(ThreatLevel.Moderate, "osSetSpeed");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "osSetSpeed", m_host, "OSSL");
             m_host.AddScriptLPS(1);
             ScenePresence avatar = World.GetScenePresence(new UUID(UUID));
-            avatar.SpeedModifier = SpeedModifier;
+            if (avatar != null)
+            {
+                avatar.SpeedModifier = SpeedModifier;
+            }
         }
         
         public void osKickAvatar(string FirstName,string SurName,string alert)
         {
-            CheckThreatLevel(ThreatLevel.Severe, "osKickAvatar");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.Severe, "osKickAvatar", m_host, "OSSL");
             if (World.Permissions.CanRunConsoleCommand(m_host.OwnerID))
             {
                 World.ForEachScenePresence(delegate(ScenePresence sp)
@@ -2135,7 +2108,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         
         public void osCauseDamage(string avatar, double damage)
         {
-            CheckThreatLevel(ThreatLevel.High, "osCauseDamage");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osCauseDamage", m_host, "OSSL");
             m_host.AddScriptLPS(1);
 
             UUID avatarId = new UUID(avatar);
@@ -2163,7 +2136,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         
         public void osCauseHealing(string avatar, double healing)
         {
-            CheckThreatLevel(ThreatLevel.High, "osCauseHealing");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osCauseHealing", m_host, "OSSL");
             m_host.AddScriptLPS(1);
 
             UUID avatarId = new UUID(avatar);
@@ -2187,7 +2160,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public LSL_List osGetPrimitiveParams(LSL_Key prim, LSL_List rules)
         {
-            CheckThreatLevel(ThreatLevel.High, "osGetPrimitiveParams");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osGetPrimitiveParams", m_host, "OSSL");
             m_host.AddScriptLPS(1);
             
             return m_LSL_Api.GetLinkPrimitiveParamsEx(prim, rules);
@@ -2195,7 +2168,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
 
         public void osSetPrimitiveParams(LSL_Key prim, LSL_List rules)
         {
-            CheckThreatLevel(ThreatLevel.High, "osGetPrimitiveParams");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osSetPrimitiveParams", m_host, "OSSL");
             m_host.AddScriptLPS(1);
             
             m_LSL_Api.SetPrimitiveParamsEx(prim, rules);
@@ -2207,8 +2180,8 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         /// <returns>Strided list of the UUID, position and name of each avatar in the region</returns>
         public LSL_List osGetAvatarList()
         {
-            CheckThreatLevel(ThreatLevel.None, "osGetAvatarList");
-
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osGetAvatarList", m_host, "OSSL");
+            
             LSL_List result = new LSL_List();
             World.ForEachScenePresence(delegate (ScenePresence avatar)
             {
@@ -2223,6 +2196,24 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
                 }
             });
             return result;
+        }
+
+        public LSL_Integer osAddAgentToGroup(LSL_Key AgentID, LSL_Key GroupID, LSL_Key RequestedRoleID)
+        {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "osAddAgentToGroup", m_host, "OSSL");
+            m_host.AddScriptLPS(1);
+
+            IGroupsServicesConnector m_groupData = World.RequestModuleInterface<IGroupsServicesConnector>();
+
+            // No groups module, no functionality
+            if (m_groupData == null)
+            {
+                OSSLShoutError("No Groups Module found for osAddAgentToGroup.");
+                return 0;
+            }
+
+            m_groupData.AddAgentToGroup(UUID.Parse(AgentID.m_string), m_host.OwnerID, UUID.Parse(GroupID.m_string), UUID.Parse(RequestedRoleID.m_string));
+            return 1;
         }
     }
 }

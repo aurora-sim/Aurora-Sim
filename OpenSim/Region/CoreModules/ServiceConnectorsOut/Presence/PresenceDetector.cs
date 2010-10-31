@@ -53,6 +53,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Presence
         {
             scene.EventManager.OnMakeRootAgent += OnMakeRootAgent;
             scene.EventManager.OnNewClient += OnNewClient;
+            scene.EventManager.OnClosingClient += OnClosingClient;
 
             m_PresenceService.LogoutRegionAgents(scene.RegionInfo.RegionID);
 
@@ -64,6 +65,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Presence
         {
             scene.EventManager.OnMakeRootAgent -= OnMakeRootAgent;
             scene.EventManager.OnNewClient -= OnNewClient;
+            scene.EventManager.OnClosingClient -= OnClosingClient;
 
             m_PresenceService.LogoutRegionAgents(scene.RegionInfo.RegionID);
 
@@ -78,6 +80,11 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Presence
         public void OnNewClient(IClientAPI client)
         {
             client.OnConnectionClosed += OnConnectionClose;
+        }
+
+        private void OnClosingClient(IClientAPI client)
+        {
+            client.OnConnectionClosed -= OnConnectionClose;
         }
 
         public void OnConnectionClose(IClientAPI client)

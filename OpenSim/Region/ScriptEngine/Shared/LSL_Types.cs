@@ -262,12 +262,7 @@ namespace OpenSim.Region.ScriptEngine.Shared
             public static Vector3 Norm(Vector3 vector)
             {
                 double mag = Mag(vector);
-                if (mag > 0.0)
-                {
-                    double invMag = 1.0 / mag;
-                    return vector * invMag;
-                }
-                return new Vector3(0, 0, 0);
+                return new Vector3(vector.x / mag, vector.y / mag, vector.z / mag);
             }
 
             #endregion
@@ -1254,27 +1249,6 @@ namespace OpenSim.Region.ScriptEngine.Shared
             }
         }
 
-        //
-        // BELOW IS WORK IN PROGRESS... IT WILL CHANGE, SO DON'T USE YET! :)
-        //
-
-        public struct StringTest
-        {
-            // Our own little string
-            internal string actualString;
-            public static implicit operator bool(StringTest mString)
-            {
-                if (mString.actualString.Length == 0)
-                    return true;
-                return false;
-            }
-            public override string ToString()
-            {
-                return actualString;
-            }
-
-        }
-
         [Serializable]
         public struct key
         {
@@ -1412,6 +1386,10 @@ namespace OpenSim.Region.ScriptEngine.Shared
                 {
                     return false;
                 }
+                else if (s.m_string == OpenMetaverse.UUID.Zero.ToString())
+                {
+                    return false;
+                }
                 else
                 {
                     return true;
@@ -1454,6 +1432,38 @@ namespace OpenSim.Region.ScriptEngine.Shared
             {
                 return new LSLString(s1.m_string + s2.m_string);
             }
+            public static LSLString operator +(LSLString s1, LSLFloat s2)
+            {
+                return new LSLString(s1.m_string + s2.ToString());
+            }
+            public static LSLString operator +(LSLString s1, LSLInteger s2)
+            {
+                return new LSLString(s1.m_string + s2.ToString());
+            }
+            public static LSLString operator +(LSLString s1, LSL_Types.Quaternion s2)
+            {
+                return new LSLString(s1.m_string + s2.ToString());
+            }
+            public static LSLString operator +(LSLString s1, LSL_Types.Vector3 s2)
+            {
+                return new LSLString(s1.m_string + s2.ToString());
+            }
+            public static LSLString operator +(LSL_Types.Vector3 s1, LSLString s2)
+            {
+                return new LSLString(s1.ToString() + s2.m_string);
+            }
+            public static LSLString operator +(LSL_Types.Quaternion s1, LSLString s2)
+            {
+                return new LSLString(s1.ToString() + s2.m_string);
+            }
+            public static LSLString operator +(LSL_Types.LSLInteger s1, LSLString s2)
+            {
+                return new LSLString(s1.ToString() + s2.m_string);
+            }
+            public static LSLString operator +(LSL_Types.LSLFloat s1, LSLString s2)
+            {
+                return new LSLString(s1.ToString() + s2.m_string);
+            }
 
             public static explicit operator double(LSLString s)
             {
@@ -1465,14 +1475,14 @@ namespace OpenSim.Region.ScriptEngine.Shared
                 return new LSLInteger(s.m_string);
             }
 
-            public static explicit operator LSLString(double d)
-            {
-                return new LSLString(d);
-            }
-
             public static explicit operator LSLString(LSLFloat f)
             {
                 return new LSLString(f);
+            }
+
+            public static explicit operator LSLString(double d)
+            {
+                return new LSLString(d);
             }
 
             static public explicit operator LSLString(bool b)
@@ -1881,6 +1891,11 @@ namespace OpenSim.Region.ScriptEngine.Shared
             static public explicit operator uint(LSLFloat f)
             {
                 return (uint) Math.Abs(f.value);
+            }
+
+            static public explicit operator string(LSLFloat f)
+            {
+                return f.value.ToString();
             }
 
             static public implicit operator Boolean(LSLFloat f)

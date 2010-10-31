@@ -15,7 +15,7 @@ namespace Aurora.Services.DataService
     {
         private IGenericData GD = null;
 
-        public void Initialise(IGenericData GenericData, IConfigSource source, string defaultConnectionString)
+        public void Initialize(IGenericData GenericData, IConfigSource source, string defaultConnectionString)
         {
             if (source.Configs["AuroraConnectors"].GetString("RegionInfoConnector", "LocalConnector") == "LocalConnector")
             {
@@ -255,7 +255,8 @@ namespace Aurora.Services.DataService
             RWLDs = GenericUtils.GetGenerics<RegionLightShareData>(regionUUID, "RegionWindLightData", GD, RWLD);
             foreach (RegionLightShareData lsd in RWLDs)
             {
-                RetVal.Add(lsd.minEffectiveAltitude, lsd);
+                if(!RetVal.ContainsKey(lsd.minEffectiveAltitude))
+                    RetVal.Add(lsd.minEffectiveAltitude, lsd);
             }
             return RetVal;
         }

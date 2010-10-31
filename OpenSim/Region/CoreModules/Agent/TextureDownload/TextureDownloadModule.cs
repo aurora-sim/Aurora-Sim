@@ -38,11 +38,9 @@ using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using BlockingQueue = OpenSim.Framework.BlockingQueue<OpenSim.Region.Framework.Interfaces.ITextureSender>;
 using OpenSim.Services.Interfaces;
-using Mono.Addins;
 
 namespace OpenSim.Region.CoreModules.Agent.TextureDownload
 {
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class TextureDownloadModule : ISharedRegionModule
     {
         private static readonly ILog m_log
@@ -91,13 +89,20 @@ namespace OpenSim.Region.CoreModules.Agent.TextureDownload
                 m_scenes.Add(scene);
                 m_scene = scene;
                 m_scene.EventManager.OnNewClient += NewClient;
+                m_scene.EventManager.OnClosingClient += OnClosingClient;
                 m_scene.EventManager.OnRemovePresence += EventManager_OnRemovePresence;
             }
         }
 
         public void RemoveRegion(Scene scene)
         {
-
+            if (m_scenes.Contains(scene))
+            {
+                m_scenes.Remove(scene);
+                m_scene.EventManager.OnNewClient -= NewClient;
+                m_scene.EventManager.OnClosingClient -= OnClosingClient;
+                m_scene.EventManager.OnRemovePresence -= EventManager_OnRemovePresence;
+            }
         }
 
         public void RegionLoaded(Scene scene)
@@ -165,6 +170,11 @@ namespace OpenSim.Region.CoreModules.Agent.TextureDownload
             }
 
             client.OnRequestTexture += TextureRequest;
+        }
+
+        private void OnClosingClient(IClientAPI client)
+        {
+            client.OnRequestTexture -= TextureRequest;
         }
 
         /// I'm commenting this out, and replacing it with the implementation below, which

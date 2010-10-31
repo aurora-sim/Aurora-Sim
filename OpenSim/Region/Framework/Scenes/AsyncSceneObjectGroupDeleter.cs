@@ -33,7 +33,6 @@ using log4net;
 using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using Amib.Threading;
 
 namespace OpenSim.Region.Framework.Scenes
 {
@@ -63,24 +62,12 @@ namespace OpenSim.Region.Framework.Scenes
 
         private readonly Queue<DeleteToInventoryHolder> m_sendToInventoryQueue = new Queue<DeleteToInventoryHolder>();
         private readonly Queue<DeleteToInventoryHolder> m_removeFromSimQueue = new Queue<DeleteToInventoryHolder>();
-        private SmartThreadPool m_ThreadPool;
         private bool DeleteLoopInUse = false;
         private bool SendToInventoryLoopInUse = false;
         private Scene m_scene;
 
         public AsyncSceneObjectGroupDeleter(Scene scene)
         {
-            STPStartInfo startInfo = new STPStartInfo();
-            startInfo.IdleTimeout = 60 * 1000; // convert to seconds as stated in .ini
-            startInfo.MaxWorkerThreads = 2;
-            startInfo.MinWorkerThreads = 0;
-            startInfo.ThreadPriority = System.Threading.ThreadPriority.BelowNormal;
-            startInfo.StackSize = 262144;
-            startInfo.StartSuspended = true;
-
-            m_ThreadPool = new SmartThreadPool(startInfo);
-
-            m_ThreadPool.Start();
             m_scene = scene;
         }
 
@@ -118,48 +105,42 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 DeleteLoopInUse = true;
                 //m_log.Debug("[SCENE]: Starting delete loop");
-                m_ThreadPool.QueueWorkItem(this.DoDeleteObject,
-                                            new Object[] { 0 });
+                Util.FireAndForget(DoDeleteObject, new Object[] { 0 });
             }
             if (!SendToInventoryLoopInUse)
             {
                 SendToInventoryLoopInUse = true;
                 //m_log.Debug("[SCENE]: Starting send to inventory loop");
-                m_ThreadPool.QueueWorkItem(this.DoSendToInventory,
-                                            new Object[] { 0 });
+                Util.FireAndForget(DoSendToInventory, new Object[] { 0 });
             }
         }
 
-        public object DoDeleteObject(object o)
+        public void DoDeleteObject(object o)
         {
             if (DeleteObject())
             {
                 //Requeue us if there is some left
-                m_ThreadPool.QueueWorkItem(this.DoDeleteObject,
-                                              new Object[] { 0 });
+                Util.FireAndForget(DoDeleteObject, new Object[] { 0 });
             }
             else
             {
                 DeleteLoopInUse = false;
                 //m_log.Debug("[SCENE]: Ending delete loop");
             }
-            return 0;
         }
 
-        public object DoSendToInventory(object o)
+        public void DoSendToInventory(object o)
         {
             if (InventoryDeQueueAndDelete())
             {
                 //Requeue us if there is some left
-                m_ThreadPool.QueueWorkItem(this.DoSendToInventory,
-                                              new Object[] { 0 });
+                Util.FireAndForget(DoSendToInventory, new Object[] { 0 });
             }
             else
             {
                 SendToInventoryLoopInUse = false;
                 //m_log.Debug("[SCENE]: Ending send to inventory loop");
             }
-            return 0;
         }
 
         public bool DeleteObject()
@@ -242,7 +223,8 @@ namespace OpenSim.Region.Framework.Scenes
                         }
                         catch (Exception e)
                         {
-                            m_log.DebugFormat("Exception background sending object: " + e);
+                            m_log.ErrorFormat(
+                                "[ASYNC DELETER]: Exception background sending object: {0}{1}", e.Message, e.StackTrace);
                         }
                     }
 

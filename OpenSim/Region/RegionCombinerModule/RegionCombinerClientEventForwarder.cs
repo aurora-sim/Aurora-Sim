@@ -69,6 +69,7 @@ public class RegionCombinerClientEventForwarder
                 m_forwarders.Add(virtualScene.RegionInfo.RegionID, forwarder);
 
                 virtualScene.EventManager.OnNewClient += forwarder.ClientConnect;
+                virtualScene.EventManager.OnClosingClient += forwarder.ClosingClient;
                 virtualScene.EventManager.OnClientClosed += forwarder.ClientClosed;
             }
         }
@@ -79,6 +80,7 @@ public class RegionCombinerClientEventForwarder
             {
                 RegionCombinerIndividualEventForwarder forwarder = m_forwarders[virtualScene.RegionInfo.RegionID];
                 virtualScene.EventManager.OnNewClient -= forwarder.ClientConnect;
+                virtualScene.EventManager.OnClosingClient -= forwarder.ClosingClient;
                 virtualScene.EventManager.OnClientClosed -= forwarder.ClientClosed;
                 m_forwarders.Remove(virtualScene.RegionInfo.RegionID);
             }

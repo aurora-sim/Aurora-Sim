@@ -37,7 +37,7 @@ using OpenSim.Region.CoreModules.World.Wind;
 
 namespace OpenSim.Region.CoreModules.World.Wind.Plugins
 {
-    class ConfigurableWind : Mono.Addins.TypeExtensionNode, IWindModelPlugin
+    public class ConfigurableWind : IWindModelPlugin
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 

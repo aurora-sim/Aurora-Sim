@@ -57,6 +57,7 @@ namespace Aurora.Modules
                 m_scenes.Add(scene);
 
             scene.EventManager.OnNewClient += OnNewClient;
+            scene.EventManager.OnClosingClient += OnClosingClient;
         }
 
         public void RemoveRegion(Scene scene)
@@ -68,6 +69,7 @@ namespace Aurora.Modules
                 m_scenes.Remove(scene);
 
             scene.EventManager.OnNewClient -= OnNewClient;
+            scene.EventManager.OnClosingClient -= OnClosingClient;
         }
 
         public void RegionLoaded(Scene scene)
@@ -103,6 +105,13 @@ namespace Aurora.Modules
             client.OnSaveState += GodSaveState;
         }
 
+        private void OnClosingClient(IClientAPI client)
+        {
+            client.OnGodUpdateRegionInfoUpdate -= GodUpdateRegionInfoUpdate;
+            client.OnGodlikeMessage -= onGodlikeMessage;
+            client.OnSaveState -= GodSaveState;
+        }
+
         void onGodlikeMessage(IClientAPI client, UUID requester, string Method, List<string> Parameter)
         {
             if (Method == "refreshmapvisibility")
@@ -111,7 +120,9 @@ namespace Aurora.Modules
                 if (Sp.GodLevel >= 0)
                 {
                     //Rebuild the map tile
-                    Sp.Scene.CreateTerrainTexture();
+                    IWorldMapModule mapModule;
+                    mapModule = Sp.Scene.RequestModuleInterface<IWorldMapModule>();
+                    mapModule.CreateTerrainTexture();
                 }
             }
         }
@@ -329,8 +340,7 @@ namespace Aurora.Modules
             args.useEstateSun = m_scene.RegionInfo.RegionSettings.UseEstateSun;
             args.waterHeight = (float)m_scene.RegionInfo.RegionSettings.WaterHeight;
             args.simName = m_scene.RegionInfo.RegionName;
-            args.RegionType = m_scene.RegionInfo.RegionType;
-            args.MaxAgents = (uint)m_scene.RegionInfo.RegionSettings.AgentLimit;
+            args.regionType = m_scene.RegionInfo.RegionType;
 
             remote_client.SendRegionInfoToEstateMenu(args);
         }

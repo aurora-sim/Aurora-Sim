@@ -33,7 +33,6 @@ using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
-using Mono.Addins;
 
 // using log4net;
 // using System.Reflection;
@@ -86,7 +85,6 @@ using Mono.Addins;
 
 namespace OpenSim.Region.CoreModules.Scripting.WorldComm
 {
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class WorldCommModule : INonSharedRegionModule, IWorldComm
     {
         // private static readonly ILog m_log =
@@ -518,7 +516,7 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
             }
         }
 
-        public void Activate(UUID itemID, int handle)
+            public void Activate(UUID itemID, int handle)
         {
             lock (m_listeners)
             {
@@ -639,7 +637,7 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
                     }
                 }
             }
-            return (Object[])data.ToArray();
+            return data.ToArray();
         }
 
         public void AddFromData(UUID itemID, UUID hostID,

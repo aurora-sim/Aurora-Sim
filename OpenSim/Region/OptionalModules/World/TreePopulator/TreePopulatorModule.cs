@@ -40,14 +40,12 @@ using OpenSim.Region.Framework.Scenes;
 using System.Xml;
 using System.Xml.Serialization;
 using System.IO;
-using Mono.Addins;
 
 namespace OpenSim.Region.OptionalModules.World.TreePopulator
 {
     /// <summary>
     /// Version 2.02 - Still hacky 
     /// </summary>
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class TreePopulatorModule : INonSharedRegionModule, ICommandableModule, IVegetationModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -406,7 +404,7 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
                         m_scene.ForEachClient(delegate(IClientAPI controller)
                         {
                             controller.SendKillObject(m_scene.RegionInfo.RegionHandle,
-                                                      new uint[]{selectedTree.LocalId});
+                                                      new ISceneEntity[] { selectedTree });
                         });
                     }
                     else
@@ -777,7 +775,7 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
                                 m_scene.ForEachClient(delegate(IClientAPI controller)
                                                           {
                                                               controller.SendKillObject(m_scene.RegionInfo.RegionHandle,
-                                                                                        new uint[]{selectedTree.LocalId});
+                                                                                        new ISceneEntity[] { selectedTree });
                                                           });
 
                                 break;

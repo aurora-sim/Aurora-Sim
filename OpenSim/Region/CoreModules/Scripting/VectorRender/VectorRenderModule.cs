@@ -38,13 +38,11 @@ using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using log4net;
 using System.Reflection;
-using Mono.Addins;
 
 //using Cairo;
 
 namespace OpenSim.Region.CoreModules.Scripting.VectorRender
 {
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class VectorRenderModule : ISharedRegionModule, IDynamicTextureRender
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);

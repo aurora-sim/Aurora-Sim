@@ -49,7 +49,7 @@ using WarpRenderer = global::Warp3D.Warp3D;
 
 namespace OpenSim.Region.CoreModules.World.Warp3DMap
 {
-    public class Warp3DImageModule : IMapImageGenerator, INonSharedRegionModule
+    /*public class Warp3DImageModule : IMapImageGenerator, INonSharedRegionModule
     {
         private static readonly UUID TEXTURE_METADATA_MAGIC = new UUID("802dc0e0-f080-4931-8b57-d1be8611c4f3");
         private static readonly Color4 WATER_COLOR = new Color4(29, 71, 95, 216);
@@ -362,7 +362,7 @@ namespace OpenSim.Region.CoreModules.World.Warp3DMap
 
             if (prim.ParentID != 0)
             {
-                SceneObjectGroup group = m_scene.SceneGraph.GetGroupByPrim(prim.LocalId);
+                SceneObjectGroup group = m_scene.GetGroupByPrim(prim.LocalId);
                 if (group != null)
                     m.transform(warp_Matrix.quaternionMatrix(ConvertQuaternion(group.RootPart.RotationOffset)));
             }
@@ -610,7 +610,19 @@ namespace OpenSim.Region.CoreModules.World.Warp3DMap
         }
 
         #endregion Static Helpers
-    }
+
+        public void CreateMapTile(out Bitmap terrainBMP, out Bitmap mapBMP)
+        {
+            terrainBMP = null;
+            mapBMP = null;
+        }
+
+        public void CreateMapTile(out byte[] terrain, out byte[] map)
+        {
+            terrain = null;
+            map = null;
+        }
+    }*/
 
     public static class ImageUtils
     {

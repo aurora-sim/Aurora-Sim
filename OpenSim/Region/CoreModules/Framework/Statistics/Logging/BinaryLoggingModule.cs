@@ -30,7 +30,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using log4net;
-using Mono.Addins;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
@@ -41,7 +40,6 @@ using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.CoreModules.Avatar.Attachments
 {
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule", Id = "BinaryLoggingModule")]
     public class BinaryLoggingModule : INonSharedRegionModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -57,22 +55,25 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             try
             {
                 IConfig statConfig = source.Configs["Statistics.Binary"];
-                if (statConfig.Contains("enabled") && statConfig.GetBoolean("enabled"))
+                if (statConfig != null)
                 {
-                    if (statConfig.Contains("collect_region_stats"))
+                    if (statConfig.Contains("enabled") && statConfig.GetBoolean("enabled"))
                     {
-                        if (statConfig.GetBoolean("collect_region_stats"))
+                        if (statConfig.Contains("collect_region_stats"))
                         {
-                            m_collectStats = true;
+                            if (statConfig.GetBoolean("collect_region_stats"))
+                            {
+                                m_collectStats = true;
+                            }
                         }
-                    }
-                    if (statConfig.Contains("region_stats_period_seconds"))
-                    {
-                        m_statLogPeriod = TimeSpan.FromSeconds(statConfig.GetInt("region_stats_period_seconds"));
-                    }
-                    if (statConfig.Contains("stats_dir"))
-                    {
-                        m_statsDir = statConfig.GetString("stats_dir");
+                        if (statConfig.Contains("region_stats_period_seconds"))
+                        {
+                            m_statLogPeriod = TimeSpan.FromSeconds(statConfig.GetInt("region_stats_period_seconds"));
+                        }
+                        if (statConfig.Contains("stats_dir"))
+                        {
+                            m_statsDir = statConfig.GetString("stats_dir");
+                        }
                     }
                 }
             }

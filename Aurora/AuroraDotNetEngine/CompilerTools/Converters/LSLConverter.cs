@@ -11,14 +11,12 @@ using Microsoft.VisualBasic;
 using log4net;
 using OpenSim.Region.Framework.Interfaces;
 using OpenMetaverse;
-using Mono.Addins;
 using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Plugins;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 {
-    [Extension(Path = "/OpenSim/ScriptConverter", NodeName = "ScriptConverter")]
     public class LSLConverter : IScriptConverter
     {
         private CSharpCodeProvider CScodeProvider = new CSharpCodeProvider();

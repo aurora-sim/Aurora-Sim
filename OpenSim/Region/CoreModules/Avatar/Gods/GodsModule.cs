@@ -32,11 +32,9 @@ using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Region.Framework.Interfaces;
-using Mono.Addins;
 
 namespace OpenSim.Region.CoreModules.Avatar.Gods
 {
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class GodsModule : INonSharedRegionModule, IGodsModule
     {
         /// <summary>Special UUID for actions that apply to all agents</summary>
@@ -53,11 +51,15 @@ namespace OpenSim.Region.CoreModules.Avatar.Gods
         {
             m_scene = scene;
             m_scene.RegisterModuleInterface<IGodsModule>(this);
+            m_scene.EventManager.OnNewClient += SubscribeToClientEvents;
+            m_scene.EventManager.OnClosingClient += UnsubscribeFromClientEvents;
         }
 
         public void RemoveRegion(Scene scene)
         {
-
+            m_scene.UnregisterModuleInterface<IGodsModule>(this);
+            m_scene.EventManager.OnNewClient -= SubscribeToClientEvents;
+            m_scene.EventManager.OnClosingClient -= UnsubscribeFromClientEvents;
         }
 
         public void RegionLoaded(Scene scene)
@@ -76,6 +78,18 @@ namespace OpenSim.Region.CoreModules.Avatar.Gods
         public void Close() {}
         public string Name { get { return "Gods Module"; } }
         public bool IsSharedModule { get { return false; } }
+        
+        public void SubscribeToClientEvents(IClientAPI client)
+        {
+            client.OnGodKickUser += KickUser;
+            client.OnRequestGodlikePowers += RequestGodlikePowers;
+        }
+        
+        public void UnsubscribeFromClientEvents(IClientAPI client)
+        {
+            client.OnGodKickUser -= KickUser;
+            client.OnRequestGodlikePowers -= RequestGodlikePowers;
+        }
         
         public void RequestGodlikePowers(
             UUID agentID, UUID sessionID, UUID token, bool godLike, IClientAPI controllingClient)

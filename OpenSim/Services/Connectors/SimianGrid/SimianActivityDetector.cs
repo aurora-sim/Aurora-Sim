@@ -44,7 +44,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
         public SimianActivityDetector(IGridUserService guService)
         {
             m_GridUserService = guService;
-            m_log.DebugFormat("[SIMIAN ACTIVITY DETECTOR]: Started");
+            //m_log.DebugFormat("[SIMIAN ACTIVITY DETECTOR]: Started");
         }
 
         public void AddRegion(Scene scene)
@@ -79,6 +79,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
 
         public void OnConnectionClose(IClientAPI client)
         {
+            client.OnConnectionClosed -= OnConnectionClose;
             if (client.IsLoggingOut)
             {
                 object sp = null;

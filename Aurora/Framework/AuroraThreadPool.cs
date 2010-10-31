@@ -14,7 +14,7 @@ namespace Aurora.Framework
     {
         public ThreadPriority priority;
         public int Threads = 0;
-        public int InitialSleepTime = 10;
+        public int InitialSleepTime = 5;
         public int MaxSleepTime = 300;
     }
 
@@ -89,7 +89,7 @@ namespace Aurora.Framework
                     }
                     else
                         OurSleepTime = m_info.InitialSleepTime; //Reset sleep timer then
-
+                    
                     //Check to see if we need more help as we could be dumped with tons of requests and only one thread
                     if (ThreadCheckTime == 0)
                     {

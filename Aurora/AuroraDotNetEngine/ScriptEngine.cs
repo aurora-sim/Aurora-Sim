@@ -1,4 +1,4 @@
-/*
+ /*
  * Copyright (c) Contributors, http://opensimulator.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
@@ -191,7 +191,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 scene.AddCommand(this, "ADNE", "ADNE", "Subcommands for Aurora DotNet Engine", AuroraDotNetConsoleCommands);
 
-                //Fire this once to make sure that the APIs are found later... bad Mono.Addins...
+                //Fire this once to make sure that the APIs are found later...
                 GetAPIs();
 
                 // Create all objects we'll be using
@@ -241,6 +241,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 FindDefaultLSLScript();
             }
 
+            scene.EventManager.OnStartupComplete += new OpenSim.Region.Framework.Scenes.EventManager.StartupComplete(EventManager_OnStartupComplete);
+            scene.EventManager.TriggerAddToStartupQueue("ScriptEngine");
             EventManager.HookUpRegionEvents(scene);
 
             scene.EventManager.OnRemoveScript += StopScript;
@@ -257,6 +259,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public void RemoveRegion(Scene scene)
         {
+            if (!m_enabled)
+                return;
+
             scene.EventManager.OnRemoveScript -= StopScript;
             scene.EventManager.OnScriptReset -= OnScriptReset;
             scene.EventManager.OnGetScriptRunning -= OnGetScriptRunning;
@@ -283,6 +288,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public void Close()
         {
+        }
+
+        private int AmountOfStartupsLeft = 0;
+
+        void EventManager_OnStartupComplete(List<string> data)
+        {
+            AmountOfStartupsLeft++;
+            if (AmountOfStartupsLeft == Util.NumberofScenes)
+            {
+                //All done!
+                MaintenanceThread.Started = true;
+            }
         }
 
         #endregion
@@ -917,8 +934,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public IScriptApi[] GetAPIs()
         {
-            return AuroraModuleLoader.LoadPlugins<IScriptApi>
-                ("/OpenSim/ScriptAPI", new PluginInitialiserBase()).ToArray();
+            return AuroraModuleLoader.PickupModules<IScriptApi>().ToArray();
         }
 
         public List<string> GetAllFunctionNames()
@@ -1002,8 +1018,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <param name="scene"></param>
         private void StartNonSharedScriptPlugins(Scene scene)
         {
-            INonSharedScriptPlugin[] nonSharedPlugins = AuroraModuleLoader.LoadPlugins<INonSharedScriptPlugin>("/OpenSim/NonSharedScriptPlugins", new NonSharedScriptPluginInitialiser(this, scene)).ToArray();
-            ScriptPlugins.AddRange(nonSharedPlugins);
+            List<INonSharedScriptPlugin> nonSharedPlugins = AuroraModuleLoader.PickupModules<INonSharedScriptPlugin>();
+            foreach (INonSharedScriptPlugin plugin in nonSharedPlugins)
+            {
+                plugin.Initialize(this, scene);
+            }
+            ScriptPlugins.AddRange(nonSharedPlugins.ToArray());
         }
 
         /// <summary>
@@ -1011,8 +1031,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// </summary>
         public void StartSharedScriptPlugins()
         {
-            ISharedScriptPlugin[] sharedPlugins = AuroraModuleLoader.LoadPlugins<ISharedScriptPlugin>("/OpenSim/SharedScriptPlugins", new SharedScriptPluginInitialiser(this)).ToArray();
-            ScriptPlugins.AddRange(sharedPlugins);
+            List<ISharedScriptPlugin> sharedPlugins = AuroraModuleLoader.PickupModules<ISharedScriptPlugin>();
+            foreach (ISharedScriptPlugin plugin in sharedPlugins)
+            {
+                plugin.Initialize(this);
+            }
+            ScriptPlugins.AddRange(sharedPlugins.ToArray());
         }
 
         public void DoOneScriptPluginPass()

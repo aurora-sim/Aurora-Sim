@@ -93,6 +93,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         protected IUrlModule m_UrlModule = null;
 		internal ScriptProtectionModule ScriptProtection;
         protected IWorldComm m_comms = null;
+
+        // MUST be a ref type
+        public class UserInfoCacheEntry
+        {
+            public int time;
+            public UserAccount account;
+            public PresenceInfo pinfo;
+        }
+        protected Dictionary<UUID, UserInfoCacheEntry> m_userInfoCache =
+                new Dictionary<UUID, UserInfoCacheEntry>();
         
         public void Initialize(ScriptEngine ScriptEngine, SceneObjectPart host, uint localID, UUID itemID, ScriptProtectionModule module)
         {
@@ -186,7 +196,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llResetScript()
         {
         	ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
             m_ScriptEngine.ResetScript(m_host.UUID, m_itemID, true);
         }
 
@@ -572,13 +581,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Vector llVecNorm(LSL_Vector v)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
-            double mag = LSL_Vector.Mag(v);
-            LSL_Vector nor = new LSL_Vector();
-            nor.x = v.x / mag;
-            nor.y = v.y / mag;
-            nor.z = v.z / mag;
-            return nor;
+            return LSL_Vector.Norm(v);
         }
 
         public LSL_Float llVecDist(LSL_Vector a, LSL_Vector b)
@@ -593,27 +596,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         //Now we start getting into quaternions which means sin/cos, matrices and vectors. ckrinke
 
-        // Utility function for llRot2Euler
-
-        // normalize an angle between -PI and PI (-180 to +180 degrees)
-        protected double NormalizeAngle(double angle)
-        {
-            if (angle > -Math.PI && angle < Math.PI)
-                return angle;
-
-            int numPis = (int)(Math.PI / angle);
-            double remainder = angle - Math.PI * numPis;
-            if (numPis % 2 == 1)
-                return Math.PI - angle;
-            return remainder;
-        }
-
-        // Old implementation of llRot2Euler, now normalized
+        // Old implementation of llRot2Euler. Normalization not required as Atan2 function will
+        // only return values >= -PI (-180 degrees) and <= PI (180 degrees).
 
         public LSL_Vector llRot2Euler(LSL_Rotation r)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
             //This implementation is from http://lslwiki.net/lslwiki/wakka.php?wakka=LibraryRotationFunctions. ckrinke
             LSL_Rotation t = new LSL_Rotation(r.x * r.x, r.y * r.y, r.z * r.z, r.s * r.s);
             double m = (t.x + t.y + t.z + t.s);
@@ -621,13 +608,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             double n = 2 * (r.y * r.s + r.x * r.z);
             double p = m * m - n * n;
             if (p > 0)
-                return new LSL_Vector(NormalizeAngle(Math.Atan2(2.0 * (r.x * r.s - r.y * r.z), (-t.x - t.y + t.z + t.s))),
-                                             NormalizeAngle(Math.Atan2(n, Math.Sqrt(p))),
-                                             NormalizeAngle(Math.Atan2(2.0 * (r.z * r.s - r.x * r.y), (t.x - t.y - t.z + t.s))));
+                return new LSL_Vector(Math.Atan2(2.0 * (r.x * r.s - r.y * r.z), (-t.x - t.y + t.z + t.s)),
+                                             Math.Atan2(n, Math.Sqrt(p)),
+                                             Math.Atan2(2.0 * (r.z * r.s - r.x * r.y), (t.x - t.y - t.z + t.s)));
             else if (n > 0)
-                return new LSL_Vector(0.0, Math.PI * 0.5, NormalizeAngle(Math.Atan2((r.z * r.s + r.x * r.y), 0.5 - t.x - t.z)));
+                return new LSL_Vector(0.0, Math.PI * 0.5, Math.Atan2((r.z * r.s + r.x * r.y), 0.5 - t.x - t.z));
             else
-                return new LSL_Vector(0.0, -Math.PI * 0.5, NormalizeAngle(Math.Atan2((r.z * r.s + r.x * r.y), 0.5 - t.x - t.z)));
+                return new LSL_Vector(0.0, -Math.PI * 0.5, Math.Atan2((r.z * r.s + r.x * r.y), 0.5 - t.x - t.z));
         }
 
         /* From wiki:
@@ -1522,29 +1509,37 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             IOpenRegionSettingsModule WSModule = m_host.ParentGroup.Scene.RequestModuleInterface<IOpenRegionSettingsModule>();
             if (WSModule != null)
             {
-                if (scale.x < WSModule.MinimumPrimScale)
-                    scale.x = WSModule.MinimumPrimScale;
-                if (scale.y < WSModule.MinimumPrimScale)
-                    scale.y = WSModule.MinimumPrimScale;
-                if (scale.z < WSModule.MinimumPrimScale)
-                    scale.z = WSModule.MinimumPrimScale;
-
-                if (part.ParentGroup.RootPart.PhysActor != null && part.ParentGroup.RootPart.PhysActor.IsPhysical)
+                if (WSModule.MaximumPhysPrimScale == -1 ||
+                    WSModule.MinimumPrimScale == -1 ||
+                    WSModule.MaximumPrimScale == -1)
                 {
-                    if (scale.x > WSModule.MaximumPhysPrimScale)
-                        scale.x = WSModule.MaximumPhysPrimScale;
-                    if (scale.y > WSModule.MaximumPhysPrimScale)
-                        scale.y = WSModule.MaximumPhysPrimScale;
-                    if (scale.z > WSModule.MaximumPhysPrimScale)
-                        scale.z = WSModule.MaximumPhysPrimScale;
                 }
+                else
+                {
+                    if (scale.x < WSModule.MinimumPrimScale)
+                        scale.x = WSModule.MinimumPrimScale;
+                    if (scale.y < WSModule.MinimumPrimScale)
+                        scale.y = WSModule.MinimumPrimScale;
+                    if (scale.z < WSModule.MinimumPrimScale)
+                        scale.z = WSModule.MinimumPrimScale;
 
-                if (scale.x > WSModule.MaximumPrimScale)
-                    scale.x = WSModule.MaximumPrimScale;
-                if (scale.y > WSModule.MaximumPrimScale)
-                    scale.y = WSModule.MaximumPrimScale;
-                if (scale.z > WSModule.MaximumPrimScale)
-                    scale.z = WSModule.MaximumPrimScale;
+                    if (part.ParentGroup.RootPart.PhysActor != null && part.ParentGroup.RootPart.PhysActor.IsPhysical)
+                    {
+                        if (scale.x > WSModule.MaximumPhysPrimScale)
+                            scale.x = WSModule.MaximumPhysPrimScale;
+                        if (scale.y > WSModule.MaximumPhysPrimScale)
+                            scale.y = WSModule.MaximumPhysPrimScale;
+                        if (scale.z > WSModule.MaximumPhysPrimScale)
+                            scale.z = WSModule.MaximumPhysPrimScale;
+                    }
+
+                    if (scale.x > WSModule.MaximumPrimScale)
+                        scale.x = WSModule.MaximumPrimScale;
+                    if (scale.y > WSModule.MaximumPrimScale)
+                        scale.y = WSModule.MaximumPrimScale;
+                    if (scale.z > WSModule.MaximumPrimScale)
+                        scale.z = WSModule.MaximumPrimScale;
+                }
             }
 
             Vector3 tmp = part.Scale;
@@ -1552,7 +1547,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             tmp.Y = (float)scale.y;
             tmp.Z = (float)scale.z;
             part.Scale = tmp;
-            part.ScheduleFullUpdate(PrimUpdateFlags.Shape);
+            part.ScheduleFullUpdate(PrimUpdateFlags.FindBest);
             part.ParentGroup.HasGroupChanged = true;
         }
 
@@ -1569,8 +1564,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             
             m_host.ClickAction = (byte)action;
             if (m_host.ParentGroup != null) m_host.ParentGroup.HasGroupChanged = true;
-            m_host.ScheduleFullUpdate(PrimUpdateFlags.ClickAction);
-            return;
+            m_host.ScheduleFullUpdate(PrimUpdateFlags.FindBest);
         }
 
         public void llSetColor(LSL_Vector color, int face)
@@ -1825,7 +1819,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
 
             part.ParentGroup.HasGroupChanged = true;
-            part.ScheduleFullUpdate(PrimUpdateFlags.Shape);
+            part.ScheduleFullUpdate(PrimUpdateFlags.FindBest);
         }
 
         /// <summary>
@@ -1860,7 +1854,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
 
             part.ParentGroup.HasGroupChanged = true;
-            part.ScheduleFullUpdate(PrimUpdateFlags.Shape);
+            part.ScheduleFullUpdate(PrimUpdateFlags.FindBest);
         }
 
         public LSL_Vector llGetColor(int face)
@@ -2128,14 +2122,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         protected void SetPos(SceneObjectPart part, LSL_Vector targetPos)
         {
             // Capped movemment if distance > 10m (http://wiki.secondlife.com/wiki/LlSetPos)
-            LSL_Vector currentPos = llGetLocalPos();
+            LSL_Vector currentPos = GetPartLocalPos(part);
 
             float ground = World.GetGroundHeight((float)targetPos.x, (float)targetPos.y);
             bool disable_underground_movement = m_ScriptEngine.Config.GetBoolean("DisableUndergroundMovement", true);
 
             if (part.ParentGroup == null)
             {
-                if ((targetPos.z < ground) && disable_underground_movement)
+                if ((targetPos.z < ground) && disable_underground_movement && m_host.AttachmentPoint == 0)
                     targetPos.z = ground;
                     LSL_Vector real_vec = SetPosAdjust(currentPos, targetPos);
                     part.UpdateOffSet(new Vector3((float)real_vec.x, (float)real_vec.y, (float)real_vec.z));
@@ -2153,13 +2147,35 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
             else
             {
-                //it's late... i think this is right ?
-                if (llVecDist(new LSL_Vector(0, 0, 0), targetPos) <= m_ScriptDistanceFactor * 10.0f)
+                LSL_Vector rel_vec = SetPosAdjust(currentPos, targetPos);
+                part.OffsetPosition = new Vector3((float)rel_vec.x, (float)rel_vec.y, (float)rel_vec.z);
+                SceneObjectGroup parent = part.ParentGroup;
+                parent.HasGroupChanged = true;
+                parent.ScheduleGroupForTerseUpdate();
+            }
+        }
+
+        protected LSL_Vector GetPartLocalPos(SceneObjectPart part)
+        {
+            if (part.ParentID == 0)
+            {
+                return new LSL_Vector(part.AbsolutePosition.X,
+                                      part.AbsolutePosition.Y,
+                                      part.AbsolutePosition.Z);
+            }
+            else
+            {
+                if (m_host.IsRoot)
                 {
-                    part.OffsetPosition = new Vector3((float)targetPos.x, (float)targetPos.y, (float)targetPos.z);
-                    SceneObjectGroup parent = part.ParentGroup;
-                    parent.HasGroupChanged = true;
-                    parent.ScheduleGroupForTerseUpdate();
+                    return new LSL_Vector(m_host.AttachedPos.X,
+                                          m_host.AttachedPos.Y,
+                                          m_host.AttachedPos.Z);
+                }
+                else
+                {
+                    return new LSL_Vector(part.OffsetPosition.X,
+                                          part.OffsetPosition.Y,
+                                          part.OffsetPosition.Z);
                 }
             }
         }
@@ -2520,7 +2536,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             m_host.SoundFlags = (int)SoundFlags.Loop;      // looping
             m_host.SoundRadius = 20;    // Magic number, 20 seems reasonable. Make configurable?
 
-            m_host.ScheduleFullUpdate(PrimUpdateFlags.Sound);
+            m_host.ScheduleFullUpdate(PrimUpdateFlags.FindBest);
         }
 
         public void llLoopSoundMaster(string sound, double volume)
@@ -2540,8 +2556,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     prim.SoundFlags = 1;      // looping
                     prim.SoundRadius = 20;    // Magic number, 20 seems reasonable. Make configurable?
 
-                    prim.ScheduleFullUpdate(PrimUpdateFlags.Sound);
-                    //prim.SendFullUpdateToAllClients();
+                    prim.ScheduleFullUpdate(PrimUpdateFlags.FindBest);
                 }
             }
             if (m_host.Sound != UUID.Zero)
@@ -2552,8 +2567,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             m_host.SoundFlags = 1;      // looping
             m_host.SoundRadius = 20;    // Magic number, 20 seems reasonable. Make configurable?
 
-            m_host.ScheduleFullUpdate(PrimUpdateFlags.Sound);
-            //m_host.SendFullUpdateToAllClients();
+            m_host.ScheduleFullUpdate(PrimUpdateFlags.FindBest);
         }
 
         public void llLoopSoundSlave(string sound, double volume)
@@ -2598,8 +2612,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         part.SoundGain = 0;
                         part.SoundFlags = 0;
                         part.SoundRadius = 0;
-                        part.ScheduleFullUpdate(PrimUpdateFlags.Sound);
-                        //part.SendFullUpdateToAllClients();
+                        part.ScheduleFullUpdate(PrimUpdateFlags.FindBest);
                     }
                     m_host.ParentGroup.LoopSoundMasterPrim = null;
                     m_host.ParentGroup.LoopSoundSlavePrims.Clear();
@@ -2610,7 +2623,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     m_host.SoundGain = 0;
                     m_host.SoundFlags = 0;
                     m_host.SoundRadius = 0;
-                    m_host.ScheduleFullUpdate(PrimUpdateFlags.Sound);
+                    m_host.ScheduleFullUpdate(PrimUpdateFlags.FindBest);
                 }
             }
             else
@@ -2619,7 +2632,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 m_host.SoundGain = 0;
                 m_host.SoundFlags = 0;
                 m_host.SoundRadius = 0;
-                m_host.ScheduleFullUpdate(PrimUpdateFlags.Sound);
+                m_host.ScheduleFullUpdate(PrimUpdateFlags.FindBest);
             }
         }
 
@@ -3543,8 +3556,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 IAttachmentsModule attachmentsModule = World.AttachmentsModule;
                 if (attachmentsModule != null)
                     attachmentsModule.AttachObject(
-                        presence.ControllingClient, grp.LocalId, 
-                        (uint)attachment, Quaternion.Identity, Vector3.Zero, false);
+                        presence.ControllingClient, grp,
+                        attachment, false);
             }
         }
 
@@ -3578,7 +3591,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                 IAttachmentsModule attachmentsModule = World.AttachmentsModule;
                 if (attachmentsModule != null)
-                    attachmentsModule.ShowDetachInUserInventory(itemID, grp, presence.ControllingClient);
+                    attachmentsModule.ShowDetachInUserInventory(itemID, presence.ControllingClient);
             }
         }
 
@@ -3801,7 +3814,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     // Do NOT try to parse UUID, animations cannot be triggered by ID
                     UUID animID = InventoryKey(anim, (int)AssetType.Animation);
                     if (animID == UUID.Zero)
-                        presence.Animator.AddAnimation(anim, m_host.UUID);
+                    {
+                        if(UUID.TryParse(anim, out animID))
+                            presence.Animator.AddAnimation(animID, m_host.UUID);
+                        else
+                            presence.Animator.AddAnimation(anim, m_host.UUID);
+                    }
                     else
                         presence.Animator.AddAnimation(animID, m_host.UUID);
                 }
@@ -3896,7 +3914,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     AssetBase asset = World.AssetService.Get(inventory);
                     SceneObjectGroup group
-                                        = OpenSim.Region.Framework.Scenes.Serialization.SceneObjectSerializer.FromOriginalXmlFormat(UUID.Zero, Utils.BytesToString(asset.Data));
+                                        = OpenSim.Region.Framework.Scenes.Serialization.SceneObjectSerializer.FromOriginalXmlFormat(UUID.Zero, Utils.BytesToString(asset.Data), World);
                     group.ResetIDs();
 
                     group.OwnerID = m_host.OwnerID;
@@ -4159,6 +4177,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
             UUID invItemID = InventorySelf();
+            UUID targetID;
+
+            if (!UUID.TryParse(target, out targetID))
+                return DateTime.Now;
 
             TaskInventoryItem item;
             lock (m_host.TaskInventory)
@@ -4178,7 +4200,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (sp != null)
                 client = sp.ControllingClient;
 
-            SceneObjectPart targetPart = World.GetSceneObjectPart((UUID)target);
+            SceneObjectPart targetPart = World.GetSceneObjectPart(targetID);
 
             if (targetPart.ParentGroup.RootPart.AttachmentPoint != 0)
                 return DateTime.Now; ; // Fail silently if attached
@@ -4529,18 +4551,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if ((info != null && info.Online) || World.GetScenePresence(destId) != null)
             {
                 // destination is an avatar
-                InventoryItemBase agentItem =
-                        World.MoveTaskInventoryItem(destId, UUID.Zero, m_host, objId);
+                InventoryItemBase agentItem = World.MoveTaskInventoryItem(destId, UUID.Zero, m_host, objId);
 
                 if (agentItem == null)
                     return DateTime.Now;
 
                 byte[] bucket = new byte[17];
                 bucket[0] = (byte)assetType;
-                byte[] objBytes = objId.GetBytes();
+                byte[] objBytes = agentItem.ID.GetBytes();
                 Array.Copy(objBytes, 0, bucket, 1, 16);
 
-                Console.WriteLine("Giving inventory to " + destId + " from " + m_host.Name);
+                OpenSim.Framework.Console.MainConsole.Instance.Output("Giving inventory to " + destId + " from " + m_host.Name, "None");
                 GridInstantMessage msg = new GridInstantMessage(World,
                         m_host.UUID, m_host.Name+", an object owned by "+
                         resolveName(m_host.OwnerID)+",", destId,
@@ -4611,40 +4632,94 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_String llRequestAgentData(string id, int data)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
 
             UUID uuid = (UUID)id;
+            PresenceInfo pinfo = null;
+            UserAccount account;
 
-            UserAccount account = World.UserAccountService.GetUserAccount(World.RegionInfo.ScopeID, uuid);
+            UserInfoCacheEntry ce;
+            if (!m_userInfoCache.TryGetValue(uuid, out ce))
+            {
+                account = World.UserAccountService.GetUserAccount(World.RegionInfo.ScopeID, uuid);
+                if (account == null)
+                {
+                    m_userInfoCache[uuid] = null; // Cache negative
+                    return UUID.Zero.ToString();
+                }
 
-            GridUserInfo pinfo = World.GridUserService.GetGridUserInfo(id);
+
+                PresenceInfo[] pinfos = World.PresenceService.GetAgents(new string[] { uuid.ToString() });
+                if (pinfos != null && pinfos.Length > 0)
+                {
+                    foreach (PresenceInfo p in pinfos)
+                    {
+                        if (p.RegionID != UUID.Zero)
+                        {
+                            pinfo = p;
+                        }
+                    }
+                }
+
+                ce = new UserInfoCacheEntry();
+                ce.time = Util.EnvironmentTickCount();
+                ce.account = account;
+                ce.pinfo = pinfo;
+            }
+            else
+            {
+                if (ce == null)
+                    return UUID.Zero.ToString();
+
+                account = ce.account;
+                pinfo = ce.pinfo;
+            }
+
+            if (Util.EnvironmentTickCount() < ce.time || (Util.EnvironmentTickCount() - ce.time) >= 20000)
+            {
+                PresenceInfo[] pinfos = World.PresenceService.GetAgents(new string[] { uuid.ToString() });
+                if (pinfos != null && pinfos.Length > 0)
+                {
+                    foreach (PresenceInfo p in pinfos)
+                    {
+                        if (p.RegionID != UUID.Zero)
+                        {
+                            pinfo = p;
+                        }
+                    }
+                }
+                else
+                    pinfo = null;
+
+                ce.time = Util.EnvironmentTickCount();
+                ce.pinfo = pinfo;
+            }
 
             string reply = String.Empty;
 
             switch (data)
             {
-            case 1: // DATA_ONLINE (0|1)
-                if (pinfo != null)
-                    reply = "1";
-                else 
+                case 1: // DATA_ONLINE (0|1)
+                    if (pinfo != null && pinfo.RegionID != UUID.Zero)
+                        reply = "1";
+                    else
+                        reply = "0";
+                    break;
+                case 2: // DATA_NAME (First Last)
+                    reply = account.FirstName + " " + account.LastName;
+                    break;
+                case 3: // DATA_BORN (YYYY-MM-DD)
+                    DateTime born = new DateTime(1970, 1, 1, 0, 0, 0, 0);
+                    born = born.AddSeconds(account.Created);
+                    reply = born.ToString("yyyy-MM-dd");
+                    break;
+                case 4: // DATA_RATING (0,0,0,0,0,0)
+                    reply = "0,0,0,0,0,0";
+                    break;
+                case 8: // DATA_PAYINFO (0|1|2|3)
                     reply = "0";
-                break;
-            case 2: // DATA_NAME (First Last)
-                reply = account.FirstName + " " + account.LastName;
-                break;
-            case 3: // DATA_BORN (YYYY-MM-DD)
-                DateTime born = new DateTime(1970, 1, 1, 0, 0, 0, 0);
-                born = born.AddSeconds(account.Created);
-                reply = born.ToString("yyyy-MM-dd");
-                break;
-            case 4: // DATA_RATING (0,0,0,0,0,0)
-                reply = "0,0,0,0,0,0";
-                break;
-            case 8: // DATA_PAYINFO (0|1|2|3)
-                reply = "0";
-                break;
-            default:
-                return UUID.Zero.ToString(); // Raise no event
+                    break;
+                default:
+                    return UUID.Zero.ToString(); // Raise no event
             }
 
             UUID rq = UUID.Random();
@@ -4725,7 +4800,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     if (m_host.OwnerID == World.LandChannel.GetLandObject(
                             presence.AbsolutePosition.X, presence.AbsolutePosition.Y).LandData.OwnerID)
                     {
-                        presence.ControllingClient.SendTeleportLocationStart();
+                        presence.ControllingClient.SendTeleportStart((uint)TeleportFlags.ViaHome);
                         World.TeleportClientHome(agentId, presence.ControllingClient);
                     }
                 }
@@ -6251,7 +6326,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             pTexAnim.Start = (float)start;
 
             part.AddTextureAnimation(pTexAnim);
-            part.SendFullUpdateToAllClients(PrimUpdateFlags.TextureAnim);
+            part.ScheduleFullUpdate(PrimUpdateFlags.FindBest);
             part.ParentGroup.HasGroupChanged = true;
         }
 
@@ -8454,7 +8529,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 int code=(int)rules.GetLSLIntegerItem(idx++);
                 int remain = rules.Length - idx;
                 Primitive.TextureEntry tex = part.Shape.Textures;
-                int face = (int)rules.GetLSLIntegerItem(idx++);
+                int face = 0;
+                if(idx < rules.Length)
+                    face = (int)rules.GetLSLIntegerItem(idx++);
+
                 Primitive.TextureEntryFace texFace = tex.GetFace((uint)face);
 
                 switch (code)
@@ -9419,7 +9497,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             
                 string reply = String.Empty;
 
-                GridRegion info = World.GridService.GetRegionByName(World.RegionInfo.ScopeID, simulator);
+                GridRegion info;
+
+                if (World.RegionInfo.RegionName == simulator)
+                    info = new GridRegion(World.RegionInfo);
+                else
+                    info = World.GridService.GetRegionByName(World.RegionInfo.ScopeID, simulator);
 
                 switch (data)
                 {
@@ -9613,8 +9696,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             bool autoAlign = landData.MediaAutoScale != 0;
             string mediaType = landData.MediaType;
             string description = landData.MediaDescription;
-            int width = landData.MediaSize[0];
-            int height = landData.MediaSize[1];
+            int width = landData.MediaWidth;
+            int height = landData.MediaHeight;
             float mediaLoopSet = landData.MediaLoopSet;
             
             ParcelMediaCommandEnum? commandToSend = null;
@@ -9788,11 +9871,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     // we send to all
                     landData.MediaID = new UUID(texture);
                     landData.MediaAutoScale = autoAlign ? (byte)1 : (byte)0;
-                    landData.MediaSize[0] = width;
-                    landData.MediaSize[1] = height;
+                    landData.MediaWidth = width;
+                    landData.MediaHeight = height;
                     landData.MediaType = mediaType;
                     landData.MediaDescription = description;
-                    landData.MediaLoop = loop;
+                    landData.MediaLoop = loop == 1;
+                    landData.MediaLoopSet = mediaLoopSet;
 
                     // do that one last, it will cause a ParcelPropertiesUpdate
                     landObject.SetMediaUrl(url);
@@ -9880,15 +9964,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                             list.Add(new LSL_String(World.GetLandData(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).MediaType));
                             break;
                         case ParcelMediaCommandEnum.Loop:
-                            list.Add(new LSL_Integer(World.GetLandData(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).MediaLoop));
+                            list.Add(new LSL_Integer(World.GetLandData(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).MediaLoop ? 1 : 0));
                             break;
                         case ParcelMediaCommandEnum.LoopSet:
-                            ShoutError("PARCEL_MEDIA_COMMAND_LOOP_SET is not supported at this time.");
-                            list.Add(new LSL_Integer(0));
+                            list.Add(new LSL_Integer(World.GetLandData(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).MediaLoopSet));
                             break;
                         case ParcelMediaCommandEnum.Size:
-                            list.Add(new LSL_String(World.GetLandData(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).MediaSize[0]));
-                            list.Add(new LSL_String(World.GetLandData(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).MediaSize[1]));
+                            list.Add(new LSL_String(World.GetLandData(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).MediaHeight));
+                            list.Add(new LSL_String(World.GetLandData(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).MediaWidth));
                             break;
                         default:
                             ParcelMediaCommandEnum mediaCommandEnum = ParcelMediaCommandEnum.Url;
@@ -9902,48 +9985,237 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return list;
         }
 
-        public LSL_Integer llClearPrimMedia(LSL_Integer face)
+        public LSL_List llGetPrimMediaParams(LSL_Integer face, LSL_List rules)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
-            if (face == ScriptBaseClass.ALL_SIDES)
+            ScriptSleep(1000);
+
+            // LSL Spec http://wiki.secondlife.com/wiki/LlGetPrimMediaParams says to fail silently if face is invalid
+            // TODO: Need to correctly handle case where a face has no media (which gives back an empty list).
+            // Assuming silently fail means give back an empty list.  Ideally, need to check this.
+            if (face < 0 || face > m_host.GetNumberOfSides() - 1)
+                return new LSL_List();
+
+            return GetPrimMediaParams(face, rules);
+        }
+
+        private LSL_List GetPrimMediaParams(int face, LSL_List rules)
+        {
+            IMoapModule module = World.RequestModuleInterface<IMoapModule>();
+            if (null == module)
+                throw new Exception("Media on a prim functions not available");
+
+            MediaEntry me = module.GetMediaEntry(m_host, face);
+
+            // As per http://wiki.secondlife.com/wiki/LlGetPrimMediaParams
+            if (null == me)
+                return new LSL_List();
+
+            LSL_List res = new LSL_List();
+
+            for (int i = 0; i < rules.Length; i++)
             {
-                for (uint i = 0; i < m_host.GetNumberOfSides(); i++)
+                int code = (int)rules.GetLSLIntegerItem(i);
+
+                switch (code)
                 {
-                    face = new LSL_Types.LSLInteger(i);
-                    ClearPrimMedia(face);
+                    case ScriptBaseClass.PRIM_MEDIA_ALT_IMAGE_ENABLE:
+                        // Not implemented
+                        res.Add(new LSL_Integer(0));
+                        break;
+
+                    case ScriptBaseClass.PRIM_MEDIA_CONTROLS:
+                        if (me.Controls == MediaControls.Standard)
+                            res.Add(new LSL_Integer(ScriptBaseClass.PRIM_MEDIA_CONTROLS_STANDARD));
+                        else
+                            res.Add(new LSL_Integer(ScriptBaseClass.PRIM_MEDIA_CONTROLS_MINI));
+                        break;
+
+                    case ScriptBaseClass.PRIM_MEDIA_CURRENT_URL:
+                        res.Add(new LSL_String(me.CurrentURL));
+                        break;
+
+                    case ScriptBaseClass.PRIM_MEDIA_HOME_URL:
+                        res.Add(new LSL_String(me.HomeURL));
+                        break;
+
+                    case ScriptBaseClass.PRIM_MEDIA_AUTO_LOOP:
+                        res.Add(me.AutoLoop ? ScriptBaseClass.TRUE : ScriptBaseClass.FALSE);
+                        break;
+
+                    case ScriptBaseClass.PRIM_MEDIA_AUTO_PLAY:
+                        res.Add(me.AutoPlay ? ScriptBaseClass.TRUE : ScriptBaseClass.FALSE);
+                        break;
+
+                    case ScriptBaseClass.PRIM_MEDIA_AUTO_SCALE:
+                        res.Add(me.AutoScale ? ScriptBaseClass.TRUE : ScriptBaseClass.FALSE);
+                        break;
+
+                    case ScriptBaseClass.PRIM_MEDIA_AUTO_ZOOM:
+                        res.Add(me.AutoZoom ? ScriptBaseClass.TRUE : ScriptBaseClass.FALSE);
+                        break;
+
+                    case ScriptBaseClass.PRIM_MEDIA_FIRST_CLICK_INTERACT:
+                        res.Add(me.InteractOnFirstClick ? ScriptBaseClass.TRUE : ScriptBaseClass.FALSE);
+                        break;
+
+                    case ScriptBaseClass.PRIM_MEDIA_WIDTH_PIXELS:
+                        res.Add(new LSL_Integer(me.Width));
+                        break;
+
+                    case ScriptBaseClass.PRIM_MEDIA_HEIGHT_PIXELS:
+                        res.Add(new LSL_Integer(me.Height));
+                        break;
+
+                    case ScriptBaseClass.PRIM_MEDIA_WHITELIST_ENABLE:
+                        res.Add(me.EnableWhiteList ? ScriptBaseClass.TRUE : ScriptBaseClass.FALSE);
+                        break;
+
+                    case ScriptBaseClass.PRIM_MEDIA_WHITELIST:
+                        string[] urls = (string[])me.WhiteList.Clone();
+
+                        for (int j = 0; j < urls.Length; j++)
+                            urls[j] = Uri.EscapeDataString(urls[j]);
+
+                        res.Add(new LSL_String(string.Join(", ", urls)));
+                        break;
+
+                    case ScriptBaseClass.PRIM_MEDIA_PERMS_INTERACT:
+                        res.Add(new LSL_Integer((int)me.InteractPermissions));
+                        break;
+
+                    case ScriptBaseClass.PRIM_MEDIA_PERMS_CONTROL:
+                        res.Add(new LSL_Integer((int)me.ControlPermissions));
+                        break;
                 }
             }
-            else
+
+            return res;
+        }
+
+        public LSL_Integer llClearPrimMedia(LSL_Integer face)
+        {
+            ScriptSleep(1000);
+
+            // LSL Spec http://wiki.secondlife.com/wiki/LlClearPrimMedia says to fail silently if face is invalid
+            // Assuming silently fail means sending back LSL_STATUS_OK.  Ideally, need to check this.
+            // FIXME: Don't perform the media check directly
+            if (face < 0 || face > m_host.GetNumberOfSides() - 1)
+                return ScriptBaseClass.LSL_STATUS_OK;
+
+            IMoapModule module = World.RequestModuleInterface<IMoapModule>();
+            if (null == module)
+                throw new Exception("Media on a prim functions not available");
+
+            module.ClearMediaEntry(m_host, face);
+
+            return ScriptBaseClass.LSL_STATUS_OK;
+        }
+
+        public LSL_Integer llSetPrimMediaParams(LSL_Integer face, LSL_List rules)
+        {
+            ScriptSleep(1000);
+
+            // LSL Spec http://wiki.secondlife.com/wiki/LlSetPrimMediaParams says to fail silently if face is invalid
+            // Assuming silently fail means sending back LSL_STATUS_OK.  Ideally, need to check this.
+            // Don't perform the media check directly
+            if (face < 0 || face > m_host.GetNumberOfSides() - 1)
+                return ScriptBaseClass.LSL_STATUS_OK;
+
+            return SetPrimMediaParams(face, rules);
+        }
+
+        public LSL_Integer SetPrimMediaParams(int face, LSL_List rules)
+        {
+            IMoapModule module = World.RequestModuleInterface<IMoapModule>();
+            if (null == module)
+                throw new Exception("Media on a prim functions not available");
+
+            MediaEntry me = module.GetMediaEntry(m_host, face);
+            if (null == me)
+                me = new MediaEntry();
+
+            int i = 0;
+
+            while (i < rules.Length - 1)
             {
-                ClearPrimMedia(face);
+                int code = rules.GetLSLIntegerItem(i++);
+
+                switch (code)
+                {
+                    case ScriptBaseClass.PRIM_MEDIA_ALT_IMAGE_ENABLE:
+                        me.EnableAlterntiveImage = (rules.GetLSLIntegerItem(i++) != 0 ? true : false);
+                        break;
+
+                    case ScriptBaseClass.PRIM_MEDIA_CONTROLS:
+                        int v = rules.GetLSLIntegerItem(i++);
+                        if (ScriptBaseClass.PRIM_MEDIA_CONTROLS_STANDARD == v)
+                            me.Controls = MediaControls.Standard;
+                        else
+                            me.Controls = MediaControls.Mini;
+                        break;
+
+                    case ScriptBaseClass.PRIM_MEDIA_CURRENT_URL:
+                        me.CurrentURL = rules.GetLSLStringItem(i++);
+                        break;
+
+                    case ScriptBaseClass.PRIM_MEDIA_HOME_URL:
+                        me.HomeURL = rules.GetLSLStringItem(i++);
+                        break;
+
+                    case ScriptBaseClass.PRIM_MEDIA_AUTO_LOOP:
+                        me.AutoLoop = (ScriptBaseClass.TRUE == rules.GetLSLIntegerItem(i++) ? true : false);
+                        break;
+
+                    case ScriptBaseClass.PRIM_MEDIA_AUTO_PLAY:
+                        me.AutoPlay = (ScriptBaseClass.TRUE == rules.GetLSLIntegerItem(i++) ? true : false);
+                        break;
+
+                    case ScriptBaseClass.PRIM_MEDIA_AUTO_SCALE:
+                        me.AutoScale = (ScriptBaseClass.TRUE == rules.GetLSLIntegerItem(i++) ? true : false);
+                        break;
+
+                    case ScriptBaseClass.PRIM_MEDIA_AUTO_ZOOM:
+                        me.AutoZoom = (ScriptBaseClass.TRUE == rules.GetLSLIntegerItem(i++) ? true : false);
+                        break;
+
+                    case ScriptBaseClass.PRIM_MEDIA_FIRST_CLICK_INTERACT:
+                        me.InteractOnFirstClick = (ScriptBaseClass.TRUE == rules.GetLSLIntegerItem(i++) ? true : false);
+                        break;
+
+                    case ScriptBaseClass.PRIM_MEDIA_WIDTH_PIXELS:
+                        me.Width = (int)rules.GetLSLIntegerItem(i++);
+                        break;
+
+                    case ScriptBaseClass.PRIM_MEDIA_HEIGHT_PIXELS:
+                        me.Height = (int)rules.GetLSLIntegerItem(i++);
+                        break;
+
+                    case ScriptBaseClass.PRIM_MEDIA_WHITELIST_ENABLE:
+                        me.EnableWhiteList = (ScriptBaseClass.TRUE == rules.GetLSLIntegerItem(i++) ? true : false);
+                        break;
+
+                    case ScriptBaseClass.PRIM_MEDIA_WHITELIST:
+                        string[] rawWhiteListUrls = rules.GetLSLStringItem(i++).ToString().Split(new char[] { ',' });
+                        List<string> whiteListUrls = new List<string>();
+                        Array.ForEach(
+                            rawWhiteListUrls, delegate(string rawUrl) { whiteListUrls.Add(rawUrl.Trim()); });
+                        me.WhiteList = whiteListUrls.ToArray();
+                        break;
+
+                    case ScriptBaseClass.PRIM_MEDIA_PERMS_INTERACT:
+                        me.InteractPermissions = (MediaPermission)(byte)(int)rules.GetLSLIntegerItem(i++);
+                        break;
+
+                    case ScriptBaseClass.PRIM_MEDIA_PERMS_CONTROL:
+                        me.ControlPermissions = (MediaPermission)(byte)(int)rules.GetLSLIntegerItem(i++);
+                        break;
+                }
             }
-            return new LSL_Integer((int)PrimMediaUpdate.OK);
-        }
 
-        private void ClearPrimMedia(LSL_Integer face)
-        {
-        }
+            module.SetMediaEntry(m_host, face, me);
 
-        public LSL_Integer llSetPrimMediaParams(LSL_Integer face, LSL_List commandList)
-        {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
-            return new LSL_Integer((int)PrimMediaUpdate.OK);
-        }
-
-        private LSL_Integer SetPrimMedia(LSL_Integer face, LSL_List commandList)
-        {
-           return new LSL_Integer((int)PrimMediaUpdate.OK);
-        }
-
-        public LSL_List llGetPrimMediaParams(LSL_Integer face, LSL_List aList)
-        {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
-            LSL_List list = new LSL_List();
-            ScriptSleep(2000);
-            return list;
+            return ScriptBaseClass.LSL_STATUS_OK;
         }
 
         public LSL_Integer llModPow(int a, int b, int c)

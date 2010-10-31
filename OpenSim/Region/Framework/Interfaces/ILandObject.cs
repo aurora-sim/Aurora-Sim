@@ -89,5 +89,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// </summary>
         /// <param name="url"></param>
         void SetMusicUrl(string url);
+
+        List<SceneObjectGroup> GetPrimsOverByOwner(UUID targetID, int flags);
     }
 }

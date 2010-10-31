@@ -59,7 +59,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                 rootNode = doc.FirstChild;
                 foreach (XmlNode aPrimNode in rootNode.ChildNodes)
                 {
-                    SceneObjectGroup obj = SceneObjectSerializer.FromOriginalXmlFormat(aPrimNode.OuterXml);
+                    SceneObjectGroup obj = SceneObjectSerializer.FromOriginalXmlFormat(aPrimNode.OuterXml, scene);
 
                     if (newIDS)
                     {
@@ -103,7 +103,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             return SceneObjectSerializer.ToXml2Format(grp);
         }
 
-        public static SceneObjectGroup DeserializeGroupFromXml2(string xmlString)
+        public static SceneObjectGroup DeserializeGroupFromXml2(string xmlString, Scene scene)
         {
             XmlDocument doc = new XmlDocument();
             XmlNode rootNode;
@@ -124,10 +124,10 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                 foreach (XmlNode aPrimNode in rootNode.ChildNodes)
                 {
                     // There is only ever one prim.  This oddity should be removeable post 0.5.9
-                    //return SceneObjectSerializer.FromXml2Format(aPrimNode.OuterXml);
+                    return SceneObjectSerializer.FromXml2Format(aPrimNode.OuterXml, scene);
                     using (reader = new XmlTextReader(new StringReader(aPrimNode.OuterXml)))
                     {
-                        SceneObjectGroup obj = new SceneObjectGroup();
+                        SceneObjectGroup obj = new SceneObjectGroup(scene);
                         if (SceneObjectSerializer.Xml2ToSOG(reader, obj))
                             return obj;
 
@@ -139,10 +139,10 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             }
             else
             {
-                //return SceneObjectSerializer.FromXml2Format(rootNode.OuterXml);
+                return SceneObjectSerializer.FromXml2Format(rootNode.OuterXml, scene);
                 using (reader = new XmlTextReader(new StringReader(rootNode.OuterXml)))
                 {
-                    SceneObjectGroup obj = new SceneObjectGroup();
+                    SceneObjectGroup obj = new SceneObjectGroup(scene);
                     if (SceneObjectSerializer.Xml2ToSOG(reader, obj))
                         return obj;
 
@@ -209,17 +209,16 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
         /// <returns>The scene object created.  null if the scene object already existed</returns>
         protected static SceneObjectGroup CreatePrimFromXml2(Scene scene, string xmlData)
         {
-            //SceneObjectGroup obj = SceneObjectSerializer.FromXml2Format(xmlData);
-            using (XmlTextReader reader = new XmlTextReader(new StringReader(xmlData)))
+            SceneObjectGroup obj = SceneObjectSerializer.FromXml2Format(xmlData, scene);
+            /*using (XmlTextReader reader = new XmlTextReader(new StringReader(xmlData)))
             {
                 SceneObjectGroup obj = new SceneObjectGroup();
                 SceneObjectSerializer.Xml2ToSOG(reader, obj);
 
-                if (scene.AddRestoredSceneObject(obj, true, false))
+                if (scene.AddRestoredSceneObject(obj, true, false, true))
                     return obj;
-                else
-                    return null;
-            }
+            }*/
+            return null;
         }
 
         public static void SavePrimsToXml2(Scene scene, string fileName)
@@ -299,9 +298,9 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                             continue;
                     }
 
-                    //stream.WriteLine(SceneObjectSerializer.ToXml2Format(g));
-                    SceneObjectSerializer.SOGToXml2(writer, (SceneObjectGroup)ent);
-                    stream.WriteLine();
+                    stream.WriteLine(SceneObjectSerializer.ToXml2Format(g));
+                    //SceneObjectSerializer.SOGToXml2(writer, (SceneObjectGroup)ent);
+                    //stream.WriteLine();
 
                     primCount++;
                 }

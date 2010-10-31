@@ -38,6 +38,7 @@ using OpenSim.Region.Physics.Manager;
 using Nini.Config;
 using OpenSim.Framework.Console;
 using OpenSim;
+using OpenSim.Server.Base;
 
 namespace OpenSim.Region.Framework.Scenes
 {
@@ -95,33 +96,26 @@ namespace OpenSim.Region.Framework.Scenes
             m_config = config;
 
             string StorageDLL = "";
-            string StorageConnectionString = "";
 
-            IConfig StorageConfig = m_config.Configs["StorageService"];
             IConfig dbConfig = config.Configs["DatabaseService"];
-
+            IConfig simDataConfig = m_config.Configs["SimulationDataStore"];
+            
             //Default to the database service config
             if (dbConfig != null)
             {
                 StorageDLL = dbConfig.GetString("StorageProvider", String.Empty);
-                StorageConnectionString = dbConfig.GetString("ConnectionString", String.Empty);
             }
-            if (StorageConfig != null)
+            if (simDataConfig != null)
             {
-                StorageDLL = StorageConfig.GetString("StorageProvider", StorageDLL);
-                StorageConnectionString = StorageConfig.GetString("ConnectionString", StorageConnectionString);
-
+                StorageDLL = simDataConfig.GetString("LocalServiceModule", String.Empty);
             }
             if(StorageDLL == String.Empty)
                 StorageDLL = "OpenSim.Data.Null.dll";
 
-            IRegionDataStore plug = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IRegionDataStore>(StorageDLL, "IRegionDataStore");
-            plug.Initialise(StorageConnectionString);
-
-            m_dataStore = plug;
+            m_simulationDataService = ServerUtils.LoadPlugin<ISimulationDataService>(StorageDLL, new object[] { m_config });
         }
 
-        protected IRegionDataStore m_dataStore;
+        protected ISimulationDataService m_simulationDataService;
 
         public void Close()
         {
@@ -175,7 +169,9 @@ namespace OpenSim.Region.Framework.Scenes
         {
             RegionsFinishedStarting++;
             if (RegionsFinishedStarting == AllRegions)
+            {
                 FinishStartUp();
+            }
         }
 
         private void FinishStartUp()
@@ -574,14 +570,10 @@ namespace OpenSim.Region.Framework.Scenes
             // Prims have to be loaded after module configuration since some modules may be invoked during the load
             scene.LoadPrimsFromStorage(regionInfo.RegionID);
 
-            RegisterRegionWithGrid(scene);
-
-            // moved these here as the terrain texture has to be created after the modules are initialized
-            //  and after registering with the grid
-            scene.CreateTerrainTexture();
-
             scene.loadAllLandObjectsFromStorage(regionInfo.RegionID);
             scene.EventManager.TriggerParcelPrimCountUpdate();
+
+            RegisterRegionWithGrid(scene);
 
             // We need to do this after we've initialized the
             // scripting engines.
@@ -877,7 +869,7 @@ namespace OpenSim.Region.Framework.Scenes
             regionInfo.InternalEndPoint.Port = (int)port;
 
             SceneCommunicationService sceneGridService = new SceneCommunicationService();
-            Scene scene = new Scene(regionInfo, circuitManager, sceneGridService, m_config, m_OpenSimBase.Version, m_dataStore, m_OpenSimBase.Stats);
+            Scene scene = new Scene(regionInfo, circuitManager, sceneGridService, m_config, m_OpenSimBase.Version, m_simulationDataService, m_OpenSimBase.Stats);
             
             clientServer.AddScene(scene);
             m_clientServers.Add(clientServer);
@@ -903,17 +895,18 @@ namespace OpenSim.Region.Framework.Scenes
         protected PhysicsScene GetPhysicsScene(IConfigSource config, string RegionName)
         {
             IConfig PhysConfig = config.Configs["Physics"];
+            IConfig MeshingConfig = config.Configs["Meshing"];
             string engine = "";
             string meshEngine = "";
             if (PhysConfig != null)
             {
                 engine = PhysConfig.GetString("DefaultPhysicsEngine", "OpenDynamicsEngine");
-                meshEngine = PhysConfig.GetString("DefaultMeshingEngine", "Meshmerizer");
+                meshEngine = MeshingConfig.GetString("DefaultMeshingEngine", "Meshmerizer");
                 string regionName = RegionName.Trim().Replace(' ', '_');
                 string RegionPhysicsEngine = PhysConfig.GetString("Region_" + regionName + "_PhysicsEngine", String.Empty);
                 if (RegionPhysicsEngine != "")
                     engine = RegionPhysicsEngine;
-                string RegionMeshingEngine = PhysConfig.GetString("Region_" + regionName + "_MeshingEngine", String.Empty);
+                string RegionMeshingEngine = MeshingConfig.GetString("Region_" + regionName + "_MeshingEngine", String.Empty);
                 if (RegionMeshingEngine != "")
                     meshEngine = RegionMeshingEngine;
             }
@@ -923,8 +916,7 @@ namespace OpenSim.Region.Framework.Scenes
                 engine = "OpenDynamicsEngine";
                 meshEngine = "Meshmerizer";
             }
-            PhysicsPluginManager physicsPluginManager;
-            physicsPluginManager = new PhysicsPluginManager();
+            PhysicsPluginManager physicsPluginManager = new PhysicsPluginManager();
             physicsPluginManager.LoadPluginsFromAssemblies("Physics");
 
             return physicsPluginManager.GetPhysicsScene(engine, meshEngine, config, RegionName);

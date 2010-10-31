@@ -51,13 +51,13 @@ namespace OpenSim.Framework
                                    UUID RayTargetID, byte BypassRayCast, bool RayEndIsIntersection,
                                    bool RezSelected, bool RemoveItem, UUID fromTaskID);
 
-    public delegate UUID RezSingleAttachmentFromInv(IClientAPI remoteClient, UUID itemID, uint AttachmentPt);
+    public delegate UUID RezSingleAttachmentFromInv(IClientAPI remoteClient, UUID itemID, int AttachmentPt);
 
     public delegate void RezMultipleAttachmentsFromInv(IClientAPI remoteClient, RezMultipleAttachmentsFromInvPacket.HeaderDataBlock header,
                                                        RezMultipleAttachmentsFromInvPacket.ObjectDataBlock[] objects);
 
     public delegate void ObjectAttach(
-        IClientAPI remoteClient, uint objectLocalID, uint AttachmentPt, Quaternion rot, bool silent);
+        IClientAPI remoteClient, uint objectLocalID, int AttachmentPt, bool silent);
 
     public delegate void ModifyTerrain(UUID user, 
         float height, float seconds, byte size, byte action, float north, float west, float south, float east,
@@ -502,7 +502,7 @@ namespace OpenSim.Framework
     
     public delegate void GroupVoteHistoryRequest(IClientAPI client,UUID agentID, UUID groupID, UUID transactionID, UUID sessionID);
 
-    public delegate void SimWideDeletesDelegate(IClientAPI client,UUID agentID, int flags, UUID targetID);
+    public delegate void SimWideDeletesDelegate(IClientAPI client, int flags, UUID targetID);
     
     public delegate void SendPostcard(IClientAPI client);
     public delegate void TeleportCancel(IClientAPI client);
@@ -1107,7 +1107,7 @@ namespace OpenSim.Framework
         /// </summary>
         /// <param name="regionHandle"></param>
         /// <param name="localID"></param>
-        void SendKillObject(ulong regionHandle, uint[] localIDs);
+        void SendKillObject(ulong regionHandle, ISceneEntity[] entities);
 
         void SendAnimations(UUID[] animID, int[] seqs, UUID sourceAgentId, UUID[] objectIDs);
         void SendRegionHandshake(RegionInfo regionInfo, RegionHandshakeArgs args);
@@ -1146,14 +1146,14 @@ namespace OpenSim.Framework
                                 uint flags, string capsURL);
 
         void SendTeleportFailed(string reason);
-        void SendTeleportLocationStart();
-        void SendTeleportProgress(string reason);
+        void SendTeleportStart(uint flags);
+        void SendTeleportProgress(uint flags, string message);
+
         void SendMoneyBalance(UUID transaction, bool success, byte[] description, int balance);
         void SendPayPrice(UUID objectID, int[] payPrice);
 
         void SendCoarseLocationUpdate(List<UUID> users, List<Vector3> CoarseLocations);
 
-        void AttachObject(uint localID, Quaternion rotation, byte attachPoint, UUID ownerID);
         void SetChildAgentThrottle(byte[] throttle);
 
         void SendAvatarDataImmediate(ISceneEntity avatar);
@@ -1409,6 +1409,8 @@ namespace OpenSim.Framework
         void SendGroupVoteHistory(UUID groupID, UUID transactionID, GroupVoteHistory Vote, GroupVoteHistoryItem[] Items);
 
         bool AddGenericPacketHandler(string MethodName, GenericMessage handler);
+
+        bool RemoveGenericPacketHandler(string MethodName);
 
         void SendRebakeAvatarTextures(UUID textureID);
 

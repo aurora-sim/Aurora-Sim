@@ -53,12 +53,16 @@ namespace OpenSim.Region.CoreModules.World.Archiver
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
+        protected static ASCIIEncoding m_asciiEncoding = new ASCIIEncoding();
+        protected static UTF8Encoding m_utf8Encoding = new UTF8Encoding();
+
         protected Scene m_scene;
         protected Stream m_loadStream;
         protected Guid m_requestId;
         protected string m_errorMessage;
         protected HashSet<AssetBase> AssetsToAdd = new HashSet<AssetBase>();
         protected bool AssetSaverIsRunning = false;
+        protected bool m_useAsync = false;
 
         /// <value>
         /// Should the archive being loaded be merged with what is already on the region?
@@ -92,7 +96,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                         + "If you've manually installed Mono, have you appropriately updated zlib1g as well?");
                 m_log.Error(e);
             }
-        
+
             m_errorMessage = String.Empty;
             m_merge = merge;
             m_skipAssets = skipAssets;
@@ -121,7 +125,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
         {
             int successfulAssetRestores = 0;
             int failedAssetRestores = 0;
-            List<string> serialisedSceneObjects = new List<string>();
+            //List<string> serialisedSceneObjects = new List<string>();
             List<string> serialisedParcels = new List<string>();
             string filePath = "NONE";
             DateTime start = DateTime.Now;
@@ -130,11 +134,23 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             byte[] data;
             TarArchiveReader.TarEntryType entryType;
 
-            m_threadpool = new Aurora.Framework.AuroraThreadPool(new Aurora.Framework.AuroraThreadPoolStartInfo()
-                {
-                    Threads = 1,
-                    priority = System.Threading.ThreadPriority.BelowNormal
-                });
+            if (!m_skipAssets)
+                m_threadpool = new Aurora.Framework.AuroraThreadPool(new Aurora.Framework.AuroraThreadPoolStartInfo()
+                    {
+                        Threads = 1,
+                        priority = System.Threading.ThreadPriority.BelowNormal
+                    });
+
+            if (!m_merge)
+            {
+                DateTime before = DateTime.Now;
+                m_log.Info("[ARCHIVER]: Clearing all existing scene objects");
+                m_scene.DeleteAllSceneObjects();
+                m_log.Info("[ARCHIVER]: Cleared all existing scene objects in " + (DateTime.Now - before).Minutes + ":" + (DateTime.Now - before).Seconds);
+            }
+
+            IRegionSerialiserModule serialiser = m_scene.RequestModuleInterface<IRegionSerialiserModule>();
+            int sceneObjectsLoadedCount = 0;
 
             try
             {
@@ -142,23 +158,99 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                 {
                     //m_log.DebugFormat(
                     //    "[ARCHIVER]: Successfully read {0} ({1} bytes)", filePath, data.Length);
-                    
+
                     if (TarArchiveReader.TarEntryType.TYPE_DIRECTORY == entryType)
                         continue;
 
                     if (filePath.StartsWith(ArchiveConstants.OBJECTS_PATH))
                     {
-                        serialisedSceneObjects.Add(Encoding.UTF8.GetString(data));
-                    }
-                    else if (filePath.StartsWith(ArchiveConstants.ASSETS_PATH) && !m_skipAssets)
-                    {
-                        if (LoadAsset(filePath, data))
-                            successfulAssetRestores++;
-                        else
-                            failedAssetRestores++;
+                        string sogdata = m_utf8Encoding.GetString(data);
+                        //serialisedSceneObjects.Add(m_utf8Encoding.GetString(data));
+                        /*
+                m_log.DebugFormat("[ARCHIVER]: Loading xml with raw size {0}", serialisedSceneObject.Length);
 
-                        if ((successfulAssetRestores + failedAssetRestores) % 250 == 0)
-                            m_log.Debug("[ARCHIVER]: Loaded " + successfulAssetRestores + " assets and failed to load " + failedAssetRestores + " assets...");
+                // Really large xml files (multi megabyte) appear to cause
+                // memory problems
+                // when loading the xml.  But don't enable this check yet
+                
+                if (serialisedSceneObject.Length > 5000000)
+                {
+                    m_log.Error("[ARCHIVER]: Ignoring xml since size > 5000000);");
+                    continue;
+                }
+                */
+
+                        string serialisedSceneObject = sogdata;
+                        SceneObjectGroup sceneObject = serialiser.DeserializeGroupFromXml2(serialisedSceneObject, m_scene);
+
+                        if (sceneObject == null)
+                        {
+                            //! big error!
+                            m_log.Error("Error reading SOP XML (Please mantis this!): " + serialisedSceneObject);
+                            continue;
+                        }
+                        // For now, give all incoming scene objects new uuids.  This will allow scenes to be cloned
+                        // on the same region server and multiple examples a single object archive to be imported
+                        // to the same scene (when this is possible).
+                        sceneObject.ResetIDs();
+
+                        foreach (SceneObjectPart part in sceneObject.ChildrenList)
+                        {
+                            if (!ResolveUserUuid(part.CreatorID))
+                                part.CreatorID = m_scene.RegionInfo.EstateSettings.EstateOwner;
+
+                            if (!ResolveUserUuid(part.OwnerID))
+                                part.OwnerID = m_scene.RegionInfo.EstateSettings.EstateOwner;
+
+                            if (!ResolveUserUuid(part.LastOwnerID))
+                                part.LastOwnerID = m_scene.RegionInfo.EstateSettings.EstateOwner;
+
+                            // And zap any troublesome sit target information
+                            part.SitTargetOrientation = new Quaternion(0, 0, 0, 1);
+                            part.SitTargetPosition = new Vector3(0, 0, 0);
+
+                            // Fix ownership/creator of inventory items
+                            // Not doing so results in inventory items
+                            // being no copy/no mod for everyone
+                            lock (part.TaskInventory)
+                            {
+                                TaskInventoryDictionary inv = part.TaskInventory;
+                                foreach (KeyValuePair<UUID, TaskInventoryItem> kvp in inv)
+                                {
+                                    if (!ResolveUserUuid(kvp.Value.OwnerID))
+                                    {
+                                        kvp.Value.OwnerID = m_scene.RegionInfo.EstateSettings.EstateOwner;
+                                    }
+                                    if (!ResolveUserUuid(kvp.Value.CreatorID))
+                                    {
+                                        kvp.Value.CreatorID = m_scene.RegionInfo.EstateSettings.EstateOwner;
+                                    }
+                                }
+                            }
+                        }
+
+                        if (m_scene.AddRestoredSceneObject(sceneObject, true, false, true))
+                        {
+                            sceneObjectsLoadedCount++;
+                            sceneObject.CreateScriptInstances(0, false, m_scene.DefaultScriptEngine, 0, UUID.Zero);
+                            sceneObject.ResumeScripts();
+                        }
+                        sceneObjectsLoadedCount++;
+                        if (sceneObjectsLoadedCount % 250 == 0)
+                            m_log.Debug("[ARCHIVER]: Loaded " + sceneObjectsLoadedCount + " objects...");
+                    }
+                    else if (filePath.StartsWith(ArchiveConstants.ASSETS_PATH))
+                    {
+                        if (!m_skipAssets)
+                        {
+                            if (LoadAsset(filePath, data))
+                                successfulAssetRestores++;
+                            else
+                                failedAssetRestores++;
+
+                            if ((successfulAssetRestores + failedAssetRestores) % 250 == 0)
+                                m_log.Debug("[ARCHIVER]: Loaded " + successfulAssetRestores + " assets and failed to load " + failedAssetRestores + " assets...");
+                        }
                     }
                     else if (!m_merge && filePath.StartsWith(ArchiveConstants.TERRAINS_PATH))
                     {
@@ -167,14 +259,18 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                     else if (!m_merge && filePath.StartsWith(ArchiveConstants.SETTINGS_PATH))
                     {
                         LoadRegionSettings(filePath, data);
-                    } 
+                    }
                     else if (!m_merge && filePath.StartsWith(ArchiveConstants.LANDDATA_PATH))
                     {
-                        serialisedParcels.Add(Encoding.UTF8.GetString(data));
-                    } 
+                        serialisedParcels.Add(m_utf8Encoding.GetString(data));
+                    }
                     else if (filePath == ArchiveConstants.CONTROL_FILE_PATH)
                     {
                         LoadControlFile(filePath, data);
+                    }
+                    else
+                    {
+                        m_log.Debug("[ARCHIVER]:UNKNOWN PATH: " + filePath);
                     }
                 }
 
@@ -191,10 +287,17 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             finally
             {
                 archive.Close();
+                m_loadStream.Close();
+                m_loadStream.Dispose();
             }
 
-            if (!AssetSaverIsRunning && !m_skipAssets)
-                m_threadpool.QueueEvent(SaveAssets, 0);
+            if (!m_skipAssets)
+            {
+                if (m_useAsync && !AssetSaverIsRunning)
+                    m_threadpool.QueueEvent(SaveAssets, 0);
+                else if (!AssetSaverIsRunning)
+                    SaveAssets();
+            }
 
             if (!m_skipAssets)
             {
@@ -205,14 +308,6 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                     m_log.ErrorFormat("[ARCHIVER]: Failed to load {0} assets", failedAssetRestores);
                     m_errorMessage += String.Format("Failed to load {0} assets", failedAssetRestores);
                 }
-            }
-
-            if (!m_merge)
-            {
-                DateTime before = DateTime.Now;
-                m_log.Info("[ARCHIVER]: Clearing all existing scene objects");
-                m_scene.DeleteAllSceneObjects();
-                m_log.Info("[ARCHIVER]: Cleared all existing scene objects in " + (DateTime.Now - before).Minutes + ":" + (DateTime.Now - before).Seconds);
             }
 
             // Try to retain the original creator/owner/lastowner if their uuid is present on this grid
@@ -231,100 +326,24 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             m_scene.EventManager.TriggerIncomingLandDataFromStorage(landData);
             m_log.InfoFormat("[ARCHIVER]: Restored {0} parcels.", landData.Count);
 
+            //Clean it out
+            landData.Clear();
+            serialisedParcels.Clear();
+
             // Reload serialized prims
-            m_log.InfoFormat("[ARCHIVER]: Loading {0} scene objects.  Please wait.", serialisedSceneObjects.Count);
+            //m_log.InfoFormat("[ARCHIVER]: Loading {0} scene objects.  Please wait.", serialisedSceneObjects.Count);
 
-            IRegionSerialiserModule serialiser = m_scene.RequestModuleInterface<IRegionSerialiserModule>();
-            int sceneObjectsLoadedCount = 0;
+            //m_log.InfoFormat("[ARCHIVER]: Restored {0} scene objects to the scene", sceneObjectsLoadedCount);
 
-            foreach (string serialisedSceneObject in serialisedSceneObjects)
-            {
-                /*
-                m_log.DebugFormat("[ARCHIVER]: Loading xml with raw size {0}", serialisedSceneObject.Length);
+            //int ignoredObjects = serialisedSceneObjects.Count - sceneObjectsLoadedCount;
 
-                // Really large xml files (multi megabyte) appear to cause
-                // memory problems
-                // when loading the xml.  But don't enable this check yet
-                
-                if (serialisedSceneObject.Length > 5000000)
-                {
-                    m_log.Error("[ARCHIVER]: Ignoring xml since size > 5000000);");
-                    continue;
-                }
-                */
-
-                SceneObjectGroup sceneObject = serialiser.DeserializeGroupFromXml2(serialisedSceneObject);
-
-                if (sceneObject == null)
-                {
-                    //! big error!
-                    m_log.Error("Error reading SOP XML (Please mantis this!): " + serialisedSceneObject);
-                    continue;
-                }
-                // For now, give all incoming scene objects new uuids.  This will allow scenes to be cloned
-                // on the same region server and multiple examples a single object archive to be imported
-                // to the same scene (when this is possible).
-                sceneObject.ResetIDs();
-
-                foreach (SceneObjectPart part in sceneObject.ChildrenList)
-                {
-                    if (!ResolveUserUuid(part.CreatorID))
-                        part.CreatorID = m_scene.RegionInfo.EstateSettings.EstateOwner;
-
-                    if (!ResolveUserUuid(part.OwnerID))
-                        part.OwnerID = m_scene.RegionInfo.EstateSettings.EstateOwner;
-
-                    if (!ResolveUserUuid(part.LastOwnerID))
-                        part.LastOwnerID = m_scene.RegionInfo.EstateSettings.EstateOwner;
-
-                    // And zap any troublesome sit target information
-                    part.SitTargetOrientation = new Quaternion(0, 0, 0, 1);
-                    part.SitTargetPosition    = new Vector3(0, 0, 0);
-
-                    // Fix ownership/creator of inventory items
-                    // Not doing so results in inventory items
-                    // being no copy/no mod for everyone
-                    lock (part.TaskInventory)
-                    {
-                        TaskInventoryDictionary inv = part.TaskInventory;
-                        foreach (KeyValuePair<UUID, TaskInventoryItem> kvp in inv)
-                        {
-                            if (!ResolveUserUuid(kvp.Value.OwnerID))
-                            {
-                                kvp.Value.OwnerID = m_scene.RegionInfo.EstateSettings.EstateOwner;
-                            }
-                            if (!ResolveUserUuid(kvp.Value.CreatorID))
-                            {
-                                kvp.Value.CreatorID = m_scene.RegionInfo.EstateSettings.EstateOwner;
-                            }
-                        }
-                    }
-                }
-
-                sceneObject.SetScene(m_scene);
-
-                if (!m_scene.AddRestoredSceneObject(sceneObject, true, false, true))
-                {
-                    sceneObjectsLoadedCount++;
-                    sceneObject.CreateScriptInstances(0, false, m_scene.DefaultScriptEngine, 0, UUID.Zero);
-                    sceneObject.ResumeScripts();
-                }
-            }
-
-            m_log.InfoFormat("[ARCHIVER]: Restored {0} scene objects to the scene", sceneObjectsLoadedCount);
-
-            int ignoredObjects = serialisedSceneObjects.Count - sceneObjectsLoadedCount;
-
-            if (ignoredObjects > 0)
-                m_log.WarnFormat("[ARCHIVER]: Ignored {0} scene objects that already existed in the scene", ignoredObjects);
+            //if (ignoredObjects > 0)
+            //    m_log.WarnFormat("[ARCHIVER]: Ignored {0} scene objects that already existed in the scene", ignoredObjects);
 
             m_log.InfoFormat("[ARCHIVER]: Successfully loaded archive in " + (DateTime.Now - start).Minutes + ":" + (DateTime.Now - start).Seconds);
 
-            m_scene.EventManager.TriggerOarFileLoaded(m_requestId, m_errorMessage);
             m_validUserUuids.Clear();
-            m_loadStream.Close();
-            m_loadStream.Dispose();
-            archive.Close();
+            m_scene.EventManager.TriggerOarFileLoaded(m_requestId, m_errorMessage);
         }
 
         /// <summary>
@@ -337,7 +356,6 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             bool v;
             if (!m_validUserUuids.TryGetValue(uuid, out v))
             {
-                DateTime now = DateTime.Now;
                 UserAccount account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, uuid);
                 if (account != null)
                 {
@@ -391,8 +409,13 @@ namespace OpenSim.Region.CoreModules.World.Archiver
 
                 // We're relying on the asset service to do the sensible thing and not store the asset if it already
                 // exists.
-                lock(AssetsToAdd)
-                    AssetsToAdd.Add(asset);
+                if (m_useAsync)
+                {
+                    lock (AssetsToAdd)
+                        AssetsToAdd.Add(asset);
+                }
+                else
+                    m_scene.AssetService.Store(asset);
 
                 /**
                  * Create layers on decode for image assets.  This is likely to significantly increase the time to load archives so
@@ -489,7 +512,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             currentRegionSettings.WaterHeight = loadedRegionSettings.WaterHeight;
 
             currentRegionSettings.Save();
-            
+
             IEstateModule estateModule = m_scene.RequestModuleInterface<IEstateModule>();
 
             if (estateModule != null)
@@ -533,8 +556,8 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             // Create the XmlParserContext.
             XmlParserContext context = new XmlParserContext(null, nsmgr, null, XmlSpace.None);
 
-            XmlTextReader xtr 
-                = new XmlTextReader(Encoding.ASCII.GetString(data), XmlNodeType.Document, context);
+            XmlTextReader xtr
+                = new XmlTextReader(m_asciiEncoding.GetString(data), XmlNodeType.Document, context);
 
             RegionSettings currentRegionSettings = m_scene.RegionInfo.RegionSettings;
 
@@ -542,24 +565,24 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             currentRegionSettings.LoadedCreationDateTime = 0;
             currentRegionSettings.LoadedCreationID = "";
 
-            while (xtr.Read()) 
+            while (xtr.Read())
             {
-                if (xtr.NodeType == XmlNodeType.Element) 
+                if (xtr.NodeType == XmlNodeType.Element)
                 {
-                    if (xtr.Name.ToString() == "datetime") 
+                    if (xtr.Name.ToString() == "datetime")
                     {
                         int value;
                         if (Int32.TryParse(xtr.ReadElementContentAsString(), out value))
                             currentRegionSettings.LoadedCreationDateTime = value;
-                    } 
-                    else if (xtr.Name.ToString() == "id") 
+                    }
+                    else if (xtr.Name.ToString() == "id")
                     {
                         currentRegionSettings.LoadedCreationID = xtr.ReadElementContentAsString();
                     }
                 }
 
             }
-            
+
             currentRegionSettings.Save();
         }
     }

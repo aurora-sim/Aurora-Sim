@@ -11,7 +11,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         OpenSim.Framework.IOpenSimBase OpenSimBase;
-        public void Initialise(OpenSim.Framework.IOpenSimBase openSim)
+        public void Initialize(OpenSim.Framework.IOpenSimBase openSim)
         {
             m_log.Info("[AURORADATA]: Setting up the data service");
             OpenSimBase = openSim;

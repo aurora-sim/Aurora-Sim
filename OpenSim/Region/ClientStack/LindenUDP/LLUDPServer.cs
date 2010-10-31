@@ -156,6 +156,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         private int m_defaultRTO = 0;
         private int m_maxRTO = 0;
 
+        private bool m_disableFacelights = false;
+
         public Socket Server { get { return null; } }
 
         public LLUDPServer(IPAddress listenIP, ref uint port, int proxyPortOffsetParm, bool allow_alternate_port, IConfigSource configSource, AgentCircuitManager circuitManager)
@@ -194,6 +196,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 m_defaultRTO = config.GetInt("DefaultRTO", 0);
                 m_maxRTO = config.GetInt("MaxRTO", 0);
                 ClientTimeOut = config.GetInt("ClientTimeOut", 60);
+                m_disableFacelights = config.GetBoolean("DisableFacelights", false);
             }
             else
             {
@@ -245,9 +248,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             if (m_scene.tracker == null)
             {
                 m_scene.tracker = new AuroraThreadTracker();
+                m_scene.tracker.Init(m_scene);
                 m_scene.tracker.AddSceneHeartbeat(new IncomingPacketHandler(this), out thread);
                 m_scene.tracker.AddSceneHeartbeat(new OutgoingPacketHandler(this), out thread);
-                m_scene.tracker.Init(m_scene);
             }
             else
             {
@@ -523,6 +526,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             // FIXME: Implement?
         }
 
+        /// <summary>
+        /// Actually send a packet to a client.
+        /// </summary>
+        /// <param name="outgoingPacket"></param>
         internal void SendPacketFinal(OutgoingPacket outgoingPacket)
         {
             UDPPacketBuffer buffer = outgoingPacket.Buffer;
@@ -650,7 +657,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             IClientAPI client;
             if (!m_scene.TryGetClient(address, out client) || !(client is LLClientView))
             {
-                //m_log.Debug("[LLUDPSERVER]: Received a " + packet.Type + " packet from an unrecognized source: " + address + " in " + m_scene.RegionInfo.RegionName);
+                m_log.Debug("[LLUDPSERVER]: Received a " + packet.Type + " packet from an unrecognized source: " + address + " in " + m_scene.RegionInfo.RegionName);
                 return;
             }
 
@@ -915,6 +922,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 // Create the LLClientView
                 LLClientView client = new LLClientView(remoteEndPoint, m_scene, this, udpClient, sessionInfo, agentID, sessionID, circuitCode);
                 client.OnLogout += LogoutHandler;
+
+                client.DisableFacelights = m_disableFacelights;
 
                 // Start the IClientAPI
                 client.Start();

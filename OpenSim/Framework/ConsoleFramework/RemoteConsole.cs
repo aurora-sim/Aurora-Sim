@@ -38,7 +38,6 @@ using Nini.Config;
 using OpenSim.Framework.Servers.HttpServer;
 using log4net;
 using OpenSim.Framework.Console;
-using Mono.Addins;
 
 namespace OpenSim.Framework
 {
@@ -46,11 +45,11 @@ namespace OpenSim.Framework
     {
         public int last;
         public long lastLineSeen;
+        public bool newConnection = true;
     }
 
     // A console that uses REST interfaces
     //
-    [Extension(Path = "/OpenSim/Console", NodeName = "ConsolePlugin")]
     public class RemoteConsole : CommandConsole
     {
         private IHttpServer m_Server = null;
@@ -70,7 +69,7 @@ namespace OpenSim.Framework
             get { return "RemoteConsole"; }
         }
 
-        public override void Initialise(string defaultPrompt, IConfigSource source, IOpenSimBase baseOpenSim)
+        public override void Initialize(string defaultPrompt, IConfigSource source, IOpenSimBase baseOpenSim)
         {
             m_Config = source;
             uint m_consolePort = 0;
@@ -115,6 +114,7 @@ namespace OpenSim.Framework
                 m_LineNumber++;
                 m_Scrollback.Add(String.Format("{0}", m_LineNumber)+":"+level+":"+text);
             }
+            Log(text.Trim());
             System.Console.WriteLine(text.Trim());
         }
 
@@ -125,7 +125,14 @@ namespace OpenSim.Framework
 
         public override string ReadLine(string p, bool isCommand, bool e)
         {
+            if (isCommand)
+                Output("+++"+p);
+            else
+                Output("-++"+p);
+
             m_DataEvent.WaitOne();
+
+            string cmdinput;
 
             lock (m_InputData)
             {
@@ -135,29 +142,30 @@ namespace OpenSim.Framework
                     return "";
                 }
 
-                string cmdinput = m_InputData[0];
+                cmdinput = m_InputData[0];
                 m_InputData.RemoveAt(0);
                 if (m_InputData.Count == 0)
                     m_DataEvent.Reset();
 
-                if (isCommand)
-                {
-                    string[] cmd = Commands.Resolve(Parser.Parse(cmdinput));
-
-                    if (cmd.Length != 0)
-                    {
-                        int i;
-
-                        for (i=0 ; i < cmd.Length ; i++)
-                        {
-                            if (cmd[i].Contains(" "))
-                                cmd[i] = "\"" + cmd[i] + "\"";
-                        }
-                        return String.Empty;
-                    }
-                }
-                return cmdinput;
             }
+
+            if (isCommand)
+            {
+                string[] cmd = Commands.Resolve(Parser.Parse(cmdinput));
+
+                if (cmd.Length != 0)
+                {
+                    int i;
+
+                    for (i=0 ; i < cmd.Length ; i++)
+                    {
+                        if (cmd[i].Contains(" "))
+                            cmd[i] = "\"" + cmd[i] + "\"";
+                    }
+                    return String.Empty;
+                }
+            }
+            return cmdinput;
         }
 
         private void DoExpire()
@@ -298,7 +306,7 @@ namespace OpenSim.Framework
 
             reply["str_response_string"] = xmldoc.InnerXml;
             reply["int_response_code"] = 200;
-            reply["content_type"] = "text/plain";
+            reply["content_type"] = "text/xml";
 
             return reply;
         }
@@ -327,7 +335,7 @@ namespace OpenSim.Framework
                     return reply;
             }
 
-            if (post["COMMAND"] == null || post["COMMAND"].ToString() == String.Empty)
+            if (post["COMMAND"] == null)
                 return reply;
 
             lock (m_InputData)
@@ -353,7 +361,7 @@ namespace OpenSim.Framework
 
             reply["str_response_string"] = xmldoc.InnerXml;
             reply["int_response_code"] = 200;
-            reply["content_type"] = "text/plain";
+            reply["content_type"] = "text/xml";
 
             return reply;
         }
@@ -434,6 +442,12 @@ namespace OpenSim.Framework
             xmldoc.AppendChild(xmlnode);
             XmlElement rootElement = xmldoc.CreateElement("", "ConsoleSession",
                     "");
+
+            if (c.newConnection)
+            {
+                c.newConnection = false;
+                Output("+++" + DefaultPrompt);
+            }
 
             lock (m_Scrollback)
             {

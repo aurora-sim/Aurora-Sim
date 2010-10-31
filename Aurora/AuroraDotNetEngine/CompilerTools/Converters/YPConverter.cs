@@ -11,11 +11,9 @@ using Microsoft.VisualBasic;
 using log4net;
 using OpenSim.Region.Framework.Interfaces;
 using OpenMetaverse;
-using Mono.Addins;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 {
-    [Extension(Path = "/OpenSim/ScriptConverter", NodeName = "ScriptConverter")]
     public class YPConverter : IScriptConverter
     {
         private CSharpCodeProvider YPcodeProvider = new CSharpCodeProvider(); // YP is translated into CSharp

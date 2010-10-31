@@ -58,7 +58,7 @@ namespace OpenSim.Framework
         public readonly static int ALPHA = 13;
         public readonly static int TATTOO = 14;
 
-        private readonly static int MAX_WEARABLES = 15;
+        public readonly static int MAX_WEARABLES = 15;
 
         private static UUID BODY_ASSET = new UUID("66c41e39-38f9-f75a-024e-585989bfab73");
         private static UUID BODY_ITEM = new UUID("66c41e39-38f9-f75a-024e-585989bfaba9");
@@ -276,7 +276,7 @@ namespace OpenSim.Framework
 
         public virtual void ClearWearables()
         {
-            for (int i = 0; i < 13; i++)
+            for (int i = 0; i < MAX_WEARABLES; i++)
             {
                 m_wearables[i].AssetID = UUID.Zero;
                 m_wearables[i].ItemID = UUID.Zero;

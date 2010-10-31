@@ -37,14 +37,9 @@ using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Framework.Console;
 using OpenSim.Region.Physics.Manager;
-using Mono.Addins;
 
-[assembly: Addin("RegionCombinerModule", "0.1")]
-[assembly: AddinDependency("OpenSim", "0.5")]
 namespace OpenSim.Region.RegionCombinerModule
 {
-
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class RegionCombinerModule : ISharedRegionModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -169,7 +164,7 @@ namespace OpenSim.Region.RegionCombinerModule
                 {
                     return;
                 }
-
+                presence.SetSendCourseLocationMethod(SendCourseLocationUpdates);
             }
         }
 
@@ -687,7 +682,8 @@ namespace OpenSim.Region.RegionCombinerModule
             // Sets up the CoarseLocationUpdate forwarder for this root region
             scene.EventManager.OnNewPresence += SetCourseLocationDelegate;
 
-            scene.EventManager.OnNewClient += new EventManager.OnNewClientDelegate(EventManager_OnNewClient);
+            scene.EventManager.OnNewClient += EventManager_OnNewClient;
+            scene.EventManager.OnClosingClient += OnClosingClient;
 
             // Adds this root region to a dictionary of regions that are connectable
             m_regions.Add(scene.RegionInfo.RegionID, regionConnections);
@@ -698,6 +694,13 @@ namespace OpenSim.Region.RegionCombinerModule
             client.OnSetEstateTerrainDetailTexture += setEstateTerrainBaseTexture;
             client.OnSetEstateTerrainTextureHeights += setEstateTerrainTextureHeights;
             client.OnSetRegionTerrainSettings += setRegionTerrainSettings;
+        }
+
+        private void OnClosingClient(IClientAPI client)
+        {
+            client.OnSetEstateTerrainDetailTexture -= setEstateTerrainBaseTexture;
+            client.OnSetEstateTerrainTextureHeights -= setEstateTerrainTextureHeights;
+            client.OnSetRegionTerrainSettings -= setRegionTerrainSettings;
         }
 
         public void setRegionTerrainSettings(float WaterHeight,
@@ -818,8 +821,7 @@ namespace OpenSim.Region.RegionCombinerModule
             args.useEstateSun = m_scene.RegionInfo.RegionSettings.UseEstateSun;
             args.waterHeight = (float)m_scene.RegionInfo.RegionSettings.WaterHeight;
             args.simName = m_scene.RegionInfo.RegionName;
-            args.RegionType = m_scene.RegionInfo.RegionType;
-            args.MaxAgents = (uint)m_scene.RegionInfo.RegionSettings.AgentLimit;
+            args.regionType = m_scene.RegionInfo.RegionType;
 
             remote_client.SendRegionInfoToEstateMenu(args);
         }
@@ -894,8 +896,8 @@ namespace OpenSim.Region.RegionCombinerModule
             {
                 if (sp.IsChildAgent)
                     return;
-                if (sp.UUID != presence.UUID)
-                {
+                //if (sp.UUID != presence.UUID)
+                //{
                     if (sp.ParentID != UUID.Zero)
                     {
                         // sitting avatar
@@ -917,7 +919,7 @@ namespace OpenSim.Region.RegionCombinerModule
                         CoarseLocations.Add(sp.AbsolutePosition);
                         AvatarUUIDs.Add(sp.UUID);
                     }
-                }
+                //}
             });
             DistributeCourseLocationUpdates(CoarseLocations, AvatarUUIDs, connectiondata, presence);
         }
@@ -982,7 +984,6 @@ namespace OpenSim.Region.RegionCombinerModule
 
                     updates.Add(offset,updatedata);
                 }
-                
                 updates[offset].Locations.Add(locations[i]);
                 updates[offset].Uuids.Add(uuids[i]);
             }

@@ -40,7 +40,7 @@ using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.CoreModules.Scripting.EmailModules
 {
-    public class EmailModule : IRegionModule, IEmailModule
+    public class EmailModule : ISharedRegionModule, IEmailModule
     {
         //
         // Log

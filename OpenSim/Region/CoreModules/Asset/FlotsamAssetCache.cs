@@ -39,7 +39,6 @@ using System.Timers;
 
 using log4net;
 using Nini.Config;
-using Mono.Addins;
 using OpenMetaverse;
 
 using OpenSim.Framework;
@@ -48,13 +47,8 @@ using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
 
-
-[assembly: Addin("FlotsamAssetCache", "1.1")]
-[assembly: AddinDependency("OpenSim", "0.5")]
-
 namespace Flotsam.RegionModules.AssetCache
 {
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class FlotsamAssetCache : ISharedRegionModule, IImprovedAssetCache, IAssetService
     {
         private static readonly ILog m_log =

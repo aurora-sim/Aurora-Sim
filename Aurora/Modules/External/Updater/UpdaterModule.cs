@@ -15,7 +15,7 @@ namespace Aurora.Modules
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        public void Initialise(OpenSim.Framework.IOpenSimBase openSim)
+        public void Initialize(OpenSim.Framework.IOpenSimBase openSim)
         {
             try
             {

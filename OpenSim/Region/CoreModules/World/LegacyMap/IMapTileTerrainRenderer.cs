@@ -29,11 +29,11 @@ using System.Drawing;
 using Nini.Config;
 using OpenSim.Region.Framework.Scenes;
 
-namespace OpenSim.Region.CoreModules.World.LegacyMap
+namespace OpenSim.Region.CoreModules.World.WorldMap
 {
     public interface IMapTileTerrainRenderer
     {
         void Initialise(Scene scene, IConfigSource config);
-        void TerrainToBitmap(Bitmap mapbmp);
+        Bitmap TerrainToBitmap(Bitmap mapbmp);
     }
 }

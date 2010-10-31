@@ -26,7 +26,6 @@
  */
 
 using System;
-using Mono.Addins;
 using Nini.Config;
 using OpenSim.Region.Framework.Scenes;
 

@@ -85,7 +85,7 @@ namespace Aurora.Modules
                 m_Scenes.Add(scene);
             m_scene = scene;
             m_scene.EventManager.OnNewClient += NewClient;
-            m_scene.EventManager.OnClientClosed += RemoveClient;
+            m_scene.EventManager.OnClosingClient += OnClosingClient;
         }
 
         public void RemoveRegion(Scene scene)
@@ -96,7 +96,7 @@ namespace Aurora.Modules
             if (m_Scenes.Contains(scene))
                 m_Scenes.Remove(scene);
             m_scene.EventManager.OnNewClient -= NewClient;
-            m_scene.EventManager.OnClientClosed -= RemoveClient;
+            m_scene.EventManager.OnClosingClient -= OnClosingClient;
         }
 
         public void RegionLoaded(Scene scene)
@@ -150,9 +150,8 @@ namespace Aurora.Modules
             client.OnPlacesQuery += OnPlacesQueryRequest;
         }
 
-        public void RemoveClient(UUID clientID, Scene scene)
+        private void OnClosingClient(IClientAPI client)
         {
-            IClientAPI client = scene.GetScenePresence(clientID).ControllingClient;
             client.OnDirPlacesQuery -= DirPlacesQuery;
             client.OnDirFindQuery -= DirFindQuery;
             client.OnDirPopularQuery -= DirPopularQuery;

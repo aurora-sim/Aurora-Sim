@@ -26,45 +26,35 @@
  */
 
 using System;
-using Nini.Config;
-using OpenSim.Framework;
-using OpenSim.Framework.Communications;
-using OpenSim.Framework.Servers;
-using OpenSim.Region.Framework;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
+using log4net;
 
-namespace OpenSim.Tests.Common.Mock
+namespace Robust._32BitLaunch
 {
-    public class TestScene : Scene
+    class Program
     {
-        public TestScene(
-            RegionInfo regInfo, AgentCircuitManager authen,
-            SceneCommunicationService sceneGridService, ISimulationDataService simDataService, IEstateDataService estateDataService,
-            ModuleLoader moduleLoader, bool dumpAssetsToFile, bool physicalPrim,
-            bool SeeIntoRegionFromNeighbor, IConfigSource config, string simulatorVersion)
-            : base(regInfo, authen, sceneGridService, simDataService, estateDataService, moduleLoader,
-                   dumpAssetsToFile, physicalPrim, SeeIntoRegionFromNeighbor, config, simulatorVersion)
+        static void Main(string[] args)
         {
-        }
-        
-        /// <summary>
-        /// Temporarily override session authentication for tests (namely teleport).
-        /// </summary>
-        /// 
-        /// TODO: This needs to be mocked out properly.
-        /// 
-        /// <param name="agent"></param>
-        /// <returns></returns>
-        public override bool VerifyUserPresence(AgentCircuitData agent, out string reason)
-        {
-            reason = String.Empty;
-            return true;
-        }
-            
-        public AsyncSceneObjectGroupDeleter SceneObjectGroupDeleter
-        {
-            get { return m_asyncSceneObjectDeleter; }
+            log4net.Config.XmlConfigurator.Configure();
+
+            System.Console.WriteLine("32-bit OpenSim executor");
+            System.Console.WriteLine("-----------------------");
+            System.Console.WriteLine("");
+            System.Console.WriteLine("This application is compiled for 32-bit CPU and will run under WOW32 or similar.");
+            System.Console.WriteLine("All 64-bit incompatibilities should be gone.");
+            System.Console.WriteLine("");
+            System.Threading.Thread.Sleep(300);
+            try
+            {
+                global::OpenSim.Server.OpenSimServer.Main(args);
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine("OpenSim threw an exception:");
+                System.Console.WriteLine(ex.ToString());
+                System.Console.WriteLine("");
+                System.Console.WriteLine("Application will now terminate!");
+                System.Console.WriteLine("");
+            }
         }
     }
 }

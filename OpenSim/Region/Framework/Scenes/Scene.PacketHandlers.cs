@@ -125,9 +125,8 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="remoteClient"></param>
         public void RequestPrim(uint primLocalID, IClientAPI remoteClient)
         {
-            List<EntityBase> EntityList = GetEntities();
-
-            foreach (EntityBase ent in EntityList)
+            EntityBase[] entityList = GetEntities();
+            foreach (EntityBase ent in entityList)
             {
                 if (ent is SceneObjectGroup)
                 {
@@ -292,24 +291,61 @@ namespace OpenSim.Region.Framework.Scenes
 
         public virtual void ProcessObjectGrab(uint localID, Vector3 offsetPos, IClientAPI remoteClient, List<SurfaceTouchEventArgs> surfaceArgs)
         {
-            List<EntityBase> EntityList = GetEntities();
+            EntityBase[] EntityList = GetEntities();
 
             SurfaceTouchEventArgs surfaceArg = null;
             if (surfaceArgs != null && surfaceArgs.Count > 0)
                 surfaceArg = surfaceArgs[0];
+            ISceneEntity childPrim;
+            SceneObjectPart part;
+            Entities.TryGetChildPrim(localID, out childPrim);
+            if (childPrim != null)
+            {
+                part = childPrim as SceneObjectPart;
+                SceneObjectGroup obj = part.ParentGroup;
+                if (obj.RootPart.BlockGrab)
+                    return;
+                // Currently only grab/touch for the single prim
+                // the client handles rez correctly
+                obj.ObjectGrabHandler(localID, offsetPos, remoteClient);
 
-            foreach (EntityBase ent in EntityList)
+                // If the touched prim handles touches, deliver it
+                // If not, deliver to root prim
+                EventManager.TriggerObjectGrab(part, part.OffsetPosition, remoteClient, surfaceArg);
+                // Deliver to the root prim if the touched prim doesn't handle touches
+                // or if we're meant to pass on touches anyway. Don't send to root prim
+                // if prim touched is the root prim as we just did it
+                if ((part.LocalId != obj.RootPart.LocalId))
+                {
+                    const int PASS_IF_NOT_HANDLED = 0;
+                    const int PASS_ALWAYS = 1;
+                    const int PASS_NEVER = 2;
+                    if (part.PassTouch == PASS_NEVER)
+                    {
+                    }
+                    if (part.PassTouch == PASS_ALWAYS)
+                    {
+                        EventManager.TriggerObjectGrab(obj.RootPart, part.OffsetPosition, remoteClient, surfaceArg);
+                    }
+                    else if (((part.ScriptEvents & scriptEvents.touch_start) == 0) && part.PassTouch == PASS_IF_NOT_HANDLED) //If no event in this prim, pass to parent
+                    {
+                        EventManager.TriggerObjectGrab(obj.RootPart, part.OffsetPosition, remoteClient, surfaceArg);
+                    }
+                }
+            }
+
+            /*foreach (EntityBase ent in EntityList)
             {
                 if (ent is SceneObjectGroup)
                 {
                     SceneObjectGroup obj = ent as SceneObjectGroup;
                     if (obj != null)
                     {
-                        if (obj.RootPart.BlockGrab)
-                            return;
                         // Is this prim part of the group
                         if (obj.HasChildPrim(localID))
                         {
+                            if (obj.RootPart.BlockGrab)
+                                return;
                             // Currently only grab/touch for the single prim
                             // the client handles rez correctly
                             obj.ObjectGrabHandler(localID, offsetPos, remoteClient);
@@ -344,18 +380,54 @@ namespace OpenSim.Region.Framework.Scenes
                         }
                     }
                 }
-            }
+            }*/
         }
 
         public virtual void ProcessObjectGrabUpdate(UUID objectID, Vector3 offset, Vector3 pos, IClientAPI remoteClient, List<SurfaceTouchEventArgs> surfaceArgs)
         {
-            List<EntityBase> EntityList = GetEntities();
+            EntityBase[] EntityList = GetEntities();
 
             SurfaceTouchEventArgs surfaceArg = null;
             if (surfaceArgs != null && surfaceArgs.Count > 0)
                 surfaceArg = surfaceArgs[0];
 
-            foreach (EntityBase ent in EntityList)
+            ISceneEntity childPrim;
+            SceneObjectPart part;
+            Entities.TryGetChildPrim(objectID, out childPrim);
+            if (childPrim != null)
+            {
+                part = childPrim as SceneObjectPart;
+                SceneObjectGroup obj = part.ParentGroup;
+                if (obj.RootPart.BlockGrab)
+                    return;
+
+                // If the touched prim handles touches, deliver it
+                // If not, deliver to root prim
+                EventManager.TriggerObjectGrabbing(part, part.OffsetPosition, remoteClient, surfaceArg);
+                // Deliver to the root prim if the touched prim doesn't handle touches
+                // or if we're meant to pass on touches anyway. Don't send to root prim
+                // if prim touched is the root prim as we just did it
+
+                if ((part.LocalId != obj.RootPart.LocalId))
+                {
+                    const int PASS_IF_NOT_HANDLED = 0;
+                    const int PASS_ALWAYS = 1;
+                    const int PASS_NEVER = 2;
+                    if (part.PassTouch == PASS_NEVER)
+                    {
+                    }
+                    if (part.PassTouch == PASS_ALWAYS)
+                    {
+                        EventManager.TriggerObjectGrabbing(obj.RootPart, part.OffsetPosition, remoteClient, surfaceArg);
+                    }
+                    else if (((part.ScriptEvents & scriptEvents.touch) == 0) && part.PassTouch == PASS_IF_NOT_HANDLED) //If no event in this prim, pass to parent
+                    {
+                        EventManager.TriggerObjectGrabbing(obj.RootPart, part.OffsetPosition, remoteClient, surfaceArg);
+                    }
+                }
+            }
+
+            /*foreach (EntityBase ent in EntityList)
             {
                 if (ent is SceneObjectGroup)
                 {
@@ -396,18 +468,48 @@ namespace OpenSim.Region.Framework.Scenes
                         }
                     }
                 }
-            }
+            }*/
          }
 
         public virtual void ProcessObjectDeGrab(uint localID, IClientAPI remoteClient, List<SurfaceTouchEventArgs> surfaceArgs)
         {
-            List<EntityBase> EntityList = GetEntities();
+            EntityBase[] EntityList = GetEntities();
 
             SurfaceTouchEventArgs surfaceArg = null;
             if (surfaceArgs != null && surfaceArgs.Count > 0)
                 surfaceArg = surfaceArgs[0];
 
-            foreach (EntityBase ent in EntityList)
+            ISceneEntity childPrim;
+            SceneObjectPart part;
+            Entities.TryGetChildPrim(localID, out childPrim);
+            if (childPrim != null)
+            {
+                part = childPrim as SceneObjectPart;
+                SceneObjectGroup obj = part.ParentGroup;
+                // If the touched prim handles touches, deliver it
+                // If not, deliver to root prim
+                EventManager.TriggerObjectDeGrab(part, remoteClient, surfaceArg);
+
+                if ((part.LocalId != obj.RootPart.LocalId))
+                {
+                    const int PASS_IF_NOT_HANDLED = 0;
+                    const int PASS_ALWAYS = 1;
+                    const int PASS_NEVER = 2;
+                    if (part.PassTouch == PASS_NEVER)
+                    {
+                    }
+                    if (part.PassTouch == PASS_ALWAYS)
+                    {
+                        EventManager.TriggerObjectDeGrab(obj.RootPart, remoteClient, surfaceArg);
+                    }
+                    else if (((part.ScriptEvents & scriptEvents.touch_end) == 0) && part.PassTouch == PASS_IF_NOT_HANDLED) //If no event in this prim, pass to parent
+                    {
+                        EventManager.TriggerObjectDeGrab(obj.RootPart, remoteClient, surfaceArg);
+                    }
+                }
+            }
+
+            /*foreach (EntityBase ent in EntityList)
             {
                 if (ent is SceneObjectGroup)
                 {
@@ -445,7 +547,7 @@ namespace OpenSim.Region.Framework.Scenes
                         }
                     }
                 }
-            }
+            }*/
         }
 
         public void ProcessAvatarPickerRequest(IClientAPI client, UUID avatarID, UUID RequestID, string query)
@@ -600,6 +702,9 @@ namespace OpenSim.Region.Framework.Scenes
         public void HandleFetchInventoryDescendents(IClientAPI remoteClient, UUID folderID, UUID ownerID,
                                                     bool fetchFolders, bool fetchItems, int sortOrder)
         {
+            if (folderID == UUID.Zero)
+                return;
+
             // FIXME MAYBE: We're not handling sortOrder!
 
             // TODO: This code for looking in the folder for the library should be folded somewhere else

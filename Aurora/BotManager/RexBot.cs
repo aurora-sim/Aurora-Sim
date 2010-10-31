@@ -2225,17 +2225,14 @@ namespace Aurora.BotManager
 
         void IClientAPI.SendStartPingCheck(byte seq)
         {
-            throw new NotImplementedException();
         }
 
-        void IClientAPI.SendKillObject(ulong regionHandle, uint[] localIDs)
+        void IClientAPI.SendKillObject(ulong regionHandle, ISceneEntity[] localIDs)
         {
-            throw new NotImplementedException();
         }
 
         void IClientAPI.SendAnimations(UUID[] animID, int[] seqs, UUID sourceAgentId, UUID[] objectIDs)
         {
-            throw new NotImplementedException();
         }
 
         void IClientAPI.SendRegionHandshake(RegionInfo regionInfo, RegionHandshakeArgs args)
@@ -2328,16 +2325,6 @@ namespace Aurora.BotManager
             throw new NotImplementedException();
         }
 
-        void IClientAPI.SendTeleportLocationStart()
-        {
-            throw new NotImplementedException();
-        }
-
-        void IClientAPI.SendTeleportProgress(string reason)
-        {
-            throw new NotImplementedException();
-        }
-
         void IClientAPI.SendMoneyBalance(UUID transaction, bool success, byte[] description, int balance)
         {
             throw new NotImplementedException();
@@ -2349,11 +2336,6 @@ namespace Aurora.BotManager
         }
 
         void IClientAPI.SendCoarseLocationUpdate(List<UUID> users, List<Vector3> CoarseLocations)
-        {
-            throw new NotImplementedException();
-        }
-
-        void IClientAPI.AttachObject(uint localID, Quaternion rotation, byte attachPoint, UUID ownerID)
         {
             throw new NotImplementedException();
         }

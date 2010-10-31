@@ -25,7 +25,7 @@ namespace OpenSim.ApplicationPlugins.RemoteController
     {
         private string userStatsURI = "";
         private IOpenSimBase m_OpenSimBase;
-        public void Initialise(IOpenSimBase openSim)
+        public void Initialize(IOpenSimBase openSim)
         {
             m_OpenSimBase = openSim;
             IConfig statsConfig = openSim.ConfigSource.Configs["Stats"];

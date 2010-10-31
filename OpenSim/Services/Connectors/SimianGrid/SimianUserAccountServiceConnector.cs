@@ -34,7 +34,6 @@ using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
 using log4net;
-using Mono.Addins;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
@@ -45,7 +44,6 @@ namespace OpenSim.Services.Connectors.SimianGrid
     /// Connects user account data (creating new users, looking up existing 
     /// users) to the SimianGrid backend
     /// </summary>
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class SimianUserAccountServiceConnector : IUserAccountService, ISharedRegionModule
     {
         private const double CACHE_EXPIRATION_SECONDS = 120.0;

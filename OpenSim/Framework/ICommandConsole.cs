@@ -39,7 +39,7 @@ namespace OpenSim.Framework
     public interface ICommandConsole: IPlugin
     {
         Commands Commands { get; set; }
-        void Initialise(string defaultPrompt, IConfigSource source, IOpenSimBase baseOpenSim);
+        void Initialize(string defaultPrompt, IConfigSource source, IOpenSimBase baseOpenSim);
         string DefaultPrompt { get; set; }
         void LockOutput();
         void UnlockOutput();
@@ -47,6 +47,8 @@ namespace OpenSim.Framework
         void Output(string text);
         string CmdPrompt(string p);
         string CmdPrompt(string p, string def);
+        string CmdPrompt(string p, List<char> excludedCharacters);
+        string CmdPrompt(string p, string def, List<char> excludedCharacters);
         string CmdPrompt(string prompt, string defaultresponse, List<string> options);
         string PasswdPrompt(string p);
         string ReadLine(string p, bool isCommand, bool e);
@@ -77,7 +79,7 @@ namespace OpenSim.Framework
             ICommandConsole console = plugin as ICommandConsole;
             if (console == null)
                 return;
-            console.Initialise(m_defaultPrompt, m_source, m_baseOpenSim);
+            console.Initialize(m_defaultPrompt, m_source, m_baseOpenSim);
         }
     }
 }

@@ -13,7 +13,7 @@ namespace Aurora.Services.DataService
     {
         IGenericData GD;
 
-        public void Initialise(IGenericData GenericData, IConfigSource source, string defaultConnectionString)
+        public void Initialize(IGenericData GenericData, IConfigSource source, string defaultConnectionString)
         {
             if (source.Configs["AuroraConnectors"].GetString("MuteListConnector", "LocalConnector") == "LocalConnector")
             {

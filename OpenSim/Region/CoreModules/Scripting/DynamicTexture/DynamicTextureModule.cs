@@ -37,11 +37,9 @@ using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using log4net;
 using System.Reflection;
-using Mono.Addins;
 
 namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
 {
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class DynamicTextureModule : ISharedRegionModule, IDynamicTextureManager
     {
         //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);

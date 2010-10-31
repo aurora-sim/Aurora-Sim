@@ -14,33 +14,27 @@ using OpenSim.Framework.Servers.HttpServer;
 using OSDArray = OpenMetaverse.StructuredData.OSDArray;
 using OSDMap = OpenMetaverse.StructuredData.OSDMap;
 using Aurora.Framework;
-using Mono.Addins;
 
 namespace Aurora.OpenRegionSettingsModule
 {
-    //[Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
-    public class OpenRegionSettingsModule : INonSharedRegionModule, IOpenRegionSettingsModule
+    #region Settings
+
+    public class OpenRegionSettings : IDataTransferable
     {
         #region Declares
 
-        private IConfigSource m_source;
-        private Scene m_scene;
+        private float m_MaxDragDistance = -1;
+        private float m_DefaultDrawDistance = -1;
 
-        private Vector3 m_MinimumPosition = new Vector3(0, 0, 0);
-        private Vector3 m_MaximumPosition = new Vector3(100000, 100000, 4096);
+        private float m_MaximumPrimScale = -1;
+        private float m_MinimumPrimScale = -1;
+        private float m_MaximumPhysPrimScale = -1;
 
-        private float m_MaxDragDistance = 0;
-        private float m_DefaultDrawDistance = 0;
+        private float m_MaximumHollowSize = -1;
+        private float m_MinimumHoleSize = -1;
 
-        private float m_MaximumPrimScale = 256;
-        private float m_MinimumPrimScale = 0.001F;
-        private float m_MaximumPhysPrimScale = 10;
-
-        private float m_MaximumHollowSize = 100;
-        private float m_MinimumHoleSize = 0.01f;
-
-        private int m_MaximumLinkCount = 0;
-        private int m_MaximumLinkCountPhys = 0;
+        private int m_MaximumLinkCount = -1;
+        private int m_MaximumLinkCountPhys = -1;
 
         private float m_WhisperDistance = 10;
         private float m_SayDistance = 30;
@@ -48,43 +42,25 @@ namespace Aurora.OpenRegionSettingsModule
 
         private OSDArray m_LSLCommands = new OSDArray();
 
-        private int m_MaximumInventoryItemsTransfer = 0;
+        private int m_MaximumInventoryItemsTransfer = -1;
         private bool m_DisplayMinimap = true;
         private bool m_RenderWater = true;
         private bool m_AllowPhysicalPrims = true;
         private bool m_ClampPrimSizes = true;
-        private bool m_ClampPrimPositions = true;
         private bool m_ForceDrawDistance = true;
         private bool m_OffsetOfUTCDST = false;
         private string m_OffsetOfUTC = "SLT";
         private bool m_EnableTeenMode = false;
-        private UUID m_DefaultUnderpants = UUID.Zero;
-        private UUID m_DefaultUndershirt = UUID.Zero;
+        public UUID m_DefaultUnderpants = UUID.Zero;
+        public UUID m_DefaultUndershirt = UUID.Zero;
         private int m_ShowTags = 2; //Show always
         private int m_MaxGroups = -1;
         private bool m_AllowParcelWindLight = true;
+        private bool m_SetTeenMode = false;
 
         #endregion
 
         #region Public properties
-
-        public Vector3 MinimumPosition
-        {
-            get
-            {
-                return m_MinimumPosition;
-            }
-            set { m_MinimumPosition = value; }
-        }
-
-        public Vector3 MaximumPosition
-        {
-            get
-            {
-                return m_MaximumPosition;
-            }
-            set { m_MaximumPosition = value; }
-        }
 
         public float MaxDragDistance
         {
@@ -227,6 +203,12 @@ namespace Aurora.OpenRegionSettingsModule
             set { m_EnableTeenMode = value; }
         }
 
+        public bool SetTeenMode
+        {
+            get { return m_SetTeenMode; }
+            set { m_SetTeenMode = value; }
+        }
+
         public UUID DefaultUnderpants
         {
             get { return m_DefaultUnderpants; }
@@ -271,6 +253,296 @@ namespace Aurora.OpenRegionSettingsModule
 
         #endregion
 
+        #region IDataTransferable
+
+        public override void FromOSD(OSDMap rm)
+        {
+            MaxDragDistance = (float)rm["MaxDragDistance"].AsReal();
+            ForceDrawDistance = rm["ForceDrawDistance"].AsInteger() == 1;
+            MaximumPrimScale = (float)rm["MaxPrimScale"].AsReal();
+            MinimumPrimScale = (float)rm["MinPrimScale"].AsReal();
+            MaximumPhysPrimScale = (float)rm["MaxPhysPrimScale"].AsReal();
+            MaximumHollowSize = (float)rm["MaxHollowSize"].AsReal();
+            MinimumHoleSize = (float)rm["MinHoleSize"].AsReal();
+            ClampPrimSizes = rm["EnforceMaxBuild"].AsInteger() == 1;
+            MaximumLinkCount = rm["MaxLinkCount"].AsInteger();
+            MaximumLinkCountPhys = rm["MaxLinkCountPhys"].AsInteger();
+            MaxDragDistance = (float)rm["MaxDragDistance"].AsReal();
+            RenderWater = rm["RenderWater"].AsInteger() == 1;
+            MaximumInventoryItemsTransfer = rm["MaxInventoryItemsTransfer"].AsInteger();
+            DisplayMinimap = rm["AllowMinimap"].AsInteger() == 1;
+            AllowPhysicalPrims = rm["AllowPhysicalPrims"].AsInteger() == 1;
+            OffsetOfUTC = rm["OffsetOfUTC"].AsString();
+            OffsetOfUTCDST = rm["OffsetOfUTCDST"].AsInteger() == 1;
+            EnableTeenMode = rm["ToggleTeenMode"].AsInteger() == 1;
+            SetTeenMode = rm["SetTeenMode"].AsInteger() == 1;
+            ShowTags = rm["ShowTags"].AsInteger();
+            MaxGroups = rm["MaxGroups"].AsInteger();
+            AllowParcelWindLight = rm["AllowParcelWindLight"].AsInteger() == 1;
+        }
+
+        public override void FromKVP(Dictionary<string, object> KVP)
+        {
+            FromOSD(Util.DictionaryToOSD(KVP));
+        }
+
+        public override Dictionary<string, object> ToKeyValuePairs()
+        {
+            return Util.OSDToDictionary(ToOSD());
+        }
+
+        public override IDataTransferable Duplicate() { return new OpenRegionSettings(); }
+
+        public override OSDMap ToOSD()
+        {
+            OSDMap body = new OSDMap();
+            body.Add("MaxDragDistance", OSD.FromReal(MaxDragDistance));
+
+            body.Add("DrawDistance", OSD.FromReal(DefaultDrawDistance));
+            body.Add("ForceDrawDistance", OSD.FromInteger(ForceDrawDistance ? 1 : 0));
+
+            body.Add("MaxPrimScale", OSD.FromReal(MaximumPrimScale));
+            body.Add("MinPrimScale", OSD.FromReal(MinimumPrimScale));
+            body.Add("MaxPhysPrimScale", OSD.FromReal(MaximumPhysPrimScale));
+
+            body.Add("MaxHollowSize", OSD.FromReal(MaximumHollowSize));
+            body.Add("MinHoleSize", OSD.FromReal(MinimumHoleSize));
+            body.Add("EnforceMaxBuild", OSD.FromInteger(ClampPrimSizes ? 1 : 0));
+
+            body.Add("MaxLinkCount", OSD.FromInteger(MaximumLinkCount));
+            body.Add("MaxLinkCountPhys", OSD.FromInteger(MaximumLinkCountPhys));
+
+            body.Add("LSLFunctions", LSLCommands);
+
+            body.Add("RenderWater", OSD.FromInteger(RenderWater ? 1 : 0));
+
+            body.Add("MaxInventoryItemsTransfer", OSD.FromInteger(MaximumInventoryItemsTransfer));
+
+            body.Add("AllowMinimap", OSD.FromInteger(DisplayMinimap ? 1 : 0));
+            body.Add("AllowPhysicalPrims", OSD.FromInteger(AllowPhysicalPrims ? 1 : 0));
+            body.Add("OffsetOfUTC", OSD.FromString(OffsetOfUTC));
+            body.Add("OffsetOfUTCDST", OSD.FromInteger(OffsetOfUTCDST ? 1 : 0));
+            body.Add("ToggleTeenMode", OSD.FromInteger(EnableTeenMode ? 1 : 0));
+            body.Add("SetTeenMode", OSD.FromInteger(SetTeenMode ? 1 : 0));
+
+            body.Add("ShowTags", OSD.FromInteger(ShowTags));
+            body.Add("MaxGroups", OSD.FromInteger(MaxGroups));
+            body.Add("AllowParcelWindLight", OSD.FromInteger(AllowParcelWindLight ? 1 : 0));
+
+            return body;
+        }
+
+        #endregion
+    }
+
+    #endregion
+
+    #region Module
+
+    public class OpenRegionSettingsModule : INonSharedRegionModule, IOpenRegionSettingsModule
+    {
+        #region IOpenRegionSettingsModule
+
+        public float MaxDragDistance
+        {
+            get
+            {
+                return m_settings.MaxDragDistance;
+            }
+            set { m_settings.MaxDragDistance = value; }
+        }
+
+        public float DefaultDrawDistance
+        {
+            get { return m_settings.DefaultDrawDistance; }
+            set { m_settings.DefaultDrawDistance = value; }
+        }
+
+        public float MaximumPrimScale
+        {
+            get
+            {
+                return m_settings.MaximumPrimScale;
+            }
+            set { m_settings.MaximumPrimScale = value; }
+        }
+
+        public float MinimumPrimScale
+        {
+            get
+            {
+                return m_settings.MinimumPrimScale;
+            }
+            set { m_settings.MinimumPrimScale = value; }
+        }
+
+        public float MaximumPhysPrimScale
+        {
+            get
+            {
+                return m_settings.MaximumPhysPrimScale;
+            }
+            set { m_settings.MaximumPhysPrimScale = value; }
+        }
+
+        public float MaximumHollowSize
+        {
+            get { return m_settings.MaximumHollowSize; }
+            set { m_settings.MaximumHollowSize = value; }
+        }
+
+        public float MinimumHoleSize
+        {
+            get { return m_settings.MinimumHoleSize; }
+            set { m_settings.MinimumHoleSize = value; }
+        }
+
+        public int MaximumLinkCount
+        {
+            get
+            {
+                return m_settings.MaximumLinkCount;
+            }
+            set { m_settings.MaximumLinkCount = value; }
+        }
+
+        public int MaximumLinkCountPhys
+        {
+            get
+            {
+                return m_settings.MaximumLinkCountPhys;
+            }
+            set { m_settings.MaximumLinkCountPhys = value; }
+        }
+
+        public OSDArray LSLCommands
+        {
+            get { return m_settings.LSLCommands; }
+            set { m_settings.LSLCommands = value; }
+        }
+
+        public float WhisperDistance
+        {
+            get { return m_settings.WhisperDistance; }
+            set { m_settings.WhisperDistance = value; }
+        }
+
+        public float SayDistance
+        {
+            get { return m_settings.SayDistance; }
+            set { m_settings.SayDistance = value; }
+        }
+
+        public float ShoutDistance
+        {
+            get { return m_settings.ShoutDistance; }
+            set { m_settings.ShoutDistance = value; }
+        }
+
+        public bool RenderWater
+        {
+            get { return m_settings.RenderWater; }
+            set { m_settings.RenderWater = value; }
+        }
+
+        public int MaximumInventoryItemsTransfer
+        {
+            get
+            {
+                return m_settings.MaximumInventoryItemsTransfer;
+            }
+            set { m_settings.MaximumInventoryItemsTransfer = value; }
+        }
+
+        public bool DisplayMinimap
+        {
+            get { return m_settings.DisplayMinimap; }
+            set { m_settings.DisplayMinimap = value; }
+        }
+
+        public bool AllowPhysicalPrims
+        {
+            get { return m_settings.AllowPhysicalPrims; }
+            set { m_settings.AllowPhysicalPrims = value; }
+        }
+
+        public string OffsetOfUTC
+        {
+            get { return m_settings.OffsetOfUTC; }
+            set { m_settings.OffsetOfUTC = value; }
+        }
+
+        public bool OffsetOfUTCDST
+        {
+            get { return m_settings.OffsetOfUTCDST; }
+            set { m_settings.OffsetOfUTCDST = value; }
+        }
+
+        public bool EnableTeenMode
+        {
+            get { return m_settings.EnableTeenMode; }
+            set { m_settings.EnableTeenMode = value; }
+        }
+
+        public bool SetTeenMode
+        {
+            get { return m_settings.SetTeenMode; }
+            set { m_settings.SetTeenMode = value; }
+        }
+
+        public UUID DefaultUnderpants
+        {
+            get { return m_settings.DefaultUnderpants; }
+            set { m_settings.DefaultUnderpants = value; }
+        }
+
+        public UUID DefaultUndershirt
+        {
+            get { return m_settings.DefaultUndershirt; }
+            set { m_settings.DefaultUndershirt = value; }
+        }
+
+        public bool ClampPrimSizes
+        {
+            get { return m_settings.ClampPrimSizes; }
+            set { m_settings.ClampPrimSizes = value; }
+        }
+
+        public bool ForceDrawDistance
+        {
+            get { return m_settings.ForceDrawDistance; }
+            set { m_settings.ForceDrawDistance = value; }
+        }
+
+        public int ShowTags
+        {
+            get { return m_settings.ShowTags; }
+            set { m_settings.ShowTags = value; }
+        }
+
+        public int MaxGroups
+        {
+            get { return m_settings.MaxGroups; }
+            set { m_settings.MaxGroups = value; }
+        }
+
+        public bool AllowParcelWindLight
+        {
+            get { return m_settings.AllowParcelWindLight; }
+            set { m_settings.AllowParcelWindLight = value; }
+        }
+
+        #endregion
+
+        #region Declares
+
+        private IConfigSource m_source;
+        private Scene m_scene;
+
+        private OpenRegionSettings m_settings = null;
+
+        #endregion
+
         #region INonSharedRegionModule
 
         public void Initialise(IConfigSource source)
@@ -285,10 +557,18 @@ namespace Aurora.OpenRegionSettingsModule
         public void AddRegion(Scene scene)
         {
             m_scene = scene;
-            ReadConfig(scene);
             scene.EventManager.OnMakeRootAgent += OnNewClient;
             scene.EventManager.OnRegisterCaps += OnRegisterCaps;
             scene.RegisterModuleInterface<IOpenRegionSettingsModule>(this);
+            IGenericsConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+
+            if (connector != null)
+            {
+                m_settings = connector.GetGeneric<OpenRegionSettings>(scene.RegionInfo.RegionID, "OpenRegionSettings", "OpenRegionSettings", new OpenRegionSettings());
+                if (m_settings == null)
+                    m_settings = new OpenRegionSettings();
+            }
+            ReadConfig(scene);
         }
 
         public void RemoveRegion(Scene scene)
@@ -301,9 +581,9 @@ namespace Aurora.OpenRegionSettingsModule
             if (chatmodule != null)
             {
                 //Set default chat ranges
-                WhisperDistance = chatmodule.WhisperDistance;
-                SayDistance = chatmodule.SayDistance;
-                ShoutDistance = chatmodule.ShoutDistance;
+                m_settings.WhisperDistance = chatmodule.WhisperDistance;
+                m_settings.SayDistance = chatmodule.SayDistance;
+                m_settings.ShoutDistance = chatmodule.ShoutDistance;
             }
             IScriptModule scriptmodule = scene.RequestModuleInterface<IScriptModule>();
             if (scriptmodule != null)
@@ -311,7 +591,7 @@ namespace Aurora.OpenRegionSettingsModule
                 List<string> FunctionNames = scriptmodule.GetAllFunctionNames();
                 foreach (string FunctionName in FunctionNames)
                 {
-                    LSLCommands.Add(OSD.FromString(FunctionName));
+                    m_settings.LSLCommands.Add(OSD.FromString(FunctionName));
                 }
             }
         }
@@ -327,6 +607,8 @@ namespace Aurora.OpenRegionSettingsModule
         }
 
         #endregion
+
+        #region CAPS
 
         public void OnRegisterCaps(UUID agentID, Caps caps)
         {
@@ -357,32 +639,40 @@ namespace Aurora.OpenRegionSettingsModule
 
             OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml((string)m_dhttpMethod["requestbody"]);
 
-            DefaultDrawDistance = rm["draw_distance"].AsInteger();
-            ForceDrawDistance = rm["force_draw_distance"].AsBoolean();
-            DisplayMinimap = rm["allow_minimap"].AsBoolean();
-            AllowPhysicalPrims = rm["allow_physical_prims"].AsBoolean();
-            MaxDragDistance = (float)rm["max_drag_distance"].AsReal();
-            MinimumHoleSize = (float)rm["min_hole_size"].AsReal();
-            MaximumHollowSize = (float)rm["max_hollow_size"].AsReal();
-            MaximumInventoryItemsTransfer = rm["max_inventory_items_transfer"].AsInteger();
-            MaximumLinkCount = (int)rm["max_link_count"].AsReal();
-            MaximumLinkCountPhys = (int)rm["max_link_count_phys"].AsReal();
-            MaximumPhysPrimScale = (float)rm["max_phys_prim_scale"].AsReal();
-            MaximumPrimScale = (float)rm["max_prim_scale"].AsReal();
-            MinimumPrimScale = (float)rm["min_prim_scale"].AsReal();
-            RenderWater = rm["render_water"].AsBoolean();
-            ShowTags = (int)rm["show_tags"].AsReal();
-            MaxGroups = (int)rm["max_groups"].AsReal();
-            AllowParcelWindLight = rm["allow_parcel_windlight"].AsBoolean();
-            EnableTeenMode = rm["enable_teen_mode"].AsBoolean();
+            m_settings.DefaultDrawDistance = rm["draw_distance"].AsInteger();
+            m_settings.ForceDrawDistance = rm["force_draw_distance"].AsBoolean();
+            m_settings.DisplayMinimap = rm["allow_minimap"].AsBoolean();
+            m_settings.AllowPhysicalPrims = rm["allow_physical_prims"].AsBoolean();
+            m_settings.MaxDragDistance = (float)rm["max_drag_distance"].AsReal();
+            m_settings.MinimumHoleSize = (float)rm["min_hole_size"].AsReal();
+            m_settings.MaximumHollowSize = (float)rm["max_hollow_size"].AsReal();
+            m_settings.MaximumInventoryItemsTransfer = rm["max_inventory_items_transfer"].AsInteger();
+            m_settings.MaximumLinkCount = (int)rm["max_link_count"].AsReal();
+            m_settings.MaximumLinkCountPhys = (int)rm["max_link_count_phys"].AsReal();
+            m_settings.MaximumPhysPrimScale = (float)rm["max_phys_prim_scale"].AsReal();
+            m_settings.MaximumPrimScale = (float)rm["max_prim_scale"].AsReal();
+            m_settings.MinimumPrimScale = (float)rm["min_prim_scale"].AsReal();
+            m_settings.RenderWater = rm["render_water"].AsBoolean();
+            m_settings.ShowTags = (int)rm["show_tags"].AsReal();
+            m_settings.MaxGroups = (int)rm["max_groups"].AsReal();
+            m_settings.AllowParcelWindLight = rm["allow_parcel_windlight"].AsBoolean();
+            m_settings.EnableTeenMode = rm["enable_teen_mode"].AsBoolean();
+            m_settings.ClampPrimSizes = rm["enforce_max_build"].AsBoolean();
 
-            //TODO Save this
+            IGenericsConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+
+            if (connector != null)
+            {
+                connector.AddGeneric(SP.Scene.RegionInfo.RegionID, "OpenRegionSettings", "OpenRegionSettings", m_settings.ToOSD());
+            }
 
             //Update all clients about changes
             SendToAllClients();
 
             return responsedata;
         }
+
+        #endregion
 
         #region Setup
 
@@ -403,50 +693,10 @@ namespace Aurora.OpenRegionSettingsModule
 
         private void ReadSettings(IConfig instanceSettings)
         {
-            m_MinimumPosition.X = instanceSettings.GetFloat("MinimumPositionX", MinimumPosition.X);
-            m_MinimumPosition.Y = instanceSettings.GetFloat("MinimumPositionY", MinimumPosition.Y);
-            m_MinimumPosition.Z = instanceSettings.GetFloat("MinimumPositionZ", MinimumPosition.Z);
-
-
-            m_MaximumPosition.X = instanceSettings.GetFloat("MaximumPositionX", MaximumPosition.X);
-            m_MaximumPosition.Y = instanceSettings.GetFloat("MaximumPositionY", MaximumPosition.Y);
-            m_MaximumPosition.Z = instanceSettings.GetFloat("MaximumPositionZ", MaximumPosition.Z);
-
-            m_MaxDragDistance = instanceSettings.GetFloat("MaxDragDistance", MaxDragDistance);
-            m_DefaultDrawDistance = instanceSettings.GetFloat("DefaultDrawDistance", DefaultDrawDistance);
-
-
-            m_MaximumPrimScale = instanceSettings.GetFloat("MaximumPrimScale", MaximumPrimScale);
-            m_MinimumPrimScale = instanceSettings.GetFloat("MinimumPrimScale", MinimumPrimScale);
-            m_MaximumPhysPrimScale = instanceSettings.GetFloat("MaximumPhysPrimScale", MaximumPhysPrimScale);
-
-
-            m_MaximumHollowSize = instanceSettings.GetFloat("MaximumHollowSize", MaximumHollowSize);
-            m_MinimumHoleSize = instanceSettings.GetFloat("MinimumHoleSize", MinimumHoleSize);
-
-
-            m_MaximumLinkCount = instanceSettings.GetFloat("MaximumLinkCount", MaximumLinkCount);
-            m_MaximumLinkCountPhys = instanceSettings.GetFloat("MaximumLinkCountPhys", MaximumLinkCountPhys);
-
-
-            m_RenderWater = instanceSettings.GetBoolean("RenderWater", RenderWater);
-            m_MaximumInventoryItemsTransfer = instanceSettings.GetInt("MaximumInventoryItemsTransfer", MaximumInventoryItemsTransfer);
-            m_DisplayMinimap = instanceSettings.GetBoolean("DisplayMinimap", DisplayMinimap);
-            m_AllowPhysicalPrims = instanceSettings.GetBoolean("AllowPhysicalPrims", AllowPhysicalPrims);
-            m_ClampPrimSizes = instanceSettings.GetBoolean("ClampPrimSizes", m_ClampPrimSizes);
-            m_ClampPrimPositions = instanceSettings.GetBoolean("ClampPrimPositions", m_ClampPrimPositions);
-            m_ForceDrawDistance = instanceSettings.GetBoolean("ForceDrawDistance", m_ForceDrawDistance);
-
-            m_OffsetOfUTC = instanceSettings.GetString("OffsetOfUTC", OffsetOfUTC);
-            m_OffsetOfUTCDST = instanceSettings.GetBoolean("OffsetOfUTCDST", OffsetOfUTCDST);
-            m_EnableTeenMode = instanceSettings.GetBoolean("EnableTeenMode", m_EnableTeenMode);
-            string defaultunderpants = instanceSettings.GetString("DefaultUnderpants", DefaultUnderpants.ToString());
-            UUID.TryParse(defaultunderpants, out m_DefaultUnderpants);
-            string defaultundershirt = instanceSettings.GetString("DefaultUndershirt", DefaultUndershirt.ToString());
-            UUID.TryParse(defaultundershirt, out m_DefaultUndershirt);
-            m_ShowTags = instanceSettings.GetInt("ShowTags", ShowTags);
-            m_MaxGroups = instanceSettings.GetInt("MaxGroups", MaxGroups);
-            m_AllowParcelWindLight = instanceSettings.GetBoolean("AllowParcelWindLight", AllowParcelWindLight);
+            string defaultunderpants = instanceSettings.GetString("DefaultUnderpants", m_settings.DefaultUnderpants.ToString());
+                UUID.TryParse(defaultunderpants, out m_settings.m_DefaultUnderpants);
+            string defaultundershirt = instanceSettings.GetString("DefaultUndershirt", m_settings.DefaultUndershirt.ToString());
+                UUID.TryParse(defaultundershirt, out m_settings.m_DefaultUndershirt);
         }
 
         #endregion
@@ -479,47 +729,56 @@ namespace Aurora.OpenRegionSettingsModule
             OSDMap map = new OSDMap();
 
             OSDMap body = new OSDMap();
-            body.Add("MinPosX", OSD.FromReal(MinimumPosition.X));
-            body.Add("MinPosY", OSD.FromReal(MinimumPosition.Y));
-            body.Add("MinPosZ", OSD.FromReal(MinimumPosition.Z));
-            body.Add("MaxPosX", OSD.FromReal(MaximumPosition.X));
-            body.Add("MaxPosY", OSD.FromReal(MaximumPosition.Y));
-            body.Add("MaxPosZ", OSD.FromReal(MaximumPosition.Z));
 
-            body.Add("MaxDragDistance", OSD.FromReal(MaxDragDistance));
+            if (m_settings.MaxDragDistance != -1)
+                body.Add("MaxDragDistance", OSD.FromReal(m_settings.MaxDragDistance));
 
-            body.Add("DrawDistance", OSD.FromReal(DefaultDrawDistance));
-            body.Add("ForceDrawDistance", OSD.FromInteger(ForceDrawDistance ? 1 : 0));
+            if (m_settings.DefaultDrawDistance != -1)
+            {
+                body.Add("DrawDistance", OSD.FromReal(m_settings.DefaultDrawDistance));
+                body.Add("ForceDrawDistance", OSD.FromInteger(m_settings.ForceDrawDistance ? 1 : 0));
+            }
 
-            body.Add("MaxPrimScale", OSD.FromReal(MaximumPrimScale));
-            body.Add("MinPrimScale", OSD.FromReal(MinimumPrimScale));
-            body.Add("MaxPhysPrimScale", OSD.FromReal(MaximumPhysPrimScale));
+            if (m_settings.MaximumPrimScale != -1)
+                body.Add("MaxPrimScale", OSD.FromReal(m_settings.MaximumPrimScale));
+            if (m_settings.MinimumPrimScale != -1)
+                body.Add("MinPrimScale", OSD.FromReal(m_settings.MinimumPrimScale));
+            if (m_settings.MaximumPhysPrimScale != -1)
+                body.Add("MaxPhysPrimScale", OSD.FromReal(m_settings.MaximumPhysPrimScale));
 
-            body.Add("MaxHollowSize", OSD.FromReal(MaximumHollowSize));
-            body.Add("MinHoleSize", OSD.FromReal(MinimumHoleSize));
+            if (m_settings.MaximumHollowSize != -1)
+                body.Add("MaxHollowSize", OSD.FromReal(m_settings.MaximumHollowSize));
+            if (m_settings.MinimumHoleSize != -1)
+                body.Add("MinHoleSize", OSD.FromReal(m_settings.MinimumHoleSize));
+            body.Add("EnforceMaxBuild", OSD.FromInteger(m_settings.ClampPrimSizes ? 1 : 0));
 
-            body.Add("MaxLinkCount", OSD.FromInteger(MaximumLinkCount));
-            body.Add("MaxLinkCountPhys", OSD.FromInteger(MaximumLinkCountPhys));
+            if (m_settings.MaximumLinkCount != -1)
+                body.Add("MaxLinkCount", OSD.FromInteger(m_settings.MaximumLinkCount));
+            if (m_settings.MaximumLinkCountPhys != -1)
+                body.Add("MaxLinkCountPhys", OSD.FromInteger(m_settings.MaximumLinkCountPhys));
 
-            body.Add("LSLFunctions", LSLCommands);
+            body.Add("LSLFunctions", m_settings.LSLCommands);
 
-            body.Add("WhisperDistance", OSD.FromReal(WhisperDistance));
-            body.Add("SayDistance", OSD.FromReal(WhisperDistance));
-            body.Add("ShoutDistance", OSD.FromReal(WhisperDistance));
+            body.Add("WhisperDistance", OSD.FromReal(m_settings.WhisperDistance));
+            body.Add("SayDistance", OSD.FromReal(m_settings.WhisperDistance));
+            body.Add("ShoutDistance", OSD.FromReal(m_settings.WhisperDistance));
 
-            body.Add("RenderWater", OSD.FromInteger(RenderWater ? 1 : 0));
+            body.Add("RenderWater", OSD.FromInteger(m_settings.RenderWater ? 1 : 0));
 
-            body.Add("MaxInventoryItemsTransfer", OSD.FromInteger(MaximumInventoryItemsTransfer));
+            if (m_settings.MaximumInventoryItemsTransfer != -1)
+                body.Add("MaxInventoryItemsTransfer", OSD.FromInteger(m_settings.MaximumInventoryItemsTransfer));
 
-            body.Add("AllowMinimap", OSD.FromInteger(DisplayMinimap ? 1 : 0));
-            body.Add("AllowPhysicalPrims", OSD.FromInteger(AllowPhysicalPrims ? 1 : 0));
-            body.Add("OffsetOfUTC", OSD.FromString(OffsetOfUTC));
-            body.Add("OffsetOfUTCDST", OSD.FromInteger(OffsetOfUTCDST ? 1 : 0));
-            body.Add("EnableTeenMode", OSD.FromInteger(EnableTeenMode ? 1 : 0));
+            body.Add("AllowMinimap", OSD.FromInteger(m_settings.DisplayMinimap ? 1 : 0));
+            body.Add("AllowPhysicalPrims", OSD.FromInteger(m_settings.AllowPhysicalPrims ? 1 : 0));
+            body.Add("OffsetOfUTC", OSD.FromString(m_settings.OffsetOfUTC));
+            body.Add("OffsetOfUTCDST", OSD.FromInteger(m_settings.OffsetOfUTCDST ? 1 : 0));
+            body.Add("ToggleTeenMode", OSD.FromInteger(m_settings.EnableTeenMode ? 1 : 0));
+            body.Add("SetTeenMode", OSD.FromInteger(m_settings.SetTeenMode ? 1 : 0));
 
-            body.Add("ShowTags", OSD.FromInteger(ShowTags));
-            body.Add("MaxGroups", OSD.FromInteger(MaxGroups));
-            body.Add("AllowParcelWindLight", OSD.FromInteger(AllowParcelWindLight ? 1 : 0));
+            body.Add("ShowTags", OSD.FromInteger(m_settings.ShowTags));
+            if (m_settings.MaxGroups != -1)
+                body.Add("MaxGroups", OSD.FromInteger(m_settings.MaxGroups));
+            body.Add("AllowParcelWindLight", OSD.FromInteger(m_settings.AllowParcelWindLight ? 1 : 0));
 
             map.Add("body", body);
             map.Add("message", OSD.FromString("OpenRegionInfo"));
@@ -528,4 +787,6 @@ namespace Aurora.OpenRegionSettingsModule
 
         #endregion
     }
+
+    #endregion
 }

@@ -31,7 +31,6 @@ using System.Collections.Specialized;
 using System.Reflection;
 using System.IO;
 using System.Web;
-using Mono.Addins;
 using log4net;
 using Nini.Config;
 using OpenMetaverse;
@@ -46,7 +45,6 @@ using Caps = OpenSim.Framework.Capabilities.Caps;
 
 namespace OpenSim.Region.CoreModules.Avatar.Assets
 {
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class GetMeshModule : INonSharedRegionModule
     {
         private static readonly ILog m_log =
@@ -102,7 +100,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Assets
         {
             UUID capID = UUID.Random();
 
-            m_log.Info("[GETMESH]: /CAPS/" + capID);
+            //m_log.Info("[GETMESH]: /CAPS/" + capID);
             caps.RegisterHandler("GetMesh",
                                  new RestHTTPHandler("GET", "/CAPS/" + capID,
                                                        delegate(Hashtable m_dhttpMethod)

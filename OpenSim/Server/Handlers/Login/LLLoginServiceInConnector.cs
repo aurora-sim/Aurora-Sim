@@ -45,6 +45,8 @@ namespace OpenSim.Server.Handlers.Login
         private ILoginService m_LoginService;
         private bool m_Proxy;
 
+        private IConfigSource m_Config;
+
         public LLLoginServiceInConnector(IConfigSource config, IHttpServer server, IScene scene) :
                 base(config, server, String.Empty)
         {
@@ -74,6 +76,7 @@ namespace OpenSim.Server.Handlers.Login
 
         private string ReadLocalServiceFromConfig(IConfigSource config)
         {
+            m_Config = config;
             IConfig serverConfig = config.Configs["LoginService"];
             if (serverConfig == null)
                 throw new Exception(String.Format("No section LoginService in config file"));
@@ -89,7 +92,7 @@ namespace OpenSim.Server.Handlers.Login
 
         private void InitializeHandlers(IHttpServer server)
         {
-            LLLoginHandlers loginHandlers = new LLLoginHandlers(m_LoginService, m_Proxy);
+            LLLoginHandlers loginHandlers = new LLLoginHandlers(m_LoginService, m_Config, m_Proxy);
             server.AddXmlRPCHandler("login_to_simulator", loginHandlers.HandleXMLRPCLogin, false);
             server.AddXmlRPCHandler("set_login_level", loginHandlers.HandleXMLRPCSetLoginLevel, false);
             server.SetDefaultLLSDHandler(loginHandlers.HandleLLSDLogin);

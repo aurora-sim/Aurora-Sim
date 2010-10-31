@@ -12,27 +12,18 @@ namespace Aurora.Framework
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        #region New Style Loaders
+        #region Module Loaders
 
-        public static List<T> LoadPlugins<T>(string loaderString, PluginInitialiserBase baseInit) where T : IPlugin
+        private static List<string> dllBlackList;
+        private static bool firstLoad = true;
+        private static List<Type> LoadedDlls = new List<Type>();
+        private static Dictionary<string, Assembly> LoadedAssemblys = new Dictionary<string, Assembly>();
+
+        public static List<T> PickupModules<T>()
         {
-            using (PluginLoader<T> loader = new PluginLoader<T>(baseInit))
-            {
-                loader.Load(loaderString);
-                return loader.Plugins;
-            }
+            return LoadModules<T>(Environment.CurrentDirectory);
         }
-
-        #endregion
-
-
-        #region Decapriated 24-5-10 - Revolution Smythe Commit d1018f6 Removes IRegionModule and converts all existing modules to the new style region format.
-        // Decapriated 24-5-10 - Revolution Smythe
-        // Commit d1018f6 Removes IRegionModule and converts all existing modules to the new style region format.
-        /*#region Old Style Region Loaders
-
-        static List<string> dllBlackList;
-        static bool firstLoad = true;
+        
         /// <summary>
         /// Gets all modules found in the given directory. 
         /// Identifier is the name of the interface.
@@ -41,8 +32,7 @@ namespace Aurora.Framework
         /// <param name="moduleDir"></param>
         /// <param name="identifier"></param>
         /// <returns></returns>
-        
-        public static List<T> PickupModules<T>(string moduleDir, string identifier)
+        public static List<T> LoadModules<T>(string moduleDir)
         {
             List<T> modules = new List<T>();
             if (firstLoad)
@@ -58,7 +48,8 @@ namespace Aurora.Framework
                 dllBlackList.Add("Castle.Core.dll");
                 dllBlackList.Add("Castle.DynamicProxy.dll");
                 dllBlackList.Add("Castle.DynamicProxy2.dll");
-                dllBlackList.Add("CookComputing.XmlRpcV2.dll");
+                dllBlackList.Add("Community.CsharpSqlite.dll");
+                dllBlackList.Add("Community.CsharpSqlite.Sqlite.dll");
                 dllBlackList.Add("CSJ2K.dll");
                 dllBlackList.Add("DotNetOpenId.dll");
                 dllBlackList.Add("DotNetOpenMail.dll");
@@ -68,6 +59,7 @@ namespace Aurora.Framework
                 dllBlackList.Add("FluentNHibernate.dll");
                 dllBlackList.Add("GlynnTucker.Cache.dll");
                 dllBlackList.Add("Google.ProtocolBuffers.dll");
+                dllBlackList.Add("GoogleTranslateAPI.dll");
                 dllBlackList.Add("HttpServer.dll");
                 dllBlackList.Add("Iesi.Collections.dll");
                 dllBlackList.Add("intl3_svn.dll");
@@ -81,7 +73,10 @@ namespace Aurora.Framework
                 dllBlackList.Add("libeay32.dll");
                 dllBlackList.Add("log4net.dll");
                 dllBlackList.Add("Modified.XnaDevRu.BulletX.dll");
+                dllBlackList.Add("Mono.Addins.CecilReflector.dll");
                 dllBlackList.Add("Mono.Addins.dll");
+                dllBlackList.Add("Mono.Addins.Setup.dll");
+                dllBlackList.Add("Mono.Data.Sqlite.dll");
                 dllBlackList.Add("Mono.Data.SqliteClient.dll");
                 dllBlackList.Add("Mono.GetOptions.dll");
                 dllBlackList.Add("Mono.PEToolkit.dll");
@@ -91,6 +86,7 @@ namespace Aurora.Framework
                 dllBlackList.Add("MySql.Data.dll");
                 dllBlackList.Add("NDesk.Options.dll");
                 dllBlackList.Add("Newtonsoft.Json.dll");
+                dllBlackList.Add("Newtonsoft.Json.Net20.dll");
                 dllBlackList.Add("NHibernate.ByteCode.Castle.dll");
                 dllBlackList.Add("NHibernate.dll");
                 dllBlackList.Add("HttpServer_OpenSim.dll");
@@ -102,6 +98,7 @@ namespace Aurora.Framework
                 dllBlackList.Add("openjpeg-dotnet-x86_64.dll");
                 dllBlackList.Add("openjpeg-dotnet.dll");
                 dllBlackList.Add("OpenMetaverse.dll");
+                dllBlackList.Add("OpenMetaverse.Rendering.Meshmerizer.dll");
                 dllBlackList.Add("OpenMetaverse.Http.dll");
                 dllBlackList.Add("OpenMetaverse.StructuredData.dll");
                 dllBlackList.Add("OpenMetaverse.Utilities.dll");
@@ -121,11 +118,11 @@ namespace Aurora.Framework
                 dllBlackList.Add("XMLRPC.dll");
                 dllBlackList.Add("xunit.dll");
                 DirectoryInfo dir = new DirectoryInfo(moduleDir);
-                firstLoad = false;
                 foreach (FileInfo fileInfo in dir.GetFiles("*.dll"))
                 {
-                    modules.AddRange(LoadRegionModules<T>(fileInfo.FullName, identifier));
+                    modules.AddRange(LoadModulesFromDLL<T>(fileInfo.FullName));
                 }
+                //firstLoad = false;
             }
             else
             {
@@ -133,15 +130,21 @@ namespace Aurora.Framework
                 {
                     foreach (Type pluginType in LoadedDlls)
                     {
-                        if (pluginType.IsPublic)
+                        try
                         {
-                            if (!pluginType.IsAbstract)
+                            if (pluginType.IsPublic)
                             {
-                                if (pluginType.GetInterface(identifier) != null)
+                                if (!pluginType.IsAbstract)
                                 {
-                                    modules.Add((T)Activator.CreateInstance(pluginType));
+                                    if (pluginType.GetInterface(typeof(T).Name) != null)
+                                    {
+                                        modules.Add((T)Activator.CreateInstance(pluginType));
+                                    }
                                 }
                             }
+                        }
+                        catch (Exception)
+                        {
                         }
                     }
                 }
@@ -151,28 +154,12 @@ namespace Aurora.Framework
             }
             return modules;
         }
-
-        private static List<T> LoadRegionModules<T>(string dllName, string identifier)
-        {
-            T[] modules = LoadModules<T>(dllName, identifier);
-            List<T> initializedModules = new List<T>();
-
-            if (modules.Length > 0)
-            {
-                foreach (T module in modules)
-                {
-                    initializedModules.Add(module);
-                }
-            }
-            return initializedModules;
-        }
-        private static List<Type> LoadedDlls = new List<Type>();
-        private static Dictionary<string, Assembly> LoadedAssemblys = new Dictionary<string, Assembly>();
-        private static T[] LoadModules<T>(string dllName, string identifier)
+        
+        private static List<T> LoadModulesFromDLL<T>(string dllName)
         {
             List<T> modules = new List<T>();
             if (dllBlackList.Contains(dllName))
-                return modules.ToArray();
+                return modules;
             Assembly pluginAssembly;
             if (!LoadedAssemblys.TryGetValue(dllName, out pluginAssembly))
             {
@@ -192,17 +179,27 @@ namespace Aurora.Framework
                 {
                     foreach (Type pluginType in pluginAssembly.GetTypes())
                     {
-                        if (!LoadedDlls.Contains(pluginType))
-                            LoadedDlls.Add(pluginType);
-                        if (pluginType.GetInterface(identifier) != null)
+                        try
                         {
                             if (pluginType.IsPublic)
                             {
                                 if (!pluginType.IsAbstract)
                                 {
-                                    modules.Add((T)Activator.CreateInstance(pluginType));
+                                    if (firstLoad)
+                                    {
+                                        //Only add on the first load
+                                        //if (!LoadedDlls.Contains(pluginType))
+                                        //    LoadedDlls.Add(pluginType);
+                                    }
+                                    if (pluginType.GetInterface(typeof(T).Name, true) != null)
+                                    {
+                                        modules.Add((T)Activator.CreateInstance(pluginType));
+                                    }
                                 }
                             }
+                        }
+                        catch (Exception)
+                        {
                         }
                     }
                 }
@@ -211,68 +208,8 @@ namespace Aurora.Framework
                 }
             }
 
-            return modules.ToArray();
-        }
-
-
-        public static List<string> FindModules(string moduleDir, string identifier, string blockedDll)
-        {
-            DirectoryInfo dir = new DirectoryInfo(moduleDir);
-            List<string> modules = new List<string>();
-
-            foreach (FileInfo fileInfo in dir.GetFiles("*.dll"))
-            {
-                if (fileInfo.Name != blockedDll)
-                    modules.AddRange(FindModulesByDLL(fileInfo, identifier));
-                else
-                    continue;
-            }
             return modules;
         }
-        private static string[] FindModulesByDLL(FileInfo fileInfo, string identifier)
-        {
-            List<string> modules = new List<string>();
-
-            Assembly pluginAssembly;
-            if (!LoadedAssemblys.TryGetValue(fileInfo.FullName, out pluginAssembly))
-            {
-                try
-                {
-                    pluginAssembly = Assembly.LoadFrom(fileInfo.FullName);
-                    LoadedAssemblys.Add(fileInfo.FullName, pluginAssembly);
-                }
-                catch (BadImageFormatException)
-                {
-                }
-            }
-
-            if (pluginAssembly != null)
-            {
-                try
-                {
-                    foreach (Type pluginType in pluginAssembly.GetTypes())
-                    {
-                        if (pluginType.IsPublic)
-                        {
-                            if (!pluginType.IsAbstract)
-                            {
-                                if (pluginType.GetInterface(identifier) != null)
-                                {
-                                    modules.Add(fileInfo.Name+":"+pluginType.Name);
-                                }
-                            }
-                        }
-                    }
-                }
-                catch (Exception)
-                {
-                }
-            }
-
-            return modules.ToArray();
-        }
-
-        #endregion*/
 
         #endregion
 

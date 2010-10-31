@@ -129,7 +129,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsIn.Neighbour
             {
                 if (s.RegionInfo.RegionHandle == regionHandle)
                 {
-                    //m_log.Debug("[NEIGHBOUR IN CONNECTOR]: Found region to SendHelloNeighbour");
+                    //m_log.DebugFormat("[NEIGHBOUR IN CONNECTOR]: HelloNeighbour from {0} to {1}", thisRegion.RegionName, s.RegionInfo.RegionName);
                     return s.IncomingHelloNeighbour(thisRegion);
                 }
             }

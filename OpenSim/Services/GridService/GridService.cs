@@ -50,7 +50,7 @@ namespace OpenSim.Services.GridService
         private bool m_DeleteOnUnregister = true;
         private static GridService m_RootInstance = null;
         protected IConfigSource m_config;
-        protected HypergridLinker m_HypergridLinker;
+        protected static HypergridLinker m_HypergridLinker;
         protected Aurora.Framework.IEstateConnector m_EstateConnector;
 
         protected IAuthenticationService m_AuthenticationService = null;
@@ -208,6 +208,7 @@ namespace OpenSim.Services.GridService
                 {
                     int newFlags = 0;
                     string regionName = rdata.RegionName.Trim().Replace(' ', '_');
+                    newFlags = ParseFlags(newFlags, gridConfig.GetString("DefaultRegionFlags", String.Empty));
                     newFlags = ParseFlags(newFlags, gridConfig.GetString("Region_" + regionName, String.Empty));
                     newFlags = ParseFlags(newFlags, gridConfig.GetString("Region_" + rdata.RegionID.ToString(), String.Empty));
                     rdata.Data["flags"] = newFlags.ToString();
@@ -253,9 +254,9 @@ namespace OpenSim.Services.GridService
             return String.Empty;
         }
 
-        public string UpdateMap(UUID scopeID, UUID RegionID, UUID mapID, UUID terrainID, UUID sessionID)
+        public string UpdateMap(UUID scopeID, GridRegion gregion, UUID mapID, UUID terrainID, UUID sessionID)
         {
-            RegionData region = m_Database.Get(RegionID, scopeID);
+            RegionData region = m_Database.Get(gregion.RegionID, scopeID);
             if (region != null)
             {
                 if (region.Data["sessionid"].ToString() != sessionID.ToString())
@@ -264,9 +265,9 @@ namespace OpenSim.Services.GridService
                     return "Wrong Session ID";
                 }
 
-                m_log.DebugFormat("[GRID SERVICE]: Region {0} updated its map", RegionID);
+                m_log.DebugFormat("[GRID SERVICE]: Region {0} updated its map", gregion.RegionID);
                 
-                m_Database.Delete(RegionID);
+                m_Database.Delete(gregion.RegionID);
 
                 int oldFlags = Convert.ToInt32(region.Data["flags"]);
                 oldFlags |= (int)OpenSim.Data.RegionFlags.RegionOnline;
@@ -344,7 +345,11 @@ namespace OpenSim.Services.GridService
 
                 foreach (RegionData rdata in rdatas)
                     if (rdata.RegionID != regionID)
-                        rinfos.Add(RegionData2RegionInfo(rdata));
+                    {
+                        int flags = Convert.ToInt32(rdata.Data["flags"]);
+                        if ((flags & (int)Data.RegionFlags.Hyperlink) == 0) // no hyperlinks as neighbours
+                            rinfos.Add(RegionData2RegionInfo(rdata));
+                    }
 
                 m_log.DebugFormat("[GRID SERVICE]: region {0} has {1} neighours", region.RegionName, rinfos.Count);
             }
@@ -375,7 +380,13 @@ namespace OpenSim.Services.GridService
         {
             List<RegionData> rdatas = m_Database.Get(regionName + "%", scopeID);
             if ((rdatas != null) && (rdatas.Count > 0))
+            {
+                //Sort to find the region with the exact name that was given
+                rdatas.Sort(new RegionDataComparison(regionName));
+                //Results are backwards... so it needs reversed
+                rdatas.Reverse();
                 return RegionData2RegionInfo(rdatas[0]);
+            }
 
             return null;
         }
@@ -571,6 +582,22 @@ namespace OpenSim.Services.GridService
             return ret;
         }
 
+        public List<GridRegion> GetHyperlinks(UUID scopeID)
+        {
+            List<GridRegion> ret = new List<GridRegion>();
+
+            List<RegionData> regions = m_Database.GetHyperlinks(scopeID);
+
+            foreach (RegionData r in regions)
+            {
+                if ((Convert.ToInt32(r.Data["flags"]) & (int)OpenSim.Data.RegionFlags.RegionOnline) != 0)
+                    ret.Add(RegionData2RegionInfo(r));
+            }
+
+            m_log.DebugFormat("[GRID SERVICE]: Hyperlinks returned {0} regions", ret.Count);
+            return ret;
+        }
+        
         public int GetRegionFlags(UUID scopeID, UUID regionID)
         {
             RegionData region = m_Database.Get(regionID, scopeID);

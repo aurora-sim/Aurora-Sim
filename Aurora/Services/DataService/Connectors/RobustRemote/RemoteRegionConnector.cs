@@ -24,15 +24,19 @@ namespace Aurora.Services.DataService
                 MethodBase.GetCurrentMethod().DeclaringType);
         private string m_ServerURI = "";
 
-        public void Initialise(IGenericData unneeded, IConfigSource source, string DefaultConnectionString)
+        public void Initialize(IGenericData unneeded, IConfigSource source, string DefaultConnectionString)
         {
             if (source.Configs["AuroraConnectors"].GetString("RegionConnector", "LocalConnector") == "RemoteConnector")
             {
+                //Later thought... we really do need just the AuroraServerURI, since it won't work with the normal grid server most of the time
                 //We want the grid server URL, but if we can't find it, resort to trying the default Aurora one
-                if (source.Configs["GridService"].GetString("GridServerURI", string.Empty) != string.Empty)
+                /*if (source.Configs["GridService"].GetString("GridServerURI", string.Empty) != string.Empty)
                     m_ServerURI = source.Configs["GridService"].GetString("GridServerURI", string.Empty);
+                else */if (source.Configs["AuroraData"].GetString("RemoteRegionServerURI", string.Empty) != string.Empty)
+                    m_ServerURI = source.Configs["AuroraData"].GetString("RemoteRegionServerURI", string.Empty);
                 else
                     m_ServerURI = source.Configs["AuroraData"].GetString("RemoteServerURI", string.Empty);
+                
                 //If both are blank, no connector
                 if (m_ServerURI != string.Empty)
                     DataManager.DataManager.RegisterPlugin(Name, this);

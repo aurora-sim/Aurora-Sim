@@ -46,7 +46,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.GridUser
         public ActivityDetector(IGridUserService guservice)
         {
             m_GridUserService = guservice;
-            m_log.DebugFormat("[ACTIVITY DETECTOR]: starting ");
+            //m_log.DebugFormat("[ACTIVITY DETECTOR]: starting ");
         }
 
         public void AddRegion(Scene scene)
@@ -55,23 +55,30 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.GridUser
             // But we could trigger the position update more often
             scene.EventManager.OnMakeRootAgent += OnMakeRootAgent;
             scene.EventManager.OnNewClient += OnNewClient;
+            scene.EventManager.OnClosingClient += OnClosingClient;
         }
 
         public void RemoveRegion(Scene scene)
         {
             scene.EventManager.OnMakeRootAgent -= OnMakeRootAgent;
             scene.EventManager.OnNewClient -= OnNewClient;
+            scene.EventManager.OnClosingClient -= OnClosingClient;
         }
 
         public void OnMakeRootAgent(ScenePresence sp)
         {
-            m_log.DebugFormat("[ACTIVITY DETECTOR]: Detected root presence {0} in {1}", sp.UUID, sp.Scene.RegionInfo.RegionName);
+            //m_log.DebugFormat("[ACTIVITY DETECTOR]: Detected root presence {0} in {1}", sp.UUID, sp.Scene.RegionInfo.RegionName);
             m_GridUserService.SetLastPosition(sp.UUID.ToString(), UUID.Zero, sp.Scene.RegionInfo.RegionID, sp.AbsolutePosition, sp.Lookat);
         }
 
         public void OnNewClient(IClientAPI client)
         {
             client.OnConnectionClosed += OnConnectionClose;
+        }
+
+        private void OnClosingClient(IClientAPI client)
+        {
+            client.OnConnectionClosed -= OnConnectionClose;
         }
 
         public void OnConnectionClose(IClientAPI client)
@@ -93,7 +100,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.GridUser
                         lookat = ((ScenePresence)sp).Lookat;
                     }
                 }
-                m_log.DebugFormat("[ACTIVITY DETECTOR]: Detected client logout {0} in {1}", client.AgentId, client.Scene.RegionInfo.RegionName);
+                //m_log.DebugFormat("[ACTIVITY DETECTOR]: Detected client logout {0} in {1}", client.AgentId, client.Scene.RegionInfo.RegionName);
                 m_GridUserService.LoggedOut(client.AgentId.ToString(), client.SessionId, client.Scene.RegionInfo.RegionID, position, lookat);
             }
 

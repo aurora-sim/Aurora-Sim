@@ -91,10 +91,95 @@ namespace OpenSim.Framework
         private UUID _snapshotID = UUID.Zero;
         private Vector3 _userLocation = new Vector3();
         private Vector3 _userLookAt = new Vector3();
-        private int _dwell = 0;
         private int _otherCleanTime = 0;
         private ulong _regionHandle;
-        private UUID _regionID;
+		private UUID _regionID;
+        private string _mediaType = "none/none";
+        private string _mediaDescription = "";
+        private int _mediaHeight = 0;
+        private int _mediaWidth = 0;
+        private float _MediaLoopSet = 0;
+        private bool _mediaLoop = false;
+        private bool _obscureMusic = false;
+        private bool _obscureMedia = false;
+        private int _dwell = 0;
+
+        /// <summary>
+        /// Whether to obscure parcel media URL
+        /// </summary>
+        [XmlIgnore]
+        public bool ObscureMedia {
+            get {
+                return _obscureMedia;
+            }
+            set {
+                _obscureMedia = value;
+            }
+        }
+
+        /// <summary>
+        /// Whether to obscure parcel music URL
+        /// </summary>
+        [XmlIgnore]
+        public bool ObscureMusic {
+            get {
+                return _obscureMusic;
+            }
+            set {
+                _obscureMusic = value;
+            }
+        }
+
+        /// <summary>
+        /// Whether to loop parcel media
+        /// </summary>
+        [XmlIgnore]
+        public bool MediaLoop {
+            get {
+                return _mediaLoop;
+            }
+            set {
+                _mediaLoop = value;
+            }
+        }
+
+        /// <summary>
+        /// Height of parcel media render
+        /// </summary>
+        [XmlIgnore]
+        public int MediaHeight {
+            get {
+                return _mediaHeight;
+            }
+            set {
+                _mediaHeight = value;
+            }
+        }
+
+        public float MediaLoopSet
+        {
+            get
+            {
+                return _MediaLoopSet;
+            }
+            set
+            {
+                _MediaLoopSet = value;
+            }
+        }
+
+        /// <summary>
+        /// Width of parcel media render
+        /// </summary>
+        [XmlIgnore]
+        public int MediaWidth {
+            get {
+                return _mediaWidth;
+            }
+            set {
+                _mediaWidth = value;
+            }
+        }
 
         /// <summary>
         /// Upper corner of the AABB for the parcel
@@ -307,6 +392,28 @@ namespace OpenSim.Framework
             }
         }
 
+        private int _Maturity = 2;
+        public int Maturity
+        {
+            get
+            {
+                return _Maturity;
+            }
+            set
+            {
+                _Maturity = value;
+            }
+        }
+
+        public int Dwell {
+            get {
+                return _dwell;
+            }
+            set {
+                _dwell = value;
+            }
+        }
+
         /// <summary>
         /// Parcel Name
         /// </summary>
@@ -440,69 +547,6 @@ namespace OpenSim.Framework
             }
         }
 
-        private byte _mediaLoop = 0;
-        /// <summary>
-        /// Type of media
-        /// </summary>
-        public byte MediaLoop
-        {
-            get
-            {
-                return _mediaLoop;
-            }
-            set
-            {
-                _mediaLoop = value;
-            }
-        }
-
-        private byte _ObscureMusic = 0;
-        /// <summary>
-        /// Type of media
-        /// </summary>
-        public byte ObscureMusic
-        {
-            get
-            {
-                return _ObscureMusic;
-            }
-            set
-            {
-                _ObscureMusic = value;
-            }
-        }
-
-        private byte _ObscureMedia = 0;
-        /// <summary>
-        /// Type of media
-        /// </summary>
-        public byte ObscureMedia
-        {
-            get
-            {
-                return _ObscureMedia;
-            }
-            set
-            {
-                _ObscureMedia = value;
-            }
-        }
-
-        private string _mediaDescription = "";
-        /// <summary>
-        /// Parcel Media Description
-        /// </summary>
-        public string MediaDescription
-        {
-            get
-            {
-                return _mediaDescription;
-            }
-            set
-            {
-                _mediaDescription = value;
-            }
-        }
         /// <summary>
         /// Texture Guid to replace with the output of the media stream
         /// </summary>
@@ -527,46 +571,6 @@ namespace OpenSim.Framework
             }
         }
 
-        private int[] _mediaSize = new int[] {0,0};
-        public int[] MediaSize
-        {
-            get
-            {
-                return _mediaSize;
-            }
-            set
-            {
-                _mediaSize = value;
-            }
-        }
-
-        private float _MediaLoopSet = 0;
-        public float MediaLoopSet
-        {
-            get
-            {
-                return _MediaLoopSet;
-            }
-            set
-            {
-                _MediaLoopSet = value;
-            }
-        }
-
-        private int _Maturity = 2;
-        public int Maturity
-        {
-            get
-            {
-                return _Maturity;
-            }
-            set
-            {
-                _Maturity = value;
-            }
-        }
-
-        private string _mediaType = "none/none";
         public string MediaType
         {
             get
@@ -757,18 +761,6 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// Deprecated idea.  Number of visitors ~= free money
-        /// </summary>
-        public int Dwell {
-            get {
-                return _dwell;
-            }
-            set {
-                _dwell = value;
-            }
-        }
-
-        /// <summary>
         /// Number of minutes to return SceneObjectGroup that are owned by someone who doesn't own 
         /// the parcel and isn't set to the same 'group' as the parcel.
         /// </summary>
@@ -781,6 +773,17 @@ namespace OpenSim.Framework
             }
         }
 
+        /// <summary>
+        /// parcel media description
+        /// </summary>
+        public string MediaDescription {
+            get {
+                return _mediaDescription;
+            }
+            set {
+                _mediaDescription = value;
+            }
+        }
 
         public LandData()
         {
@@ -830,12 +833,14 @@ namespace OpenSim.Framework
             landData._userLookAt = _userLookAt;
             landData._otherCleanTime = _otherCleanTime;
             landData._dwell = _dwell;
-            landData._mediaDescription = _mediaDescription;
-            landData._mediaLoop = _mediaLoop;
-            landData._mediaSize = _mediaSize;
             landData._mediaType = _mediaType;
-            landData._ObscureMedia = _ObscureMedia;
-            landData._ObscureMusic = _ObscureMusic;
+            landData._mediaDescription = _mediaDescription;
+            landData._mediaWidth = _mediaWidth;
+            landData._mediaHeight = _mediaHeight;
+            landData._mediaLoop = _mediaLoop;
+            landData._MediaLoopSet = _MediaLoopSet;
+            landData._obscureMusic = _obscureMusic;
+            landData._obscureMedia = _obscureMedia;
             landData._regionID = _regionID;
             landData._regionHandle = _regionHandle;
             landData._infoUUID = _infoUUID;
@@ -895,14 +900,15 @@ namespace OpenSim.Framework
             map["GlobalID"] = OSD.FromUUID(GlobalID);
             map["RegionID"] = OSD.FromUUID(RegionID);
             map["MediaDescription"] = OSD.FromString(MediaDescription);
-            map["MediaSizeX"] = OSD.FromInteger(MediaSize[0]);
-            map["MediaSizeY"] = OSD.FromInteger(MediaSize[1]);
-            map["MediaLoop"] = OSD.FromInteger(MediaLoop);
+            map["MediaWidth"] = OSD.FromInteger(MediaWidth);
+            map["MediaHeight"] = OSD.FromInteger(MediaHeight);
+            map["MediaLoop"] = OSD.FromBoolean(MediaLoop);
             map["MediaType"] = OSD.FromString(MediaType);
-            map["ObscureMedia"] = OSD.FromInteger(ObscureMedia);
-            map["ObscureMusic"] = OSD.FromInteger(ObscureMusic);
+            map["ObscureMedia"] = OSD.FromBoolean(ObscureMedia);
+            map["ObscureMusic"] = OSD.FromBoolean(ObscureMusic);
             map["SnapshotID"] = OSD.FromUUID(SnapshotID);
             map["MediaAutoScale"] = OSD.FromInteger(MediaAutoScale);
+            map["MediaLoopSet"] = OSD.FromReal(MediaLoopSet);
             map["MediaURL"] = OSD.FromString(MediaURL);
             map["MusicURL"] = OSD.FromString(MusicURL);
             map["Bitmap"] = OSD.FromBinary(Bitmap);
@@ -939,12 +945,13 @@ namespace OpenSim.Framework
             GroupID = map["GroupID"].AsUUID();
             SnapshotID = map["SnapshotID"].AsUUID();
             MediaDescription = map["MediaDescription"].AsString();
-            MediaSize[0] = map["MediaSizeX"].AsInteger();
-            MediaSize[1] = map["MediaSizeY"].AsInteger();
-            MediaLoop = (byte)map["MediaLoop"].AsInteger();
+            MediaWidth = map["MediaWidth"].AsInteger();
+            MediaHeight = map["MediaHeight"].AsInteger();
+            MediaLoop = map["MediaLoop"].AsBoolean();
             MediaType = map["MediaType"].AsString();
-            ObscureMedia = (byte)map["ObscureMedia"].AsInteger();
-            ObscureMusic = (byte)map["SnapshotID"].AsInteger();
+            ObscureMedia = map["ObscureMedia"].AsBoolean();
+            ObscureMusic = map["ObscureMusic"].AsBoolean();
+            MediaLoopSet = (float)map["MediaLoopSet"].AsReal();
             MediaAutoScale = (byte)map["MediaAutoScale"].AsInteger();
             MediaURL = map["MediaURL"].AsString();
             Bitmap = map["Bitmap"].AsBinary();

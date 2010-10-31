@@ -33,7 +33,6 @@ using System.Reflection;
 using log4net;
 using Nini.Config;
 using Nwc.XmlRpc;
-using Mono.Addins;
 using OpenMetaverse;
 using OpenSim.Framework;
 
@@ -55,7 +54,6 @@ namespace OpenSim.Region.OptionalModules.World.MoneyModule
     ///
     /// </summary>
 
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class SampleMoneyModule : IMoneyModule, ISharedRegionModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -71,8 +69,6 @@ namespace OpenSim.Region.OptionalModules.World.MoneyModule
         private bool m_sellEnabled = false;
 
         private IConfigSource m_gConfig;
-
-
 
         /// <summary>
         /// Region UUIDS indexed by AgentID
@@ -172,6 +168,7 @@ namespace OpenSim.Region.OptionalModules.World.MoneyModule
                 }
 
                 scene.EventManager.OnNewClient += OnNewClient;
+                scene.EventManager.OnClosingClient += OnClosingClient;
                 scene.EventManager.OnMoneyTransfer += MoneyTransferAction;
                 scene.EventManager.OnClientClosed += ClientClosed;
                 scene.EventManager.OnAvatarEnteringNewParcel += AvatarEnteringParcel;
@@ -184,6 +181,18 @@ namespace OpenSim.Region.OptionalModules.World.MoneyModule
 
         public void RemoveRegion(Scene scene)
         {
+            if (m_scenel.ContainsKey(scene.RegionInfo.RegionHandle))
+                m_scenel.Remove(scene.RegionInfo.RegionHandle);
+
+            scene.EventManager.OnNewClient -= OnNewClient;
+            scene.EventManager.OnClosingClient -= OnClosingClient;
+            scene.EventManager.OnMoneyTransfer -= MoneyTransferAction;
+            scene.EventManager.OnClientClosed -= ClientClosed;
+            scene.EventManager.OnAvatarEnteringNewParcel -= AvatarEnteringParcel;
+            scene.EventManager.OnMakeChildAgent -= MakeChildAgent;
+            scene.EventManager.OnClientClosed -= ClientLoggedOut;
+            scene.EventManager.OnValidateLandBuy -= ValidateLandBuy;
+            scene.EventManager.OnLandBuy -= processLandBuy;
         }
 
         public void RegionLoaded(Scene scene)
@@ -265,13 +274,11 @@ namespace OpenSim.Region.OptionalModules.World.MoneyModule
                 PriceGroupCreate = startupConfig.GetInt("PriceGroupCreate", -1);
                 m_sellEnabled = startupConfig.GetBoolean("SellEnabled", false);
             }
-
         }
 
         private void GetClientFunds(IClientAPI client)
         {
             CheckExistAndRefreshFunds(client.AgentId);
-
         }
 
         /// <summary>
@@ -288,6 +295,15 @@ namespace OpenSim.Region.OptionalModules.World.MoneyModule
             client.OnRequestPayPrice += requestPayPrice;
             client.OnObjectBuy += ObjectBuy;
             client.OnLogout += ClientClosed;
+        }
+
+        private void OnClosingClient(IClientAPI client)
+        {
+            client.OnEconomyDataRequest -= EconomyDataRequestHandler;
+            client.OnMoneyBalanceRequest -= SendMoneyBalance;
+            client.OnRequestPayPrice -= requestPayPrice;
+            client.OnObjectBuy -= ObjectBuy;
+            client.OnLogout -= ClientClosed;
         }
 
         /// <summary>
@@ -696,7 +712,9 @@ namespace OpenSim.Region.OptionalModules.World.MoneyModule
 
             if (user != null)
             {
-                user.SendEconomyData(EnergyEfficiency, ((Scene)user.Scene).ObjectCapacity, ObjectCount, PriceEnergyUnit, PriceGroupCreate,
+                Scene s = LocateSceneClientIn(user.AgentId);
+
+                user.SendEconomyData(EnergyEfficiency, s.ObjectCapacity, ObjectCount, PriceEnergyUnit, PriceGroupCreate,
                                      PriceObjectClaim, PriceObjectRent, PriceObjectScaleFactor, PriceParcelClaim, PriceParcelClaimFactor,
                                      PriceParcelRent, PricePublicObjectDecay, PricePublicObjectDelete, PriceRentLight, PriceUpload,
                                      TeleportMinPrice, TeleportPriceExponent);
@@ -805,13 +823,40 @@ namespace OpenSim.Region.OptionalModules.World.MoneyModule
             }
 
             Scene s = LocateSceneClientIn(remoteClient.AgentId);
+
+            // Implmenting base sale data checking here so the default OpenSimulator implementation isn't useless 
+            // combined with other implementations.  We're actually validating that the client is sending the data
+            // that it should.   In theory, the client should already know what to send here because it'll see it when it
+            // gets the object data.   If the data sent by the client doesn't match the object, the viewer probably has an 
+            // old idea of what the object properties are.   Viewer developer Hazim informed us that the base module 
+            // didn't check the client sent data against the object do any.   Since the base modules are the 
+            // 'crowning glory' examples of good practice..
+
+            // Validate that the object exists in the scene the user is in
             SceneObjectPart part = s.GetSceneObjectPart(localID);
             if (part == null)
             {
                 remoteClient.SendAgentAlertMessage("Unable to buy now. The object was not found.", false);
                 return;
             }
-            s.PerformObjectBuy(remoteClient, categoryID, localID, saleType);
+            
+            // Validate that the client sent the price that the object is being sold for 
+            if (part.SalePrice != salePrice)
+            {
+                remoteClient.SendAgentAlertMessage("Cannot buy at this price. Buy Failed. If you continue to get this relog.", false);
+                return;
+            }
+
+            // Validate that the client sent the proper sale type the object has set 
+            if (part.ObjectSaleType != saleType)
+            {
+                remoteClient.SendAgentAlertMessage("Cannot buy this way. Buy Failed. If you continue to get this relog.", false);
+                return;
+            }
+
+            IBuySellModule module = s.RequestModuleInterface<IBuySellModule>();
+            if (module != null)
+                module.BuyObject(remoteClient, categoryID, localID, saleType, salePrice);
         }
     }
 
@@ -822,6 +867,4 @@ namespace OpenSim.Region.OptionalModules.World.MoneyModule
         Gift = 2,
         Purchase = 3
     }
-
-  
 }

@@ -51,30 +51,29 @@ namespace OpenSim.Region.RegionCombinerModule
             m_virtScene.UnSubscribeToClientPrimEvents(client);
             m_virtScene.UnSubscribeToClientPrimRezEvents(client);
             m_virtScene.UnSubscribeToClientInventoryEvents(client);
-            ((AttachmentsModule)m_virtScene.AttachmentsModule).UnsubscribeFromClientEvents(client);
             //m_virtScene.UnSubscribeToClientTeleportEvents(client);
             m_virtScene.UnSubscribeToClientScriptEvents(client);
-            
-            IGodsModule virtGodsModule = m_virtScene.RequestModuleInterface<IGodsModule>();
-            if (virtGodsModule != null)
-                ((GodsModule)virtGodsModule).UnsubscribeFromClientEvents(client);
             
             m_virtScene.UnSubscribeToClientNetworkEvents(client);
 
             m_rootScene.SubscribeToClientPrimEvents(client);
+            m_rootScene.UnSubscribeToClientPrimRezEvents(client);
             client.OnAddPrim += LocalAddNewPrim;
             client.OnRezObject += LocalRezObject;
+            client.OnObjectDuplicateOnRay += LocalObjectDuplicateOnRay;
             
             m_rootScene.SubscribeToClientInventoryEvents(client);
-            ((AttachmentsModule)m_rootScene.AttachmentsModule).SubscribeToClientEvents(client);
             //m_rootScene.SubscribeToClientTeleportEvents(client);
             m_rootScene.SubscribeToClientScriptEvents(client);
             
-            IGodsModule rootGodsModule = m_virtScene.RequestModuleInterface<IGodsModule>();
-            if (rootGodsModule != null)
-                ((GodsModule)rootGodsModule).UnsubscribeFromClientEvents(client);
-            
             m_rootScene.SubscribeToClientNetworkEvents(client);
+        }
+
+        public void ClosingClient(IClientAPI client)
+        {
+            client.OnAddPrim -= LocalAddNewPrim;
+            client.OnRezObject -= LocalRezObject;
+            client.OnObjectDuplicateOnRay -= LocalObjectDuplicateOnRay;
         }
 
         public void ClientClosed(UUID clientid, Scene scene)
@@ -132,6 +131,36 @@ namespace OpenSim.Region.RegionCombinerModule
             raystart.Y += differenceY * (int)Constants.RegionSize;
             m_rootScene.AddNewPrim(ownerid, groupid, rayend, rot, shape, bypassraycast, raystart, raytargetid,
                                    rayendisintersection);
+        }
+
+        /// <summary>
+        /// Duplicates object specified by localID at position raycasted against RayTargetObject using 
+        /// RayEnd and RayStart to determine what the angle of the ray is
+        /// </summary>
+        /// <param name="localID">ID of object to duplicate</param>
+        /// <param name="dupeFlags"></param>
+        /// <param name="AgentID">Agent doing the duplication</param>
+        /// <param name="GroupID">Group of new object</param>
+        /// <param name="RayTargetObj">The target of the Ray</param>
+        /// <param name="RayEnd">The ending of the ray (farthest away point)</param>
+        /// <param name="RayStart">The Beginning of the ray (closest point)</param>
+        /// <param name="BypassRaycast">Bool to bypass raycasting</param>
+        /// <param name="RayEndIsIntersection">The End specified is the place to add the object</param>
+        /// <param name="CopyCenters">Position the object at the center of the face that it's colliding with</param>
+        /// <param name="CopyRotates">Rotate the object the same as the localID object</param>
+        public void LocalObjectDuplicateOnRay(uint localID, uint dupeFlags, UUID AgentID, UUID GroupID,
+                                           UUID RayTargetObj, Vector3 RayEnd, Vector3 RayStart,
+                                           bool BypassRaycast, bool RayEndIsIntersection, bool CopyCenters, bool CopyRotates)
+        {
+            int differenceX = (int)m_virtScene.RegionInfo.RegionLocX - (int)m_rootScene.RegionInfo.RegionLocX;
+            int differenceY = (int)m_virtScene.RegionInfo.RegionLocY - (int)m_rootScene.RegionInfo.RegionLocY;
+            RayEnd.X += differenceX * (int)Constants.RegionSize;
+            RayEnd.Y += differenceY * (int)Constants.RegionSize;
+            RayStart.X += differenceX * (int)Constants.RegionSize;
+            RayStart.Y += differenceY * (int)Constants.RegionSize;
+
+            m_rootScene.doObjectDuplicateOnRay(localID, dupeFlags, AgentID, GroupID, RayTargetObj,
+                RayEnd, RayStart, BypassRaycast, RayEndIsIntersection, CopyCenters, CopyRotates);
         }
     }
 }

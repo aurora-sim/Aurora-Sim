@@ -52,6 +52,23 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public bool ScriptChangeIsRunning = false;
         public bool EventProcessorIsRunning = false;
         public bool RunInMainProcessingThread = false;
+        public bool m_Started = false;
+
+        public bool Started
+        {
+            get { return m_Started; }
+            set
+            {
+                m_Started = true;
+
+                ScriptChangeQueue();
+                StateSaveQueue();
+                EventQueue();
+
+                //Start the queue because it can't start itself
+                CmdHandlerQueue();
+            }
+        }
 
         /// <summary>
         /// Queue that handles the loading and unloading of scripts
@@ -96,16 +113,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             info.MaxSleepTime = Engine.Config.GetInt("SleepTime", 100);
             threadpool = new AuroraThreadPool(info);
 
-            //Start the queue because it can't start itself
-            CmdHandlerQueue();
-
             AppDomain.CurrentDomain.AssemblyResolve += m_ScriptEngine.AssemblyResolver.OnAssemblyResolve;
-
-            foreach (OpenSim.Region.Framework.Scenes.Scene scene in m_ScriptEngine.Worlds)
-            {
-                //Register our callback so that we don't finish startup too quick
-                scene.EventManager.TriggerAddToStartupQueue("ScriptEngine");
-            }
         }
 
         #endregion
@@ -114,6 +122,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public bool StateSaveQueue()
         {
+            if (!Started) //Break early
+                return true;
+
             StateSaveIsRunning = true;
             StateQueueItem item;
             lock (StateQueue)
@@ -139,6 +150,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public bool ScriptChangeQueue()
         {
+            if (!Started) //Break early
+                return true;
+
             ScriptChangeIsRunning = true;
 
             object oitems;
@@ -201,6 +215,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public bool EventQueue()
         {
+            if (!Started) //Break early
+                return true;
+
             bool SendUpSleepRequest = false;
             try
             {
@@ -228,6 +245,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public bool CmdHandlerQueue()
         {
+            if (!Started) //Break early
+                return true;
+
             //Check timers, etc
             try
             {
@@ -299,11 +319,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                                 QIS.ID.part.ParentGroup.Scene.DeleteSceneObject(
                                     QIS.ID.part.ParentGroup, false, true);
                         }
-                        if (ex is ScriptDeleteException)
+                        else if (ex is ScriptDeleteException)
                         {
                             if (QIS.ID.part != null && QIS.ID.part.ParentGroup != null)
                                 QIS.ID.part.Inventory.RemoveInventoryItem(QIS.ID.ItemID);
                         }
+                        else if(!(ex is EventAbortException) &&
+                            !(ex is MinEventDelayException))
+                            QIS.ID.DisplayUserNotification(ex.Message, "", false, true);
                         return false;
                     }
                     else if (Running != null)

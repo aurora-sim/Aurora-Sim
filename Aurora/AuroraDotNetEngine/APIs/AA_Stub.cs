@@ -159,6 +159,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             return m_AA_Functions.AAGetFlyDisabled(userID);
         }
 
+        public void AARaiseError(string message)
+        {
+            m_AA_Functions.AARaiseError(message);
+        }
+
         public void AASetFlyDisabled(string userID, bool Value)
         {
             m_AA_Functions.AASetFlyDisabled(userID, Value);

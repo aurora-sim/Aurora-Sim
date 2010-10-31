@@ -36,12 +36,13 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
 
         public void PaintEffect(ITerrainChannel map, bool[,] mask, double rx, double ry, double rz, double strength, double duration, float BrushSize)
         {
+            if(BrushSize > 8) //If it gets too high, it will start roughening at an ever increasing rate when held down
+                BrushSize = 8;
             strength = TerrainUtil.MetersToSphericalStrength(BrushSize);
             int x, y;
 
             double area = BrushSize;
             double step = BrushSize / 4;
-            double avgExtra = BrushSize / 5;
             duration *= 0.03; //MCP Should be read from ini file
 
 
@@ -50,8 +51,13 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
             {
                 for (y = 0; y < map.Height; y++)
                 {
-                    double z = TerrainUtil.SphericalFactor(x, y, rx, ry, strength) / (strength);
+                    if (!mask[x, y])
+                        continue;
 
+                    double z = TerrainUtil.SphericalFactor(x, y, rx, ry, strength) / (strength);
+                    if (z < 0)
+                    {
+                    }
                     if (z > 0) // add in non-zero amount
                     {
                         double average = 0.0;

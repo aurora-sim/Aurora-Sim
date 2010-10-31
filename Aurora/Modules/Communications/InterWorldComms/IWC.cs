@@ -19,11 +19,9 @@ using log4net;
 using OpenSim.Services.Interfaces;
 using OpenMetaverse;
 using Aurora.DataManager;
-using Mono.Addins;
 
 namespace Aurora.Modules
 {
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class IWComms : ISharedRegionModule
     {
         #region Declares

@@ -61,38 +61,29 @@ namespace OpenSim.Region.Framework.Interfaces
         /// </summary>
         /// <param name="regionUUID">the Region UUID</param>
         /// <returns>List of loaded groups</returns>
-        List<SceneObjectGroup> LoadObjects(UUID regionUUID);
+        List<SceneObjectGroup> LoadObjects(UUID regionUUID, Scene scene);
 
         /// <summary>
         /// Store a terrain revision in region storage
         /// </summary>
         /// <param name="ter">HeightField data</param>
         /// <param name="regionID">region UUID</param>
-        void StoreTerrain(double[,] terrain, UUID regionID);
+        void StoreTerrain(double[,] terrain, UUID regionID, bool Revert);
 
         /// <summary>
         /// Load the latest terrain revision from region storage
         /// </summary>
         /// <param name="regionID">the region UUID</param>
         /// <returns>Heightfield data</returns>
-        double[,] LoadTerrain(UUID regionID);
+        double[,] LoadTerrain(UUID regionID, bool RevertMap);
 
-        void StoreLandObject(ILandObject Parcel);
-
-        /// <summary>
-        /// <list type="bullet">
-        /// <item>delete from land where UUID=globalID</item>
-        /// <item>delete from landaccesslist where LandUUID=globalID</item>
-        /// </list>
-        /// </summary>
-        /// <param name="globalID"></param>
-        void RemoveLandObject(UUID globalID);
-
+        void StoreLandObject(LandData args);
+        void RemoveLandObject(UUID RegionID, UUID ParcelID);
         List<LandData> LoadLandObjects(UUID regionUUID);
 
         void StoreRegionSettings(RegionSettings rs);
         RegionSettings LoadRegionSettings(UUID regionUUID);
-        RegionLightShareData LoadRegionWindlightSettings(UUID regionUUID);
-        void StoreRegionWindlightSettings(RegionLightShareData wl);
+
+        void RemoveRegion(UUID uUID);
     }
 }

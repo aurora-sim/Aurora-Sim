@@ -62,11 +62,18 @@ namespace OpenSim.Services.HypergridService
         protected static IGridUserService m_GridUserService;
         protected static IGridService m_GridService;
         protected static GatekeeperServiceConnector m_GatekeeperConnector;
+        protected static IGatekeeperService m_GatekeeperService;
+
+        protected static string m_GridName;
+
+        protected static bool m_BypassClientVerification;
 
         public UserAgentService(IConfigSource config)
         {
             if (!m_Initialized)
             {
+                m_Initialized = true;
+
                 m_log.DebugFormat("[HOME USERS SECURITY]: Starting...");
                 
                 IConfig serverConfig = config.Configs["UserAgentService"];
@@ -75,16 +82,25 @@ namespace OpenSim.Services.HypergridService
 
                 string gridService = serverConfig.GetString("GridService", String.Empty);
                 string gridUserService = serverConfig.GetString("GridUserService", String.Empty);
+                string gatekeeperService = serverConfig.GetString("GatekeeperService", String.Empty);
 
-                if (gridService == string.Empty || gridUserService == string.Empty)
+                m_BypassClientVerification = serverConfig.GetBoolean("BypassClientVerification", false);
+
+                if (gridService == string.Empty || gridUserService == string.Empty || gatekeeperService == string.Empty)
                     throw new Exception(String.Format("Incomplete specifications, UserAgent Service cannot function."));
 
                 Object[] args = new Object[] { config };
                 m_GridService = ServerUtils.LoadPlugin<IGridService>(gridService, args);
                 m_GridUserService = ServerUtils.LoadPlugin<IGridUserService>(gridUserService, args);
                 m_GatekeeperConnector = new GatekeeperServiceConnector();
+                m_GatekeeperService = ServerUtils.LoadPlugin<IGatekeeperService>(gatekeeperService, args);
 
-                m_Initialized = true;
+                m_GridName = serverConfig.GetString("ExternalName", string.Empty);
+                if (m_GridName == string.Empty)
+                {
+                    serverConfig = config.Configs["GatekeeperService"];
+                    m_GridName = serverConfig.GetString("ExternalName", string.Empty);
+                }
             }
         }
 
@@ -115,10 +131,11 @@ namespace OpenSim.Services.HypergridService
             return home;
         }
 
-        public bool LoginAgentToGrid(AgentCircuitData agentCircuit, GridRegion gatekeeper, GridRegion finalDestination, out string reason)
+        public bool LoginAgentToGrid(AgentCircuitData agentCircuit, GridRegion gatekeeper, GridRegion finalDestination, IPEndPoint clientIP, out string reason)
         {
-            m_log.DebugFormat("[USER AGENT SERVICE]: Request to login user {0} {1} to grid {2}", 
-                agentCircuit.firstname, agentCircuit.lastname, gatekeeper.ExternalHostName +":"+ gatekeeper.HttpPort);
+            m_log.DebugFormat("[USER AGENT SERVICE]: Request to login user {0} {1} (@{2}) to grid {3}", 
+                agentCircuit.firstname, agentCircuit.lastname, ((clientIP == null) ? "stored IP" : clientIP.Address.ToString()), 
+                gatekeeper.ExternalHostName +":"+ gatekeeper.HttpPort);
 
             // Take the IP address + port of the gatekeeper (reg) plus the info of finalDestination
             GridRegion region = new GridRegion(gatekeeper);
@@ -131,7 +148,13 @@ namespace OpenSim.Services.HypergridService
             agentCircuit.ServiceSessionID = "http://" + region.ExternalHostName + ":" + region.HttpPort + ";" + UUID.Random();
             TravelingAgentInfo old = UpdateTravelInfo(agentCircuit, region);
 
-            bool success = m_GatekeeperConnector.CreateAgent(region, agentCircuit, (uint)Constants.TeleportFlags.ViaLogin, out reason);
+            bool success = false;
+            string myExternalIP = string.Empty;
+            string gridName = "http://" + gatekeeper.ExternalHostName + ":" + gatekeeper.HttpPort;
+            if (m_GridName == gridName)
+                success = m_GatekeeperService.LoginAgent(agentCircuit, finalDestination, out reason);
+            else
+                success = m_GatekeeperConnector.CreateAgent(region, agentCircuit, (uint)Constants.TeleportFlags.ViaLogin, out myExternalIP, out reason);
 
             if (!success)
             {
@@ -145,15 +168,26 @@ namespace OpenSim.Services.HypergridService
                 return false;
             }
 
+            m_log.DebugFormat("[USER AGENT SERVICE]: Gatekeeper sees me as {0}", myExternalIP);
+            // else set the IP addresses associated with this client
+            if (clientIP != null)
+                m_TravelingAgents[agentCircuit.SessionID].ClientIPAddress = clientIP.Address.ToString();
+            m_TravelingAgents[agentCircuit.SessionID].MyIpAddress = myExternalIP;
             return true;
         }
 
-        public void SetClientToken(UUID sessionID, string token)
+        public bool LoginAgentToGrid(AgentCircuitData agentCircuit, GridRegion gatekeeper, GridRegion finalDestination, out string reason)
+        {
+            reason = string.Empty;
+            return LoginAgentToGrid(agentCircuit, gatekeeper, finalDestination, null, out reason);
+        }
+
+        private void SetClientIP(UUID sessionID, string ip)
         {
             if (m_TravelingAgents.ContainsKey(sessionID))
             {
-                m_log.DebugFormat("[USER AGENT SERVICE]: Setting token {0} for session {1}", token, sessionID);
-                m_TravelingAgents[sessionID].ClientToken = token;
+                m_log.DebugFormat("[USER AGENT SERVICE]: Setting IP {0} for session {1}", ip, sessionID);
+                m_TravelingAgents[sessionID].ClientIPAddress = ip;
             }
         }
 
@@ -165,16 +199,21 @@ namespace OpenSim.Services.HypergridService
             {
                 if (m_TravelingAgents.ContainsKey(agentCircuit.SessionID))
                 {
+                    // Very important! Override whatever this agent comes with.
+                    // UserAgentService always sets the IP for every new agent
+                    // with the original IP address.
+                    agentCircuit.IPAddress = m_TravelingAgents[agentCircuit.SessionID].ClientIPAddress;
+
                     old = m_TravelingAgents[agentCircuit.SessionID];
                 }
 
                 m_TravelingAgents[agentCircuit.SessionID] = travel;
             }
             travel.UserID = agentCircuit.AgentID;
-            travel.GridExternalName = region.ExternalHostName + ":" + region.HttpPort;
+            travel.GridExternalName = "http://" + region.ExternalHostName + ":" + region.HttpPort;
             travel.ServiceToken = agentCircuit.ServiceSessionID;
             if (old != null)
-                travel.ClientToken = old.ClientToken;
+                travel.ClientIPAddress = old.ClientIPAddress;
 
             return old;
         }
@@ -197,7 +236,7 @@ namespace OpenSim.Services.HypergridService
 
             GridUserInfo guinfo = m_GridUserService.GetGridUserInfo(userID.ToString());
             if (guinfo != null)
-                m_GridUserService.LoggedOut(userID.ToString(), guinfo.LastRegionID, guinfo.LastPosition, guinfo.LastLookAt);
+                m_GridUserService.LoggedOut(userID.ToString(), sessionID, guinfo.LastRegionID, guinfo.LastPosition, guinfo.LastLookAt);
         }
 
         // We need to prevent foreign users with the same UUID as a local user
@@ -207,26 +246,25 @@ namespace OpenSim.Services.HypergridService
                 return false;
 
             TravelingAgentInfo travel = m_TravelingAgents[sessionID];
+
             return travel.GridExternalName == thisGridExternalName;
         }
 
-        public bool VerifyClient(UUID sessionID, string token)
+        public bool VerifyClient(UUID sessionID, string reportedIP)
         {
-            m_log.DebugFormat("[USER AGENT SERVICE]: Verifying Client session {0} with token {1}", sessionID, token);
+            if (m_BypassClientVerification)
+                return true;
 
-            // Commenting this for now until I understand better what part of a sender's
-            // info stays unchanged throughout a session
+            m_log.DebugFormat("[USER AGENT SERVICE]: Verifying Client session {0} with reported IP {1}.", 
+                sessionID, reportedIP);
 
-
-            m_log.DebugFormat("[USER AGENT SERVICE]: Debug : {0}", m_TravelingAgents.ContainsKey(sessionID));
-
-            foreach (UUID session in m_TravelingAgents.Keys)
-            {
-                m_log.Debug("[UAS]: " + session + " " + m_TravelingAgents[session].ClientToken);
-            }
             if (m_TravelingAgents.ContainsKey(sessionID))
             {
-                return m_TravelingAgents[sessionID].ClientToken == token;
+                m_log.DebugFormat("[USER AGENT SERVICE]: Comparing with login IP {0} and MyIP {1}", 
+                    m_TravelingAgents[sessionID].ClientIPAddress, m_TravelingAgents[sessionID].MyIpAddress);
+
+                return m_TravelingAgents[sessionID].ClientIPAddress == reportedIP ||
+                    m_TravelingAgents[sessionID].MyIpAddress == reportedIP; // NATed
             }
 
             return false;
@@ -234,19 +272,6 @@ namespace OpenSim.Services.HypergridService
 
         public bool VerifyAgent(UUID sessionID, string token)
         {
-            m_log.DebugFormat("[USER AGENT SERVICE]: Verifying Client session {0} with token {1}", sessionID, token);
-
-            // Commenting this for now until I understand better what part of a sender's
-            // info stays unchanged throughout a session
-
-
-            m_log.DebugFormat("[USER AGENT SERVICE]: Debug : {0}", m_TravelingAgents.ContainsKey(sessionID));
-
-            foreach (UUID session in m_TravelingAgents.Keys)
-            {
-                m_log.Debug("[UAS]: " + session + " " + m_TravelingAgents[session].ClientToken);
-            }
-
             if (m_TravelingAgents.ContainsKey(sessionID))
             {
                 m_log.DebugFormat("[USER AGENT SERVICE]: Verifying agent token {0} against {1}", token, m_TravelingAgents[sessionID].ServiceToken);
@@ -265,7 +290,8 @@ namespace OpenSim.Services.HypergridService
         public UUID UserID;
         public string GridExternalName = string.Empty;
         public string ServiceToken = string.Empty;
-        public string ClientToken = string.Empty;
+        public string ClientIPAddress = string.Empty; // as seen from this user agent service
+        public string MyIpAddress = string.Empty; // the user agent service's external IP, as seen from the next gatekeeper
     }
 
 }

@@ -424,6 +424,13 @@ namespace OpenSim.Region.Framework.Scenes
             set { m_Frozen = value; }
         }
 
+        protected bool m_IsJumping = false;
+        public bool IsJumping
+        {
+            get { return m_IsJumping; }
+            set { m_IsJumping = value; }
+        }
+
         protected bool ClientIsStarting = true;
 
         public bool SetAlwaysRun
@@ -805,9 +812,6 @@ namespace OpenSim.Region.Framework.Scenes
             m_controllingClient.OnAutoPilotGo += DoAutoPilot;
             m_controllingClient.AddGenericPacketHandler("autopilot", DoMoveToPosition);
             m_controllingClient.OnRetrieveInstantMessages += HandleRetrieveInstantMessages;
-
-            // ControllingClient.OnChildAgentStatus += new StatusChange(this.ChildStatusChange);
-            // ControllingClient.OnStopMovement += new GenericCall2(this.StopMovement);
         }
 
         /// <summary>
@@ -816,6 +820,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="client"></param>
         public void HandleRetrieveInstantMessages(IClientAPI client)
         {
+            /*
             //This attempts to fixes t-pose on login by sending an animation for the avatar so it has something to display.
             //  -- Revolution
             if (ClientIsStarting)
@@ -835,6 +840,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             SendWearables();
             SendAppearanceToAllOtherAgents();
+            */
         }
 
         private void SetDirectionVectors()
@@ -904,7 +910,7 @@ namespace OpenSim.Region.Framework.Scenes
             IGroupsModule gm = m_scene.RequestModuleInterface<IGroupsModule>();
             if (gm != null)
                 m_grouptitle = gm.GetGroupTitle(m_uuid);
-
+           
             m_rootRegionHandle = m_scene.RegionInfo.RegionHandle;
 
             // Moved this from SendInitialData to ensure that m_appearance is initialized
@@ -999,6 +1005,7 @@ namespace OpenSim.Region.Framework.Scenes
             });
 
             SendScriptEventToAttachments("changed", new Object[] { Changed.TELEPORT });
+
             m_scene.EventManager.TriggerOnMakeRootAgent(this);
         }
 
@@ -1011,6 +1018,8 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void MakeChildAgent()
         {
+            // It looks like m_animator is set to null somewhere, and MakeChild
+            // is called after that. Probably in aborted teleports.
             if (m_animator == null)
                 m_animator = new ScenePresenceAnimator(this);
             else
@@ -1182,7 +1191,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void CompleteMovement(IClientAPI client)
         {
-            //m_log.Debug("[SCENE PRESENCE]: CompleteMovement");
+            //m_log.Debug("[SCENE PRESENCE]: CompleteMovement for " + Name + " in " + m_regionInfo.RegionName);
 
             Vector3 look = Velocity;
             if ((look.X == 0) && (look.Y == 0) && (look.Z == 0))
@@ -1211,11 +1220,9 @@ namespace OpenSim.Region.Framework.Scenes
             m_isChildAgent = false;
             bool m_flying = ((m_AgentControlFlags & AgentManager.ControlFlags.AGENT_CONTROL_FLY) != 0);
             MakeRootAgent(AbsolutePosition, m_flying);
-
+            
             m_controllingClient.MoveAgentIntoRegion(m_regionInfo, AbsolutePosition, look);
             
-            //m_log.DebugFormat("Completed movement");
-
             // Create child agents in neighbouring regions
             if (!m_isChildAgent)
             {
@@ -1385,7 +1392,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if ((flags & AgentManager.ControlFlags.AGENT_CONTROL_SIT_ON_GROUND) != 0)
             {
-                SitGround = true;                
+                SitGround = true;
             }
 
             // In the future, these values might need to go global.
@@ -1619,6 +1626,8 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
 
+                // If the agent update does move the avatar, then calculate the force ready for the velocity update,
+                // which occurs later in the main scene loop
                 if (update_movementflag || (update_rotation && DCFlagKeyPressed))
                 {
                     //                    m_log.DebugFormat("{0} {1}", update_movementflag, (update_rotation && DCFlagKeyPressed));
@@ -1790,7 +1799,7 @@ namespace OpenSim.Region.Framework.Scenes
             // If the primitive the player clicked on has no sit target, and one or more other linked objects have sit targets that are not full, the sit target of the object with the lowest link number will be used.
 
             // Get our own copy of the part array, and sort into the order we want to test
-            SceneObjectPart[] partArray = targetPart.ParentGroup.GetParts();
+            SceneObjectPart[] partArray = targetPart.ParentGroup.Parts;
             Array.Sort(partArray, delegate(SceneObjectPart p1, SceneObjectPart p2)
                        {
                            // we want the originally selected part first, then the rest in link order -- so make the selected part link num (-1)
@@ -2389,8 +2398,9 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         if (m_scene.m_usePreJump)
                         {
-                            if (!m_overrideUserInput && AllowMovement && !Frozen) //This check blocks jumping while the jump is occuring
+                            if (!m_overrideUserInput && AllowMovement && !Frozen && !IsJumping) //This check blocks jumping while the jump is occuring
                             {
+                                IsJumping = true;
                                 //Make jumping straight up less so that avs can't jump 10 meters up
                                 if (direc.X == 0 || direc.Y == 0)
                                     direc.Z *= 2f;
@@ -2400,10 +2410,15 @@ namespace OpenSim.Region.Framework.Scenes
                                 //Fix messed up jumps
                                 if (direc.Z <= 0)
                                     direc.Z = 7;
-                                
+
                                 PreJumpForce = direc;
                                 Animator.TrySetMovementAnimation("PREJUMP");
                                 //Leave this here! Otherwise jump will sometimes not occur...
+                                return;
+                            }
+                            else
+                            {
+                                //Can't allow jumps then
                                 return;
                             }
                         }
@@ -2582,7 +2597,10 @@ namespace OpenSim.Region.Framework.Scenes
 
                 //m_log.DebugFormat("[SCENEPRESENCE]: TerseUpdate: Pos={0} Rot={1} Vel={2}", m_pos, m_bodyRot, m_velocity);
 
-                remoteClient.SendPrimUpdate(this, PrimUpdateFlags.Position | PrimUpdateFlags.Rotation | PrimUpdateFlags.Velocity | PrimUpdateFlags.Acceleration | PrimUpdateFlags.AngularVelocity);
+                remoteClient.SendPrimUpdate(
+                    this, 
+                    PrimUpdateFlags.Position | PrimUpdateFlags.Rotation | PrimUpdateFlags.Velocity 
+                    | PrimUpdateFlags.Acceleration | PrimUpdateFlags.AngularVelocity);
 
                 m_scene.StatsReporter.AddAgentTime(Util.EnvironmentTickCountSubtract(m_perfMonMS));
                 m_scene.StatsReporter.AddAgentUpdates(1);
@@ -2996,29 +3014,29 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     if (m_requestedSitTargetUUID == UUID.Zero)
                     {
-                        if (m_scene.TestBorderCross(pos2, Cardinals.S))
+                        /*if (m_scene.TestBorderCross(pos2, Cardinals.S))
                         {
                             m_forceToApply = new Vector3(-5, 0, 0) * Rotation;
                             m_overrideUserInput = true;
-                            m_endForceTime = Util.UnixTimeSinceEpoch() + 0.1f;
+                            m_endForceTime = Util.UnixTimeSinceEpoch() + 0.1;
                         }
                         else if (m_scene.TestBorderCross(pos2, Cardinals.N))
                         {
                             m_forceToApply = new Vector3(-5, 0, 0) * Rotation;
                             m_overrideUserInput = true;
-                            m_endForceTime = Util.UnixTimeSinceEpoch() + 0.1f;
+                            m_endForceTime = Util.UnixTimeSinceEpoch() + 0.1;
                         }
                         else if (m_scene.TestBorderCross(pos2, Cardinals.E))
                         {
                             m_forceToApply = new Vector3(-5, 0, 0) * Rotation;
                             m_overrideUserInput = true;
-                            m_endForceTime = Util.UnixTimeSinceEpoch() + 0.1f;
+                            m_endForceTime = Util.UnixTimeSinceEpoch() + 0.1;
                         }
                         else if (m_scene.TestBorderCross(pos2, Cardinals.W))
                         {
                             m_forceToApply = new Vector3(-5, 0, 0) * Rotation;
                             m_overrideUserInput = true;
-                            m_endForceTime = Util.UnixTimeSinceEpoch() + 0.1f;
+                            m_endForceTime = Util.UnixTimeSinceEpoch() + 0.1;
                         }
                         if (pos2.Z < 0 || pos2.Z + 2 < Scene.GetGroundHeight(pos2.X, pos2.Y))
                         {
@@ -3027,7 +3045,7 @@ namespace OpenSim.Region.Framework.Scenes
                             else
                                 m_forceToApply = new Vector3(0, 0, 1);
                             m_overrideUserInput = true;
-                            m_endForceTime = Util.UnixTimeSinceEpoch() + 0.5f;
+                            m_endForceTime = Util.UnixTimeSinceEpoch() + 0.5;
                         }
                         double timenow = (double)Util.UnixTimeSinceEpoch();
                         if (m_endForceTime != 0 && m_endForceTime < timenow)
@@ -3035,7 +3053,7 @@ namespace OpenSim.Region.Framework.Scenes
                             m_overrideUserInput = false;
                             m_endForceTime = 0;
                             m_forceToApply = Vector3.Zero;
-                        }
+                        }*/
                     }
                 }
                 else if (neighbor > 0)
@@ -3353,6 +3371,18 @@ namespace OpenSim.Region.Framework.Scenes
                 cAgent.Attachments = attachs;
             }
 
+            lock (scriptedcontrols)
+            {
+                ControllerData[] controls = new ControllerData[scriptedcontrols.Count];
+                int i = 0;
+
+                foreach (ScriptControllers c in scriptedcontrols.Values)
+                {
+                    controls[i++] = new ControllerData(c.itemID, (uint)c.ignoreControls, (uint)c.eventControls);
+                }
+                cAgent.Controllers = controls;
+            }
+
             // Animations
             try
             {
@@ -3398,12 +3428,18 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (cAgent.Wearables == null)
                    cAgent.Wearables  = new UUID[0];
-                AvatarWearable[] wears = new AvatarWearable[cAgent.Wearables.Length / 2];
+                AvatarWearable[] wears = new AvatarWearable[Math.Max(AvatarAppearance.MAX_WEARABLES, cAgent.Wearables.Length /2)];//make the larger array
                 for (uint n = 0; n < cAgent.Wearables.Length; n += 2)
                 {
                     UUID itemId = cAgent.Wearables[n];
                     UUID assetId = cAgent.Wearables[n + 1];
                     wears[i++] = new AvatarWearable(itemId, assetId);
+                }
+                //Check for nulls
+                for (i = 0; i < wears.Length; i++)
+                {
+                    if (wears[i] == null)
+                        wears[i] = new AvatarWearable();
                 }
                 m_appearance.Wearables = wears;
                 Primitive.TextureEntry te;
@@ -3434,6 +3470,27 @@ namespace OpenSim.Region.Framework.Scenes
             }
             catch { } 
 
+            try
+            {
+                lock (scriptedcontrols)
+                {
+                    if (cAgent.Controllers != null)
+                    {
+                        scriptedcontrols.Clear();
+
+                        foreach (ControllerData c in cAgent.Controllers)
+                        {
+                            ScriptControllers sc = new ScriptControllers();
+                            sc.itemID = c.ItemID;
+                            sc.ignoreControls = (ScriptControlled)c.IgnoreControls;
+                            sc.eventControls = (ScriptControlled)c.EventControls;
+
+                            scriptedcontrols[sc.itemID] = sc;
+                        }
+                    }
+                }
+            }
+            catch { }
             // Animations
             try
             {
@@ -3491,11 +3548,6 @@ namespace OpenSim.Region.Framework.Scenes
                 else
                     m_forceToApply = null;
             }
-        }
-
-        public override void SetText(string text, Vector3 color, double alpha)
-        {
-            throw new Exception("Can't set Text on avatar.");
         }
 
         public delegate void AddPhysics();
@@ -3682,6 +3734,27 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 m_attachments.Add(gobj);
             }
+        }
+        
+        /// <summary>
+        /// Get the scene object attached to the given point.
+        /// </summary>
+        /// <param name="attachmentPoint"></param>
+        /// <returns>Returns an empty list if there were no attachments at the point.</returns>
+        public List<SceneObjectGroup> GetAttachments(int attachmentPoint)
+        {
+            List<SceneObjectGroup> attachments = new List<SceneObjectGroup>();
+            
+            lock (m_attachments)
+            {
+                foreach (SceneObjectGroup so in m_attachments)
+                {
+                    if (attachmentPoint == so.RootPart.AttachmentPoint)
+                        attachments.Add(so);
+                }
+            }
+            
+            return attachments;
         }
 
         public bool HasAttachments()
@@ -4024,8 +4097,8 @@ namespace OpenSim.Region.Framework.Scenes
                     return;
 
                 UUID itemID = m_appearance.GetAttachedItem(p);
-                UUID assetID = m_appearance.GetAttachedAsset(p);
 
+                //UUID assetID = m_appearance.GetAttachedAsset(p);
                 // For some reason assetIDs are being written as Zero's in the DB -- need to track tat down
                 // But they're not used anyway, the item is being looked up for now, so let's proceed.
                 //if (UUID.Zero == assetID) 
@@ -4036,17 +4109,11 @@ namespace OpenSim.Region.Framework.Scenes
 
                 try
                 {
-                    // Rez from inventory
-                    UUID asset 
-                        = m_scene.AttachmentsModule.RezSingleAttachmentFromInventory(ControllingClient, itemID, (uint)p);
-
-                    m_log.InfoFormat(
-                        "[ATTACHMENT]: Rezzed attachment in point {0} from item {1} and asset {2} ({3})",
-                        p, itemID, assetID, asset);
+                    m_scene.AttachmentsModule.RezSingleAttachmentFromInventory(ControllingClient, itemID, p);
                 }
                 catch (Exception e)
                 {
-                    m_log.ErrorFormat("[ATTACHMENT]: Unable to rez attachment: {0}", e.ToString());
+                    m_log.ErrorFormat("[ATTACHMENT]: Unable to rez attachment: {0}{1}", e.Message, e.StackTrace);
                 }
             }
         }

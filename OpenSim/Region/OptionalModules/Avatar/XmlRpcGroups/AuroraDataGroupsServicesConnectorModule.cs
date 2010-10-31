@@ -32,7 +32,6 @@ using System.Reflection;
 using System.Text;
 
 using log4net;
-using Mono.Addins;
 using Nini.Config;
 
 using OpenMetaverse;
@@ -47,7 +46,6 @@ using Aurora.DataManager;
 
 namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 {
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class AuroraDataGroupsServicesConnectorModule : ISharedRegionModule, IGroupsServicesConnector
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);

@@ -14,11 +14,9 @@ using OpenSim.Region.Framework.Scenes;
 using Caps = OpenSim.Framework.Capabilities.Caps;
 using Aurora.DataManager;
 using Aurora.Framework;
-using Mono.Addins;
 
 namespace Aurora.Modules
 {
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class DisplayNamesModule : ISharedRegionModule
     {
         private static readonly ILog m_log =

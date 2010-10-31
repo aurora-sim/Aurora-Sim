@@ -118,7 +118,7 @@ namespace Aurora.Modules
 
         public void RemoveRegion(Scene scene)
         {
-
+            m_scenes.Remove(scene);
         }
 
         public void RegionLoaded(Scene scene)
@@ -183,7 +183,8 @@ namespace Aurora.Modules
                 if (region != null)
                 {
                     string RegionName = region.RegionName.Replace(" ", ""); // Remove spaces
-                    Regions.Add(RegionName, region.ToKeyValuePairs());
+                    if(!Regions.ContainsKey(RegionName))
+                        Regions.Add(RegionName, region.ToKeyValuePairs());
                 }
             }
             return Regions;

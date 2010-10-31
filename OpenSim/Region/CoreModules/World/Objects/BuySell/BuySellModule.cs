@@ -29,7 +29,6 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using log4net;
-using Mono.Addins;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
@@ -41,7 +40,6 @@ using OpenSim.Region.Framework.Scenes.Serialization;
 
 namespace OpenSim.Region.CoreModules.World.Objects.BuySell
 {
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule", Id = "BuySellModule")]
     public class BuySellModule : IBuySellModule, INonSharedRegionModule
     {
 //        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -59,11 +57,13 @@ namespace OpenSim.Region.CoreModules.World.Objects.BuySell
             m_scene = scene;
             m_scene.RegisterModuleInterface<IBuySellModule>(this);
             m_scene.EventManager.OnNewClient += SubscribeToClientEvents;
+            m_scene.EventManager.OnClosingClient += UnsubscribeFromClientEvents;
         }
         
         public void RemoveRegion(Scene scene) 
         {
             m_scene.EventManager.OnNewClient -= SubscribeToClientEvents;
+            m_scene.EventManager.OnClosingClient -= UnsubscribeFromClientEvents;
         }
         
         public void RegionLoaded(Scene scene) 
@@ -75,10 +75,15 @@ namespace OpenSim.Region.CoreModules.World.Objects.BuySell
         {
             RemoveRegion(m_scene);
         }
-        
+
         public void SubscribeToClientEvents(IClientAPI client)
         {
             client.OnObjectSaleInfo += ObjectSaleInfo;
+        }
+
+        public void UnsubscribeFromClientEvents(IClientAPI client)
+        {
+            client.OnObjectSaleInfo -= ObjectSaleInfo;
         }
 
         protected void ObjectSaleInfo(
@@ -148,7 +153,7 @@ namespace OpenSim.Region.CoreModules.World.Objects.BuySell
                 part.GetProperties(remoteClient);
                 part.TriggerScriptChangedEvent(Changed.OWNER);
                 group.ResumeScripts();
-                part.ScheduleFullUpdate();
+                part.ScheduleFullUpdate(PrimUpdateFlags.FullUpdate);
 
                 break;
 

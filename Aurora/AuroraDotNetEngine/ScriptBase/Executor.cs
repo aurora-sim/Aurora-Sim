@@ -279,17 +279,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             return Start;
         }
 
-        public delegate void FireEvent(IEnumerator thread);
+        public delegate void FireEvent(IEnumerator thread, out Exception e);
 
         private bool CallAndWait(int timeout, IEnumerator enumerator)
         {
             bool RetVal = true;
-            FireEvent wrappedAction = delegate(IEnumerator en)
+            FireEvent wrappedAction = delegate(IEnumerator en, out Exception e)
             {
-                RetVal = enumerator.MoveNext();
+                e = null;
+                try
+                {
+                    RetVal = enumerator.MoveNext();
+                }
+                catch( Exception ex)
+                {
+                    e = ex;
+                }
             };
-
-            IAsyncResult result = wrappedAction.BeginInvoke(enumerator, null, null);
+            Exception exception;
+            IAsyncResult result = wrappedAction.BeginInvoke(enumerator, out exception, null, null);
             if (((timeout != -1) && !result.IsCompleted) &&
             (!result.AsyncWaitHandle.WaitOne(timeout, false) || !result.IsCompleted))
             {
@@ -301,9 +309,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             }
             else
             {
-                wrappedAction.EndInvoke(result);
+                wrappedAction.EndInvoke(out exception, result);
             }
             //Return what we got
+            if (exception != null)
+            {
+                //Throw the exception if we caught one
+                throw exception;
+            }
             return RetVal;
         }
 

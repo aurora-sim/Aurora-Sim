@@ -90,5 +90,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         void osCauseDamage(string avatar, double damage);
 
         void AASetCenterOfGravity(LSL_Types.Vector3 position);
+
+        void AARaiseError(string message);
     }
 }

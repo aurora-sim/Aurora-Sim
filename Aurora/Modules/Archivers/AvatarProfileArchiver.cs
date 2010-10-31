@@ -14,29 +14,28 @@ using log4net;
 using Aurora.DataManager;
 using Aurora.Framework;
 using OpenSim.Server.Base;
-using Mono.Addins;
 
 namespace Aurora.Modules
 {
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class AuroraAvatarProfileArchiver : ISharedRegionModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         Scene m_scene;
         public void Initialise(Nini.Config.IConfigSource source)
         {
-            MainConsole.Instance.Commands.AddCommand("region", false, "save avatar profile",
-                                          "save avatar profile <First> <Last> <Filename>",
-                                          "Saves profile and avatar data to an archive", HandleSaveAvatarProfile);
-            MainConsole.Instance.Commands.AddCommand("region", false, "load avatar profile",
-                                          "load avatar profile <First> <Last> <Filename>",
-                                          "Loads profile and avatar data from an archive", HandleLoadAvatarProfile);
         }
 
         public void AddRegion(Scene scene)
         {
             if (m_scene == null)
                 m_scene = scene;
+
+            MainConsole.Instance.Commands.AddCommand("region", false, "save avatar profile",
+                                          "save avatar profile <First> <Last> <Filename>",
+                                          "Saves profile and avatar data to an archive", HandleSaveAvatarProfile);
+            MainConsole.Instance.Commands.AddCommand("region", false, "load avatar profile",
+                                          "load avatar profile <First> <Last> <Filename>",
+                                          "Loads profile and avatar data from an archive", HandleLoadAvatarProfile);
         }
 
         public void RemoveRegion(Scene scene)

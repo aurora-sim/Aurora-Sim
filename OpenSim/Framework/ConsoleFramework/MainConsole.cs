@@ -30,11 +30,19 @@ namespace OpenSim.Framework.Console
     public class MainConsole
     {
         private static ICommandConsole instance;
+        public delegate void IncomingLogWrite(string text);
+        public static event IncomingLogWrite OnIncomingLogWrite;
 
         public static ICommandConsole Instance
         {
             get { return instance; }
             set { instance = value; }
+        }
+
+        public static void TriggerLog(string text)
+        {
+            if (OnIncomingLogWrite != null)
+                OnIncomingLogWrite(text);
         }
     }
 }

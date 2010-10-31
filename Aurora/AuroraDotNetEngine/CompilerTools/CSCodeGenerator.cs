@@ -257,7 +257,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             
             try
             {
-                if (!m_SLCompatabilityMode && false) // :/ its terribly slow! plus it really should be a job for the parser too...
+                if (m_SLCompatabilityMode && false) // :/ its terribly slow! plus it really should be a job for the parser too...
                 {
                     script = CheckForInlineVectors(script);
 
@@ -1824,7 +1824,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 {
                     foreach (SYMBOL kid in s.kids)
                     {
-                        if (kid is Assignment && !m_SLCompatabilityMode)
+                        if (kid is Assignment && m_SLCompatabilityMode)
                         {
                             Assignment a = kid as Assignment;
                             List<string> identifiers = new List<string>();
@@ -2359,7 +2359,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             string FunctionCalls = "";
             foreach (SYMBOL kid in fc.kids)
             {
-                if (kid is ArgumentList && !m_SLCompatabilityMode)
+                if (kid is ArgumentList && m_SLCompatabilityMode)
                 {
                     ArgumentList al = kid as ArgumentList;
                     int comma = al.kids.Count - 1;  // tells us whether to print a comma
@@ -2456,7 +2456,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 retstr.Append(tempString);
 
                 retstr.Append(GenerateLine(");"));
-                retstr.Append(Generate("yield return null"));
+                retstr.Append(Generate("yield return null;"));
                 retstr.Append(GenerateLine("}"));
             }
             else if (isEnumerable)

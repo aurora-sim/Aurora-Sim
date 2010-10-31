@@ -32,11 +32,9 @@ using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
-using Mono.Addins;
 
 namespace OpenSim.Region.CoreModules.Agent.Xfer
 {
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class XferModule : INonSharedRegionModule, IXfer
     {
         private Scene m_scene;
@@ -65,13 +63,17 @@ namespace OpenSim.Region.CoreModules.Agent.Xfer
         {
             m_scene = scene;
             m_scene.EventManager.OnNewClient += NewClient;
+            m_scene.EventManager.OnClosingClient += OnClosingClient;
 
             m_scene.RegisterModuleInterface<IXfer>(this);
         }
 
         public void RemoveRegion(Scene scene)
         {
+            m_scene.EventManager.OnNewClient -= NewClient;
+            m_scene.EventManager.OnClosingClient -= OnClosingClient;
 
+            m_scene.UnregisterModuleInterface<IXfer>(this);
         }
 
         public void RegionLoaded(Scene scene)
@@ -135,6 +137,12 @@ namespace OpenSim.Region.CoreModules.Agent.Xfer
         {
             client.OnRequestXfer += RequestXfer;
             client.OnConfirmXfer += AckPacket;
+        }
+
+        private void OnClosingClient(IClientAPI client)
+        {
+            client.OnRequestXfer -= RequestXfer;
+            client.OnConfirmXfer -= AckPacket;
         }
 
         /// <summary>

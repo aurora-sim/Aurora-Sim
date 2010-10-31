@@ -34,11 +34,9 @@ using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
-using Mono.Addins;
 
 namespace OpenSim.Region.CoreModules.Avatar.Groups
 {
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class GroupsModule : ISharedRegionModule
     {
         private static readonly ILog m_log =
@@ -111,13 +109,17 @@ namespace OpenSim.Region.CoreModules.Avatar.Groups
             }
 
             scene.EventManager.OnNewClient += OnNewClient;
+            scene.EventManager.OnClosingClient += OnClosingClient;
             scene.EventManager.OnClientClosed += OnClientClosed;
             scene.EventManager.OnIncomingInstantMessage += OnGridInstantMessage;
         }
 
         public void RemoveRegion(Scene scene)
         {
-
+            scene.EventManager.OnNewClient -= OnNewClient;
+            scene.EventManager.OnClosingClient -= OnClosingClient;
+            scene.EventManager.OnClientClosed -= OnClientClosed;
+            scene.EventManager.OnIncomingInstantMessage -= OnGridInstantMessage;
         }
 
         public void RegionLoaded(Scene scene)
@@ -160,6 +162,13 @@ namespace OpenSim.Region.CoreModules.Avatar.Groups
         }
 
         #endregion
+
+        private void OnClosingClient(IClientAPI client)
+        {
+            client.OnInstantMessage -= OnInstantMessage;
+            client.OnAgentDataUpdateRequest -= OnAgentDataUpdateRequest;
+            client.OnUUIDGroupNameRequest -= HandleUUIDGroupNameRequest;
+        }
 
         private void OnNewClient(IClientAPI client)
         {

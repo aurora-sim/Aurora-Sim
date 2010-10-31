@@ -55,7 +55,7 @@ namespace OpenSim.Region.Physics.Manager
             plugHard = new ZeroMesherPlugin();
             _MeshPlugins.Add(plugHard.GetName(), plugHard);
             
-            m_log.Info("[PHYSICS]: Added meshing engine: " + plugHard.GetName());
+           // m_log.Info("[PHYSICS]: Added meshing engine: " + plugHard.GetName());
         }
 
         /// <summary>
@@ -109,14 +109,26 @@ namespace OpenSim.Region.Physics.Manager
         /// <param name="pluginsPath"></param>
         public void LoadPluginsFromAssemblies(string assembliesPath)
         {
-            // Walk all assemblies (DLLs effectively) and see if they are home
+            List<IPhysicsPlugin> physicsPlugins = Aurora.Framework.AuroraModuleLoader.LoadModules<IPhysicsPlugin>(assembliesPath);
+            List<IMeshingPlugin> meshingPlugins = Aurora.Framework.AuroraModuleLoader.LoadModules<IMeshingPlugin>(assembliesPath);
+
+            foreach (IPhysicsPlugin plug in physicsPlugins)
+            {
+                _PhysPlugins.Add(plug.GetName(), plug);
+            }
+            foreach (IMeshingPlugin plug in meshingPlugins)
+            {
+                _MeshPlugins.Add(plug.GetName(), plug);
+            }
+            
+            /*// Walk all assemblies (DLLs effectively) and see if they are home
             // of a plugin that is of interest for us
             string[] pluginFiles = Directory.GetFiles(assembliesPath, "*.dll");
 
             for (int i = 0; i < pluginFiles.Length; i++)
             {
                 LoadPluginsFromAssembly(pluginFiles[i]);
-            }
+            }*/
         }
 
         /// <summary>
@@ -179,7 +191,7 @@ namespace OpenSim.Region.Physics.Manager
                                     if (!_PhysPlugins.ContainsKey(plug.GetName()))
                                     {
                                         _PhysPlugins.Add(plug.GetName(), plug);
-                                        m_log.Info("[PHYSICS]: Added physics engine: " + plug.GetName());
+                                        //m_log.Info("[PHYSICS]: Added physics engine: " + plug.GetName());
                                     }
                                 }
 
@@ -187,12 +199,18 @@ namespace OpenSim.Region.Physics.Manager
 
                                 if (meshTypeInterface != null)
                                 {
-                                    IMeshingPlugin plug =
-                                        (IMeshingPlugin)Activator.CreateInstance(pluginAssembly.GetType(pluginType.ToString()));
-                                    if (!_MeshPlugins.ContainsKey(plug.GetName()))
+                                    try
                                     {
-                                        _MeshPlugins.Add(plug.GetName(), plug);
-                                        m_log.Info("[PHYSICS]: Added meshing engine: " + plug.GetName());
+                                        IMeshingPlugin plug =
+                                            (IMeshingPlugin)Activator.CreateInstance(pluginAssembly.GetType(pluginType.ToString()));
+                                        if (!_MeshPlugins.ContainsKey(plug.GetName()))
+                                        {
+                                            _MeshPlugins.Add(plug.GetName(), plug);
+                                            //m_log.Info("[PHYSICS]: Added meshing engine: " + plug.GetName());
+                                        }
+                                    }
+                                    catch
+                                    {
                                     }
                                 }
 

@@ -387,14 +387,15 @@ Asset service request failures: {3}" + Environment.NewLine,
             sb.Append(Environment.NewLine);
             sb.Append("CONNECTION STATISTICS");
             sb.Append(Environment.NewLine);
-            sb.Append(string.Format(
-                    @"Successful logins total: {0}" + Environment.NewLine +
-                    "Successful logins Today: {1}" + Environment.NewLine +
-                    "Successful logins Yesterday: {2}" + Environment.NewLine +
-                    "Logouts total: {3}" + Environment.NewLine +
-                    "Logouts total: {4}" + Environment.NewLine +
-                    "Logouts total: {5}" + Environment.NewLine +
-                    "Abnormal client thread terminations: {6}" + Environment.NewLine,
+            sb.Append(
+                string.Format(
+@"Successful logins Total: {0} 
+Successful logins Today: {1} 
+Successful logins Yesterday: {2} 
+Logouts Total: {3} 
+Logouts Today: {4} 
+Logouts Yesterday: {5} 
+Abnormal client thread terminations: {6}"+Environment.NewLine,
                     SuccessfulLoginsTotal,
                     SuccessfulLoginsToday,
                     SuccessfulLoginsYesterday,

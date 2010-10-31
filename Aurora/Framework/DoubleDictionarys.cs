@@ -127,6 +127,73 @@ namespace Aurora.Framework
         {
             return Dictionary2.TryGetValue(key, out value);
         }
+
+        public void ForEach(Action<TValue> action)
+        {
+            foreach (TValue value in Dictionary1.Values)
+                action(value);
+        }
+
+        public void ForEach(Action<KeyValuePair<TKey1, TValue>> action)
+        {
+            foreach (KeyValuePair<TKey1, TValue> entry in Dictionary1)
+                action(entry);
+        }
+
+        public void ForEach(Action<KeyValuePair<TKey2, TValue>> action)
+        {
+            foreach (KeyValuePair<TKey2, TValue> entry in Dictionary2)
+                action(entry);
+        }
+
+        public TValue FindValue(Predicate<TValue> predicate)
+        {
+            foreach (TValue value in Dictionary1.Values)
+            {
+                if (predicate(value))
+                    return value;
+            }
+
+            return default(TValue);
+        }
+
+        public IList<TValue> FindAll(Predicate<TValue> predicate)
+        {
+            IList<TValue> list = new List<TValue>();
+            foreach (TValue value in Dictionary1.Values)
+            {
+                if (predicate(value))
+                    list.Add(value);
+            }
+
+            return list;
+        }
+
+        public int RemoveAll(Predicate<TValue> predicate)
+        {
+            IList<TKey1> list = new List<TKey1>();
+
+            foreach (KeyValuePair<TKey1, TValue> kvp in Dictionary1)
+            {
+                if (predicate(kvp.Value))
+                    list.Add(kvp.Key);
+            }
+
+            IList<TKey2> list2 = new List<TKey2>(list.Count);
+            foreach (KeyValuePair<TKey2, TValue> kvp in Dictionary2)
+            {
+                if (predicate(kvp.Value))
+                    list2.Add(kvp.Key);
+            }
+
+            for (int i = 0; i < list.Count; i++)
+                Dictionary1.Remove(list[i]);
+
+            for (int i = 0; i < list2.Count; i++)
+                Dictionary2.Remove(list2[i]);
+
+            return list.Count;
+        }
     }
 
     /*public class ExpiringCache<TKey, TValue>

@@ -51,6 +51,7 @@ namespace OpenSim.Region.CoreModules.Framework.Library
         private static bool m_HasRunOnce = false;
 
         private bool m_Enabled = false;
+//        private string m_LibraryName = "OpenSim Library";
         private Scene m_Scene;
 
         private ILibraryService m_Library;
@@ -172,17 +173,17 @@ namespace OpenSim.Region.CoreModules.Framework.Library
                 m_log.InfoFormat("[LIBRARY MODULE]: Loading library archive {0} ({1})...", iarFileName, simpleName);
                 simpleName = GetInventoryPathFromName(simpleName);
 
-                InventoryArchiveReadRequest archread = new InventoryArchiveReadRequest(m_MockScene, uinfo, simpleName, iarFileName);
+                InventoryArchiveReadRequest archread = new InventoryArchiveReadRequest(m_MockScene, uinfo, simpleName, iarFileName, false);
                 try
                 {
-                    List<InventoryNodeBase> nodes = archread.Execute();
+                    HashSet<InventoryNodeBase> nodes = archread.Execute(true);
                     if (nodes != null && nodes.Count == 0)
                     {
                         // didn't find the subfolder with the given name; place it on the top
                         m_log.InfoFormat("[LIBRARY MODULE]: Didn't find {0} in library. Placing archive on the top level", simpleName);
                         archread.Close();
-                        archread = new InventoryArchiveReadRequest(m_MockScene, uinfo, "/", iarFileName);
-                        archread.Execute();
+                        archread = new InventoryArchiveReadRequest(m_MockScene, uinfo, "/", iarFileName, false);
+                        nodes = archread.Execute(true);
                     }
                     foreach (InventoryNodeBase node in nodes)
                         FixPerms(node);
@@ -211,13 +212,21 @@ namespace OpenSim.Region.CoreModules.Framework.Library
             }
         }
 
-        private void DumpLibrary()
-        {
-            InventoryFolderImpl lib = m_Library.LibraryRootFolder;
-
-            m_log.DebugFormat(" - folder {0}", lib.Name);
-            DumpFolder(lib);
-        }
+//        private void DumpLibrary()
+//        {
+//            InventoryFolderImpl lib = m_Library.LibraryRootFolder;
+//
+//            m_log.DebugFormat(" - folder {0}", lib.Name);
+//            DumpFolder(lib);
+//        }
+//
+//        private void DumpLibrary()
+//        {
+//            InventoryFolderImpl lib = m_Scene.CommsManager.UserProfileCacheService.LibraryRoot;
+//
+//            m_log.DebugFormat(" - folder {0}", lib.Name);
+//            DumpFolder(lib);
+//        }
 
         private void DumpFolder(InventoryFolderImpl folder)
         {

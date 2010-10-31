@@ -93,7 +93,7 @@ namespace Aurora.Modules
             }
             if (m_FriendsService == null)
             {
-                m_log.Error("[AuroraProfile]: No Connector defined in section Friends, or filed to load, cannot continue");
+                m_log.Error("[AuroraProfile]: No Connector defined in section Friends, or filed to load.");
                 m_ProfileEnabled = false;
             }
             else if (profileConfig.GetString("ProfileModule", Name) != Name)
@@ -114,7 +114,7 @@ namespace Aurora.Modules
                 m_Scenes.Add(scene);
             m_scene = scene;
             m_scene.EventManager.OnNewClient += NewClient;
-            m_scene.EventManager.OnClientClosed += RemoveClient;
+            m_scene.EventManager.OnClosingClient += OnClosingClient;
         }
 
         public void RemoveRegion(Scene scene)
@@ -124,7 +124,7 @@ namespace Aurora.Modules
             if (m_Scenes.Contains(scene))
                 m_Scenes.Remove(scene);
             m_scene.EventManager.OnNewClient -= NewClient;
-            m_scene.EventManager.OnClientClosed -= RemoveClient;
+            m_scene.EventManager.OnClosingClient -= OnClosingClient;
         }
 
         public void RegionLoaded(Scene scene)
@@ -158,6 +158,36 @@ namespace Aurora.Modules
 
         #region Client
 
+        private void OnClosingClient(IClientAPI client)
+        {
+            client.OnRequestAvatarProperties -= RequestAvatarProperty;
+            client.OnUpdateAvatarProperties -= UpdateAvatarProperties;
+            client.RemoveGenericPacketHandler("avatarclassifiedsrequest");
+            client.OnClassifiedInfoRequest -= ClassifiedInfoRequest;
+            client.OnClassifiedInfoUpdate -= ClassifiedInfoUpdate;
+            client.OnClassifiedDelete -= ClassifiedDelete;
+            client.OnClassifiedGodDelete -= GodClassifiedDelete;
+            client.OnUserInfoRequest -= UserPreferencesRequest;
+            client.OnUpdateUserInfo -= UpdateUserPreferences;
+            //Track agents
+            client.OnTrackAgent -= TrackAgent;
+            client.OnFindAgent -= TrackAgent;
+
+            // Notes
+            client.RemoveGenericPacketHandler("avatarnotesrequest");
+            client.OnAvatarNotesUpdate -= AvatarNotesUpdate;
+
+            //Profile
+            client.OnAvatarInterestUpdate -= AvatarInterestsUpdate;
+
+            // Picks
+            client.RemoveGenericPacketHandler("avatarpicksrequest");
+            client.RemoveGenericPacketHandler("pickinforequest");
+            client.OnPickInfoUpdate -= PickInfoUpdate;
+            client.OnPickDelete -= PickDelete;
+            client.OnPickGodDelete -= GodPickDelete;
+        }
+
         public void NewClient(IClientAPI client)
         {
             client.OnRequestAvatarProperties += RequestAvatarProperty;
@@ -186,33 +216,6 @@ namespace Aurora.Modules
             client.OnPickInfoUpdate += PickInfoUpdate;
             client.OnPickDelete += PickDelete;
             client.OnPickGodDelete += GodPickDelete;
-        }
-
-        public void RemoveClient(UUID clientID, Scene scene)
-        {
-            IClientAPI client = scene.GetScenePresence(clientID).ControllingClient;
-            client.OnRequestAvatarProperties -= RequestAvatarProperty;
-            client.OnUpdateAvatarProperties -= UpdateAvatarProperties;
-            client.OnClassifiedInfoRequest -= ClassifiedInfoRequest;
-            client.OnClassifiedInfoUpdate -= ClassifiedInfoUpdate;
-            client.OnClassifiedDelete -= ClassifiedDelete;
-            client.OnClassifiedGodDelete -= GodClassifiedDelete;
-            client.OnUserInfoRequest -= UserPreferencesRequest;
-            client.OnUpdateUserInfo -= UpdateUserPreferences;
-            //Track agents
-            client.OnTrackAgent -= TrackAgent;
-            client.OnFindAgent -= TrackAgent;
-
-            // Notes
-            client.OnAvatarNotesUpdate -= AvatarNotesUpdate;
-
-            //Profile
-            client.OnAvatarInterestUpdate -= AvatarInterestsUpdate;
-
-            // Picks
-            client.OnPickInfoUpdate -= PickInfoUpdate;
-            client.OnPickDelete -= PickDelete;
-            client.OnPickGodDelete -= GodPickDelete;
         }
 
         #endregion

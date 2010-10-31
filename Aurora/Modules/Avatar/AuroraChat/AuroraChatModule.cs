@@ -43,7 +43,6 @@ using OpenMetaverse.StructuredData;
 using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
 using Caps = OpenSim.Framework.Capabilities.Caps;
-using Mono.Addins;
 
 namespace Aurora.Modules
 {
@@ -138,26 +137,14 @@ namespace Aurora.Modules
             m_maxChatDistance = m_config.GetFloat("max_chat_distance", m_maxChatDistance);
 
             m_useMuteListModule = (config.Configs["Messaging"].GetString("MuteListModule", "AuroraChatModule") == "AuroraChatModule");
-
-            FindChatPlugins();
         }
 
         private void FindChatPlugins()
         {
-            AllChatPlugins = Aurora.Framework.AuroraModuleLoader.LoadPlugins<IChatPlugin>("/Aurora/ChatPlugins", new AuroraChatPluginInitialiser(this));
-        }
-
-        private class AuroraChatPluginInitialiser : PluginInitialiserBase
-        {
-            IChatModule chatModule;
-            public AuroraChatPluginInitialiser(IChatModule module)
+            AllChatPlugins = AuroraModuleLoader.PickupModules<IChatPlugin>();
+            foreach (IChatPlugin plugin in AllChatPlugins)
             {
-                chatModule = module;
-            }
-            public override void Initialise(IPlugin plugin)
-            {
-                IChatPlugin chatPlugin = plugin as IChatPlugin;
-                chatPlugin.Initialize(chatModule);
+                plugin.Initialize(this);
             }
         }
 
@@ -169,6 +156,7 @@ namespace Aurora.Modules
             {
                 m_scenes.Add(scene);
                 scene.EventManager.OnNewClient += OnNewClient;
+                scene.EventManager.OnClosingClient += OnClosingClient;
                 scene.EventManager.OnClientClosed += OnClientClosed;
                 scene.EventManager.OnChatFromWorld += OnChatFromWorld;
                 scene.EventManager.OnChatBroadcast += OnChatBroadcast;
@@ -177,6 +165,8 @@ namespace Aurora.Modules
                 scene.EventManager.OnIncomingInstantMessage += OnGridInstantMessage;
 
                 scene.RegisterModuleInterface<IMuteListModule>(this);
+                scene.RegisterModuleInterface<IChatModule>(this);
+                FindChatPlugins();
             }
             //m_log.InfoFormat("[CHAT]: Initialized for {0} w:{1} s:{2} S:{3}", scene.RegionInfo.RegionName,
             //                 m_whisperdistance, m_saydistance, m_shoutdistance);
@@ -241,6 +231,14 @@ namespace Aurora.Modules
         }
 
         #endregion
+
+        private void OnClosingClient(IClientAPI client)
+        {
+            client.OnChatFromClient -= OnChatFromClient;
+            client.OnMuteListRequest -= OnMuteListRequest;
+            client.OnUpdateMuteListEntry -= OnMuteListUpdate;
+            client.OnRemoveMuteListEntry -= OnMuteListRemove;
+        }
 
         public virtual void OnNewClient(IClientAPI client)
         {

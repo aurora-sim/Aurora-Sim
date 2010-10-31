@@ -52,7 +52,6 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
         private bool m_storeLocal;
         private AgentAssetTransactions m_userTransactions;
         private uint nextPerm = 0;
-        private IClientAPI ourClient;
         private UUID TransactionID = UUID.Zero;
         private sbyte type = 0;
         private byte wearableType = 0;
@@ -71,7 +70,7 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
         /// <param name="packetID"></param>
         /// <param name="data"></param>
         /// <returns>True if the transfer is complete, false otherwise or if the xferID was not valid</returns>
-        public bool HandleXferPacket(ulong xferID, uint packetID, byte[] data)
+        public bool HandleXferPacket(IClientAPI remoteClient, ulong xferID, uint packetID, byte[] data)
         {
             if (XferID == xferID)
             {
@@ -89,11 +88,11 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
                     m_asset.Data = buffer2;
                 }
 
-                ourClient.SendConfirmXfer(xferID, packetID);
+                remoteClient.SendConfirmXfer(xferID, packetID);
 
                 if ((packetID & 0x80000000) != 0)
                 {
-                    SendCompleteMessage();
+                    SendCompleteMessage(remoteClient);
                     return true;
                 }
             }
@@ -111,7 +110,6 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
         public bool Initialise(IClientAPI remoteClient, UUID assetID, UUID transaction, sbyte type, byte[] data,
                                bool storeLocal, bool tempFile)
         {
-            ourClient = remoteClient;
             m_asset = new AssetBase(assetID, "blank", type, remoteClient.AgentId.ToString());
             m_asset.Data = data;
             m_asset.Description = "empty";
@@ -123,31 +121,31 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
 
             if (m_asset.Data.Length > 2)
             {
-                SendCompleteMessage();
+                SendCompleteMessage(remoteClient);
                 return true;
             }
             else
             {
-                RequestStartXfer();
+                RequestStartXfer(remoteClient);
             }
 
             return false;
         }
 
-        protected void RequestStartXfer()
+        protected void RequestStartXfer(IClientAPI remoteClient)
         {
             XferID = Util.GetNextXferID();
-            ourClient.SendXferRequest(XferID, m_asset.Type, m_asset.FullID, 0, new byte[0]);
+            remoteClient.SendXferRequest(XferID, m_asset.Type, m_asset.FullID, 0, new byte[0]);
         }
 
-        protected void SendCompleteMessage()
+        protected void SendCompleteMessage(IClientAPI remoteClient)
         {
-            ourClient.SendAssetUploadCompleteMessage(m_asset.Type, true, m_asset.FullID);
+            remoteClient.SendAssetUploadCompleteMessage(m_asset.Type, true, m_asset.FullID);
 
             m_finished = true;
             if (m_createItem)
             {
-                DoCreateItem(m_createItemCallback);
+                DoCreateItem(m_createItemCallback, remoteClient);
             }
             else if (m_storeLocal)
             {
@@ -200,7 +198,7 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
 
                 if (m_finished)
                 {
-                    DoCreateItem(callbackID);
+                    DoCreateItem(callbackID, remoteClient);
                 }
                 else
                 {
@@ -210,13 +208,13 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
             }
         }
 
-        private void DoCreateItem(uint callbackID)
+        private void DoCreateItem(uint callbackID, IClientAPI remoteClient)
         {
             m_userTransactions.Manager.MyScene.AssetService.Store(m_asset);
 
             InventoryItemBase item = new InventoryItemBase();
-            item.Owner = ourClient.AgentId;
-            item.CreatorId = ourClient.AgentId.ToString();
+            item.Owner = remoteClient.AgentId;
+            item.CreatorId = remoteClient.AgentId.ToString();
             item.ID = UUID.Random();
             item.AssetID = m_asset.FullID;
             item.Description = m_description;
@@ -233,9 +231,9 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
             item.CreationDate = Util.UnixTimeSinceEpoch();
 
             if (m_userTransactions.Manager.MyScene.AddInventoryItem(item))
-                ourClient.SendInventoryItemCreateUpdate(item, callbackID);
+                remoteClient.SendInventoryItemCreateUpdate(item, callbackID);
             else
-                ourClient.SendAlertMessage("Unable to create inventory item");
+                remoteClient.SendAlertMessage("Unable to create inventory item");
         }
 
         /// <summary>

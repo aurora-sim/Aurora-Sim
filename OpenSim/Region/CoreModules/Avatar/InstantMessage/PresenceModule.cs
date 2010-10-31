@@ -77,6 +77,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             m_Scenes.Add(scene);
 
             scene.EventManager.OnNewClient += OnNewClient;
+            scene.EventManager.OnClosingClient += OnClosingClient;
 
             scene.RegisterModuleInterface<IPresenceModule>(this);
         }
@@ -88,6 +89,11 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
         public void RemoveRegion(Scene scene)
         {
             m_Scenes.Remove(scene);
+
+            scene.EventManager.OnNewClient -= OnNewClient;
+            scene.EventManager.OnClosingClient -= OnClosingClient;
+
+            scene.UnregisterModuleInterface<IPresenceModule>(this);
         }
 
         public void PostInitialise()
@@ -115,6 +121,11 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
         public void OnNewClient(IClientAPI client)
         {
             client.AddGenericPacketHandler("requestonlinenotification", OnRequestOnlineNotification);
+        }
+
+        private void OnClosingClient(IClientAPI client)
+        {
+            client.RemoveGenericPacketHandler("requestonlinenotification");
         }
 
         public void OnRequestOnlineNotification(Object sender, string method, List<String> args)

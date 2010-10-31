@@ -31,7 +31,6 @@ using System.Collections.Specialized;
 using System.Reflection;
 using System.IO;
 using System.Web;
-using Mono.Addins;
 using log4net;
 using Nini.Config;
 using OpenMetaverse;
@@ -47,7 +46,6 @@ using OpenSim.Framework.Capabilities;
 
 namespace OpenSim.Region.CoreModules.Avatar.Assets
 {
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class NewFileAgentInventoryVariablePriceModule : INonSharedRegionModule
     {
         private static readonly ILog m_log =
@@ -104,7 +102,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Assets
         {
             UUID capID = UUID.Random();
 
-            m_log.Info("[GETMESH]: /CAPS/" + capID);
+            //m_log.Info("[GETMESH]: /CAPS/" + capID);
             caps.RegisterHandler("NewFileAgentInventoryVariablePrice",
 
                     new LLSDStreamhandler<LLSDAssetUploadRequest, LLSDNewFileAngentInventoryVariablePriceReplyResponse>("POST",
@@ -164,7 +162,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Assets
 
             Caps.AssetUploader uploader =
                 new Caps.AssetUploader(assetName, assetDes, newAsset, newInvItem, parentFolder, llsdRequest.inventory_type,
-                                  llsdRequest.asset_type, capsBase + uploaderPath, MainServer.Instance, m_dumpAssetsToFile);
+                                  llsdRequest.asset_type, capsBase + uploaderPath, MainServer.Instance);
             MainServer.Instance.AddStreamHandler(
                 new BinaryStreamHandler("POST", capsBase + uploaderPath, uploader.uploaderCaps));
 

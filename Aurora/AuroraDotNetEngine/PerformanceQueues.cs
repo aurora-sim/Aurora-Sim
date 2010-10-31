@@ -42,7 +42,6 @@ using Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools;
 using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
 using Aurora.ScriptEngine.AuroraDotNetEngine.APIs;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
-using Amib.Threading;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {

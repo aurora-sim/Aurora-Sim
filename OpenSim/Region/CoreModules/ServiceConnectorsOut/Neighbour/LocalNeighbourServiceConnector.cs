@@ -121,8 +121,8 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
 
         public GridRegion HelloNeighbour(ulong regionHandle, RegionInfo thisRegion)
         {
-            //m_log.DebugFormat("[NEIGHBOUR CONNECTOR]: HelloNeighbour from {0}, to {1}. Count = {2}",
-            //    thisRegion.RegionName, regionHandle, m_Scenes.Count);
+            m_log.DebugFormat("[NEIGHBOUR CONNECTOR]: HelloNeighbour from {0}, to {1}.",
+                thisRegion.RegionName, regionHandle);
             foreach (Scene s in m_Scenes)
             {
                 if (s.RegionInfo.RegionHandle == regionHandle)

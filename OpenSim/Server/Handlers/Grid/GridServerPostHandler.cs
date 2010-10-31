@@ -117,6 +117,9 @@ namespace OpenSim.Server.Handlers.Grid
                     case "get_safe_regions":
                         return GetSafeRegions(request);
 
+                    case "get_hyperlinks":
+                        return GetHyperlinks(request);
+
                     case "get_region_flags":
                         return GetRegionFlags(request);
 
@@ -230,11 +233,11 @@ namespace OpenSim.Server.Handlers.Grid
             else
                 m_log.WarnFormat("[GRID HANDLER]: no sessionID in request to update region");
 
-            UUID regionID = UUID.Zero;
-            if (request.ContainsKey("REGIONID"))
-                UUID.TryParse(request["REGIONID"].ToString(), out regionID);
+            GridRegion region = null;
+            if (request.ContainsKey("REGION"))
+                region = new GridRegion(request);
             else
-                m_log.WarnFormat("[GRID HANDLER]: no regionID in request to update region");
+                m_log.WarnFormat("[GRID HANDLER]: no region in request to update region");
 
             UUID terrainID = UUID.Zero;
             if (request.ContainsKey("TERRAINID"))
@@ -268,7 +271,7 @@ namespace OpenSim.Server.Handlers.Grid
 
             string result = "Error communicating with grid service";
 
-            result = m_GridService.UpdateMap(scopeID, regionID, mapID, terrainID, sessionID);
+            result = m_GridService.UpdateMap(scopeID, region, mapID, terrainID, sessionID);
 
             if (result == String.Empty)
                 return SuccessResult();
@@ -612,6 +615,36 @@ namespace OpenSim.Server.Handlers.Grid
 
 
             List<GridRegion> rinfos = m_GridService.GetSafeRegions(scopeID, x, y);
+
+            Dictionary<string, object> result = new Dictionary<string, object>();
+            if ((rinfos == null) || ((rinfos != null) && (rinfos.Count == 0)))
+                result["result"] = "null";
+            else
+            {
+                int i = 0;
+                foreach (GridRegion rinfo in rinfos)
+                {
+                    Dictionary<string, object> rinfoDict = rinfo.ToKeyValuePairs();
+                    result["region" + i] = rinfoDict;
+                    i++;
+                }
+            }
+            string xmlString = ServerUtils.BuildXmlResponse(result);
+            //m_log.DebugFormat("[GRID HANDLER]: resp string: {0}", xmlString);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
+        }
+
+		byte[] GetHyperlinks(Dictionary<string, object> request)
+        {
+            //m_log.DebugFormat("[GRID HANDLER]: GetHyperlinks");
+            UUID scopeID = UUID.Zero;
+            if (request.ContainsKey("SCOPEID"))
+                UUID.TryParse(request["SCOPEID"].ToString(), out scopeID);
+            else
+                m_log.WarnFormat("[GRID HANDLER]: no scopeID in request to get linked regions");
+
+            List<GridRegion> rinfos = m_GridService.GetHyperlinks(scopeID);
 
             Dictionary<string, object> result = new Dictionary<string, object>();
             if ((rinfos == null) || ((rinfos != null) && (rinfos.Count == 0)))

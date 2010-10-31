@@ -35,11 +35,9 @@ using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
-using Mono.Addins;
 
 namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
 {
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class AvatarFactoryModule : IAvatarFactory, ISharedRegionModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -80,6 +78,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
         {
             scene.RegisterModuleInterface<IAvatarFactory>(this);
             scene.EventManager.OnNewClient += NewClient;
+            scene.EventManager.OnClosingClient += RemoveClient;
 
             if (m_scene == null)
             {
@@ -89,7 +88,9 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
 
         public void RemoveRegion(Scene scene)
         {
-
+            scene.UnregisterModuleInterface<IAvatarFactory>(this);
+            scene.EventManager.OnNewClient -= NewClient;
+            scene.EventManager.OnClosingClient -= RemoveClient;
         }
 
         public void RegionLoaded(Scene scene)
@@ -127,7 +128,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
 
         public void RemoveClient(IClientAPI client)
         {
-            // client.OnAvatarNowWearing -= AvatarIsWearing;
+            client.OnAvatarNowWearing -= AvatarIsWearing;
         }
 
         public void SetAppearanceAssets(UUID userID, ref AvatarAppearance appearance)
@@ -223,7 +224,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
 
             foreach (AvatarWearingArgs.Wearable wear in e.NowWearing)
             {
-                if (wear.Type < 13)
+                if (wear.Type < 15)
                 {
                     avatAppearance.Wearables[wear.Type].ItemID = wear.ItemID;
                 }

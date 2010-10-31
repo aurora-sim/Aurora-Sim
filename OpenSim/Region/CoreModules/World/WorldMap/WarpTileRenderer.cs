@@ -13,10 +13,10 @@ using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Region.Physics.Manager;
 using CSJ2K;
-using Mono.Addins;
 using OpenMetaverse.Rendering;
 using OpenMetaverse.StructuredData;
 using Rednettle.Warp3D;
+using OpenSim.Region.CoreModules.World.WorldMap;
 using WarpRenderer = global::Warp3D.Warp3D;
 
 namespace OpenSim.Region.CoreModules.World.WorldMap

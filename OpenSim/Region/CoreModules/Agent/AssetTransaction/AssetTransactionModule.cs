@@ -37,7 +37,7 @@ using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
 {
-    public class AssetTransactionModule : IRegionModule, IAgentAssetTransactions
+    public class AssetTransactionModule : ISharedRegionModule, IAgentAssetTransactions
     {
 //        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         
@@ -65,7 +65,11 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
 
         #region IRegionModule Members
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialise(IConfigSource config)
+        {
+        }
+
+        public void AddRegion(Scene scene)
         {
             if (!RegisteredScenes.ContainsKey(scene.RegionInfo.RegionID))
             {
@@ -74,6 +78,7 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
                 scene.RegisterModuleInterface<IAgentAssetTransactions>(this);
 
                 scene.EventManager.OnNewClient += NewClient;
+                scene.EventManager.OnClosingClient += OnClosingClient;
             }
 
             // EVIL HACK!
@@ -81,6 +86,29 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
             //
             if (m_scene == null)
                 m_scene = scene;
+        }
+
+        public void RemoveRegion(Scene scene)
+        {
+            if (RegisteredScenes.ContainsKey(scene.RegionInfo.RegionID))
+            {
+                // m_log.Debug("initialising AgentAssetTransactionModule");
+                RegisteredScenes.Remove(scene.RegionInfo.RegionID);
+                scene.UnregisterModuleInterface<IAgentAssetTransactions>(this);
+
+                scene.EventManager.OnNewClient -= NewClient;
+                scene.EventManager.OnClosingClient -= OnClosingClient;
+            }
+        }
+
+        public void RegionLoaded(Scene scene)
+        {
+
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
         }
 
         public void PostInitialise()
@@ -107,6 +135,12 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
         {
             client.OnAssetUploadRequest += HandleUDPUploadRequest;
             client.OnXferReceive += HandleXfer;
+        }
+
+        private void OnClosingClient(IClientAPI client)
+        {
+            client.OnAssetUploadRequest -= HandleUDPUploadRequest;
+            client.OnXferReceive -= HandleXfer;
         }
 
         #region AgentAssetTransactions
@@ -273,7 +307,7 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
             //m_log.Debug("xferID: " + xferID + "  packetID: " + packetID + "  data!");
             AgentAssetTransactions transactions = GetUserTransactions(remoteClient.AgentId);
 
-            transactions.HandleXfer(xferID, packetID, data);
+            transactions.HandleXfer(remoteClient, xferID, packetID, data);
         }
 
         #endregion

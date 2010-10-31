@@ -227,76 +227,88 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         public void UpdateLandProperties(LandUpdateArgs args, IClientAPI remote_client)
         {
-            if (m_scene.Permissions.CanEditParcel(remote_client.AgentId,this) &&
+            if (m_scene.Permissions.CanEditParcel(remote_client.AgentId, this) &&
                 m_scene.RegionInfo.EstateSettings.AllowParcelChanges)
             {
-                bool snap_selection = false;
-                LandData newData = LandData.Copy();
-
-                if (args.AuthBuyerID != newData.AuthBuyerID || args.SalePrice != newData.SalePrice)
+                try
                 {
-                    if (m_scene.Permissions.CanSellParcel(remote_client.AgentId, this) &&
-                        m_scene.RegionInfo.RegionSettings.AllowLandResell)
+                    bool snap_selection = false;
+                    LandData newData = LandData.Copy();
+
+                    if (args.AuthBuyerID != newData.AuthBuyerID || args.SalePrice != newData.SalePrice)
                     {
-                        newData.AuthBuyerID = args.AuthBuyerID;
-                        newData.SalePrice = args.SalePrice;
-                        snap_selection = true;
+                        if (m_scene.Permissions.CanSellParcel(remote_client.AgentId, this) &&
+                            m_scene.RegionInfo.RegionSettings.AllowLandResell)
+                        {
+                            newData.AuthBuyerID = args.AuthBuyerID;
+                            newData.SalePrice = args.SalePrice;
+                            snap_selection = true;
+                        }
+                        else
+                            remote_client.SendAlertMessage("Permissions: You cannot set this parcel for sale");
                     }
-                    else
-                        remote_client.SendAlertMessage("Permissions: You cannot set this parcel for sale");
+
+                    newData.Category = args.Category;
+                    newData.Description = args.Desc;
+                    newData.GroupID = args.GroupID;
+                    newData.LandingType = args.LandingType;
+                    newData.MediaAutoScale = args.MediaAutoScale;
+                    newData.MediaID = args.MediaID;
+                    newData.MediaURL = args.MediaURL;
+                    newData.MusicURL = args.MusicURL;
+                    newData.Name = args.Name;
+
+                    if (!m_scene.RegionInfo.RegionSettings.AllowDamage &&
+                        ((args.ParcelFlags & (uint)ParcelFlags.AllowDamage) == (uint)ParcelFlags.AllowDamage))
+                        //Vanquish damage as per estate settings!
+                        args.ParcelFlags &= ~(uint)ParcelFlags.AllowDamage;
+
+                    if (m_scene.RegionInfo.RegionSettings.BlockFly &&
+                        ((args.ParcelFlags & (uint)ParcelFlags.AllowFly) == (uint)ParcelFlags.AllowFly))
+                        //Vanquish flying as per estate settings!
+                        args.ParcelFlags &= ~(uint)ParcelFlags.AllowFly;
+
+                    if (m_scene.RegionInfo.RegionSettings.RestrictPushing &&
+                        ((args.ParcelFlags & (uint)ParcelFlags.RestrictPushObject) == (uint)ParcelFlags.RestrictPushObject))
+                        //Vanquish pushing as per estate settings!
+                        args.ParcelFlags &= ~(uint)ParcelFlags.RestrictPushObject;
+
+                    if (!m_scene.RegionInfo.EstateSettings.AllowLandmark &&
+                        ((args.ParcelFlags & (uint)ParcelFlags.AllowLandmark) == (uint)ParcelFlags.AllowLandmark))
+                        //Vanquish landmarks as per estate settings!
+                        args.ParcelFlags &= ~(uint)ParcelFlags.AllowLandmark;
+
+                    if (!m_scene.RegionInfo.RegionSettings.BlockShowInSearch &&
+                        ((args.ParcelFlags & (uint)ParcelFlags.ShowDirectory) == (uint)ParcelFlags.ShowDirectory))
+                        //Vanquish show in search as per estate settings!
+                        args.ParcelFlags &= ~(uint)ParcelFlags.ShowDirectory;
+
+                    newData.Flags = args.ParcelFlags;
+                    newData.PassHours = args.PassHours;
+                    newData.PassPrice = args.PassPrice;
+                    newData.SnapshotID = args.SnapshotID;
+                    newData.UserLocation = args.UserLocation;
+                    newData.UserLookAt = args.UserLookAt;
+                    newData.MediaType = args.MediaType;
+                    newData.MediaDescription = args.MediaDescription;
+                    newData.MediaWidth = args.MediaWidth;
+                    newData.MediaHeight = args.MediaHeight;
+                    newData.MediaLoop = args.MediaLoop;
+                    newData.ObscureMusic = args.ObscureMusic;
+                    newData.ObscureMedia = args.ObscureMedia;
+
+                    m_scene.LandChannel.UpdateLandObject(LandData.LocalID, newData);
+
+                    SendLandUpdateToAvatarsOverMe(snap_selection);
                 }
-
-                newData.Category = args.Category;
-                newData.Description = args.Desc;
-                newData.GroupID = args.GroupID;
-                newData.LandingType = args.LandingType;
-                newData.MediaAutoScale = args.MediaAutoScale;
-                newData.MediaID = args.MediaID;
-                newData.MediaURL = args.MediaURL;
-                newData.MusicURL = args.MusicURL;
-                newData.Name = args.Name;
-
-                if (!m_scene.RegionInfo.RegionSettings.AllowDamage &&
-                    ((args.ParcelFlags & (uint)ParcelFlags.AllowDamage) == (uint)ParcelFlags.AllowDamage))
-                    //Vanquish damage as per estate settings!
-                    args.ParcelFlags &= (uint)ParcelFlags.AllowDamage;
-
-                if (m_scene.RegionInfo.RegionSettings.BlockFly &&
-                    ((args.ParcelFlags & (uint)ParcelFlags.AllowFly) == (uint)ParcelFlags.AllowFly))
-                    //Vanquish flying as per estate settings!
-                    args.ParcelFlags &= (uint)ParcelFlags.AllowFly;
-
-                if (m_scene.RegionInfo.RegionSettings.RestrictPushing &&
-                    ((args.ParcelFlags & (uint)ParcelFlags.RestrictPushObject) == (uint)ParcelFlags.RestrictPushObject))
-                    //Vanquish pushing as per estate settings!
-                    args.ParcelFlags &= (uint)ParcelFlags.RestrictPushObject;
-
-                if (!m_scene.RegionInfo.EstateSettings.AllowLandmark &&
-                    ((args.ParcelFlags & (uint)ParcelFlags.AllowLandmark) == (uint)ParcelFlags.AllowLandmark))
-                    //Vanquish landmarks as per estate settings!
-                    args.ParcelFlags &= (uint)ParcelFlags.AllowLandmark;
-
-                if (!m_scene.RegionInfo.RegionSettings.BlockShowInSearch &&
-                    ((args.ParcelFlags & (uint)ParcelFlags.ShowDirectory) == (uint)ParcelFlags.ShowDirectory))
-                    //Vanquish show in search as per estate settings!
-                    args.ParcelFlags &= (uint)ParcelFlags.ShowDirectory;
-
-                newData.Flags = args.ParcelFlags;
-                newData.PassHours = args.PassHours;
-                newData.PassPrice = args.PassPrice;
-                newData.SnapshotID = args.SnapshotID;
-                newData.UserLocation = args.UserLocation;
-                newData.UserLookAt = args.UserLookAt;
-                newData.MediaDescription = args.MediaDesc;
-                newData.MediaLoop = (byte)Convert.ToInt32(args.MediaLoop);
-                newData.MediaSize = new int[] { args.MediaWidth, args.MediaHeight };
-                newData.MediaType = args.MediaType;
-                newData.ObscureMedia = Convert.ToByte(args.ObscureMedia);
-                newData.ObscureMusic = Convert.ToByte(args.ObscureMusic);
-
-                m_scene.LandChannel.UpdateLandObject(LandData.LocalID, newData);
-
-                SendLandUpdateToAvatarsOverMe(snap_selection);
+                catch(Exception ex)
+                {
+                    m_log.Warn("[LAND]: Error updating land object " + this.LandData.Name + " in region " + this.m_scene.RegionInfo.RegionName + " : " + ex.ToString());
+                }
+            }
+            else
+            {
+                remote_client.SendAlertMessage("You do not have permissions to edit this land");
             }
         }
 
@@ -345,6 +357,9 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         public bool IsBannedFromLand(UUID avatar)
         {
+            if (m_scene.Permissions.IsAdministrator(avatar))
+                return false;
+
             if ((LandData.Flags & (uint) ParcelFlags.UseBanList) > 0)
             {
                 ParcelManager.ParcelAccessEntry entry = new ParcelManager.ParcelAccessEntry();
@@ -369,6 +384,9 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         public bool IsRestrictedFromLand(UUID avatar)
         {
+            if (m_scene.Permissions.IsAdministrator(avatar))
+                return false;
+
             if ((LandData.Flags & (uint) ParcelFlags.UseAccessList) > 0)
             {
                 ParcelManager.ParcelAccessEntry entry = new ParcelManager.ParcelAccessEntry();
@@ -457,8 +475,8 @@ namespace OpenSim.Region.CoreModules.World.Land
                 }
                 catch (Exception)
                 {
-                    m_log.Warn("[LAND]: " + "unable to get land at x: " + Math.Round(avatar.AbsolutePosition.X) + " y: " +
-                               Math.Round(avatar.AbsolutePosition.Y));
+                    m_log.Warn("[LAND]: " + "unable to get land at x: " + Util.Clamp<int>((int)Math.Round(avatar.AbsolutePosition.X), 0, ((int)Constants.RegionSize - 1)) + " y: " +
+                               Util.Clamp<int>((int)Math.Round(avatar.AbsolutePosition.Y), 0, ((int)Constants.RegionSize - 1)));
                 }
 
                 if (over != null)
@@ -473,6 +491,11 @@ namespace OpenSim.Region.CoreModules.World.Land
 
                         SendLandUpdateToClient(snap_selection, avatar.ControllingClient);
                     }
+                }
+                else
+                {
+                    m_log.Warn("[LAND]: " + "unable to get land at x: " + Util.Clamp<int>((int)Math.Round(avatar.AbsolutePosition.X), 0, ((int)Constants.RegionSize - 1)) + " y: " +
+                               Util.Clamp<int>((int)Math.Round(avatar.AbsolutePosition.Y), 0, ((int)Constants.RegionSize - 1)));
                 }
             });
         }
@@ -936,6 +959,25 @@ namespace OpenSim.Region.CoreModules.World.Land
             SceneObjectGroup[] objs = new SceneObjectGroup[1];
             objs[0] = obj;
             m_scene.returnObjects(objs, obj.OwnerID);
+        }
+
+        public List<SceneObjectGroup> GetPrimsOverByOwner(UUID targetID, int flags)
+        {
+            List<SceneObjectGroup> prims = new List<SceneObjectGroup>();
+            lock (primsOverMe)
+            {
+                foreach (SceneObjectGroup obj in primsOverMe)
+                {
+                    if (obj.OwnerID == m_landData.OwnerID)
+                    {
+                        if (flags == 4 && //Scripted
+                            (obj.RootPart.Flags & PrimFlags.Scripted) == PrimFlags.Scripted)
+                            continue;
+                        prims.Add(obj);
+                    }
+                }
+            }
+            return prims;
         }
 
         public void ReturnLandObjects(uint type, UUID[] owners, UUID[] tasks, IClientAPI remote_client)

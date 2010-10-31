@@ -40,11 +40,9 @@ using Caps = OpenSim.Framework.Capabilities.Caps;
 using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenMetaverse.StructuredData;
-using Mono.Addins;
 
 namespace OpenSim.Region.CoreModules.World.Estate
 {
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class EstateManagementModule : IEstateModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -70,7 +68,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
             UUID estateOwner;
             estateOwner = m_scene.RegionInfo.EstateSettings.EstateOwner;
 
-            if (m_scene.Permissions.IsGod(remote_client.AgentId))
+            //if (m_scene.Permissions.IsGod(remote_client.AgentId))
                 estateOwner = remote_client.AgentId;
 
             remote_client.SendDetailedEstateData(invoice,
@@ -163,12 +161,59 @@ namespace OpenSim.Region.CoreModules.World.Estate
                                                       {
                                                           return DispatchRegionInfo(m_dhttpMethod, capuuid, agentID);
                                                       }));
+            capuuid = UUID.Random();
 
+            caps.RegisterHandler("EstateChangeInfo",
+                                new RestHTTPHandler("POST", "/CAPS/" + capuuid + "/",
+                                                      delegate(Hashtable m_dhttpMethod)
+                                                      {
+                                                          return EstateChangeInfo(m_dhttpMethod, capuuid, agentID);
+                                                      }));
             
+        }
+
+        private Hashtable EstateChangeInfo(Hashtable m_dhttpMethod, UUID capuuid, UUID agentID)
+        {
+            if (!m_scene.Permissions.CanIssueEstateCommand(agentID, false))
+                return new Hashtable();
+
+            OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml((string)m_dhttpMethod["requestbody"]);
+
+            string estate_name = rm["estate_name"].AsString();
+            bool allow_direct_teleport = rm["allow_direct_teleport"].AsBoolean();
+            bool allow_voice_chat = rm["allow_voice_chat"].AsBoolean();
+            bool deny_age_unverified = rm["deny_age_unverified"].AsBoolean();
+            bool deny_anonymous = rm["deny_anonymous"].AsBoolean();
+            UUID invoice = rm["invoice"].AsUUID();
+            bool is_externally_visible = rm["is_externally_visible"].AsBoolean();
+            bool is_sun_fixed = rm["is_sun_fixed"].AsBoolean();
+            string owner_abuse_email = rm["owner_abuse_email"].AsString();
+            double sun_hour = rm["sun_hour"].AsReal();
+            m_scene.RegionInfo.EstateSettings.AllowDirectTeleport = allow_direct_teleport;
+            m_scene.RegionInfo.EstateSettings.AllowVoice = allow_voice_chat;
+            m_scene.RegionInfo.EstateSettings.DenyAnonymous = deny_anonymous;
+            m_scene.RegionInfo.EstateSettings.DenyIdentified = deny_age_unverified;
+            m_scene.RegionInfo.EstateSettings.PublicAccess = is_externally_visible;
+            m_scene.RegionInfo.EstateSettings.FixedSun = is_sun_fixed;
+            m_scene.RegionInfo.EstateSettings.SunPosition = sun_hour;
+            m_scene.RegionInfo.EstateSettings.AbuseEmail = owner_abuse_email;
+            m_scene.RegionInfo.EstateSettings.Save();
+            TriggerEstateInfoChange();
+
+
+            Hashtable responsedata = new Hashtable();
+            responsedata["int_response_code"] = 200; //501; //410; //404;
+            responsedata["content_type"] = "text/plain";
+            responsedata["keepalive"] = false;
+            responsedata["str_response_string"] = OSDParser.SerializeLLSDXmlString(new OSDMap());
+            return responsedata;
         }
 
         private Hashtable DispatchRegionInfo(Hashtable m_dhttpMethod, UUID capuuid, UUID agentID)
         {
+            if (!m_scene.Permissions.CanIssueEstateCommand(agentID, false))
+                return new Hashtable();
+
             OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml((string)m_dhttpMethod["requestbody"]);
 
             int agent_limit = rm["agent_limit"].AsInteger();
@@ -352,59 +397,72 @@ namespace OpenSim.Region.CoreModules.World.Estate
                 if (m_scene.Permissions.CanIssueEstateCommand(remote_client.AgentId, true))
                 {
                     m_scene.RegionInfo.EstateSettings.AddEstateUser(user);
-                    m_scene.RegionInfo.EstateSettings.Save();
-                    TriggerEstateInfoChange();
-                    remote_client.SendEstateList(invoice, (int)Constants.EstateAccessCodex.AccessOptions, m_scene.RegionInfo.EstateSettings.EstateAccess, m_scene.RegionInfo.EstateSettings.EstateID);
+                    if ((estateAccessType & 1024) == 0) //1024 means more than one is being sent
+                    {
+                        m_scene.RegionInfo.EstateSettings.Save();
+                        TriggerEstateInfoChange();
+                    }
                 }
                 else
                 {
                     remote_client.SendAlertMessage("Method EstateAccessDelta Failed, you don't have permissions");
                 }
-
+                if ((estateAccessType & 1024) == 0) //1024 means more than one is being sent
+                    remote_client.SendEstateList(invoice, (int)Constants.EstateAccessCodex.AccessOptions, m_scene.RegionInfo.EstateSettings.EstateAccess, m_scene.RegionInfo.EstateSettings.EstateID);
             }
             if ((estateAccessType & 8) != 0) // User remove
             {
                 if (m_scene.Permissions.CanIssueEstateCommand(remote_client.AgentId, true) || m_scene.Permissions.BypassPermissions())
                 {
                     m_scene.RegionInfo.EstateSettings.RemoveEstateUser(user);
-                    m_scene.RegionInfo.EstateSettings.Save();
-                    TriggerEstateInfoChange();
-
-                    remote_client.SendEstateList(invoice, (int)Constants.EstateAccessCodex.AccessOptions, m_scene.RegionInfo.EstateSettings.EstateAccess, m_scene.RegionInfo.EstateSettings.EstateID);
+                    if ((estateAccessType & 1024) == 0) //1024 means more than one is being sent
+                    {
+                        m_scene.RegionInfo.EstateSettings.Save();
+                        TriggerEstateInfoChange();
+                    }
                 }
                 else
                 {
                     remote_client.SendAlertMessage("Method EstateAccessDelta Failed, you don't have permissions");
                 }
+                if ((estateAccessType & 1024) == 0) //1024 means more than one is being sent
+                    remote_client.SendEstateList(invoice, (int)Constants.EstateAccessCodex.AccessOptions, m_scene.RegionInfo.EstateSettings.EstateAccess, m_scene.RegionInfo.EstateSettings.EstateID);
             }
             if ((estateAccessType & 16) != 0) // Group add
             {
                 if (m_scene.Permissions.CanIssueEstateCommand(remote_client.AgentId, true) || m_scene.Permissions.BypassPermissions())
                 {
                     m_scene.RegionInfo.EstateSettings.AddEstateGroup(user);
-                    m_scene.RegionInfo.EstateSettings.Save();
-                    TriggerEstateInfoChange();
-                    remote_client.SendEstateList(invoice, (int)Constants.EstateAccessCodex.AllowedGroups, m_scene.RegionInfo.EstateSettings.EstateGroups, m_scene.RegionInfo.EstateSettings.EstateID);
+                    if ((estateAccessType & 1024) == 0) //1024 means more than one is being sent
+                    {
+                        m_scene.RegionInfo.EstateSettings.Save();
+                        TriggerEstateInfoChange();
+                    }
                 }
                 else
                 {
                     remote_client.SendAlertMessage("Method EstateAccessDelta Failed, you don't have permissions");
                 }
+                if ((estateAccessType & 1024) == 0) //1024 means more than one is being sent
+                    remote_client.SendEstateList(invoice, (int)Constants.EstateAccessCodex.AllowedGroups, m_scene.RegionInfo.EstateSettings.EstateGroups, m_scene.RegionInfo.EstateSettings.EstateID);
             }
             if ((estateAccessType & 32) != 0) // Group remove
             {
                 if (m_scene.Permissions.CanIssueEstateCommand(remote_client.AgentId, true) || m_scene.Permissions.BypassPermissions())
                 {
                     m_scene.RegionInfo.EstateSettings.RemoveEstateGroup(user);
-                    m_scene.RegionInfo.EstateSettings.Save();
-                    TriggerEstateInfoChange();
-
-                    remote_client.SendEstateList(invoice, (int)Constants.EstateAccessCodex.AllowedGroups, m_scene.RegionInfo.EstateSettings.EstateGroups, m_scene.RegionInfo.EstateSettings.EstateID);
+                    if ((estateAccessType & 1024) == 0) //1024 means more than one is being sent
+                    {
+                        m_scene.RegionInfo.EstateSettings.Save();
+                        TriggerEstateInfoChange();
+                    }
                 }
                 else
                 {
                     remote_client.SendAlertMessage("Method EstateAccessDelta Failed, you don't have permissions");
                 }
+                if ((estateAccessType & 1024) == 0) //1024 means more than one is being sent
+                    remote_client.SendEstateList(invoice, (int)Constants.EstateAccessCodex.AllowedGroups, m_scene.RegionInfo.EstateSettings.EstateGroups, m_scene.RegionInfo.EstateSettings.EstateID);
             }
             if ((estateAccessType & 64) != 0) // Ban add
             {
@@ -435,15 +493,17 @@ namespace OpenSim.Region.CoreModules.World.Estate
                         item.BannedHostIPMask = (SP != null) ? ((System.Net.IPEndPoint)SP.ControllingClient.GetClientEP()).Address.ToString() : "0.0.0.0";
 
                         m_scene.RegionInfo.EstateSettings.AddBan(item);
-                        m_scene.RegionInfo.EstateSettings.Save();
-                        TriggerEstateInfoChange();
+                        if ((estateAccessType & 1024) == 0) //1024 means more than one is being sent
+                        {
+                            m_scene.RegionInfo.EstateSettings.Save();
+                            TriggerEstateInfoChange();
+                        }
 
                         ScenePresence s = m_scene.GetScenePresence(user);
                         if (s != null)
                         {
                             if (!s.IsChildAgent)
                             {
-                                s.ControllingClient.SendTeleportLocationStart();
                                 m_scene.TeleportClientHome(user, s.ControllingClient);
                             }
                         }
@@ -453,12 +513,13 @@ namespace OpenSim.Region.CoreModules.World.Estate
                     {
                         remote_client.SendAlertMessage("User is already on the region ban list");
                     }
-                    remote_client.SendBannedUserList(invoice, m_scene.RegionInfo.EstateSettings.EstateBans, m_scene.RegionInfo.EstateSettings.EstateID);
-                }
+                    }
                 else
                 {
                     remote_client.SendAlertMessage("Method EstateAccessDelta Failed, you don't have permissions");
                 }
+                if ((estateAccessType & 1024) == 0) //1024 means more than one is being sent
+                    remote_client.SendBannedUserList(invoice, m_scene.RegionInfo.EstateSettings.EstateBans, m_scene.RegionInfo.EstateSettings.EstateID);
             }
             if ((estateAccessType & 128) != 0) // Ban remove
             {
@@ -482,48 +543,59 @@ namespace OpenSim.Region.CoreModules.World.Estate
                     if (alreadyInList && listitem != null)
                     {
                         m_scene.RegionInfo.EstateSettings.RemoveBan(listitem.BannedUserID);
-                        m_scene.RegionInfo.EstateSettings.Save();
-                        TriggerEstateInfoChange();
+                        if ((estateAccessType & 1024) == 0) //1024 means more than one is being sent
+                        {
+                            m_scene.RegionInfo.EstateSettings.Save();
+                            TriggerEstateInfoChange();
+                        }
                     }
                     else
                     {
                         remote_client.SendAlertMessage("User is not on the region ban list");
                     }
-                    remote_client.SendBannedUserList(invoice, m_scene.RegionInfo.EstateSettings.EstateBans, m_scene.RegionInfo.EstateSettings.EstateID);
                 }
                 else
                 {
                     remote_client.SendAlertMessage("Method EstateAccessDelta Failed, you don't have permissions");
                 }
+                if ((estateAccessType & 1024) == 0) //1024 means more than one is being sent
+                    remote_client.SendBannedUserList(invoice, m_scene.RegionInfo.EstateSettings.EstateBans, m_scene.RegionInfo.EstateSettings.EstateID);
             }
             if ((estateAccessType & 256) != 0) // Manager add
             {
                 if (m_scene.Permissions.CanIssueEstateCommand(remote_client.AgentId, true) || m_scene.Permissions.BypassPermissions())
                 {
                     m_scene.RegionInfo.EstateSettings.AddEstateManager(user);
-                    m_scene.RegionInfo.EstateSettings.Save();
-                    TriggerEstateInfoChange();
-                    remote_client.SendEstateList(invoice, (int)Constants.EstateAccessCodex.EstateManagers, m_scene.RegionInfo.EstateSettings.EstateManagers, m_scene.RegionInfo.EstateSettings.EstateID);
+                    if ((estateAccessType & 1024) == 0) //1024 means more than one is being sent
+                    {
+                        m_scene.RegionInfo.EstateSettings.Save();
+                        TriggerEstateInfoChange();
+                    }
                 }
                 else
                 {
                     remote_client.SendAlertMessage("Method EstateAccessDelta Failed, you don't have permissions");
                 }
+                if ((estateAccessType & 1024) == 0) //1024 means more than one is being sent
+                    remote_client.SendEstateList(invoice, (int)Constants.EstateAccessCodex.EstateManagers, m_scene.RegionInfo.EstateSettings.EstateManagers, m_scene.RegionInfo.EstateSettings.EstateID);
             }
             if ((estateAccessType & 512) != 0) // Manager remove
             {
                 if (m_scene.Permissions.CanIssueEstateCommand(remote_client.AgentId, true) || m_scene.Permissions.BypassPermissions())
                 {
                     m_scene.RegionInfo.EstateSettings.RemoveEstateManager(user);
-                    m_scene.RegionInfo.EstateSettings.Save();
-                    TriggerEstateInfoChange();
-
-                    remote_client.SendEstateList(invoice, (int)Constants.EstateAccessCodex.EstateManagers, m_scene.RegionInfo.EstateSettings.EstateManagers, m_scene.RegionInfo.EstateSettings.EstateID);
+                    if ((estateAccessType & 1024) == 0) //1024 means more than one is being sent
+                    {
+                        m_scene.RegionInfo.EstateSettings.Save();
+                        TriggerEstateInfoChange();
+                    }
                 }
                 else
                 {
                     remote_client.SendAlertMessage("Method EstateAccessDelta Failed, you don't have permissions");
                 }
+                if ((estateAccessType & 1024) == 0) //1024 means more than one is being sent
+                    remote_client.SendEstateList(invoice, (int)Constants.EstateAccessCodex.EstateManagers, m_scene.RegionInfo.EstateSettings.EstateManagers, m_scene.RegionInfo.EstateSettings.EstateID);
             }
         }
 
@@ -576,7 +648,6 @@ namespace OpenSim.Region.CoreModules.World.Estate
                 ScenePresence s = m_scene.GetScenePresence(prey);
                 if (s != null)
                 {
-                    s.ControllingClient.SendTeleportLocationStart(); 
                     m_scene.TeleportClientHome(prey, s.ControllingClient);
                 }
             }
@@ -596,7 +667,6 @@ namespace OpenSim.Region.CoreModules.World.Estate
                     // Also make sure they are actually in the region
                     if (p != null && !p.IsChildAgent)
                     {
-                        p.ControllingClient.SendTeleportLocationStart();
                         m_scene.TeleportClientHome(p.UUID, p.ControllingClient);
                     }
                 }
@@ -785,8 +855,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
            args.useEstateSun = m_scene.RegionInfo.RegionSettings.UseEstateSun;
            args.waterHeight = (float)m_scene.RegionInfo.RegionSettings.WaterHeight;
            args.simName = m_scene.RegionInfo.RegionName;
-           args.RegionType = m_scene.RegionInfo.RegionType;
-           args.MaxAgents = (uint)m_scene.RegionInfo.RegionSettings.AgentLimit;
+           args.regionType = m_scene.RegionInfo.RegionType;
 
            remote_client.SendRegionInfoToEstateMenu(args);
         }
@@ -798,6 +867,9 @@ namespace OpenSim.Region.CoreModules.World.Estate
 
         private void HandleLandStatRequest(int parcelID, uint reportType, uint requestFlags, string filter, IClientAPI remoteClient)
         {
+            if (!m_scene.Permissions.CanIssueEstateCommand(remoteClient.AgentId, false))
+                return;
+
             Dictionary<uint, float> SceneData = new Dictionary<uint,float>();
             List<UUID> uuidNameLookupList = new List<UUID>();
 
@@ -888,6 +960,34 @@ namespace OpenSim.Region.CoreModules.World.Estate
                 // we drop it.  It gets cached though...  so we're ready for the next request.
             }
         }
+
+        private enum SimWideDeletesFlags : int
+        {
+            OthersLandNotUserOnly = 0,
+            AlwaysReturnObjects = 1,
+            ScriptedPrimsOnly = 4
+        }
+
+        public void SimWideDeletes(IClientAPI client, int flags, UUID targetID)
+        {
+            if (m_scene.Permissions.CanIssueEstateCommand(client.AgentId, false))
+            {
+                List<SceneObjectGroup> prims = new List<SceneObjectGroup>();
+                foreach (ILandObject selectedParcel in m_scene.LandChannel.AllParcels())
+                {
+                    if (selectedParcel.LandData.OwnerID == targetID &&
+                        (flags & (int)SimWideDeletesFlags.OthersLandNotUserOnly) ==
+                        (int)SimWideDeletesFlags.OthersLandNotUserOnly)
+                        prims.AddRange(selectedParcel.GetPrimsOverByOwner(targetID, (int)SimWideDeletesFlags.ScriptedPrimsOnly));
+                }
+                m_scene.returnObjects(prims.ToArray(), client.AgentId);
+            }
+            else
+            {
+                client.SendAlertMessage("You do not have permissions to return objects in this sim.");
+            }
+        }
+
         #endregion
 
         #region Outgoing Packets
@@ -905,7 +1005,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
         {
             RegionHandshakeArgs args = new RegionHandshakeArgs();
 
-            args.isEstateManager = m_scene.RegionInfo.EstateSettings.IsEstateManager(remoteClient.AgentId);
+            args.isEstateManager = m_scene.Permissions.IsAdministrator(remoteClient.AgentId);
             if (m_scene.RegionInfo.EstateSettings.EstateOwner != UUID.Zero && m_scene.RegionInfo.EstateSettings.EstateOwner == remoteClient.AgentId)
                 args.isEstateManager = true;
 
@@ -1111,6 +1211,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
             m_scene.EventManager.OnNewClient += EventManager_OnNewClient;
             m_scene.EventManager.OnRequestChangeWaterHeight += changeWaterHeight;
             scene.EventManager.OnRegisterCaps += OnRegisterCaps;
+            scene.EventManager.OnClosingClient += OnClosingClient;
 
             m_scene.AddCommand(this, "set terrain texture",
                                "set terrain texture <number> <uuid> [<x>] [<y>]",
@@ -1129,7 +1230,11 @@ namespace OpenSim.Region.CoreModules.World.Estate
 
         public void RemoveRegion(Scene scene)
         {
-
+            m_scene.UnregisterModuleInterface<IEstateModule>(this);
+            m_scene.EventManager.OnNewClient -= EventManager_OnNewClient;
+            m_scene.EventManager.OnRequestChangeWaterHeight -= changeWaterHeight;
+            scene.EventManager.OnRegisterCaps -= OnRegisterCaps;
+            scene.EventManager.OnClosingClient -= OnClosingClient;
         }
 
         public void RegionLoaded(Scene scene)
@@ -1203,11 +1308,39 @@ namespace OpenSim.Region.CoreModules.World.Estate
             client.OnEstateTeleportAllUsersHomeRequest += handleEstateTeleportAllUsersHomeRequest;
             client.OnRequestTerrain += handleTerrainRequest;
             client.OnUploadTerrain += handleUploadTerrain;
+            client.OnSimWideDeletes += SimWideDeletes;
 
             client.OnRegionInfoRequest += HandleRegionInfoRequest;
             client.OnEstateCovenantRequest += HandleEstateCovenantRequest;
             client.OnLandStatRequest += HandleLandStatRequest;
             sendRegionHandshake(client);
+        }
+
+        private void OnClosingClient(IClientAPI client)
+        {
+            client.OnDetailedEstateDataRequest -= sendDetailedEstateData;
+            client.OnSetEstateFlagsRequest -= estateSetRegionInfoHandler;
+            //            client.OnSetEstateTerrainBaseTexture -= setEstateTerrainBaseTexture;
+            client.OnSetEstateTerrainDetailTexture -= setEstateTerrainBaseTexture;
+            client.OnSetEstateTerrainTextureHeights -= setEstateTerrainTextureHeights;
+            client.OnCommitEstateTerrainTextureRequest -= handleCommitEstateTerrainTextureRequest;
+            client.OnSetRegionTerrainSettings -= setRegionTerrainSettings;
+            client.OnEstateRestartSimRequest -= handleEstateRestartSimRequest;
+            client.OnEstateChangeCovenantRequest -= handleChangeEstateCovenantRequest;
+            client.OnEstateChangeInfo -= handleEstateChangeInfo;
+            client.OnUpdateEstateAccessDeltaRequest -= handleEstateAccessDeltaRequest;
+            client.OnSimulatorBlueBoxMessageRequest -= SendSimulatorBlueBoxMessage;
+            client.OnEstateBlueBoxMessageRequest -= SendEstateBlueBoxMessage;
+            client.OnEstateDebugRegionRequest -= handleEstateDebugRegionRequest;
+            client.OnEstateTeleportOneUserHomeRequest -= handleEstateTeleportOneUserHomeRequest;
+            client.OnEstateTeleportAllUsersHomeRequest -= handleEstateTeleportAllUsersHomeRequest;
+            client.OnRequestTerrain -= handleTerrainRequest;
+            client.OnUploadTerrain -= handleUploadTerrain;
+            client.OnSimWideDeletes -= SimWideDeletes;
+
+            client.OnRegionInfoRequest -= HandleRegionInfoRequest;
+            client.OnEstateCovenantRequest -= HandleEstateCovenantRequest;
+            client.OnLandStatRequest -= HandleLandStatRequest;
         }
 
         public uint GetRegionFlags()
@@ -1334,9 +1467,11 @@ namespace OpenSim.Region.CoreModules.World.Estate
         protected void TriggerEstateMessage(UUID fromID, string fromName, string message)
         {
             MessageDelegate onmessage = OnEstateMessage;
-
+            IDialogModule module = m_scene.RequestModuleInterface<IDialogModule>();
             if (onmessage != null)
                 onmessage(m_scene.RegionInfo.RegionID, fromID, fromName, message);
+            else if (module != null)
+                module.SendGeneralAlert(message);
         }
     }
 }

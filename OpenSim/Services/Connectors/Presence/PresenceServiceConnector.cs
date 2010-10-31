@@ -413,11 +413,12 @@ namespace OpenSim.Services.Connectors
                 {
                     locations.Add(presence.ToString());
                 }
+                return locations.ToArray();
             }
             else
                 m_log.DebugFormat("[PRESENCE CONNECTOR]: GetAgents received null response");
-
-            return locations.ToArray();
+            
+            return null;
         }
 
         #endregion

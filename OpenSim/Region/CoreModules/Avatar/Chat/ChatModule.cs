@@ -88,6 +88,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
                 {
                     m_scenes.Add(scene);
                     scene.EventManager.OnNewClient += OnNewClient;
+                    scene.EventManager.OnClosingClient += OnClosingClient;
                     scene.EventManager.OnChatFromWorld += OnChatFromWorld;
                     scene.EventManager.OnChatBroadcast += OnChatBroadcast;
                 }
@@ -110,6 +111,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
                 if (m_scenes.Contains(scene))
                 {
                     scene.EventManager.OnNewClient -= OnNewClient;
+                    scene.EventManager.OnClosingClient -= OnClosingClient;
                     scene.EventManager.OnChatFromWorld -= OnChatFromWorld;
                     scene.EventManager.OnChatBroadcast -= OnChatBroadcast;
                     m_scenes.Remove(scene);
@@ -141,6 +143,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
         public virtual void OnNewClient(IClientAPI client)
         {
             client.OnChatFromClient += OnChatFromClient;
+        }
+
+        private void OnClosingClient(IClientAPI client)
+        {
+            client.OnChatFromClient -= OnChatFromClient;
         }
 
         protected OSChatMessage FixPositionOfChatMessage(OSChatMessage c)

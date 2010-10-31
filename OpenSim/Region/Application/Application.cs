@@ -234,7 +234,7 @@ namespace OpenSim
                         }
                 }
                 MainConsole.Instance = null;
-            }      
+            }
             */
 
             #endregion
@@ -272,7 +272,7 @@ namespace OpenSim
                 m_urlToPostErrors = m_configSource.Configs["ErrorReporting"].GetString("ErrorReportingURL", m_urlToPostErrors);
             }
 
-            OpenSimBase m_sim = new OpenSimBase(m_configSource);
+            OpenSimBase m_sim = new OpenSimBase(configSource);
             m_sim.Startup();
         }
 

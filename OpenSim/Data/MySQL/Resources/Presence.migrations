@@ -14,10 +14,10 @@ CREATE INDEX UserID ON Presence(UserID);
 
 COMMIT;
 
-:VERSION 2
+:VERSION 1         # -------------------------- 
 
-BEGIN:
+BEGIN;
 
-ALTER TABLE presence ADD COLUMN LastSeen integer not null default 0;
+ALTER TABLE `Presence` ADD COLUMN LastSeen timestamp;
 
 COMMIT;

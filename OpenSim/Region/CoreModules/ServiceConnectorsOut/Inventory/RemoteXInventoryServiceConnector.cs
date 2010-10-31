@@ -93,7 +93,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Inventory
                     Init(source);
                     m_Enabled = true;
 
-                    m_log.Info("[XINVENTORY CONNECTOR]: Remote XInventory enabled");
+                    //m_log.Info("[XINVENTORY CONNECTOR]: Remote XInventory enabled");
                 }
             }
         }
@@ -134,7 +134,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Inventory
             if (!m_Enabled)
                 return;
 
-            m_log.InfoFormat("[XINVENTORY CONNECTOR]: Enabled remote XInventory for region {0}", scene.RegionInfo.RegionName);
+            //m_log.InfoFormat("[XINVENTORY CONNECTOR]: Enabled remote XInventory for region {0}", scene.RegionInfo.RegionName);
 
         }
 
@@ -261,7 +261,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Inventory
 
         public  InventoryItemBase GetItem(InventoryItemBase item)
         {
-            m_log.DebugFormat("[XINVENTORY CONNECTOR]: GetItem {0}", item.ID);
+           // m_log.DebugFormat("[XINVENTORY CONNECTOR]: GetItem {0}", item.ID);
             if (item == null)
                 return null;
 
@@ -292,6 +292,16 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Inventory
         public  int GetAssetPermissions(UUID userID, UUID assetID)
         {
             return m_RemoteConnector.GetAssetPermissions(userID, assetID);
+        }
+
+        #endregion
+
+        #region IInventoryService Members
+
+
+        public bool LinkItem(IClientAPI client, UUID oldItemID, UUID parentID, uint Callback)
+        {
+            return false;
         }
 
         #endregion

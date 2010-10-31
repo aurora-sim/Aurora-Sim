@@ -34,19 +34,18 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using log4net;
 using Nini.Config;
-using Mono.Addins;
 
 namespace OpenSim.Framework
 {
     /// <summary>
     /// A console that uses cursor control and color
-    /// </summary>    
-    [Extension(Path = "/OpenSim/Console", NodeName = "ConsolePlugin")]
+    /// </summary>
     public class LocalConsole : CommandConsole
     {
 //        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         // private readonly object m_syncRoot = new object();
+        private const string LOGLEVEL_NONE = "(none)";
 
         private int y = -1;
         private int cp = 0;
@@ -71,7 +70,7 @@ namespace OpenSim.Framework
             ConsoleColor.Yellow
         };
 
-        public override void Initialise(string defaultPrompt, IConfigSource source, IOpenSimBase baseOpenSim)
+        public override void Initialize(string defaultPrompt, IConfigSource source, IOpenSimBase baseOpenSim)
         {
             if (source.Configs["Console"] != null)
             {
@@ -120,8 +119,8 @@ namespace OpenSim.Framework
         private int SetCursorTop(int top)
         {
             // From at least mono 2.4.2.3, window resizing can give mono an invalid row and column values.  If we try
-            // to set a cursor row position with a currently invalid column, mono will throw an exception.  
-            // Therefore, we need to make sure that the column position is valid first.              
+            // to set a cursor row position with a currently invalid column, mono will throw an exception.
+            // Therefore, we need to make sure that the column position is valid first.
             int left = System.Console.CursorLeft;
 
             if (left < 0)
@@ -141,7 +140,7 @@ namespace OpenSim.Framework
             {
                 top = 0;
             }
-            else                
+            else
             {
                 int bh = System.Console.BufferHeight;
                 
@@ -153,7 +152,7 @@ namespace OpenSim.Framework
             System.Console.CursorTop = top;
 
             return top;
-        }        
+        }
 
         /// <summary>
         /// Set the cursor column.
@@ -165,12 +164,12 @@ namespace OpenSim.Framework
         /// </param>
         /// <returns>
         /// The new cursor column.
-        /// </returns>        
+        /// </returns>
         private int SetCursorLeft(int left)
         {
             // From at least mono 2.4.2.3, window resizing can give mono an invalid row and column values.  If we try
-            // to set a cursor column position with a currently invalid row, mono will throw an exception.  
-            // Therefore, we need to make sure that the row position is valid first.               
+            // to set a cursor column position with a currently invalid row, mono will throw an exception.
+            // Therefore, we need to make sure that the row position is valid first.
             int top = System.Console.CursorTop;
 
             if (top < 0)
@@ -236,7 +235,7 @@ namespace OpenSim.Framework
                     System.Console.Write("{0}", prompt);
 
                 SetCursorTop(new_y);
-                SetCursorLeft(new_x);                
+                SetCursorLeft(new_x);
             }
         }
 
@@ -300,11 +299,21 @@ namespace OpenSim.Framework
 
         private void WriteLocalText(string text, string level)
         {
-            if (level == "None") //No color or flowers or whisles, just basic writing plus the DT must be added manually
-                System.Console.Write(DateTime.Now.Hour + ":" + DateTime.Now.Minute + ":" + DateTime.Now.Second + " - " + text);
-            else if (level == "Notice")
+            string logtext = "";
+            if (level == "None" && text != "") //No color or flowers or whisles, just basic writing plus the DT must be added manually
             {
-                WriteColorText(ConsoleColor.Gray, DateTime.Now.Hour + ":" + DateTime.Now.Minute + ":" + DateTime.Now.Second + " - ");
+                logtext = DateTime.Now.Hour + ":" + DateTime.Now.Minute + ":" + DateTime.Now.Second + " - " + text;
+                System.Console.Write(logtext);
+            }
+            else if (level == LOGLEVEL_NONE && text != "")
+            {
+                logtext = DateTime.Now.Hour + ":" + DateTime.Now.Minute + ":" + DateTime.Now.Second + " - " + text;
+                System.Console.Write(logtext);
+            }
+			else if (level == "Notice")
+            {
+                logtext = DateTime.Now.Hour + ":" + DateTime.Now.Minute + ":" + DateTime.Now.Second + " - ";
+                WriteColorText(ConsoleColor.Gray, logtext);
                 string[] Split = text.Split(new string[]{" - "}, StringSplitOptions.RemoveEmptyEntries);
                 if (Split.Length != 0)
                 {
@@ -312,17 +321,27 @@ namespace OpenSim.Framework
                     foreach (string Rest in Split)
                     {
                         if (i != 0)
+                        {
                             WriteColorText(ConsoleColor.Magenta, Rest);
+                            logtext += Rest;
+                        }
                         else
+                        {
                             WriteColorText(ConsoleColor.Gray, Rest + " - ");
+                            logtext += Rest + " - ";
+                        }
                         i++;
                     }
                 }
                 else
+                {
                     WriteColorText(ConsoleColor.Magenta, text);
+                    logtext += text;
+                }
             }
-            else
+            else if (text != "")
             {
+                int CurrentLine = 0;
                 string[] Lines = text.Split('\n', '\r');
                 //This exists so that we don't have issues with multiline stuff, since something is messed up with the Regex
                 foreach (string line in Lines)
@@ -344,21 +363,33 @@ namespace OpenSim.Framework
                                 matches[0].Groups["Category"].Value);
                         System.Console.Write("]:");
                     }
+
                     if (level == "error")
                         WriteColorText(ConsoleColor.Red, outText);
                     else if (level == "warn")
                         WriteColorText(ConsoleColor.Yellow, outText);
                     else
                         WriteColorText(ConsoleColor.Gray, outText);
+
+                    CurrentLine++;
+                    if (Lines.Length - CurrentLine != 0)
+                        System.Console.WriteLine();
+
+                    logtext += outText;
                 }
             }
+            else
+            {
+                System.Console.WriteLine(m_defaultPrompt + "# ");
+            }
+            Log(logtext);
 
             System.Console.WriteLine();
         }
 
         public override void Output(string text)
         {
-            Output(text, "normal");
+            Output(text, LOGLEVEL_NONE);
         }
 
         public override void Output(string text, string level)
@@ -464,9 +495,9 @@ namespace OpenSim.Framework
                         y = SetCursorTop(y);
 
                         if (echo) //This space makes the last line part disappear
-                            System.Console.WriteLine("{0}{1}", prompt, cmdline + " ");
+                            System.Console.Write("{0}{1}", prompt, cmdline + " ");
                         else
-                            System.Console.WriteLine("{0}", prompt);
+                            System.Console.Write("{0}", prompt);
 
                         break;
                     case ConsoleKey.End:
@@ -548,7 +579,7 @@ namespace OpenSim.Framework
                             }
                         }
 
-                        AddToHistory(cmdline.ToString());
+                        //AddToHistory(cmdline.ToString());
                         return cmdline.ToString();
                     default:
                         break;

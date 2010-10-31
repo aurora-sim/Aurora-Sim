@@ -36,11 +36,9 @@ using OpenSim.Region.CoreModules.Avatar.NPC;
 using OpenSim.Framework;
 using Timer=System.Timers.Timer;
 using OpenSim.Services.Interfaces;
-using Mono.Addins;
 
 namespace OpenSim.Region.OptionalModules.World.NPC
 {
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class NPCModule : ISharedRegionModule, INPCModule
     {
         // private const bool m_enabled = false;

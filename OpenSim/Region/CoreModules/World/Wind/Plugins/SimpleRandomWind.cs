@@ -34,7 +34,7 @@ using OpenSim.Region.Framework.Interfaces;
 
 namespace OpenSim.Region.CoreModules.World.Wind.Plugins
 {
-    class SimpleRandomWind : Mono.Addins.TypeExtensionNode, IWindModelPlugin
+    public class SimpleRandomWind : IWindModelPlugin
     {
         private Vector2[] m_windSpeeds = new Vector2[16 * 16];
         private float m_strength = 1.0f;

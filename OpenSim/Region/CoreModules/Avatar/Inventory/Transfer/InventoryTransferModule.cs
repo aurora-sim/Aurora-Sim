@@ -32,7 +32,6 @@ using log4net;
 using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Framework;
-
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
@@ -78,6 +77,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
             scene.RegisterModuleInterface<InventoryTransferModule>(this);
 
             scene.EventManager.OnNewClient += OnNewClient;
+            scene.EventManager.OnClosingClient += OnClosingClient;
             scene.EventManager.OnClientClosed += ClientLoggedOut;
             scene.EventManager.OnIncomingInstantMessage += OnGridInstantMessage;
         }
@@ -89,21 +89,22 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
                 m_TransferModule = m_Scenelist[0].RequestModuleInterface<IMessageTransferModule>();
                 if (m_TransferModule == null)
                 {
-                    m_log.Error("[INVENTORY TRANSFER] No Message transfer module found, transfers will be local only");
+                    m_log.Error("[INVENTORY TRANSFER]: No Message transfer module found, transfers will be local only");
                     m_Enabled = false;
 
                     m_Scenelist.Clear();
                     scene.EventManager.OnNewClient -= OnNewClient;
+                    scene.EventManager.OnClosingClient -= OnClosingClient;
                     scene.EventManager.OnClientClosed -= ClientLoggedOut;
                     scene.EventManager.OnIncomingInstantMessage -= OnGridInstantMessage;
                 }
             }
-
         }
 
         public void RemoveRegion(Scene scene)
         {
             scene.EventManager.OnNewClient -= OnNewClient;
+            scene.EventManager.OnClosingClient -= OnClosingClient;
             scene.EventManager.OnClientClosed -= ClientLoggedOut;
             scene.EventManager.OnIncomingInstantMessage -= OnGridInstantMessage;
             m_Scenelist.Remove(scene);
@@ -135,6 +136,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
             client.OnInstantMessage += OnInstantMessage;
         }
 
+        private void OnClosingClient(IClientAPI client)
+        {
+            client.OnInstantMessage -= OnInstantMessage;
+        }
+
         private Scene FindClientScene(UUID agentId)
         {
             lock (m_Scenelist)
@@ -153,13 +159,13 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
         {
             //m_log.InfoFormat("[INVENTORY TRANSFER]: OnInstantMessage {0}", im.dialog);
             
+            Scene scene = FindClientScene(client.AgentId);
+
+            if (scene == null) // Something seriously wrong here.
+                return;
+
             if (im.dialog == (byte) InstantMessageDialog.InventoryOffered)
             {
-                Scene scene = FindClientScene(client.AgentId);
-
-                if (scene == null) // Something seriously wrong here.
-                    return;
-
                 //m_log.DebugFormat("Asset type {0}", ((AssetType)im.binaryBucket[0]));
 
                 if (im.binaryBucket.Length < 17) // Invalid
@@ -176,7 +182,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
                 {
                     UUID folderID = new UUID(im.binaryBucket, 1);
                     
-                    m_log.DebugFormat("[AGENT INVENTORY]: Inserting original folder {0} "+
+                    m_log.DebugFormat("[INVENTORY TRANSFER]: Inserting original folder {0} "+
                             "into agent {1}'s inventory",
                             folderID, new UUID(im.toAgentID));
                     
@@ -211,7 +217,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
 
                     UUID itemID = new UUID(im.binaryBucket, 1);
 
-                    m_log.DebugFormat("[AGENT INVENTORY]: (giving) Inserting item {0} "+
+                    m_log.DebugFormat("[INVENTORY TRANSFER]: (giving) Inserting item {0} "+
                             "into agent {1}'s inventory",
                             itemID, new UUID(im.toAgentID));
 
@@ -257,11 +263,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
             }
             else if (im.dialog == (byte) InstantMessageDialog.InventoryAccepted)
             {
-                Scene scene = FindClientScene(client.AgentId);
-
-                if (scene == null) // Something seriously wrong here.
-                    return;
-                client.SendAgentAlertMessage("Inventory accepted.", false);
                 ScenePresence user = scene.GetScenePresence(new UUID(im.toAgentID));
 
                 if (user != null) // Local
@@ -276,15 +277,10 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
             }
             else if (im.dialog == (byte) InstantMessageDialog.InventoryDeclined)
             {
-                Scene scene = FindClientScene(client.AgentId);
-
-                if (scene == null) // Something seriously wrong here.
-                    return;
                 // Here, the recipient is local and we can assume that the
                 // inventory is loaded. Courtesy of the above bulk update,
                 // It will have been pushed to the client, too
                 //
-                
                 IInventoryService invService = scene.InventoryService;
 
                 InventoryFolderBase trashFolder =

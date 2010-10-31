@@ -25,15 +25,27 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.Drawing;
+using System;
+using System.Reflection;
 using Nini.Config;
-using OpenSim.Region.Framework.Scenes;
+using OpenSim.Framework;
+using OpenSim.Services.Interfaces;
+using OpenSim.Services.Base;
 
-namespace OpenSim.Region.CoreModules.World.WorldMap
+namespace OpenSim.Services.FreeswitchService
 {
-    public interface IMapTileTerrainRenderer
+    public class FreeswitchServiceBase : ServiceBase
     {
-        void Initialise(Scene scene, IConfigSource config);
-        Bitmap TerrainToBitmap(Bitmap mapbmp);
+        public FreeswitchServiceBase(IConfigSource config) : base(config)
+        {
+            //
+            // Try reading the [FreeswitchService] section first, if it exists
+            //
+            IConfig freeswitchConfig = config.Configs["FreeswitchService"];
+            if (freeswitchConfig != null)
+            {
+                // Read config here !!
+            }
+        }
     }
 }

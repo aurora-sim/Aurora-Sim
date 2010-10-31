@@ -47,26 +47,6 @@ namespace OpenSim.Region.CoreModules.World
 
         public void Initialise(IConfigSource config)
         {
-            MainConsole.Instance.Commands.AddCommand("access", true,
-                    "login enable",
-                    "login enable",
-                    "Enable simulator logins",
-                    String.Empty,
-                    HandleLoginCommand);
-
-            MainConsole.Instance.Commands.AddCommand("access", true,
-                    "login disable",
-                    "login disable",
-                    "Disable simulator logins",
-                    String.Empty,
-                    HandleLoginCommand);
-
-            MainConsole.Instance.Commands.AddCommand("access", true,
-                    "login status",
-                    "login status",
-                    "Show login status",
-                    String.Empty,
-                    HandleLoginCommand);
         }
 
         public void PostInitialise()
@@ -91,6 +71,26 @@ namespace OpenSim.Region.CoreModules.World
         {
             if (!m_SceneList.Contains(scene))
                 m_SceneList.Add(scene);
+            MainConsole.Instance.Commands.AddCommand("access", true,
+                    "login enable",
+                    "login enable",
+                    "Enable simulator logins",
+                    String.Empty,
+                    HandleLoginCommand);
+
+            MainConsole.Instance.Commands.AddCommand("access", true,
+                    "login disable",
+                    "login disable",
+                    "Disable simulator logins",
+                    String.Empty,
+                    HandleLoginCommand);
+
+            MainConsole.Instance.Commands.AddCommand("access", true,
+                    "login status",
+                    "login status",
+                    "Show login status",
+                    String.Empty,
+                    HandleLoginCommand);
         }
 
         public void RemoveRegion(Scene scene)

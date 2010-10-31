@@ -43,11 +43,9 @@ using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 using OpenMetaverse;
 using log4net;
 using Nini.Config;
-using Mono.Addins;
 
 namespace Aurora.Modules
 {
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class EntityTransferModule : ISharedRegionModule, IEntityTransferModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -100,11 +98,17 @@ namespace Aurora.Modules
 
             scene.RegisterModuleInterface<IEntityTransferModule>(this);
             scene.EventManager.OnNewClient += OnNewClient;
+            scene.EventManager.OnClosingClient += OnClosingClient;
         }
 
         protected virtual void OnNewClient(IClientAPI client)
         {
             client.OnTeleportHomeRequest += TeleportHome;
+        }
+
+        protected virtual void OnClosingClient(IClientAPI client)
+        {
+            client.OnTeleportHomeRequest -= TeleportHome;
         }
 
         public virtual void Close()
@@ -120,6 +124,10 @@ namespace Aurora.Modules
                 return;
             if (scene == m_aScene)
                 m_aScene = null;
+
+            scene.UnregisterModuleInterface<IEntityTransferModule>(this);
+            scene.EventManager.OnNewClient -= OnNewClient;
+            scene.EventManager.OnClosingClient -= OnClosingClient;
         }
 
         public virtual void RegionLoaded(Scene scene)
@@ -143,8 +151,8 @@ namespace Aurora.Modules
                 return;
             }
 
-            sp.ControllingClient.SendTeleportLocationStart();
-            sp.ControllingClient.SendTeleportProgress("requesting");
+            sp.ControllingClient.SendTeleportStart(teleportFlags);
+            sp.ControllingClient.SendTeleportProgress(teleportFlags, "requesting");
             //sp.ControllingClient.SendTeleportProgress("resolving");
 
             IEventQueue eq = sp.Scene.RequestModuleInterface<IEventQueue>();
@@ -254,7 +262,7 @@ namespace Aurora.Modules
 
         public virtual void DoTeleport(ScenePresence sp, GridRegion reg, GridRegion finalDestination, Vector3 position, Vector3 lookAt, uint teleportFlags, IEventQueue eq)
         {
-            sp.ControllingClient.SendTeleportProgress("sending_dest");
+            sp.ControllingClient.SendTeleportProgress(teleportFlags, "sending_dest");
             if (reg == null || finalDestination == null)
             {
                 sp.ControllingClient.SendTeleportFailed("Unable to locate destination");
@@ -278,7 +286,7 @@ namespace Aurora.Modules
             IPEndPoint endPoint = finalDestination.ExternalEndPoint;
             if (endPoint.Address != null)
             {
-                sp.ControllingClient.SendTeleportProgress("arriving");
+                sp.ControllingClient.SendTeleportProgress(teleportFlags, "arriving");
 
                 if (m_cancelingAgents.Contains(sp.UUID))
                 {
@@ -292,7 +300,7 @@ namespace Aurora.Modules
 
                 if (!sp.ValidateAttachments())
                 {
-                    sp.ControllingClient.SendTeleportProgress("missing_attach_tport");
+                    sp.ControllingClient.SendTeleportProgress(teleportFlags, "missing_attach_tport");
                     sp.ControllingClient.SendTeleportFailed("Inconsistent attachment state");
                     return;
                 }
@@ -308,7 +316,7 @@ namespace Aurora.Modules
                 {
                     agentCircuit.ServiceURLs = currentAgentCircuit.ServiceURLs;
                     agentCircuit.Viewer = currentAgentCircuit.Viewer;
-                    agentCircuit.IP = currentAgentCircuit.IP;
+                    agentCircuit.IPAddress = currentAgentCircuit.IPAddress;
                 }
 
                 if (NeedsNewAgent(oldRegionX, newRegionX, oldRegionY, newRegionY))
@@ -1028,7 +1036,7 @@ namespace Aurora.Modules
             {
                 agent.ServiceURLs = currentAgentCircuit.ServiceURLs;
                 agent.Viewer = currentAgentCircuit.Viewer;
-                agent.IP = currentAgentCircuit.IP;
+                agent.IPAddress = currentAgentCircuit.IPAddress;
             }
 
             InformClientOfNeighbourDelegate d = InformClientOfNeighbourAsync;
@@ -1118,7 +1126,7 @@ namespace Aurora.Modules
                     {
                         agent.ServiceURLs = currentAgentCircuit.ServiceURLs;
                         agent.Viewer = currentAgentCircuit.Viewer;
-                        agent.IP = currentAgentCircuit.IP;
+                        agent.IPAddress = currentAgentCircuit.IPAddress;
                     }
 
                     if (newRegions.Contains(neighbour.RegionHandle))

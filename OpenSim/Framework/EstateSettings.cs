@@ -568,7 +568,7 @@ namespace OpenSim.Framework
 
         public bool HasAccess(UUID user)
         {
-            if (IsEstateManager(user))
+            if (IsEstateManager(user) || EstateOwner == user)
                 return true;
 
             return l_EstateAccess.Contains(user);

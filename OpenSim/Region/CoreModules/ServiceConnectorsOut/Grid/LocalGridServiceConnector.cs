@@ -233,7 +233,12 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Grid
             return m_GridService.GetFallbackRegions(scopeID, x, y);
         }
 
-        public void SetRegionUnsafe(UUID r)
+        public List<GridRegion> GetHyperlinks(UUID scopeID)
+        {
+            return m_GridService.GetHyperlinks(scopeID);
+        }
+
+		public void SetRegionUnsafe(UUID r)
         {
             m_GridService.SetRegionUnsafe(r);
         }
@@ -261,9 +266,9 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Grid
             }
         }
 
-        public string UpdateMap(UUID scopeID, UUID RegionID, UUID mapID, UUID terrainID, UUID sessionID)
+        public string UpdateMap(UUID scopeID, GridRegion region, UUID mapID, UUID terrainID, UUID sessionID)
         {
-            return m_GridService.UpdateMap(scopeID, RegionID, mapID, terrainID, sessionID);
+            return m_GridService.UpdateMap(scopeID, region, mapID, terrainID, sessionID);
         }
 
         public multipleMapItemReply GetMapItems(ulong regionHandle, GridItemType gridItemType)

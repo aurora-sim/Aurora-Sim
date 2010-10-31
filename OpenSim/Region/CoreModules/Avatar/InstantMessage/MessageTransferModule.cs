@@ -138,8 +138,6 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
         {
             UUID toAgentID = new UUID(im.toAgentID);
 
-            //m_log.DebugFormat("[INSTANT MESSAGE]: Attempting delivery of IM from {0} to {1}", im.fromAgentName, toAgentID.ToString());
-
             // Try root avatar only first - incorrect now, see below
             foreach (Scene scene in m_Scenes)
             {
@@ -165,13 +163,14 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                     // Local message
                     ScenePresence user = (ScenePresence)scene.Entities[toAgentID];
 
-                    m_log.DebugFormat("[INSTANT MESSAGE]: Delivering to client");
+                    m_log.DebugFormat("[INSTANT MESSAGE]: Delivering IM to child agent {0} {1}", user.Name, toAgentID);
                     user.ControllingClient.SendInstantMessage(im);
 
                     return;
                 }
             }*/
 
+            //m_log.DebugFormat("[INSTANT MESSAGE]: Delivering IM to {0} via XMLRPC", im.toAgentID);
             SendGridInstantMessageViaXMLRPC(im, result);
         }
 
@@ -179,13 +178,16 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
         {
             UndeliveredMessage handlerUndeliveredMessage = OnUndeliveredMessage;
 
-            // If this event has handlers, then the IM will be considered
-            // delivered. This will suppress the error message.
+            // If this event has handlers, then an IM from an agent will be
+            // considered delivered. This will suppress the error message.
             //
             if (handlerUndeliveredMessage != null)
             {
                 handlerUndeliveredMessage(im);
-                result(true);
+                if (im.dialog == (byte)InstantMessageDialog.MessageFromAgent)
+                    result(true);
+                else
+                    result(false);
                 return;
             }
 
@@ -307,7 +309,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
 
                     try
                     {
-                        pos_x = (uint)Convert.ToInt32((string)requestData["position_x"]);
+                        pos_x = float.Parse((string)requestData["position_x"]);
                     }
                     catch (ArgumentException)
                     {
@@ -320,7 +322,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                     }
                     try
                     {
-                        pos_y = (uint)Convert.ToInt32((string)requestData["position_y"]);
+                        pos_y = float.Parse((string)requestData["position_y"]);
                     }
                     catch (ArgumentException)
                     {
@@ -333,7 +335,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                     }
                     try
                     {
-                        pos_z = (uint)Convert.ToInt32((string)requestData["position_z"]);
+                        pos_z = float.Parse((string)requestData["position_z"]);
                     }
                     catch (ArgumentException)
                     {
@@ -363,7 +365,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                     gim.fromAgentName = fromAgentName;
                     gim.fromGroup = fromGroup;
                     gim.imSessionID = imSessionID.Guid;
-                    gim.RegionID = RegionID.Guid;
+                    gim.RegionID = UUID.Zero.Guid; // RegionID.Guid;
                     gim.timestamp = timestamp;
                     gim.toAgentID = toAgentID.Guid;
                     gim.message = message;
@@ -501,8 +503,8 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             {
                 //Find the regions http address where the agent is
                 string[] AgentLocations = PresenceService.GetAgentsLocations(new string[] { toAgentID.ToString() });
-                
-                if (AgentLocations.Length == 1 && AgentLocations[0] == "Failure") //If this is true, this doesn't exist on the presence server and we use the legacy way
+
+                if (AgentLocations == null || (AgentLocations.Length == 1 && AgentLocations[0] == "Failure")) //If this is true, this doesn't exist on the presence server and we use the legacy way
                 {
                     // Non-cached user agent lookup.
                     PresenceInfo[] presences = PresenceService.GetAgents(new string[] { toAgentID.ToString() });
@@ -672,11 +674,11 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                 gim["from_group"] = "FALSE";
             byte[] offlinedata = new byte[1]; offlinedata[0] = msg.offline;
             gim["offline"] = Convert.ToBase64String(offlinedata, Base64FormattingOptions.None);
-            gim["parent_estate_id"] = 0;
-            gim["position_x"] = msg.Position.X.ToString();
-            gim["position_y"] = msg.Position.Y.ToString();
-            gim["position_z"] = msg.Position.Z.ToString();
-            gim["region_id"] = UUID.Zero.ToString();
+            gim["parent_estate_id"] = (0).ToString();
+            gim["position_x"] = (0).ToString();
+            gim["position_y"] = (0).ToString();
+            gim["position_z"] = (0).ToString();
+            gim["region_id"] = UUID.Zero.Guid.ToString();
             gim["binary_bucket"] = Convert.ToBase64String(msg.binaryBucket,Base64FormattingOptions.None);
             return gim;
         }

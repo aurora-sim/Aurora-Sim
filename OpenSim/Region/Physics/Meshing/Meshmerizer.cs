@@ -79,7 +79,7 @@ namespace OpenSim.Region.Physics.Meshing
 
         public Meshmerizer(IConfigSource config)
         {
-            IConfig start_config = config.Configs["Startup"];
+            IConfig start_config = config.Configs["Meshing"];
 
             decodedSculptMapPath = start_config.GetString("DecodedSculptMapPath","j2kDecodeCache");
             cacheSculptMaps = start_config.GetBoolean("CacheSculptMaps", cacheSculptMaps);

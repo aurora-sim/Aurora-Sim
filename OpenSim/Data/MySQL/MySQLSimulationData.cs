@@ -45,12 +45,21 @@ namespace OpenSim.Data.MySQL
     /// <summary>
     /// A MySQL Interface for the Region Server
     /// </summary>
-    public class MySQLDataStore : IRegionDataStore
+    public class MySQLSimulationData : ISimulationDataStore
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private string m_connectionString;
         private object m_dbLock = new object();
+
+        public MySQLSimulationData()
+        {
+        }
+
+        public MySQLSimulationData(string connectionString)
+        {
+            Initialise(connectionString);
+        }
 
         public void Initialise(string connectionString)
         {
@@ -80,7 +89,7 @@ namespace OpenSim.Data.MySQL
                 }
                 catch (MySqlException ex)
                 {
-                    m_log.Error("[REGION DB]: Error cleaning up dropped attachments: " + ex.Message);
+                    m_log.Error("[REGION DB]: Error cleaning up dropped attachments: " + ex.Message + ":" + ex.StackTrace);
                 }
             }
         }
@@ -174,7 +183,7 @@ namespace OpenSim.Data.MySQL
                                 "ParticleSystem, ClickAction, Material, " +
                                 "CollisionSound, CollisionSoundVolume, " +
                                 "PassTouches, " +
-                                "LinkNumber, Generic) values (" + "?UUID, " +
+                                "LinkNumber, MediaURL, Generic) values (" + "?UUID, " +
                                 "?CreationDate, ?Name, ?Text, " +
                                 "?Description, ?SitName, ?TouchName, " +
                                 "?ObjectFlags, ?OwnerMask, ?NextOwnerMask, " +
@@ -205,7 +214,7 @@ namespace OpenSim.Data.MySQL
                                 "?SaleType, ?ColorR, ?ColorG, " +
                                 "?ColorB, ?ColorA, ?ParticleSystem, " +
                                 "?ClickAction, ?Material, ?CollisionSound, " +
-                                "?CollisionSoundVolume, ?PassTouches, ?LinkNumber, ?Generic)";
+                                "?CollisionSoundVolume, ?PassTouches, ?LinkNumber, ?MediaURL, ?Generic)";
 
                         FillPrimCommand(cmd, prim, obj.UUID, regionUUID);
 
@@ -222,7 +231,7 @@ namespace OpenSim.Data.MySQL
                                 "PathTaperX, PathTaperY, PathTwist, " +
                                 "PathTwistBegin, ProfileBegin, ProfileEnd, " +
                                 "ProfileCurve, ProfileHollow, Texture, " +
-                                "ExtraParams, State) values (?UUID, " +
+                                "ExtraParams, State, Media) values (?UUID, " +
                                 "?Shape, ?ScaleX, ?ScaleY, ?ScaleZ, " +
                                 "?PCode, ?PathBegin, ?PathEnd, " +
                                 "?PathScaleX, ?PathScaleY, " +
@@ -233,12 +242,13 @@ namespace OpenSim.Data.MySQL
                                 "?PathTwistBegin, ?ProfileBegin, " +
                                 "?ProfileEnd, ?ProfileCurve, " +
                                 "?ProfileHollow, ?Texture, ?ExtraParams, " +
-                                "?State)";
+                                "?State, ?Media)";
 
                         FillShapeCommand(cmd, prim);
 
                         ExecuteNonQuery(cmd);
                     }
+                    
                     cmd.Dispose();
                 }
             }
@@ -246,6 +256,8 @@ namespace OpenSim.Data.MySQL
 
         public void RemoveObject(UUID obj, UUID regionUUID)
         {
+//            m_log.DebugFormat("[REGION DB]: Deleting scene object {0} from {1} in database", obj, regionUUID);
+            
             List<UUID> uuids = new List<UUID>();
 
             // Formerly, this used to check the region UUID.
@@ -480,7 +492,7 @@ namespace OpenSim.Data.MySQL
             }
         }
 
-        public List<SceneObjectGroup> LoadObjects(UUID regionID)
+        public List<SceneObjectGroup> LoadObjects(UUID regionID, Scene scene)
         {
             const int ROWS_PER_QUERY = 5000;
 
@@ -535,7 +547,7 @@ namespace OpenSim.Data.MySQL
             foreach (SceneObjectPart prim in prims.Values)
             {
                 if (prim.ParentUUID == UUID.Zero)
-                    objects[prim.UUID] = new SceneObjectGroup(prim);
+                    objects[prim.UUID] = new SceneObjectGroup(prim, scene);
             }
 
             // Add all of the children objects to the SOGs
@@ -767,7 +779,8 @@ namespace OpenSim.Data.MySQL
                             "MusicURL, PassHours, PassPrice, SnapshotUUID, " +
                             "UserLocationX, UserLocationY, UserLocationZ, " +
                             "UserLookAtX, UserLookAtY, UserLookAtZ, " +
-                            "AuthbuyerID, OtherCleanTime, Dwell) values (" +
+                            "AuthbuyerID, OtherCleanTime, MediaType, MediaDescription, " +
+                            "MediaSize, MediaLoop, ObscureMusic, ObscureMedia) values (" +
                             "?UUID, ?RegionUUID, " +
                             "?LocalLandID, ?Bitmap, ?Name, ?Description, " +
                             "?OwnerUUID, ?IsGroupOwned, ?Area, ?AuctionID, " +
@@ -777,7 +790,8 @@ namespace OpenSim.Data.MySQL
                             "?MusicURL, ?PassHours, ?PassPrice, ?SnapshotUUID, " +
                             "?UserLocationX, ?UserLocationY, ?UserLocationZ, " +
                             "?UserLookAtX, ?UserLookAtY, ?UserLookAtZ, " +
-                            "?AuthbuyerID, ?OtherCleanTime, ?Dwell)";
+                            "?AuthbuyerID, ?OtherCleanTime, ?MediaType, ?MediaDescription, "+
+                            "CONCAT(?MediaWidth, ',', ?MediaHeight), ?MediaLoop, ?ObscureMusic, ?ObscureMedia)";
 
                         FillLandCommand(cmd, parcel, parcel.RegionID);
 
@@ -973,7 +987,7 @@ namespace OpenSim.Data.MySQL
             prim.SitName = (string)row["SitName"];
             prim.TouchName = (string)row["TouchName"];
             // Permissions
-            prim.ObjectFlags = (uint)(int)row["ObjectFlags"];
+            prim.Flags = (PrimFlags)(int)row["ObjectFlags"];
             prim.OwnerMask = (uint)(int)row["OwnerMask"];
             prim.NextOwnerMask = (uint)(int)row["NextOwnerMask"];
             prim.GroupMask = (uint)(int)row["GroupMask"];
@@ -1077,6 +1091,8 @@ namespace OpenSim.Data.MySQL
             prim.PassTouch = (int)(double)row["CollisionSoundVolume"];
             prim.LinkNum = (int)row["LinkNumber"];
             prim.GenericData = row["Generic"].ToString();
+            if (!(row["MediaURL"] is System.DBNull))
+                prim.MediaUrl = (string)row["MediaURL"];
 
             return prim;
         }
@@ -1220,7 +1236,6 @@ namespace OpenSim.Data.MySQL
             UUID.TryParse((string)row["AuthBuyerID"], out authedbuyer);
             UUID.TryParse((string)row["SnapshotUUID"], out snapshotID);
             newData.OtherCleanTime = Convert.ToInt32(row["OtherCleanTime"]);
-            newData.Dwell = Convert.ToInt32(row["Dwell"]);
 
             newData.AuthBuyerID = authedbuyer;
             newData.SnapshotID = snapshotID;
@@ -1239,6 +1254,14 @@ namespace OpenSim.Data.MySQL
                 newData.UserLookAt = Vector3.Zero;
                 m_log.ErrorFormat("[PARCEL]: unable to get parcel telehub settings for {1}", newData.Name);
             }
+
+            newData.MediaDescription = (string) row["MediaDescription"];
+            newData.MediaType = (string) row["MediaType"];
+            newData.MediaWidth = Convert.ToInt32((((string) row["MediaSize"]).Split(','))[0]);
+            newData.MediaHeight = Convert.ToInt32((((string) row["MediaSize"]).Split(','))[1]);
+            newData.MediaLoop = Convert.ToBoolean(row["MediaLoop"]);
+            newData.ObscureMusic = Convert.ToBoolean(row["ObscureMusic"]);
+            newData.ObscureMedia = Convert.ToBoolean(row["ObscureMedia"]);
 
             newData.ParcelAccessList = new List<ParcelManager.ParcelAccessEntry>();
 
@@ -1308,7 +1331,7 @@ namespace OpenSim.Data.MySQL
             cmd.Parameters.AddWithValue("SitName", prim.SitName);
             cmd.Parameters.AddWithValue("TouchName", prim.TouchName);
             // permissions
-            cmd.Parameters.AddWithValue("ObjectFlags", prim.ObjectFlags);
+            cmd.Parameters.AddWithValue("ObjectFlags", (uint)prim.Flags);
             cmd.Parameters.AddWithValue("CreatorID", prim.CreatorID.ToString());
             cmd.Parameters.AddWithValue("OwnerID", prim.OwnerID.ToString());
             cmd.Parameters.AddWithValue("GroupID", prim.GroupID.ToString());
@@ -1416,7 +1439,7 @@ namespace OpenSim.Data.MySQL
 
             cmd.Parameters.AddWithValue("LinkNumber", prim.LinkNum);
             cmd.Parameters.AddWithValue("Generic", prim.GenericData);
-            
+			cmd.Parameters.AddWithValue("MediaURL", prim.MediaUrl);
         }
 
         /// <summary>
@@ -1545,7 +1568,14 @@ namespace OpenSim.Data.MySQL
             cmd.Parameters.AddWithValue("UserLookAtZ", land.UserLookAt.Z);
             cmd.Parameters.AddWithValue("AuthBuyerID", land.AuthBuyerID);
             cmd.Parameters.AddWithValue("OtherCleanTime", land.OtherCleanTime);
-            cmd.Parameters.AddWithValue("Dwell", land.Dwell);
+            cmd.Parameters.AddWithValue("MediaDescription", land.MediaDescription);
+            cmd.Parameters.AddWithValue("MediaType", land.MediaType);
+            cmd.Parameters.AddWithValue("MediaWidth", land.MediaWidth);
+            cmd.Parameters.AddWithValue("MediaHeight", land.MediaHeight);
+            cmd.Parameters.AddWithValue("MediaLoop", land.MediaLoop);
+            cmd.Parameters.AddWithValue("ObscureMusic", land.ObscureMusic);
+            cmd.Parameters.AddWithValue("ObscureMedia", land.ObscureMedia);
+
         }
 
         /// <summary>
@@ -1600,6 +1630,9 @@ namespace OpenSim.Data.MySQL
             s.ExtraParams = (byte[])row["ExtraParams"];
 
             s.State = (byte)(int)row["State"];
+            
+            if (!(row["Media"] is System.DBNull))
+                s.Media = PrimitiveBaseShape.MediaList.FromXml((string)row["Media"]);
 
             return s;
         }
@@ -1643,6 +1676,7 @@ namespace OpenSim.Data.MySQL
             cmd.Parameters.AddWithValue("Texture", s.TextureEntry);
             cmd.Parameters.AddWithValue("ExtraParams", s.ExtraParams);
             cmd.Parameters.AddWithValue("State", s.State);
+            cmd.Parameters.AddWithValue("Media", null == s.Media ? null : s.Media.ToXml());
         }
 
         public void StorePrimInventory(UUID primID, ICollection<TaskInventoryItem> items)

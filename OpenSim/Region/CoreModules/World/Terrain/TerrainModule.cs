@@ -68,7 +68,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         #endregion
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
+        
         private readonly Commander m_commander = new Commander("terrain");
 
         private readonly Dictionary<StandardTerrainEffects, ITerrainFloodEffect> m_floodeffects =
@@ -84,6 +84,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         private ITerrainChannel m_revert;
         private Scene m_scene;
         private volatile bool m_tainted;
+        private const double MAX_HEIGHT = 250;
+        private const double MIN_HEIGHT = -100;
         private readonly UndoStack<LandUndoState> m_undo = new UndoStack<LandUndoState>(5);
 
         #region ICommandableModule Members
@@ -131,6 +133,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 m_scene.EventManager.OnNewClient += EventManager_OnNewClient;
                 m_scene.EventManager.OnPluginConsole += EventManager_OnPluginConsole;
                 m_scene.EventManager.OnTerrainTick += EventManager_OnTerrainTick;
+                m_scene.EventManager.OnClosingClient += OnClosingClient;
                 InstallInterfaces();
             }
 
@@ -152,6 +155,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 m_scene.EventManager.OnTerrainTick -= EventManager_OnTerrainTick;
                 m_scene.EventManager.OnPluginConsole -= EventManager_OnPluginConsole;
                 m_scene.EventManager.OnNewClient -= EventManager_OnNewClient;
+                m_scene.EventManager.OnClosingClient -= OnClosingClient;
                 // remove the interface
                 m_scene.UnregisterModuleInterface<ITerrainModule>(this);
             }
@@ -381,8 +385,13 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         private void LoadPlugins()
         {
             m_plugineffects = new Dictionary<string, ITerrainEffect>();
+            string plugineffectsPath = "Terrain";
+            
             // Load the files in the Terrain/ dir
-            string[] files = Directory.GetFiles("Terrain", "*.dll");
+            if (!Directory.Exists(plugineffectsPath))
+                return;
+            
+            string[] files = Directory.GetFiles(plugineffectsPath);
             foreach (string file in files)
             {
                 //m_log.Info("Loading effects in " + file);
@@ -587,9 +596,19 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             client.OnModifyTerrain += client_OnModifyTerrain;
             client.OnBakeTerrain += client_OnBakeTerrain;
             client.OnLandUndo += client_OnLandUndo;
-            client.OnGodlikeMessage += client_onGodlikeMessage;
+			client.OnGodlikeMessage += client_onGodlikeMessage;
+            client.OnUnackedTerrain += client_OnUnackedTerrain;
         }
 
+        private void OnClosingClient(IClientAPI client)
+        {
+            client.OnModifyTerrain -= client_OnModifyTerrain;
+            client.OnBakeTerrain -= client_OnBakeTerrain;
+            client.OnLandUndo -= client_OnLandUndo;
+            client.OnGodlikeMessage -= client_onGodlikeMessage;
+            client.OnUnackedTerrain -= client_OnUnackedTerrain;
+        }
+        
         void client_onGodlikeMessage(IClientAPI client, UUID requester, string Method, List<string> Parameters)
         {
             if (!m_scene.Permissions.IsGod(client.AgentId))
@@ -646,7 +665,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                     {
                         // if we should respect the estate settings then
                         // fixup and height deltas that don't respect them
-                        if (respectEstateSettings && LimitChannelChanges(x, y))
+                        if ((respectEstateSettings && LimitChannelChanges(x, y)) ||
+                            LimitMaxTerrain(x, y))
                         {
                             // this has been vetoed, so update
                             // what we are going to send to the client
@@ -662,6 +682,34 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             {
                 m_tainted = true;
             }
+        }
+
+        private bool LimitMaxTerrain(int xStart, int yStart)
+        {
+            bool changesLimited = false;
+
+            // loop through the height map for this patch and compare it against
+            // the revert map
+            for (int x = xStart; x < xStart + Constants.TerrainPatchSize; x++)
+            {
+                for (int y = yStart; y < yStart + Constants.TerrainPatchSize; y++)
+                {
+                    double requestedHeight = m_channel[x, y];
+
+                    if (requestedHeight > MAX_HEIGHT)
+                    {
+                        m_channel[x, y] = MAX_HEIGHT;
+                        changesLimited = true;
+                    }
+                    else if (requestedHeight < MIN_HEIGHT)
+                    {
+                        m_channel[x, y] = MIN_HEIGHT; //as lower is a -ve delta
+                        changesLimited = true;
+                    }
+                }
+            }
+
+            return changesLimited;
         }
 
         /// <summary>
@@ -831,6 +879,12 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             {
                 InterfaceBakeTerrain(null); //bake terrain does not use the passed in parameter
             }
+        }
+        
+        protected void client_OnUnackedTerrain(IClientAPI client, int patchX, int patchY)
+        {
+            //m_log.Debug("Terrain packet unacked, resending patch: " + patchX + " , " + patchY);
+             client.SendLayerData(patchX, patchY, m_scene.Heightmap.GetFloatsSerialised());
         }
 
         private void StoreUndoState()

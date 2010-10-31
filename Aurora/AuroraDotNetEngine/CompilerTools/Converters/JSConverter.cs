@@ -11,11 +11,10 @@ using Microsoft.VisualBasic;
 using log4net;
 using OpenSim.Region.Framework.Interfaces;
 using OpenMetaverse;
-using Mono.Addins;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 {
-    /*[Extension(Path = "/OpenSim/ScriptConverter", NodeName = "ScriptConverter")]
+    /*
     public class JSConverter : IScriptConverter
     {
         private JScriptCodeProvider JScodeProvider = new JScriptCodeProvider();

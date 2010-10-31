@@ -76,7 +76,7 @@ namespace OpenSim.Region.Framework.Scenes
                 return;
 
             //This checks to see if we need to send more updates to the avatar since they last moved
-            List<EntityBase> Entities = m_presence.Scene.Entities.GetEntities();
+            EntityBase[] Entities = m_presence.Scene.Entities.GetEntities();
 
             foreach (EntityBase entity in Entities)
             {
@@ -108,9 +108,9 @@ namespace OpenSim.Region.Framework.Scenes
                 if (!m_presence.IsChildAgent || (m_presence.Scene.m_seeIntoRegionFromNeighbor))
                 {
                     m_pendingObjects = new Queue<SceneObjectGroup>();
-                    List<EntityBase> entities = m_presence.Scene.Entities.GetEntities();
+                    EntityBase[] entities = m_presence.Scene.Entities.GetEntities();
 
-                    lock(m_pendingObjects)
+                    lock (m_pendingObjects)
                     {
                         foreach (EntityBase e in entities)
                         {
@@ -118,12 +118,11 @@ namespace OpenSim.Region.Framework.Scenes
                                 m_pendingObjects.Enqueue((SceneObjectGroup)e);
                         }
                     }
-                    entities.Clear();
                     entities = null;
                 }
             }
 
-            lock(m_pendingObjects)
+            lock (m_pendingObjects)
             {
                 while (m_pendingObjects != null && m_pendingObjects.Count > 0)
                 {
@@ -152,83 +151,86 @@ namespace OpenSim.Region.Framework.Scenes
                     if (!m_updateTimes.ContainsKey(g.UUID))
                         g.ScheduleFullUpdateToAvatar(m_presence, PrimUpdateFlags.FullUpdate); //New object, send full
                 }
+            }
 
-                while (m_partsUpdateQueue.Count > 0)
+            while (m_partsUpdateQueue.Count > 0)
+            {
+                PrimUpdate update = m_partsUpdateQueue.Dequeue();
+
+                if (update == null)
+                    continue;
+
+                if (update.Part.ParentGroup == null || update.Part.ParentGroup.IsDeleted)
+                    continue;
+
+                if (m_presence.Scene.CheckForObjectCulling)
                 {
-                    PrimUpdate update = m_partsUpdateQueue.Dequeue();
-
-                    if (update.Part.ParentGroup == null || update.Part.ParentGroup.IsDeleted)
-                        continue;
-
-                    if (m_presence.Scene.CheckForObjectCulling)
-                    {
-                        //Check for part position against the av and the camera position
-                        if ((!Util.DistanceLessThan(m_presence.AbsolutePosition, update.Part.AbsolutePosition, m_presence.DrawDistance) &&
-                            !Util.DistanceLessThan(m_presence.CameraPosition, update.Part.AbsolutePosition, m_presence.DrawDistance)))
-                            if (m_presence.DrawDistance != 0)
-                                continue;
-                    }
-
-                    if (m_updateTimes.ContainsKey(update.Part.UUID))
-                    {
-                        ScenePartUpdate partupdate = m_updateTimes[update.Part.UUID];
-
-                        // We deal with the possibility that two updates occur at
-                        // the same unix time at the update point itself.
-
-                        if ((partupdate.LastFullUpdateTime < update.Part.TimeStampFull) ||
-                                update.Part.IsAttachment)
-                        {
-    //                            m_log.DebugFormat(
-    //                                "[SCENE PRESENCE]: Fully   updating prim {0}, {1} - part timestamp {2}",
-    //                                part.Name, part.UUID, part.TimeStampFull);
-
-                            update.Part.SendFullUpdate(m_presence.ControllingClient,
-                                   m_presence.GenerateClientFlags(update.Part), update.UpdateFlags);
-
-                            // We'll update to the part's timestamp rather than
-                            // the current time to avoid the race condition
-                            // whereby the next tick occurs while we are doing
-                            // this update. If this happened, then subsequent
-                            // updates which occurred on the same tick or the
-                            // next tick of the last update would be ignored.
-
-                            partupdate.LastFullUpdateTime = update.Part.TimeStampFull;
-
-                        }
-                        else if (partupdate.LastTerseUpdateTime <= update.Part.TimeStampTerse)
-                        {
-    //                            m_log.DebugFormat(
-    //                                "[SCENE PRESENCE]: Tersely updating prim {0}, {1} - part timestamp {2}",
-    //                                part.Name, part.UUID, part.TimeStampTerse);
-
-                            update.Part.SendTerseUpdateToClient(m_presence.ControllingClient);
-
-                            partupdate.LastTerseUpdateTime = update.Part.TimeStampTerse;
-                        }
-                    }
-                    else
-                    {
-                        //never been sent to client before so do full update
-                        ScenePartUpdate partupdate = new ScenePartUpdate();
-                        partupdate.FullID = update.Part.UUID;
-                        partupdate.LastFullUpdateTime = update.Part.TimeStampFull;
-                        m_updateTimes.Add(update.Part.UUID, partupdate);
-
-                        // Attachment handling
-                        //
-                        if (update.Part.ParentGroup.RootPart.Shape.PCode == 9 && update.Part.ParentGroup.RootPart.Shape.State != 0)
-                        {
-                            if (update.Part != update.Part.ParentGroup.RootPart)
-                                continue;
-
-                            update.Part.ParentGroup.SendFullUpdateToClient(m_presence.ControllingClient, update.UpdateFlags);
+                    //Check for part position against the av and the camera position
+                    if ((!Util.DistanceLessThan(m_presence.AbsolutePosition, update.Part.AbsolutePosition, m_presence.DrawDistance) &&
+                        !Util.DistanceLessThan(m_presence.CameraPosition, update.Part.AbsolutePosition, m_presence.DrawDistance)))
+                        if (m_presence.DrawDistance != 0)
                             continue;
-                        }
+                }
+
+                if (m_updateTimes.ContainsKey(update.Part.UUID))
+                {
+                    ScenePartUpdate partupdate = m_updateTimes[update.Part.UUID];
+
+                    // We deal with the possibility that two updates occur at
+                    // the same unix time at the update point itself.
+
+                    if ((partupdate.LastFullUpdateTime < update.Part.TimeStampFull) ||
+                            update.Part.IsAttachment)
+                    {
+                        //                            m_log.DebugFormat(
+                        //                                "[SCENE PRESENCE]: Fully   updating prim {0}, {1} - part timestamp {2}",
+                        //                                part.Name, part.UUID, part.TimeStampFull);
 
                         update.Part.SendFullUpdate(m_presence.ControllingClient,
-                                m_presence.GenerateClientFlags(update.Part), update.UpdateFlags);
+                               m_presence.GenerateClientFlags(update.Part), update.UpdateFlags);
+
+                        // We'll update to the part's timestamp rather than
+                        // the current time to avoid the race condition
+                        // whereby the next tick occurs while we are doing
+                        // this update. If this happened, then subsequent
+                        // updates which occurred on the same tick or the
+                        // next tick of the last update would be ignored.
+
+                        partupdate.LastFullUpdateTime = update.Part.TimeStampFull;
+
                     }
+                    else if (partupdate.LastTerseUpdateTime <= update.Part.TimeStampTerse)
+                    {
+                        //                            m_log.DebugFormat(
+                        //                                "[SCENE PRESENCE]: Tersely updating prim {0}, {1} - part timestamp {2}",
+                        //                                part.Name, part.UUID, part.TimeStampTerse);
+
+                        update.Part.SendTerseUpdateToClient(m_presence.ControllingClient);
+
+                        partupdate.LastTerseUpdateTime = update.Part.TimeStampTerse;
+                    }
+                }
+                else
+                {
+                    //never been sent to client before so do full update
+                    ScenePartUpdate partupdate = new ScenePartUpdate();
+                    partupdate.FullID = update.Part.UUID;
+                    partupdate.LastFullUpdateTime = update.Part.TimeStampFull;
+                    m_updateTimes.Add(update.Part.UUID, partupdate);
+
+                    // Attachment handling
+                    //
+                    if (update.Part.ParentGroup.RootPart.Shape.PCode == 9 && update.Part.ParentGroup.RootPart.Shape.State != 0)
+                    {
+                        if (update.Part != update.Part.ParentGroup.RootPart)
+                            continue;
+
+                        update.Part.ParentGroup.SendFullUpdateToClient(m_presence.ControllingClient, update.UpdateFlags);
+                        continue;
+                    }
+
+                    update.Part.SendFullUpdate(m_presence.ControllingClient,
+                            m_presence.GenerateClientFlags(update.Part), update.UpdateFlags);
                 }
             }
         }
@@ -239,7 +241,6 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 lock (m_pendingObjects)
                 {
-
                     m_pendingObjects.Clear();
                     m_pendingObjects = null;
                 }

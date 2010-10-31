@@ -63,25 +63,26 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         }
 
         private int frcount = 0;                                        // Used to limit dynamics debug output to
-                                                                        // every 100th frame
+        // every 100th frame
 
         // private OdeScene m_parentScene = null;
         private IntPtr m_body = IntPtr.Zero;
-//        private IntPtr m_jointGroup = IntPtr.Zero;
-//        private IntPtr m_aMotor = IntPtr.Zero;
+        private Material m_previousMaterial = Material.Wood;
+        //        private IntPtr m_jointGroup = IntPtr.Zero;
+        //        private IntPtr m_aMotor = IntPtr.Zero;
 
 
         // Vehicle properties
         private Vehicle m_type = Vehicle.TYPE_NONE;                     // If a 'VEHICLE', and what kind
         private Quaternion m_referenceFrame = Quaternion.Identity;   // Axis modifier
-        private VehicleFlag m_flags = (VehicleFlag) 0;                  // Boolean settings:
-                                                                        // HOVER_TERRAIN_ONLY
-                                                                        // HOVER_GLOBAL_HEIGHT
-                                                                        // NO_DEFLECTION_UP
-                                                                        // HOVER_WATER_ONLY
-                                                                        // HOVER_UP_ONLY
-                                                                        // LIMIT_MOTOR_UP
-                                                                        // LIMIT_ROLL_ONLY
+        private VehicleFlag m_flags = (VehicleFlag)0;                  // Boolean settings:
+        // HOVER_TERRAIN_ONLY
+        // HOVER_GLOBAL_HEIGHT
+        // NO_DEFLECTION_UP
+        // HOVER_WATER_ONLY
+        // HOVER_UP_ONLY
+        // LIMIT_MOTOR_UP
+        // LIMIT_ROLL_ONLY
         private VehicleFlag m_Hoverflags = (VehicleFlag)0;
         private Vector3 m_BlockingEndPoint = Vector3.Zero;
         private Quaternion m_RollreferenceFrame = Quaternion.Identity;
@@ -105,7 +106,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private float m_angularMotorDecayTimescale = 0;                 // motor angular velocity decay rate
         private Vector3 m_angularFrictionTimescale = Vector3.Zero;      // body angular velocity  decay rate
         private Vector3 m_lastAngularVelocity = Vector3.Zero;           // what was last applied to body
- //       private Vector3 m_lastVertAttractor = Vector3.Zero;             // what VA was last applied to body
+        //       private Vector3 m_lastVertAttractor = Vector3.Zero;             // what VA was last applied to body
 
         //Deflection properties
         private float m_angularDeflectionEfficiency = 0;
@@ -124,9 +125,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private float m_VhoverTimescale = 0f;
         private float m_VhoverTargetHeight = -1.0f;     // if <0 then no hover, else its the current target height
         private float m_VehicleBuoyancy = 0f;           //KF: m_VehicleBuoyancy is set by VEHICLE_BUOYANCY for a vehicle.
-                    // Modifies gravity. Slider between -1 (double-gravity) and 1 (full anti-gravity)
-                    // KF: So far I have found no good method to combine a script-requested .Z velocity and gravity.
-                    // Therefore only m_VehicleBuoyancy=1 (0g) will use the script-requested .Z velocity.
+        // Modifies gravity. Slider between -1 (double-gravity) and 1 (full anti-gravity)
+        // KF: So far I have found no good method to combine a script-requested .Z velocity and gravity.
+        // Therefore only m_VehicleBuoyancy=1 (0g) will use the script-requested .Z velocity.
 
         //Attractor properties
         private float m_verticalAttractionEfficiency = 1.0f;        // damped
@@ -245,11 +246,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     m_angularMotorDirection = new Vector3(pValue.X, pValue.Y, pValue.Z);
                     // Limit requested angular speed to 2 rps= 4 pi rads/sec
                     if (m_angularMotorDirection.X > 12.56f) m_angularMotorDirection.X = 12.56f;
-                    if (m_angularMotorDirection.X < - 12.56f) m_angularMotorDirection.X = - 12.56f;
+                    if (m_angularMotorDirection.X < -12.56f) m_angularMotorDirection.X = -12.56f;
                     if (m_angularMotorDirection.Y > 12.56f) m_angularMotorDirection.Y = 12.56f;
-                    if (m_angularMotorDirection.Y < - 12.56f) m_angularMotorDirection.Y = - 12.56f;
+                    if (m_angularMotorDirection.Y < -12.56f) m_angularMotorDirection.Y = -12.56f;
                     if (m_angularMotorDirection.Z > 12.56f) m_angularMotorDirection.Z = 12.56f;
-                    if (m_angularMotorDirection.Z < - 12.56f) m_angularMotorDirection.Z = - 12.56f;
+                    if (m_angularMotorDirection.Z < -12.56f) m_angularMotorDirection.Z = -12.56f;
                     m_angularMotorApply = 10;
                     break;
                 case Vehicle.LINEAR_FRICTION_TIMESCALE:
@@ -444,7 +445,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_type = pType;
             switch (pType)
             {
-                    case Vehicle.TYPE_NONE:
+                case Vehicle.TYPE_NONE:
                     m_linearFrictionTimescale = new Vector3(0, 0, 0);
                     m_angularFrictionTimescale = new Vector3(0, 0, 0);
                     m_linearMotorDirection = Vector3.Zero;
@@ -516,7 +517,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     break;
                 case Vehicle.TYPE_BOAT:
                     m_linearFrictionTimescale = new Vector3(10, 3, 2);
-                    m_angularFrictionTimescale = new Vector3(10,10,10);
+                    m_angularFrictionTimescale = new Vector3(10, 10, 10);
                     m_linearMotorDirection = Vector3.Zero;
                     m_linearMotorTimescale = 5;
                     m_linearMotorDecayTimescale = 60;
@@ -608,6 +609,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
             if (m_enabled)
                 return;
+            m_enabled = true;
+            m_previousMaterial = (Material)parent.m_material;
+            parent.SetMaterial((int)Material.Glass); //This seems to happen in SL... and its needed for here
             parent.ThrottleUpdates = false;
             m_body = pBody;
             if (pBody == IntPtr.Zero || m_type == Vehicle.TYPE_NONE)
@@ -615,7 +619,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             d.Mass mass;
             d.BodyGetMass(pBody, out mass);
-            
+
             Mass = mass.mass;
             Mass *= 2;
         }
@@ -624,6 +628,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
             if (!m_enabled)
                 return;
+            m_enabled = false;
+
+            parent.SetMaterial((int)m_previousMaterial); //Revert to the original
+
             parent.ThrottleUpdates = true;
             //d.BodyDisable(Body);
             m_linearMotorDirection = Vector3.Zero;
@@ -646,31 +654,53 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             MoveLinear(pTimestep, pParentScene);
             MoveAngular(pTimestep, pParentScene);
             LimitRotation(pTimestep);
-            
+
+            /*if (!parent.m_angularlock.ApproxEquals(Vector3.One, 0.003f) &&
+                                parent.Amotor != IntPtr.Zero)
+            {
+                d.JointSetAMotorParam(Amotor, (int)dParam.LowStop, -0f);
+                d.JointSetAMotorParam(Amotor, (int)dParam.LoStop3, -0f);
+                d.JointSetAMotorParam(Amotor, (int)dParam.LoStop2, -0f);
+                d.JointSetAMotorParam(Amotor, (int)dParam.HiStop, 0f);
+                d.JointSetAMotorParam(Amotor, (int)dParam.HiStop3, 0f);
+                d.JointSetAMotorParam(Amotor, (int)dParam.HiStop2, 0f);
+                d.JointSetAMotorParam(Amotor, (int)dParam.Vel, 9000f);
+                d.JointSetAMotorParam(Amotor, (int)dParam.FudgeFactor, 0f);
+                d.JointSetAMotorParam(Amotor, (int)dParam.FMax, int.MaxValue);
+                d.Vector3 avel2 = d.BodyGetAngularVel(Body);
+
+                if (parent.m_angularlock.X == 0)
+                    avel2.X = 0;
+                if (parent.m_angularlock.Y == 0)
+                    avel2.Y = 0;
+                if (parent.m_angularlock.Z == 0)
+                    avel2.Z = 0;
+                d.BodySetAngularVel(Body, avel2.X, avel2.Y, avel2.Z);
+                d.BodySetAngularDamping(Body, 1);
+                d.BodySetTorque(Body, 0, 0, 0);
+            }*/
+
             // WE deal with updates
             parent.RequestPhysicsterseUpdate();
-
         }   // end Step
 
         private void MoveLinear(float pTimestep, AuroraODEPhysicsScene _pParentScene)
         {
             d.Vector3 pos = d.BodyGetPosition(Body);
             d.Vector3 oldPos = pos;
-            m_lastPositionVector = d.BodyGetPosition(Body);
 
             if (m_lastPositionVector.X != pos.X ||
                 m_lastPositionVector.Y != pos.Y ||
                 m_lastPositionVector.Z != pos.Z)
             {
                 m_lastPositionVector = d.BodyGetPosition(Body);
-                m_lastAngularVelocity = new Vector3(d.BodyGetAngularVel(Body).X,d.BodyGetAngularVel(Body).Y, d.BodyGetAngularVel(Body).Z);
+                m_lastAngularVelocity = new Vector3(d.BodyGetAngularVel(Body).X, d.BodyGetAngularVel(Body).Y, d.BodyGetAngularVel(Body).Z);
             }
-
             if (!m_linearMotorDirection.ApproxEquals(Vector3.Zero, 0.01f))  // requested m_linearMotorDirection is significant
             {
                 // add drive to body
                 Vector3 addAmount = (m_linearMotorDirection / (m_linearMotorTimescale / (pTimestep * pTimestep * 5)));
-                addAmount.Z = (m_linearMotorDirection.Z / (m_linearMotorTimescale / (pTimestep * pTimestep)));//^ Z appears to be differently handled in SL? Go figure...
+                addAmount.Z = (m_linearMotorDirection.Z / (m_linearMotorTimescale / (pTimestep * pTimestep)));
                 m_lastLinearVelocityVector += addAmount;
 
                 // This will work temporarily, but we really need to compare speed on an axis
@@ -684,7 +714,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             else
             {        // requested is not significant
-                    // if what remains of applied is small, zero it.
+                // if what remains of applied is small, zero it.
                 if (m_lastLinearVelocityVector.ApproxEquals(Vector3.Zero, 0.01f))
                     m_lastLinearVelocityVector = Vector3.Zero;
             }
@@ -733,8 +763,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             #endregion
 
-            #region Hover
-
             // Check if hovering
             if ((m_Hoverflags & (VehicleFlag.HOVER_WATER_ONLY | VehicleFlag.HOVER_TERRAIN_ONLY | VehicleFlag.HOVER_GLOBAL_HEIGHT)) != 0)
             {
@@ -776,7 +804,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     if (Math.Abs(herr0) > 0.01f)
                     {
                         //Note: we use 1.05 because it doesn't disappear completely, only very critically damped
-                        m_dir.Z = (float)((-((herr0 * pTimestep * 50.0f) / m_VhoverTimescale) ) * (1.05 - m_VhoverEfficiency)); 
+                        m_dir.Z = (float)((-((herr0 * pTimestep * 50.0f) / m_VhoverTimescale)) * (1.05 - m_VhoverEfficiency));
                     }
                     else
                         //Too small, zero it.
@@ -784,9 +812,16 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
             }
 
-            #endregion
+            if ((m_flags & (VehicleFlag.NO_X)) != 0)
+                m_dir.X = 0;
+            if ((m_flags & (VehicleFlag.NO_Y)) != 0)
+                m_dir.Y = 0;
+            if ((m_flags & (VehicleFlag.NO_Z)) != 0)
+                m_dir.Z = 0;
 
-            #region Check for tainted forces
+            m_lastPositionVector = d.BodyGetPosition(Body);
+
+            #region Deal with tainted forces
 
             // KF: So far I have found no good method to combine a script-requested
             // .Z velocity and gravity. Therefore only 0g will used script-requested
@@ -815,17 +850,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             #endregion
 
-            #region Linear Deflection
+            #region Deflection
 
-            Vector3 DirectionWeShouldBeHeadingToward = new Vector3(1, 0, 0);
-            DirectionWeShouldBeHeadingToward *= m_referenceFrame;
+            //Forward is the prefered direction
+            Vector3 PreferredAxisOfMotion = new Vector3(1, 0, 0);
+            PreferredAxisOfMotion *= m_referenceFrame;
 
-            //We multiply the direction we are headed
-            m_dir -= (DirectionWeShouldBeHeadingToward * m_linearDeflectionEfficiency) / (m_linearDeflectionTimescale / pTimestep);
+            //m_dir += ((PreferredAxisOfMotion * m_linearDeflectionEfficiency) / (m_linearDeflectionTimescale / pTimestep));
 
             #endregion
-
-            #region Check Mass
 
             if (Mass == 0)
             {
@@ -836,21 +869,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 Mass *= 2;
             }
 
-            #endregion
+            //d.BodySetForce(Body, _pParentScene.gravityx + TaintedForce.X,
+            //    _pParentScene.gravityy + TaintedForce.Y,
+            //    (_pParentScene.gravityz * Mass * (1f - m_VehicleBuoyancy)) + TaintedForce.Z);
 
-            #region No X,Y,Z
-
-            if ((m_flags & (VehicleFlag.NO_X)) != 0)
-                m_dir.X = 0;
-            if ((m_flags & (VehicleFlag.NO_Y)) != 0)
-                m_dir.Y = 0;
-            if ((m_flags & (VehicleFlag.NO_Z)) != 0)
-                m_dir.Z = 0;
-
-            #endregion
+            //d.BodySetForce(Body, _pParentScene.gravityx + TaintedForce.X + (m_dir.X * 10000),
+            //    _pParentScene.gravityy + TaintedForce.Y + (m_dir.Y * 10000),
+            //    (_pParentScene.gravityz * Mass * (1f - m_VehicleBuoyancy)) + TaintedForce.Z + (m_dir.Z * 10000));
 
             m_dir += TaintedForce;
-
             //Uses the square to make bouyancy more effective as in SL, as it seems to effect gravity more the higher the value is
             //This check helps keep things from being pushed into the ground and the consequence of being shoved back out
             if (Math.Abs(m_dir.Z) > 0.1)
@@ -861,7 +888,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             else if (m_dir.Z < -10)
                 m_dir.Z = -10;
 
-            //Set the velocity
+            //m_lastLinearVelocityVector = m_dir;
             d.BodySetLinearVel(Body, m_dir.X, m_dir.Y, m_dir.Z);
 
             //Check for changes and only set it once
@@ -890,14 +917,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             // Get what the body is doing, this includes 'external' influences
             d.Vector3 angularVelocity = d.BodyGetAngularVel(Body);
-            d.Quaternion rot = d.BodyGetQuaternion(Body);
-
-            Vector3 vertattr = Vector3.Zero;
-            Vector3 bank = Vector3.Zero;
-            Vector3 deflection = Vector3.Zero;
-
-            #region Mouselook
-
             if ((m_flags & VehicleFlag.MOUSELOOK_STEER) == VehicleFlag.MOUSELOOK_STEER)
             {
                 if (m_userLookAt != Vector3.Zero)
@@ -920,10 +939,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
             }
 
-            #endregion
-
-            #region Add angular motor
-
             if (m_angularMotorApply > 0)
             {
                 // ramp up to new value
@@ -932,6 +947,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 m_angularMotorVelocity.X += (m_angularMotorDirection.X - m_angularMotorVelocity.X) / (m_angularMotorTimescale / (pTimestep * pTimestep * pTimestep * pTimestep * 10));
                 m_angularMotorVelocity.Y += (m_angularMotorDirection.Y - m_angularMotorVelocity.Y) / (m_angularMotorTimescale / (pTimestep * pTimestep * pTimestep * pTimestep * 10));
                 m_angularMotorVelocity.Z += (m_angularMotorDirection.Z - m_angularMotorVelocity.Z) / (m_angularMotorTimescale / (pTimestep * pTimestep * pTimestep * pTimestep * 10));
+
                 m_angularMotorApply--;        // This is done so that if script request rate is less than phys frame rate the expected
                 // velocity may still be acheived.
             }
@@ -939,8 +955,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 m_angularMotorVelocity -= m_angularMotorVelocity / (m_angularMotorDecayTimescale / pTimestep);
             }
+            if (m_angularMotorVelocity.ApproxEquals(Vector3.Zero, 0.01f))
+                m_angularMotorVelocity = Vector3.Zero;
 
-            #endregion
+            d.Quaternion rot = d.BodyGetQuaternion(Body);
+
+            Vector3 vertattr = Vector3.Zero;
+            Vector3 bank = Vector3.Zero;
+            Vector3 deflection = Vector3.Zero;
 
             #region Vertical attractor section
 
@@ -974,8 +996,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                 // As the body rotates around the X axis, then verterr.Y increases; Rotated around Y then .X increases, so
                 // Change  Body angular velocity  X based on Y, and Y based on X. Z is not changed.
-                vertattr.X =    verterr.Y;
-                vertattr.Y =  - verterr.X;
+                vertattr.X = verterr.Y;
+                vertattr.Y = -verterr.X;
                 vertattr.Z = 0f;
 
                 // scaling appears better using square-law
@@ -983,73 +1005,80 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 vertattr.X += bounce * angularVelocity.X;
                 vertattr.Y += bounce * angularVelocity.Y;
 
-                #region banking
+                #region Banking
 
-                /*
-                 
-                 VEHICLE_BANKING_EFFICIENCY, the angle of the roll rotation,
-                 * and sometimes the vehicle's velocity along its preferred axis
-                 * of motion. 
+                //X is the part that deals with banking
 
-                The VEHICLE_BANKING_EFFICIENCY can vary between -1 and +1.
-                 * When it is positive then any positive rotation
-                 * (by the right-hand rule) about the roll-axis will effect
-                 * a (negative) torque around the yaw-axis, making it turn to
-                 * the right--that is the vehicle will lean into the turn,
-                 * which is how real airplanes and motorcycle's work. 
-                 * Negating the banking coefficient will make it so that the
-                 * vehicle leans to the outside of the turn (not very "physical"
-                 * but might allow interesting vehicles so why not?). 
+                // NOTES on banking  SEE http://wiki.secondlife.com/wiki/Linden_Vehicle_Tutorial#Banking ----
 
-                The VEHICLE_BANKING_MIX is a fake (i.e. non-physical) parameter
-                 * that is useful for making banking vehicles do what you want
-                 * rather than what the laws of physics allow. For example,
-                 * consider a real motorcycle...it must be moving forward in order
-                 * for it to turn while banking, however video-game motorcycles
-                 * are often configured to turn in place when at a dead
-                 * stop--because they are often easier to control that way
-                 * using the limited interface of the keyboard or game controller.
-                 * The VEHICLE_BANKING_MIX enables combinations of both realistic
-                 * and non-realistic banking by functioning as a slider
-                 * between a banking that is correspondingly totally static (0.0)
-                 * and totally dynamic (1.0). By "static" we mean that the banking
-                 * effect depends only on the vehicle's rotation about its roll-axis
-                 * compared to "dynamic" where the banking is also proportional
-                 * to its velocity along its roll-axis.
-                 * Finding the best value of the "mixture" will probably
-                 * require trial and error. 
-                 * 
-                */
 
+                //VEHICLE_BANKING_EFFICIENCY - slider between -1 (leans out of turns),
+                //    0 (no banking), and +1 (leans into turns)  m_bankingEfficiency
+
+                //VEHICLE_BANKING_MIX - 	 slider between 0 (static banking)
+                //    and 1 (dynamic banking)                    m_bankingMix
+
+                //VEHICLE_BANKING_TIMESCALE - exponential timescale for the banking 
+                //    behavior to take full effect               m_bankingTimescale
+
+
+                // ----  END NOTES 
+
+                /*//Banking cuts down on the X as it adds to the Z
+                // Save this for later so we can reduce X as needed
+                float oldAngularVelZ = m_angularMotorVelocity.Z;
+                
+                //Efficiency makes it go either inward or outward... so it can be multiplied by the X velocity 
+                //  so that we get a rotation in the right direction with the right amount of force
+
+                // Then divide by the timescale and timeStep so that we don't apply it all at once
+                //if(m_angularMotorVelocity.Z > 0)
+                if (m_angularMotorVelocity.X != 0)
+                {
+                }
+                m_angularMotorVelocity.Z += (m_bankingEfficiency * m_angularMotorVelocity.X) / (m_bankingTimescale / pTimestep)*5;
+
+                //Figure the difference of velocity transfered from X --> Z
+                float angularVelZChange = m_angularMotorVelocity.Z - oldAngularVelZ;
+
+                //Now remove the difference that came from Z since it was transfered from X --> Z
+                
+                /*if (m_angularMotorVelocity.X < 0)
+                    m_angularMotorVelocity.X -= angularVelZChange / 3;
+                else
+                    m_angularMotorVelocity.X -= angularVelZChange / 3;*/
                 float oldZAngVel = m_angularMotorVelocity.Z;
-
-                //-1 is to send a negative torque when efficiency is > 0 to make it bank inward
 
                 float addAmount = m_angularMotorVelocity.X;
 
-                m_angularMotorVelocity.Z = (m_angularMotorVelocity.Z * (1 - m_bankingMix)) * ((-1) * m_bankingEfficiency * addAmount) / ((m_bankingTimescale / pTimestep) *5);
+                m_angularMotorVelocity.Z += (((1 - m_bankingMix) * m_bankingEfficiency * addAmount) / (m_bankingTimescale / pTimestep) * 5);
 
-                m_angularMotorVelocity.X += oldZAngVel - m_angularMotorVelocity.Z;
+                //m_angularMotorVelocity.X -= oldZAngVel - m_angularMotorVelocity.Z;
+
+                if (m_angularMotorVelocity.Z != 0)
+                {
+                }
 
                 #endregion
 
             } // else vertical attractor is off
 
+            //        m_lastVertAttractor = vertattr;
             #endregion
 
             #region Deflection
 
-            Quaternion rotation = new Quaternion(rot.X, rot.Y, rot.Z, rot.W);
+            //Forward is the prefered direction
+            Vector3 PreferredAxisOfMotion = new Vector3(1, 0, 0);
+            PreferredAxisOfMotion *= m_referenceFrame;
 
-            //Our ang direction minus the direction we need to be going
-            // Then times the efficiency and timestep
-            deflection = ToEuler((rotation - m_referenceFrame)) * m_angularDeflectionEfficiency / (m_angularDeflectionTimescale / pTimestep);
+            deflection = ((PreferredAxisOfMotion * m_angularDeflectionEfficiency) / (m_angularDeflectionTimescale / pTimestep));
 
             #endregion
 
             // Sum of velocities
             m_lastAngularVelocity = m_angularMotorVelocity + vertattr + bank + deflection;
-            
+
             #region Limit Motor Up
             double Zchange = d.BodyGetLinearVel(Body).Z;
 
@@ -1113,12 +1142,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             //Slide us around a bit
             lastDrift += m_lastAngularVelocity.Z / (7f / pTimestep);
-            
+
             if (Math.Abs(lastDrift) < 0.1)
                 lastDrift = 0;
-            
+
             lastDrift -= lastDrift / (2f / pTimestep);
-            
+
             m_lastAngularVelocity.Z += lastDrift;
 
             #endregion
@@ -1135,8 +1164,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             #endregion
 
-            #region Decay
-
             if (m_lastAngularVelocity.ApproxEquals(Vector3.Zero, 0.01f))
                 m_lastAngularVelocity = Vector3.Zero; // Reduce small value to zero.
 
@@ -1144,10 +1171,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             Vector3 decayamount = Vector3.One / (m_angularFrictionTimescale / pTimestep);
             m_lastAngularVelocity -= m_lastAngularVelocity * decayamount;
 
-            #endregion
-
             #region Linear Motor Offset
 
+            //Offset section
             if (m_linearMotorOffset != Vector3.Zero)
             {
                 //Offset of linear velocity doesn't change the linear velocity,
@@ -1171,7 +1197,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             // Apply to the body
             //
-            d.BodySetAngularVel (Body, m_lastAngularVelocity.X, m_lastAngularVelocity.Y, m_lastAngularVelocity.Z);
+            d.BodySetAngularVel(Body, m_lastAngularVelocity.X, m_lastAngularVelocity.Y, m_lastAngularVelocity.Z);
         }
 
         private Vector3 ToEuler(Quaternion m_lastCameraRotation)
@@ -1202,7 +1228,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 return Math.PI - angle;
             return remainder;
         }
-        
+
         //end MoveAngular
 
         internal void LimitRotation(float timestep)

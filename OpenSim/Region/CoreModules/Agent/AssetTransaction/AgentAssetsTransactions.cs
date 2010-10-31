@@ -73,7 +73,7 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
             return null;
         }
 
-        public void HandleXfer(ulong xferID, uint packetID, byte[] data)
+        public void HandleXfer(IClientAPI remoteClient, ulong xferID, uint packetID, byte[] data)
         {
             lock (XferUploaders)
             {
@@ -81,7 +81,7 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
                 {
                     if (uploader.XferID == xferID)
                     {
-                        uploader.HandleXferPacket(xferID, packetID, data);
+                        uploader.HandleXferPacket(remoteClient, xferID, packetID, data);
                         break;
                     }
                 }

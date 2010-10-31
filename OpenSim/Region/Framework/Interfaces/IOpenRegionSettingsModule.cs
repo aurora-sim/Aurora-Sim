@@ -9,8 +9,6 @@ namespace OpenSim.Region.Framework.Interfaces
 {
     public interface IOpenRegionSettingsModule
     {
-        Vector3 MinimumPosition { get; set; }
-        Vector3 MaximumPosition { get; set; }
         float MaxDragDistance { get; set; }
         float DefaultDrawDistance { get; set; }
         float MaximumPrimScale { get; set; }

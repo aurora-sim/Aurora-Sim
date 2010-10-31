@@ -59,7 +59,10 @@ namespace OpenSim.Region.Framework.Scenes.Animation
         private float m_animTickJump;
         private float m_timesBeforeSlowFlyIsOff = 0;
         private float m_animTickStandup = 0;
+        private float m_animTickNextJump = 0;
         private float m_jumpZ = 0;
+        private bool m_hasPreJumped = false;
+        private bool m_hasJumpAddedForce = false;
         
         /// <value>
         /// The scene presence that this animator applies to
@@ -133,9 +136,10 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             if (!m_scenePresence.IsChildAgent)
             {
                 if (m_animations.TrySetDefaultAnimation(
-                    anim, m_scenePresence.ControllingClient.NextAnimationSequenceNumber, UUID.Zero))
+                    anim, m_scenePresence.ControllingClient.NextAnimationSequenceNumber, m_scenePresence.UUID))
                 {
-                    m_scenePresence.SendScriptEventToAttachments("changed", new Object[] { Changed.ANIMATION });
+                    // 16384 is CHANGED_ANIMATION
+                    m_scenePresence.SendScriptEventToAttachments("changed", new Object[] { (int)Changed.ANIMATION});
                     SendAnimPack();
                 }
             }
@@ -157,6 +161,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
 
             const float PREJUMP_DELAY = 0.35f;
             const float JUMP_END = 1.750f;
+            const float JUMP_NEXT_TIME = 0.5f;
 
             #region Inputs
             if (m_scenePresence.SitGround)
@@ -228,6 +233,17 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                 m_animTickStandup = 0;
                 m_scenePresence.AllowMovement = true;
             }
+
+            float jumpNextElapsed = (float)(Environment.TickCount - m_animTickNextJump) / 1000f;
+            if (jumpNextElapsed > JUMP_NEXT_TIME && m_scenePresence.IsJumping && m_animTickNextJump != 0 && m_hasPreJumped)
+            {
+                //They can jump again now
+                m_animTickNextJump = 0;
+                m_scenePresence.IsJumping = false;
+                m_hasPreJumped = false;
+                m_hasJumpAddedForce = false;
+            }
+            
 
             #endregion Standup
 
@@ -338,7 +354,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
 
             //This needs to be in front of landing, otherwise you get odd landing effects sometimes when one jumps
             // -- Revolution
-            if (move.Z > 0f || m_animTickJump != 0)
+            if (move.Z > 0f || m_animTickJump != 0 && m_animTickNextJump == 0)
             {
                 if (m_scenePresence.Scene.m_usePreJump)
                 {
@@ -347,24 +363,28 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                     {
                         // Jumping
                         float jumpChange = (((float)Environment.TickCount) - m_animTickJump) / 1000;
-                        if (!jumping || (jumpChange < PREJUMP_DELAY))
+                        if (!jumping || (jumpChange < PREJUMP_DELAY) && !m_hasPreJumped)
                         {
                             m_scenePresence.AllowMovement = false;
                             // Begin prejump
                             if (m_animTickJump == 0)
-                                m_animTickJump = Environment.TickCount;
+                                m_animTickJump = (float)Environment.TickCount;
                             return "PREJUMP";
                         }
                         else if (m_animTickJump != 0)
                         {
-                            if (m_scenePresence.PreJumpForce.Z != 0)
+                            m_hasPreJumped = true;
+                            if (m_scenePresence.PreJumpForce.Z != 0 && !m_hasJumpAddedForce)
                             {
+                                m_hasJumpAddedForce = true;
                                 m_scenePresence.PreJumpForce.X /= 2f;
                                 m_scenePresence.PreJumpForce.Y /= 2f;
                                 m_scenePresence.PreJumpForce.Z /= 1.75f;
-                                m_scenePresence.m_velocityIsDecaying = false;
+                                if(m_scenePresence.Scene.m_UseNewStyleMovement)
+                                    m_scenePresence.m_velocityIsDecaying = false;
 
-                                m_scenePresence.m_forceToApply = m_scenePresence.PreJumpForce;
+                                m_scenePresence.PhysicsActor.Velocity = m_scenePresence.PreJumpForce;
+                                //m_scenePresence.m_forceToApply = m_scenePresence.PreJumpForce;
 
                                 m_scenePresence.PreJumpForce = new Vector3(
                                     m_scenePresence.PreJumpForce.X > 0 ? 3 : (m_scenePresence.PreJumpForce.X < 0 ? -3 : 0),
@@ -377,9 +397,12 @@ namespace OpenSim.Region.Framework.Scenes.Animation
 
                             if (jumpChange >= 3) //Kill this if it takes too long
                             {
-                                m_scenePresence.m_forceToApply = Vector3.Zero;
+                                m_scenePresence.PhysicsActor.Velocity = Vector3.Zero;
                                 m_animTickJump = 0;
                                 m_scenePresence.AllowMovement = true;
+                                if (m_scenePresence.Scene.m_UseNewStyleMovement)
+                                    m_scenePresence.m_velocityIsDecaying = true;
+                                m_animTickNextJump = Environment.TickCount;
                                 return "STAND";
                             }
 
@@ -416,15 +439,21 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                             }
                             else
                             {
-                                m_scenePresence.m_forceToApply = Vector3.Zero;
+                                //m_scenePresence.m_forceToApply = Vector3.Zero;
+                                m_scenePresence.PhysicsActor.Velocity = Vector3.Zero;
                                 m_animTickJump = 0;
                                 m_scenePresence.AllowMovement = true;
+                                if (m_scenePresence.Scene.m_UseNewStyleMovement)
+                                    m_scenePresence.m_velocityIsDecaying = true;
+                                m_animTickNextJump = Environment.TickCount;
                                 return "STAND";
                             }
                         }
                         else
                         {
+                            m_hasPreJumped = true;
                             m_animTickJump = 0;
+                            m_animTickNextJump = Environment.TickCount;
                             m_scenePresence.AllowMovement = true;
                         }
                     }
@@ -540,7 +569,6 @@ namespace OpenSim.Region.Framework.Scenes.Animation
         public void UpdateMovementAnimations()
         {
             m_movementAnimation = GetMovementAnimation();
-
             TrySetMovementAnimation(m_movementAnimation);
         }
 

@@ -68,6 +68,7 @@ namespace Aurora.Modules
                 m_scenes.Add(scene);
 
             scene.EventManager.OnNewClient += OnNewClient;
+            scene.EventManager.OnClosingClient += OnClosingClient;
             scene.EventManager.OnIncomingInstantMessage += OnGridInstantMessage;
         }
 
@@ -80,6 +81,7 @@ namespace Aurora.Modules
                 m_scenes.Remove(scene);
 
             scene.EventManager.OnNewClient -= OnNewClient;
+            scene.EventManager.OnClosingClient -= OnClosingClient;
             scene.EventManager.OnIncomingInstantMessage -= OnGridInstantMessage;
         }
 
@@ -122,14 +124,17 @@ namespace Aurora.Modules
             client.OnTeleportLureRequest += OnTeleportLureRequest;
         }
 
+        private void OnClosingClient(IClientAPI client)
+        {
+            client.OnStartLure -= OnStartLure;
+            client.OnTeleportLureRequest -= OnTeleportLureRequest;
+        }
+
 		public void OnStartLure(byte lureType, string message, UUID targetid, IClientAPI client)
 		{
 			if (!(client.Scene is Scene))
 				return;
 			Scene scene = (Scene)(client.Scene);
-            
-            OpenSim.Services.Interfaces.UserAccount us = m_scenes[0].UserAccountService.GetUserAccount(UUID.Zero, client.AgentId);
-            OpenSim.Services.Interfaces.UserAccount target = m_scenes[0].UserAccountService.GetUserAccount(UUID.Zero, targetid);
             
             ScenePresence presence = scene.GetScenePresence(client.AgentId);
             UUID dest = Util.BuildFakeParcelID(
@@ -138,9 +143,9 @@ namespace Aurora.Modules
 				(uint)presence.AbsolutePosition.Y,
 				(uint)presence.AbsolutePosition.Z);
 			GridInstantMessage m;
-            if (us.UserLevel >= 1)
+            if (scene.Permissions.IsAdministrator(client.AgentId))//if we are an admin
 			{
-                if (target.UserLevel >= 1)
+                if (scene.Permissions.IsAdministrator(targetid)) //if they are an admin
 				{
                     //Gods do not tp other gods
 					m = new GridInstantMessage(scene, client.AgentId,

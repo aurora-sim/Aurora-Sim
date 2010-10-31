@@ -16,7 +16,7 @@ namespace Aurora.Services.DataService
 		private Dictionary<UUID, IUserProfileInfo> UserProfilesCache = new Dictionary<UUID, IUserProfileInfo>();
         private IGenericData GD = null;
 
-        public void Initialise(IGenericData GenericData, IConfigSource source, string defaultConnectionString)
+        public void Initialize(IGenericData GenericData, IConfigSource source, string defaultConnectionString)
         {
             if (source.Configs["AuroraConnectors"].GetString("ProfileConnector", "LocalConnector") == "LocalConnector")
             {

@@ -32,7 +32,7 @@ using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.Framework.Interfaces
 {
-    public interface IRegionDataStore
+    public interface ISimulationDataStore
     {
         /// <summary>
         /// Initialises the data storage engine
@@ -86,7 +86,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// </summary>
         /// <param name="regionUUID">the Region UUID</param>
         /// <returns>List of loaded groups</returns>
-        List<SceneObjectGroup> LoadObjects(UUID regionUUID);
+        List<SceneObjectGroup> LoadObjects(UUID regionUUID, Scene scene);
 
         /// <summary>
         /// Store a terrain revision in region storage

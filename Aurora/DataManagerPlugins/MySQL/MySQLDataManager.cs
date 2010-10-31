@@ -35,7 +35,8 @@ namespace Aurora.DataManager.MySQL
             }
             else
             {
-                MySqlConnection clone = m_connection.Clone();
+                MySqlConnection clone = (MySqlConnection)((ICloneable)m_connection).Clone();
+                //MySqlConnection clone = m_connection.Clone();
                 clone.Open();
                 return clone;
             }
@@ -429,8 +430,12 @@ namespace Aurora.DataManager.MySQL
             int i = 0;
             foreach (object key in keys)
             {
-                param.Add("?" + key, values[i].ToString());
-                query += "`" + key + "`" + ",";
+                string Key = key.ToString();
+                if (key.ToString().Contains('`'))
+                    Key = key.ToString().Replace("`", ""); //Remove them
+
+                param.Add("?" + Key, values[i].ToString());
+                query += "`" + Key + "`" + ",";
                 i++;
             }
             query = query.Remove(query.Length - 1);
@@ -438,7 +443,10 @@ namespace Aurora.DataManager.MySQL
 
             foreach (object key in keys)
             {
-                query += String.Format("?{0},", key);
+                string Key = key.ToString();
+                if (key.ToString().Contains('`'))
+                    Key = key.ToString().Replace("`", ""); //Remove them
+                query += String.Format("?{0},", Key);
             }
             query = query.Remove(query.Length - 1);
             query += ")";
@@ -534,7 +542,7 @@ namespace Aurora.DataManager.MySQL
                 {
                     columnDefinition += ", ";
                 }
-                columnDefinition += column.Name + " " + GetColumnTypeStringSymbol(column.Type) + ((column.IsPrimary && !multiplePrimary) ? " PRIMARY KEY" : string.Empty);
+                columnDefinition += "`" + column.Name + "` " + GetColumnTypeStringSymbol(column.Type) + ((column.IsPrimary && !multiplePrimary) ? " PRIMARY KEY" : string.Empty);
             }
 
             string multiplePrimaryString = string.Empty;
@@ -547,7 +555,7 @@ namespace Aurora.DataManager.MySQL
                     {
                         listOfPrimaryNamesString += ", ";
                     }
-                    listOfPrimaryNamesString += column.Name;
+                    listOfPrimaryNamesString += "`" + column.Name + "`";
                 }
                 multiplePrimaryString = string.Format(", PRIMARY KEY ({0}) ", listOfPrimaryNamesString);
             }

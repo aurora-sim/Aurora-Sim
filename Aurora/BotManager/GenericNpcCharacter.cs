@@ -1172,7 +1172,7 @@ namespace Aurora.BotManager
 
         public event GodlikeMessage OnEstateTelehubRequest;
 
-        public void SendKillObject(ulong regionHandle, uint[] localIDs)
+        public void SendKillObject(ulong regionHandle, ISceneEntity[] localIDs)
         {
         }
 
@@ -1260,5 +1260,18 @@ namespace Aurora.BotManager
         public event ViewerStartAuction OnViewerStartAuction;
 
         #endregion
+
+        public void SendTeleportStart(uint flags)
+        {
+        }
+
+        public void SendTeleportProgress(uint flags, string message)
+        {
+        }
+
+        public bool RemoveGenericPacketHandler(string MethodName)
+        {
+            return true;
+        }
     }
 }

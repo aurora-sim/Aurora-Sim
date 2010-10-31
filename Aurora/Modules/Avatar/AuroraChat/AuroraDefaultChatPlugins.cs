@@ -255,16 +255,19 @@ namespace Aurora.Modules.Avatar.AuroraChat
             ScenePresence SP = scene.GetScenePresence(c.SenderUUID);
             if (SP != null)
             {
-                if (SP.GodLevel != 0 && !!m_authorizedSpeakers.Contains(c.SenderUUID))
-                    m_authorizedSpeakers.Add(c.SenderUUID);
-
-                if (SP.GodLevel != 0 && !m_authList.Contains(c.SenderUUID))
-                    m_authList.Add(c.SenderUUID);
-
-                if (!m_authorizedSpeakers.Contains(c.SenderUUID))
+                if (!SP.IsChildAgent)
                 {
-                    newc = c;
-                    return false;
+                    if (SP.GodLevel != 0 && !!m_authorizedSpeakers.Contains(c.SenderUUID))
+                        m_authorizedSpeakers.Add(c.SenderUUID);
+
+                    if (SP.GodLevel != 0 && !m_authList.Contains(c.SenderUUID))
+                        m_authList.Add(c.SenderUUID);
+
+                    if (!m_authorizedSpeakers.Contains(c.SenderUUID))
+                    {
+                        newc = c;
+                        return false;
+                    }
                 }
             }
 
@@ -354,44 +357,53 @@ namespace Aurora.Modules.Avatar.AuroraChat
 
         public void OnNewClient(IClientAPI client)
         {
-            if (!m_blockChat)
+            ScenePresence SP = ((Scene)client.Scene).GetScenePresence(client.AgentId);
+            if (!SP.IsChildAgent)
             {
-                if (!m_authorizedSpeakers.Contains(client.AgentId))
-                    m_authorizedSpeakers.Add(client.AgentId);
-            }
-            int AgentCount = 0;
-            lock (RegionAgentCount)
-            {
-                RegionAgentCount.TryGetValue(client.Scene.RegionInfo.RegionID, out AgentCount);
-                AgentCount++;
-                RegionAgentCount[client.Scene.RegionInfo.RegionID] = AgentCount;
-            }
-
-            if (m_announceNewAgents)
-            {
-                ((Scene)client.Scene).ForEachScenePresence(delegate(ScenePresence SP)
+                if (!m_blockChat)
                 {
-                    if (SP.UUID != client.AgentId && !SP.IsChildAgent)
+                    if (!m_authorizedSpeakers.Contains(client.AgentId))
+                        m_authorizedSpeakers.Add(client.AgentId);
+                }
+                int AgentCount = 0;
+                lock (RegionAgentCount)
+                {
+                    RegionAgentCount.TryGetValue(client.Scene.RegionInfo.RegionID, out AgentCount);
+                    AgentCount++;
+                    RegionAgentCount[client.Scene.RegionInfo.RegionID] = AgentCount;
+                }
+
+                if (m_announceNewAgents)
+                {
+                    ((Scene)client.Scene).ForEachScenePresence(delegate(ScenePresence presence)
                     {
-                        SP.ControllingClient.SendChatMessage(client.Name + " has joined the region. Total Agents: " + AgentCount, 1, SP.AbsolutePosition, "System",
-                                                           UUID.Zero, (byte)ChatSourceType.System, (byte)ChatAudibleLevel.Fully);
+                        if (presence.UUID != client.AgentId && !presence.IsChildAgent)
+                        {
+                            presence.ControllingClient.SendChatMessage(client.Name + " has joined the region. Total Agents: " + AgentCount, 1, SP.AbsolutePosition, "System",
+                                                               UUID.Zero, (byte)ChatSourceType.System, (byte)ChatAudibleLevel.Fully);
+                        }
+                    }
+                    );
+                }
+
+                if (m_useWelcomeMessage)
+                {
+                    if (m_welcomeMessage != "")
+                    {
+                        client.SendChatMessage(m_welcomeMessage, 1, SP.AbsolutePosition, "System",
+                                                       UUID.Zero, (byte)ChatSourceType.System, (byte)ChatAudibleLevel.Fully);
                     }
                 }
-                );
-            }
-
-            if (m_useWelcomeMessage)
-            {
-                ScenePresence SP = ((Scene)client.Scene).GetScenePresence(client.AgentId);
-                client.SendChatMessage(m_welcomeMessage, 1, SP.AbsolutePosition, "System",
-                                               UUID.Zero, (byte)ChatSourceType.System, (byte)ChatAudibleLevel.Fully);
             }
         }
 
         public void OnClosingClient(UUID clientID, Scene scene)
         {
-            if (m_authorizedSpeakers.Contains(clientID))
-                m_authorizedSpeakers.Remove(clientID);
+            lock (m_authorizedSpeakers)
+            {
+                if (m_authorizedSpeakers.Contains(clientID))
+                    m_authorizedSpeakers.Remove(clientID);
+            }
 
             int AgentCount = 0;
             lock (RegionAgentCount)

@@ -236,7 +236,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api.Plugins
                         {
                             DetectParams detect = new DetectParams();
                             detect.Key = sensedEntities[idx].itemID;
-                            detect.Populate(m_CmdManager.m_ScriptEngine.World);
+                            detect.Populate(ts.host.ParentGroup.Scene);
                             detected.Add(detect);
                         }
                         catch (Exception)
@@ -278,7 +278,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api.Plugins
             if (ts.keyID != UUID.Zero)
             {
                 EntityBase e = null;
-                m_CmdManager.m_ScriptEngine.World.Entities.TryGetValue(ts.keyID, out e);
+                ts.host.ParentGroup.Scene.Entities.TryGetValue(ts.keyID, out e);
                 if (e == null)
                     return sensedEntities;
                 Entities = new List<EntityBase>();
@@ -286,7 +286,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api.Plugins
             }
             else
             {
-                Entities = new List<EntityBase>(m_CmdManager.m_ScriptEngine.World.GetEntities());
+                Entities = ts.host.ParentGroup.Scene.GetEntities();
             }
             SceneObjectPart SensePoint = ts.host;
 
@@ -308,7 +308,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api.Plugins
                 // avatar rotation. This may include a nonzero elevation if
                 // in mouselook.
 
-                ScenePresence avatar = m_CmdManager.m_ScriptEngine.World.GetScenePresence(SensePoint.ParentGroup.RootPart.AttachedAvatar);
+                ScenePresence avatar = ts.host.ParentGroup.Scene.GetScenePresence(SensePoint.ParentGroup.RootPart.AttachedAvatar);
                 q = avatar.Rotation;
             }
             LSL_Types.Quaternion r = new LSL_Types.Quaternion(q.X, q.Y, q.Z, q.W);
@@ -416,7 +416,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api.Plugins
             List<SensedEntity> sensedEntities = new List<SensedEntity>();
 
             // If nobody about quit fast
-            if (m_CmdManager.m_ScriptEngine.World.GetRootAgentCount() == 0)
+            if (ts.host.ParentGroup.Scene.GetRootAgentCount() == 0)
                 return sensedEntities;
 
             SceneObjectPart SensePoint = ts.host;
@@ -485,7 +485,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api.Plugins
             {
                 ScenePresence sp;
                 // Try direct lookup by UUID
-                if (!m_CmdManager.m_ScriptEngine.World.TryGetScenePresence(ts.keyID, out sp))
+                if (!ts.host.ParentGroup.Scene.TryGetScenePresence(ts.keyID, out sp))
                     return sensedEntities;
                 senseEntity(sp);
             }
@@ -493,13 +493,13 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api.Plugins
             {
                 ScenePresence sp;
                 // Try lookup by name will return if/when found
-                if (!m_CmdManager.m_ScriptEngine.World.TryGetAvatarByName(ts.name, out sp))
+                if (!ts.host.ParentGroup.Scene.TryGetAvatarByName(ts.name, out sp))
                     return sensedEntities;
                 senseEntity(sp);
             }
             else
             {
-                m_CmdManager.m_ScriptEngine.World.ForEachScenePresence(senseEntity);
+                ts.host.ParentGroup.Scene.ForEachScenePresence(senseEntity);
             }
             return sensedEntities;
         }
@@ -530,7 +530,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api.Plugins
                                    Object[] data)
         {
             SceneObjectPart part =
-                m_CmdManager.m_ScriptEngine.World.GetSceneObjectPart(
+                findPrimsScene(localID).GetSceneObjectPart(
                     objectID);
 
             if (part == null)
@@ -545,12 +545,12 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api.Plugins
                 ts.localID = localID;
                 ts.itemID = itemID;
 
-                ts.interval = (double)data[idx];
+                ts.interval = (long)Convert.ToDouble(data[idx]);
                 ts.name = (string)data[idx+1];
-                ts.keyID = (UUID)data[idx+2];
-                ts.type = (int)data[idx+3];
-                ts.range = (double)data[idx+4];
-                ts.arc = (double)data[idx+5];
+                ts.keyID = new UUID(data[idx+2].ToString());
+                ts.type = Convert.ToInt32(data[idx+3]);
+                ts.range = Convert.ToDouble(data[idx+4]);
+                ts.arc = Convert.ToDouble(data[idx + 5]);
                 ts.host = part;
 
                 ts.next =
@@ -559,6 +559,40 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api.Plugins
                 SenseRepeaters.Add(ts);
                 idx += 6;
             }
+        }
+
+        public Scene findPrimsScene(UUID objectID)
+        {
+            lock (AsyncCommandManager.m_Scenes)
+            {
+                foreach (IScene s in AsyncCommandManager.m_Scenes)
+                {
+                    Scene scene = (Scene)s;
+                    SceneObjectPart part = scene.GetSceneObjectPart(objectID);
+                    if (part != null)
+                    {
+                        return scene;
+                    }
+                }
+            }
+            return null;
+        }
+
+        public Scene findPrimsScene(uint localID)
+        {
+            lock (AsyncCommandManager.m_Scenes)
+            {
+                foreach (IScene s in AsyncCommandManager.m_Scenes)
+                {
+                    Scene scene = (Scene)s;
+                    SceneObjectPart part = scene.GetSceneObjectPart(localID);
+                    if (part != null)
+                    {
+                        return scene;
+                    }
+                }
+            }
+            return null;
         }
     }
 }

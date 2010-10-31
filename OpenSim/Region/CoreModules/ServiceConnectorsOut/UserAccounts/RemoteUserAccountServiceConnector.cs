@@ -25,40 +25,28 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using log4net;
-using Nini.Config;
 using System;
-using System.Collections.Generic;
+using Nini.Config;
+using log4net;
 using System.Reflection;
-using OpenSim.Framework;
-using OpenSim.Server.Base;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
+using OpenSim.Services.Connectors;
 
-namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Land
+using OpenMetaverse;
+
+namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.UserAccounts
 {
-    public class LocalLandServicesConnector :
-            ISharedRegionModule, ILandService
+    public class RemoteUserAccountServicesConnector : UserAccountServicesConnector,
+            ISharedRegionModule, IUserAccountService
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
-        private List<Scene> m_Scenes = new List<Scene>();
-
         private bool m_Enabled = false;
-
-        public LocalLandServicesConnector()
-        {
-        }
-
-        public LocalLandServicesConnector(List<Scene> scenes)
-        {
-            m_Scenes = scenes;
-        }
-
-        #region ISharedRegionModule
+        private UserAccountCache m_Cache;
 
         public Type ReplaceableInterface 
         {
@@ -67,76 +55,101 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Land
 
         public string Name
         {
-            get { return "LocalLandServicesConnector"; }
+            get { return "RemoteUserAccountServicesConnector"; }
         }
 
-        public void Initialise(IConfigSource source)
+        public override void Initialise(IConfigSource source)
         {
             IConfig moduleConfig = source.Configs["Modules"];
             if (moduleConfig != null)
             {
-                string name = moduleConfig.GetString("LandServices", this.Name);
+                string name = moduleConfig.GetString("UserAccountServices", "");
                 if (name == Name)
                 {
+                    IConfig userConfig = source.Configs["UserAccountService"];
+                    if (userConfig == null)
+                    {
+                        m_log.Error("[USER CONNECTOR]: UserAccountService missing from OpenSim.ini");
+                        return;
+                    }
+
                     m_Enabled = true;
-                    m_log.Info("[LAND CONNECTOR]: Local land connector enabled");
+
+                    base.Initialise(source);
+                    m_Cache = new UserAccountCache();
+
+                    // m_log.Info("[USER CONNECTOR]: Remote users enabled");
                 }
             }
-        }
-
-        public void Close()
-        {
-        }
-
-        public void AddRegion(Scene scene)
-        {
-            m_Scenes.Add(scene);
-
-            if (!m_Enabled)
-                return;
-
-            scene.RegisterModuleInterface<ILandService>(this);
-        }
-
-        public void RegionLoaded(Scene scene)
-        {
         }
 
         public void PostInitialise()
         {
+            if (!m_Enabled)
+                return;
+        }
+
+        public void Close()
+        {
+            if (!m_Enabled)
+                return;
+        }
+
+        public void AddRegion(Scene scene)
+        {
+            if (!m_Enabled)
+                return;
+
+            scene.RegisterModuleInterface<IUserAccountService>(this);
         }
 
         public void RemoveRegion(Scene scene)
         {
-            if (m_Scenes.Contains(scene))
-                m_Scenes.Remove(scene);
+            if (!m_Enabled)
+                return;
         }
 
-        #endregion ISharedRegionModule
-
-        #region ILandService
-
-        public LandData GetLandData(ulong regionHandle, uint x, uint y, out byte regionAccess)
+        public void RegionLoaded(Scene scene)
         {
-            regionAccess = 2;
-            m_log.DebugFormat("[LAND CONNECTOR]: request for land data in {0} at {1}, {2}",
-                  regionHandle, x, y);
-
-            foreach (Scene s in m_Scenes)
-            {
-                if (s.RegionInfo.RegionHandle == regionHandle)
-                {
-                    LandData land = s.GetLandData(x, y);
-                    regionAccess = s.RegionInfo.AccessLevel;
-                    return land;
-                }
-            }
-
-            m_log.Debug("[LAND CONNECTOR]: didn't find land data locally.");
-            return null;
-
+            if (!m_Enabled)
+                return;
         }
 
-        #endregion ILandService
+        #region Overwritten methods from IUserAccountService
+
+        public override UserAccount GetUserAccount(UUID scopeID, UUID userID)
+        {
+            bool inCache = false;
+            UserAccount account = m_Cache.Get(userID, out inCache);
+            if (inCache)
+                return account;
+
+            account = base.GetUserAccount(scopeID, userID);
+            m_Cache.Cache(userID, account);
+
+            return account;
+        }
+
+        public override UserAccount GetUserAccount(UUID scopeID, string firstName, string lastName)
+        {
+            bool inCache = false;
+            UserAccount account = m_Cache.Get(firstName + " " + lastName, out inCache);
+            if (inCache)
+                return account;
+
+            account = base.GetUserAccount(scopeID, firstName, lastName);
+            if (account != null)
+                m_Cache.Cache(account.PrincipalID, account);
+
+            return account;
+        }
+
+        public override bool StoreUserAccount(UserAccount data)
+        {
+            // This remote connector refuses to serve this method
+            return false;
+        }
+
+        #endregion
     }
 }

@@ -25,99 +25,62 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using log4net;
 using System;
 using System.Collections.Generic;
-using System.Reflection;
-using Nini.Config;
-using OpenSim.Framework;
-using OpenSim.Services.Connectors;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
+using OpenMetaverse;
 using OpenSim.Services.Interfaces;
-using OpenSim.Server.Base;
+using log4net;
+using Nini.Config;
+using System.Reflection;
+using OpenSim.Data;
+using OpenSim.Framework;
+using OpenSim.Framework.Console;
 
-
-namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Land
+namespace OpenSim.Services.AuthenticationService
 {
-    public class RemoteLandServicesConnector :
-            LandServicesConnector, ISharedRegionModule, ILandService
+    // Generic Authentication service used for identifying
+    // and authenticating principals.
+    // Principals may be clients acting on users' behalf,
+    // or any other components that need 
+    // verifiable identification.
+    //
+    public class PasswordAuthenticationService :
+            AuthenticationServiceBase, IAuthenticationService
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
-
-        private bool m_Enabled = false;
-        private LocalLandServicesConnector m_LocalService;
-
-        public Type ReplaceableInterface 
+ 
+        public PasswordAuthenticationService(IConfigSource config) :
+                base(config)
         {
-            get { return null; }
         }
 
-        public string Name
+        public string Authenticate(UUID principalID, string password, int lifetime)
         {
-            get { return "RemoteLandServicesConnector"; }
-        }
+            AuthenticationData data = m_Database.Get(principalID);
 
-        public void Initialise(IConfigSource source)
-        {
-            IConfig moduleConfig = source.Configs["Modules"];
-            if (moduleConfig != null)
+            if (data != null && data.Data != null)
             {
-                string name = moduleConfig.GetString("LandServices", "");
-                if (name == Name)
+                if (!data.Data.ContainsKey("passwordHash") ||
+                    !data.Data.ContainsKey("passwordSalt"))
                 {
-                    m_LocalService = new LocalLandServicesConnector();
+                    return String.Empty;
+                }
 
-                    m_Enabled = true;
+                string hashed = Util.Md5Hash(password + ":" +
+                        data.Data["passwordSalt"].ToString());
 
-                    m_log.Info("[LAND CONNECTOR]: Remote Land connector enabled");
+                m_log.DebugFormat("[PASS AUTH]: got {0}; hashed = {1}; stored = {2}", password, hashed, data.Data["passwordHash"].ToString());
+
+                if (data.Data["passwordHash"].ToString() == hashed)
+                {
+                    return GetToken(principalID, lifetime);
                 }
             }
+
+            m_log.DebugFormat("[AUTH SERVICE]: PrincipalID {0} or its data not found", principalID);
+            return String.Empty;
         }
-
-        public void PostInitialise()
-        {
-        }
-
-        public void Close()
-        {
-        }
-
-        public void AddRegion(Scene scene)
-        {
-            if (!m_Enabled)
-                return;
-
-            m_LocalService.AddRegion(scene);
-            scene.RegisterModuleInterface<ILandService>(this);
-        }
-
-        public void RemoveRegion(Scene scene)
-        {
-            if (m_Enabled)
-                m_LocalService.RemoveRegion(scene);
-        }
-
-        public void RegionLoaded(Scene scene)
-        {
-            if (m_Enabled)
-                m_GridService = scene.GridService;
-        }
-
-
-        #region ILandService
-
-        public override LandData GetLandData(ulong regionHandle, uint x, uint y, out byte regionAccess)
-        {
-            LandData land = m_LocalService.GetLandData(regionHandle, x, y, out regionAccess);
-            if (land != null)
-                return land;
-
-            return base.GetLandData(regionHandle, x, y, out regionAccess);
-
-        }
-        #endregion ILandService
     }
 }

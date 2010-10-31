@@ -27,6 +27,7 @@
 
 using log4net;
 using System;
+using System.Collections.Generic;
 using OpenSim.Region.ScriptEngine.Shared;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Region.Framework.Interfaces;
@@ -48,12 +49,7 @@ namespace OpenSim.Region.ScriptEngine.Interfaces
 
     public interface IScriptEngine
     {
-        /// <summary>
-        /// Queue an event for execution
-        /// </summary>
-        IScriptWorkItem QueueEventHandler(object parms);
-
-        Scene World { get; }
+        List<IScene> Worlds { get; }
 
         IScriptModule ScriptModule { get; }
 
@@ -82,7 +78,17 @@ namespace OpenSim.Region.ScriptEngine.Interfaces
         IConfig Config { get; }
         IConfigSource ConfigSource { get; }
         string ScriptEngineName { get; }
+<<<<<<< HEAD
+        IScriptApi GetApi(UUID itemID, string name);
+        XmlRequest XmlRequestPlugin { get; }
+        SensorRepeat SensorRepeatPlugin { get; }
+        Listener ListenerPlugin { get; }
+        HttpRequest HttpRequestPlugin { get; }
+        Timer TimerPlugin { get; }
+        Dataserver DataserverPlugin { get; }
+=======
         string ScriptEnginePath { get; }
         IScriptApi GetApi(UUID itemID, string name);
+>>>>>>> 2d88394cd59d9bf747b77c242b75bd923b0bc5af
     }
 }

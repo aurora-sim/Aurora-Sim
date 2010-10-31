@@ -29,7 +29,6 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using log4net;
-using Mono.Addins;
 using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Framework;
@@ -40,7 +39,6 @@ using OpenSim.Region.CoreModules.World.Wind;
 
 namespace OpenSim.Region.CoreModules
 {
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class WindModule : IWindModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -95,7 +93,7 @@ namespace OpenSim.Region.CoreModules
                 m_frame = 0;
 
                 // Register all the Wind Model Plug-ins
-                foreach (IWindModelPlugin windPlugin in AddinManager.GetExtensionObjects("/OpenSim/WindModule", false))
+                foreach (IWindModelPlugin windPlugin in Aurora.Framework.AuroraModuleLoader.PickupModules<IWindModelPlugin>())
                 {
                     //m_log.InfoFormat("[WIND] Found Plugin: {0}", windPlugin.Name);
                     m_availableWindPlugins.Add(windPlugin.Name, windPlugin);

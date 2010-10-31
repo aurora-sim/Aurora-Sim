@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) Contributors, http://opensimulator.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
@@ -124,28 +124,27 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
         ///
         /// DeleteToInventory
         ///
-        public override UUID DeleteToInventory(DeRezAction action, UUID folderID, List<SceneObjectGroup> objectGroups, IClientAPI remoteClient)
+        public override UUID DeleteToInventory(DeRezAction action, UUID folderID, List<SceneObjectGroup> objectGroups, UUID agentID)
         {
             UUID ret = UUID.Zero;
 
             // HACK: Only works for lists of length one.
             // Intermediate version, just to make things compile
             foreach (SceneObjectGroup g in objectGroups)
-                ret = DeleteToInventory(action, folderID, g, remoteClient);
+                ret = DeleteToInventory(action, folderID, g, agentID);
             
             return ret;
         }
 
         // DO NOT OVERRIDE THE BASE METHOD
         public new virtual UUID DeleteToInventory(DeRezAction action, UUID folderID,
-                SceneObjectGroup objectGroup, IClientAPI remoteClient)
+                SceneObjectGroup objectGroup, UUID agentID)
         {
-            UUID assetID = base.DeleteToInventory(action, folderID, new List<SceneObjectGroup>() {objectGroup}, remoteClient);
+            UUID assetID = base.DeleteToInventory(action, folderID, new List<SceneObjectGroup>() { objectGroup }, agentID);
 
             if (!assetID.Equals(UUID.Zero))
             {
-                if (remoteClient != null)
-                    UploadInventoryItem(remoteClient.AgentId, assetID, "", 0);
+                UploadInventoryItem(agentID, assetID, "", 0);
             }
             else
                 m_log.Debug("[HGScene]: Scene.Inventory did not create asset");

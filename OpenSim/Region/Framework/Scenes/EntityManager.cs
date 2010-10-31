@@ -35,15 +35,17 @@ using OpenSim.Framework;
 
 namespace OpenSim.Region.Framework.Scenes
 {
-    public class EntityManager : IEnumerable<EntityBase>
+    public class EntityManager
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private readonly Dictionary<UUID,EntityBase> m_eb_uuid = new Dictionary<UUID, EntityBase>();
-        private readonly Dictionary<uint, EntityBase> m_eb_localID = new Dictionary<uint, EntityBase>();
-        private readonly Dictionary<UUID, UUID> m_child_uuid = new Dictionary<UUID, UUID>();
-        private readonly Dictionary<uint, UUID> m_child_loc_id = new Dictionary<uint, UUID>();
-        private readonly Dictionary<uint, ISceneEntity> m_eb_child_loc_id = new Dictionary<uint, ISceneEntity>();
+        private readonly Aurora.Framework.DoubleKeyDictionary<UUID, uint, EntityBase> m_entities = new Aurora.Framework.DoubleKeyDictionary<UUID, uint, EntityBase>();
+        private readonly Aurora.Framework.DoubleKeyDictionary<UUID, uint, UUID> m_child_2_parent_entities = new Aurora.Framework.DoubleKeyDictionary<UUID, uint, UUID>();
         private readonly Object m_lock = new Object();
+
+        public int Count
+        {
+            get { return m_entities.Count; }
+        }
 
         public void Add(EntityBase entity)
         {
@@ -51,15 +53,16 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 try
                 {
-                    m_eb_uuid.Add(entity.UUID, entity);
-                    m_eb_localID.Add(entity.LocalId, entity);
+                    m_entities.Remove(entity.UUID);
+                    m_entities.Remove(entity.LocalId);
+                    m_entities.Add(entity.UUID, entity.LocalId, entity);
                     if (entity is SceneObjectGroup)
                     {
                         foreach (SceneObjectPart part in (entity as SceneObjectGroup).ChildrenList)
                         {
-                            m_child_uuid[part.UUID] = entity.UUID;
-                            m_child_loc_id[part.LocalId] = entity.UUID;
-                            m_eb_child_loc_id[part.LocalId] = part;
+                            m_child_2_parent_entities.Remove(part.UUID);
+                            m_child_2_parent_entities.Remove(part.LocalId);
+                            m_child_2_parent_entities.Add(part.UUID, part.LocalId, entity.UUID);
                         }
                     }
                 }
@@ -70,72 +73,23 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void InsertOrReplace(EntityBase entity)
-        {
-            lock (m_lock)
-            {
-                try
-                {
-                    m_eb_uuid[entity.UUID] = entity;
-                    m_eb_localID[entity.LocalId] = entity;
-                    if (entity is SceneObjectGroup)
-                    {
-                        foreach (SceneObjectPart part in (entity as SceneObjectGroup).ChildrenList)
-                        {
-                            m_child_uuid[part.UUID] = entity.UUID;
-                            m_child_loc_id[part.LocalId] = entity.UUID;
-                            m_eb_child_loc_id[part.LocalId] = part;
-                        }
-                    }
-                }
-                catch(Exception e)
-                {
-                    m_log.ErrorFormat("Insert or Replace Entity failed: {0}", e.Message);
-                }
-            }
-        }
-
         public void Clear()
         {
             lock (m_lock)
             {
-                m_eb_uuid.Clear();
-                m_eb_localID.Clear();
-                m_child_uuid.Clear();
-                m_child_loc_id.Clear();
-            }
-        }
-
-        public int Count
-        {
-            get
-            {
-                return m_eb_uuid.Count;
+                m_entities.Clear();
+                m_child_2_parent_entities.Clear();
             }
         }
 
         public bool ContainsKey(UUID id)
         {
-            try
-            {
-                return m_eb_uuid.ContainsKey(id);
-            }
-            catch
-            {
-                return false;
-            }
+            return m_entities.ContainsKey(id);
         }
 
         public bool ContainsKey(uint localID)
         {
-            try
-            {
-                return m_eb_localID.ContainsKey(localID);
-            }
-            catch
-            {
-                return false;
-            }
+            return m_entities.ContainsKey(localID);
         }
 
         public bool Remove(uint localID)
@@ -144,23 +98,23 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 try
                 {
-                    bool a = false;
                     EntityBase entity;
-                    if (m_eb_localID.TryGetValue(localID, out entity))
-                        a = m_eb_uuid.Remove(entity.UUID);
+                    m_entities.TryGetValue(localID, out entity);
 
                     if (entity != null && entity is SceneObjectGroup)
                     {
                         foreach (SceneObjectPart part in (entity as SceneObjectGroup).ChildrenList)
                         {
-                            m_child_uuid.Remove(part.UUID);
-                            m_child_loc_id.Remove(part.LocalId);
-                            m_eb_child_loc_id.Remove(part.LocalId);
+                            m_child_2_parent_entities.Remove(part.UUID);
+                            m_child_2_parent_entities.Remove(part.LocalId);
                         }
+                        m_entities.Remove(entity.UUID);
                     }
-
-                    bool b = m_eb_localID.Remove(localID);
-                    return a && b;
+                    else if (m_child_2_parent_entities.ContainsKey(localID))
+                    {
+                        return m_child_2_parent_entities.Remove(localID);
+                    }
+                    return m_entities.Remove(localID);
                 }
                 catch (Exception e)
                 {
@@ -176,23 +130,23 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 try 
                 {
-                    bool a = false;
                     EntityBase entity;
-                    if (m_eb_uuid.TryGetValue(id, out entity))
-                        a = m_eb_localID.Remove(entity.LocalId);
+                    m_entities.TryGetValue(id, out entity);
 
                     if (entity != null && entity is SceneObjectGroup)
                     {
                         foreach (SceneObjectPart part in (entity as SceneObjectGroup).ChildrenList)
                         {
-                            m_child_uuid.Remove(part.UUID);
-                            m_child_loc_id.Remove(part.LocalId);
-                            m_eb_child_loc_id.Remove(part.LocalId);
+                            m_child_2_parent_entities.Remove(part.UUID);
+                            m_child_2_parent_entities.Remove(part.LocalId);
                         }
+                        m_entities.Remove(entity.LocalId);
                     }
-
-                    bool b = m_eb_uuid.Remove(id);
-                    return a && b;
+                    else if(m_child_2_parent_entities.ContainsKey(id)) 
+                    {
+                        return m_child_2_parent_entities.Remove(id);
+                    }
+                    return m_entities.Remove(id);
                 }
                 catch (Exception e)
                 {
@@ -202,56 +156,49 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public List<EntityBase> GetAllByType<T>()
+        public EntityBase[] GetAllByType<T>()
         {
             List<EntityBase> tmp = new List<EntityBase>();
 
-            lock (m_lock)
-            {
-                try
+            m_entities.ForEach(
+                delegate(EntityBase entity)
                 {
-                    foreach (KeyValuePair<UUID, EntityBase> pair in m_eb_uuid)
-                    {
-                        if (pair.Value is T)
-                        {
-                            tmp.Add(pair.Value);
-                        }
-                    }
+                    if (entity is T)
+                        tmp.Add(entity);
                 }
-                catch (Exception e) 
-                {
-                    m_log.ErrorFormat("GetAllByType failed for {0}", e);
-                    tmp = null;
-                }
-            }
+            );
 
-            return tmp;
+            return tmp.ToArray();
         }
 
-        public List<EntityBase> GetEntities()
+        public EntityBase[] GetEntities()
         {
-            lock (m_lock)
-            {
-                return new List<EntityBase>(m_eb_uuid.Values);
-            }
+            List<EntityBase> tmp = new List<EntityBase>(m_entities.Count);
+            m_entities.ForEach(delegate(EntityBase entity) { tmp.Add(entity); });
+            return tmp.ToArray();
+        }
+
+        public void ForEach(Action<EntityBase> action)
+        {
+            m_entities.ForEach(action);
+        }
+
+        public EntityBase Find(Predicate<EntityBase> predicate)
+        {
+            return m_entities.FindValue(predicate);
         }
 
         public EntityBase this[UUID id]
         {
             get
             {
-                lock (m_lock)
-                {
-                    EntityBase entity;
-                    if (m_eb_uuid.TryGetValue(id, out entity))
-                        return entity;
-                    else
-                        return null;
-                }
+                EntityBase entity;
+                m_entities.TryGetValue(id, out entity);
+                return entity;
             }
             set
             {
-                InsertOrReplace(value);
+                Add(value);
             }
         }
 
@@ -259,35 +206,24 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get
             {
-                lock (m_lock)
-                {
-                    EntityBase entity;
-                    if (m_eb_localID.TryGetValue(localID, out entity))
-                        return entity;
-                    else
-                        return null;
-                }
+                EntityBase entity;
+                m_entities.TryGetValue(localID, out entity);
+                return entity;
             }
             set
             {
-                InsertOrReplace(value);
+                Add(value);
             }
         }
 
         public bool TryGetValue(UUID key, out EntityBase obj)
         {
-            lock (m_lock)
-            {
-                return m_eb_uuid.TryGetValue(key, out obj);
-            }
+            return m_entities.TryGetValue(key, out obj);
         }
 
         public bool TryGetValue(uint key, out EntityBase obj)
         {
-            lock (m_lock)
-            {
-                return m_eb_localID.TryGetValue(key, out obj);
-            }
+            return m_entities.TryGetValue(key, out obj);
         }
 
         /// <summary>
@@ -301,7 +237,7 @@ namespace OpenSim.Region.Framework.Scenes
             lock (m_lock)
             {
                 UUID ParentKey = UUID.Zero;
-                if (m_child_uuid.TryGetValue(childkey, out ParentKey))
+                if (m_child_2_parent_entities.TryGetValue(childkey, out ParentKey))
                     return TryGetValue(ParentKey, out obj);
 
                 obj = null;
@@ -320,7 +256,7 @@ namespace OpenSim.Region.Framework.Scenes
             lock (m_lock)
             {
                 UUID ParentKey = UUID.Zero;
-                if (m_child_loc_id.TryGetValue(childkey, out ParentKey))
+                if (m_child_2_parent_entities.TryGetValue(childkey, out ParentKey))
                     return TryGetValue(ParentKey, out obj);
 
                 obj = null;
@@ -332,28 +268,36 @@ namespace OpenSim.Region.Framework.Scenes
         {
             lock (m_lock)
             {
-                if (m_eb_child_loc_id.TryGetValue(childkey, out child))
-                    return true;
-
                 child = null;
+
+                EntityBase entity;
+                if (!TryGetChildPrimParent(childkey, out entity))
+                    return false;
+                if (!(entity is SceneObjectGroup))
+                    return false;
+
+                child = (entity as SceneObjectGroup).GetChildPart(childkey);
+
                 return false;
             }
-            
         }
 
-        /// <summary>
-        /// This could be optimised to work on the list 'live' rather than making a safe copy and iterating that.
-        /// </summary>
-        /// <returns></returns>
-        public IEnumerator<EntityBase> GetEnumerator()
+        internal bool TryGetChildPrim(UUID objectID, out ISceneEntity childPrim)
         {
-            return GetEntities().GetEnumerator();
-        }
+            lock (m_lock)
+            {
+                childPrim = null;
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+                EntityBase entity;
+                if (!TryGetChildPrimParent(objectID, out entity))
+                    return false;
+                if (!(entity is SceneObjectGroup))
+                    return false;
 
+                childPrim = (entity as SceneObjectGroup).GetChildPart(objectID);
+
+                return false;
+            }
+        }
     }
 }

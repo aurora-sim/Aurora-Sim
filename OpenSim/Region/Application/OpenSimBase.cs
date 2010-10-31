@@ -44,7 +44,6 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 using OpenSim.Framework.Communications;
-
 using OpenSim.Framework.Console;
 using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
@@ -53,6 +52,8 @@ using OpenSim.Region.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Region.Physics.Manager;
+using OpenSim.Server.Base;
+using Aurora.Framework;
 
 namespace OpenSim
 {
@@ -75,8 +76,9 @@ namespace OpenSim
 
 		/// <value>
 		/// The config information passed into the OpenSimulator region server.
-		/// </value>
+        /// </value>
         protected IConfigSource m_config;
+        protected IConfigSource m_original_config;
         public IConfigSource ConfigSource
         {
 			get { return m_config; }
@@ -130,7 +132,7 @@ namespace OpenSim
 		{
             m_StartupTime = DateTime.Now;
             m_version = VersionInfo.Version;
-            m_config = configSource;
+            m_original_config = configSource;
 
             // This thread will go on to become the console listening thread
             System.Threading.Thread.CurrentThread.Name = "ConsoleThread";
@@ -140,11 +142,18 @@ namespace OpenSim
             SetUpConsole();
             
             RegisterConsoleCommands();
-		}
+        }
+
+        private void CreateConfig(IConfigSource baseConfig)
+        {
+            ConfigurationLoader m_configLoader = new ConfigurationLoader();
+            m_config = m_configLoader.LoadConfigSettings(baseConfig);
+        }
 
         private void Configuration(IConfigSource configSource)
         {
-            IConfig startupConfig = configSource.Configs["Startup"];
+            CreateConfig(configSource);
+            IConfig startupConfig = m_config.Configs["Startup"];
 
             int stpMaxThreads = 15;
 
@@ -186,8 +195,12 @@ namespace OpenSim
 
         private void SetUpConsole()
         {
-            Aurora.Framework.AuroraModuleLoader.LoadPlugins<ICommandConsole>("/OpenSim/Console", new ConsolePluginInitialiser("Region", ConfigSource, this));
-            
+            List<ICommandConsole> Plugins = AuroraModuleLoader.PickupModules<ICommandConsole>();
+            foreach (ICommandConsole plugin in Plugins)
+            {
+                plugin.Initialize("Region", ConfigSource, this);
+            }
+
             m_console = m_applicationRegistry.Get<ICommandConsole>();
             if (m_console == null)
                 m_console = new LocalConsole();
@@ -243,10 +256,16 @@ namespace OpenSim
             //Lets start this after the http server, but before application plugins.
             //Note: this should be moved out.
             m_sceneManager = new SceneManager(this, m_config);
-            
-            ApplicationPluginInitialiser ApplicationPluginManager = new ApplicationPluginInitialiser(this);
-            Aurora.Framework.AuroraModuleLoader.LoadPlugins<IApplicationPlugin>("/OpenSim/Startup", ApplicationPluginManager);
-            ApplicationPluginManager.PostInitialise();
+
+            List<IApplicationPlugin> plugins = AuroraModuleLoader.PickupModules<IApplicationPlugin>();
+            foreach (IApplicationPlugin plugin in plugins)
+            {
+                plugin.Initialize(this);
+            }
+            foreach (IApplicationPlugin plugin in plugins)
+            {
+                plugin.PostInitialise();
+            }
             
             //Has to be after Scene Manager startup
 			AddPluginCommands();
@@ -356,6 +375,8 @@ namespace OpenSim
             m_console.Commands.AddCommand("region", false, "set log level", "set log level <level>", "Set the console logging level", HandleLogLevel);
 
             m_console.Commands.AddCommand("region", false, "show", "show", "Shows information about this simulator", HandleShow);
+
+            m_console.Commands.AddCommand("region", false, "reload config", "reload config", "Reloads .ini file configuration", HandleConfigRefresh);
         }
 
         protected virtual List<string> GetHelpTopics()
@@ -499,8 +520,7 @@ namespace OpenSim
 		/// <param name="cmd">0,1,region name, region XML file</param>
 		private void HandleCreateRegion(string module, string[] cmd)
 		{
-			RegionLoaderPluginInitialiser RegionLoaderPluginInitialiser = new RegionLoaderPluginInitialiser();
-            List<IRegionLoader> regionLoaders = Aurora.Framework.AuroraModuleLoader.LoadPlugins<IRegionLoader>("/OpenSim/RegionLoader", RegionLoaderPluginInitialiser);
+            List<IRegionLoader> regionLoaders = AuroraModuleLoader.PickupModules<IRegionLoader>();
             foreach (IRegionLoader loader in regionLoaders)
             {
                 loader.Initialise(ConfigSource, null, this);
@@ -677,6 +697,20 @@ namespace OpenSim
 			}
 		}
 
+        public virtual void HandleConfigRefresh(string mod, string[] cmd)
+        {
+            //Rebuild the configs
+            ConfigurationLoader loader = new ConfigurationLoader();
+            m_config = loader.LoadConfigSettings(m_original_config);
+            //Update all modules
+            IRegionModulesController controller = m_applicationRegistry.Get<IRegionModulesController>();
+            foreach (IRegionModuleBase module in controller.AllModules)
+            {
+                module.Initialise(m_config);
+            }
+            MainConsole.Instance.Output("Finished reloading configuration.");
+        }
+
 		/// <summary>
 		/// Many commands list objects for debugging.  Some of the types are listed  here
 		/// </summary>
@@ -723,7 +757,7 @@ namespace OpenSim
 
                 case "stats":
                     if (m_stats != null)
-                        m_console.Output(m_stats.Report(), "None");
+                        m_log.Info(m_stats.Report());
                     break;
 
                 case "threads":
@@ -1024,6 +1058,12 @@ namespace OpenSim
             return sb.ToString();
         }
 
+        public static ProcessThreadCollection GetThreads()
+        {
+            Process thisProc = Process.GetCurrentProcess();
+            return thisProc.Threads;
+        }
+
         /// <summary>
         /// Get a report about the registered threads in this server.
         /// </summary>
@@ -1031,7 +1071,7 @@ namespace OpenSim
         {
             StringBuilder sb = new StringBuilder();
 
-            ProcessThreadCollection threads = ThreadTracker.GetThreads();
+            ProcessThreadCollection threads = GetThreads();
             if (threads == null)
             {
                 sb.Append("OpenSim thread tracking is only enabled in DEBUG mode.");

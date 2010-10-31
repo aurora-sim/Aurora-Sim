@@ -14,17 +14,18 @@ using OpenSim.Region.Framework.Scenes;
 using Caps = OpenSim.Framework.Capabilities.Caps;
 using Aurora.DataManager;
 using Aurora.Framework;
-using Mono.Addins;
 using OpenSim.Services.CapsService;
 using OpenSim.Server.Base;
 
 namespace Aurora.Modules
 {
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class LocalCAPSService : ISharedRegionModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private AuroraCAPSHandler m_CapsService;
+        private bool m_enabled = false;
+        private IConfigSource m_source;
+        private Scene m_scene;
 
         public void PostInitialise()
         {
@@ -32,7 +33,7 @@ namespace Aurora.Modules
 
         public string Name
         {
-            get { return "LocalCAPSService"; }
+            get { return "LocalCapsService"; }
         }
 
         public Type ReplaceableInterface
@@ -48,23 +49,8 @@ namespace Aurora.Modules
                 string name = moduleConfig.GetString("CapsService", "LocalCapsService");
                 if (name == Name)
                 {
-                    string serviceDll = moduleConfig.GetString("LocalServiceModule",
-                            String.Empty);
-
-                    if (serviceDll == String.Empty)
-                    {
-                        m_log.Error("[LOCAL CAPS SERVICES CONNECTOR]: No LocalServiceModule named in section LocalCapsService");
-                        return;
-                    }
-
-                    Object[] args = new Object[] { source };
-                    m_CapsService = ServerUtils.LoadPlugin<AuroraCAPSHandler>(serviceDll, args);
-
-                    if (m_CapsService == null)
-                    {
-                        m_log.Error("[LOCAL CAPS SERVICES CONNECTOR]: Can't load caps service");
-                        return;
-                    }
+                    m_enabled = true;
+                    m_source = source;
                 }
             }
         }
@@ -83,6 +69,32 @@ namespace Aurora.Modules
 
         public void RegionLoaded(Scene scene)
         {
+            if (!m_enabled)
+                return;
+            if (m_scene != null)
+                return; //only load once
+
+            m_scene = scene;
+
+            scene.EventManager.OnRegisterCaps += new EventManager.RegisterCapsEvent(EventManager_OnRegisterCaps);
+        }
+
+        void EventManager_OnRegisterCaps(UUID agentID, Caps caps)
+        {
+            CAPSPrivateSeedHandler handler = new CAPSPrivateSeedHandler(null,//the server IS null for a reason, so that we don't add the handlers at the wrong time
+                m_scene.InventoryService, 
+                m_scene.LibraryService, m_scene.GridUserService,
+                m_scene.PresenceService, "", agentID, ""); //URL and Hostname are all "" as well so that we don't add the hostname by accident
+
+            List<IRequestHandler> handlers = handler.GetServerCAPS();
+
+            foreach (IRequestHandler handle in handlers)
+            {
+                if (handler.registeredCAPSPath.ContainsKey(handle.Path))
+                {
+                    caps.RegisterHandler(handler.registeredCAPSPath[handle.Path].ToString(), handle);
+                }
+            }
         }
     }
 }

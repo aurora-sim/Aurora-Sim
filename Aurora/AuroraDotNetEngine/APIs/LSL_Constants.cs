@@ -277,10 +277,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         public const int CHANGED_LINK = 32;
         public const int CHANGED_ALLOWED_DROP = 64;
         public const int CHANGED_OWNER = 128;
-        public const int CHANGED_REGION_RESTART = 256;
-        public const int CHANGED_REGION_START = 256;
-        public const int CHANGED_REGION = 512;
-        public const int CHANGED_TELEPORT = 1024;
+        public const int CHANGED_REGION = 256;
+        public const int CHANGED_TELEPORT = 512;
+        public const int CHANGED_REGION_RESTART = 1024;
+        public const int CHANGED_REGION_START = 1024; //LL Changed the constant from CHANGED_REGION_RESTART
         public const int CHANGED_MEDIA = 2048;
         public const int CHANGED_ANIMATION = 16384;
         public const int CHANGED_STATE = 32768;
@@ -404,18 +404,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         public const int PARCEL_MEDIA_COMMAND_DESC = 12;
         public const int PARCEL_MEDIA_COMMAND_LOOP_SET = 13;
 
-        public const int LSL_STATUS_OK = 0;
-        public const int LSL_STATUS_MALFORMED_PARAMS = 1000;
-        public const int LSL_STATUS_TYPE_MISMATCH = 1001;
-        public const int LSL_STATUS_BOUNDS_ERROR = 1002;
-        public const int LSL_STATUS_NOT_FOUND = 1003;
-        public const int LSL_STATUS_NOT_SUPPORTED = 1004;
-        public const int LSL_STATUS_INTERNAL_ERROR = 1999;
-        public const int LSL_STATUS_WHITELIST_FAILED = 2001;
-
-        public const int PRIM_MEDIA_CONTROLS_STANDARD = 0;
-        public const int PRIM_MEDIA_CONTROLS_MINI = 1;
-
+        // constants for llGetPrimMediaParams/llSetPrimMediaParams
         public const int PRIM_MEDIA_ALT_IMAGE_ENABLE = 0;
         public const int PRIM_MEDIA_CONTROLS = 1;
         public const int PRIM_MEDIA_CURRENT_URL = 2;
@@ -431,6 +420,24 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         public const int PRIM_MEDIA_WHITELIST = 12;
         public const int PRIM_MEDIA_PERMS_INTERACT = 13;
         public const int PRIM_MEDIA_PERMS_CONTROL = 14;
+
+        public const int PRIM_MEDIA_CONTROLS_STANDARD = 0;
+        public const int PRIM_MEDIA_CONTROLS_MINI = 1;
+
+        public const int PRIM_MEDIA_PERM_NONE = 0;
+        public const int PRIM_MEDIA_PERM_OWNER = 1;
+        public const int PRIM_MEDIA_PERM_GROUP = 2;
+        public const int PRIM_MEDIA_PERM_ANYONE = 4;
+
+        // extra constants for llSetPrimMediaParams
+        public static readonly LSLInteger LSL_STATUS_OK = new LSLInteger(0);
+        public static readonly LSLInteger LSL_STATUS_MALFORMED_PARAMS = new LSLInteger(1000);
+        public static readonly LSLInteger LSL_STATUS_TYPE_MISMATCH = new LSLInteger(1001);
+        public static readonly LSLInteger LSL_STATUS_BOUNDS_ERROR = new LSLInteger(1002);
+        public static readonly LSLInteger LSL_STATUS_NOT_FOUND = new LSLInteger(1003);
+        public static readonly LSLInteger LSL_STATUS_NOT_SUPPORTED = new LSLInteger(1004);
+        public static readonly LSLInteger LSL_STATUS_INTERNAL_ERROR = new LSLInteger(1999);
+        public static readonly LSLInteger LSL_STATUS_WHITELIST_FAILED = new LSLInteger(2001);
 
         public const int PARCEL_FLAG_ALLOW_FLY = 0x1;                           // parcel allows flying
         public const int PARCEL_FLAG_ALLOW_SCRIPTS = 0x2;                       // parcel allows outside scripts

@@ -519,7 +519,7 @@ namespace OpenSim.Region.OptionalModules.World.NPC
 
         }
 
-        public virtual void SendKillObject(ulong regionHandle, uint[] localID)
+        public virtual void SendKillObject(ulong regionHandle, ISceneEntity[] localID)
         {
         }
 
@@ -628,7 +628,11 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         {
         }
 
-        public virtual void SendTeleportLocationStart()
+        public virtual void SendTeleportStart(uint flags)
+        {
+        }
+
+        public virtual void SendTeleportProgress(uint flags, string message)
         {
         }
 
@@ -641,10 +645,6 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         }
 
         public virtual void SendCoarseLocationUpdate(List<UUID> users, List<Vector3> CoarseLocations)
-        {
-        }
-
-        public virtual void AttachObject(uint localID, Quaternion rotation, byte attachPoint, UUID ownerID)
         {
         }
 
@@ -1174,12 +1174,11 @@ namespace OpenSim.Region.OptionalModules.World.NPC
 
         public event ChangeInventoryItemFlags OnChangeInventoryItemFlags;
         public event TeleportCancel OnTeleportCancel;
-
-        #region IClientAPI Members
-
-
         public event ViewerStartAuction OnViewerStartAuction;
 
-        #endregion
+        public bool RemoveGenericPacketHandler(string MethodName)
+        {
+            return true;
+        }
     }
 }

@@ -91,7 +91,6 @@ namespace OpenSim.Services.Connectors.Simulation
             return false;
         }
 
-
         protected bool SendRequest(GridRegion destination, AgentCircuitData aCircuit, uint flags, out string reason, out HttpWebRequest AgentCreateRequest)
         {
             reason = String.Empty;
@@ -239,6 +238,10 @@ namespace OpenSim.Services.Connectors.Simulation
 
                     result = false;
                 }
+            }
+            else
+            {
+                result = false;
             }
         }
 

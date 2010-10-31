@@ -30,7 +30,6 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Reflection;
 using log4net;
-using Mono.Addins;
 using Nini.Config;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
@@ -44,7 +43,6 @@ namespace OpenSim.Services.Connectors.SimianGrid
     /// <summary>
     /// Connects avatar appearance data to the SimianGrid backend
     /// </summary>
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class SimianAvatarServiceConnector : IAvatarService, ISharedRegionModule
     {
         private static readonly ILog m_log =
@@ -123,7 +121,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
 
                 if (map != null)
                 {
-                    AvatarWearable[] wearables = new AvatarWearable[13];
+                    AvatarWearable[] wearables = new AvatarWearable[15];
                     wearables[0] = new AvatarWearable(map["ShapeItem"].AsUUID(), map["ShapeAsset"].AsUUID());
                     wearables[1] = new AvatarWearable(map["SkinItem"].AsUUID(), map["SkinAsset"].AsUUID());
                     wearables[2] = new AvatarWearable(map["HairItem"].AsUUID(), map["HairAsset"].AsUUID());

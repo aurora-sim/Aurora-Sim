@@ -50,7 +50,7 @@ namespace Aurora.DataManager.SQLite
             }
             catch (Mono.Data.Sqlite.SqliteException ex)
             {
-                //m_log.Warn("[SQLiteDataManager]: Exception processing command: " + cmd.CommandText + ", Exception: " + ex);
+                m_log.Warn("[SQLiteDataManager]: Exception processing command: " + cmd.CommandText + ", Exception: " + ex);
                 //throw ex;
             }
             catch (Exception ex)
@@ -76,7 +76,7 @@ namespace Aurora.DataManager.SQLite
                     return cmd.ExecuteNonQuery();
                 }
             }
-            catch (Mono.Data.Sqlite.SqliteException ex)
+            catch (Mono.Data.Sqlite.SqliteException)
             {
                 //m_log.Warn("[SQLiteDataManager]: Exception processing command: " + cmd.CommandText + ", Exception: " + ex);
                 //throw ex;
@@ -128,12 +128,12 @@ namespace Aurora.DataManager.SQLite
                             RetVal.Add(reader[i].ToString());
                     }
                 }
+                reader.Close();
+                CloseReaderCommand(cmd);
             }
             catch
             {
             }
-            reader.Close();
-            CloseReaderCommand(cmd);
 
             return RetVal;
         }

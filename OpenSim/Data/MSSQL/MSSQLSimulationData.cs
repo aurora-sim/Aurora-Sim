@@ -43,7 +43,7 @@ namespace OpenSim.Data.MSSQL
     /// <summary>
     /// A MSSQL Interface for the Region Server.
     /// </summary>
-    public class MSSQLRegionDataStore : IRegionDataStore
+    public class MSSQLSimulationData : ISimulationDataStore
     {
         private const string _migrationStore = "RegionStore";
 
@@ -55,6 +55,16 @@ namespace OpenSim.Data.MSSQL
         /// </summary>
         private MSSQLManager _Database;
         private string m_connectionString;
+
+        public MSSQLSimulationData()
+        {
+        }
+
+        public MSSQLSimulationData(string connectionString)
+        {
+            Initialise(connectionString);
+        }
+
         /// <summary>
         /// Initialises the region datastore
         /// </summary>
@@ -81,14 +91,13 @@ namespace OpenSim.Data.MSSQL
         /// </summary>
         /// <param name="regionUUID">The region UUID.</param>
         /// <returns></returns>
-        public List<SceneObjectGroup> LoadObjects(UUID regionUUID)
+        public List<SceneObjectGroup> LoadObjects(UUID regionUUID, Scene scene)
         {
             UUID lastGroupID = UUID.Zero;
 
             Dictionary<UUID, SceneObjectPart> prims = new Dictionary<UUID, SceneObjectPart>();
             Dictionary<UUID, SceneObjectGroup> objects = new Dictionary<UUID, SceneObjectGroup>();
             SceneObjectGroup grp = null;
-
 
             string sql = "SELECT *, " +
                            "sort = CASE WHEN prims.UUID = prims.SceneGroupID THEN 0 ELSE 1 END " +
@@ -137,7 +146,7 @@ namespace OpenSim.Data.MSSQL
                                 sceneObjectPart.UUID = groupID;
                             }
 
-                            grp = new SceneObjectGroup(sceneObjectPart);
+                            grp = new SceneObjectGroup(sceneObjectPart, scene);
                         }
                         else
                         {
@@ -291,7 +300,6 @@ namespace OpenSim.Data.MSSQL
                     }
                 }
             }
-
         }
 
         /// <summary>
@@ -327,7 +335,7 @@ IF EXISTS (SELECT UUID FROM prims WHERE UUID = @UUID)
             ScriptAccessPin = @ScriptAccessPin, AllowedDrop = @AllowedDrop, DieAtEdge = @DieAtEdge, SalePrice = @SalePrice, 
             SaleType = @SaleType, ColorR = @ColorR, ColorG = @ColorG, ColorB = @ColorB, ColorA = @ColorA, ParticleSystem = @ParticleSystem, 
             ClickAction = @ClickAction, Material = @Material, CollisionSound = @CollisionSound, CollisionSoundVolume = @CollisionSoundVolume, PassTouches = @PassTouches,
-            LinkNumber = @LinkNumber
+            LinkNumber = @LinkNumber, MediaURL = @MediaURL
         WHERE UUID = @UUID
     END
 ELSE
@@ -342,7 +350,7 @@ ELSE
             PayPrice, PayButton1, PayButton2, PayButton3, PayButton4, LoopedSound, LoopedSoundGain, TextureAnimation, OmegaX, 
             OmegaY, OmegaZ, CameraEyeOffsetX, CameraEyeOffsetY, CameraEyeOffsetZ, CameraAtOffsetX, CameraAtOffsetY, CameraAtOffsetZ, 
             ForceMouselook, ScriptAccessPin, AllowedDrop, DieAtEdge, SalePrice, SaleType, ColorR, ColorG, ColorB, ColorA, 
-            ParticleSystem, ClickAction, Material, CollisionSound, CollisionSoundVolume, PassTouches, LinkNumber, Generic
+            ParticleSystem, ClickAction, Material, CollisionSound, CollisionSoundVolume, PassTouches, LinkNumber, MediaURL, Generic
             ) VALUES (
             @UUID, @CreationDate, @Name, @Text, @Description, @SitName, @TouchName, @ObjectFlags, @OwnerMask, @NextOwnerMask, @GroupMask, 
             @EveryoneMask, @BaseMask, @PositionX, @PositionY, @PositionZ, @GroupPositionX, @GroupPositionY, @GroupPositionZ, @VelocityX, 
@@ -352,7 +360,7 @@ ELSE
             @PayPrice, @PayButton1, @PayButton2, @PayButton3, @PayButton4, @LoopedSound, @LoopedSoundGain, @TextureAnimation, @OmegaX, 
             @OmegaY, @OmegaZ, @CameraEyeOffsetX, @CameraEyeOffsetY, @CameraEyeOffsetZ, @CameraAtOffsetX, @CameraAtOffsetY, @CameraAtOffsetZ, 
             @ForceMouselook, @ScriptAccessPin, @AllowedDrop, @DieAtEdge, @SalePrice, @SaleType, @ColorR, @ColorG, @ColorB, @ColorA, 
-            @ParticleSystem, @ClickAction, @Material, @CollisionSound, @CollisionSoundVolume, @PassTouches, @LinkNumber, @Generic
+            @ParticleSystem, @ClickAction, @Material, @CollisionSound, @CollisionSoundVolume, @PassTouches, @LinkNumber, @MediaURL, @Generic
             )
     END";
 
@@ -385,7 +393,7 @@ IF EXISTS (SELECT UUID FROM primshapes WHERE UUID = @UUID)
             PathSkew = @PathSkew, PathCurve = @PathCurve, PathRadiusOffset = @PathRadiusOffset, PathRevolutions = @PathRevolutions, 
             PathTaperX = @PathTaperX, PathTaperY = @PathTaperY, PathTwist = @PathTwist, PathTwistBegin = @PathTwistBegin, 
             ProfileBegin = @ProfileBegin, ProfileEnd = @ProfileEnd, ProfileCurve = @ProfileCurve, ProfileHollow = @ProfileHollow, 
-            Texture = @Texture, ExtraParams = @ExtraParams, State = @State
+            Texture = @Texture, ExtraParams = @ExtraParams, State = @State, Media = @Media
         WHERE UUID = @UUID
     END
 ELSE
@@ -394,11 +402,11 @@ ELSE
             primshapes (
             UUID, Shape, ScaleX, ScaleY, ScaleZ, PCode, PathBegin, PathEnd, PathScaleX, PathScaleY, PathShearX, PathShearY, 
             PathSkew, PathCurve, PathRadiusOffset, PathRevolutions, PathTaperX, PathTaperY, PathTwist, PathTwistBegin, ProfileBegin, 
-            ProfileEnd, ProfileCurve, ProfileHollow, Texture, ExtraParams, State
+            ProfileEnd, ProfileCurve, ProfileHollow, Texture, ExtraParams, State, Media
             ) VALUES (
             @UUID, @Shape, @ScaleX, @ScaleY, @ScaleZ, @PCode, @PathBegin, @PathEnd, @PathScaleX, @PathScaleY, @PathShearX, @PathShearY, 
             @PathSkew, @PathCurve, @PathRadiusOffset, @PathRevolutions, @PathTaperX, @PathTaperY, @PathTwist, @PathTwistBegin, @ProfileBegin, 
-            @ProfileEnd, @ProfileCurve, @ProfileHollow, @Texture, @ExtraParams, @State
+            @ProfileEnd, @ProfileCurve, @ProfileHollow, @Texture, @ExtraParams, @State, @Media
             )
     END";
 
@@ -705,9 +713,9 @@ ELSE
 
             //Insert new values
             string sql = @"INSERT INTO [land] 
-([UUID],[RegionUUID],[LocalLandID],[Bitmap],[Name],[Description],[OwnerUUID],[IsGroupOwned],[Area],[AuctionID],[Category],[ClaimDate],[ClaimPrice],[GroupUUID],[SalePrice],[LandStatus],[LandFlags],[LandingType],[MediaAutoScale],[MediaTextureUUID],[MediaURL],[MusicURL],[PassHours],[PassPrice],[SnapshotUUID],[UserLocationX],[UserLocationY],[UserLocationZ],[UserLookAtX],[UserLookAtY],[UserLookAtZ],[AuthbuyerID],[OtherCleanTime],[Dwell])
+([UUID],[RegionUUID],[LocalLandID],[Bitmap],[Name],[Description],[OwnerUUID],[IsGroupOwned],[Area],[AuctionID],[Category],[ClaimDate],[ClaimPrice],[GroupUUID],[SalePrice],[LandStatus],[LandFlags],[LandingType],[MediaAutoScale],[MediaTextureUUID],[MediaURL],[MusicURL],[PassHours],[PassPrice],[SnapshotUUID],[UserLocationX],[UserLocationY],[UserLocationZ],[UserLookAtX],[UserLookAtY],[UserLookAtZ],[AuthbuyerID],[OtherCleanTime])
 VALUES
-(@UUID,@RegionUUID,@LocalLandID,@Bitmap,@Name,@Description,@OwnerUUID,@IsGroupOwned,@Area,@AuctionID,@Category,@ClaimDate,@ClaimPrice,@GroupUUID,@SalePrice,@LandStatus,@LandFlags,@LandingType,@MediaAutoScale,@MediaTextureUUID,@MediaURL,@MusicURL,@PassHours,@PassPrice,@SnapshotUUID,@UserLocationX,@UserLocationY,@UserLocationZ,@UserLookAtX,@UserLookAtY,@UserLookAtZ,@AuthbuyerID,@OtherCleanTime,@Dwell)";
+(@UUID,@RegionUUID,@LocalLandID,@Bitmap,@Name,@Description,@OwnerUUID,@IsGroupOwned,@Area,@AuctionID,@Category,@ClaimDate,@ClaimPrice,@GroupUUID,@SalePrice,@LandStatus,@LandFlags,@LandingType,@MediaAutoScale,@MediaTextureUUID,@MediaURL,@MusicURL,@PassHours,@PassPrice,@SnapshotUUID,@UserLocationX,@UserLocationY,@UserLocationZ,@UserLookAtX,@UserLookAtY,@UserLookAtZ,@AuthbuyerID,@OtherCleanTime)";
 
             using (SqlConnection conn = new SqlConnection(m_connectionString))
             using (SqlCommand cmd = new SqlCommand(sql, conn))
@@ -1013,7 +1021,6 @@ VALUES
             newData.SnapshotID = new UUID((Guid)row["SnapshotUUID"]);
 
             newData.OtherCleanTime = Convert.ToInt32(row["OtherCleanTime"]);
-            newData.Dwell = Convert.ToInt32(row["Dwell"]);
 
             try
             {
@@ -1074,7 +1081,7 @@ VALUES
             prim.SitName = (string)primRow["SitName"];
             prim.TouchName = (string)primRow["TouchName"];
             // permissions
-            prim.ObjectFlags = Convert.ToUInt32(primRow["ObjectFlags"]);
+            prim.Flags = (PrimFlags)Convert.ToUInt32(primRow["ObjectFlags"]);
             prim.CreatorID = new UUID((Guid)primRow["CreatorID"]);
             prim.OwnerID = new UUID((Guid)primRow["OwnerID"]);
             prim.GroupID = new UUID((Guid)primRow["GroupID"]);
@@ -1184,6 +1191,8 @@ VALUES
             prim.PassTouch = Convert.ToInt32(primRow["PassTouches"]);
             prim.LinkNum = Convert.ToInt32(primRow["LinkNumber"]);
             prim.GenericData = (string)primRow["Generic"];
+            if (!(primRow["MediaURL"] is System.DBNull))
+                prim.MediaUrl = (string)primRow["MediaURL"];
 
             return prim;
         }
@@ -1236,6 +1245,9 @@ VALUES
             catch (InvalidCastException)
             {
             }
+
+            if (!(shapeRow["Media"] is System.DBNull))
+                baseShape.Media = PrimitiveBaseShape.MediaList.FromXml((string)shapeRow["Media"]);
 
             return baseShape;
         }
@@ -1415,7 +1427,6 @@ VALUES
             parameters.Add(_Database.CreateParameter("UserLookAtZ", land.UserLookAt.Z));
             parameters.Add(_Database.CreateParameter("AuthBuyerID", land.AuthBuyerID));
             parameters.Add(_Database.CreateParameter("OtherCleanTime", land.OtherCleanTime));
-            parameters.Add(_Database.CreateParameter("Dwell", land.Dwell));
 
             return parameters.ToArray();
         }
@@ -1464,7 +1475,7 @@ VALUES
             parameters.Add(_Database.CreateParameter("SitName", prim.SitName));
             parameters.Add(_Database.CreateParameter("TouchName", prim.TouchName));
             // permissions
-            parameters.Add(_Database.CreateParameter("ObjectFlags", prim.ObjectFlags));
+            parameters.Add(_Database.CreateParameter("ObjectFlags", (uint)prim.Flags));
             parameters.Add(_Database.CreateParameter("CreatorID", prim.CreatorID));
             parameters.Add(_Database.CreateParameter("OwnerID", prim.OwnerID));
             parameters.Add(_Database.CreateParameter("GroupID", prim.GroupID));
@@ -1569,7 +1580,8 @@ VALUES
             parameters.Add(_Database.CreateParameter("CollisionSoundVolume", prim.CollisionSoundVolume));
             parameters.Add(_Database.CreateParameter("PassTouches", prim.PassTouch));
             parameters.Add(_Database.CreateParameter("LinkNumber", prim.LinkNum));
-            parameters.Add(_Database.CreateParameter("Generic", prim.GenericData));
+            parameters.Add(_Database.CreateParameter("MediaURL", prim.MediaUrl));
+			parameters.Add(_Database.CreateParameter("Generic", prim.GenericData));
             return parameters.ToArray();
         }
 
@@ -1616,6 +1628,7 @@ VALUES
             parameters.Add(_Database.CreateParameter("Texture", s.TextureEntry));
             parameters.Add(_Database.CreateParameter("ExtraParams", s.ExtraParams));
             parameters.Add(_Database.CreateParameter("State", s.State));
+            parameters.Add(_Database.CreateParameter("Media", null == s.Media ? null : s.Media.ToXml()));
 
             return parameters.ToArray();
         }

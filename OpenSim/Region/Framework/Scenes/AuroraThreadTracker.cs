@@ -37,18 +37,35 @@ namespace OpenSim.Region.Framework.Scenes
         Scene m_scene = null;
         public delegate void NeedToAddThread(string type);
         public event NeedToAddThread OnNeedToAddThread;
+        private bool Alive = true;
 
         public void Init(Scene scene)
         {
             m_scene = scene;
-            checkTimer = new Timer();
-            checkTimer.Enabled = true;
-            checkTimer.Interval = 1000;
-            checkTimer.Elapsed += Check;
+            //checkTimer = new Timer();
+            //checkTimer.Enabled = true;
+            //checkTimer.Interval = 1000;
+            //checkTimer.Elapsed += Check;
+        }
+
+        public void Close()
+        {
+            Alive = false;
+            //checkTimer.Stop();
+            //checkTimer.Dispose();
+            //checkTimer = null;
+            foreach (IThread thread in AllHeartbeats)
+            {
+                thread.ThreadIsClosing -= ThreadDieing;
+                thread.ShouldExit = true;
+            }
+            AllHeartbeats.Clear();
         }
 
         private void Check(object sender, ElapsedEventArgs e)
         {
+            if (!Alive)
+                return;
             FixThreadCount();
             for (int i = 0; i < AllHeartbeats.Count; i++)
             {

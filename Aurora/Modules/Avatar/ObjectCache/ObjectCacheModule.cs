@@ -27,7 +27,7 @@ namespace Aurora.Modules
         {
             IConfig moduleConfig = source.Configs["ObjectCache"];
             if (moduleConfig != null)
-                m_Enabled = moduleConfig.GetString("Module", Name) == Name;
+                m_Enabled = moduleConfig.GetString("Module", "") == Name;
         }
 
         public virtual void PostInitialise()
@@ -102,7 +102,10 @@ namespace Aurora.Modules
                 else
                 {
                     if (CurrentEntityCRC > CRC)
+                    {
+                        m_cachedObjects[localID] = CurrentEntityCRC;
                         return false; //CRC is greater than the one the client cache has
+                    }
                     else
                         return true; //CRC is the same! Send a cache!
                 }

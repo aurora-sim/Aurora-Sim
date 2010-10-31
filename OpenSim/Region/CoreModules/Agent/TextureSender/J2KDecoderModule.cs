@@ -40,13 +40,11 @@ using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
-using Mono.Addins;
 
 namespace OpenSim.Region.CoreModules.Agent.TextureSender
 {
     public delegate void J2KDecodeDelegate(UUID assetID);
 
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class J2KDecoderModule : ISharedRegionModule, IJ2KDecoder
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -59,6 +57,7 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
         private IImprovedAssetCache m_cache;
         /// <summary>Reference to a scene (doesn't matter which one as long as it can load the cache module)</summary>
         private Scene m_scene;
+        private bool m_useCache = true;
 
         #region IRegionModule
 
@@ -77,6 +76,7 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
             if (imageConfig != null)
             {
                 m_useCSJ2K = imageConfig.GetBoolean("UseCSJ2K", m_useCSJ2K);
+                m_useCache = imageConfig.GetBoolean("UseJ2KCache", m_useCache);
             }
         }
 
@@ -276,7 +276,8 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
 
         private void SaveFileCacheForAsset(UUID AssetId, OpenJPEG.J2KLayerInfo[] Layers)
         {
-            m_decodedCache.AddOrUpdate(AssetId, Layers, TimeSpan.FromMinutes(10));
+            if(m_useCache)
+                m_decodedCache.AddOrUpdate(AssetId, Layers, TimeSpan.FromMinutes(10));
 
             if (m_cache != null)
             {

@@ -111,6 +111,7 @@ namespace OpenSim.Region.DataSnapshot.Providers
 
             //Brought back from the dead for staleness checks.
             m_scene.EventManager.OnNewClient += OnNewClient;
+            scene.EventManager.OnClosingClient += OnClosingClient;
         }
 
         public Scene GetParentScene
@@ -374,6 +375,19 @@ namespace OpenSim.Region.DataSnapshot.Providers
             client.OnParcelPropertiesUpdateRequest += delegate(LandUpdateArgs args, int local_id,
                 IClientAPI remote_client) { this.Stale = true; };
             client.OnParcelBuy += delegate(UUID agentId, UUID groupId, bool final, bool groupOwned,
+                bool removeContribution, int parcelLocalID, int parcelArea, int parcelPrice, bool authenticated)
+            { this.Stale = true; };
+        }
+
+        private void OnClosingClient(IClientAPI client)
+        {
+            client.OnParcelDivideRequest -= delegate(int west, int south, int east, int north,
+                IClientAPI remote_client) { this.Stale = true; };
+            client.OnParcelJoinRequest -= delegate(int west, int south, int east, int north,
+                IClientAPI remote_client) { this.Stale = true; };
+            client.OnParcelPropertiesUpdateRequest -= delegate(LandUpdateArgs args, int local_id,
+                IClientAPI remote_client) { this.Stale = true; };
+            client.OnParcelBuy -= delegate(UUID agentId, UUID groupId, bool final, bool groupOwned,
                 bool removeContribution, int parcelLocalID, int parcelArea, int parcelPrice, bool authenticated)
             { this.Stale = true; };
         }

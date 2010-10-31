@@ -89,7 +89,7 @@ namespace Aurora.Framework
         {
             Dictionary<string, object> result = new Dictionary<string, object>();
             result["PrincipalID"] = PrincipalID.ToString();
-            result["Flags"] = Flags;
+            result["Flags"] = (uint)Flags;
             result["MaxMaturity"] = MaxMaturity;
             result["MaturityRating"] = MaturityRating;
             result["Language"] = Language.ToString();
@@ -317,11 +317,11 @@ namespace Aurora.Framework
 
     public class ProfileInterests
     {
-        public uint WantToMask;
-        public string WantToText;
-        public uint CanDoMask;
-        public string CanDoText;
-        public string Languages;
+        public uint WantToMask = 0;
+        public string WantToText = "";
+        public uint CanDoMask = 0;
+        public string CanDoText = "";
+        public string Languages = "";
     }
 
     public class Classified

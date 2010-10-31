@@ -110,7 +110,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// </summary>
         /// <param name="xmlString"></param>
         /// <returns>The scene object created</returns>
-        SceneObjectGroup DeserializeGroupFromXml2(string xmlString);
+        SceneObjectGroup DeserializeGroupFromXml2(string xmlString, Scene scene);
 
         /// <summary>
         /// Serialize an individual scene object into the xml2 format

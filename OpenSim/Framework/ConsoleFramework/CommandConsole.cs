@@ -34,7 +34,6 @@ using System.Text;
 using System.Threading;
 using log4net;
 using Nini.Config;
-using Mono.Addins;
 
 namespace OpenSim.Framework
 {
@@ -153,7 +152,7 @@ namespace OpenSim.Framework
                 help.Add(commandInfo.descriptive_help);
 
                 if (descriptiveHelp != string.Empty)
-                    help.Add(string.Empty);                
+                    help.Add(string.Empty);
             }
             else
             {
@@ -566,12 +565,11 @@ namespace OpenSim.Framework
     /// <summary>
     /// A console that processes commands internally
     /// </summary>
-    [Extension(Path = "/OpenSim/Console", NodeName = "ConsolePlugin")]
     public class CommandConsole : ICommandConsole
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        public virtual void Initialise(string defaultPrompt, IConfigSource source, IOpenSimBase baseOpenSim)
+        public virtual void Initialize(string defaultPrompt, IConfigSource source, IOpenSimBase baseOpenSim)
         {
             if (source.Configs["Console"] != null)
             {
@@ -612,6 +610,7 @@ namespace OpenSim.Framework
         {
             string[] parts = Parser.Parse(cmd);
             m_Commands.Resolve(parts);
+            Output("");
         }
 
         public virtual string ReadLine(string p, bool isCommand, bool e)
@@ -648,6 +647,57 @@ namespace OpenSim.Framework
             string ret = ReadLine(String.Format("{0} [{1}]: ", p, def), false, true);
             if (ret == String.Empty)
                 ret = def;
+
+            return ret;
+        }
+
+        public string CmdPrompt(string p, List<char> excludedCharacters)
+        {
+            bool itisdone = false;
+            string ret = String.Empty;
+            while (!itisdone)
+            {
+                itisdone = true;
+                ret = CmdPrompt(p);
+
+                foreach (char c in excludedCharacters)
+                {
+                    if (ret.Contains(c.ToString()))
+                    {
+                        System.Console.WriteLine("The character \"" + c.ToString() + "\" is not permitted.");
+                        itisdone = false;
+                    }
+                }
+            }
+
+            return ret;
+        }
+
+        public string CmdPrompt(string p, string def, List<char> excludedCharacters)
+        {
+            bool itisdone = false;
+            string ret = String.Empty;
+            while (!itisdone)
+            {
+                itisdone = true;
+                ret = CmdPrompt(p, def);
+
+                if (ret == String.Empty)
+                {
+                    ret = def;
+                }
+                else
+                {
+                    foreach (char c in excludedCharacters)
+                    {
+                        if (ret.Contains(c.ToString()))
+                        {
+                            System.Console.WriteLine("The character \"" + c.ToString() + "\" is not permitted.");
+                            itisdone = false;
+                        }
+                    }
+                }
+            }
 
             return ret;
         }
@@ -690,7 +740,13 @@ namespace OpenSim.Framework
 
         public virtual void Output(string text)
         {
+            Log(text);
             System.Console.WriteLine(text);
+        }
+
+        public virtual void Log(string text)
+        {
+
         }
 
         public virtual void LockOutput()

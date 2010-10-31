@@ -37,14 +37,4 @@ namespace OpenSim.Framework
 
         void Initialise(IConfigSource configSource, IRegionCreator creator, IOpenSimBase openSim);
     }
-    public class RegionLoaderPluginInitialiser : PluginInitialiserBase
-    {
-        public RegionLoaderPluginInitialiser()
-        {
-        }
-
-        public override void Initialise(IPlugin plugin)
-        {
-        }
-    }
 }

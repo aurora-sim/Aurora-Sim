@@ -91,6 +91,12 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             client.OnConnectionClosed += new Action<IClientAPI>(OnConnectionClosed);
         }
 
+        protected override void OnClosingClient(IClientAPI client)
+        {
+            client.OnTeleportHomeRequest -= TeleportHome;
+            client.OnConnectionClosed -= new Action<IClientAPI>(OnConnectionClosed);
+        }
+
 
         public override void RegionLoaded(Scene scene)
         {

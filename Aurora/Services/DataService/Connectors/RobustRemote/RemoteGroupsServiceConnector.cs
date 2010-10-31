@@ -26,7 +26,7 @@ namespace Aurora.Services.DataService
 
         private string m_ServerURI = "";
 
-        public void Initialise(IGenericData GenericData, IConfigSource source, string DefaultConnectionString)
+        public void Initialize(IGenericData GenericData, IConfigSource source, string DefaultConnectionString)
         {
             if (source.Configs["AuroraConnectors"].GetString("GroupsConnector", "LocalConnector") == "RemoteConnector")
             {

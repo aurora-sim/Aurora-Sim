@@ -40,7 +40,6 @@ using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Framework.Client;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
-using Mono.Addins;
 
 namespace OpenSim.Region.OptionalModules.Scripting.XmlRpcGridRouterModule
 {
@@ -50,7 +49,6 @@ namespace OpenSim.Region.OptionalModules.Scripting.XmlRpcGridRouterModule
         public string uri;
     }
 
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class XmlRpcGridRouter : INonSharedRegionModule, IXmlRpcRouter
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);

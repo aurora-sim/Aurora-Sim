@@ -11,13 +11,11 @@ using Nini.Config;
 using log4net;
 using Aurora.DataManager;
 using Aurora.Framework;
-using Mono.Addins;
 using OpenMetaverse;
 
 namespace Aurora.Modules
 {
     /*#region Weather Module
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class WeatherModule : ISharedRegionModule
     {
         #region Declares

@@ -81,9 +81,16 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         #region INonSharedRegionModule Members
         public virtual void Initialise (IConfigSource config)
         {
-            IConfig startupConfig = config.Configs["Startup"];
-            if (startupConfig.GetString("WorldMapModule", "WorldMap") == "WorldMap")
-                m_Enabled = true;
+            if (config.Configs["MapModule"] != null)
+            {
+                if (config.Configs["MapModule"].GetString(
+                        "WorldMapModule", "WorldMapModule") !=
+                        "WorldMapModule")
+                {
+                    m_Enabled = false;
+                    return;
+                }
+            }
         }
 
         public virtual void AddRegion (Scene scene)
@@ -147,7 +154,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
             string regionimage = "regionImage" + m_scene.RegionInfo.RegionID.ToString();
             regionimage = regionimage.Replace("-", "");
-            m_log.Info("[WORLD MAP]: JPEG Map location: http://" + m_scene.RegionInfo.ExternalEndPoint.Address.ToString() + ":" + m_scene.RegionInfo.HttpPort.ToString() + "/index.php?method=" + regionimage);
+            //m_log.Info("[WORLD MAP]: JPEG Map location: http://" + m_scene.RegionInfo.ExternalEndPoint.Address.ToString() + ":" + m_scene.RegionInfo.HttpPort.ToString() + "/index.php?method=" + regionimage);
 
             MainServer.Instance.AddHTTPHandler(regionimage, OnHTTPGetMapImage);
             MainServer.Instance.AddLLSDHandler(
@@ -307,7 +314,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             lock (m_rootAgents)
             {
                 m_rootAgents.Remove(AgentId);
-                if (m_rootAgents.Count == 0)
+                if(m_rootAgents.Count == 0)
                     StopThread();
             }
         }
@@ -1000,45 +1007,8 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             return responsemap;
         }
 
-        public void GenerateMaptile()
+        public void RegenerateMaptile(string ID, byte[] data)
         {
-            // Cannot create a map for a nonexistant heightmap
-            if (m_scene.Heightmap == null)
-                return;
-            
-            //create a texture asset of the terrain
-            IMapImageGenerator terrain = m_scene.RequestModuleInterface<IMapImageGenerator>();
-            if (terrain == null)
-                return;
-
-            byte[] data = terrain.WriteJpeg2000Image();
-            if (data == null)
-                return;
-            
-            UUID lastMapRegionUUID = m_scene.RegionInfo.RegionSettings.TerrainImageID;
-
-            m_log.Debug("[WORLDMAP]: STORING MAPTILE IMAGE");
-
-            m_scene.RegionInfo.RegionSettings.TerrainImageID = UUID.Random();
-
-            AssetBase asset = new AssetBase(
-                m_scene.RegionInfo.RegionSettings.TerrainImageID,
-                "terrainImage_" + m_scene.RegionInfo.RegionID.ToString(),
-                (sbyte)AssetType.Texture,
-                m_scene.RegionInfo.RegionID.ToString());
-            asset.Data = data;
-            asset.Description = m_scene.RegionInfo.RegionName;
-            asset.Temporary = false;
-            asset.Flags = AssetFlags.Maptile;
-
-            // Store the new one
-            m_log.DebugFormat("[WORLDMAP]: Storing map tile {0}", asset.ID);
-            m_scene.AssetService.Store(asset);
-            m_scene.RegionInfo.RegionSettings.Save();
-            
-            // Delete the old one
-            m_log.DebugFormat("[WORLDMAP]: Deleting old map tile {0}", lastMapRegionUUID);
-            m_scene.AssetService.Delete(lastMapRegionUUID.ToString());
         }
 
         private void MakeRootAgent(ScenePresence avatar)

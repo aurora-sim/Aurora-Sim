@@ -38,7 +38,6 @@ using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
-using Mono.Addins;
 
 /*****************************************************
  *
@@ -82,7 +81,6 @@ using Mono.Addins;
 
 namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
 {
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class HttpRequestModule : INonSharedRegionModule, IHttpRequestModule
     {
         private object HttpListLock = new object();

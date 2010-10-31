@@ -15,7 +15,7 @@ namespace Aurora.Services.DataService
     {
         private IGenericData GD = null;
 
-        public void Initialise(IGenericData GenericData, IConfigSource source, string defaultConnectionString)
+        public void Initialize(IGenericData GenericData, IConfigSource source, string defaultConnectionString)
         {
             if (source.Configs["AuroraConnectors"].GetString("ParcelConnector", "LocalConnector") == "LocalConnector")
             {
@@ -47,7 +47,6 @@ namespace Aurora.Services.DataService
         {
             GenericUtils.AddGeneric(args.RegionID, "LandData", args.GlobalID.ToString(), args.ToOSD(), GD);
             SaveParcelAccessList(args);
-            LandData d = GetLandData(args.RegionID, args.GlobalID);
         }
 
         public LandData GetLandData(UUID RegionID, UUID ParcelID)

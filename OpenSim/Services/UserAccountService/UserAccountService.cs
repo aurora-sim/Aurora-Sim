@@ -297,7 +297,7 @@ namespace OpenSim.Services.UserAccountService
             string password;
             string email;
 
-            List<char> excluded = new List<char>(new char[]{' '});
+            List<char> excluded = new List<char>(new char[] { ' ' });
 
             if (cmdparams.Length < 3)
                 firstName = MainConsole.Instance.CmdPrompt("First name", "Default", excluded);

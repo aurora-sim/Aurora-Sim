@@ -17,9 +17,6 @@
         <RegionModule id="ArchiverModule" type="OpenSim.Region.CoreModules.World.Archiver.ArchiverModule" />
         <RegionModule id="CapabilitiesModule" type="OpenSim.Region.CoreModules.Agent.Capabilities.CapabilitiesModule" />
         <RegionModule id="TerrainModule" type="OpenSim.Region.CoreModules.World.Terrain.TerrainModule" />
-        <RegionModule id="WorldMapModule" type="OpenSim.Region.CoreModules.World.WorldMap.WorldMapModule" />
-        <RegionModule id="Warp3DImageModule" type="OpenSim.Region.CoreModules.World.Warp3DMap.Warp3DImageModule" />
-        <RegionModule id="HGWorldMapModule" type="OpenSim.Region.CoreModules.Hypergrid.HGWorldMapModule" />
         <RegionModule id="UrlModule" type="OpenSim.Region.CoreModules.Scripting.LSLHttp.UrlModule" />
         <RegionModule id="Chat" type="OpenSim.Region.CoreModules.Avatar.Chat.ChatModule" />
         <RegionModule id="FriendsModule" type="OpenSim.Region.CoreModules.Avatar.Friends.FriendsModule" />
@@ -73,9 +70,7 @@
         <RegionModule id="GridInfoServiceInConnectorModule" type="OpenSim.Region.CoreModules.ServiceConnectorsIn.Grid.GridInfoServiceInConnectorModule" />    \
         <RegionModule id="AuthenticationServiceInConnectorModule" type="OpenSim.Region.CoreModules.ServiceConnectorsIn.Authentication.AuthenticationServiceInConnectorModule" />
         <RegionModule id="AccessModule" type="OpenSim.Region.CoreModules.World.AccessModule" />    \
-        <RegionModule id="MapImageModule" type="OpenSim.Region.CoreModules.World.LegacyMap.MapImageModule" />    \
-        <RegionModule id="Warp3DImageModule" type="OpenSim.Region.CoreModules.World.Warp3DMap.Warp3DImageModule" />    \
-
+        <RegionModule id="MapImageModule" type="OpenSim.Region.CoreModules.World.WorldMap.MapImageModule" />    \
     </Extension>
 
     <Extension path = "/OpenSim/WindModule">

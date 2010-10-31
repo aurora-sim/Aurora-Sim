@@ -26,7 +26,7 @@ namespace Aurora.Services.DataService
         private string m_ServerURI = "";
         private ExpiringCache<UUID, IAgentInfo> m_cache = new ExpiringCache<UUID, IAgentInfo>();
 
-        public void Initialise(IGenericData unneeded, IConfigSource source, string DefaultConnectionString)
+        public void Initialize(IGenericData unneeded, IConfigSource source, string DefaultConnectionString)
         {
             if (source.Configs["AuroraConnectors"].GetString("AgentConnector", "LocalConnector") == "RemoteConnector")
             {

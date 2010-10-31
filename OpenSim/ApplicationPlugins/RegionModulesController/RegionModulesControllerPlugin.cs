@@ -29,7 +29,6 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using log4net;
-using Mono.Addins;
 using Nini.Config;
 using OpenSim;
 using OpenSim.Region.Framework.Interfaces;
@@ -52,12 +51,6 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
         // Our name
         private string m_name;
 
-        // Internal lists to collect information about modules present
-        private List<TypeExtensionNode> m_nonSharedModules =
-                new List<TypeExtensionNode>();
-        private List<TypeExtensionNode> m_sharedModules =
-                new List<TypeExtensionNode>();
-
         // List of shared module instances, for adding to Scenes
         private List<ISharedRegionModule> m_sharedInstances =
                 new List<ISharedRegionModule>();
@@ -73,14 +66,14 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
 
 #region IApplicationPlugin implementation
 
-        public void Initialise (IOpenSimBase openSim)
+        public void Initialize (IOpenSimBase openSim)
         {
             m_openSim = (OpenSimBase)openSim;
             m_openSim.ApplicationRegistry.RegisterInterface<IRegionModulesController>(this);
             //m_log.DebugFormat("[REGIONMODULES]: Initializing...");
 
             // Who we are
-            string id = AddinManager.CurrentAddin.Id;
+            /*string id = AddinManager.CurrentAddin.Id;
 
             // Make friendly name
             int pos = id.LastIndexOf(".");
@@ -93,10 +86,11 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
             IConfig modulesConfig =
                     m_openSim.ConfigSource.Configs["Modules"];
             if (modulesConfig == null)
-                modulesConfig = m_openSim.ConfigSource.AddConfig("Modules");
+                modulesConfig = m_openSim.ConfigSource.AddConfig("Modules");*/
 
             // Scan modules and load all that aren't disabled
-            foreach (TypeExtensionNode node in
+            m_sharedInstances = Aurora.Framework.AuroraModuleLoader.PickupModules<ISharedRegionModule>();
+            /*foreach (TypeExtensionNode node in
                     AddinManager.GetExtensionNodes("/OpenSim/RegionModules"))
             {
                 if (node.Type.GetInterface(typeof(ISharedRegionModule).ToString()) != null)
@@ -161,9 +155,9 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
                 }
                 else
                     m_log.DebugFormat("[REGIONMODULES]: Found unknown type of module {0}, class {1}", node.Id, node.Type);
-            }
+            }*/
 
-            // Load and init the module. We try a constructor with a port
+            /*// Load and init the module. We try a constructor with a port
             // if a port was given, fall back to one without if there is
             // no port or the more specific constructor fails.
             // This will be removed, so that any module capable of using a port
@@ -178,6 +172,10 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
                 // OK, we're up and running
                 m_sharedInstances.Add(module);
                 module.Initialise(m_openSim.ConfigSource);
+            }*/
+            foreach (ISharedRegionModule module in m_sharedInstances)
+            {
+                module.Initialise(m_openSim.ConfigSource);
             }
         }
 
@@ -190,7 +188,6 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
             {
                 module.PostInitialise();
             }
-
         }
 
 #endregion
@@ -218,8 +215,6 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
                 m_sharedInstances[0].Close();
                 m_sharedInstances.RemoveAt(0);
             }
-            m_sharedModules.Clear();
-            m_nonSharedModules.Clear();
         }
 
 #endregion
@@ -298,7 +293,7 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
 
             // Scan for, and load, nonshared modules
             List<INonSharedRegionModule> list = new List<INonSharedRegionModule>();
-            foreach (TypeExtensionNode node in m_nonSharedModules)
+            /*foreach (TypeExtensionNode node in m_nonSharedModules)
             {
                 Object[] ctorArgs = new Object[] {0};
 
@@ -342,6 +337,40 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
 
                     deferredNonSharedModules[replaceableInterface] = module;
                     m_log.DebugFormat("[REGIONMODULE]: Deferred load of {0}", module.Name);
+                    continue;
+                }
+
+                //m_log.DebugFormat("[REGIONMODULE]: Adding scene {0} to non-shared module {1}",
+                //                  scene.RegionInfo.RegionName, module.Name);
+
+                // Initialise the module
+                module.Initialise(m_openSim.ConfigSource);
+
+                IRegionModuleBaseModules.Add(module);
+                list.Add(module);
+            }*/
+
+            List<INonSharedRegionModule> m_nonSharedModules = Aurora.Framework.AuroraModuleLoader.PickupModules<INonSharedRegionModule>();
+            foreach (INonSharedRegionModule module in m_nonSharedModules)
+            {
+                Type replaceableInterface = module.ReplaceableInterface;
+                if (replaceableInterface != null)
+                {
+                    MethodInfo mii = mi.MakeGenericMethod(replaceableInterface);
+
+                    if (mii.Invoke(scene, new object[0]) != null)
+                    {
+                        m_log.DebugFormat("[REGIONMODULE]: Not loading {0} because another module has registered {1}", module.Name, replaceableInterface.ToString());
+                        continue;
+                    }
+
+                    deferredNonSharedModules[replaceableInterface] = module;
+                    m_log.DebugFormat("[REGIONMODULE]: Deferred load of {0}", module.Name);
+                    continue;
+                }
+
+                if (module is ISharedRegionModule) //Don't load IShared!
+                {
                     continue;
                 }
 

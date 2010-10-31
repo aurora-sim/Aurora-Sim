@@ -41,11 +41,9 @@ using OpenSim.Region.Framework.Scenes;
 using Caps=OpenSim.Framework.Capabilities.Caps;
 using Aurora.DataManager;
 using Aurora.Framework;
-using Mono.Addins;
 
 namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
 {
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class ObjectAdd : INonSharedRegionModule
     {
         private static readonly ILog m_log =

@@ -29,7 +29,6 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using log4net;
-using Mono.Addins;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
@@ -43,7 +42,6 @@ using Caps = OpenSim.Framework.Capabilities.Caps;
 
 namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 {
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class GroupsMessagingModule : ISharedRegionModule, IGroupsMessagingModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -86,7 +84,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
                 m_removeOfflineAgentsFromGroupIMs = groupsConfig.GetBoolean("RemoveOfflineUsersFromGroupIMs", m_removeOfflineAgentsFromGroupIMs);
                 
-                m_log.Info("[GROUPS-MESSAGING]: Initializing GroupsMessagingModule");
+                //m_log.Info("[GROUPS-MESSAGING]: Initializing GroupsMessagingModule");
 
                 m_debugEnabled = groupsConfig.GetBoolean("DebugEnabled", true);
             }
@@ -131,6 +129,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             m_sceneList.Add(scene);
 
             scene.EventManager.OnNewClient += OnNewClient;
+            scene.EventManager.OnClosingClient += OnClosingClient;
             scene.EventManager.OnIncomingInstantMessage += OnGridInstantMessage;
             scene.EventManager.OnClientLogin += OnClientLogin;
         }
@@ -143,6 +142,10 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             if (m_debugEnabled) m_log.DebugFormat("[GROUPS-MESSAGING]: {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
 
             m_sceneList.Remove(scene);
+            scene.EventManager.OnNewClient -= OnNewClient;
+            scene.EventManager.OnClosingClient -= OnClosingClient;
+            scene.EventManager.OnIncomingInstantMessage -= OnGridInstantMessage;
+            scene.EventManager.OnClientLogin -= OnClientLogin;
         }
 
         public void Close()
@@ -280,6 +283,13 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             if (m_debugEnabled) m_log.DebugFormat("[GROUPS-MESSAGING]: OnInstantMessage registered for {0}", client.Name);
 
             client.OnInstantMessage += OnInstantMessage;
+        }
+
+        private void OnClosingClient(IClientAPI client)
+        {
+            if (m_debugEnabled) m_log.DebugFormat("[GROUPS-MESSAGING]: OnInstantMessage unregistered for {0}", client.Name);
+
+            client.OnInstantMessage -= OnInstantMessage;
         }
 
         private void OnGridInstantMessage(GridInstantMessage msg)

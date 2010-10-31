@@ -14,11 +14,9 @@ using OpenSim.Region.Framework.Scenes;
 using Caps = OpenSim.Framework.Capabilities.Caps;
 using Aurora.DataManager;
 using Aurora.Framework;
-using Mono.Addins;
 
 namespace Aurora.Modules
 {
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class AuctionModule : INonSharedRegionModule
     {
         private static readonly ILog m_log =
@@ -34,11 +32,14 @@ namespace Aurora.Modules
             m_scene = scene;
             m_scene.EventManager.OnRegisterCaps += RegisterCaps;
             m_scene.EventManager.OnNewClient += OnNewClient;
+            m_scene.EventManager.OnClosingClient += OnClosingClient;
         }
 
         public void RemoveRegion(Scene scene)
         {
-
+            m_scene.EventManager.OnRegisterCaps -= RegisterCaps;
+            m_scene.EventManager.OnNewClient -= OnNewClient;
+            m_scene.EventManager.OnClosingClient -= OnClosingClient;
         }
 
         public void RegionLoaded(Scene scene)
@@ -56,7 +57,12 @@ namespace Aurora.Modules
 
         public void OnNewClient(IClientAPI client)
         {
-            client.OnViewerStartAuction += new ViewerStartAuction(client_OnViewerStartAuction);
+            client.OnViewerStartAuction += client_OnViewerStartAuction;
+        }
+
+        private void OnClosingClient(IClientAPI client)
+        {
+            client.OnViewerStartAuction -= client_OnViewerStartAuction;
         }
 
         void client_OnViewerStartAuction(IClientAPI client, int LocalID, UUID SnapshotID)

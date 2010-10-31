@@ -75,8 +75,14 @@ namespace Aurora.Modules
                                           "open abusereportsGUI",
                                           "Opens the abuse reports GUI", OpenGUI);
             scene.EventManager.OnNewClient += OnNewClient;
+            scene.EventManager.OnClosingClient += OnClosingClient;
             //Disabled until complete
             //scene.EventManager.OnRegisterCaps += OnRegisterCaps;
+        }
+
+        private void OnClosingClient(IClientAPI client)
+        {
+            client.OnUserReport -= UserReport;
         }
 
         public void RemoveRegion(Scene scene)
@@ -90,6 +96,7 @@ namespace Aurora.Modules
                     m_SceneList.Remove(scene);
             }
             scene.EventManager.OnNewClient -= OnNewClient;
+            scene.EventManager.OnClosingClient -= OnClosingClient;
             //Disabled until complete
             //scene.EventManager.OnRegisterCaps -= OnRegisterCaps;
         }

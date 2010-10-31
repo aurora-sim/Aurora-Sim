@@ -35,11 +35,9 @@ using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
-using Mono.Addins;
 
 namespace OpenSim.Region.CoreModules.Avatar.Gestures
 {
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class GesturesModule : INonSharedRegionModule
     { 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -55,11 +53,13 @@ namespace OpenSim.Region.CoreModules.Avatar.Gestures
             m_scene = scene;
 
             m_scene.EventManager.OnNewClient += OnNewClient;
+            m_scene.EventManager.OnClosingClient += OnClosingClient;
         }
 
         public void RemoveRegion(Scene scene)
         {
-
+            m_scene.EventManager.OnNewClient -= OnNewClient;
+            m_scene.EventManager.OnClosingClient -= OnClosingClient;
         }
 
         public void RegionLoaded(Scene scene)
@@ -76,11 +76,17 @@ namespace OpenSim.Region.CoreModules.Avatar.Gestures
         public void Close() {}
         public string Name { get { return "Gestures Module"; } }
         public bool IsSharedModule { get { return false; } }
-        
+
         private void OnNewClient(IClientAPI client)
         {
             client.OnActivateGesture += ActivateGesture;
             client.OnDeactivateGesture += DeactivateGesture;
+        }
+
+        private void OnClosingClient(IClientAPI client)
+        {
+            client.OnActivateGesture -= ActivateGesture;
+            client.OnDeactivateGesture -= DeactivateGesture;
         }
         
         public virtual void ActivateGesture(IClientAPI client, UUID assetId, UUID gestureId)

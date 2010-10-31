@@ -29,7 +29,6 @@ using System;
 using System.Collections.Generic;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using System.Net;
 
 namespace OpenSim.Framework
 {
@@ -109,14 +108,29 @@ namespace OpenSim.Framework
         public string ServiceSessionID = string.Empty;
 
         /// <summary>
-        /// Viewer's version string
+        /// The client's IP address, as captured by the login service
+        /// </summary>
+        public string IPAddress;
+
+        /// <summary>
+        /// Viewer's version string as reported by the viewer at login
         /// </summary>
         public string Viewer;
 
         /// <summary>
-        /// Viewer's IP
+        /// The channel strinf sent by the viewer at login
         /// </summary>
-        public string IP;
+        public string Channel;
+
+        /// <summary>
+        /// The Mac address as reported by the viewer at login
+        /// </summary>
+        public string Mac;
+
+        /// <summary>
+        /// The id0 as reported by the viewer at login
+        /// </summary>
+        public string Id0;
 
         /// <summary>
         /// Position the Agent's Avatar starts in the region
@@ -148,7 +162,7 @@ namespace OpenSim.Framework
             CapsPath = cAgent.CapsPath;
             ChildrenCapSeeds = cAgent.ChildrenCapSeeds;
             Viewer = cAgent.Viewer;
-            IP = cAgent.IP;
+            IPAddress = cAgent.IPAddress;
         }
 
         /// <summary>
@@ -186,21 +200,31 @@ namespace OpenSim.Framework
             args["service_session_id"] = OSD.FromString(ServiceSessionID);
             args["start_pos"] = OSD.FromString(startpos.ToString());
             args["appearance_serial"] = OSD.FromInteger(Appearance.Serial);
+            args["client_ip"] = OSD.FromString(IPAddress);
             args["viewer"] = OSD.FromString(Viewer);
-            args["IP"] = OSD.FromString(IP);
+            args["channel"] = OSD.FromString("");
+            args["mac"] = OSD.FromString("");
+            args["id0"] = OSD.FromString("");
+
 
             if (Appearance != null)
             {
                 //System.Console.WriteLine("XXX Before packing Wearables");
                 if ((Appearance.Wearables != null) && (Appearance.Wearables.Length > 0))
                 {
+                    //Moronize for OpenSim.....
+                    int i = 0;
                     OSDArray wears = new OSDArray(Appearance.Wearables.Length * 2);
                     foreach (AvatarWearable awear in Appearance.Wearables)
                     {
+                        if (i == 13) //TODO: Disable this once OpenSim supports loading of more appearance types
+                            break;
                         wears.Add(OSD.FromUUID(awear.ItemID));
                         wears.Add(OSD.FromUUID(awear.AssetID));
+                        i++;
                         //System.Console.WriteLine("XXX ItemID=" + awear.ItemID + " assetID=" + awear.AssetID);
                     }
+                    
                     args["wearables"] = wears;
                 }
 
@@ -287,10 +311,10 @@ namespace OpenSim.Framework
                 SessionID = args["session_id"].AsUUID();
             if (args["service_session_id"] != null)
                 ServiceSessionID = args["service_session_id"].AsString();
+            if (args["client_ip"] != null)
+                IPAddress = args["client_ip"].AsString();
             if (args["viewer"] != null)
                 Viewer = args["viewer"].AsString();
-            if (args["IP"] != null)
-                IP = args["IP"].AsString();
 
             if (args["start_pos"] != null)
                 Vector3.TryParse(args["start_pos"].AsString(), out startpos);
@@ -301,10 +325,21 @@ namespace OpenSim.Framework
             if ((args["wearables"] != null) && (args["wearables"]).Type == OSDType.Array)
             {
                 OSDArray wears = (OSDArray)(args["wearables"]);
+                if (wears.Count / 2 > Appearance.Wearables.Length)
+                {
+                    //Make the array bigger then!
+                    Appearance.Wearables = new AvatarWearable[wears.Count / 2];
+                }
                 for (int i = 0; i < wears.Count / 2; i++) 
                 {
                     Appearance.Wearables[i].ItemID = wears[i*2].AsUUID();
                     Appearance.Wearables[i].AssetID = wears[(i*2)+1].AsUUID();
+                }
+                //Check for nulls
+                for (int i = 0; i < Appearance.Wearables.Length; i++)
+                {
+                    if (Appearance.Wearables[i] == null)
+                        Appearance.Wearables[i] = new AvatarWearable();
                 }
            }
 
@@ -359,7 +394,10 @@ namespace OpenSim.Framework
         public float startposy;
         public float startposz;
         public string Viewer;
-        public string IP;
+        public string Channel;
+        public string Mac;
+        public string Id0;
+        public string IPAddress;
 
         public sAgentCircuitData()
         {
@@ -382,7 +420,7 @@ namespace OpenSim.Framework
             CapsPath = cAgent.CapsPath;
             ChildrenCapSeeds = cAgent.ChildrenCapSeeds;
             Viewer = cAgent.Viewer;
-            IP = cAgent.IP;
+            IPAddress = cAgent.IPAddress;
         }
     }
 }

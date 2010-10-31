@@ -67,6 +67,20 @@ namespace OpenSim.Data.SQLite
             }
         }
 
+        public List<RegionData> Get(int flags, UUID scopeID)
+        {
+            string command = "select * from '" + m_Realm + "' where (flags &" + flags.ToString() + ") = " + flags.ToString() + "";
+            if (scopeID != UUID.Zero)
+                command += " and ScopeID = :scopeID";
+
+            using (SqliteCommand cmd = new SqliteCommand(command))
+            {
+                cmd.Parameters.AddWithValue(":scopeID", scopeID.ToString());
+
+                return RunCommand(cmd);
+            }
+        }
+
         public RegionData Get(UUID regionID, UUID scopeID)
         {
             string command = "select * from '" + m_Realm + "' where uuid = :regionID";
@@ -303,5 +317,15 @@ namespace OpenSim.Data.SQLite
             regions.Sort(distanceComparer);
             return regions;
         }
+
+        #region IRegionData Members
+
+
+        public List<RegionData> GetHyperlinks(UUID scopeID)
+        {
+            return Get((int)RegionFlags.Hyperlink, scopeID);
+        }
+
+        #endregion
     }
 }

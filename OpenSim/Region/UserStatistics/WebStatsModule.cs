@@ -49,11 +49,9 @@ using Caps = OpenSim.Framework.Capabilities.Caps;
 
 using OSD = OpenMetaverse.StructuredData.OSD;
 using OSDMap = OpenMetaverse.StructuredData.OSDMap;
-using Mono.Addins;
 
 namespace OpenSim.Region.UserStatistics
 {
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class WebStatsModule : ISharedRegionModule
     {
         private static readonly ILog m_log =

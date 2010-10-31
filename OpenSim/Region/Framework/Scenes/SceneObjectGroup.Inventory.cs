@@ -153,13 +153,14 @@ namespace OpenSim.Region.Framework.Scenes
                     taskItem.GroupPermissions = item.GroupPermissions &
                             item.NextPermissions;
                     taskItem.NextPermissions = item.NextPermissions;
-                    taskItem.CurrentPermissions |= 8;
+                    // We're adding this to a prim we don't own. Force
+                    // owner change
+                    taskItem.CurrentPermissions |= 16; // Slam
                 } 
                 else 
                 {
                     taskItem.BasePermissions = item.BasePermissions;
                     taskItem.CurrentPermissions = item.CurrentPermissions;
-                    taskItem.CurrentPermissions |= 8;
                     taskItem.EveryonePermissions = item.EveryOnePermissions;
                     taskItem.GroupPermissions = item.GroupPermissions;
                     taskItem.NextPermissions = item.NextPermissions;
@@ -278,12 +279,16 @@ namespace OpenSim.Region.Framework.Scenes
             if ((ownerMask & (uint)PermissionMask.Transfer) == 0)
                 perms &= ~(uint)PermissionMask.Transfer;
 
-            if ((ownerMask & RootPart.NextOwnerMask & (uint)PermissionMask.Modify) == 0)
-                perms &= ~((uint)PermissionMask.Modify >> 13);
-            if ((ownerMask & RootPart.NextOwnerMask & (uint)PermissionMask.Copy) == 0)
-                perms &= ~((uint)PermissionMask.Copy >> 13);
-            if ((ownerMask & RootPart.NextOwnerMask & (uint)PermissionMask.Transfer) == 0)
-                perms &= ~((uint)PermissionMask.Transfer >> 13);
+            // If root prim permissions are applied here, this would screw
+            // with in-inventory manipulation of the next owner perms
+            // in a major way. So, let's move this to the give itself.
+            // Yes. I know. Evil.
+//            if ((ownerMask & RootPart.NextOwnerMask & (uint)PermissionMask.Modify) == 0)
+//                perms &= ~((uint)PermissionMask.Modify >> 13);
+//            if ((ownerMask & RootPart.NextOwnerMask & (uint)PermissionMask.Copy) == 0)
+//                perms &= ~((uint)PermissionMask.Copy >> 13);
+//            if ((ownerMask & RootPart.NextOwnerMask & (uint)PermissionMask.Transfer) == 0)
+//                perms &= ~((uint)PermissionMask.Transfer >> 13);
 
             return perms;
         }
@@ -313,22 +318,22 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             if (states.Count < 1)
-                return "";
+                return String.Empty;
 
             XmlDocument xmldoc = new XmlDocument();
 
             XmlNode xmlnode = xmldoc.CreateNode(XmlNodeType.XmlDeclaration,
-                    "", "");
+                    String.Empty, String.Empty);
 
             xmldoc.AppendChild(xmlnode);
             XmlElement rootElement = xmldoc.CreateElement("", "ScriptData",
-                    "");
+                    String.Empty);
             
             xmldoc.AppendChild(rootElement);
 
             
             XmlElement wrapper = xmldoc.CreateElement("", "ScriptStates",
-                    "");
+                    String.Empty);
             
             rootElement.AppendChild(wrapper);
 

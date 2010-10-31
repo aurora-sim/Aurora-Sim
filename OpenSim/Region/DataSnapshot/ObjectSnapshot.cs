@@ -56,6 +56,7 @@ namespace OpenSim.Region.DataSnapshot.Providers
 
             //To check for staleness, we must catch all incoming client packets.
             m_scene.EventManager.OnNewClient += OnNewClient;
+            scene.EventManager.OnClosingClient += OnClosingClient;
             m_scene.EventManager.OnParcelPrimCountAdd += delegate(SceneObjectGroup obj) { this.Stale = true; };
         }
 
@@ -72,7 +73,7 @@ namespace OpenSim.Region.DataSnapshot.Providers
             client.OnDelinkObjects += delegate(List<uint> primIds, IClientAPI clientApi) { this.Stale = true; };
             client.OnGrabUpdate += delegate(UUID objectID, Vector3 offset, Vector3 grapPos,
                 IClientAPI remoteClient, List<SurfaceTouchEventArgs> surfaceArgs) { this.Stale = true; };
-            client.OnObjectAttach += delegate(IClientAPI remoteClient, uint objectLocalID, uint AttachmentPt,
+            client.OnObjectAttach += delegate(IClientAPI remoteClient, uint objectLocalID, int AttachmentPt,
                 bool silent) { this.Stale = true; };
             client.OnObjectDuplicate += delegate(uint localID, Vector3 offset, uint dupeFlags, UUID AgentID,
                 UUID GroupID) { this.Stale = true; };
@@ -84,6 +85,33 @@ namespace OpenSim.Region.DataSnapshot.Providers
             client.OnObjectPermissions += delegate(IClientAPI controller, UUID agentID, UUID sessionID,
                 byte field, uint localId, uint mask, byte set) { this.Stale = true; };
             client.OnRezObject += delegate(IClientAPI remoteClient, UUID itemID, Vector3 RayEnd,
+                Vector3 RayStart, UUID RayTargetID, byte BypassRayCast, bool RayEndIsIntersection,
+                bool RezSelected,
+                bool RemoveItem, UUID fromTaskID) { this.Stale = true; };
+        }
+
+        private void OnClosingClient(IClientAPI client)
+        {
+            client.OnAddPrim -= delegate(UUID ownerID, UUID groupID, Vector3 RayEnd, Quaternion rot,
+                PrimitiveBaseShape shape, byte bypassRaycast, Vector3 RayStart, UUID RayTargetID,
+                byte RayEndIsIntersection) { this.Stale = true; };
+            client.OnLinkObjects -= delegate(IClientAPI remoteClient, uint parent, List<uint> children)
+            { this.Stale = true; };
+            client.OnDelinkObjects -= delegate(List<uint> primIds, IClientAPI clientApi) { this.Stale = true; };
+            client.OnGrabUpdate -= delegate(UUID objectID, Vector3 offset, Vector3 grapPos,
+                IClientAPI remoteClient, List<SurfaceTouchEventArgs> surfaceArgs) { this.Stale = true; };
+            client.OnObjectAttach -= delegate(IClientAPI remoteClient, uint objectLocalID, int AttachmentPt,
+                bool silent) { this.Stale = true; };
+            client.OnObjectDuplicate -= delegate(uint localID, Vector3 offset, uint dupeFlags, UUID AgentID,
+                UUID GroupID) { this.Stale = true; };
+            client.OnObjectDuplicateOnRay -= delegate(uint localID, uint dupeFlags, UUID AgentID, UUID GroupID,
+                UUID RayTargetObj, Vector3 RayEnd, Vector3 RayStart, bool BypassRaycast,
+                bool RayEndIsIntersection, bool CopyCenters, bool CopyRotates) { this.Stale = true; };
+            client.OnObjectIncludeInSearch -= delegate(IClientAPI remoteClient, bool IncludeInSearch, uint localID)
+            { this.Stale = true; };
+            client.OnObjectPermissions -= delegate(IClientAPI controller, UUID agentID, UUID sessionID,
+                byte field, uint localId, uint mask, byte set) { this.Stale = true; };
+            client.OnRezObject -= delegate(IClientAPI remoteClient, UUID itemID, Vector3 RayEnd,
                 Vector3 RayStart, UUID RayTargetID, byte BypassRayCast, bool RayEndIsIntersection,
                 bool RezSelected,
                 bool RemoveItem, UUID fromTaskID) { this.Stale = true; };

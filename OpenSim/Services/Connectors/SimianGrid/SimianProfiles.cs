@@ -30,7 +30,6 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Reflection;
 using log4net;
-using Mono.Addins;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
@@ -59,7 +58,6 @@ namespace OpenSim.Services.Connectors.SimianGrid
     /// Connects avatar profile and classified queries to the SimianGrid
     /// backend
     /// </summary>
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class SimianProfiles : INonSharedRegionModule
     {
         private static readonly ILog m_log =

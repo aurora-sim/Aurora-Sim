@@ -16,7 +16,7 @@ namespace Aurora.DataManager.Migration.Migrators
 
             AddSchema("UserData", ColDefs(
                 ColDef("ID", ColumnTypes.String45, true),
-                ColDef("Key", ColumnTypes.String50),
+                ColDef("Key", ColumnTypes.String50, true),
                 ColDef("Value", ColumnTypes.Text)
                 ));
 
@@ -32,11 +32,6 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("Key", ColumnTypes.String50, true),
                 ColDef("Value", ColumnTypes.Text)
                 ));
-
-            AddSchema("usercurrency", ColDefs(ColDef("PrincipalID", ColumnTypes.String50, true),
-                ColDef("Amount", ColumnTypes.String50, true),
-                ColDef("LandInUse", ColumnTypes.String50),
-                ColDef("Tier", ColumnTypes.String50)));
 
             AddSchema("simulator", ColDefs(
                 ColDef("RegionID", ColumnTypes.String50, true),

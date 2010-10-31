@@ -19,7 +19,6 @@ using log4net;
 using OpenSim.Services.Interfaces;
 using OpenMetaverse;
 using Aurora.DataManager;
-using Mono.Addins;
 
 namespace Aurora.Modules
 {

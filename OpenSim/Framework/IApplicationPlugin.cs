@@ -41,7 +41,7 @@ namespace OpenSim
         /// Initialize the Plugin
         /// </summary>
         /// <param name="openSim">The Application instance</param>
-        void Initialise(IOpenSimBase openSim);
+        void Initialize(IOpenSimBase openSim);
 
         /// <summary>
         /// Called when the application loading is completed 
@@ -62,7 +62,7 @@ namespace OpenSim
         public override void Initialise(IPlugin plugin)
         {
             IApplicationPlugin p = plugin as IApplicationPlugin;
-            p.Initialise(m_server);
+            p.Initialize(m_server);
             m_plugins.Add(p);
         }
 
@@ -118,6 +118,6 @@ namespace Aurora.Framework
 
     public interface IAuroraDataPlugin : IPlugin
     {
-        void Initialise(IGenericData GenericData, IConfigSource source, string DefaultConnectionString);
+        void Initialize(IGenericData GenericData, IConfigSource source, string DefaultConnectionString);
     }
 }

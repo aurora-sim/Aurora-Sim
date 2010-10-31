@@ -210,6 +210,9 @@ namespace OpenSim.Data.MySQL
             if (data.Data.ContainsKey("locY"))
                 data.Data.Remove("locY");
 
+            if (data.RegionName.Length > 32)
+                data.RegionName = data.RegionName.Substring(0, 32);
+
             string[] fields = new List<string>(data.Data.Keys).ToArray();
 
             using (MySqlCommand cmd = new MySqlCommand())
@@ -281,9 +284,28 @@ namespace OpenSim.Data.MySQL
 
             return false;
         }
+
         public List<RegionData> GetDefaultRegions(UUID scopeID)
         {
-            string command = "select * from `"+m_Realm+"` where (flags & 1) <> 0";
+            return Get((int)RegionFlags.DefaultRegion, scopeID);
+        }
+
+        public List<RegionData> GetFallbackRegions(UUID scopeID, int x, int y)
+        {
+            List<RegionData> regions = Get((int)RegionFlags.FallbackRegion, scopeID);
+            RegionDataDistanceCompare distanceComparer = new RegionDataDistanceCompare(x, y);
+            regions.Sort(distanceComparer);
+            return regions;
+        }
+
+        public List<RegionData> GetHyperlinks(UUID scopeID)
+        {
+            return Get((int)RegionFlags.Hyperlink, scopeID);
+        }
+
+        private List<RegionData> Get(int regionFlags, UUID scopeID)
+        {
+            string command = "select * from `" + m_Realm + "` where (flags & " + regionFlags.ToString() + ") <> 0";
             if (scopeID != UUID.Zero)
                 command += " and ScopeID = ?scopeID";
 
@@ -292,23 +314,6 @@ namespace OpenSim.Data.MySQL
             cmd.Parameters.AddWithValue("?scopeID", scopeID.ToString());
 
             return RunCommand(cmd);
-        }
-
-        public List<RegionData> GetFallbackRegions(UUID scopeID, int x, int y)
-        {
-            string command = "select * from `"+m_Realm+"` where (flags & 2) <> 0";
-            if (scopeID != UUID.Zero)
-                command += " and ScopeID = ?scopeID";
-
-            MySqlCommand cmd = new MySqlCommand(command);
-
-            cmd.Parameters.AddWithValue("?scopeID", scopeID.ToString());
-
-            List<RegionData> Regions = RunCommand(cmd);
-
-            RegionDataDistanceCompare distanceComparer = new RegionDataDistanceCompare(x, y);
-            Regions.Sort(distanceComparer);
-            return Regions;
         }
 
         public List<RegionData> GetSafeRegions(UUID scopeID, int x, int y)

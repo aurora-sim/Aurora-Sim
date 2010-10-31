@@ -67,6 +67,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Lure
             {
                 m_scenes.Add(scene);
                 scene.EventManager.OnNewClient += OnNewClient;
+                scene.EventManager.OnClosingClient += OnClosingClient;
                 scene.EventManager.OnIncomingInstantMessage +=
                         OnGridInstantMessage;
             }
@@ -90,6 +91,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Lure
                     m_Enabled = false;
                     m_scenes.Clear();
                     scene.EventManager.OnNewClient -= OnNewClient;
+                    scene.EventManager.OnClosingClient -= OnClosingClient;
                     scene.EventManager.OnIncomingInstantMessage -=
                             OnGridInstantMessage;
                 }
@@ -103,6 +105,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Lure
             {
                 m_scenes.Remove(scene);
                 scene.EventManager.OnNewClient -= OnNewClient;
+                scene.EventManager.OnClosingClient -= OnClosingClient;
                 scene.EventManager.OnIncomingInstantMessage -=
                         OnGridInstantMessage;
             }
@@ -113,6 +116,13 @@ namespace OpenSim.Region.CoreModules.Avatar.Lure
             client.OnInstantMessage += OnInstantMessage;
             client.OnStartLure += OnStartLure;
             client.OnTeleportLureRequest += OnTeleportLureRequest;
+        }
+
+        private void OnClosingClient(IClientAPI client)
+        {
+            client.OnInstantMessage -= OnInstantMessage;
+            client.OnStartLure -= OnStartLure;
+            client.OnTeleportLureRequest -= OnTeleportLureRequest;
         }
 
         public void PostInitialise()

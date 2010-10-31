@@ -48,14 +48,27 @@ using OSDMap = OpenMetaverse.StructuredData.OSDMap;
 
 namespace OpenSim.Services.LLLoginService
 {
-    public class LLFailedLoginResponse : OpenSim.Services.Interfaces.FailedLoginResponse
+    public class LoginResponseEnum
+    {
+        public static string PasswordIncorrect = "key"; //Password is wrong
+        public static string InternalError = "Internal Error"; //Something inside went wrong
+        public static string MessagePopup = "critical"; //Makes a message pop up in the viewer
+        public static string ToSNeedsSent = "tos"; //Pops up the ToS acceptance box
+        public static string Update = "update"; //Informs the client that they must update the viewer to login
+        public static string OptionalUpdate = "optional"; //Informs the client that they have an optional update
+        public static string PresenceIssue = "presence"; //Used by opensim to tell the viewer that the agent is already logged in
+        public static string OK = "true"; //Login went fine
+        public static string Indeterminant = "indeterminate"; //Unknown exactly what this does
+        public static string Redirect = "redirect"; //Redirect! TBA!
+    }
+
+    public class LLFailedLoginResponse : FailedLoginResponse
     {
         protected string m_key;
         protected string m_value;
         protected string m_login;
 
         public static LLFailedLoginResponse UserProblem;
-        public static LLFailedLoginResponse AuthorizationProblem;
         public static LLFailedLoginResponse GridProblem;
         public static LLFailedLoginResponse InventoryProblem;
         public static LLFailedLoginResponse DeadRegionProblem;
@@ -65,31 +78,28 @@ namespace OpenSim.Services.LLLoginService
 
         static LLFailedLoginResponse()
         {
-            UserProblem = new LLFailedLoginResponse("key", 
+            UserProblem = new LLFailedLoginResponse(LoginResponseEnum.PasswordIncorrect, 
                 "Could not authenticate your avatar. Please check your username and password, and check the grid if problems persist.",
                 "false");
-            AuthorizationProblem = new LLFailedLoginResponse("key",
-                "Error connecting to grid. Unable to authorize your session into the region.",
-                "false");
-            GridProblem = new LLFailedLoginResponse("Internal Error",
+            GridProblem = new LLFailedLoginResponse(LoginResponseEnum.InternalError,
                 "Error connecting to the desired location. Try connecting to another region.",
                 "false");
-            InventoryProblem = new LLFailedLoginResponse("Internal Error",
+            InventoryProblem = new LLFailedLoginResponse(LoginResponseEnum.InternalError,
                 "The inventory service is not responding.  Please notify your login region operator.",
                 "false");
-            DeadRegionProblem = new LLFailedLoginResponse("Internal Error",
+            DeadRegionProblem = new LLFailedLoginResponse(LoginResponseEnum.InternalError,
                 "The region you are attempting to log into is not responding. Please select another region and try again.",
                 "false");
-            LoginBlockedProblem = new LLFailedLoginResponse("Internal Error",
+            LoginBlockedProblem = new LLFailedLoginResponse(LoginResponseEnum.InternalError,
                 "Logins are currently restricted. Please try again later.",
                 "false");
-            AlreadyLoggedInProblem = new LLFailedLoginResponse("Internal Error",
+            AlreadyLoggedInProblem = new LLFailedLoginResponse(LoginResponseEnum.PresenceIssue,
                 "You appear to be already logged in. " +
                 "If this is not the case please wait for your session to timeout. " +
                 "If this takes longer than a few minutes please contact the grid owner. " +
                 "Please wait 5 minutes if you are going to connect to a region nearby to the region you were at previously.",
                 "false");
-            InternalError = new LLFailedLoginResponse("Internal Error", "Error generating Login Response", "false");
+            InternalError = new LLFailedLoginResponse(LoginResponseEnum.InternalError, "Error generating Login Response", "false");
         }
 
         public LLFailedLoginResponse(string key, string value, string login)
@@ -177,6 +187,8 @@ namespace OpenSim.Services.LLLoginService
         // Web map
         private string mapTileURL;
 
+        private string searchURL;
+
         // Error Flags
         private string errorReason;
         private string errorMessage;
@@ -246,7 +258,7 @@ namespace OpenSim.Services.LLLoginService
         public LLLoginResponse(UserAccount account, AgentCircuitData aCircuit, GridUserInfo pinfo,
             GridRegion destination, List<InventoryFolderBase> invSkel, FriendInfo[] friendsList, ILibraryService libService,
             string where, string startlocation, Vector3 position, Vector3 lookAt, List<InventoryItemBase> gestures, string message,
-            GridRegion home, IPEndPoint clientIP, string AdultMax, string AdultRating, string mapTileURL, string AllowFL, string TutorialURL,
+            GridRegion home, IPEndPoint clientIP, string AdultMax, string AdultRating, string mapTileURL, string searchURL, string AllowFL, string TutorialURL,
             ArrayList eventValues, ArrayList classifiedValues, string CAPSURL, string CAPSPass, IConfigSource source)
             : this()
         {
@@ -274,6 +286,7 @@ namespace OpenSim.Services.LLLoginService
             tutorialURL = TutorialURL;
             eventCategories = eventValues;
             classifiedCategories = classifiedValues;
+            SearchURL = searchURL;
 
             FillOutHomeData(pinfo, home);
             LookAt = String.Format("[r{0},r{1},r{2}]", lookAt.X, lookAt.Y, lookAt.Z);
@@ -281,8 +294,6 @@ namespace OpenSim.Services.LLLoginService
             FillOutRegionData(destination);
 
             FillOutSeedCap(aCircuit, destination, clientIP);
-
-            ReadGridSettings(source);
             
         }
 
@@ -508,6 +519,7 @@ namespace OpenSim.Services.LLLoginService
             tutorial.Add(TutorialHash);
 
             mapTileURL = String.Empty;
+            searchURL = String.Empty;
         }
 
 
@@ -572,6 +584,9 @@ namespace OpenSim.Services.LLLoginService
                 responseData["region_x"] = (Int32)(RegionX);
                 responseData["region_y"] = (Int32)(RegionY);
 
+                if (searchURL != String.Empty)
+                    responseData["search"] = searchURL;
+
                 if (mapTileURL != String.Empty)
                     responseData["map-server-url"] = mapTileURL;
 
@@ -582,8 +597,6 @@ namespace OpenSim.Services.LLLoginService
 
                 responseData["login"] = "true";
 
-                BuildGridSettings(responseData);
-
                 return responseData;
             }
             catch (Exception e)
@@ -591,45 +604,6 @@ namespace OpenSim.Services.LLLoginService
                 m_log.Warn("[CLIENT]: LoginResponse: Error creating Hashtable Response: " + e.Message);
 
                 return LLFailedLoginResponse.InternalError.ToHashtable();
-            }
-        }
-
-        private void BuildGridSettings(Hashtable responseData)
-        {
-            responseData["MaximumPrimScale"] = m_MaximumPrimScale.ToString();
-            responseData["MinimumPrimScale"] = m_MinimumPrimScale.ToString();
-            responseData["MaximumPhysicalPrimScale"] = m_MaximumPhysPrimScale.ToString();
-            responseData["MaximumHollowSize"] = m_MaximumHollowSize.ToString();
-            responseData["MaximumHoleSize"] = m_MaximumHoleSize.ToString();
-            responseData["MaximumLinkCount"] = m_MaximumLinkCount.ToString();
-            responseData["MaximumLinkCountPhys"] = m_MaximumLinkCountPhys.ToString();
-            responseData["MaximumInventoryItemsTransfer"] = m_MaximumInventoryItemsTransfer.ToString();
-            responseData["AllowPhysicalPrims"] = m_AllowPhysicalPrims ? 1 : 0;
-            responseData["ClampPrimSizes"] = m_ClampPrimSizes ? 1 : 0;
-            responseData["OffsetOfUTC"] = m_OffsetOfUTC;
-            responseData["PreferGridSettingsOverRegion"] = m_PreferGridSettingsOverRegion ? 1 : 0;
-        }
-
-        private void ReadGridSettings(IConfigSource source)
-        {
-            IConfig gridSettings = m_source.Configs["GridWideSettings"];
-            if (gridSettings != null)
-            {
-                m_MaximumPrimScale = gridSettings.GetLong("MaximumPrimScale", m_MaximumPrimScale);
-                m_MinimumPrimScale = gridSettings.GetLong("MinimumPrimScale", m_MinimumPrimScale);
-                m_MaximumPhysPrimScale = gridSettings.GetLong("MaximumPhysPrimScale", m_MaximumPhysPrimScale);
-
-
-                m_MaximumHollowSize = gridSettings.GetLong("MaximumHollowSize", m_MaximumHollowSize);
-                m_MaximumHoleSize = gridSettings.GetLong("MaximumHoleSize", m_MaximumHoleSize);
-
-
-                m_MaximumLinkCount = gridSettings.GetLong("MaximumLinkCount", m_MaximumLinkCount);
-                m_MaximumLinkCountPhys = gridSettings.GetLong("MaximumLinkCountPhys", m_MaximumLinkCountPhys);
-
-                m_MaximumInventoryItemsTransfer = gridSettings.GetInt("MaximumInventoryItemsTransfer", m_MaximumInventoryItemsTransfer);
-
-                m_OffsetOfUTC = gridSettings.GetString("OffsetOfUTC", m_OffsetOfUTC);
             }
         }
 
@@ -717,6 +691,9 @@ namespace OpenSim.Services.LLLoginService
                 if (mapTileURL != String.Empty)
                     map["map-server-url"] = OSD.FromString(mapTileURL);
 
+                if (searchURL != String.Empty)
+                    map["search"] = OSD.FromString(searchURL);
+
                 if (m_buddyList != null)
                 {
                     map["buddy-list"] = ArrayListToOSDArray(m_buddyList.ToArray());
@@ -784,7 +761,7 @@ namespace OpenSim.Services.LLLoginService
             Hashtable TempHash;
             foreach (InventoryFolderBase InvFolder in folders)
             {
-                if (InvFolder.ParentID == UUID.Zero)
+                if (InvFolder.ParentID == UUID.Zero && InvFolder.Name == "My Inventory")
                 {
                     rootID = InvFolder.ID;
                 }
@@ -1056,6 +1033,12 @@ namespace OpenSim.Services.LLLoginService
         {
             get { return mapTileURL; }
             set { mapTileURL = value; }
+        }
+
+        public string SearchURL
+        {
+            get { return searchURL; }
+            set { searchURL = value; }
         }
 
         public string Message

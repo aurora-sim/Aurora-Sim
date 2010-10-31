@@ -990,8 +990,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     //{
                         vec.X = (_target_velocity.X - vel.X) * (PID_D) + (_zeroPosition.X - pos.X) * (PID_P * 2);
                         vec.Y = (_target_velocity.Y - vel.Y) * (PID_D) + (_zeroPosition.Y - pos.Y) * (PID_P * 2);
-                        if (flying)
-                            vec.Z = (_target_velocity.Z - vel.Z) * (PID_D) + (_zeroPosition.Z - pos.Z) * PID_P;
+                        //if (flying)
+                        //    vec.Z = (_target_velocity.Z - vel.Z) * (PID_D) + (_zeroPosition.Z - pos.Z) * PID_P;
                     //}
                 }
             }
@@ -1005,7 +1005,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     vec.X = ((_target_velocity.X / movementdivisor) - vel.X) * (PID_D);
                     vec.Y = ((_target_velocity.Y / movementdivisor) - vel.Y) * (PID_D);
                     //Stop pushing down if we are just standing
-                    if(_target_velocity.Z < 0) 
+                    if (_target_velocity.Z < 0)
                         _target_velocity.Z = 0;
                 }
                 else if (m_iscolliding && flying)
@@ -1020,11 +1020,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     vec.X = ((_target_velocity.X / movementdivisor) - vel.X) * (PID_D / 6);
                     vec.Y = ((_target_velocity.Y / movementdivisor) - vel.Y) * (PID_D / 6);
                 }
-                /*
-                else if (!m_iscolliding && !flying)
-                {
-                }*/
-
                 if (m_iscolliding && !flying && _target_velocity.Z > 0.0f)
                 {
                     // We're colliding with something and we're not flying but we're moving
@@ -1209,8 +1204,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     doForce(vec);
 
                     //Stop us from fidgiting if we have a small velocity
-                    if (Math.Abs(vel.X) < 0.05 && Math.Abs(vel.Y) < 0.05 && Math.Abs(vel.Z) < 0.05)
-                        d.BodySetLinearVel(Body, 0, 0, 0);
+                    //if (Math.Abs(vel.X) < 0.05 && Math.Abs(vel.Y) < 0.05 && Math.Abs(vel.Z) < 0.05)
+                    //     d.BodySetLinearVel(Body, 0, 0, 0);
 
                     //When falling, we keep going faster and faster, and eventually, the client blue screens (blue is all you see).
                     // The speed that does this is slightly higher than -30, so we cap it here so we never do that during falling.
@@ -1315,7 +1310,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 {
                     m_lastUpdateSent = true;
                     //base.RequestPhysicsterseUpdate();
-
                 }
             }
             else
@@ -1338,8 +1332,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                 if (_velocity.Z < -6 && !m_hackSentFall)
                 {
-                    m_hackSentFall = true;
-                    m_pidControllerActive = false;
+                    //m_hackSentFall = true;
+                    //m_pidControllerActive = false;
                 }
                 else if (flying && !m_hackSentFly)
                 {

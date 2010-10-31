@@ -34,7 +34,6 @@ using System.IO;
 using System.Web;
 using System.Xml;
 using log4net;
-using Mono.Addins;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Messages.Linden;
@@ -52,7 +51,6 @@ using OSDMap = OpenMetaverse.StructuredData.OSDMap;
 
 namespace OpenSim.Region.CoreModules.Media.Moap
 {
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule", Id = "MoapModule")]
     public class MoapModule : INonSharedRegionModule, IMoapModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -236,7 +234,7 @@ namespace OpenSim.Region.CoreModules.Media.Moap
                 part.Shape.Media[face] = me;
             
             UpdateMediaUrl(part, UUID.Zero);
-            part.ScheduleFullUpdate();
+            part.ScheduleFullUpdate(PrimUpdateFlags.FullUpdate);
             part.TriggerScriptChangedEvent(Changed.MEDIA);
         }
         
@@ -421,7 +419,7 @@ namespace OpenSim.Region.CoreModules.Media.Moap
             UpdateMediaUrl(part, agentId);
             
             // Arguably, we could avoid sending a full update to the avatar that just changed the texture.
-            part.ScheduleFullUpdate();
+            part.ScheduleFullUpdate(PrimUpdateFlags.FullUpdate);
             
             part.TriggerScriptChangedEvent(Changed.MEDIA);
             
@@ -499,7 +497,7 @@ namespace OpenSim.Region.CoreModules.Media.Moap
             
             UpdateMediaUrl(part, agentId);
             
-            part.ScheduleFullUpdate();
+            part.ScheduleFullUpdate(PrimUpdateFlags.FullUpdate);
             
             part.TriggerScriptChangedEvent(Changed.MEDIA);
             

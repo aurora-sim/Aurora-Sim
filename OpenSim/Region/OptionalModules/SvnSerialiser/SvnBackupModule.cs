@@ -39,11 +39,9 @@ using OpenSim.Region.Framework.Scenes;
 using PumaCode.SvnDotNet.AprSharp;
 using PumaCode.SvnDotNet.SubversionSharp;
 using Slash = System.IO.Path;
-using Mono.Addins;
 
 namespace OpenSim.Region.Modules.SvnSerialiser
 {
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class SvnBackupModule : ISharedRegionModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);

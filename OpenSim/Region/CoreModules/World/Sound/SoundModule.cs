@@ -32,11 +32,9 @@ using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
-using Mono.Addins;
 
 namespace OpenSim.Region.CoreModules.World.Sound
 {
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class SoundModule : INonSharedRegionModule, ISoundModule
     {
         //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -52,13 +50,17 @@ namespace OpenSim.Region.CoreModules.World.Sound
             m_scene = scene;
 
             m_scene.EventManager.OnNewClient += OnNewClient;
+            m_scene.EventManager.OnClosingClient += OnClosingClient;
 
             m_scene.RegisterModuleInterface<ISoundModule>(this);
         }
 
         public void RemoveRegion(Scene scene)
         {
+            m_scene.EventManager.OnNewClient -= OnNewClient;
+            m_scene.EventManager.OnClosingClient -= OnClosingClient;
 
+            m_scene.UnregisterModuleInterface<ISoundModule>(this);
         }
 
         public void RegionLoaded(Scene scene)
@@ -79,6 +81,11 @@ namespace OpenSim.Region.CoreModules.World.Sound
         private void OnNewClient(IClientAPI client)
         {
             client.OnSoundTrigger += TriggerSound;
+        }
+
+        private void OnClosingClient(IClientAPI client)
+        {
+            client.OnSoundTrigger -= TriggerSound;
         }
         
         public virtual void PlayAttachedSound(

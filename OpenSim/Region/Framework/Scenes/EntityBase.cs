@@ -35,14 +35,15 @@ namespace OpenSim.Region.Framework.Scenes
 {
     public abstract class EntityBase : ISceneEntity
     {
+        protected Scene m_scene;
         /// <summary>
         /// The scene to which this entity belongs
         /// </summary>
         public Scene Scene
         {
             get { return m_scene; }
+            set { m_scene = value; }
         }
-        protected Scene m_scene;
 
         protected UUID m_uuid;
 

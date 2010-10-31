@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) Contributors, http://opensimulator.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
@@ -29,7 +29,6 @@ using System;
 using System.Collections.Generic;
 using OpenMetaverse;
 using log4net;
-using Mono.Addins;
 using Nini.Config;
 using System.Reflection;
 using OpenSim.Services.Base;
@@ -73,12 +72,14 @@ namespace OpenSim.Services.Connectors
 
             // We tried, but this doesn't exist. We can't proceed
             if (dllName == String.Empty)
-                throw new Exception("No StorageProvider configured");
+                dllName = "OpenSim.Data.Null.dll";
 
             m_database = LoadPlugin<ISimulationDataStore>(dllName, new Object[] { connString });
             if (m_database == null)
                 throw new Exception("Could not find a storage interface in the given module");
         }
+
+        #region ISimulationDataService Members
 
         public void StoreObject(SceneObjectGroup obj, UUID regionUUID)
         {
@@ -95,29 +96,29 @@ namespace OpenSim.Services.Connectors
             m_database.StorePrimInventory(primID, items);
         }
 
-        public List<SceneObjectGroup> LoadObjects(UUID regionUUID)
+        public List<SceneObjectGroup> LoadObjects(UUID regionUUID, Scene scene)
         {
-            return m_database.LoadObjects(regionUUID);
+            return m_database.LoadObjects(regionUUID, scene);
         }
 
-        public void StoreTerrain(double[,] terrain, UUID regionID)
+        public void StoreTerrain(double[,] terrain, UUID regionID, bool Revert)
         {
-            m_database.StoreTerrain(terrain, regionID);
+            m_database.StoreTerrain(terrain, regionID, Revert);
         }
 
-        public double[,] LoadTerrain(UUID regionID)
+        public double[,] LoadTerrain(UUID regionID, bool RevertMap)
         {
-            return m_database.LoadTerrain(regionID);
+            return m_database.LoadTerrain(regionID, RevertMap);
         }
 
-        public void StoreLandObject(ILandObject Parcel)
+        public void StoreLandObject(LandData args)
         {
-            m_database.StoreLandObject(Parcel);
+            m_database.StoreLandObject(args);
         }
 
-        public void RemoveLandObject(UUID globalID)
+        public void RemoveLandObject(UUID RegionID, UUID ParcelID)
         {
-            m_database.RemoveLandObject(globalID);
+            m_database.RemoveLandObject(RegionID, ParcelID);
         }
 
         public List<LandData> LoadLandObjects(UUID regionUUID)
@@ -135,14 +136,11 @@ namespace OpenSim.Services.Connectors
             return m_database.LoadRegionSettings(regionUUID);
         }
 
-        public RegionLightShareData LoadRegionWindlightSettings(UUID regionUUID)
+        public void RemoveRegion(UUID regionUUID)
         {
-            return m_database.LoadRegionWindlightSettings(regionUUID);
+            m_database.RemoveRegion(regionUUID);
         }
 
-        public void StoreRegionWindlightSettings(RegionLightShareData wl)
-        {
-            m_database.StoreRegionWindlightSettings(wl);
-        }
+        #endregion
     }
 }

@@ -32,11 +32,9 @@ using OpenSim.Region.Physics.Manager;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenMetaverse;
-using Mono.Addins;
 
 namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
 {
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class AuroraCombatModule : INonSharedRegionModule, ICombatModule
     {
         public string Name
@@ -552,7 +550,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                     if (health <= 0)
                     {
                         KillAvatar(localID, false);
-                        m_SP.ControllingClient.SendTeleportLocationStart();
+                        m_SP.ControllingClient.SendTeleportStart((uint)TeleportFlags.ViaHome);
                         m_SP.Scene.RequestTeleportLocation(m_SP.ControllingClient, RegionName, pos, lookat, (uint)TeleportFlags.ViaHome);
                     }
                 }

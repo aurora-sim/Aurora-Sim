@@ -51,6 +51,7 @@ namespace Aurora.Modules
             // But we could trigger the position update more often
             scene.EventManager.OnMakeRootAgent += OnMakeRootAgent;
             scene.EventManager.OnNewClient += OnNewClient;
+            scene.EventManager.OnClosingClient += OnClosingClient;
 
             //scene.EventManager.OnAvatarEnteringNewParcel += OnEnteringNewParcel;
 
@@ -62,6 +63,12 @@ namespace Aurora.Modules
         {
             client.OnConnectionClosed += OnConnectionClose;
             client.OnLogout += client_OnLogout;
+        }
+
+        private void OnClosingClient(IClientAPI client)
+        {
+            client.OnConnectionClosed -= OnConnectionClose;
+            client.OnLogout -= client_OnLogout;
         }
 
         public void client_OnLogout(IClientAPI client)

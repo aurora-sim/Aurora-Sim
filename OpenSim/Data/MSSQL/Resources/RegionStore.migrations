@@ -926,14 +926,25 @@ ALTER TABLE regionsettings ADD loaded_creation_datetime int NOT NULL default 0
 COMMIT
 
 :VERSION 24
+-- Added post 0.7
 
 BEGIN TRANSACTION
+
+ALTER TABLE prims ADD COLUMN MediaURL varchar(255)
+ALTER TABLE primshapes ADD COLUMN Media TEXT
+
+COMMIT
+:VERSION 25
+
+
+BEGIN TRANSACTION
+
 
 ALTER TABLE terrain ADD Revert varchar(6) NOT NULL default 'False'
 
 COMMIT
 
-:VERSION 25
+:VERSION 26
 
 BEGIN TRANSACTION
 
@@ -942,7 +953,7 @@ ALTER TABLE prims ADD Generic varchar(8196) not null default ''
 COMMIT
 
 
-:VERSION 26
+:VERSION 27
 
 BEGIN TRANSACTION
 
@@ -951,13 +962,10 @@ ALTER TABLE primitems ADD saleType int not null default 0;
 
 COMMIT
 
-:VERSION 23
+:VERSION 28
 
 BEGIN TRANSACTION
 
 ALTER TABLE regionsettings ADD minimum_age int NOT NULL default 0
 
 COMMIT
-
-
-

@@ -157,6 +157,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Concierge
 
                     // subscribe to NewClient events
                     scene.EventManager.OnNewClient += OnNewClient;
+                    scene.EventManager.OnClosingClient += OnClientLoggedOut;
 
                     // subscribe to *Chat events
                     scene.EventManager.OnChatFromWorld += OnChatFromWorld;
@@ -182,6 +183,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Concierge
             {
                 // unsubscribe from NewClient events
                 scene.EventManager.OnNewClient -= OnNewClient;
+                scene.EventManager.OnClosingClient -= OnClientLoggedOut;
 
                 // unsubscribe from *Chat events
                 scene.EventManager.OnChatFromWorld -= OnChatFromWorld;
@@ -307,12 +309,13 @@ namespace OpenSim.Region.OptionalModules.Avatar.Concierge
                 client.OnChatFromClient += OnChatFromClient;
         }
 
-        
-
         public void OnClientLoggedOut(IClientAPI client)
         {
             client.OnLogout -= OnClientLoggedOut;
             client.OnConnectionClosed -= OnClientLoggedOut;
+
+            if (m_replacingChatModule)
+                client.OnChatFromClient -= OnChatFromClient;
             
             if (m_conciergedScenes.Contains(client.Scene))
             {

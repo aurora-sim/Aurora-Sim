@@ -92,11 +92,12 @@ namespace OpenSim.Services.Interfaces
 
         List<GridRegion> GetDefaultRegions(UUID scopeID);
         List<GridRegion> GetFallbackRegions(UUID scopeID, int x, int y);
-        List<GridRegion> GetSafeRegions(UUID scopeID, int x, int y);
+		List<GridRegion> GetSafeRegions(UUID scopeID, int x, int y);
+        List<GridRegion> GetHyperlinks(UUID scopeID);
 
         int GetRegionFlags(UUID scopeID, UUID regionID);
 
-        string UpdateMap(UUID scopeID, UUID RegionID, UUID mapID, UUID terrainID, UUID sessionID);
+        string UpdateMap(UUID scopeID, GridRegion region, UUID mapID, UUID terrainID, UUID sessionID);
 
         multipleMapItemReply GetMapItems(ulong regionHandle, GridItemType gridItemType);
 

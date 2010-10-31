@@ -181,6 +181,11 @@ namespace OpenSim.Services.PresenceService
                         LogoutAgent(d.SessionID);
                         continue;
                     }
+                    if (ret.RegionID == UUID.Zero) //Bad logout
+                    {
+                        LogoutAgent(d.SessionID);
+                        continue;
+                    }
 
                     Services.Interfaces.GridRegion r = m_GridService.GetRegionByUUID(UUID.Zero, d.RegionID);
                     if(r != null)

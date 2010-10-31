@@ -34,7 +34,6 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using log4net;
 using Nini.Config;
-using OpenSim.Data;
 using OpenSim.Framework;
 using OpenSim.Region.CoreModules.Framework.InterfaceCommander;
 using OpenSim.Region.Framework.Interfaces;
@@ -42,13 +41,11 @@ using OpenSim.Region.Framework.Scenes;
 using Caps = OpenSim.Framework.Capabilities.Caps;
 using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
-using Mono.Addins;
 using Aurora.DataManager;
 using Aurora.Framework;
 
 namespace Aurora.Modules
 {
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class WindLightSettingsModule : INonSharedRegionModule, IWindLightSettingsModule
     {
         #region Declarations
@@ -70,9 +67,9 @@ namespace Aurora.Modules
 
         public void Initialise(IConfigSource config)
         {
-            IConfig LightShareConfig = config.Configs["LightShare"];
+            IConfig LightShareConfig = config.Configs["WindLightSettings"];
             if(LightShareConfig != null)
-                m_enableWindlight = LightShareConfig.GetBoolean("EnableWindLight", true);
+                m_enableWindlight = LightShareConfig.GetBoolean("Enable", true);
         }
 
         public void AddRegion(Scene scene)
@@ -86,13 +83,29 @@ namespace Aurora.Modules
             if (RegionInfoConnector != null)
                 m_WindlightSettings = RegionInfoConnector.LoadRegionWindlightSettings(m_scene.RegionInfo.RegionID);
 
+            scene.EventManager.OnClientClosed += new EventManager.ClientClosed(EventManager_OnClientClosed);
             scene.EventManager.OnRegisterCaps += OnRegisterCaps;
             scene.EventManager.OnMakeRootAgent += SendProfileToClient;
             scene.EventManager.OnSignificantClientMovement += OnSignificantClientMovement;
             scene.EventManager.OnAvatarEnteringNewParcel += AvatarEnteringNewParcel;
         }
 
-        public void RemoveRegion(Scene scene){}
+        void EventManager_OnClientClosed(UUID clientID, Scene scene)
+        {
+            //They are leaving, clear it out
+            m_preivouslySentWindLight.Remove(clientID);
+        }
+
+        public void RemoveRegion(Scene scene)
+        {
+            m_scene.UnregisterModuleInterface<IWindLightSettingsModule>(this);
+            
+            scene.EventManager.OnClientClosed -= new EventManager.ClientClosed(EventManager_OnClientClosed);
+            scene.EventManager.OnRegisterCaps -= OnRegisterCaps;
+            scene.EventManager.OnMakeRootAgent -= SendProfileToClient;
+            scene.EventManager.OnSignificantClientMovement -= OnSignificantClientMovement;
+            scene.EventManager.OnAvatarEnteringNewParcel -= AvatarEnteringNewParcel;
+        }
 
         public void RegionLoaded(Scene scene){}
 

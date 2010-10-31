@@ -37,7 +37,6 @@ using OpenMetaverse.Imaging;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
-using Mono.Addins;
 
 namespace OpenSim.Region.CoreModules.World.WorldMap
 {
@@ -61,7 +60,6 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         public face[] trns;
     }
 
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class MapImageModule : IMapImageGenerator, INonSharedRegionModule
     {
         private static readonly ILog m_log =
@@ -71,8 +69,6 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         private IConfigSource m_config;
         private IMapTileTerrainRenderer terrainRenderer;
         
-
-         
         #region IMapImageGenerator Members
 
         public Bitmap CreateMapTile()
@@ -97,6 +93,8 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             else
             {
                 terrainRenderer = new WarpTileRenderer();
+                //It does this automatically
+                drawPrimVolume = false;
             }
 
             terrainRenderer.Initialise(m_scene, m_config);
@@ -219,11 +217,6 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             get { return "MapImageModule"; }
         }
 
-        public bool IsSharedModule
-        {
-            get { return false; }
-        }
-
         #endregion
 
         private Bitmap DrawObjectVolume(Scene whichScene, Bitmap mapbmp)
@@ -232,7 +225,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             double[,] hm = whichScene.Heightmap.GetDoubles();
             tc = Environment.TickCount;
             //m_log.Info("[MAPTILE]: Generating Maptile Step 2: Object Volume Profile");
-            List<EntityBase> objs = whichScene.GetEntities();
+            EntityBase[] objs = whichScene.GetEntities();
             Dictionary<uint, DrawStruct> z_sort = new Dictionary<uint, DrawStruct>();
             //SortedList<float, RectangleDrawStruct> z_sort = new SortedList<float, RectangleDrawStruct>();
             List<float> z_sortheights = new List<float>();
@@ -247,6 +240,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                     {
                         SceneObjectGroup mapdot = (SceneObjectGroup)obj;
                         Color mapdotspot = Color.Gray; // Default color when prim color is white
+                        
                         // Loop over prim in group
                         foreach (SceneObjectPart part in mapdot.ChildrenList)
                         {
@@ -632,6 +626,11 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             returnpt.Y = (int)(((int)Constants.RegionSize - 1) - point3d.Y);//(int)(255 - (((topos.y - point3d.y) / z * d)));
 
             return returnpt;
+        }
+
+        public Bitmap CreateViewImage(Vector3 camPos, Vector3 camDir, float fov, int width, int height, bool useTextures)
+        {
+            return null;
         }
     }
 }

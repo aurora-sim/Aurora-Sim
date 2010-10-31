@@ -30,7 +30,6 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Reflection;
 using log4net;
-using Mono.Addins;
 using Nini.Config;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
@@ -47,7 +46,6 @@ namespace OpenSim.Services.Connectors.SimianGrid
     /// Connects avatar presence information (for tracking current location and
     /// message routing) to the SimianGrid backend
     /// </summary>
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class SimianPresenceServiceConnector : IPresenceService, IGridUserService, ISharedRegionModule
     {
         private static readonly ILog m_log =

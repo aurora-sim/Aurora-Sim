@@ -44,7 +44,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="rot"></param>
         /// <param name="silent"></param>
         void AttachObject(
-            IClientAPI remoteClient, uint objectLocalID, uint AttachmentPt, bool silent);
+            IClientAPI remoteClient, uint objectLocalID, int AttachmentPt, bool silent);
 
         /// <summary>
         /// Attach an object to an avatar.
@@ -57,7 +57,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="silent"></param>
         /// <returns>true if the object was successfully attached, false otherwise</returns>
         bool AttachObject(
-            IClientAPI remoteClient, SceneObjectGroup grp, uint AttachmentPt, bool silent);
+            IClientAPI remoteClient, SceneObjectGroup grp, int AttachmentPt, bool silent);
 
         /// <summary>
         /// Rez an attachment from user inventory and change inventory status to match.
@@ -66,7 +66,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="itemID"></param>
         /// <param name="AttachmentPt"></param>
         /// <returns>The scene object that was attached.  Null if the scene object could not be found</returns>
-        UUID RezSingleAttachmentFromInventory(IClientAPI remoteClient, UUID itemID, uint AttachmentPt);
+        UUID RezSingleAttachmentFromInventory(IClientAPI remoteClient, UUID itemID, int AttachmentPt);
 
         /// <summary>
         /// Rez an attachment from user inventory
@@ -80,7 +80,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// attachment already correctly set up in inventory.
         /// <returns>The uuid of the scene object that was attached.  Null if the scene object could not be found</returns>
         UUID RezSingleAttachmentFromInventory(
-            IClientAPI remoteClient, UUID itemID, uint AttachmentPt, bool updateInventoryStatus);
+            IClientAPI remoteClient, UUID itemID, int AttachmentPt, bool updateInventoryStatus);
 
         /// <summary>
         /// Rez multiple attachments from a user's inventory
@@ -102,7 +102,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="objectLocalID"></param>
         /// <param name="remoteClient"></param>
         void DetachObject(uint objectLocalID, IClientAPI remoteClient);
-            
+
         /// <summary>
         /// Detach the given item to the ground.
         /// </summary>
@@ -120,7 +120,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// A <see cref="IClientAPI"/>
         /// </param>
         void ShowDetachInUserInventory(UUID itemID, IClientAPI remoteClient);
-        
+
         /// <summary>
         /// Update the position of an attachment
         /// </summary>

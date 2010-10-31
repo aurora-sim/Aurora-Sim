@@ -26,6 +26,7 @@ namespace OpenSim.Services.CapsService
     public class AuroraCAPSHandler : ServiceConnector
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        public IHttpServer m_server = null;
 
         public AuroraCAPSHandler(IConfigSource config, IHttpServer server, string configName) :
             base(config, server, configName)
@@ -35,6 +36,7 @@ namespace OpenSim.Services.CapsService
             if (m_CAPSServerConfig == null)
                 throw new Exception(String.Format("No section CAPSService in config file"));
 
+            m_server = server;
             Object[] args = new Object[] { config };
             string invService = m_CAPSServerConfig.GetString("InventoryService", String.Empty);
             string libService = m_CAPSServerConfig.GetString("LibraryService", String.Empty);
@@ -66,7 +68,10 @@ namespace OpenSim.Services.CapsService
         private object m_fetchLock = new Object();
         private string SimToInform;
         private UUID m_AgentID;
-        private Hashtable CAPS = new Hashtable();
+        //X cap name to path
+        public Hashtable registeredCAPS = new Hashtable();
+        //Paths to X cap
+        public Hashtable registeredCAPSPath = new Hashtable();
         private string m_HostName;
 
         public CAPSPrivateSeedHandler(IHttpServer server, IInventoryService inventoryService, ILibraryService libraryService, IGridUserService guService, IPresenceService presenceService, string URL, UUID agentID, string HostName)
@@ -80,45 +85,58 @@ namespace OpenSim.Services.CapsService
             m_AgentID = agentID;
             m_HostName = HostName;
 
-            AddServerCAPS();
+            if(m_server != null)
+                AddServerCAPS();
         }
 
-        private void AddServerCAPS()
+        public List<IRequestHandler> GetServerCAPS()
         {
+            List<IRequestHandler> handlers = new List<IRequestHandler>();
+
             GenericHTTPMethod method = delegate(Hashtable httpMethod)
             {
                 return ProcessUpdateAgentLanguage(httpMethod, m_AgentID);
             };
-            m_server.AddStreamHandler(new RestHTTPHandler("POST", CreateCAPS("UpdateAgentLanguage"),
+            handlers.Add(new RestHTTPHandler("POST", CreateCAPS("UpdateAgentLanguage"),
                                                       method));
             method = delegate(Hashtable httpMethod)
             {
                 return ProcessUpdateAgentInfo(httpMethod, m_AgentID);
             };
-            m_server.AddStreamHandler(new RestHTTPHandler("POST", CreateCAPS("UpdateAgentInformation"),
+            handlers.Add(new RestHTTPHandler("POST", CreateCAPS("UpdateAgentInformation"),
                                                       method));
-            
-             method = delegate(Hashtable httpMethod)
+
+            method = delegate(Hashtable httpMethod)
             {
                 return FetchInventoryRequest(httpMethod, m_AgentID);
             };
-            m_server.AddStreamHandler(new RestHTTPHandler("POST", CreateCAPS("FetchInventoryDescendents"),
+            handlers.Add(new RestHTTPHandler("POST", CreateCAPS("FetchInventoryDescendents"),
                                                       method));
 
-            //Blocked until we can send a dialog remotely
-            /*method = delegate(Hashtable httpMethod)
+            method = delegate(Hashtable httpMethod)
             {
                 return HomeLocation(httpMethod, m_AgentID);
             };
-            m_server.AddStreamHandler(new RestHTTPHandler("POST", CreateCAPS("HomeLocation"),
-                                                      method));*/
+            handlers.Add(new RestHTTPHandler("POST", CreateCAPS("HomeLocation"),
+                                                      method));
 
             method = delegate(Hashtable httpMethod)
             {
                 return FetchInventoryDescendentsRequest(httpMethod, m_AgentID);
             };
-            m_server.AddStreamHandler(new RestHTTPHandler("POST", CreateCAPS("WebFetchInventoryDescendents"),
+            handlers.Add(new RestHTTPHandler("POST", CreateCAPS("WebFetchInventoryDescendents"),
                                                       method));
+
+            return handlers;
+        }
+
+        private void AddServerCAPS()
+        {
+            List<IRequestHandler> handlers = GetServerCAPS();
+            foreach (IRequestHandler handle in handlers)
+            {
+                m_server.AddStreamHandler(handle);
+            }
         }
 
         public string CapsRequest(string request, string path, string param,
@@ -134,8 +152,8 @@ namespace OpenSim.Services.CapsService
                     Hashtable hash = (Hashtable)LLSD.LLSDDeserialize(OpenMetaverse.Utils.StringToBytes(reply));
                     foreach (string key in hash.Keys)
                     {
-                        if (!CAPS.ContainsKey(key))
-                            CAPS[key] = hash[key];
+                        if (!registeredCAPS.ContainsKey(key))
+                            registeredCAPS[key] = hash[key];
                         else
                             m_log.WarnFormat("[CAPSService]: Simulator tried to override grid CAPS setting! @ {0}", SimToInform);
                     }
@@ -144,36 +162,42 @@ namespace OpenSim.Services.CapsService
             catch
             {
             }
-            return LLSDHelpers.SerialiseLLSDReply(CAPS);
+            return LLSDHelpers.SerialiseLLSDReply(registeredCAPS);
         }
 
         private string CreateCAPS(string method)
         {
             string caps = "/CAPS/" + method + "/" + UUID.Random() + "/";
-            CAPS[method] = m_HostName + caps;
+            registeredCAPS[method] = m_HostName + caps;
+            registeredCAPSPath[m_HostName + caps] = method;
             return caps;
         }
 
         private Hashtable HomeLocation(Hashtable mDhttpMethod, UUID agentID)
         {
             OpenMetaverse.StructuredData.OSDMap rm = (OpenMetaverse.StructuredData.OSDMap)OSDParser.DeserializeLLSDXml((string)mDhttpMethod["requestbody"]);
-            Vector3 position = rm["LocationPos"].AsVector3();
-            Vector3 lookAt = rm["LocationLookAt"].AsVector3();
-            int locationID = rm["LocationId"].AsInteger();
+            OpenMetaverse.StructuredData.OSDMap HomeLocation = rm["HomeLocation"] as OpenMetaverse.StructuredData.OSDMap;
+            OpenMetaverse.StructuredData.OSDMap pos = HomeLocation["LocationPos"] as OpenMetaverse.StructuredData.OSDMap;
+            Vector3 position = new Vector3((float)pos["X"].AsReal(),
+                (float)pos["Y"].AsReal(),
+                (float)pos["Z"].AsReal());
+            OpenMetaverse.StructuredData.OSDMap lookat = HomeLocation["LocationLookAt"] as OpenMetaverse.StructuredData.OSDMap;
+            Vector3 lookAt = new Vector3((float)lookat["X"].AsReal(),
+                (float)lookat["Y"].AsReal(),
+                (float)lookat["Z"].AsReal());
+            int locationID = HomeLocation["LocationId"].AsInteger();
 
             PresenceInfo presence = m_PresenceService.GetAgents(new string[]{agentID.ToString()})[0];
             m_GridUserService.SetHome(agentID.ToString(), presence.RegionID, position, lookAt);
 
-            OpenMetaverse.StructuredData.OSDMap retVal = new OpenMetaverse.StructuredData.OSDMap();
-            retVal.Add("HomeLocation", rm);
-            retVal.Add("Success", OSD.FromBoolean(true));
+            rm.Add("success", OSD.FromBoolean(true));
 
             //Send back data
             Hashtable responsedata = new Hashtable();
             responsedata["int_response_code"] = 200; //501; //410; //404;
             responsedata["content_type"] = "text/plain";
             responsedata["keepalive"] = false;
-            responsedata["str_response_string"] = retVal.ToString();
+            responsedata["str_response_string"] = OSDParser.SerializeLLSDXmlString(rm);
             return responsedata;
         }
 
@@ -183,6 +207,7 @@ namespace OpenSim.Services.CapsService
             responsedata["int_response_code"] = 200; //501; //410; //404;
             responsedata["content_type"] = "text/plain";
             responsedata["keepalive"] = false;
+            responsedata["str_response_string"] = "";
 
             OpenMetaverse.StructuredData.OSD r = OpenMetaverse.StructuredData.OSDParser.DeserializeLLSDXml((string)m_dhttpMethod["requestbody"]);
             OpenMetaverse.StructuredData.OSDMap rm = (OpenMetaverse.StructuredData.OSDMap)r;
@@ -190,11 +215,12 @@ namespace OpenSim.Services.CapsService
             if (AgentFrontend != null)
             {
                 IAgentInfo IAI = AgentFrontend.GetAgent(agentID);
+                if (IAI == null)
+                    return responsedata;
                 IAI.Language = rm["language"].AsString();
                 IAI.LanguageIsPublic = int.Parse(rm["language_is_public"].AsString()) == 1;
                 AgentFrontend.UpdateAgent(IAI);
             }
-            responsedata["str_response_string"] = "";
             return responsedata;
         }
 

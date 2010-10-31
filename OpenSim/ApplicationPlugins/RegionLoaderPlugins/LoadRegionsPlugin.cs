@@ -39,6 +39,7 @@ using OpenSim.Region.CoreModules.Scripting.XMLRPC;
 using OpenSim;
 using OpenSim.Framework.Console;
 using Aurora.Modules.RegionLoader;
+using Aurora.Framework;
 
 namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 {
@@ -59,7 +60,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 
         protected OpenSimBase m_openSim;
 
-        public void Initialise(IOpenSimBase openSim)
+        public void Initialize(IOpenSimBase openSim)
         {
             m_openSim = (OpenSimBase)openSim;
             MainConsole.Instance.Commands.AddCommand("base", false, "open region manager", "open region manager", "Opens the region manager", OpenRegionManager);
@@ -80,8 +81,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 
         public void PostInitialise()
         {
-            RegionLoaderPluginInitialiser RegionLoaderPluginInitialiser = new RegionLoaderPluginInitialiser();
-            List<IRegionLoader> regionLoaders = Aurora.Framework.AuroraModuleLoader.LoadPlugins<IRegionLoader>("/OpenSim/RegionLoader", RegionLoaderPluginInitialiser);
+            List<IRegionLoader> regionLoaders = AuroraModuleLoader.PickupModules<IRegionLoader>();
             foreach (IRegionLoader loader in regionLoaders)
             {
                 loader.Initialise(m_openSim.ConfigSource, this, m_openSim);
@@ -98,6 +98,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                 }
 
                 m_openSim.SceneManager.AllRegions += regionsToLoad.Length;
+                Util.NumberofScenes += regionsToLoad.Length;
 
                 for (int i = 0; i < regionsToLoad.Length; i++)
                 {

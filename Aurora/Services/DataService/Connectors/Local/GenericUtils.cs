@@ -13,7 +13,7 @@ namespace Aurora.Services.DataService
     {
         public static T GetGeneric<T>(UUID OwnerID, string Type, string Key, IGenericData GD, T data) where T : IDataTransferable
         {
-            List<string> retVal = GD.Query(new string[] { "OwnerID", "Type", "Key" }, new object[] { OwnerID, Type, Key }, "generics", "`value`");
+            List<string> retVal = GD.Query(new string[] { "OwnerID", "Type", "`Key`" }, new object[] { OwnerID, Type, Key }, "generics", "`value`");
             
             if (retVal.Count == 0)
                 return null;

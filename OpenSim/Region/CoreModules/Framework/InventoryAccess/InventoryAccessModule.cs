@@ -393,10 +393,28 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                     }
                     else
                     {
-                        // Catch all. Use lost & found
-                        //
+                        if (SP == null || SP.ControllingClient == null ||
+                            objectGroups[0].OwnerID != agentId)
+                        {
 
-                        folder = m_Scene.InventoryService.GetFolderForType(userID, AssetType.LostAndFoundFolder);
+                            folder = m_Scene.InventoryService.GetFolderForType(userID, AssetType.LostAndFoundFolder);
+                        }
+                        else
+                        {
+                            folder = m_Scene.InventoryService.GetFolderForType(userID, AssetType.TrashFolder);
+                        }
+                    }
+                }
+
+                // Override and put into where it came from, if it came
+                // from anywhere in inventory
+                //
+                if (action == DeRezAction.Take || action == DeRezAction.TakeCopy)
+                {
+                    if (objectGroups[0].RootPart.FromItemID != UUID.Zero)
+                    {
+                        InventoryFolderBase f = new InventoryFolderBase(objectGroups[0].RootPart.FromItemID, userID);
+                        folder = m_Scene.InventoryService.GetFolder(f);
                     }
                 }
 
@@ -449,12 +467,28 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                         if ((nextPerms & (uint)PermissionMask.Modify) == 0)
                             perms &= ~(uint)PermissionMask.Modify;
 
-                        item.BasePermissions &= ~(perms & group.RootPart.NextOwnerMask);
-                        item.CurrentPermissions &= ~(item.BasePermissions);
-                        item.NextPermissions &= ~(group.RootPart.NextOwnerMask);
-                        item.EveryOnePermissions &= ~(group.RootPart.EveryoneMask & objectGroups[0].RootPart.NextOwnerMask);
-                        item.GroupPermissions &= ~(group.RootPart.GroupMask & objectGroups[0].RootPart.NextOwnerMask);
-                        item.CurrentPermissions |= 8; // Slam!
+                        // Make sure all bits but the ones we want are clear
+                        // on take.
+                        // This will be applied to the current perms, so
+                        // it will do what we want.
+                        group.RootPart.NextOwnerMask &=
+                                ((uint)PermissionMask.Copy |
+                                 (uint)PermissionMask.Transfer |
+                                 (uint)PermissionMask.Modify);
+                        group.RootPart.NextOwnerMask |=
+                                (uint)PermissionMask.Move;
+
+                        item.BasePermissions = perms & group.RootPart.NextOwnerMask;
+                        item.CurrentPermissions = item.BasePermissions;
+                        item.NextPermissions = group.RootPart.NextOwnerMask;
+                        item.EveryOnePermissions = group.RootPart.EveryoneMask & group.RootPart.NextOwnerMask;
+                        item.GroupPermissions = group.RootPart.GroupMask & group.RootPart.NextOwnerMask;
+
+                        // Magic number badness. Maybe this deserves an enum.
+                        // bit 4 (16) is the "Slam" bit, it means treat as passed
+                        // and apply next owner perms on rez
+                        item.CurrentPermissions |= 16; // Slam!
+
                     }
                 }
                 else
@@ -467,7 +501,13 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                         item.EveryOnePermissions = group.RootPart.EveryoneMask;
                         item.GroupPermissions = group.RootPart.GroupMask;
 
-                        item.CurrentPermissions |= 8; // Slam!
+                        item.CurrentPermissions &=
+                                ((uint)PermissionMask.Copy |
+                                 (uint)PermissionMask.Transfer |
+                                 (uint)PermissionMask.Modify |
+                                 (uint)PermissionMask.Move |
+                                 7); // Preserve folded permissions
+
                     }
                 }
 
@@ -479,7 +519,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                 item.Name = asset.Name;
                 item.AssetType = asset.Type;
 
-                m_Scene.InventoryService.AddItem(item);
+                m_Scene.AddInventoryItem(item);
 
                 if (SP != null && SP.ControllingClient != null && item.Owner == SP.ControllingClient.AgentId)
                 {
@@ -582,7 +622,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                     }
 
                     SceneObjectGroup group
-                                = SceneObjectSerializer.FromOriginalXmlFormat(itemId, doc.FirstChild.OuterXml);
+                                = SceneObjectSerializer.FromOriginalXmlFormat(itemId, doc.FirstChild.OuterXml, m_Scene);
                     if (group == null)
                         return null;
 
@@ -614,7 +654,6 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                         // If we're rezzing an attachment then don't ask AddNewSceneObject() to update the client since
                         // we'll be doing that later on.  Scheduling more than one full update during the attachment
                         // process causes some clients to fail to display the attachment properly.
-                        group.SetScene(m_Scene);  
                         m_Scene.AddNewSceneObject(group, true, false);
 
                         //  m_log.InfoFormat("ray end point for inventory rezz is {0} {1} {2} ", RayEnd.X, RayEnd.Y, RayEnd.Z);
@@ -640,6 +679,11 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                         try
                         {
                             rootPart = group.GetChildPart(group.UUID);
+                            if (rootPart == null)
+                            {
+                                //Just throw the null
+                                rootPart.Acceleration = new Vector3();
+                            }
                         }
                         catch (NullReferenceException)
                         {
@@ -649,6 +693,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                                 isAttachment = " Object was an attachment";
 
                             m_log.Error("[AGENT INVENTORY]: Error rezzing ItemID: " + itemID + " object has no rootpart." + isAttachment);
+                            return null;
                         }
 
                         // Since renaming the item in the inventory does not affect the name stored
@@ -753,7 +798,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                     continue;
                 }
                 SceneObjectGroup group
-                       = SceneObjectSerializer.FromOriginalXmlFormat(aPrimNode.OuterXml);
+                       = SceneObjectSerializer.FromOriginalXmlFormat(aPrimNode.OuterXml, m_Scene);
                 if (group == null)
                     continue;
                 NewGroup.Add(group);
@@ -918,6 +963,57 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
         {
         }
 
+        public virtual bool GetAgentInventoryItem(IClientAPI remoteClient, UUID itemID, UUID requestID)
+        {
+            InventoryItemBase assetRequestItem = GetItem(remoteClient.AgentId, itemID);
+            if (assetRequestItem == null)
+            {
+                ILibraryService lib = m_Scene.RequestModuleInterface<ILibraryService>();
+                if (lib != null)
+                    assetRequestItem = lib.LibraryRootFolder.FindItem(itemID);
+                if (assetRequestItem == null)
+                    return false;
+            }
+
+            // At this point, we need to apply perms
+            // only to notecards and scripts. All
+            // other asset types are always available
+            //
+            if (assetRequestItem.AssetType == (int)AssetType.LSLText)
+            {
+                if (!m_Scene.Permissions.CanViewScript(itemID, UUID.Zero, remoteClient.AgentId))
+                {
+                    remoteClient.SendAgentAlertMessage("Insufficient permissions to view script", false);
+                    return false;
+                }
+            }
+            else if (assetRequestItem.AssetType == (int)AssetType.Notecard)
+            {
+                if (!m_Scene.Permissions.CanViewNotecard(itemID, UUID.Zero, remoteClient.AgentId))
+                {
+                    remoteClient.SendAgentAlertMessage("Insufficient permissions to view notecard", false);
+                    return false;
+                }
+            }
+
+            if (assetRequestItem.AssetID != requestID)
+            {
+                m_log.WarnFormat(
+                    "[CLIENT]: {0} requested asset {1} from item {2} but this does not match item's asset {3}",
+                    Name, requestID, itemID, assetRequestItem.AssetID);
+                return false;
+            }
+
+            return true;
+        }
+
+
+        public virtual bool IsForeignUser(UUID userID, out string assetServerURL)
+        {
+            assetServerURL = string.Empty;
+            return false;
+        }
+
         #endregion
 
         #region Misc
@@ -938,6 +1034,14 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
             asset.Data = (data == null) ? new byte[1] : data;
 
             return asset;
+        }
+
+        protected virtual InventoryItemBase GetItem(UUID agentID, UUID itemID)
+        {
+            IInventoryService invService = m_Scene.RequestModuleInterface<IInventoryService>();
+            InventoryItemBase assetRequestItem = new InventoryItemBase(itemID, agentID);
+            assetRequestItem = invService.GetItem(assetRequestItem);
+            return assetRequestItem;
         }
 
         #endregion

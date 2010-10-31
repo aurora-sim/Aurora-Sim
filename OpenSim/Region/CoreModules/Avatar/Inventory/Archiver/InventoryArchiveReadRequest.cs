@@ -98,7 +98,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
         /// A list of the inventory nodes loaded.  If folders were loaded then only the root folders are
         /// returned
         /// </returns>
-        public HashSet<InventoryNodeBase> Execute()
+        public HashSet<InventoryNodeBase> Execute(bool loadAll)
         {
             try
             {
@@ -106,6 +106,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                 int successfulAssetRestores = 0;
                 int failedAssetRestores = 0;
                 int successfulItemRestores = 0;
+
+                ScenePresence SP = m_scene.GetScenePresence(m_userInfo.PrincipalID);
                 
                 HashSet<InventoryNodeBase> loadedNodes = new HashSet<InventoryNodeBase>();
                
@@ -168,7 +170,15 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                                 // If we aren't loading the folder containing the item then well need to update the 
                                 // viewer separately for that item.
                                 if (!loadedNodes.Contains(foundFolder))
-                                    loadedNodes.Add(item);
+                                {
+                                    if (!loadAll)
+                                    {
+                                        if (SP != null)
+                                            SP.ControllingClient.SendBulkUpdateInventory(item);
+                                    }
+                                    else
+                                        loadedNodes.Add(item);
+                                }
                             }
                         }
                     }

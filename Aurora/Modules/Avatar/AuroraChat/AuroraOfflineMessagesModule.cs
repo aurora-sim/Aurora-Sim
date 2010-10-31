@@ -79,6 +79,7 @@ namespace Aurora.Modules
                 m_SceneList.Add(scene);
 
                 scene.EventManager.OnNewClient += OnNewClient;
+                scene.EventManager.OnClosingClient += OnClosingClient;
             }
         }
 
@@ -94,6 +95,7 @@ namespace Aurora.Modules
                 if (m_TransferModule == null)
                 {
                     scene.EventManager.OnNewClient -= OnNewClient;
+                    scene.EventManager.OnClosingClient -= OnClosingClient;
 
                     enabled = false;
                     m_SceneList.Clear();
@@ -113,6 +115,12 @@ namespace Aurora.Modules
             lock (m_SceneList)
             {
                 m_SceneList.Remove(scene);
+            }
+            if (m_TransferModule != null)
+            {
+                scene.EventManager.OnNewClient -= OnNewClient;
+                scene.EventManager.OnClosingClient -= OnClosingClient;
+                m_TransferModule.OnUndeliveredMessage -= UndeliveredMessage;
             }
         }
 
@@ -163,6 +171,11 @@ namespace Aurora.Modules
         private void OnNewClient(IClientAPI client)
         {
             client.OnRetrieveInstantMessages += RetrieveInstantMessages;
+        }
+
+        private void OnClosingClient(IClientAPI client)
+        {
+            client.OnRetrieveInstantMessages -= RetrieveInstantMessages;
         }
 
         private void RetrieveInstantMessages(IClientAPI client)

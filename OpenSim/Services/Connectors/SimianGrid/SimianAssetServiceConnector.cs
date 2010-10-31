@@ -31,7 +31,6 @@ using System.IO;
 using System.Net;
 using System.Reflection;
 using log4net;
-using Mono.Addins;
 using Nini.Config;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
@@ -45,7 +44,6 @@ namespace OpenSim.Services.Connectors.SimianGrid
     /// <summary>
     /// Connects to the SimianGrid asset service
     /// </summary>
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class SimianAssetServiceConnector : IAssetService, ISharedRegionModule
     {
         private static readonly ILog m_log =

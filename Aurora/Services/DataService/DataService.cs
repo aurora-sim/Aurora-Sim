@@ -72,7 +72,11 @@ namespace Aurora.Services.DataService
                 DataConnector = GenericData;
             }
 
-            Aurora.Framework.AuroraModuleLoader.LoadPlugins<IAuroraDataPlugin>("/Aurora/DataPlugin", new AuroraDataPluginInitialiser(DataConnector, source, ConnectionString));
+            List<IAuroraDataPlugin> Plugins = AuroraModuleLoader.PickupModules<IAuroraDataPlugin>();
+            foreach (IAuroraDataPlugin plugin in Plugins)
+            {
+                plugin.Initialize(DataConnector, source, ConnectionString);
+            }
         }
     }
 
@@ -92,7 +96,7 @@ namespace Aurora.Services.DataService
         {
             IAuroraDataPlugin dataplugin = plugin as IAuroraDataPlugin;
             IGenericData GenericData = GD.Copy();
-            dataplugin.Initialise(GenericData, m_source, m_defaultConnectionString);
+            dataplugin.Initialize(GenericData, m_source, m_defaultConnectionString);
         }
     }
 }

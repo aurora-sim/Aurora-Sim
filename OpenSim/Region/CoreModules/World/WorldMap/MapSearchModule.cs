@@ -36,11 +36,9 @@ using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
-using Mono.Addins;
 
 namespace OpenSim.Region.CoreModules.World.WorldMap
 {
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class MapSearchModule : ISharedRegionModule
     {
         private static readonly ILog m_log =
@@ -80,11 +78,14 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
             m_scenes.Add(scene);
             scene.EventManager.OnNewClient += OnNewClient;
+            scene.EventManager.OnClosingClient += OnClosingClient;
         }
 
         public void RemoveRegion(Scene scene)
         {
-
+            m_scenes.Remove(scene);
+            scene.EventManager.OnNewClient -= OnNewClient;
+            scene.EventManager.OnClosingClient -= OnClosingClient;
         }
 
         public void RegionLoaded(Scene scene)
@@ -124,6 +125,11 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             client.OnMapNameRequest += OnMapNameRequest;
         }
 
+        private void OnClosingClient(IClientAPI client)
+        {
+            client.OnMapNameRequest -= OnMapNameRequest;
+        }
+
         private void OnMapNameRequest(IClientAPI remoteClient, string mapName)
         {
             if (mapName.Length < 3)
@@ -153,7 +159,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                     data = new MapBlockData();
                     data.Agents = 0;
                     data.Access = info.Access;
-                    data.MapImageId = info.TerrainImage;
+                    data.MapImageID = info.TerrainImage;
                     data.Name = info.RegionName;
                     data.RegionFlags = 0;
                     data.WaterHeight = 0; // not used
@@ -167,7 +173,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             data = new MapBlockData();
             data.Agents = 0;
             data.Access = 255;
-            data.MapImageId = UUID.Zero;
+            data.MapImageID = UUID.Zero;
             data.Name = mapName;
             data.RegionFlags = 0;
             data.WaterHeight = 0; // not used

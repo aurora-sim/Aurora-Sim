@@ -69,6 +69,7 @@ namespace Aurora.Modules
 
             scene.EventManager.OnNewClient += OnNewClient;
             scene.Permissions.OnTeleport += AllowTeleport;
+            scene.EventManager.OnClosingClient += OnClosingClient;
 
             scene.AddCommand(this, "set regionsetting", "set regionsetting", "Sets a region setting for the given region. Valid params: Maturity - 0(PG),1(Mature),2(Adult); AddEstateBan,RemoveEstateBan,AddEstateManager,RemoveEstateManager - First name, Last name", SetRegionInfoOption);
             scene.AddCommand(this, "ban user", "ban user", "Bans a user from the current estate", BanUser);
@@ -81,6 +82,7 @@ namespace Aurora.Modules
 
             scene.EventManager.OnNewClient -= OnNewClient;
             scene.Permissions.OnTeleport -= AllowTeleport;
+            scene.EventManager.OnClosingClient -= OnClosingClient;
         }
 
         public void RegionLoaded(Scene scene)
@@ -143,34 +145,36 @@ namespace Aurora.Modules
 
         protected void SetRegionInfoOption(string module, string[] cmdparams)
         {
+            Scene scene = m_scene.ConsoleScene();
+            if (scene == null)
+                scene = m_scene;
             #region 3 Params needed
             if (cmdparams.Length < 4)
             {
                 m_log.Warn("Not enough parameters!");
                 return;
             }
-            EstateSettings ES = m_scene.RegionInfo.EstateSettings;
             if (cmdparams[2] == "Maturity")
             {
                 if (cmdparams[3] == "PG")
                 {
-                    m_scene.RegionInfo.RegionSettings.Maturity = 0;
+                    scene.RegionInfo.RegionSettings.Maturity = 0;
                 }
                 else if (cmdparams[3] == "Mature")
                 {
-                    m_scene.RegionInfo.RegionSettings.Maturity = 1;
+                    scene.RegionInfo.RegionSettings.Maturity = 1;
                 }
                 else if (cmdparams[3] == "Adult")
                 {
-                    m_scene.RegionInfo.RegionSettings.Maturity = 2;
+                    scene.RegionInfo.RegionSettings.Maturity = 2;
                 }
                 else
                 {
                     m_log.Warn("Your parameter did not match any existing parameters. Try PG, Mature, or Adult");
                     return;
                 }
-                m_scene.RegionInfo.RegionSettings.Save();
-                m_scene.UpdateGridRegion();
+                scene.RegionInfo.RegionSettings.Save();
+                scene.UpdateGridRegion();
             }
             #endregion
             #region 4 Params needed
@@ -183,23 +187,31 @@ namespace Aurora.Modules
             {
                 EstateBan EB = new EstateBan();
                 EB.BannedUserID = m_scene.UserAccountService.GetUserAccount(UUID.Zero,cmdparams[3],cmdparams[4]).PrincipalID;
-                ES.AddBan(EB);
+                scene.RegionInfo.EstateSettings.AddBan(EB);
             }
             if (cmdparams[2] == "AddEstateManager")
             {
-                ES.AddEstateManager(m_scene.UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]).PrincipalID);
+                scene.RegionInfo.EstateSettings.AddEstateManager(m_scene.UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]).PrincipalID);
+            }
+            if (cmdparams[2] == "AddEstateAccess")
+            {
+                scene.RegionInfo.EstateSettings.AddEstateUser(m_scene.UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]).PrincipalID);
             }
             if (cmdparams[2] == "RemoveEstateBan")
             {
-                ES.RemoveBan(m_scene.UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]).PrincipalID);
+                scene.RegionInfo.EstateSettings.RemoveBan(m_scene.UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]).PrincipalID);
             }
             if (cmdparams[2] == "RemoveEstateManager")
             {
-                ES.RemoveEstateManager(m_scene.UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]).PrincipalID);
+                scene.RegionInfo.EstateSettings.RemoveEstateManager(m_scene.UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]).PrincipalID);
+            }
+            if (cmdparams[2] == "RemoveEstateAccess")
+            {
+                scene.RegionInfo.EstateSettings.RemoveEstateUser(m_scene.UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]).PrincipalID);
             }
             #endregion
-            m_scene.RegionInfo.RegionSettings.Save();
-            ES.Save();
+            scene.RegionInfo.RegionSettings.Save();
+            scene.RegionInfo.EstateSettings.Save();
         }
 
         #endregion
@@ -210,6 +222,12 @@ namespace Aurora.Modules
         {
             client.OnGodlikeMessage += GodlikeMessage;
             client.OnEstateTelehubRequest += GodlikeMessage; //This is ok, we do estate checks and check to make sure that only telehubs are dealt with here
+        }
+
+        private void OnClosingClient(IClientAPI client)
+        {
+            client.OnGodlikeMessage -= GodlikeMessage;
+            client.OnEstateTelehubRequest -= GodlikeMessage;
         }
 
         #endregion
@@ -234,12 +252,12 @@ namespace Aurora.Modules
                         return;
                     //Remove the one we sent at X
                     telehub.SpawnPos.RemoveAt(int.Parse(Parameters[1]));
-                    RegionConnector.AddTelehub(telehub, m_scene.RegionInfo.GridSecureSessionID);
+                    RegionConnector.AddTelehub(telehub, Sp.Scene.RegionInfo.GridSecureSessionID);
                     SendTelehubInfo(client);
                 }
                 if (parameter1 == "spawnpoint add")
                 {
-                    SceneObjectPart part = m_scene.GetSceneObjectPart(uint.Parse(Parameters[1]));
+                    SceneObjectPart part = Sp.Scene.GetSceneObjectPart(uint.Parse(Parameters[1]));
                     if (part == null)
                         return;
                     Telehub telehub = RegionConnector.FindTelehub(client.Scene.RegionInfo.RegionID);
@@ -257,12 +275,12 @@ namespace Aurora.Modules
                 }
                 if (parameter1 == "delete")
                 {
-                    RegionConnector.RemoveTelehub(client.Scene.RegionInfo.RegionID, m_scene.RegionInfo.GridSecureSessionID);
+                    RegionConnector.RemoveTelehub(client.Scene.RegionInfo.RegionID, Sp.Scene.RegionInfo.GridSecureSessionID);
                     SendTelehubInfo(client);
                 }
                 if (parameter1 == "connect")
                 {
-                    SceneObjectPart part = m_scene.GetSceneObjectPart(uint.Parse(Parameters[1]));
+                    SceneObjectPart part = Sp.Scene.GetSceneObjectPart(uint.Parse(Parameters[1]));
                     if (part == null)
                         return;
                     Telehub telehub = RegionConnector.FindTelehub(client.Scene.RegionInfo.RegionID);
@@ -279,7 +297,7 @@ namespace Aurora.Modules
                     telehub.TelehubRotZ = part.ParentGroup.Rotation.Z;
                     telehub.ObjectUUID = part.UUID.ToString();
                     telehub.Name = part.Name;
-                    RegionConnector.AddTelehub(telehub, m_scene.RegionInfo.GridSecureSessionID);
+                    RegionConnector.AddTelehub(telehub, Sp.Scene.RegionInfo.GridSecureSessionID);
                     SendTelehubInfo(client);
                 }
 

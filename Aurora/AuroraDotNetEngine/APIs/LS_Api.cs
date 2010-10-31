@@ -464,7 +464,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (m_lightShareModule.EnableWindLight)
             {
                 RegionLightShareData wl = getWindlightProfileFromRules(rules);
-                //m_lightShareModule.SaveWindLightSettings(wl);
+                //m_lightShareModule.SaveWindLightSettings(0, wl);
                 success = 1;
             }
             else

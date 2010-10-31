@@ -27,6 +27,7 @@
 
 using System.Drawing;
 using OpenSim.Framework;
+using OpenMetaverse;
 
 namespace OpenSim.Region.Framework.Interfaces
 {
@@ -76,5 +77,7 @@ namespace OpenSim.Region.Framework.Interfaces
     {
         void CreateMapTile(out Bitmap terrainBMP, out Bitmap mapBMP);
         void CreateMapTile(out byte[] terrain, out byte[] map);
+
+        Bitmap CreateViewImage(Vector3 pos, Vector3 rot, float fov, int width, int height, bool usetex);
     }
 }

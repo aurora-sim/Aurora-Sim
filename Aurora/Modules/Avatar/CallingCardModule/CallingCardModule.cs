@@ -50,6 +50,8 @@ namespace Aurora.Modules
 
             if (m_scenes.Contains(scene))
                 m_scenes.Remove(scene);
+            scene.EventManager.OnNewClient -= OnNewClient;
+            scene.EventManager.OnClosingClient -= OnClosingClient;
 
             scene.UnregisterModuleInterface<ICallingCardModule>(this);
         }
@@ -59,6 +61,7 @@ namespace Aurora.Modules
             if (!m_Enabled)
                 return;
             scene.EventManager.OnNewClient += OnNewClient;
+            scene.EventManager.OnClosingClient -= OnClosingClient;
         }
 
         public void PostInitialise()
@@ -89,6 +92,13 @@ namespace Aurora.Modules
             client.OnOfferCallingCard += OnOfferCallingCard;
             client.OnAcceptCallingCard += OnAcceptCallingCard;
             client.OnDeclineCallingCard += OnDeclineCallingCard;
+        }
+
+        private void OnClosingClient(IClientAPI client)
+        {
+            client.OnOfferCallingCard -= OnOfferCallingCard;
+            client.OnAcceptCallingCard -= OnAcceptCallingCard;
+            client.OnDeclineCallingCard -= OnDeclineCallingCard;
         }
 
         #endregion

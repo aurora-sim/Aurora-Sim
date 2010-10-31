@@ -32,7 +32,6 @@ using System.Reflection;
 using System.Timers;
 
 using log4net;
-using Mono.Addins;
 using Nini.Config;
 
 using OpenMetaverse;
@@ -55,7 +54,6 @@ using DirFindFlags = OpenMetaverse.DirectoryManager.DirFindFlags;
 
 namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 {
-    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class GroupsModule : ISharedRegionModule, IGroupsModule
     {
         /// <summary>
@@ -128,7 +126,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                     return;
                 }
 
-                m_log.InfoFormat("[GROUPS]: Initializing {0}", this.Name);
+                //m_log.InfoFormat("[GROUPS]: Initializing {0}", this.Name);
 
                 m_groupNoticesEnabled   = groupsConfig.GetBoolean("NoticesEnabled", true);
                 m_debugEnabled          = groupsConfig.GetBoolean("DebugEnabled", true);
@@ -186,6 +184,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             }
 
             scene.EventManager.OnNewClient += OnNewClient;
+            scene.EventManager.OnClosingClient += OnClosingClient;
             scene.EventManager.OnIncomingInstantMessage += OnGridInstantMessage;
             scene.EventManager.OnClientLogin += EventManager_OnClientLogin;
             scene.EventManager.OnRegisterCaps += new EventManager.RegisterCapsEvent(EventManager_OnRegisterCaps);
@@ -217,6 +216,11 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             {
                 m_sceneList.Remove(scene);
             }
+            scene.EventManager.OnNewClient -= OnNewClient;
+            scene.EventManager.OnClosingClient -= OnClosingClient;
+            scene.EventManager.OnIncomingInstantMessage -= OnGridInstantMessage;
+            scene.EventManager.OnClientLogin -= EventManager_OnClientLogin;
+            scene.EventManager.OnRegisterCaps -= new EventManager.RegisterCapsEvent(EventManager_OnRegisterCaps);
         }
 
         public void Close()
@@ -261,8 +265,23 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             // Used for Notices and Group Invites/Accept/Reject
             client.OnInstantMessage += OnInstantMessage;
 
+            ScenePresence SP = m_sceneList[0].GetScenePresence(client.AgentId);
             // Send client thier groups information.
-            SendAgentGroupDataUpdate(client, client.AgentId);
+            if(SP != null && !SP.IsChildAgent)
+                SendAgentGroupDataUpdate(client, client.AgentId);
+        }
+
+        private void OnClosingClient(IClientAPI client)
+        {
+            if (m_debugEnabled) m_log.DebugFormat("[GROUPS]: {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
+
+            client.OnUUIDGroupNameRequest -= HandleUUIDGroupNameRequest;
+            client.OnAgentDataUpdateRequest -= OnAgentDataUpdateRequest;
+            client.OnDirFindQuery -= OnDirFindQuery;
+            client.OnRequestAvatarProperties -= OnRequestAvatarProperties;
+
+            // Used for Notices and Group Invites/Accept/Reject
+            client.OnInstantMessage -= OnInstantMessage;
         }
 
         private void OnRequestAvatarProperties(IClientAPI remoteClient, UUID avatarID)

@@ -25,58 +25,39 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using NUnit.Framework;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
-namespace OpenSim.Framework.Tests
-{
-    [TestFixture]
-    public class LocationTest
-    {
-        [Test]
-        public void locationRegionHandleRegionHandle()
-        {
-            //1099511628032000
-            // 256000
-            // 256000
-            Location TestLocation1 = new Location(1099511628032000);
-            Location TestLocation2 = new Location(1099511628032000);
-            Assert.That(TestLocation1 == TestLocation2);
+// General information about an assembly is controlled through the following
+// set of attributes. Change these attribute values to modify the information
+// associated with an assembly.
+[assembly: AssemblyTitle("Robust.32BitLaunch")]
+[assembly: AssemblyDescription("")]
+[assembly: AssemblyConfiguration("")]
+[assembly: AssemblyCompany("http://opensimulator.org")]
+[assembly: AssemblyProduct("Robust.32BitLaunch")]
+[assembly: AssemblyCopyright("Copyright (c) 2008")]
+[assembly: AssemblyTrademark("")]
+[assembly: AssemblyCulture("")]
 
-            TestLocation1 = new Location(1099511628032001);
-            TestLocation2 = new Location(1099511628032000);
-            Assert.That(TestLocation1 != TestLocation2);
-        }
+// Setting ComVisible to false makes the types in this assembly not visible
+// to COM components.  If you need to access a type in this assembly from
+// COM, set the ComVisible attribute to true on that type.
+[assembly: ComVisible(false)]
 
-        [Test]
-        public void locationXYRegionHandle()
-        {
-            Location TestLocation1 = new Location(256000,256000);
-            Location TestLocation2 = new Location(1099511628032000);
-            Assert.That(TestLocation1 == TestLocation2);
+// The following GUID is for the ID of the typelib if this project is exposed to COM
+[assembly: Guid("5072e919-46ab-47e6-8a63-08108324ccdf")]
 
-            Assert.That(TestLocation2.X == 256000 && TestLocation2.Y == 256000, "Test xy location doesn't match regionhandle provided");
-
-            Assert.That(TestLocation2.RegionHandle == 1099511628032000,
-                        "Location RegionHandle Property didn't match regionhandle provided in constructor");
-
-
-            TestLocation1 = new Location(256001, 256001);
-            TestLocation2 = new Location(1099511628032000);
-            Assert.That(TestLocation1 != TestLocation2);
-
-            Assert.That(TestLocation1.Equals(256001, 256001), "Equals(x,y) failed to match the position in the constructor");
-
-            Assert.That(TestLocation2.GetHashCode() == (TestLocation2.X.GetHashCode() ^ TestLocation2.Y.GetHashCode()), "GetHashCode failed to produce the expected hashcode");
-
-            Location TestLocation3;
-            object cln = TestLocation2.Clone();
-            TestLocation3 = (Location) cln;
-            Assert.That(TestLocation3.X == TestLocation2.X && TestLocation3.Y == TestLocation2.Y,
-                        "Cloned Location values do not match");
-
-            Assert.That(TestLocation2.Equals(cln), "Cloned object failed .Equals(obj) Test");
-
-        }
-        
-    }
-}
+// Version information for an assembly consists of the following four values:
+//
+//      Major Version
+//      Minor Version
+//      Build Number
+//      Revision
+//
+// You can specify all the values or you can default the Build and Revision Numbers
+// by using the '*' as shown below:
+// [assembly: AssemblyVersion("0.6.3.*")]
+[assembly: AssemblyVersion("0.6.3.*")]
+[assembly: AssemblyFileVersion("1.0.0.0")]
