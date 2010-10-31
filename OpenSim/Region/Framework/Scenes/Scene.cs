@@ -4476,7 +4476,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             //Can we teleport into this region?
             // Note: this takes care of practically every check possible, banned from estate, banned from parcels, parcel landing locations, etc
-            if (!Permissions.CanTeleport(agent.AgentID, agent.startpos, agent.IPAddress, out agent.startpos, out reason))
+            if (!Permissions.CanTeleport(agent.AgentID, agent.startpos, agent, out agent.startpos, out reason))
                 return false;
 
             if (!agent.child) 

@@ -53,9 +53,7 @@ namespace Aurora.Modules
 
                  string banCriteriaString = config.GetString("BanCriteria", "");
                  if (banCriteriaString != "")
-                 {
                      BanCriteria = banCriteriaString.Split(',');
-                 }
              }
         }
 
@@ -328,7 +326,7 @@ namespace Aurora.Modules
 
         #region Can Teleport
 
-        public bool AllowTeleport(UUID userID, Scene scene, Vector3 Position, string IP, out Vector3 newPosition, out string reason)
+        public bool AllowTeleport(UUID userID, Scene scene, Vector3 Position, AgentCircuitData ACD, out Vector3 newPosition, out string reason)
         {
             newPosition = Position;
             
@@ -365,22 +363,15 @@ namespace Aurora.Modules
             {
                 foreach (string banstr in BanCriteria)
                 {
-                    string[] splitbanstr = banstr.Split('|');
-                    if (splitbanstr[0].StartsWith("Name"))
+                    if (Sp.Name.Contains(banstr))
                     {
-                        if (Sp.Name.Contains(splitbanstr[1]))
-                        {
-                            reason = "You have been banned from this region.";
-                            return false;
-                        }
+                        reason = "You have been banned from this region.";
+                        return false;
                     }
-                    else if (splitbanstr[0].StartsWith("IP"))
+                    else if (((System.Net.IPEndPoint)Sp.ControllingClient.GetClientEP()).Address.ToString().Contains(banstr))
                     {
-                        if (((System.Net.IPEndPoint)Sp.ControllingClient.GetClientEP()).Address.ToString().Contains(splitbanstr[1]))
-                        {
-                            reason = "You have been banned from this region.";
-                            return false;
-                        }
+                        reason = "You have been banned from this region.";
+                        return false;
                     }
                 }
             }
@@ -419,8 +410,19 @@ namespace Aurora.Modules
                     reason = "Banned from this region.";
                     return false;
                 }
-                if (ban.BannedHostIPMask == IP)
+                if (ban.BannedHostIPMask == ACD.IPAddress)
                 {
+                    //Ban the new user
+                    ES.AddBan(new EstateBan()
+                    {
+                        EstateID = ES.EstateID,
+                        BannedHostIPMask = ACD.IPAddress,
+                        BannedUserID = userID,
+                        BannedHostAddress = ACD.IPAddress,
+                        BannedHostNameMask = ACD.IPAddress
+                    });
+                    ES.Save();
+
                     reason = "Banned from this region.";
                     return false;
                 }

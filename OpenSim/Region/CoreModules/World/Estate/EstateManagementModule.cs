@@ -407,8 +407,6 @@ namespace OpenSim.Region.CoreModules.World.Estate
                 {
                     remote_client.SendAlertMessage("Method EstateAccessDelta Failed, you don't have permissions");
                 }
-                if ((estateAccessType & 1024) == 0) //1024 means more than one is being sent
-                    remote_client.SendEstateList(invoice, (int)Constants.EstateAccessCodex.AccessOptions, m_scene.RegionInfo.EstateSettings.EstateAccess, m_scene.RegionInfo.EstateSettings.EstateID);
             }
             if ((estateAccessType & 8) != 0) // User remove
             {
@@ -425,8 +423,6 @@ namespace OpenSim.Region.CoreModules.World.Estate
                 {
                     remote_client.SendAlertMessage("Method EstateAccessDelta Failed, you don't have permissions");
                 }
-                if ((estateAccessType & 1024) == 0) //1024 means more than one is being sent
-                    remote_client.SendEstateList(invoice, (int)Constants.EstateAccessCodex.AccessOptions, m_scene.RegionInfo.EstateSettings.EstateAccess, m_scene.RegionInfo.EstateSettings.EstateID);
             }
             if ((estateAccessType & 16) != 0) // Group add
             {
@@ -443,8 +439,6 @@ namespace OpenSim.Region.CoreModules.World.Estate
                 {
                     remote_client.SendAlertMessage("Method EstateAccessDelta Failed, you don't have permissions");
                 }
-                if ((estateAccessType & 1024) == 0) //1024 means more than one is being sent
-                    remote_client.SendEstateList(invoice, (int)Constants.EstateAccessCodex.AllowedGroups, m_scene.RegionInfo.EstateSettings.EstateGroups, m_scene.RegionInfo.EstateSettings.EstateID);
             }
             if ((estateAccessType & 32) != 0) // Group remove
             {
@@ -461,8 +455,6 @@ namespace OpenSim.Region.CoreModules.World.Estate
                 {
                     remote_client.SendAlertMessage("Method EstateAccessDelta Failed, you don't have permissions");
                 }
-                if ((estateAccessType & 1024) == 0) //1024 means more than one is being sent
-                    remote_client.SendEstateList(invoice, (int)Constants.EstateAccessCodex.AllowedGroups, m_scene.RegionInfo.EstateSettings.EstateGroups, m_scene.RegionInfo.EstateSettings.EstateID);
             }
             if ((estateAccessType & 64) != 0) // Ban add
             {
@@ -493,33 +485,38 @@ namespace OpenSim.Region.CoreModules.World.Estate
                         item.BannedHostIPMask = (SP != null) ? ((System.Net.IPEndPoint)SP.ControllingClient.GetClientEP()).Address.ToString() : "0.0.0.0";
 
                         m_scene.RegionInfo.EstateSettings.AddBan(item);
+
+                        //Trigger the event
+                        m_scene.AuroraEventManager.FireGenericEventHandler("BanUser", user);
+
                         if ((estateAccessType & 1024) == 0) //1024 means more than one is being sent
                         {
                             m_scene.RegionInfo.EstateSettings.Save();
                             TriggerEstateInfoChange();
                         }
 
-                        ScenePresence s = m_scene.GetScenePresence(user);
-                        if (s != null)
+                        if (SP != null)
                         {
-                            if (!s.IsChildAgent)
+                            if (!SP.IsChildAgent)
                             {
-                                m_scene.TeleportClientHome(user, s.ControllingClient);
+                                m_scene.TeleportClientHome(user, SP.ControllingClient);
+                            }
+                            else
+                            {
+                                //Close them in the sim
+                                SP.ControllingClient.Close();
                             }
                         }
-
                     }
                     else
                     {
                         remote_client.SendAlertMessage("User is already on the region ban list");
                     }
-                    }
+                }
                 else
                 {
                     remote_client.SendAlertMessage("Method EstateAccessDelta Failed, you don't have permissions");
                 }
-                if ((estateAccessType & 1024) == 0) //1024 means more than one is being sent
-                    remote_client.SendBannedUserList(invoice, m_scene.RegionInfo.EstateSettings.EstateBans, m_scene.RegionInfo.EstateSettings.EstateID);
             }
             if ((estateAccessType & 128) != 0) // Ban remove
             {
@@ -540,6 +537,10 @@ namespace OpenSim.Region.CoreModules.World.Estate
                         }
 
                     }
+
+                    //Trigger the event
+                    m_scene.AuroraEventManager.FireGenericEventHandler("UnBanUser", user);
+
                     if (alreadyInList && listitem != null)
                     {
                         m_scene.RegionInfo.EstateSettings.RemoveBan(listitem.BannedUserID);
@@ -558,8 +559,6 @@ namespace OpenSim.Region.CoreModules.World.Estate
                 {
                     remote_client.SendAlertMessage("Method EstateAccessDelta Failed, you don't have permissions");
                 }
-                if ((estateAccessType & 1024) == 0) //1024 means more than one is being sent
-                    remote_client.SendBannedUserList(invoice, m_scene.RegionInfo.EstateSettings.EstateBans, m_scene.RegionInfo.EstateSettings.EstateID);
             }
             if ((estateAccessType & 256) != 0) // Manager add
             {
@@ -576,8 +575,6 @@ namespace OpenSim.Region.CoreModules.World.Estate
                 {
                     remote_client.SendAlertMessage("Method EstateAccessDelta Failed, you don't have permissions");
                 }
-                if ((estateAccessType & 1024) == 0) //1024 means more than one is being sent
-                    remote_client.SendEstateList(invoice, (int)Constants.EstateAccessCodex.EstateManagers, m_scene.RegionInfo.EstateSettings.EstateManagers, m_scene.RegionInfo.EstateSettings.EstateID);
             }
             if ((estateAccessType & 512) != 0) // Manager remove
             {
@@ -594,8 +591,13 @@ namespace OpenSim.Region.CoreModules.World.Estate
                 {
                     remote_client.SendAlertMessage("Method EstateAccessDelta Failed, you don't have permissions");
                 }
-                if ((estateAccessType & 1024) == 0) //1024 means more than one is being sent
-                    remote_client.SendEstateList(invoice, (int)Constants.EstateAccessCodex.EstateManagers, m_scene.RegionInfo.EstateSettings.EstateManagers, m_scene.RegionInfo.EstateSettings.EstateID);
+            }
+            if ((estateAccessType & 1024) == 0) //1024 means more than one is being sent   
+            {
+                remote_client.SendEstateList(invoice, (int)Constants.EstateAccessCodex.AccessOptions, m_scene.RegionInfo.EstateSettings.EstateAccess, m_scene.RegionInfo.EstateSettings.EstateID);
+                remote_client.SendEstateList(invoice, (int)Constants.EstateAccessCodex.AllowedGroups, m_scene.RegionInfo.EstateSettings.EstateGroups, m_scene.RegionInfo.EstateSettings.EstateID);
+                remote_client.SendBannedUserList(invoice, m_scene.RegionInfo.EstateSettings.EstateBans, m_scene.RegionInfo.EstateSettings.EstateID);
+                remote_client.SendEstateList(invoice, (int)Constants.EstateAccessCodex.EstateManagers, m_scene.RegionInfo.EstateSettings.EstateManagers, m_scene.RegionInfo.EstateSettings.EstateID);
             }
         }
 

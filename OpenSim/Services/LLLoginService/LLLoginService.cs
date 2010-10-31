@@ -50,6 +50,12 @@ using Aurora.Framework;
 
 namespace OpenSim.Services.LLLoginService
 {
+    public interface ILoginModule
+    {
+        void Initialize(LLLoginService service, IConfigSource source, IUserAccountService UAService);
+        bool Login(Hashtable request, UUID User, out string message);
+    }
+
     public class LLLoginService : ILoginService
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -95,6 +101,7 @@ namespace OpenSim.Services.LLLoginService
         string CAPSServerURL = "";
         string CAPSServicePassword = "";
         GridAvatarArchiver archiver;
+        List<ILoginModule> LoginModules = new List<ILoginModule>();
 
         public LLLoginService(IConfigSource config, ISimulationService simService, ILibraryService libraryService)
         {
@@ -188,7 +195,12 @@ namespace OpenSim.Services.LLLoginService
             //Start the grid profile archiver.
             new GridAvatarProfileArchiver(m_UserAccountService);
             archiver = new GridAvatarArchiver(m_UserAccountService, m_AvatarService, m_InventoryService);
-            
+            LoginModules = Aurora.Framework.AuroraModuleLoader.PickupModules<ILoginModule>();
+            foreach (ILoginModule module in LoginModules)
+            {
+                module.Initialize(this, config, m_UserAccountService);
+            }
+
             m_log.DebugFormat("[LLOGIN SERVICE]: Starting...");
 
         }
@@ -410,6 +422,17 @@ namespace OpenSim.Services.LLLoginService
                     {
                         UPI.IsNewUser = false;
                         profileData.UpdateUserProfile(UPI);
+                    }
+                }
+
+                foreach (ILoginModule module in LoginModules)
+                {
+                    string message;
+                    if (module.Login(requestData, account.PrincipalID, out message) == false)
+                    {
+                        LLFailedLoginResponse resp = new LLFailedLoginResponse(LoginResponseEnum.PasswordIncorrect,
+                            message, "false");
+                        return resp;
                     }
                 }
 

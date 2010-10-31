@@ -1902,7 +1902,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             return true;
         }
 
-        private bool CanTeleport(UUID userID, Scene scene, Vector3 Position, string IP, out Vector3 newPosition, out string reason)
+        private bool CanTeleport(UUID userID, Scene scene, Vector3 Position, AgentCircuitData ACD, out Vector3 newPosition, out string reason)
         {
             newPosition = Position;
             reason = "";

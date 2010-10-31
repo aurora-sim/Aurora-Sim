@@ -59,9 +59,14 @@ namespace Aurora.Modules
             MainServer.Instance.AddStreamHandler(new CRBSIncoming(this));
 
             //Call up other sims
-            IConfig banSysConfig = m_config.Configs["BanSystem"];
+            IConfig banSysConfig = m_config.Configs["CrossRegionBanSystem"];
             if (banSysConfig != null)
             {
+                if (!banSysConfig.GetBoolean("Enabled", false))
+                    return;
+
+                OurGetPassword = banSysConfig.GetString("OurPassword", "");
+
                 string URLlist = banSysConfig.GetString("URLs", string.Empty);
                 if (URLlist == string.Empty)
                     return;
@@ -181,6 +186,11 @@ namespace Aurora.Modules
                         }
                     }
                 }
+            }
+            //Update all the databases
+            foreach (Scene scene in m_scenes)
+            {
+                scene.RegionInfo.EstateSettings.Save();
             }
         }
 

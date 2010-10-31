@@ -91,7 +91,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
             }
         }
 
-        public bool CanTeleport(UUID userID, Scene scene, Vector3 Position, string IP, out Vector3 newPosition, out string reason)
+        public bool CanTeleport(UUID userID, Scene scene, Vector3 Position, OpenSim.Framework.AgentCircuitData ACD, out Vector3 newPosition, out string reason)
         {
             newPosition = Position;
             reason = "";

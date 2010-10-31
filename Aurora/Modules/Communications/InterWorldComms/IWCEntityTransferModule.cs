@@ -145,7 +145,7 @@ namespace Aurora.Modules
         public virtual void Teleport(ScenePresence sp, ulong regionHandle, Vector3 position, Vector3 lookAt, uint teleportFlags)
         {
             string reason = "";
-            if (!sp.Scene.Permissions.CanTeleport(sp.UUID, position, ((System.Net.IPEndPoint)sp.ControllingClient.GetClientEP()).Address.ToString(), out position, out reason))
+            if (!sp.Scene.Permissions.CanTeleport(sp.UUID, position, sp.Scene.AuthenticateHandler.GetAgentCircuitData(sp.UUID), out position, out reason))
             {
                 sp.ControllingClient.SendTeleportFailed(reason);
                 return;

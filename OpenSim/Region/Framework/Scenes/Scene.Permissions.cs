@@ -81,7 +81,7 @@ namespace OpenSim.Region.Framework.Scenes
     public delegate bool EditUserInventoryHandler(UUID itemID, UUID userID);
     public delegate bool CopyUserInventoryHandler(UUID itemID, UUID userID);
     public delegate bool DeleteUserInventoryHandler(UUID itemID, UUID userID);
-    public delegate bool TeleportHandler(UUID userID, Scene scene, Vector3 Position, string IP, out Vector3 newPosition, out string reason);
+    public delegate bool TeleportHandler(UUID userID, Scene scene, Vector3 Position, AgentCircuitData ACD, out Vector3 newPosition, out string reason);
     public delegate bool PushObjectHandler(UUID userID, ILandObject parcel);
     public delegate bool EditParcelAccessListHandler(UUID userID, ILandObject parcel, uint flags);
     public delegate bool GenericParcelHandler(UUID user, ILandObject parcel, ulong groupPowers);
@@ -963,7 +963,7 @@ namespace OpenSim.Region.Framework.Scenes
             return true;
         }
 
-        public bool CanTeleport(UUID userID, Vector3 Position, string IP, out Vector3 newPosition, out string reason)
+        public bool CanTeleport(UUID userID, Vector3 Position, AgentCircuitData ACD, out Vector3 newPosition, out string reason)
         {
             newPosition = Position;
             reason = "";
@@ -973,7 +973,7 @@ namespace OpenSim.Region.Framework.Scenes
                 Delegate[] list = handler.GetInvocationList();
                 foreach (TeleportHandler h in list)
                 {
-                    if (h(userID, m_scene, Position, IP, out newPosition, out reason) == false)
+                    if (h(userID, m_scene, Position, ACD, out newPosition, out reason) == false)
                         return false;
                 }
             }
