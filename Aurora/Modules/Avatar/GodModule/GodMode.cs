@@ -114,14 +114,14 @@ namespace Aurora.Modules
 
         void onGodlikeMessage(IClientAPI client, UUID requester, string Method, List<string> Parameter)
         {
+            //Just rebuild the map
             if (Method == "refreshmapvisibility")
             {
-                ScenePresence Sp = ((Scene)client.Scene).GetScenePresence(client.AgentId);
-                if (Sp.GodLevel >= 0)
+                if (((Scene)client.Scene).Permissions.IsGod(client.AgentId))
                 {
                     //Rebuild the map tile
                     IWorldMapModule mapModule;
-                    mapModule = Sp.Scene.RequestModuleInterface<IWorldMapModule>();
+                    mapModule = client.Scene.RequestModuleInterface<IWorldMapModule>();
                     mapModule.CreateTerrainTexture();
                 }
             }
@@ -129,8 +129,7 @@ namespace Aurora.Modules
 
         public void GodSaveState(IClientAPI client, UUID agentID)
         {
-            ScenePresence Sp = ((Scene)client.Scene).GetScenePresence(client.AgentId);
-            if (Sp.GodLevel >= 0)
+            if (((Scene)client.Scene).Permissions.IsGod(client.AgentId))
             {
                 Scene scene = (Scene)MainConsole.Instance.ConsoleScene; //Switch back later
                 MainConsole.Instance.RunCommand("change region " + ((Scene)client.Scene).RegionInfo.RegionName);
@@ -142,9 +141,10 @@ namespace Aurora.Modules
         public void GodUpdateRegionInfoUpdate(IClientAPI client, float BillableFactor, int PricePerMeter, ulong EstateID, ulong RegionFlags, byte[] SimName, int RedirectX, int RedirectY)
         {
             ScenePresence Sp = ((Scene)client.Scene).GetScenePresence(client.AgentId);
-            if (Sp.GodLevel == 0)
+            if (!((Scene)client.Scene).Permissions.IsGod(client.AgentId) || Sp == null)
                 return;
 
+            //Update their current region with new information
             string oldRegionName = ((Scene)client.Scene).RegionInfo.RegionName;
             ((Scene)client.Scene).RegionInfo.RegionName = OpenMetaverse.Utils.BytesToString(SimName);
             if(RedirectX != 0)
@@ -154,6 +154,7 @@ namespace Aurora.Modules
 
             if (((Scene)client.Scene).RegionInfo.EstateSettings.EstateID != EstateID)
             {
+                //If they are changing estates, we have to ask them for the password to the estate, so send them an llTextBox
                 string Password = "";
                 IWorldComm comm = ((Scene)client.Scene).RequestModuleInterface<IWorldComm>();
                 IDialogModule dialog = ((Scene)client.Scene).RequestModuleInterface<IDialogModule>();
@@ -230,7 +231,7 @@ namespace Aurora.Modules
 
         public void OnChatFromClient(object sender, OSChatMessage e)
         {
-             //For Estate Password
+            //For Estate Password
             EstateChange Change = null;
             if (ChannelDirectory.TryGetValue(e.Sender.AgentId, out Change))
             {

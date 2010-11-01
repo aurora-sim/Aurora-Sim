@@ -14,6 +14,9 @@ using Settings = NHibernate.Cfg.Settings;
 
 namespace Aurora.DataManager
 {
+    /// <summary>
+    /// Plugin manager that deals with retrieving IDataPlugins
+    /// </summary>
     public static class DataManager
     {
         private static Dictionary<string, object> Plugins = new Dictionary<string, object>();

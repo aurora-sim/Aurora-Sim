@@ -17,6 +17,9 @@ using OpenSim.Server.Base;
 
 namespace Aurora.Modules
 {
+    /// <summary>
+    /// This module loads/saves the avatar's profile from/into a "AvatarProfile Archive"
+    /// </summary>
     public class AuroraAvatarProfileArchiver : ISharedRegionModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -137,10 +140,12 @@ namespace Aurora.Modules
             IUserProfileInfo profile = data.GetUserProfile(account.PrincipalID);
 
             Dictionary<string, object> result = new Dictionary<string, object>();
-            result["result"] = profile.ToKeyValuePairs();
+            if(profile != null)
+                result["result"] = profile.ToKeyValuePairs();
             string UPIxmlString = ServerUtils.BuildXmlResponse(result);
 
-            result["result"] = account.ToKeyValuePairs();
+            if(account != null)
+                result["result"] = account.ToKeyValuePairs();
             string UDAxmlString = ServerUtils.BuildXmlResponse(result);
 
             StreamWriter writer = new StreamWriter(cmdparams[5]);

@@ -18,7 +18,7 @@ namespace Aurora.Framework
     {
         public static string GetServerReleaseNotesURL()
         {
-            return "http://" + GetExternalIp() + ":" + OpenSim.Framework.MainServer.Instance.Port.ToString() + "/AuroraServerRelease" + AuroraServerVersion();
+            return "http://" + GetExternalIp() + ":" + OpenSim.Framework.MainServer.Instance.Port.ToString() + "/AuroraServerRelease" + AuroraServerVersion() + ".html";
         }
 
         public static string GetAddress()
@@ -28,7 +28,7 @@ namespace Aurora.Framework
 
         public static string AuroraServerVersion()
         {
-            return "0.1";
+            return "1.0";
         }
 
         static string EncryptorType = "SHA1";

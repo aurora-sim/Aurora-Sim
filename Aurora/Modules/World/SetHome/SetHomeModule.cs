@@ -55,12 +55,33 @@ namespace Aurora.Modules.World.Auction
         {
             UUID capuuid = UUID.Random();
 
+            caps.RegisterHandler("ServerReleaseNotes",
+                                new RestHTTPHandler("POST", "/CAPS/ServerReleaseNotes/" + capuuid + "/",
+                                                      delegate(Hashtable m_dhttpMethod)
+                                                      {
+                                                          return ProcessServerReleaseNotes(m_dhttpMethod, agentID, capuuid);
+                                                      }));
+
             caps.RegisterHandler("CopyInventoryFromNotecard",
                                 new RestHTTPHandler("POST", "/CAPS/" + capuuid + "/",
                                                       delegate(Hashtable m_dhttpMethod)
                                                       {
                                                           return CopyInventoryFromNotecard(m_dhttpMethod, capuuid, agentID);
                                                       }));
+        }
+
+        private Hashtable ProcessServerReleaseNotes(Hashtable m_dhttpMethod, UUID agentID, UUID capuuid)
+        {
+            Hashtable responsedata = new Hashtable();
+            responsedata["int_response_code"] = 200; //501; //410; //404;
+            responsedata["content_type"] = "text/plain";
+            responsedata["keepalive"] = false;
+
+            OSDMap osd = new OSDMap();
+            osd.Add("ServerReleaseNotes", new OSDString(Aurora.Framework.Utilities.GetServerReleaseNotesURL()));
+            string response = OSDParser.SerializeLLSDXmlString(osd);
+            responsedata["str_response_string"] = response;
+            return responsedata;
         }
 
         private Hashtable CopyInventoryFromNotecard(Hashtable mDhttpMethod, UUID capuuid, UUID agentID)

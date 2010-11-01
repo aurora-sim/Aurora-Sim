@@ -72,7 +72,7 @@ namespace Aurora.Modules
             ILandObject landObject = m_scene.LandChannel.GetLandObject(LocalID);
             landObject.LandData.SnapshotID = SnapshotID;
             landObject.LandData.AuctionID++;
-            landObject.SendLandUpdateToClient(client);
+            landObject.SendLandUpdateToAvatarsOverMe();
         }
 
         public void RegisterCaps(UUID agentID, Caps caps)

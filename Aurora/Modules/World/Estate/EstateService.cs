@@ -339,6 +339,7 @@ namespace Aurora.Modules
                 return false; //NO!
             }
 
+            //Check how long its been since the last TP
             if (m_enabledBlockTeleportSeconds && Sp != null)
             {
                 if (TimeSinceLastTeleport.ContainsKey(Sp.Scene.RegionInfo.RegionID))
@@ -359,6 +360,7 @@ namespace Aurora.Modules
                 return true;
             }
 
+            //Check whether they fit any ban criteria
             if (Sp != null)
             {
                 foreach (string banstr in BanCriteria)
@@ -386,6 +388,7 @@ namespace Aurora.Modules
 
             List<EstateBan> EstateBans = new List<EstateBan>(ES.EstateBans);
             int i = 0;
+            //Check bans
             foreach (EstateBan ban in EstateBans)
             {
                 if (ban.BannedUserID == userID)
@@ -503,7 +506,7 @@ namespace Aurora.Modules
                     return true;
                 }
             }
-
+            //Move them out of banned parcels
             ParcelFlags parcelflags = (ParcelFlags)ILO.LandData.Flags;
             if ((parcelflags & ParcelFlags.UseAccessGroup) == ParcelFlags.UseAccessGroup &&
                 (parcelflags & ParcelFlags.UseAccessList) == ParcelFlags.UseAccessList &&
@@ -537,6 +540,7 @@ namespace Aurora.Modules
                 }
             }
 
+            //Move them to the nearest landing point
             if (!ES.AllowDirectTeleport)
             {
                 Telehub telehub = RegionConnector.FindTelehub(scene.RegionInfo.RegionID);
@@ -606,6 +610,7 @@ namespace Aurora.Modules
                 }
             }
 
+            //Can only enter prelude regions once!
             int flags = m_scene.GridService.GetRegionFlags(m_scene.RegionInfo.ScopeID, m_scene.RegionInfo.RegionID);
             //We assume that our own region isn't null....
             if (((flags & (int)OpenSim.Data.RegionFlags.Prelude) == (int)OpenSim.Data.RegionFlags.Prelude))
