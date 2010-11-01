@@ -274,8 +274,8 @@ namespace Aurora.Modules
 
             try
             {
-                IConfig startupConfig = (IConfig)m_config.Configs["Startup"];
-                regionConfigPath = startupConfig.GetString("regionload_regionsdir", regionConfigPath).Trim();
+                IConfig startupConfig = (IConfig)m_config.Configs["RegionStartup"];
+                regionConfigPath = startupConfig.GetString("RegionsDirectory", regionConfigPath).Trim();
             }
             catch (Exception)
             {

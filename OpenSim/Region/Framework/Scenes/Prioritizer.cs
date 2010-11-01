@@ -81,7 +81,7 @@ namespace OpenSim.Region.Framework.Scenes
             double priority = 0;
 
             if (entity == null)
-                return 100000;
+                return double.PositiveInfinity;
 
             switch (m_scene.UpdatePrioritizationScheme)
             {
@@ -286,21 +286,30 @@ namespace OpenSim.Region.Framework.Scenes
                     float d = -Vector3.Dot(camPosition, camAtAxis);
                     float p = Vector3.Dot(camAtAxis, entityPos) + d;
                     if (p < 0.0f) priority *= 2.0;
+                    
+                    //Add distance again to really emphasize it
+                    priority += Vector3.DistanceSquared(presence.AbsolutePosition, entityPos);
+
+                    if ((Vector3.Distance(presence.AbsolutePosition, entityPos) / 2) > presence.DrawDistance)
+                    {
+                        //Outside of draw distance!
+                        priority *= 2;
+                    }
 
                     if (entity is SceneObjectPart)
                     {
                         PhysicsActor physActor = ((SceneObjectPart)entity).ParentGroup.RootPart.PhysActor;
-                        if (physActor == null || !physActor.IsPhysical)
-                            priority += 100;
+                        if (physActor == null || physActor.IsPhysical)
+                            priority /= 2; //Emphasize physical objs
 
                         if (((SceneObjectPart)entity).ParentGroup.RootPart.IsAttachment)
                         {
+                            //Attachments are always high!
                             priority = 1.0;
-                            return priority;
                         }
                     }
                     //Closest first!
-                    return priority + Vector3.DistanceSquared(presence.AbsolutePosition, entityPos);
+                    return priority;
                 }
                 else
                 {

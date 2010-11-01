@@ -706,8 +706,11 @@ namespace OpenSim.Region.Framework.Scenes
 
             try
             {
-                IConfig startupConfig = (IConfig)m_config.Configs["Startup"];
-                regionConfigPath = startupConfig.GetString("regionload_regionsdir", regionConfigPath).Trim();
+                IConfig config = m_config.Configs["RegionStartup"];
+                if (config != null)
+                {
+                    regionConfigPath = config.GetString("RegionsDirectory", regionConfigPath).Trim();
+                }
             }
             catch (Exception)
             {

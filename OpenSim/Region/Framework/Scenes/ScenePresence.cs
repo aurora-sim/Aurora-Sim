@@ -1343,7 +1343,6 @@ namespace OpenSim.Region.Framework.Scenes
             m_CameraAtAxis = agentData.CameraAtAxis;
             m_CameraLeftAxis = agentData.CameraLeftAxis;
             m_CameraUpAxis = agentData.CameraUpAxis;
-
             // The Agent's Draw distance setting
             m_DrawDistance = agentData.Far;
 

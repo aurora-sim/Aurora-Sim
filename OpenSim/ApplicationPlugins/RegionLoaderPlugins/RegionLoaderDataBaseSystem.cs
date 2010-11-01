@@ -110,8 +110,8 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 
                 try
                 {
-                    IConfig startupConfig = (IConfig)m_configSource.Configs["Startup"];
-                    regionConfigPath = startupConfig.GetString("regionload_regionsdir", regionConfigPath).Trim();
+                    IConfig startupConfig = (IConfig)m_configSource.Configs["RegionStartup"];
+                    regionConfigPath = startupConfig.GetString("RegionsDirectory", regionConfigPath).Trim();
                 }
                 catch (Exception)
                 {

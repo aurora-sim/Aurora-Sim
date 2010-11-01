@@ -110,8 +110,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             }
             else if (cmd[3].EndsWith(".ini"))
             {
-                string regionsDir = m_configSource.Configs["Startup"].GetString("regionload_regionsdir", "Regions").Trim();
-                string regionFile = String.Format("{0}/{1}", regionsDir, cmd[3]);
+                string regionFile = String.Format("{0}/{1}", m_regionConfigPath, cmd[3]);
                 // Allow absolute and relative specifiers
                 if (cmd[3].StartsWith("/") || cmd[3].StartsWith("\\") || cmd[3].StartsWith(".."))
                     regionFile = cmd[3];

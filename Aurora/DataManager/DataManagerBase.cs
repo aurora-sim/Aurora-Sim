@@ -65,7 +65,7 @@ namespace Aurora.DataManager
         {
             if (!TableExists(VERSION_TABLE_NAME))
             {
-                CreateTable(VERSION_TABLE_NAME, new[] {new ColumnDefinition {Name = COLUMN_VERSION, Type = ColumnTypes.String}});
+                CreateTable(VERSION_TABLE_NAME, new[] {new ColumnDefinition {Name = COLUMN_VERSION, Type = ColumnTypes.String100}});
             }
             Insert(VERSION_TABLE_NAME, new[] {version.ToString()});
         }

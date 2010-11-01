@@ -1509,12 +1509,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             IOpenRegionSettingsModule WSModule = m_host.ParentGroup.Scene.RequestModuleInterface<IOpenRegionSettingsModule>();
             if (WSModule != null)
             {
-                if (WSModule.MaximumPhysPrimScale == -1 ||
-                    WSModule.MinimumPrimScale == -1 ||
-                    WSModule.MaximumPrimScale == -1)
-                {
-                }
-                else
+                if (WSModule.MinimumPrimScale != -1)
                 {
                     if (scale.x < WSModule.MinimumPrimScale)
                         scale.x = WSModule.MinimumPrimScale;
@@ -1522,17 +1517,21 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         scale.y = WSModule.MinimumPrimScale;
                     if (scale.z < WSModule.MinimumPrimScale)
                         scale.z = WSModule.MinimumPrimScale;
+                }
 
-                    if (part.ParentGroup.RootPart.PhysActor != null && part.ParentGroup.RootPart.PhysActor.IsPhysical)
-                    {
-                        if (scale.x > WSModule.MaximumPhysPrimScale)
-                            scale.x = WSModule.MaximumPhysPrimScale;
-                        if (scale.y > WSModule.MaximumPhysPrimScale)
-                            scale.y = WSModule.MaximumPhysPrimScale;
-                        if (scale.z > WSModule.MaximumPhysPrimScale)
-                            scale.z = WSModule.MaximumPhysPrimScale;
-                    }
+                if (part.ParentGroup.RootPart.PhysActor != null && part.ParentGroup.RootPart.PhysActor.IsPhysical &&
+                    WSModule.MaximumPhysPrimScale != -1)
+                {
+                    if (scale.x > WSModule.MaximumPhysPrimScale)
+                        scale.x = WSModule.MaximumPhysPrimScale;
+                    if (scale.y > WSModule.MaximumPhysPrimScale)
+                        scale.y = WSModule.MaximumPhysPrimScale;
+                    if (scale.z > WSModule.MaximumPhysPrimScale)
+                        scale.z = WSModule.MaximumPhysPrimScale;
+                }
 
+                if (WSModule.MaximumPrimScale != -1)
+                {
                     if (scale.x > WSModule.MaximumPrimScale)
                         scale.x = WSModule.MaximumPrimScale;
                     if (scale.y > WSModule.MaximumPrimScale)

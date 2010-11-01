@@ -44,8 +44,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
         public void Initialize(ScriptEngine engine)
         {
             m_ScriptEngine = engine;
-            maximumRange = engine.Config.GetDouble("SensorMaxRange", 96.0d);
-            maximumToReturn = engine.Config.GetInt("SensorMaxResults", 16);
+            maximumRange = engine.Config.GetDouble("SensorMaxRange", 256.0d);
+            usemaximumRange = engine.Config.GetBoolean("UseSensorMaxRange", true);
+            maximumToReturn = engine.Config.GetInt("SensorMaxResults", 32);
+            usemaximumToReturn = engine.Config.GetBoolean("UseSensorMax", true);
         }
 
         private Object SenseLock = new Object();
@@ -56,7 +58,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
         private const int SCRIPTED = 8;
 
         private double maximumRange = 96.0;
+        private bool usemaximumRange = true;
         private int maximumToReturn = 16;
+        private bool usemaximumToReturn = true;
 
         //
         // SenseRepeater and Sensors
@@ -118,7 +122,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             ts.name = name;
             ts.keyID = keyID;
             ts.type = type;
-            if (range > maximumRange)
+            if (range > maximumRange && usemaximumRange)
                 ts.range = maximumRange;
             else
                 ts.range = range;
@@ -185,7 +189,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             ts.name = name;
             ts.keyID = keyID;
             ts.type = type;
-            if (range > maximumRange)
+            if (range > maximumRange && usemaximumRange)
                 ts.range = maximumRange;
             else
                 ts.range = range;
@@ -240,7 +244,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                             detect.Key = sensedEntities[idx].itemID;
                             detect.Populate(ts.host.ParentGroup.Scene);
                             detected.Add(detect);
-                        	if (detected.Count == maximumToReturn)
+                        	if (detected.Count == maximumToReturn &&
+                                usemaximumToReturn)
                             	break;
                         }
                     }

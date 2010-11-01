@@ -624,21 +624,44 @@ namespace Aurora.DataManager.MySQL
 
         public override bool TableExists(string table)
         {
-            MySqlConnection dbcon = GetLockedConnection();
-            MySqlCommand dbcommand = dbcon.CreateCommand();
-            dbcommand.CommandText = string.Format("select table_name from information_schema.tables where table_schema=database() and table_name='{0}'", table.ToLower());
-            var rdr = dbcommand.ExecuteReader();
-
             var ret = false;
-            if (rdr.Read())
+            MySqlConnection dbcon = GetLockedConnection();
+            IDbCommand result;
+            IDataReader reader;
+            List<string> RetVal = new List<string>();
+            using (result = Query("show tables", new Dictionary<string, object>(), dbcon))
+            {
+                using (reader = result.ExecuteReader())
+                {
+                    try
+                    {
+                        while (reader.Read())
+                        {
+                            for (int i = 0; i < reader.FieldCount; i++)
+                            {
+                                RetVal.Add(reader.GetString(i));
+                            }
+                        }
+                    }
+                    catch
+                    {
+                    }
+                    finally
+                    {
+                        if (reader != null)
+                        {
+                            reader.Close();
+                            reader.Dispose();
+                        }
+                        result.Dispose();
+                        CloseDatabase(dbcon);
+                    }
+                }
+            }
+            if (RetVal.Contains(table))
             {
                 ret = true;
             }
-
-            rdr.Close();
-            rdr.Dispose();
-            dbcommand.Dispose();
-            CloseDatabase(dbcon);
             return ret;
         }
 

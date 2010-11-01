@@ -3955,7 +3955,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         public void ReprioritizeUpdates()
         {
-            //m_log.Debug("[CLIENT]: Reprioritizing prim updates for " + m_firstName + " " + m_lastName);
+            if (m_entityUpdates.Count == 0)
+                return;
+            m_log.Debug("[CLIENT]: Reprioritizing prim updates for " + m_firstName + " " + m_lastName + " for " + m_entityUpdates.Count + " prims.");
 
             lock (m_entityUpdates.SyncRoot)
                 m_entityUpdates.Reprioritize(UpdatePriorityHandler);

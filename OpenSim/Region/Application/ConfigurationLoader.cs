@@ -104,15 +104,16 @@ namespace OpenSim
             }
 
             string iniDirName =
-                    startupConfig.GetString("IniDirectory", "Configuration/Modules");
+                    startupConfig.GetString("inidirectory", "Configuration/Modules");
             string iniDirPath =
                     Path.Combine(Util.configDir(), iniDirName);
 
             if (Directory.Exists(iniDirPath))
             {
-                //m_log.InfoFormat("Searching folder {0} for config ini files",
-                //            iniDirPath);
-                string[] fileEntries = Directory.GetFiles(iniDirPath);
+                m_log.InfoFormat("Searching folder {0} for config ini files",
+                        iniDirPath);
+
+                string[] fileEntries = Directory.GetFiles(iniDirName);
                 foreach (string filePath in fileEntries)
                 {
                     if (Path.GetExtension(filePath).ToLower() == ".ini")
@@ -123,9 +124,10 @@ namespace OpenSim
                 }
             }
 
+
             m_config = new IniConfigSource();
             
-            //m_log.Info("[CONFIG]: Reading configuration settings");
+            m_log.Info("[CONFIG]: Reading configuration settings");
 
             if (sources.Count == 0)
             {
@@ -225,14 +227,14 @@ namespace OpenSim
 
             if (!IsUri(iniPath))
             {
-                //m_log.InfoFormat("[CONFIG]: Reading configuration file {0}", Path.GetFullPath(iniPath));
+                m_log.InfoFormat("[CONFIG]: Reading configuration file {0}", Path.GetFullPath(iniPath));
 
                 m_config.Merge(new IniConfigSource(iniPath, Nini.Ini.IniFileType.AuroraStyle));
                 success = true;
             }
             else
             {
-                //m_log.InfoFormat("[CONFIG]: {0} is a http:// URI, fetching ...", iniPath);
+                m_log.InfoFormat("[CONFIG]: {0} is a http:// URI, fetching ...", iniPath);
 
                 // The ini file path is a http URI
                 // Try to read it

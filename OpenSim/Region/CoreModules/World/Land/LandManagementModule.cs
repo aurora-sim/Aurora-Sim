@@ -450,11 +450,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         {
             if (m_scene.RegionInfo.RegionID == regionID)
             {
-                ILandObject parcelAvatarIsEntering;
-                lock (m_landList)
-                {
-                    parcelAvatarIsEntering = m_landList[localLandID];
-                }
+                ILandObject parcelAvatarIsEntering = landChannel.GetLandObject(localLandID);
 
                 if (parcelAvatarIsEntering != null)
                 {
@@ -616,15 +612,11 @@ namespace OpenSim.Region.CoreModules.World.Land
         public void ClientOnParcelAccessListRequest(UUID agentID, UUID sessionID, uint flags, int sequenceID,
                                                     int landLocalID, IClientAPI remote_client)
         {
-            ILandObject land;
-            //lock (m_landList) 
-            //{
-                m_landList.TryGetValue(landLocalID, out land);
-            //}
+            ILandObject land = landChannel.GetLandObject(landLocalID);
 
             if (land != null)
             {
-                m_landList[landLocalID].SendAccessList(agentID, sessionID, flags, sequenceID, remote_client);
+                land.SendAccessList(agentID, sessionID, flags, sequenceID, remote_client);
             }
         }
 
@@ -632,11 +624,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                                                           List<ParcelManager.ParcelAccessEntry> entries,
                                                           IClientAPI remote_client)
         {
-            ILandObject land;
-            lock (m_landList)
-            {
-                m_landList.TryGetValue(landLocalID, out land);
-            }
+            ILandObject land = landChannel.GetLandObject(landLocalID);
 
             if (land != null)
             {
@@ -783,46 +771,6 @@ namespace OpenSim.Region.CoreModules.World.Land
                 }
             }
             return null;
-        }
-
-        /// <summary>
-        /// Get the land object at the specified point
-        /// </summary>
-        /// <param name="x_float">Value between 0 - 256 on the x axis of the point</param>
-        /// <param name="y_float">Value between 0 - 256 on the y axis of the point</param>
-        /// <returns>Land object at the point supplied</returns>
-        public ILandObject GetLandObject(float x_float, float y_float)
-        {
-            int x;
-            int y;
-
-            if (x_float > Constants.RegionSize || x_float <= 0 || y_float > Constants.RegionSize || y_float <= 0)
-                return null;
-
-            try
-            {
-                x = (int)(x_float / 4);
-                y = (int)(y_float / 4);
-            }
-            catch (OverflowException)
-            {
-                return null;
-            }
-
-            if (x >= 64 || y >= 64 || x < 0 || y < 0)
-            {
-                return null;
-            }
-
-            lock (m_landList)
-            {
-                // Corner case. If an autoreturn happens during sim startup
-                // we will come here with the list uninitialized
-                //
-                ILandObject LO;
-                m_landList.TryGetValue(m_landIDList[x, y], out LO);
-                return LO;
-            }
         }
 
         public ILandObject GetLandObject(int x, int y)
@@ -1261,11 +1209,7 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         public void ClientOnParcelPropertiesUpdateRequest(LandUpdateArgs args, int localID, IClientAPI remote_client)
         {
-            ILandObject land;
-            lock (m_landList)
-            {
-                m_landList.TryGetValue(localID, out land);
-            }
+            ILandObject land = landChannel.GetLandObject(localID);
 
             if(m_scene.Permissions.CanEditParcel(remote_client.AgentId, land))
                 if (land != null)
@@ -1293,11 +1237,7 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         public void ClientOnParcelObjectOwnerRequest(int local_id, IClientAPI remote_client)
         {
-            ILandObject land;
-            lock (m_landList)
-            {
-                m_landList.TryGetValue(local_id, out land);
-            }
+            ILandObject land = landChannel.GetLandObject(local_id);
 
             if (land != null)
             {
@@ -1311,11 +1251,7 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         public void ClientOnParcelGodForceOwner(int local_id, UUID ownerID, IClientAPI remote_client)
         {
-            ILandObject land;
-            lock (m_landList)
-            {
-                m_landList.TryGetValue(local_id, out land);
-            }
+            ILandObject land = landChannel.GetLandObject(local_id);
 
             if (land != null)
             {
@@ -1334,11 +1270,7 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         public void ClientOnParcelAbandonRequest(int local_id, IClientAPI remote_client)
         {
-            ILandObject land;
-            lock (m_landList)
-            {
-                m_landList.TryGetValue(local_id, out land);
-            }
+            ILandObject land = landChannel.GetLandObject(local_id);
 
             if (land != null)
             {
@@ -1356,11 +1288,7 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         public void ClientOnParcelReclaim(int local_id, IClientAPI remote_client)
         {
-            ILandObject land;
-            lock (m_landList)
-            {
-                m_landList.TryGetValue(local_id, out land);
-            }
+            ILandObject land = landChannel.GetLandObject(local_id);
 
             if (land != null)
             {
@@ -1390,11 +1318,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         {
             if (e.economyValidated && e.landValidated)
             {
-                ILandObject land;
-                lock (m_landList)
-                {
-                    m_landList.TryGetValue(e.parcelLocalID, out land);
-                }
+                ILandObject land = landChannel.GetLandObject(local_id);
 
                 if (land != null)
                 {
@@ -1411,11 +1335,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         {
             if (e.landValidated == false)
             {
-                ILandObject lob = null;
-                lock (m_landList)
-                {
-                    m_landList.TryGetValue(e.parcelLocalID, out lob);
-                }
+                ILandObject lob = landChannel.GetLandObject(local_id);
 
                 if (lob != null)
                 {
@@ -1437,11 +1357,7 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         void ClientOnParcelDeedToGroup(int parcelLocalID, UUID groupID, IClientAPI remote_client)
         {
-            ILandObject land;
-            lock (m_landList)
-            {
-                m_landList.TryGetValue(parcelLocalID, out land);
-            }
+            ILandObject land = landChannel.GetLandObject(local_id);
 
             if (!m_scene.Permissions.CanDeedParcel(remote_client.AgentId, land))
                 return;
@@ -1485,11 +1401,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         {
             if (localID != -1)
             {
-                ILandObject selectedParcel = null;
-                lock (m_landList)
-                {
-                    m_landList.TryGetValue(localID, out selectedParcel);
-                }
+                ILandObject selectedParcel = landChannel.GetLandObject(local_id);
 
                 if (selectedParcel == null) return;
 
@@ -1653,12 +1565,9 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         private void ClientOnParcelDwellRequest(int localID, IClientAPI remoteClient)
         {
-            ILandObject selectedParcel = null;
-            lock (m_landList)
-            {
-                if (!m_landList.TryGetValue(localID, out selectedParcel))
-                    return;
-            }
+            ILandObject selectedParcel = landChannel.GetLandObject(localID);
+            if (selectedParcel == null)
+                return;
             
             remoteClient.SendParcelDwellReply(localID, selectedParcel.LandData.GlobalID,  selectedParcel.LandData.Dwell);
         }
@@ -1711,11 +1620,7 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         public void setParcelOtherCleanTime(IClientAPI remoteClient, int localID, int otherCleanTime)
         {
-            ILandObject land;
-            lock (m_landList)
-            {
-                m_landList.TryGetValue(localID, out land);
-            }
+            ILandObject land = landChannel.GetLandObject(localID);
 
             if (land == null) return;
 

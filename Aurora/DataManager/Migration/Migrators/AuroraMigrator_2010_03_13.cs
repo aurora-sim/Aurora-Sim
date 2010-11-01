@@ -14,19 +14,19 @@ namespace Aurora.DataManager.Migration.Migrators
 
             schema = new List<Rec<string, ColumnDefinition[]>>();
 
-            AddSchema("UserData", ColDefs(
+            AddSchema("userdata", ColDefs(
                 ColDef("ID", ColumnTypes.String45, true),
                 ColDef("Key", ColumnTypes.String50, true),
                 ColDef("Value", ColumnTypes.Text)
                 ));
 
-            AddSchema("Estates", ColDefs(
+            AddSchema("estates", ColDefs(
                 ColDef("ID", ColumnTypes.String45, true),
                 ColDef("Key", ColumnTypes.String50, true),
                 ColDef("Value", ColumnTypes.Text)
                 ));
 
-            AddSchema("Generics", ColDefs(
+            AddSchema("generics", ColDefs(
                 ColDef("OwnerID", ColumnTypes.String45, true),
                 ColDef("Type", ColumnTypes.String45, true),
                 ColDef("Key", ColumnTypes.String50, true),
@@ -68,19 +68,19 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("Name", ColumnTypes.String50)
                 ));
 
-            AddSchema("Passwords", ColDefs(ColDef("Method", ColumnTypes.String50, true),
+            AddSchema("passwords", ColDefs(ColDef("Method", ColumnTypes.String50, true),
                 ColDef("Password", ColumnTypes.String50)));
 
-            AddSchema("AvatarArchives", ColDefs(ColDef("Name", ColumnTypes.String50, true),
+            AddSchema("avatararchives", ColDefs(ColDef("Name", ColumnTypes.String50, true),
                 ColDef("Archive", ColumnTypes.String50)));
 
             AddSchema("macban", ColDefs(ColDef("macAddress", ColumnTypes.String50, true)));
 
-            AddSchema("LSLGenericData", ColDefs(ColDef("Token", ColumnTypes.String50, true),
+            AddSchema("lslgenericdata", ColDefs(ColDef("Token", ColumnTypes.String50, true),
                 ColDef("KeySetting", ColumnTypes.String50, true),
                 ColDef("ValueSetting", ColumnTypes.String50)));
             
-            AddSchema("BannedViewers", ColDefs(ColDef("Client", ColumnTypes.String50, true)));
+            AddSchema("bannedviewers", ColDefs(ColDef("Client", ColumnTypes.String50, true)));
 
             AddSchema("abusereports", ColDefs(
                 ColDef("Category", ColumnTypes.String100),
@@ -146,7 +146,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("RegionHandle", ColumnTypes.String50),
                 ColDef("GenericData", ColumnTypes.Text)));
 
-            AddSchema("parcelAccess", ColDefs(
+            AddSchema("parcelaccess", ColDefs(
                 ColDef("ParcelID", ColumnTypes.String50, true),
                 ColDef("AccessID", ColumnTypes.String50),
                 ColDef("Flags", ColumnTypes.String50),
@@ -204,21 +204,21 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("Title", ColumnTypes.String50),
                 ColDef("Powers", ColumnTypes.String50)));
 
-            AddSchema("auroraDotNetStateSaves", ColDefs(
+            AddSchema("auroradotnetstatesaves", ColDefs(
                 ColDef("State", ColumnTypes.String50),
                 ColDef("ItemID", ColumnTypes.String50, true),
                 ColDef("Source", ColumnTypes.Text),
                 ColDef("Running", ColumnTypes.String50),
-                ColDef("Variables", ColumnTypes.String8196),
-                ColDef("Plugins", ColumnTypes.String8196),
+                ColDef("Variables", ColumnTypes.Text),
+                ColDef("Plugins", ColumnTypes.Text),
                 ColDef("Permissions", ColumnTypes.String50),
                 ColDef("MinEventDelay", ColumnTypes.String50),
-                ColDef("AssemblyName", ColumnTypes.String8196),
+                ColDef("AssemblyName", ColumnTypes.Text),
                 ColDef("Disabled", ColumnTypes.String45),
                 ColDef("UserInventoryItemID", ColumnTypes.String50)
                 ));
 
-            AddSchema("presenceInfo", ColDefs(
+            AddSchema("presenceinfo", ColDefs(
                 ColDef("AgentID", ColumnTypes.String50, true),
                 ColDef("CurrentRegion", ColumnTypes.String50),
                 ColDef("Flags", ColumnTypes.String50),

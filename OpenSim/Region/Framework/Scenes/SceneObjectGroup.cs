@@ -2883,14 +2883,18 @@ namespace OpenSim.Region.Framework.Scenes
             IOpenRegionSettingsModule WSModule = Scene.RequestModuleInterface<IOpenRegionSettingsModule>();
             if (WSModule != null)
             {
-                if (scale.X < WSModule.MinimumPrimScale)
-                    scale.X = WSModule.MinimumPrimScale;
-                if (scale.Y < WSModule.MinimumPrimScale)
-                    scale.Y = WSModule.MinimumPrimScale;
-                if (scale.Z < WSModule.MinimumPrimScale)
-                    scale.Z = WSModule.MinimumPrimScale;
+                if (WSModule.MinimumPrimScale != -1)
+                {
+                    if (scale.X < WSModule.MinimumPrimScale)
+                        scale.X = WSModule.MinimumPrimScale;
+                    if (scale.Y < WSModule.MinimumPrimScale)
+                        scale.Y = WSModule.MinimumPrimScale;
+                    if (scale.Z < WSModule.MinimumPrimScale)
+                        scale.Z = WSModule.MinimumPrimScale;
+                }
 
-                if (RootPart.PhysActor != null && RootPart.PhysActor.IsPhysical)
+                if (RootPart.PhysActor != null && RootPart.PhysActor.IsPhysical &&
+                    WSModule.MaximumPhysPrimScale != -1)
                 {
                     if (scale.X > WSModule.MaximumPhysPrimScale)
                         scale.X = WSModule.MaximumPhysPrimScale;
@@ -2900,12 +2904,15 @@ namespace OpenSim.Region.Framework.Scenes
                         scale.Z = WSModule.MaximumPhysPrimScale;
                 }
 
-                if (scale.X > WSModule.MaximumPrimScale)
-                    scale.X = WSModule.MaximumPrimScale;
-                if (scale.Y > WSModule.MaximumPrimScale)
-                    scale.Y = WSModule.MaximumPrimScale;
-                if (scale.Z > WSModule.MaximumPrimScale)
-                    scale.Z = WSModule.MaximumPrimScale;
+                if (WSModule.MaximumPrimScale != -1)
+                {
+                    if (scale.X > WSModule.MaximumPrimScale)
+                        scale.X = WSModule.MaximumPrimScale;
+                    if (scale.Y > WSModule.MaximumPrimScale)
+                        scale.Y = WSModule.MaximumPrimScale;
+                    if (scale.Z > WSModule.MaximumPrimScale)
+                        scale.Z = WSModule.MaximumPrimScale;
+                }
             }
 
             SceneObjectPart part = GetChildPart(localID);
@@ -2944,14 +2951,18 @@ namespace OpenSim.Region.Framework.Scenes
                 IOpenRegionSettingsModule WSModule = Scene.RequestModuleInterface<IOpenRegionSettingsModule>();
                 if (WSModule != null)
                 {
-                    if (scale.X < WSModule.MinimumPrimScale)
-                        scale.X = WSModule.MinimumPrimScale;
-                    if (scale.Y < WSModule.MinimumPrimScale)
-                        scale.Y = WSModule.MinimumPrimScale;
-                    if (scale.Z < WSModule.MinimumPrimScale)
-                        scale.Z = WSModule.MinimumPrimScale;
+                    if (WSModule.MinimumPrimScale != -1)
+                    {
+                        if (scale.X < WSModule.MinimumPrimScale)
+                            scale.X = WSModule.MinimumPrimScale;
+                        if (scale.Y < WSModule.MinimumPrimScale)
+                            scale.Y = WSModule.MinimumPrimScale;
+                        if (scale.Z < WSModule.MinimumPrimScale)
+                            scale.Z = WSModule.MinimumPrimScale;
+                    }
 
-                    if (RootPart.PhysActor != null && RootPart.PhysActor.IsPhysical)
+                    if (RootPart.PhysActor != null && RootPart.PhysActor.IsPhysical &&
+                        WSModule.MaximumPhysPrimScale != -1)
                     {
                         if (scale.X > WSModule.MaximumPhysPrimScale)
                             scale.X = WSModule.MaximumPhysPrimScale;
@@ -2961,12 +2972,15 @@ namespace OpenSim.Region.Framework.Scenes
                             scale.Z = WSModule.MaximumPhysPrimScale;
                     }
 
-                    if (scale.X > WSModule.MaximumPrimScale)
-                        scale.X = WSModule.MaximumPrimScale;
-                    if (scale.Y > WSModule.MaximumPrimScale)
-                        scale.Y = WSModule.MaximumPrimScale;
-                    if (scale.Z > WSModule.MaximumPrimScale)
-                        scale.Z = WSModule.MaximumPrimScale;
+                    if (WSModule.MaximumPrimScale != -1)
+                    {
+                        if (scale.X > WSModule.MaximumPrimScale)
+                            scale.X = WSModule.MaximumPrimScale;
+                        if (scale.Y > WSModule.MaximumPrimScale)
+                            scale.Y = WSModule.MaximumPrimScale;
+                        if (scale.Z > WSModule.MaximumPrimScale)
+                            scale.Z = WSModule.MaximumPrimScale;
+                    }
                 }
 
                 float x = (scale.X / part.Scale.X);

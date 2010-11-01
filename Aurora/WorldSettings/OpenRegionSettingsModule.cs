@@ -81,7 +81,10 @@ namespace Aurora.OpenRegionSettingsModule
         {
             get
             {
-                return m_MaximumPrimScale;
+                if (m_ClampPrimSizes)
+                    return m_MaximumPrimScale;
+                else
+                    return float.MaxValue;
             }
             set { m_MaximumPrimScale = value; }
         }
@@ -90,7 +93,10 @@ namespace Aurora.OpenRegionSettingsModule
         {
             get
             {
-                return m_MinimumPrimScale;
+                if (m_ClampPrimSizes)
+                    return m_MinimumPrimScale;
+                else
+                    return 0;
             }
             set { m_MinimumPrimScale = value; }
         }
@@ -99,7 +105,10 @@ namespace Aurora.OpenRegionSettingsModule
         {
             get
             {
-                return m_MaximumPhysPrimScale;
+                if (m_ClampPrimSizes)
+                    return m_MaximumPhysPrimScale;
+                else
+                    return float.MaxValue;
             }
             set { m_MaximumPhysPrimScale = value; }
         }

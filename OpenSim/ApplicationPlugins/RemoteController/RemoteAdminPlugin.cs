@@ -596,8 +596,11 @@ namespace OpenSim.ApplicationPlugins.RemoteController
                         try
                         {
                             // OpenSim.ini can specify a different regions dir
-                            IConfig startupConfig = (IConfig) m_configSource.Configs["Startup"];
-                            regionConfigPath = startupConfig.GetString("regionload_regionsdir", regionConfigPath).Trim();
+                            IConfig config = m_configSource.Configs["RegionStartup"];
+                            if (config != null)
+                            {
+                                regionConfigPath = config.GetString("RegionsDirectory", m_regionConfigPath).Trim();
+                            }
                         }
                         catch (Exception)
                         {

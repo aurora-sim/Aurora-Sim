@@ -2260,7 +2260,7 @@ namespace OpenSim.Region.Framework.Scenes
                     if (LinkCount > module.MaximumLinkCountPhys &&
                         module.MaximumLinkCountPhys != -1)
                     {
-                        client.SendAlertMessage("You cannot link more than " + module.MaximumLinkCount + " physical prims. Please try again with fewer prims.");
+                        client.SendAlertMessage("You cannot link more than " + module.MaximumLinkCountPhys + " physical prims. Please try again with fewer prims.");
                         return;
                     }
                 }

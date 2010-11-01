@@ -106,7 +106,13 @@ namespace Aurora.DataManager.Migration
                 //if we are creating default, do it now
                 if (operationDescription.OperationType == MigrationOperationTypes.CreateDefaultAndUpgradeToTarget)
                 {
-                    currentMigrator.CreateDefaults(sessionProvider, genericData);
+                    try
+                    {
+                        currentMigrator.CreateDefaults(sessionProvider, genericData);
+                    }
+                    catch
+                    {
+                    }
                     executed = true;
                 }
 
@@ -133,7 +139,14 @@ namespace Aurora.DataManager.Migration
 
                 while (executingMigrator != null)
                 {
-                    executingMigrator.Migrate(sessionProvider, genericData);
+                    try
+                    {
+                        executingMigrator.Migrate(sessionProvider, genericData);
+                    }
+                    catch (Exception ex)
+                    {
+                        
+                    }
                     executed = true;
                     validated = currentMigrator.Validate(sessionProvider, genericData);
 

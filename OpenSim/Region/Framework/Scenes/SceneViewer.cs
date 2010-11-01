@@ -149,8 +149,10 @@ namespace OpenSim.Region.Framework.Scenes
                     // Don't even queue if we have sent this one
                     //
                     if (!m_updateTimes.ContainsKey(g.UUID))
-                        g.ScheduleFullUpdateToAvatar(m_presence, PrimUpdateFlags.FullUpdate); //New object, send full
+                        g.SendFullUpdateToClient(m_presence.ControllingClient, PrimUpdateFlags.FullUpdate); //New object, send full
                 }
+                //Do this HERE so that all those updates set added.
+                m_presence.ControllingClient.ReprioritizeUpdates();
             }
 
             while (m_partsUpdateQueue.Count > 0)

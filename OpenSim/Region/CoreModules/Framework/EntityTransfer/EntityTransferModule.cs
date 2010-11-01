@@ -914,6 +914,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     return agent;
                 }
 
+				agent.ControllingClient.RequestClientInfo();
+
                 string agentcaps;
                 if (!agent.KnownRegions.TryGetValue(neighbourRegion.RegionHandle, out agentcaps))
                 {
@@ -1290,7 +1292,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         {
             // Let's wait just a little to give time to originating regions to catch up with closing child agents
             // after a cross here
-            //Thread.Sleep(500);
+            Thread.Sleep(500);
 
             Scene m_scene = sp.Scene;
 
