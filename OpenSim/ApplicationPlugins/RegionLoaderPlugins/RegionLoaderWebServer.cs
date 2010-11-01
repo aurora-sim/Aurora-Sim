@@ -64,7 +64,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                 string url = RegionStartupConfig.GetString("WebServerURL", String.Empty).Trim();
                 if (url == String.Empty)
                 {
-                    m_log.Error("[WEBLOADER]: Unable to load webserver URL - URL was empty.");
+                    //m_log.Error("[WEBLOADER]: Unable to load webserver URL - URL was empty.");
                     return null;
                 }
                 else

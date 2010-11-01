@@ -60,7 +60,7 @@ namespace Aurora.Services.DataService
         {
             foreach (ParcelManager.ParcelAccessEntry entry in data.ParcelAccessList)
             {
-                GD.Replace("parcelAccess", new string[]
+                GD.Replace("parcelaccess", new string[]
                 {
                     "ParcelID",
                     "AccessID",
@@ -80,7 +80,7 @@ namespace Aurora.Services.DataService
 
         private void BuildParcelAccessList(LandData LandData)
         {
-            List<string> Query = GD.Query("ParcelID", LandData.GlobalID, "parcelAccess", "AccessID, Flags, Time");
+            List<string> Query = GD.Query("ParcelID", LandData.GlobalID, "parcelaccess", "AccessID, Flags, Time");
             int i = 0;
             int dataCount = 0;
             ParcelManager.ParcelAccessEntry entry = new ParcelManager.ParcelAccessEntry();
@@ -116,7 +116,7 @@ namespace Aurora.Services.DataService
         public void RemoveLandObject(UUID RegionID, UUID ParcelID)
         {
             GenericUtils.RemoveGeneric(RegionID, "LandData", ParcelID.ToString(), GD);
-            GD.Delete("parcelAccess", new string[] { "ParcelID" }, new object[] { ParcelID });
+            GD.Delete("parcelaccess", new string[] { "ParcelID" }, new object[] { ParcelID });
         }
     }
 }

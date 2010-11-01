@@ -126,7 +126,7 @@ namespace Aurora.Services.DataService
 
         public bool CheckMacAndViewer(string Mac, string viewer)
         {
-            List<string> found = GD.Query("macAddress", Mac, "macban", "*");
+            List<string> found = GD.Query("macaddress", Mac, "macban", "*");
             if (found.Count != 0)
             {
                 m_log.InfoFormat("[AgentInfoConnector]: Mac '{0}' is in the ban list", Mac);
@@ -134,7 +134,7 @@ namespace Aurora.Services.DataService
             }
 
             //Viewer Ban Start
-            List<string> clientfound = GD.Query("Client", viewer, "BannedViewers", "*");
+            List<string> clientfound = GD.Query("Client", viewer, "bannedviewers", "*");
             if (clientfound.Count != 0)
             {
                 m_log.InfoFormat("[AgentInfoConnector]: Viewer '{0}' is in the ban list", viewer);

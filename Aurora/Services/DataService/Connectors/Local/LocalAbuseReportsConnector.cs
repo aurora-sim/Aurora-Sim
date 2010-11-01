@@ -26,11 +26,11 @@ namespace Aurora.Services.DataService
 
                 GD.ConnectToDatabase(defaultConnectionString);
 
-                List<string> Results = GD.Query("Method", "AbuseReports", "Passwords", "Password");
+                List<string> Results = GD.Query("Method", "abusereports", "Passwords", "Password");
                 if (Results.Count == 0)
                 {
                     string newPass = MainConsole.Instance.PasswdPrompt("Password to access Abuse Reports");
-                    GD.Insert("Passwords", new object[] { "AbuseReports", Util.Md5Hash(Util.Md5Hash(newPass)) });
+                    GD.Insert("passwords", new object[] { "abusereports", Util.Md5Hash(Util.Md5Hash(newPass)) });
                 }
                 DataManager.DataManager.RegisterPlugin(Name, this);
             }
@@ -153,7 +153,7 @@ namespace Aurora.Services.DataService
 
         private bool CheckPassword(string Password)
         {
-            List<string> TruePassword = GD.Query("Method", "AbuseReports", "passwords", "Password");
+            List<string> TruePassword = GD.Query("Method", "abusereports", "passwords", "Password");
             if (TruePassword.Count == 0)
                 return false;
             string OtherPass = Util.Md5Hash(Password);

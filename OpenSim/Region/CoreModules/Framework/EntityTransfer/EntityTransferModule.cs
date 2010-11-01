@@ -345,6 +345,9 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     return;
                 }
 
+                // OK, it got this agent. Let's close some child agents
+                sp.CloseChildAgents(newRegionX, newRegionY);
+
                 if (NeedsNewAgent(oldRegionX, newRegionX, oldRegionY, newRegionY))
                 {
                     //sp.ControllingClient.SendTeleportProgress(teleportFlags, "Creating agent...");
@@ -409,20 +412,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     return;
                 }
 
-                m_log.DebugFormat(
-                    "[ENTITY TRANSFER MODULE]: Sending new CAPS seed url {0} to client {1}", capsPath, sp.UUID);
-
-                if (eq != null)
-                {
-                    eq.TeleportFinishEvent(destinationHandle, finalDestination.Access, endPoint,
-                                           0, teleportFlags, capsPath, sp.UUID, teleportFlags);
-                }
-                else
-                {
-                    sp.ControllingClient.SendRegionTeleport(destinationHandle, 13, endPoint, 4,
-                                                                teleportFlags, capsPath);
-                }
-
                 SetInTransit(sp.UUID);
 
                 // Let's send a full update of the agent. This is a synchronous call.
@@ -438,6 +427,20 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     // Region doesn't take it
                     Fail(sp, finalDestination);
                     return;
+                }
+
+                m_log.DebugFormat(
+                    "[ENTITY TRANSFER MODULE]: Sending new CAPS seed url {0} to client {1}", capsPath, sp.UUID);
+
+                if (eq != null)
+                {
+                    eq.TeleportFinishEvent(destinationHandle, 13, endPoint,
+                                           0, teleportFlags, capsPath, sp.UUID, teleportFlags);
+                }
+                else
+                {
+                    sp.ControllingClient.SendRegionTeleport(destinationHandle, 13, endPoint, 4,
+                                                                teleportFlags, capsPath);
                 }
 
                 // Let's set this to true tentatively. This does not trigger OnChildAgent
@@ -494,9 +497,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 sp.MakeChildAgent();
 
                 // Finally, let's close this previously-known-as-root agent, when the jump is outside the view zone
-
-                // OK, it got this agent. Let's close some child agents
-                sp.CloseChildAgents(newRegionX, newRegionY);
 
                 if (NeedsClosing(oldRegionX, newRegionX, oldRegionY, newRegionY, reg))
                 {
@@ -1121,7 +1121,21 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
             if (m_regionInfo != null)
             {
-                neighbours = RequestNeighbours(sp.Scene, m_regionInfo.RegionLocX, m_regionInfo.RegionLocY);
+                if (Util.RegionViewSize == 1)
+                    neighbours = RequestNeighbours(sp.Scene, m_regionInfo.RegionLocX, m_regionInfo.RegionLocY);
+                else
+                {
+                    neighbours = sp.Scene.GridService.GetRegionRange(m_regionInfo.ScopeID, (int)(m_regionInfo.RegionLocX - Util.RegionViewSize) * 256, (int)(m_regionInfo.RegionLocX + Util.RegionViewSize) * 256, (int)(m_regionInfo.RegionLocY - Util.RegionViewSize) * 256, (int)(m_regionInfo.RegionLocY + Util.RegionViewSize) * 256);
+                }
+                if (!Util.CloseLocalRegions)
+                {
+                    foreach (IScene scene in Util.Scenes)
+                    {
+                        GridRegion region = sp.Scene.GridService.GetRegionByUUID(scene.RegionInfo.ScopeID, scene.RegionInfo.RegionID);
+                        if (!neighbours.Contains(region))
+                            neighbours.Add(region);
+                    }
+                }
             }
             else
             {

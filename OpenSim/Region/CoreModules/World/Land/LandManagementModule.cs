@@ -1318,7 +1318,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         {
             if (e.economyValidated && e.landValidated)
             {
-                ILandObject land = landChannel.GetLandObject(local_id);
+                ILandObject land = landChannel.GetLandObject(e.parcelLocalID);
 
                 if (land != null)
                 {
@@ -1335,7 +1335,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         {
             if (e.landValidated == false)
             {
-                ILandObject lob = landChannel.GetLandObject(local_id);
+                ILandObject lob = landChannel.GetLandObject(e.parcelLocalID);
 
                 if (lob != null)
                 {
@@ -1357,7 +1357,7 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         void ClientOnParcelDeedToGroup(int parcelLocalID, UUID groupID, IClientAPI remote_client)
         {
-            ILandObject land = landChannel.GetLandObject(local_id);
+            ILandObject land = landChannel.GetLandObject(parcelLocalID);
 
             if (!m_scene.Permissions.CanDeedParcel(remote_client.AgentId, land))
                 return;
@@ -1401,7 +1401,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         {
             if (localID != -1)
             {
-                ILandObject selectedParcel = landChannel.GetLandObject(local_id);
+                ILandObject selectedParcel = landChannel.GetLandObject(localID);
 
                 if (selectedParcel == null) return;
 

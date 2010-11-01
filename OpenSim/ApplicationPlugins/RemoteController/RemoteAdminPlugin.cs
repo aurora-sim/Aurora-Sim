@@ -599,7 +599,7 @@ namespace OpenSim.ApplicationPlugins.RemoteController
                             IConfig config = m_configSource.Configs["RegionStartup"];
                             if (config != null)
                             {
-                                regionConfigPath = config.GetString("RegionsDirectory", m_regionConfigPath).Trim();
+                                regionConfigPath = config.GetString("RegionsDirectory", regionConfigPath).Trim();
                             }
                         }
                         catch (Exception)

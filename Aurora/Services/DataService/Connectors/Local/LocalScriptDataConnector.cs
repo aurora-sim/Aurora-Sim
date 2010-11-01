@@ -140,17 +140,17 @@ namespace Aurora.Services.DataService
             Insert.Add(state.AssemblyName);
             Insert.Add(state.Disabled ? 1 : 0);
             Insert.Add(state.UserInventoryID);
-            GD.Replace("auroraDotNetStateSaves", Keys.ToArray(), Insert.ToArray());
+            GD.Replace("auroradotnetstatesaves", Keys.ToArray(), Insert.ToArray());
 		}
 
         public void DeleteStateSave(UUID itemID)
         {
-            GD.Delete("auroraDotNetStateSaves", new string[] { "ItemID" }, new object[] { itemID });
+            GD.Delete("auroradotnetstatesaves", new string[] { "ItemID" }, new object[] { itemID });
         }
 
         public void DeleteStateSave(string assemblyName)
         {
-            GD.Delete("auroraDotNetStateSaves", new string[] { "AssemblyName" }, new object[] { assemblyName });
+            GD.Delete("auroradotnetstatesaves", new string[] { "AssemblyName" }, new object[] { assemblyName });
         }
 	}
 }

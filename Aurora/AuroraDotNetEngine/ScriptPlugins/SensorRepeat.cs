@@ -47,7 +47,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             maximumRange = engine.Config.GetDouble("SensorMaxRange", 256.0d);
             usemaximumRange = engine.Config.GetBoolean("UseSensorMaxRange", true);
             maximumToReturn = engine.Config.GetInt("SensorMaxResults", 32);
-            usemaximumToReturn = engine.Config.GetBoolean("UseSensorMax", true);
+            usemaximumToReturn = engine.Config.GetBoolean("UseSensorMaxResults", true);
         }
 
         private Object SenseLock = new Object();
