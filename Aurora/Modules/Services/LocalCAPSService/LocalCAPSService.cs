@@ -19,6 +19,9 @@ using OpenSim.Server.Base;
 
 namespace Aurora.Modules
 {
+    /// <summary>
+    /// This sets up the CAPS service if there is not a remote CAPS service on the ROBUST server
+    /// </summary>
     public class LocalCAPSService : ISharedRegionModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);

@@ -76,6 +76,7 @@ namespace Aurora.Modules
         {
             try
             {
+                //Read the website once!
                 if (m_map == null)
                     m_map = (OSDMap)OSDParser.Deserialize(ReadExternalWebsite("http://auroraserver.ath.cx:8080/client_tags.xml"));
                 

@@ -101,6 +101,7 @@ namespace Aurora.Modules
             foreach (ScenePresence SP in ((Scene)client.Scene).ScenePresences)
             {
                 info = m_profileConnector.GetUserProfile(SP.UUID);
+                //Send to the incoming user all known display names of avatar's around the client
                 if(info != null)
                     DisplayNameUpdate(info.DisplayName, info.DisplayName, SP, client.AgentId);
             }
@@ -116,6 +117,7 @@ namespace Aurora.Modules
                 string oldDisplayName = display_name[0].AsString();
                 string newDisplayName = display_name[1].AsString();
 
+                //Check to see if their name contains a banned character
                 foreach (string bannedUserName in bannedNames)
                 {
                     string BannedUserName = bannedUserName.Replace(" ", "");
@@ -130,8 +132,15 @@ namespace Aurora.Modules
                 }
 
                 IUserProfileInfo info = m_profileConnector.GetUserProfile(agentID);
-                info.DisplayName = newDisplayName;
-                m_profileConnector.UpdateUserProfile(info);
+                if (info == null)
+                {
+                    m_avatar.ControllingClient.SendAlertMessage("You cannot update your display name currently as your profile cannot be found.");
+                }
+                else
+                {
+                    info.DisplayName = newDisplayName;
+                    m_profileConnector.UpdateUserProfile(info);
+                }
 
                 
                 //One for us
@@ -141,10 +150,12 @@ namespace Aurora.Modules
                 {
                     foreach (ScenePresence SP in scene.ScenePresences)
                     {
-                        if (Vector3.Distance(SP.AbsolutePosition, m_avatar.AbsolutePosition) < SP.DrawDistance)
-                        {
+                        //Enable this after we do checking for draw distance!
+                        //if (Vector3.Distance(SP.AbsolutePosition, m_avatar.AbsolutePosition) < SP.DrawDistance)
+                        //{
+                            //Update all others
                             DisplayNameUpdate(newDisplayName, oldDisplayName, m_avatar, SP.UUID);
-                        }
+                        //}
                     }
                 }
                 //The reply
@@ -176,6 +187,7 @@ namespace Aurora.Modules
 
         private Hashtable ProcessGetDisplayName(Hashtable mDhttpMethod, UUID agentID)
         {
+            //I've never seen this come in, so for now... do nothing
             OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml((string)mDhttpMethod["requestbody"]);
 
             m_log.Error("[DisplayNamesModule] : Report this! GetDisplayName : " + rm.ToString());

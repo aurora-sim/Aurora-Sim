@@ -18,8 +18,17 @@ namespace Aurora.Framework
         public float TelehubRotY = 0;
         public float TelehubRotZ = 0;
 
+        /// <summary>
+        /// Positions users will spawn at in order of creation
+        /// </summary>
         public List<Vector3> SpawnPos = new List<Vector3>();
+        /// <summary>
+        /// Name of the teleHUB object
+        /// </summary>
         public string Name = "";
+        /// <summary>
+        /// UUID of the teleHUB object
+        /// </summary>
         public string ObjectUUID = "";
 
         public Telehub() { }

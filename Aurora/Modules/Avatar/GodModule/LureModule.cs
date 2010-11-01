@@ -38,6 +38,9 @@ using TPFlags = OpenSim.Framework.Constants.TeleportFlags;
 
 namespace Aurora.Modules
 {
+    /// <summary>
+    /// This just supports god TP's and thats about it
+    /// </summary>
 	public class LureModule : ISharedRegionModule
     {
         #region Declares

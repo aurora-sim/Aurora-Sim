@@ -15,6 +15,9 @@ using Aurora.Framework;
 
 namespace Aurora.Modules
 {
+    /// <summary>
+    /// This module loads/saves the avatar's appearance from/down into an "Avatar Archive", also known as an AA.
+    /// </summary>
     public class AuroraAvatarAppearanceArchiver : ISharedRegionModule, IAvatarAppearanceArchiver
 	{
 		private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);

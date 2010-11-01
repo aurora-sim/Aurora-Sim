@@ -7,7 +7,13 @@ namespace Aurora.Framework
 {
     public class AvatarArchive
     {
+        /// <summary>
+        /// Name of the archive
+        /// </summary>
         public string Name;
+        /// <summary>
+        /// XML of the archive
+        /// </summary>
         public string ArchiveXML;
     }
 }
