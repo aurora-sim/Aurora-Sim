@@ -34,6 +34,7 @@ using Nini.Config;
 using OpenSim.Framework;
 using Aurora.Modules.RegionLoader;
 using OpenSim.Framework.Console;
+using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 {
@@ -117,7 +118,8 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 
                 IScene scene;
                 m_log.Debug("[LOADREGIONS]: Creating Region: " + cmd[2]);
-                m_openSim.SceneManager.CreateRegion(new RegionInfo(cmd[2], regionFile, false, m_configSource, cmd[2]), true, out scene);
+                SceneManager manager = m_openSim.ApplicationRegistry.Get<SceneManager>();
+                manager.CreateRegion(new RegionInfo(cmd[2], regionFile, false, m_configSource, cmd[2]), true, out scene);
             }
             else
             {

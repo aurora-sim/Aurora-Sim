@@ -6359,79 +6359,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return PScriptSleep(5000);
         }
 
-        public LSL_List llParseString2List(string str, LSL_List separators, LSL_List in_spacers)
-        {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
-            LSL_List ret = new LSL_List();
-            LSL_List spacers = new LSL_List();
-            if (in_spacers.Length > 0 && separators.Length > 0)
-            {
-                for (int i = 0; i < in_spacers.Length; i++)
-                {
-                    object s = in_spacers.Data[i];
-                    for (int j = 0; j < separators.Length; j++)
-                    {
-                        if (separators.Data[j].ToString() == s.ToString())
-                        {
-                            s = null;
-                            break;
-                        }
-                    }
-                    if (s != null)
-                    {
-                        spacers.Add(s);
-                    }
-                }
-            }
-            object[] delimiters = new object[separators.Length + spacers.Length];
-            separators.Data.CopyTo(delimiters, 0);
-            spacers.Data.CopyTo(delimiters, separators.Length);
-            bool dfound = false;
-            do
-            {
-                dfound = false;
-                int cindex = -1;
-                string cdeli = "";
-                for (int i = 0; i < delimiters.Length; i++)
-                {
-                    int index = str.IndexOf(delimiters[i].ToString());
-                    bool found = index != -1;
-                    if (found && String.Empty != delimiters[i].ToString())
-                    {
-                        if ((cindex > index) || (cindex == -1))
-                        {
-                            cindex = index;
-                            cdeli = delimiters[i].ToString();
-                        }
-                        dfound = dfound || found;
-                    }
-                }
-                if (cindex != -1)
-                {
-                    if (cindex > 0)
-                    {
-                        ret.Add(new LSL_String(str.Substring(0, cindex)));
-                    }
-                    // Cannot use spacers.Contains() because spacers may be either type String or LSLString
-                    for (int j = 0; j < spacers.Length; j++)
-                    {
-                        if (spacers.Data[j].ToString() == cdeli)
-                        {
-                            ret.Add(new LSL_String(cdeli));
-                            break;
-                        }
-                    }
-                    str = str.Substring(cindex + cdeli.Length);
-                }
-            } while (dfound);
-            if (str != "")
-            {
-                ret.Add(new LSL_String(str));
-            }
-            return ret;
-        }
-
         public LSL_Integer llOverMyLand(string id)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
@@ -7766,7 +7693,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public void llSetLinkPrimitiveParamsFast(int linknumber, LSL_List rules)
         {
-            llSetLinkPrimitiveParams(linknumber, rules);
+            List<SceneObjectPart> parts = GetLinkParts(linknumber);
+
+            foreach (SceneObjectPart part in parts)
+                SetPrimParams(part, rules);
         }
 
         public LSL_Integer llGetLinkNumberOfSides(int LinkNum)
@@ -7811,6 +7741,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         string desc = rules.Data[idx++].ToString();
                         if (part is SceneObjectPart)
                             (part as SceneObjectPart).Description = desc;
+                        break;
+
+                    case (int)ScriptBaseClass.PRIM_ROT_LOCAL:
+                        if (remain < 1)
+                            return;
+                        LSL_Rotation lr = rules.GetQuaternionItem(idx++);
+                        if (part is SceneObjectPart)
+                            SetRot((part as SceneObjectPart), Rot2Quaternion(lr));
                         break;
 
                     case (int)ScriptBaseClass.PRIM_POSITION:
@@ -8845,6 +8783,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                                                textColor.B));
                         res.Add(new LSL_Float(textColor.A));
                         break;
+                    case (int)ScriptBaseClass.PRIM_ROT_LOCAL:
+                        res.Add(new LSL_Rotation(part.RotationOffset.X, part.RotationOffset.Y, part.RotationOffset.Z, part.RotationOffset.W));
+                        break;
                 }
             }
             return res;
@@ -9175,28 +9116,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         //  of arrays or other objects.
         //  </remarks>
 
-        public LSL_List llParseStringKeepNulls(string src, LSL_List separators, LSL_List spacers)
+        private LSL_List ParseString(string src, LSL_List separators, LSL_List spacers, bool keepNulls)
         {
-            int         beginning = 0;
-            int         srclen    = src.Length;
-            int         seplen    = separators.Length;
-            object[]    separray  = separators.Data;
-            int         spclen    = spacers.Length;
-            object[]    spcarray  = spacers.Data;
-            int         mlen      = seplen+spclen;
+            int beginning = 0;
+            int srclen = src.Length;
+            int seplen = separators.Length;
+            object[] separray = separators.Data;
+            int spclen = spacers.Length;
+            object[] spcarray = spacers.Data;
+            int mlen = seplen + spclen;
 
-            int[]       offset    = new int[mlen+1];
-            bool[]      active    = new bool[mlen];
+            int[] offset = new int[mlen + 1];
+            bool[] active = new bool[mlen];
 
-            int         best;
-            int         j;
+            int best;
+            int j;
 
             //    Initial capacity reduces resize cost
 
             LSL_List tokens = new LSL_List();
-
-            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
 
             //    All entries are initially valid
 
@@ -9214,6 +9152,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                 for (j = 0; j < seplen; j++)
                 {
+                    if (separray[j].ToString() == String.Empty)
+                        active[j] = false;
+
                     if (active[j])
                     {
                         // scan all of the markers
@@ -9242,10 +9183,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     for (j = seplen; (j < mlen) && (offset[best] > beginning); j++)
                     {
+                        if (spcarray[j - seplen].ToString() == String.Empty)
+                            active[j] = false;
+
                         if (active[j])
                         {
                             // scan all of the markers
-                            if ((offset[j] = src.IndexOf(spcarray[j-seplen].ToString(), beginning)) == -1)
+                            if ((offset[j] = src.IndexOf(spcarray[j - seplen].ToString(), beginning)) == -1)
                             {
                                 // not present at all
                                 active[j] = false;
@@ -9269,14 +9213,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     // no markers were found on this pass
                     // so we're pretty much done
-                    tokens.Add(new LSL_String(src.Substring(beginning, srclen - beginning)));
+                    if ((keepNulls) || ((!keepNulls) && (srclen - beginning) > 0))
+                        tokens.Add(new LSL_String(src.Substring(beginning, srclen - beginning)));
                     break;
                 }
 
                 //    Otherwise we just add the newly delimited token
                 //    and recalculate where the search should continue.
-
-                tokens.Add(new LSL_String(src.Substring(beginning,offset[best]-beginning)));
+                if ((keepNulls) || ((!keepNulls) && (offset[best] - beginning) > 0))
+                    tokens.Add(new LSL_String(src.Substring(beginning, offset[best] - beginning)));
 
                 if (best < seplen)
                 {
@@ -9285,7 +9230,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 else
                 {
                     beginning = offset[best] + (spcarray[best - seplen].ToString()).Length;
-                    tokens.Add(new LSL_String(spcarray[best - seplen].ToString()));
+                    string str = spcarray[best - seplen].ToString();
+                    if ((keepNulls) || ((!keepNulls) && (str.Length > 0)))
+                        tokens.Add(new LSL_String(str));
                 }
             }
 
@@ -9295,13 +9242,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             //    arduous. Alternatively the 'break' could be replced with a return
             //    but that's shabby programming.
 
-            if (beginning == srclen)
+            if ((beginning == srclen) && (keepNulls))
             {
                 if (srclen != 0)
                     tokens.Add(new LSL_String(""));
             }
 
             return tokens;
+        }
+
+        public LSL_List llParseString2List(string src, LSL_List separators, LSL_List spacers)
+        {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "llParseString2List", m_host, "LSL");
+            return this.ParseString(src, separators, spacers, false);
+        }
+
+        public LSL_List llParseStringKeepNulls(string src, LSL_List separators, LSL_List spacers)
+        {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "llParseStringKeepNulls", m_host, "LSL");
+            return this.ParseString(src, separators, spacers, true);
         }
 
         public LSL_Integer llGetObjectPermMask(int mask)
@@ -9883,7 +9842,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     // now send to all (non-child) agents
                     World.ForEachScenePresence(delegate(ScenePresence sp)
                     {
-                        if (!sp.IsChildAgent)
+                        if (!sp.IsChildAgent && (sp.currentParcelUUID == landData.GlobalID))
                         {
                             sp.ControllingClient.SendParcelMediaUpdate(landData.MediaURL,
                                                                           landData.MediaID,

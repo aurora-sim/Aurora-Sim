@@ -323,6 +323,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         public const int PRIM_TEXT = 26;
         public const int PRIM_NAME = 27;
         public const int PRIM_DESC = 28;
+        public const int PRIM_ROT_LOCAL = 29;
         public const int PRIM_TEXGEN_DEFAULT = 0;
         public const int PRIM_TEXGEN_PLANAR = 1;
 

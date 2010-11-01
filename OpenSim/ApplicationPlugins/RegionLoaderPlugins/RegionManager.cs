@@ -8,6 +8,7 @@ using System.Text;
 using System.Windows.Forms;
 using Aurora.Framework;
 using OpenSim.Framework;
+using OpenSim.Region.Framework.Scenes;
 using OpenMetaverse;
 using OpenSim;
 using log4net;
@@ -67,7 +68,8 @@ namespace Aurora.Modules.RegionLoader
             Aurora.DataManager.DataManager.RequestPlugin<IRegionInfoConnector>().UpdateRegionInfo(region, bool.Parse(Disabled.Text));
             IScene scene;
             m_log.Debug("[LOADREGIONS]: Creating Region: " + region.RegionName + ")");
-            m_OpenSimBase.SceneManager.CreateRegion(region, true, out scene);
+            SceneManager manager = m_OpenSimBase.ApplicationRegistry.Get<SceneManager>();
+            manager.CreateRegion(region, true, out scene);
 
             if(OpenedForCreateRegion)
                 System.Windows.Forms.Application.Exit();

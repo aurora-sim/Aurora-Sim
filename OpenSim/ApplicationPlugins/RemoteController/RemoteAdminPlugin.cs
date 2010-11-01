@@ -62,7 +62,8 @@ namespace OpenSim.ApplicationPlugins.RemoteController
         private static Object   m_requestLock = new Object();
         private static Object   m_saveOarLock = new Object();
 
-        private OpenSimBase m_application;
+        private IOpenSimBase m_application;
+        private SceneManager manager;
         private IHttpServer m_httpServer;
         private IConfig m_config;
         private IConfigSource m_configSource;
@@ -100,7 +101,7 @@ namespace OpenSim.ApplicationPlugins.RemoteController
         }
         public void Initialize(IOpenSimBase iopenSim)
         {
-            OpenSimBase openSim = (OpenSimBase)iopenSim;
+            IOpenSimBase openSim = (IOpenSimBase)iopenSim;
             m_configSource = openSim.ConfigSource;
             try
             {
@@ -184,6 +185,7 @@ namespace OpenSim.ApplicationPlugins.RemoteController
         {
             if (m_enabled)
             {
+                manager = m_application.ApplicationRegistry.Get<SceneManager>();
                 if (!CreateDefaultAvatars())
                 {
                     m_log.Info("[RADMIN]: Default avatars not loaded");
@@ -217,7 +219,7 @@ namespace OpenSim.ApplicationPlugins.RemoteController
 
                 Scene rebootedScene;
 
-                if (!m_application.SceneManager.TryGetScene(regionID, out rebootedScene))
+                if (!manager.TryGetScene(regionID, out rebootedScene))
                     throw new Exception("region not found");
 
                 responseData["rebooting"] = true;
@@ -263,7 +265,7 @@ namespace OpenSim.ApplicationPlugins.RemoteController
                 responseData["success"] = true;
                 response.Value = responseData;
 
-                m_application.SceneManager.ForEachScene(
+                manager.ForEachScene(
                     delegate(Scene scene)
                         {
                             IDialogModule dialogModule = scene.RequestModuleInterface<IDialogModule>();
@@ -318,7 +320,7 @@ namespace OpenSim.ApplicationPlugins.RemoteController
 
                 Scene region = null;
 
-                if (!m_application.SceneManager.TryGetScene(regionID, out region))
+                if (!manager.TryGetScene(regionID, out region))
                     throw new Exception("1: unable to get a scene with that name");
 
                 ITerrainModule terrainModule = region.RequestModuleInterface<ITerrainModule>();
@@ -392,7 +394,7 @@ namespace OpenSim.ApplicationPlugins.RemoteController
                     message = "Region is going down now.";
                 }
 
-                m_application.SceneManager.ForEachScene(
+                manager.ForEachScene(
                     delegate(Scene scene)
                         {
                             IDialogModule dialogModule = scene.RequestModuleInterface<IDialogModule>();
@@ -427,7 +429,7 @@ namespace OpenSim.ApplicationPlugins.RemoteController
 
         private void shutdownTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            m_application.Shutdown(true);
+            ((OpenSimBase)m_application).Shutdown(true);
         }
 
         /// <summary>
@@ -526,7 +528,7 @@ namespace OpenSim.ApplicationPlugins.RemoteController
                         (string) requestData["password"] != m_requiredPassword) throw new Exception("wrong password");
 
                     // check whether we still have space left (iff we are using limits)
-                    if (m_regionLimit != 0 && m_application.SceneManager.Scenes.Count >= m_regionLimit)
+                    if (m_regionLimit != 0 && manager.Scenes.Count >= m_regionLimit)
                         throw new Exception(String.Format("cannot instantiate new region, server capacity {0} already reached; delete regions first",
                                                           m_regionLimit));
                     // extract or generate region ID now
@@ -536,7 +538,7 @@ namespace OpenSim.ApplicationPlugins.RemoteController
                         !String.IsNullOrEmpty((string) requestData["region_id"]))
                     {
                         regionID = (UUID) (string) requestData["region_id"];
-                        if (m_application.SceneManager.TryGetScene(regionID, out scene))
+                        if (manager.TryGetScene(regionID, out scene))
                             throw new Exception(
                                 String.Format("region UUID already in use by region {0}, UUID {1}, <{2},{3}>",
                                               scene.RegionInfo.RegionName, scene.RegionInfo.RegionID,
@@ -558,13 +560,13 @@ namespace OpenSim.ApplicationPlugins.RemoteController
 
                     // check for collisions: region name, region UUID,
                     // region location
-                    if (m_application.SceneManager.TryGetScene(region.RegionName, out scene))
+                    if (manager.TryGetScene(region.RegionName, out scene))
                         throw new Exception(
                             String.Format("region name already in use by region {0}, UUID {1}, <{2},{3}>",
                                           scene.RegionInfo.RegionName, scene.RegionInfo.RegionID,
                                           scene.RegionInfo.RegionLocX, scene.RegionInfo.RegionLocY));
 
-                    if (m_application.SceneManager.TryGetScene(region.RegionLocX, region.RegionLocY, out scene))
+                    if (manager.TryGetScene(region.RegionLocX, region.RegionLocY, out scene))
                         throw new Exception(
                             String.Format("region location <{0},{1}> already in use by region {2}, UUID {3}, <{4},{5}>",
                                           region.RegionLocX, region.RegionLocY,
@@ -576,7 +578,7 @@ namespace OpenSim.ApplicationPlugins.RemoteController
 
                     region.InternalEndPoint.Port = Convert.ToInt32(requestData["listen_port"]);
                     if (0 == region.InternalEndPoint.Port) throw new Exception("listen_port is 0");
-                    if (m_application.SceneManager.TryGetScene(region.InternalEndPoint, out scene))
+                    if (manager.TryGetScene(region.InternalEndPoint, out scene))
                         throw new Exception(
                             String.Format(
                                 "region internal IP {0} and port {1} already in use by region {2}, UUID {3}, <{4},{5}>",
@@ -664,7 +666,7 @@ namespace OpenSim.ApplicationPlugins.RemoteController
                             string ownerFirst = (string) requestData["estate_owner_first"];
                             string ownerLast = (string) requestData["estate_owner_last"];
                             
-                            Scene currentOrFirst = m_application.SceneManager.CurrentOrFirstScene;
+                            Scene currentOrFirst = manager.CurrentOrFirstScene;
                             IUserAccountService accountService = currentOrFirst.UserAccountService;
                             UserAccount user = accountService.GetUserAccount(currentOrFirst.RegionInfo.ScopeID,
                                                                                ownerFirst, ownerLast);
@@ -696,7 +698,7 @@ namespace OpenSim.ApplicationPlugins.RemoteController
                     // Create the region and perform any initial initialization
 
                     IScene newScene;
-                    m_application.SceneManager.CreateRegion(region, true, out newScene);
+                    manager.CreateRegion(region, true, out newScene);
 
                     // If an access specification was provided, use it.
                     // Otherwise accept the default.
@@ -781,10 +783,10 @@ namespace OpenSim.ApplicationPlugins.RemoteController
 
                     Scene scene = null;
                     string regionName = (string) requestData["region_name"];
-                    if (!m_application.SceneManager.TryGetScene(regionName, out scene))
+                    if (!manager.TryGetScene(regionName, out scene))
                         throw new Exception(String.Format("region \"{0}\" does not exist", regionName));
 
-                    m_application.SceneManager.RemoveRegion(scene, true);
+                    manager.RemoveRegion(scene, true);
 
                     responseData["success"] = true;
                     responseData["region_name"] = regionName;
@@ -854,10 +856,10 @@ namespace OpenSim.ApplicationPlugins.RemoteController
                     {
                         // Region specified by UUID
                         UUID regionID = (UUID) (string) requestData["region_id"];
-                        if (!m_application.SceneManager.TryGetScene(regionID, out scene))
+                        if (!manager.TryGetScene(regionID, out scene))
                             throw new Exception(String.Format("region \"{0}\" does not exist", regionID));
 
-                        m_application.SceneManager.CloseRegion(scene);
+                        manager.CloseRegion(scene);
 
                         responseData["success"] = true;
                         responseData["region_id"] = regionID;
@@ -870,10 +872,10 @@ namespace OpenSim.ApplicationPlugins.RemoteController
                         // Region specified by name
 
                         string regionName = (string) requestData["region_name"];
-                        if (!m_application.SceneManager.TryGetScene(regionName, out scene))
+                        if (!manager.TryGetScene(regionName, out scene))
                             throw new Exception(String.Format("region \"{0}\" does not exist", regionName));
 
-                        m_application.SceneManager.CloseRegion(scene);
+                        manager.CloseRegion(scene);
 
                         responseData["success"] = true;
                         responseData["region_name"] = regionName;
@@ -946,7 +948,7 @@ namespace OpenSim.ApplicationPlugins.RemoteController
 
                     Scene scene = null;
                     string regionName = (string) requestData["region_name"];
-                    if (!m_application.SceneManager.TryGetScene(regionName, out scene))
+                    if (!manager.TryGetScene(regionName, out scene))
                         throw new Exception(String.Format("region \"{0}\" does not exist", regionName));
 
                     // Modify access
@@ -1074,7 +1076,7 @@ namespace OpenSim.ApplicationPlugins.RemoteController
                     if (requestData.Contains("user_email"))
                         email = (string)requestData["user_email"];
 
-                    Scene scene = m_application.SceneManager.CurrentOrFirstScene;
+                    Scene scene = manager.CurrentOrFirstScene;
                     UUID scopeID = scene.RegionInfo.ScopeID;
 
                     UserAccount account = CreateUser(scopeID, firstName, lastName, password, email);
@@ -1175,9 +1177,9 @@ namespace OpenSim.ApplicationPlugins.RemoteController
                 responseData["user_firstname"] = firstName;
                 responseData["user_lastname"] = lastName;
 
-                UUID scopeID = m_application.SceneManager.CurrentOrFirstScene.RegionInfo.ScopeID;
+                UUID scopeID = manager.CurrentOrFirstScene.RegionInfo.ScopeID;
 
-                UserAccount account = m_application.SceneManager.CurrentOrFirstScene.UserAccountService.GetUserAccount(scopeID, firstName, lastName);
+                UserAccount account = manager.CurrentOrFirstScene.UserAccountService.GetUserAccount(scopeID, firstName, lastName);
 
                 if (null == account)
                 {
@@ -1186,7 +1188,7 @@ namespace OpenSim.ApplicationPlugins.RemoteController
                 }
                 else
                 {
-                    GridUserInfo userInfo = m_application.SceneManager.CurrentOrFirstScene.GridUserService.GetGridUserInfo(account.PrincipalID.ToString());
+                    GridUserInfo userInfo = manager.CurrentOrFirstScene.GridUserService.GetGridUserInfo(account.PrincipalID.ToString());
                     if (userInfo != null)
                         responseData["lastlogin"] = userInfo.Login;
                     else
@@ -1320,7 +1322,7 @@ namespace OpenSim.ApplicationPlugins.RemoteController
             //        if (requestData.ContainsKey("about_virtual_world"))
             //            aboutAvatar = (string)requestData["about_virtual_world"];
 
-                    Scene scene = m_application.SceneManager.CurrentOrFirstScene;
+                    Scene scene = manager.CurrentOrFirstScene;
                     UUID scopeID = scene.RegionInfo.ScopeID;
                     UserAccount account = scene.UserAccountService.GetUserAccount(scopeID, firstName, lastName);
 
@@ -1452,7 +1454,7 @@ namespace OpenSim.ApplicationPlugins.RemoteController
                 return;
             }
 
-            Scene scene = m_application.SceneManager.CurrentOrFirstScene;
+            Scene scene = manager.CurrentOrFirstScene;
             UUID scopeID = scene.RegionInfo.ScopeID;
             UserAccount modelProfile = scene.UserAccountService.GetUserAccount(scopeID, modelSpecifiers[0], modelSpecifiers[1]);
 
@@ -1481,7 +1483,7 @@ namespace OpenSim.ApplicationPlugins.RemoteController
         private void EstablishAppearance(UUID destination, UUID source)
         {
             m_log.DebugFormat("[RADMIN] Initializing inventory for {0} from {1}", destination, source);
-            Scene scene = m_application.SceneManager.CurrentOrFirstScene;
+            Scene scene = manager.CurrentOrFirstScene;
             AvatarAppearance avatarAppearance = null;
             AvatarData avatar = scene.AvatarService.GetAvatar(source);
             if (avatar != null)
@@ -1553,7 +1555,7 @@ namespace OpenSim.ApplicationPlugins.RemoteController
 
         private void CopyWearablesAndAttachments(UUID destination, UUID source, AvatarAppearance avatarAppearance)
         {
-            IInventoryService inventoryService = m_application.SceneManager.CurrentOrFirstScene.InventoryService;
+            IInventoryService inventoryService = manager.CurrentOrFirstScene.InventoryService;
 
             // Get Clothing folder of receiver
             InventoryFolderBase destinationFolder = inventoryService.GetFolderForType(destination, AssetType.Clothing);
@@ -1612,7 +1614,7 @@ namespace OpenSim.ApplicationPlugins.RemoteController
                         destinationItem.CreationDate = item.CreationDate;
                         destinationItem.Folder = destinationFolder.ID;
 
-                        m_application.SceneManager.CurrentOrFirstScene.AddInventoryItem(destinationItem);
+                        manager.CurrentOrFirstScene.AddInventoryItem(destinationItem);
                         m_log.DebugFormat("[RADMIN]: Added item {0} to folder {1}", destinationItem.ID, destinationFolder.ID);
 
                         // Wear item
@@ -1665,7 +1667,7 @@ namespace OpenSim.ApplicationPlugins.RemoteController
                         destinationItem.CreationDate = item.CreationDate;
                         destinationItem.Folder = destinationFolder.ID;
 
-                        m_application.SceneManager.CurrentOrFirstScene.AddInventoryItem(destinationItem);
+                        manager.CurrentOrFirstScene.AddInventoryItem(destinationItem);
                         m_log.DebugFormat("[RADMIN]: Added item {0} to folder {1}", destinationItem.ID, destinationFolder.ID);
 
                         // Attach item
@@ -1690,7 +1692,7 @@ namespace OpenSim.ApplicationPlugins.RemoteController
         private void CopyInventoryFolders(UUID destination, UUID source, AssetType assetType, Dictionary<UUID,UUID> inventoryMap,
                                           AvatarAppearance avatarAppearance)
         {
-            IInventoryService inventoryService = m_application.SceneManager.CurrentOrFirstScene.InventoryService;
+            IInventoryService inventoryService = manager.CurrentOrFirstScene.InventoryService;
 
             InventoryFolderBase sourceFolder = inventoryService.GetFolderForType(source, assetType);
             InventoryFolderBase destinationFolder = inventoryService.GetFolderForType(destination, assetType);
@@ -1772,7 +1774,7 @@ namespace OpenSim.ApplicationPlugins.RemoteController
                     destinationItem.CreationDate = item.CreationDate;
                     destinationItem.Folder = extraFolder.ID;
 
-                    m_application.SceneManager.CurrentOrFirstScene.AddInventoryItem(destinationItem);
+                    manager.CurrentOrFirstScene.AddInventoryItem(destinationItem);
                     inventoryMap.Add(item.ID, destinationItem.ID);
                     m_log.DebugFormat("[RADMIN]: Added item {0} to folder {1}", destinationItem.ID, extraFolder.ID);
 
@@ -1837,7 +1839,7 @@ namespace OpenSim.ApplicationPlugins.RemoteController
                     bool include = false;
                     bool select  = false;
 
-                    Scene scene = m_application.SceneManager.CurrentOrFirstScene;
+                    Scene scene = manager.CurrentOrFirstScene;
                     IInventoryService inventoryService = scene.InventoryService;
                     IAssetService assetService = scene.AssetService;
 
@@ -2057,7 +2059,7 @@ namespace OpenSim.ApplicationPlugins.RemoteController
                                             inventoryItem.CreationDate = GetIntegerAttribute(item,"creationdate",Util.UnixTimeSinceEpoch());
                                             inventoryItem.Folder = extraFolder.ID; // Parent folder
 
-                                            m_application.SceneManager.CurrentOrFirstScene.AddInventoryItem(inventoryItem);
+                                            manager.CurrentOrFirstScene.AddInventoryItem(inventoryItem);
                                             m_log.DebugFormat("[RADMIN] Added item {0} to folder {1}", inventoryItem.ID, extraFolder.ID);
                                         }
 
@@ -2178,13 +2180,13 @@ namespace OpenSim.ApplicationPlugins.RemoteController
                     if (requestData.Contains("region_uuid"))
                     {
                         UUID region_uuid = (UUID) (string) requestData["region_uuid"];
-                        if (!m_application.SceneManager.TryGetScene(region_uuid, out scene))
+                        if (!manager.TryGetScene(region_uuid, out scene))
                             throw new Exception(String.Format("failed to switch to region {0}", region_uuid.ToString()));
                     }
                     else if (requestData.Contains("region_name"))
                     {
                         string region_name = (string) requestData["region_name"];
-                        if (!m_application.SceneManager.TryGetScene(region_name, out scene))
+                        if (!manager.TryGetScene(region_name, out scene))
                             throw new Exception(String.Format("failed to switch to region {0}", region_name));
                     }
                     else throw new Exception("neither region_name nor region_uuid given");
@@ -2278,13 +2280,13 @@ namespace OpenSim.ApplicationPlugins.RemoteController
                 if (requestData.Contains("region_uuid"))
                 {
                     UUID region_uuid = (UUID) (string) requestData["region_uuid"];
-                    if (!m_application.SceneManager.TryGetScene(region_uuid, out scene))
+                    if (!manager.TryGetScene(region_uuid, out scene))
                         throw new Exception(String.Format("failed to switch to region {0}", region_uuid.ToString()));
                 }
                 else if (requestData.Contains("region_name"))
                 {
                     string region_name = (string) requestData["region_name"];
-                    if (!m_application.SceneManager.TryGetScene(region_name, out scene))
+                    if (!manager.TryGetScene(region_name, out scene))
                         throw new Exception(String.Format("failed to switch to region {0}", region_name));
                 }
                 else throw new Exception("neither region_name nor region_uuid given");
@@ -2358,14 +2360,14 @@ namespace OpenSim.ApplicationPlugins.RemoteController
                     if (requestData.Contains("region_uuid"))
                     {
                         UUID region_uuid = (UUID) (string) requestData["region_uuid"];
-                        if (!m_application.SceneManager.TrySetCurrentScene(region_uuid))
+                        if (!manager.TrySetCurrentScene(region_uuid))
                             throw new Exception(String.Format("failed to switch to region {0}", region_uuid.ToString()));
                         m_log.InfoFormat("[RADMIN] Switched to region {0}", region_uuid.ToString());
                     }
                     else if (requestData.Contains("region_name"))
                     {
                         string region_name = (string) requestData["region_name"];
-                        if (!m_application.SceneManager.TrySetCurrentScene(region_name))
+                        if (!manager.TrySetCurrentScene(region_name))
                             throw new Exception(String.Format("failed to switch to region {0}", region_name));
                         m_log.InfoFormat("[RADMIN] Switched to region {0}", region_name);
                     }
@@ -2382,7 +2384,7 @@ namespace OpenSim.ApplicationPlugins.RemoteController
                     switch (xml_version)
                     {
                         case "2":
-                            m_application.SceneManager.LoadCurrentSceneFromXml2(filename);
+                            manager.LoadCurrentSceneFromXml2(filename);
                             break;
 
                         default:
@@ -2450,20 +2452,20 @@ namespace OpenSim.ApplicationPlugins.RemoteController
                 if (requestData.Contains("region_uuid"))
                 {
                     UUID region_uuid = (UUID) (string) requestData["region_uuid"];
-                    if (!m_application.SceneManager.TrySetCurrentScene(region_uuid))
+                    if (!manager.TrySetCurrentScene(region_uuid))
                         throw new Exception(String.Format("failed to switch to region {0}", region_uuid.ToString()));
                     m_log.InfoFormat("[RADMIN] Switched to region {0}", region_uuid.ToString());
                 }
                 else if (requestData.Contains("region_name"))
                 {
                     string region_name = (string) requestData["region_name"];
-                    if (!m_application.SceneManager.TrySetCurrentScene(region_name))
+                    if (!manager.TrySetCurrentScene(region_name))
                         throw new Exception(String.Format("failed to switch to region {0}", region_name));
                     m_log.InfoFormat("[RADMIN] Switched to region {0}", region_name);
                 }
                 else throw new Exception("neither region_name nor region_uuid given");
 
-                Scene scene = m_application.SceneManager.CurrentScene;
+                Scene scene = manager.CurrentScene;
                 responseData["health"] = 0;
 
                 response.Value = responseData;
@@ -2546,20 +2548,20 @@ namespace OpenSim.ApplicationPlugins.RemoteController
                 if (requestData.Contains("region_uuid"))
                 {
                     UUID region_uuid = (UUID) (string) requestData["region_uuid"];
-                    if (!m_application.SceneManager.TrySetCurrentScene(region_uuid))
+                    if (!manager.TrySetCurrentScene(region_uuid))
                         throw new Exception(String.Format("failed to switch to region {0}", region_uuid.ToString()));
                     m_log.InfoFormat("[RADMIN] Switched to region {0}", region_uuid.ToString());
                 }
                 else if (requestData.Contains("region_name"))
                 {
                     string region_name = (string) requestData["region_name"];
-                    if (!m_application.SceneManager.TrySetCurrentScene(region_name))
+                    if (!manager.TrySetCurrentScene(region_name))
                         throw new Exception(String.Format("failed to switch to region {0}", region_name));
                     m_log.InfoFormat("[RADMIN] Switched to region {0}", region_name);
                 }
                 else throw new Exception("neither region_name nor region_uuid given");
 
-                Scene scene = m_application.SceneManager.CurrentScene;
+                Scene scene = manager.CurrentScene;
                 scene.RegionInfo.EstateSettings.EstateAccess = new UUID[]{};
                 if (scene.RegionInfo.Persistent)
                     scene.RegionInfo.EstateSettings.Save();
@@ -2603,14 +2605,14 @@ namespace OpenSim.ApplicationPlugins.RemoteController
                 if (requestData.Contains("region_uuid"))
                 {
                     UUID region_uuid = (UUID) (string) requestData["region_uuid"];
-                    if (!m_application.SceneManager.TrySetCurrentScene(region_uuid))
+                    if (!manager.TrySetCurrentScene(region_uuid))
                         throw new Exception(String.Format("failed to switch to region {0}", region_uuid.ToString()));
                     m_log.InfoFormat("[RADMIN] Switched to region {0}", region_uuid.ToString());
                 }
                 else if (requestData.Contains("region_name"))
                 {
                     string region_name = (string) requestData["region_name"];
-                    if (!m_application.SceneManager.TrySetCurrentScene(region_name))
+                    if (!manager.TrySetCurrentScene(region_name))
                         throw new Exception(String.Format("failed to switch to region {0}", region_name));
                     m_log.InfoFormat("[RADMIN] Switched to region {0}", region_name);
                 }
@@ -2620,9 +2622,9 @@ namespace OpenSim.ApplicationPlugins.RemoteController
 
                 if (requestData.Contains("users"))
                 {
-                    UUID scopeID = m_application.SceneManager.CurrentOrFirstScene.RegionInfo.ScopeID;
-                    IUserAccountService userService = m_application.SceneManager.CurrentOrFirstScene.UserAccountService;
-                    Scene scene = m_application.SceneManager.CurrentScene;
+                    UUID scopeID = manager.CurrentOrFirstScene.RegionInfo.ScopeID;
+                    IUserAccountService userService = manager.CurrentOrFirstScene.UserAccountService;
+                    Scene scene = manager.CurrentScene;
                     Hashtable users = (Hashtable) requestData["users"];
                     List<UUID> uuids = new List<UUID>();
                     foreach (string name in users.Values)
@@ -2690,14 +2692,14 @@ namespace OpenSim.ApplicationPlugins.RemoteController
                 if (requestData.Contains("region_uuid"))
                 {
                     UUID region_uuid = (UUID) (string) requestData["region_uuid"];
-                    if (!m_application.SceneManager.TrySetCurrentScene(region_uuid))
+                    if (!manager.TrySetCurrentScene(region_uuid))
                         throw new Exception(String.Format("failed to switch to region {0}", region_uuid.ToString()));
                     m_log.InfoFormat("[RADMIN] Switched to region {0}", region_uuid.ToString());
                 }
                 else if (requestData.Contains("region_name"))
                 {
                     string region_name = (string) requestData["region_name"];
-                    if (!m_application.SceneManager.TrySetCurrentScene(region_name))
+                    if (!manager.TrySetCurrentScene(region_name))
                         throw new Exception(String.Format("failed to switch to region {0}", region_name));
                     m_log.InfoFormat("[RADMIN] Switched to region {0}", region_name);
                 }
@@ -2707,10 +2709,10 @@ namespace OpenSim.ApplicationPlugins.RemoteController
 
                 if (requestData.Contains("users"))
                 {
-                    UUID scopeID = m_application.SceneManager.CurrentOrFirstScene.RegionInfo.ScopeID;
-                    IUserAccountService userService = m_application.SceneManager.CurrentOrFirstScene.UserAccountService;
+                    UUID scopeID = manager.CurrentOrFirstScene.RegionInfo.ScopeID;
+                    IUserAccountService userService = manager.CurrentOrFirstScene.UserAccountService;
                     //UserProfileCacheService ups = m_application.CommunicationsManager.UserProfileCacheService;
-                    Scene scene = m_application.SceneManager.CurrentScene;
+                    Scene scene = manager.CurrentScene;
                     Hashtable users = (Hashtable) requestData["users"];
                     List<UUID> uuids = new List<UUID>();
                     foreach (string name in users.Values)
@@ -2777,27 +2779,27 @@ namespace OpenSim.ApplicationPlugins.RemoteController
                 if (requestData.Contains("region_uuid"))
                 {
                     UUID region_uuid = (UUID) (string) requestData["region_uuid"];
-                    if (!m_application.SceneManager.TrySetCurrentScene(region_uuid))
+                    if (!manager.TrySetCurrentScene(region_uuid))
                         throw new Exception(String.Format("failed to switch to region {0}", region_uuid.ToString()));
                     m_log.InfoFormat("[RADMIN] Switched to region {0}", region_uuid.ToString());
                 }
                 else if (requestData.Contains("region_name"))
                 {
                     string region_name = (string) requestData["region_name"];
-                    if (!m_application.SceneManager.TrySetCurrentScene(region_name))
+                    if (!manager.TrySetCurrentScene(region_name))
                         throw new Exception(String.Format("failed to switch to region {0}", region_name));
                     m_log.InfoFormat("[RADMIN] Switched to region {0}", region_name);
                 }
                 else throw new Exception("neither region_name nor region_uuid given");
 
-                Scene scene = m_application.SceneManager.CurrentScene;
+                Scene scene = manager.CurrentScene;
                 UUID[] accessControlList = scene.RegionInfo.EstateSettings.EstateAccess;
                 Hashtable users = new Hashtable();
 
                 foreach (UUID user in accessControlList)
                 {
-                    UUID scopeID = m_application.SceneManager.CurrentOrFirstScene.RegionInfo.ScopeID;
-                    UserAccount account = m_application.SceneManager.CurrentOrFirstScene.UserAccountService.GetUserAccount(scopeID, user);
+                    UUID scopeID = manager.CurrentOrFirstScene.RegionInfo.ScopeID;
+                    UserAccount account = manager.CurrentOrFirstScene.UserAccountService.GetUserAccount(scopeID, user);
                     if (account != null)
                     {
                         users[user.ToString()] = account.FirstName + " " + account.LastName;
@@ -2899,7 +2901,7 @@ namespace OpenSim.ApplicationPlugins.RemoteController
         /// <param name="email"></param>
         private UserAccount CreateUser(UUID scopeID, string firstName, string lastName, string password, string email)
         {
-            Scene scene = m_application.SceneManager.CurrentOrFirstScene;
+            Scene scene = manager.CurrentOrFirstScene;
             IUserAccountService userAccountService = scene.UserAccountService;
             IGridService gridService = scene.GridService;
             IAuthenticationService authenticationService = scene.AuthenticationService;
@@ -2976,7 +2978,7 @@ namespace OpenSim.ApplicationPlugins.RemoteController
         /// <param name="password"></param>
         private bool ChangeUserPassword(string firstName, string lastName, string password)
         {
-            Scene scene = m_application.SceneManager.CurrentOrFirstScene;
+            Scene scene = manager.CurrentOrFirstScene;
             IUserAccountService userAccountService = scene.UserAccountService;
             IAuthenticationService authenticationService = scene.AuthenticationService;
 

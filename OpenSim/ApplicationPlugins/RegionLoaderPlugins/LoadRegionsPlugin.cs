@@ -40,6 +40,7 @@ using OpenSim;
 using OpenSim.Framework.Console;
 using Aurora.Modules.RegionLoader;
 using Aurora.Framework;
+using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 {
@@ -97,14 +98,15 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                     throw new Exception();
                 }
 
-                m_openSim.SceneManager.AllRegions += regionsToLoad.Length;
+                SceneManager manager = m_openSim.ApplicationRegistry.Get<SceneManager>();
+                manager.AllRegions += regionsToLoad.Length;
                 Util.NumberofScenes += regionsToLoad.Length;
 
                 for (int i = 0; i < regionsToLoad.Length; i++)
                 {
                     IScene scene = null;
                     m_log.Debug("[LOADREGIONS]: Creating Region: " + regionsToLoad[i].RegionName);
-                    m_openSim.SceneManager.CreateRegion(regionsToLoad[i], true, out scene);
+                    manager.CreateRegion(regionsToLoad[i], true, out scene);
                     if (scene != null)
                     {
                         m_newRegionCreatedHandler = OnNewRegionCreated;
