@@ -1121,7 +1121,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
             if (m_regionInfo != null)
             {
-                if (Util.RegionViewSize == 1)
+                if (Util.RegionViewSize == 1) //Legacy support
                     neighbours = RequestNeighbours(sp.Scene, m_regionInfo.RegionLocX, m_regionInfo.RegionLocY);
                 else
                 {

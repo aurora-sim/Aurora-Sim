@@ -45,11 +45,11 @@ namespace OpenSim.Region.Framework.Scenes
     /// <summary>
     /// Manager for adding, closing and restarting scenes.
     /// </summary>
-    public class SceneManager
+    public class SceneManager : IApplicationPlugin
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private readonly List<Scene> m_localScenes;
+        private List<Scene> m_localScenes;
         private Scene m_currentScene = null;
         private IOpenSimBase m_OpenSimBase;
         private IConfigSource m_config = null;
@@ -88,18 +88,18 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public SceneManager(IOpenSimBase OSB, IConfigSource config)
+        public void Initialize(IOpenSimBase openSim)
         {
-            m_OpenSimBase = OSB;
+            m_OpenSimBase = openSim;
             m_localScenes = new List<Scene>();
 
-            m_config = config;
+            m_config = openSim.ConfigSource;
 
             string StorageDLL = "";
 
-            IConfig dbConfig = config.Configs["DatabaseService"];
+            IConfig dbConfig = m_config.Configs["DatabaseService"];
             IConfig simDataConfig = m_config.Configs["SimulationDataStore"];
-            
+
             //Default to the database service config
             if (dbConfig != null)
             {
@@ -109,10 +109,26 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 StorageDLL = simDataConfig.GetString("LocalServiceModule", String.Empty);
             }
-            if(StorageDLL == String.Empty)
+            if (StorageDLL == String.Empty)
                 StorageDLL = "OpenSim.Data.Null.dll";
 
             m_simulationDataService = ServerUtils.LoadPlugin<ISimulationDataService>(StorageDLL, new object[] { m_config });
+
+            //Register us!
+            m_OpenSimBase.ApplicationRegistry.RegisterInterface<SceneManager>(this);
+        }
+
+        public void PostInitialise()
+        {
+        }
+
+        public string Name
+        {
+            get { return "SceneManager"; }
+        }
+
+        public void Dispose()
+        {
         }
 
         protected ISimulationDataService m_simulationDataService;

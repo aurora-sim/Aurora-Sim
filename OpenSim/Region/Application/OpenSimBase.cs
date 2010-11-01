@@ -101,10 +101,6 @@ namespace OpenSim
         }
 
         protected SceneManager m_sceneManager = null;
-        public SceneManager SceneManager
-        {
-            get { return m_sceneManager; }
-        }
 
         /// <summary>
         /// Time at which this server was started
@@ -228,10 +224,10 @@ namespace OpenSim
             if (null != m_consoleAppender)
             {
                 m_consoleAppender.Console = m_console;
-
                 // If there is no threshold set then the threshold is effectively everything.
                 if (null == m_consoleAppender.Threshold)
                     m_consoleAppender.Threshold = Level.All;
+                m_console.Output(String.Format("Console log level is {0}", m_consoleAppender.Threshold));
             }
             if (m_console == null)
                 m_console = new LocalConsole();
@@ -254,15 +250,13 @@ namespace OpenSim
             m_stats = StatsManager.StartCollectingSimExtraStats();
             m_DiagnosticsManager = new DiagnosticsManager(m_stats, this);
 
-            //Lets start this after the http server, but before application plugins.
-            //Note: this should be moved out.
-            m_sceneManager = new SceneManager(this, m_config);
-
             List<IApplicationPlugin> plugins = AuroraModuleLoader.PickupModules<IApplicationPlugin>();
             foreach (IApplicationPlugin plugin in plugins)
             {
                 plugin.Initialize(this);
             }
+            m_sceneManager = ApplicationRegistry.Get<SceneManager>();
+
             foreach (IApplicationPlugin plugin in plugins)
             {
                 plugin.PostInitialise();
@@ -394,7 +388,7 @@ namespace OpenSim
         protected virtual List<string> GetHelpTopics()
         {
             List<string> topics = new List<string>();
-            Scene s = SceneManager.CurrentOrFirstScene;
+            Scene s = m_sceneManager.CurrentOrFirstScene;
             if (s != null && s.GetCommanders() != null)
                 topics.AddRange(s.GetCommanders().Keys);
 
@@ -427,7 +421,7 @@ namespace OpenSim
                         "{0} is not a valid logging level.  Valid logging levels are ALL, DEBUG, INFO, WARN, ERROR, FATAL, OFF",
                         rawLevel)));
 
-            //Notice(String.Format("Console log level is {0}", m_consoleAppender.Threshold));
+            m_console.Output(String.Format("Console log level is {0}", m_consoleAppender.Threshold));
         }
 
 		/// <summary>
@@ -971,7 +965,7 @@ namespace OpenSim
 
                     ICommander commander = null;
 
-                    Scene s = SceneManager.CurrentOrFirstScene;
+                    Scene s = m_sceneManager.CurrentOrFirstScene;
 
                     if (s != null && s.GetCommanders() != null)
                     {
@@ -1000,7 +994,7 @@ namespace OpenSim
             // Only safe for the interactive console, since it won't
             // let us come here unless both scene and commander exist
             //
-            ICommander moduleCommander = SceneManager.CurrentOrFirstScene.GetCommander(cmd[1]);
+            ICommander moduleCommander = m_sceneManager.CurrentOrFirstScene.GetCommander(cmd[1]);
             if (moduleCommander != null)
                 m_console.Output(moduleCommander.Help);
         }
