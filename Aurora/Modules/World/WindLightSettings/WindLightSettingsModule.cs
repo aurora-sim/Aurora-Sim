@@ -154,6 +154,7 @@ namespace Aurora.Modules
         {
             UUID capuuid = UUID.Random();
 
+            //Sets the windlight settings
             caps.RegisterHandler("DispatchWindLightSettings",
                                 new RestHTTPHandler("POST", "/CAPS/" + capuuid + "/",
                                                       delegate(Hashtable m_dhttpMethod)
@@ -162,7 +163,7 @@ namespace Aurora.Modules
                                                       }));
 
             capuuid = UUID.Random();
-
+            //Retrieves the windlight settings for a specifc parcel or region
             caps.RegisterHandler("RetrieveWindLightSettings",
                                 new RestHTTPHandler("POST", "/CAPS/" + capuuid + "/",
                                                       delegate(Hashtable m_dhttpMethod)
@@ -187,6 +188,7 @@ namespace Aurora.Modules
             OSDMap retVal = new OSDMap();
             if (rm.ContainsKey("RegionID"))
             {
+                //For the region, just add all of them
                 OSDArray array = new OSDArray();
                 foreach (RegionLightShareData rlsd in m_WindlightSettings.Values)
                 {
@@ -200,6 +202,7 @@ namespace Aurora.Modules
             else if (rm.ContainsKey("ParcelID"))
             {
                 OSDArray retVals = new OSDArray();
+                //-1 is all parcels
                 if (rm["ParcelID"].AsInteger() == -1)
                 {
                     //All parcels
@@ -223,7 +226,7 @@ namespace Aurora.Modules
                 }
                 else
                 {
-                    //Only this parcel
+                    //Only the given parcel parcel given by localID
                     ILandObject land = SP.Scene.LandChannel.GetLandObject(rm["ParcelID"].AsInteger());
                     OSDMap map = land.LandData.GenericDataMap;
                     if (map.ContainsKey("WindLight"))
@@ -438,11 +441,13 @@ namespace Aurora.Modules
 
         private void AvatarEnteringNewParcel(ScenePresence SP, int localLandID, UUID regionID)
         {
+            //Send on new parcel
             SendProfileToClient(SP);
         }
 
         void OnSignificantClientMovement(IClientAPI remote_client)
         {
+            //Send on movement as this checks for altitude
             SendProfileToClient(m_scene.GetScenePresence(remote_client.AgentId));
         }
 
@@ -536,7 +541,7 @@ namespace Aurora.Modules
             {
                 if (!presence.IsChildAgent)
                 {
-                    //Check the cache so that we don't kill the client with updates
+                    //Check the cache so that we don't kill the client with updates as this can lag the client 
                     if (m_preivouslySentWindLight.ContainsKey(presence.UUID))
                     {
                         if (m_preivouslySentWindLight[presence.UUID] == wl.UUID)

@@ -14,6 +14,10 @@ using Aurora.Framework;
 
 namespace Aurora.Modules.World.SimConsole
 {
+    /// <summary>
+    /// This module allows for the console to be accessed in V2 viewers that support SimConsole
+    /// This will eventually be extended in Imprudence so that full console support can be added into the viewer (this module already supports the eventual extension)
+    /// </summary>
     public class SimConsole : ISharedRegionModule
     {
         #region Declares
@@ -129,6 +133,7 @@ namespace Aurora.Modules.World.SimConsole
             string message = rm.AsString();
             string response = "Finished.";
 
+            //Is a god, or they authenticated to the server and have write access
             if ((SP.Scene.Permissions.CanRunConsoleCommand(SP.UUID) ||
                 AuthenticateUser(SP.UUID, message)) && CanWrite(SP.UUID))
             {
@@ -177,7 +182,7 @@ namespace Aurora.Modules.World.SimConsole
             {
                 if (message.Contains("User:"))
                 {
-                    //User:<NAME>/Password:<PASS>
+                    //The expected auth line looks like : "User:<NAME>/Password:<PASS>"
                     string[] splits = message.Split('/');
                     string username, password;
                     if (splits.Length != 2)
@@ -205,6 +210,7 @@ namespace Aurora.Modules.World.SimConsole
             {
                 if (kvp.Value == Access.ReadWrite || kvp.Value == Access.Read)
                 {
+                    //Send the EQM with the message to all people who have read access
                     SendConsoleEventEQM(kvp.Key, text);
                 }
             }

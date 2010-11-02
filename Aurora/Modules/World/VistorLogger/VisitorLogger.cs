@@ -11,6 +11,9 @@ using Nini.Config;
 
 namespace Aurora.Modules
 {
+    /// <summary>
+    /// This module logs all visitors to the sim to a specified file
+    /// </summary>
     public class VisitorLoggerModule : INonSharedRegionModule
     {
         #region Declares
@@ -46,6 +49,7 @@ namespace Aurora.Modules
         {
             try
             {
+                //Add the user
                 FileStream stream = new FileStream(m_fileName, FileMode.OpenOrCreate);
                 StreamWriter m_streamWriter = new StreamWriter(stream);
                 m_streamWriter.BaseStream.Position += m_streamWriter.BaseStream.Length;

@@ -80,25 +80,70 @@ namespace Aurora.Framework
     public interface IGenericData
     {
         /// <summary>
-        /// update table set setRow = setValue WHERE keyRow = keyValue
+        /// update 'table' set 'setRow' = 'setValue' WHERE 'keyRow' = 'keyValue'
         /// </summary>
         bool Update(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues);
         
         /// <summary>
-        /// select wantedValue from table where keyRow = keyValue
+        /// select 'wantedValue' from 'table' where 'keyRow' = 'keyValue'
         /// </summary>
         List<string> Query(string keyRow, object keyValue, string table, string wantedValue);
-        
-        List<string> Query(string whereClause, string table, string wantedValue);
-        List<string> Query(string keyRow, object keyValue, string table, string wantedValue, string Order);
-        List<string> Query(string[] keyRow, object[] keyValue, string table, string wantedValue);
-        IDataReader QueryReader(string keyRow, object keyValue, string table, string wantedValue);
-        bool Insert(string table, object[] values);
-        bool Insert(string table, string[] keys, object[] values);
-        bool Delete(string table, string[] keys, object[] values);
-        bool Replace(string table, string[] keys, object[] values);
+
         /// <summary>
-        /// Inserts a row into the database
+        /// select 'wantedValue' from 'table' where 'whereClause'
+        /// </summary>
+        List<string> Query(string whereClause, string table, string wantedValue);
+
+        /// <summary>
+        /// select 'wantedValue' from 'table' where 'keyRow' = 'keyValue' 'Order'
+        /// </summary>
+        List<string> Query(string keyRow, object keyValue, string table, string wantedValue, string Order);
+
+        /// <summary>
+        /// select 'wantedValue' from 'table' where 'keyRow' = 'keyValue'
+        /// </summary>
+        List<string> Query(string[] keyRow, object[] keyValue, string table, string wantedValue);
+
+        /// <summary>
+        /// select 'wantedValue' from 'table' where 'keyRow' = 'keyValue'
+        /// </summary>
+        IDataReader QueryReader(string keyRow, object keyValue, string table, string wantedValue);
+
+        /// <summary>
+        /// insert into 'table' values ('values')
+        /// </summary>
+        bool Insert(string table, object[] values);
+        
+        /// <summary>
+        /// insert into 'table' where 'keys' = 'values'
+        /// </summary>
+        /// <param name="table"></param>
+        /// <param name="keys"></param>
+        /// <param name="values"></param>
+        /// <returns></returns>
+        bool Insert(string table, string[] keys, object[] values);
+       
+        /// <summary>
+        /// delete from 'table' where 'keys' = 'values'
+        /// </summary>
+        /// <param name="table"></param>
+        /// <param name="keys"></param>
+        /// <param name="values"></param>
+        /// <returns></returns>
+        bool Delete(string table, string[] keys, object[] values);
+
+        /// <summary>
+        /// Replace into 'table' ('keys') values ('values')
+        /// </summary>
+        /// <param name="table"></param>
+        /// <param name="keys"></param>
+        /// <param name="values"></param>
+        /// <returns></returns>
+        bool Replace(string table, string[] keys, object[] values);
+
+        /// <summary>
+        /// Inserts a row into the database 
+        /// insert into 'table' values ('values') ON DUPLICATE KEY UPDATE 'updateKey' = 'updateValue'
         /// </summary>
         /// <param name="table">table name</param>
         /// <param name="values">All values to be inserted in the correct table order</param>
@@ -113,11 +158,21 @@ namespace Aurora.Framework
         /// <param name="connectionString"></param>
         void ConnectToDatabase(string connectionString);
 
+        /// <summary>
+        /// Makes a copy of the IGenericData plugin
+        /// </summary>
+        /// <returns></returns>
         IGenericData Copy();
     }
 
     public interface IAuroraDataPlugin : IPlugin
     {
+        /// <summary>
+        /// Starts the database plugin, performs migrations if needed
+        /// </summary>
+        /// <param name="GenericData">The Database Plugin</param>
+        /// <param name="source">Config if more parameters are needed</param>
+        /// <param name="DefaultConnectionString">The connection string to use</param>
         void Initialize(IGenericData GenericData, IConfigSource source, string DefaultConnectionString);
     }
 }
