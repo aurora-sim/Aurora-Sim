@@ -388,7 +388,7 @@
       <Reference name="OpenSim.Services.Interfaces"/>
       <Reference name="OpenMetaverse" path="../../../bin/"/>
       <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
-      <!-- FIXME: The OpenMetaverse.dll reference can be dropped when the TransferRequestPacket reference is removed from the code -->
+      <!-- FIXME: The OpenMetaverse reference can be dropped when the TransferRequestPacket reference is removed from the code -->
       <Reference name="Nini" path="../../../bin/"/>
       <Reference name="log4net" path="../../../bin/"/>
 
@@ -426,7 +426,7 @@
       <Reference name="OpenSim.Services.Interfaces"/>
       <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
       <Reference name="OpenMetaverse.StructuredData" path="../../../bin/"/>
-      <!-- FIXME: The OpenMetaverse.dll reference can be dropped when the TransferRequestPacket reference is removed from the code -->
+      <!-- FIXME: The OpenMetaverse reference can be dropped when the TransferRequestPacket reference is removed from the code -->
       <Reference name="OpenMetaverse" path="../../../bin/"/>
       <Reference name="Nini" path="../../../bin/"/>
       <Reference name="XMLRPC" path="../../../bin/"/>
@@ -1201,9 +1201,9 @@
       <Reference name="System"/>
       <Reference name="System.Core"/>
       <Reference name="System.Xml"/>
-      <Reference name="OpenMetaverseTypes.dll"/>
-      <Reference name="OpenMetaverse.StructuredData.dll"/>
-      <Reference name="OpenMetaverse.dll"/>
+      <Reference name="OpenMetaverseTypes"/>
+      <Reference name="OpenMetaverse.StructuredData"/>
+      <Reference name="OpenMetaverse"/>
       <Reference name="OpenSim.Region.Framework"/>
       <Reference name="OpenSim.Framework"/>
       <Reference name="OpenSim.Data"/>
@@ -1211,12 +1211,12 @@
       <Reference name="OpenSim.Framework.Statistics"/>
       <Reference name="OpenSim.Region.Physics.Manager"/>
       <Reference name="OpenSim.Services.Interfaces"/>
-      <Reference name="BclExtras35.dll"/>
-      <Reference name="XMLRPC.dll"/>
-      <Reference name="Nini.dll" />
-      <Reference name="log4net.dll"/>
-      <Reference name="C5.dll" />
-      <Reference name="Nini.dll" />
+      <Reference name="BclExtras35"/>
+      <Reference name="XMLRPC"/>
+      <Reference name="Nini" />
+      <Reference name="log4net"/>
+      <Reference name="C5" />
+      <Reference name="Nini" />
 
       <Files>
         <Match pattern="*.cs" recurse="false"/>
@@ -1304,18 +1304,18 @@
       </Configuration>
 
       <ReferencePath>../../../bin/</ReferencePath>
-      <Reference name="Mono.Addins.dll" />
+      <Reference name="Mono.Addins" />
       <Reference name="Aurora.Framework"/>
       <Reference name="Aurora.Services.DataService"/>
       <Reference name="System"/>
       <Reference name="System.Xml"/>
       <Reference name="System.Windows.Forms"/>
-      <Reference name="OpenMetaverseTypes.dll" />
-      <Reference name="Nini.dll" />
+      <Reference name="OpenMetaverseTypes" />
+      <Reference name="Nini" />
       <Reference name="OpenSim.Region.CoreModules"/>
       <Reference name="OpenSim.Region.Framework"/>
       <Reference name="OpenSim.Framework"/>
-      <Reference name="log4net.dll"/>
+      <Reference name="log4net"/>
       <Reference name="OpenSim"/>
       <Reference name="System.Drawing"/>
 
@@ -1667,17 +1667,17 @@
       <Reference name="System.Xml"/>
       <Reference name="System.Core"/>
       <Reference name="System.Drawing"/>
-      <Reference name="OpenMetaverseTypes.dll" path="../../bin/"/>
-      <Reference name="OpenMetaverse.dll" path="../../bin/"/>
-      <Reference name="OpenMetaverse.StructuredData.dll" path="../../bin/"/>
+      <Reference name="OpenMetaverseTypes" path="../../bin/"/>
+      <Reference name="OpenMetaverse" path="../../bin/"/>
+      <Reference name="OpenMetaverse.StructuredData" path="../../bin/"/>
       <Reference name="OpenSim.Framework"/>
       <Reference name="OpenSim.Framework.Servers.HttpServer"/>
       <Reference name="OpenSim.Services.Interfaces"/>
-      <Reference name="XMLRPC.dll"/>
-      <Reference name="FluentNHibernate.dll" path="../../bin/"/>
-      <Reference name="Nini.dll" path="../../bin/"/>
-      <Reference name="log4net.dll" path="../../bin/"/>
-      <Reference name="NHibernate.dll" path="../../bin/"/>
+      <Reference name="XMLRPC"/>
+      <Reference name="FluentNHibernate" path="../../bin/"/>
+      <Reference name="Nini" path="../../bin/"/>
+      <Reference name="log4net" path="../../bin/"/>
+      <Reference name="NHibernate" path="../../bin/"/>
 
 
       <Files>
@@ -1705,17 +1705,17 @@
       <Reference name="System.Data"/>
       <Reference name="Microsoft.VisualBasic"/>
 
-      <Reference name="Nini.dll" path="../../bin/"/>
-      <Reference name="Mono.Addins.dll" path="../../bin/"/>
-      <Reference name="OpenMetaverseTypes.dll" path="../../bin/"/>
-      <Reference name="OpenMetaverse.dll" path="../../bin/"/>
+      <Reference name="Nini" path="../../bin/"/>
+      <Reference name="Mono.Addins" path="../../bin/"/>
+      <Reference name="OpenMetaverseTypes" path="../../bin/"/>
+      <Reference name="OpenMetaverse" path="../../bin/"/>
       <Reference name="Aurora.DataManager"/>
       <Reference name="OpenSim.Framework.Servers.HttpServer"/>
       <Reference name="OpenSim.Framework"/>
       <Reference name="OpenSim.Region.Framework"/>
-      <Reference name="log4net.dll" path="../../bin/"/>
-      <Reference name="XMLRPC.dll" path="../../bin/"/>
-      <Reference name="HttpServer.dll" path="../../bin/"/>
+      <Reference name="log4net" path="../../bin/"/>
+      <Reference name="XMLRPC" path="../../bin/"/>
+      <Reference name="HttpServer" path="../../bin/"/>
       <Reference name="Aurora.Framework"/>
       <Reference name="OpenSim.Services.Interfaces"/>
       <Reference name="OpenSim.Region.CoreModules"/>
@@ -1728,9 +1728,9 @@
       <Reference name="OpenSim.Services.PresenceService"/>
       <Reference name="OpenSim.Services.Base"/>
       <Reference name="OpenSim.Services.CapsService"/>
-      <Reference name="C5.dll" path="../../bin/"/>
+      <Reference name="C5" path="../../bin/"/>
       <Reference name="OpenSim.Region.DataSnapshot"/>
-      <Reference name="GoogleTranslateAPI.dll" path="../../bin/"/>
+      <Reference name="GoogleTranslateAPI" path="../../bin/"/>
 
       <Files>
         <Match pattern="*.cs" recurse="true"/>
@@ -1760,17 +1760,17 @@
       <Reference name="System.Data"/>
       <Reference name="Microsoft.VisualBasic"/>
 
-      <Reference name="Nini.dll" path="../../bin/"/>
-      <Reference name="Mono.Addins.dll" path="../../bin/"/>
-      <Reference name="OpenMetaverseTypes.dll" path="../../bin/"/>
-      <Reference name="OpenMetaverse.dll" path="../../bin/"/>
+      <Reference name="Nini" path="../../bin/"/>
+      <Reference name="Mono.Addins" path="../../bin/"/>
+      <Reference name="OpenMetaverseTypes" path="../../bin/"/>
+      <Reference name="OpenMetaverse" path="../../bin/"/>
       <Reference name="Aurora.DataManager"/>
       <Reference name="OpenSim.Framework.Servers.HttpServer"/>
       <Reference name="OpenSim.Framework"/>
       <Reference name="OpenSim.Region.Framework"/>
-      <Reference name="log4net.dll" path="../../bin/"/>
-      <Reference name="XMLRPC.dll" path="../../bin/"/>
-      <Reference name="HttpServer.dll" path="../../bin/"/>
+      <Reference name="log4net" path="../../bin/"/>
+      <Reference name="XMLRPC" path="../../bin/"/>
+      <Reference name="HttpServer" path="../../bin/"/>
       <Reference name="Aurora.Framework"/>
       <Reference name="OpenSim.Services.Interfaces"/>
       <Reference name="OpenSim.Region.CoreModules"/>
@@ -1781,7 +1781,7 @@
       <Reference name="OpenSim.Server.Handlers"/>
       <Reference name="OpenSim.Services.PresenceService"/>
       <Reference name="OpenSim.Services.Base"/>
-      <Reference name="C5.dll" path="../../bin/"/>
+      <Reference name="C5" path="../../bin/"/>
 
       <Files>
         <Match pattern="*.cs" recurse="true"/>
@@ -1810,17 +1810,17 @@
       <Reference name="System.Data"/>
       <Reference name="Microsoft.VisualBasic"/>
 
-      <Reference name="Nini.dll" path="../../bin/"/>
-      <Reference name="Mono.Addins.dll" path="../../bin/"/>
-      <Reference name="OpenMetaverseTypes.dll" path="../../bin/"/>
-      <Reference name="OpenMetaverse.dll" path="../../bin/"/>
+      <Reference name="Nini" path="../../bin/"/>
+      <Reference name="Mono.Addins" path="../../bin/"/>
+      <Reference name="OpenMetaverseTypes" path="../../bin/"/>
+      <Reference name="OpenMetaverse" path="../../bin/"/>
       <Reference name="Aurora.DataManager"/>
       <Reference name="OpenSim.Framework.Servers.HttpServer"/>
       <Reference name="OpenSim.Framework"/>
       <Reference name="OpenSim.Region.Framework"/>
-      <Reference name="log4net.dll"/>
-      <Reference name="XMLRPC.dll"/>
-      <Reference name="HttpServer.dll" path="../../bin/"/>
+      <Reference name="log4net"/>
+      <Reference name="XMLRPC"/>
+      <Reference name="HttpServer" path="../../bin/"/>
       <Reference name="Aurora.Framework"/>
       <Reference name="OpenSim.Services.Interfaces"/>
       <Reference name="OpenSim.Region.CoreModules"/>
@@ -1834,7 +1834,7 @@
       <Reference name="OpenSim.Services.Connectors"/>
       <Reference name="OpenSim.Services.LLLoginService"/>
       <Reference name="OpenSim.Services.HypergridService"/>
-      <Reference name="C5.dll" path="../../bin/"/>
+      <Reference name="C5" path="../../bin/"/>
       <Reference name="OpenSim.Region.DataSnapshot"/>
 
       <Files>
@@ -1860,14 +1860,14 @@
       <Reference name="System"/>
       <Reference name="System.Data"/>
       <Reference name="System.Xml"/>
-      <Reference name="Nini.dll" path="../../bin/"/>
-      <Reference name="C5.dll" path="../../bin/"/>
-      <Reference name="FluentNHibernate.dll" path="../../bin/"/>
-      <Reference name="NHibernate.dll" path="../../bin/"/>
+      <Reference name="Nini" path="../../bin/"/>
+      <Reference name="C5" path="../../bin/"/>
+      <Reference name="FluentNHibernate" path="../../bin/"/>
+      <Reference name="NHibernate" path="../../bin/"/>
       <Reference name="Aurora.Framework"/>
-      <Reference name="OpenMetaverseTypes.dll" path="../../bin/"/>
-      <Reference name="OpenMetaverse.dll" path="../../bin/"/>
-      <Reference name="OpenMetaverse.StructuredData.dll" path="../../bin/"/>
+      <Reference name="OpenMetaverseTypes" path="../../bin/"/>
+      <Reference name="OpenMetaverse" path="../../bin/"/>
+      <Reference name="OpenMetaverse.StructuredData" path="../../bin/"/>
       <Reference name="OpenSim.Framework"/>
       <Reference name="System.Core"/>
       <Files>
@@ -1891,7 +1891,7 @@
       <Reference name="System"/>
       <Reference name="System.Data"/>
       <Reference name="System.Xml"/>
-      <Reference name="Nini.dll" path="../../../bin/"/>
+      <Reference name="Nini" path="../../../bin/"/>
       <Reference name="OpenSim.Services.Interfaces"/>
       <Reference name="OpenSim.Server.Base"/>
       <Reference name="Aurora.Framework"/>
@@ -1900,14 +1900,14 @@
       <Reference name="Aurora.DataManager.MySQL"/>
       <Reference name="Aurora.DataManager.MSSQL"/>
       <Reference name="Aurora.DataManager.SQLite"/>
-      <Reference name="log4net.dll" path="../../../bin/"/>
-      <Reference name="OpenMetaverseTypes.dll" path="../../../bin/"/>
-      <Reference name="OpenMetaverse.dll" path="../../../bin/"/>
-      <Reference name="OpenMetaverse.StructuredData.dll" path="../../../bin/"/>
+      <Reference name="log4net" path="../../../bin/"/>
+      <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
+      <Reference name="OpenMetaverse" path="../../../bin/"/>
+      <Reference name="OpenMetaverse.StructuredData" path="../../../bin/"/>
       <Reference name="OpenSim.Framework"/>
 
       <Reference name="System.Core"/>
-      <Reference name="C5.dll" path="../../../bin/"/>
+      <Reference name="C5" path="../../../bin/"/>
       <Files>
         <Match pattern="*.cs" recurse="true"/>
         <Match pattern="*.addin.xml" path="Resources" buildAction="EmbeddedResource" recurse="true"/>
@@ -1931,15 +1931,15 @@
       <Reference name="System"/>
       <Reference name="System.Data"/>
       <Reference name="System.Xml"/>
-      <Reference name="Nini.dll" path="../../../bin/"/>
-      <Reference name="C5.dll" path="../../../bin/"/>
+      <Reference name="Nini" path="../../../bin/"/>
+      <Reference name="C5" path="../../../bin/"/>
       <Reference name="System.Core"/>
       <Reference name="Aurora.DataManager"/>
       <Reference name="Aurora.Framework"/>
-      <Reference name="OpenMetaverseTypes.dll" path="../../../bin/"/>
-      <Reference name="OpenMetaverse.dll" path="../../../bin/"/>
+      <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
+      <Reference name="OpenMetaverse" path="../../../bin/"/>
       <Reference name="System.Data"/>
-      <Reference name="MySql.Data.dll" path="../../../bin/"/>
+      <Reference name="MySql.Data" path="../../../bin/"/>
       <Reference name="OpenSim.Data"/>
       <Reference name="OpenSim.Framework"/>
       <Files>
@@ -1963,13 +1963,13 @@
       <Reference name="System"/>
       <Reference name="System.Data"/>
       <Reference name="System.Xml"/>
-      <Reference name="Nini.dll" path="../../../bin/"/>
-      <Reference name="C5.dll" path="../../../bin/"/>
+      <Reference name="Nini" path="../../../bin/"/>
+      <Reference name="C5" path="../../../bin/"/>
       <Reference name="System.Core"/>
       <Reference name="Aurora.DataManager"/>
       <Reference name="Aurora.Framework"/>
-      <Reference name="OpenMetaverseTypes.dll" path="../../../bin/"/>
-      <Reference name="OpenMetaverse.dll" path="../../../bin/"/>
+      <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
+      <Reference name="OpenMetaverse" path="../../../bin/"/>
       <Reference name="System.Data"/>
       <Reference name="OpenSim.Data"/>
       <Reference name="OpenSim.Framework"/>
@@ -1999,20 +1999,20 @@
       <Reference name="System.Xml"/>
       <Reference name="Aurora.DataManager"/>
       <Reference name="Aurora.Framework"/>
-      <Reference name="OpenMetaverseTypes.dll" path="../../../bin/"/>
-      <Reference name="OpenMetaverse.dll" path="../../../bin/"/>
-      <Reference name="C5.dll" path="../../../bin/"/>
+      <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
+      <Reference name="OpenMetaverse" path="../../../bin/"/>
+      <Reference name="C5" path="../../../bin/"/>
       <Reference name="OpenSim.Framework"/>
       <Reference name="OpenSim.Services.Interfaces"/>
-      <Reference name="Nini.dll" path="../../../bin/"/>
-      <Reference name="XMLRPC.dll" path="../../../bin/"/>
-      <Reference name="log4net.dll" path="../../../bin/"/>
-      <Reference name="OpenMetaverse.dll" path="../../../bin/"/>
-      <Reference name="OpenMetaverse.StructuredData.dll" path="../../../bin/"/>
-      <Reference name="OpenMetaverseTypes.dll" path="../../../bin/"/>
-      <Reference name="Mono.Addins.dll" path="../../../bin/"/>
-      <Reference name="OpenMetaverseTypes.dll" path="../../../bin/"/>
-      <Reference name="Mono.Data.Sqlite.dll" path="../../../bin/"/>
+      <Reference name="Nini" path="../../../bin/"/>
+      <Reference name="XMLRPC" path="../../../bin/"/>
+      <Reference name="log4net" path="../../../bin/"/>
+      <Reference name="OpenMetaverse" path="../../../bin/"/>
+      <Reference name="OpenMetaverse.StructuredData" path="../../../bin/"/>
+      <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
+      <Reference name="Mono.Addins" path="../../../bin/"/>
+      <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
+      <Reference name="Mono.Data.Sqlite" path="../../../bin/"/>
 
       <Files>
         <Match pattern="*.cs" recurse="true"/>
@@ -2034,15 +2034,15 @@
       <ReferencePath>../../../bin/</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Core"/>
-      <Reference name="OpenMetaverseTypes.dll" path="../../../bin/"/>
-      <Reference name="Nini.dll" path="../../../bin/"/>
+      <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
+      <Reference name="Nini" path="../../../bin/"/>
       <Reference name="OpenSim.Framework"/>
       <Reference name="OpenSim.Region.Physics.Manager"/>
       <Reference name="OpenSim.Region.Physics.Meshing"/>
 
-      <Reference name="BulletDotNET.dll" path="../../../bin/"/>
-      <Reference name="nunit.framework.dll" path="../../../bin/"/>
-      <Reference name="log4net.dll" path="../../../bin/"/>
+      <Reference name="BulletDotNET" path="../../../bin/"/>
+      <Reference name="nunit.framework" path="../../../bin/"/>
+      <Reference name="log4net" path="../../../bin/"/>
       <Reference name="Aurora.Framework"/>
 
       <Files>
@@ -2065,12 +2065,12 @@
       <ReferencePath>../../../bin/</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Core"/>
-      <Reference name="OpenMetaverseTypes.dll" path="../../../bin/"/>
-      <Reference name="Nini.dll" path="../../../bin/"/>
+      <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
+      <Reference name="Nini" path="../../../bin/"/>
       <Reference name="OpenSim.Framework"/>
       <Reference name="OpenSim.Region.Physics.Manager"/>
-      <Reference name="Ode.NET.dll" path="../../../bin/"/>
-      <Reference name="log4net.dll" path="../../../bin/"/>
+      <Reference name="Ode.NET" path="../../../bin/"/>
+      <Reference name="log4net" path="../../../bin/"/>
 
       <Files>
         <Match pattern="*.cs" recurse="true">
@@ -2095,9 +2095,9 @@
       <Reference name="System"/>
       <Reference name="System.Xml"/>
       <Reference name="System.Web"/>
-      <Reference name="OpenMetaverseTypes.dll" path="../../../bin/"/>
-      <Reference name="OpenMetaverse.StructuredData.dll" path="../../../bin/"/>
-      <Reference name="OpenMetaverse.dll" path="../../../bin/"/>
+      <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
+      <Reference name="OpenMetaverse.StructuredData" path="../../../bin/"/>
+      <Reference name="OpenMetaverse" path="../../../bin/"/>
       <Reference name="OpenSim.Framework"/>
       <Reference name="OpenSim.Framework.Capabilities"/>
       <Reference name="OpenSim.Framework.Servers.HttpServer"/>
@@ -2107,8 +2107,8 @@
       <Reference name="OpenSim.Server.Handlers"/>
       <Reference name="Aurora.Services.DataService"/>
       <Reference name="OpenSim.Data"/>
-      <Reference name="Nini.dll" path="../../../bin/"/>
-      <Reference name="log4net.dll" path="../../../bin/"/>
+      <Reference name="Nini" path="../../../bin/"/>
+      <Reference name="log4net" path="../../../bin/"/>
       <Reference name="Aurora.DataManager"/>
       <Reference name="Aurora.Framework"/>
 
@@ -2134,18 +2134,18 @@
       <Reference name="System"/>
       <Reference name="System.Data"/>
       <Reference name="System.Xml"/>
-      <Reference name="Nini.dll" path="../../../bin/"/>
-      <Reference name="nunit.framework.dll" path="../../../bin/"/>
+      <Reference name="Nini" path="../../../bin/"/>
+      <Reference name="nunit.framework" path="../../../bin/"/>
       <Reference name="Aurora.Framework"/>
       <Reference name="OpenSim.Region.Framework"/>
-      <Reference name="OpenMetaverseTypes.dll" path="../../../bin/"/>
-      <Reference name="OpenMetaverse.dll" path="../../../bin/"/>
+      <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
+      <Reference name="OpenMetaverse" path="../../../bin/"/>
       <Reference name="OpenSim.Framework"/>
       <Reference name="Aurora.DataManager"/>
       <Reference name="Aurora.DataManager.SQLite"/>
       <Reference name="Aurora.DataManager.MySQL"/>
       <Reference name="Aurora.DataManager.MSSQL"/>
-      <Reference name="C5.dll" path="../../../bin/"/>
+      <Reference name="C5" path="../../../bin/"/>
       <Files>
         <Match pattern="*.cs" recurse="true"/>
       </Files>
@@ -2171,23 +2171,23 @@
       <Reference name="System.Data"/>
       <Reference name="System.Xml"/>
       <Reference name="System.Runtime.Remoting"/>
-      <Reference name="OpenMetaverse.dll" path="../../bin/"/>
-      <Reference name="OpenMetaverseTypes.dll" path="../../bin/"/>
-      <Reference name="OpenMetaverse.StructuredData.dll" path="../../bin/"/>
-      <Reference name="RAIL.dll" path="../../bin/"/>
+      <Reference name="OpenMetaverse" path="../../bin/"/>
+      <Reference name="OpenMetaverseTypes" path="../../bin/"/>
+      <Reference name="OpenMetaverse.StructuredData" path="../../bin/"/>
+      <Reference name="RAIL" path="../../bin/"/>
       <Reference name="Aurora.Framework"/>
       <Reference name="Aurora.DataManager"/>
       <Reference name="OpenSim.Framework"/>
-      <Reference name="Mono.Addins.dll" path="../../bin/"/>
+      <Reference name="Mono.Addins" path="../../bin/"/>
       <Reference name="OpenSim.Region.CoreModules" />
       <Reference name="OpenSim.Region.Framework" />
       <Reference name="OpenSim.Services.Interfaces"/>
       <Reference name="OpenSim.Region.ScriptEngine.YieldProlog"/>
       <Reference name="OpenSim.Region.Physics.Manager"/>
       <Reference name="Microsoft.JScript"/>
-      <Reference name="Nini.dll" path="../../bin/"/>
-      <Reference name="log4net.dll" path="../../bin/"/>
-      <Reference name="Tools.dll" path="../../bin/"/>
+      <Reference name="Nini" path="../../bin/"/>
+      <Reference name="log4net" path="../../bin/"/>
+      <Reference name="Tools" path="../../bin/"/>
       <Reference name="SmartThreadPool"/>
 
       <Files>
@@ -2215,23 +2215,23 @@
       <Reference name="System.Xml"/>
       <Reference name="Aurora.ScriptEngine.AuroraDotNetEngine"/>
       <Reference name="System.Runtime.Remoting"/>
-      <Reference name="OpenMetaverse.dll" path="../../bin/"/>
-      <Reference name="OpenMetaverseTypes.dll" path="../../bin/"/>
-      <Reference name="OpenMetaverse.StructuredData.dll" path="../../bin/"/>
-      <Reference name="RAIL.dll" path="../../bin/"/>
+      <Reference name="OpenMetaverse" path="../../bin/"/>
+      <Reference name="OpenMetaverseTypes" path="../../bin/"/>
+      <Reference name="OpenMetaverse.StructuredData" path="../../bin/"/>
+      <Reference name="RAIL" path="../../bin/"/>
       <Reference name="Aurora.Framework"/>
       <Reference name="Aurora.DataManager"/>
       <Reference name="OpenSim.Framework"/>
-      <Reference name="Mono.Addins.dll" path="../../bin/"/>
+      <Reference name="Mono.Addins" path="../../bin/"/>
       <Reference name="OpenSim.Region.CoreModules"/>
       <Reference name="OpenSim.Region.Framework"/>
       <Reference name="OpenSim.Services.Interfaces"/>
       <Reference name="OpenSim.Region.ScriptEngine.Shared.YieldProlog"/>
       <Reference name="OpenSim.Region.Physics.Manager"/>
       <Reference name="Microsoft.JScript"/>
-      <Reference name="Nini.dll" path="../../bin/"/>
-      <Reference name="log4net.dll" path="../../bin/"/>
-      <Reference name="Tools.dll" path="../../bin/"/>
+      <Reference name="Nini" path="../../bin/"/>
+      <Reference name="log4net" path="../../bin/"/>
+      <Reference name="Tools" path="../../bin/"/>
       <Reference name="SmartThreadPool"/>
 
       <Files>
