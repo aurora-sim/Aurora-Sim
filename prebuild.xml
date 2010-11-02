@@ -396,7 +396,6 @@
         <Match pattern="*.cs" recurse="true">
           <Exclude name="Tests" pattern="Tests"/>
         </Match>
-        <Match buildAction="EmbeddedResource" path="Resources" pattern="*.addin.xml" recurse="true"/>
       </Files>
     </Project>
 
@@ -436,7 +435,6 @@
         <Match pattern="*.cs" recurse="true">
           <Exclude name="Tests" pattern="Tests"/>
         </Match>
-        <Match buildAction="EmbeddedResource" path="Resources" pattern="*.addin.xml" recurse="true"/>
       </Files>
     </Project>
 
@@ -1790,7 +1788,7 @@
     </Project>
 
 
-    <Project frameworkVersion="v3_5" name="Aurora.OptionalModules" path="Aurora/OptionalModules" type="Library">
+    <Project frameworkVersion="v3_5" name="Aurora.Modules" path="Aurora/Modules" type="Library">
       <Configuration name="Debug">
         <Options>
           <OutputPath>../../bin/</OutputPath>
