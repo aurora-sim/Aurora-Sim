@@ -877,7 +877,6 @@
       <Reference name="OpenMetaverse" path="../../../bin/"/>
       <Reference name="OpenSim.Framework"/>
       <Reference name="OpenSim.Framework.Capabilities"/>
-      <Reference name="OpenSim.Framework.Console"/>
       <Reference name="OpenSim.Framework.Servers.HttpServer"/>
       <Reference name="OpenSim.Services.Interfaces"/>
       <Reference name="OpenSim.Services.Base"/>
@@ -1269,7 +1268,6 @@
       <Reference name="OpenMetaverse" path="../../../bin/"/>
       <Reference name="OpenSim.Framework"/>
       <Reference name="OpenSim.Data"/>
-      <Reference name="OpenSim.Framework.Console"/>
       <Reference name="OpenSim.Region.Physics.Manager"/>
       <Reference name="OpenSim.Framework.Servers"/>
       <Reference name="OpenSim.Framework.Servers.HttpServer"/>
@@ -1588,7 +1586,6 @@
       <Reference name="OpenSim.Framework"/>
       <Reference name="OpenSim.Framework.Communications"/>
       <Reference name="OpenSim.Region.CoreModules"/>
-      <Reference name="OpenSim.Region.ScriptEngine.Shared"/>
       <Reference name="Nini" path="../../../../bin/"/>
       <Reference name="RAIL" path="../../../../bin/"/>
       <Reference name="Nini" path="../../../../bin/"/>
@@ -1625,7 +1622,6 @@
       <Reference name="OpenSim.Data"/>
       <Reference name="OpenSim.Region.Framework"/>
       <Reference name="OpenSim.Region.CoreModules"/>
-      <Reference name="OpenSim.Framework.Console"/>
       <Reference name="OpenSim.Framework.Servers"/>
       <Reference name="OpenSim.Framework.Capabilities"/>
       <Reference name="OpenSim.Framework.Servers.HttpServer"/>
@@ -1787,60 +1783,6 @@
       </Files>
     </Project>
 
-
-    <Project frameworkVersion="v3_5" name="Aurora.Modules" path="Aurora/Modules" type="Library">
-      <Configuration name="Debug">
-        <Options>
-          <OutputPath>../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release">
-        <Options>
-          <OutputPath>../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-
-      <ReferencePath>../../bin/</ReferencePath>
-      <Reference name="System"/>
-      <Reference name="System.Xml"/>
-      <Reference name="System.Drawing"/>
-      <Reference name="System.Windows.Forms"/>
-      <Reference name="System.Data"/>
-      <Reference name="Microsoft.VisualBasic"/>
-
-      <Reference name="Nini" path="../../bin/"/>
-      <Reference name="Mono.Addins" path="../../bin/"/>
-      <Reference name="OpenMetaverseTypes" path="../../bin/"/>
-      <Reference name="OpenMetaverse" path="../../bin/"/>
-      <Reference name="Aurora.DataManager"/>
-      <Reference name="OpenSim.Framework.Servers.HttpServer"/>
-      <Reference name="OpenSim.Framework"/>
-      <Reference name="OpenSim.Region.Framework"/>
-      <Reference name="log4net"/>
-      <Reference name="XMLRPC"/>
-      <Reference name="HttpServer" path="../../bin/"/>
-      <Reference name="Aurora.Framework"/>
-      <Reference name="OpenSim.Services.Interfaces"/>
-      <Reference name="OpenSim.Region.CoreModules"/>
-      <Reference name="OpenSim.Server.Base"/>
-      <Reference name="OpenMetaverse.StructuredData"/>
-      <Reference name="OpenSim.Framework.Capabilities"/>
-      <Reference name="OpenSim.Region.Physics.Manager"/>
-      <Reference name="OpenSim.Server.Handlers"/>
-      <Reference name="OpenSim.Services.PresenceService"/>
-      <Reference name="OpenSim.Services.Base"/>
-      <Reference name="OpenSim.Services.Connectors"/>
-      <Reference name="OpenSim.Services.LLLoginService"/>
-      <Reference name="OpenSim.Services.HypergridService"/>
-      <Reference name="C5" path="../../bin/"/>
-      <Reference name="OpenSim.Region.DataSnapshot"/>
-
-      <Files>
-        <Match pattern="*.cs" recurse="true"/>
-        <Match pattern="*.addin.xml" path="Resources" buildAction="EmbeddedResource" recurse="true"/>
-
-      </Files>
-    </Project>
 
     <Project frameworkVersion="v3_5" name="Aurora.DataManager" path="Aurora/DataManager" type="Library">
       <Configuration name="Debug">

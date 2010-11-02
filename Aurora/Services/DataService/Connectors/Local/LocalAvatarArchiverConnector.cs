@@ -25,7 +25,7 @@ namespace Aurora.Services.DataService
 
                 GD.ConnectToDatabase(defaultConnectionString);
 
-                List<string> Results = GD.Query("Method", "avatararchives", "Passwords", "Password");
+                List<string> Results = GD.Query("Method", "avatararchives", "passwords", "Password");
                 if (Results.Count == 0)
                 {
                     string newPass = MainConsole.Instance.PasswdPrompt("Password to access Avatar Archive");

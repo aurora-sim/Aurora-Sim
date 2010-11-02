@@ -61,7 +61,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         internal bool m_LSFunctionsEnabled = false;
         internal IScriptModuleComms m_comms = null;
         internal ScriptProtectionModule ScriptProtection;
-        internal IWindLightSettingsModule m_lightShareModule;
+        //internal IWindLightSettingsModule m_lightShareModule;
 
         public void Initialize(ScriptEngine ScriptEngine, SceneObjectPart host, uint localID, UUID itemID, ScriptProtectionModule module)
         {
@@ -461,7 +461,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
             int success = 0;
 
-            if (m_lightShareModule.EnableWindLight)
+            /*if (m_lightShareModule.EnableWindLight)
             {
                 RegionLightShareData wl = getWindlightProfileFromRules(rules);
                 //m_lightShareModule.SaveWindLightSettings(0, wl);
@@ -471,7 +471,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 LSShoutError("Windlight module is disabled");
                 return 0;
-            }
+            }*/
             return success;
         }
         /// <summary>
@@ -493,7 +493,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
             int success = 0;
 
-            if (m_lightShareModule.EnableWindLight)
+            /*if (m_lightShareModule.EnableWindLight)
             { 
                 RegionLightShareData wl = getWindlightProfileFromRules(rules);
                 m_lightShareModule.SendWindlightProfileTargeted(wl, new UUID(target.m_string));
@@ -503,7 +503,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 LSShoutError("Windlight module is disabled");
                 return 0;
-            }
+            }*/
             return success;
         }
     }

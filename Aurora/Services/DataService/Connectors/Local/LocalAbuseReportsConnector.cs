@@ -26,7 +26,7 @@ namespace Aurora.Services.DataService
 
                 GD.ConnectToDatabase(defaultConnectionString);
 
-                List<string> Results = GD.Query("Method", "abusereports", "Passwords", "Password");
+                List<string> Results = GD.Query("Method", "abusereports", "passwords", "Password");
                 if (Results.Count == 0)
                 {
                     string newPass = MainConsole.Instance.PasswdPrompt("Password to access Abuse Reports");
