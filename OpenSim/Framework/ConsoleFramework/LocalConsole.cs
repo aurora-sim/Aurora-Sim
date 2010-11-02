@@ -342,7 +342,7 @@ namespace OpenSim.Framework
             else if (text != "")
             {
                 int CurrentLine = 0;
-                string[] Lines = text.Split('\n', '\r');
+                string[] Lines = text.Split(new char[2]{'\n', '\r'}, StringSplitOptions.RemoveEmptyEntries);
                 //This exists so that we don't have issues with multiline stuff, since something is messed up with the Regex
                 foreach (string line in Lines)
                 {
