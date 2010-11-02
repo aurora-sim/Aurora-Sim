@@ -9,6 +9,10 @@ using OpenSim.Region.Framework.Scenes;
 
 namespace Aurora.Modules
 {
+    /// <summary>
+    /// This module fixes issues with avatars not being logged out if they crash or the region crashing.
+    /// All this module does is update all presences in the region in the PresenceService.
+    /// </summary>
     public class PresenceModule : INonSharedRegionModule
     {
         #region Declares

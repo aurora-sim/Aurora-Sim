@@ -46,6 +46,9 @@ using System.Windows.Forms;
 
 namespace Aurora.Modules
 {
+    /// <summary>
+    /// Enables the saving of abuse reports to the database
+    /// </summary>
     public class AbuseReportsModule : ISharedRegionModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);

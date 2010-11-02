@@ -17,6 +17,9 @@ using Aurora.Framework;
 
 namespace Aurora.OpenRegionSettingsModule
 {
+    /// <summary>
+    /// This module sends Aurora-specific settings to the viewer to tell it about different settings for the region
+    /// </summary>
     #region Settings
 
     public class OpenRegionSettings : IDataTransferable
@@ -622,7 +625,8 @@ namespace Aurora.OpenRegionSettingsModule
         public void OnRegisterCaps(UUID agentID, Caps caps)
         {
             UUID capuuid = UUID.Random();
-
+            
+            //Sets the OpenRegionSettings
             caps.RegisterHandler("DispatchOpenRegionSettings",
                                 new RestHTTPHandler("POST", "/CAPS/" + capuuid + "/",
                                                       delegate(Hashtable m_dhttpMethod)
@@ -670,6 +674,7 @@ namespace Aurora.OpenRegionSettingsModule
 
             IGenericsConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
 
+            //Update the database
             if (connector != null)
             {
                 connector.AddGeneric(SP.Scene.RegionInfo.RegionID, "OpenRegionSettings", "OpenRegionSettings", m_settings.ToOSD());

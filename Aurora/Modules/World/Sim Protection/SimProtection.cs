@@ -10,11 +10,16 @@ using Nini.Config;
 
 namespace Aurora.Modules
 {
+    /// <summary>
+    /// This module helps keep the sim running when it begins to slow down, or if it freezes, restarts it
+    /// </summary>
     public class SimProtection : INonSharedRegionModule
     {
         #region Declares
 
+        //Normal Sim FPS
         private float BaseRateFramesPerSecond = 60;
+        // When BaseRate / current FPS is less than this percent, begin shutting down services
         private float PercentToBeginShutDownOfServices = 50;
         private Scene m_scene;
         private bool m_Enabled = false;
@@ -22,6 +27,7 @@ namespace Aurora.Modules
         private DateTime DisabledPhysicsStartTime = DateTime.MinValue;
         private bool AllowDisableScripts = true;
         private bool AllowDisablePhysics = true;
+        //Time before a sim sitting at 0FPS is restarted automatically
         private float MinutesBeforeZeroFPSKills = 1;
         private bool KillSimOnZeroFPS = true;
         private DateTime SimZeroFPSStartTime = DateTime.MinValue;
