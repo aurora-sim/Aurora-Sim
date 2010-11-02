@@ -1870,7 +1870,8 @@ namespace OpenSim.Region.Framework.Scenes
 
             lock (m_partsLock)
             {
-                CheckForSignificantMovement();
+                if(Scene != null && !Scene.LoadingPrims)
+                    CheckForSignificantMovement();
                 foreach (SceneObjectPart part in m_partsList)
                 {
                     try

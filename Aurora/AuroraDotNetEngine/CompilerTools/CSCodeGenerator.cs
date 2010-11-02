@@ -2470,12 +2470,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
                 retstr.Append(GenerateLine("while (true)"));
                 retstr.Append(GenerateLine("{"));
-                retstr.Append(GenerateLine("bool running = false;"));
+                string FunctionName = RandomString(10, true);
+                retstr.Append(GenerateLine("bool "+FunctionName+" = false;"));
 
                 retstr.Append(GenerateLine("try"));
                 retstr.Append(GenerateLine("{"));
-                retstr.Append(GenerateLine("running = enumerator.MoveNext();"));
-                retstr.Append(GenerateLine("if(!running)"));
+                retstr.Append(GenerateLine("" + FunctionName + " = enumerator.MoveNext();"));
+                retstr.Append(GenerateLine("if(!" + FunctionName + ")"));
                 retstr.Append(GenerateLine("break;")); //All done, break out of the loop
                 retstr.Append(GenerateLine("}"));
                 retstr.Append(GenerateLine("catch"));
