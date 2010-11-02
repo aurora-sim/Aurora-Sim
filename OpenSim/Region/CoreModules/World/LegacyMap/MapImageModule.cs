@@ -133,9 +133,11 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             }
             else
             {
+                tileRenderer = "WarpTileRenderer";
                 terrainRenderer = new WarpTileRenderer();
                 drawPrimVolume = false;
             }
+            m_log.Info("[MAPTILE]: Generating Maptile using " + tileRenderer);
 
             terrainRenderer.Initialise(m_scene, m_config);
 
