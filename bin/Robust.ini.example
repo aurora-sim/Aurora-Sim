@@ -13,7 +13,7 @@
 ; * [[<ConfigName>@]<port>/]<dll name>[:<class name>]
 ; *
 [Startup]
-ServiceConnectors = "8003/OpenSim.Server.Handlers.dll:AssetServiceConnector,8003/OpenSim.Server.Handlers.dll:XInventoryInConnector,8002/OpenSim.Server.Handlers.dll:XInventoryInConnector,8002/OpenSim.Server.Handlers.dll:FreeswitchServerConnector,8003/OpenSim.Server.Handlers.dll:GridServiceConnector,8002/OpenSim.Server.Handlers.dll:GridInfoServerInConnector,8003/OpenSim.Server.Handlers.dll:AuthenticationServiceConnector,8002/OpenSim.Server.Handlers.dll:OpenIdServerConnector,8003/OpenSim.Server.Handlers.dll:AvatarServiceConnector,8002/OpenSim.Server.Handlers.dll:LLLoginServiceInConnector,8003/OpenSim.Server.Handlers.dll:PresenceServiceConnector,8003/OpenSim.Server.Handlers.dll:UserAccountServiceConnector,8003/OpenSim.Server.Handlers.dll:GridUserServiceConnector,8003/OpenSim.Server.Handlers.dll:FriendsServiceConnector,8003/OpenSim.Server.Handlers.dll:AuroraDataServiceConnector,8007/OpenSim.Server.Handlers.dll:AuroraCAPSHandler"
+ServiceConnectors = "8003/OpenSim.Server.Handlers.dll:AssetServiceConnector,8003/OpenSim.Server.Handlers.dll:XInventoryInConnector,8002/OpenSim.Server.Handlers.dll:XInventoryInConnector,8002/OpenSim.Server.Handlers.dll:FreeswitchServerConnector,8003/OpenSim.Server.Handlers.dll:GridServiceConnector,8002/OpenSim.Server.Handlers.dll:GridInfoServerInConnector,8003/OpenSim.Server.Handlers.dll:AuthenticationServiceConnector,8002/OpenSim.Server.Handlers.dll:OpenIdServerConnector,8003/OpenSim.Server.Handlers.dll:AvatarServiceConnector,8002/OpenSim.Server.Handlers.dll:LLLoginServiceInConnector,8003/OpenSim.Server.Handlers.dll:PresenceServiceConnector,8003/OpenSim.Server.Handlers.dll:UserAccountServiceConnector,8003/OpenSim.Server.Handlers.dll:GridUserServiceConnector,8003/OpenSim.Server.Handlers.dll:FriendsServiceConnector,8007/OpenSim.Services.CapsService.dll:AuroraCAPSHandler,8003/OpenSim.Server.Handlers.dll:AuroraDataServiceConnector"
 
 ; * This is common for all services, it's the network setup for the entire
 ; * server instance, if none if specified above
@@ -65,6 +65,8 @@ ServiceConnectors = "8003/OpenSim.Server.Handlers.dll:AssetServiceConnector,8003
     ;; For example:
     ; Region_Welcome_Area = "DefaultRegion, FallbackRegion"
     ; (replace spaces with underscore)
+    AllowDuplicateNames = false
+	; Check4096 = "False"
 
 ; * This is the configuration for the freeswitch server in grid mode
 [FreeswitchService]
@@ -135,7 +137,8 @@ ServiceConnectors = "8003/OpenSim.Server.Handlers.dll:AssetServiceConnector,8003
     LibraryService = "OpenSim.Services.InventoryService.dll:LibraryService"
     FriendsService = "OpenSim.Services.FriendsService.dll:FriendsService"
 
-    WelcomeMessage = "Welcome, Avatar!"
+    ; You can customize your user logins with their name by putting <USERNAME>
+    WelcomeMessage = "Welcome, <USERNAME>!"
     AllowRemoteSetLoginLevel = "false"
 
     ; For snowglobe's web map
@@ -188,58 +191,60 @@ ServiceConnectors = "8003/OpenSim.Server.Handlers.dll:AssetServiceConnector,8003
 
 [AuroraData]
 
-; Local Data Manager Config
-PluginModule = MySQL
+    ; Local Data Manager Config
+    PluginModule = MySQL
 
-ConnectionString = "Data Source=localhost;Database=aurora;User ID=root;Password=*;"
+    ConnectionString = "Data Source=localhost;Database=aurora;User ID=root;Password=*;"
 
 [AuroraConnectors]
-AbuseReportsConnector = LocalConnector
-AssetConnector = LocalConnector
-AvatarArchiverConnector = LocalConnector
-SimMapDataConnector = LocalConnector
-ScriptDataConnector = LocalConnector
-RegionInfoConnector = LocalConnector
-AgentConnector = LocalConnector
-RegionConnector = LocalConnector
-ProfileConnector = LocalConnector
-EstateConnector = LocalConnector
-OfflineMessagesConnector = LocalConnector
-DirectoryServiceConnector = LocalConnector
-MuteListConnector = LocalConnector
-ParcelConnector = LocalConnector
+    AbuseReportsConnector = LocalConnector
+    AssetConnector = LocalConnector
+    AvatarArchiverConnector = LocalConnector
+    SimMapDataConnector = LocalConnector
+    ScriptDataConnector = LocalConnector
+    RegionInfoConnector = LocalConnector
+    AgentConnector = LocalConnector
+    RegionConnector = LocalConnector
+    ProfileConnector = LocalConnector
+    EstateConnector = LocalConnector
+    OfflineMessagesConnector = LocalConnector
+    DirectoryServiceConnector = LocalConnector
+    MuteListConnector = LocalConnector
+    ParcelConnector = LocalConnector
 
 
 [AuroraStartup]
-AssetLoaderEnabled = False
+    AssetLoaderEnabled = False
 
 [AuroraLoginService]
-; Should new users be shown the ToS
-UseTermsOfServiceOnFirstLogin = false
-; File name of the location of the ToS document in the /bin folder
-FileNameOfTOS = ToS.txt
-; Allow users to login anonymously and have a new account created automatically
-AllowAnonymousLogin = true
-; Check for passwords
-AuthenticateUsers = false
-; This allows for a default avatar to be created so the user does not login as ruth. Save an Avatar Archive then put the name of it here.
-DefaultAvatarArchiveForNewUser = 
-; Will hide the First Life setting of profile from all users
-AllowFirstLifeInProfile = true
-; Sets the tutorial URL for new users
-; NOTE: the URL you provide will NOT be the URL the client goes to! The client automatically appends it's language specification to the end of this URL. Ex. http://localhost/tutorial/ becomes http://localhost/tutorial/en for english language.
-TutorialURL = 
-CAPSServiceURL = http://auroraserver.ath.cx:8007
-CAPSServicePassword = TestPass
+    ; Should new users be shown the ToS
+    UseTermsOfServiceOnFirstLogin = false
+    ; File name of the location of the ToS document in the /bin folder
+    FileNameOfTOS = ToS.txt
+    ; Allow users to login anonymously and have a new account created automatically
+    AllowAnonymousLogin = true
+    ; Check for passwords
+    AuthenticateUsers = false
+    ; This allows for a default avatar to be created so the user does not login as ruth. Save an Avatar Archive then put the name of it here.
+    DefaultAvatarArchiveForNewUser = 
+    ; Will hide the First Life setting of profile from all users
+    AllowFirstLifeInProfile = true
+    ; Sets the tutorial URL for new users
+    ; NOTE: the URL you provide will NOT be the URL the client goes to! The client automatically appends it's language specification to the end of this URL. Ex. http://localhost/tutorial/ becomes http://localhost/tutorial/en for english language.
+    TutorialURL = 
+    CAPSServiceURL = http://auroraserver.ath.cx:8007
+    CAPSServicePassword = TestPass
 
 
 [CAPSService]
-; for the CAPS service connector
-InventoryService = OpenSim.Services.InventoryService.dll:XInventoryService
-LibraryService = OpenSim.Services.InventoryService.dll:LibraryService
-; Subsection Security
-; The CAPS service deals with setting up inventory and other parts of the client that need security, we don't want anyone to be able to access things that they do not have clearance to access
+    ; for the CAPS service connector
+    InventoryService = OpenSim.Services.InventoryService.dll:XInventoryService
+    LibraryService = OpenSim.Services.InventoryService.dll:LibraryService
+    GridUserService = "OpenSim.Services.UserAccountService.dll:GridUserService"
+    PresenceService = "OpenSim.Services.PresenceService.dll:PresenceService"   
+    ; Subsection Security
+    ; The CAPS service deals with setting up inventory and other parts of the client that need security, we don't want anyone to be able to access things that they do not have clearance to access
 
-; Password for the public CAPS service URL
-Password = TestPass
-HostName = http://auroraserver.ath.cx:8007
+    ; Password for the public CAPS service URL
+    Password = TestPass
+    HostName = http://auroraserver.ath.cx:8007[GrieferProtection]    ; List of all banned viewers    ; Note: This doesn't have to be the complete viewer tag, it can just be a part of it    ; Ex. to ban LGG Proxy, you can just add "LGG"    ; Ex 2. To ban Hippo, you can just add "Hippo" and all versions will be banned.    ; Ex. 3. To ban a specific version, you will have to find the exact client tag and ban it.    ; Note: For multiple viewers, add commas inbetween viewers    ViewersToBan = ""    ; Allowance level for users to come in    ; This level can either be set by an admin or automatically by the Similarity Checker    ; The levels to block are:    ;   AllowCleanOnly - Only allows clean agents into the grid    ;   AllowSuspected - Allows clean and suspected alternate accounts (ones that the Similarity checker suspects is a bad account, but does not have enough information to make an educated guess on)    ;   AllowKnown - Allows all agents, no matter their account level    ; Default is AllowKnown    GrieferAllowLevel = AllowKnown    ;;    ;; Check For Similarities    ;;    ; The similarity checker checks through all known user information and attempts to find alt accounts and banned users that are using them. This checking can be processed for the user logging in, and/or on a timer that checks all users every X minutes.    ; Check user on login for similarities    ; Default is false    CheckForSimilaritiesOnLogin = false    ; Should we check all users for similarities every X minutes?    ; Default is true    CheckForSimilaritiesOnTimer = true    ; How many minutes should be between each checking of all users    ; Default is 60 (one hour)    MinutesForTimerToCheck = 60

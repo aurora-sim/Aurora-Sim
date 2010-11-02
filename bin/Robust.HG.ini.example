@@ -21,7 +21,7 @@
 ; * [[<ConfigName>@]<port>/]<dll name>[:<class name>]
 ; *
 [Startup]
-ServiceConnectors = "8003/OpenSim.Server.Handlers.dll:AssetServiceConnector,8003/OpenSim.Server.Handlers.dll:XInventoryInConnector,8002/OpenSim.Server.Handlers.dll:FreeswitchServerConnector,8003/OpenSim.Server.Handlers.dll:GridServiceConnector,8002/OpenSim.Server.Handlers.dll:GridInfoServerInConnector,8003/OpenSim.Server.Handlers.dll:AuthenticationServiceConnector,8002/OpenSim.Server.Handlers.dll:OpenIdServerConnector,8003/OpenSim.Server.Handlers.dll:AvatarServiceConnector,8002/OpenSim.Server.Handlers.dll:LLLoginServiceInConnector,8003/OpenSim.Server.Handlers.dll:PresenceServiceConnector,8003/OpenSim.Server.Handlers.dll:UserAccountServiceConnector,8003/OpenSim.Server.Handlers.dll:GridUserServiceConnector,8003/OpenSim.Server.Handlers.dll:FriendsServiceConnector,8002/OpenSim.Server.Handlers.dll:GatekeeperServiceInConnector,8002/OpenSim.Server.Handlers.dll:UserAgentServerConnector,HGInventoryService@8002/OpenSim.Server.Handlers.dll:XInventoryInConnector,8002/OpenSim.Server.Handlers.dll:AssetServiceConnector,8002/OpenSim.Server.Handlers.dll:HeloServiceInConnector,8007/OpenSim.Server.Handlers.dll:AuroraCAPSHandler,8003/OpenSim.Server.Handlers.dll:AuroraDataServiceConnector"
+ServiceConnectors = "8003/OpenSim.Server.Handlers.dll:AssetServiceConnector,8003/OpenSim.Server.Handlers.dll:XInventoryInConnector,8002/OpenSim.Server.Handlers.dll:FreeswitchServerConnector,8003/OpenSim.Server.Handlers.dll:GridServiceConnector,8002/OpenSim.Server.Handlers.dll:GridInfoServerInConnector,8003/OpenSim.Server.Handlers.dll:AuthenticationServiceConnector,8002/OpenSim.Server.Handlers.dll:OpenIdServerConnector,8003/OpenSim.Server.Handlers.dll:AvatarServiceConnector,8002/OpenSim.Server.Handlers.dll:LLLoginServiceInConnector,8003/OpenSim.Server.Handlers.dll:PresenceServiceConnector,8003/OpenSim.Server.Handlers.dll:UserAccountServiceConnector,8003/OpenSim.Server.Handlers.dll:GridUserServiceConnector,8003/OpenSim.Server.Handlers.dll:FriendsServiceConnector,8002/OpenSim.Server.Handlers.dll:GatekeeperServiceInConnector,8002/OpenSim.Server.Handlers.dll:UserAgentServerConnector,HGInventoryService@8002/OpenSim.Server.Handlers.dll:XInventoryInConnector,8002/OpenSim.Server.Handlers.dll:AssetServiceConnector,8002/OpenSim.Server.Handlers.dll:HeloServiceInConnector,8007/OpenSim.Services.CapsService.dll:AuroraCAPSHandler,8003/OpenSim.Server.Handlers.dll:AuroraDataServiceConnector"
 
 ; * This is common for all services, it's the network setup for the entire
 ; * server instance, if none if specified above
@@ -50,6 +50,7 @@ ServiceConnectors = "8003/OpenSim.Server.Handlers.dll:AssetServiceConnector,8003
     LocalServiceModule = "OpenSim.Services.AssetService.dll:AssetService"
     DefaultAssetLoader = "OpenSim.Framework.AssetLoader.Filesystem.dll"
     AssetLoaderArgs = "assets/AssetSets.xml"
+    AllowRemoteDelete = "false"
 
 ; * This configuration loads the inventory server modules. It duplicates
 ; * the function of the legacy inventory server
@@ -145,7 +146,8 @@ ServiceConnectors = "8003/OpenSim.Server.Handlers.dll:AssetServiceConnector,8003
     UserAgentService = "OpenSim.Services.HypergridService.dll:UserAgentService"
     FriendsService = "OpenSim.Services.FriendsService.dll:FriendsService"
 
-    WelcomeMessage = "Welcome, Avatar!"
+    ; You can customize your user logins with their name by putting <USERNAME>
+    WelcomeMessage = "Welcome, <USERNAME>!"
     AllowRemoteSetLoginLevel = "false"
     
     ; Defaults for the users, if none is specified in the useraccounts table entry (ServiceURLs)
@@ -251,58 +253,60 @@ ServiceConnectors = "8003/OpenSim.Server.Handlers.dll:AssetServiceConnector,8003
 
 [AuroraData]
 
-; Local Data Manager Config
-PluginModule = MySQL
+    ; Local Data Manager Config
+    PluginModule = MySQL
 
-ConnectionString = "Data Source=localhost;Database=*;User ID=root;Password=*;"
+    ConnectionString = "Data Source=localhost;Database=aurora;User ID=root;Password=*;"
 
 [AuroraConnectors]
-AbuseReportsConnector = LocalConnector
-AssetConnector = LocalConnector
-AvatarArchiverConnector = LocalConnector
-SimMapDataConnector = LocalConnector
-ScriptDataConnector = LocalConnector
-RegionInfoConnector = LocalConnector
-AgentConnector = LocalConnector
-RegionConnector = LocalConnector
-ProfileConnector = LocalConnector
-EstateConnector = LocalConnector
-OfflineMessagesConnector = LocalConnector
-DirectoryServiceConnector = LocalConnector
-MuteListConnector = LocalConnector
-ParcelConnector = LocalConnector
+    AbuseReportsConnector = LocalConnector
+    AssetConnector = LocalConnector
+    AvatarArchiverConnector = LocalConnector
+    SimMapDataConnector = LocalConnector
+    ScriptDataConnector = LocalConnector
+    RegionInfoConnector = LocalConnector
+    AgentConnector = LocalConnector
+    RegionConnector = LocalConnector
+    ProfileConnector = LocalConnector
+    EstateConnector = LocalConnector
+    OfflineMessagesConnector = LocalConnector
+    DirectoryServiceConnector = LocalConnector
+    MuteListConnector = LocalConnector
+    ParcelConnector = LocalConnector
 
 
 [AuroraStartup]
-AssetLoaderEnabled = False
+    AssetLoaderEnabled = False
 
 [AuroraLoginService]
-; Should new users be shown the ToS
-UseTermsOfServiceOnFirstLogin = false
-; File name of the location of the ToS document in the /bin folder
-FileNameOfTOS = ToS.txt
-; Allow users to login anonymously and have a new account created automatically
-AllowAnonymousLogin = true
-; Check for passwords
-AuthenticateUsers = false
-; This allows for a default avatar to be created so the user does not login as ruth. Save an Avatar Archive then put the name of it here.
-DefaultAvatarArchiveForNewUser = 
-; Will hide the First Life setting of profile from all users
-AllowFirstLifeInProfile = true
-; Sets the tutorial URL for new users
-; NOTE: the URL you provide will NOT be the URL the client goes to! The client automatically appends it's language specification to the end of this URL. Ex. http://localhost/tutorial/ becomes http://localhost/tutorial/en for english language.
-TutorialURL = 
-CAPSServiceURL = http://auroraserver.ath.cx:8007
-CAPSServicePassword = TestPass
+    ; Should new users be shown the ToS
+    UseTermsOfServiceOnFirstLogin = false
+    ; File name of the location of the ToS document in the /bin folder
+    FileNameOfTOS = ToS.txt
+    ; Allow users to login anonymously and have a new account created automatically
+    AllowAnonymousLogin = true
+    ; Check for passwords
+    AuthenticateUsers = false
+    ; This allows for a default avatar to be created so the user does not login as ruth. Save an Avatar Archive then put the name of it here.
+    DefaultAvatarArchiveForNewUser = 
+    ; Will hide the First Life setting of profile from all users
+    AllowFirstLifeInProfile = true
+    ; Sets the tutorial URL for new users
+    ; NOTE: the URL you provide will NOT be the URL the client goes to! The client automatically appends it's language specification to the end of this URL. Ex. http://localhost/tutorial/ becomes http://localhost/tutorial/en for english language.
+    TutorialURL = 
+    CAPSServiceURL = http://auroraserver.ath.cx:8007
+    CAPSServicePassword = TestPass
 
 
 [CAPSService]
-; for the CAPS service connector
-InventoryService = OpenSim.Services.InventoryService.dll:XInventoryService
-LibraryService = OpenSim.Services.InventoryService.dll:LibraryService
-; Subsection Security
-; The CAPS service deals with setting up inventory and other parts of the client that need security, we don't want anyone to be able to access things that they do not have clearance to access
+    ; for the CAPS service connector
+    InventoryService = OpenSim.Services.InventoryService.dll:XInventoryService
+    LibraryService = OpenSim.Services.InventoryService.dll:LibraryService
+    GridUserService = "OpenSim.Services.UserAccountService.dll:GridUserService"
+    PresenceService = "OpenSim.Services.PresenceService.dll:PresenceService"   
+    ; Subsection Security
+    ; The CAPS service deals with setting up inventory and other parts of the client that need security, we don't want anyone to be able to access things that they do not have clearance to access
 
-; Password for the public CAPS service URL
-Password = TestPass
-HostName = http://auroraserver.ath.cx:8007
+    ; Password for the public CAPS service URL
+    Password = TestPass
+    HostName = http://auroraserver.ath.cx:8007
