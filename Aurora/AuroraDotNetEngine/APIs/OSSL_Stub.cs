@@ -676,6 +676,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             m_OSSL_Functions.osSetPrimitiveParams(prim, rules);
         }
 
+        public void osSetProjectionParams(bool projection, LSL_Key texture, double fov, double focus, double amb)
+        {
+            m_OSSL_Functions.osSetProjectionParams(projection, texture, fov, focus, amb);
+        }
+
+        public void osSetProjectionParams(LSL_Key prim, bool projection, LSL_Key texture, double fov, double focus, double amb)
+        {
+            m_OSSL_Functions.osSetProjectionParams(prim, projection, texture, fov, focus, amb);
+        }
+
         public LSL_List osGetAvatarList()
         {
             return m_OSSL_Functions.osGetAvatarList();
