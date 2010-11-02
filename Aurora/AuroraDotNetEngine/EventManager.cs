@@ -728,6 +728,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
         }
 
+        /// <summary>
+        /// Start one script in an object
+        /// </summary>
+        /// <param name="part"></param>
+        /// <param name="itemID"></param>
+        /// <param name="script"></param>
+        /// <param name="startParam"></param>
+        /// <param name="postOnRez"></param>
+        /// <param name="engine"></param>
+        /// <param name="stateSource"></param>
         public void rez_script(SceneObjectPart part, UUID itemID, string script,
                 int startParam, bool postOnRez, string engine, int stateSource)
         {
@@ -792,6 +802,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 m_scriptEngine.MaintenanceThread.AddScriptChange(new LUStruct[] { itemToQueue }, LoadPriority.FirstStart);
         }
 
+        /// <summary>
+        /// Start multiple scripts in the object
+        /// </summary>
+        /// <param name="part"></param>
+        /// <param name="items"></param>
+        /// <param name="startParam"></param>
+        /// <param name="postOnRez"></param>
+        /// <param name="engine"></param>
+        /// <param name="stateSource"></param>
+        /// <param name="RezzedFrom"></param>
         public void rez_scripts(SceneObjectPart part, TaskInventoryItem[] items,
                 int startParam, bool postOnRez, string engine, int stateSource, UUID RezzedFrom)
         {
@@ -887,8 +907,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         }
         
+        /// <summary>
+        /// This checks the minimum amount of time between script firings as well as control events, making sure that events do NOT fire after scripts reset, close or restart, etc
+        /// </summary>
+        /// <param name="ID"></param>
+        /// <param name="FunctionName"></param>
+        /// <param name="param"></param>
+        /// <returns></returns>
         private bool CheckIfEventShouldFire(ScriptData ID, string FunctionName, object[] param)
         {
+            //This will happen if the script doesn't compile correctly
             if (ID.Script == null)
             {
                 m_log.Info("[AuroraDotNetEngine]: Could not load script from item '" + ID.InventoryItem.Name + "' to fire event " + FunctionName);
@@ -992,7 +1020,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             return true;
         }
-
+        
+        /// <summary>
+        /// This removes the event from the queue and allows it to be fired again
+        /// </summary>
+        /// <param name="QIS"></param>
         public void EventComplete(QueueItemStruct QIS)
         {
             if (QIS.functionName == "timer")

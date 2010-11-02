@@ -148,6 +148,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             return false;
         }
 
+        /// <summary>
+        /// This loop deals with starting and stoping scripts
+        /// </summary>
+        /// <returns></returns>
         public bool ScriptChangeQueue()
         {
             if (!Started) //Break early
@@ -164,12 +168,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 {
                     if (item.Action == LUType.Unload)
                     {
+                        //Close
                         item.ID.CloseAndDispose(false);
                     }
                     else if (item.Action == LUType.Load)
                     {
                         try
                         {
+                            //Start
                             item.ID.Start(false);
                             NeedsFired.Add(item);
                         }
@@ -179,6 +185,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     {
                         try
                         {
+                            //Start, but don't add to the queue's again
                             item.ID.Start(true);
                             NeedsFired.Add(item);
                         }
@@ -187,6 +194,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 }
                 foreach (LUStruct item in NeedsFired)
                 {
+                    //Fire the events afterward so that they all start at the same time
                     item.ID.FireEvents();
                 }
                 threadpool.QueueEvent(ScriptChangeQueue, 2); //Requeue us
@@ -227,6 +235,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 {
                     if (QIS != null)
                     {
+                        //This sets up a part to determine whether we should sleep on the next run so we don't kill the CPU
                         SendUpSleepRequest = ProcessQIS((QueueItemStruct)QIS);
                         threadpool.QueueEvent(EventQueue, 1);
                     }
@@ -288,6 +297,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             try
             {
+                //Either its currently doing something, or the script has set the event params for the new event
                 if (QIS.CurrentlyAt != null || QIS.ID.SetEventParams(QIS.functionName, QIS.llDetectParams))
                 {
                     //If this is true, there is/was a sleep occuring
@@ -313,6 +323,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                                 QIS.param, QIS.CurrentlyAt, out ex);
                     if (ex != null)
                     {
+                        //Check exceptions, some are ours to deal with, and others are to be logged
                         if (ex is SelfDeleteException)
                         {
                             if (QIS.ID.part != null && QIS.ID.part.ParentGroup != null)
@@ -324,6 +335,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                             if (QIS.ID.part != null && QIS.ID.part.ParentGroup != null)
                                 QIS.ID.part.Inventory.RemoveInventoryItem(QIS.ID.ItemID);
                         }
+                        //Log it for the user
                         else if(!(ex is EventAbortException) &&
                             !(ex is MinEventDelayException))
                             QIS.ID.DisplayUserNotification(ex.Message, "", false, true);
@@ -340,8 +352,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             catch (Exception ex)
             {
+                //Error, tell the user
                 QIS.ID.DisplayUserNotification(ex.Message, "executing", false, true);
             }
+            //Tell the event manager about it so that the events will be removed from the queue
             EventManager.EventComplete(QIS);
             return false;
         }
@@ -449,17 +463,21 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         #endregion
 
-        private void StartThread(string p)
+        /// <summary>
+        /// Queue the event loop given by thread
+        /// </summary>
+        /// <param name="thread"></param>
+        private void StartThread(string thread)
         {
-            if (p == "State")
+            if (thread == "State")
             {
                 threadpool.QueueEvent(StateSaveQueue, 3);
             }
-            else if (p == "Change")
+            else if (thread == "Change")
             {
                 threadpool.QueueEvent(ScriptChangeQueue, 2);
             }
-            else if (p == "Event")
+            else if (thread == "Event")
             {
                 threadpool.QueueEvent(EventQueue, 1);
             }

@@ -31,6 +31,7 @@ using System.IO;
 using System.Reflection;
 using Nini.Config;
 using log4net;
+using Aurora.Framework;
 
 namespace OpenSim.Region.Physics.Manager
 {
@@ -109,8 +110,8 @@ namespace OpenSim.Region.Physics.Manager
         /// <param name="pluginsPath"></param>
         public void LoadPluginsFromAssemblies(string assembliesPath)
         {
-            List<IPhysicsPlugin> physicsPlugins = Aurora.Framework.AuroraModuleLoader.LoadModules<IPhysicsPlugin>(assembliesPath);
-            List<IMeshingPlugin> meshingPlugins = Aurora.Framework.AuroraModuleLoader.LoadModules<IMeshingPlugin>(assembliesPath);
+            List<IPhysicsPlugin> physicsPlugins = AuroraModuleLoader.LoadModules<IPhysicsPlugin>(assembliesPath);
+            List<IMeshingPlugin> meshingPlugins = AuroraModuleLoader.LoadModules<IMeshingPlugin>(assembliesPath);
 
             foreach (IPhysicsPlugin plug in physicsPlugins)
             {

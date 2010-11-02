@@ -268,10 +268,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
     public struct QueueItemStruct
     {
         public ScriptData ID;
+        //Name of the method to fire
         public string functionName;
+        //Params to give the script event
         public DetectParams[] llDetectParams;
+        //Parameters to fire the function
         public object[] param;
+        //This is the current spot that the event is at in processing
         public EnumeratorInfo CurrentlyAt;
+        //This is used to check whether the script has been updated since the last attempt to start
         public int VersionID;
     }
 

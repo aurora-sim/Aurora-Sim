@@ -39,6 +39,9 @@ using log4net;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
+    /// <summary>
+    /// This manages app domains and controls what app domains are created/destroyed
+    /// </summary>
     public class AppDomainManager
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
