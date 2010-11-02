@@ -2471,7 +2471,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 retstr.Append(GenerateLine("while (true)"));
                 retstr.Append(GenerateLine("{"));
                 string FunctionName = RandomString(10, true);
-                retstr.Append(GenerateLine("bool "+FunctionName+" = false;"));
+                retstr.Append(GenerateLine("bool " + FunctionName + " = false;"));
 
                 retstr.Append(GenerateLine("try"));
                 retstr.Append(GenerateLine("{"));

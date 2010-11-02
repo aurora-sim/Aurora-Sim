@@ -889,6 +889,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         
         private bool CheckIfEventShouldFire(ScriptData ID, string FunctionName, object[] param)
         {
+            if (ID.Script == null)
+            {
+                m_log.Info("[AuroraDotNetEngine]: Could not load script from item '" + ID.InventoryItem.Name + "' to fire event " + FunctionName);
+                return false;
+            }
             scriptEvents eventType = (scriptEvents)Enum.Parse(typeof(scriptEvents), FunctionName);
             if ((ID.Script.GetStateEventFlags(ID.State) & (long)eventType) == 0)
                 return false; //If the script doesn't contain the state, don't even bother queueing it
