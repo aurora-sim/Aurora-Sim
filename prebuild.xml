@@ -2182,7 +2182,7 @@
       <Reference name="OpenSim.Region.CoreModules" />
       <Reference name="OpenSim.Region.Framework" />
       <Reference name="OpenSim.Services.Interfaces"/>
-      <Reference name="OpenSim.Region.ScriptEngine.Shared.YieldProlog"/>
+      <Reference name="OpenSim.Region.ScriptEngine.YieldProlog"/>
       <Reference name="OpenSim.Region.Physics.Manager"/>
       <Reference name="Microsoft.JScript"/>
       <Reference name="Nini.dll" path="../../bin/"/>
