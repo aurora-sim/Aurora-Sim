@@ -1790,7 +1790,7 @@
     </Project>
 
 
-    <Project frameworkVersion="v3_5" name="Aurora.OptionalModules" path="Aurora/OptionalModules" type="Library">
+    <Project frameworkVersion="v3_5" name="Aurora.Modules" path="Aurora/Modules" type="Library">
       <Configuration name="Debug">
         <Options>
           <OutputPath>../../bin/</OutputPath>
