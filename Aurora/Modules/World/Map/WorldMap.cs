@@ -107,6 +107,7 @@ namespace Aurora.Modules
             m_config = source;
             m_Enabled = true;
             m_asyncMapTileCreation = source.Configs["MapModule"].GetBoolean("UseAsyncMapTileCreation", m_asyncMapTileCreation);
+            minutes = source.Configs["MapModule"].GetDouble("TimeBeforeMapTileRegeneration", minutes);
             m_generateMapTiles = source.Configs["MapModule"].GetBoolean("GenerateMaptiles", true);
             UUID.TryParse(source.Configs["MapModule"].GetString("MaptileStaticUUID", UUID.Zero.ToString()), out staticMapTileUUID);
             MapViewLength = source.Configs["MapModule"].GetInt("MapViewLength", MapViewLength);
