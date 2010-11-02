@@ -2079,7 +2079,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         /// </summary>
         public void osSetProjectionParams(bool projection, LSL_Key texture, double fov, double focus, double amb)
         {
-            CheckThreatLevel(ThreatLevel.High, "osSetProjectionParams");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osSetProjectionParams", m_host, "OSSL");
 
             osSetProjectionParams(UUID.Zero.ToString(), projection, texture, fov, focus, amb);
         }
@@ -2089,8 +2089,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         /// </summary>
         public void osSetProjectionParams(LSL_Key prim, bool projection, LSL_Key texture, double fov, double focus, double amb)
         {
-            CheckThreatLevel(ThreatLevel.High, "osSetProjectionParams");
-            m_host.AddScriptLPS(1);
+            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osSetProjectionParams", m_host, "OSSL");
 
             SceneObjectPart obj = null;
             if (prim == UUID.Zero.ToString())
@@ -2112,7 +2111,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
 
             obj.ParentGroup.HasGroupChanged = true;
-            obj.ScheduleFullUpdate();
+            obj.ScheduleFullUpdate(PrimUpdateFlags.FullUpdate);
 
         }
 
