@@ -290,7 +290,6 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
             DateTime start = DateTime.Now;
             int tc = Environment.TickCount;
-            m_log.Info("[MAPTILE]: Generating Maptile");
             //m_log.Info("[MAPTILE]: Generating Maptile Step 1: Terrain");
 
             // These textures should be in the AssetCache anyway, as every client conneting to this
