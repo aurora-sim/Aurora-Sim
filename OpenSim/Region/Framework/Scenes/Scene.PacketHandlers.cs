@@ -170,15 +170,18 @@ namespace OpenSim.Region.Framework.Scenes
                 else
                 {
                     SceneObjectGroup grp = m_sceneGraph.GetGroupByPrim(primLocalID);
-                    prim = grp.GetChildPart(primLocalID);
-                    entity = prim;
-                    if (prim.IsRoot)
+                    if (grp != null)
                     {
-                        prim.ParentGroup.IsSelected = true;
-                        if (Permissions.CanEditObject(prim.ParentGroup.UUID, remoteClient.AgentId)
-                            || Permissions.CanMoveObject(prim.ParentGroup.UUID, remoteClient.AgentId))
+                        prim = grp.GetChildPart(primLocalID);
+                        entity = prim;
+                        if (prim.IsRoot)
                         {
-                            EventManager.TriggerParcelPrimCountTainted();
+                            prim.ParentGroup.IsSelected = true;
+                            if (Permissions.CanEditObject(prim.ParentGroup.UUID, remoteClient.AgentId)
+                                || Permissions.CanMoveObject(prim.ParentGroup.UUID, remoteClient.AgentId))
+                            {
+                                EventManager.TriggerParcelPrimCountTainted();
+                            }
                         }
                     }
                 }

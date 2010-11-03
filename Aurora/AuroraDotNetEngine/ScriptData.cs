@@ -250,6 +250,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         #region Reset Script and State Change
 
+        public void ResetEvents()
+        {
+            RemoveCollisionEvents = false;
+            RemoveTouchEvents = false;
+            RemoveLandCollisionEvents = false;
+            TouchInQueue = false;
+            LandCollisionInQueue = false;
+            ChangedInQueue.Clear();
+            LastControlLevel = 0;
+            ControlEventsInQueue = 0;
+        }
+
         /// <summary>
         /// This resets the script back to its default state.
         /// </summary>
@@ -276,6 +288,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             EventDelayTicks = 0;
             //Remove events that may be fired again after the user stops touching the prim, etc
             // These will be removed after the next ***_start event
+            ResetEvents();
             RemoveLandCollisionEvents = true;
             RemoveCollisionEvents = true;
             RemoveTouchEvents = true;

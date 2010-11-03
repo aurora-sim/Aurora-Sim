@@ -1018,6 +1018,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     return false;
                 ID.ChangedInQueue.Add(changed);
             }
+
+            if (FunctionName == "state_entry")
+            {
+                ID.ResetEvents();
+            }
             return true;
         }
         
