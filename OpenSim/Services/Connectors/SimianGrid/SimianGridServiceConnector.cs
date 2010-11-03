@@ -424,6 +424,8 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 mapTile.Save(stream, ImageFormat.Png);
                 pngData = stream.ToArray();
             }
+            mapTile.Dispose();
+            terrainTile.Dispose();
 
             List<MultipartForm.Element> postParameters = new List<MultipartForm.Element>()
             {
