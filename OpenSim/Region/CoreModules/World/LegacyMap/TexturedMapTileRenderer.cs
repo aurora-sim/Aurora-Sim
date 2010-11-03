@@ -284,10 +284,8 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
         public unsafe Bitmap TerrainToBitmap(Bitmap mapbmp)
         {
-            BitmapData originalData = mapbmp.LockBits(
-                new Rectangle(0, 0, mapbmp.Width, mapbmp.Height),
-                ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
-
+            BitmapProcessing.FastBitmap unsafeBMP = new BitmapProcessing.FastBitmap(mapbmp);
+            unsafeBMP.LockBitmap();
             DateTime start = DateTime.Now;
             int tc = Environment.TickCount;
             //m_log.Info("[MAPTILE]: Generating Maptile Step 1: Terrain");
@@ -319,7 +317,6 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             float waterHeight = (float)settings.WaterHeight;
 
             double[,] hm = m_scene.Heightmap.GetDoubles();
-            int pixelSize = 3;
 
             for (int y = 0; y < (int)Constants.RegionSize; y++)
             {
@@ -406,11 +403,8 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                             }
                         }
                         //get the data from the original image
-                        byte* Row = (byte*)originalData.Scan0 + (y * originalData.Stride);
                         Color hsvColor = hsv.toColor();
-                        Row[x * pixelSize + 2] = hsvColor.R;
-                        Row[x * pixelSize + 1] = hsvColor.G;
-                        Row[x * pixelSize] = hsvColor.B;
+                        unsafeBMP.SetPixel(x, (255 - y), hsvColor);
                     }
                     else
                     {
@@ -426,17 +420,13 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
                         heightvalue = 100f - (heightvalue * 100f) / 19f;  // 0 - 19 => 100 - 0
 
-                        //get the data from the original image
-                        byte* Row = (byte*)originalData.Scan0 + (y * originalData.Stride);
-                        Row[x * pixelSize + 2] = WATER_COLOR.R;
-                        Row[x * pixelSize + 1] = WATER_COLOR.G;
-                        Row[x * pixelSize] = WATER_COLOR.B;
+                        unsafeBMP.SetPixel(x, (255 - y), WATER_COLOR);
                     }
                 }
             }
             if (m_mapping != null)
                 m_mapping.Clear();
-            mapbmp.UnlockBits(originalData);
+            unsafeBMP.UnlockBitmap();
             //m_log.Info("[MAPTILE]: Generating Maptile Step 1: Done in " + (Environment.TickCount - tc) + " ms");
             return mapbmp;
         }
