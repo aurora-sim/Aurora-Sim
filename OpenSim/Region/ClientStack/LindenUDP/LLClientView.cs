@@ -1165,7 +1165,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     OutPacket(layerpack, ThrottleOutPacketType.Unknown);
                 }
             }
-            catch (OverflowException e)
+            catch (OverflowException)
             {
                 for (int xa = 0; xa < 4; xa++)
                 {
@@ -1174,7 +1174,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     SendLayerData(x + xa, y, map);
                 }
             }
-            catch (IndexOutOfRangeException e)
+            catch (IndexOutOfRangeException)
             {
                 for (int xa = 0; xa < 4; xa++)
                 {
@@ -1698,7 +1698,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             int MAX_ITEMS_PER_PACKET = 5;
             int MAX_FOLDERS_PER_PACKET = 6;
 
-            if (fetchItems == null || fetchFolders == null)
+            if (fetchItems == null)
                 return; //This DOES happen when things time out!!
 
             int totalItems = fetchItems ? items.Count : 0;

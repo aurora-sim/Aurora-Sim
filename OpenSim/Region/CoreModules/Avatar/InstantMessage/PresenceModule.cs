@@ -47,8 +47,8 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
         private static readonly ILog m_log = LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
-        public event PresenceChange OnPresenceChange;
-        public event BulkPresenceData OnBulkPresenceData;
+        //public event PresenceChange OnPresenceChange;
+        //public event BulkPresenceData OnBulkPresenceData;
 
         protected List<Scene> m_Scenes = new List<Scene>();
 

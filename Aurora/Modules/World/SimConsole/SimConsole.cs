@@ -22,7 +22,6 @@ namespace Aurora.Modules.World.SimConsole
     {
         #region Declares
 
-        private string Password = "";
         private Scene m_scene;
         private bool m_enabled = false;
         private Dictionary<UUID, Access> m_authorizedParticipants = new Dictionary<UUID, Access>();

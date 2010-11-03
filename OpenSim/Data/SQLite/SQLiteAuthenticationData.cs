@@ -33,7 +33,6 @@ using System.Reflection;
 using log4net;
 using OpenMetaverse;
 using OpenSim.Framework;
-using log4net;
 #if CSharpSqlite
     using Community.CsharpSqlite.Sqlite;
 #else

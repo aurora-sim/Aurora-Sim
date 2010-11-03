@@ -2862,7 +2862,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                         foreach (SceneObjectPart part in group.ChildrenList)
                         {
-                            if (part.IsJoint() && ((part.ObjectFlags & (uint)PrimFlags.Physics) != 0))
+                            if (part.IsJoint() && ((part.Flags & PrimFlags.Physics) != 0))
                             {
                                 PhysicsScene.RequestJointDeletion(part.Name); // FIXME: what if the name changed?
                             }
@@ -2926,7 +2926,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             foreach (SceneObjectPart part in group.ChildrenList)
             {
-                if (part.IsJoint() && ((part.ObjectFlags&(uint)PrimFlags.Physics) != 0))
+                if (part.IsJoint() && ((part.Flags & PrimFlags.Physics) != 0))
                 {
                     PhysicsScene.RequestJointDeletion(part.Name); // FIXME: what if the name changed?
                 }

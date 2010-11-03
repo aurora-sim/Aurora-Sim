@@ -16,7 +16,7 @@ namespace Aurora.Services.DataService
 {
     public class SimianUtils
     {
-        private static ExpiringCache<string, OSDMap> m_memoryCache;
+        private static ExpiringCache<string, OSDMap> m_memoryCache = new ExpiringCache<string,OSDMap>();
         private static int m_cacheTimeout = 30;
 
         public static bool GetGenericEntry(UUID ownerID, string type, string key, string m_ServerURI, out OSDMap map)

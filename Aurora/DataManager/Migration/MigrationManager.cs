@@ -143,7 +143,7 @@ namespace Aurora.DataManager.Migration
                     {
                         executingMigrator.Migrate(sessionProvider, genericData);
                     }
-                    catch (Exception ex)
+                    catch (Exception)
                     {
                         
                     }

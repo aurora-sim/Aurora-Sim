@@ -67,7 +67,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
         private bool m_lastUpdateSent = false;
         private Vector3 m_velocity;
         private Vector3 m_target_velocity;
-        private Vector3 m_acceleration;
+        //private Vector3 m_acceleration;
         private Vector3 m_rotationalVelocity;
         private bool m_pidControllerActive = true;
         public float PID_D = 80.0f;
@@ -418,7 +418,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
 
         public override Vector3 Acceleration
         {
-            get { return m_acceleration; }
+            get { return Vector3.Zero; } // m_acceleration; }
         }
 
         public override Quaternion Orientation

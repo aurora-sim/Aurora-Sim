@@ -205,22 +205,6 @@ namespace OpenSim.Services.LLLoginService
         private string CAPSServicePassword;
         private IConfigSource m_source;
 
-        private long m_MaximumPrimScale = 256;
-        private long m_MinimumPrimScale = 256;
-        private long m_MaximumPhysPrimScale = 10;
-
-        private long m_MaximumHollowSize = 10;
-        private long m_MaximumHoleSize = 10;
-
-        private long m_MaximumLinkCount = 2000;
-        private long m_MaximumLinkCountPhys = 32;
-
-        private int m_MaximumInventoryItemsTransfer = 100;
-        private bool m_AllowPhysicalPrims = true;
-        private bool m_ClampPrimSizes = true;
-        private string m_OffsetOfUTC = "SLT";
-        private bool m_PreferGridSettingsOverRegion = false;
-
         private BuddyList m_buddyList = null;
 
         static LLLoginResponse()

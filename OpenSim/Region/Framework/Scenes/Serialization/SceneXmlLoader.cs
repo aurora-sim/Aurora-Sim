@@ -125,14 +125,14 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                 {
                     // There is only ever one prim.  This oddity should be removeable post 0.5.9
                     return SceneObjectSerializer.FromXml2Format(aPrimNode.OuterXml, scene);
-                    using (reader = new XmlTextReader(new StringReader(aPrimNode.OuterXml)))
+                    /*using (reader = new XmlTextReader(new StringReader(aPrimNode.OuterXml)))
                     {
                         SceneObjectGroup obj = new SceneObjectGroup(scene);
                         if (SceneObjectSerializer.Xml2ToSOG(reader, obj))
                             return obj;
 
                         return null;
-                    }
+                    }*/
                 }
 
                 return null;
@@ -140,14 +140,14 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             else
             {
                 return SceneObjectSerializer.FromXml2Format(rootNode.OuterXml, scene);
-                using (reader = new XmlTextReader(new StringReader(rootNode.OuterXml)))
+                /*using (reader = new XmlTextReader(new StringReader(rootNode.OuterXml)))
                 {
                     SceneObjectGroup obj = new SceneObjectGroup(scene);
                     if (SceneObjectSerializer.Xml2ToSOG(reader, obj))
                         return obj;
 
                     return null;
-                }
+                }*/
             }
         }
 

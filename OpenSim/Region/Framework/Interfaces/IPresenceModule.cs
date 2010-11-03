@@ -48,7 +48,7 @@ namespace OpenSim.Region.Framework.Interfaces
     {
         void RequestBulkPresenceData(UUID[] users);
 
-        event PresenceChange OnPresenceChange;
-        event BulkPresenceData OnBulkPresenceData;
+        //event PresenceChange OnPresenceChange;
+        //event BulkPresenceData OnBulkPresenceData;
     }
 }

@@ -227,7 +227,7 @@ namespace OpenSim.Services.InventoryService
             return false;
         }
 
-        public bool LinkItem(IClientAPI client, UUID oldItemID, UUID parentID, uint Callback)
+        public override bool LinkItem(IClientAPI client, UUID oldItemID, UUID parentID, uint Callback)
         {
             return false;
         }

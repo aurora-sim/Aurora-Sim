@@ -25,7 +25,6 @@ namespace Aurora.Modules
     public class LocalCAPSService : ISharedRegionModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private AuroraCAPSHandler m_CapsService;
         private bool m_enabled = false;
         private IConfigSource m_source;
         private Scene m_scene;

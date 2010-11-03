@@ -233,7 +233,7 @@ namespace Aurora.Framework
                                 return (T)Activator.CreateInstance(pluginType);
                             }
                         }
-                        catch (Exception ex)
+                        catch (Exception)
                         {
                         }
                     }

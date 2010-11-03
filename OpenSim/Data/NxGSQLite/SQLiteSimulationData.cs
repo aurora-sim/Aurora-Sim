@@ -1219,7 +1219,7 @@ namespace OpenSim.Data.SQLite
             prim.SitName = row["SitName"].ToString();
             prim.TouchName = row["TouchName"].ToString();
             // permissions
-            prim.ObjectFlags = Convert.ToUInt32(row["ObjectFlags"].ToString());
+            prim.Flags = (PrimFlags)Convert.ToUInt32(row["ObjectFlags"].ToString());
             prim.OwnerMask = Convert.ToUInt32(row["OwnerMask"].ToString());
             prim.NextOwnerMask = Convert.ToUInt32(row["NextOwnerMask"].ToString());
             prim.GroupMask = Convert.ToUInt32(row["GroupMask"].ToString());
@@ -1548,7 +1548,7 @@ namespace OpenSim.Data.SQLite
             row.Parameters.AddWithValue(":SitName", prim.SitName);
             row.Parameters.AddWithValue(":TouchName", prim.TouchName);
             // permissions
-            row.Parameters.AddWithValue(":ObjectFlags", prim.ObjectFlags);
+            row.Parameters.AddWithValue(":ObjectFlags", (uint)prim.Flags);
             row.Parameters.AddWithValue(":CreatorID", prim.CreatorID.ToString());
             row.Parameters.AddWithValue(":OwnerID", prim.OwnerID.ToString());
             row.Parameters.AddWithValue(":GroupID", prim.GroupID.ToString());

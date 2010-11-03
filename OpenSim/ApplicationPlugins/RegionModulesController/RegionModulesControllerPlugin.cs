@@ -49,7 +49,7 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
         private OpenSimBase m_openSim;
 
         // Our name
-        private string m_name;
+        private string m_name = "RegionModulesControllerPlugin";
 
         // List of shared module instances, for adding to Scenes
         private List<ISharedRegionModule> m_sharedInstances =
