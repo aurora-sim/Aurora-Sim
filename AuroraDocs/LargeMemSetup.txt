@@ -1,0 +1,100 @@
+﻿Patching OpenSim.exe & OpenSim.32BitLaunch.exe to allow them to access more RAM in Windows Systems.
+
+WHY ?
+An application running in 32Bit Mode on Windows can only access access 2GB Ram Total by default. As seen with OpenSim, this
+can can easily be reached when you throw in enough prims, scripts & users.  The Solution is to patch the EXE to make it aware
+and to adjust 32-Bit windows to accomodate that (x64 is already capable).
+
+When a 32-bit application is Large Address Aware, it can access up to 4GB on x64 operating systems and up to 3GB on x86. 
+64-bit Windows, require no modifications to the operating system to benefit from the Patched EXE files.
+32-bit Windows, require some adjustments and they vary according to Version of Windows.
+Linux/Mono do not appear affected by Large Address Aware patched exe's *** Still needs thorough verification. ***
+
+How-To Patch EXE
+
+Method 1)  
+
+    If you have Visual Studio 2008/2010 and/or C++ Express
+    COPY your OpenSim.exe / OpenSim.32BitLaunch.exe to a safe place (backup)
+    Copy again to a separate Working Directory (the ones you will patch)
+    Open a Command Prompt (CMD) and change directory to that working dir
+    run Following Command:  OpenSim.32BitLaunch.exe
+
+    REFERENCE for EDITBIN
+    http://msdn.microsoft.com/en-us/library/xd3shwhf.aspx
+
+
+Method 2)  (maybe simpler and does not require C++ be installed)
+
+    http://forums.techpowerup.com/showthread.php?t=112556
+    Above has an APPLICATION in the first posting which makes patching your executables easy. 
+    See Thread in the link for details.
+
+
+Windows Mods Required  (not applicable to 64bit)
+
+    ******************************************************************
+    *** WARNING - FOLLOW THE DIRECTIONS AND BACKUP BACKUP BACKUP ! ***
+    ******************************************************************
+
+WIN-XP
+    Ensure you have View All Files & System Files enabled.
+    In the root of C:\ you will see a file named "boot.ini"  MAKE A BACKUP COPY OF IT somewhere safe !
+    Edit it with NotePad (you must be admin priviledged) and ADD the /3GB switch as shown below
+
+    It will look similar to this example:
+
+    [boot loader]
+    timeout=30
+    default=multi(0)disk(0)rdisk(0)partition(2)\WINNT
+    [operating systems]
+    multi(0)disk(0)rdisk(0)partition(2)\WINNT="????" /3GB
+
+    Where: "????" in the example can be the programmatic name of the operating system versions shown below:
+    Windows XP Professional / Windows Server 2003 / Windows Server 2003 Enterprise Edition / Windows Server 2003 Datacenter Edition.
+
+    REFERENCE:  http://www.microsoft.com/whdc/system/platform/server/pae/paemem.mspx
+
+WIN-VISTA
+    Vista uses BCDedit.  A powerful yet potentially Very dangerous tool !
+    Open a Command Prompt (CMD)
+    Make a New Directory to preserve a BACKUP of the System Store & change dir there.  
+    Example: md c:\BCDbackup    then   cd c:\BCDbackup
+    NEXT 
+       run the follow command IN BCDbackup:  bcdedit /export MyFileName    
+       Where MyFileName is something simple like MyBCD 
+    NEXT
+       run the following command:  BCDEDIT /Set INCREASEUSERVA 3072
+       NOTE: That is the Maximum assuming you have that much RAM and don't even try to make it more, the result would be not pleasant.
+
+    !! RESTORING IN CASE OF ISSUES !!
+    The following command imports the data from C:\Data\BCD Backup into the system store:
+    bcdedit /import "c:\BCDbackup\MyBCD"
+
+    REFERENCE for BCDedit: 
+    http://download.microsoft.com/download/9/c/5/9c5b2167-8017-4bae-9fde-d599bac8184a/BCDedit_reff.docx
+
+
+
+WIN-7  (Nothing Required, support is already there and better implemented)
+
+
+*** CLOSING NOTES ***
+*********************
+By Patching the EXE files, they will use up to 4GB Ram on 64Bit or 3GB on 32bit.  This will not force
+the system and won't cause harm if the the system does not have the RAM.
+
+Modifying Win-XP & Vista (especially Vista) is a risk you have to measure for yourself.  These are well documented
+and known to work as you can see with the provided reference info.  
+
+Effects on Linux / Mono:  None have been noted by anyone using patched EXE files as Linux Handles memory differently
+but it is still subject to specific 32Bit limitations for 32Bit flavours.
+
+
+
+Additional REFERENCE INFORMATION
+
+    http://www.microsoft.com/whdc/system/platform/server/pae/paemem.mspx
+    http://support.microsoft.com/default.aspx?scid=889654  (shows mem capabilities & page sizing)
+    http://bilbroblog.com/wow64/hidden-secrets-of-w0w64-ndash-large-address-space/
+
