@@ -205,7 +205,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             bool running = false;
             if (thread != null)
             {
-                while (i < i + 10)
+                int counter = i + 10;
+                while (i < counter)
                 {
                     i++;
                     try
