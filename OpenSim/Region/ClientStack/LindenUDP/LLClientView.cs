@@ -8149,7 +8149,18 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 }
                 #endregion
 
-                Util.FireAndForget(FetchInventory, Pack);
+                //Util.FireAndForget(FetchInventory, Pack);
+                FetchInventory handlerFetchInventory = null;
+                for (int i = 0; i < FetchInventoryx.InventoryData.Length; i++)
+                {
+                    handlerFetchInventory = OnFetchInventory;
+
+                    if (handlerFetchInventory != null)
+                    {
+                        OnFetchInventory(this, FetchInventoryx.InventoryData[i].ItemID,
+                                         FetchInventoryx.InventoryData[i].OwnerID);
+                    }
+                }
             }
             return true;
         }
@@ -8184,12 +8195,18 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
             #endregion
 
-            Util.FireAndForget(FetchInventoryDescendents, Pack);
-
+            //Util.FireAndForget(FetchInventoryDescendents, Pack);
+            FetchInventoryDescendents handlerFetchInventoryDescendents = OnFetchInventoryDescendents;
+            if (handlerFetchInventoryDescendents != null)
+            {
+                handlerFetchInventoryDescendents(this, Fetch.InventoryData.FolderID, Fetch.InventoryData.OwnerID,
+                                                 Fetch.InventoryData.FetchFolders, Fetch.InventoryData.FetchItems,
+                                                 Fetch.InventoryData.SortOrder);
+            }
             return true;
         }
 
-        private void FetchInventoryDescendents(object Pack)
+        /*private void FetchInventoryDescendents(object Pack)
         {
             FetchInventoryDescendentsPacket Fetch = (FetchInventoryDescendentsPacket)Pack;
 
@@ -8200,7 +8217,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                                                  Fetch.InventoryData.FetchFolders, Fetch.InventoryData.FetchItems,
                                                  Fetch.InventoryData.SortOrder);
             }
-        }
+        }*/
 
         private bool HandlePurgeInventoryDescendents(IClientAPI sender, Packet Pack)
         {
