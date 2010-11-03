@@ -1125,7 +1125,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     neighbours = RequestNeighbours(sp.Scene, m_regionInfo.RegionLocX, m_regionInfo.RegionLocY);
                 else
                 {
-                    neighbours = sp.Scene.GridService.GetRegionRange(m_regionInfo.ScopeID, (int)(m_regionInfo.RegionLocX - Util.RegionViewSize) * 256, (int)(m_regionInfo.RegionLocX + Util.RegionViewSize) * 256, (int)(m_regionInfo.RegionLocY - Util.RegionViewSize) * 256, (int)(m_regionInfo.RegionLocY + Util.RegionViewSize) * 256);
+                    neighbours = sp.Scene.GridService.GetRegionRange(m_regionInfo.ScopeID, (int)(m_regionInfo.RegionLocX - Util.RegionViewSize) * (int)Constants.RegionSize, (int)(m_regionInfo.RegionLocX + Util.RegionViewSize) * (int)Constants.RegionSize, (int)(m_regionInfo.RegionLocY - Util.RegionViewSize) * (int)Constants.RegionSize, (int)(m_regionInfo.RegionLocY + Util.RegionViewSize) * (int)Constants.RegionSize);
                 }
                 if (!Util.CloseLocalRegions)
                 {

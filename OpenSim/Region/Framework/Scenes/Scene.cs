@@ -625,8 +625,8 @@ namespace OpenSim.Region.Framework.Scenes
                     m_UseSelectionParticles = aurorastartupConfig.GetBoolean("UseSelectionParticles", true);
                     EnableFakeRaycasting = aurorastartupConfig.GetBoolean("EnableFakeRaycasting", false);
                     MaxLowValue = aurorastartupConfig.GetFloat("MaxLowValue", -1000);
-                    Util.RegionViewSize = aurorastartupConfig.GetInt("RegionSightSize", 1);
-                    Util.CloseLocalRegions = aurorastartupConfig.GetBoolean("CloseLocalAgents", true);
+                    Util.RegionViewSize = aurorastartupConfig.GetInt("RegionSightSize", Util.RegionViewSize);
+                    Util.CloseLocalRegions = !aurorastartupConfig.GetBoolean("SeeIntoAllLocalRegions", Util.CloseLocalRegions); //This option is the opposite of the config to make it easier on the user
                     m_DefaultObjectName = aurorastartupConfig.GetString("DefaultObjectName", m_DefaultObjectName);
                     CheckForObjectCulling = aurorastartupConfig.GetBoolean("CheckForObjectCulling", CheckForObjectCulling);
                     SetObjectCapacity(aurorastartupConfig.GetInt("ObjectCapacity", ObjectCapacity));
