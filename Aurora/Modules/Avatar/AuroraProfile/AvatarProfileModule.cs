@@ -134,11 +134,6 @@ namespace Aurora.Modules
             get { return "AuroraProfileModule"; }
         }
 
-        public bool IsSharedModule
-        {
-            get { return false; }
-        }
-
         #endregion
 
         #region Client
@@ -255,6 +250,24 @@ namespace Aurora.Modules
 
             if (info == null)
                 return;
+
+            ScenePresence p = m_scene.GetScenePresence(remoteClient.AgentId);
+
+            if(p == null)
+                return; //Just fail
+
+            IMoneyModule money = p.Scene.RequestModuleInterface<IMoneyModule>();
+            if (money != null)
+            {
+                if (money.AmountCovered(remoteClient, 50))
+                    money.ApplyCharge(remoteClient.AgentId, 50, "Add Classified");
+                else
+                {
+                    remoteClient.SendAlertMessage("You do not have enough money to complete this upload.");
+                    return;
+                }
+            }
+
             if (info.Classifieds.ContainsKey(queryclassifiedID.ToString()))
             {
                 OSDMap Classifieds = Util.DictionaryToOSD(info.Classifieds);
@@ -276,8 +289,6 @@ namespace Aurora.Modules
             Vector3 globalpos = queryGlobalPos;
             byte classifiedFlags = queryclassifiedFlags;
             int classifiedPrice = queryclassifiedPrice;
-
-            ScenePresence p = m_scene.GetScenePresence(remoteClient.AgentId);
 
             UUID parceluuid = p.currentParcelUUID;
             string parcelname = "Unknown";
