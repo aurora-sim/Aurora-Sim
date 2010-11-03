@@ -52,7 +52,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Assets
             LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private Scene m_scene;
         private IAssetService m_assetService;
-        private bool m_dumpAssetsToFile = false;
 
         #region IRegionModuleBase Members
 

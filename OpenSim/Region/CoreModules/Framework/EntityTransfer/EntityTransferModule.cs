@@ -1141,12 +1141,17 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             {
                 m_log.Debug("[ENTITY TRANSFER MODULE]: m_regionInfo was null in EnableChildAgents, is this a NPC?");
             }
+            if (Util.RegionViewSize != 1 || !Util.CloseLocalRegions)
+                m_log.Info("[EntityTransferModule]: Neighbor GridRegion count : " + neighbours.Count);
 
             /// We need to find the difference between the new regions where there are no child agents
             /// and the regions where there are already child agents. We only send notification to the former.
             List<ulong> neighbourHandles = NeighbourHandles(sp.Scene, neighbours); // on this region
             neighbourHandles.Add(sp.Scene.RegionInfo.RegionHandle);  // add this region too
             List<ulong> previousRegionNeighbourHandles;
+
+            if (Util.RegionViewSize != 1 || !Util.CloseLocalRegions)
+                m_log.Info("[EntityTransferModule]: Neighbor region handles count : " + neighbourHandles.Count);
 
             if (sp.Scene.CapsModule != null)
             {
@@ -1223,6 +1228,9 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             {
                 a.ChildrenCapSeeds = new Dictionary<ulong, string>(seeds);
             }
+
+            if (Util.RegionViewSize != 1 || !Util.CloseLocalRegions)
+                m_log.Info("[EntityTransferModule]: Agents count : " + cagents.Count);
 
             if (sp.Scene.CapsModule != null)
             {

@@ -58,7 +58,12 @@ namespace OpenSim.Region.Framework.Scenes
         #region Events
 
         public event ObjectDuplicateDelegate OnObjectDuplicate;
+
+#pragma warning disable 67
+
         public event ObjectCreateDelegate OnObjectCreate;
+
+#pragma warning restore 67
         public event ObjectDeleteDelegate OnObjectRemove;
 
         #endregion

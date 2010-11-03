@@ -1121,6 +1121,7 @@ namespace Aurora.BotManager
             {
             }
         }
+        #pragma warning disable 67
 
         public event LinkInventoryItem OnLinkInventoryItem;
 
@@ -1171,6 +1172,10 @@ namespace Aurora.BotManager
         public event TeleportCancel OnTeleportCancel;
 
         public event GodlikeMessage OnEstateTelehubRequest;
+
+        public event ViewerStartAuction OnViewerStartAuction;
+
+        #pragma warning restore 67
 
         public void SendKillObject(ulong regionHandle, ISceneEntity[] localIDs)
         {
@@ -1252,15 +1257,6 @@ namespace Aurora.BotManager
         {
         }
 
-        #endregion
-
-        #region IClientAPI Members
-
-
-        public event ViewerStartAuction OnViewerStartAuction;
-
-        #endregion
-
         public void SendTeleportStart(uint flags)
         {
         }
@@ -1273,5 +1269,7 @@ namespace Aurora.BotManager
         {
             return true;
         }
+
+        #endregion
     }
 }

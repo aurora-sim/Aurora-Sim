@@ -66,7 +66,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         #region Events
 
-        public event GenericMessage OnGenericMessage;
         public event BinaryGenericMessage OnBinaryGenericMessage;
         public event Action<IClientAPI> OnLogout;
         public event ObjectPermissions OnObjectPermissions;
@@ -130,7 +129,17 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public event UpdatePrimGroupRotation OnUpdatePrimGroupMouseRotation;
         public event UpdateVector OnUpdatePrimScale;
         public event UpdateVector OnUpdatePrimGroupScale;
+
+        #pragma warning disable 67
+
         public event StatusChange OnChildAgentStatus;
+        public event GenericMessage OnGenericMessage;
+        public event BuyObjectInventory OnBuyObjectInventory;
+        public event TerrainUnacked OnUnackedTerrain;
+        public event SetEstateTerrainBaseTexture OnSetEstateTerrainBaseTexture;
+
+        #pragma warning restore 67
+
         public event RequestMapBlocks OnRequestMapBlocks;
         public event RequestMapName OnMapNameRequest;
         public event TeleportLocationRequest OnTeleportLocationRequest;
@@ -195,7 +204,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public event RequestPayPrice OnRequestPayPrice;
         public event ObjectSaleInfo OnObjectSaleInfo;
         public event ObjectBuy OnObjectBuy;
-        public event BuyObjectInventory OnBuyObjectInventory;
         public event AgentSit OnUndo;
         public event AgentSit OnRedo;
         public event LandUndo OnLandUndo;
@@ -204,7 +212,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public event RequestObjectPropertiesFamily OnObjectGroupRequest;
         public event DetailedEstateDataRequest OnDetailedEstateDataRequest;
         public event SetEstateFlagsRequest OnSetEstateFlagsRequest;
-        public event SetEstateTerrainBaseTexture OnSetEstateTerrainBaseTexture;
         public event SetEstateTerrainDetailTexture OnSetEstateTerrainDetailTexture;
         public event SetEstateTerrainTextureHeights OnSetEstateTerrainTextureHeights;
         public event CommitEstateTerrainTextureRequest OnCommitEstateTerrainTextureRequest;
@@ -226,7 +233,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public event GetScriptRunning OnGetScriptRunning;
         public event SetScriptRunning OnSetScriptRunning;
         public event UpdateVector OnAutoPilotGo;
-        public event TerrainUnacked OnUnackedTerrain;
         public event ActivateGesture OnActivateGesture;
         public event DeactivateGesture OnDeactivateGesture;
         public event ObjectOwner OnObjectOwner;

@@ -399,6 +399,9 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         public event GodlikeMessage OnGodlikeMessage;
         public event GodUpdateRegionInfoUpdate OnGodUpdateRegionInfoUpdate;
         public event GodlikeMessage OnEstateTelehubRequest;
+        public event ChangeInventoryItemFlags OnChangeInventoryItemFlags;
+        public event TeleportCancel OnTeleportCancel;
+        public event ViewerStartAuction OnViewerStartAuction;
 
 #pragma warning restore 67
 
@@ -1051,12 +1054,8 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         {
         }
 
-        #region IClientAPI Members
-
-
         public bool AddGenericPacketHandler(string MethodName, GenericMessage handler)
         {
-            //throw new NotImplementedException();
             return false;
         }
 
@@ -1111,7 +1110,6 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         public void SendPickInfoReply(UUID pickID,UUID creatorID, bool topPick, UUID parcelID, string name, string desc, UUID snapshotID, string user, string originalName, string simName, Vector3 posGlobal, int sortOrder, bool enabled)
         {
         }
-        #endregion
         
         public void SendRebakeAvatarTextures(UUID textureID)
         {
@@ -1171,10 +1169,6 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         public void SendTeleportProgress(string reason)
         {
         }
-
-        public event ChangeInventoryItemFlags OnChangeInventoryItemFlags;
-        public event TeleportCancel OnTeleportCancel;
-        public event ViewerStartAuction OnViewerStartAuction;
 
         public bool RemoveGenericPacketHandler(string MethodName)
         {

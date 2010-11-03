@@ -65,7 +65,7 @@
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
-            this.Update = new System.Windows.Forms.Button();
+            this.UpdateRegion = new System.Windows.Forms.Button();
             this.SearchForRegionByName = new System.Windows.Forms.Button();
             this.label31 = new System.Windows.Forms.Label();
             this.RegionToFind = new System.Windows.Forms.TextBox();
@@ -457,7 +457,7 @@
             // 
             // tabPage1
             // 
-            this.tabPage1.Controls.Add(this.Update);
+            this.tabPage1.Controls.Add(this.UpdateRegion);
             this.tabPage1.Controls.Add(this.SearchForRegionByName);
             this.tabPage1.Controls.Add(this.label31);
             this.tabPage1.Controls.Add(this.RegionToFind);
@@ -472,13 +472,13 @@
             // 
             // Update
             // 
-            this.Update.Location = new System.Drawing.Point(567, 301);
-            this.Update.Name = "Update";
-            this.Update.Size = new System.Drawing.Size(75, 23);
-            this.Update.TabIndex = 32;
-            this.Update.Text = "Update";
-            this.Update.UseVisualStyleBackColor = true;
-            this.Update.Click += new System.EventHandler(this.Update_Click);
+            this.UpdateRegion.Location = new System.Drawing.Point(567, 301);
+            this.UpdateRegion.Name = "Update";
+            this.UpdateRegion.Size = new System.Drawing.Size(75, 23);
+            this.UpdateRegion.TabIndex = 32;
+            this.UpdateRegion.Text = "Update";
+            this.UpdateRegion.UseVisualStyleBackColor = true;
+            this.UpdateRegion.Click += new System.EventHandler(this.Update_Click);
             // 
             // SearchForRegionByName
             // 
@@ -852,6 +852,6 @@
         private System.Windows.Forms.TextBox textBox10;
         private System.Windows.Forms.TextBox textBox11;
         private System.Windows.Forms.Label label30;
-        private System.Windows.Forms.Button Update;
+        private System.Windows.Forms.Button UpdateRegion;
     }
 }

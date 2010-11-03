@@ -137,7 +137,7 @@ namespace Aurora.Modules.AbuseReportsGUI
                 ObjectName.Text = AR.ObjectName;
                 ObjectPos.Text = AR.ObjectPosition.ToString();
                 Abusername.Text = AR.AbuserName;
-                Location.Text = AR.AbuseLocation;
+                AbuseLocation.Text = AR.AbuseLocation;
                 Summary.Text = AR.AbuseSummary;
                 Details.Text = AR.AbuseDetails;
                 AssignedTo.Text = AR.AssignedTo;
@@ -154,7 +154,7 @@ namespace Aurora.Modules.AbuseReportsGUI
                 ObjectName.Text = "";
                 ObjectPos.Text = "";
                 Abusername.Text = "";
-                Location.Text = "";
+                AbuseLocation.Text = "";
                 Summary.Text = "";
                 Details.Text = "";
                 AssignedTo.Text = "";

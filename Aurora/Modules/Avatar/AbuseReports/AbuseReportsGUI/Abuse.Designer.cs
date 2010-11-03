@@ -43,7 +43,7 @@
             this.label8 = new System.Windows.Forms.Label();
             this.label9 = new System.Windows.Forms.Label();
             this.Abusername = new System.Windows.Forms.TextBox();
-            this.Location = new System.Windows.Forms.TextBox();
+            this.AbuseLocation = new System.Windows.Forms.TextBox();
             this.Details = new System.Windows.Forms.TextBox();
             this.Summary = new System.Windows.Forms.TextBox();
             this.AssignedTo = new System.Windows.Forms.TextBox();
@@ -211,10 +211,10 @@
             // 
             // Location
             // 
-            this.Location.Location = new System.Drawing.Point(178, 174);
-            this.Location.Name = "Location";
-            this.Location.Size = new System.Drawing.Size(260, 20);
-            this.Location.TabIndex = 15;
+            this.AbuseLocation.Location = new System.Drawing.Point(178, 174);
+            this.AbuseLocation.Name = "Location";
+            this.AbuseLocation.Size = new System.Drawing.Size(260, 20);
+            this.AbuseLocation.TabIndex = 15;
             // 
             // Details
             // 
@@ -394,7 +394,7 @@
             this.Controls.Add(this.AssignedTo);
             this.Controls.Add(this.Summary);
             this.Controls.Add(this.Details);
-            this.Controls.Add(this.Location);
+            this.Controls.Add(this.AbuseLocation);
             this.Controls.Add(this.Abusername);
             this.Controls.Add(this.label9);
             this.Controls.Add(this.label8);
@@ -437,7 +437,7 @@
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.TextBox Abusername;
-        private System.Windows.Forms.TextBox Location;
+        private System.Windows.Forms.TextBox AbuseLocation;
         private System.Windows.Forms.TextBox Details;
         private System.Windows.Forms.TextBox Summary;
         private System.Windows.Forms.TextBox AssignedTo;
