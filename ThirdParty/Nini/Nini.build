@@ -1,0 +1,221 @@
+<?xml version="1.0"?>
+<!-- NAnt Build Script (http://nant.sf.net/) -->
+<project name="Nini" default="build" basedir=".">
+	<description>Nini project build script</description>
+	<property name="debug" value="false" />
+	<property name="project.name" value="Nini"/>
+	<property name="project.bin" value="..\Bin"/>
+	<property name="project.src" value="."/>
+	<property name="project.test" value="Test"/>
+	<property name="project.doc" value="..\Docs\Reference"/>
+	<property name="xml-doc-path" value="" />
+	<property name="lang" value="en"/>
+	<property name="use-strong" value="NOSTRONG"/>
+	<property name="nunit-version" value="2.2.7"/>
+
+	<target name="clean">
+		<delete dir="${project.bin}\DotNet" failonerror="false" />
+		<delete dir="${project.bin}\Mono" failonerror="false" />
+	</target>
+	
+	<target name="clean-documentation">
+		<call target="clean" />
+		<delete>
+			<fileset>
+				<include name="${project.doc}\chm\*.chm" />
+				<include name="${project.doc}\html\*.*" />
+			</fileset>
+		</delete>
+	</target>
+
+	<target name="build">
+		<call target="build-dotnet-1.0" />
+		<call target="build-dotnet-1.1" />
+		<call target="build-dotnet-2.0" />
+	</target>
+
+	<target name="build-test">
+		<call target="build-dotnet-1.1" />
+		<property name="debug" value="true" />
+		<property name="build.bin" value="${project.bin}\${runtime-name}\${current.runtime.version}\debug" />
+		<call target="build-test-version" />
+	</target>
+	
+	<target name="build-documentation">
+		<copy todir=".">
+			<fileset basedir="${project.doc}\xml\${lang}\Config">
+				<include name="*.xml" />
+			</fileset>
+		</copy>
+		<copy todir=".">
+			<fileset basedir="${project.doc}\xml\${lang}\Ini">
+				<include name="*.xml" />
+			</fileset>
+		</copy>
+		<copy todir=".">
+			<fileset basedir="${project.doc}\xml\${lang}\Util">
+				<include name="*.xml" />
+			</fileset>
+		</copy>
+		<call target="build-dotnet-1.1" />
+		<move file="Nini.xml" tofile="${build.bin}\Nini.xml" />
+		<ndoc>
+			<assemblies basedir="${build.bin}">
+				<include name="Nini.dll" />
+			</assemblies>
+			<summaries basedir=".">
+				<include name="Nini.xml" />
+			</summaries>
+			<documenters>
+				<documenter name="MSDN">
+					<property name="OutputDirectory" value="${project.doc}\html" />
+					<property name="HtmlHelpName" value="NiniReference" />
+					<property name="HtmlHelpCompilerFilename" value="hhc.exe" />
+					<property name="IncludeFavorites" value="False" />
+					<property name="Title" 
+						value="Nini Library API Reference - http://nini.sourceforge.net/" />
+					<property name="CopyrightText" 
+							  value="Copyright (c) 2006 Brent R. Matzelle" />
+				</documenter>
+			</documenters>
+		</ndoc>
+		<move file="${project.doc}\html\NiniReference.chm" 
+			  tofile="${project.doc}\chm\NiniReference.chm" />
+		<delete>
+			<fileset>
+				<include name="*.xml" />
+			</fileset>
+		</delete>
+	</target>
+	
+	<target name="build-dotnet-1.0">
+		<property name="build-version" value="NET_1_0" />
+		<property name="runtime-name" value="DotNet" />
+		<property name="current.runtime.config" value="net" />
+		<property name="current.runtime.version" value="1.0" />
+		<call target="run-build" />		
+	</target>
+
+	<target name="build-dotnet-1.1">
+		<property name="build-version" value="NET_1_1" />
+		<property name="runtime-name" value="DotNet" />
+		<property name="current.runtime.config" value="net" />
+		<property name="current.runtime.version" value="1.1" />
+		<call target="run-build" />	
+	</target>
+	
+	<target name="build-dotnet-2.0">
+		<property name="build-version" value="NET_2_0" />
+		<property name="runtime-name" value="DotNet" />
+		<property name="current.runtime.config" value="net" />
+		<property name="current.runtime.version" value="2.0" />
+		<call target="run-build" />	
+	</target>
+
+	<target name="build-mono">
+		<property name="build-version" value="MONO_1_1" />
+		<property name="runtime-name" value="Mono" />
+		<property name="current.runtime.config" value="mono" />
+		<property name="current.runtime.version" value="1.1" />
+		<call target="run-mono-build" />
+	</target>
+	
+	<target name="run-mono-build">
+		<mkdir dir="${project.bin}\Mono\1.1\Release" />
+		<property name="build.bin" value="${project.bin}\Mono\1.1\Release" />
+
+		<exec program="mcs.bat">
+			<arg value="-target:library"/>
+			<arg value="-out:${build.bin}\${project.name}.dll"/>
+			<arg value="-reference:System.dll"/>
+			<arg value="-reference:System.Xml.dll"/>
+			<arg value="-define:${build-version}"/>
+			<arg value="-define:${use-strong}"/>
+
+			<arg value="${project.src}\AssemblyInfo.cs" />
+			
+			<arg value="${project.src}\Ini\IniDocument.cs" />
+			<arg value="${project.src}\Ini\IniReader.cs" />
+			<arg value="${project.src}\Ini\IniWriter.cs" />
+			<arg value="${project.src}\Ini\IniException.cs" />
+			<arg value="${project.src}\Ini\IniSectionCollection.cs" />
+			<arg value="${project.src}\Ini\IniSection.cs" />
+			<arg value="${project.src}\Ini\IniItem.cs" />
+			
+			<arg value="${project.src}\Config\ArgvConfigSource.cs" />
+			<arg value="${project.src}\Config\ConfigBase.cs" />
+			<arg value="${project.src}\Config\ConfigSourceBase.cs" />
+			<arg value="${project.src}\Config\IniConfigSource.cs" />
+			<arg value="${project.src}\Config\DotNetConfigSource.cs" />
+			<arg value="${project.src}\Config\XmlConfigSource.cs" />
+			<arg value="${project.src}\Config\AliasText.cs" />
+			<arg value="${project.src}\Config\IConfig.cs" />
+			<arg value="${project.src}\Config\IConfigSource.cs" />
+			<arg value="${project.src}\Config\IniConfig.cs" />
+			<arg value="${project.src}\Config\ConfigCollection.cs" />
+			
+			<arg value="${project.src}\Util\ArgvParser.cs" />
+			<arg value="${project.src}\Util\OrderedList.cs" />
+			<arg value="${project.src}\Util\OrderedListEnumerator.cs" />
+		</exec>
+	</target>
+	
+	<target name="run-build">
+		<property name="nant.settings.currentframework" value="${current.runtime.config}-${current.runtime.version}" />
+		<mkdir dir="${project.bin}\${runtime-name}\${current.runtime.version}\Debug" />
+		<mkdir dir="${project.bin}\${runtime-name}\${current.runtime.version}\Release" />
+
+		<property name="debug" value="true" />
+		<property name="build.bin" value="${project.bin}\${runtime-name}\${current.runtime.version}\Debug" />
+		<call target="build-version" />
+		
+		<property name="debug" value="false" />
+		<property name="build.bin" value="${project.bin}\${runtime-name}\${current.runtime.version}\Release" />
+		<call target="build-version" />
+	</target>
+	
+	<target name="build-version" description="Compiles the project DLL">
+		<csc target="library" doc="Nini.xml"
+			define="${build-version};${use-strong}"
+			output="${build.bin}\${project.name}.dll" debug="${debug}">
+			<sources>
+				<include name="${project.src}\*.cs" />
+				<include name="${project.src}\Ini\*.cs" />
+				<include name="${project.src}\Config\*.cs" />
+				<include name="${project.src}\Util\*.cs" />
+			</sources>
+			<references>
+				<include asis="true" name="System.dll"/>
+				<include asis="true" name="System.Xml.dll"/>
+			</references>
+		</csc>
+	</target>
+
+	<target name="build-test-version" description="Builds unit tests">
+		<csc target="library" output="${build.bin}\${project.name}Tests.dll" debug="${debug}">
+			<sources>
+				<include name="${project.test}\Ini\*.cs" />
+				<include name="${project.test}\Config\*.cs" />
+				<include name="${project.test}\Util\*.cs" />
+			</sources>
+			<references>
+				<include asis="true" name="System.dll"/>
+				<include asis="true" name="System.Xml.dll"/>
+				<include asis="true" name="${build.bin}\${project.name}.dll"/>
+				<include asis="true" name="\Program Files\NUnit ${nunit-version}\bin\Nunit.Framework.dll"/>
+			</references>
+		</csc>
+		<csc target="exe" output="${build.bin}\DotNetConsoleTests.exe" debug="${debug}">
+			<sources>
+				<include name="${project.test}\Config\DotNetConsoleTests.cs" />
+			</sources>
+			<references>
+				<include asis="true" name="System.dll"/>
+				<include asis="true" name="System.Xml.dll"/>
+				<include name="${build.bin}\${project.name}.dll"/>
+			</references>
+		</csc>
+		<copy file="${project.test}\Config\DotNetConsoleTests.exe.config" 
+			tofile="${build.bin}\DotNetConsoleTests.exe.config" />
+	</target>
+</project>

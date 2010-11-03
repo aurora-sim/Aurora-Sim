@@ -424,7 +424,7 @@ namespace OpenSim.Services.LLLoginService
                         profileData.UpdateUserProfile(UPI);
                     }
                 }
-
+                requestData["ip"] = clientIP.ToString();
                 foreach (ILoginModule module in LoginModules)
                 {
                     string message;

@@ -1249,7 +1249,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     newAgent = true;
                 else
                     newAgent = false;
-                m_log.WarnFormat("--> Going to send child agent to {0}, new agent {1}", neighbour.RegionName, newAgent);
+                //m_log.WarnFormat("--> Going to send child agent to {0}, new agent {1}", neighbour.RegionName, newAgent);
                 
                 if (neighbour.RegionHandle != sp.Scene.RegionInfo.RegionHandle)
                 {

@@ -1,0 +1,167 @@
+﻿<Project DefaultTargets="Build" ToolsVersion="3.5" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectType>Local</ProjectType>
+    <ProductVersion>8.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{9B920C90-08EF-4123-A6B7-5F25CF0F94EC}</ProjectGuid>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ApplicationIcon>
+    </ApplicationIcon>
+    <AssemblyKeyContainerName>
+    </AssemblyKeyContainerName>
+    <AssemblyName>Nini</AssemblyName>
+    <AssemblyOriginatorKeyFile>
+    </AssemblyOriginatorKeyFile>
+    <DefaultClientScript>JScript</DefaultClientScript>
+    <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
+    <DefaultTargetSchema>IE50</DefaultTargetSchema>
+    <DelaySign>false</DelaySign>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Nini</RootNamespace>
+    <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
+    <StartupObject>
+    </StartupObject>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <OldToolsVersion>0.0</OldToolsVersion>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <OutputPath>..\Bin\DotNet\1.0\Debug\</OutputPath>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <BaseAddress>285212672</BaseAddress>
+    <CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
+    <ConfigurationOverrideFile>
+    </ConfigurationOverrideFile>
+    <DefineConstants>DEBUG;TRACE;NET_1_0</DefineConstants>
+    <DocumentationFile>
+    </DocumentationFile>
+    <DebugSymbols>true</DebugSymbols>
+    <FileAlignment>4096</FileAlignment>
+    <NoStdLib>false</NoStdLib>
+    <NoWarn>
+    </NoWarn>
+    <Optimize>false</Optimize>
+    <RegisterForComInterop>false</RegisterForComInterop>
+    <RemoveIntegerChecks>false</RemoveIntegerChecks>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <WarningLevel>4</WarningLevel>
+    <DebugType>full</DebugType>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <OutputPath>..\Bin\DotNet\1.0\Release\</OutputPath>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <BaseAddress>285212672</BaseAddress>
+    <CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
+    <ConfigurationOverrideFile>
+    </ConfigurationOverrideFile>
+    <DefineConstants>TRACE;NET_1_0</DefineConstants>
+    <DocumentationFile>
+    </DocumentationFile>
+    <DebugSymbols>false</DebugSymbols>
+    <FileAlignment>4096</FileAlignment>
+    <NoStdLib>false</NoStdLib>
+    <NoWarn>
+    </NoWarn>
+    <Optimize>true</Optimize>
+    <RegisterForComInterop>false</RegisterForComInterop>
+    <RemoveIntegerChecks>false</RemoveIntegerChecks>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <WarningLevel>4</WarningLevel>
+    <DebugType>none</DebugType>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System">
+      <Name>System</Name>
+    </Reference>
+    <Reference Include="System.Data">
+      <Name>System.Data</Name>
+    </Reference>
+    <Reference Include="System.Xml">
+      <Name>System.XML</Name>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AssemblyInfo.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Config\AliasText.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Config\ArgvConfigSource.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Config\ConfigBase.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Config\ConfigCollection.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Config\ConfigSourceBase.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Config\DotNetConfigSource.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Config\IConfig.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Config\IConfigSource.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Config\IniConfig.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Config\IniConfigSource.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Config\RegistryConfigSource.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Config\XmlConfigSource.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Ini\IniDocument.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Ini\IniException.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Ini\IniItem.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Ini\IniReader.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Ini\IniSection.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Ini\IniSectionCollection.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Ini\IniWriter.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Util\ArgvParser.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Util\OrderedList.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Util\OrderedListEnumerator.cs">
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PreBuildEvent>
+    </PreBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
+</Project>

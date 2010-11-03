@@ -274,12 +274,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         #region Queue processing
 
+        /// <summary>
+        /// Processes and fires an event
+        /// </summary>
+        /// <param name="QIS"></param>
+        /// <returns>Returns whether the calling thread should sleep after processing this request</returns>
         public bool ProcessQIS(QueueItemStruct QIS)
         {
             //Disabled, not running, suspended, null scripts, or loading scripts dont get events fired.
             if (QIS.ID.Suspended || QIS.ID.Script == null || 
                 QIS.ID.Loading || QIS.ID.Disabled)
-                return false;
+                return true;
 
             if (!QIS.ID.Running)
             {
@@ -287,13 +292,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 if (QIS.functionName == "state_entry"
                     || QIS.functionName == "on_rez")
                     EventProcessorQueue.Add(QIS, EventPriority.Continued);
-                return false;
+                return true;
             }
 
             //Check if this event was fired with an old versionID
             if (NeedsRemoved.ContainsKey(QIS.ID.ItemID))
                 if(NeedsRemoved[QIS.ID.ItemID] >= QIS.VersionID)
-                    return false;
+                    return true;
 
             try
             {

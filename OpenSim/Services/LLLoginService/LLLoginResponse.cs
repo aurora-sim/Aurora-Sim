@@ -219,6 +219,9 @@ namespace OpenSim.Services.LLLoginService
 
         public LLLoginResponse()
         {
+            login = "true";
+            ErrorMessage = "";
+            ErrorReason = LoginResponseEnum.OK;
             loginFlags = new ArrayList();
             globalTextures = new ArrayList();
             eventCategories = new ArrayList();

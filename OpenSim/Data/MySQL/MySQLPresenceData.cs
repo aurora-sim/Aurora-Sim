@@ -83,7 +83,7 @@ namespace OpenSim.Data.MySQL
 
             MySqlCommand cmd = new MySqlCommand();
 
-            cmd.CommandText = String.Format("update {0} set RegionID=?RegionID, LastSeen=NOW() where `SessionID`=?SessionID", m_Realm);
+            cmd.CommandText = String.Format("update {0} set RegionID=?RegionID, LastSeen=?LastSeen where `SessionID`=?SessionID", m_Realm);
 
             cmd.Parameters.AddWithValue("?SessionID", sessionID.ToString());
             cmd.Parameters.AddWithValue("?LastSeen", Util.UnixTimeSinceEpoch().ToString());
