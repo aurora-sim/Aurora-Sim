@@ -869,6 +869,11 @@ namespace OpenSim.Region.Framework.Scenes
                 //m_log.DebugFormat("Looking at entity {0}", ent.UUID);
                 if (ent is SceneObjectGroup)
                 {
+                    if (((SceneObjectGroup)ent).GetChildPart(localID) != null)
+                    {
+                        return (SceneObjectGroup)ent;
+                    }
+                    if(ent.LocalId == localID)
                     {
                         return (SceneObjectGroup)ent;
                     }

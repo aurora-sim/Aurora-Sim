@@ -167,6 +167,21 @@ namespace OpenSim.Region.Framework.Scenes
                         }
                     }
                 }
+                else
+                {
+                    SceneObjectGroup grp = m_sceneGraph.GetGroupByPrim(primLocalID);
+                    prim = grp.GetChildPart(primLocalID);
+                    entity = prim;
+                    if (prim.IsRoot)
+                    {
+                        prim.ParentGroup.IsSelected = true;
+                        if (Permissions.CanEditObject(prim.ParentGroup.UUID, remoteClient.AgentId)
+                            || Permissions.CanMoveObject(prim.ParentGroup.UUID, remoteClient.AgentId))
+                        {
+                            EventManager.TriggerParcelPrimCountTainted();
+                        }
+                    }
+                }
                 if (entity != null)
                     EntitiesToUpdate.Add(entity);
                 /*foreach (EntityBase ent in EntityList)

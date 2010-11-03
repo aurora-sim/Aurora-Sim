@@ -278,7 +278,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 child = (entity as SceneObjectGroup).GetChildPart(childkey);
 
-                return false;
+                return true;
             }
         }
 
@@ -296,7 +296,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 childPrim = (entity as SceneObjectGroup).GetChildPart(objectID);
 
-                return false;
+                return true;
             }
         }
     }

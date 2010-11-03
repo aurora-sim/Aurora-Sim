@@ -3585,6 +3585,8 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 TimeStampFull = (uint)timeNow;
             }
+            if (SitTargetAvatar.Count != 0)
+                UpdateFlags = PrimUpdateFlags.FullUpdate;
             if (UpdateFlags == PrimUpdateFlags.FindBest)
             {
                 UpdateFlags = PrimUpdateFlags.None;
