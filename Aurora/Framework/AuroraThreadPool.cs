@@ -138,6 +138,7 @@ namespace Aurora.Framework
                         return;
                 }
                 Thread thread = new Thread(ThreadStart);
+                thread.Priority = ThreadPriority.Lowest;
                 thread.Name = "Aurora Thread Pool Thread #" + 0;
                 thread.IsBackground = true;
                 thread.Start(new int[]{0,0}); //Set to 0 here to send the check for more threads the first time and 0 for the 0th thread
@@ -163,6 +164,7 @@ namespace Aurora.Framework
                 }
                 Thread thread = new Thread(ThreadStart);
                 thread.Name = "Aurora Thread Pool Thread #" + 0;
+                thread.Priority = ThreadPriority.Lowest;
                 thread.IsBackground = true;
                 thread.Start(new int[] { 0, 0 }); //Set to 0 here to send the check for more threads the first time and 0 for the 0th thread
                 Threads[0] = thread;
