@@ -1244,13 +1244,13 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             int count = 0;
             foreach (GridRegion neighbour in neighbours)
             {
-                //m_log.WarnFormat("--> Going to send child agent to {0}", neighbour.RegionName);
                 // Don't do it if there's already an agent in that region
                 if (newRegions.Contains(neighbour.RegionHandle))
                     newAgent = true;
                 else
                     newAgent = false;
-
+                m_log.WarnFormat("--> Going to send child agent to {0}, new agent {1}", neighbour.RegionName, newAgent);
+                
                 if (neighbour.RegionHandle != sp.Scene.RegionInfo.RegionHandle)
                 {
                     InformClientOfNeighbourDelegate d = InformClientOfNeighbourAsync;
