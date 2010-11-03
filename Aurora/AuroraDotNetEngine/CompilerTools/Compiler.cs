@@ -200,6 +200,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             string retval = CheckLanguageAndConvert(Script, ownerUUID, out converter, out compileScript);
             if (retval != string.Empty)
                 return retval;
+            if (converter == null)
+                return "No Compiler found for this type of script.";
 
             retval = CompileFromDotNetText(compileScript, converter, assembly);
             return retval;
