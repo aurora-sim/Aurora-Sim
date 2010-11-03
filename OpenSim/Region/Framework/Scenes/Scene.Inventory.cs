@@ -1799,7 +1799,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (action == DeRezAction.Return)
             {
-                if (Permissions.CanReturnObjects(
+                if (remoteClient != null && Permissions.CanReturnObjects(
                                     null,
                                     remoteClient.AgentId,
                                     deleteGroups))
@@ -1819,7 +1819,7 @@ namespace OpenSim.Region.Framework.Scenes
             //if (permissionToTake)
             //{
                 m_asyncSceneObjectDeleter.DeleteToInventory(
-                        action, destinationID, deleteGroups, remoteClient.AgentId,
+                    action, destinationID, deleteGroups, remoteClient == null ? UUID.Zero : remoteClient.AgentId,
                         permissionToDelete, permissionToTake);
             //}
             //else if (permissionToDelete)

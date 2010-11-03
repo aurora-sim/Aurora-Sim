@@ -5539,14 +5539,14 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Backup
 
-        private HashSet<UUID> m_backupTaintedPrims = new HashSet<UUID>();
+        private HashSet<SceneObjectGroup> m_backupTaintedPrims = new HashSet<SceneObjectGroup>();
 
         public void AddPrimBackupTaint(SceneObjectGroup sceneObjectGroup)
         {
             lock (m_backupTaintedPrims)
             {
-                if (!m_backupTaintedPrims.Contains(sceneObjectGroup.UUID))
-                    m_backupTaintedPrims.Add(sceneObjectGroup.UUID);
+                if (!m_backupTaintedPrims.Contains(sceneObjectGroup))
+                    m_backupTaintedPrims.Add(sceneObjectGroup);
             }
         }
 
@@ -5565,31 +5565,27 @@ namespace OpenSim.Region.Framework.Scenes
                     EntityBase[] entities = Entities.GetEntities();
                     foreach (EntityBase entity in entities)
                     {
-                        m_backupTaintedPrims.Add(entity.UUID);
+                        if(entity is SceneObjectGroup)
+                            m_backupTaintedPrims.Add(entity as SceneObjectGroup);
                     }
                 }
             }
-            HashSet<UUID> backupPrims;
+            HashSet<SceneObjectGroup> backupPrims;
             lock (m_backupTaintedPrims)
             {
                 if (m_backupTaintedPrims.Count == 0)
                     return;
-                backupPrims = new HashSet<UUID>(m_backupTaintedPrims);
+                backupPrims = new HashSet<SceneObjectGroup>(m_backupTaintedPrims);
                 m_backupTaintedPrims.Clear();
             }
-            backupPrims.Clear();
-            foreach (UUID grpUUID in backupPrims)
+            foreach (SceneObjectGroup grp in backupPrims)
             {
-                EntityBase entity = Entities[grpUUID];
-                if(!(entity is SceneObjectGroup))
-                    continue;
-                SceneObjectGroup grp = entity as SceneObjectGroup;
                 if (!grp.ProcessBackup(SimulationDataService, forced))
                 {
                     //Readd it then as its not time for it to backup yet
                     lock (m_backupTaintedPrims)
-                        if(!m_backupTaintedPrims.Contains(grp.UUID))
-                            m_backupTaintedPrims.Add(grp.UUID);
+                        if(!m_backupTaintedPrims.Contains(grp))
+                            m_backupTaintedPrims.Add(grp);
                 }
             }
         }

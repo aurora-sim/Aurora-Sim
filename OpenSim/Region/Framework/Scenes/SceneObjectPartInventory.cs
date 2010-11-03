@@ -254,6 +254,8 @@ namespace OpenSim.Region.Framework.Scenes
             List<TaskInventoryItem> LSLItems = GetInventoryScripts();
             if (LSLItems.Count == 0)
                 return;
+            HasInventoryChanged = true;
+            m_part.ParentGroup.HasGroupChanged = true;
 
             bool SendUpdate = m_part.AddFlag(PrimFlags.Scripted);
             m_part.ParentGroup.Scene.EventManager.TriggerRezScripts(
@@ -326,6 +328,8 @@ namespace OpenSim.Region.Framework.Scenes
             List<TaskInventoryItem> scripts = GetInventoryScripts();
             foreach (TaskInventoryItem item in scripts)
                 RemoveScriptInstance(item.ItemID, sceneObjectBeingDeleted);
+            HasInventoryChanged = true;
+            m_part.ParentGroup.HasGroupChanged = true;
         }
 
         /// <summary>
@@ -359,6 +363,8 @@ namespace OpenSim.Region.Framework.Scenes
                     m_part.ParentGroup.Scene.EventManager.TriggerRezScript(
                         m_part, item.ItemID, String.Empty, startParam, postOnRez, engine, stateSource);
                     m_part.ParentGroup.AddActiveScriptCount(1);
+                    HasInventoryChanged = true;
+                    m_part.ParentGroup.HasGroupChanged = true;
                     if (SendUpdate)
                         m_part.ScheduleFullUpdate(PrimUpdateFlags.PrimFlags); //We only need to send a compressed
                     return;
@@ -393,6 +399,8 @@ namespace OpenSim.Region.Framework.Scenes
                         m_part.ScheduleFullUpdate(PrimUpdateFlags.PrimFlags); //We only need to send a compressed
                 }
             }
+            HasInventoryChanged = true;
+            m_part.ParentGroup.HasGroupChanged = true;
         }
 
         /// <summary>
@@ -439,6 +447,8 @@ namespace OpenSim.Region.Framework.Scenes
                     m_part.ParentGroup.AddActiveScriptCount(1);
                 }
             }
+            HasInventoryChanged = true;
+            m_part.ParentGroup.HasGroupChanged = true;
         }
 
         private void RestoreSavedScriptState(UUID oldID, UUID newID)
