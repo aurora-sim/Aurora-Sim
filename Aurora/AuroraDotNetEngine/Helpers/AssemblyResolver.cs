@@ -49,7 +49,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             string[] pathList = new string[] {Path.Combine(Directory.GetCurrentDirectory(), "bin"),
                 Path.Combine(Directory.GetCurrentDirectory(),PathToSearch),
-                Path.Combine(Directory.GetCurrentDirectory(),Path.Combine(PathToSearch, "Script")),
+                Path.Combine(Directory.GetCurrentDirectory(),Path.Combine(PathToSearch, "Scripts")),
                 Directory.GetCurrentDirectory(),
                 };
 

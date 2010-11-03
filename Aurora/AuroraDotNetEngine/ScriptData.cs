@@ -480,12 +480,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             if (!reupload && Loading && LastStateSave != null
                 && File.Exists(Path.Combine(m_ScriptEngine.ScriptEnginesPath, Path.Combine(
-                    "Script",
+                    "Scripts",
                     LastStateSave.AssemblyName))))
             {
                 //Retrive the previous assembly
                 AssemblyName = Path.Combine(m_ScriptEngine.ScriptEnginesPath, Path.Combine(
-                    "Script",
+                    "Scripts",
                     LastStateSave.AssemblyName));
             }
             else

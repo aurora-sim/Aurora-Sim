@@ -192,7 +192,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             m_errors.Clear();
 
             assembly = CheckDirectories(Path.Combine(m_scriptEngine.ScriptEnginesPath, Path.Combine(
-                        "Script",
+                        "Scripts",
                         FilePrefix + "_compiled_" + itemID.ToString() + "V" + VersionID + ".dll")));
 
             IScriptConverter converter;
@@ -278,14 +278,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 {
                 }
             }
-
-            string[] testDir = assembly.Split('\\');
-
-            if (!Directory.Exists(testDir[0] + "\\" + testDir[1]))
+            if (!Directory.Exists(Path.Combine(m_scriptEngine.ScriptEnginesPath,"Scripts")))
             {
                 try
                 {
-                    Directory.CreateDirectory(testDir[0] + "\\" + testDir[1]);
+                    Directory.CreateDirectory(Path.Combine(m_scriptEngine.ScriptEnginesPath, "Scripts"));
                 }
                 catch (Exception)
                 {
@@ -372,7 +369,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 {
                     File.WriteAllText(Path.Combine(Path.Combine(
                         m_scriptEngine.ScriptEnginesPath,
-                        "Script"),
+                        "Scripts"),
                         srcFileName), Script);
                 }
                 catch (Exception ex) //NOTLEGIT - Should be just FileIOException
