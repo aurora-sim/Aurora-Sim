@@ -258,7 +258,7 @@ namespace OpenSim.Region.Framework.Scenes
             thread = new System.Threading.Thread(heartbeat.Start);
             thread.Name = "SceneHeartbeat";
             thread.Priority = System.Threading.ThreadPriority.Normal;
-            thread.IsBackground = false;
+            thread.IsBackground = true;
             thread.Start();
             heartbeat.ThreadIsClosing += ThreadDieing;
             AllHeartbeats.Add(heartbeat);

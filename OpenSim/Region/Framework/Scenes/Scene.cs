@@ -5557,6 +5557,18 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void ProcessPrimBackupTaints(bool forced)
         {
+            if (forced)
+            {
+                //Add all
+                lock (m_backupTaintedPrims)
+                {
+                    EntityBase[] entities = Entities.GetEntities();
+                    foreach (EntityBase entity in entities)
+                    {
+                        m_backupTaintedPrims.Add(entity.UUID);
+                    }
+                }
+            }
             HashSet<UUID> backupPrims;
             lock (m_backupTaintedPrims)
             {
