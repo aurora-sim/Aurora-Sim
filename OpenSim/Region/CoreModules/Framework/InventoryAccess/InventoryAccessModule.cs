@@ -646,7 +646,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
 
                         if (attachment)
                         {
-                            group.RootPart.ObjectFlags |= (uint)PrimFlags.Phantom;
+                            group.RootPart.Flags |= PrimFlags.Phantom;
                             group.RootPart.IsAttachment = true;
                         }
                         if (RezSelected)
@@ -822,7 +822,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
 
                 if (attachment)
                 {
-                    group.RootPart.ObjectFlags |= (uint)PrimFlags.Phantom;
+                    group.RootPart.Flags |= PrimFlags.Phantom;
                     group.RootPart.IsAttachment = true;
                 }
                 if (RezSelected)

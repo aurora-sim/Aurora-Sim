@@ -478,12 +478,12 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
                                     // Notify about this user status
                                     StatusNotify(fi, agentID, online);
                                 }
-                                catch (Exception ex)
+                                catch (Exception)
                                 {
                                 }
                             }
                         }
-                        catch (Exception ex)
+                        catch (Exception)
                         {
                         }
                     }

@@ -53,7 +53,6 @@ namespace OpenSim.Region.CoreModules.World.Land
         public LandData LandData;
         public ulong RegionHandle;
         public uint X, Y;
-        public byte RegionAccess;
     }
 
     public class LandManagementModule : INonSharedRegionModule
@@ -573,8 +572,8 @@ namespace OpenSim.Region.CoreModules.World.Land
                         //If the object has physics, stop it from moving
                         if ((group.RootPart.Flags & PrimFlags.Physics) == PrimFlags.Physics)
                         {
-                            bool wasTemporary = ((group.RootPart.ObjectFlags & (uint)PrimFlags.TemporaryOnRez) != 0);
-                            bool wasPhantom = ((group.RootPart.ObjectFlags & (uint)PrimFlags.Phantom) != 0);
+                            bool wasTemporary = ((group.RootPart.Flags & PrimFlags.TemporaryOnRez) != 0);
+                            bool wasPhantom = ((group.RootPart.Flags & PrimFlags.Phantom) != 0);
                             bool wasVD = group.RootPart.VolumeDetectActive;
                             group.RootPart.UpdatePrimFlags(false, wasTemporary, wasPhantom, wasVD);
                         }
