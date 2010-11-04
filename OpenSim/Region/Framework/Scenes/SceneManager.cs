@@ -632,7 +632,7 @@ namespace OpenSim.Region.Framework.Scenes
                     m_log.Error("[STARTUP]: Registration of region with grid failed - The region location you specified is already in use. You must move your region.");
                     scene.RegionInfo.RegionLocY = uint.Parse(MainConsole.Instance.CmdPrompt("New Region Location X", "1000"));
                     scene.RegionInfo.RegionLocX = uint.Parse(MainConsole.Instance.CmdPrompt("New Region Location Y", "1000"));
-                    
+
                     IConfig config = m_config.Configs["RegionStartup"];
                     if (config != null)
                     {
@@ -716,6 +716,8 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 RegisterRegionWithGrid(scene);
             }
+            else
+                m_log.Info("[SCENE]: Registered " + scene.RegionInfo.RegionName + " with the grid server successfully.");
         }
 
         private void SaveChangesFile(RegionInfo regionInfo)
