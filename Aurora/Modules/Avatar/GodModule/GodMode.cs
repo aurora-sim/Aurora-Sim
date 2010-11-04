@@ -133,7 +133,7 @@ namespace Aurora.Modules
             {
                 Scene scene = (Scene)MainConsole.Instance.ConsoleScene; //Switch back later
                 MainConsole.Instance.RunCommand("change region " + ((Scene)client.Scene).RegionInfo.RegionName);
-                MainConsole.Instance.RunCommand("save oar " + m_oar_directory + ((Scene)client.Scene).RegionInfo.RegionName + Util.UnixTimeSinceEpoch().ToString() + ".ss");
+                MainConsole.Instance.RunCommand("save oar " + m_oar_directory + ((Scene)client.Scene).RegionInfo.RegionName + Util.UnixTimeSinceEpoch().ToString() + ".statesave.oar");
                 MainConsole.Instance.RunCommand("change region " + scene.RegionInfo.RegionName);
             }
         }
