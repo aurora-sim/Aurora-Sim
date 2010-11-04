@@ -439,5 +439,15 @@ namespace Aurora.Services.DataService
             }
             return Classifieds.ToArray();
         }
+
+        public void AddClassifieds(Dictionary<string, object> dictionary)
+        {
+            //Not able to be done remotely
+        }
+
+        public void RemoveClassifieds(Dictionary<string, object> dictionary)
+        {
+            //Not able to be done remotely
+        }
     }
 }

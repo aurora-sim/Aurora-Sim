@@ -8,6 +8,7 @@ using Aurora.DataManager;
 using Aurora.Framework;
 using OpenSim.Framework;
 using Nini.Config;
+using OpenMetaverse.StructuredData;
 
 namespace Aurora.Services.DataService
 {
@@ -391,7 +392,6 @@ namespace Aurora.Services.DataService
 
         public DirClassifiedReplyData[] FindClassifieds(string queryText, string category, string queryFlags, int StartQuery)
         {
-            //TODO: BROKEN!
             List<DirClassifiedReplyData> Data = new List<DirClassifiedReplyData>();
 
             string whereClause = "";
@@ -399,23 +399,25 @@ namespace Aurora.Services.DataService
             uint cqf = uint.Parse(queryFlags);
 
             if (category != "0")
-                classifiedClause = " and category = '" + category + "'";
+                classifiedClause = " and Category = '" + category + "'";
 
-            whereClause = " name LIKE '%" + queryText + "%'" + classifiedClause + " LIMIT " + StartQuery.ToString() + ",50 ";
-            List<string> retVal = GD.Query(whereClause, "profileclassifieds", "classifiedflags, classifieduuid, creationdate, expirationdate, priceforlisting, name");
+            whereClause = " Name LIKE '%" + queryText + "%'" + classifiedClause + " LIMIT " + StartQuery.ToString() + ",50 ";
+            List<string> retVal = GD.Query(whereClause, "profileclassifieds", "*");
             if (retVal.Count == 0)
                 return Data.ToArray();
 
             DirClassifiedReplyData replyData = null;
-            for (int i = 0; i < retVal.Count; i += 6)
+            for (int i = 0; i < retVal.Count; i += 5)
             {
+                Classified classified = new Classified();
+                classified.FromOSD((OSDMap)retVal[i + 4]);
                 replyData = new DirClassifiedReplyData();
-                replyData.classifiedFlags = Convert.ToByte(retVal[i]);
-                replyData.classifiedID = new UUID(retVal[i + 1]);
-                replyData.creationDate = Convert.ToUInt32(retVal[i + 2]);
-                replyData.expirationDate = Convert.ToUInt32(retVal[i + 3]);
-                replyData.price = Convert.ToInt32(retVal[i + 4]);
-                replyData.name = retVal[i + 5];
+                replyData.classifiedFlags = classified.ClassifiedFlags;
+                replyData.classifiedID = classified.ClassifiedUUID;
+                replyData.creationDate = classified.CreationDate;
+                replyData.expirationDate = classified.ExpirationDate;
+                replyData.price = classified.PriceForListing;
+                replyData.name = classified.Name;
                 if ((replyData.classifiedFlags & (uint)DirectoryManager.ClassifiedFlags.Mature) == (uint)DirectoryManager.ClassifiedFlags.Mature)
                 {
                     if ((cqf & (uint)DirectoryManager.ClassifiedQueryFlags.Mature) == (uint)DirectoryManager.ClassifiedQueryFlags.Mature)
@@ -471,54 +473,49 @@ namespace Aurora.Services.DataService
 
         public Classified[] GetClassifiedsInRegion(string regionName)
         {
-            //TODO: BROKEN!
             List<Classified> Classifieds = new List<Classified>();
-            List<string> retVal = GD.Query("simname", regionName, "profileclassifieds", "*");
+            List<string> retVal = GD.Query("SimName", regionName, "profileclassifieds", "*");
             if (retVal.Count == 0)
                 return Classifieds.ToArray();
-            int a = 0;
             Classified classified = new Classified();
-            for (int i = 0; i < retVal.Count; i++)
+            for (int i = 0; i < retVal.Count; i += 5)
             {
-                if (a == 0)
-                    classified.ClassifiedUUID = UUID.Parse(retVal[i]);
-                if (a == 1)
-                    classified.CreatorUUID = UUID.Parse(retVal[i]);
-                if (a == 2)
-                    classified.CreationDate = uint.Parse(retVal[i]);
-                if (a == 3)
-                    classified.ExpirationDate = uint.Parse(retVal[i]);
-                if (a == 4)
-                    classified.Category = uint.Parse(retVal[i]);
-                if (a == 5)
-                    classified.Name = retVal[i];
-                if (a == 6)
-                    classified.Description = retVal[i];
-                if (a == 7)
-                    classified.ParcelUUID = UUID.Parse(retVal[i]);
-                if (a == 8)
-                    classified.ParentEstate = uint.Parse(retVal[i]);
-                if (a == 9)
-                    classified.SnapshotUUID = UUID.Parse(retVal[i]);
-                if (a == 10)
-                    classified.SimName = retVal[i];
-                if (a == 11)
-                    classified.GlobalPos = Vector3.Parse(retVal[i]);
-                if (a == 12)
-                    classified.ParcelName = retVal[i];
-                if (a == 13)
-                    classified.ClassifiedFlags = byte.Parse(retVal[i]);
-                if (a == 14)
-                    classified.PriceForListing = int.Parse(retVal[i]);
-                a++;
-                if (a == 15)
-                {
-                    a = 0;
-                    Classifieds.Add(classified);
-                    classified = new Classified();
-                }
+                classified.FromOSD((OSDMap)retVal[i + 4]);
+                Classifieds.Add(classified);
+                classified = new Classified();
             }
             return Classifieds.ToArray();
+        }
+
+        public void AddClassifieds(Dictionary<string, object> dictionary)
+        {
+            foreach (object o in dictionary)
+            {
+                OSDMap map = (OSDMap)o;
+                Classified c = new Classified();
+                c.FromOSD(map);
+                List<object> Values = new List<object>();
+                Values.Add(c.Name);
+                Values.Add(c.Category);
+                Values.Add(c.SimName);
+                Values.Add(c.ClassifiedUUID);
+                GD.Insert("profileclassifieds", Values.ToArray());
+            }
+        }
+
+        public void RemoveClassifieds(Dictionary<string, object> dictionary)
+        {
+            foreach (object o in dictionary)
+            {
+                OSDMap map = (OSDMap)o;
+                Classified c = new Classified();
+                c.FromOSD(map);
+                List<string> Keys = new List<string>();
+                Keys.Add("ClassifiedUUID");
+                List<object> Values = new List<object>();
+                Values.Add(c.ClassifiedUUID);
+                GD.Delete("profileclassifieds", Keys.ToArray(), Values.ToArray());
+            }
         }
     }
 }

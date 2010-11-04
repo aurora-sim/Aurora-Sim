@@ -163,6 +163,17 @@ namespace Aurora.Services.DataService
             //Update cache
             UserProfilesCache[Profile.PrincipalID] = Profile;
 
+            IUserProfileInfo UPI = GetUserProfile(Profile.PrincipalID);
+            if (UPI != null)
+            {
+                IDirectoryServiceConnector dirServiceConnector = DataManager.DataManager.RequestPlugin<IDirectoryServiceConnector>();
+                if (dirServiceConnector != null)
+                {
+                    dirServiceConnector.RemoveClassifieds(UPI.Classifieds);
+                    dirServiceConnector.AddClassifieds(Profile.Classifieds);
+                }
+            }
+
             return GD.Update("userdata", SetValues.ToArray(), SetRows.ToArray(), KeyRow.ToArray(), KeyValue.ToArray());
 		}
 

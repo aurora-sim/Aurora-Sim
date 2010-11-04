@@ -63,6 +63,12 @@ namespace Aurora.DataManager.Migration.Migrators
                  ColDef("f_off_circuit", ColumnTypes.String50),
                  ColDef("f_resent", ColumnTypes.String50),
                  ColDef("f_send_packet", ColumnTypes.String50)));
+
+            AddSchema("profileclassifieds", ColDefs(ColDef("Name", ColumnTypes.String50),
+                 ColDef("Category", ColumnTypes.String50),
+                 ColDef("SimName", ColumnTypes.String50),
+                 ColDef("ClassifiedUUID", ColumnTypes.String50, true),
+                 ColDef("Classified", ColumnTypes.String8196)));
         }
 
         protected override void DoCreateDefaults(DataSessionProvider sessionProvider, IDataConnector genericData)

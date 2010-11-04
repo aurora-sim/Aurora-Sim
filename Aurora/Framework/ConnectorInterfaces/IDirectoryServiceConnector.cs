@@ -92,5 +92,19 @@ namespace Aurora.Framework
         /// <param name="regionName"></param>
         /// <returns></returns>
 		Classified[] GetClassifiedsInRegion(string regionName);
-	}
+
+        /// <summary>
+        /// Add classifieds to the search database
+        /// LOCAL Only
+        /// </summary>
+        /// <param name="dictionary">objects of the dictionary are OSDMaps made from Classified</param>
+        void AddClassifieds(Dictionary<string, object> dictionary);
+
+        /// <summary>
+        /// Remove classifieds from the search database
+        /// LOCAL Only
+        /// </summary>
+        /// <param name="dictionary">objects of the dictionary are OSDMaps made from Classified</param>
+        void RemoveClassifieds(Dictionary<string, object> dictionary);
+    }
 }
