@@ -1986,6 +1986,8 @@ namespace OpenSim.Region.Framework.Scenes
                 if (!autopilot)
                     HandleAgentSit(remoteClient, UUID, UseSitTarget);
             }
+            else
+                m_log.Warn("Sit requested on unknown object: " + targetID);
         }
 
         public void HandleAgentRequestSit(IClientAPI remoteClient, UUID agentID, UUID targetID, Vector3 offset)
@@ -2275,10 +2277,9 @@ namespace OpenSim.Region.Framework.Scenes
         public void HandleAgentSit(IClientAPI remoteClient, UUID agentID, string sitAnimation, bool UseSitTarget)
         {
             SceneObjectPart part = m_scene.GetSceneObjectPart(m_requestedSitTargetID);
-
-            if (m_sitAtAutoTarget || !m_autopilotMoving)
+            if (part != null)
             {
-                if (part != null)
+                if (m_sitAtAutoTarget || !m_autopilotMoving)
                 {
                     if (UseSitTarget)
                     {
@@ -2296,29 +2297,25 @@ namespace OpenSim.Region.Framework.Scenes
                         m_parentPosition = part.AbsolutePosition;
                     }
                 }
-                else
+                m_parentID = m_requestedSitTargetUUID;
+
+                Velocity = Vector3.Zero;
+                try
                 {
-                    return;
+                    RemoveFromPhysicalScene();
                 }
-            }
-            m_parentID = m_requestedSitTargetUUID;
+                catch (Exception ex)
+                {
+                    m_log.Warn(ex);
+                }
 
-            Velocity = Vector3.Zero;
-            try
-            {
-                RemoveFromPhysicalScene();
+                SendFullUpdateToAllClients();
+                Animator.TrySetMovementAnimation(sitAnimation);
+                // This may seem stupid, but Our Full updates don't send avatar rotation :P
+                // So we're also sending a terse update (which has avatar rotation)
+                // [Update] We do now.
+                //SendTerseUpdateToAllClients();
             }
-            catch (Exception ex)
-            {
-                m_log.Warn(ex);
-            }
-
-            SendFullUpdateToAllClients();
-            Animator.TrySetMovementAnimation(sitAnimation);
-            // This may seem stupid, but Our Full updates don't send avatar rotation :P
-            // So we're also sending a terse update (which has avatar rotation)
-            // [Update] We do now.
-            //SendTerseUpdateToAllClients();
         }
 
         /// <summary>

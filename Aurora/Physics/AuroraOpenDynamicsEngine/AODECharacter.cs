@@ -1129,9 +1129,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (!_parent_scene.UsePointGravity)
             {
                 //Add normal gravity
-                vec.X += _parent_scene.gravityx * 3 * m_mass;
-                vec.Y += _parent_scene.gravityy * 3 * m_mass;
-                vec.Z += _parent_scene.gravityz * 3 * m_mass;
+                vec.X += _parent_scene.gravityx * 3f * m_mass;
+                vec.Y += _parent_scene.gravityy * 3f * m_mass;
+                vec.Z += _parent_scene.gravityz * 3f * m_mass;
             }
             else
             {
@@ -1204,11 +1204,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 if (vec.X < 100000 && vec.Y < 100000 && vec.Z < 100000) //Checks for crazy, going to NaN us values
                 {
-                    doForce(vec);
-
                     //Stop us from fidgiting if we have a small velocity
-                    //if (Math.Abs(vel.X) < 0.05 && Math.Abs(vel.Y) < 0.05 && Math.Abs(vel.Z) < 0.05)
-                    //     d.BodySetLinearVel(Body, 0, 0, 0);
+                    if (Math.Abs(vec.X) < 0.05 && Math.Abs(vec.Y) < 0.05 && Math.Abs(vec.Z) < 0.05)
+                    {
+                        vec = new Vector3(0, 0, 0);
+                        d.BodySetLinearVel(Body, 0, 0, 0);
+                    }
+
+                    doForce(vec);
 
                     //When falling, we keep going faster and faster, and eventually, the client blue screens (blue is all you see).
                     // The speed that does this is slightly higher than -30, so we cap it here so we never do that during falling.
