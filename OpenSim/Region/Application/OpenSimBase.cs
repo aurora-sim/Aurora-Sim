@@ -1013,7 +1013,11 @@ namespace OpenSim
                 RunCommandScript(m_shutdownCommandsFile);
             }
 
+            //Stop the HTTP server
             m_BaseHTTPServer.Stop();
+
+            //Close the thread pool
+            Util.CloseThreadPool();
 
             if(close)
                 m_log.Info("[SHUTDOWN]: Terminating");

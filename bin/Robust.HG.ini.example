@@ -276,7 +276,7 @@ ServiceConnectors = "8003/OpenSim.Server.Handlers.dll:AssetServiceConnector,8003
 
 
 [AuroraStartup]
-    AssetLoaderEnabled = False
+    AssetLoaderEnabled = True
 
 [AuroraLoginService]
     ; Should new users be shown the ToS

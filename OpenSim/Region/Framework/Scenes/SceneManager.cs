@@ -309,7 +309,9 @@ namespace OpenSim.Region.Framework.Scenes
         {
             ForEachCurrentScene(delegate(Scene scene)
             {
-                scene.ProcessPrimBackupTaints(true); 
+                scene.m_backingup += 10; //Clear out all other threads
+                scene.ProcessPrimBackupTaints(true);
+                scene.m_backingup -= 10; //Clear out all other threads
             });
         }
 

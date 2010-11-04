@@ -96,7 +96,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         private Type m_scriptType;
         //TODO: Hook this up somehow to configs above
         private bool killProcessing = true;
-        private int timeout = 10;
+        private int timeout = 1000;
 
         public Executor(IScript script)
         {

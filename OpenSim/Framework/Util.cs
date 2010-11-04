@@ -1416,6 +1416,17 @@ namespace OpenSim.Framework
             m_ThreadPool = new SmartThreadPool(2000, maxThreads, 2);
         }
 
+        public static void CloseThreadPool()
+        {
+            if (FireAndForgetMethod == FireAndForgetMethod.SmartThreadPool &&
+                m_ThreadPool != null)
+            {
+                m_ThreadPool.Shutdown();
+                m_ThreadPool.Dispose();
+                m_ThreadPool = null;
+            }
+        }
+
         public static int FireAndForgetCount()
         {
             const int MAX_SYSTEM_THREADS = 200;

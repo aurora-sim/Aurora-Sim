@@ -92,7 +92,7 @@ namespace OpenSim.Region.Framework.Scenes
         private int m_RestartTimerCounter;
         private readonly Timer m_restartTimer = new Timer(15000); // Wait before firing
         private int m_incrementsof15seconds;
-        private volatile bool m_backingup;
+        public volatile int m_backingup = 0;
         private Dictionary<UUID, ReturnInfo> m_returns = new Dictionary<UUID, ReturnInfo>();
         private Dictionary<UUID, SceneObjectGroup> m_groupsWithTargets = new Dictionary<UUID, SceneObjectGroup>();
         private Object m_heartbeatLock = new Object();
@@ -1283,6 +1283,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_log.Debug("[SCENE]: Persisting changed objects");
 
             //Backup uses the new taints system
+            m_backingup += 10; //Clear out all other threads
             ProcessPrimBackupTaints(false);
 
             //Replaced by the taints system as above
@@ -2319,9 +2320,9 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         private void UpdateStorageBackup()
         {
-            if (!m_backingup)
+            if (m_backingup == 0)//0 threads looping
             {
-                m_backingup = true;
+                m_backingup++;
                 Util.FireAndForget(BackupWaitCallback);
             }
         }
@@ -2353,8 +2354,8 @@ namespace OpenSim.Region.Framework.Scenes
         public void Backup(bool forced)
         {
             //EventManager.TriggerOnBackup(DataStore);
-            ProcessPrimBackupTaints(false);
-            m_backingup = false;
+            ProcessPrimBackupTaints(forced);
+            m_backingup--;
         }
 
         /// <summary>
@@ -5557,6 +5558,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void ProcessPrimBackupTaints(bool forced)
         {
+            m_backingup++;
             HashSet<SceneObjectGroup> backupPrims = new HashSet<SceneObjectGroup>();
             if (forced)
             {
@@ -5588,6 +5590,7 @@ namespace OpenSim.Region.Framework.Scenes
                             m_backupTaintedPrims.Add(grp);
                 }
             }
+            m_backingup--;
         }
 
         #endregion
