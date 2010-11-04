@@ -559,7 +559,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             if (m_tainted)
             {
                 m_tainted = false;
-                m_scene.PhysicsScene.SetTerrain(m_channel.GetFloatsSerialised(), m_channel.GetDoubles());
+                m_scene.PhysicsScene.SetTerrain(m_channel.GetFloatsSerialised(m_scene), m_channel.GetDoubles(m_scene));
                 m_scene.SaveTerrain();
             }
         }
@@ -654,7 +654,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         private void CheckForTerrainUpdates(bool respectEstateSettings)
         {
             bool shouldTaint = false;
-            float[] serialised = m_channel.GetFloatsSerialised();
+            float[] serialised = m_channel.GetFloatsSerialised(m_scene);
             int x;
             for (x = 0; x < m_channel.Width; x += Constants.TerrainPatchSize)
             {
@@ -670,7 +670,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                         {
                             // this has been vetoed, so update
                             // what we are going to send to the client
-                            serialised = m_channel.GetFloatsSerialised();
+                            serialised = m_channel.GetFloatsSerialised(m_scene);
                         }
 
                         SendToClients(serialised, x, y);
@@ -884,7 +884,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         protected void client_OnUnackedTerrain(IClientAPI client, int patchX, int patchY)
         {
             //m_log.Debug("Terrain packet unacked, resending patch: " + patchX + " , " + patchY);
-             client.SendLayerData(patchX, patchY, m_scene.Heightmap.GetFloatsSerialised());
+            client.SendLayerData(patchX, patchY, m_scene.Heightmap.GetFloatsSerialised(m_scene));
         }
 
         private void StoreUndoState()

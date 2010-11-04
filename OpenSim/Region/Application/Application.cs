@@ -378,8 +378,13 @@ namespace OpenSim
                 parameters.Add(Environment.OSVersion.Platform.ToString()); //The operating system
                 Nwc.XmlRpc.ConfigurableKeepAliveXmlRpcRequest req;
                 req = new Nwc.XmlRpc.ConfigurableKeepAliveXmlRpcRequest("SendErrorReport", parameters, true);
-
-                req.Send(m_urlToPostErrors, 10000);
+                try
+                {
+                    req.Send(m_urlToPostErrors, 10000);
+                }
+                catch
+                {
+                }
             }
         }
     }

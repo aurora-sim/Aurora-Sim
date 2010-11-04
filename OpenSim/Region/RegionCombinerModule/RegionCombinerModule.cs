@@ -57,7 +57,7 @@ namespace OpenSim.Region.RegionCombinerModule
         private Dictionary<UUID, RegionConnections> m_regions = new Dictionary<UUID, RegionConnections>();
         private bool enabledYN = false;
         private Dictionary<UUID, Scene> m_startingScenes = new Dictionary<UUID, Scene>();
-
+        private RegionCombinerLargeTerrainChannel landTerrainChannel = null;
         public void Initialise(IConfigSource source)
         {
             IConfig RegionCombinerConfig = source.Configs["RegionCombiner"];
@@ -178,6 +178,9 @@ namespace OpenSim.Region.RegionCombinerModule
                 return;
             // 
 */
+            if(landTerrainChannel == null)
+                landTerrainChannel = new RegionCombinerLargeTerrainChannel();
+            
             lock (m_startingScenes)
                 m_startingScenes.Add(scene.RegionInfo.RegionID, scene);
 
@@ -426,7 +429,6 @@ namespace OpenSim.Region.RegionCombinerModule
                 if (!connectedYN)
                 {
                     DoWorkForRootRegion(regionConnections, scene);
-
                 }
             }
             // Set up infinite borders around the entire AABB of the combined ConnectedRegions
@@ -490,7 +492,7 @@ namespace OpenSim.Region.RegionCombinerModule
             // Reset Terrain..  since terrain loads before we get here, we need to load 
             // it again so it loads in the root region
 
-            scene.PhysicsScene.SetTerrain(scene.Heightmap.GetFloatsSerialised(), scene.Heightmap.GetDoubles());
+            scene.PhysicsScene.SetTerrain(scene.Heightmap.GetFloatsSerialised(scene), scene.Heightmap.GetDoubles(scene));
 
             // Unlock borders
             conn.RegionScene.BordersLocked = false;
@@ -500,6 +502,7 @@ namespace OpenSim.Region.RegionCombinerModule
             if (conn.ClientEventForwarder != null)
                 conn.ClientEventForwarder.AddSceneToEventForwarding(scene);
 
+            landTerrainChannel.AddRegion(ConnectedRegion, scene.Heightmap);
             return true;
         }
 
@@ -547,13 +550,14 @@ namespace OpenSim.Region.RegionCombinerModule
 
             // Reset Terrain..  since terrain normally loads first.
             //conn.RegionScene.PhysicsScene.SetTerrain(conn.RegionScene.Heightmap.GetFloatsSerialised());
-            scene.PhysicsScene.SetTerrain(scene.Heightmap.GetFloatsSerialised(), scene.Heightmap.GetDoubles());
+            scene.PhysicsScene.SetTerrain(scene.Heightmap.GetFloatsSerialised(scene), scene.Heightmap.GetDoubles(scene));
             //conn.RegionScene.PhysicsScene.SetTerrain(conn.RegionScene.Heightmap.GetFloatsSerialised());
 
             scene.BordersLocked = false;
             conn.RegionScene.BordersLocked = false;
             if (conn.ClientEventForwarder != null)
                 conn.ClientEventForwarder.AddSceneToEventForwarding(scene);
+            landTerrainChannel.AddRegion(ConnectedRegion, scene.Heightmap);
             return true;
         }
 
@@ -643,7 +647,7 @@ namespace OpenSim.Region.RegionCombinerModule
 
             // Reset Terrain..  since terrain normally loads first.
             //conn.RegionScene.PhysicsScene.SetTerrain(conn.RegionScene.Heightmap.GetFloatsSerialised());
-            scene.PhysicsScene.SetTerrain(scene.Heightmap.GetFloatsSerialised(), scene.Heightmap.GetDoubles());
+            scene.PhysicsScene.SetTerrain(scene.Heightmap.GetFloatsSerialised(scene), scene.Heightmap.GetDoubles(scene));
             //conn.RegionScene.PhysicsScene.SetTerrain(conn.RegionScene.Heightmap.GetFloatsSerialised());
             scene.BordersLocked = false;
             conn.RegionScene.BordersLocked = false;
@@ -689,6 +693,7 @@ namespace OpenSim.Region.RegionCombinerModule
 
             // Adds this root region to a dictionary of regions that are connectable
             m_regions.Add(scene.RegionInfo.RegionID, regionConnections);
+            landTerrainChannel.AddRegion(rdata, scene.Heightmap);
         }
 
         void EventManager_OnNewClient(IClientAPI client)

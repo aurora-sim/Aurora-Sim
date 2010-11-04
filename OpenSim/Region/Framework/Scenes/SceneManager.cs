@@ -901,7 +901,7 @@ namespace OpenSim.Region.Framework.Scenes
             Add(scene);
 
             scene.PhysicsScene = GetPhysicsScene(m_config, scene.RegionInfo.RegionName);
-            scene.PhysicsScene.SetTerrain(scene.Heightmap.GetFloatsSerialised(), scene.Heightmap.GetDoubles());
+            scene.PhysicsScene.SetTerrain(scene.Heightmap.GetFloatsSerialised(scene), scene.Heightmap.GetDoubles(scene));
             scene.PhysicsScene.SetWaterLevel((float)regionInfo.RegionSettings.WaterHeight);
 
             return scene;

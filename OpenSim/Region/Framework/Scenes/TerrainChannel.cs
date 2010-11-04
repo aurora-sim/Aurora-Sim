@@ -98,7 +98,7 @@ namespace OpenSim.Region.Framework.Scenes
             get { return map.GetLength(1); }
         }
 
-        public ITerrainChannel MakeCopy()
+        public ITerrainChannel MakeCopy(IScene scene)
         {
             TerrainChannel copy = new TerrainChannel(false);
             copy.map = (double[,]) map.Clone();
@@ -106,7 +106,7 @@ namespace OpenSim.Region.Framework.Scenes
             return copy;
         }
 
-        public float[] GetFloatsSerialised()
+        public float[] GetFloatsSerialised(IScene scene)
         {
             // Move the member variables into local variables, calling
             // member variables 256*256 times gets expensive
@@ -127,7 +127,7 @@ namespace OpenSim.Region.Framework.Scenes
             return heights;
         }
 
-        public double[,] GetDoubles()
+        public double[,] GetDoubles(IScene scene)
         {
             return map;
         }
@@ -169,7 +169,7 @@ namespace OpenSim.Region.Framework.Scenes
             return copy;
         }
 
-        public string SaveToXmlString()
+        public string SaveToXmlString(IScene scene)
         {
             XmlWriterSettings settings = new XmlWriterSettings();
             settings.Encoding = Util.UTF8;
@@ -191,7 +191,7 @@ namespace OpenSim.Region.Framework.Scenes
             writer.WriteEndElement();
         }
 
-        public void LoadFromXmlString(string data)
+        public void LoadFromXmlString(IScene scene, string data)
         {
             StringReader sr = new StringReader(data);
             XmlTextReader reader = new XmlTextReader(sr);
@@ -210,7 +210,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         private void ToXml(XmlWriter xmlWriter)
         {
-            float[] mapData = GetFloatsSerialised();
+            float[] mapData = GetFloatsSerialised(null);
             byte[] buffer = new byte[mapData.Length * 4];
             for (int i = 0; i < mapData.Length; i++)
             {

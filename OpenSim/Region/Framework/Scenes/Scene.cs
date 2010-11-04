@@ -2441,7 +2441,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void SaveTerrain()
         {
-            SimulationDataService.StoreTerrain(Heightmap.GetDoubles(), RegionInfo.RegionID, false);
+            SimulationDataService.StoreTerrain(Heightmap.GetDoubles(this), RegionInfo.RegionID, false);
         }
 
         /// <summary>
@@ -2449,7 +2449,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void SaveRevertTerrain(ITerrainChannel channel)
         {
-            SimulationDataService.StoreTerrain(channel.GetDoubles(), RegionInfo.RegionID, true);
+            SimulationDataService.StoreTerrain(channel.GetDoubles(this), RegionInfo.RegionID, true);
         }
 
         /// <summary>
@@ -2462,7 +2462,7 @@ namespace OpenSim.Region.Framework.Scenes
                 double[,] map = SimulationDataService.LoadTerrain(RegionInfo.RegionID, true);
                 if (map == null)
                 {
-                    map = Heightmap.GetDoubles();
+                    map = Heightmap.GetDoubles(this);
                     TerrainChannel channel = new TerrainChannel(map);
                     SaveRevertTerrain(channel);
                     return channel;
@@ -2489,7 +2489,7 @@ namespace OpenSim.Region.Framework.Scenes
                     m_log.Info("[TERRAIN]: No default terrain. Generating a new terrain.");
                     Heightmap = new TerrainChannel();
 
-                    SimulationDataService.StoreTerrain(Heightmap.GetDoubles(), RegionInfo.RegionID, false);
+                    SimulationDataService.StoreTerrain(Heightmap.GetDoubles(this), RegionInfo.RegionID, false);
                 }
                 else
                 {
@@ -2506,7 +2506,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     Heightmap = new TerrainChannel();
 
-                    SimulationDataService.StoreTerrain(Heightmap.GetDoubles(), RegionInfo.RegionID, false);
+                    SimulationDataService.StoreTerrain(Heightmap.GetDoubles(this), RegionInfo.RegionID, false);
                 }
             }
             catch (Exception e)
@@ -5501,7 +5501,7 @@ namespace OpenSim.Region.Framework.Scenes
         public void TerrainUnAcked(IClientAPI client, int patchX, int patchY)
         {
             //m_log.Debug("Terrain packet unacked, resending patch: " + patchX + " , " + patchY);
-            client.SendLayerData(patchX, patchY, Heightmap.GetFloatsSerialised());
+            client.SendLayerData(patchX, patchY, Heightmap.GetFloatsSerialised(this));
         }
 
         public void TriggerEstateSunUpdate()

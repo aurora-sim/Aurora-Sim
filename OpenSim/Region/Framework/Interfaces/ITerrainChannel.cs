@@ -24,7 +24,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
+using OpenSim.Framework;
 namespace OpenSim.Region.Framework.Interfaces
 {
     public interface ITerrainChannel
@@ -37,12 +37,12 @@ namespace OpenSim.Region.Framework.Interfaces
         /// Squash the entire heightmap into a single dimensioned array
         /// </summary>
         /// <returns></returns>
-        float[] GetFloatsSerialised();
+        float[] GetFloatsSerialised(IScene scene);
 
-        double[,] GetDoubles();
+        double[,] GetDoubles(IScene scene);
         bool Tainted(int x, int y);
-        ITerrainChannel MakeCopy();
-        string SaveToXmlString();
-        void LoadFromXmlString(string data);
+        ITerrainChannel MakeCopy(IScene scene);
+        string SaveToXmlString(IScene scene);
+        void LoadFromXmlString(IScene scene, string data);
     }
 }

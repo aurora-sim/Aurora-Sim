@@ -30,156 +30,167 @@ using System.Collections.Generic;
 using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
+using OpenSim.Region.Framework.Scenes;
 using OpenSim.Region.CoreModules.World.Land;
 
 namespace OpenSim.Region.RegionCombinerModule
 {
-public class RegionCombinerLargeLandChannel : ILandChannel
+    public class RegionCombinerLargeTerrainChannel : ITerrainChannel
     {
         // private static readonly ILog m_log =
         //     LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private RegionData RegData;
-        private ILandChannel RootRegionLandChannel;
-        private readonly List<RegionData> RegionConnections;
-        
-        #region ILandChannel Members
+        private Dictionary<RegionData, ITerrainChannel> RegionConnections = new Dictionary<RegionData, ITerrainChannel>();
 
-        public RegionCombinerLargeLandChannel(RegionData regData, ILandChannel rootRegionLandChannel,
-                                              List<RegionData> regionConnections)
+        public void AddRegion(RegionData rData, ITerrainChannel thisRegionTerrainChannel)
         {
-            RegData = regData;
-            RootRegionLandChannel = rootRegionLandChannel;
-            RegionConnections = regionConnections;
-        }
-
-        public List<ILandObject> ParcelsNearPoint(Vector3 position)
-        {
-            //m_log.DebugFormat("[LANDPARCELNEARPOINT]: {0}>", position);
-            return RootRegionLandChannel.ParcelsNearPoint(position - RegData.Offset);
-        }
-
-        public List<ILandObject> AllParcels()
-        {
-            return RootRegionLandChannel.AllParcels();
-        }
-
-        public ILandObject GetLandObject(int x, int y)
-        {
-            //m_log.DebugFormat("[BIGLANDTESTINT]: <{0},{1}>", x, y);
-
-            if (x > 0 && x <= (int)Constants.RegionSize && y > 0 && y <= (int)Constants.RegionSize)
+            if (RegData == null)
             {
-                return RootRegionLandChannel.GetLandObject(x, y);
+                //Root region
+                RegData = rData;
             }
-            else
+            RegionConnections.Add(rData, thisRegionTerrainChannel);
+            RegData.RegionScene.Heightmap = this;
+        }
+
+        // We just overload the height
+        public double this[int x, int y]
+        {
+            get
             {
-                int offsetX = (x / (int)Constants.RegionSize);
-                int offsetY = (y / (int)Constants.RegionSize);
+                int offsetX = (int)(x / (int)Constants.RegionSize);
+                int offsetY = (int)(y / (int)Constants.RegionSize);
                 offsetX *= (int)Constants.RegionSize;
                 offsetY *= (int)Constants.RegionSize;
 
-                foreach (RegionData regionData in RegionConnections)
+                foreach (KeyValuePair<RegionData, ITerrainChannel> kvp in RegionConnections)
                 {
-                    if (regionData.Offset.X == offsetX && regionData.Offset.Y == offsetY)
+                    if (kvp.Key.Offset.X == offsetX && kvp.Key.Offset.Y == offsetY)
                     {
-                        return regionData.RegionScene.LandChannel.GetLandObject(x - offsetX, y - offsetY);
+                        return kvp.Value[x - offsetX, y - offsetY];
                     }
                 }
-                ILandObject obj = new LandObject(UUID.Zero, false, RegData.RegionScene);
-                obj.LandData.Name = "NO LAND";
-                return obj;
+                return 0;
             }
-        }
-
-        public ILandObject GetLandObject(int localID)
-        {
-            return RootRegionLandChannel.GetLandObject(localID);
-        }
-
-        public ILandObject GetLandObject(float x, float y)
-        {
-            //m_log.DebugFormat("[BIGLANDTESTFLOAT]: <{0},{1}>", x, y);
-            
-            if (x > 0 && x <= (int)Constants.RegionSize && y > 0 && y <= (int)Constants.RegionSize)
+            set
             {
-                return RootRegionLandChannel.GetLandObject(x, y);
-            }
-            else
-            {
-                int offsetX = (int)(x/(int) Constants.RegionSize);
-                int offsetY = (int)(y/(int) Constants.RegionSize);
-                offsetX *= (int) Constants.RegionSize;
-                offsetY *= (int) Constants.RegionSize;
+                int offsetX = (int)(x / (int)Constants.RegionSize);
+                int offsetY = (int)(y / (int)Constants.RegionSize);
+                offsetX *= (int)Constants.RegionSize;
+                offsetY *= (int)Constants.RegionSize;
 
-                foreach (RegionData regionData in RegionConnections)
+                foreach (KeyValuePair<RegionData, ITerrainChannel> kvp in RegionConnections)
                 {
-                    if (regionData.Offset.X == offsetX && regionData.Offset.Y == offsetY)
+                    if (kvp.Key.Offset.X == offsetX && kvp.Key.Offset.Y == offsetY)
                     {
-                        return regionData.RegionScene.LandChannel.GetLandObject(x - offsetX, y - offsetY);
+                        kvp.Value[x - offsetX, y - offsetY] = value;
                     }
                 }
-
-                ILandObject obj = new LandObject(UUID.Zero, false, RegData.RegionScene);
-                obj.LandData.Name = "NO LAND";
-                return obj;
             }
         }
 
-        public bool IsLandPrimCountTainted()
+        public int Height
         {
-            return RootRegionLandChannel.IsLandPrimCountTainted();
+            get 
+            {
+                int Height = 256;
+                foreach (KeyValuePair<RegionData, ITerrainChannel> kvp in RegionConnections)
+                {
+                    if (kvp.Key.Offset.Y > Height)
+                        Height = (int)kvp.Key.Offset.Y;
+                }
+                return Height;
+            }
         }
 
-        public bool IsForcefulBansAllowed()
+        public int Width
         {
-            return RootRegionLandChannel.IsForcefulBansAllowed();
+            get 
+            {
+                int Width = 256;
+                foreach (KeyValuePair<RegionData, ITerrainChannel> kvp in RegionConnections)
+                {
+                    if (kvp.Key.Offset.X > Width)
+                        Width = (int)kvp.Key.Offset.X;
+                }
+                return Width;
+            }
         }
 
-        public void UpdateLandObject(int localID, LandData data)
+        public float[] GetFloatsSerialised(IScene scene)
         {
-            RootRegionLandChannel.UpdateLandObject(localID, data);
+            foreach (KeyValuePair<RegionData, ITerrainChannel> kvp in RegionConnections)
+            {
+                if (kvp.Key.RegionId == scene.RegionInfo.RegionID)
+                {
+                    return kvp.Value.GetFloatsSerialised(scene);
+                }
+            }
+            return null;
         }
 
-        public void Join(int start_x, int start_y, int end_x, int end_y, UUID attempting_user_id)
+        public double[,] GetDoubles(IScene scene)
         {
-            RootRegionLandChannel.Join(start_x, start_y, end_x, end_y, attempting_user_id);
+            foreach (KeyValuePair<RegionData, ITerrainChannel> kvp in RegionConnections)
+            {
+                if (kvp.Key.RegionId == scene.RegionInfo.RegionID)
+                {
+                    return kvp.Value.GetDoubles(scene);
+                }
+            }
+            return null;
         }
 
-        public void Subdivide(int start_x, int start_y, int end_x, int end_y, UUID attempting_user_id)
+        public bool Tainted(int x, int y)
         {
-            RootRegionLandChannel.Subdivide(start_x, start_y, end_x, end_y, attempting_user_id);
+            int offsetX = (int)(x / (int)Constants.RegionSize);
+            int offsetY = (int)(y / (int)Constants.RegionSize);
+            offsetX *= (int)Constants.RegionSize;
+            offsetY *= (int)Constants.RegionSize;
+
+            foreach (KeyValuePair<RegionData, ITerrainChannel> kvp in RegionConnections)
+            {
+                if (kvp.Key.Offset.X == offsetX && kvp.Key.Offset.Y == offsetY)
+                {
+                    return kvp.Value.Tainted(x, y);
+                }
+            }
+            return false;
         }
 
-        public void ReturnObjectsInParcel(int localID, uint returnType, UUID[] agentIDs, UUID[] taskIDs, IClientAPI remoteClient)
+        public ITerrainChannel MakeCopy(IScene scene)
         {
-            RootRegionLandChannel.ReturnObjectsInParcel(localID, returnType, agentIDs, taskIDs, remoteClient);
+            foreach (KeyValuePair<RegionData, ITerrainChannel> kvp in RegionConnections)
+            {
+                if (kvp.Key.RegionId == scene.RegionInfo.RegionID)
+                {
+                    return kvp.Value.MakeCopy(scene);
+                }
+            }
+            return null;
         }
 
-        public void SetParcelOtherCleanTime(IClientAPI remoteClient, int localID, int otherCleanTime)
+        public string SaveToXmlString(IScene scene)
         {
-            RootRegionLandChannel.SetParcelOtherCleanTime(remoteClient, localID, otherCleanTime);
+            foreach (KeyValuePair<RegionData, ITerrainChannel> kvp in RegionConnections)
+            {
+                if (kvp.Key.RegionId == scene.RegionInfo.RegionID)
+                {
+                    return kvp.Value.SaveToXmlString(scene);
+                }
+            }
+            return null;
         }
 
-        public Vector3 GetNearestRegionEdgePosition(OpenSim.Region.Framework.Scenes.ScenePresence avatar)
+        public void LoadFromXmlString(IScene scene, string data)
         {
-            return RootRegionLandChannel.GetNearestRegionEdgePosition(avatar);
+            foreach (KeyValuePair<RegionData, ITerrainChannel> kvp in RegionConnections)
+            {
+                if (kvp.Key.RegionId == scene.RegionInfo.RegionID)
+                {
+                    kvp.Value.LoadFromXmlString(scene, data);
+                }
+            }
         }
-
-        public ILandObject GetNearestAllowedParcel(UUID avatarId, float x, float y)
-        {
-            return RootRegionLandChannel.GetNearestAllowedParcel(avatarId, x, y);
-        }
-
-        public Vector3? GetNearestAllowedPosition(OpenSim.Region.Framework.Scenes.ScenePresence avatar)
-        {
-            return RootRegionLandChannel.GetNearestAllowedPosition(avatar);
-        }
-
-        public Vector3 GetParcelCenterAtGround(ILandObject parcel)
-        {
-            return RootRegionLandChannel.GetParcelCenterAtGround(parcel);
-        }
-
-        #endregion
     }
 }
