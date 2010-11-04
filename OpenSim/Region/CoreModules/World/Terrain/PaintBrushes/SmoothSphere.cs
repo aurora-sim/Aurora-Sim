@@ -36,8 +36,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
 
         public void PaintEffect(ITerrainChannel map, bool[,] mask, double rx, double ry, double rz, double strength, double duration, float BrushSize)
         {
-            if(BrushSize > 8) //If it gets too high, it will start roughening at an ever increasing rate when held down
-                BrushSize = 8;
+            if(BrushSize > 6) //If it gets too high, it will start roughening at an ever increasing rate when held down
+                BrushSize = 6;
             strength = TerrainUtil.MetersToSphericalStrength(BrushSize);
             int x, y;
 
