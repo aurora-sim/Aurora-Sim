@@ -46,7 +46,7 @@ namespace OpenSim.Data.MySQL
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         public MySQLPresenceData(string connectionString, string realm) :
-                base(connectionString, realm, "Presence")
+                base(connectionString, realm, "presence")
         {
         }
 
