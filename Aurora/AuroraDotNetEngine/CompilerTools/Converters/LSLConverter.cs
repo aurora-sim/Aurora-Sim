@@ -19,7 +19,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 {
     public class LSLConverter : IScriptConverter
     {
-        private CSharpCodeProvider CScodeProvider = new CSharpCodeProvider();
+        //private CSharpCodeProvider CScodeProvider = new CSharpCodeProvider();
         private Compiler m_compiler;
         //private ICSCodeGenerator LSL_Converter;
 
@@ -66,6 +66,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
         public CompilerResults Compile(CompilerParameters parameters, string Script)
         {
+            CSharpCodeProvider CScodeProvider = new CSharpCodeProvider();
             bool complete = false;
             bool retried = false;
             CompilerResults results;
