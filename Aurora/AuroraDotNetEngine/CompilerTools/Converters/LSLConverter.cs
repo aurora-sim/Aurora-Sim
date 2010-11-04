@@ -47,6 +47,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 LSL_Converter = new LegacyCSCodeGenerator();
             else
                 LSL_Converter = new CSCodeGenerator(m_compiler.m_SLCompatabilityMode);
+            
             CompiledScript = LSL_Converter.Convert(Script);
             Warnings = LSL_Converter.GetWarnings();
             PositionMap = LSL_Converter.PositionMap;
@@ -99,7 +100,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 {
                     complete = true;
                 }
-            } while (!complete);
+            }
+            while (!complete);
             return results;
         }
     }

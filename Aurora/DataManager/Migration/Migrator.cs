@@ -7,7 +7,7 @@ namespace Aurora.DataManager.Migration
 {
     public class Migrator : IRestorePoint
     {
-        protected List<Rec<string, ColumnDefinition[]>> schema;
+        public List<Rec<string, ColumnDefinition[]>> schema;
 
         public Version Version { get; protected set; }
 
@@ -32,7 +32,7 @@ namespace Aurora.DataManager.Migration
 
         protected virtual bool DoValidate(DataSessionProvider sessionProvider, IDataConnector genericData)
         {
-            return false;
+            return true;
         }
 
         public IRestorePoint PrepareRestorePoint(DataSessionProvider sessionProvider, IDataConnector genericData)

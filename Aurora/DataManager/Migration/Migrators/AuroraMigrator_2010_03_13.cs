@@ -233,9 +233,8 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("LastKnownViewer", ColumnTypes.String50),
                 ColDef("Platform", ColumnTypes.String50),
                 ColDef("Position", ColumnTypes.String50),
-                ColDef("UserName", ColumnTypes.String50)));
+                ColDef("UserName", ColumnTypes.String50))); 
 
-            
             #region Search Tables
 
             AddSchema("searchparcel", ColDefs(ColDef("RegionID", ColumnTypes.String50),

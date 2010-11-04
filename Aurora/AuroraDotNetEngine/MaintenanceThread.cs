@@ -468,6 +468,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         #endregion
 
+        #region Start thread
+
         /// <summary>
         /// Queue the event loop given by thread
         /// </summary>
@@ -487,5 +489,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 threadpool.QueueEvent(EventQueue, 1);
             }
         }
+
+        #endregion
     }
 }
