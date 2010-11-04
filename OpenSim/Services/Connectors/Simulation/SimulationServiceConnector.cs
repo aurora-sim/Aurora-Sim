@@ -46,7 +46,9 @@ namespace OpenSim.Services.Connectors.Simulation
     public class SimulationServiceConnector : ISimulationService
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
+        //Keeps track of bad sends and will refuse to send child agent updates to them until the DateTime is later than the time accessed
+        private static Dictionary<string, DateTime> FailedSends = new Dictionary<string, DateTime>();
+        private int TimeBeforeNextCheck = 3000 * 60; //3 mins
         //private GridRegion m_Region;
 
         public SimulationServiceConnector()
@@ -290,6 +292,12 @@ namespace OpenSim.Services.Connectors.Simulation
                 m_log.Debug("[REMOTE SIMULATION CONNECTOR]: Unable to resolve external endpoint on agent update. Reason: " + e.Message);
                 return false;
             }
+
+            if (FailedSends.ContainsKey(uri))
+            {
+                if (FailedSends[uri] > DateTime.Now)
+                    return true; //It completed successfully kinda, lets just let it go
+            }
             //Console.WriteLine("   >>> DoAgentUpdateCall <<< " + uri);
 
             HttpWebRequest ChildUpdateRequest = (HttpWebRequest)WebRequest.Create(uri);
@@ -373,6 +381,8 @@ namespace OpenSim.Services.Connectors.Simulation
             catch (WebException ex)
             {
                 m_log.InfoFormat("[REMOTE SIMULATION CONNECTOR]: exception on reply of ChilAgentUpdate from {0}: {1}", uri, ex.Message);
+                FailedSends.Add(uri, DateTime.Now.AddMinutes(TimeBeforeNextCheck));
+                
                 // ignore, really
             }
             finally
