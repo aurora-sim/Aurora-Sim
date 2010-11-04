@@ -379,7 +379,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                                 m_hasJumpAddedForce = true;
                                 m_scenePresence.PreJumpForce.X /= 2f;
                                 m_scenePresence.PreJumpForce.Y /= 2f;
-                                m_scenePresence.PreJumpForce.Z /= 1.75f;
+                                //m_scenePresence.PreJumpForce.Z *= 1.75f;
                                 if(m_scenePresence.Scene.m_UseNewStyleMovement)
                                     m_scenePresence.m_velocityIsDecaying = false;
 
@@ -387,8 +387,8 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                                 //m_scenePresence.m_forceToApply = m_scenePresence.PreJumpForce;
 
                                 m_scenePresence.PreJumpForce = new Vector3(
-                                    m_scenePresence.PreJumpForce.X > 0 ? 3 : (m_scenePresence.PreJumpForce.X < 0 ? -3 : 0),
-                                    m_scenePresence.PreJumpForce.Y > 0 ? 3 : (m_scenePresence.PreJumpForce.Y < 0 ? -3 : 0),
+                                    m_scenePresence.PreJumpForce.X > 0 ? 7 : (m_scenePresence.PreJumpForce.X < 0 ? -3 : 0),
+                                    m_scenePresence.PreJumpForce.Y > 0 ? 7 : (m_scenePresence.PreJumpForce.Y < 0 ? -3 : 0),
                                     0);
 
                                 m_jumpZ = 0;
