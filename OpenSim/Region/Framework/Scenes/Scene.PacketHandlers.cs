@@ -316,7 +316,15 @@ namespace OpenSim.Region.Framework.Scenes
                 surfaceArg = surfaceArgs[0];
             ISceneEntity childPrim;
             SceneObjectPart part;
-            Entities.TryGetChildPrim(localID, out childPrim);
+            if (!Entities.TryGetChildPrim(localID, out childPrim))
+            {
+                SceneObjectGroup grp = m_sceneGraph.GetGroupByPrim(localID);
+                if (grp != null)
+                {
+                    part = grp.GetChildPart(localID);
+                    childPrim = part;
+                }
+            }
             if (childPrim != null)
             {
                 part = childPrim as SceneObjectPart;
@@ -411,7 +419,12 @@ namespace OpenSim.Region.Framework.Scenes
 
             ISceneEntity childPrim;
             SceneObjectPart part;
-            Entities.TryGetChildPrim(objectID, out childPrim);
+            if(!Entities.TryGetChildPrim(objectID, out childPrim))
+            {
+                part = m_sceneGraph.GetSceneObjectPart(objectID);
+                if (part != null)
+                    childPrim = part;
+            }
             if (childPrim != null)
             {
                 part = childPrim as SceneObjectPart;
@@ -499,7 +512,15 @@ namespace OpenSim.Region.Framework.Scenes
 
             ISceneEntity childPrim;
             SceneObjectPart part;
-            Entities.TryGetChildPrim(localID, out childPrim);
+            if(!Entities.TryGetChildPrim(localID, out childPrim))
+            {
+                SceneObjectGroup grp = m_sceneGraph.GetGroupByPrim(localID);
+                if (grp != null)
+                {
+                    part = grp.GetChildPart(localID);
+                    childPrim = part;
+                }
+            }
             if (childPrim != null)
             {
                 part = childPrim as SceneObjectPart;

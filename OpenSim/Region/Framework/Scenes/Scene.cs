@@ -5557,26 +5557,26 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void ProcessPrimBackupTaints(bool forced)
         {
+            HashSet<SceneObjectGroup> backupPrims = new HashSet<SceneObjectGroup>();
             if (forced)
             {
                 //Add all
-                lock (m_backupTaintedPrims)
+                EntityBase[] entities = Entities.GetEntities();
+                foreach (EntityBase entity in entities)
                 {
-                    EntityBase[] entities = Entities.GetEntities();
-                    foreach (EntityBase entity in entities)
-                    {
-                        if(entity is SceneObjectGroup)
-                            m_backupTaintedPrims.Add(entity as SceneObjectGroup);
-                    }
+                    if (entity is SceneObjectGroup)
+                        backupPrims.Add(entity as SceneObjectGroup);
                 }
             }
-            HashSet<SceneObjectGroup> backupPrims;
-            lock (m_backupTaintedPrims)
+            else
             {
-                if (m_backupTaintedPrims.Count == 0)
-                    return;
-                backupPrims = new HashSet<SceneObjectGroup>(m_backupTaintedPrims);
-                m_backupTaintedPrims.Clear();
+                lock (m_backupTaintedPrims)
+                {
+                    if (m_backupTaintedPrims.Count == 0)
+                        return;
+                    backupPrims = new HashSet<SceneObjectGroup>(m_backupTaintedPrims);
+                    m_backupTaintedPrims.Clear();
+                }
             }
             foreach (SceneObjectGroup grp in backupPrims)
             {
