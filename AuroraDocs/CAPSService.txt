@@ -1,0 +1,28 @@
+CAPS Service
+   
+    4/11/2010
+
+About the CAPS Service:
+	
+The CAPS Service is an internal ROBUST service that is used to control what CAPS the region has access to control.
+This service is used to provide grid-wide CAPS that are secure, even in an open-grid setting.
+By using this service, you (the grid operator) can control what CAPS the regions can use.
+
+
+HOW TO SET UP:
+
+In Robust.ini (or Robust.HG.ini), you will need to set a few config settings. These include the:
+[AuroraLoginService] 
+
+* In this section, you will need to change: 
+CAPSServicePassword    - This should be set to a random password that you will then use again later. This does NOT need to be given out.
+CAPSServiceURL         - This is the path to your Robust server and port 8007. Ex. "http://<IP>:8007" where <IP> is your IP or dns hostname.
+
+and the
+[CAPSService] section
+
+* In this section, you will need to change:
+Password   - This should be set to the random password that used earlier in [AuroraLoginService].
+HostName   - This is the path to your Robust server and port 8007. Ex. "http://<IP>:8007" where <IP> is your IP or dns hostname.
+
+After setting these options, you will have set up the CAPS Service and will have the ability to override Simulator CAPS that the Simulator may try to set.

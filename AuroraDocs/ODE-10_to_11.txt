@@ -11,21 +11,31 @@ FILES INCLUDED:
     Ode.NET.Double.dll    (64Bit)
     Ode.NET.Single.dll    (32Bit)
 
-    ode11.double.dll    (64Bit)
-    ode11.single.dll    (32Bit)
+    ode11double.dll    (64Bit)
+    ode11single.dll    (32Bit)
 
 --- ODE 10.1 (32bit)
-    ode.dll
-    Ode.NET.dll
+    odesingle.dll
+    Ode.NET.Single.dll
 
 
 WHAT TO DO:
 
 To setup ODE 11.1 for TESTING it's quite simple, no major Magic required.
 
-Copy out the ODE.DLL & ODE.NET.DLL to a safe place !!!
-Copy ode11.single.dll to ode.dll           (or use ode11.double.dll for 64Bit Mode)
-Copy ode.NET.single.dll to ode.NET.dll     (or use ode.NET.double.dll for 64Bit Mode)
+Copy out the odesingle.DLL & ODE.NET.Single.DLL to a safe place !!!
+Copy ode11single.dll to odesingle.dll  (or use ode11double.dll to odedouble.dll for 64Bit Mode)
+
+* FOR 64 Bit ONLY! *
+
+After you do this, change prebuild.xml in the project "Aurora.Physics.AuroraOpenDynamicsEngine" from
+<Reference name="Ode.NET.Single" path="../../../../bin/"/>
+to
+<Reference name="Ode.NET.Double" path="../../../../bin/"/>
+
+* END FOR 64 Bit ONLY! *
+
+Then run prebuild and recompile Aurora and you.
 
 NOTE: If you are using SqLite, it is 32Bit Mode Only !!! 
 
