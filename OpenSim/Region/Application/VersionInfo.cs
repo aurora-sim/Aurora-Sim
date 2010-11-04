@@ -24,6 +24,8 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+using System;
+using System.IO;
 
 namespace OpenSim
 {
@@ -51,7 +53,17 @@ namespace OpenSim
         public static string GetVersionString(string versionNumber, Flavour flavour)
         {
             string versionString = VERSION_NAME + " " + versionNumber + " " + flavour;
-            return versionString.PadRight(VERSIONINFO_VERSION_LENGTH);
+            versionString = versionString.PadRight(VERSIONINFO_VERSION_LENGTH);
+
+            string gitCommitFileName = ".version";
+
+            if (File.Exists(gitCommitFileName))
+            {
+                StreamReader CommitFile = File.OpenText(gitCommitFileName);
+                versionString = CommitFile.ReadLine();
+                CommitFile.Close();
+            }
+            return versionString;
         }
 
         public const int VERSIONINFO_VERSION_LENGTH = 27;

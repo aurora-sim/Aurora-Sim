@@ -46,7 +46,7 @@ namespace OpenSim.Data.MSSQL
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         public MSSQLPresenceData(string connectionString, string realm) :
-                base(connectionString, realm, "presence")
+                base(connectionString, realm, "Presence")
         {
         }
 

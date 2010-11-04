@@ -2,7 +2,7 @@
 
 BEGIN TRANSACTION
 
-CREATE TABLE [presence] (
+CREATE TABLE [Presence] (
 [UserID] varchar(255) NOT NULL, 
 [RegionID] uniqueidentifier NOT NULL, 
 [SessionID] uniqueidentifier NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000',
@@ -24,8 +24,8 @@ COMMIT
 
 BEGIN TRANSACTION
 
-CREATE UNIQUE INDEX SessionID ON presence(SessionID);
-CREATE INDEX UserID ON presence(UserID);
+CREATE UNIQUE INDEX SessionID ON Presence(SessionID);
+CREATE INDEX UserID ON Presence(UserID);
 
 COMMIT
 
@@ -33,6 +33,6 @@ COMMIT
 
 BEGIN TRANSACTION
 
-ALTER TABLE presence ADD LastSeen int NOT NULL default 0
+ALTER TABLE Presence ADD LastSeen int NOT NULL default 0
 
 COMMIT

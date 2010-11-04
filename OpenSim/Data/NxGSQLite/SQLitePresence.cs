@@ -19,7 +19,7 @@ namespace OpenSim.Data.SQLite
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         public SQLitePresence(string connectionString, string realm) :
-                base(connectionString, realm, "presence")
+                base(connectionString, realm, "Presence")
         {
         }
 
