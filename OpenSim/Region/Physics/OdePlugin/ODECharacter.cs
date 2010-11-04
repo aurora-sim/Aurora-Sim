@@ -905,7 +905,7 @@ namespace OpenSim.Region.Physics.OdePlugin
             //PidStatus = true;
 
             d.Vector3 localpos = d.BodyGetPosition(Body);
-            Vector3 localPos = new Vector3(localpos.X, localpos.Y, localpos.Z);
+            Vector3 localPos = new Vector3((float)localpos.X, (float)localpos.Y, (float)localpos.Z);
             
             if (!localPos.IsFinite())
             {
@@ -974,11 +974,11 @@ namespace OpenSim.Region.Physics.OdePlugin
                     // Prim to avatar collisions
 
                     d.Vector3 pos = d.BodyGetPosition(Body);
-                    vec.X = (_target_velocity.X - vel.X) * (PID_D) + (_zeroPosition.X - pos.X) * (PID_P * 2);
-                    vec.Y = (_target_velocity.Y - vel.Y)*(PID_D) + (_zeroPosition.Y - pos.Y)* (PID_P * 2);
+                    vec.X = (float)((_target_velocity.X - vel.X) * (PID_D) + (_zeroPosition.X - pos.X) * (PID_P * 2));
+                    vec.Y = (float)((_target_velocity.Y - vel.Y) * (PID_D) + (_zeroPosition.Y - pos.Y) * (PID_P * 2));
                     if (flying)
                     {
-                        vec.Z = (_target_velocity.Z - vel.Z) * (PID_D) + (_zeroPosition.Z - pos.Z) * PID_P;
+                        vec.Z = (float)((_target_velocity.Z - vel.Z) * (PID_D) + (_zeroPosition.Z - pos.Z) * PID_P);
                     }
                 }
                 //PidStatus = true;
@@ -990,20 +990,20 @@ namespace OpenSim.Region.Physics.OdePlugin
                 if (m_iscolliding && !flying)
                 {
                     // We're standing on something
-                    vec.X = ((_target_velocity.X / movementdivisor) - vel.X) * (PID_D);
-                    vec.Y = ((_target_velocity.Y / movementdivisor) - vel.Y) * (PID_D);
+                    vec.X = (float)(((_target_velocity.X / movementdivisor) - vel.X) * (PID_D));
+                    vec.Y = (float)(((_target_velocity.Y / movementdivisor) - vel.Y) * (PID_D));
                 }
                 else if (m_iscolliding && flying)
                 {
                     // We're flying and colliding with something
-                    vec.X = ((_target_velocity.X/movementdivisor) - vel.X)*(PID_D / 16);
-                    vec.Y = ((_target_velocity.Y/movementdivisor) - vel.Y)*(PID_D / 16);
+                    vec.X = (float)((_target_velocity.X / movementdivisor) - vel.X) * (PID_D / 16);
+                    vec.Y = (float)((_target_velocity.Y / movementdivisor) - vel.Y) * (PID_D / 16);
                 }
                 else if (!m_iscolliding && flying)
                 {
                     // we're in mid air suspended
-                    vec.X = ((_target_velocity.X / movementdivisor) - vel.X) * (PID_D/6);
-                    vec.Y = ((_target_velocity.Y / movementdivisor) - vel.Y) * (PID_D/6);
+                    vec.X = (float)((_target_velocity.X / movementdivisor) - vel.X) * (PID_D / 6);
+                    vec.Y = (float)((_target_velocity.Y / movementdivisor) - vel.Y) * (PID_D / 6);
                 }
 
                 if (m_iscolliding && !flying && _target_velocity.Z > 0.0f)
@@ -1011,14 +1011,14 @@ namespace OpenSim.Region.Physics.OdePlugin
                     // We're colliding with something and we're not flying but we're moving
                     // This means we're walking or running.
                     d.Vector3 pos = d.BodyGetPosition(Body);
-                    vec.Z = (_target_velocity.Z - vel.Z)*PID_D + (_zeroPosition.Z - pos.Z)*PID_P;
+                    vec.Z = (float)((_target_velocity.Z - vel.Z) * PID_D + (_zeroPosition.Z - pos.Z) * PID_P);
                     if (_target_velocity.X > 0)
                     {
-                        vec.X = ((_target_velocity.X - vel.X)/1.2f)*PID_D;
+                        vec.X = (float)(((_target_velocity.X - vel.X) / 1.2f) * PID_D);
                     }
                     if (_target_velocity.Y > 0)
                     {
-                        vec.Y = ((_target_velocity.Y - vel.Y)/1.2f)*PID_D;
+                        vec.Y = (float)(((_target_velocity.Y - vel.Y) / 1.2f) * PID_D);
                     }
                 }
                 else if (!m_iscolliding && !flying)
@@ -1029,17 +1029,17 @@ namespace OpenSim.Region.Physics.OdePlugin
                     // d.Vector3 pos = d.BodyGetPosition(Body);
                     if (_target_velocity.X > 0)
                     {
-                        vec.X = ((_target_velocity.X - vel.X)/1.2f)*PID_D;
+                        vec.X = (float)(((_target_velocity.X - vel.X) / 1.2f) * PID_D);
                     }
                     if (_target_velocity.Y > 0)
                     {
-                        vec.Y = ((_target_velocity.Y - vel.Y)/1.2f)*PID_D;
+                        vec.Y = (float)(((_target_velocity.Y - vel.Y)/1.2f)*PID_D);
                     }
                 }
 
                 if (flying)
                 {
-                    vec.Z = (_target_velocity.Z - vel.Z) * (PID_D);
+                    vec.Z = (float)((_target_velocity.Z - vel.Z) * (PID_D));
                 }
             }
             if (flying)
@@ -1124,9 +1124,9 @@ namespace OpenSim.Region.Physics.OdePlugin
             if (vec.X > (int)_parent_scene.WorldExtents.X - 0.05f) vec.X = (int)_parent_scene.WorldExtents.X - 0.05f;
             if (vec.Y > (int)_parent_scene.WorldExtents.Y - 0.05f) vec.Y = (int)_parent_scene.WorldExtents.Y - 0.05f;
 
-            _position.X = vec.X;
-            _position.Y = vec.Y;
-            _position.Z = vec.Z;
+            _position.X = (float)vec.X;
+            _position.Y = (float)vec.Y;
+            _position.Z = (float)vec.Z;
 
             // Did we move last? = zeroflag
             // This helps keep us from sliding all over
@@ -1158,10 +1158,10 @@ namespace OpenSim.Region.Physics.OdePlugin
                     vec.Y = _velocity.Y;
                     vec.Z = _velocity.Z;
                 }
-                _velocity.X = (vec.X);
-                _velocity.Y = (vec.Y);
+                _velocity.X = (float)(vec.X);
+                _velocity.Y = (float)(vec.Y);
 
-                _velocity.Z = (vec.Z);
+                _velocity.Z = (float)(vec.Z);
 
                 if (_velocity.Z < -6 && !m_hackSentFall)
                 {

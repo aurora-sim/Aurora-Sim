@@ -118,6 +118,7 @@ namespace Aurora.DataManager
                 {
                     throw new MigrationOperationException("Cannot create, table with same name and different columns already exists. This should be fixed in a migration: " + tableName);
                 }
+                return;
             }
 
             CreateTable(tableName, columnDefinitions);

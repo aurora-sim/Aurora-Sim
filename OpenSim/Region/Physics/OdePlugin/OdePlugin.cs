@@ -825,9 +825,9 @@ namespace OpenSim.Region.Physics.OdePlugin
                 if (curContact.depth > maxDepthContact.PenetrationDepth)
                 {
                     maxDepthContact = new ContactPoint(
-                        new Vector3(curContact.pos.X, curContact.pos.Y, curContact.pos.Z),
-                        new Vector3(curContact.normal.X, curContact.normal.Y, curContact.normal.Z),
-                        curContact.depth
+                        new Vector3((float)curContact.pos.X, (float)curContact.pos.Y, (float)curContact.pos.Z),
+                        new Vector3((float)curContact.normal.X, (float)curContact.normal.Y, (float)curContact.normal.Z),
+                        (float)curContact.depth
                     );
                 }
 
@@ -2090,7 +2090,7 @@ namespace OpenSim.Region.Physics.OdePlugin
                         break;
                 }
             }
-            return new Vector3(pos.X, pos.Y, pos.Z);
+            return new Vector3((float)pos.X, (float)pos.Y, (float)pos.Z);
         }
 
         // normally called from within OnJointMoved, which is called from within a lock (OdeLock)
@@ -2119,7 +2119,7 @@ namespace OpenSim.Region.Physics.OdePlugin
                         break;
                 }
             }
-            return new Vector3(axis.X, axis.Y, axis.Z);
+            return new Vector3((float)axis.X, (float)axis.Y, (float)axis.Z);
         }
 
 
