@@ -1109,7 +1109,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             WriteShape(writer, sop.Shape, options);
 
             WriteVector(writer, "Scale", sop.Scale);
-            writer.WriteElementString("UpdateFlag", sop.UpdateFlag.ToString());
+            writer.WriteElementString("UpdateFlag", ((byte)sop.UpdateFlag).ToString());
             WriteQuaternion(writer, "SitTargetOrientation", sop.SitTargetOrientation);
             WriteVector(writer, "SitTargetPosition", sop.SitTargetPosition);
             WriteVector(writer, "SitTargetPositionLL", sop.SitTargetPositionLL);

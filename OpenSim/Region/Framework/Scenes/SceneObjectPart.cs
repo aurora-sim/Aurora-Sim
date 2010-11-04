@@ -54,7 +54,7 @@ namespace OpenSim.Region.Framework.Scenes
     /// 2 - full update scheduled
     /// </summary>
     /// 
-    public enum InternalUpdateFlags
+    public enum InternalUpdateFlags : byte
     {
         NoUpdate = 0,
         TerseUpdate = 1,
@@ -3585,8 +3585,8 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 TimeStampFull = (uint)timeNow;
             }
-            if (SitTargetAvatar.Count != 0)
-                UpdateFlags = PrimUpdateFlags.FullUpdate;
+            //if (SitTargetAvatar.Count != 0)
+            //    UpdateFlags = PrimUpdateFlags.FullUpdate;
             if (UpdateFlags == PrimUpdateFlags.FindBest)
             {
                 UpdateFlags = PrimUpdateFlags.None;
