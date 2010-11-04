@@ -50,6 +50,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             CompiledScript = LSL_Converter.Convert(Script);
             Warnings = LSL_Converter.GetWarnings();
             PositionMap = LSL_Converter.PositionMap;
+
+            LSL_Converter.Dispose();
+            LSL_Converter = null;
         }
 
         public string Name

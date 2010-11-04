@@ -401,13 +401,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             }
 
             parameters.GenerateExecutable = false;
+            parameters.GenerateInMemory = false;
             parameters.OutputAssembly = assembly;
             parameters.IncludeDebugInformation = CompileWithDebugInformation;
             //parameters.WarningLevel = 1; // Should be 4?
             parameters.TreatWarningsAsErrors = false;
 
             CompilerResults results = converter.Compile(parameters, Script);
-
+            parameters = null;
             //
             // WARNINGS AND ERRORS
             //
@@ -493,7 +494,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     }
                 }
             }
-
+            results = null;
             if (m_errors.Count != 0) // Quit early then
                 return "Error";
 
