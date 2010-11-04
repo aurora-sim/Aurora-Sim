@@ -44,8 +44,6 @@ using OpenSim.Framework;
 using OpenSim.Region.Physics.Manager;
 using OpenMetaverse;
 
-//using OpenSim.Region.Physics.OdePlugin.Meshing;
-
 namespace Aurora.Physics.AuroraOpenDynamicsEngine
 {
     /// <summary>
@@ -78,12 +76,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 
                 _mScene = new AuroraODEPhysicsScene(ode, sceneIdentifier);
             }
-            return (_mScene);
+            return _mScene;
         }
 
         public string GetName()
         {
-            return ("AuroraOpenDynamicsEngine");
+            return "AuroraOpenDynamicsEngine";
         }
 
         public void Dispose()
