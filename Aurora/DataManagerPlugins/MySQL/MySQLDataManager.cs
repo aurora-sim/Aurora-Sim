@@ -721,7 +721,7 @@ namespace Aurora.DataManager.MySQL
                 case "blob":
                     return ColumnTypes.Blob;
                 default:
-                    throw new Exception("You've discovered some type in MySQL that's not reconized by Aurora, please place the correct conversion in ConvertTypeToColumnType.");
+                    throw new Exception("You've discovered some type in MySQL that's not reconized by Aurora, please place the correct conversion in ConvertTypeToColumnType. Type: " + tStr);
             }
         }
 

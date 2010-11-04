@@ -622,16 +622,23 @@ namespace OpenSim.Region.Framework.Scenes
                 if (error == "Region location is reserved")
                 {
                     m_log.Error("[STARTUP]: Registration of region with grid failed - The region location you specified is reserved. You must move your region.");
-                    scene.RegionInfo.RegionLocY = uint.Parse(MainConsole.Instance.CmdPrompt("New Region Location X", "1000"));
-                    scene.RegionInfo.RegionLocX = uint.Parse(MainConsole.Instance.CmdPrompt("New Region Location Y", "1000"));
+                    uint X = 0, Y = 0;
+                    uint.TryParse(MainConsole.Instance.CmdPrompt("New Region Location X", "1000"), out X);
+                    uint.TryParse(MainConsole.Instance.CmdPrompt("New Region Location Y", "1000"), out Y);
 
+                    scene.RegionInfo.RegionLocX = X;
+                    scene.RegionInfo.RegionLocY = Y;
                     Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>().UpdateRegionInfo(scene.RegionInfo, false);
                 }
                 if (error == "Region overlaps another region")
                 {
                     m_log.Error("[STARTUP]: Registration of region with grid failed - The region location you specified is already in use. You must move your region.");
-                    scene.RegionInfo.RegionLocY = uint.Parse(MainConsole.Instance.CmdPrompt("New Region Location X", "1000"));
-                    scene.RegionInfo.RegionLocX = uint.Parse(MainConsole.Instance.CmdPrompt("New Region Location Y", "1000"));
+                    uint X = 0, Y = 0;
+                    uint.TryParse(MainConsole.Instance.CmdPrompt("New Region Location X", "1000"), out X);
+                    uint.TryParse(MainConsole.Instance.CmdPrompt("New Region Location Y", "1000"), out Y);
+
+                    scene.RegionInfo.RegionLocX = X;
+                    scene.RegionInfo.RegionLocY = Y;
 
                     IConfig config = m_config.Configs["RegionStartup"];
                     if (config != null)
@@ -653,8 +660,8 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         string[] position = error.Split(',');
 
-                        scene.RegionInfo.RegionLocY = uint.Parse(position[1]);
-                        scene.RegionInfo.RegionLocX = uint.Parse(position[2]);
+                        scene.RegionInfo.RegionLocX = uint.Parse(position[1]);
+                        scene.RegionInfo.RegionLocY = uint.Parse(position[2]);
 
                         IConfig config = m_config.Configs["RegionStartup"];
                         if (config != null)
