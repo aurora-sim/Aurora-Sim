@@ -188,9 +188,9 @@ namespace OpenSim.Services.CapsService
             int locationID = HomeLocation["LocationId"].AsInteger();
 
             PresenceInfo presence = m_PresenceService.GetAgents(new string[]{agentID.ToString()})[0];
-            m_GridUserService.SetHome(agentID.ToString(), presence.RegionID, position, lookAt);
+            bool r = m_GridUserService.SetHome(agentID.ToString(), presence.RegionID, position, lookAt);
 
-            rm.Add("success", OSD.FromBoolean(true));
+            rm.Add("success", OSD.FromBoolean(r));
 
             //Send back data
             Hashtable responsedata = new Hashtable();
