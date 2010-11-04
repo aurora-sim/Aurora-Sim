@@ -1440,6 +1440,8 @@ namespace OpenSim.Framework
                     ThreadPool.GetAvailableThreads(out workerThreads, out iocpThreads);
                     return workerThreads;
                 case FireAndForgetMethod.SmartThreadPool:
+                    if (m_ThreadPool == null)
+                        return 0;
                     return m_ThreadPool.MaxThreads - m_ThreadPool.InUseThreads;
                 case FireAndForgetMethod.Thread:
                     return MAX_SYSTEM_THREADS - System.Diagnostics.Process.GetCurrentProcess().Threads.Count;

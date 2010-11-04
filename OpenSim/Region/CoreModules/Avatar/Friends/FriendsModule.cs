@@ -112,7 +112,12 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
 
         protected IGridService GridService
         {
-            get { return m_Scenes[0].GridService; }
+            get 
+            {
+                if (m_Scenes.Count == 0)
+                    return null;
+                return m_Scenes[0].GridService; 
+            }
         }
 
         public IUserAccountService UserAccountService
@@ -534,7 +539,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
                             break;
                         }
 
-                    if (friendSession != null)
+                    if (friendSession != null && GridService != null)
                     {
                         GridRegion region = GridService.GetRegionByUUID(m_Scenes[0].RegionInfo.ScopeID, friendSession.RegionID);
                         //m_log.DebugFormat("[FRIENDS]: Remote Notify to region {0}", region.RegionName);
