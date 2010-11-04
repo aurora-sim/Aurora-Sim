@@ -455,7 +455,7 @@ namespace OpenSim.Framework
     public delegate void RetrieveInstantMessages(IClientAPI client);
     public delegate void PickDelete(IClientAPI client, UUID pickID);
     public delegate void PickGodDelete(IClientAPI client, UUID agentID, UUID pickID, UUID queryID);
-    public delegate void PickInfoUpdate(IClientAPI client, UUID pickID, UUID creatorID, bool topPick, string name, string desc, UUID snapshotID, int sortOrder, bool enabled);
+    public delegate void PickInfoUpdate(IClientAPI client, UUID pickID, UUID creatorID, bool topPick, string name, string desc, UUID snapshotID, int sortOrder, bool enabled, Vector3d globalPos);
     public delegate void AvatarNotesUpdate(IClientAPI client, UUID targetID, string notes);
     public delegate void MuteListRequest(IClientAPI client, uint muteCRC);
     public delegate void AvatarInterestUpdate(IClientAPI client, uint wantmask, string wanttext, uint skillsmask, string skillstext, string languages);

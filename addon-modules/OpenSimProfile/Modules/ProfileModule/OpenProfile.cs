@@ -394,7 +394,7 @@ namespace OpenSimProfile.Modules.OpenProfile
 
         // Picks Update
 
-        public void PickInfoUpdate(IClientAPI remoteClient, UUID pickID, UUID creatorID, bool topPick, string name, string desc, UUID snapshotID, int sortOrder, bool enabled)
+        public void PickInfoUpdate(IClientAPI remoteClient, UUID pickID, UUID creatorID, bool topPick, string name, string desc, UUID snapshotID, int sortOrder, bool enabled, Vector3d globalPos)
         {
             Hashtable ReqHash = new Hashtable();
 

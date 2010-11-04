@@ -425,7 +425,8 @@ namespace Aurora.Services.DataService
                         if (value.Value is Dictionary<string, object>)
                         {
                             Dictionary<string, object> valuevalue = value.Value as Dictionary<string, object>;
-                            Classified classified = new Classified(valuevalue);
+                            Classified classified = new Classified();
+                            classified.FromKVP(valuevalue);
                             Classifieds.Add(classified);
                         }
                     }

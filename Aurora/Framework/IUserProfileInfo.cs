@@ -230,7 +230,6 @@ namespace Aurora.Framework
             result["Visible"] = Visible.ToString();
             result["AArchiveName"] = AArchiveName.ToString();
             result["CustomType"] = CustomType.ToString();
-            result["AArchiveName"] = AArchiveName.ToString();
             result["IMViaEmail"] = IMViaEmail.ToString();
             result["IsNewUser"] = IsNewUser.ToString();
             result["MembershipGroup"] = MembershipGroup.ToString();
@@ -308,7 +307,6 @@ namespace Aurora.Framework
             Visible = Convert.ToBoolean(main["Visible"].ToString());
             AArchiveName = main["AArchiveName"].ToString();
             CustomType = main["CustomType"].ToString();
-            AArchiveName = main["AArchiveName"].ToString();
             IMViaEmail = Convert.ToBoolean(main["IMViaEmail"].ToString());
             IsNewUser = Convert.ToBoolean(main["IsNewUser"].ToString());
             MembershipGroup = main["MembershipGroup"].ToString();
@@ -324,7 +322,7 @@ namespace Aurora.Framework
         public string Languages = "";
     }
 
-    public class Classified
+    public class Classified : IDataTransferable
     {
         public UUID ClassifiedUUID;
         public UUID CreatorUUID;
@@ -342,50 +340,58 @@ namespace Aurora.Framework
         public byte ClassifiedFlags;
         public int PriceForListing;
 
-        public Classified() { }
-
-        public Classified(Dictionary<string, object> KVP)
+        public override OSDMap ToOSD()
         {
-            ClassifiedUUID = UUID.Parse(KVP["ClassifiedUUID"].ToString());
-            CreatorUUID = UUID.Parse(KVP["CreatorUUID"].ToString());
-            CreationDate = uint.Parse(KVP["CreationDate"].ToString());
-            ExpirationDate = uint.Parse(KVP["ExpirationDate"].ToString());
-            Category = uint.Parse(KVP["Category"].ToString());
-            Name = KVP["Name"].ToString();
-            Description = KVP["Description"].ToString();
-            ParcelUUID = UUID.Parse(KVP["ParcelUUID"].ToString());
-            ParentEstate = uint.Parse(KVP["ParentEstate"].ToString());
-            SnapshotUUID = UUID.Parse(KVP["SnapshotUUID"].ToString());
-            SimName = KVP["SimName"].ToString();
-            GlobalPos = Vector3.Parse(KVP["GlobalPos"].ToString());
-            ParcelName = KVP["ParcelName"].ToString();
-            ClassifiedFlags = byte.Parse(KVP["ClassifiedFlags"].ToString());
-            PriceForListing = int.Parse(KVP["PriceForListing"].ToString());
+            OSDMap Classified = new OSDMap();
+            Classified.Add("ClassifiedUUID", OSD.FromUUID(ClassifiedUUID));
+            Classified.Add("CreatorUUID", OSD.FromUUID(CreatorUUID));
+            Classified.Add("CreationDate", OSD.FromUInteger(CreationDate));
+            Classified.Add("ExpirationDate", OSD.FromUInteger(ExpirationDate));
+            Classified.Add("Category", OSD.FromUInteger(Category));
+            Classified.Add("Name", OSD.FromString(Name));
+            Classified.Add("Description", OSD.FromString(Description));
+            Classified.Add("ParcelUUID", OSD.FromUUID(ParcelUUID));
+            Classified.Add("ParentEstate", OSD.FromUInteger(ParentEstate));
+            Classified.Add("SnapshotUUID", OSD.FromUUID(SnapshotUUID));
+            Classified.Add("SimName", OSD.FromString(SimName));
+            Classified.Add("GlobalPos", OSD.FromVector3(GlobalPos));
+            Classified.Add("ParcelName", OSD.FromString(ParcelName));
+            Classified.Add("ClassifiedFlags", OSD.FromInteger(ClassifiedFlags));
+            Classified.Add("PriceForListing", OSD.FromInteger(PriceForListing));
+            return Classified;
         }
 
-        public Dictionary<string, object> ToKeyValuePairs()
+        public override void FromOSD(OSDMap map)
         {
-            Dictionary<string, object> Classified = new Dictionary<string, object>();
-            Classified["ClassifiedUUID"] = ClassifiedUUID;
-            Classified["CreatorUUID"] = CreatorUUID;
-            Classified["CreationDate"] = CreationDate;
-            Classified["ExpirationDate"] = ExpirationDate;
-            Classified["Category"] = Category;
-            Classified["Name"] = Name;
-            Classified["Description"] = Description;
-            Classified["ParcelUUID"] = ParcelUUID;
-            Classified["ParentEstate"] = ParentEstate;
-            Classified["SnapshotUUID"] = SnapshotUUID;
-            Classified["SimName"] = SimName;
-            Classified["GlobalPos"] = GlobalPos;
-            Classified["ParcelName"] = ParcelName;
-            Classified["ClassifiedFlags"] = ClassifiedFlags;
-            Classified["PriceForListing"] = PriceForListing;
-            return Classified;
+            ClassifiedUUID = map["ClassifiedUUID"].AsUUID();
+            CreatorUUID = map["CreatorUUID"].AsUUID();
+            CreationDate = map["CreationDate"].AsUInteger();
+            ExpirationDate = map["ExpirationDate"].AsUInteger();
+            Category = map["Category"].AsUInteger();
+            Name = map["Name"].AsString();
+            Description = map["Description"].AsString();
+            ParcelUUID = map["ParcelUUID"].AsUUID();
+            ParentEstate = map["ParentEstate"].AsUInteger();
+            SnapshotUUID = map["SnapshotUUID"].AsUUID();
+            SimName = map["SimName"].AsString();
+            GlobalPos = map["GlobalPos"].AsVector3();
+            ParcelName = map["ParcelName"].AsString();
+            ClassifiedFlags = (byte)map["ClassifiedFlags"].AsInteger();
+            PriceForListing = map["PriceForListing"].AsInteger();
+        }
+
+        public override void FromKVP(Dictionary<string, object> KVP)
+        {
+            FromOSD(Util.DictionaryToOSD(KVP));
+        }
+
+        public override Dictionary<string, object> ToKeyValuePairs()
+        {
+            return Util.OSDToDictionary(ToOSD());
         }
     }
 
-    public class ProfilePickInfo
+    public class ProfilePickInfo : IDataTransferable
     {
         public UUID PickUUID;
         public UUID CreatorUUID;
@@ -401,42 +407,50 @@ namespace Aurora.Framework
         public int SortOrder;
         public int Enabled;
 
-        public ProfilePickInfo() { }
-
-        public ProfilePickInfo(Dictionary<string, object> KVP)
+        public override OSDMap ToOSD()
         {
-            PickUUID = UUID.Parse(KVP["PickUUID"].ToString());
-            CreatorUUID = UUID.Parse(KVP["CreatorUUID"].ToString());
-            TopPick = int.Parse(KVP["TopPick"].ToString());
-            ParcelUUID = UUID.Parse(KVP["ParcelUUID"].ToString());
-            Name = KVP["Name"].ToString();
-            Description = KVP["Description"].ToString();
-            SnapshotUUID = UUID.Parse(KVP["SnapshotUUID"].ToString());
-            User = KVP["User"].ToString();
-            OriginalName = KVP["OriginalName"].ToString();
-            SimName = KVP["SimName"].ToString();
-            GlobalPos = Vector3.Parse(KVP["GlobalPos"].ToString());
-            SortOrder = int.Parse(KVP["SortOrder"].ToString());
-            Enabled = int.Parse(KVP["Enabled"].ToString());
+            OSDMap Pick = new OSDMap();
+            Pick.Add("PickUUID",OSD.FromUUID(PickUUID));
+            Pick.Add("CreatorUUID", OSD.FromUUID(CreatorUUID));
+            Pick.Add("TopPick", OSD.FromInteger(TopPick));
+            Pick.Add("ParcelUUID", OSD.FromUUID(ParcelUUID));
+            Pick.Add("Name", OSD.FromString(Name));
+            Pick.Add("Description", OSD.FromString(Description));
+            Pick.Add("SnapshotUUID", OSD.FromUUID(SnapshotUUID));
+            Pick.Add("User", OSD.FromString(User));
+            Pick.Add("OriginalName", OSD.FromString(OriginalName));
+            Pick.Add("SimName", OSD.FromString(SimName));
+            Pick.Add("GlobalPos", OSD.FromVector3(GlobalPos));
+            Pick.Add("SortOrder", OSD.FromInteger(SortOrder));
+            Pick.Add("Enabled", OSD.FromInteger(Enabled));
+            return Pick;
         }
 
-        public Dictionary<string, object> ToKeyValuePairs()
+        public override void FromOSD(OSDMap map)
         {
-            Dictionary<string, object> Pick = new Dictionary<string, object>();
-            Pick["PickUUID"] = PickUUID;
-            Pick["CreatorUUID"] = CreatorUUID;
-            Pick["TopPick"] = TopPick;
-            Pick["ParcelUUID"] = ParcelUUID;
-            Pick["Name"] = Name;
-            Pick["Description"] = Description;
-            Pick["SnapshotUUID"] = SnapshotUUID;
-            Pick["User"] = User;
-            Pick["OriginalName"] = OriginalName;
-            Pick["SimName"] = SimName;
-            Pick["GlobalPos"] = GlobalPos;
-            Pick["SortOrder"] = SortOrder;
-            Pick["Enabled"] = Enabled;
-            return Pick;
+            PickUUID = map["PickUUID"].AsUUID();
+            CreatorUUID = map["CreatorUUID"].AsUUID();
+            TopPick = map["TopPick"].AsInteger();
+            ParcelUUID = map["AsString"].AsUUID();
+            Name = map["Name"].AsString();
+            Description = map["Description"].AsString();
+            SnapshotUUID = map["SnapshotUUID"].AsUUID();
+            User = map["User"].AsString();
+            OriginalName = map["OriginalName"].AsString();
+            SimName = map["SimName"].AsString();
+            GlobalPos = map["GlobalPos"].AsVector3();
+            SortOrder = map["SortOrder"].AsInteger();
+            Enabled = map["Enabled"].AsInteger();
+        }
+
+        public override void FromKVP(Dictionary<string, object> KVP)
+        {
+            FromOSD(Util.DictionaryToOSD(KVP));
+        }
+
+        public override Dictionary<string, object> ToKeyValuePairs()
+        {
+            return Util.OSDToDictionary(ToOSD());
         }
     }
 }

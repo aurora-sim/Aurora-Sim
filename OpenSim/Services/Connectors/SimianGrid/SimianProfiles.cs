@@ -239,7 +239,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
         }
 
         private void PickInfoUpdateHandler(IClientAPI client, UUID pickID, UUID creatorID, bool topPick, string name,
-            string desc, UUID snapshotID, int sortOrder, bool enabled)
+            string desc, UUID snapshotID, int sortOrder, bool enabled, Vector3d globalPos)
         {
             // FIXME: Save this
         }

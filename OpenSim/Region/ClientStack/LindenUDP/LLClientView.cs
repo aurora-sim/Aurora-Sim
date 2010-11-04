@@ -11629,7 +11629,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         Utils.BytesToString(pickInfoUpdate.Data.Desc),
                         pickInfoUpdate.Data.SnapshotID,
                         pickInfoUpdate.Data.SortOrder,
-                        pickInfoUpdate.Data.Enabled);
+                        pickInfoUpdate.Data.Enabled,
+                        pickInfoUpdate.Data.PosGlobal);
             return true;
         }
         private bool HandleAvatarNotesUpdate(IClientAPI sender, Packet Pack)
