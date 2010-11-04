@@ -1624,9 +1624,9 @@ Console.WriteLine(" JointCreateFixed");
                         d.Vector3 pos = d.BodyGetPosition(Body);
                         _target_velocity =
                             new Vector3(
-                                (m_PIDTarget.X - pos.X) * ((PID_G - m_PIDTau) * timestep),
-                                (m_PIDTarget.Y - pos.Y) * ((PID_G - m_PIDTau) * timestep),
-                                (m_PIDTarget.Z - pos.Z) * ((PID_G - m_PIDTau) * timestep)
+                                (float)((m_PIDTarget.X - pos.X) * ((PID_G - m_PIDTau) * timestep)),
+                                (float)((m_PIDTarget.Y - pos.Y) * ((PID_G - m_PIDTau) * timestep)),
+                                (float)((m_PIDTarget.Z - pos.Z) * ((PID_G - m_PIDTau) * timestep))
                                 );
 
                         //  if velocity is zero, use position control; otherwise, velocity control
@@ -1653,12 +1653,12 @@ Console.WriteLine(" JointCreateFixed");
                             _zeroFlag = false;
 
                             // We're flying and colliding with something
-                            fx = ((_target_velocity.X) - vel.X) * (PID_D);
-                            fy = ((_target_velocity.Y) - vel.Y) * (PID_D);
+                            fx = (float)(((_target_velocity.X) - vel.X) * (PID_D));
+                            fy = (float)(((_target_velocity.Y) - vel.Y) * (PID_D));
     
                             // vec.Z = (_target_velocity.Z - vel.Z) * PID_D + (_zeroPosition.Z - pos.Z) * PID_P;
 
-                            fz = fz + ((_target_velocity.Z - vel.Z) * (PID_D) * m_mass);
+                            fz = (float)(fz + ((_target_velocity.Z - vel.Z) * (PID_D) * m_mass));
                         }
                     }        // end if (m_usePID)
 
@@ -1696,11 +1696,11 @@ Console.WriteLine(" JointCreateFixed");
                         switch (m_PIDHoverType)
                         {
                             case PIDHoverType.Ground:
-                                m_groundHeight = _parent_scene.GetTerrainHeightAtXY(pos.X, pos.Y);
+                                m_groundHeight = _parent_scene.GetTerrainHeightAtXY((float)pos.X, (float)pos.Y);
                                 m_targetHoverHeight = m_groundHeight + m_PIDHoverHeight;
                                 break;
                             case PIDHoverType.GroundAndWater:
-                                m_groundHeight = _parent_scene.GetTerrainHeightAtXY(pos.X, pos.Y);
+                                m_groundHeight = _parent_scene.GetTerrainHeightAtXY((float)pos.X, (float)pos.Y);
                                 m_waterHeight  = _parent_scene.GetWaterLevel();
                                 if (m_groundHeight > m_waterHeight)
                                 {
@@ -1717,7 +1717,7 @@ Console.WriteLine(" JointCreateFixed");
 
                         _target_velocity =
                             new Vector3(0.0f, 0.0f,
-                                (m_targetHoverHeight - pos.Z) * ((PID_G - m_PIDHoverTau) * timestep)
+                                (float)((m_targetHoverHeight - pos.Z) * ((PID_G - m_PIDHoverTau) * timestep))
                                 );
 
                         //  if velocity is zero, use position control; otherwise, velocity control
@@ -1741,7 +1741,7 @@ Console.WriteLine(" JointCreateFixed");
                             _zeroFlag = false;
 
                             // We're flying and colliding with something
-                            fz = fz + ((_target_velocity.Z - vel.Z) * (PID_D) * m_mass);
+                            fz = (float)(fz + ((_target_velocity.Z - vel.Z) * (PID_D) * m_mass));
                         }
                     }
 
@@ -2600,7 +2600,7 @@ Console.WriteLine(" JointCreateFixed");
                     d.Vector3 vel = d.BodyGetLinearVel(Body);
                     d.Vector3 rotvel = d.BodyGetAngularVel(Body);
                     d.Vector3 torque = d.BodyGetTorque(Body);
-                    _torque = new Vector3(torque.X, torque.Y, torque.Z);
+                    _torque = new Vector3((float)torque.X, (float)torque.Y, (float)torque.Z);
                     Vector3 l_position = Vector3.Zero;
                     Quaternion l_orientation = Quaternion.Identity;
 
@@ -2613,13 +2613,13 @@ Console.WriteLine(" JointCreateFixed");
                     m_lastposition = _position;
                     m_lastorientation = _orientation;
 
-                    l_position.X = vec.X;
-                    l_position.Y = vec.Y;
-                    l_position.Z = vec.Z;
-                    l_orientation.X = ori.X;
-                    l_orientation.Y = ori.Y;
-                    l_orientation.Z = ori.Z;
-                    l_orientation.W = ori.W;
+                    l_position.X = (float)vec.X;
+                    l_position.Y = (float)vec.Y;
+                    l_position.Z = (float)vec.Z;
+                    l_orientation.X = (float)ori.X;
+                    l_orientation.Y = (float)ori.Y;
+                    l_orientation.Z = (float)ori.Z;
+                    l_orientation.W = (float)ori.W;
 
                     if (l_position.X > ((int)_parent_scene.WorldExtents.X - 0.05f) || l_position.X < 0f || l_position.Y > ((int)_parent_scene.WorldExtents.Y - 0.05f) || l_position.Y < 0f)
                     {
@@ -2738,9 +2738,9 @@ Console.WriteLine(" JointCreateFixed");
 
                         _position = l_position;
 
-                        _velocity.X = vel.X;
-                        _velocity.Y = vel.Y;
-                        _velocity.Z = vel.Z;
+                        _velocity.X = (float)vel.X;
+                        _velocity.Y = (float)vel.Y;
+                        _velocity.Z = (float)vel.Z;
 
                         _acceleration = ((_velocity - m_lastVelocity) / 0.1f);
                         _acceleration = new Vector3(_velocity.X - m_lastVelocity.X / 0.1f, _velocity.Y - m_lastVelocity.Y / 0.1f, _velocity.Z - m_lastVelocity.Z / 0.1f);
@@ -2752,14 +2752,14 @@ Console.WriteLine(" JointCreateFixed");
                         }
                         else
                         {
-                            m_rotationalVelocity = new Vector3(rotvel.X, rotvel.Y, rotvel.Z);
+                            m_rotationalVelocity = new Vector3((float)rotvel.X, (float)rotvel.Y, (float)rotvel.Z);
                         }
 
                         //m_log.Debug("ODE: " + m_rotationalVelocity.ToString());
-                        _orientation.X = ori.X;
-                        _orientation.Y = ori.Y;
-                        _orientation.Z = ori.Z;
-                        _orientation.W = ori.W;
+                        _orientation.X = (float)ori.X;
+                        _orientation.Y = (float)ori.Y;
+                        _orientation.Z = (float)ori.Z;
+                        _orientation.W = (float)ori.W;
                         m_lastUpdateSent = false;
                         if (!m_throttleUpdates || throttleCounter > _parent_scene.geomUpdatesPerThrottledUpdate)
                         {
@@ -2961,17 +2961,17 @@ Console.WriteLine(" JointCreateFixed");
         public Matrix4 FromDMass(d.Mass pMass)
         {
             Matrix4 obj;
-            obj.M11 = pMass.I.M00;
-            obj.M12 = pMass.I.M01;
-            obj.M13 = pMass.I.M02;
+            obj.M11 = (float)pMass.I.M00;
+            obj.M12 = (float)pMass.I.M01;
+            obj.M13 = (float)pMass.I.M02;
             obj.M14 = 0;
-            obj.M21 = pMass.I.M10;
-            obj.M22 = pMass.I.M11;
-            obj.M23 = pMass.I.M12;
+            obj.M21 = (float)pMass.I.M10;
+            obj.M22 = (float)pMass.I.M11;
+            obj.M23 = (float)pMass.I.M12;
             obj.M24 = 0;
-            obj.M31 = pMass.I.M20;
-            obj.M32 = pMass.I.M21;
-            obj.M33 = pMass.I.M22;
+            obj.M31 = (float)pMass.I.M20;
+            obj.M32 = (float)pMass.I.M21;
+            obj.M33 = (float)pMass.I.M22;
             obj.M34 = 0;
             obj.M41 = 0;
             obj.M42 = 0;

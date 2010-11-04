@@ -132,7 +132,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         //Attractor properties
         private float m_verticalAttractionEfficiency = 1.0f;        // damped
         private float m_verticalAttractionTimescale = 500f;         // Timescale > 300  means no vert attractor.
-        public float Mass;
+        public double Mass;
         private bool m_enabled = false;
 
         internal void ProcessFloatVehicleParam(Vehicle pParam, float pValue)
@@ -694,7 +694,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 m_lastPositionVector.Z != pos.Z)
             {
                 m_lastPositionVector = d.BodyGetPosition(Body);
-                m_lastAngularVelocity = new Vector3(d.BodyGetAngularVel(Body).X, d.BodyGetAngularVel(Body).Y, d.BodyGetAngularVel(Body).Z);
+                m_lastAngularVelocity = new Vector3((float)d.BodyGetAngularVel(Body).X, (float)d.BodyGetAngularVel(Body).Y, (float)d.BodyGetAngularVel(Body).Z);
             }
             if (!m_linearMotorDirection.ApproxEquals(Vector3.Zero, 0.01f))  // requested m_linearMotorDirection is significant
             {
@@ -724,16 +724,16 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_dir = m_lastLinearVelocityVector;
 
             d.Quaternion rot = d.BodyGetQuaternion(Body);
-            Quaternion rotq = new Quaternion(rot.X,
-                rot.Y,
-                rot.Z,
-                rot.W);    // rotq = rotation of object
+            Quaternion rotq = new Quaternion((float)rot.X,
+                (float)rot.Y,
+                (float)rot.Z,
+                (float)rot.W);    // rotq = rotation of object
 
             m_dir *= rotq;   // apply obj rotation to velocity vector
 
             // Preserve the current Z velocity
             d.Vector3 vel_now = d.BodyGetLinearVel(Body);
-            m_dir.Z += vel_now.Z;        // Preserve the accumulated falling velocity
+            m_dir.Z += (float)vel_now.Z;        // Preserve the accumulated falling velocity
 
             #region Blocking End Points
 
@@ -741,9 +741,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (m_BlockingEndPoint != Vector3.Zero)
             {
                 Vector3 posChange = new Vector3();
-                posChange.X = pos.X - m_lastPositionVector.X;
-                posChange.Y = pos.Y - m_lastPositionVector.Y;
-                posChange.Z = pos.Z - m_lastPositionVector.Z;
+                posChange.X = (float)(pos.X - m_lastPositionVector.X);
+                posChange.Y = (float)(pos.Y - m_lastPositionVector.Y);
+                posChange.Z = (float)(pos.Z - m_lastPositionVector.Z);
 
                 if (pos.X >= (m_BlockingEndPoint.X - (float)1))
                     pos.X -= posChange.X + 1;
@@ -773,7 +773,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
                 if ((m_Hoverflags & VehicleFlag.HOVER_TERRAIN_ONLY) != 0)
                 {
-                    m_VhoverTargetHeight = _pParentScene.GetTerrainHeightAtXY(pos.X, pos.Y) + m_VhoverHeight;
+                    m_VhoverTargetHeight = _pParentScene.GetTerrainHeightAtXY((float)pos.X, (float)pos.Y) + m_VhoverHeight;
                 }
                 if ((m_Hoverflags & VehicleFlag.HOVER_GLOBAL_HEIGHT) != 0)
                 {
@@ -784,14 +784,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 {
                     // If body is already heigher, use its height as target height
                     if (pos.Z > m_VhoverTargetHeight)
-                        m_VhoverTargetHeight = pos.Z;
+                        m_VhoverTargetHeight = (float)pos.Z;
                 }
 
                 if ((m_Hoverflags & VehicleFlag.LOCK_HOVER_HEIGHT) != 0)
                 {
                     if ((pos.Z - m_VhoverTargetHeight) > .2 || (pos.Z - m_VhoverTargetHeight) < -.2)
                     {
-                        if ((pos.Z - (pos.Z - m_VhoverTargetHeight)) >= _pParentScene.GetTerrainHeightAtXY(pos.X, pos.Y))
+                        if ((pos.Z - (pos.Z - m_VhoverTargetHeight)) >= _pParentScene.GetTerrainHeightAtXY((float)pos.X, (float)pos.Y))
                             pos.Z = m_VhoverTargetHeight;
                     }
                 }
@@ -799,7 +799,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 {
                     // m_VhoverEfficiency - 0=boucy, 1=Crit.damped
                     // m_VhoverTimescale - time to acheive height
-                    float herr0 = pos.Z - m_VhoverTargetHeight;
+                    float herr0 = (float)pos.Z - m_VhoverTargetHeight;
                     // Replace Vertical speed with correction figure if significant
                     if (Math.Abs(herr0) > 0.01f)
                     {
@@ -968,15 +968,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             if (m_verticalAttractionTimescale < 300)
             {
-                Quaternion rotqq = new Quaternion(rot.X + m_referenceFrame.X,
-                    rot.Y + m_referenceFrame.Y,
-                    rot.Z + m_referenceFrame.Z,
-                    rot.W);    // rotq = rotation of object
+                Quaternion rotqq = new Quaternion((float)rot.X + m_referenceFrame.X,
+                    (float)rot.Y + m_referenceFrame.Y,
+                    (float)rot.Z + m_referenceFrame.Z,
+                    (float)rot.W);    // rotq = rotation of object
 
                 m_angularMotorVelocity *= rotqq;
                 float VAservo = 0.2f / (m_verticalAttractionTimescale * pTimestep);
                 // get present body rotation
-                Quaternion rotq = new Quaternion(rot.X, rot.Y, rot.Z, rot.W);
+                Quaternion rotq = new Quaternion((float)rot.X, (float)rot.Y, (float)rot.Z, (float)rot.W);
                 // make a vector pointing up
                 Vector3 verterr = Vector3.Zero;
                 verterr.Z = 1.0f;
@@ -1002,8 +1002,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                 // scaling appears better using square-law
                 float bounce = 1.0f - (m_verticalAttractionEfficiency * m_verticalAttractionEfficiency);
-                vertattr.X += bounce * angularVelocity.X;
-                vertattr.Y += bounce * angularVelocity.Y;
+                vertattr.X += (float)(bounce * angularVelocity.X);
+                vertattr.Y += (float)(bounce * angularVelocity.Y);
 
                 #region Banking
 
@@ -1112,10 +1112,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (Change != Vector3.One)
                 {
                     //Using the ref frame because this requires the use of the idea of UP
-                    Quaternion rotq = new Quaternion(rot.X + m_referenceFrame.X,
-                        rot.Y + m_referenceFrame.Y,
-                        rot.Z + m_referenceFrame.Z,
-                        rot.W);    // rotq = rotation of object
+                    Quaternion rotq = new Quaternion((float)rot.X + m_referenceFrame.X,
+                        (float)rot.Y + m_referenceFrame.Y,
+                        (float)rot.Z + m_referenceFrame.Z,
+                        (float)rot.W);    // rotq = rotation of object
                     rotq.Normalize();
                     Change *= rotq;
                     Change.Z = 0;

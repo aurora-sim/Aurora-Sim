@@ -656,7 +656,7 @@ namespace OpenSim.Region.Physics.OdePlugin
             // convert requested object velocity to world-referenced vector
             m_dir = m_lastLinearVelocityVector;
             d.Quaternion rot = d.BodyGetQuaternion(Body);
-            Quaternion rotq = new Quaternion(rot.X, rot.Y, rot.Z, rot.W);    // rotq = rotation of object
+            Quaternion rotq = new Quaternion((float)rot.X, (float)rot.Y, (float)rot.Z, (float)rot.W);    // rotq = rotation of object
             m_dir *= rotq;                            // apply obj rotation to velocity vector
 
             // add Gravity andBuoyancy
@@ -669,17 +669,17 @@ namespace OpenSim.Region.Physics.OdePlugin
             d.Mass objMass;
             d.BodyGetMass(Body, out objMass);
             // m_VehicleBuoyancy: -1=2g; 0=1g; 1=0g;
-            grav.Z = _pParentScene.gravityz * objMass.mass * (1f - m_VehicleBuoyancy);
+            grav.Z = (float)(_pParentScene.gravityz * objMass.mass * (1f - m_VehicleBuoyancy));
             // Preserve the current Z velocity
             d.Vector3 vel_now = d.BodyGetLinearVel(Body);
-            m_dir.Z = vel_now.Z;        // Preserve the accumulated falling velocity
+            m_dir.Z = (float)vel_now.Z;        // Preserve the accumulated falling velocity
 
             d.Vector3 pos = d.BodyGetPosition(Body);
 //            Vector3 accel = new Vector3(-(m_dir.X - m_lastLinearVelocityVector.X / 0.1f), -(m_dir.Y - m_lastLinearVelocityVector.Y / 0.1f), m_dir.Z - m_lastLinearVelocityVector.Z / 0.1f);
             Vector3 posChange = new Vector3();
-            posChange.X = pos.X - m_lastPositionVector.X;
-            posChange.Y = pos.Y - m_lastPositionVector.Y;
-            posChange.Z = pos.Z - m_lastPositionVector.Z;
+            posChange.X = (float)(pos.X - m_lastPositionVector.X);
+            posChange.Y = (float)(pos.Y - m_lastPositionVector.Y);
+            posChange.Z = (float)(pos.Z - m_lastPositionVector.Z);
             double Zchange = Math.Abs(posChange.Z);
             if (m_BlockingEndPoint != Vector3.Zero)
             {
@@ -709,9 +709,9 @@ namespace OpenSim.Region.Physics.OdePlugin
                     d.BodySetPosition(Body, pos.X, pos.Y, pos.Z);
                 }
             }
-            if (pos.Z < _pParentScene.GetTerrainHeightAtXY(pos.X, pos.Y))
+            if (pos.Z < _pParentScene.GetTerrainHeightAtXY((float)pos.X, (float)pos.Y))
             {
-                pos.Z = _pParentScene.GetTerrainHeightAtXY(pos.X, pos.Y) + 2;
+                pos.Z = _pParentScene.GetTerrainHeightAtXY((float)pos.X, (float)pos.Y) + 2;
                 d.BodySetPosition(Body, pos.X, pos.Y, pos.Z);
             }
 
@@ -725,7 +725,7 @@ namespace OpenSim.Region.Physics.OdePlugin
                 }
                 if ((m_Hoverflags & VehicleFlag.HOVER_TERRAIN_ONLY) != 0)
                 {
-                    m_VhoverTargetHeight = _pParentScene.GetTerrainHeightAtXY(pos.X, pos.Y) + m_VhoverHeight;
+                    m_VhoverTargetHeight = _pParentScene.GetTerrainHeightAtXY((float)pos.X, (float)pos.Y) + m_VhoverHeight;
                 }
                 if ((m_Hoverflags & VehicleFlag.HOVER_GLOBAL_HEIGHT) != 0)
                 {
@@ -735,7 +735,7 @@ namespace OpenSim.Region.Physics.OdePlugin
                 if ((m_Hoverflags & VehicleFlag.HOVER_UP_ONLY) != 0)
                 {
                     // If body is aready heigher, use its height as target height
-                    if (pos.Z > m_VhoverTargetHeight) m_VhoverTargetHeight = pos.Z;
+                    if (pos.Z > m_VhoverTargetHeight) m_VhoverTargetHeight = (float)pos.Z;
                 }
                 if ((m_Hoverflags & VehicleFlag.LOCK_HOVER_HEIGHT) != 0)
                 {
@@ -746,7 +746,7 @@ namespace OpenSim.Region.Physics.OdePlugin
                 }
                 else
                 {
-                    float herr0 = pos.Z - m_VhoverTargetHeight;
+                    float herr0 = (float)(pos.Z - m_VhoverTargetHeight);
                     // Replace Vertical speed with correction figure if significant
                     if (Math.Abs(herr0) > 0.01f)
                     {
@@ -787,8 +787,8 @@ namespace OpenSim.Region.Physics.OdePlugin
                 {
                     grav.Z = (float)(grav.Z * 1.125);
                 }
-                float terraintemp = _pParentScene.GetTerrainHeightAtXY(pos.X, pos.Y);
-                float postemp = (pos.Z - terraintemp);
+                float terraintemp = _pParentScene.GetTerrainHeightAtXY((float)pos.X, (float)pos.Y);
+                float postemp = (float)(pos.Z - terraintemp);
                 if (postemp > 2.5f)
                 {
                     grav.Z = (float)(grav.Z * 1.037125);
@@ -868,7 +868,7 @@ namespace OpenSim.Region.Physics.OdePlugin
                 float VAservo = 0.2f / (m_verticalAttractionTimescale * pTimestep);
                 // get present body rotation
                 d.Quaternion rot = d.BodyGetQuaternion(Body);
-                Quaternion rotq = new Quaternion(rot.X, rot.Y, rot.Z, rot.W);
+                Quaternion rotq = new Quaternion((float)rot.X, (float)rot.Y, (float)rot.Z, (float)rot.W);
                 // make a vector pointing up
                 Vector3 verterr = Vector3.Zero;
                 verterr.Z = 1.0f;
@@ -895,8 +895,8 @@ namespace OpenSim.Region.Physics.OdePlugin
 
                 // scaling appears better usingsquare-law
                 float bounce = 1.0f - (m_verticalAttractionEfficiency * m_verticalAttractionEfficiency);
-                vertattr.X += bounce * angularVelocity.X;
-                vertattr.Y += bounce * angularVelocity.Y;
+                vertattr.X += (float)(bounce * angularVelocity.X);
+                vertattr.Y += (float)(bounce * angularVelocity.Y);
 
             } // else vertical attractor is off
 
@@ -934,7 +934,7 @@ namespace OpenSim.Region.Physics.OdePlugin
         internal void LimitRotation(float timestep)
         {
             d.Quaternion rot = d.BodyGetQuaternion(Body);
-            Quaternion rotq = new Quaternion(rot.X, rot.Y, rot.Z, rot.W);    // rotq = rotation of object
+            Quaternion rotq = new Quaternion((float)rot.X, (float)rot.Y, (float)rot.Z, (float)rot.W);    // rotq = rotation of object
             d.Quaternion m_rot = new d.Quaternion();
             bool changed = false;
             m_rot.X = rotq.X;

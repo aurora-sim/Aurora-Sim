@@ -317,10 +317,10 @@ namespace OpenSim.Region.Physics.OdePlugin
                         ContactResult collisionresult = new ContactResult();
                     
                         collisionresult.ConsumerID = ((OdePrim)p1).m_localID;
-                        collisionresult.Pos = new Vector3(contacts[i].pos.X, contacts[i].pos.Y, contacts[i].pos.Z);
-                        collisionresult.Depth = contacts[i].depth;
-                        collisionresult.Normal = new Vector3(contacts[i].normal.X, contacts[i].normal.Y,
-                                                             contacts[i].normal.Z);
+                        collisionresult.Pos = new Vector3((float)contacts[i].pos.X, (float)contacts[i].pos.Y, (float)contacts[i].pos.Z);
+                        collisionresult.Depth = (float)contacts[i].depth;
+                        collisionresult.Normal = new Vector3((float)contacts[i].normal.X, (float)contacts[i].normal.Y,
+                                                             (float)contacts[i].normal.Z);
                         lock (m_contactResults)
                             m_contactResults.Add(collisionresult);
                     }
@@ -333,10 +333,10 @@ namespace OpenSim.Region.Physics.OdePlugin
                         ContactResult collisionresult = new ContactResult();
 
                         collisionresult.ConsumerID = ((OdePrim)p2).m_localID;
-                        collisionresult.Pos = new Vector3(contacts[i].pos.X, contacts[i].pos.Y, contacts[i].pos.Z);
-                        collisionresult.Depth = contacts[i].depth;
-                        collisionresult.Normal = new Vector3(contacts[i].normal.X, contacts[i].normal.Y,
-                                      contacts[i].normal.Z);
+                        collisionresult.Pos = new Vector3((float)contacts[i].pos.X, (float)contacts[i].pos.Y, (float)contacts[i].pos.Z);
+                        collisionresult.Depth = (float)contacts[i].depth;
+                        collisionresult.Normal = new Vector3((float)contacts[i].normal.X, (float)contacts[i].normal.Y,
+                                      (float)contacts[i].normal.Z);
 
                         lock (m_contactResults)
                             m_contactResults.Add(collisionresult);
