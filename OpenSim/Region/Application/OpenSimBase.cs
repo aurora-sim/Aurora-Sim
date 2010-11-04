@@ -350,6 +350,8 @@ namespace OpenSim
 
             m_console.Commands.AddCommand("region", false, "load xml2", "load xml2", "Load a region's data from XML2 format", LoadXml2);
 
+            m_console.Commands.AddCommand("region", false, "save xml2", "save xml2", "Save a region's data in XML2 format", SaveXml2);
+
             m_console.Commands.AddCommand("region", false, "load oar", "load oar [--merge] [--skip-assets] <oar name>", "Load a region's data from OAR archive.  --merge will merge the oar with the existing scene.  --skip-assets will load the oar but ignore the assets it contains", LoadOar);
 
             m_console.Commands.AddCommand("region", false, "save oar", "save oar <oar name>", "Save a region's data to an OAR archive", "More information on forthcoming options here soon", SaveOar);
@@ -584,6 +586,23 @@ namespace OpenSim
 				}
 			}
 		}
+
+        /// <summary>
+        /// Serialize region data to XML2Format
+        /// </summary>
+        /// <param name="module"></param>
+        /// <param name="cmdparams"></param>
+        protected void SaveXml2(string module, string[] cmdparams)
+        {
+            if (cmdparams.Length > 2)
+            {
+                m_sceneManager.SaveCurrentSceneToXml2(cmdparams[2]);
+            }
+            else
+            {
+                m_log.Warn("Wrong number of parameters!");
+            }
+        }
 
 		/// <summary>
 		/// Runs commands issued by the server console from the operator

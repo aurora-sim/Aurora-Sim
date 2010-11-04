@@ -946,5 +946,16 @@ namespace OpenSim.Region.Framework.Scenes
 
             return physicsPluginManager.GetPhysicsScene(engine, meshEngine, config, RegionName);
         }
+
+        /// <summary>
+        /// Save the prims in the current scene to an xml file in OpenSimulator's current 'xml2' format
+        /// </summary>
+        /// <param name="filename"></param>
+        public void SaveCurrentSceneToXml2(string filename)
+        {
+            IRegionSerialiserModule serialiser = CurrentOrFirstScene.RequestModuleInterface<IRegionSerialiserModule>();
+            if (serialiser != null)
+                serialiser.SavePrimsToXml2(CurrentOrFirstScene, filename);
+        }
     }
 }
