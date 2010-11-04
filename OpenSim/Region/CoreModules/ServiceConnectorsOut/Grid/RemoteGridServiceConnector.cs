@@ -241,6 +241,14 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Grid
 
     public class GridCache
     {
+        private double ExpireTime = 30 * 1000 * 60; //30 mins
+        private ExpiringList<GridRegionCache> cache = new ExpiringList<GridRegionCache>();
+        
+        public GridCache()
+        {
+            cache.SetDefaultTime(ExpireTime);
+        }
+
         private class GridRegionCache
         {
             public GridRegion region;
@@ -248,8 +256,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Grid
             public int locY;
             public bool IsNull = false;
         }
-        private double ExpireTime = 30 * 1000 * 60; //30 mins
-        private ExpiringList<GridRegionCache> cache = new ExpiringList<GridRegionCache>();
+
         public void AddRegion(GridRegion regionInfo)
         {
             if (regionInfo == null)
@@ -266,7 +273,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Grid
                     if (cache[i].locX == newcache.region.RegionLocX && cache[i].locY == newcache.region.RegionLocY)
                     {
                         found = true;
-                        cache[i, ExpireTime] = newcache;
+                        cache[i] = newcache;
                     }
                 }
                 else
@@ -274,7 +281,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Grid
                     if (cache[i].region.RegionID == regionInfo.RegionID)
                     {
                         found = true;
-                        cache[i, ExpireTime] = newcache;
+                        cache[i] = newcache;
                     }
                 }
             }
@@ -349,7 +356,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Grid
                         if (cache[i].locX == x && cache[i].locY == y)
                         {
                             found = true;
-                            cache[i, ExpireTime] = newcache;
+                            cache[i] = newcache;
                         }
                     }
                     else
@@ -357,7 +364,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Grid
                         if (cache[i].region.RegionID == regionInfo.RegionID)
                         {
                             found = true;
-                            cache[i, ExpireTime] = newcache;
+                            cache[i] = newcache;
                         }
                     }
                 }
@@ -366,7 +373,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Grid
                     if (cache[i].locX == x && cache[i].locY == y)
                     {
                         found = true;
-                        cache[i, ExpireTime] = newcache;
+                        cache[i] = newcache;
                     }
                 }
             }

@@ -63,7 +63,7 @@ namespace Aurora.Framework
         List<TimedCacheKey<TKey>> timedStorage = new List<TimedCacheKey<TKey>>();
         Dictionary<TKey, TimedCacheKey<TKey>> timedStorageIndex = new Dictionary<TKey, TimedCacheKey<TKey>>();
         private System.Timers.Timer timer = new System.Timers.Timer(TimeSpan.FromSeconds(CACHE_PURGE_HZ).TotalMilliseconds);
-
+        private double DefaultTime = 0;
         #endregion
 
         #region Constructor
@@ -77,6 +77,11 @@ namespace Aurora.Framework
         #endregion
 
         #region Public methods
+
+        public void SetDefaultTime(double time)
+        {
+            DefaultTime = time;
+        }
 
         public bool Add(TKey key, double expirationSeconds)
         {
@@ -199,13 +204,9 @@ namespace Aurora.Framework
                 }
                 finally { Monitor.Exit(syncRoot); }
             }
-        }
-
-        public TKey this[int i, double time]
-        {
             set
             {
-                AddOrUpdate(value, time);
+                AddOrUpdate(value, DefaultTime);
             }
         }
 
