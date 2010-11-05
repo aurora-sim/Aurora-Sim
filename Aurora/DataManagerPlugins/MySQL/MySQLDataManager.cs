@@ -527,6 +527,7 @@ namespace Aurora.DataManager.MySQL
 
         public override void CreateTable(string table, ColumnDefinition[] columns)
         {
+            table = table.ToLower();
             if (TableExists(table))
             {
                 throw new DataManagerException("Trying to create a table with name of one that already exists.");
@@ -606,6 +607,7 @@ namespace Aurora.DataManager.MySQL
 
         public override void DropTable(string tableName)
         {
+            tableName = tableName.ToLower();
             MySqlConnection dbcon = GetLockedConnection();
             MySqlCommand dbcommand = dbcon.CreateCommand();
             dbcommand.CommandText = string.Format("drop table {0}", tableName); ;
@@ -615,6 +617,8 @@ namespace Aurora.DataManager.MySQL
 
         protected override void CopyAllDataBetweenMatchingTables(string sourceTableName, string destinationTableName, ColumnDefinition[] columnDefinitions)
         {
+            sourceTableName = sourceTableName.ToLower();
+            destinationTableName = destinationTableName.ToLower();
             MySqlConnection dbcon = GetLockedConnection();
             MySqlCommand dbcommand = dbcon.CreateCommand();
             dbcommand.CommandText = string.Format("insert into {0} select * from {1}", destinationTableName, sourceTableName);
@@ -624,6 +628,7 @@ namespace Aurora.DataManager.MySQL
 
         public override bool TableExists(string table)
         {
+            table = table.ToLower();
             var ret = false;
             MySqlConnection dbcon = GetLockedConnection();
             IDbCommand result;
@@ -668,7 +673,7 @@ namespace Aurora.DataManager.MySQL
         protected override List<ColumnDefinition> ExtractColumnsFromTable(string tableName)
         {
             var defs = new List<ColumnDefinition>();
-
+            tableName = tableName.ToLower();
 
             MySqlConnection dbcon = GetLockedConnection();
             MySqlCommand dbcommand = dbcon.CreateCommand();

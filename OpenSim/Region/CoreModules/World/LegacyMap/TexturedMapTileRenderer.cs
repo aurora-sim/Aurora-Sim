@@ -225,7 +225,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
             unsafeBMP.UnlockBitmap();
 
-            int pixels = (bmp.Width * bmp.Height) / (10 * 10);
+            int pixels = ((bmp.Width / 10) * (bmp.Height / 10));
             return Color.FromArgb((int)r / pixels, (int)g / pixels, (int)b / pixels);
         }
 

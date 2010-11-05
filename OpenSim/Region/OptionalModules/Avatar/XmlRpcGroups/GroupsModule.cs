@@ -1439,12 +1439,10 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
         /// </summary>
         private void SendAgentGroupDataUpdate(IClientAPI remoteClient, UUID dataForAgentID)
         {
-            m_log.InfoFormat("[GROUPS]: {0} called for {1}", System.Reflection.MethodBase.GetCurrentMethod().Name, remoteClient.Name);
+            m_log.InfoFormat("[GROUPS]: SendAgentGroupDataUpdate called for {0}", remoteClient.Name);
 
             // TODO: All the client update functions need to be reexamined because most do too much and send too much stuff
-
             OnAgentDataUpdateRequest(remoteClient, dataForAgentID, UUID.Zero);
-
 
             // Need to send a group membership update to the client
             // UDP version doesn't seem to behave nicely.  But we're going to send it out here
@@ -1455,7 +1453,6 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             GroupMembershipData[] membershipArray = GetProfileListedGroupMemberships(remoteClient, dataForAgentID);
             SendGroupMembershipInfoViaCaps(remoteClient, dataForAgentID, membershipArray);
             remoteClient.SendAvatarGroupsReply(dataForAgentID, membershipArray);
-
         }
 
         /// <summary>
