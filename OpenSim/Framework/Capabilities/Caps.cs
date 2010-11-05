@@ -697,15 +697,19 @@ namespace OpenSim.Framework.Capabilities
         public void BakedTextureUploaded(UUID assetID, byte[] data)
         {
             m_log.DebugFormat("[CAPS]: Received baked texture {0}", assetID.ToString());
-            IJ2KDecoder j2kDecoder = GetClient(m_agentID).Scene.RequestModuleInterface<IJ2KDecoder>();
-            if (j2kDecoder != null)
+            IClientAPI client = GetClient(m_agentID);
+            if (client != null && client.Scene != null)
             {
-                if (!j2kDecoder.Decode(assetID, data))
+                IJ2KDecoder j2kDecoder = GetClient(m_agentID).Scene.RequestModuleInterface<IJ2KDecoder>();
+                if (j2kDecoder != null)
                 {
-                    //Uhoh, bad upload, rerequest them from the client
-                    m_log.DebugFormat("[CAPS]: Received corrupted baked texture {0}", assetID.ToString());
-                    GetClient(m_agentID).SendRebakeAvatarTextures(assetID);
-                    return;
+                    if (!j2kDecoder.Decode(assetID, data))
+                    {
+                        //Uhoh, bad upload, rerequest them from the client
+                        m_log.DebugFormat("[CAPS]: Received corrupted baked texture {0}", assetID.ToString());
+                        GetClient(m_agentID).SendRebakeAvatarTextures(assetID);
+                        return;
+                    }
                 }
             }
             AssetBase asset;
