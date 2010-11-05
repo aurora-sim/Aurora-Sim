@@ -3,17 +3,21 @@ ODE VERSION 10.1 TO 11.1
        04/11/2010
 
 ODE 11.1 has been assembled and provided for TESTING PURPOSES ONLY
+NOTE: If you are using SqLite, it is 32Bit Mode Only !!! 
 - USE AT OWN RISK -
 
 FILES INCLUDED:
 
+* Files in \bin\Physics\ODEPlugins\
 --- ODE 11.1
     Ode.NET.Double.dll    (64Bit)
     Ode.NET.Single.dll    (32Bit)
 
     ode11double.dll    (64Bit)
     ode11single.dll    (32Bit)
-
+	
+	
+* Files in \bin
 --- ODE 10.1 (32bit)
     odesingle.dll
     Ode.NET.Single.dll
@@ -24,20 +28,20 @@ WHAT TO DO:
 To setup ODE 11.1 for TESTING it's quite simple, no major Magic required.
 
 Copy out the odesingle.DLL & ODE.NET.Single.DLL to a safe place !!!
-Copy ode11single.dll to odesingle.dll  (or use ode11double.dll to odedouble.dll for 64Bit Mode)
+Copy and rename ode11single.dll to odesingle.dll  (or copy and rename ode11double.dll to odedouble.dll for 64Bit Mode) and place both in the /bin directory.
 
 * FOR 64 Bit ONLY! *
 
-After you do this, change prebuild.xml in the project "Aurora.Physics.AuroraOpenDynamicsEngine" from
+After you do this, change prebuild.xml in the project "Aurora.Physics.AuroraOpenDynamicsEngine" and in "OpenSim.Region.Physics.OdePlugin" from
 <Reference name="Ode.NET.Single" path="../../../../bin/"/>
 to
 <Reference name="Ode.NET.Double" path="../../../../bin/"/>
 
+Then copy ODE.NET.Double.dll to the /bin directory and remove ODE.NET.Single.dll .
+
 * END FOR 64 Bit ONLY! *
 
 Then run prebuild and recompile Aurora and you.
-
-NOTE: If you are using SqLite, it is 32Bit Mode Only !!! 
 
 To run in 32Bit Mode, simply start OpenSim.exe after you have copied in the above noted files.
 To run in 64Bit Mode, (NO SqLite) start with OpenSim.exe after copying over the files.
