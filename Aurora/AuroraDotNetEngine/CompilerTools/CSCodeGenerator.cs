@@ -132,7 +132,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         private bool m_SLCompatabilityMode = false;
         private List<string> DTFunctions = new List<string>();
         private Parser p = null;
-
+        private Random random = new Random();
+        private Dictionary<string, string> LocalMethods = new Dictionary<string, string>();
+        private List<string> FuncCalls = new List<string>();
+        private bool FuncCntr = false;
         /// <summary>
         /// Creates an 'empty' CSCodeGenerator instance.
         /// </summary>
@@ -213,25 +216,28 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             m_CSharpLine = 0;
             m_CSharpCol = 1;
             m_positionMap = new Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>>();
+            LocalMethods.Clear();
             m_astRoot = null;
             IsParentEnumerable = false;
             OriginalScript = "";
             m_warnings.Clear();
+            FuncCalls.Clear();
+            FuncCntr = false;
         }
 
         private string CreateCompilerScript(StringBuilder ScriptClass)
         {
             StringBuilder compiledScript = new StringBuilder();
             compiledScript.AppendLine("using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;");
-                compiledScript.AppendLine("using Aurora.ScriptEngine.AuroraDotNetEngine;");
-                compiledScript.AppendLine("using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;");
-                compiledScript.AppendLine("using System;");
-                compiledScript.AppendLine("using System.Collections.Generic;");
-                compiledScript.AppendLine("using System.Collections;");
-                compiledScript.AppendLine("using System.Reflection;");
-                compiledScript.AppendLine("using System.Timers;");
-                compiledScript.AppendLine("namespace Script");
-                compiledScript.AppendLine("{");
+            compiledScript.AppendLine("using Aurora.ScriptEngine.AuroraDotNetEngine;");
+            compiledScript.AppendLine("using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;");
+            compiledScript.AppendLine("using System;");
+            compiledScript.AppendLine("using System.Collections.Generic;");
+            compiledScript.AppendLine("using System.Collections;");
+            compiledScript.AppendLine("using System.Reflection;");
+            compiledScript.AppendLine("using System.Timers;");
+            compiledScript.AppendLine("namespace Script");
+            compiledScript.AppendLine("{");
 
             compiledScript.AppendLine("[Serializable]");
             compiledScript.AppendLine("public class ScriptClass : Aurora.ScriptEngine.AuroraDotNetEngine.Runtime.ScriptBaseClass");
@@ -254,7 +260,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         public string Convert(string script)
         {
             ResetCounters();
-            
+
             try
             {
                 if (m_SLCompatabilityMode && false) // :/ its terribly slow! plus it really should be a job for the parser too...
@@ -269,7 +275,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             catch (Exception ex)
             {
                 string message = "Syntax error before conversion - " + ex.Message;
-                    
+
                 throw new Exception(message);
             }
 
@@ -290,7 +296,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
                 // Remove wrong line number info
                 //
-                if (emessage.StartsWith(slinfo+": "))
+                if (emessage.StartsWith(slinfo + ": "))
                     emessage = emessage.Substring(slinfo.Length + 2);
 
                 if (e.slInfo.lineNumber - 1 <= 0)
@@ -327,7 +333,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
         private string CheckForIncorrectFieldinitializer(string script)
         {
-            string[] BeforeDefault = script.Split(new string[]{"default"},StringSplitOptions.None);
+            string[] BeforeDefault = script.Split(new string[] { "default" }, StringSplitOptions.None);
             string[] LinesBeforeDefault = BeforeDefault[0].Split('\n');
 
             Dictionary<int, string> VariableLines = new Dictionary<int, string>();
@@ -348,7 +354,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 }
                 else if (line.Contains("(") || line.Contains(")")) // No checking inside of functions or function calls
                 {
-                    if(line.Contains(")"))
+                    if (line.Contains(")"))
                         IsInsideFunction--;
                     else
                         IsInsideFunction++;
@@ -529,7 +535,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                         {
                             string AddInsideLine = parline;
                             //throw out all odd numbered lines as they are inside ""
-                            if(lineNumber % 2 != 1)
+                            if (lineNumber % 2 != 1)
                             {
                                 string[] SplitLineA = AddLine.Split('<');
                                 if (SplitLineA.Length > 1)
@@ -589,7 +595,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             {
                 string stateName = state.Split(' ')[0];
                 stateName = state.Split('\n')[0];
-                if(!stateName.Contains("default"))
+                if (!stateName.Contains("default"))
                     CheckEvent(script, stateName);
             }
         }
@@ -1435,7 +1441,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
         void FindLineNumbers(string EventName, string Problem)
         {
-            string testScript = OriginalScript.Replace(" ","");
+            string testScript = OriginalScript.Replace(" ", "");
             int lineNumber = 0;
             int charNumber = 0;
             int i = 0;
@@ -1480,6 +1486,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         private string GenerateNode(SYMBOL s)
         {
             StringBuilder fullretstr = new StringBuilder();
+
             // make sure to put type lower in the inheritance hierarchy first
             // ie: since IdentArgument and ExpressionArgument inherit from
             // Argument, put IdentArgument and ExpressionArgument before Argument
@@ -1601,12 +1608,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             }
             else
             {
-            	foreach (SYMBOL kid in s.kids)
+                foreach (SYMBOL kid in s.kids)
                 {
                     fullretstr.Append(GenerateNode(kid));
                 }
             }
-
             return fullretstr.ToString();
         }
 
@@ -1628,24 +1634,33 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     argumentDeclarationListKids.Add(kid);
                 else
                     remainingKids.Add(kid);
-            if (gf.ReturnType != "void")
-            {
-                retstr.Append(GenerateIndented(String.Format("{0} {1}(", gf.ReturnType, CheckName(gf.Name)), gf));
-                IsParentEnumerable = false;
-            }
-            else
-            {
-                retstr.Append(GenerateIndented(String.Format("{0} {1}(", "IEnumerator", CheckName(gf.Name)), gf));
-                IsParentEnumerable = true;
-            }
+            /*
+                        if (gf.ReturnType != "void")
+                        {
+                            retstr.Append(GenerateIndented(String.Format("{0} {1}(", gf.ReturnType, CheckName(gf.Name)), gf));
+                            IsParentEnumerable = false;
+                        }
+                        else
+                        {
+                            retstr.Append(GenerateIndented(String.Format("{0} {1}(", "IEnumerator", CheckName(gf.Name)), gf));
+                            IsParentEnumerable = true;
+                        }
+             */
+
+
+            retstr.Append(GenerateIndented(String.Format("public IEnumerator {0}(", CheckName(gf.Name)), gf));
+
+            LocalMethods.Add(CheckName(gf.Name).ToLower(), gf.ReturnType);
+            IsParentEnumerable = true;
+
             // print the state arguments, if any
             foreach (SYMBOL kid in argumentDeclarationListKids)
-                retstr.Append(GenerateArgumentDeclarationList((ArgumentDeclarationList) kid));
+                retstr.Append(GenerateArgumentDeclarationList((ArgumentDeclarationList)kid));
 
             retstr.Append(GenerateLine(")"));
             foreach (SYMBOL kid in remainingKids)
                 retstr.Append(GenerateNode(kid));
-			IsParentEnumerable = false;
+            IsParentEnumerable = false;
             return retstr.ToString();
         }
 
@@ -1680,7 +1695,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
             foreach (SYMBOL kid in s.kids)
                 if (kid is StateEvent)
-                    retstr.Append(GenerateStateEvent((StateEvent) kid, s.Name));
+                    retstr.Append(GenerateStateEvent((StateEvent)kid, s.Name));
 
             return retstr.ToString();
         }
@@ -1707,14 +1722,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
             // "state" (function) declaration
             retstr.Append(GenerateIndented(String.Format("public IEnumerator {0}_event_{1}(", parentStateName, se.Name), se));
+
             IsParentEnumerable = true;
-               
+
             // print the state arguments, if any
             foreach (SYMBOL kid in argumentDeclarationListKids)
-                retstr.Append(GenerateArgumentDeclarationList((ArgumentDeclarationList) kid));
+                retstr.Append(GenerateArgumentDeclarationList((ArgumentDeclarationList)kid));
 
             retstr.Append(GenerateLine(")"));
-            
+
             foreach (SYMBOL kid in remainingKids)
                 retstr.Append(GenerateNode(kid));
 
@@ -1783,7 +1799,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
             // closing brace
             m_braceCount--;
-                
+
             retstr.Append(GenerateIndentedLine("}"));
 
             return retstr.ToString();
@@ -1808,9 +1824,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         {
             StringBuilder retstr = new StringBuilder();
 
-            string FunctionCalls = "";
             bool printSemicolon = true;
 
+            bool marc = FuncCallsMarc();
             retstr.Append(Indent());
 
             if (0 < s.kids.Count)
@@ -1824,12 +1840,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 {
                     foreach (SYMBOL kid in s.kids)
                     {
-                        if (kid is Assignment && m_SLCompatabilityMode)
+                        //                        if (kid is Assignment && m_SLCompatabilityMode)
+                        if (kid is Assignment)
                         {
                             Assignment a = kid as Assignment;
                             List<string> identifiers = new List<string>();
                             checkForMultipleAssignments(identifiers, a);
-
                             retstr.Append(GenerateNode((SYMBOL)a.kids.Pop()));
                             retstr.Append(Generate(String.Format(" {0} ", a.AssignmentType), a));
                             foreach (SYMBOL akid in a.kids)
@@ -1855,15 +1871,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                                         retstr.Append(Generate(String.Format(" {0} ", be.ExpressionSymbol), be));
                                         foreach (SYMBOL kidb in be.kids)
                                         {
-                                            if (kidb is FunctionCallExpression)
+                                            //                                            if (kidb is FunctionCallExpression)
                                             {
-                                                //Fix so that this behaves the same as in SL, calls the function first, saves the value, then adds it to the function that called it (Mantis #0004774)
-                                                string randomNewFunctionName = RandomString(10, true);
-                                                FunctionCalls += "object " + randomNewFunctionName + " = " + GenerateNode(kidb) + ";";
-                                                retstr.Append(randomNewFunctionName);
-                                            }
-                                            else
                                                 retstr.Append(GenerateNode(kidb));
+                                            }
                                         }
                                     }
                                 }
@@ -1881,15 +1892,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                                 foreach (SYMBOL akid in kid.kids)
                                 {
                                     if (akid is FunctionCall)
-                                    {
-                                        string RetString = GenerateFunctionCall(akid as FunctionCall);
-                                        if (RetString.EndsWith("TESTREMOVE\n"))
-                                        {
-                                            printSemicolon = false; //Already been printed by the enumerator creation
-                                            RetString = RetString.Remove(RetString.Length - 11, 11);
-                                        }
-                                        retstr.Append(RetString);
-                                    }
+                                        retstr.Append(GenerateFunctionCall(akid as FunctionCall));
                                     else
                                         retstr.Append(GenerateNode(akid));
                                 }
@@ -1904,7 +1907,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             if (printSemicolon)
                 retstr.Append(GenerateLine(";"));
 
-            return FunctionCalls + retstr.ToString();
+            return DumpFunc(marc) + retstr.ToString();
         }
 
         /// <summary>
@@ -1915,16 +1918,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         private string GenerateAssignment(Assignment a)
         {
             StringBuilder retstr = new StringBuilder();
-
             List<string> identifiers = new List<string>();
+
+            bool marc = FuncCallsMarc();
             checkForMultipleAssignments(identifiers, a);
 
-            retstr.Append(GenerateNode((SYMBOL) a.kids.Pop()));
+
+            retstr.Append(GenerateNode((SYMBOL)a.kids.Pop()));
             retstr.Append(Generate(String.Format(" {0} ", a.AssignmentType), a));
             foreach (SYMBOL kid in a.kids)
                 retstr.Append(GenerateNode(kid));
 
-            return retstr.ToString();
+            return DumpFunc(marc) + retstr.ToString();
         }
 
         // This code checks for LSL of the following forms, and generates a
@@ -1979,7 +1984,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             int index;
             for (index = 0; index < s.kids.Count; index++)
             {
-                checkForMultipleAssignments(identifiers, (SYMBOL) s.kids[index]);
+                checkForMultipleAssignments(identifiers, (SYMBOL)s.kids[index]);
             }
         }
 
@@ -1991,17 +1996,22 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         private string GenerateReturnStatement(ReturnStatement rs)
         {
             StringBuilder retstr = new StringBuilder();
-			
-            if(IsParentEnumerable)
+
+            if (IsParentEnumerable)
             {
-            	retstr.Append(Generate("yield break;")); //Enumerator, must be broken, and will not have a return value since in this implementation, it replaces void
+                retstr.Append(Generate("yield return ", rs));
+
+                foreach (SYMBOL kid in rs.kids)
+                    retstr.Append(GenerateNode(kid));
+                retstr.Append(Generate("; yield break", rs));
             }
+
             else
             {
-            	retstr.Append(Generate("return ", rs));
+                retstr.Append(Generate("return ", rs));
 
-            	foreach (SYMBOL kid in rs.kids)
-                	retstr.Append(GenerateNode(kid));
+                foreach (SYMBOL kid in rs.kids)
+                    retstr.Append(GenerateNode(kid));
             }
 
             return retstr.ToString();
@@ -2035,16 +2045,20 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         private string GenerateIfStatement(IfStatement ifs)
         {
             StringBuilder retstr = new StringBuilder();
+            StringBuilder tmpstr = new StringBuilder();
+            bool marc = FuncCallsMarc();
+            tmpstr.Append(GenerateIndented("if (", ifs));
+            tmpstr.Append(GenerateNode((SYMBOL)ifs.kids.Pop()));
+            tmpstr.Append(GenerateLine(")"));
 
-            retstr.Append(GenerateIndented("if (", ifs));
-            retstr.Append(GenerateNode((SYMBOL) ifs.kids.Pop()));
-            retstr.Append(GenerateLine(")"));
+            retstr.Append(DumpFunc(marc) + tmpstr.ToString());
 
             // CompoundStatement handles indentation itself but we need to do it
             // otherwise.
+
             bool indentHere = ifs.kids.Top is Statement;
             if (indentHere) m_braceCount++;
-            retstr.Append(GenerateNode((SYMBOL) ifs.kids.Pop()));
+            retstr.Append(GenerateNode((SYMBOL)ifs.kids.Pop()));
             if (indentHere) m_braceCount--;
 
             if (0 < ifs.kids.Count) // do it again for an else
@@ -2053,7 +2067,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
                 indentHere = ifs.kids.Top is Statement;
                 if (indentHere) m_braceCount++;
-                retstr.Append(GenerateNode((SYMBOL) ifs.kids.Pop()));
+                retstr.Append(GenerateNode((SYMBOL)ifs.kids.Pop()));
                 if (indentHere) m_braceCount--;
             }
 
@@ -2078,26 +2092,27 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         private string GenerateWhileStatement(WhileStatement ws)
         {
             StringBuilder retstr = new StringBuilder();
+            StringBuilder tmpstr = new StringBuilder();
 
-            if (IsParentEnumerable)
-            {
-                retstr.Append(GenerateLine("yield return null;"));
-            }
+            bool marc = FuncCallsMarc();
 
-            retstr.Append(GenerateIndented("while (", ws));
-            retstr.Append(GenerateNode((SYMBOL)ws.kids.Pop()));
-            retstr.Append(GenerateLine(")"));
+            tmpstr.Append(GenerateIndented("while (", ws));
+            tmpstr.Append(GenerateNode((SYMBOL)ws.kids.Pop()));
+            tmpstr.Append(GenerateLine(")"));
+
+            retstr.Append(DumpFunc(marc) + tmpstr.ToString());
+
             if (IsParentEnumerable)
             {
                 retstr.Append(GenerateLine("{")); // SLAM! No 'while(true) doThis(); ' statements for you!
                 retstr.Append(GenerateLine("yield return null;"));
             }
-            
+
             // CompoundStatement handles indentation itself but we need to do it
             // otherwise.
             bool indentHere = ws.kids.Top is Statement;
             if (indentHere) m_braceCount++;
-            retstr.Append(GenerateNode((SYMBOL) ws.kids.Pop()));
+            retstr.Append(GenerateNode((SYMBOL)ws.kids.Pop()));
             if (indentHere) m_braceCount--;
 
             if (IsParentEnumerable)
@@ -2114,11 +2129,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         private string GenerateDoWhileStatement(DoWhileStatement dws)
         {
             StringBuilder retstr = new StringBuilder();
-
-            if (IsParentEnumerable)
-            {
-                retstr.Append(GenerateLine("yield return null;"));
-            }
+            StringBuilder tmpstr = new StringBuilder();
 
             retstr.Append(GenerateIndentedLine("do", dws));
             if (IsParentEnumerable)
@@ -2126,20 +2137,24 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 retstr.Append(GenerateLine("{")); // SLAM!
                 retstr.Append(GenerateLine("yield return null;"));
             }
-            
+
             // CompoundStatement handles indentation itself but we need to do it
             // otherwise.
             bool indentHere = dws.kids.Top is Statement;
             if (indentHere) m_braceCount++;
-            retstr.Append(GenerateNode((SYMBOL) dws.kids.Pop()));
+            retstr.Append(GenerateNode((SYMBOL)dws.kids.Pop()));
             if (indentHere) m_braceCount--;
 
             if (IsParentEnumerable)
                 retstr.Append(GenerateLine("}"));
 
-            retstr.Append(GenerateIndented("while (", dws));
-            retstr.Append(GenerateNode((SYMBOL)dws.kids.Pop()));
-            retstr.Append(GenerateLine(");"));
+            bool marc = FuncCallsMarc();
+
+            tmpstr.Append(GenerateIndented("while (", dws));
+            tmpstr.Append(GenerateNode((SYMBOL)dws.kids.Pop()));
+            tmpstr.Append(GenerateLine(");"));
+
+            retstr.Append(DumpFunc(marc) + tmpstr.ToString());
 
             return retstr.ToString();
         }
@@ -2152,31 +2167,32 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         private string GenerateForLoop(ForLoop fl)
         {
             StringBuilder retstr = new StringBuilder();
+            StringBuilder tmpstr = new StringBuilder();
 
-            if (IsParentEnumerable)
-            {
-                retstr.Append(GenerateLine("yield return null;"));
-            }
-            retstr.Append(GenerateIndented("for (", fl));
+            bool marc = FuncCallsMarc();
+
+            tmpstr.Append(GenerateIndented("for (", fl));
 
             // It's possible that we don't have an assignment, in which case
             // the child will be null and we only print the semicolon.
             // for (x = 0; x < 10; x++)
             //      ^^^^^
-            ForLoopStatement s = (ForLoopStatement) fl.kids.Pop();
+            ForLoopStatement s = (ForLoopStatement)fl.kids.Pop();
             if (null != s)
             {
-                retstr.Append(GenerateForLoopStatement(s));
+                tmpstr.Append(GenerateForLoopStatement(s));
             }
-            retstr.Append(Generate("; "));
+            tmpstr.Append(Generate("; "));
             // for (x = 0; x < 10; x++)
             //             ^^^^^^
-            retstr.Append(GenerateNode((SYMBOL) fl.kids.Pop()));
-            retstr.Append(Generate("; "));
+            tmpstr.Append(GenerateNode((SYMBOL)fl.kids.Pop()));
+            tmpstr.Append(Generate("; "));
             // for (x = 0; x < 10; x++)
             //                     ^^^
-            retstr.Append(GenerateForLoopStatement((ForLoopStatement) fl.kids.Pop()));
-            retstr.Append(GenerateLine(")"));
+            tmpstr.Append(GenerateForLoopStatement((ForLoopStatement)fl.kids.Pop()));
+            tmpstr.Append(GenerateLine(")"));
+
+            retstr.Append(DumpFunc(marc) + tmpstr.ToString());
 
             if (IsParentEnumerable)
             {
@@ -2188,7 +2204,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             // otherwise.
             bool indentHere = fl.kids.Top is Statement;
             if (indentHere) m_braceCount++;
-            retstr.Append(GenerateNode((SYMBOL) fl.kids.Pop()));
+            retstr.Append(GenerateNode((SYMBOL)fl.kids.Pop()));
             if (indentHere) m_braceCount--;
 
             if (IsParentEnumerable)
@@ -2219,7 +2235,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             for (int i = 0; i < fls.kids.Count; i++)
             {
                 SYMBOL s = (SYMBOL)fls.kids[i];
-                
+
                 // Statements surrounded by parentheses in for loops
                 //
                 // e.g.  for ((i = 0), (j = 7); (i < 10); (++i))
@@ -2235,7 +2251,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 // like it would be considerably more complicated to handle).
                 while (s is ParenthesisExpression)
                     s = (SYMBOL)s.kids.Pop();
-                    
+
                 retstr.Append(GenerateNode(s));
                 if (0 < comma--)
                     retstr.Append(Generate(", "));
@@ -2253,13 +2269,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         {
             StringBuilder retstr = new StringBuilder();
 
+            bool marc = FuncCallsMarc();
+
             if (be.ExpressionSymbol.Equals("&&") || be.ExpressionSymbol.Equals("||"))
             {
                 // special case handling for logical and/or, see Mantis 3174
                 retstr.Append("((bool)(");
                 retstr.Append(GenerateNode((SYMBOL)be.kids.Pop()));
                 retstr.Append("))");
-                retstr.Append(Generate(String.Format(" {0} ", be.ExpressionSymbol.Substring(0,1)), be));
+                retstr.Append(Generate(String.Format(" {0} ", be.ExpressionSymbol.Substring(0, 1)), be));
                 retstr.Append("((bool)(");
                 foreach (SYMBOL kid in be.kids)
                     retstr.Append(GenerateNode(kid));
@@ -2273,7 +2291,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     retstr.Append(GenerateNode(kid));
             }
 
-            return retstr.ToString();
+            return DumpFunc(marc) + retstr.ToString();
         }
 
         /// <summary>
@@ -2286,7 +2304,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             StringBuilder retstr = new StringBuilder();
 
             retstr.Append(Generate(ue.UnarySymbol, ue));
-            retstr.Append(GenerateNode((SYMBOL) ue.kids.Pop()));
+            retstr.Append(GenerateNode((SYMBOL)ue.kids.Pop()));
 
             return retstr.ToString();
         }
@@ -2319,7 +2337,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
             if (0 < ide.kids.Count)
             {
-                IdentDotExpression dot = (IdentDotExpression) ide.kids.Top;
+                IdentDotExpression dot = (IdentDotExpression)ide.kids.Top;
                 retstr.Append(Generate(String.Format("{0}", ide.PostOperation ? CheckName(dot.Name) + "." + dot.Member + ide.Operation : ide.Operation + CheckName(dot.Name) + "." + dot.Member), ide));
             }
             else
@@ -2339,7 +2357,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
             // we wrap all typecasted statements in parentheses
             retstr.Append(Generate(String.Format("({0}) (", te.TypecastType), te));
-            retstr.Append(GenerateNode((SYMBOL) te.kids.Pop()));
+            retstr.Append(GenerateNode((SYMBOL)te.kids.Pop()));
             retstr.Append(Generate(")"));
 
             return retstr.ToString();
@@ -2354,12 +2372,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         {
             StringBuilder retstr = new StringBuilder();
 
+            bool marc = FuncCallsMarc();
+
+            string Mname = "";
             bool isEnumerable = false;
             string tempString = "";
             string FunctionCalls = "";
+
+            int NeedCloseParent = 0;
+
             foreach (SYMBOL kid in fc.kids)
             {
-                if (kid is ArgumentList && m_SLCompatabilityMode)
+                //                if (kid is ArgumentList && m_SLCompatabilityMode)
+                if (kid is ArgumentList)
                 {
                     ArgumentList al = kid as ArgumentList;
                     int comma = al.kids.Count - 1;  // tells us whether to print a comma
@@ -2390,23 +2415,31 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                                 {
                                     if (kidb is FunctionCallExpression)
                                     {
-                                        string FunctionName = RandomString(10, true);
-                                        if (FunctionCalls == "")
-                                        {
-                                            FunctionCalls += GenerateLine("{"); //Add extra bracketing
-                                        }
-                                        FunctionCalls += "object "+FunctionName+" = " + GenerateNode(kidb) + ";";
-                                        tempString += FunctionName;
+                                        tempString += GenerateNode(kidb);
                                     }
+                                    else if (kidb is TypecastExpression)
+                                    {
+                                        tempString += Generate(String.Format("({0}) (", ((TypecastExpression)kidb).TypecastType));
+                                        tempString += GenerateNode((SYMBOL)kidb.kids.Pop());
+                                        tempString += Generate(")");
+                                    }
+
                                     else
                                         tempString += GenerateNode(kidb);
                                 }
                             }
                         }
+                        else if (s is TypecastExpression)
+                        {
+                            tempString += Generate(String.Format("({0}) (", ((TypecastExpression)s).TypecastType));
+                            tempString += GenerateNode((SYMBOL)s.kids.Pop());
+                            tempString += Generate(")");
+                        }
                         else
                         {
                             tempString += GenerateNode(s);
                         }
+
                         if (0 < comma--)
                             tempString += Generate(", ");
                     }
@@ -2416,78 +2449,96 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     tempString += GenerateNode(kid);
                 }
             }
+            /*
+                        string TempStringForEnum = "";
+                        TempStringForEnum = OriginalScript.Remove(0, fc.pos);
+                        TempStringForEnum = TempStringForEnum.Remove(0, fc.Id.Length);
+                        TempStringForEnum = TempStringForEnum.Split(')')[0];
+                        string TestOriginal = OriginalScript.Replace(" ", "");
+                        TestOriginal = TestOriginal.Replace("\n", "");
+                        string TestScript = fc.Id + TempStringForEnum + ")" + "{";
+                        string TestTestScript = fc.Id + "(*){";
 
-            string TempStringForEnum = "";
-            TempStringForEnum = OriginalScript.Remove(0, fc.pos);
-            TempStringForEnum = TempStringForEnum.Remove(0, fc.Id.Length);
-            TempStringForEnum = TempStringForEnum.Split(')')[0];
-            string TestOriginal = OriginalScript.Replace(" ", "");
-            TestOriginal = TestOriginal.Replace("\n", "");
-            string TestScript = fc.Id + TempStringForEnum + ")" + "{";
-            string TestTestScript = fc.Id + "(*){";
-
-            foreach (string testOriginal in TestOriginal.Split(';'))
-            {
-                if (testOriginal.CompareWildcard(TestTestScript, true))
-                {
-                    isEnumerable = true;
-                }
-            }
-            if (TestOriginal.Contains(TestScript))
-            {
-                //This DOES need to exist, this is for nested function calls to user-generated methods!
-                isEnumerable = true;
-            }
-            else if (retstr.ToString().Contains("IEnumerator " + fc.Id))
-            {
-                isEnumerable = true;
-            }
+                        foreach (string testOriginal in TestOriginal.Split(';'))
+                        {
+                            if (testOriginal.CompareWildcard(TestTestScript, true))
+                            {
+                                isEnumerable = true;
+                            }
+                        }
+                        if (TestOriginal.Contains(TestScript))
+                        {
+                            //This DOES need to exist, this is for nested function calls to user-generated methods!
+                            isEnumerable = true;
+                        }
+                        else if (retstr.ToString().Contains("IEnumerator " + fc.Id))
+                        {
+                            isEnumerable = true;
+                        }
+            */
+            isEnumerable = false;
             bool DTFunction = false;
-            if (DTFunctions.Contains(fc.Id))
+
+            string rettype = "void";
+            if (LocalMethods.TryGetValue(fc.Id.ToLower(), out rettype))
+                isEnumerable = true;
+
+            else if (DTFunctions.Contains(fc.Id))
             {
                 DTFunction = true;
             }
 
             if (DTFunction)
             {
-                retstr.Append(GenerateLine("{"));
+                //                retstr.Append(GenerateLine("{"));
                 retstr.Append(Generate("yield return "));
                 retstr.Append(Generate(String.Format("{0}(", CheckName(fc.Id)), fc));
                 retstr.Append(tempString);
 
-                retstr.Append(GenerateLine(");"));
-                retstr.Append(Generate("yield return null;"));
-                retstr.Append(GenerateLine("}"));
+                retstr.Append(GenerateLine(")"));
+                //                retstr.Append(Generate("yield return null;"));
+                //                retstr.Append(GenerateLine("}"));
             }
             else if (isEnumerable)
             {
-                retstr.Append(GenerateLine("{"));
+                if (rettype != "void")
+                {
+                    Mname = RandomString(10, true);
+                    FunctionCalls += GenerateLine(rettype + " " + Mname + ";");
+                }
 
-                retstr.Append(Generate("IEnumerator enumerator = "));
-                retstr.Append(Generate(String.Format("{0}(", CheckName(fc.Id)), fc));
-                retstr.Append(tempString);
-                retstr.Append(Generate(");"));
+                FunctionCalls += GenerateLine("{");
 
-                retstr.Append(GenerateLine("while (true)"));
-                retstr.Append(GenerateLine("{"));
+                FunctionCalls += Generate("IEnumerator enumerator = ");
+                FunctionCalls += Generate(String.Format("{0}(", CheckName(fc.Id)), fc);
+                FunctionCalls += tempString;
+                FunctionCalls += Generate(");");
+
+                FunctionCalls += GenerateLine("while (true)");
+                FunctionCalls += GenerateLine("{");
                 string FunctionName = RandomString(10, true);
-                retstr.Append(GenerateLine("bool " + FunctionName + " = false;"));
+                FunctionCalls += GenerateLine("bool " + FunctionName + " = false;");
 
-                retstr.Append(GenerateLine("try"));
-                retstr.Append(GenerateLine("{"));
-                retstr.Append(GenerateLine("" + FunctionName + " = enumerator.MoveNext();"));
-                retstr.Append(GenerateLine("if(!" + FunctionName + ")"));
-                retstr.Append(GenerateLine("break;")); //All done, break out of the loop
-                retstr.Append(GenerateLine("}"));
-                retstr.Append(GenerateLine("catch"));
-                retstr.Append(GenerateLine("{"));
-                retstr.Append(GenerateLine("break;"));//End it since we are erroring out
-                retstr.Append(GenerateLine("}")); //End of catch
-                retstr.Append(GenerateLine("yield return enumerator.Current;")); //Let the other things process for a bit here at the end of each enumeration
-                retstr.Append(GenerateLine("}")); //End of while
-                
-                retstr.Append(GenerateLine("}"));
-                retstr.Append(GenerateLine("TESTREMOVE")); //Gets removed later and tells it not to print a ; at the end
+                FunctionCalls += GenerateLine("try");
+                FunctionCalls += GenerateLine("{");
+                FunctionCalls += GenerateLine("" + FunctionName + " = enumerator.MoveNext();");
+                FunctionCalls += GenerateLine("if(!" + FunctionName + ")");
+                FunctionCalls += GenerateLine("break;"); //All done, break out of the loop
+                FunctionCalls += GenerateLine("}");
+                FunctionCalls += GenerateLine("catch");
+                FunctionCalls += GenerateLine("{");
+                FunctionCalls += GenerateLine("break;");//End it since we are erroring out
+                FunctionCalls += GenerateLine("}"); //End of catch
+                FunctionCalls += GenerateLine("if( enumerator.Current == null || enumerator.Current is DateTime) yield return enumerator.Current;"); //Let the other things process for a bit here at the end of each enumeration
+                FunctionCalls += GenerateLine("else break;"); //Let the other things process for a bit here at the end of each enumeration
+                FunctionCalls += GenerateLine("}"); //End of while
+                if (rettype != "void")
+                {
+                    FunctionCalls += GenerateLine(Mname + " = (" + rettype + ") enumerator.Current;");
+                    retstr.Append(Mname);
+                }
+                FunctionCalls += GenerateLine("}");
+                FuncCalls.Add(FunctionCalls);
             }
             else
             {
@@ -2496,18 +2547,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
                 retstr.Append(Generate(")"));
             }
-            if (FunctionCalls != "")
-            {
-                retstr.Append(Generate(";")); //We do this because we can't just do ) } .... otherwise we have issues!
-                // Add it to the end so that everything is covered 
-                //so that lines like 'if(test) callStatement(FunctionCall());'
-                //don't error out because of brackets
-                retstr.Append(GenerateLine("}"));
-                retstr.Append(GenerateLine("TESTREMOVE")); //Gets removed later and tells it not to print a ; at the end
-            }
-
+            /*
+                        if (FunctionCalls != "")
+                        {
+                            retstr.Append(Generate(";")); //We do this because we can't just do ) } .... otherwise we have issues!
+                            // Add it to the end so that everything is covered 
+                            //so that lines like 'if(test) callStatement(FunctionCall());'
+                            //don't error out because of brackets
+                            retstr.Append(GenerateLine("}"));
+                            retstr.Append(GenerateLine("TESTREMOVE")); //Gets removed later and tells it not to print a ; at the end
+                        }
+            */
             //Function calls are first
-            return FunctionCalls + retstr;
+            return DumpFunc(marc) + retstr.ToString();
         }
 
         /// <summary>
@@ -2526,15 +2578,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 int dotIndex = c.Value.IndexOf('.') + 1;
                 if (0 < dotIndex && (dotIndex == c.Value.Length || !Char.IsDigit(c.Value[dotIndex])))
                     c.Value = c.Value.Insert(dotIndex, "0");
-                c.Value = "new LSL_Types.LSLFloat("+c.Value+")";
+                c.Value = "new LSL_Types.LSLFloat(" + c.Value + ")";
             }
             else if ("LSL_Types.LSLInteger" == c.Type)
             {
-                c.Value = "new LSL_Types.LSLInteger("+c.Value+")";
+                c.Value = "new LSL_Types.LSLInteger(" + c.Value + ")";
             }
             else if ("LSL_Types.LSLString" == c.Type)
             {
-                c.Value = "new LSL_Types.LSLString(\""+c.Value+"\")";
+                c.Value = "new LSL_Types.LSLString(\"" + c.Value + "\")";
             }
 
             retstr.Append(Generate(c.Value, c));
@@ -2552,11 +2604,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             StringBuilder retstr = new StringBuilder();
 
             retstr.Append(Generate(String.Format("new {0}(", vc.Type), vc));
-            retstr.Append(GenerateNode((SYMBOL) vc.kids.Pop()));
+            retstr.Append(GenerateNode((SYMBOL)vc.kids.Pop()));
             retstr.Append(Generate(", "));
-            retstr.Append(GenerateNode((SYMBOL) vc.kids.Pop()));
+            retstr.Append(GenerateNode((SYMBOL)vc.kids.Pop()));
             retstr.Append(Generate(", "));
-            retstr.Append(GenerateNode((SYMBOL) vc.kids.Pop()));
+            retstr.Append(GenerateNode((SYMBOL)vc.kids.Pop()));
             retstr.Append(Generate(")"));
 
             return retstr.ToString();
@@ -2572,13 +2624,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             StringBuilder retstr = new StringBuilder();
 
             retstr.Append(Generate(String.Format("new {0}(", rc.Type), rc));
-            retstr.Append(GenerateNode((SYMBOL) rc.kids.Pop()));
+            retstr.Append(GenerateNode((SYMBOL)rc.kids.Pop()));
             retstr.Append(Generate(", "));
-            retstr.Append(GenerateNode((SYMBOL) rc.kids.Pop()));
+            retstr.Append(GenerateNode((SYMBOL)rc.kids.Pop()));
             retstr.Append(Generate(", "));
-            retstr.Append(GenerateNode((SYMBOL) rc.kids.Pop()));
+            retstr.Append(GenerateNode((SYMBOL)rc.kids.Pop()));
             retstr.Append(Generate(", "));
-            retstr.Append(GenerateNode((SYMBOL) rc.kids.Pop()));
+            retstr.Append(GenerateNode((SYMBOL)rc.kids.Pop()));
             retstr.Append(Generate(")"));
 
             return retstr.ToString();
@@ -2723,8 +2775,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             for (int i = 0; i < m_braceCount; i++)
                 for (int j = 0; j < m_indentWidth; j++)
                 {
-                     retstr += " ";
-                     m_CSharpCol++;
+                    retstr += " ";
+                    m_CSharpCol++;
                 }
 
             return retstr;
@@ -2760,17 +2812,42 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         /// <returns>Random string</returns>
         private string RandomString(int size, bool lowerCase)
         {
-            StringBuilder builder = new StringBuilder();
-            Random random = new Random();
-            char ch;
+            string builder = "t";
+            int off = lowerCase ? 'a' : 'A';
+            int j;
             for (int i = 0; i < size; i++)
             {
-                ch = System.Convert.ToChar(System.Convert.ToInt32(Math.Floor(26 * random.NextDouble() + 65)));
-                builder.Append(ch);
+                j = random.Next(25);
+                builder += (char)(j + off);
             }
-            if (lowerCase)
-                return builder.ToString().ToLower();
-            return builder.ToString();
+
+            return builder;
+        }
+
+        private string DumpFunc(bool marc)
+        {
+            string ret = "";
+
+            if (!marc)
+                return ret;
+
+            FuncCntr = false;
+
+            if (FuncCalls.Count == 0)
+            {
+                return ret;
+            }
+            foreach (string s in FuncCalls)
+                ret += s;
+            FuncCalls.Clear();
+            return ret;
+        }
+        private bool FuncCallsMarc()
+        {
+            if (FuncCntr)
+                return false;
+            FuncCntr = true;
+            return true;
         }
 
         #region IDisposable Members
