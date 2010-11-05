@@ -19,7 +19,7 @@ FILES INCLUDED:
 	
 * Files in \bin
 --- ODE 10.1 (32bit)
-    odesingle.dll
+    ode.dll
     Ode.NET.Single.dll
 
 
@@ -28,7 +28,7 @@ WHAT TO DO:
 To setup ODE 11.1 for TESTING it's quite simple, no major Magic required.
 
 Copy out the odesingle.DLL & ODE.NET.Single.DLL to a safe place !!!
-Copy and rename ode11single.dll to odesingle.dll  (or copy and rename ode11double.dll to odedouble.dll for 64Bit Mode) and place both in the /bin directory.
+Copy and rename ode11single.dll to ode.dll  (or copy and rename ode11double.dll to ode.dll as well as copy Ode.NET.Double.dll for 64Bit Mode) and place both in the /bin directory.
 
 * FOR 64 Bit ONLY! *
 

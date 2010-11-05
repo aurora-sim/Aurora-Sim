@@ -95,7 +95,8 @@ namespace Aurora.Framework
                 dllBlackList.Add(Path.Combine(dir.FullName, "Npgsql.dll"));
                 dllBlackList.Add(Path.Combine(dir.FullName, "nunit.framework.dll"));
                 dllBlackList.Add(Path.Combine(dir.FullName, "ode.dll"));
-                dllBlackList.Add(Path.Combine(dir.FullName, "Ode.NET.dll"));
+                dllBlackList.Add(Path.Combine(dir.FullName, "Ode.NET.Single.dll"));
+                dllBlackList.Add(Path.Combine(dir.FullName, "Ode.NET.Double.dll"));
                 dllBlackList.Add(Path.Combine(dir.FullName, "openjpeg-dotnet-x86_64.dll"));
                 dllBlackList.Add(Path.Combine(dir.FullName, "openjpeg-dotnet.dll"));
                 dllBlackList.Add(Path.Combine(dir.FullName, "OpenMetaverse.dll"));
