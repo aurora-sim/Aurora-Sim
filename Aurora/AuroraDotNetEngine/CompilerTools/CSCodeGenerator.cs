@@ -31,6 +31,7 @@ using System.Collections.Generic;
 using System.Collections;
 using System.Text;
 using Tools;
+using Aurora.Framework;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 {
@@ -134,6 +135,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         private Parser p = null;
         private Random random = new Random();
         private Dictionary<string, string> LocalMethods = new Dictionary<string, string>();
+        private class GlobalVar
+        {
+            public string Type;
+            public string Value;
+        }
+        private Dictionary<string, GlobalVar> GlobalVariables = new Dictionary<string, GlobalVar>();
         private List<string> FuncCalls = new List<string>();
         private bool FuncCntr = false;
         /// <summary>
@@ -269,7 +276,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
                     script = CheckFloatExponent(script);
 
-                    script = CheckForIncorrectFieldinitializer(script);
+                    //script = CheckForIncorrectFieldinitializer(script);
                 }
             }
             catch (Exception ex)
@@ -331,6 +338,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             return CreateCompilerScript(returnstring);
         }
 
+        #region Deprecated code
+        /*
         private string CheckForIncorrectFieldinitializer(string script)
         {
             string[] BeforeDefault = script.Split(new string[] { "default" }, StringSplitOptions.None);
@@ -451,6 +460,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
             return script;
         }
+        */
+        #endregion
 
         private string CheckFloatExponent(string script)
         {
@@ -1677,7 +1688,102 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             {
                 retstr.Append(Indent());
                 retstr.Append("public ");
-                retstr.Append(GenerateNode(s));
+                if (s is Assignment)
+                {
+                    StringBuilder innerretstr = new StringBuilder();
+
+                    Assignment a = s as Assignment;
+                    List<string> identifiers = new List<string>();
+
+                    bool marc = FuncCallsMarc();
+                    checkForMultipleAssignments(identifiers, a);
+
+                    string VarName = GenerateNode((SYMBOL)a.kids.Pop());
+                    innerretstr.Append(VarName);
+
+                    #region Find the var name and type
+
+                    string[] vars = VarName.Split(' ');
+                    string type = vars[0];
+                    string varName = vars[1];
+                    string globalVarValue = "";
+                    #endregion
+
+                    innerretstr.Append(Generate(String.Format(" {0} ", a.AssignmentType), a));
+                    foreach (SYMBOL kid in a.kids)
+                    {
+                        if (kid is Constant)
+                        {
+                            Constant c = kid as Constant;
+                            // Supprt LSL's weird acceptance of floats with no trailing digits
+                            // after the period. Turn float x = 10.; into float x = 10.0;
+                            if ("LSL_Types.LSLFloat" == c.Type)
+                            {
+                                int dotIndex = c.Value.IndexOf('.') + 1;
+                                if (0 < dotIndex && (dotIndex == c.Value.Length || !Char.IsDigit(c.Value[dotIndex])))
+                                    globalVarValue = c.Value.Insert(dotIndex, "0");
+                                globalVarValue = "new LSL_Types.LSLFloat(" + c.Value + ") ";
+                            }
+                            else if ("LSL_Types.LSLInteger" == c.Type)
+                            {
+                                globalVarValue = "new LSL_Types.LSLInteger(" + c.Value + ") ";
+                            }
+                            else if ("LSL_Types.LSLString" == c.Type)
+                            {
+                                globalVarValue = "new LSL_Types.LSLString(\"" + c.Value + "\") ";
+                            }
+                            if(globalVarValue == "")
+                                globalVarValue = c.Value;
+
+                            if (globalVarValue == null)
+                                globalVarValue = GenerateNode(c);
+                            if (GlobalVariables.ContainsKey(globalVarValue))
+                            {
+                                //Its an assignment to another global var!
+                                //reset the global value to the other's value
+                                GlobalVar var;
+                                GlobalVariables.TryGetValue(globalVarValue, out var);
+                                //Do one last additional test before we set it.
+                                if (type == var.Type)
+                                {
+                                    globalVarValue = var.Value;
+                                }
+                                c.Value = globalVarValue;
+                            }
+                            innerretstr.Append(globalVarValue);
+                        }
+                        else if (kid is IdentExpression)
+                        {
+                            IdentExpression c = kid as IdentExpression;
+                            globalVarValue = c.Name;
+                            if (GlobalVariables.ContainsKey(globalVarValue))
+                            {
+                                //Its an assignment to another global var!
+                                //reset the global value to the other's value
+                                GlobalVar var;
+                                GlobalVariables.TryGetValue(globalVarValue, out var);
+                                //Do one last additional test before we set it.
+                                if (type == var.Type)
+                                {
+                                    globalVarValue = var.Value;
+                                }
+                            }
+                            innerretstr.Append(globalVarValue);
+                        }
+                        else
+                            innerretstr.Append(GenerateNode(kid));
+                    }
+                    GlobalVariables.Add(varName, new GlobalVar()
+                        {
+                            Type = type,
+                            Value = globalVarValue
+                        });
+
+                    retstr.Append(DumpFunc(marc) + innerretstr.ToString());
+                }
+                else
+                    retstr.Append(GenerateNode(s));
+
                 retstr.Append(GenerateLine(";"));
             }
 
@@ -2509,6 +2615,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
                 FunctionCalls += GenerateLine("{");
 
+                //We can use enumerator here as the { in the above line breaks off possible issues upward in the method (or should anyway)
                 FunctionCalls += Generate("IEnumerator enumerator = ");
                 FunctionCalls += Generate(String.Format("{0}(", CheckName(fc.Id)), fc);
                 FunctionCalls += tempString;
