@@ -190,7 +190,6 @@ namespace OpenSim
                 m_console = new LocalConsole();
             ILoggerRepository repository = LogManager.GetRepository();
             IAppender[] appenders = repository.GetAppenders();
-            OpenSimAppender m_consoleAppender = null;
             foreach (IAppender appender in appenders)
             {
                 if (appender.Name == "Console")
