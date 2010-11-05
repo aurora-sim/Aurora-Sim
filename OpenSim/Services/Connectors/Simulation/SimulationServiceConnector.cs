@@ -349,7 +349,8 @@ namespace OpenSim.Services.Connectors.Simulation
             //catch
             {
                 m_log.InfoFormat("[REMOTE SIMULATION CONNECTOR]: Bad send on AgentUpdate {0}", ex.Message);
-
+                FailedSends.Add(uri, DateTime.Now.AddMinutes(TimeBeforeNextCheck));
+                
                 return false;
             }
             finally
