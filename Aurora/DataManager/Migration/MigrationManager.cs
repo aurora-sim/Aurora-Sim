@@ -149,7 +149,7 @@ namespace Aurora.DataManager.Migration
                         
                     }
                     executed = true;
-                    validated = currentMigrator.Validate(sessionProvider, genericData);
+                    validated = executingMigrator.Validate(sessionProvider, genericData);
 
                     //if it doesn't validate, rollback
                     if (!validated)

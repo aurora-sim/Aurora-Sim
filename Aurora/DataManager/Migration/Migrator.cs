@@ -129,7 +129,7 @@ namespace Aurora.DataManager.Migration
 
         private string GetTempTableNameFromTableName(string tablename)
         {
-            return tablename + "_TEMP";
+            return tablename + "_temp";
         }
 
         private void RestoreTempTableToReal(IDataConnector genericData, string tablename, ColumnDefinition[] columnDefinitions)

@@ -95,6 +95,7 @@ namespace Aurora.DataManager
         {
             if (!TableExists(tableName))
             {
+                OpenSim.Framework.Console.MainConsole.Instance.Output("[DataMigrator]: Issue finding table " + tableName + " when verifing tables exist!", "Warn");
                 return false;
             }
 
@@ -103,6 +104,7 @@ namespace Aurora.DataManager
             {
                 if (!extractedColumns.Contains(columnDefinition))
                 {
+                    OpenSim.Framework.Console.MainConsole.Instance.Output("[DataMigrator]: Issue verifing table " + tableName + " column " + columnDefinition + " when verifing tables exist!", "Warn");
                     return false;
                 }
             }
