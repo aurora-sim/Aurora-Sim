@@ -837,7 +837,7 @@ namespace OpenSim.Framework
                     {
                         
                     }
-                    else
+                    else if(action != null)
                     {
                         action.EndInvoke(result);
                         action = null;
