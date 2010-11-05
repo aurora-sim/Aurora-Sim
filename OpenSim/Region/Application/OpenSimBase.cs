@@ -160,35 +160,6 @@ namespace OpenSim
                 m_shutdownCommandsFile = startupConfig.GetString("shutdown_console_commands_file", "shutdown_commands.txt");
 
                 m_TimerScriptFileName = startupConfig.GetString("timer_Script", "disabled");
-                if (m_logFileAppender != null)
-                {
-                    if (m_logFileAppender is log4net.Appender.FileAppender)
-                    {
-                        log4net.Appender.FileAppender appender = (log4net.Appender.FileAppender)m_logFileAppender;
-                        string fileName = startupConfig.GetString("LogFile", String.Empty);
-                        if (fileName != String.Empty)
-                        {
-                            appender.File = fileName;
-                            appender.ActivateOptions();
-                        }
-                    }
-                }
-
-                if (m_logFileAppender != null)
-                {
-                    if (m_logFileAppender is log4net.Appender.FileAppender)
-                    {
-                        log4net.Appender.FileAppender appender =
-                                (log4net.Appender.FileAppender)m_logFileAppender;
-                        string fileName = startupConfig.GetString("LogFile", String.Empty);
-                        if (fileName != String.Empty)
-                        {
-                            appender.File = fileName;
-                            appender.ActivateOptions();
-                        }
-                        m_log.InfoFormat("[LOGGING]: Logging started to file {0}", appender.File);
-                    }
-                }
             }
 
             IConfig SystemConfig = m_config.Configs["System"];
@@ -245,6 +216,38 @@ namespace OpenSim
                     m_consoleAppender.Threshold = Level.All;
                 m_console.Output(String.Format("Console log level is {0}", m_consoleAppender.Threshold));
             }
+
+            IConfig startupConfig = m_config.Configs["Startup"];
+            if (m_logFileAppender != null)
+            {
+                if (m_logFileAppender is log4net.Appender.FileAppender)
+                {
+                    log4net.Appender.FileAppender appender = (log4net.Appender.FileAppender)m_logFileAppender;
+                    string fileName = startupConfig.GetString("LogFile", String.Empty);
+                    if (fileName != String.Empty)
+                    {
+                        appender.File = fileName;
+                        appender.ActivateOptions();
+                    }
+                }
+            }
+
+            if (m_logFileAppender != null)
+            {
+                if (m_logFileAppender is log4net.Appender.FileAppender)
+                {
+                    log4net.Appender.FileAppender appender =
+                            (log4net.Appender.FileAppender)m_logFileAppender;
+                    string fileName = startupConfig.GetString("LogFile", String.Empty);
+                    if (fileName != String.Empty)
+                    {
+                        appender.File = fileName;
+                        appender.ActivateOptions();
+                    }
+                    m_log.InfoFormat("[LOGGING]: Logging started to file {0}", appender.File);
+                }
+            }
+
             if (m_console == null)
                 m_console = new LocalConsole();
             MainConsole.Instance = m_console;
