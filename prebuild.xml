@@ -2010,6 +2010,8 @@
       <Reference name="OpenSim.Framework"/>
       <Reference name="OpenSim.Region.Physics.Manager"/>
       <Reference name="Ode.NET.Single" path="../../../bin/"/>
+      <!-- To Compile with 64 bit support, uncomment this-->
+      <!-- <Reference name="Ode.NET.Double" path="../../../bin/"/>-->
       <Reference name="log4net" path="../../../bin/"/>
 
       <Files>
