@@ -278,7 +278,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                         //Vanquish landmarks as per estate settings!
                         args.ParcelFlags &= ~(uint)ParcelFlags.AllowLandmark;
 
-                    if (!m_scene.RegionInfo.RegionSettings.BlockShowInSearch &&
+                    if (m_scene.RegionInfo.RegionSettings.BlockShowInSearch &&
                         ((args.ParcelFlags & (uint)ParcelFlags.ShowDirectory) == (uint)ParcelFlags.ShowDirectory))
                         //Vanquish show in search as per estate settings!
                         args.ParcelFlags &= ~(uint)ParcelFlags.ShowDirectory;
