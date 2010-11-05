@@ -1068,8 +1068,10 @@ namespace Aurora.Modules
                 return;
 
             //Delete the old assets
-            m_scene.AssetService.Delete(lastMapRegionUUID.ToString());
-            m_scene.AssetService.Delete(lastTerrainRegionUUID.ToString());
+            if(lastMapRegionUUID != UUID.Zero)
+                m_scene.AssetService.Delete(lastMapRegionUUID.ToString());
+            if (lastTerrainRegionUUID != UUID.Zero)
+                m_scene.AssetService.Delete(lastTerrainRegionUUID.ToString());
 
             byte[] terraindata, mapdata;
             terrain.CreateMapTile(out terraindata, out mapdata);
