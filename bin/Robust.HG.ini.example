@@ -252,10 +252,45 @@ ServiceConnectors = "8003/OpenSim.Server.Handlers.dll:AssetServiceConnector,8003
 
 
 [AuroraData]
-    ;; Local Data Manager Config
+    ; Local Data Manager Config
     PluginModule = MySQL
 
     ConnectionString = "Data Source=localhost;Database=aurora;User ID=root;Password=*;"
+
+[AuroraLoginService]
+    ;; Should new users be shown the ToS when they log in if they have not seen it before?
+    UseTermsOfServiceOnFirstLogin = false
+    ;; File name of the location of the ToS document in the /bin folder
+    FileNameOfTOS = ToS.txt
+    ;; Allow users to login anonymously and have a new account created automatically?
+    AllowAnonymousLogin = true
+    ;; Should we check user passwords?
+    AuthenticateUsers = false
+    ;; This allows for a default avatar to be created so the user does not login as ruth. Save an Avatar Archive (in the console) then put the name of it here.
+    DefaultAvatarArchiveForNewUser = 
+    ;; Will hide the First Life setting of profile from all users
+    AllowFirstLifeInProfile = true
+    ;; Sets the tutorial URL for new users which will be displayed on first login.
+    ;; NOTE: the URL you provide will NOT be the URL the client goes to! The client automatically appends it's language specification to the end of this URL. Ex. http://localhost/tutorial/ becomes http://localhost/tutorial/en for english language.
+    TutorialURL = ""
+    
+	;; For more info, see AuroraDocs/CAPSService.txt
+    CAPSServiceURL = http://auroraserver.ath.cx:8007
+    CAPSServicePassword = TestPass
+
+
+[CAPSService]
+    ;; For the CAPS Service connector
+    InventoryService = OpenSim.Services.InventoryService.dll:XInventoryService
+    LibraryService = OpenSim.Services.InventoryService.dll:LibraryService
+    GridUserService = "OpenSim.Services.UserAccountService.dll:GridUserService"
+    PresenceService = "OpenSim.Services.PresenceService.dll:PresenceService"   
+    ;; Subsection Security
+    ;; The CAPS service deals with setting up inventory and other parts of the client that need security, we don't want anyone to be able to access things that they do not have clearance to access
+
+    ;; For more info, see AuroraDocs/CAPSService.txt
+    Password = TestPass
+    HostName = http://auroraserver.ath.cx:8007
 
 [AuroraConnectors]
     AbuseReportsConnector = LocalConnector
@@ -271,43 +306,8 @@ ServiceConnectors = "8003/OpenSim.Server.Handlers.dll:AssetServiceConnector,8003
     OfflineMessagesConnector = LocalConnector
     DirectoryServiceConnector = LocalConnector
     MuteListConnector = LocalConnector
-    ParcelConnector = LocalConnector
-
-
-[AuroraStartup]
-    AssetLoaderEnabled = True
-
-[AuroraLoginService]
-    ;; Should new users be shown the ToS
-    UseTermsOfServiceOnFirstLogin = false
-    ;; File name of the location of the ToS document in the /bin folder
-    FileNameOfTOS = ToS.txt
-    ;; Allow users to login anonymously and have a new account created automatically
-    AllowAnonymousLogin = true
-    ;; Check for passwords
-    AuthenticateUsers = false
-    ;; This allows for a default avatar to be created so the user does not login as ruth. Save an Avatar Archive then put the name of it here.
-    DefaultAvatarArchiveForNewUser = 
-    ;; Will hide the First Life setting of profile from all users
-    AllowFirstLifeInProfile = true
-    ;; Sets the tutorial URL for new users
-    ;; NOTE: the URL you provide will NOT be the URL the client goes to! The client automatically appends it's language specification to the end of this URL. Ex. http://localhost/tutorial/ becomes http://localhost/tutorial/en for english language.
-    TutorialURL = ""
+    ParcelConnector = LocalConnector	
 	
-    ;; For more info, see AuroraDocs/CAPSService.txt
-    CAPSServiceURL = http://auroraserver.ath.cx:8007
-    CAPSServicePassword = TestPass
-
-
-[CAPSService]
-    ;; for the CAPS service connector
-    InventoryService = OpenSim.Services.InventoryService.dll:XInventoryService
-    LibraryService = OpenSim.Services.InventoryService.dll:LibraryService
-    GridUserService = "OpenSim.Services.UserAccountService.dll:GridUserService"
-    PresenceService = "OpenSim.Services.PresenceService.dll:PresenceService"   
-    ;; Subsection Security
-    ;; The CAPS service deals with setting up inventory and other parts of the client that need security, we don't want anyone to be able to access things that they do not have clearance to access
-
-    ;; For more info, see AuroraDocs/CAPSService.txt
-    Password = TestPass
-    HostName = http://auroraserver.ath.cx:8007
+[AuroraStartup]
+    ;; Should the asset loader be enabled and load all the assets from the .xml files?
+    AssetLoaderEnabled = True
