@@ -282,7 +282,7 @@ namespace OpenSim
             }
 		}
 
-        private void RunStartupCommands()
+        public void RunStartupCommands()
         {
             //Run Startup Commands
             if (!String.IsNullOrEmpty(m_startupCommandsFile))
@@ -387,6 +387,8 @@ namespace OpenSim
             m_console.Commands.AddCommand("region", false, "show", "show", "Shows information about this simulator", HandleShow);
 
             m_console.Commands.AddCommand("region", false, "reload config", "reload config", "Reloads .ini file configuration", HandleConfigRefresh);
+
+            m_console.Commands.AddCommand("region", false, "set timer script interval", "set timer script interval", "Set the interval for the timer script (in minutes).", HandleTimerScriptTime);
         }
 
         protected virtual List<string> GetHelpTopics()
@@ -730,6 +732,17 @@ namespace OpenSim
 					break;
 			}
 		}
+
+        public virtual void HandleTimerScriptTime(string mod, string[] cmd)
+        {
+            if (cmd.Length != 5)
+            {
+                m_log.Warn("[CONSOLE]: Timer Interval command did not have enough parameters.");
+                return;
+            }
+            m_log.Warn("[CONSOLE]: Set Timer Interval to " + cmd[4]);
+            m_TimerScriptTime = int.Parse(cmd[4]);
+        }
 
         public virtual void HandleConfigRefresh(string mod, string[] cmd)
         {
