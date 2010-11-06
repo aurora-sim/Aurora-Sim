@@ -24,16 +24,6 @@ namespace Aurora.Services.DataService
                     defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
 
                 GD.ConnectToDatabase(defaultConnectionString);
-
-                List<string> Results = GD.Query("Method", "avatararchives", "passwords", "Password");
-                if (Results.Count == 0)
-                {
-                    string newPass = MainConsole.Instance.PasswdPrompt("Password to access Avatar Archive");
-                    GD.Insert("passwords", new object[] {
-					"avatararchives",
-					Util.Md5Hash(Util.Md5Hash(newPass))
-				});
-                }
                 DataManager.DataManager.RegisterPlugin(Name, this);
             }
         }
@@ -47,11 +37,9 @@ namespace Aurora.Services.DataService
         {
         }
 
-		public AvatarArchive GetAvatarArchive(string Name, string Password)
+		public AvatarArchive GetAvatarArchive(string Name)
 		{
-			if (!CheckPassword(Password))
-				return null;
-            List<string> RetVal = GD.Query("Name", Name, "avatararchives", "*");
+			List<string> RetVal = GD.Query("Name", Name, "avatararchives", "*");
 			if (RetVal.Count == 0)
 				return null;
 
@@ -61,11 +49,9 @@ namespace Aurora.Services.DataService
 			return Archive;
 		}
 
-		public void SaveAvatarArchive(AvatarArchive archive, string Password)
+		public void SaveAvatarArchive(AvatarArchive archive)
 		{
-			if (!CheckPassword(Password))
-				return;
-            List<string> Check = GD.Query("Name", archive.Name, "avatararchives", "Name");
+			List<string> Check = GD.Query("Name", archive.Name, "avatararchives", "Name");
 			if (Check.Count == 0)
             {
                 GD.Insert("avatararchives", new object[] {
@@ -77,16 +63,6 @@ namespace Aurora.Services.DataService
             {
 				GD.Update("avatararchives", new object[] { archive.ArchiveXML }, new string[] { "Archive" }, new string[] { "Name" }, new object[] { archive.Name });
 			}
-		}
-
-		private bool CheckPassword(string Password)
-		{
-            List<string> TruePassword = GD.Query("Method", "avatararchives", "Passwords", "Password");
-            if (TruePassword.Count == 0)
-                return false;
-            if (Util.Md5Hash(Password) == TruePassword[0])
-				return true;
-			return false;
 		}
 	}
 

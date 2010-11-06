@@ -1134,7 +1134,6 @@ namespace OpenSim.Services.LLLoginService
             AvatarAppearance appearance = avatarData.ToAvatarAppearance(account.PrincipalID);
             if (cmdparams[5].EndsWith(".database"))
             {
-                string Password = Util.Md5Hash(MainConsole.Instance.CmdPrompt("Password: "));
                 string ArchiveName = cmdparams[5].Substring(0, cmdparams[5].Length - 9);
                 string ArchiveXML = MakeXMLFormat(appearance, cmdparams[6]);
                 
@@ -1142,7 +1141,7 @@ namespace OpenSim.Services.LLLoginService
                 archive.ArchiveXML = ArchiveXML;
                 archive.Name = ArchiveName;
 
-                DataManager.RequestPlugin<IAvatarArchiverConnector>().SaveAvatarArchive(archive, Password);
+                DataManager.RequestPlugin<IAvatarArchiverConnector>().SaveAvatarArchive(archive);
 
                 m_log.Debug("[AvatarArchive] Saved archive to database " + cmdparams[5]);
             }
@@ -1244,11 +1243,10 @@ namespace OpenSim.Services.LLLoginService
             {
                 m_log.Debug("[AvatarArchive] Loading archive from the database " + FileName);
                 
-                string Password = Util.Md5Hash(MainConsole.Instance.CmdPrompt("Password: "));
                 FileName = FileName.Substring(0,FileName.Length-9);
 
                 Aurora.Framework.IAvatarArchiverConnector avarchiver = DataManager.RequestPlugin<IAvatarArchiverConnector>();
-                AvatarArchive archive = avarchiver.GetAvatarArchive(FileName, Password);
+                AvatarArchive archive = avarchiver.GetAvatarArchive(FileName);
 
                 string[] lines = archive.ArchiveXML.Split('\n');
                 file = new List<string>(lines);

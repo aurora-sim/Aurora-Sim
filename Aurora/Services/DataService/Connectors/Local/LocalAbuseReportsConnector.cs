@@ -26,12 +26,12 @@ namespace Aurora.Services.DataService
 
                 GD.ConnectToDatabase(defaultConnectionString);
 
-                List<string> Results = GD.Query("Method", "abusereports", "passwords", "Password");
-                if (Results.Count == 0)
-                {
-                    string newPass = MainConsole.Instance.PasswdPrompt("Password to access Abuse Reports");
-                    GD.Insert("passwords", new object[] { "abusereports", Util.Md5Hash(Util.Md5Hash(newPass)) });
-                }
+                //List<string> Results = GD.Query("Method", "abusereports", "passwords", "Password");
+                //if (Results.Count == 0)
+                //{
+                //    string newPass = MainConsole.Instance.PasswdPrompt("Password to access Abuse Reports");
+                //    GD.Insert("passwords", new object[] { "abusereports", Util.Md5Hash(Util.Md5Hash(newPass)) });
+                //}
                 DataManager.DataManager.RegisterPlugin(Name, this);
             }
         }
