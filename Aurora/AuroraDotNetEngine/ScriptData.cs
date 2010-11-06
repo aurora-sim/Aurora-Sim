@@ -638,19 +638,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             TimeSpan time = (DateTime.Now.ToUniversalTime() - StartTime);
 
-            if (presence != null)
-                MainConsole.Instance.Output("[" + m_ScriptEngine.ScriptEngineName +
+            m_log.Debug("[" + m_ScriptEngine.ScriptEngineName +
                     "]: Started Script " + InventoryItem.Name +
                     " in object " + part.Name +
-                    " by " + presence.Name +
+                    (presence != null ? " by " + presence.Name : "") + 
                     " in region " + part.ParentGroup.Scene.RegionInfo.RegionName +
-                    " in " + time.TotalSeconds + " seconds.", "None");
-            else
-                MainConsole.Instance.Output("[" + m_ScriptEngine.ScriptEngineName +
-                    "]: Started Script " + InventoryItem.Name +
-                    " in object " + part.Name +
-                    " in region " + part.ParentGroup.Scene.RegionInfo.RegionName +
-                    " in " + time.TotalSeconds + " seconds.", "None");
+                    " in " + time.TotalSeconds + " seconds.");
         }
 
         #endregion
