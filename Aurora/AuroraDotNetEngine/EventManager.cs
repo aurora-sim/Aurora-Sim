@@ -868,7 +868,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                                 if (presence != null)
                                 {
                                     presence.ControllingClient.SendAgentAlertMessage(
-                                             "Selected engine unavailable. " +
+                                             "Selected engine '" + engineName +"' is unavailable. " +
                                              "Running script on " +
                                              m_scriptEngine.ScriptEngineName,
                                              false);
