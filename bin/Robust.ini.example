@@ -227,7 +227,8 @@ ServiceConnectors = "8003/OpenSim.Server.Handlers.dll:AssetServiceConnector,8003
 
     ;; For more info, see AuroraDocs/CAPSService.txt
     Password = TestPass
-    HostName = http://auroraserver.ath.cx:8007
+	;; <IP> is your IP address or DNS
+    HostName = http://<IP>:8007
 
 [AuroraConnectors]
     AbuseReportsConnector = LocalConnector

@@ -121,6 +121,8 @@ namespace OpenSim
             get { return m_stats; }
         }
 
+        protected string m_pidFile = String.Empty;
+
 		/// <summary>
 		/// Constructor.
 		/// </summary>
@@ -164,6 +166,10 @@ namespace OpenSim
                 m_TimerScriptTime = startupConfig.GetInt("timer_time", m_TimerScriptTime);
                 if (m_TimerScriptTime < 5) //Limit for things like backup and etc...
                     m_TimerScriptTime = 5;
+
+                string pidFile = startupConfig.GetString("PIDFile", String.Empty);
+                if (pidFile != String.Empty)
+                    CreatePIDFile(pidFile);
             }
 
             IConfig SystemConfig = m_config.Configs["System"];
@@ -1046,6 +1052,7 @@ namespace OpenSim
         /// </summary>
         public virtual void Shutdown(bool close)
         {
+            RemovePIDFile();
             if (m_shutdownCommandsFile != String.Empty)
             {
                 RunCommandScript(m_shutdownCommandsFile);
@@ -1073,6 +1080,38 @@ namespace OpenSim
 
             if(close)
                 Environment.Exit(0);
+        }
+
+        protected void CreatePIDFile(string path)
+        {
+            try
+            {
+                string pidstring = System.Diagnostics.Process.GetCurrentProcess().Id.ToString();
+                FileStream fs = File.Create(path);
+                System.Text.ASCIIEncoding enc = new System.Text.ASCIIEncoding();
+                Byte[] buf = enc.GetBytes(pidstring);
+                fs.Write(buf, 0, buf.Length);
+                fs.Close();
+                m_pidFile = path;
+            }
+            catch (Exception)
+            {
+            }
+        }
+
+        protected void RemovePIDFile()
+        {
+            if (m_pidFile != String.Empty)
+            {
+                try
+                {
+                    File.Delete(m_pidFile);
+                    m_pidFile = String.Empty;
+                }
+                catch (Exception)
+                {
+                }
+            }
         }
     }
 
