@@ -393,7 +393,7 @@ namespace OpenSim.Framework
                 NeedsUpdate = true;
                 UUID newID = UUID.Random();
 
-                regionUUID = MainConsole.Instance.CmdPrompt("Region UUID", newID.ToString());
+                regionUUID = MainConsole.Instance.CmdPrompt("Region UUID for region " + name, newID.ToString());
                 config.Set("RegionUUID", regionUUID);
             }
 
@@ -405,7 +405,7 @@ namespace OpenSim.Framework
             if (location == String.Empty)
             {
                 NeedsUpdate = true;
-                location = MainConsole.Instance.CmdPrompt("Region Location", "1000,1000");
+                location = MainConsole.Instance.CmdPrompt("Region Location for region " + name, "1000,1000");
                 config.Set("Location", location);
             }
 
@@ -424,7 +424,7 @@ namespace OpenSim.Framework
             else
             {
                 NeedsUpdate = true;
-                address = IPAddress.Parse(MainConsole.Instance.CmdPrompt("Internal IP address", "0.0.0.0"));
+                address = IPAddress.Parse(MainConsole.Instance.CmdPrompt("Internal IP address for region " + name, "0.0.0.0"));
                 config.Set("InternalAddress", address.ToString());
             }
 
@@ -437,7 +437,7 @@ namespace OpenSim.Framework
             else
             {
                 NeedsUpdate = true;
-                port = Convert.ToInt32(MainConsole.Instance.CmdPrompt("Internal port", "9000"));
+                port = Convert.ToInt32(MainConsole.Instance.CmdPrompt("Internal port for region " + name, "9000"));
                 config.Set("InternalPort", port);
             }
 
@@ -452,7 +452,7 @@ namespace OpenSim.Framework
                 NeedsUpdate = true;
                 m_allow_alternate_ports = Convert.ToBoolean(MainConsole.Instance.CmdPrompt("Allow alternate ports", "False"));
 
-                config.Set("AllowAlternatePorts", m_allow_alternate_ports.ToString());
+                config.Set("AllowAlternatePorts for region " + name, m_allow_alternate_ports.ToString());
             }
 
             // External IP
@@ -466,7 +466,7 @@ namespace OpenSim.Framework
             else
             {
                 NeedsUpdate = true;
-                externalName = MainConsole.Instance.CmdPrompt("External host name", "SYSTEMIP");
+                externalName = MainConsole.Instance.CmdPrompt("External host name for region " + name, "SYSTEMIP");
                 config.Set("ExternalHostName", externalName);
             }
 
@@ -482,14 +482,14 @@ namespace OpenSim.Framework
                 m_externalHostName = externalName;
             }
 
-            m_regionType = config.GetString("RegionType", String.Empty);
+            m_regionType = config.GetString("RegionType", m_regionType);
             GridSecureSessionID = UUID.Parse(config.GetString("GridSessionID", GridSecureSessionID.ToString()));
             EstateSettings.EstatePass = config.GetString("EstatePass", "");
 
             if (m_regionType == String.Empty)
             {
                 NeedsUpdate = true;
-                m_regionType = MainConsole.Instance.CmdPrompt("Region Type", "Mainland");
+                m_regionType = MainConsole.Instance.CmdPrompt("Region Type for region " + name, "Mainland");
                 config.Set("RegionType", m_regionType);
             }
 

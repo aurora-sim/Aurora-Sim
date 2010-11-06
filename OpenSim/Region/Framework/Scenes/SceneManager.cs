@@ -39,6 +39,7 @@ using Nini.Config;
 using OpenSim.Framework.Console;
 using OpenSim;
 using OpenSim.Server.Base;
+using Aurora.Framework;
 
 namespace OpenSim.Region.Framework.Scenes
 {
@@ -55,6 +56,8 @@ namespace OpenSim.Region.Framework.Scenes
         private IConfigSource m_config = null;
         private int RegionsFinishedStarting = 0;
         public int AllRegions = 0;
+        private string LastEstateName = "";
+        private string LastEstateChoise = "no";
         
         public List<Scene> Scenes
         {
@@ -354,6 +357,147 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             return false;
+        }
+
+        private void FindEstateInfo(Scene scene)
+        {
+            if (scene.EstateService != null)
+            {
+                EstateSettings ES = scene.EstateService.LoadEstateSettings(scene.RegionInfo.RegionID);
+                if (ES != null && ES.EstateID == 0) // No record at all, new estate required
+                {
+                    m_log.Warn("Your region " + scene.RegionInfo.RegionName + " is not part of an estate.");
+                    ES = CreateEstateInfo(scene);
+                }
+                else if (ES == null) //Cannot connect to the estate service
+                {
+                    m_log.Warn("The connection to the estate service was broken, please try again soon.");
+                    while (true)
+                    {
+                        MainConsole.Instance.CmdPrompt("Press enter to try again.");
+                        ES = scene.EstateService.LoadEstateSettings(scene.RegionInfo.RegionID);
+                        if (ES != null && ES.EstateID == 0)
+                            ES = CreateEstateInfo(scene);
+                        else if (ES == null)
+                            continue;
+                        break;
+                    }
+                }
+                //This sets the password back so we can use it again to make changes to the estate settings later
+                if (ES.EstatePass == "" && scene.RegionInfo.EstateSettings.EstatePass != "")
+                    ES.EstatePass = scene.RegionInfo.EstateSettings.EstatePass;
+                scene.RegionInfo.EstateSettings = ES;
+                scene.RegionInfo.WriteNiniConfig();
+            }
+            else
+            {
+                IConfig dbConfig = scene.Config.Configs["DatabaseService"];
+                IConfig esConfig = scene.Config.Configs["EstateService"];
+                if (dbConfig != null)
+                {
+                    string StorageDLL = dbConfig.GetString("StorageProvider", String.Empty);
+                    string StorageConnectionString = dbConfig.GetString("ConnectionString", String.Empty);
+                    if (esConfig != null)
+                    {
+                        StorageDLL = esConfig.GetString("StorageProvider", StorageDLL);
+                        StorageConnectionString = esConfig.GetString("ConnectionString", StorageConnectionString);
+                    }
+                    if (StorageDLL != "")
+                    {
+                        IEstateDataStore EDS = AuroraModuleLoader.LoadPlugin<IEstateDataStore>(StorageDLL, "IEstateDataStore");
+                        EDS.Initialise(StorageConnectionString);
+                        if (EDS != null)
+                        {
+                            scene.RegionInfo.EstateSettings = EDS.LoadEstateSettings(scene.RegionInfo.RegionID, true);
+                        }
+                    }
+                }
+            }
+        }
+
+        private EstateSettings CreateEstateInfo(Scene scene)
+        {
+            EstateSettings ES = null;
+            while (true)
+            {
+                string response = MainConsole.Instance.CmdPrompt("Do you wish to join an existing estate for " + scene.RegionInfo.RegionName + "? (Options are {yes, no, find})", LastEstateChoise, new List<string>() { "yes", "no", "find" });
+                LastEstateChoise = response;
+                if (response == "no")
+                {
+                    // Create a new estate
+                    ES = new EstateSettings();
+                    ES.EstateName = MainConsole.Instance.CmdPrompt("New estate name", scene.RegionInfo.EstateSettings.EstateName);
+                    
+                    //Set to auto connect to this region next
+                    LastEstateName = response;
+                    LastEstateChoise = "yes";
+
+                    string Password = Util.Md5Hash(Util.Md5Hash(MainConsole.Instance.CmdPrompt("New estate password (to keep others from joining your estate, blank to have no pass)", ES.EstatePass)));
+                    ES.EstatePass = Password;
+                    ES = scene.EstateService.CreateEstate(ES, scene.RegionInfo.RegionID);
+                    if (ES == null)
+                    {
+                        m_log.Warn("The connection to the server was broken, please try again soon.");
+                        continue;
+                    }
+                    else if (ES.EstateID == 0)
+                    {
+                        m_log.Warn("There was an error in creating this estate: " + ES.EstateName); //EstateName holds the error. See LocalEstateConnector for more info.
+                        continue;
+                    }
+                    //We set this back if there wasn't an error because the EstateService will NOT send it back
+                    ES.EstatePass = Password;
+                    break;
+                }
+                else if (response == "yes")
+                {
+                    response = MainConsole.Instance.CmdPrompt("Estate name to join", LastEstateName);
+                    if (response == "None")
+                        continue;
+                    LastEstateName = response;
+
+                    List<int> estateIDs = scene.EstateService.GetEstates(response);
+                    if (estateIDs == null)
+                    {
+                        m_log.Warn("The connection to the server was broken, please try again soon.");
+                        continue;
+                    }
+                    if (estateIDs.Count < 1)
+                    {
+                        m_log.Warn("The name you have entered matches no known estate. Please try again");
+                        continue;
+                    }
+
+                    int estateID = estateIDs[0];
+
+                    string Password = Util.Md5Hash(Util.Md5Hash(MainConsole.Instance.CmdPrompt("Password for the estate", "")));
+                    //We save the Password because we have to reset it after we tell the EstateService about it, as it clears it for security reasons
+                    if (scene.EstateService.LinkRegion(scene.RegionInfo.RegionID, estateID, Password))
+                    {
+                        ES = scene.EstateService.LoadEstateSettings(scene.RegionInfo.RegionID); //We could do by EstateID now, but we need to completely make sure that it fully is set up
+                        if (ES == null)
+                        {
+                            m_log.Warn("The connection to the server was broken, please try again soon.");
+                            continue;
+                        }
+                        break;
+                    }
+
+                    m_log.Warn("Joining the estate failed. Please try again.");
+                    continue;
+                }
+                else if (response == "find")
+                {
+                    ES = scene.EstateService.LoadEstateSettings(scene.RegionInfo.RegionID);
+                    if (ES == null)
+                    {
+                        m_log.Warn("The connection to the estate service was broken, please try again soon.");
+                        continue;
+                    }
+                    break;
+                }
+            }
+            return ES;
         }
 
         #region TryGetScene functions
@@ -906,6 +1050,8 @@ namespace OpenSim.Region.Framework.Scenes
             SceneCommunicationService sceneGridService = new SceneCommunicationService();
             Scene scene = new Scene(regionInfo, circuitManager, sceneGridService, m_config, m_OpenSimBase.Version, m_simulationDataService, m_OpenSimBase.Stats);
             
+            FindEstateInfo(scene);
+
             clientServer.AddScene(scene);
             m_clientServers.Add(clientServer);
 
