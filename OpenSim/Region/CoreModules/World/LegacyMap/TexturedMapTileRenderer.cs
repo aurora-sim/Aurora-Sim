@@ -211,10 +211,11 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             int r = 0;
             int g = 0;
             int b = 0;
-
-            for (int y = 0; y < bmp.Height; y += 10)
+            int y = 0;
+            int x = 0;
+            for (y = 0; y < bmp.Height; y += 10)
             {
-                for (int x = 0; x < bmp.Width; x += 10)
+                for (x = 0; x < bmp.Width; x += 10)
                 {
                     Color pixel = unsafeBMP.GetPixel(x, y);
                     r += pixel.R;
@@ -225,7 +226,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
             unsafeBMP.UnlockBitmap();
 
-            int pixels = ((bmp.Width / 10) * (bmp.Height / 10));
+            int pixels = ((x / 10) * (y / 10));
             return Color.FromArgb((int)r / pixels, (int)g / pixels, (int)b / pixels);
         }
 

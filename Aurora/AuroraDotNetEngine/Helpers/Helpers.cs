@@ -88,7 +88,21 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         }
 
         protected ScriptDeleteException(
-                SerializationInfo info, 
+                SerializationInfo info,
+                StreamingContext context)
+        {
+        }
+    }
+
+    [Serializable]
+    public class ScriptPermissionsException : Exception
+    {
+        public ScriptPermissionsException(string message) : base (message)
+        {
+        }
+
+        protected ScriptPermissionsException(
+                SerializationInfo info,
                 StreamingContext context)
         {
         }
