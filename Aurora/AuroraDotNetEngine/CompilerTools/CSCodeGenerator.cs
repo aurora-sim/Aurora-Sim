@@ -31,7 +31,6 @@ using System.Collections.Generic;
 using System.Collections;
 using System.Text;
 using Tools;
-using Aurora.Framework;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 {
@@ -2111,18 +2110,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
             if (IsParentEnumerable)
             {
-                retstr.Append(Generate("{"));
-                retstr.Append(Generate("yield return ", rs));
-
+                retstr.Append(Generate("{ "));
                 if (rs.kids.Count == 0)
-                    retstr.Append(Generate("null; yield break;", rs));
+                    retstr.Append(Generate("yield break;", rs));
                 else
                     {
+                    retstr.Append(Generate("yield return ", rs));
                     foreach (SYMBOL kid in rs.kids)
                         retstr.Append(GenerateNode(kid));
                     retstr.Append(Generate("; yield break;", rs));
                     }
-                retstr.Append(Generate("}"));
+                retstr.Append(Generate(" }"));
             }
 
             else
