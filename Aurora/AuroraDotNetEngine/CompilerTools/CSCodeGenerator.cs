@@ -2114,9 +2114,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 retstr.Append(Generate("{"));
                 retstr.Append(Generate("yield return ", rs));
 
-                foreach (SYMBOL kid in rs.kids)
-                    retstr.Append(GenerateNode(kid));
-                retstr.Append(Generate("; yield break;", rs));
+                if (rs.kids.Count == 0)
+                    retstr.Append(Generate("null; yield break;", rs));
+                else
+                    {
+                    foreach (SYMBOL kid in rs.kids)
+                        retstr.Append(GenerateNode(kid));
+                    retstr.Append(Generate("; yield break;", rs));
+                    }
                 retstr.Append(Generate("}"));
             }
 
