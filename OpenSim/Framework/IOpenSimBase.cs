@@ -46,5 +46,6 @@ namespace OpenSim.Framework
         IStatsCollector Stats { get; }
         DateTime StartupTime { get; }
         string Version { get; }
-	}
+        void RunStartupCommands();
+    }
 }

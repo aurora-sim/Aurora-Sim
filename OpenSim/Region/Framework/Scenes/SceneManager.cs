@@ -196,6 +196,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         private void FinishStartUp()
         {
+            m_OpenSimBase.RunStartupCommands();
             PrintFileToConsole("startuplogo.txt");
 
             // For now, start at the 'root' level by default

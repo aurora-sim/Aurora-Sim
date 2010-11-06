@@ -67,6 +67,7 @@ namespace OpenSim
 		protected string m_startupCommandsFile;
 		protected string m_shutdownCommandsFile;
         private string m_TimerScriptFileName = "disabled";
+        private int m_TimerScriptTime = 20;
         protected ConfigurationLoader m_configLoader;
         protected ICommandConsole m_console;
         protected OpenSimAppender m_consoleAppender;
@@ -160,6 +161,9 @@ namespace OpenSim
                 m_shutdownCommandsFile = startupConfig.GetString("shutdown_console_commands_file", "shutdown_commands.txt");
 
                 m_TimerScriptFileName = startupConfig.GetString("timer_Script", "disabled");
+                m_TimerScriptTime = startupConfig.GetInt("timer_time", m_TimerScriptTime);
+                if (m_TimerScriptTime < 5) //Limit for things like backup and etc...
+                    m_TimerScriptTime = 5;
             }
 
             IConfig SystemConfig = m_config.Configs["System"];
@@ -265,8 +269,6 @@ namespace OpenSim
             //Has to be after Scene Manager startup
 			AddPluginCommands();
 
-            RunStartupCommands();
-
             try
             {
                 //Start the prompt
@@ -291,7 +293,7 @@ namespace OpenSim
             {
                 Timer m_TimerScriptTimer = new Timer();
                 m_TimerScriptTimer.Enabled = true;
-                m_TimerScriptTimer.Interval = 1200 * 1000;
+                m_TimerScriptTimer.Interval = m_TimerScriptTime * 60 * 1000;
                 m_TimerScriptTimer.Elapsed += RunAutoTimerScript;
             }
         }
@@ -492,16 +494,20 @@ namespace OpenSim
 		{
 			if (File.Exists(fileName)) {
 				m_log.Info("[COMMANDFILE]: Running " + fileName);
-
+                List<string> commands = new List<string>();
 				using (StreamReader readFile = File.OpenText(fileName)) {
 					string currentCommand;
 					while ((currentCommand = readFile.ReadLine()) != null) {
 						if (currentCommand != String.Empty) {
-							m_log.Info("[COMMANDFILE]: Running '" + currentCommand + "'");
-							m_console.RunCommand(currentCommand);
+                            commands.Add(currentCommand);
 						}
 					}
 				}
+                foreach (string currentCommand in commands)
+                {
+                    m_log.Info("[COMMANDFILE]: Running '" + currentCommand + "'");
+                    m_console.RunCommand(currentCommand);
+                }
 			}
 		}
 
