@@ -802,6 +802,8 @@ namespace OpenSim.Services.GridService
         private List<mapItemReply> GetItems(int X, int Y)
         {
             GridRegion region = GetRegionByPosition(UUID.Zero, X, Y);
+            if (region == null || region.Access == (byte)SimAccess.Down || region.Access == (byte)SimAccess.NonExistent)
+                return new List<mapItemReply>();
             SimMap map = GetSimMap(region.RegionID);
 
             List<mapItemReply> mapItems = new List<mapItemReply>();
