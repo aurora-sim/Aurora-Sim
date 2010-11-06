@@ -628,8 +628,9 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
             ICallingCardModule ccmodule = client.Scene.RequestModuleInterface<ICallingCardModule>();
             if (ccmodule != null)
             {
+                UserAccount account = ((Scene)client.Scene).UserAccountService.GetUserAccount(UUID.Zero, friendID);
                 UUID folderID = ((Scene)client.Scene).InventoryService.GetFolderForType(agentID, AssetType.CallingCard).ID;
-                ccmodule.CreateCallingCard(client, friendID, folderID, client.Name);
+                ccmodule.CreateCallingCard(client, friendID, folderID, account.Name);
             }
                 
             // Try Local
@@ -792,8 +793,9 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
                 ICallingCardModule ccmodule = friendClient.Scene.RequestModuleInterface<ICallingCardModule>();
                 if (ccmodule != null)
                 {
+                    UserAccount account = ((Scene)friendClient.Scene).UserAccountService.GetUserAccount(UUID.Zero, userID);
                     UUID folderID = ((Scene)friendClient.Scene).InventoryService.GetFolderForType(friendID, AssetType.CallingCard).ID;
-                    ccmodule.CreateCallingCard(friendClient, userID, folderID, friendClient.Name);
+                    ccmodule.CreateCallingCard(friendClient, userID, folderID, account.Name);
                 }
                 // we're done
                 return true;
