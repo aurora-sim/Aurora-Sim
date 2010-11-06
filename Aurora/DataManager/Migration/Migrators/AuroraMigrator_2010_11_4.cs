@@ -44,7 +44,7 @@ namespace Aurora.DataManager.Migration.Migrators
                  ColDef("min_sim_fps", ColumnTypes.String50),
                  ColDef("max_sim_fps", ColumnTypes.String50),
                  ColDef("mode_sim_fps", ColumnTypes.String50),
-                 ColDef("start_time", ColumnTypes.String50),
+                 ColDef("start_time", ColumnTypes.Integer),
                  ColDef("client_version", ColumnTypes.String50),
                  ColDef("s_cpu", ColumnTypes.String50),
                  ColDef("s_gpu", ColumnTypes.String50),

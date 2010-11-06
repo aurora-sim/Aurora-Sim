@@ -32,6 +32,7 @@ using System.Text;
 using Mono.Data.SqliteClient;
 using OpenMetaverse;
 using OpenSim.Region.Framework.Scenes;
+using Aurora.Framework;
 
 namespace OpenSim.Region.UserStatistics
 {
@@ -46,9 +47,6 @@ namespace OpenSim.Region.UserStatistics
 
         public Hashtable ProcessModel(Hashtable pParams)
         {
-            SqliteConnection dbConn = (SqliteConnection)pParams["DatabaseConnection"];
-
-
             List<ClientVersionData> clidata = new List<ClientVersionData>();
             List<ClientVersionData> cliRegData = new List<ClientVersionData>();
             Hashtable regionTotals = new Hashtable();
@@ -57,75 +55,11 @@ namespace OpenSim.Region.UserStatistics
             modeldata.Add("Scenes", pParams["Scenes"]);
             modeldata.Add("Reports", pParams["Reports"]);
             int totalclients = 0;
-            int totalregions = 0;
 
-            lock (dbConn)
-            {
-                string sql = "select count(distinct region_id) as regcnt from stats_session_data";
-
-                SqliteCommand cmd = new SqliteCommand(sql, dbConn);
-                SqliteDataReader sdr = cmd.ExecuteReader();
-                if (sdr.HasRows)
-                {
-                    sdr.Read();
-                    totalregions = Convert.ToInt32(sdr["regcnt"]);
-                }
-
-                sdr.Close();
-                sdr.Dispose();
-
-                sql =
-                    "select client_version, count(*) as cnt, avg(avg_sim_fps) as simfps from stats_session_data group by client_version order by count(*) desc LIMIT 10;";
-
-                cmd = new SqliteCommand(sql, dbConn);
-                sdr = cmd.ExecuteReader();
-                if (sdr.HasRows)
-                {
-                    while (sdr.Read())
-                    {
-                        ClientVersionData udata = new ClientVersionData();
-                        udata.version = sdr["client_version"].ToString();
-                        udata.count = Convert.ToInt32(sdr["cnt"]);
-                        udata.fps = Convert.ToSingle(sdr["simfps"]);
-                        clidata.Add(udata);
-                        totalclients += udata.count;
-                        
-                    }
-                }
-                sdr.Close();
-                sdr.Dispose();
-
-                if (totalregions > 1)
-                {
-                    sql =
-                        "select region_id, client_version, count(*) as cnt, avg(avg_sim_fps) as simfps from stats_session_data group by region_id, client_version order by region_id, count(*) desc;";
-                    cmd = new SqliteCommand(sql, dbConn);
-                    
-                    sdr = cmd.ExecuteReader();
-                    
-                    if (sdr.HasRows)
-                    {
-                        while (sdr.Read())
-                        {
-                            ClientVersionData udata = new ClientVersionData();
-                            udata.version = sdr["client_version"].ToString();
-                            udata.count = Convert.ToInt32(sdr["cnt"]);
-                            udata.fps = Convert.ToSingle(sdr["simfps"]);
-                            udata.region_id = UUID.Parse(sdr["region_id"].ToString());
-                            cliRegData.Add(udata);
-                        }
-                    }
-                    sdr.Close();
-                    sdr.Dispose();
-
-
-                }
-
-            }
+            cliRegData = Aurora.DataManager.DataManager.RequestPlugin<IWebStatsDataConnector>().GetClientVersions();
             
             foreach (ClientVersionData cvd in cliRegData)
             {
-                
                 if (regionTotals.ContainsKey(cvd.region_id))
                 {
                     int regiontotal = (int)regionTotals[cvd.region_id];
@@ -136,9 +70,6 @@ namespace OpenSim.Region.UserStatistics
                 {
                     regionTotals.Add(cvd.region_id, cvd.count);
                 }
-                
-                
-
             }
 
             modeldata["ClientData"] = clidata;
@@ -290,13 +221,5 @@ TD.align_top { vertical-align: top; }
         }
 
         #endregion
-    }
-
-    public struct ClientVersionData
-    {
-        public UUID region_id;
-        public string version;
-        public int count;
-        public float fps;
     }
 }

@@ -673,15 +673,32 @@ namespace Aurora.Modules
                 return;
             }
 
+            bool TryCoordsSearch = false;
+            int XCoord = 0;
+            int YCoord = 0;
+
+            string[] splitSearch = mapName.Split(',');
+            if (splitSearch.Length != 1)
+            {
+                if (int.TryParse(splitSearch[0], out XCoord) && int.TryParse(splitSearch[1], out YCoord))
+                    TryCoordsSearch = true;
+            }
+
             List<MapBlockData> blocks = new List<MapBlockData>();
 
             List<GridRegion> regionInfos = m_scene.GridService.GetRegionsByName(UUID.Zero, mapName, 20);
+            if (TryCoordsSearch)
+            {
+                GridRegion region = m_scene.GridService.GetRegionByPosition(m_scene.RegionInfo.ScopeID, (int)(XCoord * Constants.RegionSize), (int)(YCoord * Constants.RegionSize));
+                if(region != null)
+                    regionInfos.Add(region);
+            }
             foreach (GridRegion region in regionInfos)
             {
                 //Add the found in search region first
                 blocks.Add(SearchMapBlockFromGridRegion(region));
                 //Then send surrounding regions
-                List<GridRegion> regions = m_scene.GridService.GetRegionRange(m_scene.RegionInfo.ScopeID,
+                List<GridRegion> regions = regions = m_scene.GridService.GetRegionRange(m_scene.RegionInfo.ScopeID,
                             (region.RegionLocX - (4 * (int)Constants.RegionSize)),
                             (region.RegionLocX + (4 * (int)Constants.RegionSize)),
                             (region.RegionLocY - (4 * (int)Constants.RegionSize)),

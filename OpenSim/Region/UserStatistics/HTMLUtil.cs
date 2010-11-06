@@ -28,6 +28,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Aurora.Framework;
 
 namespace OpenSim.Region.UserStatistics
 {
@@ -233,7 +234,7 @@ namespace OpenSim.Region.UserStatistics
             int repcount = 0;
             foreach (string str in reports.Keys)
             {
-                if (reports[str].ReportName.Length > 0)
+                if (reports[str].ReportName.Length > 0 && str.Length > 0)
                 {
                     if (repcount > 0)
                     {

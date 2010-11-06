@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
@@ -92,9 +93,6 @@ namespace Aurora.Services.DataService
             Keys.Add("f_off_circuit");
             Keys.Add("f_resent");
             Keys.Add("f_send_packet");
-            Keys.Add("session_key");
-            Keys.Add("agent_key");
-            Keys.Add("region_key");
 
             Values.Add(uid.session_data.session_id);
             Values.Add(uid.session_data.agent_id);
@@ -142,10 +140,151 @@ namespace Aurora.Services.DataService
             Values.Add(uid.session_data.f_off_circuit);
             Values.Add(uid.session_data.f_resent);
             Values.Add(uid.session_data.f_send_packet);
-            Values.Add(uid.session_data.session_id);
-            Values.Add(uid.session_data.agent_id);
-            Values.Add(uid.session_data.region_id);
             GD.Replace("stats_session_data", Keys.ToArray(), Values.ToArray());
+        }
+
+        public stats_default_page_values GetDefaultPageStats()
+        {
+            stats_default_page_values stats = new stats_default_page_values();
+            List<string> retStr = GD.Query("", "", "stats_session_data",
+                "COUNT(DISTINCT agent_id) as agents, COUNT(*) as sessions, AVG(avg_fps) as client_fps, " +
+                                "AVG(avg_sim_fps) as savg_sim_fps, AVG(avg_ping) as sav_ping, SUM(n_out_kb) as num_in_kb, " +
+                                "SUM(n_out_pk) as num_in_packets, SUM(n_in_kb) as num_out_kb, SUM(n_in_pk) as num_out_packets, AVG(mem_use) as sav_mem_use");
+
+            if (retStr.Count == 0)
+                return stats;
+
+            for (int i = 0; i < retStr.Count; i += 8)
+            {
+
+                stats.total_num_users = Convert.ToInt32(retStr[i]);
+                stats.total_num_sessions = Convert.ToInt32(retStr[i + 1]);
+                stats.avg_client_fps = Convert.ToSingle(retStr[i + 2]);
+                stats.avg_sim_fps = Convert.ToSingle(retStr[i + 3]);
+                stats.avg_ping = Convert.ToSingle(retStr[i + 4]);
+                stats.total_kb_out = Convert.ToSingle(retStr[i + 5]);
+                stats.total_kb_in = Convert.ToSingle(retStr[i + 6]);
+                stats.avg_client_mem_use = Convert.ToSingle(retStr[i + 7]);
+
+            }
+            return stats;
+        }
+
+        public List<ClientVersionData> GetClientVersions()
+        {
+            List<ClientVersionData> clients = new List<ClientVersionData>();
+
+            List<string> retStr = GD.Query("", "", "stats_session_data",
+                "count(distinct region_id) as regcnt");
+
+            if (retStr.Count == 0)
+                return clients;
+
+            int totalregions = totalregions = Convert.ToInt32(retStr[0]);
+            int totalclients = 0;
+            if (totalregions > 1)
+            {
+                retStr = GD.QueryFullData(" group by region_id, client_version order by region_id, count(*) desc;",
+                "stats_session_data",
+                "region_id, client_version, count(*) as cnt, avg(avg_sim_fps) as simfps");
+
+                for (int i = 0; i < retStr.Count; i += 4)
+                {
+                    ClientVersionData udata = new ClientVersionData();
+                    udata.region_id = UUID.Parse(retStr[i]);
+                    udata.version = retStr[i + 1];
+                    udata.count = int.Parse(retStr[i + 2]);
+                    udata.fps = Convert.ToSingle(retStr[i + 3]);
+                    clients.Add(udata);
+                }
+            }
+            else
+            {
+                retStr = GD.QueryFullData(" group by region_id, client_version order by region_id, count(*) desc;",
+                    "stats_session_data",
+                    "region_id, client_version, count(*) as cnt, avg(avg_sim_fps) as simfps");
+
+                for (int i = 0; i < retStr.Count; i += 4)
+                {
+                    ClientVersionData udata = new ClientVersionData();
+                    udata.region_id = UUID.Parse(retStr[i]);
+                    udata.version = retStr[i + 1];
+                    udata.count = int.Parse(retStr[i + 2]);
+                    udata.fps = Convert.ToSingle(retStr[i + 3]);
+                    clients.Add(udata);
+                    totalclients += udata.count;
+                }
+            }
+
+            return clients;
+        }
+
+        public List<SessionList> GetSessionList(string puserUUID, string clientVersionString)
+        {
+            List<SessionList> sessionList = new List<SessionList>();
+            string sql = " a LEFT OUTER JOIN stats_session_data b ON a.Agent_ID = b.Agent_ID";
+            int queryparams = 0;
+
+            if (puserUUID.Length > 0)
+            {
+                if (queryparams == 0)
+                    sql += " WHERE";
+                else
+                    sql += " AND";
+
+                sql += " b.agent_id='" + puserUUID + "'";
+                queryparams++;
+            }
+
+            if (clientVersionString.Length > 0)
+            {
+                if (queryparams == 0)
+                    sql += " WHERE";
+                else
+                    sql += " AND";
+
+                sql += " b.client_version='" + clientVersionString + "'";
+                queryparams++;
+            }
+
+            sql += " ORDER BY a.name_f, a.name_l, b.last_updated;";
+
+            IDataReader sdr = GD.QueryDataFull(sql,
+                "stats_session_data",
+                "distinct a.name_f, a.name_l, a.Agent_ID, b.Session_ID, b.client_version, b.last_updated, b.start_time");
+
+            if (sdr != null && sdr.FieldCount != 0)
+            {
+                UUID userUUID = UUID.Zero;
+
+                SessionList activeSessionList = new SessionList();
+                activeSessionList.user_id = UUID.Random();
+                while (sdr.Read())
+                {
+                    UUID readUUID = UUID.Parse(sdr["agent_id"].ToString());
+                    if (readUUID != userUUID)
+                    {
+                        activeSessionList = new SessionList();
+                        activeSessionList.user_id = readUUID;
+                        activeSessionList.firstname = sdr["name_f"].ToString();
+                        activeSessionList.lastname = sdr["name_l"].ToString();
+                        activeSessionList.sessions = new List<ShortSessionData>();
+                        sessionList.Add(activeSessionList);
+                    }
+
+                    ShortSessionData ssd = new ShortSessionData();
+
+                    ssd.last_update = Utils.UnixTimeToDateTime((uint)Convert.ToInt32(sdr["last_updated"]));
+                    ssd.start_time = Utils.UnixTimeToDateTime((uint)Convert.ToInt32(sdr["start_time"]));
+                    ssd.session_id = UUID.Parse(sdr["session_id"].ToString());
+                    ssd.client_version = sdr["client_version"].ToString();
+                    activeSessionList.sessions.Add(ssd);
+
+                    userUUID = activeSessionList.user_id;
+                }
+            }
+
+            return sessionList;
         }
 	}
 }

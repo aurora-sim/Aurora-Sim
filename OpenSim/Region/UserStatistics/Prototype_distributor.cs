@@ -31,6 +31,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using OpenSim.Framework;
+using Aurora.Framework;
 
 namespace OpenSim.Region.UserStatistics
 {

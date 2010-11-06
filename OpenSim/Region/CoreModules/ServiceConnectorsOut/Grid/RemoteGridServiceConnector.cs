@@ -143,7 +143,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Grid
         public override string RegisterRegion(UUID scopeID, GridRegion regionInfo, UUID SecureSessionID, out UUID SessionID)
         {
             m_GridCache.AddRegion(regionInfo);
-            string msg = string.Empty;// m_LocalGridService.RegisterRegion(scopeID, regionInfo, SecureSessionID, out SessionID);
+            //string msg = m_LocalGridService.RegisterRegion(scopeID, regionInfo, SecureSessionID, out SessionID);
 
             //if (msg == String.Empty)
                 return base.RegisterRegion(scopeID, regionInfo, SecureSessionID,  out SessionID);

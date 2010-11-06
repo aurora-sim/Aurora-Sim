@@ -35,6 +35,7 @@ using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Framework.Statistics;
+using Aurora.Framework;
 
 namespace OpenSim.Region.UserStatistics
 {

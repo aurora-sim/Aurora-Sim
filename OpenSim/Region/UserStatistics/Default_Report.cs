@@ -34,6 +34,7 @@ using Mono.Data.SqliteClient;
 using OpenMetaverse;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Framework.Statistics;
+using Aurora.Framework;
 
 
 namespace OpenSim.Region.UserStatistics
@@ -50,10 +51,9 @@ namespace OpenSim.Region.UserStatistics
 
         public Hashtable ProcessModel(Hashtable pParams)
         {
-            SqliteConnection conn = (SqliteConnection)pParams["DatabaseConnection"];
             List<Scene> m_scene = (List<Scene>)pParams["Scenes"];
 
-            stats_default_page_values mData = rep_DefaultReport_data(conn, m_scene);
+            stats_default_page_values mData = rep_DefaultReport_data(m_scene);
             mData.sim_stat_data = (Dictionary<UUID,USimStatsData>)pParams["SimStats"];
             mData.stats_reports = (Dictionary<string, IStatsController>) pParams["Reports"];
 
@@ -74,8 +74,6 @@ namespace OpenSim.Region.UserStatistics
 
         public string rep_Default_report_view(stats_default_page_values values)
         {
-
-            
             StringBuilder output = new StringBuilder();
 
 
@@ -198,53 +196,11 @@ TD.align_top { vertical-align: top; }
             // TODO: FIXME: template
             return output.ToString();
         }
-
-       
-
-        public stats_default_page_values rep_DefaultReport_data(SqliteConnection db, List<Scene> m_scene)
+        public stats_default_page_values rep_DefaultReport_data(List<Scene> m_scene)
         {
             stats_default_page_values returnstruct = new stats_default_page_values();
             returnstruct.all_scenes = m_scene.ToArray();
-            lock (db)
-            {
-                string SQL = @"SELECT COUNT(DISTINCT agent_id) as agents, COUNT(*) as sessions, AVG(avg_fps) as client_fps, 
-                                AVG(avg_sim_fps) as savg_sim_fps, AVG(avg_ping) as sav_ping, SUM(n_out_kb) as num_in_kb, 
-                                SUM(n_out_pk) as num_in_packets, SUM(n_in_kb) as num_out_kb, SUM(n_in_pk) as num_out_packets, AVG(mem_use) as sav_mem_use
-                                FROM stats_session_data;";
-                SqliteCommand cmd = new SqliteCommand(SQL, db);
-                SqliteDataReader sdr = cmd.ExecuteReader();
-                if (sdr.HasRows)
-                {
-                    sdr.Read();
-                    returnstruct.total_num_users = Convert.ToInt32(sdr["agents"]);
-                    returnstruct.total_num_sessions = Convert.ToInt32(sdr["sessions"]);
-                    returnstruct.avg_client_fps = Convert.ToSingle(sdr["client_fps"]);
-                    returnstruct.avg_sim_fps = Convert.ToSingle(sdr["savg_sim_fps"]);
-                    returnstruct.avg_ping = Convert.ToSingle(sdr["sav_ping"]);
-                    returnstruct.total_kb_out = Convert.ToSingle(sdr["num_out_kb"]);
-                    returnstruct.total_kb_in = Convert.ToSingle(sdr["num_in_kb"]);
-                    returnstruct.avg_client_mem_use = Convert.ToSingle(sdr["sav_mem_use"]);
-
-                }
-            }
             return returnstruct;
         }
-
-    }
-
-    public struct stats_default_page_values
-    {
-        public int total_num_users;
-        public int total_num_sessions;
-        public float avg_client_fps;
-        public float avg_client_mem_use;
-        public float avg_sim_fps;
-        public float avg_ping;
-        public float total_kb_out;
-        public float total_kb_in;
-        public float avg_client_resends;
-        public Scene[] all_scenes;
-        public Dictionary<UUID, USimStatsData> sim_stat_data;
-        public Dictionary<string, IStatsController> stats_reports;
     }
 }

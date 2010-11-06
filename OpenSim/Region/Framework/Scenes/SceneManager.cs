@@ -429,7 +429,7 @@ namespace OpenSim.Region.Framework.Scenes
                     ES.EstateName = MainConsole.Instance.CmdPrompt("New estate name", scene.RegionInfo.EstateSettings.EstateName);
                     
                     //Set to auto connect to this region next
-                    LastEstateName = response;
+                    LastEstateName = ES.EstateName;
                     LastEstateChoise = "yes";
 
                     string Password = Util.Md5Hash(Util.Md5Hash(MainConsole.Instance.CmdPrompt("New estate password (to keep others from joining your estate, blank to have no pass)", ES.EstatePass)));

@@ -95,6 +95,21 @@ namespace Aurora.Framework
         List<string> Query(string whereClause, string table, string wantedValue);
 
         /// <summary>
+        /// select 'wantedValue' from 'table' 'whereClause'
+        /// </summary>
+        List<string> QueryFullData(string whereClause, string table, string wantedValue);
+
+        /// <summary>
+        /// select 'wantedValue' from 'table' 'whereClause'
+        /// </summary>
+        IDataReader QueryDataFull(string whereClause, string table, string wantedValue);
+
+        /// <summary>
+        /// select 'wantedValue' from 'table' where 'whereClause'
+        /// </summary>
+        IDataReader QueryData(string whereClause, string table, string wantedValue);
+
+        /// <summary>
         /// select 'wantedValue' from 'table' where 'keyRow' = 'keyValue' 'Order'
         /// </summary>
         List<string> Query(string keyRow, object keyValue, string table, string wantedValue, string Order);

@@ -32,6 +32,7 @@ using System.Text;
 using Mono.Data.SqliteClient;
 using OpenMetaverse;
 using OpenSim.Framework;
+using Aurora.Framework;
 
 namespace OpenSim.Region.UserStatistics
 {
@@ -49,14 +50,12 @@ namespace OpenSim.Region.UserStatistics
             Hashtable modeldata = new Hashtable();
             modeldata.Add("Scenes", pParams["Scenes"]);
             modeldata.Add("Reports", pParams["Reports"]);
-            SqliteConnection dbConn = (SqliteConnection)pParams["DatabaseConnection"];
             List<SessionList> lstSessions = new List<SessionList>();
             Hashtable requestvars = (Hashtable) pParams["RequestVars"];
             
 
             string puserUUID = string.Empty;
             string clientVersionString = string.Empty;
-            int queryparams = 0;
 
             if (requestvars != null)
             {
@@ -76,78 +75,8 @@ namespace OpenSim.Region.UserStatistics
                 }
             }
 
-            lock (dbConn)
-            {
-                string sql =
-                    "SELECT distinct a.name_f, a.name_l, a.Agent_ID, b.Session_ID, b.client_version, b.last_updated, b.start_time FROM stats_session_data a LEFT OUTER JOIN stats_session_data b ON a.Agent_ID = b.Agent_ID";
-
-                if (puserUUID.Length > 0)
-                {
-                    if (queryparams == 0)
-                        sql += " WHERE";
-                    else
-                        sql += " AND";
-
-                    sql += " b.agent_id=:agent_id";
-                    queryparams++;
-                }
-
-                if (clientVersionString.Length > 0)
-                {
-                    if (queryparams == 0)
-                        sql += " WHERE";
-                    else
-                        sql += " AND";
-
-                    sql += " b.client_version=:client_version";
-                    queryparams++;
-                }
-
-                sql += " ORDER BY a.name_f, a.name_l, b.last_updated;";
-
-                SqliteCommand cmd = new SqliteCommand(sql, dbConn);
-
-                if (puserUUID.Length > 0)
-                    cmd.Parameters.Add(new SqliteParameter(":agent_id", puserUUID));
-                if (clientVersionString.Length > 0)
-                    cmd.Parameters.Add(new SqliteParameter(":client_version", clientVersionString));
-
-                SqliteDataReader sdr = cmd.ExecuteReader();
-                
-                if (sdr.HasRows)
-                {
-                    UUID userUUID = UUID.Zero;
-
-                    SessionList activeSessionList = new SessionList();
-                    activeSessionList.user_id=UUID.Random();
-                    while (sdr.Read())
-                    {
-                        UUID readUUID = UUID.Parse(sdr["agent_id"].ToString());
-                        if (readUUID != userUUID)
-                        {
-                            activeSessionList = new SessionList();
-                            activeSessionList.user_id = readUUID;
-                            activeSessionList.firstname = sdr["name_f"].ToString();
-                            activeSessionList.lastname = sdr["name_l"].ToString();
-                            activeSessionList.sessions = new List<ShortSessionData>();
-                            lstSessions.Add(activeSessionList);
-                        }
-
-                        ShortSessionData ssd = new ShortSessionData();
-                        
-                        ssd.last_update = Utils.UnixTimeToDateTime((uint)Convert.ToInt32(sdr["last_updated"]));
-                        ssd.start_time = Utils.UnixTimeToDateTime((uint)Convert.ToInt32(sdr["start_time"]));
-                        ssd.session_id = UUID.Parse(sdr["session_id"].ToString());
-                        ssd.client_version = sdr["client_version"].ToString();
-                        activeSessionList.sessions.Add(ssd);
-
-                        userUUID = activeSessionList.user_id;
-                    }
-                }
-                sdr.Close();
-                sdr.Dispose();
-                
-            }
+            lstSessions = Aurora.DataManager.DataManager.RequestPlugin<IWebStatsDataConnector>().GetSessionList(puserUUID, clientVersionString);
+            
             modeldata["SessionData"] = lstSessions;
             return modeldata;
         }
@@ -260,22 +189,6 @@ TD.align_top { vertical-align: top; }
             HTMLUtil.TABLE_C(ref output);
             output.Append("</BODY>\n</HTML>");
             return output.ToString();
-        }
-
-        public class SessionList
-        {
-            public string firstname;
-            public string lastname;
-            public UUID user_id;
-            public List<ShortSessionData> sessions;
-        }
-
-        public struct ShortSessionData
-        {
-            public UUID session_id;
-            public string client_version;
-            public DateTime last_update;
-            public DateTime start_time;
         }
 
         #endregion

@@ -109,6 +109,7 @@ namespace OpenSim.Region.UserStatistics
                     Clients_report clientReport = new Clients_report();
                     Sessions_Report sessionsReport = new Sessions_Report();
 
+                    reports.Add("home", rep);
                     reports.Add("", rep);
                     reports.Add("prototype.js", protodep);
                     reports.Add("updater.js", updatedep);
@@ -877,87 +878,4 @@ namespace OpenSim.Region.UserStatistics
             return s;
         }
     }
-
-    public class USimStatsData
-    {
-        private UUID m_regionID = UUID.Zero;
-        private volatile int m_statcounter = 0;
-        private volatile float m_timeDilation;
-        private volatile float m_simFps;
-        private volatile float m_physicsFps;
-        private volatile float m_agentUpdates;
-        private volatile float m_rootAgents;
-        private volatile float m_childAgents;
-        private volatile float m_totalPrims;
-        private volatile float m_activePrims;
-        private volatile float m_totalFrameTime;
-        private volatile float m_netFrameTime;
-        private volatile float m_physicsFrameTime;
-        private volatile float m_otherFrameTime;
-        private volatile float m_imageFrameTime;
-        private volatile float m_inPacketsPerSecond;
-        private volatile float m_outPacketsPerSecond;
-        private volatile float m_unackedBytes;
-        private volatile float m_agentFrameTime;
-        private volatile float m_pendingDownloads;
-        private volatile float m_pendingUploads;
-        private volatile float m_activeScripts;
-        private volatile float m_scriptLinesPerSecond;
-
-        public UUID RegionId { get { return m_regionID; } }
-        public int StatsCounter { get { return m_statcounter; } set { m_statcounter = value;}}
-        public float TimeDilation { get { return m_timeDilation; } }
-        public float SimFps { get { return m_simFps; } }
-        public float PhysicsFps { get { return m_physicsFps; } }
-        public float AgentUpdates { get { return m_agentUpdates; } }
-        public float RootAgents { get { return m_rootAgents; } }
-        public float ChildAgents { get { return m_childAgents; } }
-        public float TotalPrims { get { return m_totalPrims; } }
-        public float ActivePrims { get { return m_activePrims; } }
-        public float TotalFrameTime { get { return m_totalFrameTime; } }
-        public float NetFrameTime { get { return m_netFrameTime; } }
-        public float PhysicsFrameTime { get { return m_physicsFrameTime; } }
-        public float OtherFrameTime { get { return m_otherFrameTime; } }
-        public float ImageFrameTime { get { return m_imageFrameTime; } }
-        public float InPacketsPerSecond { get { return m_inPacketsPerSecond; } }
-        public float OutPacketsPerSecond { get { return m_outPacketsPerSecond; } }
-        public float UnackedBytes { get { return m_unackedBytes; } }
-        public float AgentFrameTime { get { return m_agentFrameTime; } }
-        public float PendingDownloads { get { return m_pendingDownloads; } }
-        public float PendingUploads { get { return m_pendingUploads; } }
-        public float ActiveScripts { get { return m_activeScripts; } }
-        public float ScriptLinesPerSecond { get { return m_scriptLinesPerSecond; } }
-
-        public USimStatsData(UUID pRegionID)
-        {
-            m_regionID = pRegionID;
-        }
-
-        public void ConsumeSimStats(SimStats stats)
-        {
-            m_regionID = stats.RegionUUID;
-            m_timeDilation = stats.StatsBlock[0].StatValue;
-            m_simFps = stats.StatsBlock[1].StatValue;
-            m_physicsFps = stats.StatsBlock[2].StatValue;
-            m_agentUpdates = stats.StatsBlock[3].StatValue;
-            m_rootAgents = stats.StatsBlock[4].StatValue;
-            m_childAgents = stats.StatsBlock[5].StatValue;
-            m_totalPrims = stats.StatsBlock[6].StatValue;
-            m_activePrims = stats.StatsBlock[7].StatValue;
-            m_totalFrameTime = stats.StatsBlock[8].StatValue;
-            m_netFrameTime = stats.StatsBlock[9].StatValue;
-            m_physicsFrameTime = stats.StatsBlock[10].StatValue;
-            m_otherFrameTime = stats.StatsBlock[11].StatValue;
-            m_imageFrameTime = stats.StatsBlock[12].StatValue;
-            m_inPacketsPerSecond = stats.StatsBlock[13].StatValue;
-            m_outPacketsPerSecond = stats.StatsBlock[14].StatValue;
-            m_unackedBytes = stats.StatsBlock[15].StatValue;
-            m_agentFrameTime = stats.StatsBlock[16].StatValue;
-            m_pendingDownloads = stats.StatsBlock[17].StatValue;
-            m_pendingUploads = stats.StatsBlock[18].StatValue;
-            m_activeScripts = stats.StatsBlock[19].StatValue;
-            m_scriptLinesPerSecond = stats.StatsBlock[20].StatValue;
-        }
-    }
-
 }
