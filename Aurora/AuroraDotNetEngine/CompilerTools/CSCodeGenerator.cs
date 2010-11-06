@@ -31,7 +31,6 @@ using System.Collections.Generic;
 using System.Collections;
 using System.Text;
 using Tools;
-using Aurora.Framework;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 {
