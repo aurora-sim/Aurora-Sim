@@ -133,7 +133,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         private List<string> DTFunctions = new List<string>();
         private Parser p = null;
         private Random random = new Random();
-        private Dictionary<string, string> LocalMethods = new Dictionary<string, string>();
+        public Dictionary<string, string> LocalMethods = new Dictionary<string, string>();
         private class GlobalVar
         {
             public string Type;
@@ -318,7 +318,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 throw new Exception(message);
             }
 
-            m_astRoot = codeTransformer.Transform();
+            m_astRoot = codeTransformer.Transform(LocalMethods);
             OriginalScript = script;
             StringBuilder returnstring = new StringBuilder();
 
@@ -1661,7 +1661,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
             retstr.Append(GenerateIndented(String.Format("public IEnumerator {0}(", CheckName(gf.Name)), gf));
 
-            LocalMethods.Add(CheckName(gf.Name).ToLower(), gf.ReturnType);
+//            LocalMethods.Add(CheckName(gf.Name), gf.ReturnType);
             IsParentEnumerable = true;
 
             // print the state arguments, if any
@@ -2597,7 +2597,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             bool DTFunction = false;
 
             string rettype = "void";
-            if (LocalMethods.TryGetValue(fc.Id.ToLower(), out rettype))
+            if (LocalMethods.TryGetValue(fc.Id, out rettype))
                 isEnumerable = true;
 
             else if (DTFunctions.Contains(fc.Id))

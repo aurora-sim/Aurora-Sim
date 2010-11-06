@@ -63,19 +63,24 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         /// </summary>
         /// <returns>The root node of the transformed AST</returns>
         public SYMBOL Transform()
-        {
+            {
+            return Transform(null);
+            }
+
+        public SYMBOL Transform(Dictionary<string, string> GlobalMethods)
+            {
             foreach (SYMBOL s in m_astRoot.kids)
-                TransformNode(s);
+                TransformNode(s, GlobalMethods);
 
             return m_astRoot;
-        }
+            }
 
         /// <summary>
         /// Recursively called to transform each type of node. Will transform this
         /// node, then all it's children.
         /// </summary>
         /// <param name="s">The current node to transform.</param>
-        private void TransformNode(SYMBOL s)
+        private void TransformNode(SYMBOL s, Dictionary<string, string> GlobalMethods)
         {
             // make sure to put type lower in the inheritance hierarchy first
             // ie: since IdentConstant and StringConstant inherit from Constant,
@@ -86,8 +91,20 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 ((Constant) s).Type = m_datatypeLSL2OpenSim[((Constant) s).Type];
             else if (s is TypecastExpression)
                 ((TypecastExpression) s).TypecastType = m_datatypeLSL2OpenSim[((TypecastExpression) s).TypecastType];
-            else if (s is GlobalFunctionDefinition && "void" != ((GlobalFunctionDefinition) s).ReturnType) // we don't need to translate "void"
-                ((GlobalFunctionDefinition) s).ReturnType = m_datatypeLSL2OpenSim[((GlobalFunctionDefinition) s).ReturnType];
+            else if (s is GlobalFunctionDefinition)
+                {
+                if ("void" == ((GlobalFunctionDefinition)s).ReturnType) // we don't need to translate "void"
+                    {
+                    if (GlobalMethods != null)
+                        GlobalMethods.Add(((GlobalFunctionDefinition)s).Name, "void");
+                    }
+                else
+                    {
+                    ((GlobalFunctionDefinition)s).ReturnType = m_datatypeLSL2OpenSim[((GlobalFunctionDefinition)s).ReturnType];
+                    if (GlobalMethods != null)
+                        GlobalMethods.Add(((GlobalFunctionDefinition)s).Name, ((GlobalFunctionDefinition)s).ReturnType);
+                    }
+                }
 
             for (int i = 0; i < s.kids.Count; i++)
             {
@@ -100,12 +117,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 //     }
                 //
                 // We need to check for that here.
+
                 if (null != s.kids[i])
                 {
                     if (!(s is Assignment || s is ArgumentDeclarationList) && s.kids[i] is Declaration)
                         AddImplicitInitialization(s, i);
 
-                    TransformNode((SYMBOL) s.kids[i]);
+                    TransformNode((SYMBOL)s.kids[i],null);
                 }
             }
         }
