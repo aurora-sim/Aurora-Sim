@@ -856,6 +856,7 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         Environment.Exit(0);
                     }
+                    RegisterRegionWithGrid(scene);
                 }
                 if (error == "Wrong Session ID")
                 {

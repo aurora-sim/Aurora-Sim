@@ -135,11 +135,11 @@ namespace OpenSim.Services.Connectors
                     }
                 }
                 else
-                    m_log.DebugFormat("[GRID CONNECTOR]: RegisterRegion received null reply");
+                    m_log.DebugFormat("[GRID CONNECTOR]: RegisterRegion received null reply from " + m_ServerURI);
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[GRID CONNECTOR]: Exception when contacting grid server: {0}", e.Message);
+                m_log.DebugFormat("[GRID CONNECTOR]: Exception when contacting grid server " + m_ServerURI + " : {0}", e.Message);
             }
 
             return "Error communicating with grid service";
