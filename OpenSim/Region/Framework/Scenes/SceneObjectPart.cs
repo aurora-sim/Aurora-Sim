@@ -756,7 +756,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_TextureAnimation = Utils.EmptyBytes;
             ParticleSystem = Utils.EmptyBytes;
             Rezzed = DateTime.UtcNow;
-            
+
             m_inventory = new SceneObjectPartInventory(this);
         }
 
@@ -1007,7 +1007,8 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_passCollision; }
             set
             {
-                ParentGroup.HasGroupChanged = true;
+                if(ParentGroup != null)
+                    ParentGroup.HasGroupChanged = true;
                 m_passCollision = value;
             }
         }
@@ -1019,7 +1020,8 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_CollisionFilter; }
             set
             {
-                ParentGroup.HasGroupChanged = true;
+                if (ParentGroup != null)
+                    ParentGroup.HasGroupChanged = true;
                 m_CollisionFilter = value;
             }
         }
@@ -1109,7 +1111,8 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_TextureAnimation; }
             set
             {
-                ParentGroup.HasGroupChanged = true;
+                if (ParentGroup != null)
+                    ParentGroup.HasGroupChanged = true;
                 m_TextureAnimation = value;
             }
         }
@@ -1195,7 +1198,8 @@ namespace OpenSim.Region.Framework.Scenes
             }
             set
             {
-                ParentGroup.HasGroupChanged = true;
+                if (ParentGroup != null)
+                    ParentGroup.HasGroupChanged = true;
                 TriggerScriptMovingStartEvent();
                 m_groupPosition = value;
 
@@ -1307,7 +1311,8 @@ namespace OpenSim.Region.Framework.Scenes
             
             set
             {
-                ParentGroup.HasGroupChanged = true;
+                if (ParentGroup != null)
+                    ParentGroup.HasGroupChanged = true;
                 m_rotationOffset = value;
 
                 PhysicsActor actor = PhysActor;
@@ -1387,7 +1392,8 @@ namespace OpenSim.Region.Framework.Scenes
             }
             set
             {
-                ParentGroup.HasGroupChanged = true;
+                if (ParentGroup != null)
+                    ParentGroup.HasGroupChanged = true;
                 m_angularVelocity = value;
             }
         }
@@ -1398,7 +1404,8 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_acceleration; }
             set
             {
-                ParentGroup.HasGroupChanged = true;
+                if (ParentGroup != null)
+                    ParentGroup.HasGroupChanged = true;
                 m_acceleration = value;
             }
         }
@@ -1408,7 +1415,8 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_description; }
             set 
             {
-                ParentGroup.HasGroupChanged = true;
+                if (ParentGroup != null)
+                    ParentGroup.HasGroupChanged = true;
                 m_description = value;
                 PhysicsActor actor = PhysActor;
                 if (actor != null)
@@ -1462,7 +1470,8 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_color; }
             set
             {
-                ParentGroup.HasGroupChanged = true;
+                if (ParentGroup != null)
+                    ParentGroup.HasGroupChanged = true;
                 m_color = value;
                 TriggerScriptChangedEvent(Changed.COLOR);
 
@@ -1486,7 +1495,8 @@ namespace OpenSim.Region.Framework.Scenes
             }
             set
             {
-                ParentGroup.HasGroupChanged = true;
+                if (ParentGroup != null)
+                    ParentGroup.HasGroupChanged = true;
                 m_text = value;
             }
         }
@@ -1497,7 +1507,8 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_sitName; }
             set
             {
-                ParentGroup.HasGroupChanged = true;
+                if (ParentGroup != null)
+                    ParentGroup.HasGroupChanged = true;
                 m_sitName = value;
             }
         }
@@ -1507,7 +1518,8 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_touchName; }
             set
             {
-                ParentGroup.HasGroupChanged = true;
+                if (ParentGroup != null)
+                    ParentGroup.HasGroupChanged = true;
                 m_touchName = value;
             }
         }
@@ -1517,7 +1529,8 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_linkNum; }
             set
             {
-                ParentGroup.HasGroupChanged = true;
+                if (ParentGroup != null)
+                    ParentGroup.HasGroupChanged = true;
                 m_linkNum = value;
             }
         }
@@ -1527,7 +1540,8 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_clickAction; }
             set
             {
-                ParentGroup.HasGroupChanged = true;
+                if (ParentGroup != null)
+                    ParentGroup.HasGroupChanged = true;
                 m_clickAction = value;
             }
         }
@@ -1537,7 +1551,8 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_shape; }
             set
             {
-                ParentGroup.HasGroupChanged = true;
+                if (ParentGroup != null)
+                    ParentGroup.HasGroupChanged = true;
                 bool shape_changed = false;
                 // TODO: this should really be restricted to the right
                 // set of attributes on shape change.  For instance,
@@ -1558,7 +1573,8 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_shape.Scale; }
             set
             {
-                ParentGroup.HasGroupChanged = true;
+                if (ParentGroup != null)
+                    ParentGroup.HasGroupChanged = true;
                 if (m_shape != null)
                 {
                     if (m_shape.Scale != value)
@@ -1605,7 +1621,8 @@ namespace OpenSim.Region.Framework.Scenes
             
             set
             {
-                ParentGroup.HasGroupChanged = true;
+                if (ParentGroup != null)
+                    ParentGroup.HasGroupChanged = true;
                 m_mediaUrl = value;
                 
                 if (ParentGroup != null)
@@ -1656,7 +1673,8 @@ namespace OpenSim.Region.Framework.Scenes
             }
             set 
             {
-                ParentGroup.HasGroupChanged = true;
+                if (ParentGroup != null)
+                    ParentGroup.HasGroupChanged = true;
                 AddGenericField("SitTargetOrientation", value);
                 m_sitTargetOrientation = value; 
             }
@@ -1671,7 +1689,8 @@ namespace OpenSim.Region.Framework.Scenes
             }
             set
             {
-                ParentGroup.HasGroupChanged = true;
+                if (ParentGroup != null)
+                    ParentGroup.HasGroupChanged = true;
                 AddGenericField("SitTargetPosition", value);
                 m_sitTargetPosition = value;
             }
@@ -1818,7 +1837,8 @@ namespace OpenSim.Region.Framework.Scenes
             set 
             { 
 //                m_log.DebugFormat("[SOP]: Setting flags for {0} {1} to {2}", UUID, Name, value);
-                ParentGroup.HasGroupChanged = true;
+                if (ParentGroup != null)
+                    ParentGroup.HasGroupChanged = true;
                 _flags = value; 
             }
         }
@@ -1857,7 +1877,8 @@ namespace OpenSim.Region.Framework.Scenes
             }
             set
             {
-                ParentGroup.HasGroupChanged = true;
+                if (ParentGroup != null)
+                    ParentGroup.HasGroupChanged = true;
                 _parentUUID = value;
             }
         }
@@ -1868,7 +1889,8 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_sitAnimation; }
             set
             {
-                ParentGroup.HasGroupChanged = true;
+                if (ParentGroup != null)
+                    ParentGroup.HasGroupChanged = true;
                 m_sitAnimation = value;
             }
         }
@@ -1878,7 +1900,8 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_collisionSound; }
             set
             {
-                ParentGroup.HasGroupChanged = true;
+                if (ParentGroup != null)
+                    ParentGroup.HasGroupChanged = true;
                 m_collisionSound = value;
                 //Why?
                 //aggregateScriptEvents();
@@ -1890,7 +1913,8 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_collisionSprite; }
             set
             {
-                ParentGroup.HasGroupChanged = true;
+                if (ParentGroup != null)
+                    ParentGroup.HasGroupChanged = true;
                 m_collisionSprite = value;
             }
         }
@@ -1900,7 +1924,8 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_collisionSoundVolume; }
             set
             {
-                ParentGroup.HasGroupChanged = true;
+                if (ParentGroup != null)
+                    ParentGroup.HasGroupChanged = true;
                 m_collisionSoundVolume = value;
             }
         }
