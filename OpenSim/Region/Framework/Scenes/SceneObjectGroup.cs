@@ -1440,7 +1440,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             try
             {
-                if (isTimeToPersist(out shouldReaddToLoop, out shouldReaddToLoopNow) || forcedBackup) // forced means FORCED, you don't get a choice!
+                if (isTimeToPersist(out shouldReaddToLoop, out shouldReaddToLoopNow) || (forcedBackup && !IsAttachment)) // forced means FORCED, you don't get a choice!
                 {
                     // don't backup while it's selected or you're asking for changes mid stream.
                     m_log.DebugFormat(
