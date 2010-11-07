@@ -104,11 +104,11 @@ namespace OpenSim
             }
 
             string iniDirName =
-                    startupConfig.GetString("inidirectory", "Configuration/Modules");
+                    startupConfig.GetString("inidirectory", "");
             string iniDirPath =
                     Path.Combine(Util.configDir(), iniDirName);
 
-            if (Directory.Exists(iniDirPath))
+            if (Directory.Exists(iniDirPath) && iniDirName != "")
             {
                 m_log.InfoFormat("Searching folder {0} for config ini files",
                         iniDirPath);
