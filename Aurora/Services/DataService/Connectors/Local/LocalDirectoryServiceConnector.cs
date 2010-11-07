@@ -72,11 +72,12 @@ namespace Aurora.Services.DataService
         /// <param name="showInSearch"></param>
         public void AddLandObject(LandData args)
         {
+            //Check whether this region is just spamming add to search and stop them if they are
             if (timeBeforeNextUpdate.ContainsKey(args.InfoUUID) &&
                 Util.UnixTimeSinceEpoch() < timeBeforeNextUpdate[args.InfoUUID])
                 return; //Too soon to update
 
-            //Update the time
+            //Update the time with now + the time to wait for the next update
             timeBeforeNextUpdate[args.InfoUUID] = Util.UnixTimeSinceEpoch() + (60 * minTimeBeforeNextParcelUpdate);
             
             List<object> Values = new List<object>();
@@ -129,12 +130,21 @@ namespace Aurora.Services.DataService
             GD.Replace("searchparcel", Keys.ToArray(), Values.ToArray());
         }
 
+        /// <summary>
+        /// Gets a parcel from the search database by Info UUID (the true cross instance parcel ID)
+        /// </summary>
+        /// <param name="ParcelID"></param>
+        /// <returns></returns>
         public LandData GetParcelInfo(UUID InfoUUID)
         {
+            //Get info about a specific parcel somewhere in the metaverse
             List<string> Query = GD.Query("InfoUUID", InfoUUID, "searchparcel", "*");
-            LandData LandData = new LandData();
+            //Cant find it, return
             if (Query.Count == 0)
                 return null;
+
+            //Parse and return
+            LandData LandData = new LandData();
             LandData.RegionID = UUID.Parse(Query[0]);
             LandData.GlobalID = UUID.Parse(Query[1]);
             LandData.LocalID = int.Parse(Query[2]);
@@ -153,60 +163,53 @@ namespace Aurora.Services.DataService
             return LandData;
         }
 
+        /// <summary>
+        /// Gets all parcels owned by the given user
+        /// </summary>
+        /// <param name="OwnerID"></param>
+        /// <returns></returns>
         public LandData[] GetParcelByOwner(UUID OwnerID)
         {
             List<LandData> Lands = new List<LandData>();
+            //NOTE: this does check for group deeded land as well, so this can check for that as well
             List<string> Query = GD.Query("OwnerID", OwnerID, "searchparcel", "*");
+            //Return if no values
             if (Query.Count == 0)
                 return Lands.ToArray();
-            int i = 0;
-            int DataCount = 0;
+            
             LandData LandData = new LandData();
-            foreach (string RetVal in Query)
+            //Add all the parcels belonging to the owner to the list
+            for (int i = 0; i < Query.Count; i += 21)
             {
-                if (DataCount == 0)
-                    LandData.RegionID = UUID.Parse(Query[i]);
-                if (DataCount == 1)
-                    LandData.GlobalID = UUID.Parse(Query[i]);
-                if (DataCount == 2)
-                    LandData.LocalID = int.Parse(Query[i]);
-                if (DataCount == 3)
-                    LandData.UserLocation = Vector3.Parse(Query[i]);
-                if (DataCount == 6)
-                    LandData.Name = Query[i];
-                if (DataCount == 7)
-                    LandData.Description = Query[i];
-                if (DataCount == 8)
-                    LandData.Flags = uint.Parse(Query[i]);
-                if (DataCount == 9)
-                    LandData.Dwell = int.Parse(Query[i]);
-                if (DataCount == 10)
-                    LandData.InfoUUID = UUID.Parse(Query[i]);
-                if (DataCount == 13)
-                    LandData.AuctionID = uint.Parse(Query[i]);
-                if (DataCount == 14)
-                    LandData.Area = int.Parse(Query[i]);
-                if (DataCount == 16)
-                    LandData.Maturity = int.Parse(Query[i]);
-                if (DataCount == 17)
-                    LandData.OwnerID = UUID.Parse(Query[i]);
-                if (DataCount == 18)
-                    LandData.GroupID = UUID.Parse(Query[i]);
-                if (DataCount == 20)
-                    LandData.SnapshotID = UUID.Parse(Query[i]);
+                LandData.RegionID = UUID.Parse(Query[i]);
+                LandData.GlobalID = UUID.Parse(Query[i + 1]);
+                LandData.LocalID = int.Parse(Query[i + 2]);
+                LandData.UserLocation = new Vector3(int.Parse(Query[i + 3]), int.Parse(Query[i + 4]), int.Parse(Query[i + 5]));
+                LandData.Name = Query[i + 6];
+                LandData.Description = Query[i + 7];
+                LandData.Flags = uint.Parse(Query[i + 8]);
+                LandData.Dwell = int.Parse(Query[i + 9]);
+                LandData.InfoUUID = UUID.Parse(Query[i + 10]);
+                LandData.AuctionID = uint.Parse(Query[i + 13]);
+                LandData.Area = int.Parse(Query[i + 14]);
+                LandData.Maturity = int.Parse(Query[i + 16]);
+                LandData.OwnerID = UUID.Parse(Query[i + 17]);
+                LandData.GroupID = UUID.Parse(Query[i + 18]);
+                LandData.SnapshotID = UUID.Parse(Query[i + 20]);
 
-                DataCount++;
-                i++;
-                if (DataCount == 21)
-                {
-                    Lands.Add(LandData);
-                    LandData = new LandData();
-                    DataCount = 0;
-                }
+                Lands.Add(LandData);
+                LandData = new LandData();
             }
             return Lands.ToArray();
         }
 
+        /// <summary>
+        /// Searches for parcels around the grid
+        /// </summary>
+        /// <param name="queryText"></param>
+        /// <param name="category"></param>
+        /// <param name="StartQuery"></param>
+        /// <returns></returns>
         public DirPlacesReplyData[] FindLand(string queryText, string category, int StartQuery, uint Flags)
         {
             List<DirPlacesReplyData> Data = new List<DirPlacesReplyData>();
@@ -214,9 +217,10 @@ namespace Aurora.Services.DataService
             string categoryString = "";
             string dwell = "";
 
-            if (category != "-1")
+            if (category != "-1") //Check for category
                 categoryString = " PCategory = '" + category + "' &&";
 
+            //If they dwell sort flag is there, sort by dwell going down
             if ((Flags & (uint)DirectoryManager.DirFindFlags.DwellSort) == (uint)DirectoryManager.DirFindFlags.DwellSort)
                 dwell = " ORDER BY Dwell DESC";
 
@@ -232,8 +236,10 @@ namespace Aurora.Services.DataService
                 replyData.parcelID = new UUID(retVal[i]);
                 replyData.name = retVal[i + 1];
                 replyData.forSale = int.Parse(retVal[i + 2]) == 1;
-                replyData.auction = retVal[i + 3] == "0";
+                replyData.auction = retVal[i + 3] == "0"; //Auction is stored as a 0 if there is no auction
                 replyData.dwell = float.Parse(retVal[i + 4]);
+
+                //Check to make sure we are sending the requested maturity levels
                 if (int.Parse(retVal[i + 5]) <= 0 && ((Flags & (uint)DirectoryManager.DirFindFlags.IncludePG)) == (uint)DirectoryManager.DirFindFlags.IncludePG)
                     Data.Add(replyData);
                 else if (int.Parse(retVal[i + 5]) <= 1 && ((Flags & (uint)DirectoryManager.DirFindFlags.IncludeMature)) == (uint)DirectoryManager.DirFindFlags.IncludeMature)
@@ -246,6 +252,14 @@ namespace Aurora.Services.DataService
             return Data.ToArray();
         }
 
+        /// <summary>
+        /// Searches for parcels for sale around the grid
+        /// </summary>
+        /// <param name="searchType"></param>
+        /// <param name="price"></param>
+        /// <param name="area"></param>
+        /// <param name="StartQuery"></param>
+        /// <returns></returns>
         public DirLandReplyData[] FindLandForSale(string searchType, string price, string area, int StartQuery, uint Flags)
         {
             //searchType
@@ -260,23 +274,30 @@ namespace Aurora.Services.DataService
             string areastring = "";
             string forsalestring = "";
 
+            //They requested a sale price check
             if ((Flags & (uint)DirectoryManager.DirFindFlags.LimitByPrice) == (uint)DirectoryManager.DirFindFlags.LimitByPrice)
                 pricestring = " SalePrice <= '" + price + "'";
 
+            //They requested a 
             if ((Flags & (uint)DirectoryManager.DirFindFlags.LimitByArea) == (uint)DirectoryManager.DirFindFlags.LimitByArea)
             {
+                //Check to make sure we add the 'and' into the SQL statement
+                // If the price string exists, we need the and inbetween these two statements
                 areastring = pricestring == "" ? "" : " and";
+                //Add the area command
                 areastring += " Area >= '" + area + "'";
             }
-
+            //If either exists, we need the 'and' between these and the for sale statement
             if (areastring != "" || pricestring != "")
                 forsalestring = " and";
 
+            //Only parcels set for sale will be checked
             forsalestring += " ForSale = '1'";
 
             string whereClause = pricestring + areastring + forsalestring + " LIMIT " + StartQuery.ToString() + ",50 " + dwell;
             List<string> retVal = GD.Query(whereClause, "searchparcel", "InfoUUID,Name,Auction,SalePrice,Area,Maturity");
 
+            //if there are none, return
             if (retVal.Count == 0)
                 return Data.ToArray();
 
@@ -288,12 +309,16 @@ namespace Aurora.Services.DataService
                 replyData.parcelID = new UUID(retVal[i]);
                 replyData.name = retVal[i + 1];
                 replyData.auction = (retVal[i + 2] != "0");
+                //If its an auction and we didn't request to see auctions, skip to the next and continue
                 if ((Flags & (uint)DirectoryManager.SearchTypeFlags.Auction) == (uint)DirectoryManager.SearchTypeFlags.Auction && !replyData.auction)
                     continue;
+
                 replyData.salePrice = Convert.ToInt32(retVal[i + 3]);
                 replyData.actualArea = Convert.ToInt32(retVal[i + 4]);
+                //0 flag is an override so that we can get all lands for sale, regardless of maturity
                 if (Flags == 0)
                     Data.Add(replyData);
+                //Check maturity levels depending on what flags the user has set
                 if (int.Parse(retVal[i + 5]) == 0 && ((Flags & (uint)DirectoryManager.DirFindFlags.IncludePG)) == (uint)DirectoryManager.DirFindFlags.IncludePG)
                     Data.Add(replyData);
                 else if (int.Parse(retVal[i + 5]) == 1 && ((Flags & (uint)DirectoryManager.DirFindFlags.IncludeMature)) == (uint)DirectoryManager.DirFindFlags.IncludeMature)
@@ -305,28 +330,39 @@ namespace Aurora.Services.DataService
             return Data.ToArray();
         }
 
+        /// <summary>
+        /// Searches for events with the given parameters
+        /// </summary>
+        /// <param name="queryText"></param>
+        /// <param name="flags"></param>
+        /// <param name="StartQuery"></param>
+        /// <returns></returns>
         public DirEventsReplyData[] FindEvents(string queryText, string flags, int StartQuery)
         {
             List<DirEventsReplyData> Data = new List<DirEventsReplyData>();
             string whereClause = "";
             uint eventFlags = uint.Parse(flags);
+            //|0| means search between some days
             if (queryText.Contains("|0|"))
             {
                 string StringDay = queryText.Split('|')[0];
-                if (StringDay == "u")
+                if (StringDay == "u") //"u" means search for events that are going on today
                 {
                     whereClause = " EDate >= '" + Util.ToUnixTime(DateTime.Today) + "' LIMIT " + StartQuery.ToString() + ",50 ";
                 }
                 else
                 {
+                    //Pull the day out then and search for that many days in the future/past
                     int Day = int.Parse(StringDay);
                     DateTime SearchedDay = DateTime.Today.AddDays(Day);
+                    //We only look at one day at a time
                     DateTime NextDay = SearchedDay.AddDays(1);
                     whereClause = " EDate >= '" + Util.ToUnixTime(SearchedDay) + "' and EDate <= '" + Util.ToUnixTime(NextDay) + "' and EFlags <= '" + flags + "' LIMIT " + StartQuery.ToString() + ",50 ";
                 }
             }
             else
             {
+                //Else, search for the search term
                 whereClause = " EName LIKE '%" + queryText + "%' LIMIT " + StartQuery.ToString() + ",50 ";
             }
             List<string> retVal = GD.Query(whereClause, "events", "EOwnerID,EName,EID,EDate,EFlags,EMature");
@@ -345,6 +381,7 @@ namespace Aurora.Services.DataService
                 replyData.unixTime = (uint)Util.ToUnixTime(date);
                 replyData.eventFlags = Convert.ToUInt32(retVal[i + 4]);
 
+                //Check the maturity levels
                 if (Convert.ToInt32(retVal[i + 5]) == 2 && (eventFlags & (uint)DirectoryManager.EventFlags.Adult) == (uint)DirectoryManager.EventFlags.Adult)
                     Data.Add(replyData);
                 else if (Convert.ToInt32(retVal[i + 5]) == 1 && (eventFlags & (uint)DirectoryManager.EventFlags.Mature) == (uint)DirectoryManager.EventFlags.Mature)
@@ -356,42 +393,53 @@ namespace Aurora.Services.DataService
             return Data.ToArray();
         }
 
-        public DirEventsReplyData[] FindAllEventsInRegion(string regionName)
+        /// <summary>
+        /// Retrives all events in the given region by their maturity level
+        /// </summary>
+        /// <param name="regionName"></param>
+        /// <param name="maturity">Uses DirectoryManager.EventFlags to determine the maturity requested</param>
+        /// <returns></returns>
+        public DirEventsReplyData[] FindAllEventsInRegion(string regionName, int maturity)
         {
             List<DirEventsReplyData> Data = new List<DirEventsReplyData>();
-            List<string> retVal = GD.Query("ESimName", regionName, "events", "EOwnerID,EName,EID,EDate,EFlags");
+            
+            List<string> retVal = GD.Query("ESimName", regionName, "events", "EOwnerID,EName,EID,EDate,EFlags,EMature");
+            
             if (retVal.Count == 0)
                 return Data.ToArray();
-            int DataCount = 0;
+            
             DirEventsReplyData replyData = new DirEventsReplyData();
-            for (int i = 0; i < retVal.Count; i++)
+            for (int i = 0; i < retVal.Count; i += 6)
             {
-                if (DataCount == 0)
-                    replyData.ownerID = new UUID(retVal[i]);
-                if (DataCount == 1)
-                    replyData.name = retVal[i];
-                if (DataCount == 2)
-                    replyData.eventID = Convert.ToUInt32(retVal[i]);
-                if (DataCount == 3)
-                {
-                    DateTime date = Util.ToDateTime(ulong.Parse(retVal[i]));
-                    replyData.date = date.ToString(new System.Globalization.DateTimeFormatInfo());
-                    replyData.unixTime = (uint)Util.ToUnixTime(date);
-                }
-                if (DataCount == 4)
-                    replyData.eventFlags = Convert.ToUInt32(retVal[i]);
-                DataCount++;
-                if (DataCount == 5)
-                {
-                    DataCount = 0;
-                    Data.Add(replyData);
-                    replyData = new DirEventsReplyData();
-                }
+                //Check maturity level
+                if(int.Parse(retVal[i+5]) != maturity)
+                    continue;
+
+                replyData.ownerID = new UUID(retVal[i]);
+                replyData.name = retVal[i + 1];
+                replyData.eventID = Convert.ToUInt32(retVal[i + 2]);
+
+                //Parse the date for the viewer
+                DateTime date = Util.ToDateTime(ulong.Parse(retVal[i + 3]));
+                replyData.date = date.ToString(new System.Globalization.DateTimeFormatInfo());
+                replyData.unixTime = (uint)Util.ToUnixTime(date);
+
+                replyData.eventFlags = Convert.ToUInt32(retVal[i + 4]);
+                Data.Add(replyData);
+                replyData = new DirEventsReplyData();
             }
 
             return Data.ToArray();
         }
 
+        /// <summary>
+        /// Searches for classifieds
+        /// </summary>
+        /// <param name="queryText"></param>
+        /// <param name="category"></param>
+        /// <param name="queryFlags"></param>
+        /// <param name="StartQuery"></param>
+        /// <returns></returns>
         public DirClassifiedReplyData[] FindClassifieds(string queryText, string category, string queryFlags, int StartQuery)
         {
             List<DirClassifiedReplyData> Data = new List<DirClassifiedReplyData>();
@@ -400,7 +448,7 @@ namespace Aurora.Services.DataService
             string classifiedClause = "";
             uint cqf = uint.Parse(queryFlags);
 
-            if (category != "0")
+            if (int.Parse(category) != (int)DirectoryManager.ClassifiedCategories.Any) //Check the category
                 classifiedClause = " and Category = '" + category + "'";
 
             whereClause = " Name LIKE '%" + queryText + "%'" + classifiedClause + " LIMIT " + StartQuery.ToString() + ",50 ";
@@ -411,8 +459,10 @@ namespace Aurora.Services.DataService
             DirClassifiedReplyData replyData = null;
             for (int i = 0; i < retVal.Count; i += 5)
             {
+                //Pull the classified out of OSD
                 Classified classified = new Classified();
-                classified.FromOSD((OSDMap)retVal[i + 4]);
+                classified.FromOSD((OSDMap)OSDParser.DeserializeJson(retVal[i + 4]));
+
                 replyData = new DirClassifiedReplyData();
                 replyData.classifiedFlags = classified.ClassifiedFlags;
                 replyData.classifiedID = classified.ClassifiedUUID;
@@ -420,79 +470,87 @@ namespace Aurora.Services.DataService
                 replyData.expirationDate = classified.ExpirationDate;
                 replyData.price = classified.PriceForListing;
                 replyData.name = classified.Name;
+                //Check maturity levels
                 if ((replyData.classifiedFlags & (uint)DirectoryManager.ClassifiedFlags.Mature) == (uint)DirectoryManager.ClassifiedFlags.Mature)
                 {
                     if ((cqf & (uint)DirectoryManager.ClassifiedQueryFlags.Mature) == (uint)DirectoryManager.ClassifiedQueryFlags.Mature)
                         Data.Add(replyData);
                 }
-                else
+                else //Its PG, add all
                     Data.Add(replyData);
             }
             return Data.ToArray();
         }
 
+        /// <summary>
+        /// Gets more info about the event by the events unique event ID
+        /// </summary>
+        /// <param name="EventID"></param>
+        /// <returns></returns>
         public EventData GetEventInfo(string EventID)
         {
             EventData data = new EventData();
             List<string> RetVal = GD.Query("EID", EventID, "events", "EID, ECreatorID, EName, ECategory, EDesc, EDate, EDuration, ECoverCharge, ECoverAmount, ESimName, EGlobalPos, EFlags, EMature");
             if (RetVal.Count == 0)
                 return null;
-            for (int i = 0; i < RetVal.Count; i++)
+            for (int i = 0; i < RetVal.Count; i += 12)
             {
-                if (i == 0)
-                    data.eventID = Convert.ToUInt32(RetVal[i]);
-                if (i == 1)
-                    data.creator = RetVal[i];
-                if (i == 2)
-                    data.name = RetVal[i];
-                if (i == 3)
-                    data.category = RetVal[i];
-                if (i == 4)
-                    data.description = RetVal[i];
-                if (i == 5)
-                {
-                    DateTime date = Util.ToDateTime(ulong.Parse(RetVal[i]));
-                    data.date = date.ToString(new System.Globalization.DateTimeFormatInfo());
-                    data.dateUTC = (uint)Util.ToUnixTime(date);
-                }
-                if (i == 6)
-                    data.duration = Convert.ToUInt32(RetVal[i]);
-                if (i == 7)
-                    data.cover = Convert.ToUInt32(RetVal[i]);
-                if (i == 8)
-                    data.amount = Convert.ToUInt32(RetVal[i]);
-                if (i == 9)
-                    data.simName = RetVal[i];
-                if (i == 10)
-                    Vector3.TryParse(RetVal[i], out data.globalPos);
-                if (i == 11)
-                    data.eventFlags = Convert.ToUInt32(RetVal[i]);
-                if (i == 12)
-                    data.maturity = Convert.ToInt32(RetVal[i]);
+                data.eventID = Convert.ToUInt32(RetVal[i]);
+                data.creator = RetVal[i + 1];
+                data.name = RetVal[i + 2];
+                data.category = RetVal[i + 3];
+                data.description = RetVal[i + 4];
+                //Parse the time out for the viewer
+                DateTime date = Util.ToDateTime(ulong.Parse(RetVal[i + 5]));
+                data.date = date.ToString(new System.Globalization.DateTimeFormatInfo());
+                data.dateUTC = (uint)Util.ToUnixTime(date);
+
+                data.duration = Convert.ToUInt32(RetVal[i + 6]);
+                data.cover = Convert.ToUInt32(RetVal[i + 7]);
+                data.amount = Convert.ToUInt32(RetVal[i + 8]);
+                data.simName = RetVal[i + 9];
+                Vector3.TryParse(RetVal[i + 10], out data.globalPos);
+                data.eventFlags = Convert.ToUInt32(RetVal[i + 11]);
+                data.maturity = Convert.ToInt32(RetVal[i + 12]);
             }
             return data;
         }
 
+        /// <summary>
+        /// Gets all classifieds in the given region
+        /// </summary>
+        /// <param name="regionName"></param>
+        /// <returns></returns>
         public Classified[] GetClassifiedsInRegion(string regionName)
         {
             List<Classified> Classifieds = new List<Classified>();
             List<string> retVal = GD.Query("SimName", regionName, "profileclassifieds", "*");
+            
             if (retVal.Count == 0)
                 return Classifieds.ToArray();
+            
             Classified classified = new Classified();
             for (int i = 0; i < retVal.Count; i += 5)
             {
-                classified.FromOSD((OSDMap)retVal[i + 4]);
+                //Pull the classified out of OSD
+                classified.FromOSD((OSDMap)OSDParser.DeserializeJson(retVal[i + 4]));
                 Classifieds.Add(classified);
                 classified = new Classified();
             }
             return Classifieds.ToArray();
         }
 
+        /// <summary>
+        /// Add classifieds to the search database
+        /// LOCAL Only, called by the profile service
+        /// </summary>
+        /// <param name="dictionary">objects of the dictionary are OSDMaps made from Classified</param>
         public void AddClassifieds(Dictionary<string, object> dictionary)
         {
-            foreach (object o in dictionary)
+            //Add a dictionary of classifieds
+            foreach (object o in dictionary.Values)
             {
+                //Pull out the OSD map and make it into a classified
                 OSDMap map = (OSDMap)o;
                 Classified c = new Classified();
                 c.FromOSD(map);
@@ -501,14 +559,22 @@ namespace Aurora.Services.DataService
                 Values.Add(c.Category);
                 Values.Add(c.SimName);
                 Values.Add(c.ClassifiedUUID);
+                Values.Add(OSDParser.SerializeJsonString(map));
                 GD.Insert("profileclassifieds", Values.ToArray());
             }
         }
 
+        /// <summary>
+        /// Remove classifieds from the search database
+        /// LOCAL Only, called by the profile service
+        /// </summary>
+        /// <param name="dictionary">objects of the dictionary are OSDMaps made from Classified</param>
         public void RemoveClassifieds(Dictionary<string, object> dictionary)
         {
-            foreach (object o in dictionary)
+            //Remove all the UUIDs in the given dictionary from search
+            foreach (object o in dictionary.Values)
             {
+                //Pull out the OSDMaps
                 OSDMap map = (OSDMap)o;
                 Classified c = new Classified();
                 c.FromOSD(map);

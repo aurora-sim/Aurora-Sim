@@ -284,9 +284,9 @@ namespace OpenSim
 
         public static bool Startup(ArgvConfigSource configSource)
         {
+            OpenSimBase m_sim = new OpenSimBase(configSource);
             try
             {
-                OpenSimBase m_sim = new OpenSimBase(configSource);
                 m_sim.Startup();
             }
             catch (Exception ex)
@@ -298,6 +298,8 @@ namespace OpenSim
                     m_log.Error(mes);
                     handleException(mes, ex);
                 }
+                //Just clean it out as good as we can
+                m_sim.Shutdown(false);
                 return false;
             }
             return true;

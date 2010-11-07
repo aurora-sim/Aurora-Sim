@@ -1032,7 +1032,8 @@ namespace OpenSim.Server.Handlers.AuroraData
             Dictionary<string, object> result = new Dictionary<string, object>();
 
             string RegionName = request["REGIONNAME"].ToString();
-            DirEventsReplyData[] lands = DirectoryServiceConnector.FindAllEventsInRegion(RegionName);
+            int maturity = int.Parse(request["MATURITY"].ToString());
+            DirEventsReplyData[] lands = DirectoryServiceConnector.FindAllEventsInRegion(RegionName, maturity);
 
             int i = 0;
             foreach (DirEventsReplyData land in lands)

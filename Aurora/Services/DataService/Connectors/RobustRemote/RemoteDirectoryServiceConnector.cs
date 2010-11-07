@@ -286,11 +286,12 @@ namespace Aurora.Services.DataService
             return Events.ToArray();
         }
 
-        public DirEventsReplyData[] FindAllEventsInRegion(string regionName)
+        public DirEventsReplyData[] FindAllEventsInRegion(string regionName, int maturity)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
 
             sendData["REGIONNAME"] = regionName;
+            sendData["MATURITY"] = maturity;
             sendData["METHOD"] = "findeventsinregion";
 
             string reqString = ServerUtils.BuildQueryString(sendData);
