@@ -308,11 +308,22 @@ namespace OpenSim
         {
             uint HttpListenerPort =
                 (uint)m_config.Configs["Network"].GetInt("http_listener_port", (int)9000);
-            uint httpSSLPort =
-                (uint)m_config.Configs["SSLConfig"].GetInt("http_listener_sslport", (int)9001);
-            bool HttpUsesSSL = m_config.Configs["SSLConfig"].GetBoolean("http_listener_ssl", false);
-            string HttpSSLCN = m_config.Configs["SSLConfig"].GetString("http_listener_cn", "localhost");
-            
+            uint httpSSLPort = 9001;
+            bool HttpUsesSSL = false;
+            string HttpSSLCN = "localhost";
+            try
+            {
+                if (m_config.Configs["SSLConfig"] != null)
+                {
+                    httpSSLPort =
+                        (uint)m_config.Configs["SSLConfig"].GetInt("http_listener_sslport", (int)9001);
+                    HttpUsesSSL = m_config.Configs["SSLConfig"].GetBoolean("http_listener_ssl", false);
+                    HttpSSLCN = m_config.Configs["SSLConfig"].GetString("http_listener_cn", "localhost");
+                }
+            }
+            catch
+            {
+            }
             m_BaseHTTPServer = new BaseHttpServer(
                     HttpListenerPort, HttpUsesSSL, httpSSLPort,
                     HttpSSLCN);
