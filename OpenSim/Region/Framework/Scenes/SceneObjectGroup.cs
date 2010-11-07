@@ -112,6 +112,7 @@ namespace OpenSim.Region.Framework.Scenes
         private bool m_hasGroupChanged = false;
         private DateTime timeFirstChanged;
         private DateTime timeLastChanged;
+        public bool m_forceBackupNow = false;
 
         public bool HasGroupChanged
         {
@@ -145,8 +146,21 @@ namespace OpenSim.Region.Framework.Scenes
         {
             shouldReaddToLoop = true;
             shouldReaddToLoopNow = false;
+
+            //Forced NOW
+            if (m_forceBackupNow)
+            {
+                //Revert it
+                m_forceBackupNow = false;
+                return true;
+            }
+
+            DateTime currentTime = DateTime.Now;
             if (IsSelected)
             {
+                //Check the max time for backup as well
+                if ((currentTime - timeFirstChanged).TotalMinutes > m_scene.m_persistAfter)
+                    return true;
                 //Selected prims are probably being changed, add them back for tte next backup
                 shouldReaddToLoopNow = true;
                 return false;
@@ -157,15 +171,12 @@ namespace OpenSim.Region.Framework.Scenes
                 shouldReaddToLoop = false;
                 return false;
             }
-            if (!m_hasGroupChanged)
-                return false;
             if (m_scene.ShuttingDown)
             {
                 //Do not readd now
                 shouldReaddToLoop = false;
                 return false;
             }
-            DateTime currentTime = DateTime.Now;
             if ((currentTime - timeLastChanged).TotalMinutes > m_scene.m_dontPersistBefore || (currentTime - timeFirstChanged).TotalMinutes > m_scene.m_persistAfter)
                 return true;
             return false;
@@ -517,6 +528,7 @@ namespace OpenSim.Region.Framework.Scenes
         public SceneObjectGroup(Scene scene)
         {
             m_scene = scene;
+            m_forceBackupNow = true;
         }
 
         /// <summary>
@@ -2313,7 +2325,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="localID"></param>
         /// <returns></returns>
-        [Obsolete("Use EntityManager.TryGetChildPrim instead.")]
+        //[Obsolete("Use EntityManager.TryGetChildPrim instead.")]
         public bool HasChildPrim(uint localID)
         {
             //m_log.DebugFormat("Entered HasChildPrim looking for {0}", localID);
