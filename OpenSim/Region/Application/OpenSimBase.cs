@@ -1052,34 +1052,60 @@ namespace OpenSim
         /// </summary>
         public virtual void Shutdown(bool close)
         {
-            RemovePIDFile();
-            if (m_shutdownCommandsFile != String.Empty)
-            {
-                RunCommandScript(m_shutdownCommandsFile);
-            }
-
-            //Stop the HTTP server
-            m_BaseHTTPServer.Stop();
-
-            //Close the thread pool
-            Util.CloseThreadPool();
-
-            if(close)
-                m_log.Info("[SHUTDOWN]: Terminating");
-
             try
             {
-                m_sceneManager.Close();
+                try
+                {
+                    RemovePIDFile();
+                    if (m_shutdownCommandsFile != String.Empty)
+                    {
+                        RunCommandScript(m_shutdownCommandsFile);
+                    }
+                }
+                catch
+                {
+                    //It doesn't matter, just shut down
+                }
+                try
+                {
+                    //Stop the HTTP server
+                    m_BaseHTTPServer.Stop();
+                }
+                catch
+                {
+                    //Again, just shut down
+                }
+
+                try
+                {
+                    //Close the thread pool
+                    Util.CloseThreadPool();
+                }
+                catch
+                {
+                    //Just shut down already
+                }
+
+                if (close)
+                    m_log.Info("[SHUTDOWN]: Terminating");
+
+                try
+                {
+                    m_sceneManager.Close();
+                }
+                catch (Exception e)
+                {
+                    m_log.ErrorFormat("[SHUTDOWN]: Ignoring failure during shutdown - {0}", e);
+                }
+
+                m_log.Info("[SHUTDOWN]: Shutdown processing on main thread complete. " + (close ? " Exiting..." : ""));
+
+                if (close)
+                    Environment.Exit(0);
             }
-            catch (Exception e)
+            catch
             {
-                m_log.ErrorFormat("[SHUTDOWN]: Ignoring failure during shutdown - {0}", e);
             }
-
-            m_log.Info("[SHUTDOWN]: Shutdown processing on main thread complete. " + (close ? " Exiting..." : ""));
-
-            if(close)
-                Environment.Exit(0);
         }
 
         protected void CreatePIDFile(string path)
