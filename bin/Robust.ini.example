@@ -66,6 +66,10 @@ ServiceConnectors = "8003/OpenSim.Server.Handlers.dll:AssetServiceConnector,8003
     ;; Region_Welcome_Area = "DefaultRegion, FallbackRegion"
     ;; (replace spaces with underscore)
     AllowDuplicateNames = false
+	
+    ;; Disable the checking of session ID's in the Grid Service
+    ;; This disables the security behind the Grid Service and allows regions to be registered and deregistered without verifying their identity.
+    DisableSessionID = false;
 
 ;; * This is the configuration for the freeswitch server in grid mode
 [FreeswitchService]

@@ -138,7 +138,7 @@ namespace Aurora.Services.DataService
             LandData.RegionID = UUID.Parse(Query[0]);
             LandData.GlobalID = UUID.Parse(Query[1]);
             LandData.LocalID = int.Parse(Query[2]);
-            LandData.UserLocation = Vector3.Parse(Query[3]);
+            LandData.UserLocation = new Vector3(int.Parse(Query[3]), int.Parse(Query[4]), int.Parse(Query[5]));
             LandData.Name = Query[6];
             LandData.Description = Query[7];
             LandData.Flags = uint.Parse(Query[8]);
@@ -220,7 +220,7 @@ namespace Aurora.Services.DataService
             if ((Flags & (uint)DirectoryManager.DirFindFlags.DwellSort) == (uint)DirectoryManager.DirFindFlags.DwellSort)
                 dwell = " ORDER BY Dwell DESC";
 
-            string whereClause = categoryString + " Description LIKE '%" + queryText + "%' OR Name LIKE '%" + queryText + "%' and ShowInSearch = 'True'"  + dwell + " LIMIT " + StartQuery.ToString() + ",50 ";
+            string whereClause = categoryString + " Description LIKE '%" + queryText + "%' OR Name LIKE '%" + queryText + "%' and ShowInSearch = '1'"  + dwell + " LIMIT " + StartQuery.ToString() + ",50 ";
             List<string> retVal = GD.Query(whereClause, "searchparcel", "InfoUUID,Name,ForSale,Auction,Dwell,Maturity");
             if (retVal.Count == 0)
                 return Data.ToArray();
@@ -234,11 +234,11 @@ namespace Aurora.Services.DataService
                 replyData.forSale = int.Parse(retVal[i + 2]) == 1;
                 replyData.auction = retVal[i + 3] == "0";
                 replyData.dwell = float.Parse(retVal[i + 4]);
-                if (int.Parse(retVal[i + 5]) == 0 && ((Flags & (uint)DirectoryManager.DirFindFlags.IncludePG)) == (uint)DirectoryManager.DirFindFlags.IncludePG)
+                if (int.Parse(retVal[i + 5]) <= 0 && ((Flags & (uint)DirectoryManager.DirFindFlags.IncludePG)) == (uint)DirectoryManager.DirFindFlags.IncludePG)
                     Data.Add(replyData);
-                else if (int.Parse(retVal[i + 5]) == 1 && ((Flags & (uint)DirectoryManager.DirFindFlags.IncludeMature)) == (uint)DirectoryManager.DirFindFlags.IncludeMature)
+                else if (int.Parse(retVal[i + 5]) <= 1 && ((Flags & (uint)DirectoryManager.DirFindFlags.IncludeMature)) == (uint)DirectoryManager.DirFindFlags.IncludeMature)
                     Data.Add(replyData);
-                else if (int.Parse(retVal[i + 5]) == 2 && ((Flags & (uint)DirectoryManager.DirFindFlags.IncludeAdult)) == (uint)DirectoryManager.DirFindFlags.IncludeAdult)
+                else if (int.Parse(retVal[i + 5]) <= 2 && ((Flags & (uint)DirectoryManager.DirFindFlags.IncludeAdult)) == (uint)DirectoryManager.DirFindFlags.IncludeAdult)
                     Data.Add(replyData);
                 replyData = new DirPlacesReplyData();
             }
@@ -272,10 +272,10 @@ namespace Aurora.Services.DataService
             if (areastring != "" || pricestring != "")
                 forsalestring = " and";
 
-            forsalestring += " ForSale = 'True'";
+            forsalestring += " ForSale = '1'";
 
             string whereClause = pricestring + areastring + forsalestring + " LIMIT " + StartQuery.ToString() + ",50 " + dwell;
-            List<string> retVal = GD.Query(whereClause, "searchparcel", "InfoUUID,Name,Auction,SalePrice,Area");
+            List<string> retVal = GD.Query(whereClause, "searchparcel", "InfoUUID,Name,Auction,SalePrice,Area,Maturity");
 
             if (retVal.Count == 0)
                 return Data.ToArray();
@@ -292,6 +292,8 @@ namespace Aurora.Services.DataService
                     continue;
                 replyData.salePrice = Convert.ToInt32(retVal[i + 3]);
                 replyData.actualArea = Convert.ToInt32(retVal[i + 4]);
+                if (Flags == 0)
+                    Data.Add(replyData);
                 if (int.Parse(retVal[i + 5]) == 0 && ((Flags & (uint)DirectoryManager.DirFindFlags.IncludePG)) == (uint)DirectoryManager.DirFindFlags.IncludePG)
                     Data.Add(replyData);
                 else if (int.Parse(retVal[i + 5]) == 1 && ((Flags & (uint)DirectoryManager.DirFindFlags.IncludeMature)) == (uint)DirectoryManager.DirFindFlags.IncludeMature)

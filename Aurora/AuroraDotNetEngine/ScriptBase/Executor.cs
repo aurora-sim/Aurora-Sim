@@ -98,8 +98,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         private bool killProcessing = true;
         private int timeout = 1000;
 
+        private bool InTimeSlice = false;
+        private DateTime TimeSliceEnd = new DateTime();
+        private Double MaxTimeSlice = 15.0;    // script timeslice execution time in ms , hardwired for now
+  
+
         public Executor(IScript script)
         {
+            InTimeSlice=false;
             m_Script = script;
             initEventFlags();
         }
@@ -146,6 +152,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             return eventFlags;
         }
 
+        public void ResetTimeSlice()
+            {
+            TimeSliceEnd = DateTime.Now.AddMilliseconds(MaxTimeSlice);
+            }
+
+        public bool CheckSlice()
+            {
+            return (DateTime.Now > TimeSliceEnd);
+            } 
+
         public EnumeratorInfo ExecuteEvent(string state, string FunctionName, object[] args, EnumeratorInfo Start, out Exception ex)
         {
             ex = null;
@@ -158,6 +174,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             //#endif
 
             #region Find Event
+            // not sure it's need
+            if (InTimeSlice)
+                return Start;
 
             MethodInfo ev = null;
             if (m_scriptType == null)
@@ -201,48 +220,59 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             else
                 thread = (IEnumerator)ev.Invoke(m_Script, args);
 
-            int i = 0;
+//            int i = 0;
             bool running = false;
             if (thread != null)
-            {
-                while (i < 10)
                 {
-                    i++;
-                    try
+                // not sure it's need
+                InTimeSlice = true;
+
+/*
+                while (i < 10)
                     {
+                    i++;
+ */
+                    try
+                        {
+                        ResetTimeSlice();
+
                         running = CallAndWait(timeout, thread);
+
+                        InTimeSlice = true;
                         //Sleep processing
                         if (running && thread.Current != null)
-                        {
-                            if (thread.Current is DateTime)
                             {
-                                if (Start == null)
+                            if (thread.Current is DateTime)
                                 {
+                                if (Start == null)
+                                    {
                                     Start = new EnumeratorInfo();
                                     Start.Key = System.Guid.NewGuid();
-                                }
+                                    }
                                 Start.SleepTo = (DateTime)thread.Current;
                                 lock (m_enumerators)
-                                {
+                                    {
                                     m_enumerators[Start.Key] = thread;
-                                }
+                                    }
                                 ex = null;
+                                InTimeSlice = false;
                                 return Start;
+                                }
                             }
-                        }
                         if (!running)
-                        {
-                            lock (m_enumerators)
                             {
+                            lock (m_enumerators)
+                                {
                                 if(Start != null)
                                     m_enumerators.Remove(Start.Key);
-                            }
+                                }
                             ex = null;
+                            InTimeSlice = false;
                             return null;
+                            }
                         }
-                    }
                     catch (Exception tie)
-                    {
+                        {
                         // Grab the inner exception and rethrow it, unless the inner
                         // exception is an EventAbortException as this indicates event
                         // invocation termination due to a state change.
@@ -255,70 +285,76 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
                             !(tie is EventAbortException) ||
                             !(tie is EventAbortException))
                             ex = tie;
+                        InTimeSlice = false;
                         return null;
-                    }
+                        }
+//                    }
                 }
-            }
             else
-            {
+                {
                 //No enumerator.... errr.... something went really wrong here
                 ex = null;
+                InTimeSlice = false;
                 return Start;
-            }
+                }
             if (Start == null)
-            {
+                {
                 Start = new EnumeratorInfo();
                 Start.Key = System.Guid.NewGuid();
-            }
+                }
 
             lock (m_enumerators)
-            {
+                {
                 m_enumerators[Start.Key] = thread;
-            }
+                }
             ex = null;
+            InTimeSlice = false;
             return Start;
-        }
+            }
 
         public delegate void FireEvent(IEnumerator thread, out Exception e);
 
         private bool CallAndWait(int timeout, IEnumerator enumerator)
-        {
+            {
             bool RetVal = true;
             FireEvent wrappedAction = delegate(IEnumerator en, out Exception e)
-            {
+                {
                 e = null;
                 try
-                {
+                    {
                     RetVal = enumerator.MoveNext();
-                }
+                    }
                 catch( Exception ex)
-                {
+                    {
                     e = ex;
-                }
-            };
+                    }
+                };
+
             Exception exception;
+            
             IAsyncResult result = wrappedAction.BeginInvoke(enumerator, out exception, null, null);
+
             if (((timeout != -1) && !result.IsCompleted) &&
-            (!result.AsyncWaitHandle.WaitOne(timeout, false) || !result.IsCompleted))
-            {
+                    (!result.AsyncWaitHandle.WaitOne(timeout, false) || !result.IsCompleted))
+                {
                 //If we don't kill processing, then we pass on
                 if (!killProcessing)
                     return true;
                 else
                     return false;
-            }
+                }
             else
-            {
+                {
                 wrappedAction.EndInvoke(out exception, result);
-            }
+                }
             //Return what we got
             if (exception != null)
-            {
+                {
                 //Throw the exception if we caught one
                 throw exception;
-            }
+                }
             return RetVal;
-        }
+            }
 
 
         protected void initEventFlags()

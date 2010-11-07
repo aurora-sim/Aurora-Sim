@@ -844,6 +844,7 @@ namespace OpenSim.Framework
             landData._regionID = _regionID;
             landData._regionHandle = _regionHandle;
             landData._infoUUID = _infoUUID;
+            landData._Maturity = _Maturity;
 
             landData._parcelAccessList.Clear();
             foreach (ParcelManager.ParcelAccessEntry entry in _parcelAccessList)
@@ -892,7 +893,7 @@ namespace OpenSim.Framework
             map["SalePrice"] = OSD.FromInteger(SalePrice);
             map["InfoUUID"] = OSD.FromUUID(InfoUUID);
             map["Dwell"] = OSD.FromInteger(Dwell);
-            map["Flags"] = OSD.FromUInteger(Flags);
+            map["Flags"] = OSD.FromInteger((int)Flags);
             map["Name"] = OSD.FromString(Name);
             map["Description"] = OSD.FromString(Description);
             map["UserLocation"] = OSD.FromVector3(UserLocation);
@@ -935,7 +936,7 @@ namespace OpenSim.Framework
             UserLocation = map["UserLocation"].AsVector3();
             Name = map["Name"].AsString();
             Description = map["Description"].AsString();
-            Flags = map["Flags"].AsUInteger();
+            Flags = (uint)map["Flags"].AsInteger();
             Dwell = map["Dwell"].AsInteger();
             InfoUUID = map["InfoUUID"].AsUUID();
             AuctionID = map["AuctionID"].AsUInteger();

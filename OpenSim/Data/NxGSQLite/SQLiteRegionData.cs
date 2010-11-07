@@ -21,7 +21,7 @@ namespace OpenSim.Data.SQLite
         public SQLiteRegionData(string connectionString, string realm)
                 : base(connectionString)
         {
-            m_Realm = realm;
+            m_Realm = realm.ToLower();
             m_connectionString = connectionString;
 
             using (SqliteConnection dbcon = new SqliteConnection(m_connectionString))

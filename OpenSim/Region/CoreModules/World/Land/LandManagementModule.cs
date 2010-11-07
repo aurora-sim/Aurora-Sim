@@ -1605,7 +1605,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                 }
                 if (extLandData.LandData == null)
                 {
-                    m_log.WarnFormat("[LAND]: Failed to find parcel {0} in region {1}", parcelID, info.RegionName); 
+                    m_log.WarnFormat("[LAND]: Failed to find parcel {0}", parcelID); 
                     return;
                 }
                 // we need to transfer the fake parcelID, not the one in landData, so the viewer can match it to the landmark.

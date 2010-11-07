@@ -56,6 +56,7 @@ namespace OpenSim.Services.GridService
         protected IAuthenticationService m_AuthenticationService = null;
         protected bool m_AllowDuplicateNames = false;
         protected bool m_AllowHypergridMapSearch = false;
+        protected bool m_UseSessionID = true;
         protected Dictionary<UUID, UUID> GridSessionIDs = new Dictionary<UUID, UUID>();
 
         public GridService(IConfigSource config)
@@ -68,6 +69,7 @@ namespace OpenSim.Services.GridService
             if (gridConfig != null)
             {
                 m_DeleteOnUnregister = gridConfig.GetBoolean("DeleteOnUnregister", true);
+                m_UseSessionID = !gridConfig.GetBoolean("DisableSessionID", false);
 
                 string authService = gridConfig.GetString("AuthenticationService", String.Empty);
 
@@ -224,7 +226,7 @@ namespace OpenSim.Services.GridService
             if (region != null)
             {
                 //If we already have a session, we need to check it
-                if (region.Data["sessionid"].ToString() != oldSessionID.ToString())
+                if (m_UseSessionID && region.Data["sessionid"].ToString() != oldSessionID.ToString())
                 {
                     m_log.Warn("[GRID SERVICE]: Region called register, but the sessionID they provided is wrong!");
                     return "Wrong Session ID";
@@ -259,7 +261,7 @@ namespace OpenSim.Services.GridService
             RegionData region = m_Database.Get(gregion.RegionID, scopeID);
             if (region != null)
             {
-                if (region.Data["sessionid"].ToString() != sessionID.ToString())
+                if (m_UseSessionID && region.Data["sessionid"].ToString() != sessionID.ToString())
                 {
                     m_log.Warn("[GRID SERVICE]: Region called UpdateMap, but provided incorrect SessionID! Possible attempt to disable a region!!");
                     return "Wrong Session ID";
@@ -302,7 +304,7 @@ namespace OpenSim.Services.GridService
             if (region == null)
                 return false;
 
-            if (region.Data["sessionid"].ToString() != SessionID.ToString())
+            if (m_UseSessionID && region.Data["sessionid"].ToString() != SessionID.ToString())
             {
                 m_log.Warn("[GRID SERVICE]: Region called deregister, but provided incorrect SessionID! Possible attempt to disable a region!!");
                 return false;

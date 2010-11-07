@@ -489,7 +489,7 @@ namespace Aurora.Modules
             {
                 if (DSC == null)
                     return;
-                DirLandReplyData[] Landdata = DSC.FindLandForSale("4294967295", int.MaxValue.ToString(), "0", 0, (uint)DirectoryManager.DirFindFlags.IncludePG);
+                DirLandReplyData[] Landdata = DSC.FindLandForSale("0", int.MaxValue.ToString(), "0", 0, 0);
                 
                 uint locX = 0;
                 uint locY = 0;
@@ -504,8 +504,17 @@ namespace Aurora.Modules
                     {
                         if (scene.RegionInfo.RegionID == landdata.RegionID)
                         {
-                            locX = scene.RegionInfo.RegionLocX;
-                            locY = scene.RegionInfo.RegionLocY;
+                            locX = scene.RegionInfo.RegionLocX * Constants.RegionSize;
+                            locY = scene.RegionInfo.RegionLocY * Constants.RegionSize;
+                        }
+                    }
+                    if (locY == 0 && locX == 0)
+                    {
+                        OpenSim.Services.Interfaces.GridRegion r = m_scene.GridService.GetRegionByUUID(UUID.Zero, landdata.RegionID);
+                        if (r != null)
+                        {
+                            locX = (uint)r.RegionLocX;
+                            locY = (uint)r.RegionLocY;
                         }
                     }
                     if (locY == 0 && locX == 0)
@@ -530,7 +539,7 @@ namespace Aurora.Modules
             {
                 if (DSC == null)
                     return;
-                DirLandReplyData[] Landdata = DSC.FindLandForSale("4294967295", int.MaxValue.ToString(), "0",0, 0);
+                DirLandReplyData[] Landdata = DSC.FindLandForSale("0", int.MaxValue.ToString(), "0",0, 0);
                 
                 uint locX = 0;
                 uint locY = 0;
@@ -587,8 +596,8 @@ namespace Aurora.Modules
                         continue;
                     OpenSim.Services.Interfaces.GridRegion region = m_scene.GridService.GetRegionByName(UUID.Zero, RegionName);
                     mapitem = new mapItemReply();
-                    mapitem.x = (uint)globalPos.X;
-                    mapitem.y = (uint)globalPos.Y;
+                    mapitem.x = (uint)globalPos.X + (Constants.RegionSize / 2);
+                    mapitem.y = (uint)globalPos.Y + (Constants.RegionSize / 2);
                     mapitem.id = UUID.Random();
                     mapitem.name = eventData.name;
                     mapitem.Extra = (int)eventdata.dateUTC;
@@ -618,8 +627,8 @@ namespace Aurora.Modules
                         continue;
                     OpenSim.Services.Interfaces.GridRegion region = m_scene.GridService.GetRegionByName(UUID.Zero, RegionName);
                     mapitem = new mapItemReply();
-                    mapitem.x = (uint)globalPos.X;
-                    mapitem.y = (uint)globalPos.Y;
+                    mapitem.x = (uint)globalPos.X + (Constants.RegionSize / 2);
+                    mapitem.y = (uint)globalPos.Y + (Constants.RegionSize / 2);
                     mapitem.id = UUID.Random();
                     mapitem.name = eventData.name;
                     mapitem.Extra = (int)eventdata.dateUTC;
@@ -648,8 +657,8 @@ namespace Aurora.Modules
                         continue;
                     OpenSim.Services.Interfaces.GridRegion region = m_scene.GridService.GetRegionByName(UUID.Zero, RegionName);
                     mapitem = new mapItemReply();
-                    mapitem.x = (uint)globalPos.X;
-                    mapitem.y = (uint)globalPos.Y;
+                    mapitem.x = (uint)globalPos.X + (Constants.RegionSize / 2);
+                    mapitem.y = (uint)globalPos.Y + (Constants.RegionSize / 2);
                     mapitem.id = UUID.Random();
                     mapitem.name = eventData.name;
                     mapitem.Extra = (int)eventdata.dateUTC;
