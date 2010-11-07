@@ -1146,7 +1146,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             //Backup uses the new taints system
             m_backingup = true; //Clear out all other threads
-            ProcessPrimBackupTaints(false);
+            ProcessPrimBackupTaints(true);
 
             //Replaced by the taints system as above
             /*List<EntityBase> entities = GetEntities();
@@ -5408,16 +5408,16 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Backup
 
-        private HashSet<SceneObjectGroup> m_backupTaintedPrims = new HashSet<SceneObjectGroup>();
-        private HashSet<SceneObjectGroup> m_secondaryBackupTaintedPrims = new HashSet<SceneObjectGroup>();
+        private Dictionary<UUID, SceneObjectGroup> m_backupTaintedPrims = new Dictionary<UUID, SceneObjectGroup>();
+        private Dictionary<UUID, SceneObjectGroup> m_secondaryBackupTaintedPrims = new Dictionary<UUID, SceneObjectGroup>();
         private DateTime runSecondaryBackup = DateTime.Now;
 
         public void AddPrimBackupTaint(SceneObjectGroup sceneObjectGroup)
         {
             lock (m_backupTaintedPrims)
             {
-                if (!m_backupTaintedPrims.Contains(sceneObjectGroup))
-                    m_backupTaintedPrims.Add(sceneObjectGroup);
+                if (!m_backupTaintedPrims.ContainsKey(sceneObjectGroup.UUID))
+                    m_backupTaintedPrims.Add(sceneObjectGroup.UUID, sceneObjectGroup);
             }
         }
 
@@ -5445,7 +5445,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     if (m_backupTaintedPrims.Count != 0)
                     {
-                        backupPrims = new HashSet<SceneObjectGroup>(m_backupTaintedPrims);
+                        backupPrims = new HashSet<SceneObjectGroup>(m_backupTaintedPrims.Values);
                         m_backupTaintedPrims.Clear();
                     }
                 }
@@ -5460,7 +5460,7 @@ namespace OpenSim.Region.Framework.Scenes
                         if (m_secondaryBackupTaintedPrims.Count != 0)
                         {
                             //Check this set
-                            foreach (SceneObjectGroup grp in m_secondaryBackupTaintedPrims)
+                            foreach (SceneObjectGroup grp in m_secondaryBackupTaintedPrims.Values)
                             {
                                 backupPrims.Add(grp);
                             }
@@ -5484,17 +5484,17 @@ namespace OpenSim.Region.Framework.Scenes
                         lock (m_secondaryBackupTaintedPrims)
                             lock (m_backupTaintedPrims)
                                 //Make sure its not in either so that we don't duplicate checking
-                                if (!m_secondaryBackupTaintedPrims.Contains(grp) &&
-                                    !m_backupTaintedPrims.Contains(grp))
-                                    m_secondaryBackupTaintedPrims.Add(grp);
+                                if (!m_secondaryBackupTaintedPrims.ContainsKey(grp.UUID) &&
+                                    !m_backupTaintedPrims.ContainsKey(grp.UUID))
+                                    m_secondaryBackupTaintedPrims.Add(grp.UUID, grp);
                     }
                     if (shouldReaddToLoopNow)
                     {
                         //Readd it into the seconary backup loop then as its not time for it to backup yet
                         lock (m_backupTaintedPrims)
                             //Make sure its not in either so that we don't duplicate checking
-                            if (!m_backupTaintedPrims.Contains(grp))
-                                m_backupTaintedPrims.Add(grp);
+                            if (!m_backupTaintedPrims.ContainsKey(grp.UUID))
+                                m_backupTaintedPrims.Add(grp.UUID, grp);
                     }
                 }
             }

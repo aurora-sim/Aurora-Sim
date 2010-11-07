@@ -1535,29 +1535,28 @@ namespace OpenSim.Region.Framework.Scenes
                 partList = new List<SceneObjectPart>(m_partsList);
             }
 
-            partList.Sort(delegate(SceneObjectPart p1, SceneObjectPart p2)
+            partList.Sort(LinkSetCompare);
+
+            if (userExposed)
             {
-                return p1.LinkNum.CompareTo(p2.LinkNum);
-            }
-            );
+                /// may need to create a new Physics actor.
+                if (dupe.RootPart.PhysActor != null && userExposed)
+                {
+                    PrimitiveBaseShape pbs = dupe.RootPart.Shape;
+                    dupe.RootPart.PhysActor.LocalID = dupe.RootPart.LocalId;
 
-            /// may need to create a new Physics actor.
-            if (dupe.RootPart.PhysActor != null && userExposed)
-            {
-                PrimitiveBaseShape pbs = dupe.RootPart.Shape;
-                dupe.RootPart.PhysActor.LocalID = dupe.RootPart.LocalId;
+                    dupe.RootPart.PhysActor.PIDTarget = RootPart.PhysActor.PIDTarget;
+                    dupe.RootPart.PhysActor.PIDTau = RootPart.PhysActor.PIDTau;
+                    dupe.RootPart.PhysActor.PIDActive = RootPart.PhysActor.PIDActive;
 
-                dupe.RootPart.PhysActor.PIDTarget = RootPart.PhysActor.PIDTarget;
-                dupe.RootPart.PhysActor.PIDTau = RootPart.PhysActor.PIDTau;
-                dupe.RootPart.PhysActor.PIDActive = RootPart.PhysActor.PIDActive;
+                    if (dupe.RootPart.VolumeDetectActive)
+                        dupe.RootPart.PhysActor.SetVolumeDetect(1);
 
-                if (dupe.RootPart.VolumeDetectActive)
-                    dupe.RootPart.PhysActor.SetVolumeDetect(1);
+                    dupe.RootPart.PhysActor.Selected = false;
 
-                dupe.RootPart.PhysActor.Selected = false;
+                    dupe.RootPart.ScriptSetPhysicsStatus(dupe.RootPart.PhysActor.IsPhysical);
 
-                dupe.RootPart.ScriptSetPhysicsStatus(dupe.RootPart.PhysActor.IsPhysical);
-
+                }
             }
 
             foreach (SceneObjectPart part in partList)
@@ -1576,6 +1575,11 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             return dupe;
+        }
+
+        public int LinkSetCompare(SceneObjectPart p1, SceneObjectPart p2)
+        {
+            return p1.LinkNum.CompareTo(p2.LinkNum);
         }
 
         /// <summary>

@@ -843,6 +843,7 @@ namespace OpenSim.Region.Framework.Scenes
             return (avatar != null);
         }
 
+        protected internal Dictionary<uint, SceneObjectGroup> SceneObjectGroupsByLocalID = new Dictionary<uint, SceneObjectGroup>();
         /// <summary>
         /// Get a scene object group that contains the prim with the given local id
         /// </summary>
@@ -864,19 +865,29 @@ namespace OpenSim.Region.Framework.Scenes
 
             m_log.DebugFormat("Entered deprecated GetGroupByPrim with localID {0}", localID);
 
-            EntityBase[] EntityList = GetEntities();
-            foreach (EntityBase ent in EntityList)
+            SceneObjectGroup sog;
+            lock (SceneObjectGroupsByLocalID)
+                SceneObjectGroupsByLocalID.TryGetValue(localID, out sog);
+
+            if (sog != null)
+            {
+                if (sog.HasChildPrim(localID))
+                    return sog;
+                SceneObjectGroupsByLocalID.Remove(localID);
+            }
+
+            EntityBase[] entityList = GetEntities();
+            foreach (EntityBase ent in entityList)
             {
                 //m_log.DebugFormat("Looking at entity {0}", ent.UUID);
                 if (ent is SceneObjectGroup)
                 {
-                    if (((SceneObjectGroup)ent).GetChildPart(localID) != null)
+                    sog = (SceneObjectGroup)ent;
+                    if (sog.HasChildPrim(localID))
                     {
-                        return (SceneObjectGroup)ent;
-                    }
-                    if(ent.LocalId == localID)
-                    {
-                        return (SceneObjectGroup)ent;
+                        lock (SceneObjectGroupsByLocalID)
+                            SceneObjectGroupsByLocalID[localID] = sog;
+                        return sog;
                     }
                 }
             }

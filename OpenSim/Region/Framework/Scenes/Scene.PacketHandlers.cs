@@ -187,43 +187,47 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 if (entity != null)
                     EntitiesToUpdate.Add(entity);
-                /*foreach (EntityBase ent in EntityList)
+                else
                 {
-                    if (ent is SceneObjectGroup)
+                    EntityBase[] EntityList = Entities.GetEntities();
+                    foreach (EntityBase ent in EntityList)
                     {
-                        if (((SceneObjectGroup)ent).LocalId == primLocalID)
+                        if (ent is SceneObjectGroup)
                         {
+                            if (((SceneObjectGroup)ent).LocalId == primLocalID)
+                            {
 
-                            ((SceneObjectGroup)ent).GetProperties(remoteClient);
-                            ((SceneObjectGroup)ent).IsSelected = true;
-                            // A prim is only tainted if it's allowed to be edited by the person clicking it.
-                            if (Permissions.CanEditObject(((SceneObjectGroup)ent).UUID, remoteClient.AgentId)
-                                || Permissions.CanMoveObject(((SceneObjectGroup)ent).UUID, remoteClient.AgentId))
-                            {
-                                EventManager.TriggerParcelPrimCountTainted();
-                            }
-                            prim = ((SceneObjectGroup)ent).RootPart;
-                            break;
-                        }
-                        else
-                        {
-                            // We also need to check the children of this prim as they
-                            // can be selected as well and send property information
-                            bool foundPrim = false;
-                            foreach (SceneObjectPart child in ((SceneObjectGroup)ent).ChildrenList)
-                            {
-                                if (child.LocalId == primLocalID)
+                                ((SceneObjectGroup)ent).GetProperties(remoteClient);
+                                ((SceneObjectGroup)ent).IsSelected = true;
+                                // A prim is only tainted if it's allowed to be edited by the person clicking it.
+                                if (Permissions.CanEditObject(((SceneObjectGroup)ent).UUID, remoteClient.AgentId)
+                                    || Permissions.CanMoveObject(((SceneObjectGroup)ent).UUID, remoteClient.AgentId))
                                 {
-                                    child.GetProperties(remoteClient);
-                                    foundPrim = true;
-                                    prim = child;
-                                    break;
+                                    EventManager.TriggerParcelPrimCountTainted();
                                 }
+                                prim = ((SceneObjectGroup)ent).RootPart;
+                                break;
                             }
-                            if (foundPrim) break;
+                            else
+                            {
+                                // We also need to check the children of this prim as they
+                                // can be selected as well and send property information
+                                bool foundPrim = false;
+                                foreach (SceneObjectPart child in ((SceneObjectGroup)ent).ChildrenList)
+                                {
+                                    if (child.LocalId == primLocalID)
+                                    {
+                                        child.GetProperties(remoteClient);
+                                        foundPrim = true;
+                                        prim = child;
+                                        break;
+                                    }
+                                }
+                                if (foundPrim) break;
+                            }
                         }
                     }
-                }*/
+                }
             }
             if (EntitiesToUpdate.Count != 0)
                 remoteClient.SendObjectPropertiesReply(EntitiesToUpdate);
