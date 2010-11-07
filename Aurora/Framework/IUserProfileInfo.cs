@@ -21,7 +21,7 @@ namespace Aurora.Framework
         PastPrelude = 10
     }
 
-    public class IAgentInfo
+    public class IAgentInfo : IDataTransferable
     {
         /// <summary>
         /// The ID value for this user
@@ -58,49 +58,51 @@ namespace Aurora.Framework
         /// </summary>
         public bool LanguageIsPublic = true;
 
-        public IAgentInfo() { }
-
-        public IAgentInfo(Dictionary<string, object> kvp)
+        public override Dictionary<string, object> ToKeyValuePairs()
         {
-            PrincipalID = UUID.Zero;
-            if (kvp.ContainsKey("PrincipalID") && kvp["PrincipalID"] != null)
-                PrincipalID = new UUID(kvp["PrincipalID"].ToString());
-            Flags = 0;
-            if (kvp.ContainsKey("Flags") && kvp["Flags"] != null)
-                Flags = (IAgentFlags)Convert.ToUInt32(kvp["Flags"].ToString());
-            MaxMaturity = 0;
-            if (kvp.ContainsKey("MaxMaturity") && kvp["MaxMaturity"] != null)
-                MaxMaturity = Convert.ToInt32(kvp["MaxMaturity"].ToString());
-            MaturityRating = 0;
-            if (kvp.ContainsKey("MaturityRating") && kvp["MaturityRating"] != null)
-                MaturityRating = Convert.ToInt32(kvp["MaturityRating"].ToString());
-            Language = "";
-            if (kvp.ContainsKey("Language") && kvp["Language"] != null)
-                Language = kvp["Language"].ToString();
-            AcceptTOS = true;
-            if (kvp.ContainsKey("AcceptTOS") && kvp["AcceptTOS"] != null)
-                AcceptTOS = Convert.ToBoolean(kvp["AcceptTOS"].ToString());
-            LanguageIsPublic = true;
-            if (kvp.ContainsKey("LanguageIsPublic") && kvp["LanguageIsPublic"] != null)
-                LanguageIsPublic = Convert.ToBoolean(kvp["LanguageIsPublic"].ToString());
+            return Util.OSDToDictionary(ToOSD());
         }
 
-        public Dictionary<string, object> ToKeyValuePairs()
+        public override OSDMap ToOSD()
         {
-            Dictionary<string, object> result = new Dictionary<string, object>();
-            result["PrincipalID"] = PrincipalID.ToString();
-            result["Flags"] = (uint)Flags;
-            result["MaxMaturity"] = MaxMaturity;
-            result["MaturityRating"] = MaturityRating;
-            result["Language"] = Language.ToString();
-            result["AcceptTOS"] = AcceptTOS.ToString();
-            result["LanguageIsPublic"] = LanguageIsPublic.ToString();
+            OSDMap map = new OSDMap();
 
-            return result;
+            map.Add("PrincipalID", OSD.FromUUID(PrincipalID));
+            map.Add("Flags", OSD.FromInteger((int)Flags));
+            map.Add("MaxMaturity", OSD.FromInteger(MaxMaturity));
+            map.Add("MaturityRating", OSD.FromInteger(MaturityRating));
+            map.Add("Language", OSD.FromString(Language));
+            map.Add("AcceptTOS", OSD.FromBoolean(AcceptTOS));
+            map.Add("LanguageIsPublic", OSD.FromBoolean(LanguageIsPublic));
+            
+            return map;
+        }
+
+        public override void FromOSD(OSDMap map)
+        {
+            PrincipalID = map["PrincipalID"].AsUUID();
+            Flags = (IAgentFlags)map["Flags"].AsInteger();
+            MaxMaturity = Convert.ToInt32(map["MaxMaturity"].AsInteger());
+            MaturityRating = Convert.ToInt32(map["MaturityRating"].AsInteger());
+            Language = map["Language"].AsString();
+            AcceptTOS = map["AcceptTOS"].AsBoolean();
+            LanguageIsPublic = map["LanguageIsPublic"].AsBoolean();
+        }
+
+        public override void FromKVP(Dictionary<string, object> RetVal)
+        {
+            FromOSD(Util.DictionaryToOSD(RetVal));
+        }
+
+        public override IDataTransferable Duplicate()
+        {
+            IAgentInfo m = new IAgentInfo();
+            m.FromOSD(ToOSD());
+            return m;
         }
     }
 
-    public class IUserProfileInfo
+    public class IUserProfileInfo : IDataTransferable
     {
         /// <summary>
         /// The ID value for this user
@@ -208,108 +210,94 @@ namespace Aurora.Framework
         /// </summary>
         public Dictionary<string, object> Classifieds = new Dictionary<string,object>();
 
-        public Dictionary<string, object> ToKeyValuePairs()
+        public override Dictionary<string, object> ToKeyValuePairs()
         {
-            Dictionary<string, object> result = new Dictionary<string, object>();
-            result["PrincipalID"] = PrincipalID.ToString();
-            result["AllowPublish"] = AllowPublish.ToString();
-            result["MaturePublish"] = MaturePublish.ToString();
-            result["WantToMask"] = Interests.WantToMask;
-            result["WantToText"] = Interests.WantToText;
-            result["CanDoMask"] = Interests.CanDoMask;
-            result["CanDoText"] = Interests.CanDoText;
-            result["Languages"] = Interests.Languages;
-            result["AboutText"] = AboutText.ToString();
-            result["FirstLifeImage"] = FirstLifeImage.ToString();
-            result["FirstLifeAboutText"] = FirstLifeAboutText;
-            result["Image"] = Image.ToString();
-            result["WebURL"] = WebURL;
-            result["Created"] = Created.ToString();
-            result["DisplayName"] = DisplayName;
-            result["Partner"] = Partner.ToString();
-            result["Visible"] = Visible.ToString();
-            result["AArchiveName"] = AArchiveName.ToString();
-            result["CustomType"] = CustomType.ToString();
-            result["IMViaEmail"] = IMViaEmail.ToString();
-            result["IsNewUser"] = IsNewUser.ToString();
-            result["MembershipGroup"] = MembershipGroup.ToString();
-
-            result["Classifieds"] = OSDParser.SerializeJsonString(Util.DictionaryToOSD(Classifieds));
-            result["Picks"] = OSDParser.SerializeJsonString(Util.DictionaryToOSD(Picks));
-            result["Notes"] = OSDParser.SerializeJsonString(Util.DictionaryToOSD(Notes));
-
-            return result;
+            return Util.OSDToDictionary(ToOSD());
         }
 
-        // http://social.msdn.microsoft.com/forums/en-US/csharpgeneral/thread/68f7ca38-5cd1-411f-b8d4-e4f7a688bc03
-        // By: A Million Lemmings
-        public string ConvertDecString(int dvalue)
+        public override OSDMap ToOSD()
         {
+            OSDMap map = new OSDMap();
+            map.Add("PrincipalID", OSD.FromUUID(PrincipalID));
+            map.Add("AllowPublish", OSD.FromBoolean(AllowPublish));
+            map.Add("MaturePublish", OSD.FromBoolean(MaturePublish));
+            map.Add("WantToMask", OSD.FromUInteger(Interests.WantToMask));
+            map.Add("WantToText", OSD.FromString(Interests.WantToText));
+            map.Add("CanDoMask", OSD.FromUInteger(Interests.CanDoMask));
+            map.Add("CanDoText", OSD.FromString(Interests.CanDoText));
+            map.Add("Languages", OSD.FromString(Interests.Languages));
+            map.Add("AboutText", OSD.FromString(AboutText));
+            map.Add("FirstLifeImage", OSD.FromUUID(FirstLifeImage));
+            map.Add("FirstLifeAboutText", OSD.FromString(FirstLifeAboutText));
+            map.Add("Image", OSD.FromUUID(Image));
+            map.Add("WebURL", OSD.FromString(WebURL));
+            map.Add("Created", OSD.FromInteger(Created));
+            map.Add("DisplayName", OSD.FromString(DisplayName));
+            map.Add("Partner", OSD.FromUUID(Partner));
+            map.Add("Visible", OSD.FromBoolean(Visible));
+            map.Add("AArchiveName", OSD.FromString(AArchiveName));
+            map.Add("CustomType", OSD.FromString(CustomType));
+            map.Add("IMViaEmail", OSD.FromBoolean(IMViaEmail));
+            map.Add("IsNewUser", OSD.FromBoolean(IsNewUser));
+            map.Add("MembershipGroup", OSD.FromString(MembershipGroup));
 
-            string CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-            string retVal = string.Empty;
-
-            double value = Convert.ToDouble(dvalue);
-
-            do
-            {
-
-                double remainder = value - (26 * Math.Truncate(value / 26));
-
-                retVal = retVal + CHARS.Substring((int)remainder, 1);
-
-                value = Math.Truncate(value / 26);
-
-            }
-            while (value > 0);
-
-
-
-            return retVal;
-
+            map.Add("Classifieds", OSD.FromString(OSDParser.SerializeJsonString(Util.DictionaryToOSD(Classifieds))));
+            map.Add("Picks", OSD.FromString(OSDParser.SerializeJsonString(Util.DictionaryToOSD(Picks))));
+            map.Add("Notes", OSD.FromString(OSDParser.SerializeJsonString(Util.DictionaryToOSD(Notes))));
+            
+            return map;
         }
 
-        public IUserProfileInfo() { }
-
-        public IUserProfileInfo(Dictionary<string, object> main)
+        public override void FromOSD(OSDMap map)
         {
-            PrincipalID = new UUID(main["PrincipalID"].ToString());
-            AllowPublish = Convert.ToBoolean(main["AllowPublish"].ToString());
-            MaturePublish = Convert.ToBoolean(main["MaturePublish"].ToString());
+            PrincipalID = map["PrincipalID"].AsUUID();
+            AllowPublish = map["AllowPublish"].AsBoolean();
+            MaturePublish = map["MaturePublish"].AsBoolean();
 
             //Interests
             Interests = new ProfileInterests();
-            Interests.WantToMask = uint.Parse(main["WantToMask"].ToString());
-            Interests.WantToText = main["WantToText"].ToString();
-            Interests.CanDoMask = uint.Parse(main["CanDoMask"].ToString());
-            Interests.CanDoText = main["CanDoText"].ToString();
-            Interests.Languages = main["Languages"].ToString();
+            Interests.WantToMask = map["WantToMask"].AsUInteger();
+            Interests.WantToText = map["WantToText"].AsString();
+            Interests.CanDoMask = map["CanDoMask"].AsUInteger();
+            Interests.CanDoText = map["CanDoText"].AsString();
+            Interests.Languages = map["Languages"].AsString();
             //End interests
 
-            if (main.ContainsKey("Classifieds"))
-                Classifieds = Util.OSDToDictionary((OSDMap)OSDParser.DeserializeJson(main["Classifieds"].ToString()));
+            if (map.ContainsKey("Classifieds"))
+                Classifieds = Util.OSDToDictionary((OSDMap)OSDParser.DeserializeJson(map["Classifieds"].AsString()));
 
-            if (main.ContainsKey("Picks"))
-                Picks = Util.OSDToDictionary((OSDMap)OSDParser.DeserializeJson(main["Picks"].ToString()));
+            if (map.ContainsKey("Picks"))
+                Picks = Util.OSDToDictionary((OSDMap)OSDParser.DeserializeJson(map["Picks"].AsString()));
 
-            if(main.ContainsKey("Notes"))
-                Notes = Util.OSDToDictionary((OSDMap)OSDParser.DeserializeJson(main["Notes"].ToString()));
-            
-            AboutText = main["AboutText"].ToString();
-            FirstLifeImage = new UUID(main["FirstLifeImage"].ToString());
-            FirstLifeAboutText = main["FirstLifeAboutText"].ToString();
-            Image = new UUID(main["Image"].ToString());
-            WebURL = main["WebURL"].ToString();
-            Created = Convert.ToInt32(main["Created"].ToString());
-            DisplayName = main["DisplayName"].ToString();
-            Partner = new UUID(main["Partner"].ToString());
-            Visible = Convert.ToBoolean(main["Visible"].ToString());
-            AArchiveName = main["AArchiveName"].ToString();
-            CustomType = main["CustomType"].ToString();
-            IMViaEmail = Convert.ToBoolean(main["IMViaEmail"].ToString());
-            IsNewUser = Convert.ToBoolean(main["IsNewUser"].ToString());
-            MembershipGroup = main["MembershipGroup"].ToString();
+            if (map.ContainsKey("Notes"))
+                Notes = Util.OSDToDictionary((OSDMap)OSDParser.DeserializeJson(map["Notes"].AsString()));
+
+            AboutText = map["AboutText"].AsString();
+            FirstLifeImage = map["FirstLifeImage"].AsUUID();
+            FirstLifeAboutText = map["FirstLifeAboutText"].AsString();
+            Image = map["Image"].AsUUID();
+            WebURL = map["WebURL"].AsString();
+            Created = map["Created"].AsInteger();
+            DisplayName = map["DisplayName"].AsString();
+            Partner = map["Partner"].AsUUID();
+            Visible = map["Visible"].AsBoolean();
+            AArchiveName = map["AArchiveName"].AsString();
+            CustomType = map["CustomType"].AsString();
+            IMViaEmail = map["IMViaEmail"].AsBoolean();
+            IsNewUser = map["IsNewUser"].AsBoolean();
+            MembershipGroup = map["MembershipGroup"].AsString();
+        }
+
+        public override void FromKVP(Dictionary<string, object> RetVal)
+        {
+            FromOSD(Util.DictionaryToOSD(RetVal));
+        }
+
+        public override IDataTransferable Duplicate()
+        {
+            IUserProfileInfo m = new IUserProfileInfo();
+            m.FromOSD(ToOSD());
+            return m;
         }
     }
 

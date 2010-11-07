@@ -112,7 +112,8 @@ namespace Aurora.Modules
 
 
             replyData = ServerUtils.ParseXmlResponse(file[2]);
-            IUserProfileInfo UPI = new IUserProfileInfo(replyData["result"] as Dictionary<string, object>);
+            IUserProfileInfo UPI = new IUserProfileInfo();
+            UPI.FromKVP(replyData["result"] as Dictionary<string, object>);
             //Update the principle ID to the new user.
             UPI.PrincipalID = UDA.PrincipalID;
 

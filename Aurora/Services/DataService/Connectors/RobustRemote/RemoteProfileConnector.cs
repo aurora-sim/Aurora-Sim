@@ -69,14 +69,13 @@ namespace Aurora.Services.DataService
                         if (!replyData.ContainsKey("result"))
                             return null;
 
-                        
-                        Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
                         IUserProfileInfo profile = null;
-                        foreach (object f in replyvalues)
+                        foreach (object f in replyData.Values)
                         {
                             if (f is Dictionary<string, object>)
                             {
-                                profile = new IUserProfileInfo((Dictionary<string, object>)f);
+                                profile = new IUserProfileInfo();
+                                profile.FromKVP((Dictionary<string, object>)f);
                             }
                             else
                                 m_log.DebugFormat("[AuroraRemoteProfileConnector]: GetProfile {0} received invalid response type {1}",

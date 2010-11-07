@@ -1654,7 +1654,8 @@ namespace OpenSim.Server.Handlers.AuroraData
                 return Failedencoding.GetBytes(FailedxmlString);
             }
 
-            IUserProfileInfo UserProfile = new IUserProfileInfo(request);
+            IUserProfileInfo UserProfile = new IUserProfileInfo();
+            UserProfile.FromKVP(request);
             ProfileConnector.UpdateUserProfile(UserProfile);
             result["result"] = "Successful";
 

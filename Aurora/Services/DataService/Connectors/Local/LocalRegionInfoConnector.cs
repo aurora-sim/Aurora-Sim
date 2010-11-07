@@ -11,13 +11,16 @@ using OpenMetaverse.StructuredData;
 
 namespace Aurora.Services.DataService
 {
+    //Slated to be fixed
+    // TODO: Actually fix this
     public class LocalRegionInfoConnector : IRegionInfoConnector, IAuroraDataPlugin
     {
         private IGenericData GD = null;
 
         public void Initialize(IGenericData GenericData, IConfigSource source, string defaultConnectionString)
         {
-            if (source.Configs["AuroraConnectors"].GetString("RegionInfoConnector", "LocalConnector") == "LocalConnector")
+            //Disabled for now until it is fixed
+            /*if (source.Configs["AuroraConnectors"].GetString("RegionInfoConnector", "LocalConnector") == "LocalConnector")
             {
                 GD = GenericData;
 
@@ -27,7 +30,7 @@ namespace Aurora.Services.DataService
                 GD.ConnectToDatabase(defaultConnectionString);
 
                 DataManager.DataManager.RegisterPlugin(Name, this);
-            }
+            }*/
         }
 
         public string Name

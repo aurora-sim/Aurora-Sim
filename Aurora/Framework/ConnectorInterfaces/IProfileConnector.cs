@@ -19,7 +19,7 @@ namespace Aurora.Framework
         IUserProfileInfo GetUserProfile(UUID agentID);
 
         /// <summary>
-        /// Updates the user's profile
+        /// Updates the user's profile (Note: the user must already have a profile created)
         /// </summary>
         /// <param name="Profile"></param>
         /// <returns></returns>

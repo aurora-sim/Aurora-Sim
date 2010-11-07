@@ -221,6 +221,8 @@ namespace OpenSim.Region.Framework.Scenes
             // If this is an update for our own avatar give it the highest priority
             if (client.AgentId == entity.UUID)
                 return 0.0;
+            if (entity == null)
+                return double.NaN;
             if (entity is ScenePresence)
                 return 1.0;
 
@@ -244,7 +246,10 @@ namespace OpenSim.Region.Framework.Scenes
             // Objects avatars are sitting on should be prioritized more
             if (entity is SceneObjectPart)
             {
-                if (presence != null && presence.SittingOnUUID == ((SceneObjectPart)entity).ParentGroup.RootPart.UUID ||
+                if (presence != null &&
+                    ((SceneObjectPart)entity).ParentGroup != null &&
+                    ((SceneObjectPart)entity).ParentGroup.RootPart != null &&
+                    presence.SittingOnUUID == ((SceneObjectPart)entity).ParentGroup.RootPart.UUID ||
                     presence.SittingOnID == ((SceneObjectPart)entity).ParentGroup.RootPart.LocalId)
                 {
                     //Objects that are physical get more priority.
@@ -257,7 +262,9 @@ namespace OpenSim.Region.Framework.Scenes
             }
             if (entity is SceneObjectGroup)
             {
-                if (presence != null && presence.SittingOnUUID == ((SceneObjectGroup)entity).RootPart.UUID ||
+                if (presence != null &&
+                    ((SceneObjectGroup)entity).RootPart != null && 
+                    presence.SittingOnUUID == ((SceneObjectGroup)entity).RootPart.UUID ||
                     presence.SittingOnID == ((SceneObjectGroup)entity).RootPart.LocalId)
                 {
                     //Objects that are physical get more priority.
@@ -298,14 +305,18 @@ namespace OpenSim.Region.Framework.Scenes
 
                     if (entity is SceneObjectPart)
                     {
-                        PhysicsActor physActor = ((SceneObjectPart)entity).ParentGroup.RootPart.PhysActor;
-                        if (physActor == null || physActor.IsPhysical)
-                            priority /= 2; //Emphasize physical objs
-
-                        if (((SceneObjectPart)entity).ParentGroup.RootPart.IsAttachment)
+                        if (((SceneObjectPart)entity).ParentGroup != null &&
+                            ((SceneObjectPart)entity).ParentGroup.RootPart != null)
                         {
-                            //Attachments are always high!
-                            priority = 1.0;
+                            PhysicsActor physActor = ((SceneObjectPart)entity).ParentGroup.RootPart.PhysActor;
+                            if (physActor == null || physActor.IsPhysical)
+                                priority /= 2; //Emphasize physical objs
+
+                            if (((SceneObjectPart)entity).ParentGroup.RootPart.IsAttachment)
+                            {
+                                //Attachments are always high!
+                                priority = 1.0;
+                            }
                         }
                     }
                     //Closest first!
@@ -315,7 +326,6 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     // Child agent. Use the normal distance method
                     Vector3 presencePos = presence.AbsolutePosition;
-
 
                     return Vector3.DistanceSquared(presencePos, entityPos);
                 }

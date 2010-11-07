@@ -79,7 +79,8 @@ namespace Aurora.Services.DataService
                         {
                             if (f is Dictionary<string, object>)
                             {
-                                agent = new IAgentInfo((Dictionary<string, object>)f);
+                                agent = new IAgentInfo();
+                                agent.FromKVP((Dictionary<string, object>)f);
                                 m_cache.AddOrUpdate(PrincipalID, agent, new TimeSpan(0,30,0));
                             }
                             else

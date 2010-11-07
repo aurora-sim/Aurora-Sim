@@ -92,7 +92,8 @@ namespace OpenSim.Region.Framework.Scenes
         private int m_RestartTimerCounter;
         private readonly Timer m_restartTimer = new Timer(15000); // Wait before firing
         private int m_incrementsof15seconds;
-        public volatile int m_backingup = 0;
+        public volatile bool m_backingup = false;
+        private DateTime m_lastRanBackupInHeartbeat = DateTime.MinValue;
         private Dictionary<UUID, ReturnInfo> m_returns = new Dictionary<UUID, ReturnInfo>();
         private Dictionary<UUID, SceneObjectGroup> m_groupsWithTargets = new Dictionary<UUID, SceneObjectGroup>();
         private Object m_heartbeatLock = new Object();
@@ -1148,7 +1149,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_log.Debug("[SCENE]: Persisting changed objects");
 
             //Backup uses the new taints system
-            m_backingup += 10; //Clear out all other threads
+            m_backingup = true; //Clear out all other threads
             ProcessPrimBackupTaints(false);
 
             //Replaced by the taints system as above
@@ -2185,9 +2186,13 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         private void UpdateStorageBackup()
         {
-            if (m_backingup == 0)//0 threads looping
+            //Check every min persistant times as well except when it is set to 0
+            if (!m_backingup || (m_lastRanBackupInHeartbeat.Ticks > DateTime.Now.Ticks
+                && m_dontPersistBefore != 0))
             {
-                m_backingup++;
+                //Add the time now plus minimum persistance time so that we can force a run if it goes wrong
+                m_lastRanBackupInHeartbeat = DateTime.Now.AddMinutes((m_dontPersistBefore / 10000000L));
+                m_backingup = true;
                 Util.FireAndForget(BackupWaitCallback);
             }
         }
@@ -2220,7 +2225,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             //EventManager.TriggerOnBackup(DataStore);
             ProcessPrimBackupTaints(forced);
-            m_backingup--;
+            m_backingup = false;
         }
 
         /// <summary>
@@ -2231,7 +2236,9 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (group != null)
             {
-                group.ProcessBackup(SimulationDataService, true);
+                bool shouldReaddToLoop;
+                bool shouldReaddToLoopNow;
+                group.ProcessBackup(SimulationDataService, true, out shouldReaddToLoop, out shouldReaddToLoopNow);
             }
         }
 
@@ -5406,6 +5413,8 @@ namespace OpenSim.Region.Framework.Scenes
         #region Backup
 
         private HashSet<SceneObjectGroup> m_backupTaintedPrims = new HashSet<SceneObjectGroup>();
+        private HashSet<SceneObjectGroup> m_secondaryBackupTaintedPrims = new HashSet<SceneObjectGroup>();
+        private DateTime runSecondaryBackup = DateTime.Now;
 
         public void AddPrimBackupTaint(SceneObjectGroup sceneObjectGroup)
         {
@@ -5423,7 +5432,6 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void ProcessPrimBackupTaints(bool forced)
         {
-            m_backingup++;
             HashSet<SceneObjectGroup> backupPrims = new HashSet<SceneObjectGroup>();
             if (forced)
             {
@@ -5439,23 +5447,61 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 lock (m_backupTaintedPrims)
                 {
-                    if (m_backupTaintedPrims.Count == 0)
-                        return;
-                    backupPrims = new HashSet<SceneObjectGroup>(m_backupTaintedPrims);
-                    m_backupTaintedPrims.Clear();
+                    if (m_backupTaintedPrims.Count != 0)
+                    {
+                        backupPrims = new HashSet<SceneObjectGroup>(m_backupTaintedPrims);
+                        m_backupTaintedPrims.Clear();
+                    }
+                }
+                //The seconary backup storage is so that we do not check every time and kill checking for updates that are not ready to persist yet
+                // So it runs every X minutes depending on how long the minimum persistance time is
+                if (runSecondaryBackup.Ticks < DateTime.Now.Ticks)
+                {
+                    //Add the min persistance time to now to get the new time
+                    runSecondaryBackup = DateTime.Now.AddMinutes((m_dontPersistBefore / 10000000L));
+                    lock (m_secondaryBackupTaintedPrims)
+                    {
+                        if (m_secondaryBackupTaintedPrims.Count != 0)
+                        {
+                            //Check this set
+                            foreach (SceneObjectGroup grp in m_secondaryBackupTaintedPrims)
+                            {
+                                backupPrims.Add(grp);
+                            }
+                        }
+                        m_secondaryBackupTaintedPrims.Clear();
+                    }
+                    //Add the min persistance time to now to get the new time
+                    runSecondaryBackup = DateTime.Now.AddMinutes((m_dontPersistBefore / 10000000L));
                 }
             }
             foreach (SceneObjectGroup grp in backupPrims)
             {
-                if (!grp.ProcessBackup(SimulationDataService, forced))
+                //Check this prim
+                bool shouldReaddToLoop;
+                bool shouldReaddToLoopNow;
+                if (!grp.ProcessBackup(SimulationDataService, forced, out shouldReaddToLoop, out shouldReaddToLoopNow))
                 {
-                    //Readd it then as its not time for it to backup yet
-                    lock (m_backupTaintedPrims)
-                        if(!m_backupTaintedPrims.Contains(grp))
-                            m_backupTaintedPrims.Add(grp);
+                    if (shouldReaddToLoop)
+                    {
+                        //Readd it into the seconary backup loop then as its not time for it to backup yet
+                        lock (m_secondaryBackupTaintedPrims)
+                            lock (m_backupTaintedPrims)
+                                //Make sure its not in either so that we don't duplicate checking
+                                if (!m_secondaryBackupTaintedPrims.Contains(grp) &&
+                                    !m_backupTaintedPrims.Contains(grp))
+                                    m_secondaryBackupTaintedPrims.Add(grp);
+                    }
+                    if (shouldReaddToLoopNow)
+                    {
+                        //Readd it into the seconary backup loop then as its not time for it to backup yet
+                        lock (m_backupTaintedPrims)
+                            //Make sure its not in either so that we don't duplicate checking
+                            if (!m_backupTaintedPrims.Contains(grp))
+                                m_backupTaintedPrims.Add(grp);
+                    }
                 }
             }
-            m_backingup--;
         }
 
         #endregion

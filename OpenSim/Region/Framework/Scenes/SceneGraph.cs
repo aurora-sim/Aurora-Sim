@@ -271,6 +271,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             // Ensure that we persist this new scene object
             sceneObject.HasGroupChanged = true;
+            sceneObject.ForceInventoryPersistence();
 
             return AddSceneObject(sceneObject, attachToBackup, sendClientUpdates);
         }

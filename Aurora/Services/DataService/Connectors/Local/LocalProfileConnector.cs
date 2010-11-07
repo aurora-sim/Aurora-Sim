@@ -13,6 +13,7 @@ namespace Aurora.Services.DataService
 {
     public class LocalProfileConnector : IProfileConnector, IAuroraDataPlugin
 	{
+        //We can use a cache because we are the only place that profiles will be served from
 		private Dictionary<UUID, IUserProfileInfo> UserProfilesCache = new Dictionary<UUID, IUserProfileInfo>();
         private IGenericData GD = null;
 
@@ -57,9 +58,15 @@ namespace Aurora.Services.DataService
         {
         }
 
+        /// <summary>
+        /// Get a user's profile
+        /// </summary>
+        /// <param name="agentID"></param>
+        /// <returns></returns>
 		public IUserProfileInfo GetUserProfile(UUID agentID)
 		{
 			IUserProfileInfo UserProfile = new IUserProfileInfo();
+            //Try from the user profile first before getting from the DB
             if (UserProfilesCache.TryGetValue(agentID, out UserProfile)) 
 				return UserProfile;
             else 
@@ -68,6 +75,7 @@ namespace Aurora.Services.DataService
                 List<string> query = null;
                 try
                 {
+                    //Grab it from the almost generic interface
                     query = GD.Query(new string[]{"ID", "`Key`"}, new object[]{agentID, "LLProfile"}, "userdata", "Value");
                 }
                 catch
@@ -75,7 +83,7 @@ namespace Aurora.Services.DataService
                 }
                 if (query == null || query.Count == 0)
 					return null;
-
+                //Pull out the OSDmap
                 OSDMap profile = (OSDMap)OSDParser.DeserializeLLSDXml(query[0]);
 
 				UserProfile.PrincipalID = agentID;
@@ -104,36 +112,49 @@ namespace Aurora.Services.DataService
                 OSD onotes = OSDParser.DeserializeLLSDXml(profile["Notes"].AsString());
                 OSDMap notes = onotes.Type == OSDType.Unknown ? new OSDMap() : (OSDMap)onotes;
                 UserProfile.Notes = Util.OSDToDictionary(notes);
+                
                 OSD opicks = OSDParser.DeserializeLLSDXml(profile["Picks"].AsString());
                 OSDMap picks = opicks.Type == OSDType.Unknown ? new OSDMap() : (OSDMap)opicks;
                 UserProfile.Picks = Util.OSDToDictionary(picks);
+                
                 OSD oclassifieds = OSDParser.DeserializeLLSDXml(profile["Classifieds"].AsString());
                 OSDMap classifieds = oclassifieds.Type == OSDType.Unknown ? new OSDMap() : (OSDMap)oclassifieds;
                 UserProfile.Classifieds = Util.OSDToDictionary(classifieds);
 
+                //Add to the cache
 			    UserProfilesCache[agentID] = UserProfile;
 
 				return UserProfile;
 			}
 		}
 
+        /// <summary>
+        /// Update a user's profile (Note: this does not work if the user does not have a profile)
+        /// </summary>
+        /// <param name="Profile"></param>
+        /// <returns></returns>
         public bool UpdateUserProfile(IUserProfileInfo Profile)
         {
             Dictionary<string, object> Values = new Dictionary<string, object>();
             Values.Add("AllowPublish", Profile.AllowPublish ? 1 : 0);
             Values.Add("MaturePublish", Profile.MaturePublish ? 1 : 0);
+            //Can't change from the region
             //Values.Add("Partner");
             Values.Add("WebURL", Profile.WebURL);
             Values.Add("AboutText", Profile.AboutText);
             Values.Add("FirstLifeAboutText", Profile.FirstLifeAboutText);
             Values.Add("Image", Profile.Image);
             Values.Add("FirstLifeImage", Profile.FirstLifeImage);
+            //Can't change from the region
             //Values.Add("CustomType");
             Values.Add("Visible", Profile.Visible ? 1 : 0);
             Values.Add("IMViaEmail", Profile.IMViaEmail ? 1 : 0);
-            Values.Add("MembershipGroup", Profile.MembershipGroup);
+            //Can't change from the region
+            //Values.Add("MembershipGroup", Profile.MembershipGroup);
+            //The next two really shouldn't be able to be changed, but the grid server sets them... so we can't comment them out, but they shouldn't be able to be changed remotely
             Values.Add("AArchiveName", Profile.AArchiveName);
             Values.Add("IsNewUser", Profile.IsNewUser ? 1 : 0);
+            //Can't change from the region
             //Values.Add("Created", Profile.Created);
             Values.Add("DisplayName", Profile.DisplayName);
             Values.Add("WantToMask", Profile.Interests.WantToMask);
@@ -150,6 +171,7 @@ namespace Aurora.Services.DataService
             List<string> SetRows = new List<string>();
             SetRows.Add("Value");
 
+            //We do do this on purpose. It cuts out values that we should not be putting in the database
             OSDMap map = Util.DictionaryToOSD(Values);
             SetValues.Add(OSDParser.SerializeLLSDXmlString(map));
 
@@ -177,20 +199,23 @@ namespace Aurora.Services.DataService
             return GD.Update("userdata", SetValues.ToArray(), SetRows.ToArray(), KeyRow.ToArray(), KeyValue.ToArray());
 		}
 
+        /// <summary>
+        /// Create a new profile for a user
+        /// </summary>
+        /// <param name="AgentID"></param>
         public void CreateNewProfile(UUID AgentID)
 		{
 			List<object> values = new List<object>();
             values.Add(AgentID.ToString()); //ID
             values.Add("LLProfile"); //Key
+
+            //Create a new basic profile for them
             IUserProfileInfo profile = new IUserProfileInfo();
             profile.PrincipalID = AgentID;
-            values.Add(OSDParser.SerializeLLSDXmlString(Util.DictionaryToOSD(profile.ToKeyValuePairs()))); //Value which is a default Profile
-			GD.Insert("userdata", values.ToArray());
-		}
 
-		public void RemoveFromCache(UUID ID)
-		{
-			UserProfilesCache.Remove(ID);
+            values.Add(OSDParser.SerializeLLSDXmlString(profile.ToOSD())); //Value which is a default Profile
+			
+            GD.Insert("userdata", values.ToArray());
 		}
     }
 }
