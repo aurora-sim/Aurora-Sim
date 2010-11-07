@@ -46,6 +46,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private ScriptSponsor m_sponser;
 
+
         public ISponsor Sponsor
         {
             get
@@ -110,6 +111,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         {
             return m_Executor.ExecuteEvent(state, FunctionName, args, Start, out ex);
         }
+
+        public bool CheckSlice()
+            {
+            return m_Executor.CheckSlice();
+            }
 
         private Dictionary<string, object> m_InitialValues =
                 new Dictionary<string, object>();

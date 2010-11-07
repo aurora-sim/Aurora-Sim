@@ -1897,7 +1897,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             // opening brace
             retstr.Append(GenerateIndentedLine("{"));
             if (IsParentEnumerable)
-                retstr.Append(GenerateLine("yield return null;"));
+                retstr.Append(GenerateLine("if (CheckSlice()) yield return null;"));
             m_braceCount++;
 
             foreach (SYMBOL kid in cs.kids)
@@ -2222,7 +2222,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             if (IsParentEnumerable)
             {
                 retstr.Append(GenerateLine("{")); // SLAM! No 'while(true) doThis(); ' statements for you!
-                retstr.Append(GenerateLine("yield return null;"));
+                retstr.Append(GenerateLine("if (CheckSlice()) yield return null;"));
             }
 
             // CompoundStatement handles indentation itself but we need to do it
@@ -2252,7 +2252,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             if (IsParentEnumerable)
             {
                 retstr.Append(GenerateLine("{")); // SLAM!
-                retstr.Append(GenerateLine("yield return null;"));
+                retstr.Append(GenerateLine("if (CheckSlice()) yield return null;"));
             }
 
             // CompoundStatement handles indentation itself but we need to do it
@@ -2314,7 +2314,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             if (IsParentEnumerable)
             {
                 retstr.Append(GenerateLine("{")); // SLAM! No 'for(i = 0; i < 1; i = 0) doSomething();' statements for you
-                retstr.Append(GenerateLine("yield return null;"));
+                retstr.Append(GenerateLine("if (CheckSlice()) yield return null;"));
             }
 
             // CompoundStatement handles indentation itself but we need to do it
