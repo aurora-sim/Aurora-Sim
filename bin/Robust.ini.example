@@ -212,7 +212,7 @@ ServiceConnectors = "8003/OpenSim.Server.Handlers.dll:AssetServiceConnector,8003
     TutorialURL = ""
     
 	;; For more info, see AuroraDocs/CAPSService.txt
-    CAPSServiceURL = http://auroraserver.ath.cx:8007
+    CAPSServiceURL = http://127.0.0.1:8007
     CAPSServicePassword = TestPass
 
 

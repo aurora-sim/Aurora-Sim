@@ -152,10 +152,10 @@ ServiceConnectors = "8003/OpenSim.Server.Handlers.dll:AssetServiceConnector,8003
     
     ;; Defaults for the users, if none is specified in the useraccounts table entry (ServiceURLs)
     ;; CHANGE THIS
-    HomeURI = "http://auroraserver.ath.cx:8002"
-    GatekeeperURI = "http://auroraserver.ath.cx:8002"
-    InventoryServerURI = "http://auroraserver.ath.cx:8002"
-    AssetServerURI = "http://auroraserver.ath.cx:8002"
+    HomeURI = "http://127.0.0.1:8002"
+    GatekeeperURI = "http://127.0.0.1:8002"
+    InventoryServerURI = "http://127.0.0.1:8002"
+    AssetServerURI = "http://127.0.0.1:8002"
 
     ;; For snowglobe's web map
     ; MapTileURL = "";
@@ -275,7 +275,7 @@ ServiceConnectors = "8003/OpenSim.Server.Handlers.dll:AssetServiceConnector,8003
     TutorialURL = ""
     
 	;; For more info, see AuroraDocs/CAPSService.txt
-    CAPSServiceURL = http://auroraserver.ath.cx:8007
+    CAPSServiceURL = http://127.0.0.1:8007
     CAPSServicePassword = TestPass
 
 
