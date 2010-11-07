@@ -5447,6 +5447,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             foreach (SceneObjectGroup grp in backupPrims)
             {
+                m_log.Debug("[Scene]: Backing up prim " + grp.Name + " in region " + this.RegionInfo.RegionName + " at " + grp.AbsolutePosition.ToString());
                 if (!grp.ProcessBackup(SimulationDataService, forced))
                 {
                     //Readd it then as its not time for it to backup yet
