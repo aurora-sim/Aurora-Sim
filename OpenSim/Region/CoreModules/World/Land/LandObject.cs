@@ -74,7 +74,13 @@ namespace OpenSim.Region.CoreModules.World.Land
         {
             get { return m_landData; }
 
-            set { m_landData = value; }
+            set
+            {
+                //Fix the land data HERE
+                if (m_scene != null) //Not sure that this ever WILL be null... but we'll be safe...
+                    value.Maturity = m_scene.RegionInfo.RegionSettings.Maturity;
+                m_landData = value; 
+            }
         }
 
         public UUID RegionUUID
@@ -87,6 +93,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         public LandObject(UUID owner_id, bool is_group_owned, Scene scene)
         {
             m_scene = scene;
+            LandData.Maturity = m_scene.RegionInfo.RegionSettings.Maturity;
             LandData.OwnerID = owner_id;
             if (is_group_owned)
                 LandData.GroupID = owner_id;

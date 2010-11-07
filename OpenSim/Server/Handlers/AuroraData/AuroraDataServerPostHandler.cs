@@ -929,7 +929,8 @@ namespace OpenSim.Server.Handlers.AuroraData
             UUID INFOUUID = UUID.Parse(request["INFOUUID"].ToString());
             LandData land = DirectoryServiceConnector.GetParcelInfo(INFOUUID);
 
-            result.Add("Land", land.ToKeyValuePairs());
+            if(land != null)
+                result.Add("Land", land.ToKeyValuePairs());
 
             string xmlString = ServerUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
