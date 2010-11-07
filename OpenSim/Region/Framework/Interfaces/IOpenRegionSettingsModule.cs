@@ -35,5 +35,6 @@ namespace OpenSim.Region.Framework.Interfaces
         int ShowTags { get; set; }
         int MaxGroups { get; set; }
         bool AllowParcelWindLight { get; set; }
+        void RegisterGenericValue(string key, string value);
     }
 }
