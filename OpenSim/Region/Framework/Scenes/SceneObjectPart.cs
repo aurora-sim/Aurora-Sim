@@ -1397,8 +1397,6 @@ namespace OpenSim.Region.Framework.Scenes
             }
             set
             {
-                if (ParentGroup != null)
-                    ParentGroup.HasGroupChanged = true;
                 m_angularVelocity = value;
             }
         }
@@ -1409,8 +1407,6 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_acceleration; }
             set
             {
-                if (ParentGroup != null)
-                    ParentGroup.HasGroupChanged = true;
                 m_acceleration = value;
             }
         }
@@ -1626,8 +1622,6 @@ namespace OpenSim.Region.Framework.Scenes
             
             set
             {
-                if (ParentGroup != null)
-                    ParentGroup.HasGroupChanged = true;
                 m_mediaUrl = value;
                 
                 if (ParentGroup != null)

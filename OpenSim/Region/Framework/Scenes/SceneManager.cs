@@ -313,9 +313,9 @@ namespace OpenSim.Region.Framework.Scenes
         {
             ForEachCurrentScene(delegate(Scene scene)
             {
-                scene.m_backingup += 10; //Clear out all other threads
+                scene.m_backingup = true; //Clear out all other threads
                 scene.ProcessPrimBackupTaints(true);
-                scene.m_backingup -= 10; //Clear out all other threads
+                scene.m_backingup = false; //Clear out all other threads
             });
         }
 
@@ -870,7 +870,7 @@ namespace OpenSim.Region.Framework.Scenes
                 RegisterRegionWithGrid(scene);
             }
             else
-                m_log.Info("[SCENE]: Registered " + scene.RegionInfo.RegionName + " with the grid server successfully.");
+                m_log.Debug("[SCENE]: Registered " + scene.RegionInfo.RegionName + " with the grid server successfully.");
         }
 
         private void SaveChangesFile(RegionInfo regionInfo)

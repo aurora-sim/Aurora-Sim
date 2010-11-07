@@ -71,7 +71,7 @@ namespace Aurora.Services.DataService
         private void SaveParcelAccessList(LandData data)
         {
             //Clear out all old parcel bans and access list entries
-            GD.Replace("parcelaccess", new string[] { "ParcelID" }, new object[] { data.GlobalID });
+            GD.Delete("parcelaccess", new string[] { "ParcelID" }, new object[] { data.GlobalID });
             foreach (ParcelManager.ParcelAccessEntry entry in data.ParcelAccessList)
             {
                 //Replace all the old ones

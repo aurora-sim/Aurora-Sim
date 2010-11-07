@@ -135,14 +135,36 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        private bool isTimeToPersist()
+        /// <summary>
+        /// Returns whether it is time to backup or not
+        /// </summary>
+        /// <param name="shouldReaddToLoop">Should this prim even be checked again for backup in the secondary loop?</param>
+        /// <param name="shouldReaddToLoopNow">Should this prim be added to the immediate loop for next backup?</param>
+        /// <returns></returns>
+        private bool isTimeToPersist(out bool shouldReaddToLoop, out bool shouldReaddToLoopNow)
         {
-            if (IsSelected || IsDeleted || IsAttachment)
+            shouldReaddToLoop = true;
+            shouldReaddToLoopNow = false;
+            if (IsSelected)
+            {
+                //Selected prims are probably being changed, add them back for tte next backup
+                shouldReaddToLoopNow = true;
                 return false;
+            }
+            if (IsDeleted || IsAttachment)
+            {
+                //Do not readd under these circumstances as we don't deal with backing up either of those into sim storage
+                shouldReaddToLoop = false;
+                return false;
+            }
             if (!m_hasGroupChanged)
                 return false;
             if (m_scene.ShuttingDown)
-                return true;
+            {
+                //Do not readd now
+                shouldReaddToLoop = false;
+                return false;
+            }
             long currentTime = Util.UnixTimeSinceEpoch();
             if (currentTime - timeLastChanged > m_scene.m_dontPersistBefore || currentTime - timeFirstChanged > m_scene.m_persistAfter)
                 return true;
@@ -1377,11 +1399,17 @@ namespace OpenSim.Region.Framework.Scenes
         #region Events
 
         /// <summary>
-        /// Processes backup.
+        /// Deal with backing up this prim
         /// </summary>
-        /// <param name="datastore"></param>
-        public virtual bool ProcessBackup(ISimulationDataService datastore, bool forcedBackup)
+        /// <param name="datastore">Place to save the prim into</param>
+        /// <param name="forcedBackup">Is this backup forced?</param>
+        /// <param name="shouldReaddToLoop">Should we even check this prim again until it is changed again?</param>
+        /// <param name="shouldReaddToLoopNow">Should this prim be readded to the backup loop for immediate checking next loop?</param>
+        /// <returns></returns>
+        public virtual bool ProcessBackup(ISimulationDataService datastore, bool forcedBackup, out bool shouldReaddToLoop, out bool shouldReaddToLoopNow)
         {
+            shouldReaddToLoop = true;
+            shouldReaddToLoopNow = false;
             //if (!m_isBackedUp)
             //    return true;
 
@@ -1393,32 +1421,29 @@ namespace OpenSim.Region.Framework.Scenes
 
             try
             {
-                if (isTimeToPersist() || forcedBackup) // forced means FORCED, you don't get a choice!
+                if (isTimeToPersist(out shouldReaddToLoop, out shouldReaddToLoopNow) || forcedBackup) // forced means FORCED, you don't get a choice!
                 {
-                    if (HasGroupChanged || forcedBackup)
+                    // don't backup while it's selected or you're asking for changes mid stream.
+                    m_log.DebugFormat(
+                            "[SCENE]: Storing {0}, {1} in {2} at {3}",
+                            Name, UUID, m_scene.RegionInfo.RegionName, AbsolutePosition.ToString());
+
+                    SceneObjectGroup backup_group = Copy(OwnerID, GroupID, false, Scene, false);
+                    backup_group.RootPart.Velocity = RootPart.Velocity;
+                    backup_group.RootPart.Acceleration = RootPart.Acceleration;
+                    backup_group.RootPart.AngularVelocity = RootPart.AngularVelocity;
+                    backup_group.RootPart.ParticleSystem = RootPart.ParticleSystem;
+                    HasGroupChanged = false;
+
+                    datastore.StoreObject(backup_group, m_scene.RegionInfo.RegionID);
+
+                    backup_group.ForEachPart(delegate(SceneObjectPart part)
                     {
-                        // don't backup while it's selected or you're asking for changes mid stream.
-                        //m_log.DebugFormat(
-                        //        "[SCENE]: Storing {0}, {1} in {2}",
-                        //        Name, UUID, m_scene.RegionInfo.RegionName);
+                        part.Inventory.ProcessInventoryBackup(datastore);
+                    });
 
-                        SceneObjectGroup backup_group = Copy(OwnerID, GroupID, false, Scene, false);
-                        backup_group.RootPart.Velocity = RootPart.Velocity;
-                        backup_group.RootPart.Acceleration = RootPart.Acceleration;
-                        backup_group.RootPart.AngularVelocity = RootPart.AngularVelocity;
-                        backup_group.RootPart.ParticleSystem = RootPart.ParticleSystem;
-                        HasGroupChanged = false;
-
-                        datastore.StoreObject(backup_group, m_scene.RegionInfo.RegionID);
-
-                        backup_group.ForEachPart(delegate(SceneObjectPart part)
-                        {
-                            part.Inventory.ProcessInventoryBackup(datastore);
-                        });
-
-                        backup_group = null;
-                        return true;
-                    }
+                    backup_group = null;
+                    return true;
                 }
             }
             catch (Exception e)
