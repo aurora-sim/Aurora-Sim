@@ -3913,7 +3913,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     AssetBase asset = World.AssetService.Get(inventory);
                     SceneObjectGroup group
                                         = OpenSim.Region.Framework.Scenes.Serialization.SceneObjectSerializer.FromOriginalXmlFormat(UUID.Zero, Utils.BytesToString(asset.Data), World);
-                    group.ResetIDs();
+                    group.ResetIDs(true);
 
                     group.OwnerID = m_host.OwnerID;
 
@@ -4217,7 +4217,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 }
 //                byte uf = childPrim.RootPart.UpdateFlag;
                 childPrim.RootPart.UpdateFlag = InternalUpdateFlags.NoUpdate;
-                parentPrim.LinkToGroup(childPrim);
+                parentPrim.LinkToGroup(childPrim, true);
 //                if (uf != (Byte)0)
 //                    parent.RootPart.UpdateFlag = uf;
             }
@@ -4308,7 +4308,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     foreach (SceneObjectPart part in parts)
                     {
                         part.UpdateFlag = InternalUpdateFlags.NoUpdate;
-                        newRoot.ParentGroup.LinkToGroup(part.ParentGroup);
+                        newRoot.ParentGroup.LinkToGroup(part.ParentGroup, true);
                     }
                     newRoot.ParentGroup.HasGroupChanged = true;
                     newRoot.ParentGroup.ScheduleGroupForFullUpdate(PrimUpdateFlags.FullUpdate);

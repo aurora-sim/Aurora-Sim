@@ -1966,7 +1966,7 @@ namespace OpenSim.Region.Framework.Scenes
                         GetScenePresence(ownerID).ControllingClient.SendAlertMessage("You do not have permission to rez objects here: " + reason);
                         return null;
                     }
-                    group.ResetIDs();
+                    group.ResetIDs(true);
 
                     AddNewSceneObject(group, true, false);
 

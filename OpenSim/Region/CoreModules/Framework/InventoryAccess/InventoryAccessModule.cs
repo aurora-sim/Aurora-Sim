@@ -642,7 +642,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                             return null;
                         }
 
-                        group.ResetIDs();
+                    group.ResetIDs(true);
 
                         if (attachment)
                         {
@@ -818,7 +818,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                     return null;
                 }
 
-                group.ResetIDs();
+                group.ResetIDs(true);
 
                 if (attachment)
                 {
