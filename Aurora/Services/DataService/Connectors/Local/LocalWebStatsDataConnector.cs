@@ -39,6 +39,10 @@ namespace Aurora.Services.DataService
         {
         }
 
+        /// <summary>
+        /// Add/Update a user's stats in the database
+        /// </summary>
+        /// <param name="uid"></param>
         public void UpdateUserStats(UserSessionID uid)
         {
             if (uid.session_id == UUID.Zero)
@@ -143,6 +147,10 @@ namespace Aurora.Services.DataService
             GD.Replace("stats_session_data", Keys.ToArray(), Values.ToArray());
         }
 
+        /// <summary>
+        /// Get info on the sim status
+        /// </summary>
+        /// <returns></returns>
         public stats_default_page_values GetDefaultPageStats()
         {
             stats_default_page_values stats = new stats_default_page_values();
@@ -170,6 +178,10 @@ namespace Aurora.Services.DataService
             return stats;
         }
 
+        /// <summary>
+        /// Get info on all clients that are in the region
+        /// </summary>
+        /// <returns></returns>
         public List<ClientVersionData> GetClientVersions()
         {
             List<ClientVersionData> clients = new List<ClientVersionData>();
@@ -219,6 +231,12 @@ namespace Aurora.Services.DataService
             return clients;
         }
 
+        /// <summary>
+        /// Get a list of all the client sessions in the region
+        /// </summary>
+        /// <param name="puserUUID"></param>
+        /// <param name="clientVersionString"></param>
+        /// <returns></returns>
         public List<SessionList> GetSessionList(string puserUUID, string clientVersionString)
         {
             List<SessionList> sessionList = new List<SessionList>();

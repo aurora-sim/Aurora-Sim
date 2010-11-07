@@ -59,7 +59,12 @@ namespace Aurora.Services.DataService
         {
         }
 
-		public IAgentInfo GetAgent(UUID agentID)
+        /// <summary>
+        /// Gets the info about the agent (TOS data, maturity info, language, etc)
+        /// </summary>
+        /// <param name="agentID"></param>
+        /// <returns></returns>
+        public IAgentInfo GetAgent(UUID agentID)
 		{
 			IAgentInfo agent = new IAgentInfo();
             List<string> query = null;
@@ -85,7 +90,12 @@ namespace Aurora.Services.DataService
 			return agent;
 		}
 
-		public void UpdateAgent(IAgentInfo agent)
+        /// <summary>
+        /// Updates the language and maturity params of the agent.
+        /// Note: we only allow for this on the grid side
+        /// </summary>
+        /// <param name="agent"></param>
+        public void UpdateAgent(IAgentInfo agent)
 		{
             Dictionary<string, object> Values = new Dictionary<string, object>();
             Values.Add("AcceptTOS", agent.AcceptTOS ? 1 : 0);
@@ -113,7 +123,12 @@ namespace Aurora.Services.DataService
             GD.Update("userdata", SetValues.ToArray(), SetRows.ToArray(), KeyRow.ToArray(), KeyValue.ToArray());
 		}
 
-		public void CreateNewAgent(UUID agentID)
+        /// <summary>
+        /// Creates a new database entry for the agent.
+        /// Note: we only allow for this on the grid side
+        /// </summary>
+        /// <param name="agentID"></param>
+        public void CreateNewAgent(UUID agentID)
 		{
             List<object> values = new List<object>();
             values.Add(agentID);
@@ -124,11 +139,19 @@ namespace Aurora.Services.DataService
             GD.Insert("userdata", values.ToArray());
 		}
 
+        /// <summary>
+        /// Checks whether the mac address and viewer are allowed to connect to this grid.
+        /// Note: we only allow for this on the grid side
+        /// </summary>
+        /// <param name="Mac"></param>
+        /// <param name="viewer"></param>
+        /// <returns></returns>
         public bool CheckMacAndViewer(string Mac, string viewer)
         {
             List<string> found = GD.Query("macaddress", Mac, "macban", "*");
             if (found.Count != 0)
             {
+                //Found a mac that matched
                 m_log.InfoFormat("[AgentInfoConnector]: Mac '{0}' is in the ban list", Mac);
                 return false;
             }

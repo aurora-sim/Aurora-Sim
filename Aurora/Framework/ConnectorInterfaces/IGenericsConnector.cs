@@ -7,12 +7,28 @@ using OpenMetaverse.StructuredData;
 
 namespace Aurora.Framework
 {
-	public interface IGenericsConnector
+    /// <summary>
+    /// Some background to this class
+    /// 
+    /// This class saves any class that implements the IDataTransferable interface.
+    ///   When implementing the IDataTransferable interface, it is heavily recommending to implement ToOSD and FromOSD first, then use the Utility methods to convert OSDMaps into Dictionarys, as shown in the LandData class.
+    /// 
+    /// This method of saving uses 4 columns in the database, OwnerID, Type, Key, and Value
+    /// 
+    ///   - OwnerID : This is a way to be able to save Agent or Region or anything with a UUID into the database and have it be set to that UUID only.
+    ///   - Type : What made this data? This just tells what module created the given row in the database.
+    ///   - Key : Another identifying setting so that you can store more than one row under an OwnerID and Type
+    ///   - Value : The value of the row
+    /// 
+    /// This class deals with the Getting/Setting/Removing of these generic interfaces.
+    /// 
+    /// </summary>
+    public interface IGenericsConnector
 	{
         /// <summary>
-        /// Gets a Generic type as set by T
+        /// Gets a Generic type as set by the ownerID, Type, and Key
         /// </summary>
-        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="T">return value of type IDataTransferable</typeparam>
         /// <param name="OwnerID"></param>
         /// <param name="Type"></param>
         /// <param name="Key"></param>
@@ -31,7 +47,7 @@ namespace Aurora.Framework
         List<T> GetGenerics<T>(UUID OwnerID, string Type, T data) where T : IDataTransferable;
         
         /// <summary>
-        /// Adds a generic into the database
+        /// Adds a generic IDataTransferable into the database
         /// </summary>
         /// <param name="AgentID"></param>
         /// <param name="Type"></param>
@@ -40,7 +56,7 @@ namespace Aurora.Framework
         void AddGeneric(UUID AgentID, string Type, string Key, OSDMap Value);
         
         /// <summary>
-        /// Removes a generic from the database
+        /// Removes a generic IDataTransferable from the database
         /// </summary>
         /// <param name="AgentID"></param>
         /// <param name="Type"></param>
@@ -48,7 +64,7 @@ namespace Aurora.Framework
         void RemoveGeneric(UUID AgentID, string Type, string Key);
         
         /// <summary>
-        /// Removes a generic from the database
+        /// Removes a generic IDataTransferable from the database
         /// </summary>
         /// <param name="AgentID"></param>
         /// <param name="Type"></param>

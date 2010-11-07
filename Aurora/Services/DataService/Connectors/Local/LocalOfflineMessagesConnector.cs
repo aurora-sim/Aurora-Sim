@@ -56,14 +56,25 @@ namespace Aurora.Services.DataService
         {
         }
 
+        /// <summary>
+        /// Gets all offline messages for the user in GridInstantMessage format.
+        /// </summary>
+        /// <param name="agentID"></param>
+        /// <returns></returns>
         public GridInstantMessage[] GetOfflineMessages(UUID agentID)
 		{
+            //Get all the messages
             List<GridInstantMessage> Messages = GenericUtils.GetGenerics<GridInstantMessage>(agentID, "OfflineMessages", GD, new GridInstantMessage());
+            //Clear them out now that we have them
             GenericUtils.RemoveGeneric(agentID, "OfflineMessages", GD);
             return Messages.ToArray();
 		}
 
-		public void AddOfflineMessage(GridInstantMessage message)
+        /// <summary>
+        /// Adds a new offline message for the user.
+        /// </summary>
+        /// <param name="message"></param>
+        public void AddOfflineMessage(GridInstantMessage message)
 		{
             GenericUtils.AddGeneric(new UUID(message.toAgentID), "OfflineMessages", UUID.Random().ToString(), message.ToOSD(), GD);
 		}

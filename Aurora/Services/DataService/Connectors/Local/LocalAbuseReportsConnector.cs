@@ -45,7 +45,13 @@ namespace Aurora.Services.DataService
         {
         }
 
-		public AbuseReport GetAbuseReport(int Number, string Password)
+        /// <summary>
+        /// Gets the abuse report associated with the number and uses the pass to authenticate.
+        /// </summary>
+        /// <param name="Number"></param>
+        /// <param name="Password"></param>
+        /// <returns></returns>
+        public AbuseReport GetAbuseReport(int Number, string Password)
 		{
             if (!CheckPassword(Password))
                 return null;
@@ -72,7 +78,12 @@ namespace Aurora.Services.DataService
 			return report;
 		}
 
-		public void AddAbuseReport(AbuseReport report)
+        /// <summary>
+        /// Adds a new abuse report to the database
+        /// </summary>
+        /// <param name="report"></param>
+        /// <param name="Password"></param>
+        public void AddAbuseReport(AbuseReport report)
 		{
             List<object> InsertValues = new List<object>();
 			InsertValues.Add(report.Category);
@@ -106,6 +117,11 @@ namespace Aurora.Services.DataService
 			GD.Insert("abusereports", InsertValues.ToArray());
 		}
 
+        /// <summary>
+        /// Updates an abuse report and authenticates with the password.
+        /// </summary>
+        /// <param name="report"></param>
+        /// <param name="Password"></param>
         public void UpdateAbuseReport(AbuseReport report, string Password)
         {
             if (!CheckPassword(Password))
@@ -151,6 +167,11 @@ namespace Aurora.Services.DataService
             GD.Replace("abusereports", InsertKeys.ToArray(),InsertValues.ToArray());
         }
 
+        /// <summary>
+        /// Check the user's password, not currently used
+        /// </summary>
+        /// <param name="Password"></param>
+        /// <returns></returns>
         private bool CheckPassword(string Password)
         {
             List<string> TruePassword = GD.Query("Method", "abusereports", "passwords", "Password");

@@ -96,68 +96,48 @@ namespace OpenSim.Framework
 
         public override Dictionary<string, object> ToKeyValuePairs()
         {
-            Dictionary<string, object> RetVal = new Dictionary<string, object>();
-            RetVal.Add("fromAgentID", fromAgentID);
-            RetVal.Add("fromAgentName", fromAgentName);
-            RetVal.Add("toAgentID", toAgentID);
-            RetVal.Add("dialog", dialog);
-            RetVal.Add("fromGroup", fromGroup);
-            RetVal.Add("message", message);
-            RetVal.Add("imSessionID", imSessionID);
-            RetVal.Add("offline", offline);
-            RetVal.Add("Position", Position);
-            RetVal.Add("binaryBucket", Utils.BytesToString(binaryBucket));
-            RetVal.Add("ParentEstateID", ParentEstateID);
-            RetVal.Add("RegionID", RegionID);
-            RetVal.Add("timestamp", timestamp);
-            return RetVal;
-        }
-
-        public override void FromOSD(OSDMap map)
-        {
-            FromKVP(OSDToDictionary(map));
+            return Util.OSDToDictionary(ToOSD());
         }
 
         public override OSDMap ToOSD()
         {
-            return DictionaryToOSD(ToKeyValuePairs());
+            OSDMap map = new OSDMap();
+            map.Add("fromAgentID", OSD.FromUUID(new UUID(fromAgentID)));
+            map.Add("fromAgentName", OSD.FromString(fromAgentName));
+            map.Add("toAgentID", OSD.FromUUID(new UUID(toAgentID)));
+            map.Add("dialog", OSD.FromInteger(dialog));
+            map.Add("fromGroup", OSD.FromBoolean(fromGroup));
+            map.Add("message", OSD.FromString(message));
+            map.Add("imSessionID", OSD.FromUUID(new UUID(imSessionID)));
+            map.Add("offline", OSD.FromInteger(offline));
+            map.Add("Position", OSD.FromVector3(Position));
+            map.Add("binaryBucket", OSD.FromBinary(binaryBucket));
+            map.Add("ParentEstateID", OSD.FromUInteger(ParentEstateID));
+            map.Add("RegionID", OSD.FromUUID(new UUID(RegionID)));
+            map.Add("timestamp", OSD.FromUInteger(timestamp));
+            return map;
+        }
+
+        public override void FromOSD(OSDMap map)
+        {
+            fromAgentID = map["fromAgentID"].AsUUID().Guid;
+            fromAgentName = map["fromAgentName"].AsString();
+            toAgentID = map["toAgentID"].AsUUID().Guid;
+            dialog = (byte)map["dialog"].AsInteger();
+            fromGroup = map["fromGroup"].AsBoolean();
+            message = map["message"].ToString();
+            offline = (byte)map["offline"].AsInteger();
+            Position = map["Position"].AsVector3();
+            binaryBucket = map["binaryBucket"].AsBinary();
+            ParentEstateID = map["ParentEstateID"].AsUInteger();
+            RegionID = map["RegionID"].AsUUID().Guid;
+            imSessionID = map["imSessionID"].AsUUID().Guid;
+            timestamp = map["timestamp"].AsUInteger();
         }
 
         public override void FromKVP(Dictionary<string, object> RetVal)
         {
-            fromAgentID = UUID.Parse(RetVal["fromAgentID"].ToString()).Guid;
-            fromAgentName = RetVal["fromAgentName"].ToString();
-            toAgentID = UUID.Parse(RetVal["toAgentID"].ToString()).Guid;
-            dialog = byte.Parse(RetVal["dialog"].ToString());
-            fromGroup = bool.Parse(RetVal["fromGroup"].ToString());
-            message = RetVal["message"].ToString();
-            offline = byte.Parse(RetVal["offline"].ToString());
-            Position = Vector3.Parse(RetVal["Position"].ToString());
-            binaryBucket = Utils.StringToBytes(RetVal["binaryBucket"].ToString());
-            ParentEstateID = uint.Parse(RetVal["ParentEstateID"].ToString());
-            RegionID = UUID.Parse(RetVal["RegionID"].ToString()).Guid;
-            imSessionID = UUID.Parse(RetVal["imSessionID"].ToString()).Guid;
-            timestamp = uint.Parse(RetVal["timestamp"].ToString());
-        }
-
-        private OSDMap DictionaryToOSD(Dictionary<string, object> sendData)
-        {
-            OSDMap map = new OSDMap();
-            foreach (KeyValuePair<string, object> kvp in sendData)
-            {
-                map[kvp.Key] = OSD.FromObject(kvp.Value);
-            }
-            return map;
-        }
-
-        private Dictionary<string, object> OSDToDictionary(OSDMap map)
-        {
-            Dictionary<string, object> retVal = new Dictionary<string, object>();
-            foreach (string key in map.Keys)
-            {
-                retVal.Add(key, map[key]);
-            }
-            return retVal;
+            FromOSD(Util.DictionaryToOSD(RetVal));
         }
 
         public override IDataTransferable Duplicate()

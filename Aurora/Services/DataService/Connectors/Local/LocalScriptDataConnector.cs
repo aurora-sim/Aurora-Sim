@@ -38,22 +38,28 @@ namespace Aurora.Services.DataService
         {
         }
 
+        /// <summary>
+        /// Get the last state save the script has
+        /// </summary>
+        /// <param name="itemID"></param>
+        /// <param name="UserInventoryItemID"></param>
+        /// <returns></returns>
 		public StateSave GetStateSave(UUID itemID, UUID UserInventoryItemID)
 		{
             try
             {
                 StateSave StateSave = new StateSave();
                 List<string> StateSaveRetVals = new List<string>();
+
+                //Use the UserInventoryItemID over the ItemID as the UserInventory is set when coming out of inventory and it overrides any other settings.
                 if (UserInventoryItemID != UUID.Zero)
-                {
                     StateSaveRetVals = GD.Query("UserInventoryItemID", UserInventoryItemID.ToString(), "auroradotnetstatesaves", "*");
-                }
                 else
-                {
                     StateSaveRetVals = GD.Query("ItemID", itemID.ToString(), "auroradotnetstatesaves", "*");
-                }
+               
                 if (StateSaveRetVals.Count == 0)
                     return null;
+
                 Dictionary<string, object> vars = new Dictionary<string, object>();
                 StateSave.State = StateSaveRetVals[0];
                 StateSave.ItemID = new UUID(StateSaveRetVals[1]);
@@ -98,9 +104,7 @@ namespace Aurora.Services.DataService
                 }
                 StateSave.Plugins = plugins.ToArray();
                 StateSave.Permissions = StateSaveRetVals[6];
-                double minEventDelay = 0.0;
-                double.TryParse(StateSaveRetVals[7], NumberStyles.Float, Culture.NumberFormatInfo, out minEventDelay);
-                StateSave.MinEventDelay = (long)minEventDelay;
+                double.TryParse(StateSaveRetVals[7], NumberStyles.Float, Culture.NumberFormatInfo, out StateSave.MinEventDelay);
                 StateSave.AssemblyName = StateSaveRetVals[8];
                 StateSave.Disabled = int.Parse(StateSaveRetVals[9]) == 1;
                 StateSave.UserInventoryID = UUID.Parse(StateSaveRetVals[10]);
@@ -113,6 +117,10 @@ namespace Aurora.Services.DataService
             }
 		}
 
+        /// <summary>
+        /// Save the current script state.
+        /// </summary>
+        /// <param name="state"></param>
 		public void SaveStateSave(StateSave state)
 		{
             List<string> Keys = new List<string>();
@@ -143,11 +151,19 @@ namespace Aurora.Services.DataService
             GD.Replace("auroradotnetstatesaves", Keys.ToArray(), Insert.ToArray());
 		}
 
+        /// <summary>
+        /// Delete the state saves for the given InventoryItem
+        /// </summary>
+        /// <param name="itemID"></param>
         public void DeleteStateSave(UUID itemID)
         {
             GD.Delete("auroradotnetstatesaves", new string[] { "ItemID" }, new object[] { itemID });
         }
 
+        /// <summary>
+        /// Delete the state saves for the given assembly
+        /// </summary>
+        /// <param name="itemID"></param>
         public void DeleteStateSave(string assemblyName)
         {
             GD.Delete("auroradotnetstatesaves", new string[] { "AssemblyName" }, new object[] { assemblyName });

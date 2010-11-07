@@ -59,8 +59,8 @@ namespace Aurora.Services.DataService
             if (result == null)
                 return null;
 
-            Dictionary<string, object> dresult = Util.OSDToDictionary(result);
-            IUserProfileInfo profile = new IUserProfileInfo(dresult);
+            IUserProfileInfo profile = new IUserProfileInfo();
+            profile.FromOSD(result);
 
             return profile;
         }

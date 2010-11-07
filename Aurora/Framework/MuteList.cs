@@ -23,30 +23,30 @@ namespace Aurora.Framework
         /// </summary>
         public string MuteType;
 
-        public override Dictionary<string, object> ToKeyValuePairs()
-        {
-            Dictionary<string, object> KVP = new Dictionary<string, object>();
-            KVP["MuteName"] = MuteName;
-            KVP["MuteID"] = MuteID;
-            KVP["MuteType"] = MuteType;
-            return KVP;
-        }
-
         public override void FromOSD(OSDMap map)
         {
-            FromKVP(Util.OSDToDictionary(map));
+            MuteName = map["MuteName"].AsString();
+            MuteID = map["MuteID"].AsUUID();
+            MuteType = map["MuteType"].AsString();
         }
 
         public override OSDMap ToOSD()
         {
-            return Util.DictionaryToOSD(ToKeyValuePairs());
+            OSDMap map = new OSDMap();
+            map.Add("MuteName", MuteName);
+            map.Add("MuteID", MuteID);
+            map.Add("MuteType", MuteType);
+            return map;
+        }
+
+        public override Dictionary<string, object> ToKeyValuePairs()
+        {
+            return Util.OSDToDictionary(ToOSD());
         }
 
         public override void FromKVP(Dictionary<string, object> KVP)
         {
-            MuteName = KVP["MuteName"].ToString();
-            MuteID = UUID.Parse(KVP["MuteID"].ToString());
-            MuteType = KVP["MuteType"].ToString();
+            FromOSD(Util.DictionaryToOSD(KVP));
         }
 
         public override IDataTransferable Duplicate()

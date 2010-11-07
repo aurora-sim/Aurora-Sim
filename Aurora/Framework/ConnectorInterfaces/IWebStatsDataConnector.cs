@@ -8,6 +8,37 @@ using OpenSim.Framework;
 
 namespace Aurora.Framework
 {
+    public interface IWebStatsDataConnector
+    {
+        /// <summary>
+        /// Add/Update a user's stats in the database
+        /// </summary>
+        /// <param name="uid"></param>
+        void UpdateUserStats(UserSessionID uid);
+
+        /// <summary>
+        /// Get info on the sim status
+        /// </summary>
+        /// <returns></returns>
+        stats_default_page_values GetDefaultPageStats();
+
+        /// <summary>
+        /// Get info on all clients that are in the region
+        /// </summary>
+        /// <returns></returns>
+        List<ClientVersionData> GetClientVersions();
+        
+        /// <summary>
+        /// Get a list of all the client sessions in the region
+        /// </summary>
+        /// <param name="puserUUID"></param>
+        /// <param name="clientVersionString"></param>
+        /// <returns></returns>
+        List<SessionList> GetSessionList(string puserUUID, string clientVersionString);
+    }
+
+    #region Structs
+
     public struct UserSessionID
     {
         public UUID session_id;
@@ -201,11 +232,6 @@ namespace Aurora.Framework
         public List<ShortSessionData> sessions;
     }
 
-    public interface IWebStatsDataConnector
-    {
-        void UpdateUserStats(UserSessionID uid);
-        stats_default_page_values GetDefaultPageStats();
-        List<ClientVersionData> GetClientVersions();
-        List<SessionList> GetSessionList(string puserUUID, string clientVersionString);
-    }
+    #endregion
+
 }

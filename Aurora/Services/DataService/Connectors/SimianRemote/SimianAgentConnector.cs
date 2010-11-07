@@ -59,8 +59,8 @@ namespace Aurora.Services.DataService
             if (result == null)
                 return null;
 
-            Dictionary<string, object> dresult = Util.OSDToDictionary(result);
-            IAgentInfo agent = new IAgentInfo(dresult);
+            IAgentInfo agent = new IAgentInfo();
+            agent.FromOSD(result);
 
             return agent;
         }
