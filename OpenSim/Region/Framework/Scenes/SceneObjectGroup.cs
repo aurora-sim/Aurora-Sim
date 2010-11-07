@@ -110,8 +110,8 @@ namespace OpenSim.Region.Framework.Scenes
         /// since the group's last persistent backup
         /// </summary>
         private bool m_hasGroupChanged = false;
-        private long timeFirstChanged;
-        private long timeLastChanged;
+        private DateTime timeFirstChanged;
+        private DateTime timeLastChanged;
 
         public bool HasGroupChanged
         {
@@ -120,9 +120,9 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (value)
                 {
-                    timeLastChanged = Util.UnixTimeSinceEpoch();
-                    if (!m_hasGroupChanged)
-                        timeFirstChanged = Util.UnixTimeSinceEpoch();
+                    timeLastChanged = DateTime.Now;
+                    if (!m_hasGroupChanged) //First change then
+                        timeFirstChanged = DateTime.Now;
 
                     if (m_scene != null)
                         m_scene.AddPrimBackupTaint(this);
@@ -165,8 +165,8 @@ namespace OpenSim.Region.Framework.Scenes
                 shouldReaddToLoop = false;
                 return false;
             }
-            long currentTime = Util.UnixTimeSinceEpoch();
-            if (currentTime - timeLastChanged > m_scene.m_dontPersistBefore || currentTime - timeFirstChanged > m_scene.m_persistAfter)
+            DateTime currentTime = DateTime.Now;
+            if ((currentTime - timeLastChanged).TotalMinutes > m_scene.m_dontPersistBefore || (currentTime - timeFirstChanged).TotalMinutes > m_scene.m_persistAfter)
                 return true;
             return false;
         }

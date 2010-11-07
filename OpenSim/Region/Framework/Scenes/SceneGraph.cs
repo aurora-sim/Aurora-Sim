@@ -1847,6 +1847,9 @@ namespace OpenSim.Region.Framework.Scenes
 
                     m_parentScene.EventManager.TriggerParcelPrimCountUpdate();
 
+                    //Add to backup
+                    copy.HasGroupChanged = true;
+                    original.HasGroupChanged = true;
                     return copy;
                 }
                 else

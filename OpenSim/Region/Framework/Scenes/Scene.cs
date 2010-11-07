@@ -189,9 +189,9 @@ namespace OpenSim.Region.Framework.Scenes
         private object m_deleting_scene_object = new object();
 
         // the minimum time that must elapse before a changed object will be considered for persisted
-        public long m_dontPersistBefore = DEFAULT_MIN_TIME_FOR_PERSISTENCE * 10000000L;
+        public long m_dontPersistBefore = DEFAULT_MIN_TIME_FOR_PERSISTENCE;
         // the maximum time that must elapse before a changed object will be considered for persisted
-        public long m_persistAfter = DEFAULT_MAX_TIME_FOR_PERSISTENCE * 10000000L;
+        public long m_persistAfter = DEFAULT_MAX_TIME_FOR_PERSISTENCE;
 
         private UpdatePrioritizationSchemes m_priorityScheme = UpdatePrioritizationSchemes.Time;
         private bool m_reprioritizationEnabled = true;
@@ -685,18 +685,14 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     m_dontPersistBefore =
                         persistanceConfig.GetLong("MinimumTimeBeforePersistenceConsidered", DEFAULT_MIN_TIME_FOR_PERSISTENCE);
-                    m_dontPersistBefore *= 10000000;
 
                     m_persistAfter =
                         persistanceConfig.GetLong("MaximumTimeBeforePersistenceConsidered", DEFAULT_MAX_TIME_FOR_PERSISTENCE);
-                    m_persistAfter *= 10000000;
                 }
                 else
                 {
                     m_dontPersistBefore = DEFAULT_MIN_TIME_FOR_PERSISTENCE;
-                    m_dontPersistBefore *= 10000000;
                     m_persistAfter = DEFAULT_MAX_TIME_FOR_PERSISTENCE;
-                    m_persistAfter *= 10000000;
                 }
                 IConfig scriptEngineConfig = m_config.Configs["ScriptEngines"];
                 if (scriptEngineConfig != null)
