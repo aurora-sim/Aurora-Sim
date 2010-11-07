@@ -849,40 +849,18 @@ namespace OpenSim.Region.CoreModules.World.Land
         public void FinalizeLandPrimCountUpdate()
         {
             //Get Simwide prim count for owner
-            Dictionary<UUID, List<LandObject>> landOwnersAndParcels = new Dictionary<UUID, List<LandObject>>();
-            lock (m_landList)
+            int simArea = 0;
+            int simPrims = 0;
+            foreach (LandObject p in AllParcels())
             {
-                foreach (LandObject p in m_landList.Values)
-                {
-                    if (!landOwnersAndParcels.ContainsKey(p.LandData.OwnerID))
-                    {
-                        List<LandObject> tempList = new List<LandObject>();
-                        tempList.Add(p);
-                        landOwnersAndParcels.Add(p.LandData.OwnerID, tempList);
-                    }
-                    else
-                    {
-                        landOwnersAndParcels[p.LandData.OwnerID].Add(p);
-                    }
-                }
+                simArea += p.LandData.Area;
+                simPrims += p.LandData.OwnerPrims + p.LandData.OtherPrims + p.LandData.GroupPrims +
+                            p.LandData.SelectedPrims;
             }
-
-            foreach (UUID owner in landOwnersAndParcels.Keys)
+            foreach (LandObject p in AllParcels())
             {
-                int simArea = 0;
-                int simPrims = 0;
-                foreach (LandObject p in landOwnersAndParcels[owner])
-                {
-                    simArea += p.LandData.Area;
-                    simPrims += p.LandData.OwnerPrims + p.LandData.OtherPrims + p.LandData.GroupPrims +
-                                p.LandData.SelectedPrims;
-                }
-
-                foreach (LandObject p in landOwnersAndParcels[owner])
-                {
-                    p.LandData.SimwideArea = simArea;
-                    p.LandData.SimwidePrims = simPrims;
-                }
+                p.LandData.SimwideArea = simArea;
+                p.LandData.SimwidePrims = simPrims;
             }
         }
 
