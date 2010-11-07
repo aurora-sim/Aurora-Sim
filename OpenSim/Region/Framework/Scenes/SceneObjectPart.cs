@@ -2247,9 +2247,10 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="linkNum"></param>
         /// <param name="userExposed">True if the duplicate will immediately be in the scene, false otherwise</param>
         /// <returns></returns>
-        public SceneObjectPart Copy(uint localID, UUID AgentID, UUID GroupID, int linkNum, bool userExposed, bool ChangeScripts)
+        public SceneObjectPart Copy(uint localID, UUID AgentID, UUID GroupID, int linkNum, bool userExposed, bool ChangeScripts, SceneObjectGroup parent)
         {
             SceneObjectPart dupe = (SceneObjectPart)MemberwiseClone();
+            dupe.m_parentGroup = parent;
             dupe.m_shape = m_shape.Copy();
             dupe.m_regionHandle = m_regionHandle;
             if (userExposed)
@@ -2332,7 +2333,7 @@ namespace OpenSim.Region.Framework.Scenes
             ParentGroup.Scene.EventManager.TriggerOnSceneObjectPartCopy(dupe, this, userExposed);
 
 //            m_log.DebugFormat("[SCENE OBJECT PART]: Clone of {0} {1} finished", Name, UUID);
-                          
+
             return dupe;
         }
 
