@@ -2455,6 +2455,11 @@ namespace OpenSim.Region.Framework.Scenes
 
             foreach (SceneObjectGroup group in PrimsFromDB)
             {
+                if (group.IsAttachment || group.RootPart.Shape.State != 0)
+                {
+                    //WTF went wrong here?
+                    group.RootPart.Shape.State = 0;
+                }
                 group.Scene = this;
                 EventManager.TriggerOnSceneObjectLoaded(group);
                 

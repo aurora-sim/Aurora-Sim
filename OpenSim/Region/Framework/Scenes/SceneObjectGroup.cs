@@ -113,6 +113,7 @@ namespace OpenSim.Region.Framework.Scenes
         private DateTime timeFirstChanged;
         private DateTime timeLastChanged;
         public bool m_forceBackupNow = false;
+        public bool m_isLoaded = false;
 
         public bool HasGroupChanged
         {
@@ -125,12 +126,12 @@ namespace OpenSim.Region.Framework.Scenes
                     if (!m_hasGroupChanged) //First change then
                         timeFirstChanged = DateTime.Now;
 
-                    if (m_scene != null)
+                    if (m_scene != null && m_isLoaded)
                         m_scene.AddPrimBackupTaint(this);
-                    else
-                    {
+                    else if (m_scene == null)
                         m_log.Warn("[SOG]: Scene is null in HasGroupChanged!");
-                    }
+                    else if (!m_isLoaded)
+                        m_log.Info("[SOG]: Not loaded in HasGroupChanged!");
                 }
                 m_hasGroupChanged = value;
             }
@@ -529,6 +530,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             m_scene = scene;
             m_forceBackupNow = true;
+            m_isLoaded = true;
         }
 
         /// <summary>
@@ -1442,6 +1444,8 @@ namespace OpenSim.Region.Framework.Scenes
                             Name, UUID, m_scene.RegionInfo.RegionName, AbsolutePosition.ToString());
 
                     SceneObjectGroup backup_group = Copy(OwnerID, GroupID, false, Scene, false);
+                    //Do this we don't try to re-persist to the DB
+                    backup_group.m_isLoaded = false;
                     backup_group.RootPart.Velocity = RootPart.Velocity;
                     backup_group.RootPart.Acceleration = RootPart.Acceleration;
                     backup_group.RootPart.AngularVelocity = RootPart.AngularVelocity;
@@ -1450,10 +1454,11 @@ namespace OpenSim.Region.Framework.Scenes
 
                     datastore.StoreObject(backup_group, m_scene.RegionInfo.RegionID);
 
-                    backup_group.ForEachPart(delegate(SceneObjectPart part)
+                    //Backup inventory, no lock as this isn't added ANYWHERE but here
+                    foreach (SceneObjectPart part in backup_group.ChildrenList)
                     {
                         part.Inventory.ProcessInventoryBackup(datastore);
-                    });
+                    }
 
                     backup_group = null;
                     return true;
@@ -1496,6 +1501,10 @@ namespace OpenSim.Region.Framework.Scenes
         public SceneObjectGroup Copy(UUID cAgentID, UUID cGroupID, bool userExposed, Scene scene, bool ChangeScripts)
         {
             SceneObjectGroup dupe = (SceneObjectGroup)MemberwiseClone();
+
+            //Block attempts to persist to the DB
+            dupe.m_isLoaded = false;
+
             //dupe.m_isBackedUp = false;
             dupe.m_parts = new Dictionary<OpenMetaverse.UUID, SceneObjectPart>();
             dupe.m_partsList = new List<SceneObjectPart>();
@@ -1587,6 +1596,13 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
 
+            dupe.m_isLoaded = true;
+            //Now let it persist if it is needed
+            if (userExposed)
+            {
+                dupe.HasGroupChanged = true;
+            }
+
             return dupe;
         }
 
@@ -1603,7 +1619,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="cGroupID"></param>
         public void CopyRootPart(SceneObjectPart part, UUID cAgentID, UUID cGroupID, bool userExposed, bool ChangeScripts)
         {
-            SetRootPart(part.Copy(m_scene.AllocateLocalId(), OwnerID, GroupID, m_parts.Count, userExposed, ChangeScripts), userExposed);
+            SetRootPart(part.Copy(m_scene.AllocateLocalId(), OwnerID, GroupID, m_parts.Count, userExposed, ChangeScripts, this), userExposed);
         }
 
         public void ScriptSetPhysicsStatus(bool UsePhysics)
@@ -1851,7 +1867,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="cGroupID"></param>
         public SceneObjectPart CopyPart(SceneObjectPart part, UUID cAgentID, UUID cGroupID, bool userExposed, bool ChangeScripts)
         {
-            SceneObjectPart newPart = part.Copy(m_scene.AllocateLocalId(), OwnerID, GroupID, m_parts.Count, userExposed, ChangeScripts);
+            SceneObjectPart newPart = part.Copy(m_scene.AllocateLocalId(), OwnerID, GroupID, m_parts.Count, userExposed, ChangeScripts, this);
             AddPart(newPart, userExposed);
 
             SetPartAsNonRoot(newPart);
