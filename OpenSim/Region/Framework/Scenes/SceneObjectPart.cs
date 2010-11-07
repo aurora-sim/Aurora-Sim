@@ -699,7 +699,8 @@ namespace OpenSim.Region.Framework.Scenes
             }
             set
             {
-                ParentGroup.HasGroupChanged = true;
+                if (ParentGroup != null)
+                    ParentGroup.HasGroupChanged = true;
                 lock (m_GenericData)
                 {
                     m_GenericData = value;
@@ -730,7 +731,8 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void AddGenericField(string key, object Value)
         {
-            ParentGroup.HasGroupChanged = true;
+            if(ParentGroup != null)
+                ParentGroup.HasGroupChanged = true;
             if (Value is byte[])
             {
                 byte[] V = Value as byte[];
@@ -894,7 +896,8 @@ namespace OpenSim.Region.Framework.Scenes
             get { return (uint)Flags; }
             set
             {
-                ParentGroup.HasGroupChanged = true;
+                if (ParentGroup != null)
+                    ParentGroup.HasGroupChanged = true;
                 Flags = (PrimFlags)value;
             }
         }
@@ -904,7 +907,8 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_uuid; }
             set 
             {
-                ParentGroup.HasGroupChanged = true;
+                if (ParentGroup != null)
+                    ParentGroup.HasGroupChanged = true;
                 m_uuid = value; 
                 
                 // This is necessary so that TaskInventoryItem parent ids correctly reference the new uuid of this part
@@ -939,7 +943,8 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_name; }
             set 
             {
-                ParentGroup.HasGroupChanged = true;
+                if (ParentGroup != null)
+                    ParentGroup.HasGroupChanged = true;
                 m_name = value;
                 if (PhysActor != null)
                 {
@@ -953,7 +958,8 @@ namespace OpenSim.Region.Framework.Scenes
             get { return (byte) m_material; }
             set
             {
-                ParentGroup.HasGroupChanged = true;
+                if (ParentGroup != null)
+                    ParentGroup.HasGroupChanged = true;
                 m_material = (Material)value;
                 if (PhysActor != null)
                 {
@@ -980,7 +986,6 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_passTouches; }
             set
             {
-                ParentGroup.HasGroupChanged = true;
                 m_passTouches = value;
                 if (ParentGroup != null)
                     ParentGroup.HasGroupChanged = true;
