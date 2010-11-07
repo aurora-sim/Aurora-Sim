@@ -387,6 +387,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             sceneObject.AttachToScene(m_parentScene);
             Entities.Add(sceneObject);
+            sceneObject.m_forceBackupNow = true;
 
             if (sendClientUpdates)
                 sceneObject.ScheduleGroupForFullUpdate(PrimUpdateFlags.FullUpdate);
@@ -863,7 +864,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (Entities.TryGetChildPrimParent(localID, out entity))
                 return entity as SceneObjectGroup;
 
-            m_log.DebugFormat("Entered deprecated GetGroupByPrim with localID {0}", localID);
+            //m_log.DebugFormat("Entered deprecated GetGroupByPrim with localID {0}", localID);
 
             SceneObjectGroup sog;
             lock (SceneObjectGroupsByLocalID)
@@ -892,6 +893,7 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
 
+            m_log.Warn("[SCENEGRAPH]: Could not find a SOG for prim " + localID);
             return null;
         }
 
@@ -917,7 +919,9 @@ namespace OpenSim.Region.Framework.Scenes
                 if (ent is SceneObjectGroup)
                 {
                     if(((SceneObjectGroup)ent).UUID == fullID)
-                        return (SceneObjectGroup)ent;
+                        return ((SceneObjectGroup)ent);
+                    else if (((SceneObjectGroup)ent).HasChildPrim(fullID))
+                        return ((SceneObjectGroup)ent);
                 }
             }
 
@@ -1576,7 +1580,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 foreach (SceneObjectGroup child in childGroups)
                 {
-                    parentGroup.LinkToGroup(child);
+                    parentGroup.LinkToGroup(child, true);
 
                     // this is here so physics gets updated!
                     // Don't remove!  Bad juju!  Stay away! or fix physics!

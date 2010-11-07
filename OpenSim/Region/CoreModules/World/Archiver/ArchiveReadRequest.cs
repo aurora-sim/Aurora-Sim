@@ -192,7 +192,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                         // For now, give all incoming scene objects new uuids.  This will allow scenes to be cloned
                         // on the same region server and multiple examples a single object archive to be imported
                         // to the same scene (when this is possible).
-                        sceneObject.ResetIDs();
+                        sceneObject.ResetIDs(true);
 
                         foreach (SceneObjectPart part in sceneObject.ChildrenList)
                         {

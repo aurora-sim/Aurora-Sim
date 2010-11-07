@@ -63,7 +63,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
 
                     if (newIDS)
                     {
-                        obj.ResetIDs();
+                        obj.ResetIDs(true);
                     }
                     //if we want this to be a import method then we need new uuids for the object to avoid any clashes
                     //obj.RegenerateFullIDs();

@@ -744,7 +744,7 @@ namespace OpenSim.Region.Framework.Scenes
             string xmlData = Utils.BytesToString(rezAsset.Data);
             SceneObjectGroup group = SceneObjectSerializer.FromOriginalXmlFormat(xmlData, m_part.ParentGroup.Scene);
 
-            group.ResetIDs();
+            group.ResetIDs(true);
 
             SceneObjectPart rootPart = group.GetChildPart(group.UUID);
 

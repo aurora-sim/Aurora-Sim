@@ -3391,7 +3391,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             if (newObject.LocalId == 0)
             {
-                newObject.ResetIDs();
+                newObject.ResetIDs(true);
                 newObject.AttachToScene(this);
             }
             if (!AddSceneObject(newObject))

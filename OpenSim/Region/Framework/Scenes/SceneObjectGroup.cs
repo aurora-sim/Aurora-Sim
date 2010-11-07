@@ -112,6 +112,7 @@ namespace OpenSim.Region.Framework.Scenes
         private bool m_hasGroupChanged = false;
         private DateTime timeFirstChanged;
         private DateTime timeLastChanged;
+        public bool m_forceBackupNow = false;
 
         public bool HasGroupChanged
         {
@@ -145,11 +146,13 @@ namespace OpenSim.Region.Framework.Scenes
         {
             shouldReaddToLoop = true;
             shouldReaddToLoopNow = false;
-            if (IsSelected)
+
+            //Forced NOW
+            if (m_forceBackupNow || !IsAttachment)
             {
-                //Selected prims are probably being changed, add them back for tte next backup
-                shouldReaddToLoopNow = true;
-                return false;
+                //Revert it
+                m_forceBackupNow = false;
+                return true;
             }
             if (IsDeleted || IsAttachment)
             {
@@ -157,15 +160,23 @@ namespace OpenSim.Region.Framework.Scenes
                 shouldReaddToLoop = false;
                 return false;
             }
-            if (!m_hasGroupChanged)
-                return false;
             if (m_scene.ShuttingDown)
             {
                 //Do not readd now
                 shouldReaddToLoop = false;
                 return false;
             }
+
             DateTime currentTime = DateTime.Now;
+            if (IsSelected)
+            {
+                //Check the max time for backup as well
+                if ((currentTime - timeFirstChanged).TotalMinutes > m_scene.m_persistAfter)
+                    return true;
+                //Selected prims are probably being changed, add them back for tte next backup
+                shouldReaddToLoopNow = true;
+                return false;
+            }
             if ((currentTime - timeLastChanged).TotalMinutes > m_scene.m_dontPersistBefore || (currentTime - timeFirstChanged).TotalMinutes > m_scene.m_persistAfter)
                 return true;
             return false;
@@ -517,6 +528,7 @@ namespace OpenSim.Region.Framework.Scenes
         public SceneObjectGroup(Scene scene)
         {
             m_scene = scene;
+            m_forceBackupNow = true;
         }
 
         /// <summary>
@@ -526,7 +538,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public SceneObjectGroup(SceneObjectPart part, Scene scene) :this(scene)
         {
-            SetRootPart(part);
+            SetRootPart(part, true);
         }
 
         /// <summary>
@@ -534,7 +546,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public SceneObjectGroup(UUID ownerID, Vector3 pos, Quaternion rot, PrimitiveBaseShape shape, Scene scene) : this(scene)
         {
-            SetRootPart(new SceneObjectPart(ownerID, shape, pos, rot, Vector3.Zero, scene.DefaultObjectName));
+            SetRootPart(new SceneObjectPart(ownerID, shape, pos, rot, Vector3.Zero, scene.DefaultObjectName), true);
         }
 
         /// <summary>
@@ -1110,7 +1122,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// Set a part to act as the root part for this scene object
         /// </summary>
         /// <param name="part"></param>
-        public void SetRootPart(SceneObjectPart part)
+        public void SetRootPart(SceneObjectPart part, bool UserExposed)
         {
             if (part == null)
                 throw new ArgumentNullException("Cannot give SceneObjectGroup a null root SceneObjectPart");
@@ -1119,17 +1131,18 @@ namespace OpenSim.Region.Framework.Scenes
             if (!IsAttachment)
                 part.SetParentLocalId(0);
             part.LinkNum = 0;
-            AddPart(part);
+            AddPart(part, UserExposed);
         }
 
         /// <summary>
         /// Add a new part to this scene object.  The part must already be correctly configured.
         /// </summary>
         /// <param name="part"></param>
-        public void AddPart(SceneObjectPart part)
+        public void AddPart(SceneObjectPart part, bool UserExposed)
         {
             part.SetParent(this);
-            UpdatePartList(part);
+            if(UserExposed)
+                UpdatePartList(part);
             if (part != RootPart)
                 part.LinkNum = m_parts.Count;
 
@@ -1590,7 +1603,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="cGroupID"></param>
         public void CopyRootPart(SceneObjectPart part, UUID cAgentID, UUID cGroupID, bool userExposed, bool ChangeScripts)
         {
-            SetRootPart(part.Copy(m_scene.AllocateLocalId(), OwnerID, GroupID, m_parts.Count, userExposed, ChangeScripts));
+            SetRootPart(part.Copy(m_scene.AllocateLocalId(), OwnerID, GroupID, m_parts.Count, userExposed, ChangeScripts), userExposed);
         }
 
         public void ScriptSetPhysicsStatus(bool UsePhysics)
@@ -1839,7 +1852,7 @@ namespace OpenSim.Region.Framework.Scenes
         public SceneObjectPart CopyPart(SceneObjectPart part, UUID cAgentID, UUID cGroupID, bool userExposed, bool ChangeScripts)
         {
             SceneObjectPart newPart = part.Copy(m_scene.AllocateLocalId(), OwnerID, GroupID, m_parts.Count, userExposed, ChangeScripts);
-            AddPart(newPart);
+            AddPart(newPart, userExposed);
 
             SetPartAsNonRoot(newPart);
             return newPart;
@@ -1851,7 +1864,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// This is called by methods which want to add a new group to an existing scene, in order
         /// to ensure that there are no clashes with groups already present.
         /// </summary>
-        public void ResetIDs()
+        public void ResetIDs(bool UserExposed)
         {
             // As this is only ever called for prims which are not currently part of the scene (and hence
             // not accessible by clients), there should be no need to lock
@@ -1862,7 +1875,8 @@ namespace OpenSim.Region.Framework.Scenes
                 part.ResetIDs(part.LinkNum, false); // Don't change link nums
                 if(m_scene != null)
                     m_rootPart.LocalId = m_scene.AllocateLocalId();
-                UpdatePartList(part);
+                if(UserExposed)
+                    UpdatePartList(part);
             }
         }
 
@@ -2313,7 +2327,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="localID"></param>
         /// <returns></returns>
-        [Obsolete("Use EntityManager.TryGetChildPrim instead.")]
+        //[Obsolete("Use EntityManager.TryGetChildPrim instead.")]
         public bool HasChildPrim(uint localID)
         {
             //m_log.DebugFormat("Entered HasChildPrim looking for {0}", localID);
@@ -2340,7 +2354,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// Link the prims in a given group to this group
         /// </summary>
         /// <param name="objectGroup">The group of prims which should be linked to this group</param>
-        public void LinkToGroup(SceneObjectGroup objectGroup)
+        public void LinkToGroup(SceneObjectGroup objectGroup, bool UserExposed)
         {
             // Make sure we have sent any pending unlinks or stuff.
             //if (objectGroup.RootPart.UpdateFlag > 0)
@@ -2394,7 +2408,8 @@ namespace OpenSim.Region.Framework.Scenes
                 linkPart.LinkNum = 2;
 
                 linkPart.SetParent(this);
-                UpdatePartList(linkPart);
+                if(UserExposed)
+                    UpdatePartList(linkPart);
                 linkPart.CreateSelected = true;
 
                 //rest of parts
@@ -2403,7 +2418,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     if (part.UUID != objectGroup.m_rootPart.UUID)
                     {
-                        LinkNonRootPart(part, oldGroupPosition, oldRootRotation, linkNum++);
+                        LinkNonRootPart(part, oldGroupPosition, oldRootRotation, linkNum++, true);
                     }
                 }
             }
@@ -2557,7 +2572,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_isBackedUp = false;*/
         }
 
-        private void LinkNonRootPart(SceneObjectPart part, Vector3 oldGroupPosition, Quaternion oldGroupRotation, int linkNum)
+        private void LinkNonRootPart(SceneObjectPart part, Vector3 oldGroupPosition, Quaternion oldGroupRotation, int linkNum, bool UserExposed)
         {
             Quaternion parentRot = oldGroupRotation;
             Quaternion oldRot = part.RotationOffset;
@@ -2575,8 +2590,9 @@ namespace OpenSim.Region.Framework.Scenes
 
             part.SetParent(this);
             part.SetParentLocalId(m_rootPart.LocalId);
-
-            UpdatePartList(part);
+            
+            if(UserExposed)
+                UpdatePartList(part);
 
             part.LinkNum = linkNum;
 

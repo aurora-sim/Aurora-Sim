@@ -560,7 +560,7 @@ namespace OpenSim.Data.MySQL
                     {
                         int originalLinkNum = prim.LinkNum;
 
-                        sog.AddPart(prim);
+                        sog.AddPart(prim, true);
 
                         // SceneObjectGroup.AddPart() tries to be smart and automatically set the LinkNum.
                         // We override that here
