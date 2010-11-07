@@ -578,8 +578,8 @@ namespace OpenSim
 				switch (cmdparams[0].ToLower()) 
                 {
                     case "help":
-                        MainConsole.Instance.Output("modules list - List modules");
-                        MainConsole.Instance.Output("modules unload - Unload a module");
+                        MainConsole.Instance.Output("modules list - List modules", "noTimeStamp");
+                        MainConsole.Instance.Output("modules unload - Unload a module", "noTimeStamp");
                         break;
 					case "list":
                         foreach (IRegionModuleBase irm in controller.AllModules)

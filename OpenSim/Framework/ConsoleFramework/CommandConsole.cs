@@ -590,7 +590,7 @@ namespace OpenSim.Framework
             List<string> help = m_Commands.GetHelp(cmd);
 
             foreach (string s in help)
-                Output(s);
+                Output(s, "noTimeStamp");
         }
 
         /// <summary>
