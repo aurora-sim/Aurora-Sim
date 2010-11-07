@@ -115,6 +115,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public bool HasGroupChanged
         {
+            get { return m_hasGroupChanged; }
             set
             {
                 if (value)
@@ -123,13 +124,15 @@ namespace OpenSim.Region.Framework.Scenes
                     if (!m_hasGroupChanged)
                         timeFirstChanged = Util.UnixTimeSinceEpoch();
 
-                    if(m_scene != null)
+                    if (m_scene != null)
                         m_scene.AddPrimBackupTaint(this);
+                    else
+                    {
+                        m_log.Warn("[SOG]: Scene is null in HasGroupChanged!");
+                    }
                 }
                 m_hasGroupChanged = value;
             }
-
-            get { return m_hasGroupChanged; }
         }
 
         private bool isTimeToPersist()
@@ -207,7 +210,11 @@ namespace OpenSim.Region.Framework.Scenes
                     return String.Empty;
                 return RootPart.Name;
             }
-            set { RootPart.Name = value; }
+            set
+            {
+                HasGroupChanged = true;
+                RootPart.Name = value;
+            }
         }
 
         /// <summary>
@@ -232,7 +239,11 @@ namespace OpenSim.Region.Framework.Scenes
         public virtual Quaternion Rotation
         {
             get { return m_rotation; }
-            set { m_rotation = value; }
+            set
+            {
+                HasGroupChanged = true;
+                m_rotation = value;
+            }
         }
 
         public Quaternion GroupRotation
@@ -243,7 +254,11 @@ namespace OpenSim.Region.Framework.Scenes
         public UUID GroupID
         {
             get { return m_rootPart.GroupID; }
-            set { m_rootPart.GroupID = value; }
+            set 
+            {
+                HasGroupChanged = true;
+                m_rootPart.GroupID = value;
+            }
         }
 
         public SceneObjectPart[] Parts
@@ -294,6 +309,7 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_rootPart.GroupPosition; }
             set
             {
+                HasGroupChanged = true;
                 Vector3 val = value;
                 if (!IsAttachment && RootPart.Shape.State == 0)
                 {
@@ -364,19 +380,31 @@ namespace OpenSim.Region.Framework.Scenes
         public UUID OwnerID
         {
             get { return m_rootPart.OwnerID; }
-            set { m_rootPart.OwnerID = value; }
+            set
+            {
+                HasGroupChanged = true;
+                m_rootPart.OwnerID = value;
+            }
         }
 
         public float Damage
         {
             get { return m_rootPart.Damage; }
-            set { m_rootPart.Damage = value; }
+            set
+            {
+                HasGroupChanged = true;
+                m_rootPart.Damage = value;
+            }
         }
 
         public Color Color
         {
             get { return m_rootPart.Color; }
-            set { m_rootPart.Color = value; }
+            set
+            {
+                HasGroupChanged = true;
+                m_rootPart.Color = value;
+            }
         }
 
         public string Text
@@ -389,12 +417,11 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 return returnstr;
             }
-            set { m_rootPart.Text = value; }
-        }
-
-        protected virtual bool InSceneBackup
-        {
-            get { return true; }
+            set
+            {
+                HasGroupChanged = true;
+                m_rootPart.Text = value;
+            }
         }
 
         public bool IsSelected
