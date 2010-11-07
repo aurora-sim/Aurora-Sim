@@ -55,13 +55,12 @@ namespace Aurora.Modules
         #region Declares
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private Scene m_scene;
         private IConfigSource m_config;
         private IProfileConnector ProfileFrontend = null;
         private List<Scene> m_Scenes = new List<Scene>();
         private bool m_SearchEnabled = false;
         private IGroupsModule GroupsModule = null;
-        private IDirectoryServiceConnector DSC = null;
+        private IDirectoryServiceConnector directoryService = null;
 
         #endregion
 
@@ -71,7 +70,7 @@ namespace Aurora.Modules
         {
             m_config = config;
             IConfig searchConfig = config.Configs["Search"];
-            if (searchConfig != null)
+            if (searchConfig != null) //Check whether we are enabled
                 if (searchConfig.GetString("SearchModule", Name) == Name)
                     m_SearchEnabled = true;
         }
@@ -83,9 +82,8 @@ namespace Aurora.Modules
 
             if (!m_Scenes.Contains(scene))
                 m_Scenes.Add(scene);
-            m_scene = scene;
-            m_scene.EventManager.OnNewClient += NewClient;
-            m_scene.EventManager.OnClosingClient += OnClosingClient;
+            scene.EventManager.OnNewClient += NewClient;
+            scene.EventManager.OnClosingClient += OnClosingClient;
         }
 
         public void RemoveRegion(Scene scene)
@@ -95,18 +93,18 @@ namespace Aurora.Modules
 
             if (m_Scenes.Contains(scene))
                 m_Scenes.Remove(scene);
-            m_scene.EventManager.OnNewClient -= NewClient;
-            m_scene.EventManager.OnClosingClient -= OnClosingClient;
+            scene.EventManager.OnNewClient -= NewClient;
+            scene.EventManager.OnClosingClient -= OnClosingClient;
         }
 
         public void RegionLoaded(Scene scene)
         {
             if (!m_SearchEnabled)
                 return;
-
+            //Pull in the services we need
             ProfileFrontend = DataManager.DataManager.RequestPlugin<IProfileConnector>();
-            DSC = Aurora.DataManager.DataManager.RequestPlugin<IDirectoryServiceConnector>();
-            GroupsModule = m_scene.RequestModuleInterface<IGroupsModule>();
+            directoryService = Aurora.DataManager.DataManager.RequestPlugin<IDirectoryServiceConnector>();
+            GroupsModule = scene.RequestModuleInterface<IGroupsModule>();
         }
 
         public Type ReplaceableInterface
@@ -172,7 +170,7 @@ namespace Aurora.Modules
         /// </summary>
         /// <param name="remoteClient"></param>
         /// <param name="queryID"></param>
-        /// <param name="queryText"></param>
+        /// <param name="queryText">The thing to search for</param>
         /// <param name="queryFlags"></param>
         /// <param name="category"></param>
         /// <param name="simName"></param>
@@ -181,7 +179,9 @@ namespace Aurora.Modules
                                       string queryText, int queryFlags, int category, string simName,
                                       int queryStart)
         {
-            DirPlacesReplyData[] ReturnValues = DSC.FindLand(queryText, category.ToString(), queryStart, (uint)queryFlags);
+            DirPlacesReplyData[] ReturnValues = directoryService.FindLand(queryText, category.ToString(), queryStart, (uint)queryFlags);
+            
+            //Only send 10 at a time so that we don't kill the client with too big of a packet
             if (ReturnValues.Length > 10)
             {
                 DirPlacesReplyData[] data = new DirPlacesReplyData[10];
@@ -193,6 +193,7 @@ namespace Aurora.Modules
                     i++;
                     if (i == 10)
                     {
+                        //Rebuild the packets every 10 places
                         remoteClient.SendDirPlacesReply(queryID, data);
                         i = 0;
                         if (ReturnValues.Length - i < 10)
@@ -205,18 +206,18 @@ namespace Aurora.Modules
                         }
                     }
                 }
-                remoteClient.SendDirPlacesReply(queryID, data);
+                //Send all the remaining packets
+                if(data.Length != 0)
+                    remoteClient.SendDirPlacesReply(queryID, data);
             }
-            else
-            {
+            else //Send all then if it is less than 10
                 remoteClient.SendDirPlacesReply(queryID, ReturnValues);
-            }
         }
 
         public void DirPopularQuery(IClientAPI remoteClient, UUID queryID, uint queryFlags)
         {
             /// <summary>
-            /// Deprecated.
+            /// Deprecated as no newer client support it
             /// </summary>
         }
 
@@ -234,7 +235,8 @@ namespace Aurora.Modules
                                  uint queryFlags, uint searchType, int price, int area,
                                  int queryStart)
         {
-            DirLandReplyData[] ReturnValues = DSC.FindLandForSale(searchType.ToString(), price.ToString(), area.ToString(), queryStart, queryFlags);
+            DirLandReplyData[] ReturnValues = directoryService.FindLandForSale(searchType.ToString(), price.ToString(), area.ToString(), queryStart, queryFlags);
+            //Send only 10 at a time
             if (ReturnValues.Length > 10)
             {
                 DirLandReplyData[] data = new DirLandReplyData[10];
@@ -246,34 +248,41 @@ namespace Aurora.Modules
                     i++;
                     if (i == 10)
                     {
+                        //Rebuild every 10 packets
                         remoteClient.SendDirLandReply(queryID, data);
                         i = 0;
                         if (ReturnValues.Length - i < 10)
-                        {
                             data = new DirLandReplyData[ReturnValues.Length - i];
-                        }
                         else
-                        {
                             data = new DirLandReplyData[10];
-                        }
                     }
                 }
-                remoteClient.SendDirLandReply(queryID, data);
+                //Send the remaining
+                if(data.Length != 0)
+                    remoteClient.SendDirLandReply(queryID, data);
             }
-            else
+            else //Send all the rest
                 remoteClient.SendDirLandReply(queryID, ReturnValues);
         }
 
+        /// <summary>
+        /// Finds either people or events
+        /// </summary>
+        /// <param name="remoteClient"></param>
+        /// <param name="queryID">Just a UUID to send back to the client</param>
+        /// <param name="queryText">The term to search for</param>
+        /// <param name="queryFlags">Flags like maturity, etc</param>
+        /// <param name="queryStart">Where in the search should we start? 0, 10, 20, etc</param>
         public void DirFindQuery(IClientAPI remoteClient, UUID queryID,
                                  string queryText, uint queryFlags, int queryStart)
         {
-            if ((queryFlags & 1) != 0)
+            if ((queryFlags & 1) != 0) //People query
             {
                 DirPeopleQuery(remoteClient, queryID, queryText, queryFlags,
                                queryStart);
                 return;
             }
-            else if ((queryFlags & 32) != 0)
+            else if ((queryFlags & 32) != 0) //Events query
             {
                 DirEventsQuery(remoteClient, queryID, queryText, queryFlags,
                                queryStart);
@@ -285,6 +294,7 @@ namespace Aurora.Modules
         public void DirPeopleQuery(IClientAPI remoteClient, UUID queryID,
                                    string queryText, uint queryFlags, int queryStart)
         {
+            //Find the user accounts
             List<UserAccount> accounts = m_Scenes[0].UserAccountService.GetUserAccounts(m_Scenes[0].RegionInfo.ScopeID, queryText);
             DirPeopleReplyData[] data =
                     new DirPeopleReplyData[accounts.Count];
@@ -292,6 +302,7 @@ namespace Aurora.Modules
             int i = 0;
             foreach (UserAccount item in accounts)
             {
+                //This is really bad, we should not be searching for all of these people again in the Profile service
                 IUserProfileInfo UserProfile = ProfileFrontend.GetUserProfile(item.PrincipalID);
                 if (UserProfile == null)
                 {
@@ -311,13 +322,14 @@ namespace Aurora.Modules
                                 data[i].group = membership.GroupName;
                         }
                     }
-                    OpenSim.Services.Interfaces.GridUserInfo Pinfo = m_scene.GridUserService.GetGridUserInfo(item.PrincipalID.ToString());
-                    if (Pinfo != null)
+                    //Then we have to pull the GUI to see if the user is online or not
+                    OpenSim.Services.Interfaces.GridUserInfo Pinfo = m_Scenes[0].GridUserService.GetGridUserInfo(item.PrincipalID.ToString());
+                    if (Pinfo != null && Pinfo.Online) //If it is null, they are offline
                         data[i].online = true;
                     data[i].reputation = 0;
                     i++;
                 }
-                else if (UserProfile.AllowPublish)
+                else if (UserProfile.AllowPublish) //Check whether they want to be in search or not
                 {
                     data[i] = new DirPeopleReplyData();
                     data[i].agentID = item.PrincipalID;
@@ -328,6 +340,7 @@ namespace Aurora.Modules
                     else
                     {
                         data[i].group = "";
+                        //Check what group they have set
                         GroupMembershipData[] memberships = GroupsModule.GetMembershipData(item.PrincipalID);
                         foreach (GroupMembershipData membership in memberships)
                         {
@@ -335,17 +348,18 @@ namespace Aurora.Modules
                                 data[i].group = membership.GroupName;
                         }
                     }
-                    OpenSim.Services.Interfaces.GridUserInfo Pinfo = m_scene.GridUserService.GetGridUserInfo(item.PrincipalID.ToString());
-                    if (Pinfo != null)
+                    //Then we have to pull the GUI to see if the user is online or not
+                    OpenSim.Services.Interfaces.GridUserInfo Pinfo = m_Scenes[0].GridUserService.GetGridUserInfo(item.PrincipalID.ToString());
+                    if (Pinfo != null && Pinfo.Online)
                         data[i].online = true;
                     data[i].reputation = 0;
                     i++;
                 }
             }
+            //Only send 10 packets at a time
             if (data.Length > 10)
             {
                 DirPeopleReplyData[] retvals = new DirPeopleReplyData[10];
-                
                 i = 0;
                 foreach (DirPeopleReplyData d in data)
                 {
@@ -356,18 +370,16 @@ namespace Aurora.Modules
                         remoteClient.SendDirPeopleReply(queryID, retvals);
                         i = 0;
                         if (data.Length - i < 10)
-                        {
                             retvals = new DirPeopleReplyData[data.Length - i];
-                        }
                         else
-                        {
                             retvals = new DirPeopleReplyData[10];
-                        }
                     }
                 }
-                remoteClient.SendDirPeopleReply(queryID, retvals);
+                //Send the remaining
+                if(retvals.Length != 0)
+                    remoteClient.SendDirPeopleReply(queryID, retvals);
             }
-            else
+            else //Send all if under 10
                 remoteClient.SendDirPeopleReply(queryID, data);
             
         }
@@ -375,8 +387,9 @@ namespace Aurora.Modules
         public void DirEventsQuery(IClientAPI remoteClient, UUID queryID,
                                    string queryText, uint queryFlags, int queryStart)
         {
-            DirEventsReplyData[] ReturnValues = DSC.FindEvents(queryText, queryFlags.ToString(), queryStart);
+            DirEventsReplyData[] ReturnValues = directoryService.FindEvents(queryText, queryFlags.ToString(), queryStart);
 
+            //Split into sets of 10 packets
             if (ReturnValues.Length > 10)
             {
                 DirEventsReplyData[] data = new DirEventsReplyData[10];
@@ -391,18 +404,16 @@ namespace Aurora.Modules
                         remoteClient.SendDirEventsReply(queryID, data);
                         i = 0;
                         if (data.Length - i < 10)
-                        {
                             data = new DirEventsReplyData[data.Length - i];
-                        }
                         else
-                        {
                             data = new DirEventsReplyData[10];
-                        }
                     }
                 }
-                remoteClient.SendDirEventsReply(queryID, data);
+                //Send the remaining packets
+                if(data.Length != 0)
+                    remoteClient.SendDirEventsReply(queryID, data);
             }
-            else
+            else //Send the remaining as they are under 10
                 remoteClient.SendDirEventsReply(queryID, ReturnValues);
         }
 
@@ -410,7 +421,9 @@ namespace Aurora.Modules
                                        string queryText, uint queryFlags, uint category,
                                        int queryStart)
         {
-            DirClassifiedReplyData[] ReturnValues = DSC.FindClassifieds(queryText, category.ToString(), queryFlags.ToString(), queryStart);
+            DirClassifiedReplyData[] ReturnValues = directoryService.FindClassifieds(queryText, category.ToString(), queryFlags.ToString(), queryStart);
+            
+            //Split into sets of 10 packets
             if (ReturnValues.Length > 10)
             {
                 DirClassifiedReplyData[] data = new DirClassifiedReplyData[10];
@@ -425,24 +438,29 @@ namespace Aurora.Modules
                         remoteClient.SendDirClassifiedReply(queryID, data);
                         i = 0;
                         if (data.Length - i < 10)
-                        {
                             data = new DirClassifiedReplyData[data.Length - i];
-                        }
                         else
-                        {
                             data = new DirClassifiedReplyData[10];
-                        }
                     }
                 }
-                remoteClient.SendDirClassifiedReply(queryID, data);
+                //Send the remaining packets
+                if (data.Length != 0)
+                    remoteClient.SendDirClassifiedReply(queryID, data);
             }
-            else
+            else //Send the remaining as they are under 10
                 remoteClient.SendDirClassifiedReply(queryID, ReturnValues);
         }
 
+        /// <summary>
+        /// Tell the client about X event
+        /// </summary>
+        /// <param name="remoteClient"></param>
+        /// <param name="queryEventID">ID of the event</param>
         public void EventInfoRequest(IClientAPI remoteClient, uint queryEventID)
         {
-            EventData data = DSC.GetEventInfo(queryEventID.ToString());
+            //Find the event
+            EventData data = directoryService.GetEventInfo(queryEventID.ToString());
+            //Send the event
             remoteClient.SendEventInfoReply(data);
         }
 
@@ -455,8 +473,8 @@ namespace Aurora.Modules
             mapItemReply mapitem = new mapItemReply();
             uint xstart = 0;
             uint ystart = 0;
-            OpenMetaverse.Utils.LongToUInts(m_scene.RegionInfo.RegionHandle, out xstart, out ystart);
-            OpenSim.Services.Interfaces.GridRegion GR = m_scene.GridService.GetRegionByPosition(UUID.Zero, (int)xstart, (int)ystart);
+            OpenMetaverse.Utils.LongToUInts(remoteClient.Scene.RegionInfo.RegionHandle, out xstart, out ystart);
+            OpenSim.Services.Interfaces.GridRegion GR = m_Scenes[0].GridService.GetRegionByPosition(UUID.Zero, (int)xstart, (int)ystart);
 
             #region Telehub
             if (itemtype == (uint)OpenMetaverse.GridItemType.Telehub)
@@ -464,17 +482,23 @@ namespace Aurora.Modules
                 IRegionConnector GF = DataManager.DataManager.RequestPlugin<IRegionConnector>();
                 if (GF == null)
                     return;
+
                 int tc = Environment.TickCount;
+                //Find the telehub
                 Telehub telehub = GF.FindTelehub(GR.RegionID);
                 if (telehub != null)
                 {
                     mapitem = new mapItemReply();
+                    //The position is in GLOBAL coordinates (in meters)
                     mapitem.x = (uint)(GR.RegionLocX + telehub.TelehubLocX);
                     mapitem.y = (uint)(GR.RegionLocY + telehub.TelehubLocY);
                     mapitem.id = GR.RegionID;
+                    //This is how the name is sent, go figure
                     mapitem.name = Util.Md5Hash(GR.RegionName + tc.ToString());
+                    //Not sure, but this is what gets sent
                     mapitem.Extra = 1;
                     mapitem.Extra2 = 0;
+
                     mapitems.Add(mapitem);
                     remoteClient.SendMapItemReply(mapitems.ToArray(), itemtype, flags);
                     mapitems.Clear();
@@ -485,41 +509,45 @@ namespace Aurora.Modules
 
             #region Land for sale
 
+            //PG land that is for sale
             if (itemtype == (uint)OpenMetaverse.GridItemType.LandForSale)
             {
-                if (DSC == null)
+                if (directoryService == null)
                     return;
-                DirLandReplyData[] Landdata = DSC.FindLandForSale("0", int.MaxValue.ToString(), "0", 0, 0);
+                //Find all the land, use "0" for the flags so we get all land for sale, no price or area checking
+                DirLandReplyData[] Landdata = directoryService.FindLandForSale("0", int.MaxValue.ToString(), "0", 0, 0);
                 
                 uint locX = 0;
                 uint locY = 0;
                 foreach (DirLandReplyData landDir in Landdata)
                 {
-                    LandData landdata = DSC.GetParcelInfo(landDir.parcelID);
+                    LandData landdata = directoryService.GetParcelInfo(landDir.parcelID);
                     if (landdata.Maturity != 0)
-                    {
-                        continue;
-                    }
+                        continue; //Not a PG land 
                     foreach (Scene scene in m_Scenes)
                     {
                         if (scene.RegionInfo.RegionID == landdata.RegionID)
                         {
+                            //Global coords, so add the meters
                             locX = scene.RegionInfo.RegionLocX * Constants.RegionSize;
                             locY = scene.RegionInfo.RegionLocY * Constants.RegionSize;
                         }
                     }
                     if (locY == 0 && locX == 0)
                     {
-                        OpenSim.Services.Interfaces.GridRegion r = m_scene.GridService.GetRegionByUUID(UUID.Zero, landdata.RegionID);
+                        //Ask the grid service for the coordinates if the region is not local
+                        OpenSim.Services.Interfaces.GridRegion r = m_Scenes[0].GridService.GetRegionByUUID(UUID.Zero, landdata.RegionID);
                         if (r != null)
                         {
                             locX = (uint)r.RegionLocX;
                             locY = (uint)r.RegionLocY;
                         }
                     }
-                    if (locY == 0 && locX == 0)
+                    if (locY == 0 && locX == 0) //Couldn't find the region, don't send
                         continue;
+
                     mapitem = new mapItemReply();
+                    //Global coords, so make sure its in meters
                     mapitem.x = (uint)(locX + landdata.UserLocation.X);
                     mapitem.y = (uint)(locY + landdata.UserLocation.Y);
                     mapitem.id = landDir.parcelID;
@@ -528,6 +556,7 @@ namespace Aurora.Modules
                     mapitem.Extra2 = landDir.salePrice;
                     mapitems.Add(mapitem);
                 }
+                //Send all the map items
                 if (mapitems.Count != 0)
                 {
                     remoteClient.SendMapItemReply(mapitems.ToArray(), itemtype, flags);
@@ -535,40 +564,55 @@ namespace Aurora.Modules
                 }
             }
 
+            //Adult or mature land that is for sale
             if (itemtype == (uint)OpenMetaverse.GridItemType.AdultLandForSale)
             {
-                if (DSC == null)
+                if (directoryService == null)
                     return;
-                DirLandReplyData[] Landdata = DSC.FindLandForSale("0", int.MaxValue.ToString(), "0",0, 0);
+                //Find all the land, use "0" for the flags so we get all land for sale, no price or area checking
+                DirLandReplyData[] Landdata = directoryService.FindLandForSale("0", int.MaxValue.ToString(), "0", 0, 0);
                 
                 uint locX = 0;
                 uint locY = 0;
                 foreach (DirLandReplyData landDir in Landdata)
                 {
-                    LandData landdata = DSC.GetParcelInfo(landDir.parcelID);
+                    LandData landdata = directoryService.GetParcelInfo(landDir.parcelID);
                     if (landdata.Maturity == 0)
-                    {
-                        continue;
-                    }
+                        continue; //Its PG
                     foreach (Scene scene in m_Scenes)
                     {
                         if (scene.RegionInfo.RegionID == landdata.RegionID)
                         {
-                            locX = scene.RegionInfo.RegionLocX;
-                            locY = scene.RegionInfo.RegionLocY;
+                            //Global coords, so add the meters
+                            locX = scene.RegionInfo.RegionLocX * Constants.RegionSize;
+                            locY = scene.RegionInfo.RegionLocY * Constants.RegionSize;
                         }
                     }
                     if (locY == 0 && locX == 0)
+                    {
+                        //Ask the grid service for the coordinates if the region is not local
+                        OpenSim.Services.Interfaces.GridRegion r = m_Scenes[0].GridService.GetRegionByUUID(UUID.Zero, landdata.RegionID);
+                        if (r != null)
+                        {
+                            locX = (uint)r.RegionLocX;
+                            locY = (uint)r.RegionLocY;
+                        }
+                    }
+                    if (locY == 0 && locX == 0) //Couldn't find the region, don't send
                         continue;
+
                     mapitem = new mapItemReply();
+                    //Global coords, so make sure its in meters
                     mapitem.x = (uint)(locX + landdata.UserLocation.X);
                     mapitem.y = (uint)(locY + landdata.UserLocation.Y);
                     mapitem.id = landDir.parcelID;
                     mapitem.name = landDir.name;
                     mapitem.Extra = landDir.actualArea;
                     mapitem.Extra2 = landDir.salePrice;
+
                     mapitems.Add(mapitem);
                 }
+                //Send the results if we have any
                 if (mapitems.Count != 0)
                 {
                     remoteClient.SendMapItemReply(mapitems.ToArray(), itemtype, flags);
@@ -580,91 +624,44 @@ namespace Aurora.Modules
 
             #region Events
 
-            if (itemtype == (uint)OpenMetaverse.GridItemType.PgEvent)
+            if (itemtype == (uint)OpenMetaverse.GridItemType.PgEvent ||
+                itemtype == (uint)OpenMetaverse.GridItemType.MatureEvent ||
+                itemtype == (uint)OpenMetaverse.GridItemType.AdultEvent)
             {
-                if (DSC == null)
+                if (directoryService == null)
                     return;
-                DirEventsReplyData[] Eventdata = DSC.FindAllEventsInRegion(GR.RegionName);
+
+                //Find the maturity level
+                int maturity = itemtype == (uint)OpenMetaverse.GridItemType.PgEvent ?
+                    (int)DirectoryManager.EventFlags.PG :
+                    (itemtype == (uint)GridItemType.MatureEvent) ?
+                    (int)DirectoryManager.EventFlags.Mature :
+                    (int)DirectoryManager.EventFlags.Adult;
+
+                //Gets all the events occuring in the given region by maturity level
+                DirEventsReplyData[] Eventdata = directoryService.FindAllEventsInRegion(GR.RegionName, maturity);
+                
                 foreach (DirEventsReplyData eventData in Eventdata)
                 {
-                    EventData eventdata = DSC.GetEventInfo(eventData.eventID.ToString());
-
+                    //Get more info on the event
+                    EventData eventdata = directoryService.GetEventInfo(eventData.eventID.ToString());
+                    
                     string RegionName = eventdata.simName;
                     Vector3 globalPos = eventdata.globalPos;
-                    int Mature = eventdata.maturity;
-                    if (Mature != 0)
-                        continue;
-                    OpenSim.Services.Interfaces.GridRegion region = m_scene.GridService.GetRegionByName(UUID.Zero, RegionName);
+                    OpenSim.Services.Interfaces.GridRegion region = m_Scenes[0].GridService.GetRegionByName(UUID.Zero, RegionName);
                     mapitem = new mapItemReply();
+                    
+                    //Use global position plus half the region so that it doesn't always appear in the bottom corner
                     mapitem.x = (uint)globalPos.X + (Constants.RegionSize / 2);
                     mapitem.y = (uint)globalPos.Y + (Constants.RegionSize / 2);
+                    
                     mapitem.id = UUID.Random();
                     mapitem.name = eventData.name;
                     mapitem.Extra = (int)eventdata.dateUTC;
-                    mapitem.Extra2 = (int)eventdata.eventID;//(int)DirectoryManager.EventFlags.PG;
+                    mapitem.Extra2 = (int)eventdata.eventID;
                     mapitems.Add(mapitem);
                 }
-                if (mapitems.Count != 0)
-                {
-                    remoteClient.SendMapItemReply(mapitems.ToArray(), itemtype, flags);
-                    mapitems.Clear();
-                }
-            }
-
-            if (itemtype == (uint)OpenMetaverse.GridItemType.AdultEvent)
-            {
-                if (DSC == null)
-                    return;
-                DirEventsReplyData[] Eventdata = DSC.FindAllEventsInRegion(GR.RegionName);
-                foreach (DirEventsReplyData eventData in Eventdata)
-                {
-                    EventData eventdata = DSC.GetEventInfo(eventData.eventID.ToString());
-
-                    string RegionName = eventdata.simName;
-                    Vector3 globalPos = eventdata.globalPos;
-                    int Mature = eventdata.maturity;
-                    if (Mature != 2)
-                        continue;
-                    OpenSim.Services.Interfaces.GridRegion region = m_scene.GridService.GetRegionByName(UUID.Zero, RegionName);
-                    mapitem = new mapItemReply();
-                    mapitem.x = (uint)globalPos.X + (Constants.RegionSize / 2);
-                    mapitem.y = (uint)globalPos.Y + (Constants.RegionSize / 2);
-                    mapitem.id = UUID.Random();
-                    mapitem.name = eventData.name;
-                    mapitem.Extra = (int)eventdata.dateUTC;
-                    mapitem.Extra2 = (int)eventdata.eventID;//(int)DirectoryManager.EventFlags.PG;
-                    mapitems.Add(mapitem);
-                }
-                if (mapitems.Count != 0)
-                {
-                    remoteClient.SendMapItemReply(mapitems.ToArray(), itemtype, flags);
-                    mapitems.Clear();
-                }
-            }
-            if (itemtype == (uint)OpenMetaverse.GridItemType.MatureEvent)
-            {
-                if (DSC == null)
-                    return;
-                DirEventsReplyData[] Eventdata = DSC.FindAllEventsInRegion(GR.RegionName);
-                foreach (DirEventsReplyData eventData in Eventdata)
-                {
-                    EventData eventdata = DSC.GetEventInfo(eventData.eventID.ToString());
-
-                    string RegionName = eventdata.simName;
-                    Vector3 globalPos = eventdata.globalPos;
-                    int Mature = eventdata.maturity;
-                    if (Mature != 1)
-                        continue;
-                    OpenSim.Services.Interfaces.GridRegion region = m_scene.GridService.GetRegionByName(UUID.Zero, RegionName);
-                    mapitem = new mapItemReply();
-                    mapitem.x = (uint)globalPos.X + (Constants.RegionSize / 2);
-                    mapitem.y = (uint)globalPos.Y + (Constants.RegionSize / 2);
-                    mapitem.id = UUID.Random();
-                    mapitem.name = eventData.name;
-                    mapitem.Extra = (int)eventdata.dateUTC;
-                    mapitem.Extra2 = (int)eventdata.eventID;//(int)DirectoryManager.EventFlags.PG;
-                    mapitems.Add(mapitem);
-                }
+                //Send if we have any
                 if (mapitems.Count != 0)
                 {
                     remoteClient.SendMapItemReply(mapitems.ToArray(), itemtype, flags);
@@ -678,21 +675,28 @@ namespace Aurora.Modules
 
             if (itemtype == (uint)OpenMetaverse.GridItemType.Classified)
             {
-                if (DSC == null)
+                if (directoryService == null)
                     return;
-                Classified[] Classifieds = DSC.GetClassifiedsInRegion(GR.RegionName);
+                //Get all the classifieds in this region
+                Classified[] Classifieds = directoryService.GetClassifiedsInRegion(GR.RegionName);
                 foreach (Classified classified in Classifieds)
                 {
-                    OpenSim.Services.Interfaces.GridRegion region = m_scene.GridService.GetRegionByName(UUID.Zero, classified.SimName);
+                    //Get the region so we have its position
+                    OpenSim.Services.Interfaces.GridRegion region = m_Scenes[0].GridService.GetRegionByName(UUID.Zero, classified.SimName);
+                    
                     mapitem = new mapItemReply();
-                    mapitem.x = (uint)(region.RegionLocX + classified.GlobalPos.X);
-                    mapitem.y = (uint)(region.RegionLocY + classified.GlobalPos.Y);
-                    mapitem.id = new UUID(classified.CreatorUUID);
+                    
+                    //Use global position plus half the sim so that all classifieds are not in the bottom corner
+                    mapitem.x = (uint)(region.RegionLocX + classified.GlobalPos.X + (Constants.RegionSize / 2));
+                    mapitem.y = (uint)(region.RegionLocY + classified.GlobalPos.Y + (Constants.RegionSize / 2));
+                    
+                    mapitem.id = classified.CreatorUUID;
                     mapitem.name = classified.Name;
                     mapitem.Extra = 0;
                     mapitem.Extra2 = 0;
                     mapitems.Add(mapitem);
                 }
+                //Send the events, if we have any
                 if (mapitems.Count != 0)
                 {
                     remoteClient.SendMapItemReply(mapitems.ToArray(), itemtype, flags);
@@ -707,11 +711,14 @@ namespace Aurora.Modules
         {
             if (QueryFlags == 64) //Agent Owned
             {
-                LandData[] LandData = DSC.GetParcelByOwner(client.AgentId);
+                //Get all the parcels
+                LandData[] LandData = directoryService.GetParcelByOwner(client.AgentId);
+
                 List<ExtendedLandData> parcels = new List<ExtendedLandData>();
                 foreach (LandData land in LandData)
                 {
-                    OpenSim.Services.Interfaces.GridRegion region = m_scene.GridService.GetRegionByUUID(UUID.Zero, land.RegionID);
+                    //Find the region so we can add the meters correctly
+                    OpenSim.Services.Interfaces.GridRegion region = m_Scenes[0].GridService.GetRegionByUUID(UUID.Zero, land.RegionID);
                     if (region != null)
                     {
                         ExtendedLandData parcel = new ExtendedLandData();
@@ -728,11 +735,14 @@ namespace Aurora.Modules
             }
             if (QueryFlags == 256) //Group Owned
             {
-                LandData[] LandData = DSC.GetParcelByOwner(QueryID);
+                //Find all the group owned land
+                LandData[] LandData = directoryService.GetParcelByOwner(QueryID);
+
                 List<ExtendedLandData> parcels = new List<ExtendedLandData>();
                 foreach (LandData land in LandData)
                 {
-                    OpenSim.Services.Interfaces.GridRegion region = m_scene.GridService.GetRegionByUUID(UUID.Zero, land.RegionID);
+                    //Find the region from the grid service so that we can add the meters correctly
+                    OpenSim.Services.Interfaces.GridRegion region = m_Scenes[0].GridService.GetRegionByUUID(UUID.Zero, land.RegionID);
                     if (region != null)
                     {
                         ExtendedLandData parcel = new ExtendedLandData();
@@ -744,8 +754,9 @@ namespace Aurora.Modules
                         parcels.Add(parcel);
                     }
                 }
-
-                client.SendPlacesQuery(parcels.ToArray(), QueryID, TransactionID);
+                //Send if we have any parcels
+                if(parcels.Count != 0)
+                    client.SendPlacesQuery(parcels.ToArray(), QueryID, TransactionID);
             }
         }
 

@@ -63,11 +63,12 @@ namespace Aurora.Framework
         DirEventsReplyData[] FindEvents(string queryText, string flags, int StartQuery);
 		
         /// <summary>
-        /// Retrives all events in the given region
+        /// Retrives all events in the given region by their maturity level
         /// </summary>
         /// <param name="regionName"></param>
+        /// <param name="maturity">Uses DirectoryManager.EventFlags to determine the maturity requested</param>
         /// <returns></returns>
-        DirEventsReplyData[] FindAllEventsInRegion(string regionName);
+        DirEventsReplyData[] FindAllEventsInRegion(string regionName, int maturity);
 
         /// <summary>
         /// Searches for classifieds
@@ -95,14 +96,14 @@ namespace Aurora.Framework
 
         /// <summary>
         /// Add classifieds to the search database
-        /// LOCAL Only
+        /// LOCAL Only, called by the profile service
         /// </summary>
         /// <param name="dictionary">objects of the dictionary are OSDMaps made from Classified</param>
         void AddClassifieds(Dictionary<string, object> dictionary);
 
         /// <summary>
         /// Remove classifieds from the search database
-        /// LOCAL Only
+        /// LOCAL Only, called by the profile service
         /// </summary>
         /// <param name="dictionary">objects of the dictionary are OSDMaps made from Classified</param>
         void RemoveClassifieds(Dictionary<string, object> dictionary);
