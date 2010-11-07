@@ -108,8 +108,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //   If this isn't enabled, we run into issues with the CmdHandlerQueue,
             //    as it always must be async, so we must run the pool anyway
             AuroraThreadPoolStartInfo info = new AuroraThreadPoolStartInfo();
-            info.priority = ThreadPriority.Lowest;
+            info.priority = ThreadPriority.Normal;
             info.Threads = Engine.Config.GetInt("Threads", 100);
+            if(info.Threads < 4)
+                   info.Threads = 4;  // let's try to have enough threads alive for control, etc
             info.MaxSleepTime = Engine.Config.GetInt("SleepTime", 100);
             threadpool = new AuroraThreadPool(info);
 

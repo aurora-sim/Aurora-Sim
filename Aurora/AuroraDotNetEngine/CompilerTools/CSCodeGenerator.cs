@@ -2645,7 +2645,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 FunctionCalls += GenerateLine("}");
                 FunctionCalls += GenerateLine("catch");
                 FunctionCalls += GenerateLine("{");
-                FunctionCalls += GenerateLine("break;");//End it since we are erroring out
+                FunctionCalls += GenerateLine("yield break;");//End it since we are erroring out -> now abort 
                 FunctionCalls += GenerateLine("}"); //End of catch
                 FunctionCalls += GenerateLine("if( enumerator.Current == null || enumerator.Current is DateTime) yield return enumerator.Current;"); //Let the other things process for a bit here at the end of each enumeration
                 FunctionCalls += GenerateLine("else break;"); //Let the other things process for a bit here at the end of each enumeration
