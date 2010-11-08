@@ -81,13 +81,11 @@ namespace Aurora.Modules
         protected void SaveVersion(string module, string[] cmdparams)
         {
             if (cmdparams.Length < 3)
-            {
                 return;
-            }
 
             string Desc = "";
-            cmdparams[0] ="";
-            cmdparams[1] ="";
+            cmdparams[0] = "";
+            cmdparams[1] = "";
             foreach(string param in cmdparams)
             {
                 Desc += param;
@@ -101,12 +99,12 @@ namespace Aurora.Modules
             Scene scene = (Scene)MainConsole.Instance.ConsoleScene; //Switch back later
             MainConsole.Instance.RunCommand("change region " + nextScene.RegionInfo.RegionName);
             string tag = "";
-            tag += "Region."+nextScene.RegionInfo.RegionName;
+            tag += "Region." + nextScene.RegionInfo.RegionName;
             tag += ".Desc." + Description;
             tag += ".Version." + nextVersion;
-            tag += ".Date." + DateTime.Now.Ticks;
+            tag += ".Date." + DateTime.Now.ToString();
             nextVersion++;
-            MainConsole.Instance.RunCommand("save oar " + tag + ".oar.vc");
+            MainConsole.Instance.RunCommand("save oar " + tag + ".vc.oar");
             //Change back
             MainConsole.Instance.RunCommand("change region " + scene.RegionInfo.RegionName);
         }
