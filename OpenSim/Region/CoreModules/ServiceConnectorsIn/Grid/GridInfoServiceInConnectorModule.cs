@@ -62,9 +62,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsIn.Grid
                 {
                     m_log.Info("[GRIDINFO IN CONNECTOR]: GridInfo Service In Connector enabled");
                 }
-
             }
-
         }
 
         public void PostInitialise()
@@ -110,7 +108,6 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsIn.Grid
 
                 new GridInfoServerInConnector(m_Config, MainServer.Instance, "GridInfoService");
             }
-
         }
 
         #endregion

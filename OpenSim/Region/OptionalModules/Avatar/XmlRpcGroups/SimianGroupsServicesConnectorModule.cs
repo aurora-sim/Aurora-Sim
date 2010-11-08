@@ -682,6 +682,13 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                 OSDArray entryArray = (OSDArray)response["Entries"];
                 foreach (OSDMap entryMap in entryArray)
                 {
+                    if (entryMap["AllowPublish"].AsBoolean() == false) //Respect AllowPublish
+                        continue;
+
+                    if ((queryflags & (uint)DirectoryManager.DirFindFlags.IncludeMature) != (uint)DirectoryManager.DirFindFlags.IncludeMature)
+                        if (entryMap["MaturePublish"].AsBoolean() == true)// Check for pg,mature
+                            continue; //Block mature
+
                     DirGroupsReplyData data = new DirGroupsReplyData();
                     data.groupID = entryMap["OwnerID"].AsUUID();
                     data.groupName = entryMap["Key"].AsString();
@@ -966,10 +973,13 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                     data.FromName = Notice.Value["FromName"].AsString();
                     data.Subject = Notice.Value["Subject"].AsString();
                     data.HasAttachment = Notice.Value["BinaryBucket"].AsBinary().Length > 0;
-
-                    //TODO: Figure out how to get this
-                    data.AssetType = 0;
-
+                    if (data.HasAttachment)
+                    {
+                        data.ItemID = Notice.Value["ItemID"].AsUUID();
+                        data.AssetType = (byte)Notice.Value["AssetType"].AsInteger();
+                        data.ItemName = Notice.Value["ItemName"].AsString();
+                    }
+                    
                     values.Add(data);
                 }
             }
@@ -993,8 +1003,13 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                 data.noticeData.Timestamp = GroupNotice["TimeStamp"].AsUInteger();
                 data.noticeData.FromName = GroupNotice["FromName"].AsString();
                 data.noticeData.Subject = GroupNotice["Subject"].AsString();
-                data.noticeData.HasAttachment = data.BinaryBucket.Length > 0;
-                data.noticeData.AssetType = 0;
+                data.noticeData.HasAttachment = GroupNotice["BinaryBucket"].AsBinary().Length > 0;
+                if (data.noticeData.HasAttachment)
+                {
+                    data.noticeData.ItemID = GroupNotice["ItemID"].AsUUID();
+                    data.noticeData.AssetType = (byte)GroupNotice["AssetType"].AsInteger();
+                    data.noticeData.ItemName = GroupNotice["ItemName"].AsString();
+                }
 
                 if (data.Message == null)
                 {
@@ -1014,7 +1029,10 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             Notice["FromName"] = OSD.FromString(fromName);
             Notice["Subject"] = OSD.FromString(subject);
             Notice["Message"] = OSD.FromString(message);
-            Notice["BinaryBucket"] = OSD.FromBinary(new byte[0]);
+            Notice["ItemID"] = OSD.FromUUID(ItemID);
+            Notice["AssetType"] = OSD.FromInteger(AssetType);
+            Notice["ItemName"] = OSD.FromString(ItemName);
+            Notice["BinaryBucket"] = OSD.FromBinary(new byte[ItemID != UUID.Zero ? 1 : 0]);
 
             SimianAddGeneric(groupID, "GroupNotice", noticeID.ToString(), Notice);
             

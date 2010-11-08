@@ -264,8 +264,8 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (presence != null &&
                     ((SceneObjectGroup)entity).RootPart != null && 
-                    presence.SittingOnUUID == ((SceneObjectGroup)entity).RootPart.UUID ||
-                    presence.SittingOnID == ((SceneObjectGroup)entity).RootPart.LocalId)
+                    (presence.SittingOnUUID == ((SceneObjectGroup)entity).RootPart.UUID ||
+                    presence.SittingOnID == ((SceneObjectGroup)entity).RootPart.LocalId))
                 {
                     //Objects that are physical get more priority.
                     PhysicsActor physActor = ((SceneObjectGroup)entity).RootPart.PhysActor;
