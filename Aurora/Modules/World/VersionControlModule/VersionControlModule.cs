@@ -66,12 +66,11 @@ namespace Aurora.Modules
 
             if (m_autoOAREnabled)
             {
-                m_autoOARTimer = new Timer(m_autoOARTime * (TimeSpan.TicksPerDay / TimeSpan.TicksPerMillisecond));//Time in days
+                m_autoOARTimer = new Timer(m_autoOARTime * 1000 * 60 * 60 * 24);//Time in days
                 m_autoOARTimer.Elapsed += SaveOAR;
                 m_autoOARTimer.Enabled = true;
             }
-            scene.AddCommand(this, "save version", "save version <description>", "Saves the current region as the next incremented version in the version control module.", SaveVersion);
-            
+            //scene.AddCommand(this, "save version", "save version <description>", "Saves the current region as the next incremented version in the version control module.", SaveVersion);
         }
 
         private void SaveOAR(object sender, ElapsedEventArgs e)
