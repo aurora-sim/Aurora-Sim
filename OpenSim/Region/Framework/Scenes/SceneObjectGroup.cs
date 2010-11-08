@@ -149,7 +149,7 @@ namespace OpenSim.Region.Framework.Scenes
             shouldReaddToLoopNow = false;
 
             //Forced NOW
-            if (m_forceBackupNow || !IsAttachment)
+            if (m_forceBackupNow && !IsAttachment)
             {
                 //Revert it
                 m_forceBackupNow = false;
@@ -1143,8 +1143,9 @@ namespace OpenSim.Region.Framework.Scenes
         public void AddPart(SceneObjectPart part, bool UserExposed)
         {
             part.SetParent(this);
-            if(UserExposed)
-                UpdatePartList(part);
+
+            UpdatePartList(part, UserExposed);
+            
             if (part != RootPart)
                 part.LinkNum = m_parts.Count;
 
@@ -1152,16 +1153,19 @@ namespace OpenSim.Region.Framework.Scenes
                 RootPart.LinkNum = 1;
         }
 
-        private void UpdatePartList(SceneObjectPart part)
+        private void UpdatePartList(SceneObjectPart part, bool UserExposed)
         {
             lock (m_partsLock)
             {
                 m_parts[part.UUID] = part;
                 m_partsList.Add(part);
             }
-            Scene.Entities.Remove(LocalId);
-            Scene.Entities.Remove(UUID);
-            Scene.Entities.Add(this);
+            if (UserExposed)
+            {
+                Scene.Entities.Remove(LocalId);
+                Scene.Entities.Remove(UUID);
+                Scene.Entities.Add(this);
+            }
         }
 
         public void RemovePartList(SceneObjectPart part)
@@ -1436,7 +1440,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             try
             {
-                if (isTimeToPersist(out shouldReaddToLoop, out shouldReaddToLoopNow) || forcedBackup) // forced means FORCED, you don't get a choice!
+                if (isTimeToPersist(out shouldReaddToLoop, out shouldReaddToLoopNow) || (forcedBackup && !IsAttachment)) // forced means FORCED, you don't get a choice!
                 {
                     // don't backup while it's selected or you're asking for changes mid stream.
                     m_log.DebugFormat(
@@ -1891,8 +1895,7 @@ namespace OpenSim.Region.Framework.Scenes
                 part.ResetIDs(part.LinkNum, false); // Don't change link nums
                 if(m_scene != null)
                     m_rootPart.LocalId = m_scene.AllocateLocalId();
-                if(UserExposed)
-                    UpdatePartList(part);
+                UpdatePartList(part, UserExposed);
             }
         }
 
@@ -2424,8 +2427,7 @@ namespace OpenSim.Region.Framework.Scenes
                 linkPart.LinkNum = 2;
 
                 linkPart.SetParent(this);
-                if(UserExposed)
-                    UpdatePartList(linkPart);
+                UpdatePartList(linkPart, UserExposed);
                 linkPart.CreateSelected = true;
 
                 //rest of parts
@@ -2607,8 +2609,7 @@ namespace OpenSim.Region.Framework.Scenes
             part.SetParent(this);
             part.SetParentLocalId(m_rootPart.LocalId);
             
-            if(UserExposed)
-                UpdatePartList(part);
+            UpdatePartList(part, UserExposed);
 
             part.LinkNum = linkNum;
 

@@ -544,14 +544,21 @@ namespace Aurora.OpenRegionSettingsModule
             set { m_settings.AllowParcelWindLight = value; }
         }
 
+        public void RegisterGenericValue(string key, string value)
+        {
+            additionalKVPs.Add(key, value);
+        }
+
         #endregion
 
         #region Declares
 
         private IConfigSource m_source;
         private Scene m_scene;
-
         private OpenRegionSettings m_settings = null;
+
+        //Generic KVP's to send
+        private Dictionary<string, string> additionalKVPs = new Dictionary<string, string>();
 
         #endregion
 
@@ -793,6 +800,12 @@ namespace Aurora.OpenRegionSettingsModule
             if (m_settings.MaxGroups != -1)
                 body.Add("MaxGroups", OSD.FromInteger(m_settings.MaxGroups));
             body.Add("AllowParcelWindLight", OSD.FromInteger(m_settings.AllowParcelWindLight ? 1 : 0));
+
+            //Add all the generic ones
+            foreach (KeyValuePair<string, string> KVP in additionalKVPs)
+            {
+                body.Add(KVP.Key, OSD.FromString(KVP.Value));
+            }
 
             map.Add("body", body);
             map.Add("message", OSD.FromString("OpenRegionInfo"));

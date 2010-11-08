@@ -1242,63 +1242,71 @@ namespace OpenSim.Region.Framework.Scenes
 
                 if (account == null)
                 {
-                    // Create a new account
-                    account = new UserAccount(m_regInfo.ScopeID, first, last, String.Empty);
-                    if (account.ServiceURLs == null || (account.ServiceURLs != null && account.ServiceURLs.Count == 0))
+                    string name = first + " " + last;
+                    string createNewUser = MainConsole.Instance.CmdPrompt("Could not find user " + name + ". Would you like to create this user?", "yes");
+
+                    if (createNewUser == "yes")
                     {
-                        account.ServiceURLs = new Dictionary<string, object>();
-                        account.ServiceURLs["HomeURI"] = string.Empty;
-                        account.ServiceURLs["GatekeeperURI"] = string.Empty;
-                        account.ServiceURLs["InventoryServerURI"] = string.Empty;
-                        account.ServiceURLs["AssetServerURI"] = string.Empty;
-                    }
-
-                    if (UserAccountService.StoreUserAccount(account))
-                    {
-                        string password = MainConsole.Instance.PasswdPrompt("Password");
-                        string email = MainConsole.Instance.CmdPrompt("Email", "");
-
-                        account.Email = email;
-                        UserAccountService.StoreUserAccount(account);
-
-                        bool success = false;
-                        success = AuthenticationService.SetPassword(account.PrincipalID, password);
-                        if (!success)
-                            m_log.WarnFormat("[USER ACCOUNT SERVICE]: Unable to set password for account {0} {1}.",
-                               first, last);
-
-                        GridRegion home = null;
-                        if (GridService != null)
+                        // Create a new account
+                        account = new UserAccount(m_regInfo.ScopeID, first, last, String.Empty);
+                        if (account.ServiceURLs == null || (account.ServiceURLs != null && account.ServiceURLs.Count == 0))
                         {
-                            List<GridRegion> defaultRegions = GridService.GetDefaultRegions(UUID.Zero);
-                            if (defaultRegions != null && defaultRegions.Count >= 1)
-                                home = defaultRegions[0];
+                            account.ServiceURLs = new Dictionary<string, object>();
+                            account.ServiceURLs["HomeURI"] = string.Empty;
+                            account.ServiceURLs["GatekeeperURI"] = string.Empty;
+                            account.ServiceURLs["InventoryServerURI"] = string.Empty;
+                            account.ServiceURLs["AssetServerURI"] = string.Empty;
+                        }
 
-                            if (GridUserService != null && home != null)
-                                GridUserService.SetHome(account.PrincipalID.ToString(), home.RegionID, new Vector3(128, 128, 0), new Vector3(0, 1, 0));
+                        if (UserAccountService.StoreUserAccount(account))
+                        {
+                            string password = MainConsole.Instance.PasswdPrompt(name + "'s password ");
+                            string email = MainConsole.Instance.CmdPrompt(name + "'s email", "");
+
+                            account.Email = email;
+                            UserAccountService.StoreUserAccount(account);
+
+                            bool success = false;
+                            success = AuthenticationService.SetPassword(account.PrincipalID, password);
+                            if (!success)
+                            {
+                                m_log.WarnFormat("[USER ACCOUNT SERVICE]: Unable to set password for account {0} {1}.",
+                                   first, last);
+                            }
+
+                            GridRegion home = null;
+                            if (GridService != null)
+                            {
+                                List<GridRegion> defaultRegions = GridService.GetDefaultRegions(UUID.Zero);
+                                if (defaultRegions != null && defaultRegions.Count >= 1)
+                                    home = defaultRegions[0];
+
+                                if (GridUserService != null && home != null)
+                                    GridUserService.SetHome(account.PrincipalID.ToString(), home.RegionID, new Vector3(128, 128, 0), new Vector3(0, 1, 0));
+                                else
+                                    m_log.WarnFormat("[USER ACCOUNT SERVICE]: Unable to set home for account {0} {1}.",
+                                       first, last);
+
+                            }
                             else
-                                m_log.WarnFormat("[USER ACCOUNT SERVICE]: Unable to set home for account {0} {1}.",
+                                m_log.WarnFormat("[USER ACCOUNT SERVICE]: Unable to retrieve home region for account {0} {1}.",
                                    first, last);
 
+                            if (InventoryService != null)
+                                success = InventoryService.CreateUserInventory(account.PrincipalID);
+                            if (!success)
+                                m_log.WarnFormat("[USER ACCOUNT SERVICE]: Unable to create inventory for account {0} {1}.",
+                                   first, last);
+
+
+                            m_log.InfoFormat("[USER ACCOUNT SERVICE]: Account {0} {1} created successfully", first, last);
+
+                            m_regInfo.EstateSettings.EstateOwner = account.PrincipalID;
+                            m_regInfo.EstateSettings.Save();
                         }
                         else
-                            m_log.WarnFormat("[USER ACCOUNT SERVICE]: Unable to retrieve home region for account {0} {1}.",
-                               first, last);
-
-                        if (InventoryService != null)
-                            success = InventoryService.CreateUserInventory(account.PrincipalID);
-                        if (!success)
-                            m_log.WarnFormat("[USER ACCOUNT SERVICE]: Unable to create inventory for account {0} {1}.",
-                               first, last);
-
-
-                        m_log.InfoFormat("[USER ACCOUNT SERVICE]: Account {0} {1} created successfully", first, last);
-
-                        m_regInfo.EstateSettings.EstateOwner = account.PrincipalID;
-                        m_regInfo.EstateSettings.Save();
+                            m_log.ErrorFormat("[SCENE]: Unable to store account. If this simulator is connected to a grid, you must create the estate owner account first.");
                     }
-                    else
-                        m_log.ErrorFormat("[SCENE]: Unable to store account. If this simulator is connected to a grid, you must create the estate owner account first.");
                 }
                 else
                 {
@@ -2474,7 +2482,6 @@ namespace OpenSim.Region.Framework.Scenes
                 rootPart.Flags &= ~PrimFlags.Scripted;
                 rootPart.TrimPermissions();
                 group.CheckSculptAndLoad();
-                //rootPart.DoPhysicsPropertyUpdate(UsePhysics, true);
             }
             LoadingPrims = false;
             EntityBase[] e = m_sceneGraph.GetEntities();

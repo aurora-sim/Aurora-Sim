@@ -120,7 +120,7 @@ namespace OpenSim.Services.InventoryService
         /// <param name="assets"></param>
         protected void LoadLibraries(string librariesControlPath)
         {
-            //m_log.InfoFormat("[LIBRARY INVENTORY]: Loading library control file {0}", librariesControlPath);
+            m_log.InfoFormat("[LIBRARY INVENTORY]: Loading library control file {0}", librariesControlPath);
             LoadFromFile(librariesControlPath, "Libraries control", ReadLibraryFromConfig);
         }
 

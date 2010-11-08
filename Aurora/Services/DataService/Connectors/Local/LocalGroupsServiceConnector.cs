@@ -599,11 +599,11 @@ namespace Aurora.Services.DataService
             DirGroupsReplyData dirgroup = new DirGroupsReplyData();
             for (int i = 0; i < retVal.Count; i += 5)
             {
-                if (retVal[i + 2] == "0") // They don't want to be shown in search.. respect this
+                if (retVal[i + 3] == "0") // (AllowPublish param) They don't want to be shown in search.. respect this
                     continue;
 
                 if ((queryflags & (uint)DirectoryManager.DirFindFlags.IncludeMature) != (uint)DirectoryManager.DirFindFlags.IncludeMature)
-                    if(retVal[i + 3] == "1")//Check for pg,mature
+                    if (retVal[i + 4] == "1")// (MaturePublish param) Check for pg,mature
                         continue;
                 dirgroup.groupID = UUID.Parse(retVal[i]);
                 dirgroup.groupName = retVal[i + 1];

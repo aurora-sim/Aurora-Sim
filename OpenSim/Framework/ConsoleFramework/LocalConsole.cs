@@ -300,7 +300,12 @@ namespace OpenSim.Framework
         private void WriteLocalText(string text, string level)
         {
             string logtext = "";
-            if (level == "None" && text != "") //No color or flowers or whisles, just basic writing plus the DT must be added manually
+            if (level == "noTimeStamp" && text != "")
+            {
+                logtext = text;
+                System.Console.Write(logtext);
+            }
+            else if (level == "None" && text != "") //No color or flowers or whisles, just basic writing plus the DT must be added manually
             {
                 logtext = DateTime.Now.Hour + ":" + DateTime.Now.Minute + ":" + DateTime.Now.Second + " - " + text;
                 System.Console.Write(logtext);
