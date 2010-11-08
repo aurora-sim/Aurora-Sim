@@ -65,6 +65,34 @@ namespace OpenSim
             string masterFileName =
                     startupConfig.GetString("inimaster", String.Empty);
 
+            string iniFileName =
+                    startupConfig.GetString("inifile", "OpenSim.ini");
+
+            //Be mindful of these when modifying...
+            //1) When file A includes file B, if the same directive is found in both, that the value in file B wins.
+            //2) That inifile may be used with or without inimaster being used.
+            //3) That any values for directives pulled in via inifile (Config Set 2) override directives of the same name found in the directive set (Config Set 1) created by reading in bin/Opensim.ini and its subsequently included files or that created by reading in whatever file inimaster points to and its subsequently included files.
+            if (iniFileName != "")
+            {
+                if (IsUri(iniFileName))
+                {
+                    if (!sources.Contains(iniFileName))
+                        sources.Add(iniFileName);
+                    Application.iniFilePath = iniFileName;
+                }
+                else
+                {
+                    Application.iniFilePath = Path.GetFullPath(
+                            Path.Combine(Util.configDir(), iniFileName));
+
+                    if (File.Exists(Application.iniFilePath))
+                    {
+                        if (!sources.Contains(Application.iniFilePath))
+                            sources.Add(Application.iniFilePath);
+                    }
+                }
+            }
+
             if (IsUri(masterFileName))
             {
                 if (!sources.Contains(masterFileName))
@@ -79,28 +107,8 @@ namespace OpenSim
                         File.Exists(masterFilePath) &&
                         (!sources.Contains(masterFilePath)))
                     sources.Add(masterFilePath);
-            }
-
-
-            string iniFileName =
-                    startupConfig.GetString("inifile", "OpenSim.ini");
-
-            if (IsUri(iniFileName))
-            {
-                if (!sources.Contains(iniFileName))
-                    sources.Add(iniFileName);
-                Application.iniFilePath = iniFileName;
-            }
-            else
-            {
-                Application.iniFilePath = Path.GetFullPath(
-                        Path.Combine(Util.configDir(), iniFileName));
-
-                if (File.Exists(Application.iniFilePath))
-                {
-                    if (!sources.Contains(Application.iniFilePath))
-                        sources.Add(Application.iniFilePath);
-                }
+                if (iniFileName == "") //Then it doesn't exist and we need to set this
+                    Application.iniFilePath = masterFilePath;
             }
 
             string iniDirName =
