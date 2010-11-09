@@ -4330,10 +4330,6 @@ namespace OpenSim.Region.Framework.Scenes
                     agentTransactions.RemoveAgentAssetTransactions(agentID);
                 }
 
-                // Remove the avatar from the scene
-                m_sceneGraph.RemoveScenePresence(agentID);
-                m_clientManager.Remove(agentID);
-
                 try
                 {
                     avatar.Close();
@@ -4346,6 +4342,10 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     m_log.Error("[SCENE] Scene.cs:RemoveClient exception: " + e.ToString());
                 }
+
+                // Remove the avatar from the scene
+                m_sceneGraph.RemoveScenePresence(agentID);
+                m_clientManager.Remove(agentID);
 
                 m_authenticateHandler.RemoveCircuit(avatar.ControllingClient.CircuitCode);
                 //m_log.InfoFormat("[SCENE] Memory pre  GC {0}", System.GC.GetTotalMemory(false));
