@@ -126,12 +126,14 @@ namespace OpenSim.Region.Framework.Scenes
                     if (!m_hasGroupChanged) //First change then
                         timeFirstChanged = DateTime.Now;
 
-                    if (m_scene != null && m_isLoaded)
+                    if (m_scene != null && m_isLoaded && !m_scene.LoadingPrims) //Do NOT add to backup while still loading prims
                         m_scene.AddPrimBackupTaint(this);
                     else if (m_scene == null)
                         m_log.Warn("[SOG]: Scene is null in HasGroupChanged!");
-                    else if (!m_isLoaded)
-                        m_log.Info("[SOG]: Not loaded in HasGroupChanged!");
+                    //else if (!m_isLoaded)
+                    //    m_log.Info("[SOG]: Not loaded in HasGroupChanged!");
+                    //else if (!m_scene.LoadingPrims)
+                    //    m_log.Info("[SOG]: Not scene loaded in HasGroupChanged!");
                 }
                 m_hasGroupChanged = value;
             }
