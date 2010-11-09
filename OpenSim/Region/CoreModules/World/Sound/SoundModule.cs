@@ -178,8 +178,10 @@ namespace OpenSim.Region.CoreModules.World.Sound
             UUID soundId, UUID ownerID, UUID objectID, UUID parentID, double gain, Vector3 position, UInt64 handle, float radius)
         {
             ILandObject ILO = m_scene.LandChannel.GetLandObject(position.X, position.Y);
-            bool LocalOnly = (ILO.LandData.Flags & (uint)ParcelFlags.SoundLocal) == (uint)ParcelFlags.SoundLocal;
-           
+            bool LocalOnly = false;
+            if (ILO != null) //Check only if null, otherwise this breaks megaregions
+                LocalOnly = (ILO.LandData.Flags & (uint)ParcelFlags.SoundLocal) == (uint)ParcelFlags.SoundLocal;
+
             m_scene.ForEachScenePresence(delegate(ScenePresence sp)
             {
                 if (Cones.Count != 0)

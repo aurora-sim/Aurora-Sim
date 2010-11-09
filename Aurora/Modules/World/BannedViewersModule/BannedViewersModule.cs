@@ -72,6 +72,11 @@ namespace Aurora.Modules
             get { return null; }
         }
 
+        /// <summary>
+        /// Check to see if the client has baked textures that belong to banned clients
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="textureEntry"></param>
         public void CheckForBannedViewer(IClientAPI client, Primitive.TextureEntry textureEntry)
         {
             try
@@ -88,6 +93,7 @@ namespace Aurora.Modules
                         if (m_map.ContainsKey(textureEntry.FaceTextures[i].TextureID.ToString()))
                         {
                             OSDMap viewerMap = (OSDMap)m_map[textureEntry.FaceTextures[i].TextureID.ToString()];
+                            //Check the names
                             if (BannedViewers.Contains(viewerMap["name"].ToString()))
                             {
                                 client.Kick("You cannot use " + viewerMap["name"] + " in this sim.");
@@ -105,6 +111,11 @@ namespace Aurora.Modules
             catch { }
         }
 
+        /// <summary>
+        /// Read the website
+        /// </summary>
+        /// <param name="URL"></param>
+        /// <returns></returns>
         private string ReadExternalWebsite(string URL)
         {
             String website = "";
