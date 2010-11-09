@@ -1231,6 +1231,7 @@ namespace OpenSim.Region.Framework.Scenes
             //
             // TODO: Find a better place for this
             //
+            UserAccount account = UserAccountService.GetUserAccount(m_regInfo.ScopeID, m_regInfo.EstateSettings.EstateOwner);
             while (m_regInfo.EstateSettings.EstateOwner == UUID.Zero && MainConsole.Instance != null)
             {
                 MainConsole.Instance.Output("The current estate " + m_regInfo.EstateSettings.EstateName + " has no owner set.");
@@ -1238,7 +1239,7 @@ namespace OpenSim.Region.Framework.Scenes
                 string first = MainConsole.Instance.CmdPrompt("Estate owner first name", "Test", excluded);
                 string last = MainConsole.Instance.CmdPrompt("Estate owner last name", "User", excluded);
 
-                UserAccount account = UserAccountService.GetUserAccount(m_regInfo.ScopeID, first, last);
+                account = UserAccountService.GetUserAccount(m_regInfo.ScopeID, first, last);
 
                 if (account == null)
                 {
@@ -1310,6 +1311,88 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 else
                 {
+                    m_regInfo.EstateSettings.EstateOwner = account.PrincipalID;
+                    m_regInfo.EstateSettings.Save();
+                }
+            }
+            while (account == null)
+            {
+                MainConsole.Instance.Output("The current estate " + m_regInfo.EstateSettings.EstateName + " has no owner that exists in this grid set.");
+                List<char> excluded = new List<char>(new char[1] { ' ' });
+                string first = MainConsole.Instance.CmdPrompt("Estate owner first name", "Test", excluded);
+                string last = MainConsole.Instance.CmdPrompt("Estate owner last name", "User", excluded);
+                account = UserAccountService.GetUserAccount(m_regInfo.ScopeID, first, last);
+                if (account == null)
+                {
+                    string name = first + " " + last;
+                    string createNewUser = MainConsole.Instance.CmdPrompt("Could not find user " + name + ". Would you like to create this user?", "yes");
+
+                    if (createNewUser == "yes")
+                    {
+                        // Create a new account
+                        account = new UserAccount(m_regInfo.ScopeID, first, last, String.Empty);
+                        if (account.ServiceURLs == null || (account.ServiceURLs != null && account.ServiceURLs.Count == 0))
+                        {
+                            account.ServiceURLs = new Dictionary<string, object>();
+                            account.ServiceURLs["HomeURI"] = string.Empty;
+                            account.ServiceURLs["GatekeeperURI"] = string.Empty;
+                            account.ServiceURLs["InventoryServerURI"] = string.Empty;
+                            account.ServiceURLs["AssetServerURI"] = string.Empty;
+                        }
+
+                        if (UserAccountService.StoreUserAccount(account))
+                        {
+                            string password = MainConsole.Instance.PasswdPrompt(name + "'s password ");
+                            string email = MainConsole.Instance.CmdPrompt(name + "'s email", "");
+
+                            account.Email = email;
+                            UserAccountService.StoreUserAccount(account);
+
+                            bool success = false;
+                            success = AuthenticationService.SetPassword(account.PrincipalID, password);
+                            if (!success)
+                            {
+                                m_log.WarnFormat("[USER ACCOUNT SERVICE]: Unable to set password for account {0} {1}.",
+                                   first, last);
+                            }
+
+                            GridRegion home = null;
+                            if (GridService != null)
+                            {
+                                List<GridRegion> defaultRegions = GridService.GetDefaultRegions(UUID.Zero);
+                                if (defaultRegions != null && defaultRegions.Count >= 1)
+                                    home = defaultRegions[0];
+
+                                if (GridUserService != null && home != null)
+                                    GridUserService.SetHome(account.PrincipalID.ToString(), home.RegionID, new Vector3(128, 128, 0), new Vector3(0, 1, 0));
+                                else
+                                    m_log.WarnFormat("[USER ACCOUNT SERVICE]: Unable to set home for account {0} {1}.",
+                                       first, last);
+
+                            }
+                            else
+                                m_log.WarnFormat("[USER ACCOUNT SERVICE]: Unable to retrieve home region for account {0} {1}.",
+                                   first, last);
+
+                            if (InventoryService != null)
+                                success = InventoryService.CreateUserInventory(account.PrincipalID);
+                            if (!success)
+                                m_log.WarnFormat("[USER ACCOUNT SERVICE]: Unable to create inventory for account {0} {1}.",
+                                   first, last);
+
+
+                            m_log.InfoFormat("[USER ACCOUNT SERVICE]: Account {0} {1} created successfully", first, last);
+
+                            m_regInfo.EstateSettings.EstateOwner = account.PrincipalID;
+                            m_regInfo.EstateSettings.Save();
+                        }
+                        else
+                            m_log.ErrorFormat("[SCENE]: Unable to store account. If this simulator is connected to a grid, you must create the estate owner account first.");
+                    }
+                }
+                else
+                {
+                    //Set the new user
                     m_regInfo.EstateSettings.EstateOwner = account.PrincipalID;
                     m_regInfo.EstateSettings.Save();
                 }

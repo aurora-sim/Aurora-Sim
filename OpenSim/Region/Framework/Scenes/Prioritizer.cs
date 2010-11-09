@@ -247,6 +247,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (entity is SceneObjectPart)
             {
                 if (presence != null &&
+                    ((SceneObjectPart)entity) != null && 
                     ((SceneObjectPart)entity).ParentGroup != null &&
                     ((SceneObjectPart)entity).ParentGroup.RootPart != null &&
                     presence.SittingOnUUID == ((SceneObjectPart)entity).ParentGroup.RootPart.UUID ||
