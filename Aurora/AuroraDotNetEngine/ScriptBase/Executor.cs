@@ -100,7 +100,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
 
         private bool InTimeSlice = false;
         private DateTime TimeSliceEnd = new DateTime();
-        private Double MaxTimeSlice = 15.0;    // script timeslice execution time in ms , hardwired for now
+        private DateTime TimeSliceStart = new DateTime();
+        private TimeSpan TimeSliceTotal = new TimeSpan();
+
+        private Double MaxTimeSlice = 25.0;    // script timeslice execution time in ms , hardwired for now
   
 
         public Executor(IScript script)
@@ -152,9 +155,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             return eventFlags;
         }
 
-        public void ResetTimeSlice()
+        public void OpenTimeSlice()
             {
-            TimeSliceEnd = DateTime.Now.AddMilliseconds(MaxTimeSlice);
+            TimeSliceStart = DateTime.Now;
+            TimeSliceEnd = TimeSliceStart.AddMilliseconds(MaxTimeSlice);
+            InTimeSlice = true;
+            }
+
+        public void CloseTimeSlice()
+            {
+            TimeSliceTotal += DateTime.Now - TimeSliceStart;
+            InTimeSlice = false;
             }
 
         public bool CheckSlice()
@@ -176,7 +187,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             #region Find Event
             // not sure it's need
             if (InTimeSlice)
+                {
+                m_log.Debug("ScriptEngine TimeSlice Overlap" + FunctionName);
                 return Start;
+                }
 
             MethodInfo ev = null;
             if (m_scriptType == null)
@@ -210,150 +224,82 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         }
 
         public EnumeratorInfo FireAsEnumerator(EnumeratorInfo Start, MethodInfo ev, object[] args, out Exception ex)
-        {
+            {
             IEnumerator thread = null;
-            if (Start != null)
-                lock (m_enumerators)
-                {
-                    m_enumerators.TryGetValue(Start.Key, out thread);
-                }
-            else
-                thread = (IEnumerator)ev.Invoke(m_Script, args);
 
-//            int i = 0;
-            bool running = false;
-            if (thread != null)
-                {
-                // not sure it's need
-                InTimeSlice = true;
+            OpenTimeSlice();
+            InTimeSlice = true;
+            bool running = true;
+            ex = null;
 
-/*
-                while (i < 10)
+            try
+                {
+                if (Start != null)
                     {
-                    i++;
- */
-                    try
+                    lock (m_enumerators)
                         {
-                        ResetTimeSlice();
-
-                        running = CallAndWait(timeout, thread);
-
-                        InTimeSlice = true;
-                        //Sleep processing
-                        if (running && thread.Current != null)
-                            {
-                            if (thread.Current is DateTime)
-                                {
-                                if (Start == null)
-                                    {
-                                    Start = new EnumeratorInfo();
-                                    Start.Key = System.Guid.NewGuid();
-                                    }
-                                Start.SleepTo = (DateTime)thread.Current;
-                                lock (m_enumerators)
-                                    {
-                                    m_enumerators[Start.Key] = thread;
-                                    }
-                                ex = null;
-                                InTimeSlice = false;
-                                return Start;
-                                }
-                            }
-                        if (!running)
-                            {
-                            lock (m_enumerators)
-                                {
-                                if(Start != null)
-                                    m_enumerators.Remove(Start.Key);
-                                }
-                            ex = null;
-                            InTimeSlice = false;
-                            return null;
-                            }
+                        m_enumerators.TryGetValue(Start.Key, out thread);
                         }
-                    catch (Exception tie)
+                    if (thread != null)
+                        running = thread.MoveNext();
+                    }
+                else
+                    thread = (IEnumerator)ev.Invoke(m_Script, args);
+                }
+            catch (Exception tie)
+                {
+                // Grab the inner exception and rethrow it, unless the inner
+                // exception is an EventAbortException as this indicates event
+                // invocation termination due to a state change.
+                // DO NOT THROW JUST THE INNER EXCEPTION!
+                // FriendlyErrors depends on getting the whole exception!
+                //
+                if (!(tie is EventAbortException) ||
+                        !(tie is MinEventDelayException) ||
+                        !(tie is EventAbortException) ||
+                        !(tie is EventAbortException))
+                    ex = tie;
+                if (Start != null)
+                    {
+                    lock (m_enumerators)
                         {
-                        // Grab the inner exception and rethrow it, unless the inner
-                        // exception is an EventAbortException as this indicates event
-                        // invocation termination due to a state change.
-                        // DO NOT THROW JUST THE INNER EXCEPTION!
-                        // FriendlyErrors depends on getting the whole exception!
-                        //
-                        ex = null;
-                        if (!(tie is EventAbortException) ||
-                            !(tie is MinEventDelayException) ||
-                            !(tie is EventAbortException) ||
-                            !(tie is EventAbortException))
-                            ex = tie;
-                        InTimeSlice = false;
-                        return null;
+                        m_enumerators.Remove(Start.Key);
                         }
-//                    }
+                    }
+                InTimeSlice = false;
+                return null;
+                }
+
+            if (running && thread != null)
+                {
+                if (Start == null)
+                    {
+                    Start = new EnumeratorInfo();
+                    Start.Key = System.Guid.NewGuid();
+                    }
+                lock (m_enumerators)
+                    {
+                    m_enumerators[Start.Key] = thread;
+                    }
+
+                if (thread.Current is DateTime)
+                    Start.SleepTo = (DateTime)thread.Current;
+                CloseTimeSlice();
+                return Start;
                 }
             else
                 {
                 //No enumerator.... errr.... something went really wrong here
-                ex = null;
-                InTimeSlice = false;
-                return Start;
-                }
-            if (Start == null)
-                {
-                Start = new EnumeratorInfo();
-                Start.Key = System.Guid.NewGuid();
-                }
-
-            lock (m_enumerators)
-                {
-                m_enumerators[Start.Key] = thread;
-                }
-            ex = null;
-            InTimeSlice = false;
-            return Start;
-            }
-
-        public delegate void FireEvent(IEnumerator thread, out Exception e);
-
-        private bool CallAndWait(int timeout, IEnumerator enumerator)
-            {
-            bool RetVal = true;
-            FireEvent wrappedAction = delegate(IEnumerator en, out Exception e)
-                {
-                e = null;
-                try
+                if (Start != null)
                     {
-                    RetVal = enumerator.MoveNext();
+                    lock (m_enumerators)
+                        {
+                        m_enumerators.Remove(Start.Key);
+                        }
                     }
-                catch( Exception ex)
-                    {
-                    e = ex;
-                    }
-                };
-
-            Exception exception;
-            
-            IAsyncResult result = wrappedAction.BeginInvoke(enumerator, out exception, null, null);
-
-            if (((timeout != -1) && !result.IsCompleted) &&
-                    (!result.AsyncWaitHandle.WaitOne(timeout, false) || !result.IsCompleted))
-                {
-                //If we don't kill processing, then we pass on
-                if (!killProcessing)
-                    return true;
-                else
-                    return false;
+                CloseTimeSlice();
+                return null;
                 }
-            else
-                {
-                wrappedAction.EndInvoke(out exception, result);
-                }
-            //Return what we got
-            if (exception != null)
-                {
-                //Throw the exception if we caught one
-                throw exception;
-                }
-            return RetVal;
             }
 
 

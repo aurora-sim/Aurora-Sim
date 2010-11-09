@@ -104,6 +104,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             RunInMainProcessingThread = Engine.Config.GetBoolean("RunInMainProcessingThread", false);
 
+            RunInMainProcessingThread = false; // temporary false until code is fix to work with true
+            
             //There IS a reason we start this, even if RunInMain is enabled
             //   If this isn't enabled, we run into issues with the CmdHandlerQueue,
             //    as it always must be async, so we must run the pool anyway
@@ -268,6 +270,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 m_log.WarnFormat("[{0}]: Error in CmdHandlerPass, {1}", m_ScriptEngine.ScriptEngineName, ex);
             }
+            Thread.Sleep(10);   // don't burn cpu
             threadpool.QueueEvent(CmdHandlerQueue, 2);
             return false;
         }

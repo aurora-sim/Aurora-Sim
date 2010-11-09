@@ -50,6 +50,11 @@ namespace OpenSim
         protected IConfigSource m_config;
 
         /// <summary>
+        /// Should we save all merging of the .ini files to the filesystem?
+        /// </summary>
+        protected bool inidbg;
+
+        /// <summary>
         /// Loads the region configuration
         /// </summary>
         /// <param name="argvSource">Parameters passed into the process when started</param>
@@ -61,6 +66,9 @@ namespace OpenSim
             IConfig startupConfig = argvSource.Configs["Startup"];
 
             List<string> sources = new List<string>();
+
+            inidbg =
+                    startupConfig.GetBoolean("inidbg", false);
 
             string masterFileName =
                     startupConfig.GetString("inimaster", String.Empty);
@@ -147,7 +155,7 @@ namespace OpenSim
 
             for (int i = 0 ; i < sources.Count ; i++)
             {
-                if (ReadConfig(sources[i]))
+                if (ReadConfig(sources[i], i))
                     iniFileExists = true;
                 AddIncludes(sources);
             }
@@ -230,7 +238,7 @@ namespace OpenSim
         /// </summary>
         /// <param name="iniPath">Full path to the ini</param>
         /// <returns></returns>
-        private bool ReadConfig(string iniPath)
+        private bool ReadConfig(string iniPath, int i)
         {
             bool success = false;
 
@@ -239,6 +247,10 @@ namespace OpenSim
                 m_log.InfoFormat("[CONFIG]: Reading configuration file {0}", Path.GetFullPath(iniPath));
 
                 m_config.Merge(new IniConfigSource(iniPath, Nini.Ini.IniFileType.AuroraStyle));
+                if (inidbg)
+                {
+                    WriteConfigFile(i, m_config);
+                }
                 success = true;
             }
             else
@@ -262,6 +274,21 @@ namespace OpenSim
                 }
             }
             return success;
+        }
+        private void WriteConfigFile(int i, IConfigSource m_config)
+        {
+            string m_fileName = "ConfigFileDump" + i + ".ini";
+            m_log.Debug("Writing config dump file to " + m_fileName);
+            try
+            {
+                //Add the user
+                FileStream stream = new FileStream(m_fileName, FileMode.Create);
+                StreamWriter m_streamWriter = new StreamWriter(stream);
+                m_streamWriter.BaseStream.Position += m_streamWriter.BaseStream.Length;
+                m_streamWriter.WriteLine(m_config.ToString());
+                m_streamWriter.Close();
+            }
+            catch { }
         }
     }
 }

@@ -243,21 +243,16 @@ namespace OpenSim
             configSource.Alias.AddAlias("True", true);
             configSource.Alias.AddAlias("False", false);
 
-            configSource.AddSwitch("Startup", "background");
+            ///Command line switches
             configSource.AddSwitch("Startup", "inifile");
             configSource.AddSwitch("Startup", "inimaster");
             configSource.AddSwitch("Startup", "inidirectory");
-            configSource.AddSwitch("Startup", "physics");
-            configSource.AddSwitch("Startup", "gui");
-            configSource.AddSwitch("Startup", "console");
+            configSource.AddSwitch("Console", "Console");
+            configSource.AddSwitch("Startup", "inidbg");
 
-            configSource.AddConfig("StandAlone");
             configSource.AddConfig("Network");
 
             IConfigSource m_configSource = Configuration(configSource);
-
-            // Check if we're running in the background or not
-            bool background = m_configSource.Configs["Startup"].GetBoolean("background", false);
 
             // Check if we're saving crashes
             m_saveCrashDumps = m_configSource.Configs["Startup"].GetBoolean("save_crashes", false);
