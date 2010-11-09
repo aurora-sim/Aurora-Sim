@@ -105,6 +105,12 @@ namespace Aurora.Modules
 
         #region ICallingCardModule interface
 
+        /// <summary>
+        /// This comes from the Friends module when a friend is added or when a user gives another user a calling card
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="destID"></param>
+        /// <param name="transactionID"></param>
         private void OnOfferCallingCard(IClientAPI client, UUID destID, UUID transactionID)
         {
             m_log.DebugFormat("[AURORA CALLING CARD MODULE]: got offer from {0} for {1}, transaction {2}",
@@ -125,6 +131,13 @@ namespace Aurora.Modules
             friendClient.SendOfferCallingCard(client.AgentId, transactionID);
         }
 
+        /// <summary>
+        /// Create the calling card inventory item in the user's inventory
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="creator"></param>
+        /// <param name="folder"></param>
+        /// <param name="name"></param>
         public void CreateCallingCard(IClientAPI client, UUID creator, UUID folder, string name)
         {
             m_log.Debug("[AURORA CALLING CARD MODULE]: Creating calling card for " + client.Name);
@@ -151,6 +164,12 @@ namespace Aurora.Modules
             ((Scene)client.Scene).AddInventoryItem(client, item);
         }
 
+        /// <summary>
+        /// Accept the user's calling card and add the card to their inventory
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="transactionID"></param>
+        /// <param name="folderID"></param>
         private void OnAcceptCallingCard(IClientAPI client, UUID transactionID, UUID folderID)
         {
             m_log.DebugFormat("[AURORA CALLING CARD MODULE]: User {0} ({1} {2}) accepted tid {3}, folder {4}",
@@ -180,6 +199,11 @@ namespace Aurora.Modules
             CreateCallingCard(client, destID, folderID, friendClient.Name);
         }
 
+        /// <summary>
+        /// Remove the potential calling card and notify the other user
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="transactionID"></param>
         private void OnDeclineCallingCard(IClientAPI client, UUID transactionID)
         {
             m_log.DebugFormat("[AURORA CALLING CARD MODULE]: User {0} (ID:{1}) declined card, tid {2}",
@@ -207,9 +231,11 @@ namespace Aurora.Modules
 
         #region Helpers
 
-        //
-        // Find the client for a ID
-        //
+        /// <summary>
+        /// Find the client for a ID
+        /// </summary>
+        /// <param name="agentID"></param>
+        /// <returns></returns>
         public IClientAPI LocateClientObject(UUID agentID)
         {
             Scene scene = GetClientScene(agentID);
@@ -223,9 +249,11 @@ namespace Aurora.Modules
             return presence.ControllingClient;
         }
 
-        //
-        // Find the scene for an agent
-        //
+        /// <summary>
+        /// Find the scene for an agent
+        /// </summary>
+        /// <param name="agentId"></param>
+        /// <returns></returns>
         private Scene GetClientScene(UUID agentId)
         {
             lock (m_scenes)

@@ -17,6 +17,9 @@ using Aurora.Framework;
 
 namespace Aurora.Modules
 {
+    /// <summary>
+    /// Module to deal with setting of alternative names on clients
+    /// </summary>
     public class DisplayNamesModule : ISharedRegionModule
     {
         private static readonly ILog m_log =
@@ -70,6 +73,11 @@ namespace Aurora.Modules
         {
         }
 
+        /// <summary>
+        /// Set up the CAPS for display names
+        /// </summary>
+        /// <param name="agentID"></param>
+        /// <param name="caps"></param>
         public void RegisterCaps(UUID agentID, Caps caps)
         {
             UUID capuuid = UUID.Random();
@@ -91,6 +99,10 @@ namespace Aurora.Modules
                                                       }));
         }
 
+        /// <summary>
+        /// Tell the client about all other display names in the region as well as send ours to all others
+        /// </summary>
+        /// <param name="client"></param>
         public void OnNewClient(IClientAPI client)
         {
             ScenePresence us = ((Scene)client.Scene).GetScenePresence(client.AgentId);
@@ -107,6 +119,12 @@ namespace Aurora.Modules
             }
         }
 
+        /// <summary>
+        /// Set the display name for the given user
+        /// </summary>
+        /// <param name="mDhttpMethod"></param>
+        /// <param name="agentID"></param>
+        /// <returns></returns>
         private Hashtable ProcessSetDisplayName(Hashtable mDhttpMethod, UUID agentID)
         {
             try
@@ -138,6 +156,7 @@ namespace Aurora.Modules
                 }
                 else
                 {
+                    //Set the name
                     info.DisplayName = newDisplayName;
                     m_profileConnector.UpdateUserProfile(info);
                 }
@@ -174,6 +193,11 @@ namespace Aurora.Modules
             return responsedata;
         }
 
+        /// <summary>
+        /// Find the av in the known regions
+        /// </summary>
+        /// <param name="uUID"></param>
+        /// <returns></returns>
         private ScenePresence FindAv(UUID uUID)
         {
             ScenePresence Sp = null;
@@ -185,6 +209,12 @@ namespace Aurora.Modules
             return Sp;
         }
 
+        /// <summary>
+        /// Get the user's display name, currently not used?
+        /// </summary>
+        /// <param name="mDhttpMethod"></param>
+        /// <param name="agentID"></param>
+        /// <returns></returns>
         private Hashtable ProcessGetDisplayName(Hashtable mDhttpMethod, UUID agentID)
         {
             //I've never seen this come in, so for now... do nothing
@@ -219,6 +249,13 @@ namespace Aurora.Modules
 
         #region Event Queue
 
+        /// <summary>
+        /// Send the user a display name update
+        /// </summary>
+        /// <param name="newDisplayName"></param>
+        /// <param name="oldDisplayName"></param>
+        /// <param name="InfoFromAv"></param>
+        /// <param name="ToAgentID"></param>
         public void DisplayNameUpdate(string newDisplayName, string oldDisplayName, ScenePresence InfoFromAv, UUID ToAgentID)
         {
             if (m_eventQueue != null)
@@ -238,6 +275,12 @@ namespace Aurora.Modules
             }
         }
 
+        /// <summary>
+        /// Reply to the set display name reply
+        /// </summary>
+        /// <param name="newDisplayName"></param>
+        /// <param name="oldDisplayName"></param>
+        /// <param name="m_avatar"></param>
         public void SetDisplayNameReply(string newDisplayName, string oldDisplayName, ScenePresence m_avatar)
         {
             if (m_eventQueue != null)
@@ -253,6 +296,17 @@ namespace Aurora.Modules
             }
         }
 
+        /// <summary>
+        /// Tell the user about an update
+        /// </summary>
+        /// <param name="newDisplayName"></param>
+        /// <param name="oldDisplayName"></param>
+        /// <param name="ID"></param>
+        /// <param name="isDefault"></param>
+        /// <param name="First"></param>
+        /// <param name="Last"></param>
+        /// <param name="Account"></param>
+        /// <returns></returns>
         public OSD DisplayNameUpdate(string newDisplayName, string oldDisplayName, UUID ID, bool isDefault, string First, string Last, string Account)
         {
             OSDMap nameReply = new OSDMap();
@@ -276,6 +330,17 @@ namespace Aurora.Modules
             return nameReply;
         }
 
+        /// <summary>
+        /// Send back a user's display name
+        /// </summary>
+        /// <param name="newDisplayName"></param>
+        /// <param name="oldDisplayName"></param>
+        /// <param name="ID"></param>
+        /// <param name="isDefault"></param>
+        /// <param name="First"></param>
+        /// <param name="Last"></param>
+        /// <param name="Account"></param>
+        /// <returns></returns>
         public OSD DisplayNameReply(string newDisplayName, string oldDisplayName, UUID ID, bool isDefault, string First, string Last, string Account)
         {
             OSDMap nameReply = new OSDMap();

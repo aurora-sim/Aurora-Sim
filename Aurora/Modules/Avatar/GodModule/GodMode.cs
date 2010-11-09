@@ -112,6 +112,13 @@ namespace Aurora.Modules
             client.OnSaveState -= GodSaveState;
         }
 
+        /// <summary>
+        /// The user requested something from god tools
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="requester"></param>
+        /// <param name="Method"></param>
+        /// <param name="Parameter"></param>
         void onGodlikeMessage(IClientAPI client, UUID requester, string Method, List<string> Parameter)
         {
             //Just rebuild the map
@@ -127,8 +134,14 @@ namespace Aurora.Modules
             }
         }
 
+        /// <summary>
+        /// Save the state of the region
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="agentID"></param>
         public void GodSaveState(IClientAPI client, UUID agentID)
         {
+            //Check for god perms
             if (((Scene)client.Scene).Permissions.IsGod(client.AgentId))
             {
                 Scene scene = (Scene)MainConsole.Instance.ConsoleScene; //Switch back later
@@ -138,29 +151,46 @@ namespace Aurora.Modules
             }
         }
 
+        /// <summary>
+        /// The god has requested that we update something in the region configs
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="BillableFactor"></param>
+        /// <param name="PricePerMeter"></param>
+        /// <param name="EstateID"></param>
+        /// <param name="RegionFlags"></param>
+        /// <param name="SimName"></param>
+        /// <param name="RedirectX"></param>
+        /// <param name="RedirectY"></param>
         public void GodUpdateRegionInfoUpdate(IClientAPI client, float BillableFactor, int PricePerMeter, ulong EstateID, ulong RegionFlags, byte[] SimName, int RedirectX, int RedirectY)
         {
+            //Check god perms
             ScenePresence Sp = ((Scene)client.Scene).GetScenePresence(client.AgentId);
-            if (!((Scene)client.Scene).Permissions.IsGod(client.AgentId) || Sp == null)
+            if (!((Scene)client.Scene).Permissions.IsGod(client.AgentId) && Sp == null)
                 return;
 
             //Update their current region with new information
             string oldRegionName = ((Scene)client.Scene).RegionInfo.RegionName;
-            ((Scene)client.Scene).RegionInfo.RegionName = OpenMetaverse.Utils.BytesToString(SimName);
+            ((Scene)client.Scene).RegionInfo.RegionName = Utils.BytesToString(SimName);
+            
+            //Set the region loc X and Y
             if(RedirectX != 0)
                 ((Scene)client.Scene).RegionInfo.RegionLocX = (uint)RedirectX;
             if (RedirectY != 0)
                 ((Scene)client.Scene).RegionInfo.RegionLocY = (uint)RedirectY;
 
+            //Update the estate ID
             if (((Scene)client.Scene).RegionInfo.EstateSettings.EstateID != EstateID)
             {
                 //If they are changing estates, we have to ask them for the password to the estate, so send them an llTextBox
                 string Password = "";
                 IWorldComm comm = ((Scene)client.Scene).RequestModuleInterface<IWorldComm>();
                 IDialogModule dialog = ((Scene)client.Scene).RequestModuleInterface<IDialogModule>();
+                //If the comms module is not null, we send the user a text box on a random channel so that they cannot be tapped into
                 if (comm != null && dialog != null)
                 {
                     int Channel = new Random().Next(1000, 100000);
+                    //Block the channel so NOONE can access it until the question is answered
                     comm.AddBlockedChannel(Channel);
                     ChannelDirectory.Add(client.AgentId, new EstateChange() { Channel = Channel, EstateID = (uint)EstateID, OldEstateID = ((Scene)client.Scene).RegionInfo.EstateSettings.EstateID });
                     //Set the ID temperarily, if it doesn't work, we will revert it later
@@ -180,7 +210,8 @@ namespace Aurora.Modules
                     }
                 }
             }
-
+            
+            //Set the other settings
             client.Scene.RegionInfo.EstateSettings.BillableFactor = BillableFactor;
             client.Scene.RegionInfo.EstateSettings.PricePerMeter = PricePerMeter;
             client.Scene.RegionInfo.EstateSettings.SetFromFlags(RegionFlags);
@@ -213,7 +244,7 @@ namespace Aurora.Modules
                 SaveChangesFile(oldRegionName, ((Scene)client.Scene).RegionInfo);
                 
 
-            //Tell the clients to update all references to the new name
+            //Tell the clients to update all references to the new settings
             foreach (ScenePresence sp in ((Scene)client.Scene).ScenePresences)
             {
                 HandleRegionInfoRequest(sp.ControllingClient, ((Scene)client.Scene));
@@ -229,20 +260,28 @@ namespace Aurora.Modules
 
         private Dictionary<UUID, EstateChange> ChannelDirectory = new Dictionary<UUID, EstateChange>();
 
+        /// <summary>
+        /// This sets the estateID for the region if the estate password is set right
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         public void OnChatFromClient(object sender, OSChatMessage e)
         {
             //For Estate Password
             EstateChange Change = null;
             if (ChannelDirectory.TryGetValue(e.Sender.AgentId, out Change))
             {
+                //Check whether the channel is right
                 if (Change.Channel == e.Channel)
                 {
                     ((IClientAPI)sender).OnChatFromClient -= OnChatFromClient;
                     ChannelDirectory.Remove(e.Sender.AgentId);
                     IWorldComm comm = ((Scene)((IClientAPI)sender).Scene).RequestModuleInterface<IWorldComm>();
+                    //Unblock the channel now that we have the password
                     comm.RemoveBlockedChannel(Change.Channel);
 
                     string Password = Util.Md5Hash(e.Message);
+                    //Try to switch estates
                     bool changed = ((Scene)((IClientAPI)sender).Scene).EstateService.LinkRegion(((Scene)((IClientAPI)sender).Scene).RegionInfo.RegionID, (int)Change.EstateID, Password);
                     if (!changed)
                     {
@@ -256,7 +295,7 @@ namespace Aurora.Modules
                         ((Scene)((IClientAPI)sender).Scene).RegionInfo.EstateSettings.Save();
                         ((IClientAPI)sender).SendAgentAlertMessage("Estate Updated.", false);
                     }
-                    //Tell the clients to update all references to the new name
+                    //Tell the clients to update all references to the new settings
                     foreach (ScenePresence sp in ((Scene)((IClientAPI)sender).Scene).ScenePresences)
                     {
                         HandleRegionInfoRequest(sp.ControllingClient, ((Scene)((IClientAPI)sender).Scene));
@@ -269,6 +308,11 @@ namespace Aurora.Modules
 
         #region Helpers
 
+        /// <summary>
+        /// Save the config files
+        /// </summary>
+        /// <param name="OldRegionName"></param>
+        /// <param name="regionInfo"></param>
         private void SaveChangesFile(string OldRegionName, RegionInfo regionInfo)
         {
             string regionConfigPath = Path.Combine(Util.configDir(), "Regions");
@@ -310,6 +354,10 @@ namespace Aurora.Modules
             }
         }
 
+        /// <summary>
+        /// Save the database configs
+        /// </summary>
+        /// <param name="regionInfo"></param>
         private void SaveChangesDatabase(RegionInfo regionInfo)
         {
             IRegionInfoConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IRegionInfoConnector>();
@@ -317,6 +365,11 @@ namespace Aurora.Modules
                 connector.UpdateRegionInfo(regionInfo, false);
         }
 
+        /// <summary>
+        /// Tell the client about the changes
+        /// </summary>
+        /// <param name="remote_client"></param>
+        /// <param name="m_scene"></param>
         private void HandleRegionInfoRequest(IClientAPI remote_client, Scene m_scene)
         {
             RegionInfoForEstateMenuArgs args = new RegionInfoForEstateMenuArgs();

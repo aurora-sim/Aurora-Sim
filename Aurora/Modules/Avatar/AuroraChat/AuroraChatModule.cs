@@ -159,7 +159,6 @@ namespace Aurora.Modules
                 m_scenes.Add(scene);
                 scene.EventManager.OnNewClient += OnNewClient;
                 scene.EventManager.OnClosingClient += OnClosingClient;
-                scene.EventManager.OnClientClosed += OnClientClosed;
                 scene.EventManager.OnChatFromWorld += OnChatFromWorld;
                 scene.EventManager.OnChatBroadcast += OnChatBroadcast;
                 scene.EventManager.OnRegisterCaps += RegisterCaps;
@@ -204,7 +203,6 @@ namespace Aurora.Modules
             if (m_scenes.Contains(scene))
             {
                 scene.EventManager.OnNewClient -= OnNewClient;
-                scene.EventManager.OnClientClosed -= OnClientClosed;
                 scene.EventManager.OnChatFromWorld -= OnChatFromWorld;
                 scene.EventManager.OnChatBroadcast -= OnChatBroadcast;
                 scene.EventManager.OnRegisterCaps -= RegisterCaps;

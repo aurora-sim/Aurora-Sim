@@ -145,7 +145,9 @@ namespace Aurora.Modules
 				(uint)presence.AbsolutePosition.X,
 				(uint)presence.AbsolutePosition.Y,
 				(uint)presence.AbsolutePosition.Z);
+
 			GridInstantMessage m;
+
             if (scene.Permissions.IsAdministrator(client.AgentId))//if we are an admin
 			{
                 if (scene.Permissions.IsAdministrator(targetid)) //if they are an admin

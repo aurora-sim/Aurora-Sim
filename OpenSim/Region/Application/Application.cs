@@ -270,14 +270,16 @@ namespace OpenSim
             }
 
             bool Running = true;
-            while (AutoRestart && Running)
+            while (AutoRestart || Running)
             {
+                //Always run once, then disable this
+                Running = false;
                 //! because if it crashes, it needs restarted, if it didn't crash, don't restart it
-                Running = !Startup(configSource);
+                Startup(configSource);
             }
         }
 
-        public static bool Startup(ArgvConfigSource configSource)
+        public static void Startup(ArgvConfigSource configSource)
         {
             OpenSimBase m_sim = new OpenSimBase(configSource);
             try
@@ -295,9 +297,10 @@ namespace OpenSim
                 }
                 //Just clean it out as good as we can
                 m_sim.Shutdown(false);
-                return false;
+                //Then let it restart if it needs
+                return;
             }
-            return true;
+            Environment.Exit(0);
         }
 
         private static IConfigSource Configuration(IConfigSource configSource)
