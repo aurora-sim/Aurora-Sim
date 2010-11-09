@@ -250,7 +250,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
 
         public string[] GetAgentsLocations(string[] userIDs)
         {
-            return new string[0];
+            return new string[1] { "Failure" };
         }
 
         #endregion IPresenceService
