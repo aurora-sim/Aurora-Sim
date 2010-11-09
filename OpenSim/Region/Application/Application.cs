@@ -250,6 +250,7 @@ namespace OpenSim
             configSource.AddSwitch("Startup", "physics");
             configSource.AddSwitch("Startup", "gui");
             configSource.AddSwitch("Startup", "console");
+            configSource.AddSwitch("Startup", "inidbg");
 
             configSource.AddConfig("StandAlone");
             configSource.AddConfig("Network");

@@ -581,6 +581,8 @@ namespace Aurora.Modules
         public void AvatarInterestsUpdate(IClientAPI remoteClient, uint wantmask, string wanttext, uint skillsmask, string skillstext, string languages)
         {
             IUserProfileInfo UPI = ProfileFrontend.GetUserProfile(remoteClient.AgentId);
+            if (UPI == null)
+                return;
             UPI.Interests.WantToMask = wantmask;
             UPI.Interests.WantToText = wanttext;
             UPI.Interests.CanDoMask = skillsmask;
