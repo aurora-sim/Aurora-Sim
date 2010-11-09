@@ -61,7 +61,8 @@ namespace OpenSim.Region.RegionCombinerModule
         public void Initialise(IConfigSource source)
         {
             IConfig RegionCombinerConfig = source.Configs["RegionCombiner"];
-            enabledYN = RegionCombinerConfig.GetBoolean("CombineContiguousRegions", false);
+            if(RegionCombinerConfig != null)
+                enabledYN = RegionCombinerConfig.GetBoolean("CombineContiguousRegions", false);
             
             if (enabledYN)
                 MainConsole.Instance.Commands.AddCommand("RegionCombinerModule", false, "fix-phantoms",

@@ -72,9 +72,17 @@ namespace Aurora.Modules
 
         #region IObjectCache
 
+        /// <summary>
+        /// Check whether we can send a CachedObjectUpdate to the client
+        /// </summary>
+        /// <param name="AgentID"></param>
+        /// <param name="localID"></param>
+        /// <param name="CurrentEntityCRC"></param>
+        /// <returns></returns>
         public bool UseCachedObject(UUID AgentID, uint localID, uint CurrentEntityCRC)
         {
             ObjectCacheClient client;
+            //If we have the client in the store, we can check, if not, no cached update
             if (ObjectCacheAgents.TryGetValue(AgentID, out client))
                 return client.GetUseCachedObject(localID, CurrentEntityCRC);
             else
@@ -90,6 +98,12 @@ namespace Aurora.Modules
             //Should we use a dictionary for ObjectUpdateCached checking?
             Dictionary<uint, uint> m_cachedObjects = new Dictionary<uint, uint>();
 
+            /// <summary>
+            /// Check whether the given object exists in our internal cache
+            /// </summary>
+            /// <param name="localID"></param>
+            /// <param name="CurrentEntityCRC"></param>
+            /// <returns></returns>
             public bool GetUseCachedObject(uint localID, uint CurrentEntityCRC)
             {
                 uint CRC = 0;
