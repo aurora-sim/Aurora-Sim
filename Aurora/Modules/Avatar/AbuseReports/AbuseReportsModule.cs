@@ -184,26 +184,6 @@ namespace Aurora.Modules
             report.AbuseDetails = AbuseDetails;
 
             report.ReporterName = client.Name;
-            
-            /*summery = summery.Replace("\"", "`");
-        	summery =summery.Replace("|","");
-        	summery =summery.Replace(")","");
-        	summery =summery.Replace("(","");
-        	summery =summery.Replace("{","`");
-        	summery =summery.Replace("}","`");
-        	summery =summery.Replace("[","`");
-        	summery =summery.Replace("]","`");
-        	string [] summerysplit = summery.Split(' ');
-            report.RegionName = summerysplit[1];
-            report.AbuseLocation = summerysplit[2];
-        	
-            //Right
-        	string [] summerysplit2 = summery.Split(new Char [] {'`'});
-        	report.Category = summerysplit2[1];
-            report.AbuseSummary = summerysplit2[5];
-            report.AbuserName = summerysplit2[3];
-        	//Since the server doesn't trust this anyway...
-            report.Number = (-1);*/
 
             string[] findRegion = summery.Split('|');
             report.RegionName = findRegion[1];
@@ -238,6 +218,7 @@ namespace Aurora.Modules
             report.Number = (-1);
 
             EstateSettings ES = client.Scene.RegionInfo.EstateSettings;
+            //If the abuse email is set up and the email module is available, send the email
             if (ES.AbuseEmailToEstateOwner && ES.AbuseEmail != "")
             {
                 IEmailModule Email = m_SceneList[0].RequestModuleInterface<IEmailModule>();
@@ -246,6 +227,7 @@ namespace Aurora.Modules
                         report.ReporterName + " against " + report.AbuserName + " at " + report.AbuseLocation + " in your region " + report.RegionName +
                         ". Summary: " + report.AbuseSummary + ". Details: " + report.AbuseDetails + ".");
             }
+            //Tell the DB about it
             IAbuseReportsConnector conn = Aurora.DataManager.DataManager.RequestPlugin<IAbuseReportsConnector>();
             if(conn != null)
                 conn.AddAbuseReport(report);

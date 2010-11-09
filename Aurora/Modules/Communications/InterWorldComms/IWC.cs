@@ -30,7 +30,7 @@ namespace Aurora.Modules
         private IConfig m_config;
         private List<Scene> m_scenes = new List<Scene>();
         private List<OpenSim.Services.Interfaces.GridRegion> m_ForeignRegions = new List<OpenSim.Services.Interfaces.GridRegion>();
-        private bool m_Enabled = true;
+        private bool m_Enabled = false;
         private bool m_RegionLoaded = false;
         private List<ConnectionIdentifier> Connections;
         public IWCOutgoingPublicConnections OutgoingPublicComms;
@@ -45,18 +45,16 @@ namespace Aurora.Modules
             if (source.Configs["AuroraInterWorldConnectors"] != null)
             {
                 if (source.Configs["AuroraInterWorldConnectors"].GetBoolean(
-                        "Enabled", true) !=
+                        "Enabled", true) ==
                         true)
                 {
-                    m_Enabled = false;
+                    m_Enabled = true;
                     return;
                 }
+                OurPassword = source.Configs["AuroraInterWorldConnectors"].GetString("OurPassword", "");
             }
             m_config = source.Configs["AuroraInterWorldConnectors"];
-            OurPassword = m_config.GetString("OurPassword", "");
         }
-
-        public bool IsSharedModule { get { return true; } }
 
         public string Name { get { return "InterWorldCommunications"; } }
 

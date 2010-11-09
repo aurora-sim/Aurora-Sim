@@ -40,6 +40,9 @@ using Aurora.Framework;
 
 namespace Aurora.Modules
 {
+    /// <summary>
+    /// This dialog module has support for mute lists
+    /// </summary>
     public class AuroraDialogModule : INonSharedRegionModule, IDialogModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -81,7 +84,6 @@ namespace Aurora.Modules
 
         public void RemoveRegion(Scene scene)
         {
-
         }
 
         public void RegionLoaded(Scene scene)
@@ -155,6 +157,7 @@ namespace Aurora.Modules
                 ownerLastName = "user)";
             }
 
+            //If the user is muted, we do NOT send them dialog boxes
             if (m_muteListModule != null)
             {
                 bool cached = false; //Unneeded
@@ -175,6 +178,7 @@ namespace Aurora.Modules
         {
             ScenePresence sp = m_scene.GetScenePresence(avatarID);
 
+            //If the user is muted, do NOT send them URL boxes
             if (m_muteListModule != null)
             {
                 bool cached = false; //Unneeded
@@ -216,6 +220,7 @@ namespace Aurora.Modules
                     }
                 }
 
+                //If the user is muted, do not send the text box
                 if (m_muteListModule != null)
                 {
                     bool cached = false; //Unneeded
