@@ -99,6 +99,7 @@ namespace Aurora.Modules
                         "WorldMapModule", "AuroraWorldMapModule") !=
                         "AuroraWorldMapModule")
                     return;
+                m_Enabled = true;
                 //m_log.Info("[AuroraWorldMap] Initializing");
                 m_config = source;
                 m_asyncMapTileCreation = source.Configs["MapModule"].GetBoolean("UseAsyncMapTileCreation", m_asyncMapTileCreation);
