@@ -47,7 +47,11 @@ namespace Aurora.Framework
     }
 
     #endregion
-
+    
+    /// <summary>
+    /// List that has an expiring built in
+    /// </summary>
+    /// <typeparam name="TKey"></typeparam>
     public sealed class ExpiringList<TKey>
     {
         const double CACHE_PURGE_HZ = 1.0;

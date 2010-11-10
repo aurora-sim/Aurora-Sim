@@ -17,8 +17,8 @@ namespace Aurora.Framework
         /// <summary>
         /// Check this user to see if they are using a banned viewer
         /// </summary>
-        /// <param name="SP"></param>
-        /// <param name="textureEntry"></param>
-        void CheckForBannedViewer(IClientAPI SP, Primitive.TextureEntry textureEntry);
+        /// <param name="client">Client of the user</param>
+        /// <param name="textureEntry">The textures the viewer is giving the server</param>
+        void CheckForBannedViewer(IClientAPI client, Primitive.TextureEntry textureEntry);
     }
 }

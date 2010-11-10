@@ -18,16 +18,28 @@ namespace Aurora.Framework
 {
     public static class Utilities
     {
+        /// <summary>
+        /// Get the URL to the release notes for the current version of Aurora
+        /// </summary>
+        /// <returns></returns>
         public static string GetServerReleaseNotesURL()
         {
             return "http://" + GetExternalIp() + ":" + OpenSim.Framework.MainServer.Instance.Port.ToString() + "/AuroraServerRelease" + AuroraServerVersion() + ".html";
         }
 
+        /// <summary>
+        /// Get the URL to our sim
+        /// </summary>
+        /// <returns></returns>
         public static string GetAddress()
         {
             return "http://" + GetExternalIp() + ":" + OpenSim.Framework.MainServer.Instance.Port.ToString();
         }
 
+        /// <summary>
+        /// What is our version?
+        /// </summary>
+        /// <returns></returns>
         public static string AuroraServerVersion()
         {
             return "1.0";
@@ -43,15 +55,22 @@ namespace Aurora.Framework
                 EncryptorType = type;
             }
         }
+        /// <summary>
+        /// This is for encryption, it sets the number of times to iterate through the encryption
+        /// </summary>
+        /// <param name="iterations"></param>
         public static void SetEncryptIterations(int iterations)
         {
             EncryptIterations = iterations;
         }
+        /// <summary>
+        /// This is for encryption, it sets the size of the key
+        /// </summary>
+        /// <param name="size"></param>
         public static void SetKeySize(int size)
         {
             KeySize = size;
         }
-
 
         /// <summary>
         /// Encrypts specified plaintext using Rijndael symmetric key algorithm
@@ -287,6 +306,10 @@ namespace Aurora.Framework
         }
 
         private static string CachedExternalIP = "";
+        /// <summary>
+        /// Get OUR external IP
+        /// </summary>
+        /// <returns></returns>
         public static string GetExternalIp()
         {
             if (CachedExternalIP == "")
@@ -298,6 +321,7 @@ namespace Aurora.Framework
                 WebClient webClient = new WebClient();
                 try
                 {
+                    //Ask what is my ip for it
                     externalIp = utf8.GetString(webClient.DownloadData("http://whatismyip.com/automation/n09230945.asp"));
                 }
                 catch (Exception) { }
@@ -308,7 +332,14 @@ namespace Aurora.Framework
                 return CachedExternalIP;
         }
 
-        public static Hashtable GenericXMLRPCRequest(Hashtable ReqParams, string method, string IPpoint)
+        /// <summary>
+        /// Send a generic XMLRPC request
+        /// </summary>
+        /// <param name="ReqParams">params to send</param>
+        /// <param name="method"></param>
+        /// <param name="URL">URL to send the request to</param>
+        /// <returns></returns>
+        public static Hashtable GenericXMLRPCRequest(Hashtable ReqParams, string method, string URL)
         {
             ArrayList SendParams = new ArrayList();
             SendParams.Add(ReqParams);
@@ -318,7 +349,7 @@ namespace Aurora.Framework
             try
             {
                 XmlRpcRequest Req = new XmlRpcRequest(method, SendParams);
-                Resp = Req.Send(IPpoint, 30000);
+                Resp = Req.Send(URL, 30000);
             }
             catch (WebException)
             {
@@ -357,18 +388,34 @@ namespace Aurora.Framework
                 return RespData;
             }
         }
-        public static Hashtable GenericXMLRPCRequestEncrypted(Hashtable ReqParams, string method, string IPpoint)
+        
+        /// <summary>
+        /// Send a generic XMLRPC request but with encryption on the values
+        /// </summary>
+        /// <param name="ReqParams">Params to send</param>
+        /// <param name="method"></param>
+        /// <param name="URL">URL to post to</param>
+        /// <param name="passPhrase">pass to remove the encryption</param>
+        /// <param name="salt">Extra additional piece that is added to the password</param>
+        /// <returns></returns>
+        public static Hashtable GenericXMLRPCRequestEncrypted(Hashtable ReqParams, string method, string URL, string passPhrase, string salt)
         {
-            //Framework.Utils.Encrypt(
+            Hashtable reqP = new Hashtable();
+            //Encrypt the values
+            foreach(KeyValuePair<string, object> kvp in ReqParams)
+            {
+                reqP.Add(kvp.Key, Encrypt(kvp.Value.ToString(), passPhrase, salt));
+            }
+
             ArrayList SendParams = new ArrayList();
-            SendParams.Add(ReqParams);
+            SendParams.Add(reqP);
 
             // Send Request
             XmlRpcResponse Resp;
             try
             {
                 XmlRpcRequest Req = new XmlRpcRequest(method, SendParams);
-                Resp = Req.Send(IPpoint, 30000);
+                Resp = Req.Send(URL, 30000);
             }
             catch (WebException)
             {
