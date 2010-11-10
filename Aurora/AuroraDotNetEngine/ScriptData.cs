@@ -467,7 +467,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     URL = Source.Remove(0, line);
                     URL = URL.Replace("#IncludeHTML ", "");
                     URL = URL.Split('\n')[0];
-                    string webSite = ReadExternalWebsite(URL);
+                    string webSite = Utilities.ReadExternalWebsite(URL);
                     Source = Source.Replace("#IncludeHTML " + URL, webSite);
                 }
             }
@@ -706,26 +706,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             return true;
         }
 
-        #endregion
-
-        #region Other
-
-        public string ReadExternalWebsite(string URL)
-        {
-            // External IP Address (get your external IP locally)
-            String externalIp = "";
-            UTF8Encoding utf8 = new UTF8Encoding();
-
-            WebClient webClient = new WebClient();
-            try
-            {
-                externalIp = utf8.GetString(webClient.DownloadData(URL));
-            }
-            catch (Exception)
-            {
-            }
-            return externalIp;
-        }
         #endregion
     }
 }

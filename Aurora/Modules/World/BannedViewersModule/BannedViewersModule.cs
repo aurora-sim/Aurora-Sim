@@ -83,7 +83,7 @@ namespace Aurora.Modules
             {
                 //Read the website once!
                 if (m_map == null)
-                    m_map = (OSDMap)OSDParser.Deserialize(ReadExternalWebsite("http://auroraserver.ath.cx:8080/client_tags.xml"));
+                    m_map = (OSDMap)OSDParser.Deserialize(Utilities.ReadExternalWebsite("http://auroraserver.ath.cx:8080/client_tags.xml"));
                 
                 //This is the givaway texture!
                 for (int i = 0; i < textureEntry.FaceTextures.Length; i++)
@@ -109,27 +109,6 @@ namespace Aurora.Modules
                 }
             }
             catch { }
-        }
-
-        /// <summary>
-        /// Read the website
-        /// </summary>
-        /// <param name="URL"></param>
-        /// <returns></returns>
-        private string ReadExternalWebsite(string URL)
-        {
-            String website = "";
-            UTF8Encoding utf8 = new UTF8Encoding();
-
-            WebClient webClient = new WebClient();
-            try
-            {
-                website = utf8.GetString(webClient.DownloadData(URL));
-            }
-            catch (Exception)
-            {
-            }
-            return website;
         }
     }
 }

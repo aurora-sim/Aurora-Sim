@@ -6,11 +6,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Drawing;
 using System.Text;
 using System.Security.Cryptography;
 using System.Xml;
 using OpenMetaverse.StructuredData;
 using Nwc.XmlRpc;
+using System.Windows.Forms;
 
 namespace Aurora.Framework
 {
@@ -404,6 +406,94 @@ namespace Aurora.Framework
                 RespData["success"] = "false";
                 return RespData;
             }
+        }
+
+        /// <summary>
+        /// Read a website into a string
+        /// </summary>
+        /// <param name="URL">URL to change into a string</param>
+        /// <returns></returns>
+        public static string ReadExternalWebsite(string URL)
+        {
+            String website = "";
+            UTF8Encoding utf8 = new UTF8Encoding();
+
+            WebClient webClient = new WebClient();
+            try
+            {
+                website = utf8.GetString(webClient.DownloadData(URL));
+            }
+            catch (Exception)
+            {
+            }
+            return website;
+        }
+
+        /// <summary>
+        /// Download the file from downloadLink and save it to Aurora + Version + 
+        /// </summary>
+        /// <param name="downloadLink">Link to the download</param>
+        /// <param name="filename">Name to put the download in</param>
+        public static void DownloadFile(string downloadLink, string filename)
+        {
+            WebClient webClient = new WebClient();
+            try
+            {
+                OpenSim.Framework.Console.MainConsole.Instance.Output("Downloading new file from " + downloadLink + " now into file " + filename + ".", "WARN");
+                webClient.DownloadFile(downloadLink, filename);
+            }
+            catch (Exception)
+            {
+            }
+        }
+
+        /// <summary>
+        /// Bring up a popup with a text box to ask the user for some input
+        /// </summary>
+        /// <param name="title"></param>
+        /// <param name="promptText"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static DialogResult InputBox(string title, string promptText, ref string value)
+        {
+            Form form = new Form();
+            Label label = new Label();
+            TextBox textBox = new TextBox();
+            Button buttonOk = new Button();
+            Button buttonCancel = new Button();
+
+            form.Text = title;
+            label.Text = promptText;
+            textBox.Text = value;
+
+            buttonOk.Text = "OK";
+            buttonCancel.Text = "Cancel";
+            buttonOk.DialogResult = DialogResult.OK;
+            buttonCancel.DialogResult = DialogResult.Cancel;
+
+            label.SetBounds(9, 20, 372, 13);
+            textBox.SetBounds(12, 36, 372, 20);
+            buttonOk.SetBounds(228, 72, 75, 23);
+            buttonCancel.SetBounds(309, 72, 75, 23);
+
+            label.AutoSize = true;
+            textBox.Anchor = textBox.Anchor | AnchorStyles.Right;
+            buttonOk.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            buttonCancel.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+
+            form.ClientSize = new Size(396, 107);
+            form.Controls.AddRange(new Control[] { label, textBox, buttonOk, buttonCancel });
+            form.ClientSize = new Size(Math.Max(300, label.Right + 10), form.ClientSize.Height);
+            form.FormBorderStyle = FormBorderStyle.FixedDialog;
+            form.StartPosition = FormStartPosition.CenterScreen;
+            form.MinimizeBox = false;
+            form.MaximizeBox = false;
+            form.AcceptButton = buttonOk;
+            form.CancelButton = buttonCancel;
+
+            DialogResult dialogResult = form.ShowDialog();
+            value = textBox.Text;
+            return dialogResult;
         }
     }
 }
