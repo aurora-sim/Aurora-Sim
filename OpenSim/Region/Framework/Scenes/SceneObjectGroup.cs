@@ -3799,6 +3799,29 @@ namespace OpenSim.Region.Framework.Scenes
 
         #endregion
 
+        /// <summary>
+        /// Get the sum of the size of all parts, not really that effective
+        /// </summary>
+        /// <returns></returns>
+        public Vector3 GetFakeTotalSize()
+        {
+            Vector3 totalSize = new Vector3();
+            lock (m_partsLock)
+            {
+                foreach (SceneObjectPart part in m_partsList)
+                {
+                    //Find the position of the prim and determine how far away it is from the absolute position of the group, then add the scale
+                    if ((part.AbsolutePosition.X - AbsolutePosition.X) + (part.Scale.X / 2) > totalSize.X)
+                        totalSize.X = (part.AbsolutePosition.X - AbsolutePosition.X) + (part.Scale.X / 2);
+                    if ((part.AbsolutePosition.Y - AbsolutePosition.Y) + (part.Scale.Y / 2) > totalSize.Y)
+                        totalSize.Y = (part.AbsolutePosition.Y - AbsolutePosition.Y) + (part.Scale.Y / 2);
+                    if ((part.AbsolutePosition.Z - AbsolutePosition.Z) + (part.Scale.Z / 2) > totalSize.Z)
+                        totalSize.Z = (part.AbsolutePosition.Z - AbsolutePosition.Z) + (part.Scale.Z / 2);
+                }
+            }
+            return totalSize;
+        }
+
         private readonly List<uint> m_lastColliders = new List<uint>();
 
         public void FireAttachmentCollisionEvents(EventArgs e)

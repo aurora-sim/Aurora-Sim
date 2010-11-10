@@ -248,6 +248,10 @@ namespace OpenSim.Region.Framework.Scenes
             //Do this first... As if its null, this wont be fired.
             ScenePresence SP;
             TryGetScenePresence(remoteClient.AgentId, out SP);
+
+            if (SP == null)
+                return;
+
             SP.SelectedUUID = null;
             SP.IsSelecting = false;
 
@@ -270,8 +274,8 @@ namespace OpenSim.Region.Framework.Scenes
             
             if (part.ParentGroup.IsAttachment)
                 isAttachment = true;
-            else //This NEEDS to be done because otherwise rotationalVelocity will break!
-                part.ParentGroup.ScheduleGroupForFullUpdate(PrimUpdateFlags.FullUpdate);
+            else //This NEEDS to be done because otherwise rotationalVelocity will break! Only for the editing av as the client stops the rotation for them when they are in edit
+                part.ParentGroup.ScheduleFullUpdateToAvatar(SP, PrimUpdateFlags.FullUpdate);
 
             // If it's not an attachment, and we are allowed to move it,
             // then we might have done so. If we moved across a parcel
