@@ -590,7 +590,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             catch (Exception ex)
             {
-                DisplayUserNotification(ex.Message, "app domain creation", reupload, true);
+                DisplayUserNotification(ex.ToString(), "app domain creation", reupload, true);
                 return;
             }
 

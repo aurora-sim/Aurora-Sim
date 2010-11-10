@@ -348,7 +348,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         //Log it for the user
                         else if(!(ex is EventAbortException) &&
                             !(ex is MinEventDelayException))
-                            QIS.ID.DisplayUserNotification(ex.Message, "", false, true);
+                            QIS.ID.DisplayUserNotification(ex.ToString(), "", false, true);
                         return false;
                     }
                     else if (Running != null)
@@ -363,7 +363,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             catch (Exception ex)
             {
                 //Error, tell the user
-                QIS.ID.DisplayUserNotification(ex.Message, "executing", false, true);
+                QIS.ID.DisplayUserNotification(ex.ToString(), "executing", false, true);
             }
             //Tell the event manager about it so that the events will be removed from the queue
             EventManager.EventComplete(QIS);
