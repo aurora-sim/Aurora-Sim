@@ -6,7 +6,7 @@ using Aurora.Framework;
 
 namespace Aurora.Framework
 {
-	public interface IAgentConnector
+    public interface IAgentConnector : IAuroraDataPlugin
 	{
         /// <summary>
         /// Gets the info about the agent (TOS data, maturity info, language, etc)

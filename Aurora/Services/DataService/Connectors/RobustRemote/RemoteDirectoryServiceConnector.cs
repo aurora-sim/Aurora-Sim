@@ -17,7 +17,7 @@ using OpenSim.Server.Base;
 
 namespace Aurora.Services.DataService
 {
-    public class RemoteDirectoryServiceConnector : IDirectoryServiceConnector, IAuroraDataPlugin
+    public class RemoteDirectoryServiceConnector : IDirectoryServiceConnector
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(

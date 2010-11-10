@@ -12,7 +12,7 @@ using OpenMetaverse.StructuredData;
 
 namespace Aurora.Services.DataService
 {
-    public class LocalDirectoryServiceConnector : IDirectoryServiceConnector, IAuroraDataPlugin
+    public class LocalDirectoryServiceConnector : IDirectoryServiceConnector
     {
         private IGenericData GD = null;
         private int minTimeBeforeNextParcelUpdate = 60;

@@ -17,7 +17,7 @@ using OpenSim.Server.Base;
 
 namespace Aurora.Services.DataService
 {
-    public class RemoteAgentConnector : IAgentConnector, IAuroraDataPlugin
+    public class RemoteAgentConnector : IAgentConnector
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(

@@ -12,7 +12,7 @@ using OpenSim.Framework;
 
 namespace Aurora.Services.DataService
 {
-    public class LocalAgentConnector : IAgentConnector, IAuroraDataPlugin
+    public class LocalAgentConnector : IAgentConnector
 	{
 		private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 

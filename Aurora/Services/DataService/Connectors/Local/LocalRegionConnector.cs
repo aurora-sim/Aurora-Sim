@@ -8,7 +8,7 @@ using Nini.Config;
 
 namespace Aurora.Services.DataService
 {
-    public class LocalRegionConnector : IRegionConnector, IAuroraDataPlugin
+    public class LocalRegionConnector : IRegionConnector
     {
         private IGenericData GD = null;
 

@@ -8,7 +8,7 @@ using OpenSim.Framework;
 
 namespace Aurora.Framework
 {
-    public interface IWebStatsDataConnector
+    public interface IWebStatsDataConnector : IAuroraDataPlugin
     {
         /// <summary>
         /// Add/Update a user's stats in the database

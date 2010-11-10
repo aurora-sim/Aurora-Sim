@@ -17,7 +17,7 @@ using OpenSim.Server.Base;
 
 namespace Aurora.Services.DataService
 {
-    public class SimianRegionConnector : IRegionConnector, IAuroraDataPlugin
+    public class SimianRegionConnector : IRegionConnector
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(

@@ -7,7 +7,7 @@ using OpenSim.Framework;
 
 namespace Aurora.Framework
 {
-	public interface IRegionConnector
+    public interface IRegionConnector : IAuroraDataPlugin
 	{
         /// <summary>
         /// Adds a telehub for the region

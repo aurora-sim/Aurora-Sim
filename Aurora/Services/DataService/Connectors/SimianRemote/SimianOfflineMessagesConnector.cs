@@ -17,7 +17,7 @@ using OpenSim.Server.Base;
 
 namespace Aurora.Services.DataService
 {
-    public class SimianOfflineMessagesConnector : IOfflineMessagesConnector, IAuroraDataPlugin
+    public class SimianOfflineMessagesConnector : IOfflineMessagesConnector
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(

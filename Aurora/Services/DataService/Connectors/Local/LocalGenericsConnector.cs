@@ -28,7 +28,7 @@ namespace Aurora.Services.DataService
     /// This class deals with the Getting/Setting/Removing of these generic interfaces.
     /// 
     /// </summary>
-    public class LocalGenericsConnector : IGenericsConnector, IAuroraDataPlugin
+    public class LocalGenericsConnector : IGenericsConnector
 	{
 		private IGenericData GD = null;
 

@@ -18,7 +18,7 @@ using OpenSim.Server.Base;
 
 namespace Aurora.Services.DataService
 {
-    public class SimianAgentConnector : IAgentConnector, IAuroraDataPlugin
+    public class SimianAgentConnector : IAgentConnector
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(

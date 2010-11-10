@@ -11,7 +11,7 @@ using Nini.Config;
 
 namespace Aurora.Services.DataService
 {
-    public class LocalAbuseReportsConnector : IAbuseReportsConnector, IAuroraDataPlugin
+    public class LocalAbuseReportsConnector : IAbuseReportsConnector
 	{
 		private IGenericData GD = null;
 

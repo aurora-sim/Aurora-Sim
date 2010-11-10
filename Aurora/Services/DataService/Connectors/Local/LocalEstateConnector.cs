@@ -12,7 +12,7 @@ using OpenMetaverse.StructuredData;
 
 namespace Aurora.Services.DataService
 {
-    public class LocalEstateConnector : IEstateConnector, IAuroraDataPlugin
+    public class LocalEstateConnector : IEstateConnector
 	{
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private IGenericData GD = null;

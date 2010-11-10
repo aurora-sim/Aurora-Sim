@@ -9,7 +9,7 @@ using OpenSim.Framework;
 
 namespace Aurora.Framework
 {
-	public interface IProfileConnector
+    public interface IProfileConnector : IAuroraDataPlugin
 	{
         /// <summary>
         /// Gets the profile for an agent

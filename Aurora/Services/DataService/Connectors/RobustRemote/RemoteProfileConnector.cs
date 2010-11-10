@@ -17,7 +17,7 @@ using OpenSim.Server.Base;
 
 namespace Aurora.Services.DataService
 {
-    public class RemoteProfileConnector : IProfileConnector, IAuroraDataPlugin
+    public class RemoteProfileConnector : IProfileConnector
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(

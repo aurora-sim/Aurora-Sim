@@ -12,7 +12,7 @@ using Nini.Config;
 
 namespace Aurora.Framework
 {
-	public interface IGroupsServiceConnector
+    public interface IGroupsServiceConnector : IAuroraDataPlugin
 	{
 		void CreateGroup(UUID groupID, string name, string charter, bool showInList, UUID insigniaID, int membershipFee, bool openEnrollment, bool allowPublish, bool maturePublish, UUID founderID,
             ulong EveryonePowers, UUID OwnerRoleID, ulong OwnerPowers);

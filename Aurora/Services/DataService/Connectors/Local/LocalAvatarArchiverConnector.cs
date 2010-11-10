@@ -10,7 +10,7 @@ namespace Aurora.Services.DataService
 {
 	//This will always be local, as this is only used by the grid server.
 	//The region server should not be using this class.
-    public class LocalAvatarArchiverConnector : IAvatarArchiverConnector, IAuroraDataPlugin
+    public class LocalAvatarArchiverConnector : IAvatarArchiverConnector
 	{
 		private IGenericData GD = null;
 

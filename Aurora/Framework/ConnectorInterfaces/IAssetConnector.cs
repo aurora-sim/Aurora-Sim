@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Aurora.Framework
 {
-	public interface IAssetConnector
+    public interface IAssetConnector : IAuroraDataPlugin
 	{
         /// <summary>
         /// Adds data from the AA commands to the database to be saved.

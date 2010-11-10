@@ -11,14 +11,19 @@ namespace Aurora.Framework
     public static class AuroraModuleLoader
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
-        #region Module Loaders
-
         private static List<string> dllBlackList;
         private static bool firstLoad = true;
         private static List<Type> LoadedDlls = new List<Type>();
         private static Dictionary<string, Assembly> LoadedAssemblys = new Dictionary<string, Assembly>();
 
+        #region Module Loaders
+
+        
+        /// <summary>
+        /// Find all T modules in the current directory
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
         public static List<T> PickupModules<T>()
         {
             return LoadModules<T>(Environment.CurrentDirectory);
@@ -156,6 +161,12 @@ namespace Aurora.Framework
             return modules;
         }
         
+        /// <summary>
+        /// Load all T modules from dllname
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="dllName"></param>
+        /// <returns></returns>
         private static List<T> LoadModulesFromDLL<T>(string dllName)
         {
             List<T> modules = new List<T>();
@@ -215,6 +226,13 @@ namespace Aurora.Framework
 
         #endregion
 
+        /// <summary>
+        /// Load all plugins from the given .dll file with the interface 'type'
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="dllName"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
         public static T LoadPlugin<T>(string dllName, string type) 
         {
             try

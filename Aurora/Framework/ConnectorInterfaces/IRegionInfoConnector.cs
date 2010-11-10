@@ -8,7 +8,7 @@ using OpenMetaverse.StructuredData;
 
 namespace Aurora.Framework
 {
-    public interface IRegionInfoConnector
+    public interface IRegionInfoConnector : IAuroraDataPlugin
 	{
         /// <summary>
         /// Gets RegionInfos for the database region connector

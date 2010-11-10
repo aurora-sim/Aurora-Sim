@@ -13,7 +13,7 @@ namespace Aurora.Services.DataService
 {
     //Slated to be fixed
     // TODO: Actually fix this
-    public class LocalRegionInfoConnector : IRegionInfoConnector, IAuroraDataPlugin
+    public class LocalRegionInfoConnector : IRegionInfoConnector
     {
         private IGenericData GD = null;
 

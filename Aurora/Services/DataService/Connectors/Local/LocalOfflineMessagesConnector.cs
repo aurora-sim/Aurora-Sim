@@ -11,7 +11,7 @@ using System.Xml.Serialization;
 
 namespace Aurora.Services.DataService
 {
-    public class LocalOfflineMessagesConnector : IOfflineMessagesConnector, IAuroraDataPlugin
+    public class LocalOfflineMessagesConnector : IOfflineMessagesConnector
 	{
         private IGenericData GD = null;
 

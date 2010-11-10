@@ -11,7 +11,7 @@ using Nini.Config;
 
 namespace Aurora.Services.DataService
 {
-    public class LocalWebStatsDataConnector : IWebStatsDataConnector, IAuroraDataPlugin
+    public class LocalWebStatsDataConnector : IWebStatsDataConnector
 	{
         private IGenericData GD = null;
 

@@ -7,7 +7,7 @@ using OpenSim.Framework;
 
 namespace Aurora.Framework
 {
-	public interface IEstateConnector
+    public interface IEstateConnector : IAuroraDataPlugin
 	{
         /// <summary>
         /// Loads the estate data for the given region

@@ -17,7 +17,7 @@ using OpenSim.Server.Base;
 
 namespace Aurora.Services.DataService
 {
-    public class RemoteRegionConnector : IRegionConnector, IAuroraDataPlugin
+    public class RemoteRegionConnector : IRegionConnector
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(

@@ -714,6 +714,37 @@ namespace Aurora.OpenRegionSettingsModule
 
         private void ReadSettings(IConfig instanceSettings)
         {
+            m_settings.MaxDragDistance = instanceSettings.GetFloat("MaxDragDistance", MaxDragDistance);
+            m_settings.DefaultDrawDistance = instanceSettings.GetFloat("DefaultDrawDistance", DefaultDrawDistance);
+
+
+            m_settings.MaximumPrimScale = instanceSettings.GetFloat("MaximumPrimScale", MaximumPrimScale);
+            m_settings.MinimumPrimScale = instanceSettings.GetFloat("MinimumPrimScale", MinimumPrimScale);
+            m_settings.MaximumPhysPrimScale = instanceSettings.GetFloat("MaximumPhysPrimScale", MaximumPhysPrimScale);
+
+
+            m_settings.MaximumHollowSize = instanceSettings.GetFloat("MaximumHollowSize", MaximumHollowSize);
+            m_settings.MinimumHoleSize = instanceSettings.GetFloat("MinimumHoleSize", MinimumHoleSize);
+
+
+            m_settings.MaximumLinkCount = instanceSettings.GetInt("MaximumLinkCount", MaximumLinkCount);
+            m_settings.MaximumLinkCountPhys = instanceSettings.GetInt("MaximumLinkCountPhys", MaximumLinkCountPhys);
+
+
+            m_settings.RenderWater = instanceSettings.GetBoolean("RenderWater", RenderWater);
+            m_settings.MaximumInventoryItemsTransfer = instanceSettings.GetInt("MaximumInventoryItemsTransfer", MaximumInventoryItemsTransfer);
+            m_settings.DisplayMinimap = instanceSettings.GetBoolean("DisplayMinimap", DisplayMinimap);
+            m_settings.AllowPhysicalPrims = instanceSettings.GetBoolean("AllowPhysicalPrims", AllowPhysicalPrims);
+            m_settings.ClampPrimSizes = instanceSettings.GetBoolean("ClampPrimSizes", ClampPrimSizes);
+            m_settings.ForceDrawDistance = instanceSettings.GetBoolean("ForceDrawDistance", ForceDrawDistance);
+
+            m_settings.OffsetOfUTC = instanceSettings.GetString("OffsetOfUTC", OffsetOfUTC);
+            m_settings.OffsetOfUTCDST = instanceSettings.GetBoolean("OffsetOfUTCDST", OffsetOfUTCDST);
+            m_settings.EnableTeenMode = instanceSettings.GetBoolean("EnableTeenMode", EnableTeenMode);
+            m_settings.ShowTags = instanceSettings.GetInt("ShowTags", ShowTags);
+            m_settings.MaxGroups = instanceSettings.GetInt("MaxGroups", MaxGroups);
+            m_settings.AllowParcelWindLight = instanceSettings.GetBoolean("AllowParcelWindLight", AllowParcelWindLight);
+            
             string defaultunderpants = instanceSettings.GetString("DefaultUnderpants", m_settings.DefaultUnderpants.ToString());
                 UUID.TryParse(defaultunderpants, out m_settings.m_DefaultUnderpants);
             string defaultundershirt = instanceSettings.GetString("DefaultUndershirt", m_settings.DefaultUndershirt.ToString());

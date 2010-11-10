@@ -9,7 +9,7 @@ using Nini.Config;
 
 namespace Aurora.Services.DataService
 {
-    public class LocalMuteListConnector : IMuteListConnector, IAuroraDataPlugin
+    public class LocalMuteListConnector : IMuteListConnector
     {
         IGenericData GD;
 

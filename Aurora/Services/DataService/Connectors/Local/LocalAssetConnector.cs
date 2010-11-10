@@ -9,7 +9,7 @@ using Nini.Config;
 
 namespace Aurora.Services.DataService
 {
-    public class LocalAssetConnector : IAssetConnector, IAuroraDataPlugin
+    public class LocalAssetConnector : IAssetConnector
 	{
 		private IGenericData GD = null;
 
