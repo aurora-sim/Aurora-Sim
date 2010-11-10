@@ -119,7 +119,7 @@ namespace Aurora.Services.DataService
             }
             else
             {
-                m_log.Error("[SIMIAN AGENTS]: Failed to fetch agent info data for " + userID + ": " + response["Message"].AsString());
+                m_log.Error("[SIMIAN AGENTS CONNECTOR]: Failed to fetch agent info data for " + userID + ": " + response["Message"].AsString());
             }
 
             return null;

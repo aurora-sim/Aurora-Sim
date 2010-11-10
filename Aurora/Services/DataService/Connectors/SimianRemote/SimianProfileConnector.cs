@@ -54,7 +54,7 @@ namespace Aurora.Services.DataService
                 { "UserID", PrincipalID.ToString() }
             };
 
-            OSDMap result = PostData(PrincipalID, requestArgs);
+            OSDMap result = PostUserData(PrincipalID, requestArgs);
 
             if (result == null)
                 return null;
@@ -81,13 +81,7 @@ namespace Aurora.Services.DataService
                 { "Profile", OSDParser.SerializeJsonString(Profile.ToOSD()) }
             };
 
-            OSDMap result = PostData(Profile.PrincipalID, requestArgs);
-
-            if (result == null)
-                return false;
-
-            bool success = result["Success"].AsBoolean();
-            return success;
+            return PostData(Profile.PrincipalID, requestArgs);
         }
 
         public void CreateNewProfile(UUID PrincipalID)
@@ -99,7 +93,16 @@ namespace Aurora.Services.DataService
 
         #region Helpers
 
-        private OSDMap PostData(UUID userID, NameValueCollection nvc)
+        private bool PostData(UUID userID, NameValueCollection nvc)
+        {
+            OSDMap response = WebUtil.PostToService(m_ServerURI, nvc);
+            
+            if(response.ContainsKey("Success"))
+                return response["Success"].AsBoolean();
+            return false;
+        }
+
+        private OSDMap PostUserData(UUID userID, NameValueCollection nvc)
         {
             OSDMap response = WebUtil.PostToService(m_ServerURI, nvc);
             if (response["Success"].AsBoolean() && response["User"] is OSDMap)
@@ -108,7 +111,7 @@ namespace Aurora.Services.DataService
             }
             else
             {
-                m_log.Error("[SIMIAN PROFILES]: Failed to fetch user data for " + userID + ": " + response["Message"].AsString());
+                m_log.Error("[SIMIAN PROFILES CONNECTOR]: Failed to fetch user data for " + userID + ": " + response["Message"].AsString());
             }
 
             return null;
