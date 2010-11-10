@@ -756,10 +756,11 @@ namespace OpenSim.Server.Handlers.Grid
 
         public byte[] AddTelehub(Dictionary<string, object> request)
         {
-            Telehub telehub = new Telehub(request);
+            Telehub telehub = new Telehub();
+            telehub.FromKVP(request);
             UUID SessionID = UUID.Parse(request["SESSIONID"].ToString());
 
-            if (SessionCache.ContainsKey(UUID.Parse(telehub.RegionID)) && SessionCache[UUID.Parse(telehub.RegionID)] == SessionID)
+            if (SessionCache.ContainsKey(telehub.RegionID) && SessionCache[telehub.RegionID] == SessionID)
                 TelehubConnector.AddTelehub(telehub, SessionID);
 
             return SuccessResult();

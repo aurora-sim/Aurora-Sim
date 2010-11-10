@@ -263,7 +263,7 @@ namespace Aurora.Modules
                         return;
                     telehub.RegionLocX = client.Scene.RegionInfo.RegionLocX;
                     telehub.RegionLocY = client.Scene.RegionInfo.RegionLocY;
-                    telehub.RegionID = client.Scene.RegionInfo.RegionID.ToString();
+                    telehub.RegionID = client.Scene.RegionInfo.RegionID;
                     Vector3 pos = new Vector3(telehub.TelehubLocX, telehub.TelehubLocY, telehub.TelehubLocZ);
                     if (telehub.TelehubLocX == 0 && telehub.TelehubLocY == 0)
                         return; //No spawns without a telehub
@@ -286,14 +286,14 @@ namespace Aurora.Modules
                         telehub = new Telehub();
                     telehub.RegionLocX = client.Scene.RegionInfo.RegionLocX;
                     telehub.RegionLocY = client.Scene.RegionInfo.RegionLocY;
-                    telehub.RegionID = client.Scene.RegionInfo.RegionID.ToString();
+                    telehub.RegionID = client.Scene.RegionInfo.RegionID;
                     telehub.TelehubLocX = part.AbsolutePosition.X;
                     telehub.TelehubLocY = part.AbsolutePosition.Y;
                     telehub.TelehubLocZ = part.AbsolutePosition.Z;
                     telehub.TelehubRotX = part.ParentGroup.Rotation.X;
                     telehub.TelehubRotY = part.ParentGroup.Rotation.Y;
                     telehub.TelehubRotZ = part.ParentGroup.Rotation.Z;
-                    telehub.ObjectUUID = part.UUID.ToString();
+                    telehub.ObjectUUID = part.UUID;
                     telehub.Name = part.Name;
                     RegionConnector.AddTelehub(telehub, Sp.Scene.RegionInfo.GridSecureSessionID);
                     SendTelehubInfo(client);
@@ -317,7 +317,7 @@ namespace Aurora.Modules
                 {
                     Vector3 pos = new Vector3(telehub.TelehubLocX, telehub.TelehubLocY, telehub.TelehubLocZ);
                     Quaternion rot = new Quaternion(telehub.TelehubRotX, telehub.TelehubRotY, telehub.TelehubRotZ);
-                    client.SendTelehubInfo(pos, rot, telehub.SpawnPos, UUID.Parse(telehub.ObjectUUID), telehub.Name);
+                    client.SendTelehubInfo(pos, rot, telehub.SpawnPos, telehub.ObjectUUID, telehub.Name);
                 }
             }
         }

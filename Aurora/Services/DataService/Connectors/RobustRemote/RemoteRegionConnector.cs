@@ -119,7 +119,9 @@ namespace Aurora.Services.DataService
                     {
                         if (replyData.Count != 0)
                         {
-                            return new Telehub(replyData);
+                            Telehub t = new Telehub();
+                            t.FromKVP(replyData);
+                            return t;
                         }
                     }
                     else
