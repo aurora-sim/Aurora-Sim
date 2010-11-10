@@ -645,7 +645,8 @@ namespace Aurora.Modules
             IUserProfileInfo UPI = ProfileFrontend.GetUserProfile(remoteClient.AgentId);
             if (UPI == null)
                 return;
-            
+
+            UPI.PrincipalID = remoteClient.AgentId;
             UPI.Image = ImageID;
             UPI.FirstLifeImage = FLImageID;
             UPI.AboutText = AboutText;
@@ -664,7 +665,7 @@ namespace Aurora.Modules
             if (Profile == null || account == null)
                 return;
             Byte[] charterMember;
-            if (Profile.MembershipGroup == " " || Profile.MembershipGroup == "")
+            if (Profile.MembershipGroup == "")
             {
                 charterMember = new Byte[1];
                 charterMember[0] = (Byte)((account.UserFlags & 0xf00) >> 8);
@@ -679,8 +680,8 @@ namespace Aurora.Modules
 
             uint flags = Convert.ToUInt32(Profile.AllowPublish) + Convert.ToUInt32(Profile.MaturePublish) + membershipGroupINT + (uint)agentOnline + (uint)account.UserFlags;
             remoteClient.SendAvatarInterestsReply(target, Convert.ToUInt32(Profile.Interests.WantToMask), Profile.Interests.WantToText, Convert.ToUInt32(Profile.Interests.CanDoMask), Profile.Interests.CanDoText, Profile.Interests.Languages);
-            remoteClient.SendAvatarProperties(Profile.PrincipalID, Profile.AboutText,
-                                              Util.ToDateTime(Profile.Created).ToString("M/d/yyyy", CultureInfo.InvariantCulture),
+            remoteClient.SendAvatarProperties(account.PrincipalID, Profile.AboutText,
+                                              Util.ToDateTime(account.Created).ToString("M/d/yyyy", CultureInfo.InvariantCulture),
                                               charterMember, Profile.FirstLifeAboutText, flags,
                                               Profile.FirstLifeImage, Profile.Image, Profile.WebURL, new UUID(Profile.Partner));
         }

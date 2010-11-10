@@ -51,7 +51,7 @@ namespace Aurora.Services.DataService
             NameValueCollection requestArgs = new NameValueCollection
             {
                 { "RequestMethod", "GetUser" },
-                { "AgentID", PrincipalID.ToString() }
+                { "UserID", PrincipalID.ToString() }
             };
 
             OSDMap result = PostData(PrincipalID, requestArgs);
@@ -59,10 +59,17 @@ namespace Aurora.Services.DataService
             if (result == null)
                 return null;
 
-            IUserProfileInfo profile = new IUserProfileInfo();
-            profile.FromOSD(result);
+            if (result.ContainsKey("Profile"))
+            {
+                OSDMap profilemap = (OSDMap)OSDParser.DeserializeJson(result["Profile"].AsString());
 
-            return profile;
+                IUserProfileInfo profile = new IUserProfileInfo();
+                profile.FromOSD(profilemap);
+
+                return profile;
+            }
+
+            return null;
         }
 
         public bool UpdateUserProfile(IUserProfileInfo Profile)
@@ -70,8 +77,8 @@ namespace Aurora.Services.DataService
             NameValueCollection requestArgs = new NameValueCollection
             {
                 { "RequestMethod", "AddUserData" },
-                { "AgentID", Profile.PrincipalID.ToString() },
-                { "Profile", OSDParser.SerializeJsonString(Util.DictionaryToOSD(Profile.ToKeyValuePairs())) }
+                { "UserID", Profile.PrincipalID.ToString() },
+                { "Profile", OSDParser.SerializeJsonString(Profile.ToOSD()) }
             };
 
             OSDMap result = PostData(Profile.PrincipalID, requestArgs);

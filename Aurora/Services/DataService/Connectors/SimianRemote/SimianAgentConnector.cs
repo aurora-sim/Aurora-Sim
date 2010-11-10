@@ -51,7 +51,7 @@ namespace Aurora.Services.DataService
             NameValueCollection requestArgs = new NameValueCollection
             {
                 { "RequestMethod", "GetUser" },
-                { "AgentID", PrincipalID.ToString() }
+                { "UserID", PrincipalID.ToString() }
             };
 
             OSDMap result = PostData(PrincipalID, requestArgs);
@@ -59,20 +59,44 @@ namespace Aurora.Services.DataService
             if (result == null)
                 return null;
 
-            IAgentInfo agent = new IAgentInfo();
-            agent.FromOSD(result);
+            if (result.ContainsKey("AgentInfo"))
+            {
+                OSDMap agentmap = (OSDMap)OSDParser.DeserializeJson(result["AgentInfo"].AsString());
 
-            return agent;
+                IAgentInfo agent = new IAgentInfo();
+                agent.FromOSD(agentmap);
+
+                return agent;
+            }
+
+            return null;
         }
 
         public void UpdateAgent(IAgentInfo agent)
         {
-            //No creating from sims!
+            NameValueCollection requestArgs = new NameValueCollection
+            {
+                { "RequestMethod", "AddUserData" },
+                { "UserID", agent.PrincipalID.ToString() },
+                { "AgentInfo", OSDParser.SerializeJsonString(agent.ToOSD()) }
+            };
+
+            PostData(agent.PrincipalID, requestArgs);
         }
 
         public void CreateNewAgent(UUID PrincipalID)
         {
-            //No creating from sims!
+            IAgentInfo info = new IAgentInfo();
+            info.PrincipalID = PrincipalID;
+
+            NameValueCollection requestArgs = new NameValueCollection
+            {
+                { "RequestMethod", "AddUserData" },
+                { "UserID", info.PrincipalID.ToString() },
+                { "AgentInfo", OSDParser.SerializeJsonString(info.ToOSD()) }
+            };
+
+            PostData(info.PrincipalID, requestArgs);
         }
 
         public bool CheckMacAndViewer(string Mac, string viewer)
@@ -95,7 +119,7 @@ namespace Aurora.Services.DataService
             }
             else
             {
-                m_log.Error("[SIMIAN PROFILES]: Failed to fetch user data for " + userID + ": " + response["Message"].AsString());
+                m_log.Error("[SIMIAN AGENTS]: Failed to fetch agent info data for " + userID + ": " + response["Message"].AsString());
             }
 
             return null;

@@ -476,7 +476,15 @@ namespace Aurora.Modules
             IAgentConnector AgentConnector = DataManager.DataManager.RequestPlugin<IAgentConnector>();
             IAgentInfo agentInfo = null;
             if (AgentConnector != null)
+            {
                 agentInfo = AgentConnector.GetAgent(userID);
+                if (agentInfo == null)
+                {
+                    AgentConnector.CreateNewAgent(userID);
+                    agentInfo = AgentConnector.GetAgent(userID);
+                }
+            }
+            
 
             if (agentInfo != null && scene.RegionInfo.RegionSettings.Maturity > agentInfo.MaturityRating)
             {
