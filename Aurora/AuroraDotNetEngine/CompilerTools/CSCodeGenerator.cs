@@ -34,90 +34,6 @@ using Tools;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 {
-    public static class Extension
-    {
-        public static bool CompareWildcards(this string WildString, string Mask, bool IgnoreCase)
-        {
-            int i = 0;
-
-            if (String.IsNullOrEmpty(Mask))
-                return false;
-            if (Mask == "*")
-                return true;
-
-            while (i != Mask.Length)
-            {
-                if (CompareWildcard(WildString, Mask.Substring(i), IgnoreCase))
-                    return true;
-
-                while (i != Mask.Length && Mask[i] != ';')
-                    i += 1;
-
-                if (i != Mask.Length && Mask[i] == ';')
-                {
-                    i += 1;
-
-                    while (i != Mask.Length && Mask[i] == ' ')
-                        i += 1;
-                }
-            }
-
-            return false;
-        }
-
-        public static bool CompareWildcard(this string WildString, string Mask, bool IgnoreCase)
-        {
-            int i = 0, k = 0;
-
-            while (k != WildString.Length)
-            {
-                if ((i + 1) > Mask.Length)
-                    return true;
-                switch (Mask[i])
-                {
-                    case '*':
-
-                        if ((i + 1) >= Mask.Length)
-                            return true;
-
-                        while (k != WildString.Length)
-                        {
-                            if (CompareWildcard(WildString.Substring(k + 1), Mask.Substring(i + 1), IgnoreCase))
-                                return true;
-
-                            k += 1;
-                        }
-
-                        return false;
-
-                    case '?':
-
-                        break;
-
-                    default:
-
-                        if (IgnoreCase == false && WildString[k] != Mask[i])
-                            return false;
-                        if (IgnoreCase && Char.ToLower(WildString[k]) != Char.ToLower(Mask[i]))
-                            return false;
-
-                        break;
-                }
-
-                i += 1;
-                k += 1;
-            }
-
-            if (k == WildString.Length)
-            {
-                if (i == Mask.Length || Mask[i] == ';' || Mask[i] == '*')
-                    return true;
-            }
-
-            return false;
-        }
-    }
-
     public class CSCodeGenerator : ICSCodeGenerator
     {
         private SYMBOL m_astRoot = null;
@@ -142,6 +58,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         private Dictionary<string, GlobalVar> GlobalVariables = new Dictionary<string, GlobalVar>();
         private List<string> FuncCalls = new List<string>();
         private bool FuncCntr = false;
+
         /// <summary>
         /// Creates an 'empty' CSCodeGenerator instance.
         /// </summary>
@@ -275,8 +192,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     script = CheckForInlineVectors(script);
 
                     script = CheckFloatExponent(script);
-
-                    //script = CheckForIncorrectFieldinitializer(script);
                 }
             }
             catch (Exception ex)
@@ -337,131 +252,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             CheckEventCasts(returnstring);
             return CreateCompilerScript(returnstring);
         }
-
-        #region Deprecated code
-        /*
-        private string CheckForIncorrectFieldinitializer(string script)
-        {
-            string[] BeforeDefault = script.Split(new string[] { "default" }, StringSplitOptions.None);
-            string[] LinesBeforeDefault = BeforeDefault[0].Split('\n');
-
-            Dictionary<int, string> VariableLines = new Dictionary<int, string>();
-            Dictionary<int, string> Variables = new Dictionary<int, string>();
-            int IsInsideFunction = 0;
-            int LineNumberTemp = -1;
-            foreach (string line in LinesBeforeDefault)
-            {
-                LineNumberTemp++;
-                if (line == "")
-                    continue;
-                else if (line.StartsWith("//")) // No checking comments either
-                    continue;
-                else if (line.Contains("{")) // No checking inside of functions
-                {
-                    IsInsideFunction++;
-                    continue;
-                }
-                else if (line.Contains("(") || line.Contains(")")) // No checking inside of functions or function calls
-                {
-                    if (line.Contains(")"))
-                        IsInsideFunction--;
-                    else
-                        IsInsideFunction++;
-                    continue;
-                }
-                else if (line.Contains("}"))
-                {
-                    IsInsideFunction--;
-                    continue;
-                }
-                else if (IsInsideFunction != 0)
-                    continue;
-                else
-                {
-                    if (line.StartsWith("integer") || line.StartsWith("float")
-                        || line.StartsWith("rotation") || line.StartsWith("vector")
-                        || line.StartsWith("list") || line.StartsWith("string")
-                        || line.StartsWith("key"))
-                    {
-                        VariableLines.Add(LineNumberTemp, line);
-                        string[] EqualSplit = line.Split('=');
-                        Variables.Add(LineNumberTemp, EqualSplit[0].Split(' ')[1]);
-                    }
-                }
-            }
-            Dictionary<int, string> NewLines = new Dictionary<int, string>();
-            foreach (KeyValuePair<int, string> linekvp in VariableLines)
-            {
-                string NewLine = linekvp.Value;
-                #region Find the variable
-
-                string[] keys = NewLine.Split('=');
-                if (keys.Length != 1)
-                {
-                    string key = keys[0];
-                    key = key.Split(' ')[1];
-
-                #endregion
-                    #region Find the Value
-
-                    string EqualSplit = NewLine.Split('=')[1];
-                    EqualSplit = EqualSplit.Split(';')[0];
-
-                    #endregion
-                    int i = 0;
-                    foreach (KeyValuePair<int, string> variablekvp in Variables)
-                    {
-                        string variable = variablekvp.Value;
-                        if (EqualSplit == variable)
-                        {
-                            string VarNewLine = VariableLines[variablekvp.Key];
-
-                            // Rebuild the line so that it does not error out
-                            // using the line it references, but with the new variable
-                            string[] LineParts = VarNewLine.Split('=');
-                            string[] SplitLineParts = LineParts[0].Split(' ');
-                            SplitLineParts[1] = key;
-                            string tempSplit = "";
-                            foreach (string LinePart in SplitLineParts)
-                            {
-                                tempSplit += LinePart + " ";
-                            }
-                            tempSplit = tempSplit.Remove(tempSplit.Length - 1, 1);
-                            LineParts[0] = tempSplit;
-                            NewLine = "";
-                            foreach (string LinePart in LineParts)
-                            {
-                                NewLine += LinePart + "=";
-                            }
-                            NewLine = NewLine.Remove(NewLine.Length - 1, 1);
-                        }
-                        i++;
-                    }
-                }
-                NewLines.Add(linekvp.Key, NewLine);
-            }
-            foreach (KeyValuePair<int, string> newLine in NewLines)
-            {
-                LinesBeforeDefault[newLine.Key] = newLine.Value;
-            }
-            string Line = "";
-            foreach (string newLine in LinesBeforeDefault)
-            {
-                Line += newLine + "\n";
-            }
-            Line = Line.Remove(Line.Length - 1, 1);
-            script = "";
-            BeforeDefault[0] = Line;
-            foreach (string newLine in BeforeDefault)
-            {
-                script += newLine + "default";
-            }
-            script = script.Remove(script.Length - 7, 7);
-
-            return script;
-        }
-        */
-        #endregion
 
         private string CheckFloatExponent(string script)
         {

@@ -1211,15 +1211,20 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
     public class ScriptErrorReporter
     {
-        int Timeout = 500; // 5 seconds, measured in 10 millisecond intervals (Odd, yes)
-        public ScriptErrorReporter(IConfig config)
-        {
-            Timeout = (config.GetInt("ScriptErrorFindingTimeOut", 5) * 100);
-        }
-
         //Errors that have been thrown while compiling
         private Dictionary<UUID, ArrayList> Errors = new Dictionary<UUID, ArrayList>();
+        private int Timeout = 5000; // 5 seconds
 
+        public ScriptErrorReporter(IConfig config)
+        {
+            Timeout = (config.GetInt("ScriptErrorFindingTimeOut", 5) * 1000);
+        }
+
+        /// <summary>
+        /// Add a new error for the client thread to find
+        /// </summary>
+        /// <param name="ItemID"></param>
+        /// <param name="errors"></param>
         public void AddError(UUID ItemID, ArrayList errors)
         {
             if (!Errors.ContainsKey(ItemID))
@@ -1228,6 +1233,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 Errors[ItemID] = errors;
         }
 
+        /// <summary>
+        /// Find the errors that the script may have produced while compiling
+        /// </summary>
+        /// <param name="ItemID"></param>
+        /// <returns></returns>
         public ArrayList FindErrors(UUID ItemID)
         {
             ArrayList Error = new ArrayList();
@@ -1243,6 +1253,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             return Error;
         }
 
+        /// <summary>
+        /// Wait while the script is processed
+        /// </summary>
+        /// <param name="ItemID"></param>
+        /// <param name="error"></param>
+        /// <returns></returns>
         private bool TryFindError(UUID ItemID, out ArrayList error)
         {
             error = null;
@@ -1252,15 +1268,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             int i = 0;
             while ((error = Errors[ItemID]) == null && i < Timeout)
             {
-                i++;
-                Thread.Sleep(10);
+                Thread.Sleep(50);
+                i += 50;
             }
-            if (i == 500)
-                return false; //Cut off
-            else
+            if (i < 5000)
                 return true;
+            else
+                return false; //Cut off
         }
 
+        /// <summary>
+        /// Clear this item's errors
+        /// </summary>
+        /// <param name="ItemID"></param>
         public void RemoveError(UUID ItemID)
         {
             Errors[ItemID] = null;

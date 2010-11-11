@@ -473,6 +473,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         #region Remove
 
+        /// <summary>
+        /// Sets the newest VersionID to the given versionID so taht we can block out ALL previous scripts
+        /// </summary>
+        /// <param name="ItemID"></param>
+        /// <param name="VersionID"></param>
         public void RemoveFromEventQueue(UUID ItemID, int VersionID)
         {
             NeedsRemoved[ItemID] = VersionID;
