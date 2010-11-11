@@ -1121,7 +1121,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             foreach (IScriptPlugin plugin in ScriptPlugins)
             {
-                data.AddRange(plugin.GetSerializationData(itemID, primID));
+                try
+                {
+                    data.AddRange(plugin.GetSerializationData(itemID, primID));
+                }
+                catch(Exception ex)
+                {
+                    m_log.Warn("[" + Name + "]: Error attempting to get serialization data, " + ex.ToString());
+                }
             }
 
             return data.ToArray();
@@ -1130,28 +1137,35 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public void CreateFromData(UUID primID,
                 UUID itemID, UUID hostID, Object[] data)
         {
-            int idx = 0;
-            int len;
-
-            while (idx < data.Length - 1)
+            try
             {
-                string type = data[idx].ToString();
-                len = Convert.ToInt32(data[idx + 1]);
-                idx += 2;
+                int idx = 0;
+                int len;
 
-                if (len > 0)
+                while (idx < data.Length - 1)
                 {
-                    Object[] item = new Object[len];
-                    Array.Copy(data, idx, item, 0, len);
+                    string type = data[idx].ToString();
+                    len = Convert.ToInt32(data[idx + 1]);
+                    idx += 2;
 
-                    idx += len;
-
-                    IScriptPlugin plugin = GetScriptPlugin(type);
-                    if (plugin != null)
+                    if (len > 0)
                     {
-                        plugin.CreateFromData(itemID, hostID, item);
+                        Object[] item = new Object[len];
+                        Array.Copy(data, idx, item, 0, len);
+
+                        idx += len;
+
+                        IScriptPlugin plugin = GetScriptPlugin(type);
+                        if (plugin != null)
+                        {
+                            plugin.CreateFromData(itemID, hostID, item);
+                        }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                m_log.Warn("[" + Name + "]: Error attempting to CreateFromData, " + ex.ToString());
             }
         }
 
