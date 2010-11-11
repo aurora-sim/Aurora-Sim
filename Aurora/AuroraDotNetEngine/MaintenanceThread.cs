@@ -551,7 +551,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         private LinkedList<ScriptData> ScriptIDs = new LinkedList<ScriptData>();
         private LinkedList<ScriptData> SleepingScriptIDs = new LinkedList<ScriptData>();
-        private Queue<aJob> SchRequests = new Queue<aJob>();
 
         public void FlushEventSchQueue(ScriptData ID)
             {
@@ -911,20 +910,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     {
                     if (ScriptIDs.Count == 0)
                         {
-                        lock (SchRequests)
+                        lock (SleepingScriptIDs)
                             {
-                            if (SchRequests.Count == 0)
+                            lock (WorkersLock)
                                 {
-                                lock (SleepingScriptIDs)
-                                    {
-                                    lock (WorkersLock)
-                                        {
-                                        if (SleepingScriptIDs.Count < WorkersLock.nWorkers)
-                                            break;
-                                        else
-                                            WillSleep = true;
-                                        }
-                                    }
+                                if (SleepingScriptIDs.Count < WorkersLock.nWorkers)
+                                    break;
+                                else
+                                    WillSleep = true;
                                 }
                             }
                         }
