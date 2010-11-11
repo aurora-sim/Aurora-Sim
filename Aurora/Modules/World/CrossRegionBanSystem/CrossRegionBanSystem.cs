@@ -32,11 +32,6 @@ namespace Aurora.Modules
         public void Initialise(IConfigSource source)
         {
             m_config = source;
-            IConfig banSysConfig = source.Configs["BanSystem"];
-            if (banSysConfig != null)
-            {
-
-            }
         }
 
         public void Close()

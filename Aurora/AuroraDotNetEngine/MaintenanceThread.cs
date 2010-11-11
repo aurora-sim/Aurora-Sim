@@ -129,6 +129,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (!Started) //Break early
                 return true;
 
+            if (m_ScriptEngine.ConsoleDisabled || m_ScriptEngine.Disabled)
+                return true;
+
             StateSaveIsRunning = true;
             StateQueueItem item;
             lock (StateQueue)
@@ -159,6 +162,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public bool ScriptChangeQueue()
         {
             if (!Started) //Break early
+                return true;
+
+            if (m_ScriptEngine.ConsoleDisabled || m_ScriptEngine.Disabled)
                 return true;
 
             ScriptChangeIsRunning = true;
@@ -230,6 +236,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (!Started) //Break early
                 return true;
 
+            if (m_ScriptEngine.ConsoleDisabled || m_ScriptEngine.Disabled)
+                return true;
+
             bool SendUpSleepRequest = false;
             try
             {
@@ -259,6 +268,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public bool CmdHandlerQueue()
         {
             if (!Started) //Break early
+                return true;
+
+            if (m_ScriptEngine.ConsoleDisabled || m_ScriptEngine.Disabled)
                 return true;
 
             //Check timers, etc
@@ -348,7 +360,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         //Log it for the user
                         else if(!(ex is EventAbortException) &&
                             !(ex is MinEventDelayException))
-                            QIS.ID.DisplayUserNotification(ex.Message, "", false, true);
+                            QIS.ID.DisplayUserNotification(ex.ToString(), "", false, true);
                         return false;
                     }
                     else if (Running != null)
@@ -363,7 +375,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             catch (Exception ex)
             {
                 //Error, tell the user
-                QIS.ID.DisplayUserNotification(ex.Message, "executing", false, true);
+                QIS.ID.DisplayUserNotification(ex.ToString(), "executing", false, true);
             }
             //Tell the event manager about it so that the events will be removed from the queue
             EventManager.EventComplete(QIS);
@@ -461,6 +473,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         #region Remove
 
+        /// <summary>
+        /// Sets the newest VersionID to the given versionID so taht we can block out ALL previous scripts
+        /// </summary>
+        /// <param name="ItemID"></param>
+        /// <param name="VersionID"></param>
         public void RemoveFromEventQueue(UUID ItemID, int VersionID)
         {
             NeedsRemoved[ItemID] = VersionID;
@@ -496,5 +513,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         }
 
         #endregion
+
+        /// <summary>
+        /// Makes sure that all the threads that need to be running are running and starts them if they need to be running
+        /// </summary>
+        public void PokeThreads()
+        {
+            if (StateQueue.Count != 0 && !StateSaveIsRunning)
+                StartThread("State");
+            if (LUQueue.Count() != 0 && !ScriptChangeIsRunning)
+                StartThread("Change");
+            if (!EventProcessorIsRunning) //Can't check the count on this one, so poke it anyway
+                StartThread("Event");
+        }
     }
 }

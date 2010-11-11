@@ -7,7 +7,7 @@ using OpenSim.Framework;
 
 namespace Aurora.Framework
 {
-    public interface IParcelServiceConnector
+    public interface IParcelServiceConnector : IAuroraDataPlugin
     {
         /// <summary>
         /// Stores the changes to the parcel

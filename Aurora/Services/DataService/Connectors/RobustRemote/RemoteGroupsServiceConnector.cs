@@ -18,7 +18,7 @@ using OpenSim.Server.Base;
 
 namespace Aurora.Services.DataService
 {
-    public class RemoteGroupsServiceConnector : IGroupsServiceConnector, IAuroraDataPlugin
+    public class RemoteGroupsServiceConnector : IGroupsServiceConnector
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(

@@ -17,7 +17,7 @@ using OpenSim.Server.Base;
 
 namespace Aurora.Services.DataService
 {
-    public class RemoteMuteListConnector : IMuteListConnector, IAuroraDataPlugin
+    public class RemoteMuteListConnector : IMuteListConnector
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(

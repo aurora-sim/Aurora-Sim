@@ -18,7 +18,7 @@ using OpenSim.Server.Base;
 
 namespace Aurora.Services.DataService
 {
-    public class SimianProfileConnector : IProfileConnector, IAuroraDataPlugin
+    public class SimianProfileConnector : IProfileConnector
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
@@ -51,18 +51,25 @@ namespace Aurora.Services.DataService
             NameValueCollection requestArgs = new NameValueCollection
             {
                 { "RequestMethod", "GetUser" },
-                { "AgentID", PrincipalID.ToString() }
+                { "UserID", PrincipalID.ToString() }
             };
 
-            OSDMap result = PostData(PrincipalID, requestArgs);
+            OSDMap result = PostUserData(PrincipalID, requestArgs);
 
             if (result == null)
                 return null;
 
-            IUserProfileInfo profile = new IUserProfileInfo();
-            profile.FromOSD(result);
+            if (result.ContainsKey("Profile"))
+            {
+                OSDMap profilemap = (OSDMap)OSDParser.DeserializeJson(result["Profile"].AsString());
 
-            return profile;
+                IUserProfileInfo profile = new IUserProfileInfo();
+                profile.FromOSD(profilemap);
+
+                return profile;
+            }
+
+            return null;
         }
 
         public bool UpdateUserProfile(IUserProfileInfo Profile)
@@ -70,17 +77,11 @@ namespace Aurora.Services.DataService
             NameValueCollection requestArgs = new NameValueCollection
             {
                 { "RequestMethod", "AddUserData" },
-                { "AgentID", Profile.PrincipalID.ToString() },
-                { "Profile", OSDParser.SerializeJsonString(Util.DictionaryToOSD(Profile.ToKeyValuePairs())) }
+                { "UserID", Profile.PrincipalID.ToString() },
+                { "Profile", OSDParser.SerializeJsonString(Profile.ToOSD()) }
             };
 
-            OSDMap result = PostData(Profile.PrincipalID, requestArgs);
-
-            if (result == null)
-                return false;
-
-            bool success = result["Success"].AsBoolean();
-            return success;
+            return PostData(Profile.PrincipalID, requestArgs);
         }
 
         public void CreateNewProfile(UUID PrincipalID)
@@ -92,7 +93,16 @@ namespace Aurora.Services.DataService
 
         #region Helpers
 
-        private OSDMap PostData(UUID userID, NameValueCollection nvc)
+        private bool PostData(UUID userID, NameValueCollection nvc)
+        {
+            OSDMap response = WebUtil.PostToService(m_ServerURI, nvc);
+            
+            if(response.ContainsKey("Success"))
+                return response["Success"].AsBoolean();
+            return false;
+        }
+
+        private OSDMap PostUserData(UUID userID, NameValueCollection nvc)
         {
             OSDMap response = WebUtil.PostToService(m_ServerURI, nvc);
             if (response["Success"].AsBoolean() && response["User"] is OSDMap)
@@ -101,7 +111,7 @@ namespace Aurora.Services.DataService
             }
             else
             {
-                m_log.Error("[SIMIAN PROFILES]: Failed to fetch user data for " + userID + ": " + response["Message"].AsString());
+                m_log.Error("[SIMIAN PROFILES CONNECTOR]: Failed to fetch user data for " + userID + ": " + response["Message"].AsString());
             }
 
             return null;

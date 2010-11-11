@@ -50,11 +50,12 @@ using Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools;
 using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
 using Aurora.ScriptEngine.AuroraDotNetEngine.APIs;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
+using OpenSim.Region.CoreModules.Framework.InterfaceCommander;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
     [Serializable]
-    public class ScriptEngine : ISharedRegionModule, IScriptModule
+    public class ScriptEngine : ISharedRegionModule, IScriptModule, ICommandableModule
     {
         #region Declares
 
@@ -64,6 +65,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             get { return m_Scenes; }
         }
+
+        private readonly Commander m_commander = new Commander("ADNE");
 
         private List<Scene> m_Scenes = new List<Scene>();
 
@@ -96,6 +99,42 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public bool DisplayErrorsOnConsole = false;
 
         public bool ShowWarnings = false;
+
+        private bool m_consoleDisabled = false;
+        private bool m_disabled = false;
+
+        /// <summary>
+        /// Disabled from the command line, takes presidence over normal Disabled
+        /// </summary>
+        public bool ConsoleDisabled
+        {
+            get { return m_consoleDisabled; }
+            set 
+            { 
+                m_consoleDisabled = value; 
+                //Poke the threads to make sure they run
+                MaintenanceThread.PokeThreads();
+            }
+        }
+
+        /// <summary>
+        /// Temperary disable by things like OAR loading so that we don't kill loading
+        /// </summary>
+        public bool Disabled
+        {
+            get { return m_disabled; }
+            set
+            {
+                m_disabled = value;
+                //Poke the threads to make sure they run
+                MaintenanceThread.PokeThreads();
+            }
+        }
+
+        public ICommander CommandInterface
+        {
+            get { return m_commander; }
+        }
 
         private IXmlRpcRouter m_XmlRpcRouter;
 
@@ -190,6 +229,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (FirstStartup)
             {
                 scene.AddCommand(this, "ADNE", "ADNE", "Subcommands for Aurora DotNet Engine", AuroraDotNetConsoleCommands);
+                scene.AddCommand(this, "help ADNE", "help ADNE", "Brings up the help for ADNE", AuroraDotNetConsoleHelp);
 
                 //Fire this once to make sure that the APIs are found later...
                 GetAPIs();
@@ -328,6 +368,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
         }
 
+        protected void AuroraDotNetConsoleHelp(string module, string[] cmdparams)
+        {
+            m_log.Info("Aurora DotNet Commands : \n" +
+                " ADNE restart - Restarts all scripts \n" +
+                " ADNE stop - Stops all scripts \n" +
+                " ADNE stats - Tells stats about the script engine \n" +
+                " ADNE disable - Disables the script engine temperarily \n" +
+                " ADNE enable - Reenables the script engine");
+        }
+
         protected void AuroraDotNetConsoleCommands(string module, string[] cmdparams)
         {
             if (cmdparams[1] == "restart")
@@ -375,12 +425,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     + "\nNumber of app domains: " + AppDomainManager.NumberOfAppDomains
                     + "\nPermission level of app domains: " + AppDomainManager.PermissionLevel);
             }
+            if (cmdparams[1] == "disable")
+            {
+                ConsoleDisabled = true;
+            }
+            if (cmdparams[1] == "enable")
+            {
+                ConsoleDisabled = false;
+            }
             if (cmdparams[1] == "help")
             {
-                m_log.Info("Aurora DotNet Commands : \n" +
-                    " ADNE restart - Restarts all scripts \n" +
-                    " ADNE stop - Stops all scripts \n" +
-                    " ADNE stats - Tells stats about the script engine");
+                AuroraDotNetConsoleHelp(module, cmdparams);
             }
         }
 
@@ -1066,7 +1121,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             foreach (IScriptPlugin plugin in ScriptPlugins)
             {
-                data.AddRange(plugin.GetSerializationData(itemID, primID));
+                try
+                {
+                    data.AddRange(plugin.GetSerializationData(itemID, primID));
+                }
+                catch(Exception ex)
+                {
+                    m_log.Warn("[" + Name + "]: Error attempting to get serialization data, " + ex.ToString());
+                }
             }
 
             return data.ToArray();
@@ -1075,28 +1137,35 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public void CreateFromData(UUID primID,
                 UUID itemID, UUID hostID, Object[] data)
         {
-            int idx = 0;
-            int len;
-
-            while (idx < data.Length - 1)
+            try
             {
-                string type = data[idx].ToString();
-                len = Convert.ToInt32(data[idx + 1]);
-                idx += 2;
+                int idx = 0;
+                int len;
 
-                if (len > 0)
+                while (idx < data.Length - 1)
                 {
-                    Object[] item = new Object[len];
-                    Array.Copy(data, idx, item, 0, len);
+                    string type = data[idx].ToString();
+                    len = Convert.ToInt32(data[idx + 1]);
+                    idx += 2;
 
-                    idx += len;
-
-                    IScriptPlugin plugin = GetScriptPlugin(type);
-                    if (plugin != null)
+                    if (len > 0)
                     {
-                        plugin.CreateFromData(itemID, hostID, item);
+                        Object[] item = new Object[len];
+                        Array.Copy(data, idx, item, 0, len);
+
+                        idx += len;
+
+                        IScriptPlugin plugin = GetScriptPlugin(type);
+                        if (plugin != null)
+                        {
+                            plugin.CreateFromData(itemID, hostID, item);
+                        }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                m_log.Warn("[" + Name + "]: Error attempting to CreateFromData, " + ex.ToString());
             }
         }
 
@@ -1142,15 +1211,20 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
     public class ScriptErrorReporter
     {
-        int Timeout = 500; // 5 seconds, measured in 10 millisecond intervals (Odd, yes)
-        public ScriptErrorReporter(IConfig config)
-        {
-            Timeout = (config.GetInt("ScriptErrorFindingTimeOut", 5) * 100);
-        }
-
         //Errors that have been thrown while compiling
         private Dictionary<UUID, ArrayList> Errors = new Dictionary<UUID, ArrayList>();
+        private int Timeout = 5000; // 5 seconds
 
+        public ScriptErrorReporter(IConfig config)
+        {
+            Timeout = (config.GetInt("ScriptErrorFindingTimeOut", 5) * 1000);
+        }
+
+        /// <summary>
+        /// Add a new error for the client thread to find
+        /// </summary>
+        /// <param name="ItemID"></param>
+        /// <param name="errors"></param>
         public void AddError(UUID ItemID, ArrayList errors)
         {
             if (!Errors.ContainsKey(ItemID))
@@ -1159,6 +1233,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 Errors[ItemID] = errors;
         }
 
+        /// <summary>
+        /// Find the errors that the script may have produced while compiling
+        /// </summary>
+        /// <param name="ItemID"></param>
+        /// <returns></returns>
         public ArrayList FindErrors(UUID ItemID)
         {
             ArrayList Error = new ArrayList();
@@ -1174,6 +1253,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             return Error;
         }
 
+        /// <summary>
+        /// Wait while the script is processed
+        /// </summary>
+        /// <param name="ItemID"></param>
+        /// <param name="error"></param>
+        /// <returns></returns>
         private bool TryFindError(UUID ItemID, out ArrayList error)
         {
             error = null;
@@ -1183,15 +1268,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             int i = 0;
             while ((error = Errors[ItemID]) == null && i < Timeout)
             {
-                i++;
-                Thread.Sleep(10);
+                Thread.Sleep(50);
+                i += 50;
             }
-            if (i == 500)
-                return false; //Cut off
-            else
+            if (i < 5000)
                 return true;
+            else
+                return false; //Cut off
         }
 
+        /// <summary>
+        /// Clear this item's errors
+        /// </summary>
+        /// <param name="ItemID"></param>
         public void RemoveError(UUID ItemID)
         {
             Errors[ItemID] = null;

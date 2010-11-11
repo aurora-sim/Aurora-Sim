@@ -7,6 +7,9 @@ using BitmapProcessing;
 
 namespace Aurora.Framework
 {
+    /// <summary>
+    /// Keeps track of data and builds a graph out of the given data
+    /// </summary>
     public class Profiler
     {
         private Dictionary<string, ProfilerValueManager> Stats = new Dictionary<string, ProfilerValueManager>();

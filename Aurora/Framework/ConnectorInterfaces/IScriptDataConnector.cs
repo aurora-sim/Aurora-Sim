@@ -8,7 +8,7 @@ using OpenSim.Framework;
 
 namespace Aurora.Framework
 {
-	public interface IScriptDataConnector
+    public interface IScriptDataConnector : IAuroraDataPlugin
 	{
         /// <summary>
         /// Gets a script state save by user Inventory Item ID, if UUID.Zero, then loads by prim Inventory Item ID

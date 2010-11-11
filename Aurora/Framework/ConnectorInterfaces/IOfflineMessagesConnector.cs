@@ -7,7 +7,7 @@ using OpenSim.Framework;
 
 namespace Aurora.Framework
 {
-	public interface IOfflineMessagesConnector
+    public interface IOfflineMessagesConnector : IAuroraDataPlugin
 	{
         /// <summary>
         /// Gets all offline messages for the user in GridInstantMessage format.

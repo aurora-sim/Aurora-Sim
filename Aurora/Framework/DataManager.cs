@@ -19,19 +19,30 @@ namespace Aurora.DataManager
     /// </summary>
     public static class DataManager
     {
-        private static Dictionary<string, object> Plugins = new Dictionary<string, object>();
-        public static T RequestPlugin<T>()
+        private static Dictionary<string, IAuroraDataPlugin> Plugins = new Dictionary<string, IAuroraDataPlugin>();
+        /// <summary>
+        /// Request a data plugin from the registry
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public static T RequestPlugin<T>() where T : IAuroraDataPlugin
         {
             if (Plugins.ContainsKey(typeof(T).Name))
             {
-                object Plugin;
+                IAuroraDataPlugin Plugin;
                 Plugins.TryGetValue(typeof(T).Name, out Plugin);
                 return (T)Plugin;
             }
+            //Return null if we can't find it
             return default(T);
         }
 
-        public static void RegisterPlugin(string Name, object Plugin)
+        /// <summary>
+        /// Register a new plugin to the registry
+        /// </summary>
+        /// <param name="Name"></param>
+        /// <param name="Plugin"></param>
+        public static void RegisterPlugin(string Name, IAuroraDataPlugin Plugin)
         {
             if (!Plugins.ContainsKey(Name))
                 Plugins.Add(Name, Plugin);

@@ -102,6 +102,7 @@ namespace OpenSim.Services.LLLoginService
         string CAPSServicePassword = "";
         GridAvatarArchiver archiver;
         List<ILoginModule> LoginModules = new List<ILoginModule>();
+        bool allowExportPermission = true;
 
         public LLLoginService(IConfigSource config, ISimulationService simService, ILibraryService libraryService)
         {
@@ -121,7 +122,9 @@ namespace OpenSim.Services.LLLoginService
                 ReadClassifiedValues(m_AuroraLoginConfig);
                 CAPSServerURL = m_AuroraLoginConfig.GetString("CAPSServiceURL", "");
                 CAPSServicePassword = m_AuroraLoginConfig.GetString("CAPSServicePassword", "");
+                allowExportPermission = m_AuroraLoginConfig.GetBoolean("AllowUseageOfExportPermissions", true);
             }
+
             m_LoginServerConfig = config.Configs["LoginService"];
             if (m_LoginServerConfig == null)
                 throw new Exception(String.Format("No section LoginService in config file"));
@@ -317,6 +320,9 @@ namespace OpenSim.Services.LLLoginService
                 // Get the account and check that it exists
                 //
                 UserAccount account = m_UserAccountService.GetUserAccount(scopeID, firstName, lastName);
+                if (!passwd.StartsWith("$1$"))
+                    passwd = "$1$" + Util.Md5Hash(passwd);
+                passwd = passwd.Remove(0, 3); //remove $1$
                 if (account == null)
                 {
                     if (!m_AllowAnonymousLogin)
@@ -327,7 +333,9 @@ namespace OpenSim.Services.LLLoginService
                     else
                     {
                         account = new UserAccount(UUID.Zero, firstName, lastName, "");
+                        account.UserTitle = "";
                         m_UserAccountService.StoreUserAccount(account);
+                        account = m_UserAccountService.GetUserAccount(scopeID, firstName, lastName);
                         m_AuthenticationService.SetPasswordHashed(account.PrincipalID, passwd);
                         m_InventoryService.CreateUserInventory(account.PrincipalID);
                     }
@@ -339,9 +347,6 @@ namespace OpenSim.Services.LLLoginService
                     //
                     // Authenticate this user
                     //
-                    if (!passwd.StartsWith("$1$"))
-                        passwd = "$1$" + Util.Md5Hash(passwd);
-                    passwd = passwd.Remove(0, 3); //remove $1$
                     string token = m_AuthenticationService.Authenticate(account.PrincipalID, passwd, 30);
                     if ((token == string.Empty) || (token != string.Empty && !UUID.TryParse(token, out secureSession)))
                     {
@@ -594,7 +599,7 @@ namespace OpenSim.Services.LLLoginService
 
                 LLLoginResponse response = new LLLoginResponse(account, aCircuit, guinfo, destination, inventorySkel, friendsList, m_LibraryService,
                     where, startLocation, position, lookAt, gestures, m_WelcomeMessage, home, clientIP, MaxMaturity, MaturityRating, m_MapTileURL, m_SearchURL,
-                    m_AllowFirstLife ? "Y" : "N", m_TutorialURL, eventCategories, classifiedCategories, CAPSServerURL, CAPSServicePassword, m_config);
+                    m_AllowFirstLife ? "Y" : "N", m_TutorialURL, eventCategories, classifiedCategories, CAPSServerURL, CAPSServicePassword, allowExportPermission, m_config);
 
                 m_log.DebugFormat("[LLOGIN SERVICE]: All clear. Sending login response to client to login to region " + destination.RegionName + ", tried to login to " + startLocation + " at " + position.ToString() + ".");
                 return response;

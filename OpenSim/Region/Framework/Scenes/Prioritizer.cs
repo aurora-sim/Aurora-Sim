@@ -58,7 +58,7 @@ namespace OpenSim.Region.Framework.Scenes
 
     public class Prioritizer
     {
-//        private static readonly ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
         /// This is added to the priority of all child prims, to make sure that the root prim update is sent to the
@@ -83,25 +83,37 @@ namespace OpenSim.Region.Framework.Scenes
             if (entity == null)
                 return double.PositiveInfinity;
 
-            switch (m_scene.UpdatePrioritizationScheme)
+            try
             {
-                case UpdatePrioritizationSchemes.Time:
-                    priority = GetPriorityByTime();
-                    break;
-                case UpdatePrioritizationSchemes.Distance:
-                    priority = GetPriorityByDistance(client, entity);
-                    break;
-                case UpdatePrioritizationSchemes.SimpleAngularDistance:
-                    priority = GetPriorityByDistance(client, entity); //This (afaik) always has been the same in OpenSim as just distance (it is in 0.6.9 anyway)
-                    break;
-                case UpdatePrioritizationSchemes.FrontBack:
-                    priority = GetPriorityByFrontBack(client, entity);
-                    break;
-                case UpdatePrioritizationSchemes.BestAvatarResponsiveness:
-                    priority = GetPriorityByBestAvatarResponsiveness(client, entity);
-                    break;
-                default:
-                    throw new InvalidOperationException("UpdatePrioritizationScheme not defined.");
+                switch (m_scene.UpdatePrioritizationScheme)
+                {
+                    case UpdatePrioritizationSchemes.Time:
+                        priority = GetPriorityByTime();
+                        break;
+                    case UpdatePrioritizationSchemes.Distance:
+                        priority = GetPriorityByDistance(client, entity);
+                        break;
+                    case UpdatePrioritizationSchemes.SimpleAngularDistance:
+                        priority = GetPriorityByDistance(client, entity); //This (afaik) always has been the same in OpenSim as just distance (it is in 0.6.9 anyway)
+                        break;
+                    case UpdatePrioritizationSchemes.FrontBack:
+                        priority = GetPriorityByFrontBack(client, entity);
+                        break;
+                    case UpdatePrioritizationSchemes.BestAvatarResponsiveness:
+                        priority = GetPriorityByBestAvatarResponsiveness(client, entity);
+                        break;
+                    default:
+                        throw new InvalidOperationException("UpdatePrioritizationScheme not defined.");
+                }
+            }
+            catch (Exception ex)
+            {
+                if (!(ex is InvalidOperationException))
+                {
+                    m_log.Warn("[PRIORITY]: Error in finding priority of a prim/user:" + ex.ToString());
+                }
+                //Set it to max if it errors
+                priority = double.PositiveInfinity;
             }
 
             // Adjust priority so that root prims are sent to the viewer first.  This is especially important for 
@@ -241,43 +253,6 @@ namespace OpenSim.Region.Framework.Scenes
 
             ScenePresence presence = m_scene.GetScenePresence(client.AgentId);
 
-            #region Sitting avatars
-
-            // Objects avatars are sitting on should be prioritized more
-            if (entity is SceneObjectPart)
-            {
-                if (presence != null &&
-                    ((SceneObjectPart)entity).ParentGroup != null &&
-                    ((SceneObjectPart)entity).ParentGroup.RootPart != null &&
-                    presence.SittingOnUUID == ((SceneObjectPart)entity).ParentGroup.RootPart.UUID ||
-                    presence.SittingOnID == ((SceneObjectPart)entity).ParentGroup.RootPart.LocalId)
-                {
-                    //Objects that are physical get more priority.
-                    PhysicsActor physActor = ((SceneObjectPart)entity).ParentGroup.RootPart.PhysActor;
-                    if (physActor != null && physActor.IsPhysical)
-                        return 0.0;
-                    else
-                        return 1.1;
-                }
-            }
-            if (entity is SceneObjectGroup)
-            {
-                if (presence != null &&
-                    ((SceneObjectGroup)entity).RootPart != null && 
-                    (presence.SittingOnUUID == ((SceneObjectGroup)entity).RootPart.UUID ||
-                    presence.SittingOnID == ((SceneObjectGroup)entity).RootPart.LocalId))
-                {
-                    //Objects that are physical get more priority.
-                    PhysicsActor physActor = ((SceneObjectGroup)entity).RootPart.PhysActor;
-                    if (physActor != null && physActor.IsPhysical)
-                        return 0.0;
-                    else
-                        return 1.1;
-                }
-            }
-
-            #endregion
-
             if (presence != null)
             {
                 if (!presence.IsChildAgent)
@@ -303,20 +278,49 @@ namespace OpenSim.Region.Framework.Scenes
                         priority *= 2;
                     }
 
+                    SceneObjectPart rootPart = null;
                     if (entity is SceneObjectPart)
                     {
                         if (((SceneObjectPart)entity).ParentGroup != null &&
                             ((SceneObjectPart)entity).ParentGroup.RootPart != null)
-                        {
-                            PhysicsActor physActor = ((SceneObjectPart)entity).ParentGroup.RootPart.PhysActor;
-                            if (physActor == null || physActor.IsPhysical)
-                                priority /= 2; //Emphasize physical objs
+                            rootPart = ((SceneObjectPart)entity).ParentGroup.RootPart;
+                    }
+                    if (entity is SceneObjectGroup)
+                    {
+                        if (((SceneObjectGroup)entity).RootPart != null)
+                            rootPart = ((SceneObjectGroup)entity).RootPart;
+                    }
 
-                            if (((SceneObjectPart)entity).ParentGroup.RootPart.IsAttachment)
-                            {
-                                //Attachments are always high!
-                                priority = 1.0;
-                            }
+                    if (rootPart != null)
+                    {
+                        PhysicsActor physActor = rootPart.PhysActor;
+
+                        // Objects avatars are sitting on should be prioritized more
+                        if (presence.SittingOnUUID == rootPart.UUID ||
+                                    presence.SittingOnID == rootPart.LocalId)
+                        {
+                            //Objects that are physical get more priority.
+                            if (physActor != null && physActor.IsPhysical)
+                                return 0.0;
+                            else
+                                return 1.2;
+                        }
+
+                        if (physActor == null || physActor.IsPhysical)
+                            priority /= 2; //Emphasize physical objs
+
+                        //Factor in the size of objects as well, big ones are MUCH more important than small ones
+                        float size = rootPart.ParentGroup.GetFakeTotalSize().Length();
+                        //Cap size at 10 so that we completely don't overwhelm other objects
+                        if (size > 10)
+                            size = 10;
+
+                        priority *=  1 / size;
+
+                        if (rootPart.IsAttachment)
+                        {
+                            //Attachments are always high!
+                            priority = 1.0;
                         }
                     }
                     //Closest first!

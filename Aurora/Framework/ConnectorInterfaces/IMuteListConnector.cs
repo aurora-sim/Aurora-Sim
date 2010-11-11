@@ -6,7 +6,7 @@ using OpenMetaverse;
 
 namespace Aurora.Framework
 {
-    public interface IMuteListConnector
+    public interface IMuteListConnector : IAuroraDataPlugin
     {
         /// <summary>
         /// Gets the full mute list for the given agent.

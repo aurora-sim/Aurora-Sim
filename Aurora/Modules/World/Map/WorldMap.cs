@@ -98,19 +98,16 @@ namespace Aurora.Modules
                 if (source.Configs["MapModule"].GetString(
                         "WorldMapModule", "AuroraWorldMapModule") !=
                         "AuroraWorldMapModule")
-                {
-                    m_Enabled = false;
                     return;
-                }
+                m_Enabled = true;
+                //m_log.Info("[AuroraWorldMap] Initializing");
+                m_config = source;
+                m_asyncMapTileCreation = source.Configs["MapModule"].GetBoolean("UseAsyncMapTileCreation", m_asyncMapTileCreation);
+                minutes = source.Configs["MapModule"].GetDouble("TimeBeforeMapTileRegeneration", minutes);
+                m_generateMapTiles = source.Configs["MapModule"].GetBoolean("GenerateMaptiles", true);
+                UUID.TryParse(source.Configs["MapModule"].GetString("MaptileStaticUUID", UUID.Zero.ToString()), out staticMapTileUUID);
+                MapViewLength = source.Configs["MapModule"].GetInt("MapViewLength", MapViewLength);
             }
-            //m_log.Info("[AuroraWorldMap] Initializing");
-            m_config = source;
-            m_Enabled = true;
-            m_asyncMapTileCreation = source.Configs["MapModule"].GetBoolean("UseAsyncMapTileCreation", m_asyncMapTileCreation);
-            minutes = source.Configs["MapModule"].GetDouble("TimeBeforeMapTileRegeneration", minutes);
-            m_generateMapTiles = source.Configs["MapModule"].GetBoolean("GenerateMaptiles", true);
-            UUID.TryParse(source.Configs["MapModule"].GetString("MaptileStaticUUID", UUID.Zero.ToString()), out staticMapTileUUID);
-            MapViewLength = source.Configs["MapModule"].GetInt("MapViewLength", MapViewLength);
 		}
 
 		public virtual void AddRegion (Scene scene)

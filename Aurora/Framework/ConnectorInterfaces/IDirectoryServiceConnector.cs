@@ -7,7 +7,7 @@ using OpenSim.Framework;
 
 namespace Aurora.Framework
 {
-    public interface IDirectoryServiceConnector
+    public interface IDirectoryServiceConnector : IAuroraDataPlugin
 	{
         /// <summary>
         /// Adds a region into search

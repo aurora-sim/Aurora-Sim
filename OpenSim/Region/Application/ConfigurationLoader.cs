@@ -50,6 +50,11 @@ namespace OpenSim
         protected IConfigSource m_config;
 
         /// <summary>
+        /// Should we save all merging of the .ini files to the filesystem?
+        /// </summary>
+        protected bool inidbg;
+
+        /// <summary>
         /// Loads the region configuration
         /// </summary>
         /// <param name="argvSource">Parameters passed into the process when started</param>
@@ -62,11 +67,14 @@ namespace OpenSim
 
             List<string> sources = new List<string>();
 
+            inidbg =
+                startupConfig.GetBoolean("inidbg", false);
+
             string masterFileName =
-                    startupConfig.GetString("inimaster", String.Empty);
+                startupConfig.GetString("inimaster", String.Empty);
 
             string iniFileName =
-                    startupConfig.GetString("inifile", "OpenSim.ini");
+                startupConfig.GetString("inifile", "OpenSim.ini");
 
             //Be mindful of these when modifying...
             //1) When file A includes file B, if the same directive is found in both, that the value in file B wins.
@@ -147,9 +155,9 @@ namespace OpenSim
 
             for (int i = 0 ; i < sources.Count ; i++)
             {
-                if (ReadConfig(sources[i]))
+                if (ReadConfig(sources[i], i))
                     iniFileExists = true;
-                AddIncludes(sources);
+                AddIncludes(sources, ref i);
             }
 
             if (!iniFileExists)
@@ -169,8 +177,11 @@ namespace OpenSim
         /// Adds the included files as ini configuration files
         /// </summary>
         /// <param name="sources">List of URL strings or filename strings</param>
-        private void AddIncludes(List<string> sources)
+        /// <param name="cntr">Where should we start inserting sources into the list?</param>
+        private void AddIncludes(List<string> sources, ref int cntr)
         {
+            int cn = cntr;
+            //Where should we insert the sources into the list?
             //loop over config sources
             foreach (IConfig config in m_config.Configs)
             {
@@ -185,7 +196,10 @@ namespace OpenSim
                         if (IsUri(file))
                         {
                             if (!sources.Contains(file))
-                                sources.Add(file);
+                            {
+                                cn++;
+                                sources.Insert(cn, file);
+                            }
                         }
                         else
                         {
@@ -205,7 +219,10 @@ namespace OpenSim
                             foreach (string p in paths)
                             {
                                 if (!sources.Contains(p))
-                                    sources.Add(p);
+                                {
+                                    cn++;
+                                    sources.Insert(cn, p);
+                                }
                             }
                         }
                     }
@@ -230,7 +247,7 @@ namespace OpenSim
         /// </summary>
         /// <param name="iniPath">Full path to the ini</param>
         /// <returns></returns>
-        private bool ReadConfig(string iniPath)
+        private bool ReadConfig(string iniPath, int i)
         {
             bool success = false;
 
@@ -239,6 +256,10 @@ namespace OpenSim
                 m_log.InfoFormat("[CONFIG]: Reading configuration file {0}", Path.GetFullPath(iniPath));
 
                 m_config.Merge(new IniConfigSource(iniPath, Nini.Ini.IniFileType.AuroraStyle));
+                if (inidbg)
+                {
+                    WriteConfigFile(i, m_config);
+                }
                 success = true;
             }
             else
@@ -262,6 +283,21 @@ namespace OpenSim
                 }
             }
             return success;
+        }
+        private void WriteConfigFile(int i, IConfigSource m_config)
+        {
+            string m_fileName = "ConfigFileDump" + i + ".ini";
+            m_log.Debug("Writing config dump file to " + m_fileName);
+            try
+            {
+                //Add the user
+                FileStream stream = new FileStream(m_fileName, FileMode.Create);
+                StreamWriter m_streamWriter = new StreamWriter(stream);
+                m_streamWriter.BaseStream.Position += m_streamWriter.BaseStream.Length;
+                m_streamWriter.WriteLine(m_config.ToString());
+                m_streamWriter.Close();
+            }
+            catch { }
         }
     }
 }

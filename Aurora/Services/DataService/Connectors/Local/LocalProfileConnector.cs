@@ -11,7 +11,7 @@ using Nini.Config;
 
 namespace Aurora.Services.DataService
 {
-    public class LocalProfileConnector : IProfileConnector, IAuroraDataPlugin
+    public class LocalProfileConnector : IProfileConnector
 	{
         //We can use a cache because we are the only place that profiles will be served from
 		private Dictionary<UUID, IUserProfileInfo> UserProfilesCache = new Dictionary<UUID, IUserProfileInfo>();

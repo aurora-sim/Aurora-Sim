@@ -126,12 +126,14 @@ namespace OpenSim.Region.Framework.Scenes
                     if (!m_hasGroupChanged) //First change then
                         timeFirstChanged = DateTime.Now;
 
-                    if (m_scene != null && m_isLoaded)
+                    if (m_scene != null && m_isLoaded && !m_scene.LoadingPrims) //Do NOT add to backup while still loading prims
                         m_scene.AddPrimBackupTaint(this);
                     else if (m_scene == null)
                         m_log.Warn("[SOG]: Scene is null in HasGroupChanged!");
-                    else if (!m_isLoaded)
-                        m_log.Info("[SOG]: Not loaded in HasGroupChanged!");
+                    //else if (!m_isLoaded)
+                    //    m_log.Info("[SOG]: Not loaded in HasGroupChanged!");
+                    //else if (!m_scene.LoadingPrims)
+                    //    m_log.Info("[SOG]: Not scene loaded in HasGroupChanged!");
                 }
                 m_hasGroupChanged = value;
             }
@@ -3796,6 +3798,29 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         #endregion
+
+        /// <summary>
+        /// Get the sum of the size of all parts, not really that effective
+        /// </summary>
+        /// <returns></returns>
+        public Vector3 GetFakeTotalSize()
+        {
+            Vector3 totalSize = new Vector3();
+            lock (m_partsLock)
+            {
+                foreach (SceneObjectPart part in m_partsList)
+                {
+                    //Find the position of the prim and determine how far away it is from the absolute position of the group, then add the scale
+                    if ((part.AbsolutePosition.X - AbsolutePosition.X) + (part.Scale.X / 2) > totalSize.X)
+                        totalSize.X = (part.AbsolutePosition.X - AbsolutePosition.X) + (part.Scale.X / 2);
+                    if ((part.AbsolutePosition.Y - AbsolutePosition.Y) + (part.Scale.Y / 2) > totalSize.Y)
+                        totalSize.Y = (part.AbsolutePosition.Y - AbsolutePosition.Y) + (part.Scale.Y / 2);
+                    if ((part.AbsolutePosition.Z - AbsolutePosition.Z) + (part.Scale.Z / 2) > totalSize.Z)
+                        totalSize.Z = (part.AbsolutePosition.Z - AbsolutePosition.Z) + (part.Scale.Z / 2);
+                }
+            }
+            return totalSize;
+        }
 
         private readonly List<uint> m_lastColliders = new List<uint>();
 

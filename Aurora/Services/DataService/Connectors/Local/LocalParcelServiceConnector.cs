@@ -11,7 +11,7 @@ using Nini.Config;
 
 namespace Aurora.Services.DataService
 {
-    public class LocalParcelServiceConnector : IParcelServiceConnector, IAuroraDataPlugin
+    public class LocalParcelServiceConnector : IParcelServiceConnector
     {
         private IGenericData GD = null;
 

@@ -95,6 +95,8 @@ namespace Aurora.Modules
 
         private IMessageTransferModule m_TransferModule = null;
 
+        private Dictionary<UUID, MuteList[]> MuteListCache = new Dictionary<UUID, MuteList[]>();
+        
         public IConfig Config
         {
             get { return m_config; }
@@ -157,7 +159,6 @@ namespace Aurora.Modules
                 m_scenes.Add(scene);
                 scene.EventManager.OnNewClient += OnNewClient;
                 scene.EventManager.OnClosingClient += OnClosingClient;
-                scene.EventManager.OnClientClosed += OnClientClosed;
                 scene.EventManager.OnChatFromWorld += OnChatFromWorld;
                 scene.EventManager.OnChatBroadcast += OnChatBroadcast;
                 scene.EventManager.OnRegisterCaps += RegisterCaps;
@@ -202,7 +203,6 @@ namespace Aurora.Modules
             if (m_scenes.Contains(scene))
             {
                 scene.EventManager.OnNewClient -= OnNewClient;
-                scene.EventManager.OnClientClosed -= OnClientClosed;
                 scene.EventManager.OnChatFromWorld -= OnChatFromWorld;
                 scene.EventManager.OnChatBroadcast -= OnChatBroadcast;
                 scene.EventManager.OnRegisterCaps -= RegisterCaps;
@@ -238,6 +238,11 @@ namespace Aurora.Modules
             client.OnMuteListRequest -= OnMuteListRequest;
             client.OnUpdateMuteListEntry -= OnMuteListUpdate;
             client.OnRemoveMuteListEntry -= OnMuteListRemove;
+            //Tell all client plugins that the user left
+            foreach (IChatPlugin plugin in AllChatPlugins)
+            {
+                plugin.OnClosingClient(client.AgentId, ((Scene)client.Scene));
+            }
         }
 
         public virtual void OnNewClient(IClientAPI client)
@@ -247,20 +252,18 @@ namespace Aurora.Modules
             client.OnUpdateMuteListEntry += OnMuteListUpdate;
             client.OnRemoveMuteListEntry += OnMuteListRemove;
 
+            //Tell all the chat plugins about the new user
             foreach (IChatPlugin plugin in AllChatPlugins)
             {
                 plugin.OnNewClient(client);
             }
         }
 
-        public virtual void OnClientClosed(UUID clientID, Scene scene)
-        {
-            foreach (IChatPlugin plugin in AllChatPlugins)
-            {
-                plugin.OnClosingClient(clientID, scene);
-            }
-        }
-
+        /// <summary>
+        /// Set the correct position for the chat message
+        /// </summary>
+        /// <param name="c"></param>
+        /// <returns></returns>
         protected OSChatMessage FixPositionOfChatMessage(OSChatMessage c)
         {
             ScenePresence avatar;
@@ -271,6 +274,11 @@ namespace Aurora.Modules
             return c;
         }
 
+        /// <summary>
+        /// New chat message from the client
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="c"></param>
         public virtual void OnChatFromClient(Object sender, OSChatMessage c)
         {
             c = FixPositionOfChatMessage(c);
@@ -289,14 +297,17 @@ namespace Aurora.Modules
                 return;
             }
 
+            //If the message is not blank, tell the plugins about it
             if (c.Message != "")
             {
                 foreach (string pluginMain in ChatPlugins.Keys)
                 {
+                    //if their plugin level is all or the message starts with the message, send the message to the plugin
                     if (pluginMain == "all" || c.Message.StartsWith(pluginMain + "."))
                     {
                         IChatPlugin plugin;
                         ChatPlugins.TryGetValue(pluginMain, out plugin);
+                        //If it returns false, stop the message from being sent
                         if (!plugin.OnNewChatMessageFromWorld(c, out c))
                             return;
                     }
@@ -306,6 +317,11 @@ namespace Aurora.Modules
             DeliverChatToAvatars(ChatSourceType.Agent, c);
         }
 
+        /// <summary>
+        /// Send the message from the prim to the avatars in the regions
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="c"></param>
         public virtual void OnChatFromWorld(Object sender, OSChatMessage c)
         {
             // early return if not on public or debug channel
@@ -313,12 +329,20 @@ namespace Aurora.Modules
 
             bool Sent = false;
 
-            if(c.Range > m_maxChatDistance)
+            if(c.Range > m_maxChatDistance) //Check for max distance
                 c.Range = m_maxChatDistance;
 
-            if (c.Type == ChatTypeEnum.Say)
+            //Send the message into neighboring regions if possible
+
+            if (c.Type == ChatTypeEnum.Say ||
+                c.Type == ChatTypeEnum.Whisper ||
+                c.Type == ChatTypeEnum.Shout ||
+                c.Type == ChatTypeEnum.Custom)
             {
-                if (c.Position.X + m_saydistance > 256)
+                int distance = c.Type == ChatTypeEnum.Say ? m_saydistance :
+                    (c.Type == ChatTypeEnum.Whisper) ? m_whisperdistance :
+                    (c.Type == ChatTypeEnum.Custom) ? (int)c.Range : m_shoutdistance;
+                if (c.Position.X + distance > Constants.RegionSize)
                 {
                     Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX + 1, c.Scene.RegionInfo.RegionLocY);
                     if (scene != null)
@@ -332,7 +356,7 @@ namespace Aurora.Modules
                         Sent = true;
                     }
                 }
-                if (c.Position.Y + m_saydistance > 256)
+                if (c.Position.Y + distance > Constants.RegionSize)
                 {
                     Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX, c.Scene.RegionInfo.RegionLocY + 1);
                     if (scene != null)
@@ -346,7 +370,7 @@ namespace Aurora.Modules
                         Sent = true;
                     }
                 }
-                if (c.Position.X + m_saydistance > 256 && c.Position.Y + m_saydistance > 256)
+                if (c.Position.X + distance > Constants.RegionSize && c.Position.Y + distance > Constants.RegionSize)
                 {
                     Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX + 1, c.Scene.RegionInfo.RegionLocY + 1);
                     if (scene != null)
@@ -361,7 +385,7 @@ namespace Aurora.Modules
                         Sent = true;
                     }
                 }
-                if (c.Position.X + m_saydistance > 256 && c.Position.Y - m_saydistance < 0)
+                if (c.Position.X + distance > Constants.RegionSize && c.Position.Y - distance < 0)
                 {
                     Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX + 1, c.Scene.RegionInfo.RegionLocY - 1);
                     if (scene != null)
@@ -376,7 +400,7 @@ namespace Aurora.Modules
                         Sent = true;
                     }
                 }
-                if (c.Position.Y - m_saydistance < 0)
+                if (c.Position.Y - distance < 0)
                 {
                     Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX, c.Scene.RegionInfo.RegionLocY - 1);
                     if (scene != null)
@@ -390,7 +414,7 @@ namespace Aurora.Modules
                         Sent = true;
                     }
                 }
-                if (c.Position.X - m_saydistance < 0 && c.Position.Y - m_saydistance < 0)
+                if (c.Position.X - distance < 0 && c.Position.Y - distance < 0)
                 {
                     Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX - 1, c.Scene.RegionInfo.RegionLocY - 1);
                     if (scene != null)
@@ -405,7 +429,7 @@ namespace Aurora.Modules
                         Sent = true;
                     }
                 }
-                if (c.Position.X - m_saydistance < 0)
+                if (c.Position.X - distance < 0)
                 {
                     Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX - 1, c.Scene.RegionInfo.RegionLocY);
                     if (scene != null)
@@ -419,364 +443,7 @@ namespace Aurora.Modules
                         Sent = true;
                     }
                 }
-                if (c.Position.X - m_saydistance < 0 && c.Position.Y + m_saydistance > 256)
-                {
-                    Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX - 1, c.Scene.RegionInfo.RegionLocY + 1);
-                    if (scene != null)
-                    {
-                        OSChatMessage newC = c.Copy();
-                        newC.Scene = scene;
-                        Vector3 Position = newC.Position;
-                        Position.X += Constants.RegionSize;
-                        Position.Y -= Constants.RegionSize;
-                        newC.Position = Position;
-                        DeliverChatToAvatars(ChatSourceType.Object, newC);
-                        Sent = true;
-                    }
-                }
-            }
-            if (c.Type == ChatTypeEnum.Whisper)
-            {
-                if (c.Position.X + m_whisperdistance > 256)
-                {
-                    Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX + 1, c.Scene.RegionInfo.RegionLocY);
-                    if (scene != null)
-                    {
-                        OSChatMessage newC = c.Copy();
-                        newC.Scene = scene;
-                        Vector3 Position = newC.Position;
-                        Position.X -= Constants.RegionSize;
-                        newC.Position = Position;
-                        DeliverChatToAvatars(ChatSourceType.Object, newC);
-                        Sent = true;
-                    }
-                }
-                if (c.Position.Y + m_whisperdistance > 256)
-                {
-                    Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX, c.Scene.RegionInfo.RegionLocY + 1);
-                    if (scene != null)
-                    {
-                        OSChatMessage newC = c.Copy();
-                        newC.Scene = scene;
-                        Vector3 Position = newC.Position;
-                        Position.Y -= Constants.RegionSize;
-                        newC.Position = Position;
-                        DeliverChatToAvatars(ChatSourceType.Object, newC);
-                        Sent = true;
-                    }
-                }
-                if (c.Position.X + m_whisperdistance > 256 && c.Position.Y + m_whisperdistance > 256)
-                {
-                    Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX + 1, c.Scene.RegionInfo.RegionLocY + 1);
-                    if (scene != null)
-                    {
-                        OSChatMessage newC = c.Copy();
-                        newC.Scene = scene;
-                        Vector3 Position = newC.Position;
-                        Position.X -= Constants.RegionSize;
-                        Position.Y -= Constants.RegionSize;
-                        newC.Position = Position;
-                        DeliverChatToAvatars(ChatSourceType.Object, newC);
-                        Sent = true;
-                    }
-                }
-                if (c.Position.X + m_whisperdistance > 256 && c.Position.Y - m_whisperdistance < 0)
-                {
-                    Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX + 1, c.Scene.RegionInfo.RegionLocY - 1);
-                    if (scene != null)
-                    {
-                        OSChatMessage newC = c.Copy();
-                        newC.Scene = scene;
-                        Vector3 Position = newC.Position;
-                        Position.X -= Constants.RegionSize;
-                        Position.Y += Constants.RegionSize;
-                        newC.Position = Position;
-                        DeliverChatToAvatars(ChatSourceType.Object, newC);
-                        Sent = true;
-                    }
-                }
-                if (c.Position.Y - m_whisperdistance < 0)
-                {
-                    Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX, c.Scene.RegionInfo.RegionLocY - 1);
-                    if (scene != null)
-                    {
-                        OSChatMessage newC = c.Copy();
-                        newC.Scene = scene;
-                        Vector3 Position = newC.Position;
-                        Position.Y += Constants.RegionSize;
-                        newC.Position = Position;
-                        DeliverChatToAvatars(ChatSourceType.Object, newC);
-                        Sent = true;
-                    }
-                }
-                if (c.Position.X - m_whisperdistance < 0 && c.Position.Y - m_whisperdistance < 0)
-                {
-                    Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX - 1, c.Scene.RegionInfo.RegionLocY - 1);
-                    if (scene != null)
-                    {
-                        OSChatMessage newC = c.Copy();
-                        newC.Scene = scene;
-                        Vector3 Position = newC.Position;
-                        Position.X += Constants.RegionSize;
-                        Position.Y += Constants.RegionSize;
-                        newC.Position = Position;
-                        DeliverChatToAvatars(ChatSourceType.Object, newC);
-                        Sent = true;
-                    }
-                }
-                if (c.Position.X - m_whisperdistance < 0)
-                {
-                    Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX - 1, c.Scene.RegionInfo.RegionLocY);
-                    if (scene != null)
-                    {
-                        OSChatMessage newC = c.Copy();
-                        newC.Scene = scene;
-                        Vector3 Position = newC.Position;
-                        Position.X += Constants.RegionSize;
-                        newC.Position = Position;
-                        DeliverChatToAvatars(ChatSourceType.Object, newC);
-                        Sent = true;
-                    }
-                }
-                if (c.Position.X - m_whisperdistance < 0 && c.Position.Y + m_whisperdistance > 256)
-                {
-                    Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX - 1, c.Scene.RegionInfo.RegionLocY + 1);
-                    if (scene != null)
-                    {
-                        OSChatMessage newC = c.Copy();
-                        newC.Scene = scene;
-                        Vector3 Position = newC.Position;
-                        Position.X += Constants.RegionSize;
-                        Position.Y -= Constants.RegionSize;
-                        newC.Position = Position;
-                        DeliverChatToAvatars(ChatSourceType.Object, newC);
-                        Sent = true;
-                    }
-                }
-            }
-            if (c.Type == ChatTypeEnum.Shout)
-            {
-                if (c.Position.X + m_shoutdistance > 256)
-                {
-                    Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX + 1, c.Scene.RegionInfo.RegionLocY);
-                    if (scene != null)
-                    {
-                        OSChatMessage newC = c.Copy();
-                        newC.Scene = scene;
-                        Vector3 Position = newC.Position;
-                        Position.X -= Constants.RegionSize;
-                        newC.Position = Position;
-                        DeliverChatToAvatars(ChatSourceType.Object, newC);
-                        Sent = true;
-                    }
-                }
-                if (c.Position.Y + m_shoutdistance > 256)
-                {
-                    Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX, c.Scene.RegionInfo.RegionLocY + 1);
-                    if (scene != null)
-                    {
-                        OSChatMessage newC = c.Copy();
-                        newC.Scene = scene;
-                        Vector3 Position = newC.Position;
-                        Position.Y -= Constants.RegionSize;
-                        newC.Position = Position;
-                        DeliverChatToAvatars(ChatSourceType.Object, newC);
-                        Sent = true;
-                    }
-                }
-                if (c.Position.X + m_shoutdistance > 256 && c.Position.Y + m_shoutdistance > 256)
-                {
-                    Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX + 1, c.Scene.RegionInfo.RegionLocY + 1);
-                    if (scene != null)
-                    {
-                        OSChatMessage newC = c.Copy();
-                        newC.Scene = scene;
-                        Vector3 Position = newC.Position;
-                        Position.X -= Constants.RegionSize;
-                        Position.Y -= Constants.RegionSize;
-                        newC.Position = Position;
-                        DeliverChatToAvatars(ChatSourceType.Object, newC);
-                        Sent = true;
-                    }
-                }
-                if (c.Position.X + m_shoutdistance > 256 && c.Position.Y - m_shoutdistance < 0)
-                {
-                    Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX + 1, c.Scene.RegionInfo.RegionLocY - 1);
-                    if (scene != null)
-                    {
-                        OSChatMessage newC = c.Copy();
-                        newC.Scene = scene;
-                        Vector3 Position = newC.Position;
-                        Position.X -= Constants.RegionSize;
-                        Position.Y += Constants.RegionSize;
-                        newC.Position = Position;
-                        DeliverChatToAvatars(ChatSourceType.Object, newC);
-                        Sent = true;
-                    }
-                }
-                if (c.Position.Y - m_shoutdistance < 0)
-                {
-                    Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX, c.Scene.RegionInfo.RegionLocY - 1);
-                    if (scene != null)
-                    {
-                        OSChatMessage newC = c.Copy();
-                        newC.Scene = scene;
-                        Vector3 Position = newC.Position;
-                        Position.Y += Constants.RegionSize;
-                        newC.Position = Position;
-                        DeliverChatToAvatars(ChatSourceType.Object, newC);
-                        Sent = true;
-                    }
-                }
-                if (c.Position.X - m_shoutdistance < 0 && c.Position.Y - m_shoutdistance < 0)
-                {
-                    Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX - 1, c.Scene.RegionInfo.RegionLocY - 1);
-                    if (scene != null)
-                    {
-                        OSChatMessage newC = c.Copy();
-                        newC.Scene = scene;
-                        Vector3 Position = newC.Position;
-                        Position.X += Constants.RegionSize;
-                        Position.Y += Constants.RegionSize;
-                        newC.Position = Position;
-                        DeliverChatToAvatars(ChatSourceType.Object, newC);
-                        Sent = true;
-                    }
-                }
-                if (c.Position.X - m_shoutdistance < 0)
-                {
-                    Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX - 1, c.Scene.RegionInfo.RegionLocY);
-                    if (scene != null)
-                    {
-                        OSChatMessage newC = c.Copy();
-                        newC.Scene = scene;
-                        Vector3 Position = newC.Position;
-                        Position.X += Constants.RegionSize;
-                        newC.Position = Position;
-                        DeliverChatToAvatars(ChatSourceType.Object, newC);
-                        Sent = true;
-                    }
-                }
-                if (c.Position.X - m_shoutdistance < 0 && c.Position.Y + m_shoutdistance > 256)
-                {
-                    Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX - 1, c.Scene.RegionInfo.RegionLocY + 1);
-                    if (scene != null)
-                    {
-                        OSChatMessage newC = c.Copy();
-                        newC.Scene = scene;
-                        Vector3 Position = newC.Position;
-                        Position.X += Constants.RegionSize;
-                        Position.Y -= Constants.RegionSize;
-                        newC.Position = Position;
-                        DeliverChatToAvatars(ChatSourceType.Object, newC);
-                        Sent = true;
-                    }
-                }
-            }
-            if (c.Type == ChatTypeEnum.Custom)
-            {
-                if (c.Position.X + c.Range > 256)
-                {
-                    Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX + 1, c.Scene.RegionInfo.RegionLocY);
-                    if (scene != null)
-                    {
-                        OSChatMessage newC = c.Copy();
-                        newC.Scene = scene;
-                        Vector3 Position = newC.Position;
-                        Position.X -= Constants.RegionSize;
-                        newC.Position = Position;
-                        DeliverChatToAvatars(ChatSourceType.Object, newC);
-                        Sent = true;
-                    }
-                }
-                if (c.Position.Y + c.Range > 256)
-                {
-                    Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX, c.Scene.RegionInfo.RegionLocY + 1);
-                    if (scene != null)
-                    {
-                        OSChatMessage newC = c.Copy();
-                        newC.Scene = scene;
-                        Vector3 Position = newC.Position;
-                        Position.Y -= Constants.RegionSize;
-                        newC.Position = Position;
-                        DeliverChatToAvatars(ChatSourceType.Object, newC);
-                        Sent = true;
-                    }
-                }
-                if (c.Position.X + c.Range > 256 && c.Position.Y + c.Range > 256)
-                {
-                    Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX + 1, c.Scene.RegionInfo.RegionLocY + 1);
-                    if (scene != null)
-                    {
-                        OSChatMessage newC = c.Copy();
-                        newC.Scene = scene;
-                        Vector3 Position = newC.Position;
-                        Position.X -= Constants.RegionSize;
-                        Position.Y -= Constants.RegionSize;
-                        newC.Position = Position;
-                        DeliverChatToAvatars(ChatSourceType.Object, newC);
-                        Sent = true;
-                    }
-                }
-                if (c.Position.X + c.Range > 256 && c.Position.Y - c.Range < 0)
-                {
-                    Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX + 1, c.Scene.RegionInfo.RegionLocY - 1);
-                    if (scene != null)
-                    {
-                        OSChatMessage newC = c.Copy();
-                        newC.Scene = scene;
-                        Vector3 Position = newC.Position;
-                        Position.X -= Constants.RegionSize;
-                        Position.Y += Constants.RegionSize;
-                        newC.Position = Position;
-                        DeliverChatToAvatars(ChatSourceType.Object, newC);
-                        Sent = true;
-                    }
-                }
-                if (c.Position.Y - c.Range < 0)
-                {
-                    Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX, c.Scene.RegionInfo.RegionLocY - 1);
-                    if (scene != null)
-                    {
-                        OSChatMessage newC = c.Copy();
-                        newC.Scene = scene;
-                        Vector3 Position = newC.Position;
-                        Position.Y += Constants.RegionSize;
-                        newC.Position = Position;
-                        DeliverChatToAvatars(ChatSourceType.Object, newC);
-                        Sent = true;
-                    }
-                }
-                if (c.Position.X - c.Range < 0 && c.Position.Y - c.Range < 0)
-                {
-                    Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX - 1, c.Scene.RegionInfo.RegionLocY - 1);
-                    if (scene != null)
-                    {
-                        OSChatMessage newC = c.Copy();
-                        newC.Scene = scene;
-                        Vector3 Position = newC.Position;
-                        Position.X += Constants.RegionSize;
-                        Position.Y += Constants.RegionSize;
-                        newC.Position = Position;
-                        DeliverChatToAvatars(ChatSourceType.Object, newC);
-                        Sent = true;
-                    }
-                }
-                if (c.Position.X - c.Range < 0)
-                {
-                    Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX - 1, c.Scene.RegionInfo.RegionLocY);
-                    if (scene != null)
-                    {
-                        OSChatMessage newC = c.Copy();
-                        newC.Scene = scene;
-                        Vector3 Position = newC.Position;
-                        Position.X += Constants.RegionSize;
-                        newC.Position = Position;
-                        DeliverChatToAvatars(ChatSourceType.Object, newC);
-                        Sent = true;
-                    }
-                }
-                if (c.Position.X - c.Range < 0 && c.Position.Y + c.Range > 256)
+                if (c.Position.X - distance < 0 && c.Position.Y + distance > Constants.RegionSize)
                 {
                     Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX - 1, c.Scene.RegionInfo.RegionLocY + 1);
                     if (scene != null)
@@ -793,9 +460,15 @@ namespace Aurora.Modules
                 }
             }
             if(!Sent)
-            DeliverChatToAvatars(ChatSourceType.Object, c);
+                DeliverChatToAvatars(ChatSourceType.Object, c);
         }
 
+        /// <summary>
+        /// Find the scene at X, Y if it exists
+        /// </summary>
+        /// <param name="LocX"></param>
+        /// <param name="LocY"></param>
+        /// <returns></returns>
         private Scene FindScene(uint LocX, uint LocY)
         {
             foreach (Scene scene in m_scenes)
@@ -867,6 +540,7 @@ namespace Aurora.Modules
 
                         int dis = (int)Util.GetDistanceTo(toRegionPos, fromRegionPos);
 
+                        //Check for max range
                         if (c.Type == ChatTypeEnum.Whisper && dis > m_whisperdistance ||
                             c.Type == ChatTypeEnum.Say && dis > m_saydistance ||
                             c.Type == ChatTypeEnum.Shout && dis > m_shoutdistance ||
@@ -874,10 +548,13 @@ namespace Aurora.Modules
                         {
                             continue;
                         }
+                        //The client actually does this on its own, we don't need to
+                        /*//Check whether the user is muted
                         bool IsMuted = false;
                         if (message != "" && m_useMuteListModule)
                         {
                             Dictionary<UUID, bool> cache = new Dictionary<UUID,bool>();
+                            //Check the cache first so that we don't kill the server
                             if (IsMutedCache.TryGetValue(presence.UUID, out cache))
                             {
                                 //If the cache doesn't contain the person, they arn't used
@@ -899,7 +576,8 @@ namespace Aurora.Modules
                             }
                         }
                         if (!IsMuted)
-                            TrySendChatMessage(presence, fromPos, regionPos, fromID, fromName, c.Type, message, sourceType, c.Range);
+                            */
+                        TrySendChatMessage(presence, fromPos, regionPos, fromID, fromName, c.Type, message, sourceType, c.Range);
                     }
                 }
             }
@@ -920,7 +598,7 @@ namespace Aurora.Modules
             if (c.Range > m_maxChatDistance)
                 c.Range = m_maxChatDistance;
 
-            if (cType == ChatTypeEnum.SayTo) //Change to something client can understand
+            if (cType == ChatTypeEnum.SayTo) //Change to something client can understand as SayTo doesn't exist except on the server
                 cType = ChatTypeEnum.Owner;
 
             if (cType == ChatTypeEnum.Region)
@@ -984,6 +662,7 @@ namespace Aurora.Modules
                                 presence.Scene.RegionInfo.RegionLocY * Constants.RegionSize, 0);
 
                 int dis = (int)Util.GetDistanceTo(toRegionPos, fromRegionPos);
+                //Set the best fitting setting for custom
                 if (dis < m_whisperdistance)
                     type = ChatTypeEnum.Whisper;
                 else if (dis > m_saydistance)
@@ -997,8 +676,11 @@ namespace Aurora.Modules
                                                        fromAgentID, (byte)src, (byte)ChatAudibleLevel.Fully);
         }
 
-        private Dictionary<UUID, Dictionary<UUID, bool>> IsMutedCache = new Dictionary<UUID, Dictionary<UUID, bool>>();
-        private Dictionary<UUID, MuteList[]> MuteListCache = new Dictionary<UUID, MuteList[]>();
+        /// <summary>
+        /// Get all the mutes the client has set
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="crc"></param>
         private void OnMuteListRequest(IClientAPI client, uint crc)
         {
             if (!m_useMuteListModule)
@@ -1020,7 +702,6 @@ namespace Aurora.Modules
                 invString += (mute.MuteType + " " + mute.MuteID + " " + mute.MuteName + " |\n");
                 i++;
             }
-            IsMutedCache[client.AgentId] = cache; //Load up the mute list early if they login or add mutes
             
             if(invString != "")
                 invString = invString.Remove(invString.Length - 3, 3);
@@ -1034,6 +715,12 @@ namespace Aurora.Modules
             }
         }
 
+        /// <summary>
+        /// Get all the mutes from the database
+        /// </summary>
+        /// <param name="AgentID"></param>
+        /// <param name="Cached"></param>
+        /// <returns></returns>
         public MuteList[] GetMutes(UUID AgentID, out bool Cached)
         {
             Cached = false;
@@ -1049,6 +736,14 @@ namespace Aurora.Modules
             return List;
         }
 
+        /// <summary>
+        /// Update the mute (from the client)
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="MuteID"></param>
+        /// <param name="Name"></param>
+        /// <param name="Flags"></param>
+        /// <param name="AgentID"></param>
         private void OnMuteListUpdate(IClientAPI client, UUID MuteID, string Name, int Flags, UUID AgentID)
         {
             if (!m_useMuteListModule)
@@ -1057,6 +752,13 @@ namespace Aurora.Modules
             OnMuteListRequest(client, 0);
         }
 
+        /// <summary>
+        /// Update the mute in the database
+        /// </summary>
+        /// <param name="MuteID"></param>
+        /// <param name="Name"></param>
+        /// <param name="Flags"></param>
+        /// <param name="AgentID"></param>
         public void UpdateMuteList(UUID MuteID, string Name, int Flags, UUID AgentID)
         {
             if (MuteID == UUID.Zero)
@@ -1071,6 +773,13 @@ namespace Aurora.Modules
             MuteListCache.Remove(AgentID);
         }
 
+        /// <summary>
+        /// Remove the mute (from the client)
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="MuteID"></param>
+        /// <param name="Name"></param>
+        /// <param name="AgentID"></param>
         private void OnMuteListRemove(IClientAPI client, UUID MuteID, string Name, UUID AgentID)    
         {
             if (!m_useMuteListModule)
@@ -1079,6 +788,12 @@ namespace Aurora.Modules
             OnMuteListRequest(client, 0);
         }
 
+        /// <summary>
+        /// Remove the given mute from the user's mute list in the database
+        /// </summary>
+        /// <param name="MuteID"></param>
+        /// <param name="Name"></param>
+        /// <param name="AgentID"></param>
         public void RemoveMute(UUID MuteID, string Name, UUID AgentID)
         {
             //Gets sent if a mute is not selected.
@@ -1091,6 +806,9 @@ namespace Aurora.Modules
 
         private Dictionary<UUID, ChatSession> ChatSessions = new Dictionary<UUID, ChatSession>();
 
+        /// <summary>
+        /// Internal class for chat sessions 
+        /// </summary>
         public class ChatSession
         {
             public UUID SessionID;
@@ -1128,6 +846,11 @@ namespace Aurora.Modules
             public bool HasBeenAdded;
         }
         
+        /// <summary>
+        /// Set up the CAPS for friend conferencing
+        /// </summary>
+        /// <param name="agentID"></param>
+        /// <param name="caps"></param>
         public void RegisterCaps(UUID agentID, Caps caps)
         {
             string capsBase = "/CAPS/" + caps.CapsObjectPath;
@@ -1208,6 +931,7 @@ namespace Aurora.Modules
             }
             else if (method == "accept invitation")
             {
+                //They would like added to the group conversation
                 List<OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock> Us = new List<OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock>();
                 List<OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock> NotUsAgents = new List<OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock>();
 
@@ -1215,6 +939,7 @@ namespace Aurora.Modules
                 if (session != null)
                 {
                     ChatSessionMember thismember = FindMember(sessionid, Agent);
+                    //Tell all the other members about the incoming member
                     foreach (ChatSessionMember sessionMember in session.Members)
                     {
                         OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock block = new OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock();
@@ -1223,7 +948,7 @@ namespace Aurora.Modules
                         block.IsModerator = sessionMember.IsModerator;
                         block.MuteText = sessionMember.MuteText;
                         block.MuteVoice = sessionMember.MuteVoice;
-                        block.Transition = "ENTER";
+                        block.Transition = "ENTER"; 
                         if (sessionMember.AvatarKey == thismember.AvatarKey)
                             Us.Add(block);
                         else
@@ -1237,10 +962,12 @@ namespace Aurora.Modules
                     {
                         if (member.AvatarKey == thismember.AvatarKey)
                         {
+                            //Tell 'us' about all the other agents in the group
                             eq.ChatterBoxSessionAgentListUpdates(session.SessionID, NotUsAgents.ToArray(), member.AvatarKey, "ENTER");
                         }
                         else
                         {
+                            //Tell 'other' agents about the new agent ('us')
                             eq.ChatterBoxSessionAgentListUpdates(session.SessionID, Us.ToArray(), member.AvatarKey, "ENTER");
                         }
                     }
@@ -1304,6 +1031,10 @@ namespace Aurora.Modules
             }
         }
 
+        /// <summary>
+        /// Hook up the IMs from the client
+        /// </summary>
+        /// <param name="client"></param>
         void OnClientConnect(IClientCore client)
         {
             IClientIM clientIM;
@@ -1313,6 +1044,11 @@ namespace Aurora.Modules
             }
         }
 
+        /// <summary>
+        /// Find the presence from all the known sims
+        /// </summary>
+        /// <param name="avID"></param>
+        /// <returns></returns>
         public ScenePresence findScenePresence(UUID avID)
         {
             foreach (Scene s in m_scenes)
@@ -1331,6 +1067,11 @@ namespace Aurora.Modules
             OnInstantMessage(findScenePresence(new UUID(msg.toAgentID)).ControllingClient, msg);
         }
 
+        /// <summary>
+        /// If its a message we deal with, pull it from the client here
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="im"></param>
         public void OnInstantMessage(IClientAPI client, GridInstantMessage im)
         {
             byte dialog = im.dialog;
@@ -1342,6 +1083,12 @@ namespace Aurora.Modules
                 DropMemberFromSession(client, im);
         }
 
+        /// <summary>
+        /// Find the member from X sessionID 
+        /// </summary>
+        /// <param name="sessionid"></param>
+        /// <param name="Agent"></param>
+        /// <returns></returns>
         private ChatSessionMember FindMember(UUID sessionid, UUID Agent)
         {
             ChatSession session;
@@ -1357,6 +1104,12 @@ namespace Aurora.Modules
             return thismember;
         }
 
+        /// <summary>
+        /// Check whether the user has moderator permissions
+        /// </summary>
+        /// <param name="Agent"></param>
+        /// <param name="sessionid"></param>
+        /// <returns></returns>
         public bool CheckModeratorPermission(UUID Agent, UUID sessionid)
         {
             ChatSession session;
@@ -1372,6 +1125,11 @@ namespace Aurora.Modules
             return thismember.IsModerator;
         }
 
+        /// <summary>
+        /// Remove the member from this session
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="im"></param>
         public void DropMemberFromSession(IClientAPI client, GridInstantMessage im)
         {
             ChatSession session;
@@ -1408,6 +1166,11 @@ namespace Aurora.Modules
             }
         }
 
+        /// <summary>
+        /// Send chat to all the members of this friend conference
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="im"></param>
         public void SendChatToSession(IClientAPI client, GridInstantMessage im)
         {
             ChatSession session;
@@ -1450,6 +1213,11 @@ namespace Aurora.Modules
             }
         }
 
+        /// <summary>
+        /// Add this member to the friend conference
+        /// </summary>
+        /// <param name="member"></param>
+        /// <param name="SessionID"></param>
         public void AddMemberToGroup(ChatSessionMember member, UUID SessionID)
         {
             ChatSession session;
@@ -1457,11 +1225,20 @@ namespace Aurora.Modules
             session.Members.Add(member);
         }
 
+        /// <summary>
+        /// Create a new friend conference session
+        /// </summary>
+        /// <param name="session"></param>
         public void CreateSession(ChatSession session)
         {
             ChatSessions.Add(session.SessionID, session);
         }
 
+        /// <summary>
+        /// Get a session by a user's sessionID
+        /// </summary>
+        /// <param name="SessionID"></param>
+        /// <returns></returns>
         public ChatSession GetSession(UUID SessionID)
         {
             ChatSession session;
@@ -1469,6 +1246,11 @@ namespace Aurora.Modules
             return session;
         }
 
+        /// <summary>
+        /// Add the agent to the in-memory session lists and give them the default permissions
+        /// </summary>
+        /// <param name="AgentID"></param>
+        /// <param name="SessionID"></param>
         private void AddDefaultPermsMemberToSession(UUID AgentID, UUID SessionID)
         {
             ChatSession session;

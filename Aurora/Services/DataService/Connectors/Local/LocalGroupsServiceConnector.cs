@@ -13,7 +13,7 @@ using log4net;
 
 namespace Aurora.Services.DataService
 {
-	public class LocalGroupsServiceConnector : IGroupsServiceConnector, IAuroraDataPlugin
+	public class LocalGroupsServiceConnector : IGroupsServiceConnector
 	{
         private static readonly ILog m_log =
             LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);

@@ -6,7 +6,7 @@ using OpenSim.Framework;
 
 namespace Aurora.Framework
 {
-	public interface IAvatarArchiverConnector
+    public interface IAvatarArchiverConnector : IAuroraDataPlugin
 	{
         /// <summary>
         /// Gets avatar archives from the database

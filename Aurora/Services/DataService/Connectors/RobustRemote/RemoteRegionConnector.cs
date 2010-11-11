@@ -17,7 +17,7 @@ using OpenSim.Server.Base;
 
 namespace Aurora.Services.DataService
 {
-    public class RemoteRegionConnector : IRegionConnector, IAuroraDataPlugin
+    public class RemoteRegionConnector : IRegionConnector
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
@@ -119,7 +119,9 @@ namespace Aurora.Services.DataService
                     {
                         if (replyData.Count != 0)
                         {
-                            return new Telehub(replyData);
+                            Telehub t = new Telehub();
+                            t.FromKVP(replyData);
+                            return t;
                         }
                     }
                     else

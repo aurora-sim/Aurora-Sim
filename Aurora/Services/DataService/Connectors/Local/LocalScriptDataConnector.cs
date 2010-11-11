@@ -10,7 +10,7 @@ using Nini.Config;
 
 namespace Aurora.Services.DataService
 {
-    public class LocalScriptDataConnector : IScriptDataConnector, IAuroraDataPlugin
+    public class LocalScriptDataConnector : IScriptDataConnector
 	{
         private IGenericData GD = null;
 

@@ -820,7 +820,6 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="client"></param>
         public void HandleRetrieveInstantMessages(IClientAPI client)
         {
-            /*
             //This attempts to fixes t-pose on login by sending an animation for the avatar so it has something to display.
             //  -- Revolution
             if (ClientIsStarting)
@@ -838,9 +837,9 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 ClientIsStarting = false;
             }
-            SendWearables();
-            SendAppearanceToAllOtherAgents();
-            */
+            //Don't do this until it has been tested
+            /*SendWearables();
+            SendAppearanceToAllOtherAgents();*/
         }
 
         private void SetDirectionVectors()
@@ -2781,7 +2780,7 @@ namespace OpenSim.Region.Framework.Scenes
             bool avWasNull = true;
             Vector3 pos = m_pos;
             pos.Z -= m_appearance.HipOffset;
-            lock (m_appearanceLock)
+            /*lock (m_appearanceLock)
             {
                 if (m_physicsActor != null)
                 {
@@ -2799,7 +2798,7 @@ namespace OpenSim.Region.Framework.Scenes
                         PhysicsActor = null;
                     }
                 }
-            }
+            }*/
 
             #region Bake Cache Check
 
@@ -2837,6 +2836,12 @@ namespace OpenSim.Region.Framework.Scenes
             if (m_appearance.AvatarHeight > 0)
                 m_avHeight = m_appearance.AvatarHeight;
 
+            //If the av exists, set their new size, if not, add them to the region
+            if(m_physicsActor != null)
+                m_physicsActor.Size = new Vector3(0, 0, m_avHeight);
+            else
+                AddToPhysicalScene(flyingTemp, false);
+
             // This is not needed, because only the transient data changed
             //AvatarData adata = new AvatarData(m_appearance);
             //m_scene.AvatarService.SetAvatar(m_controllingClient.AgentId, adata);
@@ -2849,13 +2854,13 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             pos.Z += m_appearance.HipOffset;
-            lock (m_appearanceLock)
-            {
-                if (!avWasNull)
-                {
-                    AddToPhysicalScene(flyingTemp, false);
-                }
-            }
+            //lock (m_appearanceLock)
+            //{
+            //    if (!avWasNull)
+            //    {
+            //        AddToPhysicalScene(flyingTemp, false);
+            //    }
+            //}
             m_controllingClient.SendAvatarDataImmediate(this);
         }
 

@@ -1,0 +1,22 @@
+Startup CommandLine Switches fo Aurora
+
+You can use these switches with either OpenSim.exe or OpenSim.32BitLaunche.exe
+
+OpenSim.exe -inifile MyIniOveride.ini
+OpenSim.exe -inimaster MyIniMaster.ini
+OpenSim.exe -inidirectory c:\MyConfigs
+OpenSim.exe -Console basic
+OpenSim.exe -inidbg true or false
+
+Example CommandLine
+OpenSim.32bitlaunch.exe -inimaster C:\Grid\configs\MyIniMaster.ini -inifile C:\Grid\configs\MyIniOveride.ini
+
+
+inidbg 
+This creates a file in the BIN directory for each ini file loaded in Sequence
+Examples
+    OpenSim.ini = ConfigFileDump1.ini
+    Main.ini = ConfigFileDump2.ini
+
+These are incremented according to to order of load and contain the parsed ini file contents.
+!! Used only for Debugging and tracing ini flow path.  Do Not Use as a Normal Setting. !!

@@ -125,6 +125,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public int ControlEventsInQueue = 0;
         public bool StartedFromSavedState = false;
         public UUID RezzedFrom = UUID.Zero; // If rezzed from llRezObject, this is not Zero
+        /// <summary>
+        /// This helps make sure that we clear out previous versions so that we don't have overlapping script versions running
+        /// </summary>
         public int VersionID = 0;
 
         public SceneObjectPart part;
@@ -180,7 +183,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             VersionID += 5;
             m_ScriptEngine.MaintenanceThread.RemoveFromEventQueue(ItemID, VersionID);
+            //Give the user back any controls we took
             ReleaseControls();
+
             // Tell script not to accept new requests
             //These are fine to set as the state wont be saved again
             if (!Silent)
@@ -191,9 +196,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             // Remove from internal structure
             ScriptEngine.ScriptProtection.RemoveScript(this);
-            if (!Silent) //Don't remove on a recompile
+            if (!Silent) //Don't remove on a recompile because we'll make it under a different assembly
                 ScriptEngine.ScriptProtection.RemovePreviouslyCompiled(Source);
 
+            //Remove any errors that might be sitting around
             m_ScriptEngine.ScriptErrorReporter.RemoveError(ItemID);
 
             #region Clean out script parts
@@ -205,17 +211,23 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 // Stop long command on script
                 m_ScriptEngine.RemoveScript(part.UUID, ItemID);
+
+                //Release the script and destroy it
                 ILease lease = (ILease)RemotingServices.GetLifetimeService(Script as MarshalByRefObject);
                 if (lease != null)
                     lease.Unregister(Script.Sponsor);
+
                 Script.Close();
                 Script = null;
             }
+
             if (AppDomain == null)
                 return;
+
             // Tell AppDomain that we have stopped script
             m_ScriptEngine.AppDomainManager.UnloadScriptAppDomain(AppDomain);
             AppDomain = null;
+
             MainConsole.Instance.Output("[" + m_ScriptEngine.ScriptEngineName+ "]: Closed Script " + InventoryItem.Name + " in " + part.Name, "None");
         }
 
@@ -401,8 +413,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (RezzedFrom != UUID.Zero)
             {
                 //Post the event for the prim that rezzed us
-                m_ScriptEngine.AddToObjectQueue(RezzedFrom, "object_rez", new DetectParams[0]
-                    , -1, new object[] { part.ParentGroup.RootPart.UUID });
+                m_ScriptEngine.AddToObjectQueue(RezzedFrom, "object_rez", new DetectParams[0],
+                    -1, new object[] { part.ParentGroup.RootPart.UUID });
                 RezzedFrom = UUID.Zero;
             }
             if (StartedFromSavedState)
@@ -444,6 +456,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //Reset this
             StartedFromSavedState = false;
 
+            //Clear out previous errors if they were not cleaned up
             m_ScriptEngine.ScriptErrorReporter.RemoveError(ItemID);
 
             //Find the inventory item
@@ -467,7 +480,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     URL = Source.Remove(0, line);
                     URL = URL.Replace("#IncludeHTML ", "");
                     URL = URL.Split('\n')[0];
-                    string webSite = ReadExternalWebsite(URL);
+                    string webSite = Utilities.ReadExternalWebsite(URL);
                     Source = Source.Replace("#IncludeHTML " + URL, webSite);
                 }
             }
@@ -487,10 +500,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             #endregion
 
-            // Attempt to find a state save
+            // Attempt to find a state save to load from
             if(ScriptFrontend != null)
                 LastStateSave = ScriptFrontend.GetStateSave(ItemID, UserInventoryItemID);
 
+            //If the saved state exists, if it isn't a reupload (something changed), and if the assembly exists, load the state save
             if (!reupload && Loading && LastStateSave != null
                 && File.Exists(Path.Combine(m_ScriptEngine.ScriptEnginesPath, Path.Combine(
                     "Scripts",
@@ -509,12 +523,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     //Close the previous script
                     CloseAndDispose(true);
 
+                    //Increment this so that we clear out the previous upload
                     VersionID++;
                 }
 
                 //Try to find a previously compiled script in this instance
                 string PreviouslyCompiledAssemblyName = ScriptEngine.ScriptProtection.TryGetPreviouslyCompiledScript(Source);
-                if (PreviouslyCompiledAssemblyName != null)
+                if (PreviouslyCompiledAssemblyName != null) //Already exists in this instance, so we do not need to check whether it exists
                     AssemblyName = PreviouslyCompiledAssemblyName;
                 else
                 {
@@ -578,6 +593,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             try
             {
                 Script = m_ScriptEngine.AppDomainManager.LoadScript(AssemblyName, "Script.ScriptClass", out AppDomain);
+                //Add now so that we don't add it too early and give it the possibility to fail
                 ScriptEngine.ScriptProtection.AddPreviouslyCompiled(Source, this);
             }
             catch (System.IO.FileNotFoundException) // Not valid!!!
@@ -590,12 +606,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             catch (Exception ex)
             {
-                DisplayUserNotification(ex.Message, "app domain creation", reupload, true);
+                DisplayUserNotification(ex.ToString(), "app domain creation", reupload, true);
                 return;
             }
 
             ILease lease = (ILease)RemotingServices.GetLifetimeService(Script as MarshalByRefObject);
-            if (lease != null)
+            if (lease != null) //Its null if it is all running in the same app domain
                 lease.Register(Script.Sponsor);
 
             //If its a reupload, an avatar is waiting for the script errors
@@ -625,7 +641,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             else
             {
-
                 //Make a new state save now
                 m_ScriptEngine.MaintenanceThread.AddToStateSaverQueue(this, true);
             }
@@ -706,26 +721,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             return true;
         }
 
-        #endregion
-
-        #region Other
-
-        public string ReadExternalWebsite(string URL)
-        {
-            // External IP Address (get your external IP locally)
-            String externalIp = "";
-            UTF8Encoding utf8 = new UTF8Encoding();
-
-            WebClient webClient = new WebClient();
-            try
-            {
-                externalIp = utf8.GetString(webClient.DownloadData(URL));
-            }
-            catch (Exception)
-            {
-            }
-            return externalIp;
-        }
         #endregion
     }
 }

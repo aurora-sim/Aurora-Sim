@@ -281,8 +281,8 @@ namespace OpenSim.Region.CoreModules.World.Land
         private Vector2 GetParcelCenter(ILandObject parcel)
         {
             int count = 0;
-            int avgx = 0;
-            int avgy = 0;
+            float avgx = 0;
+            float avgy = 0;
             for (int x = 0; x < Constants.RegionSize; x++)
             {
                 for (int y = 0; y < Constants.RegionSize; y++)
@@ -292,6 +292,11 @@ namespace OpenSim.Region.CoreModules.World.Land
                     {
                         if (count == 0)
                         {
+                            //Set this to 1 so that when we multiply down below, it doesn't lock to 0
+                            if (x == 0)
+                                x = 1;
+                            if (y == 0)
+                                y = 1;
                             avgx = x;
                             avgy = y;
                         }

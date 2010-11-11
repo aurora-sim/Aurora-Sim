@@ -7,7 +7,7 @@ using OpenMetaverse;
 
 namespace Aurora.Framework
 {
-	public interface IAbuseReportsConnector
+    public interface IAbuseReportsConnector : IAuroraDataPlugin
 	{
         /// <summary>
         /// Gets the abuse report associated with the number and uses the pass to authenticate.

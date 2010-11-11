@@ -62,5 +62,7 @@ namespace OpenSim.Region.Framework.Interfaces
         void SaveStateSave(UUID uUID, UUID uUID_2);
 
         List<string> GetAllFunctionNames();
+
+        bool Disabled { get; set; }
     }
 }

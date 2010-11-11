@@ -58,10 +58,13 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
         public void Initialise(IConfigSource source)
         {
             m_config = source.Configs["CombatModule"];
-            m_enabled = m_config.GetBoolean("Enabled", true);
-            MaximumHealth = m_config.GetFloat("MaximumHealth", 100);
-            ForceRequireCombatPermission = m_config.GetBoolean("ForceRequireCombatPermission", ForceRequireCombatPermission);
-            DisallowTeleportingForCombatants = m_config.GetBoolean("DisallowTeleportingForCombatants", DisallowTeleportingForCombatants);
+            if (m_config != null)
+            {
+                m_enabled = m_config.GetBoolean("Enabled", true);
+                MaximumHealth = m_config.GetFloat("MaximumHealth", 100);
+                ForceRequireCombatPermission = m_config.GetBoolean("ForceRequireCombatPermission", ForceRequireCombatPermission);
+                DisallowTeleportingForCombatants = m_config.GetBoolean("DisallowTeleportingForCombatants", DisallowTeleportingForCombatants);
+            }
         }
 
         public void Close()

@@ -72,13 +72,18 @@ namespace Aurora.Modules
             get { return null; }
         }
 
+        /// <summary>
+        /// Check to see if the client has baked textures that belong to banned clients
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="textureEntry"></param>
         public void CheckForBannedViewer(IClientAPI client, Primitive.TextureEntry textureEntry)
         {
             try
             {
                 //Read the website once!
                 if (m_map == null)
-                    m_map = (OSDMap)OSDParser.Deserialize(ReadExternalWebsite("http://auroraserver.ath.cx:8080/client_tags.xml"));
+                    m_map = (OSDMap)OSDParser.Deserialize(Utilities.ReadExternalWebsite("http://auroraserver.ath.cx:8080/client_tags.xml"));
                 
                 //This is the givaway texture!
                 for (int i = 0; i < textureEntry.FaceTextures.Length; i++)
@@ -88,6 +93,7 @@ namespace Aurora.Modules
                         if (m_map.ContainsKey(textureEntry.FaceTextures[i].TextureID.ToString()))
                         {
                             OSDMap viewerMap = (OSDMap)m_map[textureEntry.FaceTextures[i].TextureID.ToString()];
+                            //Check the names
                             if (BannedViewers.Contains(viewerMap["name"].ToString()))
                             {
                                 client.Kick("You cannot use " + viewerMap["name"] + " in this sim.");
@@ -103,22 +109,6 @@ namespace Aurora.Modules
                 }
             }
             catch { }
-        }
-
-        private string ReadExternalWebsite(string URL)
-        {
-            String website = "";
-            UTF8Encoding utf8 = new UTF8Encoding();
-
-            WebClient webClient = new WebClient();
-            try
-            {
-                website = utf8.GetString(webClient.DownloadData(URL));
-            }
-            catch (Exception)
-            {
-            }
-            return website;
         }
     }
 }

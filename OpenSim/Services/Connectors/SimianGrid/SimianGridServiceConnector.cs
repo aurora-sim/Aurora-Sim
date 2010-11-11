@@ -153,7 +153,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 { "InternalPort", OSD.FromInteger(regionInfo.InternalEndPoint.Port) },
                 { "ExternalAddress", OSD.FromString(regionInfo.ExternalEndPoint.Address.ToString()) },
                 { "ExternalPort", OSD.FromInteger(regionInfo.ExternalEndPoint.Port) },
-                { "MapTexture", OSD.FromUUID(regionInfo.TerrainImage) },
+                { "MapTexture", OSD.FromUUID(regionInfo.TerrainMapImage) },
                 { "Access", OSD.FromInteger(regionInfo.Access) },
                 { "RegionSecret", OSD.FromString(regionInfo.RegionSecret) },
                 { "EstateOwner", OSD.FromUUID(regionInfo.EstateOwner) },

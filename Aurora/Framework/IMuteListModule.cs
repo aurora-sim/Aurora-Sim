@@ -14,6 +14,7 @@ namespace Aurora.Framework
         /// <param name="Cached">Are these notes already cached?</param>
         /// <returns></returns>
         MuteList[] GetMutes(UUID AgentID, out bool Cached);
+
         /// <summary>
         /// Update the mute list
         /// </summary>
@@ -22,6 +23,7 @@ namespace Aurora.Framework
         /// <param name="Flags"></param>
         /// <param name="AgentID"></param>
         void UpdateMuteList(UUID MuteID, string Name, int Flags, UUID AgentID);
+
         /// <summary>
         /// Remove a mute from the mute list
         /// </summary>

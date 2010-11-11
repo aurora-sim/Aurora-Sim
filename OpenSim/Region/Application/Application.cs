@@ -243,21 +243,16 @@ namespace OpenSim
             configSource.Alias.AddAlias("True", true);
             configSource.Alias.AddAlias("False", false);
 
-            configSource.AddSwitch("Startup", "background");
+            ///Command line switches
             configSource.AddSwitch("Startup", "inifile");
             configSource.AddSwitch("Startup", "inimaster");
             configSource.AddSwitch("Startup", "inidirectory");
-            configSource.AddSwitch("Startup", "physics");
-            configSource.AddSwitch("Startup", "gui");
-            configSource.AddSwitch("Startup", "console");
+            configSource.AddSwitch("Console", "Console");
+            configSource.AddSwitch("Startup", "inidbg");
 
-            configSource.AddConfig("StandAlone");
             configSource.AddConfig("Network");
 
             IConfigSource m_configSource = Configuration(configSource);
-
-            // Check if we're running in the background or not
-            bool background = m_configSource.Configs["Startup"].GetBoolean("background", false);
 
             // Check if we're saving crashes
             m_saveCrashDumps = m_configSource.Configs["Startup"].GetBoolean("save_crashes", false);
@@ -275,14 +270,16 @@ namespace OpenSim
             }
 
             bool Running = true;
-            while (AutoRestart && Running)
+            while (AutoRestart || Running)
             {
+                //Always run once, then disable this
+                Running = false;
                 //! because if it crashes, it needs restarted, if it didn't crash, don't restart it
-                Running = !Startup(configSource);
+                Startup(configSource);
             }
         }
 
-        public static bool Startup(ArgvConfigSource configSource)
+        public static void Startup(ArgvConfigSource configSource)
         {
             OpenSimBase m_sim = new OpenSimBase(configSource);
             try
@@ -300,9 +297,10 @@ namespace OpenSim
                 }
                 //Just clean it out as good as we can
                 m_sim.Shutdown(false);
-                return false;
+                //Then let it restart if it needs
+                return;
             }
-            return true;
+            Environment.Exit(0);
         }
 
         private static IConfigSource Configuration(IConfigSource configSource)

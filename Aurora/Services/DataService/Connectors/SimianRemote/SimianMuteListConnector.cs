@@ -18,7 +18,7 @@ using OpenSim.Server.Base;
 
 namespace Aurora.Services.DataService
 {
-    public class SimianMuteListConnector : IMuteListConnector, IAuroraDataPlugin
+    public class SimianMuteListConnector : IMuteListConnector
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(

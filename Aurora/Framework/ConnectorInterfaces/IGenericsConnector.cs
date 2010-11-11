@@ -23,7 +23,7 @@ namespace Aurora.Framework
     /// This class deals with the Getting/Setting/Removing of these generic interfaces.
     /// 
     /// </summary>
-    public interface IGenericsConnector
+    public interface IGenericsConnector : IAuroraDataPlugin
 	{
         /// <summary>
         /// Gets a Generic type as set by the ownerID, Type, and Key

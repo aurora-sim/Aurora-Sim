@@ -12,7 +12,7 @@ using OpenMetaverse.StructuredData;
 
 namespace Aurora.Services.DataService
 {
-    public class LocalDirectoryServiceConnector : IDirectoryServiceConnector, IAuroraDataPlugin
+    public class LocalDirectoryServiceConnector : IDirectoryServiceConnector
     {
         private IGenericData GD = null;
         private int minTimeBeforeNextParcelUpdate = 60;
@@ -148,7 +148,7 @@ namespace Aurora.Services.DataService
             LandData.RegionID = UUID.Parse(Query[0]);
             LandData.GlobalID = UUID.Parse(Query[1]);
             LandData.LocalID = int.Parse(Query[2]);
-            LandData.UserLocation = new Vector3(int.Parse(Query[3]), int.Parse(Query[4]), int.Parse(Query[5]));
+            LandData.UserLocation = new Vector3(float.Parse(Query[3]), float.Parse(Query[4]), float.Parse(Query[5]));
             LandData.Name = Query[6];
             LandData.Description = Query[7];
             LandData.Flags = uint.Parse(Query[8]);
@@ -184,7 +184,7 @@ namespace Aurora.Services.DataService
                 LandData.RegionID = UUID.Parse(Query[i]);
                 LandData.GlobalID = UUID.Parse(Query[i + 1]);
                 LandData.LocalID = int.Parse(Query[i + 2]);
-                LandData.UserLocation = new Vector3(int.Parse(Query[i + 3]), int.Parse(Query[i + 4]), int.Parse(Query[i + 5]));
+                LandData.UserLocation = new Vector3(float.Parse(Query[i + 3]), float.Parse(Query[i + 4]), float.Parse(Query[i + 5]));
                 LandData.Name = Query[i + 6];
                 LandData.Description = Query[i + 7];
                 LandData.Flags = uint.Parse(Query[i + 8]);

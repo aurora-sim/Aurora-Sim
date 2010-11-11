@@ -6,26 +6,40 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Drawing;
 using System.Text;
 using System.Security.Cryptography;
 using System.Xml;
 using OpenMetaverse.StructuredData;
 using Nwc.XmlRpc;
+using System.Windows.Forms;
 
 namespace Aurora.Framework
 {
     public static class Utilities
     {
+        /// <summary>
+        /// Get the URL to the release notes for the current version of Aurora
+        /// </summary>
+        /// <returns></returns>
         public static string GetServerReleaseNotesURL()
         {
             return "http://" + GetExternalIp() + ":" + OpenSim.Framework.MainServer.Instance.Port.ToString() + "/AuroraServerRelease" + AuroraServerVersion() + ".html";
         }
 
+        /// <summary>
+        /// Get the URL to our sim
+        /// </summary>
+        /// <returns></returns>
         public static string GetAddress()
         {
             return "http://" + GetExternalIp() + ":" + OpenSim.Framework.MainServer.Instance.Port.ToString();
         }
 
+        /// <summary>
+        /// What is our version?
+        /// </summary>
+        /// <returns></returns>
         public static string AuroraServerVersion()
         {
             return "1.0";
@@ -41,15 +55,22 @@ namespace Aurora.Framework
                 EncryptorType = type;
             }
         }
+        /// <summary>
+        /// This is for encryption, it sets the number of times to iterate through the encryption
+        /// </summary>
+        /// <param name="iterations"></param>
         public static void SetEncryptIterations(int iterations)
         {
             EncryptIterations = iterations;
         }
+        /// <summary>
+        /// This is for encryption, it sets the size of the key
+        /// </summary>
+        /// <param name="size"></param>
         public static void SetKeySize(int size)
         {
             KeySize = size;
         }
-
 
         /// <summary>
         /// Encrypts specified plaintext using Rijndael symmetric key algorithm
@@ -285,6 +306,10 @@ namespace Aurora.Framework
         }
 
         private static string CachedExternalIP = "";
+        /// <summary>
+        /// Get OUR external IP
+        /// </summary>
+        /// <returns></returns>
         public static string GetExternalIp()
         {
             if (CachedExternalIP == "")
@@ -296,6 +321,7 @@ namespace Aurora.Framework
                 WebClient webClient = new WebClient();
                 try
                 {
+                    //Ask what is my ip for it
                     externalIp = utf8.GetString(webClient.DownloadData("http://whatismyip.com/automation/n09230945.asp"));
                 }
                 catch (Exception) { }
@@ -306,7 +332,14 @@ namespace Aurora.Framework
                 return CachedExternalIP;
         }
 
-        public static Hashtable GenericXMLRPCRequest(Hashtable ReqParams, string method, string IPpoint)
+        /// <summary>
+        /// Send a generic XMLRPC request
+        /// </summary>
+        /// <param name="ReqParams">params to send</param>
+        /// <param name="method"></param>
+        /// <param name="URL">URL to send the request to</param>
+        /// <returns></returns>
+        public static Hashtable GenericXMLRPCRequest(Hashtable ReqParams, string method, string URL)
         {
             ArrayList SendParams = new ArrayList();
             SendParams.Add(ReqParams);
@@ -316,7 +349,7 @@ namespace Aurora.Framework
             try
             {
                 XmlRpcRequest Req = new XmlRpcRequest(method, SendParams);
-                Resp = Req.Send(IPpoint, 30000);
+                Resp = Req.Send(URL, 30000);
             }
             catch (WebException)
             {
@@ -355,18 +388,34 @@ namespace Aurora.Framework
                 return RespData;
             }
         }
-        public static Hashtable GenericXMLRPCRequestEncrypted(Hashtable ReqParams, string method, string IPpoint)
+        
+        /// <summary>
+        /// Send a generic XMLRPC request but with encryption on the values
+        /// </summary>
+        /// <param name="ReqParams">Params to send</param>
+        /// <param name="method"></param>
+        /// <param name="URL">URL to post to</param>
+        /// <param name="passPhrase">pass to remove the encryption</param>
+        /// <param name="salt">Extra additional piece that is added to the password</param>
+        /// <returns></returns>
+        public static Hashtable GenericXMLRPCRequestEncrypted(Hashtable ReqParams, string method, string URL, string passPhrase, string salt)
         {
-            //Framework.Utils.Encrypt(
+            Hashtable reqP = new Hashtable();
+            //Encrypt the values
+            foreach(KeyValuePair<string, object> kvp in ReqParams)
+            {
+                reqP.Add(kvp.Key, Encrypt(kvp.Value.ToString(), passPhrase, salt));
+            }
+
             ArrayList SendParams = new ArrayList();
-            SendParams.Add(ReqParams);
+            SendParams.Add(reqP);
 
             // Send Request
             XmlRpcResponse Resp;
             try
             {
                 XmlRpcRequest Req = new XmlRpcRequest(method, SendParams);
-                Resp = Req.Send(IPpoint, 30000);
+                Resp = Req.Send(URL, 30000);
             }
             catch (WebException)
             {
@@ -404,6 +453,94 @@ namespace Aurora.Framework
                 RespData["success"] = "false";
                 return RespData;
             }
+        }
+
+        /// <summary>
+        /// Read a website into a string
+        /// </summary>
+        /// <param name="URL">URL to change into a string</param>
+        /// <returns></returns>
+        public static string ReadExternalWebsite(string URL)
+        {
+            String website = "";
+            UTF8Encoding utf8 = new UTF8Encoding();
+
+            WebClient webClient = new WebClient();
+            try
+            {
+                website = utf8.GetString(webClient.DownloadData(URL));
+            }
+            catch (Exception)
+            {
+            }
+            return website;
+        }
+
+        /// <summary>
+        /// Download the file from downloadLink and save it to Aurora + Version + 
+        /// </summary>
+        /// <param name="downloadLink">Link to the download</param>
+        /// <param name="filename">Name to put the download in</param>
+        public static void DownloadFile(string downloadLink, string filename)
+        {
+            WebClient webClient = new WebClient();
+            try
+            {
+                OpenSim.Framework.Console.MainConsole.Instance.Output("Downloading new file from " + downloadLink + " now into file " + filename + ".", "WARN");
+                webClient.DownloadFile(downloadLink, filename);
+            }
+            catch (Exception)
+            {
+            }
+        }
+
+        /// <summary>
+        /// Bring up a popup with a text box to ask the user for some input
+        /// </summary>
+        /// <param name="title"></param>
+        /// <param name="promptText"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static DialogResult InputBox(string title, string promptText, ref string value)
+        {
+            Form form = new Form();
+            Label label = new Label();
+            TextBox textBox = new TextBox();
+            Button buttonOk = new Button();
+            Button buttonCancel = new Button();
+
+            form.Text = title;
+            label.Text = promptText;
+            textBox.Text = value;
+
+            buttonOk.Text = "OK";
+            buttonCancel.Text = "Cancel";
+            buttonOk.DialogResult = DialogResult.OK;
+            buttonCancel.DialogResult = DialogResult.Cancel;
+
+            label.SetBounds(9, 20, 372, 13);
+            textBox.SetBounds(12, 36, 372, 20);
+            buttonOk.SetBounds(228, 72, 75, 23);
+            buttonCancel.SetBounds(309, 72, 75, 23);
+
+            label.AutoSize = true;
+            textBox.Anchor = textBox.Anchor | AnchorStyles.Right;
+            buttonOk.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            buttonCancel.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+
+            form.ClientSize = new Size(396, 107);
+            form.Controls.AddRange(new Control[] { label, textBox, buttonOk, buttonCancel });
+            form.ClientSize = new Size(Math.Max(300, label.Right + 10), form.ClientSize.Height);
+            form.FormBorderStyle = FormBorderStyle.FixedDialog;
+            form.StartPosition = FormStartPosition.CenterScreen;
+            form.MinimizeBox = false;
+            form.MaximizeBox = false;
+            form.AcceptButton = buttonOk;
+            form.CancelButton = buttonCancel;
+
+            DialogResult dialogResult = form.ShowDialog();
+            value = textBox.Text;
+            return dialogResult;
         }
     }
 }

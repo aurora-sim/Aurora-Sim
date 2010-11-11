@@ -8,7 +8,7 @@ using Nini.Config;
 
 namespace Aurora.Services.DataService
 {
-    public class LocalRegionConnector : IRegionConnector, IAuroraDataPlugin
+    public class LocalRegionConnector : IRegionConnector
     {
         private IGenericData GD = null;
 
@@ -136,7 +136,7 @@ namespace Aurora.Services.DataService
             if (telehubposition.Count != 11)
                 return null;
 
-            telehub.RegionID = regionID.ToString();
+            telehub.RegionID = regionID;
             telehub.RegionLocX = float.Parse(telehubposition[0]);
             telehub.RegionLocY = float.Parse(telehubposition[1]);
             telehub.TelehubLocX = float.Parse(telehubposition[2]);
@@ -146,7 +146,7 @@ namespace Aurora.Services.DataService
             telehub.TelehubRotY = float.Parse(telehubposition[6]);
             telehub.TelehubRotZ = float.Parse(telehubposition[7]);
             telehub.SpawnPos = telehub.BuildToList(telehubposition[8]);
-            telehub.ObjectUUID = telehubposition[9];
+            telehub.ObjectUUID = UUID.Parse(telehubposition[9]);
             telehub.Name = telehubposition[10];
 
             return telehub;
