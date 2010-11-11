@@ -152,6 +152,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         private Dictionary<string, long> NextEventDelay = new Dictionary<string, long>();
         public bool MovingInQueue = false;
 
+        public bool EventsProcDataLocked = false;
+        public bool InEventsProcData = false;
+        public ScriptEventsProcData EventsProcData = new ScriptEventsProcData();
+
         #endregion
 
         #region Close Script
@@ -284,7 +288,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //Release controls over people.
             ReleaseControls();
             //Remove other items from the queue.
-            m_ScriptEngine.MaintenanceThread.RemoveFromEventQueue(ItemID, VersionID);
+
+            m_ScriptEngine.MaintenanceThread.ResetEventSchQueue(this);
+//            m_ScriptEngine.MaintenanceThread.RemoveFromEventQueue(ItemID, VersionID);
+
             VersionID++;
             //Reset the state to default
             State = "default";

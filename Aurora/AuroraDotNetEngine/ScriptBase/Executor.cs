@@ -98,7 +98,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         private bool InTimeSlice = false;
         private DateTime TimeSliceEnd = new DateTime();
         private DateTime TimeSliceStart = new DateTime();
-        private TimeSpan TimeSliceTotal = new TimeSpan();
 
         private Double MaxTimeSlice = 25.0;    // script timeslice execution time in ms , hardwired for now
   
@@ -166,8 +165,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         {
             if (!InTimeSlice) //Make sure this hasn't already been called by another thread
                 return;
-
-            TimeSliceTotal += DateTime.Now - TimeSliceStart;
             InTimeSlice = false;
         }
 
@@ -235,13 +232,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
 
             try
             {
-                for(int i = 0; i < 5; i++) //We do 5 so that we do not kill the loops/queues above with many repeated event firings
+                // Ubit: we can't have this loop, it breaks llSleep for example
+                // queues should be protected else where, and possible they are now
+
+//                for(int i = 0; i < 5; i++) //We do 5 so that we do not kill the loops/queues above with many repeated event firings
                 {
                     if (Start != null) //Make sure we have some info, otherwise start a new thread
                     {
                         //Open the slice at the beginning of every iteration
                         OpenTimeSlice();
-                        InTimeSlice = true;
+                        
 
                         if (thread == null) //Only do this once
                         {
@@ -253,11 +253,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
                         if (thread != null) //Push the event forward
                             running = thread.MoveNext();
 
+/*
                         if (!running) //Break out of the loop as we are done
                             break;
 
                         //Close the time slice at the end of every enumeration
                         CloseTimeSlice();
+ */
                     }
                     else
                         thread = (IEnumerator)ev.Invoke(m_Script, args);
@@ -283,7 +285,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
                         m_enumerators.Remove(Start.Key);
                     }
                 }
-                InTimeSlice = false;
+                CloseTimeSlice();
                 return null;
             }
 
@@ -301,6 +303,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
 
                 if (thread.Current is DateTime)
                     Start.SleepTo = (DateTime)thread.Current;
+                CloseTimeSlice();
                 return Start;
             }
             else
