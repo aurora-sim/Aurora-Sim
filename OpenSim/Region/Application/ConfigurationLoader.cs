@@ -71,10 +71,10 @@ namespace OpenSim
                     startupConfig.GetBoolean("inidbg", false);
 
             string masterFileName =
-                    startupConfig.GetString("inimaster", String.Empty);
+                startupConfig.GetString("inimaster", "OpenSim.ini");
 
             string iniFileName =
-                    startupConfig.GetString("inifile", "OpenSim.ini");
+                startupConfig.GetString("inifile", "OpenSima.ini");
 
             //Be mindful of these when modifying...
             //1) When file A includes file B, if the same directive is found in both, that the value in file B wins.
@@ -157,7 +157,7 @@ namespace OpenSim
             {
                 if (ReadConfig(sources[i], i))
                     iniFileExists = true;
-                AddIncludes(sources);
+                AddIncludes(sources, ref i);
             }
 
             if (!iniFileExists)
@@ -177,8 +177,11 @@ namespace OpenSim
         /// Adds the included files as ini configuration files
         /// </summary>
         /// <param name="sources">List of URL strings or filename strings</param>
-        private void AddIncludes(List<string> sources)
+        /// <param name="cntr">Where should we start inserting sources into the list?</param>
+        private void AddIncludes(List<string> sources, ref int cntr)
         {
+            int cn = cntr;
+            //Where should we insert the sources into the list?
             //loop over config sources
             foreach (IConfig config in m_config.Configs)
             {
@@ -193,7 +196,10 @@ namespace OpenSim
                         if (IsUri(file))
                         {
                             if (!sources.Contains(file))
-                                sources.Add(file);
+                            {
+                                cn++;
+                                sources.Insert(cn, file);
+                            }
                         }
                         else
                         {
@@ -213,7 +219,10 @@ namespace OpenSim
                             foreach (string p in paths)
                             {
                                 if (!sources.Contains(p))
-                                    sources.Add(p);
+                                {
+                                    cn++;
+                                    sources.Insert(cn, p);
+                                }
                             }
                         }
                     }
