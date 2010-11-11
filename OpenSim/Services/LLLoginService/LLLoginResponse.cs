@@ -203,6 +203,7 @@ namespace OpenSim.Services.LLLoginService
         private string udpBlackList;
         private string CAPSServiceURL;
         private string CAPSServicePassword;
+        private bool m_allowExportPermission;
         private IConfigSource m_source;
 
         private BuddyList m_buddyList = null;
@@ -246,7 +247,7 @@ namespace OpenSim.Services.LLLoginService
             GridRegion destination, List<InventoryFolderBase> invSkel, FriendInfo[] friendsList, ILibraryService libService,
             string where, string startlocation, Vector3 position, Vector3 lookAt, List<InventoryItemBase> gestures, string message,
             GridRegion home, IPEndPoint clientIP, string AdultMax, string AdultRating, string mapTileURL, string searchURL, string AllowFL, string TutorialURL,
-            ArrayList eventValues, ArrayList classifiedValues, string CAPSURL, string CAPSPass, IConfigSource source)
+            ArrayList eventValues, ArrayList classifiedValues, string CAPSURL, string CAPSPass, bool allowExportPermission, IConfigSource source)
             : this()
         {
             m_source = source;
@@ -270,6 +271,7 @@ namespace OpenSim.Services.LLLoginService
             AgentAccess = AdultRating;
 			MapTileURL = mapTileURL;
             allowFirstLife = AllowFL;
+            m_allowExportPermission = allowExportPermission;
             tutorialURL = TutorialURL;
             eventCategories = eventValues;
             classifiedCategories = classifiedValues;
@@ -551,6 +553,7 @@ namespace OpenSim.Services.LLLoginService
                 responseData["event_notifications"] = new ArrayList(); // TODO: What is this?
                 responseData["classified_categories"] = classifiedCategories;
                 responseData["ui-config"] = uiConfig;
+                responseData["export"] = m_allowExportPermission ? "flag" : "";
 
                 if (agentInventory != null)
                 {

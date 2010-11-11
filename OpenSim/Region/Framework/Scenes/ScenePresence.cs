@@ -820,7 +820,6 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="client"></param>
         public void HandleRetrieveInstantMessages(IClientAPI client)
         {
-            /*
             //This attempts to fixes t-pose on login by sending an animation for the avatar so it has something to display.
             //  -- Revolution
             if (ClientIsStarting)
@@ -840,7 +839,6 @@ namespace OpenSim.Region.Framework.Scenes
             }
             SendWearables();
             SendAppearanceToAllOtherAgents();
-            */
         }
 
         private void SetDirectionVectors()

@@ -102,6 +102,7 @@ namespace OpenSim.Services.LLLoginService
         string CAPSServicePassword = "";
         GridAvatarArchiver archiver;
         List<ILoginModule> LoginModules = new List<ILoginModule>();
+        bool allowExportPermission = true;
 
         public LLLoginService(IConfigSource config, ISimulationService simService, ILibraryService libraryService)
         {
@@ -121,7 +122,9 @@ namespace OpenSim.Services.LLLoginService
                 ReadClassifiedValues(m_AuroraLoginConfig);
                 CAPSServerURL = m_AuroraLoginConfig.GetString("CAPSServiceURL", "");
                 CAPSServicePassword = m_AuroraLoginConfig.GetString("CAPSServicePassword", "");
+                allowExportPermission = m_AuroraLoginConfig.GetBoolean("AllowUseageOfExportPermissions", true);
             }
+
             m_LoginServerConfig = config.Configs["LoginService"];
             if (m_LoginServerConfig == null)
                 throw new Exception(String.Format("No section LoginService in config file"));
@@ -596,7 +599,7 @@ namespace OpenSim.Services.LLLoginService
 
                 LLLoginResponse response = new LLLoginResponse(account, aCircuit, guinfo, destination, inventorySkel, friendsList, m_LibraryService,
                     where, startLocation, position, lookAt, gestures, m_WelcomeMessage, home, clientIP, MaxMaturity, MaturityRating, m_MapTileURL, m_SearchURL,
-                    m_AllowFirstLife ? "Y" : "N", m_TutorialURL, eventCategories, classifiedCategories, CAPSServerURL, CAPSServicePassword, m_config);
+                    m_AllowFirstLife ? "Y" : "N", m_TutorialURL, eventCategories, classifiedCategories, CAPSServerURL, CAPSServicePassword, allowExportPermission, m_config);
 
                 m_log.DebugFormat("[LLOGIN SERVICE]: All clear. Sending login response to client to login to region " + destination.RegionName + ", tried to login to " + startLocation + " at " + position.ToString() + ".");
                 return response;

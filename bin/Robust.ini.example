@@ -221,6 +221,10 @@ ServiceConnectors = "8003/OpenSim.Server.Handlers.dll:AssetServiceConnector,8003
 	;; This is a website that appears in the client telling the user how to move, fly, etc.
     ;; NOTE: the URL you provide will NOT be the URL the client goes to! The client automatically appends it's language specification to the end of this URL. Ex. http://localhost/tutorial/ becomes http://localhost/tutorial/en for english language.
     TutorialURL = ""
+	;; Allow the 'export' permission in the Imprudence viewer.
+	;; This allows people to set whether they would like to allow others to export objects that are theirs.
+	AllowUseageOfExportPermissions = true
+	
     
 	;; For more info, see AuroraDocs/CAPSService.txt
     CAPSServiceURL = http://127.0.0.1:8007

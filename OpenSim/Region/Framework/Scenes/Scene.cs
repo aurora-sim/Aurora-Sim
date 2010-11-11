@@ -621,6 +621,7 @@ namespace OpenSim.Region.Framework.Scenes
                 IConfig aurorastartupConfig = m_config.Configs["AuroraStartup"];
                 if (aurorastartupConfig != null)
                 {
+                    UseTracker = aurorastartupConfig.GetBoolean("RunWithMultipleHeartbeats", true);
                     RunScriptsInAttachments = aurorastartupConfig.GetBoolean("AllowRunningOfScriptsInAttachments", false);
                     m_UseSelectionParticles = aurorastartupConfig.GetBoolean("UseSelectionParticles", true);
                     EnableFakeRaycasting = aurorastartupConfig.GetBoolean("EnableFakeRaycasting", false);

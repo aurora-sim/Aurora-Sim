@@ -5072,6 +5072,14 @@ namespace OpenSim.Region.Framework.Scenes
             // Are we the owner?
             if (m_parentGroup.Scene.Permissions.CanEditObject(this.UUID, AgentID))
             {
+                uint exportPermission = (1 << 30);
+                if ((mask & exportPermission) == exportPermission)
+                {
+                    //Only the creator can set export permissions
+                    if (CreatorID != AgentID)
+                        mask &= exportPermission;
+                }
+
                 switch (field)
                 {
                     case 1:
