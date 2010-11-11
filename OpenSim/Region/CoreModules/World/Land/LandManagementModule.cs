@@ -203,7 +203,14 @@ namespace OpenSim.Region.CoreModules.World.Land
                 //{
                 foreach (LandData parcel in m_TaintedLandData)
                 {
-                    DSC.AddLandObject(parcel);
+                    LandData p = parcel.Copy();
+                    Vector3 OldUserLocation = p.UserLocation;
+                    if (p.UserLocation == Vector3.Zero)
+                    {
+                        //Set it to a position inside the parcel at the ground if it doesn't have one
+                        p.UserLocation = landChannel.GetParcelCenterAtGround(landChannel.GetLandObject(p.LocalID));
+                    }
+                    DSC.AddLandObject(p);
                 }
                 //}
             }
@@ -214,6 +221,12 @@ namespace OpenSim.Region.CoreModules.World.Land
             IDirectoryServiceConnector DSC = Aurora.DataManager.DataManager.RequestPlugin<IDirectoryServiceConnector>();
             if (DSC != null)
             {
+                Vector3 OldUserLocation = parcel.UserLocation;
+                if (parcel.UserLocation == Vector3.Zero)
+                {
+                    //Set it to a position inside the parcel at the ground if it doesn't have one
+                    parcel.UserLocation = landChannel.GetParcelCenterAtGround(landChannel.GetLandObject(parcel.LocalID));
+                }
                 if (m_UpdateDirectoryOnUpdate)
                     //Update search database
                     DSC.AddLandObject(parcel);
@@ -226,6 +239,8 @@ namespace OpenSim.Region.CoreModules.World.Land
                             m_TaintedLandData.Add(parcel);
                     //}
                 }
+                //Reset the position 
+                parcel.UserLocation = OldUserLocation;
             }
         }
 
@@ -1559,40 +1574,47 @@ namespace OpenSim.Region.CoreModules.World.Land
             m_log.DebugFormat("[LAND] got parcelinfo request for regionHandle {0}, x/y {1}/{2}",
                                                                             extLandData.RegionHandle, extLandData.X, extLandData.Y);
             IDirectoryServiceConnector DSC = Aurora.DataManager.DataManager.RequestPlugin<IDirectoryServiceConnector>();
-            LandData data = DSC.GetParcelInfo(parcelID);
-            if (data == null)
+            if (DSC != null)
             {
-                ILandObject land = m_scene.LandChannel.GetLandObject(extLandData.X, extLandData.Y);
-                data = DSC.GetParcelInfo(land.LandData.InfoUUID);
-            }
-            extLandData.LandData = data;
-
-            if (extLandData != null)  // if we found some data, send it
-            {
-                GridRegion info;
-                if (extLandData.RegionHandle == m_scene.RegionInfo.RegionHandle)
+                LandData data = DSC.GetParcelInfo(parcelID);
+                if (data == null)
                 {
-                    info = new GridRegion(m_scene.RegionInfo);
+                    ILandObject land = m_scene.LandChannel.GetLandObject(extLandData.X, extLandData.Y);
+                    data = DSC.GetParcelInfo(land.LandData.InfoUUID);
+                }
+                extLandData.LandData = data;
+
+                if (extLandData != null)  // if we found some data, send it
+                {
+                    GridRegion info;
+                    if (extLandData.RegionHandle == m_scene.RegionInfo.RegionHandle)
+                    {
+                        info = new GridRegion(m_scene.RegionInfo);
+                    }
+                    else
+                    {
+                        // most likely still cached from building the extLandData entry
+                        uint x = 0, y = 0;
+                        OpenMetaverse.Utils.LongToUInts(extLandData.RegionHandle, out x, out y);
+                        info = m_scene.GridService.GetRegionByPosition(UUID.Zero, (int)x, (int)y);
+                    }
+                    if (extLandData.LandData == null)
+                    {
+                        m_log.WarnFormat("[LAND]: Failed to find parcel {0}", parcelID);
+                        return;
+                    }
+                    // we need to transfer the fake parcelID, not the one in landData, so the viewer can match it to the landmark.
+                    m_log.DebugFormat("[LAND] got parcelinfo for parcel {0} in region {1}; sending...",
+                                      extLandData.LandData.Name, extLandData.RegionHandle);
+                    remoteClient.SendParcelInfo(extLandData.LandData, parcelID, (uint)(info.RegionLocX + extLandData.LandData.UserLocation.X), (uint)(info.RegionLocY + extLandData.LandData.UserLocation.Y), info.RegionName);
                 }
                 else
-                {
-                    // most likely still cached from building the extLandData entry
-                    uint x = 0, y = 0;
-                    OpenMetaverse.Utils.LongToUInts(extLandData.RegionHandle, out x, out y);
-                    info = m_scene.GridService.GetRegionByPosition(UUID.Zero, (int)x, (int)y);
-                }
-                if (extLandData.LandData == null)
-                {
-                    m_log.WarnFormat("[LAND]: Failed to find parcel {0}", parcelID); 
-                    return;
-                }
-                // we need to transfer the fake parcelID, not the one in landData, so the viewer can match it to the landmark.
-                m_log.DebugFormat("[LAND] got parcelinfo for parcel {0} in region {1}; sending...",
-                                  extLandData.LandData.Name, extLandData.RegionHandle);
-                remoteClient.SendParcelInfo(extLandData.LandData, parcelID, (uint)(info.RegionLocX * Constants.RegionSize + extLandData.X), (uint)(info.RegionLocY * Constants.RegionSize + extLandData.Y), info.RegionName);
+                    m_log.Debug("[LAND] got no parcelinfo; not sending");
             }
             else
-                m_log.Debug("[LAND] got no parcelinfo; not sending");
+            {
+                m_log.Debug("[LAND] got no directory service; not sending");
+            }
         }
 
         public void setParcelOtherCleanTime(IClientAPI remoteClient, int localID, int otherCleanTime)

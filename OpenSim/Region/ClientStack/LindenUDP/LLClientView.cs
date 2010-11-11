@@ -2821,10 +2821,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         public void SendParcelInfo(LandData land, UUID parcelID, uint x, uint y, string SimName)
         {
-            float dwell = 0.0f;
-            IDwellModule dwellModule = m_scene.RequestModuleInterface<IDwellModule>();
-            if (dwellModule != null)
-                dwell = dwellModule.GetDwell(land.GlobalID);
             ParcelInfoReplyPacket reply = (ParcelInfoReplyPacket)PacketPool.Instance.GetPacket(PacketType.ParcelInfoReply);
             reply.AgentData.AgentID = m_agentId;
             reply.Data.ParcelID = parcelID;
@@ -2844,12 +2840,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             {
                 pos = (land.AABBMax + land.AABBMin) * 0.5f;
             }
-            reply.Data.GlobalX = ((Scene)this.Scene).RegionInfo.RegionLocX + x;
-            reply.Data.GlobalY = ((Scene)this.Scene).RegionInfo.RegionLocY + y;
+            reply.Data.GlobalX = x;
+            reply.Data.GlobalY = y;
             reply.Data.GlobalZ = pos.Z;
             reply.Data.SimName = Utils.StringToBytes(SimName);
             reply.Data.SnapshotID = land.SnapshotID;
-            reply.Data.Dwell = dwell;
+            reply.Data.Dwell = land.Dwell;
             reply.Data.SalePrice = land.SalePrice;
             reply.Data.AuctionID = (int)land.AuctionID;
 
