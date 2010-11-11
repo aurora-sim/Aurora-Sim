@@ -71,10 +71,10 @@ namespace OpenSim
                     startupConfig.GetBoolean("inidbg", false);
 
             string masterFileName =
-                startupConfig.GetString("inimaster", "OpenSim.ini");
+                startupConfig.GetString("inimaster", String.Empty);
 
             string iniFileName =
-                startupConfig.GetString("inifile", "OpenSima.ini");
+                startupConfig.GetString("inifile", "OpenSim.ini");
 
             //Be mindful of these when modifying...
             //1) When file A includes file B, if the same directive is found in both, that the value in file B wins.
