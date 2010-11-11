@@ -68,7 +68,7 @@ namespace OpenSim
             List<string> sources = new List<string>();
 
             inidbg =
-                    startupConfig.GetBoolean("inidbg", false);
+                startupConfig.GetBoolean("inidbg", false);
 
             string masterFileName =
                 startupConfig.GetString("inimaster", String.Empty);

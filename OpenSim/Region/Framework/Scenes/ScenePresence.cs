@@ -837,8 +837,9 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 ClientIsStarting = false;
             }
-            SendWearables();
-            SendAppearanceToAllOtherAgents();
+            //Don't do this until it has been tested
+            /*SendWearables();
+            SendAppearanceToAllOtherAgents();*/
         }
 
         private void SetDirectionVectors()

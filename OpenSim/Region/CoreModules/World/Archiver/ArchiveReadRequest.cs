@@ -149,6 +149,13 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                 m_log.Info("[ARCHIVER]: Cleared all existing scene objects in " + (DateTime.Now - before).Minutes + ":" + (DateTime.Now - before).Seconds);
             }
 
+            IScriptModule[] modules = m_scene.RequestModuleInterfaces<IScriptModule>();
+            //Disable the script engine so that it doesn't load in the background and kill OAR loading
+            foreach (IScriptModule module in modules)
+            {
+                module.Disabled = true;
+            }
+
             IRegionSerialiserModule serialiser = m_scene.RequestModuleInterface<IRegionSerialiserModule>();
             int sceneObjectsLoadedCount = 0;
 
@@ -289,6 +296,11 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                 archive.Close();
                 m_loadStream.Close();
                 m_loadStream.Dispose();
+            }
+            //Reeanble now that we are done
+            foreach (IScriptModule module in modules)
+            {
+                module.Disabled = false;
             }
 
             if (!m_skipAssets)

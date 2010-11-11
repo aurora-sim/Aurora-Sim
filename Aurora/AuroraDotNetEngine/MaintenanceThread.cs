@@ -129,6 +129,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (!Started) //Break early
                 return true;
 
+            if (m_ScriptEngine.ConsoleDisabled || m_ScriptEngine.Disabled)
+                return true;
+
             StateSaveIsRunning = true;
             StateQueueItem item;
             lock (StateQueue)
@@ -159,6 +162,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public bool ScriptChangeQueue()
         {
             if (!Started) //Break early
+                return true;
+
+            if (m_ScriptEngine.ConsoleDisabled || m_ScriptEngine.Disabled)
                 return true;
 
             ScriptChangeIsRunning = true;
@@ -230,6 +236,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (!Started) //Break early
                 return true;
 
+            if (m_ScriptEngine.ConsoleDisabled || m_ScriptEngine.Disabled)
+                return true;
+
             bool SendUpSleepRequest = false;
             try
             {
@@ -259,6 +268,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public bool CmdHandlerQueue()
         {
             if (!Started) //Break early
+                return true;
+
+            if (m_ScriptEngine.ConsoleDisabled || m_ScriptEngine.Disabled)
                 return true;
 
             //Check timers, etc
@@ -496,5 +508,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         }
 
         #endregion
+
+        /// <summary>
+        /// Makes sure that all the threads that need to be running are running and starts them if they need to be running
+        /// </summary>
+        public void PokeThreads()
+        {
+            if (StateQueue.Count != 0 && !StateSaveIsRunning)
+                StartThread("State");
+            if (LUQueue.Count() != 0 && !ScriptChangeIsRunning)
+                StartThread("Change");
+            if (!EventProcessorIsRunning) //Can't check the count on this one, so poke it anyway
+                StartThread("Event");
+        }
     }
 }

@@ -50,11 +50,12 @@ using Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools;
 using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
 using Aurora.ScriptEngine.AuroraDotNetEngine.APIs;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
+using OpenSim.Region.CoreModules.Framework.InterfaceCommander;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
     [Serializable]
-    public class ScriptEngine : ISharedRegionModule, IScriptModule
+    public class ScriptEngine : ISharedRegionModule, IScriptModule, ICommandableModule
     {
         #region Declares
 
@@ -64,6 +65,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             get { return m_Scenes; }
         }
+
+        private readonly Commander m_commander = new Commander("ADNE");
 
         private List<Scene> m_Scenes = new List<Scene>();
 
@@ -96,6 +99,42 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public bool DisplayErrorsOnConsole = false;
 
         public bool ShowWarnings = false;
+
+        private bool m_consoleDisabled = false;
+        private bool m_disabled = false;
+
+        /// <summary>
+        /// Disabled from the command line, takes presidence over normal Disabled
+        /// </summary>
+        public bool ConsoleDisabled
+        {
+            get { return m_consoleDisabled; }
+            set 
+            { 
+                m_consoleDisabled = value; 
+                //Poke the threads to make sure they run
+                MaintenanceThread.PokeThreads();
+            }
+        }
+
+        /// <summary>
+        /// Temperary disable by things like OAR loading so that we don't kill loading
+        /// </summary>
+        public bool Disabled
+        {
+            get { return m_disabled; }
+            set
+            {
+                m_disabled = value;
+                //Poke the threads to make sure they run
+                MaintenanceThread.PokeThreads();
+            }
+        }
+
+        public ICommander CommandInterface
+        {
+            get { return m_commander; }
+        }
 
         private IXmlRpcRouter m_XmlRpcRouter;
 
@@ -190,6 +229,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (FirstStartup)
             {
                 scene.AddCommand(this, "ADNE", "ADNE", "Subcommands for Aurora DotNet Engine", AuroraDotNetConsoleCommands);
+                scene.AddCommand(this, "help ADNE", "help ADNE", "Brings up the help for ADNE", AuroraDotNetConsoleHelp);
 
                 //Fire this once to make sure that the APIs are found later...
                 GetAPIs();
@@ -328,6 +368,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
         }
 
+        protected void AuroraDotNetConsoleHelp(string module, string[] cmdparams)
+        {
+            m_log.Info("Aurora DotNet Commands : \n" +
+                " ADNE restart - Restarts all scripts \n" +
+                " ADNE stop - Stops all scripts \n" +
+                " ADNE stats - Tells stats about the script engine \n" +
+                " ADNE disable - Disables the script engine temperarily \n" +
+                " ADNE enable - Reenables the script engine");
+        }
+
         protected void AuroraDotNetConsoleCommands(string module, string[] cmdparams)
         {
             if (cmdparams[1] == "restart")
@@ -375,12 +425,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     + "\nNumber of app domains: " + AppDomainManager.NumberOfAppDomains
                     + "\nPermission level of app domains: " + AppDomainManager.PermissionLevel);
             }
+            if (cmdparams[1] == "disable")
+            {
+                ConsoleDisabled = true;
+            }
+            if (cmdparams[1] == "enable")
+            {
+                ConsoleDisabled = false;
+            }
             if (cmdparams[1] == "help")
             {
-                m_log.Info("Aurora DotNet Commands : \n" +
-                    " ADNE restart - Restarts all scripts \n" +
-                    " ADNE stop - Stops all scripts \n" +
-                    " ADNE stats - Tells stats about the script engine");
+                AuroraDotNetConsoleHelp(module, cmdparams);
             }
         }
 
