@@ -641,6 +641,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     ID.EventsProcData.thread = null;
                     ID.InEventsProcData = true;
                     }
+
+                if (ID.EventsProcData.EventsQueue.Count > 100)
+                    {
+                    ID.EventsProcDataLocked = false;
+                    return;
+                    }
+
                 ID.EventsProcData.EventsQueue.Enqueue(QIS);
                 lock (ScriptIDs)
                     {
@@ -677,6 +684,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     ID.EventsProcData.thread = null;
                     ID.InEventsProcData = true;
                     }
+
+                if (ID.EventsProcData.EventsQueue.Count > 100)
+                    {
+                    ID.EventsProcDataLocked = false;
+                    return;
+                    }
+
                 ID.EventsProcData.EventsQueue.Enqueue(QIS);
                 lock (ScriptIDs)
                     {
