@@ -268,7 +268,9 @@ namespace OpenSim.Region.Framework.Scenes.Components
             foreach (IComponent component in m_components.Values)
             {
                 //Add the componet to the map by its name
-                ComponentsBody.Add(component.Name, component.GetState(obj.UUID));
+                OSD o = component.GetState(obj.UUID);
+                if(o != null)
+                    ComponentsBody.Add(component.Name, o);
             }
             return OSDParser.SerializeJsonString(ComponentsBody);
         }
