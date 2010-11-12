@@ -183,7 +183,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         private Quaternion m_bodyRotPrevious = Quaternion.Identity;
 
-        private const int LAND_VELOCITYMAG_MAX = 12;
+        private const int LAND_VELOCITYMAG_MAX = 20;
 
         public bool IsRestrictedToRegion;
 
@@ -2778,31 +2778,12 @@ namespace OpenSim.Region.Framework.Scenes
                 return;
 
             bool flyingTemp = false;
-            //bool avWasNull = true;
             Vector3 pos = m_pos;
             pos.Z -= m_appearance.HipOffset;
-            /*lock (m_appearanceLock)
-            {
-                if (m_physicsActor != null)
-                {
-                    avWasNull = false;
-                    if (!IsChildAgent)
-                    {
-                        m_physicsActor.Velocity = Vector3.Zero;
-                        // This may seem like it's redundant, remove the avatar from the physics scene
-                        // just to add it back again, but it saves us from having to update
-                        // 3 variables 10 times a second.
-
-                        flyingTemp = m_physicsActor.Flying;
-                        RemoveFromPhysicalScene();
-
-                        PhysicsActor = null;
-                    }
-                }
-            }*/
 
             #region Bake Cache Check
 
+            //Check to make sure that we have all the baked textures we need and if not, request them from the client
             if (textureEntry != null)
             {
                 for (int i = 0; i < BAKE_INDICES.Length; i++)
@@ -2851,6 +2832,7 @@ namespace OpenSim.Region.Framework.Scenes
             //AvatarData adata = new AvatarData(m_appearance);
             //m_scene.AvatarService.SetAvatar(m_controllingClient.AgentId, adata);
 
+            //This is sent as the last update, and signals that the agent is done updating their appearance, now we send the updates
             if (textureEntry != null)
             {
                 m_controllingClient.SendAvatarDataImmediate(this);
@@ -2864,13 +2846,6 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             pos.Z += m_appearance.HipOffset;
-            //lock (m_appearanceLock)
-            //{
-            //    if (!avWasNull)
-            //    {
-            //        AddToPhysicalScene(flyingTemp, false);
-            //    }
-            //}
         }
 
         public void SetWearable(int wearableId, AvatarWearable wearable)
