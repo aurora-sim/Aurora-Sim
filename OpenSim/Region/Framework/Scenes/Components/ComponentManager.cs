@@ -25,6 +25,7 @@ namespace OpenSim.Region.Framework.Scenes.Components
         /// </summary>
         private Dictionary<string, IComponent> m_components = new Dictionary<string, IComponent>();
         private Dictionary<Type, string> m_componentsBaseType = new Dictionary<Type, string>();
+        private bool m_hasStarted = false;
 
         #endregion
 
@@ -44,9 +45,13 @@ namespace OpenSim.Region.Framework.Scenes.Components
 
         public void AddRegion(Scene scene)
         {
-            RegisterDefaultComponents();
+            if (!m_hasStarted)
+            {
+                RegisterDefaultComponents();
+                SceneObjectSerializer.AddSerializer("Components", this);
+                m_hasStarted = false;
+            }
             scene.RegisterModuleInterface<IComponentManager>(this);
-            SceneObjectSerializer.AddSerializer("Components", this);
         }
 
         /// <summary>
@@ -162,7 +167,7 @@ namespace OpenSim.Region.Framework.Scenes.Components
             //Now check for name duplication
             if (m_components.ContainsKey(component.Name))
             {
-                m_log.Warn("[COMPONENTMANAGER]: Tried registering a component while another module already has used this name!");
+                m_log.Warn("[COMPONENTMANAGER]: Tried registering a component while another module already has used this name '" + component.Name + "'!");
                 return;
             }
             //Only add if it is not null
