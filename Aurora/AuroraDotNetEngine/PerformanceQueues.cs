@@ -106,17 +106,21 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public bool GetNext(out object Item)
         {
             Item = null;
-            if (FirstStartQueue.Count != 0)
+            lock (FirstStartQueue)
             {
-                lock (FirstStartQueue)
+                if (FirstStartQueue.Count != 0)
+                {
                     Item = FirstStartQueue.Dequeue();
-                return true;
+                    return true;
+                }
             }
-            if (ContinuedQueue.Count != 0)
+            lock (ContinuedQueue)
             {
-                lock (ContinuedQueue)
+                if (ContinuedQueue.Count != 0)
+                {
                     Item = ContinuedQueue.Dequeue();
-                return true;
+                    return true;
+                }
             }
             return false;
         }

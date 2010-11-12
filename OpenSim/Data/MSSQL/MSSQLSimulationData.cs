@@ -115,7 +115,7 @@ namespace OpenSim.Data.MSSQL
                 {
                     while (reader.Read())
                     {
-                        SceneObjectPart sceneObjectPart = BuildPrim(reader);
+                        SceneObjectPart sceneObjectPart = BuildPrim(reader, scene);
                         if (reader["Shape"] is DBNull)
                             sceneObjectPart.Shape = PrimitiveBaseShape.Default;
                         else
@@ -1062,9 +1062,9 @@ VALUES
         /// </summary>
         /// <param name="primRow">datarecord</param>
         /// <returns></returns>
-        private static SceneObjectPart BuildPrim(IDataRecord primRow)
+        private static SceneObjectPart BuildPrim(IDataRecord primRow, Scene scene)
         {
-            SceneObjectPart prim = new SceneObjectPart();
+            SceneObjectPart prim = new SceneObjectPart(scene);
 
             prim.UUID = new UUID((Guid)primRow["UUID"]);
             // explicit conversion of integers is required, which sort

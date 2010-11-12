@@ -518,7 +518,7 @@ namespace OpenSim.Data.MySQL
                         {
                             while (reader.Read())
                             {
-                                SceneObjectPart prim = BuildPrim(reader);
+                                SceneObjectPart prim = BuildPrim(reader, scene);
                                 if (reader["Shape"] is DBNull)
                                     prim.Shape = PrimitiveBaseShape.Default;
                                 else
@@ -959,9 +959,9 @@ namespace OpenSim.Data.MySQL
         {
         }
 
-        private SceneObjectPart BuildPrim(IDataReader row)
+        private SceneObjectPart BuildPrim(IDataReader row, Scene scene)
         {
-            SceneObjectPart prim = new SceneObjectPart();
+            SceneObjectPart prim = new SceneObjectPart(scene);
 
             // depending on the MySQL connector version, CHAR(36) may be already converted to Guid! 
             prim.UUID = DBGuid.FromDB(row["UUID"]);

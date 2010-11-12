@@ -550,7 +550,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public SceneObjectGroup(UUID ownerID, Vector3 pos, Quaternion rot, PrimitiveBaseShape shape, Scene scene) : this(scene)
         {
-            SetRootPart(new SceneObjectPart(ownerID, shape, pos, rot, Vector3.Zero, scene.DefaultObjectName), true);
+            SetRootPart(new SceneObjectPart(ownerID, shape, pos, rot, Vector3.Zero, scene.DefaultObjectName, scene), true);
         }
 
         /// <summary>
