@@ -57,6 +57,8 @@ namespace OpenSim.Region.Framework.Scenes
         public void CreateScriptInstances()
         {
             m_log.Info("[PRIM INVENTORY]: Starting scripts in scene");
+            //Set loading prims here to block backup
+            LoadingPrims = true;
             EntityBase[] entities = Entities.GetEntities();
             foreach (EntityBase group in entities)
             {
@@ -66,6 +68,8 @@ namespace OpenSim.Region.Framework.Scenes
                     ((SceneObjectGroup)group).ResumeScripts();
                 }
             }
+            //Now reset it
+            LoadingPrims = false;
         }
 
         public void AddUploadedInventoryItem(UUID agentID, InventoryItemBase item)

@@ -702,8 +702,19 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="State"></param>
         public void SetComponentState(string Name, object State)
         {
+            SetComponentState(Name, State, true);
+        }
+
+        /// <summary>
+        /// Set a Component with the given name's State
+        /// </summary>
+        /// <param name="Name"></param>
+        /// <param name="State"></param>
+        /// <param name="shouldBackup">Should this be backed up now</param>
+        public void SetComponentState(string Name, object State, bool shouldBackup)
+        {
             //Back up the object later
-            if(ParentGroup != null)
+            if (ParentGroup != null && shouldBackup)
                 ParentGroup.HasGroupChanged = true;
 
             //Tell the ComponentManager about it
@@ -905,7 +916,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             set
             {
-                SetComponentState("CRC", value);
+                SetComponentState("CRC", value, false);
                 m_CRC = value;
             }
         }
