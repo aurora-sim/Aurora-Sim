@@ -49,7 +49,7 @@ namespace OpenSim.Region.Framework.Scenes.Components
             {
                 RegisterDefaultComponents();
                 SceneObjectSerializer.AddSerializer("Components", this);
-                m_hasStarted = false;
+                m_hasStarted = true;
             }
             scene.RegisterModuleInterface<IComponentManager>(this);
         }

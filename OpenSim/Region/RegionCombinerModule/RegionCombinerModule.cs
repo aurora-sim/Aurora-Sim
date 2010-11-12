@@ -656,6 +656,8 @@ namespace OpenSim.Region.RegionCombinerModule
             if (conn.ClientEventForwarder != null)
                 conn.ClientEventForwarder.AddSceneToEventForwarding(scene);
 
+            landTerrainChannel.AddRegion(ConnectedRegion, scene.Heightmap);
+
             return true;
 
             //scene.PhysicsScene.Combine(conn.RegionScene.PhysicsScene, offset,extents);
