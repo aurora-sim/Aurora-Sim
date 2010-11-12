@@ -133,6 +133,9 @@ namespace OpenSim.Region.Framework.Scenes.Animation
         {
             //m_log.DebugFormat("Updating movement animation to {0}", anim);
 
+            if (!m_scenePresence.Scene.m_useSplatAnimation && anim == "STANDUP")
+                anim = "LAND";
+
             if (!m_scenePresence.IsChildAgent)
             {
                 if (m_animations.TrySetDefaultAnimation(
@@ -217,13 +220,15 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             #region Standup
 
             float standupElapsed = (float)(Environment.TickCount - m_animTickStandup) / 1000f;
-            if (standupElapsed < STANDUP_TIME)
+            if (standupElapsed < STANDUP_TIME &&
+                m_scenePresence.Scene.m_useSplatAnimation)
             {
                 // Falling long enough to trigger the animation
                 m_scenePresence.AllowMovement = false;
                 return "STANDUP";
             }
-            else if (standupElapsed < BRUSH_TIME)
+            else if (standupElapsed < BRUSH_TIME &&
+                m_scenePresence.Scene.m_useSplatAnimation)
             {
                 m_scenePresence.AllowMovement = false;
                 return "BRUSH";
