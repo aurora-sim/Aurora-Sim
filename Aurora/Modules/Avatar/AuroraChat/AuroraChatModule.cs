@@ -115,6 +115,7 @@ namespace Aurora.Modules
         #endregion
 
         #region ISharedRegionModule Members
+
         public virtual void Initialise(IConfigSource config)
         {
             m_config = config.Configs["AuroraChat"];
@@ -342,7 +343,10 @@ namespace Aurora.Modules
                 int distance = c.Type == ChatTypeEnum.Say ? m_saydistance :
                     (c.Type == ChatTypeEnum.Whisper) ? m_whisperdistance :
                     (c.Type == ChatTypeEnum.Custom) ? (int)c.Range : m_shoutdistance;
-                if (c.Position.X + distance > Constants.RegionSize)
+
+                if (((Scene)c.Scene).TestBorderCross(new Vector3(c.Position.X + distance,
+                    c.Position.Y,
+                    c.Position.Z), Cardinals.E))
                 {
                     Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX + 1, c.Scene.RegionInfo.RegionLocY);
                     if (scene != null)
@@ -356,7 +360,9 @@ namespace Aurora.Modules
                         Sent = true;
                     }
                 }
-                if (c.Position.Y + distance > Constants.RegionSize)
+                if (((Scene)c.Scene).TestBorderCross(new Vector3(c.Position.X,
+                    c.Position.Y + distance,
+                    c.Position.Z), Cardinals.N))
                 {
                     Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX, c.Scene.RegionInfo.RegionLocY + 1);
                     if (scene != null)
@@ -370,7 +376,12 @@ namespace Aurora.Modules
                         Sent = true;
                     }
                 }
-                if (c.Position.X + distance > Constants.RegionSize && c.Position.Y + distance > Constants.RegionSize)
+                if (((Scene)c.Scene).TestBorderCross(new Vector3(c.Position.X + distance,
+                    c.Position.Y + distance,
+                    c.Position.Z), Cardinals.E) &&
+                    ((Scene)c.Scene).TestBorderCross(new Vector3(c.Position.X + distance,
+                    c.Position.Y + distance,
+                    c.Position.Z), Cardinals.N))
                 {
                     Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX + 1, c.Scene.RegionInfo.RegionLocY + 1);
                     if (scene != null)
@@ -385,7 +396,9 @@ namespace Aurora.Modules
                         Sent = true;
                     }
                 }
-                if (c.Position.X + distance > Constants.RegionSize && c.Position.Y - distance < 0)
+                if (((Scene)c.Scene).TestBorderCross(new Vector3(c.Position.X + distance,
+                    c.Position.Y,
+                    c.Position.Z), Cardinals.E) && c.Position.Y - distance < 0)
                 {
                     Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX + 1, c.Scene.RegionInfo.RegionLocY - 1);
                     if (scene != null)
@@ -443,7 +456,9 @@ namespace Aurora.Modules
                         Sent = true;
                     }
                 }
-                if (c.Position.X - distance < 0 && c.Position.Y + distance > Constants.RegionSize)
+                if (c.Position.X - distance < 0 && ((Scene)c.Scene).TestBorderCross(new Vector3(c.Position.X,
+                    c.Position.Y + distance,
+                    c.Position.Z), Cardinals.N))
                 {
                     Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX - 1, c.Scene.RegionInfo.RegionLocY + 1);
                     if (scene != null)
