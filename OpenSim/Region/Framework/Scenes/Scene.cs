@@ -2550,7 +2550,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (group.IsAttachment || (group.RootPart.Shape.State != 0 &&
                     (group.RootPart.Shape.PCode == (byte)PCode.None ||
                     group.RootPart.Shape.PCode == (byte)PCode.Prim ||
-                    group.RootPart.Shape.PCode == (byte)PCode.Avatar))
+                    group.RootPart.Shape.PCode == (byte)PCode.Avatar)))
                 {
                     m_log.Warn("[SCENE]: Fixing State for object " + group.Name + " while loading objects.");
                     //WTF went wrong here?
