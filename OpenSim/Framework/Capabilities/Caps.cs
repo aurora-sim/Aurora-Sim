@@ -696,7 +696,7 @@ namespace OpenSim.Framework.Capabilities
 
         public void BakedTextureUploaded(UUID assetID, byte[] data)
         {
-            m_log.DebugFormat("[CAPS]: Received baked texture {0}", assetID.ToString());
+            m_log.InfoFormat("[CAPS]: Received baked texture {0}", assetID.ToString());
             IClientAPI client = GetClient(m_agentID);
             if (client != null && client.Scene != null)
             {

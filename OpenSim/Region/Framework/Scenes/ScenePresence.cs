@@ -1220,25 +1220,21 @@ namespace OpenSim.Region.Framework.Scenes
             m_isChildAgent = false;
             bool m_flying = ((m_AgentControlFlags & AgentManager.ControlFlags.AGENT_CONTROL_FLY) != 0);
             MakeRootAgent(AbsolutePosition, m_flying);
-            
+
             m_controllingClient.MoveAgentIntoRegion(m_regionInfo, AbsolutePosition, look);
-            
+
             // Create child agents in neighbouring regions
-            if (!m_isChildAgent)
-            {
-                //Experimentally moving this into root agents only.... since why do child agents need to send appearances?
-                SendInitialData();
+            SendInitialData();
 
-                IEntityTransferModule m_agentTransfer = m_scene.RequestModuleInterface<IEntityTransferModule>();
-                if (m_agentTransfer != null)
-                    m_agentTransfer.EnableChildAgents(this);
-                else
-                    m_log.DebugFormat("[SCENE PRESENCE]: Unable to create child agents in neighbours, because AgentTransferModule is not active");
+            IEntityTransferModule m_agentTransfer = m_scene.RequestModuleInterface<IEntityTransferModule>();
+            if (m_agentTransfer != null)
+                m_agentTransfer.EnableChildAgents(this);
+            else
+                m_log.DebugFormat("[SCENE PRESENCE]: Unable to create child agents in neighbours, because AgentTransferModule is not active");
 
-                IFriendsModule friendsModule = m_scene.RequestModuleInterface<IFriendsModule>();
-                if (friendsModule != null)
-                    friendsModule.SendFriendsOnlineIfNeeded(ControllingClient);
-            }
+            IFriendsModule friendsModule = m_scene.RequestModuleInterface<IFriendsModule>();
+            if (friendsModule != null)
+                friendsModule.SendFriendsOnlineIfNeeded(ControllingClient);
         }
 
         /// <summary>
