@@ -707,7 +707,8 @@ namespace OpenSim.Region.Framework.Scenes
                 ParentGroup.HasGroupChanged = true;
 
             //Tell the ComponentManager about it
-            IComponentManager manager = (ParentGroup == null ? m_initialScene : ParentGroup.Scene).RequestModuleInterface<IComponentManager>();
+            Scene scene = (ParentGroup == null ? m_initialScene : ParentGroup.Scene);
+            IComponentManager manager = scene == null ? null : scene.RequestModuleInterface<IComponentManager>();
             if (manager != null)
                 manager.SetComponentState(this, Name, OSD.FromObject(State));
         }
