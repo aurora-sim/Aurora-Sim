@@ -175,6 +175,7 @@ namespace OpenSim.Region.Framework.Scenes
         
         private bool m_forceFly;
         private bool m_flyDisabled;
+        private volatile bool m_creatingPhysicalRepresentation = false;
 
         private float m_speedModifier = 1.0f;
 
@@ -2838,9 +2839,11 @@ namespace OpenSim.Region.Framework.Scenes
                 m_avHeight = m_appearance.AvatarHeight;
 
             //If the av exists, set their new size, if not, add them to the region
-            if(m_physicsActor != null)
+            if (m_physicsActor != null)
+            {
                 if (height != m_avHeight)
                     m_physicsActor.Size = new Vector3(0.74f, 0.74f, m_avHeight);
+            }
             else
                 AddToPhysicalScene(flyingTemp, false);
 
@@ -3565,6 +3568,13 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void AddToPhysicalScene(bool isFlying, bool AddAvHeightToPosition)
         {
+            //Make sure we arn't already doing this
+            if (m_creatingPhysicalRepresentation)
+                return;
+
+            //Set this so we don't do it multiple times
+            m_creatingPhysicalRepresentation = true;
+
             PhysicsScene scene = m_scene.PhysicsScene;
 
             Vector3 pVec = AbsolutePosition;
@@ -3582,8 +3592,12 @@ namespace OpenSim.Region.Framework.Scenes
             m_physicsActor.SubscribeEvents(500);
             m_physicsActor.LocalID = LocalId;
 
+            //Tell any events about it
             if (OnAddPhysics != null)
                 OnAddPhysics();
+
+            //All done, reset this
+            m_creatingPhysicalRepresentation = false;
         }
 
         private void OutOfBoundsCall(Vector3 pos)

@@ -265,7 +265,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             // Used for Notices and Group Invites/Accept/Reject
             client.OnInstantMessage += OnInstantMessage;
 
-            ScenePresence SP = m_sceneList[0].GetScenePresence(client.AgentId);
+            ScenePresence SP = ((Scene)client.Scene).GetScenePresence(client.AgentId);
             // Send client thier groups information.
             if(SP != null && !SP.IsChildAgent)
                 SendAgentGroupDataUpdate(client, client.AgentId);
