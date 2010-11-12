@@ -2777,7 +2777,7 @@ namespace OpenSim.Region.Framework.Scenes
                 return;
 
             bool flyingTemp = false;
-            bool avWasNull = true;
+            //bool avWasNull = true;
             Vector3 pos = m_pos;
             pos.Z -= m_appearance.HipOffset;
             /*lock (m_appearanceLock)
@@ -2831,6 +2831,7 @@ namespace OpenSim.Region.Framework.Scenes
                     if (textureEntry != null)
                         module.CheckForBannedViewer(this.ControllingClient, textureEntry);
             }
+            float height = m_appearance.AvatarHeight;
 
             m_appearance.SetAppearance(textureEntry, visualParams);
             if (m_appearance.AvatarHeight > 0)
@@ -2838,7 +2839,8 @@ namespace OpenSim.Region.Framework.Scenes
 
             //If the av exists, set their new size, if not, add them to the region
             if(m_physicsActor != null)
-                m_physicsActor.Size = new Vector3(0, 0, m_avHeight);
+                if (height != m_avHeight)
+                    m_physicsActor.Size = new Vector3(0.74f, 0.74f, m_avHeight);
             else
                 AddToPhysicalScene(flyingTemp, false);
 
@@ -2846,7 +2848,12 @@ namespace OpenSim.Region.Framework.Scenes
             //AvatarData adata = new AvatarData(m_appearance);
             //m_scene.AvatarService.SetAvatar(m_controllingClient.AgentId, adata);
 
-            SendAppearanceToAllOtherAgents();
+            if (textureEntry != null)
+            {
+                m_controllingClient.SendAvatarDataImmediate(this);
+
+                SendAppearanceToAllOtherAgents();
+            }
             if (!m_startAnimationSet)
             {
                 Animator.UpdateMovementAnimations();
@@ -2861,7 +2868,6 @@ namespace OpenSim.Region.Framework.Scenes
             //        AddToPhysicalScene(flyingTemp, false);
             //    }
             //}
-            m_controllingClient.SendAvatarDataImmediate(this);
         }
 
         public void SetWearable(int wearableId, AvatarWearable wearable)

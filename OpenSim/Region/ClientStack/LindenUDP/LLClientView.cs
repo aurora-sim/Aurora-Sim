@@ -6203,7 +6203,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     Primitive.TextureEntry te = null;
                     if (appear.ObjectData.TextureEntry.Length > 1)
                         te = new Primitive.TextureEntry(appear.ObjectData.TextureEntry, 0, appear.ObjectData.TextureEntry.Length);
-
+                    
                     handlerSetAppearance(te, visualparams);
                 }
                 catch (Exception e)

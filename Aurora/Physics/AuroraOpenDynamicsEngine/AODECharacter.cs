@@ -442,7 +442,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                     Vector3 SetSize = value;
                     m_tainted_CAPSULE_LENGTH = (SetSize.Z*1.15f) - CAPSULE_RADIUS*2.0f;
-                    //m_log.Info("[SIZE]: " + CAPSULE_LENGTH.ToString());
+                    m_log.Info("[RESIZE]: " + m_tainted_CAPSULE_LENGTH.ToString());
 
                     Velocity = Vector3.Zero;
 
