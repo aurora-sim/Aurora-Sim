@@ -1745,7 +1745,7 @@ namespace OpenSim.Region.Framework.Scenes
                 deleteIDs.Add(localID);
                 deleteGroups.Add(grp);
 
-                ScenePresence SP = GetScenePresence(remoteClient.AgentId);
+                ScenePresence SP = remoteClient == null ? null : GetScenePresence(remoteClient.AgentId);
 
                 if (SP == null)
                 {
