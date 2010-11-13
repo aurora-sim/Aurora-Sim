@@ -65,7 +65,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
         public static SceneObjectGroup FromOriginalXmlFormat(UUID fromUserInventoryItemID, string xmlData, Scene scene)
         {
             //m_log.DebugFormat("[SOG]: Starting deserialization of SOG");
-            //int time = System.Environment.TickCount;
+            //int time = Util.EnvironmentTickCount();
 
             try
             {
@@ -145,7 +145,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
         public static void ToOriginalXmlFormat(SceneObjectGroup sceneObject, XmlTextWriter writer)
         {
             //m_log.DebugFormat("[SERIALIZER]: Starting serialization of {0}", Name);
-            //int time = System.Environment.TickCount;
+            //int time = Util.EnvironmentTickCount();
 
             writer.WriteStartElement(String.Empty, "SceneObjectGroup", String.Empty);
             writer.WriteStartElement(String.Empty, "RootPart", String.Empty);
@@ -169,7 +169,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             sceneObject.SaveScriptedState(writer);
             writer.WriteEndElement(); // SceneObjectGroup
 
-            //m_log.DebugFormat("[SERIALIZER]: Finished serialization of SOG {0}, {1}ms", Name, System.Environment.TickCount - time);
+            //m_log.DebugFormat("[SERIALIZER]: Finished serialization of SOG {0}, {1}ms", Name, Util.EnvironmentTickCount() - time);
         }
 
         protected static void ToXmlFormat(SceneObjectPart part, XmlTextWriter writer)
@@ -180,7 +180,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
         public static SceneObjectGroup FromXml2Format(string xmlData, Scene scene)
         {
             //m_log.DebugFormat("[SOG]: Starting deserialization of SOG");
-            //int time = System.Environment.TickCount;
+            //int time = Util.EnvironmentTickCount();
 
             try
             {
