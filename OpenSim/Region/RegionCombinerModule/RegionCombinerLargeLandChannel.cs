@@ -89,6 +89,18 @@ namespace OpenSim.Region.RegionCombinerModule
             }
         }
 
+        public IScene Scene
+        {
+            get
+            {
+                return RegionConnections[RegData].Scene;
+            }
+            set
+            {
+                RegionConnections[RegData].Scene = value;
+            }
+        }
+
         public int Height
         {
             get 

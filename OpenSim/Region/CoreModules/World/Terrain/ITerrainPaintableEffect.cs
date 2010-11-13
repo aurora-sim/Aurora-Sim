@@ -25,12 +25,14 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System.Collections.Generic;
 using OpenSim.Region.Framework.Interfaces;
+using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.CoreModules.World.Terrain
 {
     public interface ITerrainPaintableEffect
     {
-        void PaintEffect(ITerrainChannel map, bool[,] allowMask, double x, double y, double z, double strength, double duration, float BrushSize);
+        void PaintEffect(ITerrainChannel map, bool[,] allowMask, double x, double y, double z, double strength, double duration, float BrushSize, List<Scene> scene);
     }
 }

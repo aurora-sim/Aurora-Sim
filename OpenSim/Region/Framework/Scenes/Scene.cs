@@ -2427,11 +2427,11 @@ namespace OpenSim.Region.Framework.Scenes
                 if (map == null)
                 {
                     map = Heightmap.GetDoubles(this);
-                    TerrainChannel channel = new TerrainChannel(map);
+                    TerrainChannel channel = new TerrainChannel(map, this);
                     SaveRevertTerrain(channel);
                     return channel;
                 }
-                return new TerrainChannel(map);
+                return new TerrainChannel(map, this);
             }
             catch (Exception e)
             {
@@ -2451,13 +2451,13 @@ namespace OpenSim.Region.Framework.Scenes
                 if (map == null)
                 {
                     m_log.Info("[TERRAIN]: No default terrain. Generating a new terrain.");
-                    Heightmap = new TerrainChannel();
+                    Heightmap = new TerrainChannel(this);
 
                     SimulationDataService.StoreTerrain(Heightmap.GetDoubles(this), RegionInfo.RegionID, false);
                 }
                 else
                 {
-                    Heightmap = new TerrainChannel(map);
+                    Heightmap = new TerrainChannel(map, this);
                 }
             }
             catch (IOException e)
@@ -2468,7 +2468,7 @@ namespace OpenSim.Region.Framework.Scenes
                 #pragma warning disable 0162
                 if ((int)Constants.RegionSize != 256)
                 {
-                    Heightmap = new TerrainChannel();
+                    Heightmap = new TerrainChannel(this);
 
                     SimulationDataService.StoreTerrain(Heightmap.GetDoubles(this), RegionInfo.RegionID, false);
                 }

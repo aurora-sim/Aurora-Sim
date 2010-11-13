@@ -89,7 +89,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
                             eof = true;
                             Int16 heightScale = bs.ReadInt16();
                             Int16 baseHeight = bs.ReadInt16();
-                            retval = new TerrainChannel(w, h);
+                            retval = new TerrainChannel(w, h, null);
                             int x;
                             for (x = 0; x < w; x++)
                             {

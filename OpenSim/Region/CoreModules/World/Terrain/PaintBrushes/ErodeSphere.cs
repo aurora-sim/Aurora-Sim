@@ -26,6 +26,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 
@@ -151,7 +152,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
 
         #region ITerrainPaintableEffect Members
 
-        public void PaintEffect(ITerrainChannel map, bool[,] mask, double rx, double ry, double rz, double strength, double duration, float BrushSize)
+        public void PaintEffect(ITerrainChannel map, bool[,] mask, double rx, double ry, double rz, double strength, double duration, float BrushSize, List<Scene> scene)
         {
             strength = TerrainUtil.MetersToSphericalStrength(strength);
 
@@ -159,8 +160,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
             // Using one 'rain' round for this, so skipping a useless loop
             // Will need to adapt back in for the Flood brush
 
-            ITerrainChannel water = new TerrainChannel(map.Width, map.Height);
-            ITerrainChannel sediment = new TerrainChannel(map.Width, map.Height);
+            ITerrainChannel water = new TerrainChannel(map.Width, map.Height, null);
+            ITerrainChannel sediment = new TerrainChannel(map.Width, map.Height, null);
 
             // Fill with rain
             for (x = 0; x < water.Width; x++)

@@ -73,7 +73,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
 
         public ITerrainChannel LoadFile(string filename, int offsetX, int offsetY, int fileWidth, int fileHeight, int sectionWidth, int sectionHeight)
         {
-            TerrainChannel retval = new TerrainChannel(sectionWidth, sectionHeight);
+            TerrainChannel retval = new TerrainChannel(sectionWidth, sectionHeight, null);
 
             FileInfo file = new FileInfo(filename);
             FileStream s = file.Open(FileMode.Open, FileAccess.Read);
