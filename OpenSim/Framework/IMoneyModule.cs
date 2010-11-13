@@ -29,13 +29,19 @@ using OpenMetaverse;
 
 namespace OpenSim.Framework
 {
-    public delegate void ObjectPaid(UUID objectID, UUID agentID, int amount);
+    //public delegate void ObjectPaid(UUID objectID, UUID agentID, int amount);
+    // For legacy money module. Fumi.Iseki
+    public delegate bool ObjectPaid(UUID objectID, UUID agentID, int amount);
+    // For DTL money module.
+    public delegate bool PostObjectPaid(uint localID, ulong regionHandle, UUID agentID, int amount);
+
     public interface IMoneyModule
     {
         bool ObjectGiveMoney(UUID objectID, UUID fromID, UUID toID,
                 int amount);
 
-        int GetBalance(UUID agentID);
+        //int GetBalance(UUID agentID);
+        int GetBalance(IClientAPI client);
         bool UploadCovered(IClientAPI client, int amount);
         bool AmountCovered(IClientAPI client, int amount);
         void ApplyCharge(UUID agentID, int amount, string text);
@@ -45,5 +51,6 @@ namespace OpenSim.Framework
         int GroupCreationCharge { get; }
 
         event ObjectPaid OnObjectPaid;
+        event PostObjectPaid OnPostObjectPaid;
     }
 }
