@@ -49,6 +49,9 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void Add(EntityBase entity)
         {
+            if (entity.LocalId == 0)
+                return;
+
             lock (m_lock)
             {
                 try
@@ -94,6 +97,8 @@ namespace OpenSim.Region.Framework.Scenes
 
         public bool Remove(uint localID)
         {
+            if (localID == 0)
+                return false;
             lock (m_lock)
             {
                 try
@@ -126,6 +131,9 @@ namespace OpenSim.Region.Framework.Scenes
 
         public bool Remove(UUID id)
         {
+            if (id == UUID.Zero)
+                return false;
+
             lock (m_lock)
             {
                 try 
