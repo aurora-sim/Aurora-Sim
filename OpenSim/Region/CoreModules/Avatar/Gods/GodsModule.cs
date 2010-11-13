@@ -27,16 +27,21 @@
 
 using System;
 using System.Collections.Generic;
+using System.Reflection;
+using log4net;
 using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Region.Framework.Interfaces;
+using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Region.CoreModules.Avatar.Gods
 {
     public class GodsModule : INonSharedRegionModule, IGodsModule
     {
+        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
         /// <summary>Special UUID for actions that apply to all agents</summary>
         private static readonly UUID ALL_AGENTS = new UUID("44e87126-e794-4ded-05b3-7c42da3d5cdb");
 
@@ -100,7 +105,9 @@ namespace OpenSim.Region.CoreModules.Avatar.Gods
             {
                 if (godLike == false)
                 {
-                    sp.GrantGodlikePowers(agentID, sessionID, token, godLike);
+                    //Unconditionally remove god levels
+                    sp.GodLevel = 0;
+                    sp.ControllingClient.SendAdminResponse(token, (uint)sp.GodLevel);
                     return;
                 }
 
@@ -113,8 +120,17 @@ namespace OpenSim.Region.CoreModules.Avatar.Gods
                     {
                         if (sessionID == controllingClient.SessionId)
                         {
-                            //m_log.Info("godlike: " + godLike.ToString());
-                            sp.GrantGodlikePowers(agentID, testSessionID, token, godLike);
+                            m_log.Info("[GODS]: God level set for " + sp.Name + ", level " + godLike.ToString());
+                            UserAccount account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, agentID);
+                            if (account != null)
+                            {
+                                if (account.UserLevel > 0)
+                                    sp.GodLevel = account.UserLevel;
+                                else
+                                    sp.GodLevel = 200;
+                            }
+
+                            sp.ControllingClient.SendAdminResponse(token, (uint)sp.GodLevel);
                         }
                     }
                 }

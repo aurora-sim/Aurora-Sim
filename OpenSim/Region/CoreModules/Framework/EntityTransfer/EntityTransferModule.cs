@@ -1260,7 +1260,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                                       InformClientOfNeighbourCompleted,
                                       d);
                     }
-
                     catch (ArgumentOutOfRangeException)
                     {
                         m_log.ErrorFormat(

@@ -64,6 +64,10 @@ namespace OpenSim.Region.Framework.Scenes
                 update.Part = part;
                 update.UpdateFlags = UpdateFlags;
                 m_partsUpdateQueue.Enqueue(update);
+
+                //Make it check when the user comes around to it again
+                if (m_objectsInView.Contains(part.UUID))
+                    m_objectsInView.Remove(part.UUID);
             }
         }
 
@@ -99,6 +103,7 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
             }
+            Entities = null;
         }
 
         public void SendPrimUpdates()
@@ -151,7 +156,7 @@ namespace OpenSim.Region.Framework.Scenes
                     if (!m_updateTimes.ContainsKey(g.UUID))
                         g.SendFullUpdateToClient(m_presence.ControllingClient, PrimUpdateFlags.FullUpdate); //New object, send full
                 }
-                //Do this HERE so that all those updates set added.
+                //Do this HERE so that all those updates added are prioritized.
                 m_presence.ControllingClient.ReprioritizeUpdates();
             }
 

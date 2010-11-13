@@ -3903,7 +3903,7 @@ namespace OpenSim.Region.Framework.Scenes
                     Velocity.ApproxEquals(Vector3.Zero, VELOCITY_TOLERANCE) ||
                     !AngularVelocity.ApproxEquals(m_lastAngularVelocity, VELOCITY_TOLERANCE) ||
                     !OffsetPosition.ApproxEquals(m_lastPosition, POSITION_TOLERANCE) ||
-                    Environment.TickCount - m_lastTerseSent > TIME_MS_TOLERANCE)
+                    Util.TickCount() - m_lastTerseSent > TIME_MS_TOLERANCE)
                 {
                     SendTerseUpdateToAllClients();
 
@@ -3913,7 +3913,7 @@ namespace OpenSim.Region.Framework.Scenes
                     m_lastVelocity = Velocity;
                     m_lastAcceleration = Acceleration;
                     m_lastAngularVelocity = AngularVelocity;
-                    m_lastTerseSent = Environment.TickCount;
+                    m_lastTerseSent = Util.TickCount();
                 }
                 ClearUpdateSchedule();
             }

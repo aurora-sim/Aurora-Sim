@@ -3470,7 +3470,6 @@ namespace OpenSim.Region.Framework.Scenes
             return false;
         }
 
-
         /// <summary>
         /// Called when objects or attachments cross the border, or teleport, between regions.
         /// </summary>
@@ -3719,9 +3718,6 @@ namespace OpenSim.Region.Framework.Scenes
             if (aCircuit == null) // no good, didn't pass NewUserConnection successfully
                 return;
 
-            m_clientManager.Add(client);
-            SubscribeToClientEvents(client);
-
             // Do the verification here
             System.Net.IPEndPoint ep = (System.Net.IPEndPoint)client.GetClientEP();
             if (!VerifyClient(aCircuit, ep, out vialogin))
@@ -3762,6 +3758,10 @@ namespace OpenSim.Region.Framework.Scenes
                 if (vialogin)
                     EventManager.TriggerOnClientLogin(client);
             }
+
+            //Leave these below so we don't allow clients to be able to get fake entrance into the sim as this DOES set up the checking for IPs
+            m_clientManager.Add(client);
+            SubscribeToClientEvents(client);
 
             if (!sp.IsChildAgent && Stats is OpenSim.Framework.Statistics.SimExtraStatsCollector)
             {
@@ -4495,7 +4495,6 @@ namespace OpenSim.Region.Framework.Scenes
                     return false;
                 }
 
-                CapsModule.NewUserConnection(agent);
                 CapsModule.AddCapsHandler(agent.AgentID);
             }
             else
@@ -4507,7 +4506,6 @@ namespace OpenSim.Region.Framework.Scenes
                     //    agent.AgentID, RegionInfo.RegionName);
 
                     sp.AdjustKnownSeeds();
-                    CapsModule.NewUserConnection(agent);
                 }
             }
 
@@ -5465,12 +5463,6 @@ namespace OpenSim.Region.Framework.Scenes
             float ydiff = y - (float)((int)y);
 
             return (((vsn.X * xdiff) + (vsn.Y * ydiff)) / (-1 * vsn.Z)) + p0.Z;
-        }
-
-        public void TerrainUnAcked(IClientAPI client, int patchX, int patchY)
-        {
-            //m_log.Debug("Terrain packet unacked, resending patch: " + patchX + " , " + patchY);
-            client.SendLayerData(patchX, patchY, Heightmap.GetFloatsSerialised(this));
         }
 
         public void TriggerEstateSunUpdate()

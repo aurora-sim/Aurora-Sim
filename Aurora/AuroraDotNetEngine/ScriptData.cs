@@ -676,7 +676,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return true;
             }
 
-            long NowTicks = Environment.TickCount;
+            long NowTicks = Util.EnvironmentTickCount();
 
             if (EventDelayTicks != 0)
             {

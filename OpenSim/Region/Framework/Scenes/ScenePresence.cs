@@ -120,7 +120,6 @@ namespace OpenSim.Region.Framework.Scenes
         private ScriptControlled LastCommands = ScriptControlled.CONTROL_ZERO;
         private bool MouseDown = false;
         private SceneObjectGroup proxyObjectGroup;
-        //private SceneObjectPart proxyObjectPart = null;
         public Vector3 lastKnownAllowedPosition;
         public Vector4 CollisionPlane = Vector4.UnitW;
 
@@ -181,13 +180,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         private Quaternion m_bodyRot= Quaternion.Identity;
 
-        private Quaternion m_bodyRotPrevious = Quaternion.Identity;
-
         private const int LAND_VELOCITYMAG_MAX = 20;
-
-        public bool IsRestrictedToRegion;
-
-        public string JID = String.Empty;
 
         // Default AV Height
         private float m_avHeight = 1.56f;
@@ -213,9 +206,6 @@ namespace OpenSim.Region.Framework.Scenes
         private AgentManager.ControlFlags m_AgentControlFlags;
         private Quaternion m_headrotation = Quaternion.Identity;
         private byte m_state;
-
-        //Reuse the Vector3 instead of creating a new one on the UpdateMovement method
-//        private Vector3 movementvector;
 
         private bool m_autopilotMoving;
         private Vector3 m_autoPilotTarget;
@@ -277,8 +267,7 @@ namespace OpenSim.Region.Framework.Scenes
         private SceneObjectPart m_SelectedUUID = null;
         private byte[] m_EffectColor = new Color4(1, 0.01568628f, 0, 1).GetBytes();
         private UUID CollisionSoundID = UUID.Zero;
-        private object m_appearanceLock = new object();
-
+        
         /// <value>
         /// Script engines present in the scene
         /// </value>
@@ -329,14 +318,21 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_invulnerable; }
         }
 
+        /// <summary>
+        /// The current user god level
+        /// </summary>
         public int UserLevel
         {
             get { return m_userLevel; }
         }
 
+        /// <summary>
+        /// The max god level the user can have
+        /// </summary>
         public int GodLevel
         {
             get { return m_godLevel; }
+            set { m_godLevel = value; }
         }
 
         public ulong RegionHandle
@@ -580,12 +576,6 @@ namespace OpenSim.Region.Framework.Scenes
             set { m_bodyRot = value; }
         }
 
-        public Quaternion PreviousRotation
-        {
-            get { return m_bodyRotPrevious; }
-            set { m_bodyRotPrevious = value; }
-        }
-
         /// <summary>
         /// If this is true, agent doesn't have a representation in this scene.
         ///    this is an agent 'looking into' this scene from a nearby scene(region)
@@ -812,35 +802,6 @@ namespace OpenSim.Region.Framework.Scenes
             m_controllingClient.OnForceReleaseControls += HandleForceReleaseControls;
             m_controllingClient.OnAutoPilotGo += DoAutoPilot;
             m_controllingClient.AddGenericPacketHandler("autopilot", DoMoveToPosition);
-            m_controllingClient.OnRetrieveInstantMessages += HandleRetrieveInstantMessages;
-        }
-
-        /// <summary>
-        /// This is for sending an animation pack to the client as the last thing they do before they login
-        /// </summary>
-        /// <param name="client"></param>
-        public void HandleRetrieveInstantMessages(IClientAPI client)
-        {
-            //This attempts to fixes t-pose on login by sending an animation for the avatar so it has something to display.
-            //  -- Revolution
-            if (ClientIsStarting)
-            {
-                if (m_physicsActor != null)
-                {
-                    if (m_physicsActor.Flying)
-                        Animator.TrySetMovementAnimation("HOVER");
-                    else
-                        Animator.TrySetMovementAnimation("STAND");
-                }
-                else
-                {
-                    Animator.TrySetMovementAnimation("STAND");
-                }
-                ClientIsStarting = false;
-            }
-            //Don't do this until it has been tested
-            /*SendWearables();
-            SendAppearanceToAllOtherAgents();*/
         }
 
         private void SetDirectionVectors()
@@ -3182,34 +3143,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         #endregion
 
-        /// <summary>
-        /// This allows the Sim owner the abiility to kick users from their sim currently.
-        /// It tells the client that the agent has permission to do so.
-        /// </summary>
-        public void GrantGodlikePowers(UUID agentID, UUID sessionID, UUID token, bool godStatus)
-        {
-            if (godStatus)
-            {
-                // For now, assign god level 200 to anyone
-                // who is granted god powers, but has no god level set.
-                //
-                UserAccount account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, agentID);
-                if (account != null)
-                {
-                    if (account.UserLevel > 0)
-                        m_godLevel = account.UserLevel;
-                    else
-                        m_godLevel = 200;
-                }
-            }
-            else
-            {
-                m_godLevel = 0;
-            }
-
-            ControllingClient.SendAdminResponse(token, (uint)m_godLevel);
-        }
-
         #region Child Agent Updates
 
         public void ChildAgentDataUpdate(AgentData cAgentData)
@@ -3297,10 +3230,11 @@ namespace OpenSim.Region.Framework.Scenes
             cAgent.BodyRotation = m_bodyRot;
             cAgent.ControlFlags = (uint)m_AgentControlFlags;
 
-            if (m_scene.Permissions.IsGod(new UUID(cAgent.AgentID)))
+            //This is checked by the other sim, so we don't have to validate it at all
+            //if (m_scene.Permissions.IsGod(new UUID(cAgent.AgentID)))
                 cAgent.GodLevel = (byte)m_godLevel;
-            else 
-                cAgent.GodLevel = (byte) 0;
+            //else 
+            //    cAgent.GodLevel = (byte) 0;
 
             cAgent.Speed = SpeedModifier;
             cAgent.AlwaysRun = m_setAlwaysRun;

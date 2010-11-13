@@ -1508,6 +1508,15 @@ namespace OpenSim.Framework
         const Int32 EnvironmentTickCountMask = 0x3fffffff;
 
         /// <summary>
+        /// An alternate Environment.TickCount that uses int.MaxValue to lock the tick count
+        /// </summary>
+        /// <returns></returns>
+        public static int TickCount()
+        {
+            return Environment.TickCount & Int32.MaxValue;
+        }
+
+        /// <summary>
         /// Environment.TickCount is an int but it counts all 32 bits so it goes positive
         /// and negative every 24.9 days. Subtracts the passed value (previously fetched by
         /// 'EnvironmentTickCount()') and accounts for any wrapping.
