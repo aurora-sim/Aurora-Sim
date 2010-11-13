@@ -189,6 +189,7 @@ namespace OpenSim.Region.Framework.Scenes
                     EntitiesToUpdate.Add(entity);
                 else
                 {
+                    m_log.Warn("[SCENEPACKETHANDLER]: Could not find prim in SelectPrim, running through all prims.");
                     EntityBase[] EntityList = Entities.GetEntities();
                     foreach (EntityBase ent in EntityList)
                     {

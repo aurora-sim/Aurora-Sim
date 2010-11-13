@@ -593,6 +593,8 @@ namespace OpenSim.Framework.Capabilities
                             errorResponse.state = "error";
                             return errorResponse;
                         }
+                        else
+                            mm.ApplyUploadCharge(client.AgentId, mm.UploadCharge, "Upload asset.");
                     }
                 }
             }

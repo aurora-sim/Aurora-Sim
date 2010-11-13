@@ -600,7 +600,7 @@ namespace OpenSim.Framework
         {
             string line = ReadLine(m_defaultPrompt + "# ", true, true);
 
-            if (line != String.Empty)
+            if (line != String.Empty && line.Replace(" ", "") != String.Empty) //If there is a space, its fine
             {
                 m_log.Info("[CONSOLE] Invalid command");
             }

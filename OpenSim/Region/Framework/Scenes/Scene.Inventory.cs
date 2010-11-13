@@ -77,6 +77,11 @@ namespace OpenSim.Region.Framework.Scenes
             IMoneyModule money = RequestModuleInterface<IMoneyModule>();
             if (money != null)
             {
+                if (!money.AmountCovered(GetScenePresence(agentID).ControllingClient, money.UploadCharge))
+                {
+                    GetScenePresence(agentID).ControllingClient.SendAlertMessage("You do not have enough money to complete this upload.");
+                    return;
+                }
                 money.ApplyUploadCharge(agentID, money.UploadCharge, "Asset upload");
             }
 

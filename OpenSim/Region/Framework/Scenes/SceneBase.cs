@@ -219,7 +219,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public virtual string GetSimulatorVersion()
         {
-            return "OpenSimulator Server";
+            return "Aurora Server";
         }
 
         #endregion
