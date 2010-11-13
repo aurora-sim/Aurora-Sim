@@ -1305,6 +1305,9 @@ namespace OpenSim.Region.Framework.Scenes
                     ParentGroup.HasGroupChanged = true;
                 m_rotationOffset = value;
 
+                if (value.W == 0) //We have an issue here... try to normalize it
+                    value.Normalize();
+
                 PhysicsActor actor = PhysActor;
                 if (actor != null)
                 {

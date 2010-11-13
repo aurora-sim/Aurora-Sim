@@ -3806,81 +3806,88 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                     // UNTODO: Remove this once we can build compressed updates
                     // UPDATE: WE CAN!
-                    canUseCompressed = false;
+                    //canUseCompressed = false;
 
                     // UNTODO: Remove this once we can build cached updates
                     // UPDATE: WE CAN!
-                    canUseCached = false;
+                    //canUseCached = false;
 
-                    if (canUseCached)
+                    try
                     {
-                        cachedUpdateBlocks.Value.Add(CreatePrimCachedUpdateBlock((SceneObjectPart)update.Entity, this.m_agentId));
-                    }
-                    else if (!canUseImproved && !canUseCompressed)
-                    {
-                        if (update.Entity is ScenePresence)
+                        if (canUseCached)
                         {
-                            objectUpdateBlocks.Value.Add(CreateAvatarUpdateBlock((ScenePresence)update.Entity));
+                            cachedUpdateBlocks.Value.Add(CreatePrimCachedUpdateBlock((SceneObjectPart)update.Entity, this.m_agentId));
+                        }
+                        else if (!canUseImproved && !canUseCompressed)
+                        {
+                            if (update.Entity is ScenePresence)
+                            {
+                                objectUpdateBlocks.Value.Add(CreateAvatarUpdateBlock((ScenePresence)update.Entity));
+                            }
+                            else
+                            {
+                                //                            if (update.Entity is SceneObjectPart && ((SceneObjectPart)update.Entity).IsAttachment)
+                                //                            {
+                                //                                SceneObjectPart sop = (SceneObjectPart)update.Entity;
+                                //                                string text = sop.Text;
+                                //                                if (text.IndexOf("\n") >= 0)
+                                //                                    text = text.Remove(text.IndexOf("\n"));
+                                //
+                                //                                if (m_attachmentsSent.Contains(sop.ParentID))
+                                //                                {
+                                ////                                    m_log.DebugFormat(
+                                ////                                        "[CLIENT]: Sending full info about attached prim {0} text {1}",
+                                ////                                        sop.LocalId, text);
+                                //
+                                //                                    objectUpdateBlocks.Value.Add(CreatePrimUpdateBlock(sop, this.m_agentId));
+                                //
+                                //                                    m_attachmentsSent.Add(sop.LocalId);
+                                //                                }
+                                //                                else
+                                //                                {
+                                //                                    m_log.DebugFormat(
+                                //                                        "[CLIENT]: Requeueing full update of prim {0} text {1} since we haven't sent its parent {2} yet",
+                                //                                        sop.LocalId, text, sop.ParentID);
+                                //
+                                //                                    m_entityUpdates.Enqueue(double.MaxValue, update, sop.LocalId);
+                                //                                }
+                                //                            }
+                                //                            else
+                                //                            {
+                                objectUpdateBlocks.Value.Add(CreatePrimUpdateBlock((SceneObjectPart)update.Entity, this.m_agentId));
+                                //                            }
+                            }
+                        }
+                        else if (!canUseImproved)
+                        {
+                            CompressedFlags Flags = CompressedFlags.None;
+                            if (updateFlags.HasFlag(PrimUpdateFlags.AngularVelocity))
+                                Flags |= CompressedFlags.HasAngularVelocity;
+                            if (updateFlags.HasFlag(PrimUpdateFlags.MediaURL))
+                                Flags |= CompressedFlags.MediaURL;
+                            if (updateFlags.HasFlag(PrimUpdateFlags.ParentID))
+                                Flags |= CompressedFlags.HasParent;
+                            if (updateFlags.HasFlag(PrimUpdateFlags.Particles))
+                                Flags |= CompressedFlags.HasParticles;
+                            if (updateFlags.HasFlag(PrimUpdateFlags.Sound))
+                                Flags |= CompressedFlags.HasSound;
+                            if (updateFlags.HasFlag(PrimUpdateFlags.Text))
+                                Flags |= CompressedFlags.HasText;
+                            if (updateFlags.HasFlag(PrimUpdateFlags.TextureAnim))
+                                Flags |= CompressedFlags.TextureAnimation;
+                            if (updateFlags.HasFlag(PrimUpdateFlags.NameValue) || ((SceneObjectPart)update.Entity).IsAttachment)
+                                Flags |= CompressedFlags.HasNameValues;
+
+                            compressedUpdateBlocks.Value.Add(CreateCompressedUpdateBlock((SceneObjectPart)update.Entity, Flags, updateFlags));
                         }
                         else
                         {
-                            //                            if (update.Entity is SceneObjectPart && ((SceneObjectPart)update.Entity).IsAttachment)
-                            //                            {
-                            //                                SceneObjectPart sop = (SceneObjectPart)update.Entity;
-                            //                                string text = sop.Text;
-                            //                                if (text.IndexOf("\n") >= 0)
-                            //                                    text = text.Remove(text.IndexOf("\n"));
-                            //
-                            //                                if (m_attachmentsSent.Contains(sop.ParentID))
-                            //                                {
-                            ////                                    m_log.DebugFormat(
-                            ////                                        "[CLIENT]: Sending full info about attached prim {0} text {1}",
-                            ////                                        sop.LocalId, text);
-                            //
-                            //                                    objectUpdateBlocks.Value.Add(CreatePrimUpdateBlock(sop, this.m_agentId));
-                            //
-                            //                                    m_attachmentsSent.Add(sop.LocalId);
-                            //                                }
-                            //                                else
-                            //                                {
-                            //                                    m_log.DebugFormat(
-                            //                                        "[CLIENT]: Requeueing full update of prim {0} text {1} since we haven't sent its parent {2} yet",
-                            //                                        sop.LocalId, text, sop.ParentID);
-                            //
-                            //                                    m_entityUpdates.Enqueue(double.MaxValue, update, sop.LocalId);
-                            //                                }
-                            //                            }
-                            //                            else
-                            //                            {
-                            objectUpdateBlocks.Value.Add(CreatePrimUpdateBlock((SceneObjectPart)update.Entity, this.m_agentId));
-                            //                            }
+                            terseUpdateBlocks.Value.Add(CreateImprovedTerseBlock(update.Entity, updateFlags.HasFlag(PrimUpdateFlags.Textures)));
                         }
                     }
-                    else if (!canUseImproved)
+                    catch (Exception ex)
                     {
-                        CompressedFlags Flags = CompressedFlags.None;
-                        if (updateFlags.HasFlag(PrimUpdateFlags.AngularVelocity))
-                            Flags |= CompressedFlags.HasAngularVelocity;
-                        if (updateFlags.HasFlag(PrimUpdateFlags.MediaURL))
-                            Flags |= CompressedFlags.MediaURL;
-                        if (updateFlags.HasFlag(PrimUpdateFlags.ParentID))
-                            Flags |= CompressedFlags.HasParent;
-                        if (updateFlags.HasFlag(PrimUpdateFlags.Particles))
-                            Flags |= CompressedFlags.HasParticles;
-                        if (updateFlags.HasFlag(PrimUpdateFlags.Sound))
-                            Flags |= CompressedFlags.HasSound;
-                        if (updateFlags.HasFlag(PrimUpdateFlags.Text))
-                            Flags |= CompressedFlags.HasText;
-                        if (updateFlags.HasFlag(PrimUpdateFlags.TextureAnim))
-                            Flags |= CompressedFlags.TextureAnimation;
-                        if (updateFlags.HasFlag(PrimUpdateFlags.NameValue) || ((SceneObjectPart)update.Entity).IsAttachment)
-                            Flags |= CompressedFlags.HasNameValues;
-
-                        compressedUpdateBlocks.Value.Add(CreateCompressedUpdateBlock((SceneObjectPart)update.Entity, Flags, updateFlags));
-                    }
-                    else
-                    {
-                        terseUpdateBlocks.Value.Add(CreateImprovedTerseBlock(update.Entity, updateFlags.HasFlag(PrimUpdateFlags.Textures)));
+                        m_log.Warn("[LLCLIENTVIEW]: Issue creating an update block " + ex.ToString());
                     }
 
                     #endregion Block Construction
@@ -4848,10 +4855,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             update.ExtraParams = data.Shape.ExtraParams ?? Utils.EmptyBytes;
             update.FullID = data.UUID;
             update.ID = data.LocalId;
-            if (update.ID == 0)
-            {
-
-            }
             //update.JointAxisOrAnchor = Vector3.Zero; // These are deprecated
             //update.JointPivot = Vector3.Zero;
             //update.JointType = 0;
