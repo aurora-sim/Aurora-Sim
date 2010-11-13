@@ -492,3 +492,12 @@ ALTER TABLE primitems ADD COLUMN salePrice integer NOT NULL DEFAULT 0;
 ALTER TABLE primitems ADD COLUMN saleType integer NOT NULL DEFAULT 0;
 
 COMMIT;
+
+:VERSION 25
+
+BEGIN;
+
+ALTER TABLE regionsettings ADD COLUMN generic varchar(8196) NOT NULL DEFAULT '';
+ALTER TABLE regionsettings ADD COLUMN covenantlastupdated varchar(36) NOT NULL DEFAULT '0';
+
+COMMIT;

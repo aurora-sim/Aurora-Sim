@@ -2515,12 +2515,12 @@ namespace Aurora.BotManager
             throw new NotImplementedException();
         }
 
-        void IClientAPI.SendEstateCovenantInformation(UUID covenant)
+        void IClientAPI.SendEstateCovenantInformation(UUID covenant, int covenantLastUpdated)
         {
             throw new NotImplementedException();
         }
 
-        void IClientAPI.SendDetailedEstateData(UUID invoice, string estateName, uint estateID, uint parentEstate, uint estateFlags, uint sunPosition, UUID covenant, string abuseEmail, UUID estateOwner)
+        void IClientAPI.SendDetailedEstateData(UUID invoice, string estateName, uint estateID, uint parentEstate, uint estateFlags, uint sunPosition, UUID covenant, int covenantLastUpdated, string abuseEmail, UUID estateOwner)
         {
             throw new NotImplementedException();
         }

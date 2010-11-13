@@ -34,6 +34,7 @@ using System.Reflection;
 using log4net;
 using Mono.Data.Sqlite;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
@@ -1482,6 +1483,7 @@ namespace OpenSim.Data.SQLite
             newSettings.FixedSun = Convert.ToBoolean(row["fixed_sun"]);
             newSettings.SunPosition = Convert.ToDouble(row["sun_position"]);
             newSettings.Covenant = new UUID(row["covenant"].ToString());
+            newSettings.CovenantLastUpdated = Convert.ToInt32(row["covenantlastupdated"].ToString());
             newSettings.TerrainImageID = new UUID(row["map_tile_ID"].ToString());
             newSettings.TerrainMapImageID = new UUID(row["terrain_tile_ID"].ToString());
             newSettings.MinimumAge = Convert.ToInt32(row["minimum_age"]);
@@ -1490,6 +1492,10 @@ namespace OpenSim.Data.SQLite
                 newSettings.LoadedCreationID = "";
             else
                 newSettings.LoadedCreationID = row["loaded_creation_id"].ToString();
+
+            OSD o = OSDParser.DeserializeJson(row["generic"].ToString());
+            if(o.Type == OSDType.Map)
+                newSettings.Generic = (OSDMap)o;
 
             return newSettings;
         }
@@ -1828,11 +1834,13 @@ namespace OpenSim.Data.SQLite
             row["fixed_sun"] = settings.FixedSun;
             row["sun_position"] = settings.SunPosition;
             row["covenant"] = settings.Covenant.ToString();
+            row["covenantlastupdated"] = settings.CovenantLastUpdated.ToString();
             row["map_tile_ID"] = settings.TerrainImageID.ToString();
             row["terrain_tile_ID"] = settings.TerrainMapImageID.ToString();
             row["loaded_creation_datetime"] = settings.LoadedCreationDateTime.ToString();
             row["loaded_creation_id"] = settings.LoadedCreationID.ToString();
             row["minimum_age"] = settings.MinimumAge;
+            row["generic"] = OSDParser.SerializeJsonString(settings.Generic);
         }
 
         /// <summary>

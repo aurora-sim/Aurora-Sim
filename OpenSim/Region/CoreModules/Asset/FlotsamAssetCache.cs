@@ -214,8 +214,6 @@ namespace Flotsam.RegionModules.AssetCache
                 if (m_AssetService == null)
                 {
                     m_AssetService = scene.RequestModuleInterface<IAssetService>();
-                    if (m_AssetService == null)
-                        m_AssetService = scene.AssetService;
                 }
             }
         }
@@ -231,6 +229,10 @@ namespace Flotsam.RegionModules.AssetCache
 
         public void RegionLoaded(Scene scene)
         {
+            if (m_AssetService == null)
+            {
+                m_AssetService = scene.RequestModuleInterface<IAssetService>();
+            }
         }
 
         ////////////////////////////////////////////////////////////

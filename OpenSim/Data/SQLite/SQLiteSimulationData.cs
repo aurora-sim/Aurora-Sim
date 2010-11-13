@@ -1609,8 +1609,13 @@ namespace OpenSim.Data.SQLite
                                      );
             newSettings.FixedSun = Convert.ToBoolean(row["fixed_sun"]);
             newSettings.SunPosition = Convert.ToDouble(row["sun_position"]);
-            newSettings.Covenant = new UUID((String) row["covenant"]);
+            newSettings.Covenant = new UUID((String)row["covenant"]);
+            newSettings.CovenantLastUpdated = Convert.ToInt32(row["covenantlastupdated"]);
             newSettings.TerrainImageID = new UUID((String)row["map_tile_ID"]);
+
+            OSD o = OSDParser.DeserializeJson((String)row["generic"]);
+            if (o.Type == OSDType.Map)
+                newSettings.Generic = (OSDMap)o;
 
             return newSettings;
         }
@@ -1937,7 +1942,9 @@ namespace OpenSim.Data.SQLite
             row["fixed_sun"] = settings.FixedSun;
             row["sun_position"] = settings.SunPosition;
             row["covenant"] = settings.Covenant.ToString();
+            row["covenantlastupdated"] = settings.CovenantLastUpdated.ToString();
             row["map_tile_ID"] = settings.TerrainImageID.ToString();
+            row["generic"] = OSDParser.SerializeJsonString(settings.Generic);
         }
 
         /// <summary>

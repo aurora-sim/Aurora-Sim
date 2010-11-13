@@ -4377,19 +4377,19 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             OutPacket(rinfopack, ThrottleOutPacketType.Task);
         }
 
-        public void SendEstateCovenantInformation(UUID covenant)
+        public void SendEstateCovenantInformation(UUID covenant, int covenantLastUpdated)
         {
             EstateCovenantReplyPacket einfopack = new EstateCovenantReplyPacket();
             EstateCovenantReplyPacket.DataBlock edata = new EstateCovenantReplyPacket.DataBlock();
             edata.CovenantID = covenant;
-            edata.CovenantTimestamp = 0;
+            edata.CovenantTimestamp = (uint)covenantLastUpdated;
             edata.EstateOwnerID = m_scene.RegionInfo.EstateSettings.EstateOwner;
             edata.EstateName = Utils.StringToBytes(m_scene.RegionInfo.EstateSettings.EstateName);
             einfopack.Data = edata;
             OutPacket(einfopack, ThrottleOutPacketType.Task);
         }
 
-        public void SendDetailedEstateData(UUID invoice, string estateName, uint estateID, uint parentEstate, uint estateFlags, uint sunPosition, UUID covenant, string abuseEmail, UUID estateOwner)
+        public void SendDetailedEstateData(UUID invoice, string estateName, uint estateID, uint parentEstate, uint estateFlags, uint sunPosition, UUID covenant, int CovenantLastUpdated, string abuseEmail, UUID estateOwner)
         {
             EstateOwnerMessagePacket packet = new EstateOwnerMessagePacket();
             packet.MethodData.Invoice = invoice;
@@ -4411,8 +4411,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             returnblock[4].Parameter = Utils.StringToBytes(sunPosition.ToString());
             returnblock[5].Parameter = Utils.StringToBytes(parentEstate.ToString());
             returnblock[6].Parameter = Utils.StringToBytes(covenant.ToString());
-            returnblock[7].Parameter = Utils.StringToBytes("1160895077"); // what is this?
-            returnblock[8].Parameter = Utils.StringToBytes("1"); // what is this?
+            returnblock[7].Parameter = Utils.StringToBytes(CovenantLastUpdated.ToString());
+            returnblock[8].Parameter = Utils.StringToBytes("1"); // Send to this agent only
             returnblock[9].Parameter = Utils.StringToBytes(abuseEmail);
 
             packet.ParamList = returnblock;

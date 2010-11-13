@@ -77,6 +77,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
                     GetEstateFlags(),
                     sun,
                     m_scene.RegionInfo.RegionSettings.Covenant,
+                    m_scene.RegionInfo.RegionSettings.CovenantLastUpdated,
                     m_scene.RegionInfo.EstateSettings.AbuseEmail,
                     estateOwner);
 
@@ -380,6 +381,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
         private void handleChangeEstateCovenantRequest(IClientAPI remoteClient, UUID estateCovenantID)
         {
             m_scene.RegionInfo.RegionSettings.Covenant = estateCovenantID;
+            m_scene.RegionInfo.RegionSettings.CovenantLastUpdated = Util.UnixTimeSinceEpoch();
             m_scene.RegionInfo.RegionSettings.Save();
             TriggerRegionInfoChange();
         }
@@ -863,7 +865,8 @@ namespace OpenSim.Region.CoreModules.World.Estate
 
         private void HandleEstateCovenantRequest(IClientAPI remote_client)
         {
-            remote_client.SendEstateCovenantInformation(m_scene.RegionInfo.RegionSettings.Covenant);
+            remote_client.SendEstateCovenantInformation(m_scene.RegionInfo.RegionSettings.Covenant,
+                m_scene.RegionInfo.RegionSettings.CovenantLastUpdated);
         }
 
         private void HandleLandStatRequest(int parcelID, uint reportType, uint requestFlags, string filter, IClientAPI remoteClient)
@@ -1006,7 +1009,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
         {
             RegionHandshakeArgs args = new RegionHandshakeArgs();
 
-            args.isEstateManager = m_scene.Permissions.IsAdministrator(remoteClient.AgentId);
+            args.isEstateManager = m_scene.Permissions.IsGod(remoteClient.AgentId);
             if (m_scene.RegionInfo.EstateSettings.EstateOwner != UUID.Zero && m_scene.RegionInfo.EstateSettings.EstateOwner == remoteClient.AgentId)
                 args.isEstateManager = true;
 
@@ -1029,6 +1032,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
             args.terrainBase1 = UUID.Zero;
             args.terrainBase2 = UUID.Zero;
             args.terrainBase3 = UUID.Zero;
+
             args.terrainDetail0 = m_scene.RegionInfo.RegionSettings.TerrainTexture1;
             args.terrainDetail1 = m_scene.RegionInfo.RegionSettings.TerrainTexture2;
             args.terrainDetail2 = m_scene.RegionInfo.RegionSettings.TerrainTexture3;

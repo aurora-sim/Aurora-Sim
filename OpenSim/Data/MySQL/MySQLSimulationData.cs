@@ -35,6 +35,7 @@ using System.Threading;
 using log4net;
 using MySql.Data.MySqlClient;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
@@ -1178,7 +1179,8 @@ namespace OpenSim.Data.MySQL
             newSettings.FixedSun = Convert.ToBoolean(row["fixed_sun"]);
             newSettings.SunPosition = Convert.ToDouble(row["sun_position"]);
             newSettings.Covenant = DBGuid.FromDB(row["covenant"]);
-
+            newSettings.CovenantLastUpdated = Convert.ToInt32(row["covenantlastupdated"]);
+            
             newSettings.LoadedCreationDateTime = Convert.ToInt32(row["loaded_creation_datetime"]);
             
             if (row["loaded_creation_id"] is DBNull)
@@ -1190,6 +1192,10 @@ namespace OpenSim.Data.MySQL
             newSettings.TerrainMapImageID = DBGuid.FromDB(row["terrain_tile_ID"]);
             newSettings.MinimumAge = Convert.ToInt32(row["minimum_age"]);
 
+            OSD o = OSDParser.DeserializeJson((String)row["generic"]);
+            if (o.Type == OSDType.Map)
+                newSettings.Generic = (OSDMap)o;
+            
             return newSettings;
         }
 
@@ -1516,12 +1522,13 @@ namespace OpenSim.Data.MySQL
             cmd.Parameters.AddWithValue("FixedSun", settings.FixedSun);
             cmd.Parameters.AddWithValue("SunPosition", settings.SunPosition);
             cmd.Parameters.AddWithValue("Covenant", settings.Covenant.ToString());
+            cmd.Parameters.AddWithValue("covenantlastupdated", settings.CovenantLastUpdated.ToString());
             cmd.Parameters.AddWithValue("LoadedCreationDateTime", settings.LoadedCreationDateTime);
             cmd.Parameters.AddWithValue("LoadedCreationID", settings.LoadedCreationID);
             cmd.Parameters.AddWithValue("TerrainImageID", settings.TerrainImageID);
             cmd.Parameters.AddWithValue("TerrainMapImageID", settings.TerrainMapImageID);
             cmd.Parameters.AddWithValue("minimum_age", settings.MinimumAge);
-
+            cmd.Parameters.AddWithValue("generic", OSDParser.SerializeJsonString(settings.Generic));
         }
 
         /// <summary>
