@@ -3665,18 +3665,8 @@ namespace OpenSim.Region.Framework.Scenes
             //    UpdateFlags = PrimUpdateFlags.FullUpdate;
             if (UpdateFlags == PrimUpdateFlags.FindBest)
             {
+                //Add the defaults
                 UpdateFlags = PrimUpdateFlags.None;
-                if (Text != "")
-                    UpdateFlags |= PrimUpdateFlags.Text;
-                if (TextureAnimation.Length != 0)
-                    UpdateFlags |= PrimUpdateFlags.TextureAnim;
-                if (Sound != UUID.Zero)
-                    UpdateFlags |= PrimUpdateFlags.Sound;
-                if (ParticleSystem.Length != 0)
-                    UpdateFlags |= PrimUpdateFlags.Particles;
-                if (CurrentMediaVersion != "x-mv:0000000001/00000000-0000-0000-0000-000000000000")
-                    UpdateFlags |= PrimUpdateFlags.MediaURL;
-
                 UpdateFlags |= PrimUpdateFlags.ClickAction;
                 UpdateFlags |= PrimUpdateFlags.ExtraData;
                 UpdateFlags |= PrimUpdateFlags.Shape;
@@ -3686,6 +3676,18 @@ namespace OpenSim.Region.Framework.Scenes
                 UpdateFlags |= PrimUpdateFlags.PrimFlags;
                 UpdateFlags |= PrimUpdateFlags.Position;
             }
+            //Must send these as well
+            if (Text != "")
+                UpdateFlags |= PrimUpdateFlags.Text;
+            if (TextureAnimation.Length != 0)
+                UpdateFlags |= PrimUpdateFlags.TextureAnim;
+            if (Sound != UUID.Zero)
+                UpdateFlags |= PrimUpdateFlags.Sound;
+            if (ParticleSystem.Length != 0)
+                UpdateFlags |= PrimUpdateFlags.Particles;
+            if (CurrentMediaVersion != "x-mv:0000000001/00000000-0000-0000-0000-000000000000")
+                UpdateFlags |= PrimUpdateFlags.MediaURL;
+
             //Needs to be outside, otherwise compressed updates will be screwy with groups
             if (ParentGroup.ChildrenList.Count != 1)
                 UpdateFlags |= PrimUpdateFlags.ParentID;

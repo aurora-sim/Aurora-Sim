@@ -230,6 +230,8 @@ namespace OpenSim.Region.Framework.Scenes
         public double ChildReprioritizationDistance { get { return m_childReprioritizationDistance; } }
         protected string m_simulatorVersion = "OpenSimulator Server";
         protected Timer m_restartWaitTimer = new Timer();
+        protected static int m_timeToSlowTheHeartbeat = 3;
+        protected static int m_timeToSlowThePhysHeartbeat = 2;
 
         public AgentCircuitManager AuthenticateHandler
         {
@@ -1574,7 +1576,7 @@ namespace OpenSim.Region.Framework.Scenes
                     m_scene.StatsReporter.SetSleepMS(maintc);
 
                     if (maintc > 0)
-                        Thread.Sleep(maintc / 3);
+                        Thread.Sleep(maintc / Scene.m_timeToSlowTheHeartbeat);
                     try
                     {
                         CheckExit();
@@ -1707,7 +1709,7 @@ namespace OpenSim.Region.Framework.Scenes
                     maintc = (int)(m_scene.m_timespan * 1000) - maintc;
 
                     if (maintc > 0)
-                        Thread.Sleep(maintc / 2);
+                        Thread.Sleep(maintc / Scene.m_timeToSlowThePhysHeartbeat);
                     try
                     {
                         CheckExit();
@@ -1845,7 +1847,7 @@ namespace OpenSim.Region.Framework.Scenes
                     maintc = (int)(m_scene.m_timespan * 1000) - maintc;
 
                     if (maintc > 0)
-                        Thread.Sleep(maintc / 3);
+                        Thread.Sleep(maintc / Scene.m_timeToSlowTheHeartbeat);
                     try
                     {
                         CheckExit();

@@ -244,7 +244,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void Reset()
         {
-            if (m_pendingObjects != null)
+            if (m_pendingObjects != null && m_pendingObjects.Count != 0)
             {
                 lock (m_pendingObjects)
                 {
