@@ -109,6 +109,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private float avMovementDivisorRun = 0.8f;
         private float minimumGroundFlightOffset = 3f;
         public float maximumMassObject = 10000.01f;
+        public bool m_allowTimeDilation = false;
 
         public bool meshSculptedPrim = true;
         public bool forceSimplePrimMeshing = false;
@@ -401,7 +402,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         avStandupTensor = physicsconfig.GetFloat("av_capsule_standup_tensor_win", 550000f);
                         bodyMotorJointMaxforceTensor = physicsconfig.GetFloat("body_motor_joint_maxforce_tensor_win", 5f);
                     }
-
+                    m_allowTimeDilation = physicsconfig.GetBoolean("allow_Time_Dilation", m_allowTimeDilation);
                     physics_logging = physicsconfig.GetBoolean("physics_logging", false);
                     physics_logging_interval = physicsconfig.GetInt("physics_logging_interval", 0);
                     physics_logging_append_existing_logfile = physicsconfig.GetBoolean("physics_logging_append_existing_logfile", false);
@@ -2981,7 +2982,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (fps < (fps - StartFPS) / 10000 + StartFPS)
                     StartFPS += (fps - StartFPS) / 10000;
             }
-            m_timeDilation = (fps / StartFPS);
+
+            if(m_allowTimeDilation)
+                m_timeDilation = (fps / StartFPS);
+
             return fps;
         }
 
