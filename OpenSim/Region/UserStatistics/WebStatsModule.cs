@@ -178,7 +178,7 @@ namespace OpenSim.Region.UserStatistics
             {
                 // Ignore the update if there's a report running right now
                 // ignore the update if there hasn't been a hit in 30 seconds.
-                if (concurrencyCounter > 0 || System.Environment.TickCount - lastHit > 30000)
+                if (concurrencyCounter > 0 || Util.EnvironmentTickCount() - lastHit > 30000)
                     return;
 
                 if ((updateLogCounter++ % updateLogMod) == 0)
@@ -216,7 +216,7 @@ namespace OpenSim.Region.UserStatistics
 
         public Hashtable HandleStatsRequest(Hashtable request)
         {
-            lastHit = System.Environment.TickCount;
+            lastHit = Util.EnvironmentTickCount();
             Hashtable responsedata = new Hashtable();
             string regpath = request["uri"].ToString();
             int response_code = 404;
