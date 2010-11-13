@@ -1158,16 +1158,6 @@ namespace OpenSim.Region.Framework.Scenes
             m_backingup = true; //Clear out all other threads
             ProcessPrimBackupTaints(true);
 
-            //Replaced by the taints system as above
-            /*List<EntityBase> entities = GetEntities();
-            foreach (EntityBase entity in entities)
-            {
-                if (!entity.IsDeleted && entity is SceneObjectGroup && ((SceneObjectGroup)entity).HasGroupChanged)
-                {
-                    ((SceneObjectGroup)entity).ProcessBackup(DataStore, false);
-                }
-            }*/
-
             m_sceneGraph.Close();
 
             //Deregister from the grid server

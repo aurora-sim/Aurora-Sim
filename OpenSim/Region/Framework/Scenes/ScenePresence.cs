@@ -4087,11 +4087,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         private void Reprioritize(object sender, ElapsedEventArgs e)
         {
-            DateTime s = DateTime.Now;
-            
             m_controllingClient.ReprioritizeUpdates();
-
-            m_log.Warn((DateTime.Now - s).TotalMilliseconds);
 
             lock (m_reprioritization_timer)
             {

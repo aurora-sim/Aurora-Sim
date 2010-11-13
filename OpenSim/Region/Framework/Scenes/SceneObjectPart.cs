@@ -3679,11 +3679,11 @@ namespace OpenSim.Region.Framework.Scenes
             //Must send these as well
             if (Text != "")
                 UpdateFlags |= PrimUpdateFlags.Text;
-            if (TextureAnimation.Length != 0)
+            if (TextureAnimation != null && TextureAnimation.Length != 0)
                 UpdateFlags |= PrimUpdateFlags.TextureAnim;
             if (Sound != UUID.Zero)
                 UpdateFlags |= PrimUpdateFlags.Sound;
-            if (ParticleSystem.Length != 0)
+            if (ParticleSystem != null && ParticleSystem.Length != 0)
                 UpdateFlags |= PrimUpdateFlags.Particles;
             if (CurrentMediaVersion != "x-mv:0000000001/00000000-0000-0000-0000-000000000000")
                 UpdateFlags |= PrimUpdateFlags.MediaURL;
