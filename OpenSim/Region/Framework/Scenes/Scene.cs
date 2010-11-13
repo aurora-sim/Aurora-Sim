@@ -5524,11 +5524,29 @@ namespace OpenSim.Region.Framework.Scenes
             if (forced)
             {
                 //Add all
-                EntityBase[] entities = Entities.GetEntities();
+                /*EntityBase[] entities = Entities.GetEntities();
                 foreach (EntityBase entity in entities)
                 {
                     if (entity is SceneObjectGroup)
                         backupPrims.Add(entity as SceneObjectGroup);
+                }*/
+                lock (m_backupTaintedPrims)
+                {
+                    //Add all these to the backup
+                    backupPrims = new HashSet<SceneObjectGroup>(m_backupTaintedPrims.Values);
+                    m_backupTaintedPrims.Clear();
+                    //Reset the timer
+                    runSecondaryBackup = DateTime.Now.AddMinutes((m_dontPersistBefore / 10000000L));
+                    
+                    if (m_secondaryBackupTaintedPrims.Count != 0)
+                    {
+                        //Check this set
+                        foreach (SceneObjectGroup grp in m_secondaryBackupTaintedPrims.Values)
+                        {
+                            backupPrims.Add(grp);
+                        }
+                    }
+                    m_secondaryBackupTaintedPrims.Clear();
                 }
             }
             else

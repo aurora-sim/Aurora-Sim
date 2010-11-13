@@ -214,6 +214,8 @@ namespace Flotsam.RegionModules.AssetCache
                 if (m_AssetService == null)
                 {
                     m_AssetService = scene.RequestModuleInterface<IAssetService>();
+                    if (m_AssetService == null)
+                        m_AssetService = scene.AssetService;
                 }
             }
         }
@@ -648,6 +650,10 @@ namespace Flotsam.RegionModules.AssetCache
         /// <returns></returns>
         private int CacheScenes()
         {
+            //Make sure this is not null
+            if (m_AssetService == null)
+                m_AssetService = m_Scenes[0].AssetService;
+
             UuidGatherer gatherer = new UuidGatherer(m_AssetService);
 
             Dictionary<UUID, AssetType> assets = new Dictionary<UUID, AssetType>();
