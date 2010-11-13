@@ -58,6 +58,10 @@ namespace OpenSim.Services.AuthenticationService
 
         public string Authenticate(UUID principalID, string password, int lifetime)
         {
+            //Return automatically if we do not auth users
+            if(!m_authenticateUsers)
+                return GetToken(principalID, lifetime);
+
             AuthenticationData data = m_Database.Get(principalID);
 
             if (data != null && data.Data != null)

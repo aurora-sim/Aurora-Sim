@@ -90,9 +90,10 @@ ServiceConnectors = "8003/OpenSim.Server.Handlers.dll:AssetServiceConnector,8003
 ;; * Realm = "users" will use the legacy tables as an authentication source
 ;; *
 [AuthenticationService]
+    ;; Should we check user passwords? If this is set to false, there will be NO password checking.
+    AuthenticateUsers = true
     ;; for the server connector
     LocalServiceModule = "OpenSim.Services.AuthenticationService.dll:PasswordAuthenticationService"
-    ; Realm = "useraccounts"
 
 [OpenIdService]
     ;; for the server connector
@@ -269,8 +270,6 @@ ServiceConnectors = "8003/OpenSim.Server.Handlers.dll:AssetServiceConnector,8003
     FileNameOfTOS = ToS.txt
     ;; Allow users to login anonymously and have a new account created automatically? This will create a new account for any user logging in.
     AllowAnonymousLogin = false
-    ;; Should we check user passwords? If this is set to false, there will be NO password checking.
-    AuthenticateUsers = true
     ;; This allows for a default avatar to be created so the user does not login as ruth. Save an Avatar Archive (in the console) then put the name of it here.
     ;; To set this, create a user and set them up as you wish them to look.
     ;;  Then save an Avatar Archive into the database by the command in the console "save avatar archive", "save avatar archive <First> <Last> <Filename> <FolderNameToSaveInto>", "Saves appearance to an avatar archive archive (Note: put \"\" around the FolderName if you need more than one word)"
@@ -286,6 +285,8 @@ ServiceConnectors = "8003/OpenSim.Server.Handlers.dll:AssetServiceConnector,8003
 	;; Allow the 'export' permission in the Imprudence viewer.
 	;; This allows people to set whether they would like to allow others to export objects that are theirs.
 	AllowUseageOfExportPermissions = true
+	;; If a user does not have a home location set, what region should it be set to for them?
+    DefaultHomeRegion = ""
     
 	;; For more info, see AuroraDocs/CAPSService.txt
     CAPSServiceURL = http://127.0.0.1:8007

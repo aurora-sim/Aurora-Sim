@@ -89,7 +89,6 @@ namespace OpenSim.Services.LLLoginService
         IConfigSource m_config;
         IConfig m_AuroraLoginConfig;
         bool m_AllowAnonymousLogin = false;
-        bool m_AuthenticateUsers = true;
         bool m_UseTOS = false;
         string m_TOSLocation = "";
         string m_DefaultUserAvatarArchive = "";
@@ -114,7 +113,6 @@ namespace OpenSim.Services.LLLoginService
                 m_DefaultHomeRegion = m_AuroraLoginConfig.GetString("DefaultHomeRegion", "");
                 m_DefaultUserAvatarArchive = m_AuroraLoginConfig.GetString("DefaultAvatarArchiveForNewUser", "");
                 m_AllowAnonymousLogin = m_AuroraLoginConfig.GetBoolean("AllowAnonymousLogin", false);
-                m_AuthenticateUsers = m_AuroraLoginConfig.GetBoolean("AuthenticateUsers", true);
                 m_TOSLocation = m_AuroraLoginConfig.GetString("FileNameOfTOS", "");
                 m_AllowFirstLife = m_AuroraLoginConfig.GetBoolean("AllowFirstLifeInProfile", true);
                 m_TutorialURL = m_AuroraLoginConfig.GetString("TutorialURL", m_TutorialURL);
@@ -345,22 +343,14 @@ namespace OpenSim.Services.LLLoginService
                 scopeID = account.ScopeID;
 
                 UUID secureSession = UUID.Zero;
-                if (m_AuthenticateUsers)
+                //
+                // Authenticate this user
+                //
+                string token = m_AuthenticationService.Authenticate(account.PrincipalID, passwd, 30);
+                if ((token == string.Empty) || (token != string.Empty && !UUID.TryParse(token, out secureSession)))
                 {
-                    //
-                    // Authenticate this user
-                    //
-                    string token = m_AuthenticationService.Authenticate(account.PrincipalID, passwd, 30);
-                    if ((token == string.Empty) || (token != string.Empty && !UUID.TryParse(token, out secureSession)))
-                    {
-                        m_log.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: authentication failed");
-                        return LLFailedLoginResponse.UserProblem;
-                    }
-                }
-                else
-                {
-                    string token = m_AuthenticationService.GetToken(account.PrincipalID, 30);
-                    UUID.TryParse(token, out secureSession);
+                    m_log.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: authentication failed");
+                    return LLFailedLoginResponse.UserProblem;
                 }
 
                 IAgentInfo agent = null;
