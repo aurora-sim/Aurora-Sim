@@ -985,7 +985,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 }
                 catch (Exception ex)
                 {
-                    m_log.Error("[Scene]: Failed with " + ex);
+                    if(ex.Message != "Closing")
+                        m_log.Error("[Scene]: Failed with " + ex);
                 }
                 FireThreadClosing(this);
                 Thread.CurrentThread.Abort();
@@ -1068,6 +1069,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     }
                     catch (Exception ex)
                     {
+                        if (ex.Message == "Closing")
+                            break;
                         m_log.Error("[LLUDPSERVER]: OutgoingPacketHandler loop threw an exception: " + ex.Message, ex);
                         break;
                     }

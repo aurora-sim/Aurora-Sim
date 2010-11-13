@@ -48,7 +48,7 @@ namespace OpenSim.Region.Framework.Scenes
         public SceneViewer(ScenePresence presence)
         {
             m_presence = presence;
-            if(presence.Scene.CheckForObjectCulling) //Only do culling checks if enabled
+            //if(presence.Scene.CheckForObjectCulling) //Only do culling checks if enabled
                 presence.Scene.EventManager.OnSignificantClientMovement += SignificantClientMovement;
         }
 
@@ -87,7 +87,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (entity is SceneObjectGroup) //Only objects
                 {
                     //Check to see if they are out of range
-                    if ((!Util.DistanceLessThan(m_presence.AbsolutePosition, entity.AbsolutePosition, m_presence.DrawDistance) && !Util.DistanceLessThan(m_presence.CameraPosition, entity.AbsolutePosition, m_presence.DrawDistance)))
+                    if (Util.DistanceLessThan(m_presence.CameraPosition, entity.AbsolutePosition, m_presence.DrawDistance))
                     {
                         //Check if we already have sent them an update
                         if (!m_objectsInView.Contains(entity.UUID))

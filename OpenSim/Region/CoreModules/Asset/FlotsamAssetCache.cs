@@ -654,7 +654,10 @@ namespace Flotsam.RegionModules.AssetCache
         {
             //Make sure this is not null
             if (m_AssetService == null)
-                m_AssetService = m_Scenes[0].AssetService;
+                m_AssetService = m_Scenes[0].RequestModuleInterface<IAssetService>();
+
+            if (m_AssetService == null)
+                return 0;
 
             UuidGatherer gatherer = new UuidGatherer(m_AssetService);
 

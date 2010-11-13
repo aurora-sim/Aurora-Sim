@@ -126,7 +126,11 @@ namespace OpenSim.Region.Framework.Scenes.Components
         public void RemoveRegion(Scene scene)
         {
             scene.UnregisterModuleInterface<IComponentManager>(this);
-            SceneObjectSerializer.RemoveSerializer("Components");
+            if (m_hasStarted) //This only needs removed once
+            {
+                SceneObjectSerializer.RemoveSerializer("Components");
+                m_hasStarted = false;
+            }
         }
 
         public void RegionLoaded(Scene scene)

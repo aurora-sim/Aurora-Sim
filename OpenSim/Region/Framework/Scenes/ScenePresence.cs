@@ -198,7 +198,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         protected Timer m_reprioritization_timer;
         protected bool m_reprioritizing;
-        protected bool m_reprioritization_called;
 
         // Use these three vectors to figure out what the agent is looking at
         // Convert it to a Matrix and/or Quaternion
@@ -4082,20 +4081,21 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     if (!m_reprioritizing)
                         m_reprioritization_timer.Enabled = m_reprioritizing = true;
-                    else
-                        m_reprioritization_called = true;
                 }
             }
         }
 
         private void Reprioritize(object sender, ElapsedEventArgs e)
         {
+            DateTime s = DateTime.Now;
+            
             m_controllingClient.ReprioritizeUpdates();
+
+            m_log.Warn((DateTime.Now - s).TotalMilliseconds);
 
             lock (m_reprioritization_timer)
             {
-                m_reprioritization_timer.Enabled = m_reprioritizing = m_reprioritization_called;
-                m_reprioritization_called = false;
+                m_reprioritization_timer.Enabled = m_reprioritizing = false;
             }
         }
 

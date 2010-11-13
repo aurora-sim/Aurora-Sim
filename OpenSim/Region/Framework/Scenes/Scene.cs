@@ -1141,6 +1141,13 @@ namespace OpenSim.Region.Framework.Scenes
             // Stop all client threads.
             ForEachScenePresence(delegate(ScenePresence avatar) { avatar.ControllingClient.Close(); });
 
+            if (UseTracker)
+            {
+                tracker.OnNeedToAddThread -= NeedsNewThread;
+                tracker.Close();
+                tracker = null;
+            }
+
             // Stop updating the scene objects and agents.
             //m_heartbeatTimer.Close();
             shuttingdown = true;
