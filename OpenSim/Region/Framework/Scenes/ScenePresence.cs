@@ -149,6 +149,8 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_requestedSitTargetUUID; }
         }
         public bool SitGround = false;
+        public bool m_HasWearablesBeenSent = false;
+        public bool m_InitialHasWearablesBeenSent = false;
 
         private SendCourseLocationsMethod m_sendCourseLocationsMethod;
 
@@ -968,6 +970,31 @@ namespace OpenSim.Region.Framework.Scenes
             SendScriptEventToAttachments("changed", new Object[] { Changed.TELEPORT });
 
             m_scene.EventManager.TriggerOnMakeRootAgent(this);
+
+            //Check to make sure that we have sent all the appearance info 10 seconds later
+            Timer t = new Timer(10 * 1000);
+            t.Elapsed += new ElapsedEventHandler(CheckToMakeSureWearablesHaveBeenSent);
+            t.AutoReset = false;
+            t.Start();
+        }
+
+        /// <summary>
+        /// This makes sure that after the agent has entered the sim that they have their clothes and that they all exist
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        void CheckToMakeSureWearablesHaveBeenSent(object sender, ElapsedEventArgs e)
+        {
+            if (!m_InitialHasWearablesBeenSent)
+            {
+                m_log.Warn("[ScenePresence]: Been 10 seconds since root agent " + Name + " was added and appearance was not sent, force sending now.");
+                
+                //Force send!
+                m_controllingClient.SendAvatarDataImmediate(this);
+                if (!m_HasWearablesBeenSent)
+                    SendWearables();
+                SendAppearanceToAllOtherAgents();
+            }
         }
 
         /// <summary>
@@ -2692,7 +2719,9 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void SendWearables()
         {
-            //m_log.DebugFormat("[SCENE]: Received request for wearables of {0}", Name);
+            m_HasWearablesBeenSent = true;
+            m_InitialHasWearablesBeenSent = true;
+            m_log.DebugFormat("[SCENE]: Received request for wearables of {0}", Name);
             ControllingClient.SendWearables(m_appearance.Wearables, m_appearance.Serial++);
         }
 
@@ -2793,7 +2822,8 @@ namespace OpenSim.Region.Framework.Scenes
             if (textureEntry != null)
             {
                 m_controllingClient.SendAvatarDataImmediate(this);
-
+                if(!m_HasWearablesBeenSent)
+                    SendWearables();
                 SendAppearanceToAllOtherAgents();
             }
             if (!m_startAnimationSet)
