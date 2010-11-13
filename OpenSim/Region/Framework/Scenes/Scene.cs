@@ -1892,6 +1892,7 @@ namespace OpenSim.Region.Framework.Scenes
                     m_log.Error("[Scene]: Failed with " + ex);
                 }
                 FireThreadClosing(this);
+                Thread.CurrentThread.Abort();
             }
 
             private void CheckExit()

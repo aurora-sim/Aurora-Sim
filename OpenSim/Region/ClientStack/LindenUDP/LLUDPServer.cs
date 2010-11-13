@@ -988,6 +988,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     m_log.Error("[Scene]: Failed with " + ex);
                 }
                 FireThreadClosing(this);
+                Thread.CurrentThread.Abort();
             }
 
             private void CheckExit()
@@ -1145,6 +1146,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     m_log.Error("[Scene]: Failed with " + ex);
                 }
                 FireThreadClosing(this);
+                Thread.CurrentThread.Abort();
             }
 
             private void CheckExit()
