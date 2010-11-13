@@ -341,6 +341,9 @@ namespace OpenSim.Services.LLLoginService
                     }
                 }
 
+                //Set the scopeID for the user
+                scopeID = account.ScopeID;
+
                 UUID secureSession = UUID.Zero;
                 if (m_AuthenticateUsers)
                 {
