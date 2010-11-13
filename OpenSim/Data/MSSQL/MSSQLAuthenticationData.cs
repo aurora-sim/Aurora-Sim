@@ -41,7 +41,7 @@ namespace OpenSim.Data.MSSQL
     {
         private string m_Realm;
         private List<string> m_ColumnNames = null;
-        private int m_LastExpire = 0;
+        private int m_LastExpire = Environment.TickCount;
         private string m_ConnectionString;
         private MSSQLManager m_database;
 
