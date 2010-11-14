@@ -188,12 +188,12 @@ namespace OpenSim.Region.CoreModules.World.Land
         public int GetParcelMaxPrimCount(ILandObject thisObject)
         {
             // Normal Calculations
-            return (int)Math.Round(((float)LandData.Area / 65536.0f) * (float)m_scene.ObjectCapacity * (float)m_scene.RegionInfo.RegionSettings.ObjectBonus);
+            return (int)Math.Round(((float)LandData.Area / 65536.0f) * (float)m_scene.RegionInfo.ObjectCapacity * (float)m_scene.RegionInfo.RegionSettings.ObjectBonus);
         }
 
         public int GetSimulatorMaxPrimCount(ILandObject thisObject)
         {
-            return m_scene.ObjectCapacity;
+            return m_scene.RegionInfo.ObjectCapacity;
         }
 
         #endregion

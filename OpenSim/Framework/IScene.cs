@@ -67,8 +67,6 @@ namespace OpenSim.Framework
 
         float TimeDilation { get; }
 
-        bool AllowScriptCrossings { get; }
-
         event restart OnRestart;
 
         void AddNewClient(IClientAPI client);

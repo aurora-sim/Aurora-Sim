@@ -495,11 +495,6 @@ namespace OpenSim.Region.Framework.Scenes
             return null;
         }
 
-        public virtual bool AllowScriptCrossings
-        {
-            get { return false; }
-        }
-
         public abstract bool CheckClient(UUID agentID, System.Net.IPEndPoint ep);
 
         protected void StartupComplete(Scene scene, List<string> data)

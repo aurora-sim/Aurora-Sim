@@ -250,7 +250,16 @@ namespace OpenSim.Region.Framework.Scenes.Components
         public void DeserializeComponents(SceneObjectPart obj, string serialized)
         {
             //Pull the OSDMap out for components
-            OSDMap map = (OSDMap)OSDParser.DeserializeJson(serialized);
+            OSDMap map;
+            try
+            {
+                map = (OSDMap)OSDParser.DeserializeJson(serialized);
+            }
+            catch
+            {
+                //Bad JSON? Just return
+                return;
+            }
 
             //Now check against the list of components we have loaded
             foreach (KeyValuePair<string, OSD> kvp in map)

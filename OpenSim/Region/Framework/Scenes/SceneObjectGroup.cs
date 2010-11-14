@@ -1116,11 +1116,6 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
         }
-
-        public ushort GetTimeDilation()
-        {
-            return Utils.FloatToUInt16(m_scene.TimeDilation, 0.0f, 1.0f);
-        }
         
         /// <summary>
         /// Set a part to act as the root part for this scene object
@@ -1214,14 +1209,6 @@ namespace OpenSim.Region.Framework.Scenes
 
                 }
             }
-        }
-
-        // helper provided for parts.
-        public int GetSceneMaxUndo()
-        {
-            if (m_scene != null)
-                return m_scene.MaxUndoCount;
-            return 5;
         }
 
         // justincc: I don't believe this hack is needed any longer, especially since the physics

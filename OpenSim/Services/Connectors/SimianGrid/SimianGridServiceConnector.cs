@@ -544,7 +544,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
             return region;
         }
 
-        public string UpdateMap(UUID scopeID, GridRegion region, UUID mapID, UUID terrainID, UUID sessionID)
+        public string UpdateMap(UUID scopeID, GridRegion region, UUID sessionID)
         {
             UUID SessionID;
             return RegisterRegion(scopeID, region, UUID.Zero, out SessionID);

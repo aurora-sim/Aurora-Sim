@@ -705,12 +705,11 @@ namespace OpenSim.Region.Framework.Scenes
             }
             else
             {
-                string[] names = GetUserNames(uuid);
-                if (names.Length == 2)
+                UserAccount account = UserAccountService.GetUserAccount(RegionInfo.ScopeID, uuid);
+                if (account != null)
                 {
-                    remote_client.SendNameReply(uuid, names[0], names[1]);
+                    remote_client.SendNameReply(uuid, account.FirstName, account.LastName);
                 }
-
             }
         }
 

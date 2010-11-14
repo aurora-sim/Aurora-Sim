@@ -53,6 +53,19 @@ namespace OpenSim.Region.Framework.Scenes.Animation
         {
             get { return m_movementAnimation; }
         }
+
+        private static AvatarAnimations m_defaultAnimations = null;
+
+        public static AvatarAnimations DefaultAnimations
+        {
+            get
+            {
+                if (m_defaultAnimations == null)
+                    m_defaultAnimations = new AvatarAnimations();
+                return m_defaultAnimations;
+            }
+        }
+
         protected string m_movementAnimation = "DEFAULT";
 
         private float m_animTickFall;
@@ -73,7 +86,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
         {
             m_scenePresence = sp;
             //This step makes sure that we don't waste almost 2.5! seconds on incoming agents
-            m_animations = new AnimationSet(sp.Scene.DefaultAnimations);
+            m_animations = new AnimationSet(DefaultAnimations);
         }
         
         public void AddAnimation(UUID animID, UUID objectID)

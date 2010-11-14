@@ -385,7 +385,9 @@ namespace Aurora.Modules
                 }
                 else
                 {
-                    agentCircuit.CapsPath = sp.Scene.CapsModule.GetChildSeed(sp.UUID, reg.RegionHandle);
+                    ICapabilitiesModule module = sp.Scene.RequestModuleInterface<ICapabilitiesModule>();
+                    if (module != null)
+                        agentCircuit.CapsPath = module.GetChildSeed(sp.UUID, reg.RegionHandle);
                     capsPath = "http://" + finalDestination.ExternalHostName + ":" + finalDestination.HttpPort
                                 + "/CAPS/" + agentCircuit.CapsPath + "0000/";
                 }
@@ -1013,8 +1015,9 @@ namespace Aurora.Modules
             agent.child = true;
             agent.Appearance = sp.Appearance;
             agent.CapsPath = CapsUtil.GetRandomCapsObjectPath();
-
-            agent.ChildrenCapSeeds = new Dictionary<ulong, string>(sp.Scene.CapsModule.GetChildrenSeeds(sp.UUID));
+            ICapabilitiesModule module = sp.Scene.RequestModuleInterface<ICapabilitiesModule>();
+            if(module != null)
+                agent.ChildrenCapSeeds = new Dictionary<ulong, string>(module.GetChildrenSeeds(sp.UUID));
             m_log.DebugFormat("[XXX] Seeds 1 {0}", agent.ChildrenCapSeeds.Count);
 
             if (!agent.ChildrenCapSeeds.ContainsKey(sp.Scene.RegionInfo.RegionHandle))
@@ -1027,10 +1030,8 @@ namespace Aurora.Modules
             m_log.DebugFormat("[XXX] Adding {0}", region.RegionHandle);
             agent.ChildrenCapSeeds.Add(region.RegionHandle, agent.CapsPath);
 
-            if (sp.Scene.CapsModule != null)
-            {
-                sp.Scene.CapsModule.SetChildrenSeed(sp.UUID, agent.ChildrenCapSeeds);
-            }
+            if (module != null)
+                module.SetChildrenSeed(sp.UUID, agent.ChildrenCapSeeds);
 
             if (currentAgentCircuit != null)
             {
@@ -1075,10 +1076,11 @@ namespace Aurora.Modules
             neighbourHandles.Add(sp.Scene.RegionInfo.RegionHandle);  // add this region too
             List<ulong> previousRegionNeighbourHandles;
 
-            if (sp.Scene.CapsModule != null)
+            ICapabilitiesModule module = sp.Scene.RequestModuleInterface<ICapabilitiesModule>();
+            if (module != null)
             {
                 previousRegionNeighbourHandles =
-                    new List<ulong>(sp.Scene.CapsModule.GetChildrenSeeds(sp.UUID).Keys);
+                    new List<ulong>(module.GetChildrenSeeds(sp.UUID).Keys);
             }
             else
             {
@@ -1098,9 +1100,9 @@ namespace Aurora.Modules
 
             /// Collect as many seeds as possible
             Dictionary<ulong, string> seeds;
-            if (sp.Scene.CapsModule != null)
+            if (module != null)
                 seeds
-                    = new Dictionary<ulong, string>(sp.Scene.CapsModule.GetChildrenSeeds(sp.UUID));
+                    = new Dictionary<ulong, string>(module.GetChildrenSeeds(sp.UUID));
             else
                 seeds = new Dictionary<ulong, string>();
 
@@ -1135,8 +1137,8 @@ namespace Aurora.Modules
                         sp.AddNeighbourRegion(neighbour.RegionHandle, agent.CapsPath);
                         seeds.Add(neighbour.RegionHandle, agent.CapsPath);
                     }
-                    else
-                        agent.CapsPath = sp.Scene.CapsModule.GetChildSeed(sp.UUID, neighbour.RegionHandle);
+                    else if(module != null)
+                        agent.CapsPath = module.GetChildSeed(sp.UUID, neighbour.RegionHandle);
 
                     cagents.Add(agent);
                 }
@@ -1148,9 +1150,9 @@ namespace Aurora.Modules
                 a.ChildrenCapSeeds = new Dictionary<ulong, string>(seeds);
             }
 
-            if (sp.Scene.CapsModule != null)
+            if (module != null)
             {
-                sp.Scene.CapsModule.SetChildrenSeed(sp.UUID, seeds);
+                module.SetChildrenSeed(sp.UUID, seeds);
             }
             sp.KnownRegions = seeds;
             //avatar.Scene.DumpChildrenSeeds(avatar.UUID);

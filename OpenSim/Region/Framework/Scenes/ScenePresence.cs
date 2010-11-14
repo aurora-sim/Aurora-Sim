@@ -630,9 +630,9 @@ namespace OpenSim.Region.Framework.Scenes
         public void AdjustKnownSeeds()
         {
             Dictionary<ulong, string> seeds;
-
-            if (Scene.CapsModule != null)
-                seeds = Scene.CapsModule.GetChildrenSeeds(UUID);
+            ICapabilitiesModule module = RequestModuleInterface<ICapabilitiesModule>();
+            if (module != null)
+                seeds = module.GetChildrenSeeds(UUID);
             else
                 seeds = new Dictionary<ulong, string>();
 
@@ -649,9 +649,9 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
             DropOldNeighbours(old);
-            
-            if (Scene.CapsModule != null)
-                Scene.CapsModule.SetChildrenSeed(UUID, seeds);
+
+            if (module != null)
+                module.SetChildrenSeed(UUID, seeds);
             
             KnownRegions = seeds;
             //m_log.Debug(" ++++++++++AFTER+++++++++++++ ");
@@ -1145,7 +1145,9 @@ namespace OpenSim.Region.Framework.Scenes
             foreach (ulong handle in oldRegions)
             {
                 RemoveNeighbourRegion(handle);
-                Scene.CapsModule.DropChildSeed(UUID, handle);
+                ICapabilitiesModule module = Scene.RequestModuleInterface<ICapabilitiesModule>();
+                if(module != null)
+                    module.DropChildSeed(UUID, handle);
             }
         }
 
@@ -1269,11 +1271,11 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void HandleAgentUpdate(IClientAPI remoteClient, AgentUpdateArgs agentData)
         {
-            //if (m_isChildAgent)
-            //{
-            //    // m_log.Debug("DEBUG: HandleAgentUpdate: child agent");
-            //    return;
-            //}
+            if (m_isChildAgent)
+            {
+                m_log.Debug("DEBUG: HandleAgentUpdate: child agent");
+                return;
+            }
 
             m_perfMonMS = Util.EnvironmentTickCount();
 
@@ -1603,7 +1605,7 @@ namespace OpenSim.Region.Framework.Scenes
                         // nesting this check because LengthSquared() is expensive and we don't 
                         // want to do it every step when flying.
                         //The == Zero and Z > 0.1 are to stop people from flying and then falling down because the physics engine hasn't calculted the push yet
-                        if (Velocity != Vector3.Zero && Math.Abs(Velocity.Z) > 0.1 && (Velocity.LengthSquared() <= LAND_VELOCITYMAG_MAX))
+                        if (Velocity != Vector3.Zero && Math.Abs(Velocity.Z) > 0.15 && (Velocity.LengthSquared() <= LAND_VELOCITYMAG_MAX))
                             StopFlying();
                     }
                 }
@@ -3217,7 +3219,7 @@ namespace OpenSim.Region.Framework.Scenes
                 ControllingClient.SetChildAgentThrottle(cAgentData.Throttles);
 
             // Sends out the objects in the user's draw distance if m_sendTasksToChild is true.
-            if (m_scene.m_seeIntoRegionFromNeighbor)
+            if (m_scene.RegionInfo.SeeIntoThisSimFromNeighbor)
                 m_sceneViewer.Reset();
 
             //cAgentData.AVHeight;

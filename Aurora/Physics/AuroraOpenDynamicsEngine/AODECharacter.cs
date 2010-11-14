@@ -441,6 +441,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     m_pidControllerActive = true;
 
                     Vector3 SetSize = value;
+
+                    if (((SetSize.Z * 1.15f) - CAPSULE_RADIUS * 2.0f) == CAPSULE_LENGTH)
+                        return; //It is the same, do not rebuild
+
                     m_tainted_CAPSULE_LENGTH = (SetSize.Z*1.15f) - CAPSULE_RADIUS*2.0f;
                     //m_log.Info("[RESIZE]: " + m_tainted_CAPSULE_LENGTH.ToString());
 

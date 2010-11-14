@@ -266,9 +266,9 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Grid
             }
         }
 
-        public string UpdateMap(UUID scopeID, GridRegion region, UUID mapID, UUID terrainID, UUID sessionID)
+        public string UpdateMap(UUID scopeID, GridRegion region, UUID sessionID)
         {
-            return m_GridService.UpdateMap(scopeID, region, mapID, terrainID, sessionID);
+            return m_GridService.UpdateMap(scopeID, region, sessionID);
         }
 
         public multipleMapItemReply GetMapItems(ulong regionHandle, GridItemType gridItemType)

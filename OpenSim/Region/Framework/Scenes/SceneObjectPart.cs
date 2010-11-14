@@ -4480,12 +4480,8 @@ namespace OpenSim.Region.Framework.Scenes
                                 }
                             }
 
-                            if (m_parentGroup.GetSceneMaxUndo() > 0)
-                            {
-                                UndoState nUndo = new UndoState(this);
-
-                                m_undo.Push(nUndo);
-                            }
+                            UndoState nUndo = new UndoState(this);
+                            m_undo.Push(nUndo);
                         }
                     }
                 }
@@ -4958,10 +4954,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (m_undo.Count > 0)
                 {
-                    if (m_parentGroup.GetSceneMaxUndo() > 0)
-                    {
-                       m_redo.Push(new UndoState(this));
-                    }
+                    m_redo.Push(new UndoState(this));
                     UndoState goback = m_undo.Pop();
                     if (goback != null)
                     {
@@ -4977,12 +4970,9 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (m_redo.Count > 0)
                 {
-                    if (m_parentGroup.GetSceneMaxUndo() > 0)
-                    {
-                        UndoState nUndo = new UndoState(this);
+                    UndoState nUndo = new UndoState(this);
+                    m_undo.Push(nUndo);
 
-                        m_undo.Push(nUndo);
-                    }
                     UndoState gofwd = m_redo.Pop();
                     if (gofwd != null)
                         gofwd.PlayfwdState(this);

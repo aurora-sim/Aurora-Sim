@@ -60,15 +60,10 @@ namespace OpenSim.Region.Framework.Scenes
         private const long DEFAULT_MIN_TIME_FOR_PERSISTENCE = 60L;
         private const long DEFAULT_MAX_TIME_FOR_PERSISTENCE = 600L;
 
-        public delegate void SynchronizeSceneHandler(Scene scene);
-
         #region Fields
 
-        public SynchronizeSceneHandler SynchronizeScene;
         public SimStatsReporter StatsReporter;
-        private AvatarAnimations m_defaultAnimations = null;
 
-        protected List<RegionInfo> m_regionRestartNotifyList = new List<RegionInfo>();
         protected List<RegionInfo> m_neighbours = new List<RegionInfo>();
 
         protected List<UUID> m_needsDeleted = new List<UUID>();
@@ -86,23 +81,20 @@ namespace OpenSim.Region.Framework.Scenes
         /// </value>
         private SceneGraph m_sceneGraph;
 
-        public bool m_seeIntoRegionFromNeighbor;
-        public bool m_strictAccessControl = true;
-        public int MaxUndoCount = 5;
         private int m_RestartTimerCounter;
         private readonly Timer m_restartTimer = new Timer(15000); // Wait before firing
         private int m_incrementsof15seconds;
+
         public volatile bool m_backingup = false;
         private DateTime m_lastRanBackupInHeartbeat = DateTime.MinValue;
+
         private Dictionary<UUID, ReturnInfo> m_returns = new Dictionary<UUID, ReturnInfo>();
         private Dictionary<UUID, SceneObjectGroup> m_groupsWithTargets = new Dictionary<UUID, SceneObjectGroup>();
-        private Object m_heartbeatLock = new Object();
+        
         protected IConfigSource m_config;
         
 
         protected AgentCircuitManager m_authenticateHandler;
-
-        protected UUID d = UUID.Zero;
 
 
         protected SceneCommunicationService m_sceneGridService;
@@ -122,15 +114,7 @@ namespace OpenSim.Region.Framework.Scenes
         protected IAvatarService m_AvatarService;
         protected IGridUserService m_GridUserService;
 
-
-        protected IXMLRPC m_xmlrpcModule;
-        protected IWorldComm m_worldCommModule;
-        protected IAvatarFactory m_AvatarFactory;
-        protected IRegionSerialiserModule m_serialiser;
-        protected IDialogModule m_dialogModule;
         protected IEntityTransferModule m_teleportModule;
-        protected ICapabilitiesModule m_capsModule;
-        public IXfer XferManager;
 
         
         public IAttachmentsModule AttachmentsModule = null;
@@ -142,7 +126,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         // Central Update Loop
 
-        protected int m_fps = 10;
         protected uint m_frame;
         protected float m_timespan = 0.089f;
         protected DateTime m_lastupdate = DateTime.UtcNow;
@@ -156,6 +139,8 @@ namespace OpenSim.Region.Framework.Scenes
         private int m_update_terrain = 50;
         private int m_update_land = 1;
         private int m_update_coarse_locations = 50;
+
+        #region Monitor trackings
 
         private int frameMS;
         private int physicsMS2;
@@ -179,6 +164,8 @@ namespace OpenSim.Region.Framework.Scenes
         public int MonitorLandTime { get { return landMS; } }
         public int MonitorLastFrameTick { get { return lastCompletedFrame; } }
 
+        #endregion
+
         private string m_defaultScriptEngine;
         private int m_LastLogin;
         private Thread HeartbeatThread;
@@ -199,7 +186,6 @@ namespace OpenSim.Region.Framework.Scenes
         private double m_rootReprioritizationDistance = 10.0;
         private double m_childReprioritizationDistance = 20.0;
 
-        private int m_ObjectCapacity = 45000;
         private bool EnableFakeRaycasting = false;
         private bool m_UseSelectionParticles = true;
         public bool LoadingPrims = false;
@@ -211,8 +197,6 @@ namespace OpenSim.Region.Framework.Scenes
         /// Are we applying physics to any of the prims in this scene?
         /// </summary>
         public bool m_physicalPrim;
-        public bool m_trustBinaries;
-        public bool m_allowScriptCrossings;
         public bool m_usePreJump = true;
         public bool m_UseNewStyleMovement = true;
         public bool m_useSplatAnimation = true;
@@ -310,7 +294,7 @@ namespace OpenSim.Region.Framework.Scenes
             return m_simulatorVersion;
         }
 
-        protected override IConfigSource GetConfig()
+        protected IConfigSource GetConfig()
         {
             return m_config;
         }
@@ -320,15 +304,7 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_sceneGridService; }
         }
 
-        public AvatarAnimations DefaultAnimations
-        {
-            get
-            {
-                if (m_defaultAnimations == null)
-                    m_defaultAnimations = new AvatarAnimations();
-                return m_defaultAnimations;
-            }
-        }
+        
         public string DefaultObjectName
         {
             get { return m_DefaultObjectName; }
@@ -342,11 +318,6 @@ namespace OpenSim.Region.Framework.Scenes
         public bool UseSelectionParticles
         {
             get { return m_UseSelectionParticles; }
-        }
-
-        public override bool AllowScriptCrossings
-        {
-            get { return m_allowScriptCrossings; }
         }
 
         public new float TimeDilation
@@ -365,6 +336,8 @@ namespace OpenSim.Region.Framework.Scenes
                     m_bordersLocked = 0;
             }
         }
+
+        #region Services
 
         public IAssetService AssetService
         {
@@ -517,20 +490,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public IAvatarFactory AvatarFactory
-        {
-            get { return m_AvatarFactory; }
-        }
-
-        public ICapabilitiesModule CapsModule
-        {
-            get { return m_capsModule; }
-        }
-
-        public int ObjectCapacity
-        {
-            get { return m_ObjectCapacity; }
-        }
+        #endregion
         
         #endregion
 
@@ -632,7 +592,7 @@ namespace OpenSim.Region.Framework.Scenes
                     Util.CloseLocalRegions = !aurorastartupConfig.GetBoolean("SeeIntoAllLocalRegions", Util.CloseLocalRegions); //This option is the opposite of the config to make it easier on the user
                     m_DefaultObjectName = aurorastartupConfig.GetString("DefaultObjectName", m_DefaultObjectName);
                     CheckForObjectCulling = aurorastartupConfig.GetBoolean("CheckForObjectCulling", CheckForObjectCulling);
-                    SetObjectCapacity(aurorastartupConfig.GetInt("ObjectCapacity", ObjectCapacity));
+                    SetObjectCapacity(aurorastartupConfig.GetInt("ObjectCapacity", 80000));
                 }
 
                 IConfig regionConfig = m_config.Configs[this.RegionInfo.RegionName];
@@ -679,10 +639,7 @@ namespace OpenSim.Region.Framework.Scenes
                     m_usePreJump = animationConfig.GetBoolean("enableprejump", m_usePreJump);
                     m_useSplatAnimation = animationConfig.GetBoolean("enableSplatAnimation", m_useSplatAnimation);
                 }
-                m_seeIntoRegionFromNeighbor = RegionInfo.SeeIntoThisSimFromNeighbor;
-                m_trustBinaries = RegionInfo.TrustBinariesFromForeignSims;
-                m_allowScriptCrossings = RegionInfo.AllowScriptCrossing;
-
+                
                 IConfig persistanceConfig = m_config.Configs["Persistance"];
                 if (persistanceConfig != null)
                 {
@@ -707,8 +664,6 @@ namespace OpenSim.Region.Framework.Scenes
                     PacketPool.Instance.RecyclePackets = packetConfig.GetBoolean("RecyclePackets", true);
                     PacketPool.Instance.RecycleDataBlocks = packetConfig.GetBoolean("RecycleDataBlocks", true);
                 }
-
-                m_strictAccessControl = startupConfig.GetBoolean("StrictAccessControl", m_strictAccessControl);
             }
             catch
             {
@@ -803,36 +758,6 @@ namespace OpenSim.Region.Framework.Scenes
         #endregion Constructors
 
         #region Startup / Close Methods
-
-        public string[] GetUserNames(UUID uuid)
-        {
-            string[] returnstring = new string[0];
-
-            UserAccount account = UserAccountService.GetUserAccount(RegionInfo.ScopeID, uuid);
-
-            if (account != null)
-            {
-                returnstring = new string[2];
-                returnstring[0] = account.FirstName;
-                returnstring[1] = account.LastName;
-            }
-
-            return returnstring;
-        }
-
-        public string GetUserName(UUID uuid)
-        {
-            string[] names = GetUserNames(uuid);
-            if (names.Length == 2)
-            {
-                string firstname = names[0];
-                string lastname = names[1];
-
-                return firstname + " " + lastname;
-
-            }
-            return "(hippos)";
-        }
 
         /// <summary>
         /// Another region is up. 
@@ -949,7 +874,9 @@ namespace OpenSim.Region.Framework.Scenes
             if (seconds < 15)
             {
                 m_restartTimer.Stop();
-                m_dialogModule.SendGeneralAlert("Restart Aborted");
+                IDialogModule module = RequestModuleInterface<IDialogModule>();
+                if (module != null)
+                    module.SendGeneralAlert("Restart Aborted");
             }
             else
             {
@@ -961,7 +888,9 @@ namespace OpenSim.Region.Framework.Scenes
                 m_restartTimer.Elapsed += new ElapsedEventHandler(RestartTimer_Elapsed);
                 m_log.Info("[REGION]: Restarting Region in " + (seconds / 60) + " minutes");
                 m_restartTimer.Start();
-                m_dialogModule.SendNotificationToUsersInRegion(
+                IDialogModule module = RequestModuleInterface<IDialogModule>();
+                if (module != null)
+                    module.SendNotificationToUsersInRegion(
                     UUID.Random(), String.Empty, RegionInfo.RegionName + String.Format(": Restarting in {0} Minutes", (int)(seconds / 60.0)));
             }
         }
@@ -978,7 +907,9 @@ namespace OpenSim.Region.Framework.Scenes
                 if (m_RestartTimerCounter == 4 || m_RestartTimerCounter == 6 || m_RestartTimerCounter == 7)
                 {
                     m_log.Info("[REGION]: Restarting Region in " + ((8 - m_RestartTimerCounter) * 15) + " seconds");
-                    m_dialogModule.SendNotificationToUsersInRegion(
+                    IDialogModule module = RequestModuleInterface<IDialogModule>();
+                    if (module != null)
+                        module.SendNotificationToUsersInRegion(
                         UUID.Random(),
                         String.Empty,
                         RegionInfo.RegionName + ": Restarting in " + ((8 - m_RestartTimerCounter) * 15) + " seconds");
@@ -1001,7 +932,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (startupConfig.GetBoolean("InworldRestartShutsDown", false))
                 {
                     //This will kill it asyncly
-                    KillInstance();
+                    MainConsole.Instance.EndConsoleProcessing();
                     return;
                 }
             }
@@ -1024,47 +955,9 @@ namespace OpenSim.Region.Framework.Scenes
             base.Restart(0);
         }
 
-        // This is a helper function that notifies root agents in this region that a new sim near them has come up
-        // This is in the form of a timer because when an instance of OpenSim.exe is started,
-        // Even though the sims initialize, they don't listen until 'all of the sims are initialized'
-        // If we tell an agent about a sim that's not listening yet, the agent will not be able to connect to it.
-        // subsequently the agent will never see the region come back online.
-        public void RestartNotifyWaitElapsed(object sender, ElapsedEventArgs e)
-        {
-            m_restartWaitTimer.Stop();
-            lock (m_regionRestartNotifyList)
-            {
-                foreach (RegionInfo region in m_regionRestartNotifyList)
-                {
-                    GridRegion r = new GridRegion(region);
-                    try
-                    {
-                        ForEachScenePresence(delegate(ScenePresence agent)
-                                             {
-                                                 // If agent is a root agent.
-                                                 if (!agent.IsChildAgent)
-                                                 {
-                                                     if (m_teleportModule != null)
-                                                         m_teleportModule.EnableChildAgent(agent, r);
-                                                 }
-                                             }
-                            );
-                    }
-                    catch (NullReferenceException)
-                    {
-                        // This means that we're not booted up completely yet.
-                        // This shouldn't happen too often anymore.
-                    }
-                }
-
-                // Reset list to nothing.
-                m_regionRestartNotifyList.Clear();
-            }
-        }
-
         public void UpdateGridRegion()
         {
-            GridService.UpdateMap(RegionInfo.ScopeID, new GridRegion(RegionInfo), RegionInfo.RegionSettings.TerrainImageID, RegionInfo.RegionSettings.TerrainMapImageID, RegionInfo.GridSecureSessionID);
+            GridService.UpdateMap(RegionInfo.ScopeID, new GridRegion(RegionInfo), RegionInfo.GridSecureSessionID);
         }
 
         public void SetSceneCoreDebug(bool ScriptEngine, bool CollisionEvents, bool PhysicsEngine)
@@ -1168,11 +1061,6 @@ namespace OpenSim.Region.Framework.Scenes
             base.Close();
         }
 
-        public void KillInstance()
-        {
-            MainConsole.Instance.EndConsoleProcessing();
-        }
-
         public AuroraThreadTracker tracker = null;
         private bool UseTracker = true;
         /// <summary>
@@ -1216,14 +1104,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void SetModuleInterfaces()
         {
-            m_xmlrpcModule = RequestModuleInterface<IXMLRPC>();
-            m_worldCommModule = RequestModuleInterface<IWorldComm>();
-            XferManager = RequestModuleInterface<IXfer>();
-            m_AvatarFactory = RequestModuleInterface<IAvatarFactory>();
             AttachmentsModule = RequestModuleInterface<IAttachmentsModule>();
-            m_serialiser = RequestModuleInterface<IRegionSerialiserModule>();
-            m_dialogModule = RequestModuleInterface<IDialogModule>();
-            m_capsModule = RequestModuleInterface<ICapabilitiesModule>();
             m_teleportModule = RequestModuleInterface<IEntityTransferModule>();
 
             // Shoving this in here for now, because we have the needed
@@ -2113,8 +1994,6 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         if (!RegionInfo.RegionSettings.DisablePhysics)
                             physicsFPS = m_sceneGraph.UpdatePhysics(Math.Max(SinceLastFrame.TotalSeconds, m_timespan));
-                        if (SynchronizeScene != null)
-                            SynchronizeScene(this);
                     }
                     physicsMS = Util.EnvironmentTickCountSubtract(tmpPhysicsMS);
 
@@ -3138,7 +3017,9 @@ namespace OpenSim.Region.Framework.Scenes
 
                     if ((effectivePerms & (uint)PermissionMask.Transfer) == 0)
                     {
-                        m_dialogModule.SendAlertToUser(remoteClient, "This item doesn't appear to be for sale");
+                        IDialogModule module = RequestModuleInterface<IDialogModule>();
+                        if(module != null)
+                            module.SendAlertToUser(remoteClient, "This item doesn't appear to be for sale");
                         return false;
                     }
 
@@ -3194,7 +3075,9 @@ namespace OpenSim.Region.Framework.Scenes
 
                     if ((perms & (uint)PermissionMask.Transfer) == 0)
                     {
-                        m_dialogModule.SendAlertToUser(remoteClient, "This item doesn't appear to be for sale");
+                        IDialogModule module = RequestModuleInterface<IDialogModule>();
+                        if (module != null)
+                            module.SendAlertToUser(remoteClient, "This item doesn't appear to be for sale");
                         return false;
                     }
 
@@ -3240,7 +3123,9 @@ namespace OpenSim.Region.Framework.Scenes
                         remoteClient.SendInventoryItemCreateUpdate(item, 0);
                     else
                     {
-                        m_dialogModule.SendAlertToUser(remoteClient, "Cannot buy now. Your inventory is unavailable");
+                        IDialogModule module = RequestModuleInterface<IDialogModule>();
+                        if (module != null)
+                            module.SendAlertToUser(remoteClient, "Cannot buy now. Your inventory is unavailable");
                         return false;
                     }
                     break;
@@ -3263,8 +3148,10 @@ namespace OpenSim.Region.Framework.Scenes
 
                     if (!okToSell)
                     {
-                        m_dialogModule.SendAlertToUser(
-                            remoteClient, "This item's inventory doesn't appear to be for sale");
+                        IDialogModule module = RequestModuleInterface<IDialogModule>();
+                        if (module != null)
+                            module.SendAlertToUser(
+                                remoteClient, "This item's inventory doesn't appear to be for sale");
                         return false;
                     }
 
@@ -4063,7 +3950,6 @@ namespace OpenSim.Region.Framework.Scenes
         {
             client.OnTeleportLocationRequest -= RequestTeleportLocation;
             client.OnTeleportLandmarkRequest -= RequestTeleportLandmark;
-            //client.OnTeleportHomeRequest -= TeleportClientHome;
         }
 
         public virtual void UnSubscribeToClientScriptEvents(IClientAPI client)
@@ -4216,17 +4102,22 @@ namespace OpenSim.Region.Framework.Scenes
         public virtual void SetHomeRezPoint(IClientAPI remoteClient, ulong regionHandle, Vector3 position, Vector3 lookAt, uint flags)
         {
             ScenePresence SP = GetScenePresence(remoteClient.AgentId);
+            IDialogModule module = RequestModuleInterface<IDialogModule>();
             if (Permissions.CanSetHome(SP.UUID))
             {
                 position.Z += SP.Appearance.AvatarHeight / 2;
-                if (GridUserService != null && GridUserService.SetHome(remoteClient.AgentId.ToString(), RegionInfo.RegionID, position, lookAt))
+                if (GridUserService != null &&
+                    GridUserService.SetHome(remoteClient.AgentId.ToString(), RegionInfo.RegionID, position, lookAt) &&
+                    module != null) //Do this last so it doesn't screw up the rest
+                {
                     // FUBAR ALERT: this needs to be "Home position set." so the viewer saves a home-screenshot.
-                    m_dialogModule.SendAlertToUser(remoteClient, "Home position set.");
-                else
-                    m_dialogModule.SendAlertToUser(remoteClient, "Set Home request failed.");
+                    module.SendAlertToUser(remoteClient, "Home position set.");
+                }
+                else if (module != null)
+                    module.SendAlertToUser(remoteClient, "Set Home request failed.");
             }
-            else
-                m_dialogModule.SendAlertToUser(remoteClient, "Set Home request failed: Permissions do not allow the setting of home here.");
+            else if(module != null)
+                module.SendAlertToUser(remoteClient, "Set Home request failed: Permissions do not allow the setting of home here.");
         }
 
         /// <summary>
@@ -4296,7 +4187,9 @@ namespace OpenSim.Region.Framework.Scenes
                             (childagentYN ? "child" : "root"), agentID, RegionInfo.RegionName);
 
                     m_sceneGraph.removeUserCount(!childagentYN);
-                    CapsModule.RemoveCapsHandler(agentID);
+                    ICapabilitiesModule module = RequestModuleInterface<ICapabilitiesModule>();
+                    if (module != null)
+                        module.RemoveCapsHandler(agentID);
 
                     if (!avatar.IsChildAgent)
                     {
@@ -4469,7 +4362,9 @@ namespace OpenSim.Region.Framework.Scenes
                     RegionInfo.RegionName, (agent.child ? "child" : "root"), agent.firstname, agent.lastname,
                     agent.AgentID, agent.circuitcode);
 
-            CapsModule.NewUserConnection(agent);
+            ICapabilitiesModule module = RequestModuleInterface<ICapabilitiesModule>();
+            if (module != null)
+                module.NewUserConnection(agent);
 
             if (sp == null) // We don't have an [child] agent here already
             {
@@ -4495,7 +4390,8 @@ namespace OpenSim.Region.Framework.Scenes
                     return false;
                 }
 
-                CapsModule.AddCapsHandler(agent.AgentID);
+                if (module != null)
+                    module.AddCapsHandler(agent.AgentID);
             }
             else
             {
@@ -4616,7 +4512,6 @@ namespace OpenSim.Region.Framework.Scenes
         {
             reason = String.Empty;
 
-            if (!m_strictAccessControl) return true; //No checking if we don't do access control
             if (Permissions.IsGod(agent.AgentID)) return true;
                       
             if (AuthorizationService != null)
@@ -4920,13 +4815,11 @@ namespace OpenSim.Region.Framework.Scenes
         {
             // Region specific config overrides global
             //
-            if (RegionInfo.ObjectCapacity != 0)
-                objects = RegionInfo.ObjectCapacity;
+            if (RegionInfo.ObjectCapacity == 0)
+                RegionInfo.ObjectCapacity = objects;
 
             if (StatsReporter != null)
                 StatsReporter.SetObjectCapacity(objects);
-
-            m_ObjectCapacity = objects;
         }
 
         #endregion

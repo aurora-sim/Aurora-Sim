@@ -729,7 +729,7 @@ namespace OpenSim.Region.OptionalModules.World.MoneyModule
             {
                 Scene s = LocateSceneClientIn(user.AgentId);
 
-                user.SendEconomyData(EnergyEfficiency, s.ObjectCapacity, ObjectCount, PriceEnergyUnit, PriceGroupCreate,
+                user.SendEconomyData(EnergyEfficiency, s.RegionInfo.ObjectCapacity, ObjectCount, PriceEnergyUnit, PriceGroupCreate,
                                      PriceObjectClaim, PriceObjectRent, PriceObjectScaleFactor, PriceParcelClaim, PriceParcelClaimFactor,
                                      PriceParcelRent, PricePublicObjectDecay, PricePublicObjectDelete, PriceRentLight, PriceUpload,
                                      TeleportMinPrice, TeleportPriceExponent);

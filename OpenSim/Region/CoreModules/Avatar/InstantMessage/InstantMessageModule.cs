@@ -34,6 +34,7 @@ using OpenSim.Framework;
 using OpenSim.Framework.Client;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
 {
@@ -159,7 +160,13 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             if (m_TransferModule != null)
             {
                 if (client == null)
-                    im.fromAgentName = m_scenes[0].GetUserName(new UUID(im.fromAgentID));
+                {
+                    UserAccount account = m_scenes[0].UserAccountService.GetUserAccount(m_scenes[0].RegionInfo.ScopeID, new UUID(im.fromAgentID));
+                    if (account != null)
+                        im.fromAgentName = account.Name;
+                    else
+                        im.fromAgentName = "(No account found)";
+                }
                 else
                     im.fromAgentName = client.Name;
 

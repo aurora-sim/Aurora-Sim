@@ -534,7 +534,19 @@ namespace OpenSim.Region.CoreModules.Framework.EventQueue
                 }
                 if (AvatarID != UUID.Zero)
                 {
-                    return ProcessQueue(request, AvatarID, m_scene.CapsModule.GetCapsHandlerForUser(AvatarID));
+                    ICapabilitiesModule module = m_scene.RequestModuleInterface<ICapabilitiesModule>();
+                    if (module != null)
+                        return ProcessQueue(request, AvatarID, module.GetCapsHandlerForUser(AvatarID));
+                    else
+                    {
+                        responsedata["int_response_code"] = 404;
+                        responsedata["content_type"] = "text/plain";
+                        responsedata["keepalive"] = false;
+                        responsedata["str_response_string"] = "Not Found";
+                        responsedata["error_status_text"] = "Not Found";
+                        responsedata["http_protocol_version"] = "HTTP/1.0";
+                        return responsedata;
+                    }
                 }
                 else
                 {

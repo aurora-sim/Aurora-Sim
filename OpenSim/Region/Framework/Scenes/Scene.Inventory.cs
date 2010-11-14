@@ -822,7 +822,9 @@ namespace OpenSim.Region.Framework.Scenes
             }
             else
             {
-                m_dialogModule.SendAlertToUser(remoteClient, "Failed to create item");
+                IDialogModule module = RequestModuleInterface<IDialogModule>();
+                if (module != null)
+                    module.SendAlertToUser(remoteClient, "Failed to create item");
                 m_log.WarnFormat(
                     "Failed to add item for {0} in CreateNewInventoryItem!",
                      remoteClient.Name);
@@ -972,7 +974,9 @@ namespace OpenSim.Region.Framework.Scenes
             SceneObjectGroup group = GetGroupByPrim(primLocalID);
             if (group != null)
             {
-                group.RequestInventoryFile(remoteClient, primLocalID, XferManager);
+                IXfer xfer = RequestModuleInterface<IXfer>();
+                if (xfer != null)
+                    group.RequestInventoryFile(remoteClient, primLocalID, xfer);
             }
             else
             {
@@ -1909,7 +1913,11 @@ namespace OpenSim.Region.Framework.Scenes
                 if (AddInventoryItem(item))
                     remoteClient.SendInventoryItemCreateUpdate(item, 0);
                 else
-                    m_dialogModule.SendAlertToUser(remoteClient, "Operation failed");
+                {
+                    IDialogModule module = RequestModuleInterface<IDialogModule>();
+                    if (module != null)
+                        module.SendAlertToUser(remoteClient, "Operation failed");
+                }
 
                 itemID = item.ID;
                 return item.AssetID;

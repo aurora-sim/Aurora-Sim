@@ -233,23 +233,7 @@ namespace OpenSim.Server.Handlers.Grid
             else
                 m_log.WarnFormat("[GRID HANDLER]: no sessionID in request to update region");
 
-            GridRegion region = null;
-            if (request.ContainsKey("REGION"))
-                region = new GridRegion(request);
-            else
-                m_log.WarnFormat("[GRID HANDLER]: no region in request to update region");
-
-            UUID terrainID = UUID.Zero;
-            if (request.ContainsKey("TERRAINID"))
-                UUID.TryParse(request["TERRAINID"].ToString(), out terrainID);
-            else
-                m_log.WarnFormat("[GRID HANDLER]: no terrainID in request to update region");
-            UUID mapID = UUID.Zero;
-            if (request.ContainsKey("MAPID"))
-                UUID.TryParse(request["MAPID"].ToString(), out mapID);
-            else
-                m_log.WarnFormat("[GRID HANDLER]: no mapID in request to update region");
-
+            GridRegion region = region = new GridRegion(request);
 
             int versionNumberMin = 0, versionNumberMax = 0;
             if (request.ContainsKey("VERSIONMIN"))
@@ -271,7 +255,7 @@ namespace OpenSim.Server.Handlers.Grid
 
             string result = "Error communicating with grid service";
 
-            result = m_GridService.UpdateMap(scopeID, region, mapID, terrainID, sessionID);
+            result = m_GridService.UpdateMap(scopeID, region, sessionID);
 
             if (result == String.Empty)
                 return SuccessResult();

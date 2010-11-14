@@ -351,7 +351,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (stateSource == 1 && // Prim crossing
 
-                        m_part.ParentGroup.Scene.m_trustBinaries)
+                        m_part.ParentGroup.Scene.RegionInfo.TrustBinariesFromForeignSims)
                 {
                     lock (m_items)
                     {

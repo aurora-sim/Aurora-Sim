@@ -708,15 +708,12 @@ namespace OpenSim.Services.Connectors
             return flags;
         }
 
-        public string UpdateMap(UUID scopeID, GridRegion region, UUID mapID, UUID terrainID, UUID sessionID)
+        public string UpdateMap(UUID scopeID, GridRegion region, UUID sessionID)
         {
-            Dictionary<string, object> sendData = new Dictionary<string, object>();
+            Dictionary<string, object> sendData = region.ToKeyValuePairs();
 
             sendData["SCOPEID"] = scopeID.ToString();
             sendData["SESSIONID"] = sessionID.ToString();
-            sendData["TERRAINID"] = terrainID.ToString();
-            sendData["MAPID"] = mapID.ToString();
-            sendData["REGION"] = region;
             sendData["VERSIONMIN"] = ProtocolVersions.ClientProtocolVersionMin.ToString();
             sendData["VERSIONMAX"] = ProtocolVersions.ClientProtocolVersionMax.ToString();
             sendData["METHOD"] = "update_map";

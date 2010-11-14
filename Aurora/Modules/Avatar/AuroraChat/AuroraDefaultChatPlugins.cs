@@ -6,6 +6,7 @@ using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using OpenSim.Services.Interfaces;
 using log4net;
 using Aurora.DataManager;
 using Aurora.Framework;
@@ -454,28 +455,33 @@ namespace Aurora.Modules.Avatar.AuroraChat
                     m_authorizedSpeakers.Remove(clientID);
             }
 
-            //Clean up the agent count
+            ScenePresence presence = scene.GetScenePresence(clientID);
             int AgentCount = 0;
             lock (RegionAgentCount)
             {
                 RegionAgentCount.TryGetValue(scene.RegionInfo.RegionID, out AgentCount);
-                AgentCount--;
+                if (!presence.IsChildAgent)
+                {
+                    //Clean up the agent count
+                    AgentCount--;
 
-                if (AgentCount < 0)
-                    AgentCount = 0;
+                    if (AgentCount < 0)
+                        AgentCount = 0;
 
-                RegionAgentCount[scene.RegionInfo.RegionID] = AgentCount;
+                    RegionAgentCount[scene.RegionInfo.RegionID] = AgentCount;
+                }
             }
 
             //Announce the closing agent if enabled
             if (m_announceClosedAgents)
             {
-                string leavingAvatar = scene.GetUserName(clientID);
+                UserAccount account = scene.UserAccountService.GetUserAccount(scene.RegionInfo.ScopeID,
+                    clientID);
                 scene.ForEachScenePresence(delegate(ScenePresence SP)
                 {
                     if (SP.UUID != clientID && !SP.IsChildAgent)
                     {
-                        SP.ControllingClient.SendChatMessage(leavingAvatar + " has left the region. Total Agents: " + AgentCount, 1, SP.AbsolutePosition, "System",
+                        SP.ControllingClient.SendChatMessage(account.Name + " has left the region. Total Agents: " + AgentCount, 1, SP.AbsolutePosition, "System",
                                                            UUID.Zero, (byte)ChatSourceType.System, (byte)ChatAudibleLevel.Fully);
                     }
                 }

@@ -832,7 +832,9 @@ namespace OpenSim.Region.CoreModules.World.Estate
                 byte[] bdata = new byte[input.Length];
                 input.Read(bdata, 0, (int)input.Length);
                 remote_client.SendAlertMessage("Terrain file written, starting download...");
-                m_scene.XferManager.AddNewFile("terrain.raw", bdata);
+                IXfer xfer = m_scene.RequestModuleInterface<IXfer>();
+                if(xfer != null)
+                    xfer.AddNewFile("terrain.raw", bdata);
                 // Tell client about it
                 m_log.Warn("[CLIENT]: Sending Terrain to " + remote_client.Name);
                 remote_client.SendInitiateDownload("terrain.raw", clientFileName);
@@ -959,8 +961,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
 
             for (int i = 0; i < uuidarr.Length; i++)
             {
-                // string lookupname = m_scene.CommsManager.UUIDNameRequestString(uuidarr[i]);
-                m_scene.GetUserName(uuidarr[i]);
+                m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, uuidarr[i]);
                 // we drop it.  It gets cached though...  so we're ready for the next request.
             }
         }
