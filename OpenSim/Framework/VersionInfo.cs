@@ -55,6 +55,15 @@ namespace OpenSim.Framework
             string versionString = VERSION_NAME + " " + versionNumber + " " + flavour;
             versionString = versionString.PadRight(VERSIONINFO_VERSION_LENGTH);
 
+            // Add commit hash and date information if available
+            // The commit hash and date are stored in a file bin/.version
+            // This file can automatically created by a post
+            // commit script in the opensim git master repository or
+            // by issuing the follwoing command from the top level
+            // directory of the opensim repository
+            // git log -n 1 --pretty="format:%h: %ci" >bin/.version
+            // For the full git commit hash use %H instead of %h
+            //
             string gitCommitFileName = ".version";
 
             if (File.Exists(gitCommitFileName))
