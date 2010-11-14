@@ -379,7 +379,7 @@ namespace Aurora.Modules
                     if (removeThisMap != "")
                         innerMap.Remove(removeThisMap);
 
-                    innerMap.Add(lsd.minEffectiveAltitude.ToString(), lsd.ToOSD());
+                    innerMap[lsd.minEffectiveAltitude.ToString()] = lsd.ToOSD();
 
                     land.LandData.AddGenericData("WindLight", innerMap);
                     //Update the client

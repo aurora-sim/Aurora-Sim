@@ -997,6 +997,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     //{
                         vec.X = (float)((_target_velocity.X - vel.X) * (PID_D) + (_zeroPosition.X - pos.X) * (PID_P * 2));
                         vec.Y = (float)((_target_velocity.Y - vel.Y) * (PID_D) + (_zeroPosition.Y - pos.Y) * (PID_P * 2));
+                        vec.Z = 0;
                         //if (flying)
                         //    vec.Z = (_target_velocity.Z - vel.Z) * (PID_D) + (_zeroPosition.Z - pos.Z) * PID_P;
                     //}

@@ -38,11 +38,6 @@ namespace Aurora.Modules
             if (m_scene == null)
                 m_scene = scene;
 
-            InventoryService = m_scene.InventoryService;
-            AssetService = m_scene.AssetService;
-            UserAccountService = m_scene.UserAccountService;
-            AvatarService = m_scene.AvatarService;
-
             MainConsole.Instance.Commands.AddCommand("region", false, "save avatar archive", "save avatar archive <First> <Last> <Filename> <FolderNameToSaveInto>", "Saves appearance to an avatar archive archive (Note: put \"\" around the FolderName if you need more than one word)", HandleSaveAvatarArchive);
             MainConsole.Instance.Commands.AddCommand("region", false, "load avatar archive", "load avatar archive <First> <Last> <Filename>", "Loads appearance from an avatar archive archive", HandleLoadAvatarArchive);
         }
@@ -54,7 +49,10 @@ namespace Aurora.Modules
 
         public void RegionLoaded(Scene scene)
         {
-
+            InventoryService = m_scene.InventoryService;
+            AssetService = m_scene.AssetService;
+            UserAccountService = m_scene.UserAccountService;
+            AvatarService = m_scene.AvatarService;
         }
 
         public Type ReplaceableInterface

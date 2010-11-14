@@ -1271,11 +1271,11 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void HandleAgentUpdate(IClientAPI remoteClient, AgentUpdateArgs agentData)
         {
-            if (m_isChildAgent)
-            {
-                m_log.Debug("DEBUG: HandleAgentUpdate: child agent");
-                return;
-            }
+            //if (m_isChildAgent)
+            //{
+            //    m_log.Debug("DEBUG: HandleAgentUpdate: child agent");
+            //    return;
+            //}
 
             m_perfMonMS = Util.EnvironmentTickCount();
 

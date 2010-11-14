@@ -380,6 +380,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         protected void AuroraDotNetConsoleCommands(string module, string[] cmdparams)
         {
+            if (cmdparams.Length == 1)
+            {
+                AuroraDotNetConsoleHelp(module, cmdparams);
+                return;
+            }
             if (cmdparams[1] == "restart")
             {
                 string go = MainConsole.Instance.CmdPrompt("Are you sure you want to restart all scripts? (This also wipes the script state saves database, which could cause loss of information in your scripts)", "no");
