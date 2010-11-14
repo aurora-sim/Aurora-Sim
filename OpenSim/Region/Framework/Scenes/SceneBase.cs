@@ -140,15 +140,10 @@ namespace OpenSim.Region.Framework.Scenes
         #region Terrain Methods
 
         /// <summary>
-        /// Loads the World heightmap
-        /// </summary>
-        public abstract void LoadWorldMap();
-
-        /// <summary>
         /// Send the region heightmap to the client
         /// </summary>
         /// <param name="RemoteClient">Client to send to</param>
-        public virtual void SendLayerData(IClientAPI RemoteClient)
+        public void SendLayerData(IClientAPI RemoteClient)
         {
             RemoteClient.SendLayerData(Heightmap.GetFloatsSerialised(this));
         }
@@ -208,11 +203,6 @@ namespace OpenSim.Region.Framework.Scenes
             restart handlerPhysicsCrash = OnRestart;
             if (handlerPhysicsCrash != null)
                 handlerPhysicsCrash(RegionInfo);
-        }
-
-        public virtual bool PresenceChildStatus(UUID avatarID)
-        {
-            return false;
         }
         
         public abstract void OtherRegionUp(GridRegion otherRegion);

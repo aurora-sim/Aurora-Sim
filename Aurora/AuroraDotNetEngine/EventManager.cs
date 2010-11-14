@@ -960,6 +960,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             scriptEvents eventType = (scriptEvents)Enum.Parse(typeof(scriptEvents), FunctionName);
             if ((ID.Script.GetStateEventFlags(ID.State) & (long)eventType) == 0)
                 return false; //If the script doesn't contain the state, don't even bother queueing it
+            
+            //Make sure we can execute events at position
+            if (!m_scriptEngine.PipeEventsForScript(ID.part))
+                return false;
 
             if (eventType == scriptEvents.timer)
             {

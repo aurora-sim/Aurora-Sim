@@ -192,7 +192,7 @@ namespace OpenSim.Region.Framework.Scenes
         public bool CheckForObjectCulling = false;
         public bool[,] DirectionsToBlockChildAgents;
         private string m_DefaultObjectName = "Primitive";
-        private bool RunScriptsInAttachments = false;
+        public bool RunScriptsInAttachments = false;
         /// <summary>
         /// Are we applying physics to any of the prims in this scene?
         /// </summary>
@@ -565,6 +565,8 @@ namespace OpenSim.Region.Framework.Scenes
                 EventManager.OnLandObjectRemoved +=
                     new EventManager.LandObjectRemoved(SimulationDataService.RemoveLandObject);
             }
+
+            EventManager.OnClosingClient += UnSubscribeToClientEvents;
 
             m_sceneGraph = new SceneGraph(this, m_regInfo);
 
@@ -2319,7 +2321,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// Loads the World heightmap
         /// </summary>
-        public override void LoadWorldMap()
+        public void LoadWorldMap()
         {
             try
             {
@@ -3859,7 +3861,6 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// Unsubscribe the client from events.
         /// </summary>
-        /// FIXME: Not called anywhere!
         /// <param name="client">The IClientAPI of the client</param>
         public virtual void UnSubscribeToClientEvents(IClientAPI client)
         {
@@ -4843,75 +4844,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         #endregion
 
-        #region Script Engine
-
-        private bool ScriptDanger(SceneObjectPart part, Vector3 pos)
-        {
-            if (part.IsAttachment && RunScriptsInAttachments)
-                return true; //Always run as in SL
-            ILandObject parcel = LandChannel.GetLandObject(pos.X, pos.Y);
-            if (parcel != null)
-            {
-                if ((parcel.LandData.Flags & (uint)ParcelFlags.AllowOtherScripts) != 0)
-                    return true;
-                else if ((parcel.LandData.Flags & (uint)ParcelFlags.AllowGroupScripts) != 0)
-                {
-                    if (part.OwnerID == parcel.LandData.OwnerID
-                        || (parcel.LandData.IsGroupOwned && part.GroupID == parcel.LandData.GroupID)
-                        || Permissions.IsGod(part.OwnerID))
-                        return true;
-                    else
-                        return false;
-                }
-                else
-                {
-                    //Gods should be able to run scripts. 
-                    // -- Revolution
-                    if (part.OwnerID == parcel.LandData.OwnerID || Permissions.IsGod(part.OwnerID))
-                        return true;
-                    else
-                        return false;
-                }
-            }
-            else
-            {
-                if (pos.X > 0f && pos.X < Constants.RegionSize && pos.Y > 0f && pos.Y < Constants.RegionSize)
-                    // The only time parcel != null when an object is inside a region is when
-                    // there is nothing behind the landchannel.  IE, no land plugin loaded.
-                    return true;
-                else
-                    // The object is outside of this region.  Stop piping events to it.
-                    return false;
-            }
-        }
-
-        public bool ScriptDanger(uint localID, Vector3 pos)
-        {
-            SceneObjectPart part = GetSceneObjectPart(localID);
-            if (part != null)
-            {
-                return ScriptDanger(part, pos);
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        public bool PipeEventsForScript(SceneObjectPart part)
-        {
-            // Changed so that child prims of attachments return ScriptDanger for their parent, so that
-            //  their scripts will actually run.
-            //      -- Leaf, Tue Aug 12 14:17:05 EDT 2008
-            SceneObjectPart parent = part.ParentGroup.RootPart;
-            if (parent != null && parent.IsAttachment)
-                return ScriptDanger(parent, parent.AbsolutePosition);
-            else
-                return ScriptDanger(part, part.AbsolutePosition);
-        }
-
-        #endregion
-
         #region SceneGraph wrapper methods
 
         public UUID ConvertLocalIDToFullID(uint localID)
@@ -5000,7 +4932,7 @@ namespace OpenSim.Region.Framework.Scenes
             return m_sceneGraph.GetScenePresence(localID);
         }
 
-        public override bool PresenceChildStatus(UUID avatarID)
+        public bool PresenceChildStatus(UUID avatarID)
         {
             ScenePresence cp = GetScenePresence(avatarID);
 
@@ -5356,37 +5288,6 @@ namespace OpenSim.Region.Framework.Scenes
             float ydiff = y - (float)((int)y);
 
             return (((vsn.X * xdiff) + (vsn.Y * ydiff)) / (-1 * vsn.Z)) + p0.Z;
-        }
-
-        public void TriggerEstateSunUpdate()
-        {
-            float sun;
-            if (RegionInfo.RegionSettings.UseEstateSun)
-            {
-                sun = (float)RegionInfo.EstateSettings.SunPosition;
-                if (RegionInfo.EstateSettings.UseGlobalTime)
-                {
-                    sun = EventManager.GetCurrentTimeAsSunLindenHour() - 6.0f;
-                }
-
-                // 
-                EventManager.TriggerEstateToolsSunUpdate(
-                        RegionInfo.RegionHandle,
-                        RegionInfo.EstateSettings.FixedSun,
-                        RegionInfo.RegionSettings.UseEstateSun,
-                        sun);
-            }
-            else
-            {
-                // Use the Sun Position from the Region Settings
-                sun = (float)RegionInfo.RegionSettings.SunPosition - 6.0f;
-
-                EventManager.TriggerEstateToolsSunUpdate(
-                        RegionInfo.RegionHandle,
-                        RegionInfo.RegionSettings.FixedSun,
-                        RegionInfo.RegionSettings.UseEstateSun,
-                        sun);
-            }
         }
 
         #endregion

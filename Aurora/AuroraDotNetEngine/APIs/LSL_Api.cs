@@ -7117,8 +7117,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Integer llScriptDanger(LSL_Vector pos)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
-            bool result = World.ScriptDanger(m_host.LocalId, new Vector3((float)pos.x, (float)pos.y, (float)pos.z));
+
+            bool result = m_ScriptEngine.PipeEventsForScript(m_host, new Vector3((float)pos.x, (float)pos.y, (float)pos.z));
             if (result)
             {
                 return 1;
@@ -7127,7 +7127,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 return 0;
             }
-
         }
 
         public DateTime llDialog(string avatar, string message, LSL_List buttons, int chat_channel)

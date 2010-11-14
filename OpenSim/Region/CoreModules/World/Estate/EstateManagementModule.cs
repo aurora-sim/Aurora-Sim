@@ -359,7 +359,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
                 m_scene.RegionInfo.RegionSettings.FixedSun = UseFixedSun;
                 m_scene.RegionInfo.RegionSettings.SunPosition = SunHour;
 
-                m_scene.TriggerEstateSunUpdate();
+                TriggerEstateSunUpdate();
 
                 //m_log.Debug("[ESTATE]: UFS: " + UseFixedSun.ToString());
                 //m_log.Debug("[ESTATE]: SunHour: " + SunHour.ToString());
@@ -1106,7 +1106,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
             m_scene.RegionInfo.EstateSettings.Save();
             TriggerEstateInfoChange();
 
-            m_scene.TriggerEstateSunUpdate();
+            TriggerEstateSunUpdate();
 
             sendDetailedEstateData(remoteClient, invoice);
         }
@@ -1247,7 +1247,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
         {
             // Sets up the sun module based no the saved Estate and Region Settings
             // DO NOT REMOVE or the sun will stop working
-            m_scene.TriggerEstateSunUpdate();
+            TriggerEstateSunUpdate();
         }
 
         public Type ReplaceableInterface
@@ -1478,6 +1478,37 @@ namespace OpenSim.Region.CoreModules.World.Estate
                 onmessage(m_scene.RegionInfo.RegionID, fromID, fromName, message);
             else if (module != null)
                 module.SendGeneralAlert(message);
+        }
+
+        public void TriggerEstateSunUpdate()
+        {
+            float sun;
+            if (m_scene.RegionInfo.RegionSettings.UseEstateSun)
+            {
+                sun = (float)m_scene.RegionInfo.EstateSettings.SunPosition;
+                if (m_scene.RegionInfo.EstateSettings.UseGlobalTime)
+                {
+                    sun = m_scene.EventManager.GetCurrentTimeAsSunLindenHour() - 6.0f;
+                }
+
+                // 
+                m_scene.EventManager.TriggerEstateToolsSunUpdate(
+                        m_scene.RegionInfo.RegionHandle,
+                        m_scene.RegionInfo.EstateSettings.FixedSun,
+                        m_scene.RegionInfo.RegionSettings.UseEstateSun,
+                        sun);
+            }
+            else
+            {
+                // Use the Sun Position from the Region Settings
+                sun = (float)m_scene.RegionInfo.RegionSettings.SunPosition - 6.0f;
+
+                m_scene.EventManager.TriggerEstateToolsSunUpdate(
+                        m_scene.RegionInfo.RegionHandle,
+                        m_scene.RegionInfo.RegionSettings.FixedSun,
+                        m_scene.RegionInfo.RegionSettings.UseEstateSun,
+                        sun);
+            }
         }
     }
 }

@@ -734,7 +734,7 @@ namespace OpenSim.Region.RegionCombinerModule
                     r.RegionInfo.RegionSettings.FixedSun = UseFixedSun;
                     r.RegionInfo.RegionSettings.SunPosition = SunHour;
 
-                    r.TriggerEstateSunUpdate();
+                    r.RequestModuleInterface<IEstateModule>().TriggerEstateSunUpdate();
 
                     //m_log.Debug("[ESTATE]: UFS: " + UseFixedSun.ToString());
                     //m_log.Debug("[ESTATE]: SunHour: " + SunHour.ToString());
